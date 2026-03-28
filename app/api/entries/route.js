@@ -30,7 +30,7 @@ export async function POST(request) {
         horizon, album_art, post_link
       ) VALUES (
         ${album}, ${artist}, ${year}, ${entry_type}, ${relationship},
-        ${rating}, ${favorite}, ${notes}, ${notes}, ${tags},
+        ${rating}, ${favorite}, ${notes}, ${tags},
         ${horizon}, ${album_art}, ${post_link}
       )
       RETURNING *
