@@ -23,15 +23,22 @@ export async function POST(request) {
       horizon, album_art, post_link
     } = body;
 
+    const slug = album
+      .toLowerCase()
+      .replace(/[^a-z0-9\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
+      .trim();
+
     const result = await sql`
       INSERT INTO entries (
         album, artist, year, entry_type, relationship,
         rating, favorite, background, notes, tags,
-        horizon, album_art, post_link
+        horizon, album_art, post_link, slug
       ) VALUES (
         ${album}, ${artist}, ${year}, ${entry_type}, ${relationship},
-        ${rating}, ${favorite}, ${notes}, ${tags},
-        ${horizon}, ${album_art}, ${post_link}
+        ${rating}, ${favorite}, ${background}, ${notes}, ${tags},
+        ${horizon}, ${album_art}, ${post_link}, ${slug}
       )
       RETURNING *
     `;
