@@ -9,6 +9,7 @@ export default function Session() {
   const [pw, setPw] = useState('');
   const [pwError, setPwError] = useState(false);
 
+  const [albumArt, setAlbumArt] = useState('');
   const [album, setAlbum] = useState('');
   const [artist, setArtist] = useState('');
   const [brief, setBrief] = useState(null);
@@ -56,6 +57,20 @@ export default function Session() {
     }
   }
 
+  async function fetchAlbumArt(albumName, artistName) {
+    try {
+      const query = encodeURIComponent(`${albumName} ${artistName}`);
+      const res = await fetch(`https://itunes.apple.com/search?term=${query}&media=music&entity=album&limit=1`);
+      const data = await res.json();
+      if (data.results && data.results[0]) {
+        const art = data.results[0].artworkUrl100.replace('100x100', '600x600');
+        setAlbumArt(art);
+      }
+    } catch (err) {
+      console.log('Art fetch failed:', err);
+    }
+  }
+
   async function doResearch() {
     if (!album.trim()) return;
     setBriefLoading(true);
@@ -68,9 +83,10 @@ export default function Session() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ album, artist })
       });
-      const data = await res.json();
+const data = await res.json();
       if (data.error) throw new Error(data.error);
       setBrief(data);
+      fetchAlbumArt(data.album, data.artist);
     } catch (err) {
       setBriefError(err.message || 'Research failed. Try again.');
     } finally {
@@ -121,7 +137,7 @@ export default function Session() {
           notes: output.notes_prose,
           tags: output.tags || [],
           horizon: output.horizon || '',
-          album_art: '',
+          album_art: albumArt,
           post_link: ''
         })
       });
@@ -238,9 +254,16 @@ export default function Session() {
               <p className="text-xs text-red-400 mt-4" style={{fontFamily:'var(--font-mono)'}}>{briefError}</p>
             )}
             {brief && (
-              <div className="flex flex-col gap-5">
-                <div>
-                  <h2 className="text-2xl mb-1" style={{fontFamily:'var(--font-serif)'}}>{brief.album}</h2>
+  <div className="flex flex-col gap-5">
+    {albumArt && (
+      <img
+        src={albumArt}
+        alt={brief.album}
+        className="w-full aspect-square object-cover rounded-lg"
+      />
+    )}
+    <div>
+      <h2 className="text-2xl mb-1" style={{fontFamily:'var(--font-serif)'}}>{brief.album}</h2>
                   <p className="text-xs text-[#c8d47a]" style={{fontFamily:'var(--font-mono)'}}>{brief.artist}</p>
                   <div className="flex flex-wrap gap-2 mt-3">
                     {[brief.year, brief.genre, brief.label, brief.debut ? '⬖ debut' : null].filter(Boolean).map((t,i) => (
