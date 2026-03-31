@@ -1,114 +1,114 @@
+'use client';
+
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import Sidebar from '../components/Sidebar';
 
-async function getEntries() {
-  try {
-    const res = await fetch('http://localhost:3000/api/entries', {
-      cache: 'no-store'
-    });
-    const data = await res.json();
-    return data.entries || [];
-  } catch {
-    return [];
-  }
-}
+export default function HomePage() {
+  const [entries, setEntries] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [hoveredId, setHoveredId] = useState(null);
 
-export default async function Home() {
-  const entries = await getEntries();
+  useEffect(() => {
+    fetch('/api/entries')
+      .then(r => r.json())
+      .then(data => {
+        // handle both {entries: [...]} and plain array
+        const list = Array.isArray(data) ? data : (data.entries || []);
+        setEntries(list);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
 
   return (
-    <main className="min-h-screen bg-[#0e0e0e] text-[#e8e4dc]">
-      
-      {/* Header */}
-      <header className="border-b border-[#2a2a2a] px-8 py-6">
-        <h1 className="text-3xl" style={{fontFamily: 'var(--font-serif)'}}>
-          listening <em className="text-[#c8d47a]">notes</em>
-        </h1>
-        <p className="text-xs text-[#555] tracking-widest uppercase mt-1" style={{fontFamily: 'var(--font-mono)'}}>
-          a music listening journal
-        </p>
-      </header>
+    <div className="layout">
+      <button
+        className={`sb-hamburger ${mobileOpen ? 'sb-hamburger--open' : ''}`}
+        onClick={() => setMobileOpen(v => !v)}
+        aria-label="Toggle navigation"
+      >
+        <span /><span /><span />
+      </button>
 
-      {/* Entries */}
-      <div className="max-w-2xl mx-auto px-8 py-16">
-        {entries.length === 0 ? (
-          <p className="text-[#555] font-mono text-sm">no entries yet.</p>
+      <Sidebar mobileOpen={mobileOpen} onClose={() => setMobileOpen(false)} />
+
+      <main className="main">
+        <div className="page-header">
+          <h1 className="page-heading">
+            <span className="page-heading-count">{loading ? '—' : entries.length}</span>
+            <span className="page-heading-label">entries</span>
+          </h1>
+        </div>
+
+        {loading ? (
+          <div className="grid-loading">
+            {Array.from({ length: 12 }).map((_, i) => (
+              <div key={i} className="tile--skeleton" />
+            ))}
+          </div>
+        ) : entries.length === 0 ? (
+          <div className="grid-empty">No entries yet.</div>
         ) : (
-          <div className="flex flex-col gap-16">
-            {entries.map((entry) => (
-              <article key={entry.id} className="border border-[#2a2a2a] rounded-lg overflow-hidden">
-                
-                {/* Album art */}
-                {entry.album_art && (
-                  <img 
-                    src={entry.album_art} 
-                    alt={entry.album}
-                    className="w-full object-cover aspect-square"
-                  />
-                )}
-
-                {/* Post header */}
-                <div className="p-6 border-b border-[#2a2a2a]">
-                  <h2 className="text-2xl mb-1" style={{fontFamily: 'var(--font-serif)'}}>
-                    {entry.album}
-                  </h2>
-                  <div className="flex gap-3 items-center flex-wrap mt-2">
-                    <span className="text-[#c8d47a] text-sm" style={{fontFamily: 'var(--font-mono)'}}>
-                      {entry.artist}
-                    </span>
-                    <span className="text-[#555] text-xs" style={{fontFamily: 'var(--font-mono)'}}>
-                      {entry.year}
-                    </span>
-                    {entry.rating && (
-                      <span className="text-[#555] text-xs border border-[#2a2a2a] px-2 py-0.5 rounded" style={{fontFamily: 'var(--font-mono)'}}>
-                        {entry.rating}
-                      </span>
-                    )}
-                    {entry.relationship && (
-                      <span className="text-[#555] text-xs border border-[#2a2a2a] px-2 py-0.5 rounded" style={{fontFamily: 'var(--font-mono)'}}>
-                        {entry.relationship}
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                {/* Content */}
-                <div className="p-6 flex flex-col gap-6">
-                  {entry.background && (
-                    <p className="text-sm leading-relaxed text-[#9a9590]" style={{fontFamily: 'var(--font-sans)'}}>
-                      {entry.background}
-                    </p>
-                  )}
-
-                  {entry.horizon && (
-                    <p className="text-center text-[#3a3a3a] tracking-widest" style={{fontFamily: 'var(--font-mono)'}}>
-                      {entry.horizon}
-                    </p>
-                  )}
-
-                  {entry.notes && (
-                    <p className="text-sm leading-relaxed" style={{fontFamily: 'var(--font-sans)'}}>
-                      {entry.notes}
-                    </p>
-                  )}
-
-                  {/* Tags */}
-                  {entry.tags && entry.tags.length > 0 && (
-                    <div className="flex flex-wrap gap-2 pt-2 border-t border-[#2a2a2a]">
-                      {entry.tags.map((tag, i) => (
-                        <span key={i} className="text-xs text-[#555]" style={{fontFamily: 'var(--font-mono)'}}>
-                          #{tag}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-              </article>
+          <div className="album-grid">
+            {entries.map(entry => (
+              <AlbumTile
+                key={entry.id}
+                entry={entry}
+                hovered={hoveredId === entry.id}
+                onHover={setHoveredId}
+              />
             ))}
           </div>
         )}
+      </main>
+    </div>
+  );
+}
+
+function AlbumTile({ entry, hovered, onHover }) {
+  const stars = entry.rating ? Math.round(entry.rating) : null;
+
+  return (
+    <Link
+      href={`/entries/${entry.slug}`}
+      className={`tile ${hovered ? 'tile--hovered' : ''}`}
+      onMouseEnter={() => onHover(entry.id)}
+      onMouseLeave={() => onHover(null)}
+    >
+      <div className="tile-art-wrap">
+        {entry.album_art ? (
+          <img
+            src={entry.album_art}
+            alt={`${entry.album} by ${entry.artist}`}
+            className="tile-art"
+            loading="lazy"
+            decoding="async"
+          />
+        ) : (
+          <div className="tile-art-placeholder">
+            <span>{entry.album?.[0] ?? '♪'}</span>
+          </div>
+        )}
+        <div className="tile-overlay">
+          <div className="tile-overlay-inner">
+            <div className="tile-overlay-album">{entry.album}</div>
+            <div className="tile-overlay-artist">{entry.artist}</div>
+            {entry.year && <div className="tile-overlay-year">{entry.year}</div>}
+            {stars && (
+              <div className="tile-overlay-stars">
+                {'★'.repeat(stars)}{'☆'.repeat(5 - stars)}
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
-    </main>
+      <div className="tile-label">
+        <span className="tile-label-album">{entry.album}</span>
+        <span className="tile-label-artist">{entry.artist}</span>
+      </div>
+    </Link>
   );
 }
