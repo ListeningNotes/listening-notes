@@ -156,16 +156,58 @@ function Hero() {
   const [recentStack, setRecentStack] = useState([]);
   const prevTrack = useRef(null);
 
+  // Fetch real recent tracks on mount and keep in sync
+  useEffect(() => {
+    async function fetchRecent() {
+      try {
+        const res = await fetch('https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=listeningnotes&api_key=f022ca293645cd4cf2beeb3be7ae4b6f&limit=6&format=json');
+        const data = await res.json();
+        const tracks = data?.recenttracks?.track || [];
+        const nowPlaying = tracks.find(t => t['@attr']?.nowplaying);
+        const past = tracks
+          .filter(t => !t['@attr']?.nowplaying)
+          .map(t => ({
+            track: t.name,
+            artist: t.artist['#text'],
+            art: t.image?.[3]?.['#text'] || t.image?.[2]?.['#text'] || '',
+          }))
+          .filter(t => !(nowPlaying && t.track === nowPlaying.name && t.artist === nowPlaying.artist['#text']));
+        setRecentStack(past.slice(0, 3));
+      } catch(e) {}
+    }
+    fetchRecent();
+    const interval = setInterval(fetchRecent, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+
+  // Track previous art so we can use it when track changes
+  const prevArtRef = useRef('');
+
+  // Update queue when track changes
   useEffect(() => {
     if (!trackObj?.name) return;
     const key = `${trackObj.name}|||${trackObj.artist}`;
     if (key === prevTrack.current) return;
+
+    // Add the previous track to the front of the queue with its correct art
+    if (prevTrack.current) {
+      const [prevName, prevArtist] = prevTrack.current.split('|||');
+      const prevArt = prevArtRef.current;
+      setRecentStack(prev => {
+        const newEntry = { track: prevName, artist: prevArtist, art: prevArt };
+        const filtered = prev.filter(t => !(t.track === trackObj.name && t.artist === trackObj.artist));
+        return [newEntry, ...filtered].slice(0, 3);
+      });
+    } else {
+      setRecentStack(prev => prev.filter(t => !(t.track === trackObj.name && t.artist === trackObj.artist)));
+    }
+
     prevTrack.current = key;
-    setRecentStack(prev => {
-      const next = [{ track: trackObj.name, artist: trackObj.artist, art: trackObj.image }, ...prev];
-      return next.slice(0, 6);
-    });
+    prevArtRef.current = artUrl;
   }, [trackObj]);
+
+  const sizes = [0.82, 0.68, 0.56];
 
   return (
     <section className="hero">
@@ -173,89 +215,78 @@ function Hero() {
         <div className="hero-blur-bg" style={{ backgroundImage: `url(${artUrl})` }} />
       )}
       <div className="hero-fade-bottom" />
-      <div className={`hero-inner ${panelOpen ? 'hero-inner--panel-open' : ''}`}>
-        <button
-          className="beacon-card"
-          onClick={() => setPanelOpen(v => !v)}
-          aria-expanded={panelOpen}
-          aria-label="Toggle recent listens"
-        >
-          <div className={`beacon-art-wrap ${isLive ? 'beacon-art-wrap--live' : ''}`}>
-            {artUrl ? (
-              <img
-                src={artUrl}
-                alt={trackName}
-                className={`beacon-art ${!isLive ? 'beacon-art--idle' : ''}`}
-              />
-            ) : (
-              <div className="beacon-art-placeholder">♪</div>
-            )}
-            {isLive && <span className="beacon-live-dot" aria-hidden="true" />}
-            {!isLive && artUrl && (
-              <div className="beacon-idle-overlay">
-                <span>Last played</span>
+      <div className="hero-inner" style={{ zIndex: 3 }}>
+
+        <div className={`beacon-stage ${panelOpen ? 'beacon-stage--open' : ''}`}>
+
+          {/* Recent tracks — bubble out to the right */}
+          {recentStack.slice(0, 3).map((item, i) => (
+            <div
+              key={i}
+              className="beacon-recent-tile"
+              style={{
+                '--scale': sizes[i],
+                '--delay': `${(i + 1) * 0.08}s`,
+              }}
+            >
+              {item.art && <img src={item.art} alt={item.track} className="beacon-recent-art" />}
+              <div className="beacon-recent-meta">
+                <div className="beacon-recent-track">{item.track}</div>
+                <div className="beacon-recent-artist">{item.artist}</div>
               </div>
-            )}
-          </div>
-
-          <div className="beacon-meta">
-            <div className="beacon-status">
-              <span className={`beacon-dot ${isLive ? 'beacon-dot--live' : ''}`} />
-              <span className="beacon-status-text">
-                {isLive ? 'Now listening' : 'Not listening'}
-              </span>
             </div>
-            <div className="beacon-track">{trackName || '—'}</div>
-            {artistName && <div className="beacon-artist">{artistName}</div>}
-          </div>
-        </button>
+          ))}
 
-        <div className={`recent-panel ${panelOpen ? 'recent-panel--open' : ''}`}>
-          <div className="recent-panel-header">Recent listens</div>
-          {recentStack.length === 0 ? (
-            <div className="recent-panel-empty">Nothing yet this session.</div>
-          ) : (
-            <div className="recent-panel-list">
-              {recentStack.map((item, i) => (
-                <div key={i} className="recent-item">
-                  {item.art && <img src={item.art} alt="" className="recent-item-art" />}
-                  <div className="recent-item-meta">
-                    <div className="recent-item-track">{item.track}</div>
-                    <div className="recent-item-artist">{item.artist}</div>
-                  </div>
-                </div>
-              ))}
+          {/* Main beacon — always present, slides left when open */}
+          <button
+            className="beacon-card beacon-card--main"
+            onClick={() => setPanelOpen(v => !v)}
+            aria-expanded={panelOpen}
+            aria-label="Toggle recent listens"
+          >
+            <div className={`beacon-art-wrap ${isLive ? 'beacon-art-wrap--live' : ''}`}>
+              {artUrl ? (
+                <img src={artUrl} alt={trackName} className={`beacon-art ${!isLive ? 'beacon-art--idle' : ''}`} />
+              ) : (
+                <div className="beacon-art-placeholder">♪</div>
+              )}
+              {!isLive && artUrl && (
+                <div className="beacon-idle-overlay"><span>Last played</span></div>
+              )}
             </div>
-          )}
+            <div className="beacon-meta">
+              <div className="beacon-status">
+                <span className={`beacon-dot ${isLive ? 'beacon-dot--live' : ''}`} />
+                <span className="beacon-status-text">{isLive ? 'Now listening' : 'Not listening'}</span>
+              </div>
+              <div className="beacon-track">{trackName || '—'}</div>
+              {artistName && <div className="beacon-artist">{artistName}</div>}
+            </div>
+          </button>
+
         </div>
       </div>
     </section>
   );
 }
-
 function AlbumStrip({ entries }) {
   const trackRef = useRef(null);
   const animFrameRef = useRef(null);
   const posRef = useRef(0);
-  const isDragging = useRef(false);
-  const dragStartX = useRef(0);
-  const dragStartPos = useRef(0);
-  const resumeTimer = useRef(null);
-  const speed = 0.6;
+  const pausedRef = useRef(false);
+  const speed = 0.5;
 
-  // Triplicate so loop never shows a gap regardless of count
   const tiles = entries.length > 0 ? [...entries, ...entries, ...entries] : [];
 
   const tick = useCallback(() => {
     const el = trackRef.current;
-    if (!el || isDragging.current) {
-      animFrameRef.current = requestAnimationFrame(tick);
-      return;
+    if (!el) { animFrameRef.current = requestAnimationFrame(tick); return; }
+    if (!pausedRef.current) {
+      const third = el.scrollWidth / 3;
+      posRef.current += speed;
+      if (posRef.current >= third) posRef.current -= third;
+      el.style.transform = `translateX(-${posRef.current}px)`;
     }
-    const third = el.scrollWidth / 3;
-    posRef.current += speed;
-    if (posRef.current >= third) posRef.current -= third;
-    el.style.transform = `translateX(-${posRef.current}px)`;
     animFrameRef.current = requestAnimationFrame(tick);
   }, []);
 
@@ -264,43 +295,26 @@ function AlbumStrip({ entries }) {
     return () => cancelAnimationFrame(animFrameRef.current);
   }, [tick, entries]);
 
-  function onPointerDown(e) {
-    isDragging.current = true;
-    dragStartX.current = e.clientX;
-    dragStartPos.current = posRef.current;
-    trackRef.current?.setPointerCapture(e.pointerId);
-    clearTimeout(resumeTimer.current);
-  }
-  function onPointerMove(e) {
-    if (!isDragging.current) return;
-    const delta = e.clientX - dragStartX.current;
+  function nudge(dir) {
     const el = trackRef.current;
     if (!el) return;
     const third = el.scrollWidth / 3;
-    let next = dragStartPos.current - delta;
-    if (next < 0) next += third;
-    if (next >= third) next -= third;
-    posRef.current = next;
-    el.style.transform = `translateX(-${next}px)`;
-  }
-  function onPointerUp() {
-    resumeTimer.current = setTimeout(() => {
-      isDragging.current = false;
-    }, 2500);
+    pausedRef.current = true;
+    posRef.current += dir * 280;
+    if (posRef.current < 0) posRef.current += third;
+    if (posRef.current >= third) posRef.current -= third;
+    el.style.transform = `translateX(-${posRef.current}px)`;
+    setTimeout(() => { pausedRef.current = false; }, 1200);
   }
 
   if (entries.length === 0) return null;
 
   return (
     <div className="strip-outer">
-      <div
-        className="strip-viewport"
-        onPointerDown={onPointerDown}
-        onPointerMove={onPointerMove}
-        onPointerUp={onPointerUp}
-        onPointerLeave={onPointerUp}
-        style={{ cursor: 'grab' }}
-      >
+      <button className="strip-arrow strip-arrow--left" onClick={() => nudge(-1)} aria-label="Previous">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+      <div className="strip-viewport">
         <div className="strip-track" ref={trackRef}>
           {tiles.map((entry, i) => (
             <Link
@@ -308,20 +322,11 @@ function AlbumStrip({ entries }) {
               href={`/entries/${entry.slug}`}
               className="strip-tile"
               draggable={false}
-              onClick={e => { if (isDragging.current) e.preventDefault(); }}
             >
               {entry.album_art ? (
-                <img
-                  src={entry.album_art}
-                  alt={entry.album}
-                  className="strip-tile-img"
-                  draggable={false}
-                  loading="lazy"
-                />
+                <img src={entry.album_art} alt={entry.album} className="strip-tile-img" draggable={false} loading="lazy" />
               ) : (
-                <div className="strip-tile-placeholder">
-                  {entry.album?.[0] ?? '♪'}
-                </div>
+                <div className="strip-tile-placeholder">{entry.album?.[0] ?? '♪'}</div>
               )}
               <div className="strip-tile-hover">
                 <div className="strip-tile-hover-album">{entry.album}</div>
@@ -333,10 +338,12 @@ function AlbumStrip({ entries }) {
         <div className="strip-fade-left" />
         <div className="strip-fade-right" />
       </div>
+      <button className="strip-arrow strip-arrow--right" onClick={() => nudge(1)} aria-label="Next">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6"/></svg>
+      </button>
     </div>
   );
 }
-
 export default function HomePage() {
   const { theme, toggleTheme } = useTheme();
   const [entries, setEntries] = useState([]);

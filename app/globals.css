@@ -543,7 +543,7 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   font-family: 'Fraunces', serif;
   font-size: 2.2rem;
   font-weight: 900;
-  font-style: italic;
+  font-style: normal;
   color: var(--text);
   text-decoration: none;
   white-space: nowrap;
@@ -658,7 +658,7 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   filter: blur(60px) saturate(1.4) brightness(0.85);
   transform: scale(1.15);
   z-index: 0;
-  transition: background-image 1.2s ease;
+  transition: opacity 0.8s ease;
 }
 
 .hero-fade-bottom {
@@ -721,7 +721,12 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   height: 100%;
   object-fit: cover;
   display: block;
-  transition: filter 0.4s;
+  position: absolute;
+  top: 0; left: 0;
+  transition: opacity 0.8s ease, filter 0.4s;
+}
+.beacon-art-wrap {
+  position: relative;
 }
 .beacon-art--idle {
   filter: grayscale(80%) brightness(0.7);
@@ -800,12 +805,14 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   line-height: 1.1;
   color: var(--text);
   max-width: 500px;
+  transition: opacity 0.5s ease;
 }
 .beacon-artist {
   font-family: 'DM Mono', monospace;
   font-size: 0.85rem;
   letter-spacing: 0.08em;
   color: var(--text-muted);
+  transition: opacity 0.5s ease;
 }
 
 .hero-divider {
@@ -890,28 +897,49 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 }
 
 .strip-outer {
-  width: 100vw;
-  position: relative;
-  left: 50%;
-  right: 50%;
-  margin-left: -50vw;
-  margin-right: -50vw;
+  width: 100%;
   overflow: hidden;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0;
 }
 
 .strip-viewport {
   position: relative;
-  width: 100%;
+  flex: 1;
   overflow: hidden;
-  user-select: none;
 }
 
 .strip-track {
   display: flex;
   gap: 12px;
   will-change: transform;
-  padding: 4px 0 4px 0;
+  padding: 4px 0;
 }
+
+.strip-arrow {
+  flex-shrink: 0;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  transition: background 0.15s, transform 0.1s;
+  flex-shrink: 0;
+}
+.strip-arrow:hover {
+  background: var(--bg2);
+  transform: scale(1.05);
+}
+.strip-arrow--left { margin-right: 12px; }
+.strip-arrow--right { margin-left: 12px; }
 
 .strip-tile {
   flex-shrink: 0;
@@ -1206,4 +1234,88 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 [data-theme='dark'] .topnav-dropdown {
   background: #1c1c1c;
   border-color: rgba(255,255,255,0.08);
+}
+
+/* ── Beacon Stage (expanded recent listens) ── */
+.beacon-stage {
+  position: relative;
+  width: 100%;
+  height: 420px;
+}
+
+/* Closed: centered. Open: shifts left */
+.beacon-card--main {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  transform: translateX(-50%);
+  z-index: 10;
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.beacon-stage--open .beacon-card--main {
+  transform: translateX(calc(-50% - 320px));
+}
+
+/* Recent tiles — all start from center, fan right */
+.beacon-recent-tile {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateX(-50%) scale(0.3);
+  transition:
+    transform 0.55s cubic-bezier(0.34, 1.56, 0.64, 1),
+    opacity 0.4s ease;
+  transition-delay: var(--delay, 0s);
+}
+
+.beacon-stage--open .beacon-recent-tile {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.beacon-stage--open .beacon-recent-tile:nth-child(1) {
+  transform: translateX(0) scale(0.88);
+}
+.beacon-stage--open .beacon-recent-tile:nth-child(2) {
+  transform: translateX(230px) scale(0.76);
+}
+.beacon-stage--open .beacon-recent-tile:nth-child(3) {
+  transform: translateX(430px) scale(0.64);
+}
+
+.beacon-recent-art {
+  width: 300px;
+  height: 300px;
+  object-fit: cover;
+  border-radius: 16px;
+  display: block;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.2);
+}
+
+.beacon-recent-meta {
+  text-align: center;
+}
+
+.beacon-recent-track {
+  font-family: 'Fraunces', serif;
+  font-weight: 900;
+  font-size: 1rem;
+  color: var(--text);
+  line-height: 1.2;
+  max-width: 200px;
+}
+
+.beacon-recent-artist {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+  color: var(--text-muted);
+  margin-top: 3px;
 }
