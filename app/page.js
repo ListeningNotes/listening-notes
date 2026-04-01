@@ -107,7 +107,7 @@ function TopNav({ onToggleTheme, theme }) {
         </div>
 
         <div className="topnav-right">
-          <a href="https://instagram.com/listeningnotes" target="_blank" rel="noopener noreferrer" className="topnav-icon-btn" aria-label="Instagram">
+          <a href="https://instagram.com/listeningnotes.blog" target="_blank" rel="noopener noreferrer" className="topnav-icon-btn" aria-label="Instagram">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.5" fill="currentColor" stroke="none"/></svg>
           </a>
           <button className="topnav-icon-btn" onClick={onToggleTheme} aria-label="Toggle theme">
@@ -169,6 +169,10 @@ function Hero() {
 
   return (
     <section className="hero">
+      {artUrl && (
+        <div className="hero-blur-bg" style={{ backgroundImage: `url(${artUrl})` }} />
+      )}
+      <div className="hero-fade-bottom" />
       <div className={`hero-inner ${panelOpen ? 'hero-inner--panel-open' : ''}`}>
         <button
           className="beacon-card"
@@ -354,6 +358,7 @@ export default function HomePage() {
       <TopNav onToggleTheme={toggleTheme} theme={theme} />
       <Hero />
 
+      <div className="hero-divider" />
       <div className="hp-strip-section">
         <div className="strip-label">Recent entries</div>
         {loading ? (
