@@ -1327,4 +1327,3 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 .beacon-recent-tile:nth-child(1) { opacity: 0.62; filter: saturate(0.65); transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease, filter 0.4s ease; }
 .beacon-recent-tile:nth-child(2) { opacity: 0.46; filter: saturate(0.48); transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease, filter 0.4s ease; }
 .beacon-recent-tile:nth-child(3) { opacity: 0.32; filter: saturate(0.32); transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease, filter 0.4s ease; }
-.beacon-recent-tile:hover { opacity: 1 !important; filter: saturate(1) !important; }
