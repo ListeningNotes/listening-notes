@@ -339,22 +339,7 @@ export default function PostClient({ entry }) {
           </section>
         )}
 
-        {/* Post link */}
-        {editMode && (
-          <section style={{ marginBottom: '2rem' }}>
-            <SectionLabel>tumblr post link</SectionLabel>
-            <EditInput value={fields.post_link || ''} onChange={v => handleChange('post_link', v)} placeholder="https://…" />
-          </section>
-        )}
-        {!editMode && fields.post_link && (
-          <a href={fields.post_link} target="_blank" rel="noopener noreferrer" style={{
-            fontFamily: 'DM Mono, monospace', fontSize: '11px', letterSpacing: '0.1em',
-            textTransform: 'uppercase', color: '#555', textDecoration: 'none',
-            borderBottom: '1px solid #2a2a2a', paddingBottom: '2px',
-          }}>
-            view on tumblr →
-          </a>
-        )}
+
       </div>
     </div>
   );
