@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, useCallback } from 'react';
 import Link from 'next/link';
 import { useTheme } from '../components/ThemeProvider';
 import { useListeningBeacon } from '../hooks/useListeningBeacon';
+import EntryModal from '../components/EntryModal';
 
 function SurpriseLink({ href, label }) {
   const ref = useRef(null);
@@ -26,7 +27,7 @@ function SurpriseLink({ href, label }) {
       span.style.setProperty('--gy', gy + 'px');
       span.style.setProperty('--dur', dur + 's');
       span.style.setProperty('--gr', (Math.random() * 360) + 'deg');
-      span.style.color = `hsl(${hue}, 90%, 55%)`;
+      span.style.color = 'hsl(' + hue + ', 90%, 55%)';
       span.style.left = e.clientX + 'px';
       span.style.top = e.clientY + 'px';
       document.body.appendChild(span);
@@ -35,11 +36,7 @@ function SurpriseLink({ href, label }) {
   }
 
   return (
-    <Link
-      href={href}
-      className="topnav-link topnav-link--surprise"
-      onClick={explode}
-    >
+    <Link href={href} className="topnav-link topnav-link--surprise" onClick={explode}>
       <span className="surprise-inner" ref={ref}>{label}</span>
     </Link>
   );
@@ -50,23 +47,9 @@ function TopNav({ onToggleTheme, theme }) {
   const [openGroup, setOpenGroup] = useState(null);
 
   const groups = [
-    {
-      label: 'Listen',
-      links: [
-        { href: '/about', label: 'About' },
-        { href: '/specs', label: 'Specs' },
-        { href: '/index', label: 'Index' },
-      ]
-    },
-    {
-      label: 'Explore',
-      links: [
-        { href: '/archive', label: 'Archive' },
-        { href: '/compare', label: 'Compare' },
-      ]
-    },
+    { label: 'Listen', links: [{ href: '/about', label: 'About' }, { href: '/specs', label: 'Specs' }, { href: '/index', label: 'Index' }] },
+    { label: 'Explore', links: [{ href: '/archive', label: 'Archive' }, { href: '/compare', label: 'Compare' }] },
   ];
-
   const standalone = [
     { href: '/submit', label: 'Submit' },
     { href: '/shuffle', label: 'Surprise', surprise: true },
@@ -76,42 +59,31 @@ function TopNav({ onToggleTheme, theme }) {
     <nav className="topnav" onMouseLeave={() => setOpenGroup(null)}>
       <div className="topnav-inner">
         <Link href="/" className="topnav-wordmark">Listening Notes</Link>
-
         <div className="topnav-links">
           {groups.map(g => (
-            <div
-              key={g.label}
-              className="topnav-group"
-              onMouseEnter={() => setOpenGroup(g.label)}
-            >
+            <div key={g.label} className="topnav-group" onMouseEnter={() => setOpenGroup(g.label)}>
               <span className="topnav-link topnav-link--group">
                 {g.label}
                 <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 3.5l3 3 3-3"/></svg>
               </span>
               {openGroup === g.label && (
                 <div className="topnav-dropdown">
-                  {g.links.map(l => (
-                    <Link key={l.href} href={l.href} className="topnav-dropdown-link">{l.label}</Link>
-                  ))}
+                  {g.links.map(l => <Link key={l.href} href={l.href} className="topnav-dropdown-link">{l.label}</Link>)}
                 </div>
               )}
             </div>
           ))}
-          {standalone.map(l => (
-            l.surprise ? (
-              <SurpriseLink key={l.href} href={l.href} label={l.label} />
-            ) : (
-              <Link key={l.href} href={l.href} className="topnav-link">{l.label}</Link>
-            )
-          ))}
+          {standalone.map(l => l.surprise
+            ? <SurpriseLink key={l.href} href={l.href} label={l.label} />
+            : <Link key={l.href} href={l.href} className="topnav-link">{l.label}</Link>
+          )}
         </div>
-
         <div className="topnav-right">
           <a href="https://instagram.com/listeningnotes.blog" target="_blank" rel="noopener noreferrer" className="topnav-icon-btn" aria-label="Instagram">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.5" fill="currentColor" stroke="none"/></svg>
           </a>
           <button className="topnav-icon-btn" onClick={onToggleTheme} aria-label="Toggle theme">
-            {theme === "dark" ? (
+            {theme === 'dark' ? (
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/>
                 <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
@@ -124,22 +96,15 @@ function TopNav({ onToggleTheme, theme }) {
               </svg>
             )}
           </button>
-          <button
-            className={`topnav-hamburger ${menuOpen ? "topnav-hamburger--open" : ""}`}
-            onClick={() => setMenuOpen(v => !v)}
-            aria-label="Menu"
-          >
+          <button className={'topnav-hamburger' + (menuOpen ? ' topnav-hamburger--open' : '')} onClick={() => setMenuOpen(v => !v)} aria-label="Menu">
             <span /><span /><span />
           </button>
         </div>
       </div>
-
       {menuOpen && (
         <div className="topnav-drawer">
           {groups.flatMap(g => g.links).concat(standalone).map(l => (
-            <Link key={l.href} href={l.href} className="topnav-drawer-link" onClick={() => setMenuOpen(false)}>
-              {l.label}
-            </Link>
+            <Link key={l.href} href={l.href} className="topnav-drawer-link" onClick={() => setMenuOpen(false)}>{l.label}</Link>
           ))}
         </div>
       )}
@@ -155,8 +120,8 @@ function Hero() {
   const [panelOpen, setPanelOpen] = useState(false);
   const [recentStack, setRecentStack] = useState([]);
   const prevTrack = useRef(null);
+  const prevArtRef = useRef('');
 
-  // Fetch real recent tracks on mount and keep in sync
   useEffect(() => {
     async function fetchRecent() {
       try {
@@ -166,11 +131,7 @@ function Hero() {
         const nowPlaying = tracks.find(t => t['@attr']?.nowplaying);
         const past = tracks
           .filter(t => !t['@attr']?.nowplaying)
-          .map(t => ({
-            track: t.name,
-            artist: t.artist['#text'],
-            art: t.image?.[3]?.['#text'] || t.image?.[2]?.['#text'] || '',
-          }))
+          .map(t => ({ track: t.name, artist: t.artist['#text'], art: t.image?.[3]?.['#text'] || t.image?.[2]?.['#text'] || '' }))
           .filter(t => !(nowPlaying && t.track === nowPlaying.name && t.artist === nowPlaying.artist['#text']));
         setRecentStack(past.slice(0, 3));
       } catch(e) {}
@@ -180,17 +141,10 @@ function Hero() {
     return () => clearInterval(interval);
   }, []);
 
-
-  // Track previous art so we can use it when track changes
-  const prevArtRef = useRef('');
-
-  // Update queue when track changes
   useEffect(() => {
     if (!trackObj?.name) return;
-    const key = `${trackObj.name}|||${trackObj.artist}`;
+    const key = trackObj.name + '|||' + trackObj.artist;
     if (key === prevTrack.current) return;
-
-    // Add the previous track to the front of the queue with its correct art
     if (prevTrack.current) {
       const [prevName, prevArtist] = prevTrack.current.split('|||');
       const prevArt = prevArtRef.current;
@@ -202,7 +156,6 @@ function Hero() {
     } else {
       setRecentStack(prev => prev.filter(t => !(t.track === trackObj.name && t.artist === trackObj.artist)));
     }
-
     prevTrack.current = key;
     prevArtRef.current = artUrl;
   }, [trackObj]);
@@ -211,24 +164,12 @@ function Hero() {
 
   return (
     <section className="hero">
-      {artUrl && (
-        <div className="hero-blur-bg" style={{ backgroundImage: `url(${artUrl})` }} />
-      )}
+      {artUrl && <div className="hero-blur-bg" style={{ backgroundImage: 'url(' + artUrl + ')' }} />}
       <div className="hero-fade-bottom" />
       <div className="hero-inner" style={{ zIndex: 3 }}>
-
-        <div className={`beacon-stage ${panelOpen ? 'beacon-stage--open' : ''}`}>
-
-          {/* Recent tracks — bubble out to the right */}
+        <div className={'beacon-stage' + (panelOpen ? ' beacon-stage--open' : '')}>
           {recentStack.slice(0, 3).map((item, i) => (
-            <div
-              key={i}
-              className="beacon-recent-tile"
-              style={{
-                '--scale': sizes[i],
-                '--delay': `${(i + 1) * 0.08}s`,
-              }}
-            >
+            <div key={i} className="beacon-recent-tile" style={{ '--scale': sizes[i], '--delay': ((i + 1) * 0.08) + 's' }}>
               {item.art && <img src={item.art} alt={item.track} className="beacon-recent-art" />}
               <div className="beacon-recent-meta">
                 <div className="beacon-recent-track">{item.track}</div>
@@ -236,46 +177,35 @@ function Hero() {
               </div>
             </div>
           ))}
-
-          {/* Main beacon — always present, slides left when open */}
-          <button
-            className="beacon-card beacon-card--main"
-            onClick={() => setPanelOpen(v => !v)}
-            aria-expanded={panelOpen}
-            aria-label="Toggle recent listens"
-          >
-            <div className={`beacon-art-wrap ${isLive ? 'beacon-art-wrap--live' : ''}`}>
-              {artUrl ? (
-                <img src={artUrl} alt={trackName} className={`beacon-art ${!isLive ? 'beacon-art--idle' : ''}`} />
-              ) : (
-                <div className="beacon-art-placeholder">♪</div>
-              )}
-              {!isLive && artUrl && (
-                <div className="beacon-idle-overlay"><span>Last played</span></div>
-              )}
+          <button className="beacon-card beacon-card--main" onClick={() => setPanelOpen(v => !v)} aria-expanded={panelOpen} aria-label="Toggle recent listens">
+            <div className={'beacon-art-wrap' + (isLive ? ' beacon-art-wrap--live' : '')}>
+              {artUrl
+                ? <img src={artUrl} alt={trackName} className={'beacon-art' + (!isLive ? ' beacon-art--idle' : '')} />
+                : <div className="beacon-art-placeholder">♪</div>
+              }
+              {!isLive && artUrl && <div className="beacon-idle-overlay"><span>Last played</span></div>}
             </div>
             <div className="beacon-meta">
               <div className="beacon-status">
-                <span className={`beacon-dot ${isLive ? 'beacon-dot--live' : ''}`} />
+                <span className={'beacon-dot' + (isLive ? ' beacon-dot--live' : '')} />
                 <span className="beacon-status-text">{isLive ? 'Now listening' : 'Not listening'}</span>
               </div>
               <div className="beacon-track">{trackName || '—'}</div>
               {artistName && <div className="beacon-artist">{artistName}</div>}
             </div>
           </button>
-
         </div>
       </div>
     </section>
   );
 }
-function AlbumStrip({ entries }) {
+
+function AlbumStrip({ entries, onTileClick }) {
   const trackRef = useRef(null);
   const animFrameRef = useRef(null);
   const posRef = useRef(0);
   const pausedRef = useRef(false);
   const speed = 0.5;
-
   const tiles = entries.length > 0 ? [...entries, ...entries, ...entries] : [];
 
   const tick = useCallback(() => {
@@ -285,7 +215,7 @@ function AlbumStrip({ entries }) {
       const third = el.scrollWidth / 3;
       posRef.current += speed;
       if (posRef.current >= third) posRef.current -= third;
-      el.style.transform = `translateX(-${posRef.current}px)`;
+      el.style.transform = 'translateX(-' + posRef.current + 'px)';
     }
     animFrameRef.current = requestAnimationFrame(tick);
   }, []);
@@ -303,7 +233,7 @@ function AlbumStrip({ entries }) {
     posRef.current += dir * 280;
     if (posRef.current < 0) posRef.current += third;
     if (posRef.current >= third) posRef.current -= third;
-    el.style.transform = `translateX(-${posRef.current}px)`;
+    el.style.transform = 'translateX(-' + posRef.current + 'px)';
     setTimeout(() => { pausedRef.current = false; }, 1200);
   }
 
@@ -317,22 +247,22 @@ function AlbumStrip({ entries }) {
       <div className="strip-viewport">
         <div className="strip-track" ref={trackRef}>
           {tiles.map((entry, i) => (
-            <Link
-              key={`${entry.id}-${i}`}
-              href={`/entries/${entry.slug}`}
+            <button
+              key={entry.id + '-' + i}
               className="strip-tile"
-              draggable={false}
+              onClick={() => onTileClick(entry.slug)}
+              aria-label={entry.album + ' by ' + entry.artist}
+              style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
             >
-              {entry.album_art ? (
-                <img src={entry.album_art} alt={entry.album} className="strip-tile-img" draggable={false} loading="lazy" />
-              ) : (
-                <div className="strip-tile-placeholder">{entry.album?.[0] ?? '♪'}</div>
-              )}
+              {entry.album_art
+                ? <img src={entry.album_art} alt={entry.album} className="strip-tile-img" draggable={false} loading="lazy" />
+                : <div className="strip-tile-placeholder">{entry.album?.[0] ?? '♪'}</div>
+              }
               <div className="strip-tile-hover">
                 <div className="strip-tile-hover-album">{entry.album}</div>
                 <div className="strip-tile-hover-artist">{entry.artist}</div>
               </div>
-            </Link>
+            </button>
           ))}
         </div>
         <div className="strip-fade-left" />
@@ -344,10 +274,12 @@ function AlbumStrip({ entries }) {
     </div>
   );
 }
+
 export default function HomePage() {
-  const { theme, toggleTheme } = useTheme();
+  const { theme, toggle: toggleTheme } = useTheme();
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [modalSlug, setModalSlug] = useState(null);
 
   useEffect(() => {
     fetch('/api/entries')
@@ -364,29 +296,25 @@ export default function HomePage() {
     <div className="hp">
       <TopNav onToggleTheme={toggleTheme} theme={theme} />
       <Hero />
-
       <div className="hero-divider" />
       <div className="hp-strip-section">
         <div className="strip-label">Recent entries</div>
         {loading ? (
           <div className="strip-skeleton">
-            {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="strip-skeleton-tile" />
-            ))}
+            {Array.from({ length: 8 }).map((_, i) => <div key={i} className="strip-skeleton-tile" />)}
           </div>
         ) : (
-          <AlbumStrip entries={entries} />
+          <AlbumStrip entries={entries} onTileClick={setModalSlug} />
         )}
-
         <div className="hp-cta">
-          <Link href="/archive" className="hp-cta-btn hp-cta-btn--filled">
-            See full archive →
-          </Link>
-          <Link href="/submit" className="hp-cta-btn hp-cta-btn--outline">
-            Submit an album
-          </Link>
+          <Link href="/archive" className="hp-cta-btn hp-cta-btn--filled">See full archive →</Link>
+          <Link href="/submit" className="hp-cta-btn hp-cta-btn--outline">Submit an album</Link>
         </div>
       </div>
+
+      {modalSlug && (
+        <EntryModal slug={modalSlug} onClose={() => setModalSlug(null)} />
+      )}
     </div>
   );
 }
