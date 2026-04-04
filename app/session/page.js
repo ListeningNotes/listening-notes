@@ -417,7 +417,7 @@ export default function Session() {
                     e.target.style.height = e.target.scrollHeight + 'px';
                   }}
                   placeholder="How does this album feel as a whole? Themes, impressions, context..."
-                  style={{ fontFamily:MONO, fontSize:12.5, lineHeight:1.9, color:'#1a1916', background:'transparent', border:'none', outline:'none', resize:'none', width:'100%', minHeight:160, overflowY:'hidden', display:'block' }}
+                  style={{ fontFamily:MONO, fontSize:12.5, lineHeight:1.9, color:'#1a1916', background:'transparent', border:'none', outline:'none', resize:'none', width:'100%', minHeight:120, overflow:'hidden', display:'block', boxSizing:'border-box' }}
                 />
               </div>
 
