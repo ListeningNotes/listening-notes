@@ -367,7 +367,7 @@ export default function Session() {
             </div>
           </div>
 
-          <div style={{ width:'50%', display:'flex', flexDirection:'column', overflow:'hidden', background:'rgba(255,255,255,0.6)', backdropFilter:'blur(8px)' }}>
+          <div style={{ width:'50%', display:'flex', flexDirection:'column', background:'rgba(255,255,255,0.6)', backdropFilter:'blur(8px)' }}>
 
             <div style={{ padding:'10px 22px', borderBottom:border, display:'flex', alignItems:'center', gap:10, flexShrink:0 }}>
               <span style={labelStyle}>Session Notes</span>
@@ -437,8 +437,18 @@ export default function Session() {
                         </span>
                         <StarRating value={trackRatings[i] || 0} onChange={v => setTrackRatings(prev => ({ ...prev, [i]: v }))} size={13} />
                       </div>
-                      <input value={trackNotes[i] || ''} onChange={e => setTrackNotes(prev => ({ ...prev, [i]: e.target.value }))}
-                        placeholder="notes..." className="sn-track-input" />
+                      <textarea
+                        value={trackNotes[i] || ''}
+                        onChange={e => {
+                          setTrackNotes(prev => ({ ...prev, [i]: e.target.value }));
+                          e.target.style.height = 'auto';
+                          e.target.style.height = e.target.scrollHeight + 'px';
+                        }}
+                        placeholder="notes..."
+                        className="sn-track-input"
+                        rows={1}
+                        style={{ resize:'none', overflow:'hidden', display:'block' }}
+                      />
                     </div>
                   ))}
                 </div>
