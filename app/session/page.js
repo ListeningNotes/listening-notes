@@ -4,43 +4,52 @@ import { useState, useEffect, useRef } from 'react';
 
 const PASSWORD = 'listeningnotes';
 
-// ── Half-star rating component ──────────────────────────────────────────
-function StarRating({ value, onChange, small = false }) {
+const C = {
+  bg:      '#0e0e0e',
+  bg2:     '#161616',
+  surface: '#1c1c1c',
+  border:  '#2a2a2a',
+  border2: '#1e1e1e',
+  text:    '#e8e4dc',
+  muted:   '#555',
+  muted2:  '#9a9590',
+  accent:  '#c8d47a',
+  gold:    '#E8B84B',
+};
+
+const FONT  = "'DM Sans', system-ui, sans-serif";
+const MONO  = "'DM Mono', 'Courier New', monospace";
+const SERIF = "'DM Serif Display', Georgia, serif";
+
+const label = (extra = {}) => ({
+  fontFamily: MONO, fontSize: 10, letterSpacing: '0.14em',
+  textTransform: 'uppercase', color: '#555', ...extra,
+});
+
+function StarRating({ value, onChange, size = 18 }) {
   const [hover, setHover] = useState(null);
-  const size = small ? 'text-base' : 'text-xl';
   const display = hover ?? value;
-
   return (
-    <div className="flex gap-0.5" onMouseLeave={() => setHover(null)}>
-      {[1, 2, 3, 4, 5].map(n => {
-        const full = n <= display;
-        const half = !full && display >= n - 0.5 && display < n;
-
+    <div style={{ display: 'flex', gap: 2 }} onMouseLeave={() => setHover(null)}>
+      {[1,2,3,4,5].map(n => {
+        const filled = n <= display;
+        const half = !filled && display >= n - 0.5 && display < n;
         return (
-          <span key={n} className={`relative cursor-pointer ${size}`}
-            style={{ width: small ? '1.1em' : '1.3em', display: 'inline-block' }}>
-            {/* left half hitbox */}
-            <span className="absolute inset-0 w-1/2 z-10"
+          <span key={n} style={{ position: 'relative', width: size * 1.2, height: size, display: 'inline-block', cursor: 'pointer' }}>
+            <span style={{ position: 'absolute', inset: 0, width: '50%', zIndex: 10 }}
               onMouseEnter={() => setHover(n - 0.5)}
               onClick={() => onChange(value === n - 0.5 ? 0 : n - 0.5)} />
-            {/* right half hitbox */}
-            <span className="absolute inset-0 left-1/2 w-1/2 z-10"
+            <span style={{ position: 'absolute', inset: 0, left: '50%', width: '50%', zIndex: 10 }}
               onMouseEnter={() => setHover(n)}
               onClick={() => onChange(value === n ? 0 : n)} />
-            {/* visual */}
-            {full && <span className="text-[#c8d47a]">★</span>}
+            {filled && <span style={{ color: '#E8B84B', fontSize: size }}>★</span>}
             {half && (
               <span style={{ position: 'relative', display: 'inline-block' }}>
-                {/* grey background star */}
-                <span className="text-[#333]">★</span>
-                {/* yellow left half clipped over it */}
-                <span style={{
-                  position: 'absolute', left: 0, top: 0,
-                  width: '50%', overflow: 'hidden', display: 'inline-block'
-                }} className="text-[#c8d47a]">★</span>
+                <span style={{ color: '#2a2a2a', fontSize: size }}>★</span>
+                <span style={{ position: 'absolute', left: 0, top: 0, width: '50%', overflow: 'hidden', display: 'inline-block', color: '#E8B84B', fontSize: size }}>★</span>
               </span>
             )}
-            {!full && !half && <span className="text-[#333]">★</span>}
+            {!filled && !half && <span style={{ color: '#2a2a2a', fontSize: size }}>★</span>}
           </span>
         );
       })}
@@ -48,7 +57,6 @@ function StarRating({ value, onChange, small = false }) {
   );
 }
 
-// ── MusicBrainz tracklist fetch ─────────────────────────────────────────
 async function fetchTracklist(albumName, artistName, year) {
   try {
     const query = encodeURIComponent(`release:"${albumName}" AND artist:"${artistName}"`);
@@ -59,11 +67,8 @@ async function fetchTracklist(albumName, artistName, year) {
     const searchData = await searchRes.json();
     const releases = searchData.releases || [];
     if (!releases.length) return null;
-
-    // Score releases — prefer official, prefer year match
     const yearNum = year ? parseInt(String(year), 10) : NaN;
     let best = null, bestScore = -Infinity;
-
     for (const r of releases) {
       let score = r.score || 0;
       const releaseYear = parseInt((r.date || '').slice(0, 4), 10);
@@ -72,36 +77,22 @@ async function fetchTracklist(albumName, artistName, year) {
       if ((r['release-group']?.['primary-type'] || '').toLowerCase() === 'album') score += 10;
       if (score > bestScore) { bestScore = score; best = r; }
     }
-
     if (!best) return null;
-
-    // Fetch full release with recordings
     const detailRes = await fetch(
       `https://musicbrainz.org/ws/2/release/${best.id}?inc=recordings&fmt=json`,
       { headers: { 'User-Agent': 'ListeningNotes/1.0 (listeningnotes.blog)' } }
     );
     const detail = await detailRes.json();
-    const media = detail.media || [];
-
-    // Flatten all tracks across all discs
     const tracks = [];
-    for (const disc of media) {
+    for (const disc of (detail.media || [])) {
       for (const t of (disc.tracks || [])) {
-        tracks.push({
-  number: tracks.length + 1,
-  title: t.title || t.recording?.title || 'Unknown',
-  duration: t.length ? Math.round(t.length / 1000) : null,
-});
+        tracks.push({ number: tracks.length + 1, title: t.title || t.recording?.title || 'Unknown', duration: t.length ? Math.round(t.length / 1000) : null });
       }
     }
     return tracks.length ? tracks : null;
-  } catch (err) {
-    console.log('Tracklist fetch failed:', err);
-    return null;
-  }
+  } catch { return null; }
 }
 
-// ── iTunes art fetch ────────────────────────────────────────────────────
 async function fetchAlbumArtUrl(albumName, artistName, year) {
   try {
     const norm = s => String(s || '').toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, ' ').trim();
@@ -139,31 +130,25 @@ async function fetchAlbumArtUrl(albumName, artistName, year) {
   } catch { return ''; }
 }
 
-// ── Format seconds to m:ss ──────────────────────────────────────────────
 function fmtDuration(s) {
   if (!s) return '';
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 }
-// ────────────────────────────────────────────────────────────────────────
+function fmtTime(s) {
+  return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+}
+
 const LOADING_PHRASES = [
-  'Searching the archive...',
-  'Pulling press records...',
-  'Checking release dates...',
-  'Reading liner notes...',
-  'Cross-referencing labels...',
-  'Scanning chart history...',
-  'Digging through the stacks...',
-  'Consulting the canon...',
-  'Reviewing session logs...',
-  'Gathering context...',
+  'Searching the archive...','Pulling press records...','Checking release dates...',
+  'Reading liner notes...','Cross-referencing labels...','Scanning chart history...',
+  'Digging through the stacks...','Consulting the canon...','Reviewing session logs...','Gathering context...',
 ];
-// ────────────────────────────────────────────────────────────────────────
+
 export default function Session() {
   const [authed, setAuthed] = useState(false);
   const [pw, setPw] = useState('');
   const [pwError, setPwError] = useState(false);
 
-  // Album / research
   const [albumInput, setAlbumInput] = useState('');
   const [artistInput, setArtistInput] = useState('');
   const [brief, setBrief] = useState(null);
@@ -171,17 +156,12 @@ export default function Session() {
   const [briefError, setBriefError] = useState('');
   const [loadingFactIndex, setLoadingFactIndex] = useState(0);
 
-  // Art
   const [albumArt, setAlbumArt] = useState('');
-  const [artCollapsed, setArtCollapsed] = useState(false);
-
-  // Tracklist
-  const [tracks, setTracks] = useState(null); // null = not loaded, [] = not found
+  const [tracks, setTracks] = useState(null);
   const [tracksLoading, setTracksLoading] = useState(false);
-  const [trackNotes, setTrackNotes] = useState({});   // { index: string }
-  const [trackRatings, setTrackRatings] = useState({}); // { index: number }
+  const [trackNotes, setTrackNotes] = useState({});
+  const [trackRatings, setTrackRatings] = useState({});
 
-  // Notes / metadata
   const [overallNotes, setOverallNotes] = useState('');
   const [rating, setRating] = useState(0);
   const [Masterpiece, setMasterpiece] = useState(false);
@@ -190,20 +170,18 @@ export default function Session() {
   const [relationship, setRelationship] = useState('');
   const [horizonBar, setHorizonBar] = useState(true);
 
-  // Output
   const [formatting, setFormatting] = useState(false);
   const [output, setOutput] = useState(null);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [scoreCheckOpen, setScoreCheckOpen] = useState(false);
 
-  // Timer
   const [elapsed, setElapsed] = useState(0);
   const timerRef = useRef(null);
+  const notesRef = useRef(null);
 
   useEffect(() => {
-    const stored = localStorage.getItem('ln_session_auth');
-    if (stored === 'true') setAuthed(true);
+    if (localStorage.getItem('ln_session_auth') === 'true') setAuthed(true);
   }, []);
 
   useEffect(() => {
@@ -211,74 +189,52 @@ export default function Session() {
       timerRef.current = setInterval(() => setElapsed(e => e + 1), 1000);
     }
   }, [brief]);
-  
-  useEffect(() => {
-  if (!briefLoading) return;
-  setLoadingFactIndex(0);
-  const interval = setInterval(() => {
-    setLoadingFactIndex(i => (i + 1) % LOADING_PHRASES.length);
-  }, 1800);
-  return () => clearInterval(interval);
-}, [briefLoading]);
 
-  function formatTime(s) {
-    return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
-  }
+  useEffect(() => {
+    if (!briefLoading) return;
+    setLoadingFactIndex(0);
+    const interval = setInterval(() => setLoadingFactIndex(i => (i + 1) % LOADING_PHRASES.length), 1800);
+    return () => clearInterval(interval);
+  }, [briefLoading]);
+
+  useEffect(() => {
+    if (notesRef.current) {
+      notesRef.current.style.height = 'auto';
+      notesRef.current.style.height = Math.max(120, notesRef.current.scrollHeight) + 'px';
+    }
+  }, [overallNotes]);
 
   function handleAuth() {
-    if (pw === PASSWORD) {
-      setAuthed(true);
-      localStorage.setItem('ln_session_auth', 'true');
-    } else {
-      setPwError(true);
-    }
+    if (pw === PASSWORD) { setAuthed(true); localStorage.setItem('ln_session_auth', 'true'); }
+    else setPwError(true);
   }
 
-  // Score Check — average of all rated tracks
   const ratedTracks = Object.values(trackRatings).filter(v => v > 0);
   const scoreCheckAvg = ratedTracks.length
-    ? (ratedTracks.reduce((a, b) => a + b, 0) / ratedTracks.length).toFixed(2)
-    : null;
+    ? (ratedTracks.reduce((a, b) => a + b, 0) / ratedTracks.length).toFixed(2) : null;
 
   async function doResearch() {
     if (!albumInput.trim()) return;
-    setBriefLoading(true);
-    setBriefError('');
-    setBrief(null);
-    setTracks(null);
-    setTrackNotes({});
-    setTrackRatings({});
-    setAlbumArt('');
-    setArtCollapsed(false);
-    setElapsed(0);
+    setBriefLoading(true); setBriefError(''); setBrief(null);
+    setTracks(null); setTrackNotes({}); setTrackRatings({});
+    setAlbumArt(''); setElapsed(0); setOverallNotes('');
+    setRating(0); setMasterpiece(false); setFavorite(false);
+    setSaved(false); setOutput(null);
     if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
-
     try {
       const res = await fetch('/api/research', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ album: albumInput, artist: artistInput })
       });
       const data = await res.json();
       if (data.error) throw new Error(data.error);
       setBrief(data);
-
-      // Fire art + tracklist in parallel
-      fetchAlbumArtUrl(data.album, data.artist, data.year).then(url => {
-        if (url) setAlbumArt(url);
-      });
-
+      fetchAlbumArtUrl(data.album, data.artist, data.year).then(url => { if (url) setAlbumArt(url); });
       setTracksLoading(true);
-      fetchTracklist(data.album, data.artist, data.year).then(t => {
-        setTracks(t || []);
-        setTracksLoading(false);
-      });
-
+      fetchTracklist(data.album, data.artist, data.year).then(t => { setTracks(t || []); setTracksLoading(false); });
     } catch (err) {
-      setBriefError(err.message || 'Research failed. Try again.');
-    } finally {
-      setBriefLoading(false);
-    }
+      setBriefError(err.message || 'Research failed.');
+    } finally { setBriefLoading(false); }
   }
 
   async function doFormat() {
@@ -286,23 +242,14 @@ export default function Session() {
     setFormatting(true);
     try {
       const res = await fetch('/api/format', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          brief, notes: overallNotes, rating, Masterpiece,
-          Favorite, entryType, relationship, horizonBar,
-          trackNotes, trackRatings,
-          tracks: tracks || []
-        })
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ brief, notes: overallNotes, rating, Masterpiece, Favorite, entryType, relationship, horizonBar, trackNotes, trackRatings, tracks: tracks || [] })
       });
       const data = await res.json();
       if (data.error) throw new Error(data.error);
       setOutput(data);
-    } catch (err) {
-      alert('Formatting failed: ' + err.message);
-    } finally {
-      setFormatting(false);
-    }
+    } catch (err) { alert('Formatting failed: ' + err.message); }
+    finally { setFormatting(false); }
   }
 
   async function doSave() {
@@ -310,56 +257,40 @@ export default function Session() {
     setSaving(true);
     try {
       const res = await fetch('/api/entries', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          album: brief.album,
-          artist: brief.artist,
-          year: brief.year,
+          album: brief.album, artist: brief.artist, year: brief.year,
           entry_type: entryType || 'Personal Library',
           relationship: relationship || '',
           rating: Masterpiece ? 'Masterpiece' : (rating ? rating + ' stars' : ''),
-          Favorite,
-          background: output.background,
-          notes: output.notes_prose,
-          tags: output.tags || [],
-          horizon: output.horizon || '',
-          album_art: albumArt,
-          post_link: ''
+          Favorite, background: output.background, notes: output.notes_prose,
+          tags: output.tags || [], horizon: output.horizon || '',
+          album_art: albumArt, post_link: ''
         })
       });
       const data = await res.json();
       if (data.error) throw new Error(data.error);
       setSaved(true);
-    } catch (err) {
-      alert('Save failed: ' + err.message);
-    } finally {
-      setSaving(false);
-    }
+    } catch (err) { alert('Save failed: ' + err.message); }
+    finally { setSaving(false); }
   }
 
-  // ── PASSWORD GATE ───────────────────────────────────────────────────
   if (!authed) {
     return (
-      <div className="min-h-screen bg-[#0e0e0e] flex items-center justify-center p-6">
-        <div className="bg-[#161616] border border-[#2a2a2a] rounded-xl p-10 w-full max-w-sm flex flex-col gap-6">
-          <h1 className="text-2xl" style={{ fontFamily: 'var(--font-serif)' }}>
-            listening <em className="text-[#c8d47a]">notes</em>
-          </h1>
-          <p className="text-xs text-[#555] uppercase tracking-widest" style={{ fontFamily: 'var(--font-mono)' }}>session access</p>
-          <input
-            type="password"
-            placeholder="password"
-            value={pw}
+      <div style={{ minHeight: '100vh', background: '#0e0e0e', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, fontFamily: FONT }}>
+        <div style={{ background: '#161616', border: '1px solid #2a2a2a', borderRadius: 16, padding: 40, width: '100%', maxWidth: 360, display: 'flex', flexDirection: 'column', gap: 20 }}>
+          <div>
+            <div style={{ fontFamily: SERIF, fontSize: 22, color: '#e8e4dc' }}>listening notes</div>
+            <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#555', marginTop: 4 }}>session access</div>
+          </div>
+          <input type="password" placeholder="password" value={pw}
             onChange={e => { setPw(e.target.value); setPwError(false); }}
             onKeyDown={e => e.key === 'Enter' && handleAuth()}
-            className="bg-[#1e1e1e] border border-[#2a2a2a] rounded-lg px-4 py-3 text-sm outline-none focus:border-[#c8d47a] text-[#e8e4dc]"
-            style={{ fontFamily: 'var(--font-mono)' }}
+            style={{ background: '#1c1c1c', border: `1px solid ${pwError ? '#ef4444' : '#2a2a2a'}`, borderRadius: 8, padding: '12px 16px', fontFamily: MONO, fontSize: 13, color: '#e8e4dc', outline: 'none' }}
           />
-          {pwError && <p className="text-xs text-red-400" style={{ fontFamily: 'var(--font-mono)' }}>incorrect password</p>}
+          {pwError && <div style={{ fontFamily: MONO, fontSize: 11, color: '#ef4444' }}>incorrect password</div>}
           <button onClick={handleAuth}
-            className="bg-[#c8d47a] text-[#0e0e0e] rounded-lg py-3 text-xs uppercase tracking-widest font-medium cursor-pointer"
-            style={{ fontFamily: 'var(--font-mono)' }}>
+            style={{ background: '#c8d47a', color: '#0e0e0e', borderRadius: 8, padding: '12px 0', fontFamily: MONO, fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase', cursor: 'pointer', border: 'none', fontWeight: 500 }}>
             Enter →
           </button>
         </div>
@@ -367,336 +298,276 @@ export default function Session() {
     );
   }
 
-  // ── MAIN SESSION ────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-[#0e0e0e] text-[#e8e4dc] flex flex-col">
+    <>
+      <style>{`
+        @keyframes sn-fade { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:translateY(0); } }
+        @keyframes sn-pulse { 0%,100%{opacity:0.4} 50%{opacity:1} }
+        .sn-skel { background:#1c1c1c; border-radius:3px; animation:sn-pulse 1.6s ease-in-out infinite; }
+        .sn-row:hover { background:rgba(255,255,255,0.02); }
+        .sn-topbar-input { background:#1c1c1c; border:1px solid #2a2a2a; border-radius:8px; padding:8px 14px; font-family:'DM Mono','Courier New',monospace; font-size:12px; color:#e8e4dc; outline:none; transition:border-color 0.15s; }
+        .sn-topbar-input:focus { border-color:#c8d47a; }
+        .sn-topbar-input::placeholder { color:#555; }
+        .sn-select { background:#1c1c1c; border:1px solid #2a2a2a; border-radius:6px; padding:7px 10px; font-family:'DM Mono','Courier New',monospace; font-size:11px; letter-spacing:0.06em; color:#9a9590; outline:none; cursor:pointer; }
+        .sn-select:focus { border-color:#555; }
+        .sn-check { accent-color:#c8d47a; cursor:pointer; width:13px; height:13px; }
+        .sn-textarea { font-family:'DM Mono','Courier New',monospace; font-size:12px; line-height:1.9; color:#e8e4dc; background:transparent; border:none; outline:none; resize:none; width:100%; min-height:120px; }
+        .sn-textarea::placeholder { color:#555; }
+        .sn-track-input { font-family:'DM Mono','Courier New',monospace; font-size:11px; color:#9a9590; background:transparent; border:none; border-bottom:1px solid #1e1e1e; outline:none; width:100%; padding:5px 0; transition:border-color 0.15s; }
+        .sn-track-input:focus { border-color:#555; color:#e8e4dc; }
+        .sn-track-input::placeholder { color:#555; opacity:0.5; }
+        .sn-btn { transition:opacity 0.15s, transform 0.1s; }
+        .sn-btn:hover:not(:disabled) { opacity:0.85; transform:translateY(-1px); }
+        .sn-btn:disabled { opacity:0.3; cursor:not-allowed; }
+        ::-webkit-scrollbar { width:4px; background:transparent; }
+        ::-webkit-scrollbar-thumb { background:#2a2a2a; border-radius:99px; }
+      `}</style>
 
-      {/* Topbar */}
-      <div className="flex items-center gap-4 px-6 py-4 border-b border-[#2a2a2a] bg-[#161616]">
-        <span className="text-lg" style={{ fontFamily: 'var(--font-serif)' }}>
-          listening <em className="text-[#c8d47a]">notes</em>
-        </span>
-        <span className="text-[#2a2a2a]">|</span>
-        <span className="text-xs text-[#555] uppercase tracking-widest" style={{ fontFamily: 'var(--font-mono)' }}>session</span>
-        {brief && (
-          <>
-            <span className="text-[#2a2a2a]">|</span>
-            <span className="text-xs text-[#555]" style={{ fontFamily: 'var(--font-mono)' }}>{formatTime(elapsed)} elapsed</span>
-          </>
-        )}
-        <div className="ml-auto flex gap-3">
-          <input value={albumInput} onChange={e => setAlbumInput(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && doResearch()}
-            placeholder="Album title..."
-            className="bg-[#1e1e1e] border border-[#2a2a2a] rounded-lg px-3 py-2 text-xs outline-none focus:border-[#c8d47a] text-[#e8e4dc] w-48"
-            style={{ fontFamily: 'var(--font-mono)' }} />
-          <input value={artistInput} onChange={e => setArtistInput(e.target.value)}
-            onKeyDown={e => e.key === 'Enter' && doResearch()}
-            placeholder="Artist..."
-            className="bg-[#1e1e1e] border border-[#2a2a2a] rounded-lg px-3 py-2 text-xs outline-none focus:border-[#c8d47a] text-[#e8e4dc] w-36"
-            style={{ fontFamily: 'var(--font-mono)' }} />
-          <button onClick={doResearch} disabled={briefLoading}
-            className="bg-[#c8d47a] text-[#0e0e0e] rounded-lg px-4 py-2 text-xs uppercase tracking-widest font-medium cursor-pointer disabled:opacity-40"
-            style={{ fontFamily: 'var(--font-mono)' }}>
-            {briefLoading ? '...' : 'Research →'}
-          </button>
-        </div>
-      </div>
+      <div style={{ minHeight:'100vh', background:'#0e0e0e', color:'#e8e4dc', display:'flex', flexDirection:'column', fontFamily:FONT }}>
 
-      {/* Main panels */}
-      <div className="flex flex-1 overflow-hidden">
-
-        {/* ── LEFT: Brief panel ── */}
-        <div className="w-1/2 border-r border-[#2a2a2a] flex flex-col overflow-hidden">
-          <div className="px-5 py-3 border-b border-[#2a2a2a] flex items-center justify-between">
-            <span className="text-xs text-[#555] uppercase tracking-widest" style={{ fontFamily: 'var(--font-mono)' }}>Album Briefing</span>
+        {/* Topbar */}
+        <div style={{ display:'flex', alignItems:'center', gap:16, padding:'14px 24px', borderBottom:'1px solid #2a2a2a', background:'#161616', flexShrink:0 }}>
+          <span style={{ fontFamily:SERIF, fontSize:18, color:'#e8e4dc', flexShrink:0 }}>listening notes</span>
+          <span style={{ color:'#2a2a2a' }}>·</span>
+          <span style={{ fontFamily:MONO, fontSize:10, letterSpacing:'0.14em', textTransform:'uppercase', color:'#555' }}>session</span>
+          {brief && (<>
+            <span style={{ color:'#2a2a2a' }}>·</span>
+            <span style={{ fontFamily:MONO, fontSize:11, color:'#555' }}>{fmtTime(elapsed)}</span>
+          </>)}
+          <div style={{ marginLeft:'auto', display:'flex', gap:10, alignItems:'center' }}>
+            <input value={albumInput} onChange={e => setAlbumInput(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && doResearch()}
+              placeholder="Album title..." className="sn-topbar-input" style={{ width:180 }} />
+            <input value={artistInput} onChange={e => setArtistInput(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && doResearch()}
+              placeholder="Artist..." className="sn-topbar-input" style={{ width:140 }} />
+            <button onClick={doResearch} disabled={briefLoading || !albumInput.trim()} className="sn-btn"
+              style={{ background:'#c8d47a', color:'#0e0e0e', borderRadius:8, padding:'8px 18px', fontFamily:MONO, fontSize:11, letterSpacing:'0.1em', textTransform:'uppercase', border:'none', cursor:'pointer', fontWeight:500, flexShrink:0 }}>
+              {briefLoading ? '···' : 'Research →'}
+            </button>
           </div>
+        </div>
 
-          <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-5">
+        {/* Two panels */}
+        <div style={{ display:'flex', flex:1, overflow:'hidden' }}>
 
-            {/* Empty state */}
-            {!brief && !briefLoading && !briefError && (
-              <p className="text-xs text-[#555] text-center mt-20" style={{ fontFamily: 'var(--font-mono)' }}>
-                Enter an album above and click Research to pull context before you listen.
-              </p>
-            )}
+          {/* LEFT: Brief */}
+          <div style={{ width:'50%', borderRight:'1px solid #2a2a2a', display:'flex', flexDirection:'column', overflow:'hidden' }}>
+            <div style={{ padding:'10px 20px', borderBottom:'1px solid #2a2a2a', flexShrink:0 }}>
+              <span style={{ fontFamily:MONO, fontSize:10, letterSpacing:'0.14em', textTransform:'uppercase', color:'#555' }}>Album Briefing</span>
+            </div>
+            <div style={{ flex:1, overflowY:'auto', padding:20, display:'flex', flexDirection:'column', gap:20 }}>
 
-            {/* Loading skeleton */}
-            {briefLoading && (
-  <div className="flex flex-col gap-6 mt-8 px-2">
-    <p
-      key={loadingFactIndex}
-      className="text-xs text-[#555] text-center animate-pulse"
-      style={{
-        fontFamily: 'var(--font-mono)',
-        animation: 'fadeIn 0.4s ease',
-      }}>
-      {LOADING_PHRASES[loadingFactIndex]}
-    </p>
-    <div className="flex flex-col gap-3">
-      {[100, 70, 100, 50, 100, 80].map((w, i) => (
-        <div key={i} className="h-2.5 rounded bg-[#1e1e1e] animate-pulse" style={{ width: `${w}%` }} />
-      ))}
-    </div>
-  </div>
-)}
+              {!brief && !briefLoading && !briefError && (
+                <div style={{ textAlign:'center', paddingTop:80, fontFamily:MONO, fontSize:11, color:'#555', lineHeight:2 }}>
+                  Enter an album above<br/>and click Research.
+                </div>
+              )}
 
-            {briefError && (
-              <p className="text-xs text-red-400 mt-4" style={{ fontFamily: 'var(--font-mono)' }}>{briefError}</p>
-            )}
+              {briefLoading && (
+                <div style={{ display:'flex', flexDirection:'column', gap:20, paddingTop:40 }}>
+                  <div key={loadingFactIndex} style={{ fontFamily:MONO, fontSize:11, color:'#555', textAlign:'center', animation:'sn-fade 0.4s ease forwards' }}>
+                    {LOADING_PHRASES[loadingFactIndex]}
+                  </div>
+                  <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+                    {[80,60,90,45,80,65].map((w,i) => (
+                      <div key={i} className="sn-skel" style={{ height:9, width:w+'%', animationDelay:i*0.1+'s' }} />
+                    ))}
+                  </div>
+                </div>
+              )}
 
-            {brief && (
-              <>
-                {/* Art + metadata side by side */}
-<div className="flex gap-4 items-start">
-  {albumArt && (
-    <img
-      src={albumArt}
-      alt={brief.album}
-      className="w-24 h-24 object-cover rounded-lg flex-shrink-0"
-    />
-  )}
-  <div className="flex flex-col gap-2 min-w-0">
-    <h2 className="text-xl leading-tight" style={{ fontFamily: 'var(--font-serif)' }}>{brief.album}</h2>
-    <p className="text-xs text-[#c8d47a]" style={{ fontFamily: 'var(--font-mono)' }}>{brief.artist}</p>
-    <div className="flex flex-wrap gap-2 mt-1">
-      {[brief.year, brief.genre, brief.label, brief.debut ? '⬖ debut' : null].filter(Boolean).map((t, i) => (
-        <span key={i} className="text-xs border border-[#2a2a2a] px-2 py-0.5 rounded text-[#9a9590]"
-          style={{ fontFamily: 'var(--font-mono)' }}>{t}</span>
-      ))}
-    </div>
-  </div>
-</div>
+              {briefError && <div style={{ fontFamily:MONO, fontSize:11, color:'#ef4444', paddingTop:20 }}>{briefError}</div>}
 
-                {/* Briefing sections */}
-                {[['Context', brief.context], ['Production', brief.production], ['Reception', brief.reception], ['Listen For', brief.listen_for]].map(([label, val]) => val ? (
-                  <div key={label}>
-                    <p className="text-xs text-[#555] uppercase tracking-widest mb-2 pb-1 border-b border-[#2a2a2a]" style={{ fontFamily: 'var(--font-mono)' }}>{label}</p>
-                    <p className="text-xs leading-relaxed text-[#9a9590]">{val}</p>
+              {brief && (<>
+                {/* Art + meta */}
+                <div style={{ display:'flex', gap:16, alignItems:'flex-start' }}>
+                  {albumArt
+                    ? <img src={albumArt} alt={brief.album} style={{ width:88, height:88, borderRadius:8, objectFit:'cover', flexShrink:0, boxShadow:'0 8px 24px rgba(0,0,0,0.5)' }} />
+                    : <div style={{ width:88, height:88, borderRadius:8, background:'#1c1c1c', flexShrink:0, border:'1px solid #2a2a2a' }} />
+                  }
+                  <div style={{ minWidth:0 }}>
+                    <div style={{ fontFamily:SERIF, fontSize:20, color:'#e8e4dc', lineHeight:1.1, marginBottom:4 }}>{brief.album}</div>
+                    <div style={{ fontFamily:MONO, fontSize:11, color:'#c8d47a', marginBottom:10 }}>{brief.artist}</div>
+                    <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
+                      {[brief.year, brief.genre, brief.label, brief.debut ? '⬖ debut' : null].filter(Boolean).map((t,i) => (
+                        <span key={i} style={{ fontFamily:MONO, fontSize:10, color:'#9a9590', border:'1px solid #2a2a2a', padding:'2px 8px', borderRadius:4 }}>{t}</span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+
+                {[['Context',brief.context],['Production',brief.production],['Reception',brief.reception],['Listen For',brief.listen_for]].map(([l,val]) => val ? (
+                  <div key={l}>
+                    <div style={{ fontFamily:MONO, fontSize:10, letterSpacing:'0.14em', textTransform:'uppercase', color:'#555', marginBottom:8, paddingBottom:6, borderBottom:'1px solid #2a2a2a' }}>{l}</div>
+                    <div style={{ fontSize:12, lineHeight:1.75, color:'#9a9590' }}>{val}</div>
                   </div>
                 ) : null)}
 
                 {brief.key_facts?.length > 0 && (
                   <div>
-                    <p className="text-xs text-[#555] uppercase tracking-widest mb-2 pb-1 border-b border-[#2a2a2a]" style={{ fontFamily: 'var(--font-mono)' }}>Key Facts</p>
-                    {brief.key_facts.map((f, i) => (
-                      <p key={i} className="text-xs text-[#9a9590] mb-1">— {f}</p>
+                    <div style={{ fontFamily:MONO, fontSize:10, letterSpacing:'0.14em', textTransform:'uppercase', color:'#555', marginBottom:8, paddingBottom:6, borderBottom:'1px solid #2a2a2a' }}>Key Facts</div>
+                    {brief.key_facts.map((f,i) => (
+                      <div key={i} style={{ fontSize:12, color:'#9a9590', marginBottom:6 }}>— {f}</div>
                     ))}
                   </div>
                 )}
 
-                {/* Tracklist */}
                 <div>
-                  <p className="text-xs text-[#555] uppercase tracking-widest mb-2 pb-1 border-b border-[#2a2a2a]" style={{ fontFamily: 'var(--font-mono)' }}>
-                    Tracklist
-                    {tracksLoading && <span className="ml-2 opacity-40">loading...</span>}
-                  </p>
+                  <div style={{ fontFamily:MONO, fontSize:10, letterSpacing:'0.14em', textTransform:'uppercase', color:'#555', marginBottom:8, paddingBottom:6, borderBottom:'1px solid #2a2a2a' }}>
+                    Tracklist {tracksLoading && <span style={{ opacity:0.4 }}>· loading...</span>}
+                  </div>
                   {tracksLoading && (
-                    <div className="flex flex-col gap-2">
-                      {[...Array(8)].map((_, i) => (
-                        <div key={i} className="h-2.5 rounded bg-[#1e1e1e] animate-pulse" style={{ width: `${60 + (i % 3) * 15}%` }} />
-                      ))}
+                    <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+                      {[...Array(8)].map((_,i) => <div key={i} className="sn-skel" style={{ height:9, width:(55+(i%3)*15)+'%' }} />)}
                     </div>
                   )}
-                  {!tracksLoading && tracks && tracks.length === 0 && (
-                    <p className="text-xs text-[#555]" style={{ fontFamily: 'var(--font-mono)' }}>Tracklist not found.</p>
+                  {!tracksLoading && tracks?.length === 0 && (
+                    <div style={{ fontFamily:MONO, fontSize:11, color:'#555' }}>Tracklist not found.</div>
                   )}
-                  {!tracksLoading && tracks && tracks.length > 0 && (
-                    <div className="flex flex-col gap-1">
-                      {tracks.map((t, i) => (
-                        <div key={i} className="flex items-center justify-between text-xs text-[#9a9590] py-0.5">
-                          <span style={{ fontFamily: 'var(--font-mono)' }}>
-                            <span className="text-[#555] mr-2">{t.number}.</span>
-                            {t.title}
-                          </span>
-                          {t.duration && (
-                            <span className="text-[#444] ml-2 flex-shrink-0" style={{ fontFamily: 'var(--font-mono)' }}>{fmtDuration(t.duration)}</span>
-                          )}
+                  {!tracksLoading && tracks?.length > 0 && (
+                    <div style={{ display:'flex', flexDirection:'column', gap:2 }}>
+                      {tracks.map((t,i) => (
+                        <div key={i} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'3px 0', fontFamily:MONO, fontSize:11, color:'#9a9590' }}>
+                          <span><span style={{ color:'#555', marginRight:8 }}>{t.number}.</span>{t.title}</span>
+                          {t.duration && <span style={{ color:'#2a2a2a', flexShrink:0, marginLeft:8 }}>{fmtDuration(t.duration)}</span>}
                         </div>
                       ))}
                     </div>
                   )}
                 </div>
-              </>
-            )}
-          </div>
-        </div>
-
-        {/* ── RIGHT: Notes panel ── */}
-        <div className="w-1/2 flex flex-col overflow-hidden">
-
-          {/* Controls bar */}
-          <div className="px-5 py-3 border-b border-[#2a2a2a] flex items-center gap-4 flex-wrap">
-            <span className="text-xs text-[#555] uppercase tracking-widest" style={{ fontFamily: 'var(--font-mono)' }}>Session Notes</span>
-
-            <select value={entryType} onChange={e => setEntryType(e.target.value)}
-              className="bg-[#1e1e1e] border border-[#2a2a2a] rounded px-2 py-1 text-xs text-[#e8e4dc] outline-none ml-auto"
-              style={{ fontFamily: 'var(--font-mono)' }}>
-              <option value="">— Type</option>
-              <option value="Personal Library">Personal Library</option>
-              <option value="Submission">Submission</option>
-            </select>
-
-            <select value={relationship} onChange={e => setRelationship(e.target.value)}
-              className="bg-[#1e1e1e] border border-[#2a2a2a] rounded px-2 py-1 text-xs text-[#e8e4dc] outline-none"
-              style={{ fontFamily: 'var(--font-mono)' }}>
-              <option value="">— Relationship</option>
-              <option>First Listen</option>
-              <option>Revisit</option>
-              <option>Formative</option>
-              <option>Study</option>
-              <option>Submission</option>
-            </select>
+              </>)}
+            </div>
           </div>
 
-          {/* Rating bar */}
-          <div className="px-5 py-2 border-b border-[#2a2a2a] flex items-center gap-5 flex-wrap">
-            <StarRating value={rating} onChange={setRating} />
-            <label className="flex items-center gap-2 text-xs text-[#9a9590] cursor-pointer" style={{ fontFamily: 'var(--font-mono)' }}>
-              <input type="checkbox" checked={Masterpiece} onChange={e => setMasterpiece(e.target.checked)} className="accent-[#c8d47a]" />
-              Masterpiece
-            </label>
-            <label className="flex items-center gap-2 text-xs text-[#9a9590] cursor-pointer" style={{ fontFamily: 'var(--font-mono)' }}>
-              <input type="checkbox" checked={Favorite} onChange={e => setFavorite(e.target.checked)} className="accent-[#c8d47a]" />
-              Favorite
-            </label>
-            <label className="flex items-center gap-2 text-xs text-[#9a9590] cursor-pointer" style={{ fontFamily: 'var(--font-mono)' }}>
-              <input type="checkbox" checked={horizonBar} onChange={e => setHorizonBar(e.target.checked)} className="accent-[#c8d47a]" />
-              horizon bar
-            </label>
-            {ratedTracks.length > 0 && (
-  <div className="ml-auto flex items-center gap-2">
-    <button
-      onClick={() => setScoreCheckOpen(c => !c)}
-      className="text-xs text-[#555] hover:text-[#c8d47a] transition-colors uppercase tracking-widest cursor-pointer"
-      style={{ fontFamily: 'var(--font-mono)' }}>
-      {scoreCheckOpen ? '▼' : '▶'} score check
-    </button>
-    {scoreCheckOpen && (
-      <span className="text-xs text-[#c8d47a]" style={{ fontFamily: 'var(--font-mono)' }}>
-        <strong>{scoreCheckAvg}</strong> / 5
-      </span>
-    )}
-  </div>
-)}
-          </div>
+          {/* RIGHT: Notes */}
+          <div style={{ width:'50%', display:'flex', flexDirection:'column', overflow:'hidden' }}>
 
-          {/* Scrollable notes area */}
-          <div className="flex-1 overflow-y-auto flex flex-col">
-
-            {/* Overall album notes */}
-            <div className="border-b border-[#2a2a2a]">
-              <div className="px-5 pt-4 pb-1">
-                <p className="text-xs text-[#555] uppercase tracking-widest" style={{ fontFamily: 'var(--font-mono)' }}>Overall Notes</p>
-              </div>
-              <textarea
-                value={overallNotes}
-                onChange={e => setOverallNotes(e.target.value)}
-                placeholder="How does this album feel as a whole? Themes, impressions, context..."
-                className="w-full bg-transparent outline-none resize-none px-5 py-3 text-xs leading-relaxed text-[#e8e4dc] placeholder-[#555] min-h-[100px]"
-                style={{ fontFamily: 'var(--font-mono)' }}
-              />
+            {/* Controls */}
+            <div style={{ padding:'10px 20px', borderBottom:'1px solid #2a2a2a', display:'flex', alignItems:'center', gap:10, flexWrap:'wrap', flexShrink:0 }}>
+              <span style={{ fontFamily:MONO, fontSize:10, letterSpacing:'0.14em', textTransform:'uppercase', color:'#555' }}>Session Notes</span>
+              <select value={entryType} onChange={e => setEntryType(e.target.value)} className="sn-select" style={{ marginLeft:'auto' }}>
+                <option value="">— Type</option>
+                <option value="Personal Library">Personal Library</option>
+                <option value="Submission">Submission</option>
+              </select>
+              <select value={relationship} onChange={e => setRelationship(e.target.value)} className="sn-select">
+                <option value="">— Relationship</option>
+                <option>First Listen</option>
+                <option>Revisit</option>
+                <option>Formative</option>
+                <option>Study</option>
+                <option>Submission</option>
+              </select>
             </div>
 
-            {/* Per-track notes */}
-            {tracks && tracks.length > 0 && (
-              <div className="flex flex-col">
-                <div className="px-5 pt-4 pb-2 border-b border-[#1a1a1a]">
-                  <p className="text-xs text-[#555] uppercase tracking-widest" style={{ fontFamily: 'var(--font-mono)' }}>Track Notes</p>
+            {/* Rating row */}
+            <div style={{ padding:'10px 20px', borderBottom:'1px solid #2a2a2a', display:'flex', alignItems:'center', gap:16, flexWrap:'wrap', flexShrink:0 }}>
+              <StarRating value={rating} onChange={setRating} size={18} />
+              {[['Masterpiece',Masterpiece,setMasterpiece],['Favorite',Favorite,setFavorite],['Horizon',horizonBar,setHorizonBar]].map(([lbl,val,fn]) => (
+                <label key={lbl} style={{ display:'flex', alignItems:'center', gap:6, cursor:'pointer' }}>
+                  <input type="checkbox" checked={val} onChange={e => fn(e.target.checked)} className="sn-check" />
+                  <span style={{ fontFamily:MONO, fontSize:10, letterSpacing:'0.08em', color:val ? '#9a9590' : '#555' }}>{lbl}</span>
+                </label>
+              ))}
+              {ratedTracks.length > 0 && (
+                <div style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:8 }}>
+                  <button onClick={() => setScoreCheckOpen(c => !c)}
+                    style={{ fontFamily:MONO, fontSize:10, letterSpacing:'0.1em', textTransform:'uppercase', color:'#555', background:'none', border:'none', cursor:'pointer' }}>
+                    {scoreCheckOpen ? '▼' : '▶'} score check
+                  </button>
+                  {scoreCheckOpen && <span style={{ fontFamily:MONO, fontSize:11, color:'#c8d47a' }}>{scoreCheckAvg} / 5</span>}
                 </div>
-                {tracks.map((t, i) => (
-                  <div key={i} className="border-b border-[#1a1a1a] px-5 py-3 flex flex-col gap-2">
-                    {/* Track header */}
-                    <div className="flex items-center justify-between gap-3">
-                      <span className="text-xs text-[#e8e4dc] flex-1 min-w-0 truncate" style={{ fontFamily: 'var(--font-mono)' }}>
-                        <span className="text-[#444] mr-1">{t.number}.</span>
-                        {t.title}
-                        {t.duration && <span className="text-[#444] ml-2">{fmtDuration(t.duration)}</span>}
-                      </span>
-                      <span className="flex-shrink-0">
-                        <StarRating
-                          value={trackRatings[i] || 0}
-                          onChange={v => setTrackRatings(prev => ({ ...prev, [i]: v }))}
-                          small
-                        />
-                      </span>
+              )}
+            </div>
+
+            {/* Scrollable notes */}
+            <div style={{ flex:1, overflowY:'auto', display:'flex', flexDirection:'column' }}>
+              <div style={{ borderBottom:'1px solid #2a2a2a' }}>
+                <div style={{ padding:'12px 20px 4px', fontFamily:MONO, fontSize:10, letterSpacing:'0.14em', textTransform:'uppercase', color:'#555' }}>Overall Notes</div>
+                <textarea ref={notesRef} value={overallNotes} onChange={e => setOverallNotes(e.target.value)}
+                  placeholder="How does this album feel as a whole? Themes, impressions, context..."
+                  className="sn-textarea" style={{ padding:'8px 20px 16px' }} />
+              </div>
+
+              {tracks && tracks.length > 0 && (
+                <div>
+                  <div style={{ padding:'12px 20px 8px', borderBottom:'1px solid #1e1e1e', fontFamily:MONO, fontSize:10, letterSpacing:'0.14em', textTransform:'uppercase', color:'#555' }}>Track Notes</div>
+                  {tracks.map((t,i) => (
+                    <div key={i} className="sn-row" style={{ padding:'10px 20px', borderBottom:'1px solid #1e1e1e', display:'flex', flexDirection:'column', gap:6, transition:'background 0.1s' }}>
+                      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:12 }}>
+                        <span style={{ fontFamily:MONO, fontSize:11, color:'#9a9590', minWidth:0, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>
+                          <span style={{ color:'#555', marginRight:6 }}>{t.number}.</span>
+                          {t.title}
+                          {t.duration && <span style={{ color:'#2a2a2a', marginLeft:8 }}>{fmtDuration(t.duration)}</span>}
+                        </span>
+                        <div style={{ flexShrink:0 }}>
+                          <StarRating value={trackRatings[i] || 0} onChange={v => setTrackRatings(prev => ({ ...prev, [i]: v }))} size={13} />
+                        </div>
+                      </div>
+                      <input value={trackNotes[i] || ''} onChange={e => setTrackNotes(prev => ({ ...prev, [i]: e.target.value }))}
+                        placeholder="notes..." className="sn-track-input" />
                     </div>
-                    {/* Track notes input */}
-                    <input
-                      value={trackNotes[i] || ''}
-                      onChange={e => setTrackNotes(prev => ({ ...prev, [i]: e.target.value }))}
-                      placeholder="notes..."
-                      className="bg-transparent border-b border-[#2a2a2a] outline-none text-xs text-[#9a9590] placeholder-[#444] py-1 w-full focus:border-[#555] transition-colors"
-                      style={{ fontFamily: 'var(--font-mono)' }}
-                    />
-                  </div>
-                ))}
-              </div>
-            )}
+                  ))}
+                </div>
+              )}
 
-            {/* Tracklist loading state in notes panel */}
-            {tracksLoading && (
-              <div className="px-5 py-4 flex flex-col gap-3">
-                <p className="text-xs text-[#555] uppercase tracking-widest" style={{ fontFamily: 'var(--font-mono)' }}>Track Notes</p>
-                {[...Array(6)].map((_, i) => (
-                  <div key={i} className="h-8 rounded bg-[#1e1e1e] animate-pulse" />
-                ))}
-              </div>
-            )}
-          </div>
+              {tracksLoading && (
+                <div style={{ padding:'12px 20px', display:'flex', flexDirection:'column', gap:10 }}>
+                  <div style={{ fontFamily:MONO, fontSize:10, letterSpacing:'0.14em', textTransform:'uppercase', color:'#555' }}>Track Notes</div>
+                  {[...Array(6)].map((_,i) => <div key={i} className="sn-skel" style={{ height:32 }} />)}
+                </div>
+              )}
+            </div>
 
-          {/* Footer */}
-          <div className="px-5 py-3 border-t border-[#2a2a2a] flex items-center justify-between">
-            <span className="text-xs text-[#555]" style={{ fontFamily: 'var(--font-mono)' }}>{overallNotes.length} chars</span>
-            <button
-              onClick={doFormat}
-              disabled={!brief || overallNotes.trim().length < 10 || formatting}
-              className="bg-[#e8e4dc] text-[#0e0e0e] rounded-lg px-6 py-2 text-xs uppercase tracking-widest font-medium cursor-pointer disabled:opacity-30"
-              style={{ fontFamily: 'var(--font-mono)' }}>
-              {formatting ? 'Formatting…' : 'Format & Done →'}
-            </button>
+            {/* Footer */}
+            <div style={{ padding:'12px 20px', borderTop:'1px solid #2a2a2a', display:'flex', alignItems:'center', justifyContent:'space-between', flexShrink:0 }}>
+              <span style={{ fontFamily:MONO, fontSize:10, color:'#555' }}>{overallNotes.length} chars</span>
+              <button onClick={doFormat} disabled={!brief || overallNotes.trim().length < 10 || formatting} className="sn-btn"
+                style={{ background:'#e8e4dc', color:'#0e0e0e', borderRadius:8, padding:'9px 22px', fontFamily:MONO, fontSize:11, letterSpacing:'0.1em', textTransform:'uppercase', border:'none', cursor:'pointer', fontWeight:500 }}>
+                {formatting ? 'Formatting…' : 'Format & Done →'}
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
-      {/* ── Output modal ── */}
       {output && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-6">
-          <div className="bg-[#161616] border border-[#2a2a2a] rounded-xl w-full max-w-2xl max-h-[85vh] flex flex-col overflow-hidden">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-[#2a2a2a]">
-              <h2 className="text-lg" style={{ fontFamily: 'var(--font-serif)' }}>Session Output</h2>
-              <div className="flex gap-3">
-                {!saved ? (
-                  <button onClick={doSave} disabled={saving}
-                    className="bg-[#c8d47a] text-[#0e0e0e] rounded-lg px-5 py-2 text-xs uppercase tracking-widest font-medium cursor-pointer disabled:opacity-40"
-                    style={{ fontFamily: 'var(--font-mono)' }}>
-                    {saving ? 'Saving…' : 'Save to Site →'}
-                  </button>
-                ) : (
-                  <span className="text-xs text-[#c8d47a] px-5 py-2" style={{ fontFamily: 'var(--font-mono)' }}>✓ saved</span>
-                )}
+        <div style={{ position:'fixed', inset:0, background:'rgba(0,0,0,0.75)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:50, padding:24 }}>
+          <div style={{ background:'#161616', border:'1px solid #2a2a2a', borderRadius:16, width:'100%', maxWidth:680, maxHeight:'85vh', display:'flex', flexDirection:'column', overflow:'hidden' }}>
+            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'16px 24px', borderBottom:'1px solid #2a2a2a' }}>
+              <span style={{ fontFamily:SERIF, fontSize:18, color:'#e8e4dc' }}>Session Output</span>
+              <div style={{ display:'flex', gap:10, alignItems:'center' }}>
+                {!saved
+                  ? <button onClick={doSave} disabled={saving} className="sn-btn"
+                      style={{ background:'#c8d47a', color:'#0e0e0e', borderRadius:8, padding:'8px 18px', fontFamily:MONO, fontSize:11, letterSpacing:'0.1em', textTransform:'uppercase', border:'none', cursor:'pointer', fontWeight:500 }}>
+                      {saving ? 'Saving…' : 'Save to Site →'}
+                    </button>
+                  : <span style={{ fontFamily:MONO, fontSize:11, color:'#c8d47a' }}>✓ saved</span>
+                }
                 <button onClick={() => setOutput(null)}
-                  className="bg-[#2a2a2a] text-[#e8e4dc] rounded-lg px-4 py-2 text-xs cursor-pointer"
-                  style={{ fontFamily: 'var(--font-mono)' }}>close</button>
+                  style={{ background:'#1c1c1c', color:'#9a9590', borderRadius:8, padding:'8px 14px', fontFamily:MONO, fontSize:11, border:'1px solid #2a2a2a', cursor:'pointer' }}>
+                  close
+                </button>
               </div>
             </div>
-            <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-6">
+            <div style={{ flex:1, overflowY:'auto', padding:24, display:'flex', flexDirection:'column', gap:20 }}>
               <div>
-                <p className="text-xs text-[#555] uppercase tracking-widest mb-2" style={{ fontFamily: 'var(--font-mono)' }}>Background</p>
-                <p className="text-xs leading-relaxed text-[#9a9590]">{output.background}</p>
+                <div style={{ fontFamily:MONO, fontSize:10, letterSpacing:'0.14em', textTransform:'uppercase', color:'#555', marginBottom:8 }}>Background</div>
+                <div style={{ fontSize:13, lineHeight:1.85, color:'#9a9590' }}>{output.background}</div>
               </div>
               {output.horizon && (
-                <p className="text-center text-[#555] tracking-widest text-xs" style={{ fontFamily: 'var(--font-mono)' }}>{output.horizon}</p>
+                <div style={{ textAlign:'center', fontFamily:MONO, fontSize:14, color:'#555', letterSpacing:'0.06em' }}>{output.horizon}</div>
               )}
               <div>
-                <p className="text-xs text-[#555] uppercase tracking-widest mb-2" style={{ fontFamily: 'var(--font-mono)' }}>Notes</p>
-                <p className="text-xs leading-relaxed">{output.notes_prose}</p>
+                <div style={{ fontFamily:MONO, fontSize:10, letterSpacing:'0.14em', textTransform:'uppercase', color:'#555', marginBottom:8 }}>Notes</div>
+                <div style={{ fontSize:13, lineHeight:1.85, color:'#e8e4dc' }}>{output.notes_prose}</div>
               </div>
               <div>
-                <p className="text-xs text-[#555] uppercase tracking-widest mb-2" style={{ fontFamily: 'var(--font-mono)' }}>Tags</p>
-                <div className="flex flex-wrap gap-2">
-                  {(output.tags || []).map((t, i) => (
-                    <span key={i} className="text-xs text-[#555] border border-[#2a2a2a] px-2 py-0.5 rounded" style={{ fontFamily: 'var(--font-mono)' }}>#{t}</span>
+                <div style={{ fontFamily:MONO, fontSize:10, letterSpacing:'0.14em', textTransform:'uppercase', color:'#555', marginBottom:8 }}>Tags</div>
+                <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
+                  {(output.tags || []).map((t,i) => (
+                    <span key={i} style={{ fontFamily:MONO, fontSize:10, color:'#555', border:'1px solid #2a2a2a', padding:'3px 8px', borderRadius:4 }}>#{t}</span>
                   ))}
                 </div>
               </div>
@@ -704,6 +575,6 @@ export default function Session() {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }
