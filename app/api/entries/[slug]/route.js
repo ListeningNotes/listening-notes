@@ -22,6 +22,9 @@ export async function PATCH(request, { params }) {
     const { slug } = await params;
     const body = await request.json();
     const { password, slug: _ignore, ...fields } = body;
+    if (fields.tags && typeof fields.tags === 'string') {
+      fields.tags = fields.tags.split(',').map(t => t.trim()).filter(Boolean);
+    }
 
     if (password !== 'listeningnotes') {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });

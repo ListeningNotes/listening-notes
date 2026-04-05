@@ -431,9 +431,9 @@ export default function EntryModal({ slug, onClose }) {
             ))}
           </div>
           {entry && (
-            <Link href={'/entries/' + entry.slug} onClick={onClose} style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#c8d47a', textDecoration: 'none' }}>
+            <a href={'/entries/' + entry.slug} style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#c8d47a', textDecoration: 'none' }}>
               Full page + comments ↗
-            </Link>
+            </a>
           )}
         </div>
       </div>
