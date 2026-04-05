@@ -183,6 +183,15 @@ export default function PostClient({ entry }) {
                   {fields.favorite ? '★ favorited' : '☆ favorite'}
                 </button>
               </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', justifyContent: 'flex-end' }}>
+                <Label>masterpiece</Label>
+                <button
+                  onClick={() => handleChange('masterpiece', !fields.masterpiece)}
+                  style={{ ...ghostBtn, color: fields.masterpiece ? '#E8B84B' : '#555', borderColor: fields.masterpiece ? '#E8B84B55' : '#2a2a2a', padding: '0.45rem 1rem', fontSize: '13px' }}
+                >
+                  {fields.masterpiece ? '✦ masterpiece' : '✦ not yet'}
+                </button>
+              </div>
             </>
           ) : (
             <>
@@ -190,6 +199,7 @@ export default function PostClient({ entry }) {
               {fields.relationship && <Chip>{fields.relationship}</Chip>}
               {fields.entry_type && <Chip>{fields.entry_type}</Chip>}
               {(fields.favorite === true || fields.favorite === 'true') && <Chip accent>Favorite</Chip>}
+              {(fields.masterpiece === true || fields.masterpiece === 'true') && <Chip accent>Masterpiece</Chip>}
             </>
           )}
         </div>

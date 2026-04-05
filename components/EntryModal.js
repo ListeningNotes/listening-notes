@@ -117,7 +117,7 @@ function HorizonDivider({ horizon, tracks, animate }) {
 }
 
 function StickyBar({ entry, visible }) {
-  const masterpiece = parseRating(entry?.rating) === 5;
+  const masterpiece = entry?.masterpiece === true;
   const isSubmission = entry?.entry_type === 'Submission';
   return (
     <div style={{
@@ -213,7 +213,7 @@ export default function EntryModal({ slug, onClose }) {
 
   const { albumNotes, trackNotes } = splitNotes(entry?.notes);
   const tracks = parseTracksFromNotes(entry?.notes);
-  const masterpiece = parseRating(entry?.rating) === 5;
+  const masterpiece = entry?.masterpiece === true;
   const isSubmission = entry?.entry_type === 'Submission';
 
   return (

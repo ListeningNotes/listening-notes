@@ -19,7 +19,7 @@ export async function POST(request) {
     const body = await request.json();
     const {
       album, artist, year, entry_type, relationship,
-      rating, favorite, background, notes, tags,
+      rating, favorite, masterpiece, background, notes, tags,
       horizon, album_art, post_link
     } = body;
 

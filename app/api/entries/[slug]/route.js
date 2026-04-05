@@ -39,6 +39,7 @@ export async function PATCH(request, { params }) {
         relationship = COALESCE(${fields.relationship ?? null}, relationship),
         rating = COALESCE(${fields.rating ?? null}, rating),
         favorite = COALESCE(${fields.favorite ?? null}, favorite),
+        masterpiece = COALESCE(${fields.masterpiece ?? null}, masterpiece),
         background = COALESCE(${fields.background ?? null}, background),
         notes = COALESCE(${fields.notes ?? null}, notes),
         tags = COALESCE(${fields.tags ?? null}, tags),
