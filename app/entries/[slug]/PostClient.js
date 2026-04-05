@@ -174,6 +174,15 @@ export default function PostClient({ entry }) {
                   {['Personal Library','Submission'].map(v => <option key={v} value={v}>{v}</option>)}
                 </select>
               </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', justifyContent: 'flex-end' }}>
+                <Label>favorite</Label>
+                <button
+                  onClick={() => handleChange('favorite', !fields.favorite)}
+                  style={{ ...ghostBtn, color: fields.favorite ? '#E8B84B' : '#555', borderColor: fields.favorite ? '#E8B84B55' : '#2a2a2a', padding: '0.45rem 1rem', fontSize: '13px' }}
+                >
+                  {fields.favorite ? '★ favorited' : '☆ favorite'}
+                </button>
+              </div>
             </>
           ) : (
             <>
