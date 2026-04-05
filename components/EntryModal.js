@@ -43,7 +43,7 @@ function parseTracksFromNotes(notesText) {
 function splitNotes(notesText) {
   if (!notesText) return { albumNotes: '', trackNotes: '' };
   const clean = notesText.replace(/\*?\*?Album Notes\*?\*?/g, '').replace(/\*\*/g, '').trim();
-  const trackSplit = clean.search(/Track Notes|\n\n\d+\.\s/m);
+  const trackSplit = clean.search(/Track Notes|\n\n\d+\.\s|\n\nTrack\s+\d+\s*[\u2014\u2013]/m);
   if (trackSplit > -1) {
     return {
       albumNotes: clean.slice(0, trackSplit).trim(),
@@ -61,17 +61,15 @@ function Stars({ rating, size = 16, glow = false }) {
         const filled = numeric >= i;
         const half = !filled && numeric >= i - 0.5;
         return (
-          <div key={i} className={glow ? 'ln-star-glow' : ''} style={{ position: 'relative', width: size, height: size, flexShrink: 0 }}>
-            <svg width={size} height={size} viewBox="0 0 18 18" style={{ position: 'absolute' }}>
+          <div key={i} className={glow ? 'ln-star-glow' : ''} style={{ position: 'relative', width: size, height: size, flexShrink: 0, display: 'block' }}>
+            <svg width={size} height={size} viewBox="0 0 18 18" style={{ position: 'absolute', top: 0, left: 0 }}>
               <path d={STAR_PATH} fill={GOLD_EMPTY} />
             </svg>
-            {(filled || half) && (
-              <div style={{ position: 'absolute', inset: 0, overflow: 'hidden', width: half ? size / 2 : size }}>
-                <svg width={size} height={size} viewBox="0 0 18 18">
-                  <path d={STAR_PATH} fill={GOLD} />
-                </svg>
-              </div>
-            )}
+            <div style={{ position: 'absolute', top: 0, left: 0, overflow: 'hidden', width: half ? size / 2 : filled ? size : 0 }}>
+              <svg width={size} height={size} viewBox="0 0 18 18" style={{ display: 'block' }}>
+                <path d={STAR_PATH} fill={GOLD} />
+              </svg>
+            </div>
           </div>
         );
       })}
@@ -222,9 +220,8 @@ export default function EntryModal({ slug, onClose }) {
     <>
       <style>{`
         @keyframes ln-star-glow-kf {
-          0%,83%,100%{filter:brightness(1) drop-shadow(0 0 0px rgba(255,210,60,0))}
-          88%{filter:brightness(1.7) drop-shadow(0 0 7px rgba(255,210,60,1))}
-          93%{filter:brightness(1.2) drop-shadow(0 0 3px rgba(255,210,60,0.4))}
+          0%,100%{filter:brightness(1.15) drop-shadow(0 0 3px rgba(255,210,60,0.5)) drop-shadow(0 0 6px rgba(255,180,30,0.3))}
+          50%{filter:brightness(1.45) drop-shadow(0 0 6px rgba(255,210,60,0.9)) drop-shadow(0 0 12px rgba(255,180,30,0.5))}
         }
         @keyframes ln-master-shine-kf {
           0%,80%,100%{background-position:-200% center}
@@ -234,18 +231,18 @@ export default function EntryModal({ slug, onClose }) {
           from{opacity:0;transform:translate(-50%,calc(-50% + 12px))}
           to{opacity:1;transform:translate(-50%,-50%)}
         }
-        .ln-star-glow{animation:ln-star-glow-kf 40s ease-in-out infinite}
-        .ln-star-glow:nth-child(2){animation-delay:.5s}
-        .ln-star-glow:nth-child(3){animation-delay:1s}
-        .ln-star-glow:nth-child(4){animation-delay:1.5s}
-        .ln-star-glow:nth-child(5){animation-delay:2s}
+        .ln-star-glow{animation:ln-star-glow-kf 2.8s ease-in-out infinite}
+        .ln-star-glow:nth-child(2){animation-delay:.18s}
+        .ln-star-glow:nth-child(3){animation-delay:.36s}
+        .ln-star-glow:nth-child(4){animation-delay:.54s}
+        .ln-star-glow:nth-child(5){animation-delay:.72s}
         .ln-masterpiece-shine{
           background:linear-gradient(105deg,rgba(255,210,60,.7) 0%,rgba(255,255,200,1) 40%,rgba(232,184,75,.7) 60%,rgba(255,210,60,.7) 100%);
           background-size:200% auto;
           -webkit-background-clip:text;
           -webkit-text-fill-color:transparent;
           background-clip:text;
-          animation:ln-master-shine-kf 40s ease-in-out infinite;
+          animation:ln-master-shine-kf 30s ease-in-out infinite;
         }
         .ln-horizon-bar{transition:background 0.2s}
         .ln-horizon-bar-wrap:hover .ln-horizon-bar{background:#dce88a}
@@ -317,12 +314,17 @@ export default function EntryModal({ slug, onClose }) {
 
           {/* Top: metadata + background */}
           <div style={{
-            display: 'flex', flexShrink: 0,
-            borderBottom: '1px solid ' + DIVIDER,
-            maxHeight: collapsed ? 0 : 300,
-            opacity: collapsed ? 0 : 1,
+            display: 'grid',
+            gridTemplateRows: collapsed ? '0fr' : '1fr',
+            flexShrink: 0,
+            transition: 'grid-template-rows 0.32s cubic-bezier(0.4,0,0.2,1)',
+          }}><div style={{
+            display: 'flex',
+            minHeight: 0,
             overflow: 'hidden',
-            transition: 'max-height 0.35s cubic-bezier(0.4,0,0.2,1), opacity 0.3s ease',
+            opacity: collapsed ? 0 : 1,
+            borderBottom: collapsed ? 'none' : '1px solid ' + DIVIDER,
+            transition: 'opacity 0.25s ease',
           }}>
 
             {/* Metadata */}
@@ -372,6 +374,7 @@ export default function EntryModal({ slug, onClose }) {
             </div>
           </div>
 
+          </div>
           {/* Scrollable notes */}
           <div ref={scrollRef} className="ln-notes-scroll" onScroll={handleScroll} style={{ flex: 1, overflowY: 'auto', padding: '20px 24px', fontFamily: FONT }}>
             {loading ? (

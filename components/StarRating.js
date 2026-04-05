@@ -21,7 +21,7 @@ export default function StarRating({ rating, size = 18, style = {} }) {
         const fill = numeric >= i ? 'full' : numeric >= i - 0.5 ? 'half' : 'empty';
         return (
           <div key={i} style={{ position: 'relative', width: size, height: size, flexShrink: 0 }}>
-            <div style={{ position: 'absolute', inset: 0, color: '#2a2a2a' }}>
+            <div style={{ position: 'absolute', inset: 0, color: 'rgba(232,184,75,0.18)' }}>
               <StarSVG size={size} />
             </div>
             {fill !== 'empty' && (
