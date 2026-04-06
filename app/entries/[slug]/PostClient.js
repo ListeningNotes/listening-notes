@@ -342,7 +342,7 @@ function TrackThread({ track, trackIndex, slug, commentsByTrack, onRefresh }) {
     setOpen(true);
   }
 
-  const ratingStr = starsFromRating(track.rating);
+  const ratingStr = track.rating || '';
 
   return (
     <div id={'track-' + trackIndex} style={{ borderBottom: '1px solid #2a2a2a' }}>
