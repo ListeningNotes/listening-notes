@@ -231,9 +231,24 @@ function AlbumPicker({ onSelect }) {
   const border = '1px solid #e0dcd5';
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f5f3ef', display: 'flex', flexDirection: 'column', fontFamily: SANS }}>
+    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', fontFamily: SANS, position:'relative' }}>
+
+      <style>{`
+        @keyframes drift1 { 0%,100%{transform:translate(0,0) scale(1)} 50%{transform:translate(30px,-20px) scale(1.08)} }
+        @keyframes drift2 { 0%,100%{transform:translate(0,0) scale(1)} 50%{transform:translate(-25px,30px) scale(1.06)} }
+        @keyframes drift3 { 0%,100%{transform:translate(0,0) scale(1.05)} 50%{transform:translate(20px,20px) scale(1)} }
+        @keyframes shimmer { 0%,100%{opacity:0.4} 50%{opacity:0.7} }
+      `}</style>
+      {/* Animated glass background */}
+      <div style={{ position:'fixed', inset:0, overflow:'hidden', zIndex:0, background:'#f0ede8' }}>
+        <div style={{ position:'absolute', width:600, height:600, borderRadius:'50%', background:'radial-gradient(circle, rgba(200,212,122,0.45) 0%, transparent 70%)', top:'-10%', left:'-5%', animation:'drift1 14s ease-in-out infinite' }} />
+        <div style={{ position:'absolute', width:500, height:500, borderRadius:'50%', background:'radial-gradient(circle, rgba(180,200,255,0.35) 0%, transparent 70%)', bottom:'-10%', right:'5%', animation:'drift2 18s ease-in-out infinite' }} />
+        <div style={{ position:'absolute', width:400, height:400, borderRadius:'50%', background:'radial-gradient(circle, rgba(255,220,180,0.35) 0%, transparent 70%)', top:'30%', right:'20%', animation:'drift3 22s ease-in-out infinite' }} />
+        <div style={{ position:'absolute', inset:0, backdropFilter:'blur(12px)', WebkitBackdropFilter:'blur(12px)' }} />
+        <div style={{ position:'absolute', inset:0, background:'rgba(245,243,239,0.3)' }} />
+      </div>
       {/* Top nav */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '14px 28px', borderBottom: border, background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(12px)', flexShrink: 0 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '14px 28px', borderBottom: border, background: 'rgba(255,255,255,0.6)', backdropFilter: 'blur(16px)', WebkitBackdropFilter:'blur(16px)', flexShrink: 0, position:'relative', zIndex:1 }}>
         <span style={{ fontFamily: 'Fraunces, serif', fontSize: 18, fontWeight: 900, color: '#1a1916', letterSpacing: '-0.02em' }}>Listening Notes</span>
         <span style={{ color: '#d0ccc5' }}>·</span>
         <span style={{ ...labelStyle }}>session</span>
@@ -243,7 +258,7 @@ function AlbumPicker({ onSelect }) {
       </div>
 
       {/* Main */}
-      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: albums.length > 0 ? 'flex-start' : 'center', padding: '48px 24px', transition: 'justify-content 0.3s' }}>
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: albums.length > 0 ? 'flex-start' : 'center', padding: '48px 24px', transition: 'justify-content 0.3s', position:'relative', zIndex:1 }}>
 
         {/* Prompt + artist input */}
         <div style={{ width: '100%', maxWidth: 560, marginBottom: albums.length > 0 ? 32 : 0 }}>
