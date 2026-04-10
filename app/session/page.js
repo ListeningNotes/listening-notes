@@ -1,11 +1,14 @@
+
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 
 const PASSWORD = 'listeningnotes';
 const MONO  = "'DM Mono', 'Courier New', monospace";
 const SERIF = "'DM Serif Display', Georgia, serif";
 const SANS  = "'DM Sans', system-ui, sans-serif";
+
+// ── Star Rating ────────────────────────────────────────────────────────────
 
 function StarRating({ value, onChange, size = 18 }) {
   const [hover, setHover] = useState(null);
@@ -33,6 +36,8 @@ function StarRating({ value, onChange, size = 18 }) {
     </div>
   );
 }
+
+// ── API helpers ────────────────────────────────────────────────────────────
 
 async function fetchTracklist(albumName, artistName, year) {
   try {
@@ -107,10 +112,39 @@ async function fetchAlbumArtUrl(albumName, artistName, year) {
   } catch { return ''; }
 }
 
+// Search iTunes for artist discography
+async function searchArtistAlbums(artistQuery) {
+  if (!artistQuery.trim()) return [];
+  try {
+    const query = encodeURIComponent(artistQuery);
+    const res = await fetch(`https://itunes.apple.com/search?term=${query}&entity=album&limit=20&attribute=artistTerm`);
+    const data = await res.json();
+    const results = data.results || [];
+    // Deduplicate by collection name, take most relevant
+    const seen = new Set();
+    const albums = [];
+    for (const r of results) {
+      const key = (r.collectionName || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+      if (!seen.has(key) && r.artworkUrl100) {
+        seen.add(key);
+        albums.push({
+          name: r.collectionName,
+          artist: r.artistName,
+          year: (r.releaseDate || '').slice(0, 4),
+          art: r.artworkUrl100.replace(/\d+x\d+bb/, '600x600bb'),
+          artLarge: r.artworkUrl100.replace(/\d+x\d+bb/, '3000x3000bb'),
+        });
+      }
+    }
+    return albums.slice(0, 12);
+  } catch { return []; }
+}
+
 function fmtDuration(s) {
   if (!s) return '';
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 }
+
 function fmtTime(s) {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 }
@@ -121,12 +155,237 @@ const LOADING_PHRASES = [
   'Digging through the stacks...','Consulting the canon...','Reviewing session logs...','Gathering context...',
 ];
 
+// ── Password Gate ──────────────────────────────────────────────────────────
+
+function PasswordGate({ onAuth }) {
+  const [pw, setPw] = useState('');
+  const [error, setError] = useState(false);
+  const border = '1px solid #e0dcd5';
+  const MONO = "'DM Mono', monospace";
+
+  function handleAuth() {
+    if (pw === PASSWORD) { onAuth(); }
+    else setError(true);
+  }
+
+  return (
+    <div style={{ minHeight: '100vh', background: '#f5f3ef', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, fontFamily: "'DM Sans', sans-serif" }}>
+      <div style={{ background: '#fff', border, borderRadius: 20, padding: 48, width: '100%', maxWidth: 360, display: 'flex', flexDirection: 'column', gap: 20, boxShadow: '0 4px 32px rgba(0,0,0,0.08)' }}>
+        <div>
+          <div style={{ fontFamily: 'Fraunces, serif', fontSize: 26, fontWeight: 900, color: '#1a1916', letterSpacing: '-0.02em' }}>Listening Notes</div>
+          <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#7a776f', marginTop: 4 }}>session access</div>
+        </div>
+        <input type="password" placeholder="password" value={pw}
+          onChange={e => { setPw(e.target.value); setError(false); }}
+          onKeyDown={e => e.key === 'Enter' && handleAuth()}
+          style={{ background: '#fff', border: `1px solid ${error ? '#ef4444' : '#e0dcd5'}`, borderRadius: 8, padding: '12px 16px', fontFamily: MONO, fontSize: 13, color: '#1a1916', outline: 'none' }}
+        />
+        {error && <div style={{ fontFamily: MONO, fontSize: 11, color: '#ef4444' }}>incorrect password</div>}
+        <button onClick={handleAuth}
+          style={{ background: '#c8d47a', color: '#1a1916', borderRadius: 8, padding: '12px 0', fontFamily: MONO, fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase', cursor: 'pointer', border: 'none', fontWeight: 600 }}>
+          Enter →
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ── Album Picker Landing ───────────────────────────────────────────────────
+
+function AlbumPicker({ onSelect }) {
+  const [artistInput, setArtistInput] = useState('');
+  const [albums, setAlbums] = useState([]);
+  const [searching, setSearching] = useState(false);
+  const [manualAlbum, setManualAlbum] = useState('');
+  const [showManual, setShowManual] = useState(false);
+  const debounceRef = useRef(null);
+  const inputRef = useRef(null);
+
+  const labelStyle = { fontFamily: MONO, fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#7a776f' };
+
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
+
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (!artistInput.trim()) { setAlbums([]); setSearching(false); return; }
+    setSearching(true);
+    debounceRef.current = setTimeout(async () => {
+      const results = await searchArtistAlbums(artistInput);
+      setAlbums(results);
+      setSearching(false);
+    }, 600);
+    return () => clearTimeout(debounceRef.current);
+  }, [artistInput]);
+
+  function handleAlbumClick(album) {
+    onSelect({ album: album.name, artist: album.artist, year: album.year, artUrl: album.artLarge });
+  }
+
+  function handleManualSubmit() {
+    if (!manualAlbum.trim() || !artistInput.trim()) return;
+    onSelect({ album: manualAlbum.trim(), artist: artistInput.trim(), year: '', artUrl: '' });
+  }
+
+  const border = '1px solid #e0dcd5';
+
+  return (
+    <div style={{ minHeight: '100vh', background: '#f5f3ef', display: 'flex', flexDirection: 'column', fontFamily: SANS }}>
+      {/* Top nav */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '14px 28px', borderBottom: border, background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(12px)', flexShrink: 0 }}>
+        <span style={{ fontFamily: 'Fraunces, serif', fontSize: 18, fontWeight: 900, color: '#1a1916', letterSpacing: '-0.02em' }}>Listening Notes</span>
+        <span style={{ color: '#d0ccc5' }}>·</span>
+        <span style={{ ...labelStyle }}>session</span>
+        <div style={{ marginLeft: 'auto', display: 'flex', gap: 10 }}>
+          <a href="/session/entries" style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#7a776f', textDecoration: 'none', padding: '6px 14px', borderRadius: 8, border, background: '#fff' }}>Entries →</a>
+        </div>
+      </div>
+
+      {/* Main */}
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: albums.length > 0 ? 'flex-start' : 'center', padding: '48px 24px', transition: 'justify-content 0.3s' }}>
+
+        {/* Prompt + artist input */}
+        <div style={{ width: '100%', maxWidth: 560, marginBottom: albums.length > 0 ? 32 : 0 }}>
+          <div style={{ fontFamily: SERIF, fontSize: 'clamp(1.8rem, 4vw, 2.8rem)', color: '#1a1916', lineHeight: 1.1, marginBottom: 28, textAlign: 'center' }}>
+            What do you want<br />to listen to?
+          </div>
+          <div style={{ position: 'relative' }}>
+            <input
+              ref={inputRef}
+              value={artistInput}
+              onChange={e => setArtistInput(e.target.value)}
+              placeholder="Search by artist..."
+              style={{
+                width: '100%', background: '#fff', border: '1px solid #d8d5cf',
+                borderRadius: 14, padding: '16px 22px', fontFamily: SANS, fontSize: 16,
+                color: '#1a1916', outline: 'none', boxShadow: '0 2px 16px rgba(0,0,0,0.06)',
+                boxSizing: 'border-box',
+              }}
+              onFocus={e => e.target.style.borderColor = '#c8d47a'}
+              onBlur={e => e.target.style.borderColor = '#d8d5cf'}
+            />
+            {searching && (
+              <div style={{ position: 'absolute', right: 16, top: '50%', transform: 'translateY(-50%)', fontFamily: MONO, fontSize: 10, color: '#aaa8a2', letterSpacing: '0.1em' }}>
+                searching…
+              </div>
+            )}
+          </div>
+
+          {/* Manual album override */}
+          {artistInput.trim() && (
+            <div style={{ marginTop: 12, display: 'flex', gap: 8, alignItems: 'center' }}>
+              {!showManual ? (
+                <button onClick={() => setShowManual(true)} style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#aaa8a2', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+                  + type album manually
+                </button>
+              ) : (
+                <>
+                  <input
+                    value={manualAlbum}
+                    onChange={e => setManualAlbum(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && handleManualSubmit()}
+                    placeholder="Album title..."
+                    style={{ flex: 1, background: '#fff', border, borderRadius: 8, padding: '9px 14px', fontFamily: MONO, fontSize: 12, color: '#1a1916', outline: 'none' }}
+                    autoFocus
+                  />
+                  <button onClick={handleManualSubmit} disabled={!manualAlbum.trim()}
+                    style={{ background: '#1a1916', color: '#f5f3ef', border: 'none', borderRadius: 8, padding: '9px 18px', fontFamily: MONO, fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer', opacity: manualAlbum.trim() ? 1 : 0.3 }}>
+                    Start →
+                  </button>
+                </>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Album carousel */}
+        {albums.length > 0 && (
+          <div style={{ width: '100%', maxWidth: 960 }}>
+            <div style={{ ...labelStyle, marginBottom: 16, paddingLeft: 4 }}>
+              Albums by {albums[0]?.artist} — choose one to begin
+            </div>
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))',
+              gap: 14,
+            }}>
+              {albums.map((album, i) => (
+                <button
+                  key={i}
+                  onClick={() => handleAlbumClick(album)}
+                  style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left', borderRadius: 10, transition: 'transform 0.15s', }}
+                  onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-3px)'}
+                  onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
+                >
+                  <div style={{ borderRadius: 10, overflow: 'hidden', aspectRatio: '1', background: '#ece9e3', marginBottom: 8, boxShadow: '0 4px 16px rgba(0,0,0,0.1)' }}>
+                    <img src={album.art} alt={album.name} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                  </div>
+                  <div style={{ fontFamily: SANS, fontSize: 12, fontWeight: 500, color: '#1a1916', lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{album.name}</div>
+                  {album.year && <div style={{ fontFamily: MONO, fontSize: 10, color: '#aaa8a2', marginTop: 2 }}>{album.year}</div>}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Empty state after search yields nothing */}
+        {!searching && artistInput.trim() && albums.length === 0 && (
+          <div style={{ marginTop: 24, fontFamily: MONO, fontSize: 11, color: '#aaa8a2', textAlign: 'center' }}>
+            No results — try typing the album manually above
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── Main Session App ───────────────────────────────────────────────────────
+
+
+function ResearchOverlay({ art, phraseIndex, album, artist }) {
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setVisible(true), 30);
+    return () => clearTimeout(t);
+  }, []);
+  return (
+    <div style={{ position:'fixed', inset:0, zIndex:200, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', opacity:visible?1:0, transition:'opacity 0.4s ease', overflow:'hidden' }}>
+      {art && <div style={{ position:'absolute', inset:'-40px', backgroundImage:`url(${art})`, backgroundSize:'cover', backgroundPosition:'center', filter:'blur(60px) saturate(1.2) brightness(0.85)', transform:'scale(1.15)' }} />}
+      <div style={{ position:'absolute', inset:0, background:art?'rgba(245,243,239,0.82)':'#f5f3ef' }} />
+      <div style={{ position:'relative', zIndex:1, display:'flex', flexDirection:'column', alignItems:'center', gap:32, padding:32, textAlign:'center' }}>
+        {art && <img src={art} alt={album} style={{ width:120, height:120, borderRadius:14, objectFit:'cover', boxShadow:'0 24px 64px rgba(0,0,0,0.6)' }} />}
+        <div>
+          <div style={{ fontFamily:"'DM Serif Display',serif", fontSize:'clamp(1.4rem,3vw,2rem)', color:'#1a1916', lineHeight:1.1, marginBottom:6 }}>{album}</div>
+          <div style={{ fontFamily:"'DM Mono',monospace", fontSize:11, letterSpacing:'0.12em', textTransform:'uppercase', color:'rgba(26,25,22,0.4)' }}>{artist}</div>
+        </div>
+        <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:14 }}>
+          <div key={phraseIndex} style={{ fontFamily:"'DM Mono',monospace", fontSize:11, letterSpacing:'0.12em', textTransform:'uppercase', color:'#c8d47a', animation:'overlay-fade 0.5s ease forwards' }}>
+            {['Searching the archive...','Pulling press records...','Checking release dates...','Reading liner notes...','Cross-referencing labels...','Scanning chart history...','Digging through the stacks...','Consulting the canon...'][phraseIndex % 8]}
+          </div>
+          <div style={{ display:'flex', gap:6 }}>
+            {[0,1,2].map(i => <div key={i} style={{ width:5, height:5, borderRadius:'50%', background:'rgba(200,212,122,0.4)', animation:`overlay-dot 1.4s ease-in-out ${i*0.2}s infinite` }} />)}
+          </div>
+        </div>
+      </div>
+      <style>{`
+        @keyframes overlay-fade { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes overlay-dot { 0%,100%{opacity:0.3;transform:scale(1)} 50%{opacity:1;transform:scale(1.4)} }
+      `}</style>
+    </div>
+  );
+}
+
 export default function Session() {
   const [authed, setAuthed] = useState(false);
-  const [pw, setPw] = useState('');
-  const [pwError, setPwError] = useState(false);
+  // 'picker' | 'session'
+  const [view, setView] = useState('picker');
+  const [loadingArt, setLoadingArt] = useState('');
+
+  // Pre-filled from picker
   const [albumInput, setAlbumInput] = useState('');
   const [artistInput, setArtistInput] = useState('');
+
   const [brief, setBrief] = useState(null);
   const [briefLoading, setBriefLoading] = useState(false);
   const [briefError, setBriefError] = useState('');
@@ -168,31 +427,49 @@ export default function Session() {
   }, [briefLoading]);
 
   function handleAuth() {
-    if (pw === PASSWORD) { setAuthed(true); localStorage.setItem('ln_session_auth', 'true'); }
-    else setPwError(true);
+    setAuthed(true);
+    localStorage.setItem('ln_session_auth', 'true');
+  }
+
+  // Called when user picks an album from the picker
+  async function handlePickerSelect({ album, artist, year, artUrl }) {
+    setAlbumInput(album);
+    setArtistInput(artist);
+    if (artUrl) { setAlbumArt(artUrl); setLoadingArt(artUrl); }
+    setView('loading');
+    await doResearch(album, artist, artUrl);
+    setView('session');
+
+
   }
 
   const ratedTracks = Object.values(trackRatings).filter(v => v > 0);
   const scoreCheckAvg = ratedTracks.length
     ? (ratedTracks.reduce((a, b) => a + b, 0) / ratedTracks.length).toFixed(2) : null;
 
-  async function doResearch() {
-    if (!albumInput.trim()) return;
+  async function doResearch(album, artist, existingArt) {
+    const a = album || albumInput;
+    const ar = artist || artistInput;
+    if (!a.trim()) return;
     setBriefLoading(true); setBriefError(''); setBrief(null);
     setTracks(null); setTrackNotes({}); setTrackRatings({});
-    setAlbumArt(''); setElapsed(0); setOverallNotes('');
+    if (!existingArt) setAlbumArt('');
+    setElapsed(0); setOverallNotes('');
     setRating(0); setMasterpiece(false); setFavorite(false);
     setSaved(false); setOutput(null);
     if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
     try {
       const res = await fetch('/api/research', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ album: albumInput, artist: artistInput })
+        body: JSON.stringify({ album: a, artist: ar })
       });
       const data = await res.json();
       if (data.error) throw new Error(data.error);
       setBrief(data);
-      fetchAlbumArtUrl(data.album, data.artist, data.year).then(url => { if (url) setAlbumArt(url); });
+      // Fetch better art from research result if we didn't get it from picker
+      if (!existingArt) {
+        fetchAlbumArtUrl(data.album, data.artist, data.year).then(url => { if (url) setAlbumArt(url); });
+      }
       setTracksLoading(true);
       fetchTracklist(data.album, data.artist, data.year).then(t => { setTracks(t || []); setTracksLoading(false); });
     } catch (err) {
@@ -241,28 +518,13 @@ export default function Session() {
   const border = '1px solid #e0dcd5';
   const labelStyle = { fontFamily: MONO, fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#7a776f' };
 
-  if (!authed) {
-    return (
-      <div style={{ minHeight: '100vh', background: '#f5f3ef', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, fontFamily: SANS }}>
-        <div style={{ background: '#fff', border: '1px solid #e0dcd5', borderRadius: 20, padding: 48, width: '100%', maxWidth: 360, display: 'flex', flexDirection: 'column', gap: 20, boxShadow: '0 4px 32px rgba(0,0,0,0.08)' }}>
-          <div>
-            <div style={{ fontFamily: 'Fraunces, serif', fontSize: 26, fontWeight: 900, color: '#1a1916', letterSpacing: '-0.02em' }}>Listening Notes</div>
-            <div style={{ ...labelStyle, marginTop: 4 }}>session access</div>
-          </div>
-          <input type="password" placeholder="password" value={pw}
-            onChange={e => { setPw(e.target.value); setPwError(false); }}
-            onKeyDown={e => e.key === 'Enter' && handleAuth()}
-            style={{ background: '#fff', border: `1px solid ${pwError ? '#ef4444' : '#e0dcd5'}`, borderRadius: 8, padding: '12px 16px', fontFamily: MONO, fontSize: 13, color: '#1a1916', outline: 'none' }}
-          />
-          {pwError && <div style={{ fontFamily: MONO, fontSize: 11, color: '#ef4444' }}>incorrect password</div>}
-          <button onClick={handleAuth}
-            style={{ background: '#c8d47a', color: '#1a1916', borderRadius: 8, padding: '12px 0', fontFamily: MONO, fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase', cursor: 'pointer', border: 'none', fontWeight: 600 }}>
-            Enter →
-          </button>
-        </div>
-      </div>
-    );
-  }
+  // ── Render gates ──
+
+  if (!authed) return <PasswordGate onAuth={handleAuth} />;
+  if (view === 'picker') return <AlbumPicker onSelect={handlePickerSelect} />;
+  if (view === 'loading') return <ResearchOverlay art={loadingArt} phraseIndex={loadingFactIndex} album={albumInput} artist={artistInput} />;
+
+  // ── Session view ───────────────────────────────────────────────────────────
 
   return (
     <>
@@ -291,23 +553,34 @@ export default function Session() {
 
       <div style={{ minHeight:'100vh', color:'#1a1916', display:'flex', flexDirection:'column', fontFamily:SANS, position:'relative', zIndex:1 }}>
 
+        {/* Top bar */}
         <div style={{ display:'flex', alignItems:'center', gap:16, padding:'14px 28px', borderBottom:border, background:'rgba(255,255,255,0.75)', backdropFilter:'blur(12px)', flexShrink:0 }}>
-          <span style={{ fontFamily:'Fraunces, serif', fontSize:18, fontWeight:900, color:'#1a1916', letterSpacing:'-0.02em', flexShrink:0 }}>Listening Notes</span>
+          <button onClick={() => setView('picker')} style={{ fontFamily:'Fraunces, serif', fontSize:18, fontWeight:900, color:'#1a1916', letterSpacing:'-0.02em', flexShrink:0, background:'none', border:'none', cursor:'pointer', padding:0 }}>Listening Notes</button>
           <span style={{ color:'#d0ccc5' }}>·</span>
           <span style={{ fontFamily:MONO, fontSize:10, letterSpacing:'0.14em', textTransform:'uppercase', color:'#7a776f' }}>session</span>
           {brief && <><span style={{ color:'#d0ccc5' }}>·</span><span style={{ fontFamily:MONO, fontSize:11, color:'#aaa8a2' }}>{fmtTime(elapsed)}</span></>}
           <div style={{ marginLeft:'auto', display:'flex', gap:10, alignItems:'center' }}>
-            <input value={albumInput} onChange={e => setAlbumInput(e.target.value)} onKeyDown={e => e.key==='Enter' && doResearch()} placeholder="Album title..." className="sn-ti" style={{ width:190 }} />
-            <input value={artistInput} onChange={e => setArtistInput(e.target.value)} onKeyDown={e => e.key==='Enter' && doResearch()} placeholder="Artist..." className="sn-ti" style={{ width:150 }} />
-            <button onClick={doResearch} disabled={briefLoading || !albumInput.trim()} className="sn-btn"
+            {/* Album/artist shown as read-only chips + re-search option */}
+            {brief && (
+              <div style={{ display:'flex', gap:8, alignItems:'center' }}>
+                <span style={{ fontFamily:MONO, fontSize:11, color:'#5a5750', background:'#f0ede8', padding:'4px 10px', borderRadius:6 }}>{brief.album}</span>
+                <span style={{ fontFamily:MONO, fontSize:10, color:'#aaa8a2' }}>by {brief.artist}</span>
+              </div>
+            )}
+            <input value={albumInput} onChange={e => setAlbumInput(e.target.value)} onKeyDown={e => e.key==='Enter' && doResearch()} placeholder="Album title..." className="sn-ti" style={{ width:160 }} />
+            <input value={artistInput} onChange={e => setArtistInput(e.target.value)} onKeyDown={e => e.key==='Enter' && doResearch()} placeholder="Artist..." className="sn-ti" style={{ width:130 }} />
+            <button onClick={() => doResearch()} disabled={briefLoading || !albumInput.trim()} className="sn-btn"
               style={{ background:'#c8d47a', color:'#1a1916', borderRadius:8, padding:'8px 20px', fontFamily:MONO, fontSize:11, letterSpacing:'0.1em', textTransform:'uppercase', border:'none', cursor:'pointer', fontWeight:600, flexShrink:0 }}>
               {briefLoading ? '···' : 'Research →'}
             </button>
+            <a href="/session/entries" style={{ fontFamily:MONO, fontSize:10, letterSpacing:'0.1em', textTransform:'uppercase', color:'#7a776f', textDecoration:'none', padding:'8px 14px', borderRadius:8, border, background:'#fff', flexShrink:0 }}>Entries</a>
           </div>
         </div>
 
+        {/* Split panels */}
         <div style={{ display:'flex', flex:1, overflow:'hidden' }}>
 
+          {/* LEFT: Brief */}
           <div style={{ width:'50%', borderRight:border, display:'flex', flexDirection:'column', overflow:'hidden', background:'rgba(255,255,255,0.5)', backdropFilter:'blur(8px)' }}>
             <div style={{ padding:'10px 22px', borderBottom:border, flexShrink:0 }}>
               <span style={labelStyle}>Album Briefing</span>
@@ -316,7 +589,7 @@ export default function Session() {
 
               {!brief && !briefLoading && !briefError && (
                 <div style={{ textAlign:'center', paddingTop:80, fontFamily:MONO, fontSize:11, color:'#aaa8a2', lineHeight:2 }}>
-                  Enter an album above<br/>and click Research.
+                  Researching album…
                 </div>
               )}
 
@@ -367,6 +640,7 @@ export default function Session() {
             </div>
           </div>
 
+          {/* RIGHT: Notes */}
           <div style={{ width:'50%', display:'flex', flexDirection:'column', background:'rgba(255,255,255,0.6)', backdropFilter:'blur(8px)' }}>
 
             <div style={{ padding:'10px 22px', borderBottom:border, display:'flex', alignItems:'center', gap:10, flexShrink:0 }}>
@@ -406,7 +680,6 @@ export default function Session() {
             </div>
 
             <div style={{ flex:1, overflowY:'auto', display:'flex', flexDirection:'column' }}>
-
               <div style={{ borderBottom:border, padding:'14px 22px 16px' }}>
                 <div style={{ ...labelStyle, marginBottom:10 }}>Overall Notes</div>
                 <textarea
@@ -473,6 +746,7 @@ export default function Session() {
         </div>
       </div>
 
+      {/* Output modal */}
       {output && (
         <div style={{ position:'fixed', inset:0, background:'rgba(26,25,22,0.6)', backdropFilter:'blur(8px)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:50, padding:24 }}>
           <div style={{ background:'#fff', border:'1px solid #e0dcd5', borderRadius:20, width:'100%', maxWidth:680, maxHeight:'85vh', display:'flex', flexDirection:'column', overflow:'hidden', boxShadow:'0 24px 80px rgba(0,0,0,0.2)' }}>
@@ -513,3 +787,4 @@ export default function Session() {
     </>
   );
 }
+
