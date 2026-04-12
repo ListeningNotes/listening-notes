@@ -1,6 +1,6 @@
-NOTES.MD
+# NOTES.MD
 
-Personal Checklist: 
+Personal Checklist:
 
 PENDING
 
@@ -14,7 +14,7 @@ PENDING
 - [ ] MODAL — Scroll sticky collapse needs to be MUCH smoother and not take to a new spot. Feels so glitchy
 - [ ] MODAL — Horizon track names only loads for some albums
 - [ ] MODAL — weird glitch with stars, (took screenshot)
-- [ ] MODAL — Maybe I do want background of website to fade just a tiny bit. 
+- [ ] MODAL — Maybe I do want background of website to fade just a tiny bit.
 - [ ] MODAL — link to full page open in new tab
 - [ ] MODAL — favorite not showing, showing · ?
 - [ ] MODAL — Masterpiece logic (only if it's all tracks 5 star, not just any 5 star album ex: as tall as lions)
@@ -33,7 +33,12 @@ PENDING
 - [ ] HOME — Little jiggle animation on hover
 - [ ] HOME — Better logic for live track timing (sticky logic past last.fm)
 
-COMPLETE 
+- [ ] SECURITY — API routes currently unprotected (POST /api/entries, /api/research, /api/format, /api/reflect). Proxy/middleware approach was attempted but Next.js 16 proxy can't distinguish your requests from strangers. Correct fix deferred: need server-side session token approach. Not urgent until public launch.
+
+- [ ] COMMENTS — Moderation inbox needs to be built in /session to approve/reject pending comments
+- [ ] COMMENTS — Upvote abuse prevention (IP or cookie check) before going fully public
+
+COMPLETE
 - [x] Individual post pages — each entry gets its own URL
 - [x] Fix Horizon logic
 - [x] Notes box expands as typing or paste
@@ -54,41 +59,26 @@ COMPLETE
 - [x] Session: loading overlay with fill animation + expand-to-fill transition
 - [x] Session: AI chat panel (reflect feature)
 - [x] Session: better album picker via iTunes artist ID lookup
+- [x] All API routes, components, hooks, and pages labeled with plain-English comments
+- [x] comments POST set to pending = true (moderation queue)
+- [x] format route rewritten — editor not writer, preserves voice, background from brief
+- [x] Sidebar.js deleted (replaced by TopNav in page.js)
+- [x] PATCH route restored to /api/entries/[slug] (used by /session/entries edit modal)
 
 ---
 
-## Session Tool (app/session/page.js)
-- Always light theme on picker/overlay; dark glass aesthetic on session view
-- Password: listeningnotes (shared localStorage key with /session/entries)
-- Three views: picker -> loading overlay -> session
-- Picker: artist search with 600ms debounce, iTunes album grid, manual fallback
-- Loading overlay: full-screen frosted, blurred album art bg, rotating phrases, fill animation + expand-to-fill transition
-- Session view: album art full-bleed background, two floating glass widget panels
-- Panel style: rgba(0,0,0,0.45) + blur(10px) + rounded corners + white border
-- Draft auto-saves to localStorage on every keystroke, restores on same album
-- Draft cleared on successful save
-- Header: back arrow (→ picker) + elapsed timer + Entries link only
-- Album art: iTunes Search API, 25-result scored matching, 3000x3000
-- Tracklist: MusicBrainz API
-- Format & Done → /api/format → Save to Site → /api/entries POST
-- AI reflect: /api/reflect → chat drawer in notes panel
+## Architecture notes
 
-## AlbumPicker — new design (NOT YET WRITTEN TO FILE, restore from git 8b8ab71)
-- Home screen with three frosted glass buttons: Start Listening / Edit View Entries / Submissions
-- mode state: 'home' shows buttons, 'session' shows artist search + album grid
-- Floating album art injected via useEffect, DOM-driven (not React state)
-- 12 albums, hand-placed irregular positions, CSS drift animations (f1-f5 keyframes)
-- Spring-scale swap: every 4-8s, 1-2 random albums scale to 0.05 → swap src → spring back
-- No duplicates in visible set
-- Cleanup on unmount: clearTimeout + remove DOM els
-- AlbumPicker occupies lines 218-546 in page.js
-- Python write issue: backticks in JSX break PYEOF heredoc — use cat > /tmp/file.py approach next time
+**File write rules:**
+- Code files (.js, .css) — edit directly in VS Code, works fine
+- Config/dotfiles (.env.local) — use Python or echo >> from terminal; VS Code silently fails on these
+- Never use PYEOF heredoc with backticks in JSX — use cat > /tmp/file.py approach instead
+- Always verify .env.local writes with: `cat /path/to/.env.local`
 
-## /session/entries (app/session/entries/page.js)
-- Same password gate, shared localStorage auth
-- Table: art thumbnail, album, artist, year, rating, type, favorite/masterpiece flags
-- Click row → edit modal with all fields + delete with confirm step
-- Search + sort (newest/oldest/A-Z)
-- View → link to public post page from edit modal
-- Edit saves via PATCH /api/entries/[slug]
-- Delete via DELETE /api/entries/[slug]
+**Environment variables:**
+- DATABASE_URL — Neon Postgres connection string
+- ANTHROPIC_API_KEY — Claude API key
+- SESSION_SECRET — generated with `openssl rand -hex 32`, saved in Vercel (sensitive) + .env.local
+- SESSION_SECRET is not yet wired to API route protection (deferred — see SECURITY above)
+
+**Git workflow:**
