@@ -13,7 +13,7 @@ const labelStyle = { fontFamily: MONO, fontSize: 10, letterSpacing: '0.14em', te
 
 function inputStyle(focused) {
   return {
-    background: '#fff', border: `1px solid ${focused ? '#c8d47a' : '#e0dcd5'}`, borderRadius: 8,
+    background: '#fff', border: `1px solid ${focused ? '#1a1916' : '#e0dcd5'}`, borderRadius: 8,
     padding: '9px 14px', fontFamily: MONO, fontSize: 12, color: '#1a1916', outline: 'none', width: '100%', boxSizing: 'border-box',
   };
 }
@@ -43,7 +43,7 @@ function PasswordGate({ onAuth }) {
         />
         {error && <div style={{ fontFamily: MONO, fontSize: 11, color: '#ef4444' }}>incorrect password</div>}
         <button onClick={handleAuth}
-          style={{ background: '#c8d47a', color: '#1a1916', borderRadius: 8, padding: '12px 0', fontFamily: MONO, fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase', cursor: 'pointer', border: 'none', fontWeight: 600 }}>
+          style={{ background: '#1a1916', color: '#1a1916', borderRadius: 8, padding: '12px 0', fontFamily: MONO, fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase', cursor: 'pointer', border: 'none', fontWeight: 600 }}>
           Enter →
         </button>
       </div>
@@ -128,7 +128,7 @@ function EditModal({ entry, onSave, onDelete, onClose }) {
               View →
             </a>
             <button onClick={handleSave} disabled={saving}
-              style={{ background: '#c8d47a', color: '#1a1916', border: 'none', borderRadius: 8, padding: '8px 20px', fontFamily: MONO, fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600, opacity: saving ? 0.5 : 1 }}>
+              style={{ background: '#1a1916', color: '#1a1916', border: 'none', borderRadius: 8, padding: '8px 20px', fontFamily: MONO, fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600, opacity: saving ? 0.5 : 1 }}>
               {saving ? 'Saving…' : 'Save'}
             </button>
             <button onClick={handleDelete} disabled={deleting}
@@ -183,7 +183,7 @@ function EditModal({ entry, onSave, onDelete, onClose }) {
             {[['Favorite', 'favorite'], ['Masterpiece', 'masterpiece']].map(([label, key]) => (
               <label key={key} style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
                 <input type="checkbox" checked={fields[key]} onChange={e => set(key, e.target.checked)}
-                  style={{ accentColor: '#c8d47a', cursor: 'pointer', width: 14, height: 14 }} />
+                  style={{ accentColor: '#1a1916', cursor: 'pointer', width: 14, height: 14 }} />
                 <span style={{ fontFamily: MONO, fontSize: 11, color: fields[key] ? '#1a1916' : '#aaa8a2' }}>{label}</span>
               </label>
             ))}
@@ -347,11 +347,11 @@ export default function SessionEntries() {
                   <div style={{ padding: '0 8px', fontFamily: SANS, fontSize: 13, fontWeight: 500, color: '#1a1916', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{entry.album}</div>
                   <div style={{ padding: '0 8px', fontFamily: MONO, fontSize: 11, color: '#7a776f', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{entry.artist}</div>
                   <div style={{ padding: '0 8px', fontFamily: MONO, fontSize: 11, color: '#aaa8a2' }}>{entry.year || '—'}</div>
-                  <div style={{ padding: '0 8px', fontFamily: MONO, fontSize: 11, color: '#c8d47a' }}>{entry.rating || '—'}</div>
+                  <div style={{ padding: '0 8px', fontFamily: MONO, fontSize: 11, color: '#1a1916' }}>{entry.rating || '—'}</div>
                   <div style={{ padding: '0 8px', fontFamily: MONO, fontSize: 10, color: '#aaa8a2', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{entry.entry_type || '—'}</div>
                   <div style={{ padding: '0 8px', display: 'flex', gap: 6 }}>
                     {entry.favorite === true && <span title="Favorite" style={{ fontSize: 12 }}>♥</span>}
-                    {entry.masterpiece === true && <span title="Masterpiece" style={{ fontSize: 10, color: '#c8d47a', fontFamily: MONO }}>M</span>}
+                    {entry.masterpiece === true && <span title="Masterpiece" style={{ fontSize: 10, color: '#1a1916', fontFamily: MONO }}>M</span>}
                   </div>
                 </div>
               ))}
