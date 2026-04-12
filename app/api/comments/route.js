@@ -12,7 +12,7 @@ export async function GET(request) {
            author_name, content, upvotes, pending, created_at
     FROM comments
     WHERE entry_slug = ${slug}
-      AND pending = false
+      AND pending = true
     ORDER BY created_at ASC
   `;
 
