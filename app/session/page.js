@@ -182,7 +182,7 @@ function PasswordGate({ onAuth }) {
         />
         {error && <div style={{ fontFamily: MONO, fontSize: 11, color: '#ef4444' }}>incorrect password</div>}
         <button onClick={handleAuth}
-          style={{ background: '#c8d47a', color: '#1a1916', borderRadius: 8, padding: '12px 0', fontFamily: MONO, fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase', cursor: 'pointer', border: 'none', fontWeight: 600 }}>
+          style={{ background: '#1a1916', color: '#1a1916', borderRadius: 8, padding: '12px 0', fontFamily: MONO, fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase', cursor: 'pointer', border: 'none', fontWeight: 600 }}>
           Enter →
         </button>
       </div>
@@ -253,7 +253,7 @@ function AlbumPicker({ onSelect }) {
         <span style={{ color: '#d0ccc5' }}>·</span>
         <span style={{ ...labelStyle }}>session</span>
         <div style={{ marginLeft: 'auto', display: 'flex', gap: 10 }}>
-          <a href="/session/entries" style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#7a776f', textDecoration: 'none', padding: '6px 14px', borderRadius: 8, border, background: '#fff' }}>Entries →</a>
+          <a href="/session/entries" style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#7a776f', textDecoration: 'none', padding: '6px 10px', borderRadius: 8, border, background: '#fff' }}>Entries</a>
         </div>
       </div>
 
@@ -277,7 +277,7 @@ function AlbumPicker({ onSelect }) {
                 color: '#1a1916', outline: 'none', boxShadow: '0 2px 16px rgba(0,0,0,0.06)',
                 boxSizing: 'border-box',
               }}
-              onFocus={e => e.target.style.borderColor = '#c8d47a'}
+              onFocus={e => e.target.style.borderColor = '#1a1916'}
               onBlur={e => e.target.style.borderColor = '#d8d5cf'}
             />
             {searching && (
@@ -375,7 +375,7 @@ function ResearchOverlay({ art, phraseIndex, album, artist }) {
           <div style={{ fontFamily:"'DM Mono',monospace", fontSize:11, letterSpacing:'0.12em', textTransform:'uppercase', color:'rgba(26,25,22,0.4)' }}>{artist}</div>
         </div>
         <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:14 }}>
-          <div key={phraseIndex} style={{ fontFamily:"'DM Mono',monospace", fontSize:11, letterSpacing:'0.12em', textTransform:'uppercase', color:'#c8d47a', animation:'overlay-fade 0.5s ease forwards' }}>
+          <div key={phraseIndex} style={{ fontFamily:"'DM Mono',monospace", fontSize:11, letterSpacing:'0.12em', textTransform:'uppercase', color:'#1a1916', animation:'overlay-fade 0.5s ease forwards' }}>
             {['Searching the archive...','Pulling press records...','Checking release dates...','Reading liner notes...','Cross-referencing labels...','Scanning chart history...','Digging through the stacks...','Consulting the canon...'][phraseIndex % 8]}
           </div>
           <div style={{ display:'flex', gap:6 }}>
@@ -601,9 +601,9 @@ export default function Session() {
           <button onClick={() => setView('picker')} style={{ fontFamily:MONO, fontSize:11, letterSpacing:'0.08em', textTransform:'uppercase', color:'rgba(232,228,220,0.7)', background:'rgba(0,0,0,0.35)', border:'1px solid rgba(255,255,255,0.12)', borderRadius:8, padding:'7px 14px', cursor:'pointer', backdropFilter:'blur(8px)' }}>
             ← Back
           </button>
-        </div>
           {brief && <span style={{ fontFamily:MONO, fontSize:10, color:'rgba(232,228,220,0.35)', letterSpacing:'0.1em' }}>{fmtTime(elapsed)}</span>}
-          <a href="/session/entries" style={{ fontFamily:MONO, fontSize:11, letterSpacing:'0.08em', textTransform:'uppercase', color:'rgba(232,228,220,0.7)', textDecoration:'none', padding:'6px 10px', borderRadius:8, border:'1px solid rgba(255,255,255,0.12)', background:'rgba(0,0,0,0.35)', backdropFilter:'blur(8px)' }}>Entries</a>
+          <a href="/session/entries" style={{ fontFamily:MONO, fontSize:11, letterSpacing:'0.08em', textTransform:'uppercase', color:'rgba(232,228,220,0.7)', textDecoration:'none', padding:'6px 10px', borderRadius:8, border:'1px solid rgba(255,255,255,0.12)', background:'rgba(0,0,0,0.35)', backdropFilter:'blur(8px)', flexShrink:0 }}>Entries</a>
+        </div>
         {/* Split panels */}
         <div style={{ display:'flex', flex:1, overflow:'hidden', gap:16, padding:16 }}>
 
@@ -781,7 +781,7 @@ export default function Session() {
               <span style={{ fontFamily:SERIF, fontSize:20, color:'#1a1916' }}>Session Output</span>
               <div style={{ display:'flex', gap:10, alignItems:'center' }}>
                 {!saved
-                  ? <button onClick={doSave} disabled={saving} className="sn-btn" style={{ background:'#c8d47a', color:'#1a1916', borderRadius:8, padding:'8px 20px', fontFamily:MONO, fontSize:11, letterSpacing:'0.1em', textTransform:'uppercase', border:'none', cursor:'pointer', fontWeight:600 }}>
+                  ? <button onClick={doSave} disabled={saving} className="sn-btn" style={{ background:'#1a1916', color:'#1a1916', borderRadius:8, padding:'8px 20px', fontFamily:MONO, fontSize:11, letterSpacing:'0.1em', textTransform:'uppercase', border:'none', cursor:'pointer', fontWeight:600 }}>
                       {saving ? 'Saving…' : 'Save to Site →'}
                     </button>
                   : <span style={{ fontFamily:MONO, fontSize:11, color:'rgba(232,228,220,0.8)', fontWeight:600 }}>✓ saved</span>
