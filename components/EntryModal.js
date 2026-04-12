@@ -1,8 +1,23 @@
+// components/EntryModal.js
+// The overlay modal that opens when you click an album tile on the homepage.
+// Shows the full entry — art, metadata, background, notes, horizon bar, tags.
+// Does NOT load a new page — it overlays the current page and updates the URL
+// to /entries/[slug] so the entry is shareable, then restores / on close.
+//
+// Features:
+// - Full-bleed album art background
+// - Frosted glass info box
+// - Collapse-on-scroll metadata (StickyBar replaces it when scrolled)
+// - Animated horizon bar
+// - Masterpiece star glow + gold shine animation
+// - Escape key to close
+
 'use client';
 
 import { useEffect, useState, useRef, useCallback } from 'react';
 import Link from 'next/link';
 
+// ── CONSTANTS ──────────────────────────────────────────────────────────────
 const STAR_PATH = 'M9 1.5l2.163 4.38 4.837.703-3.5 3.412.826 4.818L9 12.39l-4.326 2.273.826-4.818L2 6.583l4.837-.703z';
 const GOLD = '#E8B84B';
 const GOLD_EMPTY = 'rgba(232,184,75,0.18)';
@@ -12,12 +27,17 @@ const WIDGET_BG = 'rgba(8,6,14,0.50)';
 const WIDGET_BORDER = 'rgba(255,255,255,0.09)';
 const DIVIDER = 'rgba(255,255,255,0.07)';
 
+// ── UTILITY FUNCTIONS ──────────────────────────────────────────────────────
+
+// Parses a rating value to a number — handles strings like "4.5 stars"
 function parseRating(rating) {
   if (!rating) return 0;
   const n = parseFloat(rating);
   return isNaN(n) ? 0 : n;
 }
 
+// Parses horizon string into array of heights (0–1).
+// Accepts either Unicode block characters (▁▂▃▄) or a JSON array of numbers.
 function parseHorizon(horizon) {
   if (!horizon) return [];
   const BLOCK_MAP = { '\u2581': 0.12, '\u2582': 0.25, '\u2583': 0.37, '\u2584': 0.50, '\u2585': 0.62, '\u2586': 0.75, '\u2587': 0.87, '\u2588': 1.00 };
@@ -30,6 +50,8 @@ function parseHorizon(horizon) {
   return [...horizon.trim()].filter(c => BLOCK_MAP[c]).map(c => BLOCK_MAP[c]);
 }
 
+// Parses numbered track lines with star ratings from the notes field.
+// e.g. "1. Song Title — ★★★" becomes { num: 1, name: "Song Title", stars: 3 }
 function parseTracksFromNotes(notesText) {
   if (!notesText) return [];
   const matches = [...notesText.matchAll(/(\d+)\.\s+([^\u2014\u2013\n]+?)\s*[\u2014\u2013]\s*(\u2605[\u2605\u2606\s]*)/g)];
@@ -40,6 +62,8 @@ function parseTracksFromNotes(notesText) {
   }));
 }
 
+// Splits notes into album-level prose and track-level notes.
+// Track notes start at "Track Notes" heading or first numbered line.
 function splitNotes(notesText) {
   if (!notesText) return { albumNotes: '', trackNotes: '' };
   const clean = notesText.replace(/\*?\*?Album Notes\*?\*?/g, '').replace(/\*\*/g, '').trim();
@@ -53,6 +77,10 @@ function splitNotes(notesText) {
   return { albumNotes: clean, trackNotes: '' };
 }
 
+// ── STARS ──────────────────────────────────────────────────────────────────
+// Read-only star display used inside the modal.
+// glow=true adds the pulsing animation used for Masterpiece entries.
+
 function Stars({ rating, size = 16, glow = false }) {
   const numeric = parseRating(rating);
   return (
@@ -62,9 +90,11 @@ function Stars({ rating, size = 16, glow = false }) {
         const half = !filled && numeric >= i - 0.5;
         return (
           <div key={i} className={glow ? 'ln-star-glow' : ''} style={{ position: 'relative', width: size, height: size, flexShrink: 0, display: 'block' }}>
+            {/* Dim background star */}
             <svg width={size} height={size} viewBox="0 0 18 18" style={{ position: 'absolute', top: 0, left: 0 }}>
               <path d={STAR_PATH} fill={GOLD_EMPTY} />
             </svg>
+            {/* Gold fill — full or half width */}
             <div style={{ position: 'absolute', top: 0, left: 0, overflow: 'hidden', width: half ? size / 2 : filled ? size : 0 }}>
               <svg width={size} height={size} viewBox="0 0 18 18" style={{ display: 'block' }}>
                 <path d={STAR_PATH} fill={GOLD} />
@@ -77,8 +107,15 @@ function Stars({ rating, size = 16, glow = false }) {
   );
 }
 
+// ── HORIZON DIVIDER ────────────────────────────────────────────────────────
+// The bar chart that sits between album notes and track notes.
+// Each bar represents one track — height = track star rating.
+// Bars animate in with a spring effect when the modal opens (animate prop).
+// Hovering a bar shows a tooltip with the track name.
+
 function HorizonDivider({ horizon, tracks, animate }) {
   const bars = parseHorizon(horizon);
+  // Use track star ratings if available, otherwise fall back to horizon block characters
   const trackBars = tracks.length > 0 ? tracks.map(t => t.stars / 5) : bars;
   if (!trackBars.length) return null;
   const barWidth = Math.min(trackBars.length * 14, 280);
@@ -92,6 +129,7 @@ function HorizonDivider({ horizon, tracks, animate }) {
           const track = tracks[i];
           return (
             <div key={i} className="ln-horizon-bar-wrap" style={{ position: 'relative', flex: 1, height: '100%', display: 'flex', alignItems: 'flex-end' }}>
+              {/* Tooltip — track name on hover */}
               {track && <div className="ln-horizon-tooltip">{track.name}</div>}
               <div
                 className="ln-horizon-bar"
@@ -101,6 +139,7 @@ function HorizonDivider({ horizon, tracks, animate }) {
                   background: '#c8d47a',
                   borderRadius: '1px 1px 0 0',
                   transformOrigin: 'bottom',
+                  // Bars animate up with staggered spring delay when animate=true
                   transform: animate ? 'scaleY(1)' : 'scaleY(0)',
                   opacity: animate ? 1 : 0,
                   transition: animate
@@ -116,6 +155,11 @@ function HorizonDivider({ horizon, tracks, animate }) {
   );
 }
 
+// ── STICKY BAR ─────────────────────────────────────────────────────────────
+// A compact metadata bar that slides in at the top of the info box
+// when the user scrolls down past the main metadata section.
+// Shows album, artist, year, rating, relationship, and entry type in one line.
+
 function StickyBar({ entry, visible }) {
   const masterpiece = entry?.masterpiece === true;
   const isSubmission = entry?.entry_type === 'Submission';
@@ -130,13 +174,14 @@ function StickyBar({ entry, visible }) {
       gap: 12,
       fontFamily: FONT,
       background: 'rgba(8,6,14,0.3)',
+      // Animates in by expanding from 0 height when visible becomes true
       maxHeight: visible ? 52 : 0,
       opacity: visible ? 1 : 0,
       overflow: 'hidden',
       transition: 'max-height 0.35s cubic-bezier(0.4,0,0.2,1), opacity 0.3s ease',
     }}>
       <div style={{ fontSize: 14, fontWeight: 700, color: '#f0ece4', letterSpacing: '-0.02em', flexShrink: 0 }}>{entry?.album}</div>
-      <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', flexShrink: 0 }}>{entry?.artist}{entry?.year ? ' \u00b7 ' + entry.year : ''}</div>
+      <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', flexShrink: 0 }}>{entry?.artist}{entry?.year ? ' · ' + entry.year : ''}</div>
       <div style={{ width: 1, height: 16, background: 'rgba(255,255,255,0.1)', flexShrink: 0 }} />
       <Stars rating={entry?.rating} size={12} glow={masterpiece} />
       {masterpiece && (
@@ -152,7 +197,7 @@ function StickyBar({ entry, visible }) {
       )}
       {isSubmission && (
         <>
-          <span style={{ color: 'rgba(255,255,255,0.15)', fontFamily: MONO, fontSize: 9 }}>\u00b7</span>
+          <span style={{ color: 'rgba(255,255,255,0.15)', fontFamily: MONO, fontSize: 9 }}>·</span>
           <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(200,212,122,0.6)' }}>Submission</span>
         </>
       )}
@@ -160,13 +205,16 @@ function StickyBar({ entry, visible }) {
   );
 }
 
+// ── MAIN MODAL ─────────────────────────────────────────────────────────────
+
 export default function EntryModal({ slug, onClose }) {
   const [entry, setEntry] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [animateBars, setAnimateBars] = useState(false);
-  const [collapsed, setCollapsed] = useState(false);
+  const [animateBars, setAnimateBars] = useState(false); // triggers horizon bar animation
+  const [collapsed, setCollapsed] = useState(false);     // true when user has scrolled down
   const scrollRef = useRef(null);
 
+  // Fetch entry data when slug changes
   useEffect(() => {
     if (!slug) return;
     setLoading(true);
@@ -178,11 +226,14 @@ export default function EntryModal({ slug, onClose }) {
       .then(data => {
         setEntry(data.entry || data);
         setLoading(false);
+        // Wait two animation frames before triggering bar animation
+        // so the bars are in the DOM before we animate them
         requestAnimationFrame(() => requestAnimationFrame(() => setAnimateBars(true)));
       })
       .catch(() => setLoading(false));
   }, [slug]);
 
+  // Update the URL to /entries/[slug] while modal is open — restores / on close
   useEffect(() => {
     if (slug) window.history.pushState({}, '', '/entries/' + slug);
     return () => {
@@ -192,21 +243,25 @@ export default function EntryModal({ slug, onClose }) {
     };
   }, [slug]);
 
+  // Close on Escape key
   useEffect(() => {
     const onKey = e => { if (e.key === 'Escape') onClose(); };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
 
+  // Prevent page scrolling while modal is open
   useEffect(() => {
     document.body.style.overflow = 'hidden';
     return () => { document.body.style.overflow = ''; };
   }, []);
 
+  // Show the sticky bar when the user scrolls more than 40px into the notes
   const handleScroll = useCallback(() => {
     if (scrollRef.current) setCollapsed(scrollRef.current.scrollTop > 40);
   }, []);
 
+  // Parse tags — stored as array or comma string in the DB
   const tags = entry?.tags
     ? (Array.isArray(entry.tags) ? entry.tags : entry.tags.split(',').map(t => t.trim()).filter(Boolean))
     : [];
@@ -218,6 +273,7 @@ export default function EntryModal({ slug, onClose }) {
 
   return (
     <>
+      {/* CSS animations — defined here so they're scoped to the modal */}
       <style>{`
         @keyframes ln-star-glow-kf {
           0%,100%{filter:brightness(1.15) drop-shadow(0 0 3px rgba(255,210,60,0.5)) drop-shadow(0 0 6px rgba(255,180,30,0.3))}
@@ -261,14 +317,14 @@ export default function EntryModal({ slug, onClose }) {
         .ln-notes-scroll::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,0.2)}
       `}</style>
 
-      {/* Backdrop — transparent, click to close */}
+      {/* Invisible backdrop — clicking closes the modal */}
       <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 500 }} />
 
-      {/* Modal */}
+      {/* Modal container */}
       <div
         role="dialog"
         aria-modal="true"
-        onClick={e => e.stopPropagation()}
+        onClick={e => e.stopPropagation()} // prevent clicks inside from closing
         style={{
           position: 'fixed', top: '50%', left: '50%',
           transform: 'translate(-50%,-50%)',
@@ -279,13 +335,14 @@ export default function EntryModal({ slug, onClose }) {
           animation: 'ln-modal-in 0.3s cubic-bezier(0.34,1.2,0.64,1) forwards',
         }}
       >
-        {/* Album art full bleed */}
+        {/* Full-bleed album art — fills the entire modal background */}
         {entry?.album_art && (
           <img src={entry.album_art} alt={entry.album} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
         )}
+        {/* Dark tint over the art so text is readable */}
         <div style={{ position: 'absolute', inset: 0, background: 'rgba(6,4,12,0.18)' }} />
 
-        {/* Close */}
+        {/* Close button */}
         <button
           onClick={onClose}
           aria-label="Close"
@@ -300,7 +357,7 @@ export default function EntryModal({ slug, onClose }) {
           ✕
         </button>
 
-        {/* Info box — inset */}
+        {/* Frosted glass info box — inset from the modal edges */}
         <div style={{
           position: 'absolute', top: 48, left: 44, right: 44, bottom: 64,
           background: WIDGET_BG,
@@ -310,9 +367,10 @@ export default function EntryModal({ slug, onClose }) {
           display: 'flex', flexDirection: 'column', overflow: 'hidden',
         }}>
 
+          {/* Sticky bar — slides in when metadata is scrolled out of view */}
           <StickyBar entry={entry} visible={collapsed} />
 
-          {/* Top: metadata + background */}
+          {/* Metadata + background section — collapses when scrolled */}
           <div style={{
             display: 'grid',
             gridTemplateRows: collapsed ? '0fr' : '1fr',
@@ -327,9 +385,10 @@ export default function EntryModal({ slug, onClose }) {
             transition: 'opacity 0.25s ease',
           }}>
 
-            {/* Metadata */}
+            {/* Left column: album title, artist, year, rating, relationship */}
             <div style={{ padding: '20px 22px', width: 270, flexShrink: 0, borderRight: '1px solid ' + DIVIDER, fontFamily: FONT, display: 'flex', flexDirection: 'column' }}>
               {loading ? (
+                // Skeleton loading bars
                 [70, 50, 40].map((w, i) => <div key={i} style={{ height: 10, width: w + '%', background: 'rgba(255,255,255,0.08)', borderRadius: 3, marginBottom: 8 }} />)
               ) : entry ? (
                 <>
@@ -361,7 +420,7 @@ export default function EntryModal({ slug, onClose }) {
               ) : null}
             </div>
 
-            {/* Background */}
+            {/* Right column: background text */}
             <div style={{ flex: 1, padding: '20px 22px', minWidth: 0, fontFamily: FONT }}>
               {loading ? (
                 [100, 90, 95, 85, 88].map((w, i) => <div key={i} style={{ height: 9, width: w + '%', background: 'rgba(255,255,255,0.08)', borderRadius: 3, marginBottom: 8 }} />)
@@ -373,11 +432,12 @@ export default function EntryModal({ slug, onClose }) {
               ) : null}
             </div>
           </div>
-
           </div>
-          {/* Scrollable notes */}
+
+          {/* Scrollable notes section */}
           <div ref={scrollRef} className="ln-notes-scroll" onScroll={handleScroll} style={{ flex: 1, overflowY: 'auto', padding: '20px 24px', fontFamily: FONT }}>
             {loading ? (
+              // Skeleton loading bars
               [100, 92, 97, 85, 90, 88, 95, 78].map((w, i) => <div key={i} style={{ height: 9, width: w + '%', background: 'rgba(255,255,255,0.08)', borderRadius: 3, marginBottom: 10 }} />)
             ) : entry ? (
               <>
@@ -388,6 +448,7 @@ export default function EntryModal({ slug, onClose }) {
                   </>
                 )}
 
+                {/* Horizon bar — shown between album notes and track notes */}
                 {(tracks.length > 0 || entry.horizon) && (
                   <HorizonDivider horizon={entry.horizon} tracks={tracks} animate={animateBars} />
                 )}
@@ -416,7 +477,7 @@ export default function EntryModal({ slug, onClose }) {
           </div>
         </div>
 
-        {/* Footer */}
+        {/* Footer bar — first 3 tags on the left, full page link on the right */}
         <div style={{
           position: 'absolute', bottom: 0, left: 0, right: 0, height: 44,
           background: 'rgba(6,4,12,0.55)', borderTop: '1px solid rgba(255,255,255,0.06)',
@@ -430,6 +491,7 @@ export default function EntryModal({ slug, onClose }) {
               </span>
             ))}
           </div>
+          {/* Link to the full public entry page with comments */}
           {entry && (
             <a href={'/entries/' + entry.slug} style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#c8d47a', textDecoration: 'none' }}>
               Full page + comments ↗
