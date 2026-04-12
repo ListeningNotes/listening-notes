@@ -1,32 +1,13 @@
-// app/api/research/route.js
-// Called by the session tool when you click "Research".
-// Sends the album + artist to Claude, gets back structured facts as JSON.
-
 import Anthropic from '@anthropic-ai/sdk';
-import { isAuthorized } from '../../../lib/auth';
 
-// Creates one Anthropic client instance that this whole file uses.
-// The API key is read from your environment variables — never hardcoded.
 const client = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
-// POST — protected. Only the session tool can call this.
-// "POST" means this route receives data (the album name) rather than just serving a page.
 export async function POST(request) {
-
-  // Auth check — if the request doesn't have the correct SESSION_SECRET header, stop here.
-  // Returns a 401 which means "you're not allowed in".
-  if (!isAuthorized(request)) {
-    return Response.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
   try {
-    // Pull the album and artist out of the request body the session tool sent.
     const { album, artist } = await request.json();
 
-    // Send a message to Claude asking for structured research about this album.
-    // max_tokens limits how long Claude's response can be (controls cost + speed).
     const message = await client.messages.create({
       model: 'claude-sonnet-4-20250514',
       max_tokens: 1600,
@@ -70,21 +51,14 @@ Return ONLY valid JSON with no markdown fences:
       ]
     });
 
-    // Claude returns an array of content blocks — we want the first one's text.
     const text = message.content[0].text;
-
-    // Claude sometimes wraps JSON in extra text. This finds the first { and last }
-    // to extract just the JSON portion, then parses it into a real JavaScript object.
     const start = text.indexOf('{');
     const end = text.lastIndexOf('}');
     const parsed = JSON.parse(text.slice(start, end + 1));
 
-    // Send the parsed research object back to the session tool.
     return Response.json(parsed);
 
   } catch (error) {
-    // If anything goes wrong, send back the error message with a 500 status
-    // ("500" means something broke on the server side).
     return Response.json({ error: error.message }, { status: 500 });
   }
 }
