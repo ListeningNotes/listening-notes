@@ -116,27 +116,50 @@ async function fetchAlbumArtUrl(albumName, artistName, year) {
 async function searchArtistAlbums(artistQuery) {
   if (!artistQuery.trim()) return [];
   try {
-    const query = encodeURIComponent(artistQuery);
-    const res = await fetch(`https://itunes.apple.com/search?term=${query}&entity=album&limit=20&attribute=artistTerm`);
-    const data = await res.json();
-    const results = data.results || [];
-    // Deduplicate by collection name, take most relevant
+    // Step 1: search for artist to get their iTunes artistId
+    const searchRes = await fetch(
+      `https://itunes.apple.com/search?term=${encodeURIComponent(artistQuery)}&entity=musicArtist&limit=5`
+    );
+    const searchData = await searchRes.json();
+    const artists = searchData.results || [];
+    if (!artists.length) return [];
+
+    // Pick closest name match
+    const q = artistQuery.toLowerCase().trim();
+    const best = artists.find(a => a.artistName.toLowerCase() === q) || artists[0];
+    const artistId = best.artistId;
+    const artistName = best.artistName;
+
+    // Step 2: lookup full discography by artistId
+    // Note: first result is the artist record itself, skip it
+    const lookupRes = await fetch(
+      `https://itunes.apple.com/lookup?id=${artistId}&entity=album&limit=100`
+    );
+    const lookupData = await lookupRes.json();
+    const results = (lookupData.results || []).filter(r => r.wrapperType === 'collection');
+
     const seen = new Set();
     const albums = [];
     for (const r of results) {
-      const key = (r.collectionName || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-      if (!seen.has(key) && r.artworkUrl100) {
-        seen.add(key);
-        albums.push({
-          name: r.collectionName,
-          artist: r.artistName,
-          year: (r.releaseDate || '').slice(0, 4),
-          art: r.artworkUrl100.replace(/\d+x\d+bb/, '600x600bb'),
-          artLarge: r.artworkUrl100.replace(/\d+x\d+bb/, '3000x3000bb'),
-        });
-      }
+      if (!r.artworkUrl100) continue;
+      const trackCount = r.trackCount || 0;
+      if (trackCount > 0 && trackCount <= 3) continue;
+      const name = r.collectionName || '';
+      if (/- single$/i.test(name)) continue;
+      const key = name.toLowerCase().replace(/[^a-z0-9]/g, '');
+      if (seen.has(key)) continue;
+      seen.add(key);
+      albums.push({
+        name,
+        artist: artistName,
+        year: (r.releaseDate || '').slice(0, 4),
+        trackCount,
+        art: r.artworkUrl100.replace(/\d+x\d+bb/, '600x600bb'),
+        artLarge: r.artworkUrl100.replace(/\d+x\d+bb/, '3000x3000bb'),
+      });
     }
-    return albums.slice(0, 12);
+    albums.sort((a, b) => (b.year || '0').localeCompare(a.year || '0'));
+    return albums.slice(0, 20);
   } catch { return []; }
 }
 
@@ -423,6 +446,11 @@ export default function Session() {
   const [scoreCheckOpen, setScoreCheckOpen] = useState(false);
   const [elapsed, setElapsed] = useState(0);
   const timerRef = useRef(null);
+  const [chatOpen, setChatOpen] = useState(false);
+  const [chatMessages, setChatMessages] = useState([]);
+  const [chatInput, setChatInput] = useState('');
+  const [chatLoading, setChatLoading] = useState(false);
+  const chatEndRef = useRef(null);
 
   useEffect(() => {
     if (localStorage.getItem('ln_session_auth') === 'true') setAuthed(true);
@@ -517,6 +545,26 @@ export default function Session() {
     } catch (err) {
       setBriefError(err.message || 'Research failed.');
     } finally { setBriefLoading(false); }
+  }
+
+  async function sendChat(msg) {
+    const message = msg || chatInput.trim();
+    if (!message) return;
+    setChatInput('');
+    setChatMessages(prev => [...prev, { role: 'user', text: message }]);
+    setChatLoading(true);
+    try {
+      const res = await fetch('/api/reflect', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message, brief, overallNotes, trackNotes, trackRatings, tracks: tracks || [] })
+      });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      setChatMessages(prev => [...prev, { role: 'ai', text: data.reply }]);
+      setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
+    } catch (err) {
+      setChatMessages(prev => [...prev, { role: 'ai', text: 'Something went wrong: ' + err.message }]);
+    } finally { setChatLoading(false); }
   }
 
   async function doFormat() {
@@ -762,8 +810,60 @@ export default function Session() {
               )}
             </div>
 
+            {/* Chat drawer */}
+            {chatOpen && (
+              <div style={{ borderTop:'1px solid rgba(255,255,255,0.08)', display:'flex', flexDirection:'column', height:280, background:'rgba(0,0,0,0.25)', flexShrink:0 }}>
+                <div style={{ flex:1, overflowY:'auto', padding:'12px 16px', display:'flex', flexDirection:'column', gap:10 }}>
+                  {chatMessages.length === 0 && (
+                    <div style={{ display:'flex', flexDirection:'column', gap:8, paddingTop:8 }}>
+                      <div style={{ fontFamily:MONO, fontSize:9, letterSpacing:'0.12em', textTransform:'uppercase', color:'rgba(232,228,220,0.25)', marginBottom:4 }}>Quick prompts</div>
+                      {['Reflect on my notes so far', 'What patterns do you notice?', 'Push back on something I said'].map(p => (
+                        <button key={p} onClick={() => sendChat(p)}
+                          style={{ fontFamily:MONO, fontSize:10, color:'rgba(232,228,220,0.5)', background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:6, padding:'6px 12px', cursor:'pointer', textAlign:'left', letterSpacing:'0.04em' }}>
+                          {p}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {chatMessages.map((m, i) => (
+                    <div key={i} style={{ display:'flex', flexDirection:'column', gap:2, alignItems: m.role === 'user' ? 'flex-end' : 'flex-start' }}>
+                      <div style={{ fontFamily:MONO, fontSize:9, letterSpacing:'0.1em', textTransform:'uppercase', color:'rgba(232,228,220,0.25)' }}>{m.role === 'user' ? 'you' : 'ai'}</div>
+                      <div style={{ maxWidth:'85%', padding:'8px 12px', borderRadius:10, background: m.role === 'user' ? 'rgba(255,255,255,0.12)' : 'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.1)', fontFamily:SANS, fontSize:12, lineHeight:1.7, color:'rgba(232,228,220,0.88)', whiteSpace:'pre-wrap' }}>
+                        {m.text}
+                      </div>
+                    </div>
+                  ))}
+                  {chatLoading && (
+                    <div style={{ display:'flex', gap:4, padding:'4px 0' }}>
+                      {[0,1,2].map(i => <div key={i} style={{ width:5, height:5, borderRadius:'50%', background:'rgba(232,228,220,0.3)', animation:`overlay-dot 1.2s ease-in-out ${i*0.2}s infinite` }} />)}
+                    </div>
+                  )}
+                  <div ref={chatEndRef} />
+                </div>
+                <div style={{ display:'flex', gap:8, padding:'10px 16px', borderTop:'1px solid rgba(255,255,255,0.06)' }}>
+                  <input
+                    value={chatInput}
+                    onChange={e => setChatInput(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && !e.shiftKey && sendChat()}
+                    placeholder="Ask anything about the music…"
+                    style={{ flex:1, background:'rgba(255,255,255,0.06)', border:'1px solid rgba(255,255,255,0.12)', borderRadius:8, padding:'8px 12px', fontFamily:MONO, fontSize:11, color:'#e8e4dc', outline:'none' }}
+                  />
+                  <button onClick={() => sendChat()} disabled={!chatInput.trim() || chatLoading}
+                    style={{ background:'rgba(255,255,255,0.12)', border:'1px solid rgba(255,255,255,0.15)', borderRadius:8, padding:'8px 14px', fontFamily:MONO, fontSize:11, color:'#e8e4dc', cursor:'pointer', letterSpacing:'0.06em' }}>
+                    →
+                  </button>
+                </div>
+              </div>
+            )}
+
             <div style={{ padding:'12px 22px', borderTop:'1px solid rgba(255,255,255,0.08)', display:'flex', alignItems:'center', justifyContent:'space-between', flexShrink:0, background:'rgba(0,0,0,0.2)' }}>
-              <span style={{ fontFamily:MONO, fontSize:10, color:'rgba(232,228,220,0.35)' }}>{overallNotes.length} chars</span>
+              <div style={{ display:'flex', alignItems:'center', gap:12 }}>
+                <span style={{ fontFamily:MONO, fontSize:10, color:'rgba(232,228,220,0.35)' }}>{overallNotes.length} chars</span>
+                <button onClick={() => setChatOpen(v => !v)}
+                  style={{ fontFamily:MONO, fontSize:10, letterSpacing:'0.08em', textTransform:'uppercase', color: chatOpen ? '#e8e4dc' : 'rgba(232,228,220,0.4)', background: chatOpen ? 'rgba(255,255,255,0.12)' : 'none', border:'1px solid ' + (chatOpen ? 'rgba(255,255,255,0.2)' : 'rgba(255,255,255,0.1)'), borderRadius:6, padding:'5px 10px', cursor:'pointer' }}>
+                  {chatOpen ? '✕ chat' : '💬 ask ai'}
+                </button>
+              </div>
               <button onClick={doFormat} disabled={!brief || overallNotes.trim().length < 10 || formatting} className="sn-btn"
                 style={{ background:'rgba(255,255,255,0.15)', color:'#e8e4dc', borderRadius:8, padding:'9px 24px', fontFamily:MONO, fontSize:11, letterSpacing:'0.1em', textTransform:'uppercase', border:'1px solid rgba(255,255,255,0.2)', cursor:'pointer', fontWeight:600 }}>
                 {formatting ? 'Formatting…' : 'Format & Done →'}
