@@ -1,12 +1,27 @@
+// app/api/comments/route.js
+// Handles public comments on entry pages.
+// GET — anyone can read approved comments (public facing).
+// POST — anyone can submit a comment, but it goes into a pending queue.
+//        Nothing appears on the site until you approve it in your session tool.
+
 import { neon } from '@neondatabase/serverless';
 
+// Database connection using the Neon serverless driver.
+// DATABASE_URL comes from your environment variables.
 const sql = neon(process.env.DATABASE_URL);
 
+// GET — public, no auth needed.
+// Loads all approved comments for a given entry and organizes them
+// into a nested tree (top-level comments + their replies).
 export async function GET(request) {
+  // Read the "slug" from the URL, e.g. /api/comments?slug=pet-sounds
   const { searchParams } = new URL(request.url);
   const slug = searchParams.get('slug');
+
+  // Slug is required — we can't load comments without knowing which entry
   if (!slug) return Response.json({ error: 'slug required' }, { status: 400 });
 
+  // Fetch only approved (pending = false) comments for this entry, oldest first
   const rows = await sql`
     SELECT id, entry_slug, track_index, parent_id,
            author_name, content, upvotes, pending, created_at
@@ -16,7 +31,9 @@ export async function GET(request) {
     ORDER BY created_at ASC
   `;
 
-  // Build nested tree
+  // Build a nested tree structure so replies sit under their parent comments.
+  // First pass: index every comment by its id.
+  // Second pass: attach replies to their parent, or add to root list.
   const map = {};
   const roots = [];
   rows.forEach(r => { map[r.id] = { ...r, replies: [] }; });
@@ -28,7 +45,9 @@ export async function GET(request) {
     }
   });
 
-  // Group by track_index
+  // Group comments by track_index so track-specific comments
+  // can be displayed next to the right track on the entry page.
+  // track_index of -1 means the comment is about the album overall.
   const byTrack = {};
   roots.forEach(c => {
     const k = String(c.track_index);
@@ -39,19 +58,24 @@ export async function GET(request) {
   return Response.json({ comments: byTrack });
 }
 
+// POST — public, no auth needed (anyone can submit).
+// Comments are held in a pending queue — nothing goes live until you approve it.
 export async function POST(request) {
   try {
     const { slug, track_index, parent_id, author_name, author_email, content } = await request.json();
 
+    // All required fields must be present and non-empty
     if (!slug || !author_name?.trim() || !author_email?.trim() || !content?.trim()) {
       return Response.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    // Basic email validation
+    // Basic email format check — must have something@something.something
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(author_email)) {
       return Response.json({ error: 'Invalid email' }, { status: 400 });
     }
 
+    // Insert the comment with pending = true.
+    // It will NOT appear on the site until you approve it.
     const result = await sql`
       INSERT INTO comments (entry_slug, track_index, parent_id, author_name, author_email, content, pending)
       VALUES (
@@ -61,12 +85,14 @@ export async function POST(request) {
         ${author_name.trim()},
         ${author_email.trim().toLowerCase()},
         ${content.trim()},
-        false
+        true
       )
       RETURNING id, track_index, parent_id, author_name, content, upvotes, pending, created_at
     `;
 
+    // Return the new comment so the UI can show a "thanks, pending approval" message
     return Response.json({ comment: result[0] });
+
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
