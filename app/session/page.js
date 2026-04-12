@@ -381,34 +381,83 @@ function AlbumPicker({ onSelect }) {
 // ── Main Session App ───────────────────────────────────────────────────────
 
 
-function ResearchOverlay({ art, phraseIndex, album, artist }) {
+// (BurstSparkles removed — using expand-to-fill transition instead)
+
+function ResearchOverlay({ art, phraseIndex, album, artist, onBurst }) {
   const [visible, setVisible] = useState(false);
+  const [fillPct, setFillPct] = useState(0);
+  const [expanding, setExpanding] = useState(false);
+  const fillRef = useRef(null);
+  const fillPctRef = useRef(0);
+
   useEffect(() => {
     const t = setTimeout(() => setVisible(true), 30);
     return () => clearTimeout(t);
   }, []);
+
+  // Slowly fill to ~82% while research runs
+  useEffect(() => {
+    fillRef.current = setInterval(() => {
+      fillPctRef.current = Math.min(fillPctRef.current + 0.5, 82);
+      setFillPct(fillPctRef.current);
+    }, 50);
+    return () => clearInterval(fillRef.current);
+  }, []);
+
+  // When research done, fill to 100 then expand to fill screen
+  useEffect(() => {
+    if (!onBurst) return;
+    clearInterval(fillRef.current);
+    const finish = setInterval(() => {
+      fillPctRef.current = Math.min(fillPctRef.current + 4, 100);
+      setFillPct(fillPctRef.current);
+      if (fillPctRef.current >= 100) {
+        clearInterval(finish);
+        setTimeout(() => setExpanding(true), 80);
+      }
+    }, 20);
+  }, [onBurst]);
+
+  const phrases = ['Searching the archive...','Pulling press records...','Checking release dates...','Reading liner notes...','Cross-referencing labels...','Scanning chart history...','Digging through the stacks...','Consulting the canon...'];
+
   return (
-    <div style={{ position:'fixed', inset:0, zIndex:200, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', opacity:visible?1:0, transition:'opacity 0.4s ease', overflow:'hidden' }}>
-      {art && <div style={{ position:'absolute', inset:'-40px', backgroundImage:`url(${art})`, backgroundSize:'cover', backgroundPosition:'center', filter:'blur(60px) saturate(1.2) brightness(0.85)', transform:'scale(1.15)' }} />}
-      <div style={{ position:'absolute', inset:0, background:art?'rgba(245,243,239,0.82)':'#f5f3ef' }} />
-      <div style={{ position:'relative', zIndex:1, display:'flex', flexDirection:'column', alignItems:'center', gap:32, padding:32, textAlign:'center' }}>
-        {art && <img src={art} alt={album} style={{ width:120, height:120, borderRadius:14, objectFit:'cover', boxShadow:'0 24px 64px rgba(0,0,0,0.6)' }} />}
-        <div>
-          <div style={{ fontFamily:"'DM Serif Display',serif", fontSize:'clamp(1.4rem,3vw,2rem)', color:'#1a1916', lineHeight:1.1, marginBottom:6 }}>{album}</div>
-          <div style={{ fontFamily:"'DM Mono',monospace", fontSize:11, letterSpacing:'0.12em', textTransform:'uppercase', color:'rgba(26,25,22,0.4)' }}>{artist}</div>
+    <div style={{ position:'fixed', inset:0, zIndex:200, display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:28, opacity:visible?1:0, transition:'opacity 0.4s ease', background:'rgba(245,243,239,0.96)', backdropFilter:'blur(12px)' }}>
+      <div style={{ position:'relative', width:300, height:300 }}>
+        {/* Pulse ring */}
+        <div style={{ position:'absolute', inset:-12, borderRadius:28, border:'1.5px solid rgba(26,25,22,0.1)', animation:'ro-pulse 2s ease-in-out infinite', pointerEvents:'none' }} />
+        {/* Art container — expands to fill screen when done */}
+        <div style={{
+          position:'relative', width:300, height:300, borderRadius: expanding ? '0px' : '20px',
+          overflow:'hidden',
+          boxShadow: expanding ? 'none' : '0 24px 80px rgba(0,0,0,0.18)',
+          transform: expanding ? `scale(${typeof window !== 'undefined' ? Math.max(window.innerWidth/300, window.innerHeight/300) * 1.05 : 6})` : 'scale(1)',
+          transition: expanding ? 'transform 0.7s cubic-bezier(0.4,0,0.2,1), border-radius 0.7s ease, box-shadow 0.5s ease' : 'none',
+          transformOrigin: 'center center',
+          flexShrink: 0,
+        }}>
+          {art ? (<>
+            {/* Grayscale base */}
+            <img src={art} alt={album} style={{ position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'cover', filter:'grayscale(100%) brightness(0.55) blur(1px)', display:'block' }} />
+            {/* Color reveal rising from bottom */}
+            <div style={{ position:'absolute', left:0, right:0, bottom:0, height:fillPct+'%', overflow:'hidden', transition:'height 0.06s linear' }}>
+              <img src={art} alt="" style={{ position:'absolute', bottom:0, left:0, width:'100%', height:'300px', objectFit:'cover', display:'block' }} />
+            </div>
+          </>) : (
+            <div style={{ width:'100%', height:'100%', background:'#2a2a2a' }} />
+          )}
         </div>
-        <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:14 }}>
-          <div key={phraseIndex} style={{ fontFamily:"'DM Mono',monospace", fontSize:11, letterSpacing:'0.12em', textTransform:'uppercase', color:'#1a1916', animation:'overlay-fade 0.5s ease forwards' }}>
-            {['Searching the archive...','Pulling press records...','Checking release dates...','Reading liner notes...','Cross-referencing labels...','Scanning chart history...','Digging through the stacks...','Consulting the canon...'][phraseIndex % 8]}
-          </div>
-          <div style={{ display:'flex', gap:6 }}>
-            {[0,1,2].map(i => <div key={i} style={{ width:5, height:5, borderRadius:'50%', background:'rgba(200,212,122,0.4)', animation:`overlay-dot 1.4s ease-in-out ${i*0.2}s infinite` }} />)}
-          </div>
+      </div>
+      <div style={{ textAlign:'center', display:'flex', flexDirection:'column', alignItems:'center', gap:6 }}>
+        <div style={{ fontFamily:"'DM Serif Display',serif", fontSize:'clamp(1.2rem,2.5vw,1.7rem)', color:'#1a1916', lineHeight:1.1 }}>{album}</div>
+        <div style={{ fontFamily:"'DM Mono',monospace", fontSize:10, letterSpacing:'0.14em', textTransform:'uppercase', color:'rgba(26,25,22,0.35)' }}>{artist}</div>
+        <div key={phraseIndex} style={{ fontFamily:"'DM Mono',monospace", fontSize:10, letterSpacing:'0.12em', textTransform:'uppercase', color:'rgba(26,25,22,0.45)', marginTop:6, animation:'overlay-fade 0.5s ease forwards' }}>
+          {phrases[phraseIndex % 8]}
         </div>
       </div>
       <style>{`
-        @keyframes overlay-fade { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
-        @keyframes overlay-dot { 0%,100%{opacity:0.3;transform:scale(1)} 50%{opacity:1;transform:scale(1.4)} }
+        @keyframes ro-pulse{0%,100%{transform:scale(1);opacity:0.5}50%{transform:scale(1.04);opacity:0.15}}
+        @keyframes overlay-fade{from{opacity:0;transform:translateY(3px)}to{opacity:1;transform:translateY(0)}}
+
       `}</style>
     </div>
   );
@@ -446,6 +495,7 @@ export default function Session() {
   const [scoreCheckOpen, setScoreCheckOpen] = useState(false);
   const [elapsed, setElapsed] = useState(0);
   const timerRef = useRef(null);
+  const [burstReady, setBurstReady] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
   const [chatMessages, setChatMessages] = useState([]);
   const [chatInput, setChatInput] = useState('');
@@ -507,6 +557,7 @@ export default function Session() {
     if (artUrl) { setAlbumArt(artUrl); setLoadingArt(artUrl); }
     setView('loading');
     await doResearch(album, artist, artUrl);
+    await new Promise(r => setTimeout(r, 1000));
     setView('session');
 
 
@@ -520,7 +571,7 @@ export default function Session() {
     const a = album || albumInput;
     const ar = artist || artistInput;
     if (!a.trim()) return;
-    setBriefLoading(true); setBriefError(''); setBrief(null);
+    setBriefLoading(true); setBriefError(''); setBrief(null); setBurstReady(false);
     setTracks(null); setTrackNotes({}); setTrackRatings({});
     if (!existingArt) setAlbumArt('');
     setElapsed(0); setOverallNotes('');
@@ -536,6 +587,7 @@ export default function Session() {
       if (data.error) throw new Error(data.error);
       setBrief(data);
       restoreDraft(data.album);
+      setBurstReady(true);
       // Fetch better art from research result if we didn't get it from picker
       if (!existingArt) {
         fetchAlbumArtUrl(data.album, data.artist, data.year).then(url => { if (url) setAlbumArt(url); });
@@ -613,7 +665,7 @@ export default function Session() {
 
   if (!authed) return <PasswordGate onAuth={handleAuth} />;
   if (view === 'picker') return <AlbumPicker onSelect={handlePickerSelect} />;
-  if (view === 'loading') return <ResearchOverlay art={loadingArt} phraseIndex={loadingFactIndex} album={albumInput} artist={artistInput} />;
+  if (view === 'loading') return <ResearchOverlay art={loadingArt} phraseIndex={loadingFactIndex} album={albumInput} artist={artistInput} onBurst={burstReady} />;
 
   // ── Session view ───────────────────────────────────────────────────────────
 
