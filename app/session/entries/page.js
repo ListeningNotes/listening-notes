@@ -1,16 +1,24 @@
+// app/session/entries/page.js
+// Your private CMS — view, edit, and delete all entries in the database.
+// Password protected, same gate as the main session tool.
+// Accessible at /session/entries via the "Entries" button in the session nav.
 
 'use client';
 
 import { useState, useEffect } from 'react';
 
 const PASSWORD = 'listeningnotes';
+
+// ── DESIGN TOKENS ──────────────────────────────────────────────────────────
 const MONO  = "'DM Mono', 'Courier New', monospace";
 const SERIF = "'DM Serif Display', Georgia, serif";
 const SANS  = "'DM Sans', system-ui, sans-serif";
 const BORDER = '1px solid #e0dcd5';
 
+// Shared label style — the small uppercase labels above form fields
 const labelStyle = { fontFamily: MONO, fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#7a776f' };
 
+// Input style function — border darkens when focused
 function inputStyle(focused) {
   return {
     background: '#fff', border: `1px solid ${focused ? '#1a1916' : '#e0dcd5'}`, borderRadius: 8,
@@ -18,7 +26,8 @@ function inputStyle(focused) {
   };
 }
 
-// ── Password Gate ──────────────────────────────────────────────────────────
+// ── PASSWORD GATE ──────────────────────────────────────────────────────────
+// Shown before the entries list. Same pattern as the main session gate.
 
 function PasswordGate({ onAuth }) {
   const [pw, setPw] = useState('');
@@ -43,7 +52,7 @@ function PasswordGate({ onAuth }) {
         />
         {error && <div style={{ fontFamily: MONO, fontSize: 11, color: '#ef4444' }}>incorrect password</div>}
         <button onClick={handleAuth}
-          style={{ background: '#1a1916', color: '#1a1916', borderRadius: 8, padding: '12px 0', fontFamily: MONO, fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase', cursor: 'pointer', border: 'none', fontWeight: 600 }}>
+          style={{ background: '#1a1916', color: '#fff', borderRadius: 8, padding: '12px 0', fontFamily: MONO, fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase', cursor: 'pointer', border: 'none', fontWeight: 600 }}>
           Enter →
         </button>
       </div>
@@ -51,9 +60,13 @@ function PasswordGate({ onAuth }) {
   );
 }
 
-// ── Edit Modal ─────────────────────────────────────────────────────────────
+// ── EDIT MODAL ─────────────────────────────────────────────────────────────
+// Opens when you click an entry row. Full edit form for all fields.
+// Save calls PATCH /api/entries/[slug], Delete calls DELETE /api/entries/[slug].
+// Delete requires two clicks — first click shows confirmation, second executes.
 
 function EditModal({ entry, onSave, onDelete, onClose }) {
+  // Local copy of all editable fields — changes here don't affect the list until saved
   const [fields, setFields] = useState({
     album: entry.album || '',
     artist: entry.artist || '',
@@ -65,17 +78,20 @@ function EditModal({ entry, onSave, onDelete, onClose }) {
     masterpiece: entry.masterpiece === true,
     background: entry.background || '',
     notes: entry.notes || '',
+    // Tags stored as array in DB, displayed as comma-separated string in the input
     tags: Array.isArray(entry.tags) ? entry.tags.join(', ') : (entry.tags || ''),
     horizon: entry.horizon || '',
     album_art: entry.album_art || '',
   });
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [confirmDelete, setConfirmDelete] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState(false); // two-click delete safety
   const [error, setError] = useState('');
 
+  // Helper to update a single field without spreading manually every time
   function set(key, val) { setFields(f => ({ ...f, [key]: val })); }
 
+  // Sends updated fields to the API and notifies the parent list to update
   async function handleSave() {
     setSaving(true); setError('');
     try {
@@ -86,11 +102,12 @@ function EditModal({ entry, onSave, onDelete, onClose }) {
       });
       const data = await res.json();
       if (data.error) throw new Error(data.error);
-      onSave(data.entry);
+      onSave(data.entry); // pass updated entry back to parent to refresh the list
     } catch (err) { setError(err.message); }
     finally { setSaving(false); }
   }
 
+  // First click: shows confirmation state. Second click: executes delete.
   async function handleDelete() {
     if (!confirmDelete) { setConfirmDelete(true); return; }
     setDeleting(true);
@@ -102,10 +119,11 @@ function EditModal({ entry, onSave, onDelete, onClose }) {
       });
       const data = await res.json();
       if (data.error) throw new Error(data.error);
-      onDelete(entry.slug);
+      onDelete(entry.slug); // tell parent to remove this entry from the list
     } catch (err) { setError(err.message); setDeleting(false); }
   }
 
+  // Textarea style helper — accepts a minimum height value
   const taStyle = (minH = 80) => ({
     background: '#fff', border: BORDER, borderRadius: 8, padding: '9px 14px',
     fontFamily: MONO, fontSize: 12, color: '#1a1916', outline: 'none',
@@ -116,21 +134,23 @@ function EditModal({ entry, onSave, onDelete, onClose }) {
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(26,25,22,0.55)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: 24 }}>
       <div style={{ background: '#f5f3ef', border: BORDER, borderRadius: 20, width: '100%', maxWidth: 700, maxHeight: '90vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 24px 80px rgba(0,0,0,0.2)' }}>
 
-        {/* Header */}
+        {/* Modal header — album name, action buttons */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 28px', borderBottom: BORDER, background: '#fff' }}>
           <div>
             <div style={{ fontFamily: SERIF, fontSize: 18, color: '#1a1916' }}>{entry.album}</div>
             <div style={{ fontFamily: MONO, fontSize: 10, color: '#aaa8a2', marginTop: 2 }}>{entry.artist}</div>
           </div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            {/* Opens the public entry page in a new tab */}
             <a href={`/entries/${entry.slug}`} target="_blank" rel="noreferrer"
               style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#7a776f', textDecoration: 'none', padding: '7px 14px', border: BORDER, borderRadius: 8, background: '#f5f3ef' }}>
               View →
             </a>
             <button onClick={handleSave} disabled={saving}
-              style={{ background: '#1a1916', color: '#1a1916', border: 'none', borderRadius: 8, padding: '8px 20px', fontFamily: MONO, fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600, opacity: saving ? 0.5 : 1 }}>
+              style={{ background: '#1a1916', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 20px', fontFamily: MONO, fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600, opacity: saving ? 0.5 : 1 }}>
               {saving ? 'Saving…' : 'Save'}
             </button>
+            {/* Delete button — turns red and shows confirm text on first click */}
             <button onClick={handleDelete} disabled={deleting}
               style={{ background: confirmDelete ? '#ef4444' : '#fff', color: confirmDelete ? '#fff' : '#ef4444', border: `1px solid ${confirmDelete ? '#ef4444' : '#fca5a5'}`, borderRadius: 8, padding: '8px 14px', fontFamily: MONO, fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer', transition: 'all 0.15s' }}>
               {deleting ? '…' : confirmDelete ? 'Confirm delete' : 'Delete'}
@@ -142,18 +162,18 @@ function EditModal({ entry, onSave, onDelete, onClose }) {
           </div>
         </div>
 
-        {/* Form */}
+        {/* Scrollable form body */}
         <div style={{ flex: 1, overflowY: 'auto', padding: 28, display: 'flex', flexDirection: 'column', gap: 20 }}>
           {error && <div style={{ fontFamily: MONO, fontSize: 11, color: '#ef4444', padding: '8px 12px', background: '#fff5f5', border: '1px solid #fca5a5', borderRadius: 6 }}>{error}</div>}
 
-          {/* Row 1 */}
+          {/* Album, Artist, Year */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 100px', gap: 12 }}>
             <div><div style={{ ...labelStyle, marginBottom: 6 }}>Album</div><input value={fields.album} onChange={e => set('album', e.target.value)} style={inputStyle()} /></div>
             <div><div style={{ ...labelStyle, marginBottom: 6 }}>Artist</div><input value={fields.artist} onChange={e => set('artist', e.target.value)} style={inputStyle()} /></div>
             <div><div style={{ ...labelStyle, marginBottom: 6 }}>Year</div><input value={fields.year} onChange={e => set('year', e.target.value)} style={inputStyle()} /></div>
           </div>
 
-          {/* Row 2 */}
+          {/* Rating, Relationship, Entry Type */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
             <div>
               <div style={{ ...labelStyle, marginBottom: 6 }}>Rating</div>
@@ -178,7 +198,7 @@ function EditModal({ entry, onSave, onDelete, onClose }) {
             </div>
           </div>
 
-          {/* Toggles */}
+          {/* Favorite and Masterpiece checkboxes */}
           <div style={{ display: 'flex', gap: 20 }}>
             {[['Favorite', 'favorite'], ['Masterpiece', 'masterpiece']].map(([label, key]) => (
               <label key={key} style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
@@ -189,19 +209,17 @@ function EditModal({ entry, onSave, onDelete, onClose }) {
             ))}
           </div>
 
-          {/* Background */}
           <div>
             <div style={{ ...labelStyle, marginBottom: 6 }}>Background</div>
             <textarea value={fields.background} onChange={e => set('background', e.target.value)} style={taStyle(100)} />
           </div>
 
-          {/* Notes */}
           <div>
             <div style={{ ...labelStyle, marginBottom: 6 }}>Notes</div>
             <textarea value={fields.notes} onChange={e => set('notes', e.target.value)} style={taStyle(160)} />
           </div>
 
-          {/* Tags + Horizon */}
+          {/* Tags + Horizon side by side */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             <div>
               <div style={{ ...labelStyle, marginBottom: 6 }}>Tags (comma separated)</div>
@@ -213,7 +231,7 @@ function EditModal({ entry, onSave, onDelete, onClose }) {
             </div>
           </div>
 
-          {/* Album art */}
+          {/* Album art URL with live preview thumbnail */}
           <div>
             <div style={{ ...labelStyle, marginBottom: 6 }}>Album Art URL</div>
             <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
@@ -229,16 +247,19 @@ function EditModal({ entry, onSave, onDelete, onClose }) {
   );
 }
 
-// ── Main Entries Page ──────────────────────────────────────────────────────
+// ── MAIN ENTRIES PAGE ──────────────────────────────────────────────────────
+// Loads all entries from the database and displays them in a sortable, searchable table.
+// Clicking a row opens the EditModal.
 
 export default function SessionEntries() {
   const [authed, setAuthed] = useState(false);
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [editing, setEditing] = useState(null);
+  const [editing, setEditing] = useState(null); // the entry currently open in EditModal, or null
   const [sortBy, setSortBy] = useState('newest');
 
+  // Check localStorage for existing auth on mount
   useEffect(() => {
     if (localStorage.getItem('ln_session_auth') === 'true') setAuthed(true);
   }, []);
@@ -248,6 +269,7 @@ export default function SessionEntries() {
     localStorage.setItem('ln_session_auth', 'true');
   }
 
+  // Load all entries once authenticated
   useEffect(() => {
     if (!authed) return;
     fetch('/api/entries')
@@ -256,16 +278,19 @@ export default function SessionEntries() {
       .catch(() => setLoading(false));
   }, [authed]);
 
+  // Replace the edited entry in the list without refetching everything
   function handleSave(updated) {
     setEntries(prev => prev.map(e => e.slug === updated.slug ? updated : e));
     setEditing(null);
   }
 
+  // Remove the deleted entry from the list without refetching
   function handleDelete(slug) {
     setEntries(prev => prev.filter(e => e.slug !== slug));
     setEditing(null);
   }
 
+  // Filter by search query and sort — computed from entries state on every render
   const filtered = entries
     .filter(e => {
       if (!search.trim()) return true;
@@ -292,11 +317,12 @@ export default function SessionEntries() {
 
       <div style={{ minHeight: '100vh', background: '#f5f3ef', fontFamily: SANS, color: '#1a1916' }}>
 
-        {/* Nav */}
+        {/* Sticky nav — search, sort, back to session */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '14px 28px', borderBottom: BORDER, background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(12px)', position: 'sticky', top: 0, zIndex: 10 }}>
           <a href="/session" style={{ fontFamily: 'Fraunces, serif', fontSize: 18, fontWeight: 900, color: '#1a1916', letterSpacing: '-0.02em', textDecoration: 'none' }}>Listening Notes</a>
           <span style={{ color: '#d0ccc5' }}>·</span>
           <span style={{ ...labelStyle }}>entries</span>
+          {/* Shows filtered count vs total — e.g. "12 / 31" when searching */}
           <span style={{ fontFamily: MONO, fontSize: 10, color: '#c0bdb7', marginLeft: 4 }}>{filtered.length} / {entries.length}</span>
 
           <div style={{ marginLeft: 'auto', display: 'flex', gap: 10, alignItems: 'center' }}>
@@ -316,15 +342,16 @@ export default function SessionEntries() {
           </div>
         </div>
 
-        {/* Table */}
+        {/* Entries table */}
         <div style={{ maxWidth: 1000, margin: '0 auto', padding: '32px 24px' }}>
           {loading ? (
+            // Skeleton loading rows while entries are being fetched
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {[...Array(8)].map((_, i) => <div key={i} style={{ height: 56, borderRadius: 10, background: '#ece9e3', animation: 'pulse 1.4s ease-in-out infinite', animationDelay: i * 0.08 + 's' }} />)}
             </div>
           ) : (
             <div style={{ background: '#fff', border: BORDER, borderRadius: 14, overflow: 'hidden' }}>
-              {/* Header */}
+              {/* Column headers */}
               <div style={{ display: 'grid', gridTemplateColumns: '60px 1fr 1fr 80px 100px 100px 48px', gap: 0, padding: '8px 16px', borderBottom: BORDER, background: '#f5f3ef' }}>
                 {['Art', 'Album', 'Artist', 'Year', 'Rating', 'Type', ''].map((h, i) => (
                   <div key={i} style={{ ...labelStyle, padding: '4px 8px' }}>{h}</div>
@@ -335,6 +362,7 @@ export default function SessionEntries() {
                 <div style={{ padding: '48px 24px', textAlign: 'center', fontFamily: MONO, fontSize: 11, color: '#aaa8a2' }}>No entries found.</div>
               )}
 
+              {/* Entry rows — clicking any row opens EditModal */}
               {filtered.map((entry) => (
                 <div key={entry.slug} className="se-row" style={{ display: 'grid', gridTemplateColumns: '60px 1fr 1fr 80px 100px 100px 48px', gap: 0, padding: '10px 16px', borderBottom: BORDER, alignItems: 'center', cursor: 'pointer' }}
                   onClick={() => setEditing(entry)}>
@@ -349,6 +377,7 @@ export default function SessionEntries() {
                   <div style={{ padding: '0 8px', fontFamily: MONO, fontSize: 11, color: '#aaa8a2' }}>{entry.year || '—'}</div>
                   <div style={{ padding: '0 8px', fontFamily: MONO, fontSize: 11, color: '#1a1916' }}>{entry.rating || '—'}</div>
                   <div style={{ padding: '0 8px', fontFamily: MONO, fontSize: 10, color: '#aaa8a2', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{entry.entry_type || '—'}</div>
+                  {/* Small icons for favorite and masterpiece flags */}
                   <div style={{ padding: '0 8px', display: 'flex', gap: 6 }}>
                     {entry.favorite === true && <span title="Favorite" style={{ fontSize: 12 }}>♥</span>}
                     {entry.masterpiece === true && <span title="Masterpiece" style={{ fontSize: 10, color: '#1a1916', fontFamily: MONO }}>M</span>}
@@ -360,6 +389,7 @@ export default function SessionEntries() {
         </div>
       </div>
 
+      {/* Edit modal — rendered outside the table so it overlays everything */}
       {editing && (
         <EditModal
           entry={editing}
@@ -371,4 +401,3 @@ export default function SessionEntries() {
     </>
   );
 }
-
