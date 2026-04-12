@@ -1,10 +1,7 @@
-// app/api/entries/route.js
 import { neon } from '@neondatabase/serverless';
-import { isAuthorized } from '../../../lib/auth';
 
 const sql = neon(process.env.DATABASE_URL);
 
-// GET — public, no auth needed (homepage reads from this)
 export async function GET() {
   try {
     const entries = await sql`
@@ -17,17 +14,12 @@ export async function GET() {
   }
 }
 
-// POST — protected, only the session tool can create entries
 export async function POST(request) {
-  if (!isAuthorized(request)) {
-    return Response.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
   try {
     const body = await request.json();
     const {
       album, artist, year, entry_type, relationship,
-      rating, favorite, background, notes, tags,
+      rating, favorite, masterpiece, background, notes, tags,
       horizon, album_art, post_link
     } = body;
 
