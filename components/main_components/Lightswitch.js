@@ -43,7 +43,7 @@ async function getSunsetTheme() {
 
 // ThemeProvider — wraps the whole app in layout.js.
 // Handles reading saved preference, auto-detecting theme, and applying it to the <html> element.
-export function ThemeProvider({ children }) {
+export function Lightswitch({ children }) {
   const [theme, setTheme] = useState('light');
   const [mounted, setMounted] = useState(false); // prevents flash of wrong theme on first render
 
