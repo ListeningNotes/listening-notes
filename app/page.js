@@ -10,9 +10,9 @@
 
 import { useEffect, useRef, useState, useCallback } from 'react';
 import Link from 'next/link';
-import { useTheme } from '../components/ThemeProvider';
+import { useTheme } from '../components/main_components/Lightswitch';
 import { useListeningBeacon } from '../hooks/useListeningBeacon';
-import EntryModal from '../components/EntryModal';
+import EntryModal from '../components/main_components/EntryModal';
 
 // ── SURPRISE LINK ──────────────────────────────────────────────────────────
 // A nav link that explodes gold particles on click.
