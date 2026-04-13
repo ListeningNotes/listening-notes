@@ -1,7 +1,7 @@
 'use client';
-import { fonts } from '../../../library/sitewide_visuals';
 
 import StarRating from '../StarRating';
+import { fonts } from '../../../library/sitewide_visuals';
 
 const DIVIDER = 'rgba(255,255,255,0.07)';
 
