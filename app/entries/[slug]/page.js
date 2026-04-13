@@ -1,9 +1,3 @@
-// app/entries/[slug]/page.js
-// The public-facing page for a single entry — e.g. /entries/pet-sounds
-// This is a SERVER component, meaning it runs on the server and fetches data
-// before sending anything to the browser. Faster and better for SEO.
-// It hands the entry data off to PostClient which handles the interactive UI.
-
 import { neon } from '@neondatabase/serverless';
 import PostClient from './FullPostPage';
 
