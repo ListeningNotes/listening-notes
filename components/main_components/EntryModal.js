@@ -10,8 +10,8 @@ import { fonts } from '../../library/sitewide_visuals';
 import { useEffect, useState, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import StarRating from './StarRating';
-import HorizonGenerator from './entry_modal/HorizonGenerator';
-import StickyHeader from './entry_modal/StickyHeader';
+import HorizonGenerator from './Entry_modal/HorizonGenerator';
+import StickyHeader from './Entry_modal/StickyHeader';
 import { parseTracksFromNotes, splitNotes } from '../../library/entry_formatter';
 
 
@@ -19,7 +19,6 @@ const WIDGET_BG = 'rgba(8,6,14,0.50)';
 const WIDGET_BORDER = 'rgba(255,255,255,0.09)';
 const DIVIDER = 'rgba(255,255,255,0.07)';
 
-// ── MAIN MODAL ─────────────────────────────────────────────────────────────
 
 export default function EntryModal({ slug, onClose }) {
   const [entry, setEntry] = useState(null);
