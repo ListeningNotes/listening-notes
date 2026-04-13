@@ -1,3 +1,11 @@
+// app/page.js
+// The public homepage. The first thing anyone sees when they visit the site.
+//
+// Three main sections:
+// 1. TopNav — floating pill navigation with dropdown groups, theme toggle, Instagram link
+// 2. Hero — the live listening beacon showing what's currently playing on Last.fm
+// 3. AlbumStrip — auto-scrolling row of album art tiles, each opens an EntryModal
+
 'use client';
 
 import { useEffect, useRef, useState, useCallback } from 'react';
@@ -6,10 +14,16 @@ import { useTheme } from '../components/ThemeProvider';
 import { useListeningBeacon } from '../hooks/useListeningBeacon';
 import EntryModal from '../components/EntryModal';
 
+// ── SURPRISE LINK ──────────────────────────────────────────────────────────
+// A nav link that explodes gold particles on click.
+// Used for the "Surprise" link that goes to /shuffle.
+
 function SurpriseLink({ href, label }) {
   const ref = useRef(null);
   const symbols = ['✦', '★', '✸', '⬡', '✺', '◆', '✧', '⋆'];
 
+  // Creates 28 particle elements at the click position and animates them outward.
+  // Each particle is a DOM element appended to the body and removed after its animation.
   function explode(e) {
     const count = 28;
     for (let i = 0; i < count; i++) {
@@ -23,6 +37,7 @@ function SurpriseLink({ href, label }) {
       const gy = Math.sin(rad) * dist;
       const dur = 0.6 + Math.random() * 0.4;
       const hue = 35 + Math.random() * 20;
+      // CSS custom properties drive the animation — defined in globals.css
       span.style.setProperty('--gx', gx + 'px');
       span.style.setProperty('--gy', gy + 'px');
       span.style.setProperty('--dur', dur + 's');
@@ -42,17 +57,23 @@ function SurpriseLink({ href, label }) {
   );
 }
 
+// ── TOP NAV ────────────────────────────────────────────────────────────────
+// Floating pill navigation at the top of the page.
+// Has dropdown groups (Listen, Explore), standalone links, theme toggle, and Instagram.
+// On mobile, collapses into a hamburger drawer.
+
 function TopNav({ onToggleTheme, theme }) {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [openGroup, setOpenGroup] = useState(null);
+  const [openGroup, setOpenGroup] = useState(null); // which dropdown group is open
 
+  // Nav structure — groups show as dropdowns, standalone as direct links
   const groups = [
     { label: 'Listen', links: [{ href: '/about', label: 'About' }, { href: '/specs', label: 'Specs' }, { href: '/index', label: 'Index' }] },
     { label: 'Explore', links: [{ href: '/archive', label: 'Archive' }, { href: '/compare', label: 'Compare' }] },
   ];
   const standalone = [
     { href: '/submit', label: 'Submit' },
-    { href: '/shuffle', label: 'Surprise', surprise: true },
+    { href: '/shuffle', label: 'Surprise', surprise: true }, // uses SurpriseLink
   ];
 
   return (
@@ -82,6 +103,7 @@ function TopNav({ onToggleTheme, theme }) {
           <a href="https://instagram.com/listeningnotes.blog" target="_blank" rel="noopener noreferrer" className="topnav-icon-btn" aria-label="Instagram">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.5" fill="currentColor" stroke="none"/></svg>
           </a>
+          {/* Theme toggle — shows sun icon in dark mode, moon in light mode */}
           <button className="topnav-icon-btn" onClick={onToggleTheme} aria-label="Toggle theme">
             {theme === 'dark' ? (
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
@@ -96,11 +118,13 @@ function TopNav({ onToggleTheme, theme }) {
               </svg>
             )}
           </button>
+          {/* Hamburger — mobile only, toggles the drawer */}
           <button className={'topnav-hamburger' + (menuOpen ? ' topnav-hamburger--open' : '')} onClick={() => setMenuOpen(v => !v)} aria-label="Menu">
             <span /><span /><span />
           </button>
         </div>
       </div>
+      {/* Mobile drawer — all nav links flattened into a vertical list */}
       {menuOpen && (
         <div className="topnav-drawer">
           {groups.flatMap(g => g.links).concat(standalone).map(l => (
@@ -112,16 +136,23 @@ function TopNav({ onToggleTheme, theme }) {
   );
 }
 
+// ── HERO ───────────────────────────────────────────────────────────────────
+// Full-bleed hero section with the live listening beacon.
+// The beacon shows what's currently playing on Last.fm.
+// Clicking it expands to show the 3 most recently played tracks as echo tiles.
+// Background is a blurred version of the current album art.
+
 function Hero() {
-  const { track: trackObj, isLive } = useListeningBeacon();
+  const { track: trackObj, isLive } = useListeningBeacon(); // live track from Last.fm hook
   const trackName = trackObj?.name || '—';
   const artistName = trackObj?.artist || '';
   const artUrl = trackObj?.image || '';
   const [panelOpen, setPanelOpen] = useState(false);
-  const [recentStack, setRecentStack] = useState([]);
-  const prevTrack = useRef(null);
-  const prevArtRef = useRef('');
+  const [recentStack, setRecentStack] = useState([]); // last 3 tracks (excluding now playing)
+  const prevTrack = useRef(null);   // tracks the previous song to detect changes
+  const prevArtRef = useRef('');    // stores the art of the previous track for the stack
 
+  // Fetch recent scrobbles from Last.fm every 30 seconds
   useEffect(() => {
     async function fetchRecent() {
       try {
@@ -141,33 +172,39 @@ function Hero() {
     return () => clearInterval(interval);
   }, []);
 
+  // When the track changes, push the previous track into the recent stack
   useEffect(() => {
     if (!trackObj?.name) return;
     const key = trackObj.name + '|||' + trackObj.artist;
-    if (key === prevTrack.current) return;
+    if (key === prevTrack.current) return; // same track, no change
     if (prevTrack.current) {
       const [prevName, prevArtist] = prevTrack.current.split('|||');
       const prevArt = prevArtRef.current;
       setRecentStack(prev => {
         const newEntry = { track: prevName, artist: prevArtist, art: prevArt };
+        // Remove the current track from the stack in case it was already in there
         const filtered = prev.filter(t => !(t.track === trackObj.name && t.artist === trackObj.artist));
         return [newEntry, ...filtered].slice(0, 3);
       });
     } else {
+      // First load — just remove the current track from the stack if it's there
       setRecentStack(prev => prev.filter(t => !(t.track === trackObj.name && t.artist === trackObj.artist)));
     }
     prevTrack.current = key;
     prevArtRef.current = artUrl;
   }, [trackObj]);
 
+  // Scale sizes for the 3 echo tiles — each gets progressively smaller
   const sizes = [0.82, 0.68, 0.56];
 
   return (
     <section className="hero">
+      {/* Blurred album art background — updates with each new track */}
       {artUrl && <div className="hero-blur-bg" style={{ backgroundImage: 'url(' + artUrl + ')' }} />}
       <div className="hero-fade-bottom" />
       <div className="hero-inner" style={{ zIndex: 3 }}>
         <div className={'beacon-stage' + (panelOpen ? ' beacon-stage--open' : '')}>
+          {/* Echo tiles — the 3 recent tracks that appear when the beacon is open */}
           {recentStack.slice(0, 3).map((item, i) => (
             <div key={i} className="beacon-recent-tile" style={{ '--scale': sizes[i], '--delay': ((i + 1) * 0.08) + 's' }}>
               {item.art && <img src={item.art} alt={item.track} className="beacon-recent-art" />}
@@ -177,6 +214,7 @@ function Hero() {
               </div>
             </div>
           ))}
+          {/* Main beacon card — the clickable now-playing button */}
           <button className="beacon-card beacon-card--main" onClick={() => setPanelOpen(v => !v)} aria-expanded={panelOpen} aria-label="Toggle recent listens">
             <div className={'beacon-art-wrap' + (isLive ? ' beacon-art-wrap--live' : '')}>
               {artUrl
@@ -200,21 +238,30 @@ function Hero() {
   );
 }
 
+// ── ALBUM STRIP ────────────────────────────────────────────────────────────
+// Auto-scrolling horizontal strip of album art tiles.
+// Entries are tripled so the strip loops seamlessly without gaps.
+// Uses requestAnimationFrame for smooth animation instead of CSS transitions.
+// Clicking a tile opens the EntryModal for that entry.
+
 function AlbumStrip({ entries, onTileClick }) {
   const trackRef = useRef(null);
   const animFrameRef = useRef(null);
-  const posRef = useRef(0);
-  const pausedRef = useRef(false);
-  const speed = 0.5;
+  const posRef = useRef(0);          // current scroll position in pixels
+  const pausedRef = useRef(false);   // true when user clicks an arrow button
+  const speed = 0.5;                 // pixels per frame
+
+  // Triple the entries so the strip loops — when we hit 1/3 of the total width, reset to 0
   const tiles = entries.length > 0 ? [...entries, ...entries, ...entries] : [];
 
+  // Animation loop — runs every frame via requestAnimationFrame
   const tick = useCallback(() => {
     const el = trackRef.current;
     if (!el) { animFrameRef.current = requestAnimationFrame(tick); return; }
     if (!pausedRef.current) {
-      const third = el.scrollWidth / 3;
+      const third = el.scrollWidth / 3; // width of one set of entries
       posRef.current += speed;
-      if (posRef.current >= third) posRef.current -= third;
+      if (posRef.current >= third) posRef.current -= third; // seamless loop reset
       el.style.transform = 'translateX(-' + posRef.current + 'px)';
     }
     animFrameRef.current = requestAnimationFrame(tick);
@@ -222,15 +269,17 @@ function AlbumStrip({ entries, onTileClick }) {
 
   useEffect(() => {
     animFrameRef.current = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(animFrameRef.current);
+    return () => cancelAnimationFrame(animFrameRef.current); // cleanup on unmount
   }, [tick, entries]);
 
+  // Arrow button handler — nudges the strip left or right and pauses briefly
   function nudge(dir) {
     const el = trackRef.current;
     if (!el) return;
     const third = el.scrollWidth / 3;
     pausedRef.current = true;
     posRef.current += dir * 280;
+    // Keep position within the first third to maintain seamless looping
     if (posRef.current < 0) posRef.current += third;
     if (posRef.current >= third) posRef.current -= third;
     el.style.transform = 'translateX(-' + posRef.current + 'px)';
@@ -258,6 +307,7 @@ function AlbumStrip({ entries, onTileClick }) {
                 ? <img src={entry.album_art} alt={entry.album} className="strip-tile-img" draggable={false} loading="lazy" />
                 : <div className="strip-tile-placeholder">{entry.album?.[0] ?? '♪'}</div>
               }
+              {/* Hover overlay — shows album and artist name on hover */}
               <div className="strip-tile-hover">
                 <div className="strip-tile-hover-album">{entry.album}</div>
                 <div className="strip-tile-hover-artist">{entry.artist}</div>
@@ -265,6 +315,7 @@ function AlbumStrip({ entries, onTileClick }) {
             </button>
           ))}
         </div>
+        {/* Gradient fades on left and right edges to soften the strip boundaries */}
         <div className="strip-fade-left" />
         <div className="strip-fade-right" />
       </div>
@@ -275,12 +326,17 @@ function AlbumStrip({ entries, onTileClick }) {
   );
 }
 
+// ── HOME PAGE ──────────────────────────────────────────────────────────────
+// Root component. Fetches all entries on load and passes them to AlbumStrip.
+// Manages which entry modal is open via modalSlug state.
+
 export default function HomePage() {
   const { theme, toggle: toggleTheme } = useTheme();
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [modalSlug, setModalSlug] = useState(null);
+  const [modalSlug, setModalSlug] = useState(null); // slug of the open entry modal, or null
 
+  // Load all entries from the database on mount
   useEffect(() => {
     fetch('/api/entries')
       .then(r => r.json())
@@ -300,6 +356,7 @@ export default function HomePage() {
       <div className="hp-strip-section">
         <div className="strip-label">Recent entries</div>
         {loading ? (
+          // Skeleton tiles while entries are loading
           <div className="strip-skeleton">
             {Array.from({ length: 8 }).map((_, i) => <div key={i} className="strip-skeleton-tile" />)}
           </div>
@@ -312,6 +369,7 @@ export default function HomePage() {
         </div>
       </div>
 
+      {/* Entry modal — renders when a tile is clicked, closes on backdrop click or X */}
       {modalSlug && (
         <EntryModal slug={modalSlug} onClose={() => setModalSlug(null)} />
       )}

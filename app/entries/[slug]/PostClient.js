@@ -1,9 +1,18 @@
+// app/entries/[slug]/PostClient.js
+// The interactive UI for a single entry page.
+// This is a CLIENT component — it runs in the browser and handles all interactivity:
+// comments, upvotes, the horizon bar, track threads, and the live listening beacon.
+// It receives the entry data from page.js which fetched it server-side.
+
 'use client';
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useListeningBeacon } from '../../../hooks/useListeningBeacon';
 
-// ── Helpers ────────────────────────────────────────────────────────────────
+// ── UTILITY FUNCTIONS ──────────────────────────────────────────────────────
+// Small helper functions used throughout the component.
 
+// Converts a timestamp to a human-readable relative time string.
+// e.g. "3h ago", "2d ago", "just now"
 function timeAgo(dateStr) {
   const diff = Date.now() - new Date(dateStr).getTime();
   const m = Math.floor(diff / 60000);
@@ -16,6 +25,8 @@ function timeAgo(dateStr) {
   return Math.floor(d / 7) + 'w ago';
 }
 
+// Converts a numeric rating to a star string.
+// e.g. 4.5 becomes "★★★★½☆"
 function starsFromRating(r) {
   const n = parseFloat(r);
   if (!n) return '';
@@ -24,9 +35,13 @@ function starsFromRating(r) {
   return '★'.repeat(full) + (half ? '½' : '') + '☆'.repeat(5 - full - (half ? 1 : 0));
 }
 
+// Maps Unicode block characters to height values (0–1) for the horizon bar.
+// e.g. '▄' = 0.50 means that bar renders at 50% height.
 const BLOCK_MAP = { '▁':0.12,'▂':0.25,'▃':0.37,'▄':0.50,'▅':0.62,'▆':0.75,'▇':0.87,'█':1.00 };
 const VALID_BLOCKS = new Set(Object.keys(BLOCK_MAP));
 
+// Parses a horizon string (either block characters or JSON array) into an array of heights.
+// Used by the HorizonBar component to know how tall to draw each bar.
 function parseHorizon(horizon) {
   if (!horizon) return [];
   if (horizon.trim().startsWith('[')) {
@@ -38,6 +53,8 @@ function parseHorizon(horizon) {
   return [...horizon.trim()].filter(c => VALID_BLOCKS.has(c)).map(c => BLOCK_MAP[c]);
 }
 
+// Parses numbered track lines from the notes field into structured track objects.
+// e.g. "1. Song Title — ★★★" becomes { number: 1, title: "Song Title", rating: "★★★" }
 function parseTracksFromNotes(notes) {
   if (!notes) return [];
   const normalized = notes.replace(/\\n/g, '\n');
@@ -59,6 +76,8 @@ function parseTracksFromNotes(notes) {
   return tracks;
 }
 
+// Splits the notes field into album-level notes and track-level notes.
+// Track notes start at the first numbered line (e.g. "1. Song Title").
 function splitNotes(notes) {
   if (!notes) return { album: '', tracks: '' };
   const idx = notes.search(/\n\n1\.\s|\n\nTrack \d/);
@@ -69,7 +88,9 @@ function splitNotes(notes) {
   return { album: notes, tracks: '' };
 }
 
-// ── Nav Beacon ─────────────────────────────────────────────────────────────
+// ── NAV BEACON ─────────────────────────────────────────────────────────────
+// The live listening indicator in the top nav.
+// Shows what's currently playing on Last.fm and expands to show recent tracks.
 
 function NavBeacon() {
   const { track, isLive } = useListeningBeacon();
@@ -77,6 +98,7 @@ function NavBeacon() {
   const [recents, setRecents] = useState([]);
   const ref = useRef(null);
 
+  // Fetch recent scrobbles from Last.fm every 30 seconds
   useEffect(() => {
     async function fetchRecents() {
       try {
@@ -95,6 +117,7 @@ function NavBeacon() {
     return () => clearInterval(iv);
   }, []);
 
+  // Close the dropdown when clicking outside of it
   useEffect(() => {
     function handleClick(e) {
       if (ref.current && !ref.current.contains(e.target)) setOpen(false);
@@ -172,22 +195,24 @@ function NavBeacon() {
   );
 }
 
-// ── Comment components ─────────────────────────────────────────────────────
+// ── COMMENT COMPONENTS ─────────────────────────────────────────────────────
 
+// A single comment with its nested replies.
+// Supports upvoting, replying, and collapsing the thread.
 function CommentThread({ comment, slug, onReplyPosted }) {
   const [collapsed, setCollapsed] = useState(false);
   const [replying, setReplying] = useState(false);
   const [upvotes, setUpvotes] = useState(comment.upvotes);
-  const [upvoted, setUpvoted] = useState(false);
+  const [upvoted, setUpvoted] = useState(false); // prevents double upvoting in the same session
   const [replyName, setReplyName] = useState('');
   const [replyEmail, setReplyEmail] = useState('');
   const [replyText, setReplyText] = useState('');
   const [posting, setPosting] = useState(false);
 
   async function handleUpvote() {
-    if (upvoted) return;
+    if (upvoted) return; // already upvoted this session, do nothing
     setUpvoted(true);
-    setUpvotes(v => v + 1);
+    setUpvotes(v => v + 1); // optimistic update — show +1 immediately without waiting for server
     await fetch('/api/comments/upvote', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -205,7 +230,7 @@ function CommentThread({ comment, slug, onReplyPosted }) {
         body: JSON.stringify({
           slug,
           track_index: comment.track_index,
-          parent_id: comment.id,
+          parent_id: comment.id, // links this reply to its parent comment
           author_name: replyName,
           author_email: replyEmail,
           content: replyText,
@@ -215,18 +240,19 @@ function CommentThread({ comment, slug, onReplyPosted }) {
       if (data.comment) {
         setReplying(false);
         setReplyName(''); setReplyEmail(''); setReplyText('');
-        onReplyPosted();
+        onReplyPosted(); // tell the parent to reload comments
       }
     } finally {
       setPosting(false);
     }
   }
 
+  // Show first two letters of commenter's name as their avatar
   const initials = comment.author_name.slice(0, 2).toUpperCase();
 
   return (
     <div style={{ display: 'flex', gap: 0, marginBottom: '2px' }}>
-      {/* Gutter */}
+      {/* Gutter — the vertical line + avatar on the left side of a comment thread */}
       <div
         onClick={() => setCollapsed(v => !v)}
         style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '32px', flexShrink: 0, cursor: 'pointer' }}
@@ -239,7 +265,7 @@ function CommentThread({ comment, slug, onReplyPosted }) {
         )}
       </div>
 
-      {/* Body */}
+      {/* Comment body */}
       <div style={{ flex: 1, paddingTop: '2px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
           <span style={{ fontFamily: 'DM Mono, monospace', fontSize: '11px', color: '#e8e4dc', letterSpacing: '0.04em' }}>{comment.author_name}</span>
@@ -275,6 +301,7 @@ function CommentThread({ comment, slug, onReplyPosted }) {
               </div>
             )}
 
+            {/* Recursively render replies — each reply is its own CommentThread */}
             {comment.replies?.length > 0 && (
               <div style={{ paddingLeft: '0' }}>
                 {comment.replies.map(r => (
@@ -295,6 +322,7 @@ function CommentThread({ comment, slug, onReplyPosted }) {
   );
 }
 
+// Form for submitting a new top-level comment on a track or the album overall.
 function NewCommentForm({ slug, trackIndex, onPosted }) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -315,7 +343,7 @@ function NewCommentForm({ slug, trackIndex, onPosted }) {
       const data = await res.json();
       if (data.error) { setError(data.error); return; }
       setName(''); setEmail(''); setText('');
-      onPosted();
+      onPosted(); // tell the parent to reload comments
     } catch { setError('Something went wrong.'); }
     finally { setPosting(false); }
   }
@@ -333,14 +361,12 @@ function NewCommentForm({ slug, trackIndex, onPosted }) {
   );
 }
 
+// A single track row — shows the track title, rating, and comment count.
+// Expands to show the track note and its comment thread when clicked.
 function TrackThread({ track, trackIndex, slug, commentsByTrack, onRefresh }) {
   const [open, setOpen] = useState(false);
   const trackComments = commentsByTrack[String(trackIndex)] || [];
   const count = trackComments.length;
-
-  function scrollAndOpen() {
-    setOpen(true);
-  }
 
   const ratingStr = track.rating || '';
 
@@ -384,7 +410,10 @@ function TrackThread({ track, trackIndex, slug, commentsByTrack, onRefresh }) {
   );
 }
 
-// ── Horizon Bar ────────────────────────────────────────────────────────────
+// ── HORIZON BAR ────────────────────────────────────────────────────────────
+// Visual bar chart where each bar represents a track.
+// Bar height = track rating. Click a bar to scroll to that track.
+// A green dot above a bar means that track has comments.
 
 function HorizonBar({ horizon, tracks, commentsByTrack, onBarClick }) {
   const bars = parseHorizon(horizon);
@@ -404,6 +433,7 @@ function HorizonBar({ horizon, tracks, commentsByTrack, onBarClick }) {
               title={label}
               style={{ flex: 1, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', cursor: 'pointer', position: 'relative' }}
             >
+              {/* Green dot above bar if the track has comments */}
               {count > 0 && (
                 <div style={{ position: 'absolute', top: '-8px', left: '50%', transform: 'translateX(-50%)', width: '5px', height: '5px', borderRadius: '50%', background: '#c8d47a' }} />
               )}
@@ -423,13 +453,14 @@ function HorizonBar({ horizon, tracks, commentsByTrack, onBarClick }) {
   );
 }
 
-// ── Main component ─────────────────────────────────────────────────────────
+// ── MAIN COMPONENT ─────────────────────────────────────────────────────────
+// Renders the full entry page. Receives the entry object from page.js.
 
 export default function PostClient({ entry }) {
   const [commentsByTrack, setCommentsByTrack] = useState({});
   const [commentsLoaded, setCommentsLoaded] = useState(false);
 
-  // Force dark theme — post page is always dark
+  // Force dark theme on this page regardless of any global theme setting
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', 'dark');
     document.body.style.background = '#0e0e0e';
@@ -439,14 +470,17 @@ export default function PostClient({ entry }) {
     };
   }, []);
 
+  // Parse tags — stored as either an array or comma-separated string in the DB
   const tags = entry.tags
     ? (Array.isArray(entry.tags) ? entry.tags : entry.tags.split(',').map(t => t.trim()).filter(Boolean))
     : [];
 
+  // Split notes into album-level prose and per-track notes
   const { album: albumNotes, tracks: trackNotesRaw } = splitNotes(entry.notes);
   const parsedTracks = parseTracksFromNotes(entry.notes);
   const horizonBars = parseHorizon(entry.horizon);
 
+  // Load comments from the API for this entry
   async function loadComments() {
     try {
       const res = await fetch('/api/comments?slug=' + entry.slug);
@@ -456,8 +490,10 @@ export default function PostClient({ entry }) {
     } catch {}
   }
 
+  // Load comments once when the page mounts
   useEffect(() => { loadComments(); }, []);
 
+  // Smooth scroll to a track section when clicking a horizon bar
   function handleBarClick(i) {
     const el = document.getElementById('track-' + i);
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -498,7 +534,7 @@ export default function PostClient({ entry }) {
         </div>
       </nav>
 
-      {/* ── HERO ── */}
+      {/* ── HERO ── Blurred album art background with metadata overlay */}
       <div style={{ position: 'relative', height: '360px', overflow: 'hidden' }}>
         {entry.album_art && (
           <div style={{ position: 'absolute', inset: '-40px', backgroundImage: 'url(' + entry.album_art + ')', backgroundSize: 'cover', backgroundPosition: 'center', filter: 'blur(50px) saturate(1.3) brightness(0.55)', transform: 'scale(1.2)' }} />
@@ -506,7 +542,6 @@ export default function PostClient({ entry }) {
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, #0e0e0e 20%, rgba(14,14,14,0.3) 100%)' }} />
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, rgba(14,14,14,0.4) 0%, transparent 40%)' }} />
 
-        {/* Metadata overlay */}
         <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '0 48px 36px', maxWidth: '860px', margin: '0 auto' }}>
           <div style={{ display: 'flex', alignItems: 'flex-end', gap: '24px' }}>
             {entry.album_art && (
@@ -540,7 +575,6 @@ export default function PostClient({ entry }) {
       {/* ── CONTENT ── */}
       <div style={{ maxWidth: '860px', margin: '0 auto', padding: '48px 48px 100px' }}>
 
-        {/* Background */}
         {entry.background && (
           <section style={{ marginBottom: '48px' }}>
             <SLabel>Background</SLabel>
@@ -548,7 +582,6 @@ export default function PostClient({ entry }) {
           </section>
         )}
 
-        {/* Notes */}
         {albumNotes && (
           <section style={{ marginBottom: '48px' }}>
             <SLabel>Notes</SLabel>
@@ -556,7 +589,6 @@ export default function PostClient({ entry }) {
           </section>
         )}
 
-        {/* ── HORIZON ── */}
         {horizonBars.length > 0 && (
           <section style={{ marginBottom: '48px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
@@ -572,7 +604,6 @@ export default function PostClient({ entry }) {
           </section>
         )}
 
-        {/* ── TRACKS + COMMENTS ── */}
         {parsedTracks.length > 0 && (
           <section style={{ marginBottom: '48px' }}>
             <SLabel>Tracks</SLabel>
@@ -591,7 +622,6 @@ export default function PostClient({ entry }) {
           </section>
         )}
 
-        {/* Tags */}
         {tags.length > 0 && (
           <section style={{ marginBottom: '48px' }}>
             <SLabel>Tags</SLabel>
@@ -603,7 +633,7 @@ export default function PostClient({ entry }) {
           </section>
         )}
 
-        {/* Footer */}
+        {/* Footer — date and back link */}
         <div style={{ borderTop: '1px solid #2a2a2a', paddingTop: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span style={{ fontFamily: 'DM Mono, monospace', fontSize: '10px', color: '#333' }}>{new Date(entry.created_at).toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' })}</span>
           <a href="/" style={{ fontFamily: 'DM Mono, monospace', fontSize: '10px', letterSpacing: '0.1em', textTransform: 'uppercase', color: '#444', textDecoration: 'none' }}>← All entries</a>
@@ -614,28 +644,41 @@ export default function PostClient({ entry }) {
   );
 }
 
-// ── Small shared components ────────────────────────────────────────────────
+// ── SHARED SMALL COMPONENTS ────────────────────────────────────────────────
+// Reusable UI primitives used throughout this file.
 
+// Section label — the small uppercase label above each content section
 function SLabel({ children }) {
   return <div style={{ fontFamily: 'DM Mono, monospace', fontSize: '9px', letterSpacing: '0.16em', textTransform: 'uppercase', color: '#555', marginBottom: '16px', paddingBottom: '10px', borderBottom: '1px solid #2a2a2a' }}>{children}</div>;
 }
+
+// Inline version of SLabel — no border, used inside flex rows
 function SLabelInline({ children }) {
   return <span style={{ fontFamily: 'DM Mono, monospace', fontSize: '9px', letterSpacing: '0.16em', textTransform: 'uppercase', color: '#555' }}>{children}</span>;
 }
+
+// Small pill tag — used for relationship, entry type, and favorite badge
+// accent=true makes it green, default is grey
 function Chip({ children, accent }) {
   return <span style={{ fontFamily: 'DM Mono, monospace', fontSize: '10px', letterSpacing: '0.08em', border: '1px solid ' + (accent ? 'rgba(200,212,122,0.3)' : '#2a2a2a'), color: accent ? '#c8d47a' : '#a8a49c', borderRadius: '4px', padding: '3px 8px' }}>{children}</span>;
 }
+
+// ── SHARED STYLES ──────────────────────────────────────────────────────────
+// Style objects shared across comment input fields and buttons.
+// Defined once here instead of repeated inline throughout the file.
 
 const inputStyle = {
   background: 'rgba(255,255,255,0.04)', border: '1px solid #2a2a2a', borderRadius: '6px',
   color: '#e8e4dc', padding: '7px 10px', fontFamily: 'DM Mono, monospace', fontSize: '11px',
   outline: 'none', flex: 1, backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
 };
+// Green filled button — used for primary actions like "Post comment"
 const accentBtnSm = {
   fontFamily: 'DM Mono, monospace', fontSize: '9px', letterSpacing: '0.12em', textTransform: 'uppercase',
   color: '#0e0e0e', background: '#c8d47a', border: 'none', borderRadius: '6px',
   padding: '7px 14px', cursor: 'pointer',
 };
+// Ghost button — used for secondary actions like "Cancel"
 const ghostBtnSm = {
   fontFamily: 'DM Mono, monospace', fontSize: '9px', letterSpacing: '0.12em', textTransform: 'uppercase',
   color: '#555', background: 'none', border: '1px solid #2a2a2a', borderRadius: '6px',

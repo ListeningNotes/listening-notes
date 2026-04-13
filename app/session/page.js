@@ -693,8 +693,8 @@ export default function Session() {
   // Sends a message to /api/reflect — the AI chat companion.
   // Passes your current notes and the album brief as context.
   async function sendChat(msg) {
-    const message = msg || chatInput.trim();
-    if (!message) return;
+  if (chatLoading) return;
+  const message = msg || chatInput.trim();
     setChatInput('');
     setChatMessages(prev => [...prev, { role: 'user', text: message }]);
     setChatLoading(true);
