@@ -3,19 +3,15 @@
 // Shows the full entry — art, metadata, background, notes, horizon bar, tags.
 // Does NOT load a new page — it overlays the current page and updates the URL
 // to /entries/[slug] so the entry is shareable, then restores / on close.
-//
-// Features:
-// - Full-bleed album art background
-// - Frosted glass info box
-// - Collapse-on-scroll metadata (StickyBar replaces it when scrolled)
-// - Animated horizon bar
-// - Masterpiece star glow + gold shine animation
-// - Escape key to close
 
 'use client';
 
 import { useEffect, useState, useRef, useCallback } from 'react';
 import Link from 'next/link';
+import StarRating from './StarRating';
+import HorizonGenerator from './entry_modal/HorizonGenerator';
+import StickyHeader from './entry_modal/StickyHeader';
+import { parseTracksFromNotes, splitNotes } from '../../library/entry_formatter';
 
 // ── CONSTANTS ──────────────────────────────────────────────────────────────
 const STAR_PATH = 'M9 1.5l2.163 4.38 4.837.703-3.5 3.412.826 4.818L9 12.39l-4.326 2.273.826-4.818L2 6.583l4.837-.703z';
@@ -26,184 +22,6 @@ const MONO = "'DM Mono', monospace";
 const WIDGET_BG = 'rgba(8,6,14,0.50)';
 const WIDGET_BORDER = 'rgba(255,255,255,0.09)';
 const DIVIDER = 'rgba(255,255,255,0.07)';
-
-// ── UTILITY FUNCTIONS ──────────────────────────────────────────────────────
-
-// Parses a rating value to a number — handles strings like "4.5 stars"
-function parseRating(rating) {
-  if (!rating) return 0;
-  const n = parseFloat(rating);
-  return isNaN(n) ? 0 : n;
-}
-
-// Parses horizon string into array of heights (0–1).
-// Accepts either Unicode block characters (▁▂▃▄) or a JSON array of numbers.
-function parseHorizon(horizon) {
-  if (!horizon) return [];
-  const BLOCK_MAP = { '\u2581': 0.12, '\u2582': 0.25, '\u2583': 0.37, '\u2584': 0.50, '\u2585': 0.62, '\u2586': 0.75, '\u2587': 0.87, '\u2588': 1.00 };
-  if (horizon.trim().startsWith('[')) {
-    try {
-      const arr = JSON.parse(horizon);
-      if (Array.isArray(arr)) return arr.map(v => parseFloat(v) / 5);
-    } catch {}
-  }
-  return [...horizon.trim()].filter(c => BLOCK_MAP[c]).map(c => BLOCK_MAP[c]);
-}
-
-// Parses numbered track lines with star ratings from the notes field.
-// e.g. "1. Song Title — ★★★" becomes { num: 1, name: "Song Title", stars: 3 }
-function parseTracksFromNotes(notesText) {
-  if (!notesText) return [];
-  const matches = [...notesText.matchAll(/(\d+)\.\s+([^\u2014\u2013\n]+?)\s*[\u2014\u2013]\s*(\u2605[\u2605\u2606\s]*)/g)];
-  return matches.map(m => ({
-    num: parseInt(m[1]),
-    name: m[2].replace(/\*\*/g, '').trim(),
-    stars: (m[3].match(/\u2605/g) || []).length,
-  }));
-}
-
-// Splits notes into album-level prose and track-level notes.
-// Track notes start at "Track Notes" heading or first numbered line.
-function splitNotes(notesText) {
-  if (!notesText) return { albumNotes: '', trackNotes: '' };
-  const clean = notesText.replace(/\*?\*?Album Notes\*?\*?/g, '').replace(/\*\*/g, '').trim();
-  const trackSplit = clean.search(/Track Notes|\n\n\d+\.\s|\n\nTrack\s+\d+\s*[\u2014\u2013]/m);
-  if (trackSplit > -1) {
-    return {
-      albumNotes: clean.slice(0, trackSplit).trim(),
-      trackNotes: clean.slice(trackSplit).replace(/\*?\*?Track Notes\*?\*?/g, '').trim(),
-    };
-  }
-  return { albumNotes: clean, trackNotes: '' };
-}
-
-// ── STARS ──────────────────────────────────────────────────────────────────
-// Read-only star display used inside the modal.
-// glow=true adds the pulsing animation used for Masterpiece entries.
-
-function Stars({ rating, size = 16, glow = false }) {
-  const numeric = parseRating(rating);
-  return (
-    <div style={{ display: 'inline-flex', gap: 3, alignItems: 'center' }}>
-      {[1, 2, 3, 4, 5].map(i => {
-        const filled = numeric >= i;
-        const half = !filled && numeric >= i - 0.5;
-        return (
-          <div key={i} className={glow ? 'ln-star-glow' : ''} style={{ position: 'relative', width: size, height: size, flexShrink: 0, display: 'block' }}>
-            {/* Dim background star */}
-            <svg width={size} height={size} viewBox="0 0 18 18" style={{ position: 'absolute', top: 0, left: 0 }}>
-              <path d={STAR_PATH} fill={GOLD_EMPTY} />
-            </svg>
-            {/* Gold fill — full or half width */}
-            <div style={{ position: 'absolute', top: 0, left: 0, overflow: 'hidden', width: half ? size / 2 : filled ? size : 0 }}>
-              <svg width={size} height={size} viewBox="0 0 18 18" style={{ display: 'block' }}>
-                <path d={STAR_PATH} fill={GOLD} />
-              </svg>
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-// ── HORIZON DIVIDER ────────────────────────────────────────────────────────
-// The bar chart that sits between album notes and track notes.
-// Each bar represents one track — height = track star rating.
-// Bars animate in with a spring effect when the modal opens (animate prop).
-// Hovering a bar shows a tooltip with the track name.
-
-function HorizonDivider({ horizon, tracks, animate }) {
-  const bars = parseHorizon(horizon);
-  // Use track star ratings if available, otherwise fall back to horizon block characters
-  const trackBars = tracks.length > 0 ? tracks.map(t => t.stars / 5) : bars;
-  if (!trackBars.length) return null;
-  const barWidth = Math.min(trackBars.length * 14, 280);
-  return (
-    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', margin: '28px 0 24px', gap: 14 }}>
-      <div style={{ fontFamily: MONO, fontSize: 8, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.2)', flexShrink: 0 }}>
-        Horizon
-      </div>
-      <div style={{ display: 'flex', alignItems: 'flex-end', gap: 3, height: 32, width: barWidth }}>
-        {trackBars.map((h, i) => {
-          const track = tracks[i];
-          return (
-            <div key={i} className="ln-horizon-bar-wrap" style={{ position: 'relative', flex: 1, height: '100%', display: 'flex', alignItems: 'flex-end' }}>
-              {/* Tooltip — track name on hover */}
-              {track && <div className="ln-horizon-tooltip">{track.name}</div>}
-              <div
-                className="ln-horizon-bar"
-                style={{
-                  width: '100%',
-                  height: Math.round(h * 100) + '%',
-                  background: '#c8d47a',
-                  borderRadius: '1px 1px 0 0',
-                  transformOrigin: 'bottom',
-                  // Bars animate up with staggered spring delay when animate=true
-                  transform: animate ? 'scaleY(1)' : 'scaleY(0)',
-                  opacity: animate ? 1 : 0,
-                  transition: animate
-                    ? 'transform 0.5s cubic-bezier(0.34,1.4,0.64,1) ' + (i * 35) + 'ms, opacity 0.3s ease ' + (i * 35) + 'ms'
-                    : 'none',
-                }}
-              />
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-// ── STICKY BAR ─────────────────────────────────────────────────────────────
-// A compact metadata bar that slides in at the top of the info box
-// when the user scrolls down past the main metadata section.
-// Shows album, artist, year, rating, relationship, and entry type in one line.
-
-function StickyBar({ entry, visible }) {
-  const masterpiece = entry?.masterpiece === true;
-  const isSubmission = entry?.entry_type === 'Submission';
-  return (
-    <div style={{
-      flexShrink: 0,
-      borderBottom: '1px solid ' + DIVIDER,
-      padding: '10px 24px',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: 12,
-      fontFamily: FONT,
-      background: 'rgba(8,6,14,0.3)',
-      // Animates in by expanding from 0 height when visible becomes true
-      maxHeight: visible ? 52 : 0,
-      opacity: visible ? 1 : 0,
-      overflow: 'hidden',
-      transition: 'max-height 0.35s cubic-bezier(0.4,0,0.2,1), opacity 0.3s ease',
-    }}>
-      <div style={{ fontSize: 14, fontWeight: 700, color: '#f0ece4', letterSpacing: '-0.02em', flexShrink: 0 }}>{entry?.album}</div>
-      <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.35)', flexShrink: 0 }}>{entry?.artist}{entry?.year ? ' · ' + entry.year : ''}</div>
-      <div style={{ width: 1, height: 16, background: 'rgba(255,255,255,0.1)', flexShrink: 0 }} />
-      <Stars rating={entry?.rating} size={12} glow={masterpiece} />
-      {masterpiece && (
-        <span className="ln-masterpiece-shine" style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase', fontWeight: 500 }}>
-          Masterpiece
-        </span>
-      )}
-      <div style={{ width: 1, height: 16, background: 'rgba(255,255,255,0.1)', flexShrink: 0 }} />
-      {entry?.relationship && (
-        <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.28)' }}>
-          {entry.relationship}
-        </span>
-      )}
-      {isSubmission && (
-        <>
-          <span style={{ color: 'rgba(255,255,255,0.15)', fontFamily: MONO, fontSize: 9 }}>·</span>
-          <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(200,212,122,0.6)' }}>Submission</span>
-        </>
-      )}
-    </div>
-  );
-}
 
 // ── MAIN MODAL ─────────────────────────────────────────────────────────────
 
@@ -368,7 +186,7 @@ export default function EntryModal({ slug, onClose }) {
         }}>
 
           {/* Sticky bar — slides in when metadata is scrolled out of view */}
-          <StickyBar entry={entry} visible={collapsed} />
+          <StickyHeader entry={entry} visible={collapsed} />
 
           {/* Metadata + background section — collapses when scrolled */}
           <div style={{
@@ -399,7 +217,7 @@ export default function EntryModal({ slug, onClose }) {
                   </div>
                   <div style={{ height: 1, background: 'rgba(255,255,255,0.08)', marginBottom: 12 }} />
                   <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 7 }}>
-                    <Stars rating={entry.rating} size={18} glow={masterpiece} />
+                    <StarRating rating={entry.rating} size={18} glow={masterpiece} />
                     {masterpiece && (
                       <>
                         <span style={{ color: 'rgba(255,255,255,0.18)', fontFamily: MONO, fontSize: 9 }}>·</span>
@@ -450,7 +268,7 @@ export default function EntryModal({ slug, onClose }) {
 
                 {/* Horizon bar — shown between album notes and track notes */}
                 {(tracks.length > 0 || entry.horizon) && (
-                  <HorizonDivider horizon={entry.horizon} tracks={tracks} animate={animateBars} />
+                  <HorizonGenerator horizon={entry.horizon} tracks={tracks} animate={animateBars} />
                 )}
 
                 {trackNotes && (
