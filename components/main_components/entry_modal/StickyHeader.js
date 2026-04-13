@@ -1,9 +1,8 @@
 'use client';
+import { fonts } from '../../../library/sitewide_visuals';
 
 import StarRating from '../StarRating';
 
-const FONT = "'DM Sans', sans-serif";
-const MONO = "'DM Mono', monospace";
 const DIVIDER = 'rgba(255,255,255,0.07)';
 
 export default function StickyHeader({ entry, visible }) {
@@ -19,7 +18,7 @@ export default function StickyHeader({ entry, visible }) {
       alignItems: 'center',
       justifyContent: 'center',
       gap: 12,
-      fontFamily: FONT,
+      fontFamily: fonts.sans,
       background: 'rgba(8,6,14,0.3)',
       maxHeight: visible ? 52 : 0,
       opacity: visible ? 1 : 0,
@@ -31,20 +30,20 @@ export default function StickyHeader({ entry, visible }) {
       <div style={{ width: 1, height: 16, background: 'rgba(255,255,255,0.1)', flexShrink: 0 }} />
       <StarRating rating={entry?.rating} size={12} glow={masterpiece} />
       {masterpiece && (
-        <span className="ln-masterpiece-shine" style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase', fontWeight: 500 }}>
+        <span className="ln-masterpiece-shine" style={{ fontFamily: fonts.mono, fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase', fontWeight: 500 }}>
           Masterpiece
         </span>
       )}
       <div style={{ width: 1, height: 16, background: 'rgba(255,255,255,0.1)', flexShrink: 0 }} />
       {entry?.relationship && (
-        <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.28)' }}>
+        <span style={{ fontFamily: fonts.mono, fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.28)' }}>
           {entry.relationship}
         </span>
       )}
       {isSubmission && (
         <>
-          <span style={{ color: 'rgba(255,255,255,0.15)', fontFamily: MONO, fontSize: 9 }}>·</span>
-          <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(200,212,122,0.6)' }}>Submission</span>
+          <span style={{ color: 'rgba(255,255,255,0.15)', fontFamily: fonts.mono, fontSize: 9 }}>·</span>
+          <span style={{ fontFamily: fonts.mono, fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(200,212,122,0.6)' }}>Submission</span>
         </>
       )}
     </div>
