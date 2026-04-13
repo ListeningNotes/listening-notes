@@ -5,6 +5,7 @@
 // to /entries/[slug] so the entry is shareable, then restores / on close.
 
 'use client';
+import { fonts } from '../../library/sitewide_visuals';
 
 import { useEffect, useState, useRef, useCallback } from 'react';
 import Link from 'next/link';
@@ -17,8 +18,6 @@ import { parseTracksFromNotes, splitNotes } from '../../library/entry_formatter'
 const STAR_PATH = 'M9 1.5l2.163 4.38 4.837.703-3.5 3.412.826 4.818L9 12.39l-4.326 2.273.826-4.818L2 6.583l4.837-.703z';
 const GOLD = '#E8B84B';
 const GOLD_EMPTY = 'rgba(232,184,75,0.18)';
-const FONT = "'DM Sans', sans-serif";
-const MONO = "'DM Mono', monospace";
 const WIDGET_BG = 'rgba(8,6,14,0.50)';
 const WIDGET_BORDER = 'rgba(255,255,255,0.09)';
 const DIVIDER = 'rgba(255,255,255,0.07)';
@@ -124,7 +123,7 @@ export default function EntryModal({ slug, onClose }) {
           position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);
           background:rgba(8,6,14,0.9);border:1px solid rgba(255,255,255,0.12);
           border-radius:6px;padding:4px 8px;white-space:nowrap;
-          font-family:${FONT};font-size:10px;color:rgba(232,228,220,0.9);
+          font-family:${fonts.sans};font-size:10px;color:rgba(232,228,220,0.9);
           opacity:0;pointer-events:none;transition:opacity 0.15s;z-index:10;
           backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
         }
@@ -169,7 +168,7 @@ export default function EntryModal({ slug, onClose }) {
             width: 28, height: 28, borderRadius: '50%',
             background: 'rgba(0,0,0,0.4)', border: '1px solid ' + WIDGET_BORDER,
             color: 'rgba(255,255,255,0.45)', fontSize: 12, cursor: 'pointer',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: FONT,
+            display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: fonts.sans,
           }}
         >
           ✕
@@ -204,7 +203,7 @@ export default function EntryModal({ slug, onClose }) {
           }}>
 
             {/* Left column: album title, artist, year, rating, relationship */}
-            <div style={{ padding: '20px 22px', width: 270, flexShrink: 0, borderRight: '1px solid ' + DIVIDER, fontFamily: FONT, display: 'flex', flexDirection: 'column' }}>
+            <div style={{ padding: '20px 22px', width: 270, flexShrink: 0, borderRight: '1px solid ' + DIVIDER, fontFamily: fonts.sans, display: 'flex', flexDirection: 'column' }}>
               {loading ? (
                 // Skeleton loading bars
                 [70, 50, 40].map((w, i) => <div key={i} style={{ height: 10, width: w + '%', background: 'rgba(255,255,255,0.08)', borderRadius: 3, marginBottom: 8 }} />)
@@ -220,12 +219,12 @@ export default function EntryModal({ slug, onClose }) {
                     <StarRating rating={entry.rating} size={18} glow={masterpiece} />
                     {masterpiece && (
                       <>
-                        <span style={{ color: 'rgba(255,255,255,0.18)', fontFamily: MONO, fontSize: 9 }}>·</span>
-                        <span className="ln-masterpiece-shine" style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase', fontWeight: 500 }}>Masterpiece</span>
+                        <span style={{ color: 'rgba(255,255,255,0.18)', fontFamily: fonts.mono, fontSize: 9 }}>·</span>
+                        <span className="ln-masterpiece-shine" style={{ fontFamily: fonts.mono, fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase', fontWeight: 500 }}>Masterpiece</span>
                       </>
                     )}
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontFamily: MONO, fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontFamily: fonts.mono, fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
                     {entry.relationship && <span style={{ color: 'rgba(255,255,255,0.3)' }}>{entry.relationship}</span>}
                     {isSubmission && (
                       <>
@@ -239,12 +238,12 @@ export default function EntryModal({ slug, onClose }) {
             </div>
 
             {/* Right column: background text */}
-            <div style={{ flex: 1, padding: '20px 22px', minWidth: 0, fontFamily: FONT }}>
+            <div style={{ flex: 1, padding: '20px 22px', minWidth: 0, fontFamily: fonts.sans }}>
               {loading ? (
                 [100, 90, 95, 85, 88].map((w, i) => <div key={i} style={{ height: 9, width: w + '%', background: 'rgba(255,255,255,0.08)', borderRadius: 3, marginBottom: 8 }} />)
               ) : entry?.background ? (
                 <>
-                  <div style={{ fontFamily: MONO, fontSize: 8, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.2)', marginBottom: 10 }}>Background</div>
+                  <div style={{ fontFamily: fonts.mono, fontSize: 8, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.2)', marginBottom: 10 }}>Background</div>
                   <div style={{ fontSize: 12.5, fontWeight: 300, lineHeight: 1.8, color: 'rgba(200,196,192,0.78)' }}>{entry.background}</div>
                 </>
               ) : null}
@@ -253,7 +252,7 @@ export default function EntryModal({ slug, onClose }) {
           </div>
 
           {/* Scrollable notes section */}
-          <div ref={scrollRef} className="ln-notes-scroll" onScroll={handleScroll} style={{ flex: 1, overflowY: 'auto', padding: '20px 24px', fontFamily: FONT }}>
+          <div ref={scrollRef} className="ln-notes-scroll" onScroll={handleScroll} style={{ flex: 1, overflowY: 'auto', padding: '20px 24px', fontFamily: fonts.sans }}>
             {loading ? (
               // Skeleton loading bars
               [100, 92, 97, 85, 90, 88, 95, 78].map((w, i) => <div key={i} style={{ height: 9, width: w + '%', background: 'rgba(255,255,255,0.08)', borderRadius: 3, marginBottom: 10 }} />)
@@ -261,7 +260,7 @@ export default function EntryModal({ slug, onClose }) {
               <>
                 {albumNotes && (
                   <>
-                    <div style={{ fontFamily: MONO, fontSize: 8, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.2)', marginBottom: 12 }}>Album Notes</div>
+                    <div style={{ fontFamily: fonts.mono, fontSize: 8, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.2)', marginBottom: 12 }}>Album Notes</div>
                     <div style={{ fontSize: 14, fontWeight: 400, lineHeight: 1.88, color: 'rgba(232,228,220,0.92)', whiteSpace: 'pre-wrap' }}>{albumNotes}</div>
                   </>
                 )}
@@ -273,7 +272,7 @@ export default function EntryModal({ slug, onClose }) {
 
                 {trackNotes && (
                   <>
-                    <div style={{ fontFamily: MONO, fontSize: 8, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.2)', marginBottom: 12 }}>Track Notes</div>
+                    <div style={{ fontFamily: fonts.mono, fontSize: 8, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.2)', marginBottom: 12 }}>Track Notes</div>
                     <div style={{ fontSize: 13.5, fontWeight: 400, lineHeight: 1.88, color: 'rgba(210,206,200,0.85)', whiteSpace: 'pre-wrap' }}>{trackNotes}</div>
                   </>
                 )}
@@ -281,7 +280,7 @@ export default function EntryModal({ slug, onClose }) {
                 {tags.length > 0 && (
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 28, paddingTop: 20, borderTop: '1px solid ' + DIVIDER }}>
                     {tags.map((tag, i) => (
-                      <span key={i} style={{ fontFamily: MONO, fontSize: 8, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.28)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 4, padding: '3px 8px' }}>
+                      <span key={i} style={{ fontFamily: fonts.mono, fontSize: 8, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.28)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 4, padding: '3px 8px' }}>
                         {tag}
                       </span>
                     ))}
@@ -290,7 +289,7 @@ export default function EntryModal({ slug, onClose }) {
                 <div style={{ height: 16 }} />
               </>
             ) : (
-              <div style={{ color: 'rgba(255,255,255,0.3)', fontFamily: MONO, fontSize: 11 }}>entry not found</div>
+              <div style={{ color: 'rgba(255,255,255,0.3)', fontFamily: fonts.mono, fontSize: 11 }}>entry not found</div>
             )}
           </div>
         </div>
@@ -301,7 +300,7 @@ export default function EntryModal({ slug, onClose }) {
           background: 'rgba(6,4,12,0.55)', borderTop: '1px solid rgba(255,255,255,0.06)',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 20px',
         }}>
-          <div style={{ display: 'flex', gap: 6, fontFamily: MONO, alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: 6, fontFamily: fonts.mono, alignItems: 'center' }}>
             {tags.slice(0, 3).map((tag, i) => (
               <span key={i} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                 {i > 0 && <span style={{ color: 'rgba(255,255,255,0.15)' }}>·</span>}
@@ -311,7 +310,7 @@ export default function EntryModal({ slug, onClose }) {
           </div>
           {/* Link to the full public entry page with comments */}
           {entry && (
-            <a href={'/entries/' + entry.slug} style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#c8d47a', textDecoration: 'none' }}>
+            <a href={'/entries/' + entry.slug} style={{ fontFamily: fonts.mono, fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#c8d47a', textDecoration: 'none' }}>
               Full page + comments ↗
             </a>
           )}

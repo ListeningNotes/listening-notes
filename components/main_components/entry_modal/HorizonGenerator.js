@@ -1,4 +1,5 @@
 'use client';
+import { fonts } from '../../../library/sitewide_visuals';
 
 function parseHorizon(horizon) {
   if (!horizon) return [];
@@ -12,8 +13,6 @@ function parseHorizon(horizon) {
   return [...horizon.trim()].filter(c => BLOCK_MAP[c]).map(c => BLOCK_MAP[c]);
 }
 
-const FONT = "'DM Sans', sans-serif";
-const MONO = "'DM Mono', monospace";
 
 export default function HorizonGenerator({ horizon, tracks, animate }) {
   const bars = parseHorizon(horizon);
@@ -23,7 +22,7 @@ export default function HorizonGenerator({ horizon, tracks, animate }) {
 
   return (
     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', margin: '28px 0 24px', gap: 14 }}>
-      <div style={{ fontFamily: MONO, fontSize: 8, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.2)', flexShrink: 0 }}>
+      <div style={{ fontFamily: fonts.mono, fontSize: 8, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.2)', flexShrink: 0 }}>
         Horizon
       </div>
       <div style={{ display: 'flex', alignItems: 'flex-end', gap: 3, height: 32, width: barWidth }}>
