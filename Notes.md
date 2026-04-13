@@ -82,3 +82,10 @@ COMPLETE
 - SESSION_SECRET is not yet wired to API route protection (deferred — see SECURITY above)
 
 **Git workflow:**
+
+## Site Structure
+Two branches: public (/) and private (/session), both reading/writing the same Neon Postgres DB.
+Public pages: / (homepage), /about (about + specs + index), /archive, /submit, /compare, /entries/[slug] (entry + comments), surprise (random entry redirect)
+Private pages: /session (note-taking tool → research + format APIs), /session/entries (CMS), /session/inbox (comments + submissions moderation), /session/distribution (Instagram + Reddit auto-post — not yet built)
+Shared DB: all entries, comments, submissions flow through the same entries table + future comments and submissions tables.
+Distribution layer sits inside /session — after saving a post, one click auto-posts to Instagram and relevant subreddits.
