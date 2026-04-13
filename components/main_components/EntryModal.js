@@ -14,10 +14,7 @@ import HorizonGenerator from './entry_modal/HorizonGenerator';
 import StickyHeader from './entry_modal/StickyHeader';
 import { parseTracksFromNotes, splitNotes } from '../../library/entry_formatter';
 
-// ── CONSTANTS ──────────────────────────────────────────────────────────────
-const STAR_PATH = 'M9 1.5l2.163 4.38 4.837.703-3.5 3.412.826 4.818L9 12.39l-4.326 2.273.826-4.818L2 6.583l4.837-.703z';
-const GOLD = '#E8B84B';
-const GOLD_EMPTY = 'rgba(232,184,75,0.18)';
+
 const WIDGET_BG = 'rgba(8,6,14,0.50)';
 const WIDGET_BORDER = 'rgba(255,255,255,0.09)';
 const DIVIDER = 'rgba(255,255,255,0.07)';
@@ -27,8 +24,8 @@ const DIVIDER = 'rgba(255,255,255,0.07)';
 export default function EntryModal({ slug, onClose }) {
   const [entry, setEntry] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [animateBars, setAnimateBars] = useState(false); // triggers horizon bar animation
-  const [collapsed, setCollapsed] = useState(false);     // true when user has scrolled down
+  const [animateBars, setAnimateBars] = useState(false);
+  const [collapsed, setCollapsed] = useState(false);
   const scrollRef = useRef(null);
 
   // Fetch entry data when slug changes
