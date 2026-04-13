@@ -44,6 +44,7 @@ Keep responses concise and conversational. You're a smart friend who knows music
     const msg = await client.messages.create({
       model: 'claude-sonnet-4-20250514',
       max_tokens: 600,
+      timeout: 30000,
       system: systemPrompt,
       messages: [{ role: 'user', content: userContent }],
     });
