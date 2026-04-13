@@ -5,7 +5,7 @@
 // It hands the entry data off to PostClient which handles the interactive UI.
 
 import { neon } from '@neondatabase/serverless';
-import PostClient from './PostClient';
+import FullPostPage from './FullPostPage';
 
 const sql = neon(process.env.DATABASE_URL);
 
@@ -40,5 +40,5 @@ export default async function PostPage({ params }) {
   // Pass the entry data to PostClient which renders the actual page UI.
   // PostClient is a client component — it handles interactivity like the modal,
   // star ratings, and the horizon bar visualization.
-  return <PostClient entry={result[0]} />;
+  return <FullPostPage entry={result[0]} />;
 }
