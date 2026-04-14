@@ -43,8 +43,28 @@ Return ONLY valid JSON with no markdown fences:
   return JSON.parse(text.slice(text.indexOf('{'), text.lastIndexOf('}') + 1));
 }
 
-export async function format_post({ brief, notes, rating, masterpiece, favorite, entryType, relationship, horizonBar, trackNotes, trackRatings, tracks }) {
+export async function format_post({ brief, notes, rating, masterpiece, favorite, entryType, relationship, trackNotes, trackRatings, tracks }) {
   const client = get_client();
+
+  const trackNotesBlock = tracks?.length
+    ? tracks.map((t, i) => {
+        const note = trackNotes?.[i];
+        const stars = trackRatings?.[i];
+        if (!note && !stars) return null;
+        const starStr = stars ? ('★'.repeat(Math.floor(stars)) + (stars % 1 >= 0.5 ? '½' : '')) : '';
+        return (t.number || i+1) + '. ' + t.title + (starStr ? ' — ' + starStr : '') + (note ? '\n' + note : '');
+      }).filter(Boolean).join('\n\n')
+    : '';
+
+  const horizonString = (() => {
+    if (!tracks?.length) return '';
+    const bars = ['▁','▂','▃','▄','▅','▆','▇','█'];
+    return tracks.map((_, i) => {
+      const r = trackRatings?.[i] || 0;
+      return bars[Math.round((r / 5) * (bars.length - 1))];
+    }).join('');
+  })();
+
   const message = await client.messages.create({
     model: 'claude-sonnet-4-20250514',
     max_tokens: 1600,
@@ -68,11 +88,13 @@ Background context:
 Raw listener notes:
 ${notes}
 
-Write a blog post in two parts:
-1. BACKGROUND (2-3 paragraphs): Set the scene factually but warmly.
-2. NOTES (2-4 paragraphs): First person, drawn from the raw notes. Keep the writer's voice.
+${trackNotesBlock ? `Per-track notes:\n${trackNotesBlock}` : ''}
 
-${horizonBar ? 'Include a horizon bar between sections — a single line of Unicode block characters like ▁▂▃▆▇▇▆▃▂▁' : 'Do not include a horizon bar.'}
+Write a blog post in two parts:
+1. BACKGROUND (1 short paragraph, 3-4 sentences max): Set the scene factually but warmly.
+2. NOTES: Return the raw listener notes almost exactly as written. Fix spelling only. Do not rewrite, restructure, or improve sentences. Preserve all paragraph breaks exactly as they appear in the raw notes.
+
+Include this horizon bar between the two sections (already calculated, use exactly): ${horizonString}
 
 Also generate 8-12 tags relevant to this entry.
 
@@ -80,7 +102,7 @@ Return ONLY valid JSON, no markdown fences:
 {
   "background": "full background section",
   "notes_prose": "full notes section",
-  "horizon": "${horizonBar ? '▁▂▃▆▇ etc' : ''}",
+  "horizon": "${horizonString}",
   "tags": ["tag1", "tag2"]
 }`
     }]

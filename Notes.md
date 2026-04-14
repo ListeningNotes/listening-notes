@@ -1,91 +1,194 @@
 # NOTES.MD
 
-Personal Checklist:
+---
 
-PENDING
+## Pending
 
-- [ ] DEV — Connect domain listeningnotes.blog
-- [ ] DEV — Instagram + Reddit distribution
-- [ ] DEV — Ability for people to comment on post URL page
+**DEV**
+- [ ] Connect domain listeningnotes.blog (currently pointing to Tumblr)
+- [ ] Instagram + Reddit auto-distribution after posting
+- [ ] Moderation inbox in /session (approve/reject comments + submissions)
 
-- [ ] SLUG — Redesign actual post page
+**HOME**
+- [ ] Brainstorm alternative to scrolling album strip for recent entries
+- [ ] Connect navigation bar links to actual pages
+- [ ] Jiggle animation on album tile hover
+- [ ] Better live track logic (sticky state past Last.fm delay)
+- [ ] Beacon centering fix when open
 
-- [ ] MODAL — album art fully shows, then data loads in. Or CLICK to show album art and everything leaves screen
-- [ ] MODAL — Scroll sticky collapse needs to be MUCH smoother and not take to a new spot. Feels so glitchy
-- [ ] MODAL — Horizon track names only loads for some albums
-- [ ] MODAL — weird glitch with stars, (took screenshot)
-- [ ] MODAL — Maybe I do want background of website to fade just a tiny bit.
-- [ ] MODAL — link to full page open in new tab
-- [ ] MODAL — favorite not showing, showing · ?
-- [ ] MODAL — Masterpiece logic (only if it's all tracks 5 star, not just any 5 star album ex: as tall as lions)
-- [ ] MODAL — Horizons should all raise at the same time, not across tracks
+**MODAL**
+- [ ] Album art loads fully before data appears (or click-to-reveal)
+- [ ] Sticky collapse animation is glitchy — needs smoother transition
+- [ ] Horizon track names only load for some albums
+- [ ] Star display glitch (screenshot taken)
+- [ ] Subtle background fade behind modal
+- [ ] Link to full page (open in new tab)
+- [ ] Favorite not showing — showing · instead
+- [ ] Masterpiece logic: only if ALL tracks are 5 stars (not just the album rating)
+- [ ] Horizon bars should all rise simultaneously, not staggered
 
-- [ ] SESSION — Way to see Spotify information (monthly listeners, artist ranking)
-- [ ] SESSION — Discogs genre tags (automatic via Claude API)
-- [ ] SESSION — Apple Music playback controls (requires MusicKit JS + Apple developer account)
+**SLUG PAGE**
+- [ ] Full redesign of the public entry/post page
 
-- [ ] SESSION PICKER — Rewrite AlbumPicker with new home screen design (three buttons + floating albums + spring swap). Python write kept failing due to heredoc/backtick conflicts. Next session: write to a .py file first, then run it. End line of AlbumPicker is 546 (one before export default at 547). New design: mode state ('home'|'session'), three frosted glass buttons (Start Listening / Edit View Entries / Submissions), floating album art via useEffect DOM injection with CSS drift animations, spring-scale swap every 4-8s replacing 1-2 random albums without duplicates.
-- [ ] SESSION PICKER — Future idea: randomize background layout per visit (10+ different ways to show album art — floating, grid+flip, vinyl dial, rain, full bleed). More entries = more layouts unlocked. Gamify the archive.
-- [ ] SESSION PICKER — Submissions page (/session/submissions) needs to be created (placeholder for now)
+**SESSION**
+- [ ] Spotify data panel (monthly listeners, artist ranking)
+- [ ] Discogs genre tags via Claude API
+- [ ] Apple Music playback (requires MusicKit JS + Apple developer account)
+- [ ] Rewrite AlbumSelection with new home screen: three buttons + floating album art + spring swap
+- [ ] Submissions page (/session/submissions) — placeholder needed
+- [ ] Future: randomize album art layout per visit (10+ layouts, more entries = more unlocked)
 
-- [ ] HOME — recent entries (brainstorm other looks than scrolling bar)
-- [ ] HOME — Connect navigation bar to pages
-- [ ] HOME — Little jiggle animation on hover
-- [ ] HOME — Better logic for live track timing (sticky logic past last.fm)
-
-- [ ] SECURITY — API routes currently unprotected (POST /api/entries, /api/research, /api/format, /api/reflect). Proxy/middleware approach was attempted but Next.js 16 proxy can't distinguish your requests from strangers. Correct fix deferred: need server-side session token approach. Not urgent until public launch.
-
-- [ ] COMMENTS — Moderation inbox needs to be built in /session to approve/reject pending comments
-- [ ] COMMENTS — Upvote abuse prevention (IP or cookie check) before going fully public
-
-COMPLETE
-- [x] Individual post pages — each entry gets its own URL
-- [x] Fix Horizon logic
-- [x] Notes box expands as typing or paste
-- [x] Night and day mode button not working
-- [x] Fix the session app to post directly to your database instead of copy/paste
-- [x] Password protect the session page so only you can access it
-- [x] Get the session app into your website first — that's your core workflow tool
-- [x] Add the full track notes field to entries
-- [x] Album art — either upload or pull from Apple Music automatically
-- [x] Lightbox instead of post page? (View/leave comment takes to URL? Need to decide)
-- [x] Session: artist-first album picker landing screen with iTunes live search
-- [x] Session: full-screen frosted loading overlay during research (light theme)
-- [x] Session: album art as full-bleed background with frosted glass widget panels
-- [x] Session: draft auto-save to localStorage, restored on same album
-- [x] Session: clean minimal header (back button + entries only)
-- [x] Session: /session/entries — full entry management CMS (list, edit, delete)
-- [x] Session tool not on public site (navigate directly to /session)
-- [x] Session: loading overlay with fill animation + expand-to-fill transition
-- [x] Session: AI chat panel (reflect feature)
-- [x] Session: better album picker via iTunes artist ID lookup
-- [x] All API routes, components, hooks, and pages labeled with plain-English comments
-- [x] comments POST set to pending = true (moderation queue)
-- [x] format route rewritten — editor not writer, preserves voice, background from brief
-- [x] Sidebar.js deleted (replaced by TopNav in page.js)
-- [x] PATCH route restored to /api/entries/[slug] (used by /session/entries edit modal)
+**SECURITY**
+- [ ] API routes unprotected — POST /api/entries, /api/research, /api/format, /api/reflect open to anyone
+- [ ] Fix: server-side session token approach (deferred until public launch)
+- [ ] Upvote abuse prevention (IP or cookie check)
 
 ---
 
-## Architecture notes
+## Complete
+- [x] Codebase refactor — library/, main_components/, session_components/ structure
+- [x] Individual post pages with their own URL
+- [x] Horizon bar logic
+- [x] Notes box auto-expands while typing
+- [x] Light/dark mode toggle
+- [x] Session posts directly to database
+- [x] Password protected session
+- [x] Track notes field
+- [x] Album art via iTunes API
+- [x] Session: artist-first album picker with iTunes search
+- [x] Session: frosted loading overlay with fill animation
+- [x] Session: album art full-bleed background with glass panels
+- [x] Session: draft auto-save to localStorage
+- [x] Session: /session/entries CMS
+- [x] Session: AI chat companion (Echo)
+- [x] Comments pending moderation queue
+- [x] Format route preserves writer voice
+- [x] PATCH route for /api/entries/[slug]
 
-**File write rules:**
-- Code files (.js, .css) — edit directly in VS Code, works fine
-- Config/dotfiles (.env.local) — use Python or echo >> from terminal; VS Code silently fails on these
-- Never use PYEOF heredoc with backticks in JSX — use cat > /tmp/file.py approach instead
-- Always verify .env.local writes with: `cat /path/to/.env.local`
+---
 
-**Environment variables:**
-- DATABASE_URL — Neon Postgres connection string
-- ANTHROPIC_API_KEY — Claude API key
-- SESSION_SECRET — generated with `openssl rand -hex 32`, saved in Vercel (sensitive) + .env.local
-- SESSION_SECRET is not yet wired to API route protection (deferred — see SECURITY above)
+## Architecture — The House
 
-**Git workflow:**
+Think of the codebase as a house. Every piece has a room.
 
-## Site Structure
-Two branches: public (/) and private (/session), both reading/writing the same Neon Postgres DB.
-Public pages: / (homepage), /about (about + specs + index), /archive, /submit, /compare, /entries/[slug] (entry + comments), surprise (random entry redirect)
-Private pages: /session (note-taking tool → research + format APIs), /session/entries (CMS), /session/inbox (comments + submissions moderation), /session/distribution (Instagram + Reddit auto-post — not yet built)
-Shared DB: all entries, comments, submissions flow through the same entries table + future comments and submissions tables.
-Distribution layer sits inside /session — after saving a post, one click auto-posts to Instagram and relevant subreddits.
+### Library — Systems Behind the Walls
+`/library` holds all the logic that powers the site. Nothing visual lives here. If something breaks or you want to change how something works, start here.
+
+| File | What it does |
+|------|-------------|
+| `database_connection.js` | Opens the connection to Neon Postgres. Every DB query imports from here. |
+| `database_actions.js` | All entry DB functions: `pull_all_entries`, `pull_entry_by_slug`, `save_new_entry`, `update_entry`, `delete_entry` |
+| `comment_actions.js` | Comment DB functions: `nest_comments`, `save_comment`, `upvote_comment` |
+| `slug_generator.js` | `create_slug` — turns "Pet Sounds" into "pet-sounds" |
+| `entry_formatter.js` | Parses entry data for display: `parseHorizon`, `parseTracksFromNotes`, `splitNotes`, `parseRating` |
+| `sitewide_visuals.js` | Design tokens: all colors and fonts. Change here = changes everywhere. |
+| `ai_integration.js` | Claude API calls: `research_album`, `format_post`, `ask_echo` |
+| `music_data_api.js` | External music APIs: `fetchTracklist` (MusicBrainz), `fetchAlbumArtUrl` (iTunes), `searchArtistAlbums` (iTunes) |
+| `session_timers.js` | `TrackLength`, `SessionDuration`, `LOADING_PHRASES` |
+
+---
+
+### API Routes — The Front Door
+`/app/api` — these are the doors people and the app knock on. Each route is thin — it receives a request, calls the library, and sends back a response. No logic lives here.
+
+| Route | What it does |
+|-------|-------------|
+| `GET /api/entries` | Returns all entries (homepage) |
+| `POST /api/entries` | Saves a new entry (session tool) |
+| `GET /api/entries/[slug]` | Returns one entry by slug (post page, modal) |
+| `PATCH /api/entries/[slug]` | Updates an entry (session CMS) |
+| `DELETE /api/entries/[slug]` | Deletes an entry (session CMS) |
+| `GET /api/comments?slug=` | Returns approved comments for an entry |
+| `POST /api/comments` | Submits a new comment (pending approval) |
+| `POST /api/comments/upvote` | Upvotes a comment |
+| `POST /api/research` | Calls Claude to research an album |
+| `POST /api/format` | Calls Claude to format raw notes into a post |
+| `POST /api/reflect` | Calls Claude as listening companion (Echo) |
+
+---
+
+### Components — The Furniture
+`/components` holds all visual UI pieces. Two rooms:
+
+**`main_components/`** — public-facing UI
+| File | What it does |
+|------|-------------|
+| `TopNav.js` | Floating pill navigation (homepage) |
+| `Hero.js` | Full-bleed beacon section (homepage) |
+| `AlbumStrip.js` | Auto-scrolling album tiles (homepage) |
+| `NavBeacon.js` | Compact listening beacon (all pages except homepage) |
+| `EntryModal.js` | Album overlay modal (homepage click) |
+| `StarRating.js` | Read-only star display (modal + post page) |
+| `Lightswitch.js` | Light/dark mode provider (wraps entire app) |
+| `entry_modal/HorizonGenerator.js` | Bar chart inside the modal |
+| `entry_modal/StickyHeader.js` | Compact metadata bar on modal scroll |
+| `Slug_Page/CommentThread.js` | Single comment + replies |
+| `Slug_Page/NewCommentForm.js` | Comment submission form |
+| `Slug_Page/TrackThread.js` | Expandable track row with comments |
+| `Slug_Page/HorizonBar.js` | Bar chart on post page (click to scroll) |
+| `Slug_Page/MetadataLabel.js` | Section label (uppercase, with border) |
+| `Slug_Page/MetadataLabelInline.js` | Section label (no border, inline) |
+| `Slug_Page/Chip.js` | Pill tag (relationship, type, favorite) |
+
+**`session_components/`** — private session tool UI
+| File | What it does |
+|------|-------------|
+| `PasswordGate.js` | Password screen |
+| `AlbumSelection.js` | Artist search + album grid picker |
+| `LoadingResearch.js` | Full-screen loading overlay during research |
+| `StarRating.js` | Interactive star input (click to rate) |
+
+---
+
+### Pages — The Rooms
+`/app` — Next.js pages. Each one assembles components into a full screen.
+
+| File | URL | What it does |
+|------|-----|-------------|
+| `page.js` | `/` | Homepage — imports TopNav, Hero, AlbumStrip |
+| `entries/[slug]/page.js` | `/entries/pet-sounds` | Fetches entry server-side, passes to FullPostPage |
+| `entries/[slug]/FullPostPage.js` | — | Full public post page with comments |
+| `session/page.js` | `/session` | Private session tool — all note-taking logic |
+| `session/entries/page.js` | `/session/entries` | Private CMS — edit/delete all entries |
+
+---
+
+### Hooks
+`/hooks/useListeningBeacon.js` — polls Last.fm every 15s for current track. Used by Hero and NavBeacon.
+
+---
+
+## Design Tokens
+All colors and fonts live in `library/sitewide_visuals.js`. Change them there and they update everywhere.
+
+```js
+colors.background    #0e0e0e   — page background
+colors.panel         #161616   — cards, panels
+colors.text          #e8e4dc   — primary text
+colors.accent        #c8d47a   — green accent
+colors.border        #2a2a2a   — borders
+colors.gold          #E8B84B   — star ratings
+colors.secondary_text #555     — muted text
+
+fonts.serif   DM Serif Display
+fonts.mono    DM Mono
+fonts.sans    DM Sans
+```
+
+---
+
+## File Write Rules
+- JS files — edit directly in VS Code
+- `.env.local` — use Python from terminal (VS Code silently fails)
+- Never use heredoc with backticks in JSX — write to `/tmp/file.py` first
+- Verify env writes with: `cat .env.local`
+
+## Environment Variables
+- `DATABASE_URL` — Neon Postgres connection string
+- `ANTHROPIC_API_KEY` — Claude API key
+- `SESSION_SECRET` — saved in Vercel + .env.local (not yet wired to route protection)
+
+## Git Workflow
+- Commit after each verified working checkpoint
+- `git restore <file>` to undo a single file
+- `git add -A && git commit -m "message"`
