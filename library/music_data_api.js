@@ -1,39 +1,34 @@
-export async function fetchTracklist(albumName, artistName, year) {
+export async function fetchTracklist(albumName, artistName) {
   try {
-    const query = encodeURIComponent(`release:"${albumName}" AND artist:"${artistName}"`);
-    const searchRes = await fetch(
-      `https://musicbrainz.org/ws/2/release/?query=${query}&limit=10&fmt=json`,
-      { headers: { 'User-Agent': 'ListeningNotes/1.0 (listeningnotes.blog)' } }
+    const query = encodeURIComponent(`${albumName} ${artistName}`);
+    const res = await fetch(`https://itunes.apple.com/search?term=${query}&entity=song&limit=50`);
+    const data = await res.json();
+
+    if (!data.results?.length) return null;
+
+    // Find the most likely matching album by name
+    const normalized = albumName.toLowerCase();
+    const songs = data.results.filter(r =>
+      r.wrapperType === 'track' &&
+      r.collectionName?.toLowerCase().includes(normalized)
     );
-    const searchData = await searchRes.json();
-    const releases = searchData.releases || [];
-    if (!releases.length) return null;
 
-    const yearNum = year ? parseInt(String(year), 10) : NaN;
-    let best = null, bestScore = -Infinity;
-    for (const r of releases) {
-      let score = r.score || 0;
-      const releaseYear = parseInt((r.date || '').slice(0, 4), 10);
-      if (!isNaN(yearNum) && !isNaN(releaseYear) && releaseYear === yearNum) score += 30;
-      if ((r.status || '').toLowerCase() === 'official') score += 20;
-      if ((r['release-group']?.['primary-type'] || '').toLowerCase() === 'album') score += 10;
-      if (score > bestScore) { bestScore = score; best = r; }
-    }
-    if (!best) return null;
+    if (!songs.length) return null;
 
-    const detailRes = await fetch(
-      `https://musicbrainz.org/ws/2/release/${best.id}?inc=recordings&fmt=json`,
-      { headers: { 'User-Agent': 'ListeningNotes/1.0 (listeningnotes.blog)' } }
-    );
-    const detail = await detailRes.json();
-
-    const tracks = [];
-    for (const disc of (detail.media || [])) {
-      for (const t of (disc.tracks || [])) {
-        tracks.push({ number: tracks.length + 1, title: t.title || t.recording?.title || 'Unknown', duration: t.length ? Math.round(t.length / 1000) : null });
-      }
-    }
-    return tracks.length ? tracks : null;
+    // Sort by disc/track number and dedupe
+    const seen = new Set();
+    return songs
+      .sort((a, b) => a.trackNumber - b.trackNumber)
+      .filter(s => {
+        if (seen.has(s.trackId)) return false;
+        seen.add(s.trackId);
+        return true;
+      })
+      .map(s => ({
+        number: s.trackNumber,
+        title: s.trackName,
+        duration: s.trackTimeMillis ? Math.round(s.trackTimeMillis / 1000) : null
+      }));
   } catch { return null; }
 }
 

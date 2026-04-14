@@ -203,7 +203,7 @@ export default function Session() {
     try {
       const res = await fetch('/api/format', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ brief, notes: overallNotes, rating, Masterpiece, Favorite, entryType, relationship, horizonBar: true, trackNotes, trackRatings, tracks: tracks || [] })
+        body: JSON.stringify({ brief, notes: overallNotes, rating, Masterpiece, Favorite, entryType, relationship, trackNotes, trackRatings, tracks: tracks || [] })
       });
       const data = await res.json();
       if (data.error) throw new Error(data.error);
@@ -233,7 +233,8 @@ export default function Session() {
       const data = await res.json();
       if (data.error) throw new Error(data.error);
       setSaved(true);
-      localStorage.removeItem('ln_session_draft'); // clear draft — entry is now in the database
+      localStorage.removeItem('ln_session_draft');
+      setTimeout(() => setView('picker'), 1800);
     } catch (err) { alert('Save failed: ' + err.message); }
     finally { setSaving(false); }
   }
@@ -526,42 +527,109 @@ export default function Session() {
         </div>
       </div>
 
-      {/* OUTPUT MODAL ────────────────────────────────────────────────────────
-          Shows the formatted output from /api/format for review.
-          From here you can save to the database or close and keep editing. */}
+      {/* OUTPUT MODAL */}
       {output && (
-        <div style={{ position:'fixed', inset:0, background:'rgba(26,25,22,0.6)', backdropFilter:'blur(8px)', display:'flex', alignItems:'center', justifyContent:'center', zIndex:50, padding:24 }}>
-          <div style={{ background:'#fff', border:'1px solid #e0dcd5', borderRadius:20, width:'100%', maxWidth:680, maxHeight:'85vh', display:'flex', flexDirection:'column', overflow:'hidden', boxShadow:'0 24px 80px rgba(0,0,0,0.2)' }}>
-            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'18px 28px', borderBottom:'1px solid #e0dcd5' }}>
-              <span style={{ fontFamily:fonts.serif, fontSize:20, color:'#1a1916' }}>Session Output</span>
-              <div style={{ display:'flex', gap:10, alignItems:'center' }}>
-                {!saved
-                  ? <button onClick={doSave} disabled={saving} className="sn-btn" style={{ background:'#1a1916', color:'#fff', borderRadius:8, padding:'8px 20px', fontFamily:fonts.mono, fontSize:11, letterSpacing:'0.1em', textTransform:'uppercase', border:'none', cursor:'pointer', fontWeight:600 }}>
-                      {saving ? 'Saving…' : 'Save to Site →'}
-                    </button>
-                  : <span style={{ fontFamily:fonts.mono, fontSize:11, color:'#7a776f', fontWeight:600 }}>✓ saved</span>
-                }
-                <button onClick={() => setOutput(null)} style={{ background:'#f5f3ef', color:'#7a776f', borderRadius:8, padding:'8px 14px', fontFamily:fonts.mono, fontSize:11, border:'1px solid #e0dcd5', cursor:'pointer' }}>close</button>
-              </div>
-            </div>
-            <div style={{ flex:1, overflowY:'auto', padding:28, display:'flex', flexDirection:'column', gap:24 }}>
-              <div>
-                <div style={{ ...labelStyle, marginBottom:10 }}>Background</div>
-                <div style={{ fontSize:13.5, lineHeight:1.85, color:'#5a5750' }}>{output.background}</div>
-              </div>
-              {output.horizon && <div style={{ textAlign:'center', fontFamily:fonts.mono, fontSize:16, color:'#c0bdb7', letterSpacing:'0.04em' }}>{output.horizon}</div>}
-              <div>
-                <div style={{ ...labelStyle, marginBottom:10 }}>Notes</div>
-                <div style={{ fontSize:13.5, lineHeight:1.85, color:'#1a1916' }}>{output.notes_prose}</div>
-              </div>
-              <div>
-                <div style={{ ...labelStyle, marginBottom:10 }}>Tags</div>
-                <div style={{ display:'flex', flexWrap:'wrap', gap:6 }}>
-                  {(output.tags || []).map((t,i) => (
-                    <span key={i} style={{ fontFamily:fonts.mono, fontSize:10, color:'#7a776f', border:'1px solid #e0dcd5', padding:'3px 10px', borderRadius:4, background:'#f5f3ef' }}>#{t}</span>
-                  ))}
+        <div style={{ position:'fixed', inset:0, zIndex:50 }}>
+          {/* Backdrop */}
+          <div onClick={() => setOutput(null)} style={{ position:'absolute', inset:0, background:'rgba(6,4,12,0.7)', backdropFilter:'blur(12px)' }} />
+
+          {/* Modal */}
+          <div style={{
+            position:'fixed', top:'50%', left:'50%',
+            transform:'translate(-50%,-50%)',
+            width:'78vw', maxWidth:940, height:'86vh',
+            borderRadius:16, overflow:'hidden',
+            border:'1px solid rgba(255,255,255,0.09)',
+            zIndex:51,
+          }}>
+            {/* Full-bleed album art background */}
+            {albumArt && <img src={albumArt} alt={brief?.album} style={{ position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'cover', display:'block' }} />}
+            <div style={{ position:'absolute', inset:0, background:'rgba(6,4,12,0.18)' }} />
+
+            {/* Close button */}
+            <button onClick={() => setOutput(null)} style={{
+              position:'absolute', top:14, right:14, zIndex:20,
+              width:28, height:28, borderRadius:'50%',
+              background:'rgba(0,0,0,0.4)', border:'1px solid rgba(255,255,255,0.09)',
+              color:'rgba(255,255,255,0.45)', fontSize:12, cursor:'pointer',
+              display:'flex', alignItems:'center', justifyContent:'center',
+            }}>✕</button>
+
+            {/* Frosted glass content box */}
+            <div style={{
+              position:'absolute', top:48, left:44, right:44, bottom:64,
+              background:'rgba(8,6,14,0.50)',
+              backdropFilter:'blur(24px)', WebkitBackdropFilter:'blur(24px)',
+              border:'1px solid rgba(255,255,255,0.09)',
+              borderRadius:12,
+              display:'flex', flexDirection:'column', overflow:'hidden',
+            }}>
+              {/* Metadata header */}
+              <div style={{ display:'flex', borderBottom:'1px solid rgba(255,255,255,0.07)', flexShrink:0 }}>
+                {/* Left: album info */}
+                <div style={{ padding:'20px 22px', width:270, flexShrink:0, borderRight:'1px solid rgba(255,255,255,0.07)', display:'flex', flexDirection:'column' }}>
+                  <div style={{ fontSize:26, fontWeight:700, color:'#f0ece4', lineHeight:1.05, letterSpacing:'-0.02em', marginBottom:3 }}>{brief?.album}</div>
+                  <div style={{ fontSize:13, color:'rgba(255,255,255,0.42)', marginBottom:14 }}>{brief?.artist}{brief?.year ? ' · ' + brief.year : ''}</div>
+                  <div style={{ height:1, background:'rgba(255,255,255,0.08)', marginBottom:12 }} />
+                  <div style={{ display:'flex', alignItems:'center', gap:6, marginBottom:8 }}>
+                    {[1,2,3,4,5].map(i => (
+                      <span key={i} style={{ fontSize:16, color: i <= Math.floor(rating) ? '#E8B84B' : 'rgba(255,255,255,0.15)' }}>★</span>
+                    ))}
+                  </div>
+                  <div style={{ fontFamily:fonts.mono, fontSize:11, letterSpacing:'0.1em', textTransform:'uppercase', color:'rgba(255,255,255,0.3)' }}>
+                    {relationship || ''}{entryType ? ' · ' + entryType : ''}
+                  </div>
+                </div>
+                {/* Right: background */}
+                <div style={{ flex:1, padding:'20px 22px', minWidth:0 }}>
+                  <div style={{ fontFamily:fonts.mono, fontSize:8, letterSpacing:'0.14em', textTransform:'uppercase', color:'rgba(255,255,255,0.2)', marginBottom:10 }}>Background</div>
+                  <div style={{ fontSize:12.5, fontWeight:300, lineHeight:1.8, color:'rgba(200,196,192,0.78)' }}>{output.background}</div>
                 </div>
               </div>
+
+              {/* Scrollable notes */}
+              <div style={{ flex:1, overflowY:'auto', padding:'20px 24px' }} className="ln-notes-scroll">
+                <div style={{ fontFamily:fonts.mono, fontSize:8, letterSpacing:'0.14em', textTransform:'uppercase', color:'rgba(255,255,255,0.2)', marginBottom:12 }}>Notes</div>
+                <div style={{ fontSize:14, lineHeight:1.88, color:'rgba(232,228,220,0.92)', whiteSpace:'pre-wrap', marginBottom:24 }}>{output.notes_prose}</div>
+
+                {output.horizon && (
+                  <div style={{ textAlign:'center', fontFamily:fonts.mono, fontSize:18, letterSpacing:'0.05em', color:'rgba(255,255,255,0.25)', margin:'24px 0' }}>
+                    {output.horizon}
+                  </div>
+                )}
+
+                <div style={{ fontFamily:fonts.mono, fontSize:8, letterSpacing:'0.14em', textTransform:'uppercase', color:'rgba(255,255,255,0.2)', marginBottom:12, marginTop:8 }}>Track Notes</div>
+
+                {(output.tags || []).length > 0 && (
+                  <div style={{ display:'flex', flexWrap:'wrap', gap:6, paddingTop:20, borderTop:'1px solid rgba(255,255,255,0.07)' }}>
+                    {output.tags.map((t,i) => (
+                      <span key={i} style={{ fontFamily:fonts.mono, fontSize:8, letterSpacing:'0.08em', textTransform:'uppercase', color:'rgba(255,255,255,0.28)', border:'1px solid rgba(255,255,255,0.1)', borderRadius:4, padding:'3px 8px' }}>#{t}</span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div style={{
+              position:'absolute', bottom:0, left:0, right:0, height:44,
+              background:'rgba(6,4,12,0.55)', borderTop:'1px solid rgba(255,255,255,0.06)',
+              display:'flex', alignItems:'center', justifyContent:'space-between', padding:'0 20px',
+            }}>
+              <div style={{ display:'flex', gap:6, fontFamily:fonts.mono }}>
+                {(output.tags || []).slice(0,3).map((t,i) => (
+                  <span key={i} style={{ display:'flex', alignItems:'center', gap:6 }}>
+                    {i > 0 && <span style={{ color:'rgba(255,255,255,0.15)' }}>·</span>}
+                    <span style={{ fontSize:8, letterSpacing:'0.06em', textTransform:'uppercase', color:'rgba(255,255,255,0.25)' }}>{t}</span>
+                  </span>
+                ))}
+              </div>
+              {!saved
+                ? <button onClick={doSave} disabled={saving} className="sn-btn" style={{ fontFamily:fonts.mono, fontSize:10, letterSpacing:'0.1em', textTransform:'uppercase', color:'#c8d47a', background:'none', border:'1px solid rgba(200,212,122,0.3)', borderRadius:6, padding:'6px 16px', cursor:'pointer' }}>
+                    {saving ? 'Saving…' : 'Save to Site →'}
+                  </button>
+                : <span style={{ fontFamily:fonts.mono, fontSize:10, color:'#c8d47a', letterSpacing:'0.1em' }}>✓ saved</span>
+              }
             </div>
           </div>
         </div>
