@@ -17,7 +17,7 @@ export async function pull_entry_by_slug(slug) {
 export async function save_new_entry(body) {
   const {
     album, artist, year, entry_type, relationship,
-    rating, favorite, background, notes, tags,
+    rating, favorite, background, notes, track_notes, tags,
     horizon, album_art, post_link
   } = body;
 
@@ -26,11 +26,11 @@ export async function save_new_entry(body) {
   const result = await database`
     INSERT INTO entries (
       album, artist, year, entry_type, relationship,
-      rating, favorite, background, notes, tags,
+      rating, favorite, background, notes, track_notes, tags,
       horizon, album_art, post_link, slug
     ) VALUES (
       ${album}, ${artist}, ${year}, ${entry_type}, ${relationship},
-      ${rating}, ${favorite}, ${background}, ${notes}, ${tags},
+      ${rating}, ${favorite}, ${background}, ${notes}, ${track_notes}, ${tags},
       ${horizon}, ${album_art}, ${post_link}, ${slug}
     )
     RETURNING *
@@ -54,6 +54,8 @@ export async function update_entry(slug, fields) {
       favorite = COALESCE(${fields.favorite ?? null}, favorite),
       background = COALESCE(${fields.background ?? null}, background),
       notes = COALESCE(${fields.notes ?? null}, notes),
+      track_notes = COALESCE(${fields.track_notes ?? null}, track_notes),
+      track_notes = COALESCE(${fields.track_notes ?? null}, track_notes),
       tags = COALESCE(${fields.tags ?? null}, tags),
       horizon = COALESCE(${fields.horizon ?? null}, horizon),
       album_art = COALESCE(${fields.album_art ?? null}, album_art),
