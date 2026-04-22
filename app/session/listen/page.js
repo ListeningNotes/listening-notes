@@ -748,10 +748,6 @@ export default function ListenPage() {
   return (
     <>
       <style>{`
-        @keyframes ln-art-box-sweep { 0% { clip-path: inset(100% 0 0 0); } 100% { clip-path: inset(0%); } }
-        @keyframes ln-art-box-color { 0% { filter: grayscale(1) brightness(0.92); } 100% { filter: grayscale(0) brightness(1); } }
-        .ln-art-box-loading { animation: ln-art-box-sweep 2.2s cubic-bezier(0.25,0,0.2,1) forwards, ln-art-box-color 14s ease forwards; }
-        .ln-art-box-done    { clip-path: inset(0%) !important; filter: grayscale(0) brightness(1) !important; transition: filter 1s ease !important; }
         @keyframes ln-panel-appear {
           from { opacity: 0; transform: translateY(14px) scale(0.99); }
           to   { opacity: 1; transform: translateY(0) scale(1); }
@@ -803,15 +799,12 @@ export default function ListenPage() {
               display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
               padding: '0 24px', fontFamily: fonts.sans, background: '#f0ede6',
             }}>
-              {/* Art box — B&W sweep then slow colorize */}
               {albumArt && (
-                <div
-                  className={researchState === 'loading' ? 'ln-art-box-loading' : 'ln-art-box-done'}
-                  style={{
-                    width: 220, height: 220, borderRadius: 16, overflow: 'hidden',
-                    boxShadow: `0 16px 56px ${bdr(0.18)}`, flexShrink: 0, marginBottom: 28,
-                  }}
-                >
+                <div style={{
+                  width: 220, height: 220, borderRadius: 16, overflow: 'hidden',
+                  flexShrink: 0, marginBottom: 28,
+                  boxShadow: `0 16px 56px ${bdr(0.18)}`,
+                }}>
                   <img src={albumArt} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                 </div>
               )}
