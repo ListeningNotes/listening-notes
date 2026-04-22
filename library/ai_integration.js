@@ -40,7 +40,10 @@ Return ONLY valid JSON with no markdown fences:
   });
 
   const text = message.content[0].text;
-  return JSON.parse(text.slice(text.indexOf('{'), text.lastIndexOf('}') + 1));
+  console.log("RAW FORMAT RESPONSE:", text);
+  const parsed = JSON.parse(text.slice(text.indexOf('{'), text.lastIndexOf('}') + 1));
+  if (parsed.notes_prose && !parsed.album_notes) parsed.album_notes = parsed.notes_prose;
+  return parsed;
 }
 
 export async function format_post({ brief, notes, rating, masterpiece, favorite, entryType, relationship, trackNotes, trackRatings, tracks }) {
@@ -67,7 +70,7 @@ export async function format_post({ brief, notes, rating, masterpiece, favorite,
 
   const message = await client.messages.create({
     model: 'claude-sonnet-4-20250514',
-    max_tokens: 1600,
+    max_tokens: 4000,
     messages: [{
       role: 'user',
       content: `You are the voice behind "Listening Notes," a music blog. Thoughtful, intimate, editorial.
@@ -101,7 +104,8 @@ Also generate 8-12 tags relevant to this entry.
 Return ONLY valid JSON, no markdown fences:
 {
   "background": "full background section",
-  "notes_prose": "full notes section",
+  "album_notes": "full album-level notes section (no track notes here)",
+  "track_notes": "all per-track notes formatted as: 1. Track Title — ★★★★★\nnote text\n\n2. Track Title — ★★★\nnote text",
   "horizon": "${horizonString}",
   "tags": ["tag1", "tag2"]
 }`
@@ -109,7 +113,10 @@ Return ONLY valid JSON, no markdown fences:
   });
 
   const text = message.content[0].text;
-  return JSON.parse(text.slice(text.indexOf('{'), text.lastIndexOf('}') + 1));
+  console.log("RAW FORMAT RESPONSE:", text);
+  const parsed = JSON.parse(text.slice(text.indexOf('{'), text.lastIndexOf('}') + 1));
+  if (parsed.notes_prose && !parsed.album_notes) parsed.album_notes = parsed.notes_prose;
+  return parsed;
 }
 
 export async function ask_echo({ message, brief, overallNotes, trackNotes, tracks }) {

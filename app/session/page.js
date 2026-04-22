@@ -225,7 +225,8 @@ export default function Session() {
           entry_type: entryType || 'Personal Library',
           relationship: relationship || '',
           rating: Masterpiece ? 'Masterpiece' : (rating ? rating + ' stars' : ''),
-          Favorite, background: output.background, notes: output.notes_prose,
+          favorite: Favorite, background: output.background, notes: output.album_notes,
+          track_notes: output.track_notes || '',
           tags: output.tags || [], horizon: output.horizon || '',
           album_art: albumArt, post_link: ''
         })
@@ -589,8 +590,8 @@ export default function Session() {
 
               {/* Scrollable notes */}
               <div style={{ flex:1, overflowY:'auto', padding:'20px 24px' }} className="ln-notes-scroll">
-                <div style={{ fontFamily:fonts.mono, fontSize:8, letterSpacing:'0.14em', textTransform:'uppercase', color:'rgba(255,255,255,0.2)', marginBottom:12 }}>Notes</div>
-                <div style={{ fontSize:14, lineHeight:1.88, color:'rgba(232,228,220,0.92)', whiteSpace:'pre-wrap', marginBottom:24 }}>{output.notes_prose}</div>
+                <div style={{ fontFamily:fonts.mono, fontSize:8, letterSpacing:'0.14em', textTransform:'uppercase', color:'rgba(255,255,255,0.2)', marginBottom:12 }}>Album Notes</div>
+                <div style={{ fontSize:14, lineHeight:1.88, color:'rgba(232,228,220,0.92)', whiteSpace:'pre-wrap', marginBottom:24 }}>{output.album_notes}</div>
 
                 {output.horizon && (
                   <div style={{ textAlign:'center', fontFamily:fonts.mono, fontSize:18, letterSpacing:'0.05em', color:'rgba(255,255,255,0.25)', margin:'24px 0' }}>
@@ -598,7 +599,12 @@ export default function Session() {
                   </div>
                 )}
 
-                <div style={{ fontFamily:fonts.mono, fontSize:8, letterSpacing:'0.14em', textTransform:'uppercase', color:'rgba(255,255,255,0.2)', marginBottom:12, marginTop:8 }}>Track Notes</div>
+                {output.track_notes && (
+                  <>
+                    <div style={{ fontFamily:fonts.mono, fontSize:8, letterSpacing:'0.14em', textTransform:'uppercase', color:'rgba(255,255,255,0.2)', marginBottom:12, marginTop:8 }}>Track Notes</div>
+                    <div style={{ fontSize:14, lineHeight:1.88, color:'rgba(210,206,200,0.85)', whiteSpace:'pre-wrap', marginBottom:24 }}>{output.track_notes}</div>
+                  </>
+                )}
 
                 {(output.tags || []).length > 0 && (
                   <div style={{ display:'flex', flexWrap:'wrap', gap:6, paddingTop:20, borderTop:'1px solid rgba(255,255,255,0.07)' }}>
