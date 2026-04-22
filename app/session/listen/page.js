@@ -7,13 +7,12 @@ import StarRating from '../../../components/session_components/StarRating';
 import { TrackLength, SessionDuration, LOADING_PHRASES } from '../../../library/session_timers';
 
 const STEPS = [
-  { id: 0, label: 'History' },
-  { id: 1, label: 'Tracks' },
-  { id: 2, label: 'Notes' },
-  { id: 3, label: 'Meta' },
-  { id: 4, label: 'Echo' },
-  { id: 5, label: 'Tags' },
-  { id: 6, label: 'Preview' },
+  { id: 0, label: 'Album Debrief' },
+  { id: 1, label: 'Track Notes' },
+  { id: 2, label: 'Album Notes' },
+  { id: 3, label: 'Reflect' },
+  { id: 4, label: 'Tags' },
+  { id: 5, label: 'Preview' },
 ];
 
 const tx  = (a) => `rgba(15,12,10,${a})`;
@@ -172,7 +171,7 @@ export default function ListenPage() {
   }, [artistInput, step]);
 
   useEffect(() => {
-    if (step === 5 && !output && !formatting && brief && overallNotes.trim()) doFormat();
+    if (step === 4 && !output && !formatting && brief && overallNotes.trim()) doFormat();
   }, [step]);
 
   useEffect(() => {
@@ -444,6 +443,16 @@ export default function ListenPage() {
   function renderNotes() {
     return (
       <div style={{ width: '100%' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap', marginBottom: 24 }}>
+          <StarRating value={rating} onChange={setRating} size={24} />
+          <div style={{ width: 1, height: 20, background: bdr(0.1), flexShrink: 0 }} />
+          {[['Masterpiece', Masterpiece, setMasterpiece], ['Favorite', Favorite, setFavorite]].map(([name, val, fn]) => (
+            <label key={name} style={{ display: 'flex', alignItems: 'center', gap: 7, cursor: 'pointer' }}>
+              <input type="checkbox" checked={val} onChange={e => fn(e.target.checked)} style={{ accentColor: '#c8d47a', cursor: 'pointer', width: 15, height: 15 }} />
+              <span style={{ fontFamily: fonts.mono, fontSize: 10, letterSpacing: '0.08em', textTransform: 'uppercase', color: val ? '#6a7a18' : tx(0.35), transition: 'color 0.15s' }}>{name}</span>
+            </label>
+          ))}
+        </div>
         <div style={{ borderTop: `1px solid ${bdr(0.07)}`, paddingTop: 20, marginBottom: 16 }}>
           <div style={{ ...lbl, marginBottom: 14 }}>Album Notes</div>
           <textarea
@@ -461,33 +470,6 @@ export default function ListenPage() {
         </div>
         <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
           <PanelBtn onClick={() => advanceTo(3)} disabled={overallNotes.trim().length < 10} accent>Continue →</PanelBtn>
-        </div>
-      </div>
-    );
-  }
-
-  function renderMeta() {
-    return (
-      <div style={{ width: '100%' }}>
-        <div style={{ borderTop: `1px solid ${bdr(0.07)}`, paddingTop: 20, marginBottom: 32 }}>
-          <div style={{ ...lbl, marginBottom: 20 }}>Rating</div>
-          <StarRating value={rating} onChange={setRating} size={28} />
-        </div>
-
-        <div style={{ borderTop: `1px solid ${bdr(0.07)}`, paddingTop: 20, marginBottom: 36 }}>
-          <div style={{ ...lbl, marginBottom: 16 }}>Designations</div>
-          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-            {[['Masterpiece', Masterpiece, setMasterpiece], ['Favorite', Favorite, setFavorite]].map(([name, val, fn]) => (
-              <label key={name} style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
-                <input type="checkbox" checked={val} onChange={e => fn(e.target.checked)} style={{ accentColor: '#c8d47a', cursor: 'pointer', width: 16, height: 16 }} />
-                <span style={{ fontFamily: fonts.mono, fontSize: 11, letterSpacing: '0.08em', textTransform: 'uppercase', color: val ? '#6a7a18' : tx(0.38), transition: 'color 0.15s' }}>{name}</span>
-              </label>
-            ))}
-          </div>
-        </div>
-
-        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-          <PanelBtn onClick={() => advanceTo(4)} accent>Continue →</PanelBtn>
         </div>
       </div>
     );
@@ -534,10 +516,10 @@ export default function ListenPage() {
           <PanelBtn onClick={() => sendChat()} disabled={!chatInput.trim() || chatLoading} style={{ padding: '10px 18px' }}>→</PanelBtn>
         </div>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 16 }}>
-          <button onClick={() => advanceTo(5)} style={{ fontFamily: fonts.mono, fontSize: 10, letterSpacing: '0.08em', textTransform: 'uppercase', color: tx(0.25), background: 'none', border: 'none', cursor: 'pointer' }}>
+          <button onClick={() => advanceTo(4)} style={{ fontFamily: fonts.mono, fontSize: 10, letterSpacing: '0.08em', textTransform: 'uppercase', color: tx(0.25), background: 'none', border: 'none', cursor: 'pointer' }}>
             Skip →
           </button>
-          <PanelBtn onClick={() => advanceTo(5)} accent>Continue →</PanelBtn>
+          <PanelBtn onClick={() => advanceTo(4)} accent>Continue →</PanelBtn>
         </div>
       </div>
     );
@@ -592,7 +574,7 @@ export default function ListenPage() {
         </div>
 
         <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-          <PanelBtn onClick={() => advanceTo(6)} accent>Preview →</PanelBtn>
+          <PanelBtn onClick={() => advanceTo(5)} accent>Preview →</PanelBtn>
         </div>
       </div>
     );
@@ -666,7 +648,7 @@ export default function ListenPage() {
     );
   }
 
-  const stepRenders = [renderHistory, renderTracks, renderNotes, renderMeta, renderEcho, renderTags, renderPreview];
+  const stepRenders = [renderHistory, renderTracks, renderNotes, renderEcho, renderTags, renderPreview];
 
   // ── ALBUM SEARCH ─────────────────────────────────────────────────────────
 
@@ -870,71 +852,28 @@ export default function ListenPage() {
             </div>
           )}
 
-          {/* ── PANEL + BUBBLES ── */}
+          {/* ── PANEL ── */}
           {!showLoadingScreen && (
             <div style={{
-              minHeight: '100vh',
+              position: 'fixed', inset: 0, zIndex: 6,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              gap: 18, padding: '24px 28px',
-              position: 'relative', zIndex: 6,
+              padding: '24px',
               boxSizing: 'border-box',
             }}>
-
-              {/* Floating step bubbles */}
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
-                {STEPS.map((s, i) => {
-                  const isPast = s.id < step;
-                  const isCurrent = s.id === step;
-                  const isReachable = s.id <= maxStep;
-                  const isClickable = isReachable && !isCurrent;
-                  return (
-                    <div key={s.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                      <button
-                        onClick={() => isClickable && setStep(s.id)}
-                        title={s.label}
-                        style={{
-                          width: 42, height: 42, borderRadius: '50%', flexShrink: 0,
-                          background: isCurrent ? 'rgba(200,212,122,0.88)' : isPast ? 'rgba(200,212,122,0.18)' : 'rgba(255,255,255,0.1)',
-                          border: `1.5px solid ${isCurrent ? 'rgba(200,212,122,0.9)' : isPast ? 'rgba(200,212,122,0.35)' : 'rgba(255,255,255,0.18)'}`,
-                          animation: isCurrent ? 'ln-glow 2.8s ease-in-out infinite' : 'none',
-                          color: isCurrent ? '#1a1916' : isPast ? '#c8d47a' : 'rgba(255,255,255,0.28)',
-                          fontSize: 11, fontFamily: fonts.mono, fontWeight: 700,
-                          cursor: isClickable ? 'pointer' : 'default',
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          transition: 'all 0.28s ease',
-                        }}
-                      >
-                        {isPast ? '✓' : s.id + 1}
-                      </button>
-                      {i < STEPS.length - 1 && (
-                        <div style={{
-                          width: 1.5, height: 14,
-                          background: isPast ? 'rgba(200,212,122,0.22)' : 'rgba(255,255,255,0.09)',
-                          margin: '3px 0',
-                          transition: 'background 0.28s ease',
-                        }} />
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-
               {/* Frosted glass panel */}
               <div style={{
-                flex: 1,
-                maxWidth: 1040,
+                width: '100%', maxWidth: 1100,
                 height: 'calc(100vh - 48px)',
                 position: 'relative',
                 overflow: 'hidden',
-                borderRadius: 26,
-                border: `1px solid ${bdr(0.08)}`,
-                boxShadow: `0 24px 72px ${bdr(0.28)}`,
+                borderRadius: 22,
+                border: `1px solid ${bdr(0.1)}`,
+                boxShadow: `0 24px 80px ${bdr(0.35)}`,
                 display: 'flex',
-                flexDirection: 'column',
-                animation: 'ln-panel-appear 0.55s cubic-bezier(0.34,1.2,0.64,1)',
+                animation: 'ln-panel-appear 0.5s cubic-bezier(0.34,1.2,0.64,1)',
               }}>
 
-                {/* Static blurred art — renders once, GPU-cached */}
+                {/* Blurred art background */}
                 {albumArt ? (
                   <div style={{
                     position: 'absolute', inset: 0,
@@ -944,49 +883,110 @@ export default function ListenPage() {
                     transform: 'scale(1.15)',
                     zIndex: 0,
                   }} />
-                ) : <div style={{ position: 'absolute', inset: 0, background: '#e8e4f0', zIndex: 0 }} />}
+                ) : <div style={{ position: 'absolute', inset: 0, background: '#1a1410', zIndex: 0 }} />}
 
-                {/* Frosted white overlay */}
-                <div style={{ position: 'absolute', inset: 0, background: 'rgba(255,255,255,0.52)', zIndex: 1 }} />
+                <div style={{ position: 'absolute', inset: 0, background: 'rgba(255,255,255,0.10)', zIndex: 1 }} />
 
-                {/* SVG grain texture */}
-                <div style={{
-                  position: 'absolute', inset: 0, zIndex: 2, opacity: 0.055, mixBlendMode: 'overlay',
-                  backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")`,
-                  backgroundSize: '200px 200px',
-                }} />
+                {/* Panel content (above bg) */}
+                <div style={{ position: 'relative', zIndex: 2, display: 'flex', width: '100%', height: '100%' }}>
 
-                {/* Panel content */}
-                <div style={{ position: 'relative', zIndex: 3, display: 'flex', flexDirection: 'column', height: '100%' }}>
-
-                  {/* Panel header */}
-                  {brief && (
-                    <div style={{ padding: '14px 28px', borderBottom: `1px solid ${bdr(0.08)}`, display: 'flex', alignItems: 'center', gap: 14, flexShrink: 0 }}>
-                      {albumArt && <img src={albumArt} alt={brief.album} style={{ width: 36, height: 36, borderRadius: 6, objectFit: 'cover', flexShrink: 0, boxShadow: `0 2px 8px ${bdr(0.2)}` }} />}
-                      <div style={{ minWidth: 0 }}>
-                        <div style={{ fontFamily: fonts.serif, fontSize: 15, color: tx(0.88), lineHeight: 1, marginBottom: 2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{brief.album}</div>
-                        <div style={{ fontFamily: fonts.mono, fontSize: 10, color: tx(0.38), letterSpacing: '0.05em' }}>{brief.artist}</div>
-                      </div>
-                      <div style={{ marginLeft: 'auto', display: 'flex', gap: 18, alignItems: 'center', flexShrink: 0 }}>
-                        {elapsed > 0 && <span style={{ fontFamily: fonts.mono, fontSize: 10, color: tx(0.25), letterSpacing: '0.1em' }}>{SessionDuration(elapsed)}</span>}
-                        <a href="/session" style={{ fontFamily: fonts.mono, fontSize: 10, letterSpacing: '0.07em', textTransform: 'uppercase', color: tx(0.28), textDecoration: 'none' }}>← Session</a>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Step content */}
+                  {/* ── SIDEBAR ── */}
                   <div style={{
-                    flex: 1, overflowY: 'auto',
-                    display: 'flex',
-                    alignItems: 'flex-start',
-                    justifyContent: 'center',
-                    padding: step === 4 ? '32px 48px 32px' : '40px 48px 56px',
+                    width: 220, flexShrink: 0,
+                    borderRight: `1px solid ${bdr(0.1)}`,
+                    display: 'flex', flexDirection: 'column',
+                    padding: '20px 0',
+                    background: 'rgba(0,0,0,0.08)',
                   }}>
-                    {stepRenders[step]?.()}
+                    {/* Back link */}
+                    <a href="/session" style={{ fontFamily: fonts.mono, fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: tx(0.3), textDecoration: 'none', padding: '0 20px', marginBottom: 16, display: 'block' }}>← Session</a>
+
+                    {/* Album art */}
+                    {albumArt && (
+                      <div style={{ margin: '0 16px 16px', borderRadius: 12, overflow: 'hidden', aspectRatio: '1', boxShadow: `0 8px 32px ${bdr(0.3)}`, flexShrink: 0 }}>
+                        <img src={albumArt} alt={brief?.album} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                      </div>
+                    )}
+
+                    {/* Album info */}
+                    {brief && (
+                      <div style={{ padding: '0 16px', marginBottom: 16 }}>
+                        <div style={{ fontFamily: fonts.serif, fontSize: 15, color: tx(0.9), lineHeight: 1.2, marginBottom: 4, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{brief.album}</div>
+                        <div style={{ fontFamily: fonts.mono, fontSize: 10, color: tx(0.45), letterSpacing: '0.05em', marginBottom: 10 }}>{brief.artist}</div>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                          {[brief.year, brief.genre].filter(Boolean).map((t, i) => (
+                            <span key={i} style={{ fontFamily: fonts.mono, fontSize: 9, color: tx(0.42), border: `1px solid ${bdr(0.12)}`, borderRadius: 4, padding: '2px 7px', background: 'rgba(255,255,255,0.18)' }}>{t}</span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Session meta */}
+                    {(relationship || entryType || elapsed > 0) && (
+                      <div style={{ padding: '10px 16px', borderTop: `1px solid ${bdr(0.08)}`, borderBottom: `1px solid ${bdr(0.08)}`, marginBottom: 12 }}>
+                        {relationship && <div style={{ fontFamily: fonts.mono, fontSize: 9, color: tx(0.38), letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 3 }}>{relationship}</div>}
+                        {entryType && <div style={{ fontFamily: fonts.mono, fontSize: 9, color: tx(0.38), letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 3 }}>{entryType}</div>}
+                        {elapsed > 0 && <div style={{ fontFamily: fonts.mono, fontSize: 9, color: tx(0.25), letterSpacing: '0.1em', marginTop: 4 }}>{SessionDuration(elapsed)}</div>}
+                      </div>
+                    )}
+
+                    {/* Step nav */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 2, padding: '0 10px' }}>
+                      {STEPS.map(s => {
+                        const isPast = s.id < step;
+                        const isCurrent = s.id === step;
+                        const isReachable = s.id <= maxStep;
+                        return (
+                          <button
+                            key={s.id}
+                            onClick={() => isReachable && !isCurrent && setStep(s.id)}
+                            style={{
+                              display: 'flex', alignItems: 'center', gap: 10,
+                              padding: '9px 12px', borderRadius: 10, width: '100%', textAlign: 'left',
+                              background: isCurrent ? 'rgba(255,255,255,0.18)' : 'transparent',
+                              border: 'none',
+                              cursor: isReachable && !isCurrent ? 'pointer' : 'default',
+                              transition: 'background 0.15s',
+                            }}
+                          >
+                            <span style={{
+                              fontFamily: fonts.mono, fontSize: 9, width: 14, textAlign: 'center', flexShrink: 0,
+                              color: isCurrent ? '#6a7a18' : isPast ? '#6a7a18' : tx(0.25),
+                            }}>
+                              {isPast ? '✓' : s.id + 1}
+                            </span>
+                            <span style={{
+                              fontFamily: fonts.mono, fontSize: 11, letterSpacing: '0.04em',
+                              color: isCurrent ? tx(0.88) : isPast ? tx(0.5) : tx(0.28),
+                              transition: 'color 0.15s',
+                            }}>
+                              {s.label}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* ── MAIN CONTENT ── */}
+                  <div style={{
+                    flex: 1, minWidth: 0,
+                    display: 'flex', flexDirection: 'column',
+                    overflow: step === 3 ? 'hidden' : 'auto',
+                  }}>
+                    <div style={{
+                      flex: 1,
+                      padding: step === 3 ? '36px 48px 36px' : '40px 48px 56px',
+                      display: step === 3 ? 'flex' : 'block',
+                      flexDirection: step === 3 ? 'column' : undefined,
+                      overflowY: step === 3 ? 'hidden' : undefined,
+                    }}>
+                      {stepRenders[step]?.()}
+                    </div>
                   </div>
 
                 </div>
-              </div>{/* end panel */}
+              </div>
             </div>
           )}
         </>
