@@ -15,8 +15,9 @@ const STEPS = [
   { id: 5, label: 'Preview' },
 ];
 
-const tx  = (a) => `rgba(15,12,10,${a})`;
-const bdr = (a) => `rgba(0,0,0,${a})`;
+const tx  = (a) => `rgba(255,255,255,${a})`;
+const bdr = (a) => `rgba(255,255,255,${a})`;
+const dk  = (a) => `rgba(15,12,10,${a})`;   // dark text for light screens
 
 const lbl = {
   fontFamily: fonts.mono,
@@ -655,7 +656,7 @@ export default function ListenPage() {
   function renderAlbumSearch() {
     return (
       <div style={{ width: '100%', maxWidth: 680 }}>
-        <div style={{ fontFamily: fonts.serif, fontSize: 'clamp(2rem, 4vw, 3rem)', color: tx(0.85), lineHeight: 1.1, marginBottom: 40, textAlign: 'center' }}>
+        <div style={{ fontFamily: fonts.serif, fontSize: 'clamp(2rem, 4vw, 3rem)', color: dk(0.85), lineHeight: 1.1, marginBottom: 40, textAlign: 'center' }}>
           What are you<br />listening to?
         </div>
 
@@ -665,22 +666,20 @@ export default function ListenPage() {
             onChange={e => setArtistInput(e.target.value)}
             placeholder="Search by artist..."
             style={{
-              width: '100%', background: 'rgba(255,255,255,0.6)',
-              border: `1px solid ${bdr(0.1)}`, borderRadius: 14,
+              width: '100%', background: 'rgba(255,255,255,0.7)',
+              border: `1px solid rgba(0,0,0,0.1)`, borderRadius: 14,
               padding: '16px 22px', fontFamily: fonts.sans, fontSize: 16,
-              color: tx(0.85), outline: 'none', boxSizing: 'border-box',
-              boxShadow: `0 2px 12px ${bdr(0.06)}`,
+              color: dk(0.85), outline: 'none', boxSizing: 'border-box',
+              boxShadow: '0 2px 12px rgba(0,0,0,0.06)',
             }}
-            onFocus={e => e.target.style.borderColor = bdr(0.25)}
-            onBlur={e => e.target.style.borderColor = bdr(0.1)}
           />
           {searching && (
-            <div style={{ position: 'absolute', right: 18, top: '50%', transform: 'translateY(-50%)', fontFamily: fonts.mono, fontSize: 9, color: tx(0.3), letterSpacing: '0.1em' }}>searching…</div>
+            <div style={{ position: 'absolute', right: 18, top: '50%', transform: 'translateY(-50%)', fontFamily: fonts.mono, fontSize: 9, color: dk(0.3), letterSpacing: '0.1em' }}>searching…</div>
           )}
         </div>
 
         {artistInput.trim() && !showManual && (
-          <button onClick={() => setShowManual(true)} style={{ fontFamily: fonts.mono, fontSize: 10, letterSpacing: '0.08em', textTransform: 'uppercase', color: tx(0.3), background: 'none', border: 'none', cursor: 'pointer', padding: '6px 0', display: 'block', marginBottom: 8 }}>
+          <button onClick={() => setShowManual(true)} style={{ fontFamily: fonts.mono, fontSize: 10, letterSpacing: '0.08em', textTransform: 'uppercase', color: dk(0.3), background: 'none', border: 'none', cursor: 'pointer', padding: '6px 0', display: 'block', marginBottom: 8 }}>
             + enter album manually
           </button>
         )}
@@ -690,7 +689,7 @@ export default function ListenPage() {
             <input
               value={manualAlbum} onChange={e => setManualAlbum(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleManualSubmit()} placeholder="Album title..." autoFocus
-              style={{ flex: 1, background: 'rgba(255,255,255,0.6)', border: `1px solid ${bdr(0.1)}`, borderRadius: 10, padding: '10px 16px', fontFamily: fonts.mono, fontSize: 12, color: tx(0.8), outline: 'none' }}
+              style={{ flex: 1, background: 'rgba(255,255,255,0.7)', border: '1px solid rgba(0,0,0,0.1)', borderRadius: 10, padding: '10px 16px', fontFamily: fonts.mono, fontSize: 12, color: dk(0.8), outline: 'none' }}
             />
             <PillBtn onClick={handleManualSubmit} active={manualAlbum.trim() && artistInput.trim()}>Start →</PillBtn>
           </div>
@@ -698,18 +697,18 @@ export default function ListenPage() {
 
         {albums.length > 0 && (
           <div style={{ marginTop: 8 }}>
-            <div style={{ ...lbl, marginBottom: 18 }}>Albums by {albums[0]?.artist} — choose one to begin</div>
+            <div style={{ fontFamily: fonts.mono, fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: dk(0.38), marginBottom: 18 }}>Albums by {albums[0]?.artist} — choose one to begin</div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: 14 }}>
               {albums.map((album, i) => (
                 <button key={i} onClick={() => handleAlbumSelect({ album: album.name, artist: album.artist, year: album.year, artUrl: album.artLarge })}
                   style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left', borderRadius: 12, transition: 'transform 0.18s ease' }}
                   onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-5px) scale(1.02)'}
                   onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0) scale(1)'}>
-                  <div style={{ borderRadius: 12, overflow: 'hidden', aspectRatio: '1', background: 'rgba(0,0,0,0.08)', marginBottom: 9, boxShadow: `0 6px 24px ${bdr(0.18)}` }}>
+                  <div style={{ borderRadius: 12, overflow: 'hidden', aspectRatio: '1', background: 'rgba(0,0,0,0.08)', marginBottom: 9, boxShadow: '0 6px 24px rgba(0,0,0,0.18)' }}>
                     {album.art && <img src={album.art} alt={album.name} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />}
                   </div>
-                  <div style={{ fontFamily: fonts.sans, fontSize: 12, fontWeight: 500, color: tx(0.82), lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{album.name}</div>
-                  {album.year && <div style={{ fontFamily: fonts.mono, fontSize: 10, color: tx(0.35), marginTop: 2 }}>{album.year}</div>}
+                  <div style={{ fontFamily: fonts.sans, fontSize: 12, fontWeight: 500, color: dk(0.82), lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{album.name}</div>
+                  {album.year && <div style={{ fontFamily: fonts.mono, fontSize: 10, color: dk(0.35), marginTop: 2 }}>{album.year}</div>}
                 </button>
               ))}
             </div>
@@ -717,7 +716,7 @@ export default function ListenPage() {
         )}
 
         {!searching && artistInput.trim() && albums.length === 0 && (
-          <div style={{ textAlign: 'center', fontFamily: fonts.mono, fontSize: 11, color: tx(0.3), marginTop: 16 }}>
+          <div style={{ textAlign: 'center', fontFamily: fonts.mono, fontSize: 11, color: dk(0.3), marginTop: 16 }}>
             No results — enter the album manually above
           </div>
         )}
@@ -743,8 +742,8 @@ export default function ListenPage() {
         @keyframes ln-dot { 0%,80%,100%{opacity:0.18;transform:scale(0.7)} 40%{opacity:1;transform:scale(1)} }
         ::-webkit-scrollbar { width: 3px; }
         ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 99px; }
-        input::placeholder { color: rgba(15,12,10,0.3); }
-        textarea::placeholder { color: rgba(15,12,10,0.28); }
+        input::placeholder { color: rgba(255,255,255,0.3); }
+        textarea::placeholder { color: rgba(255,255,255,0.28); }
       `}</style>
 
       {/* ── ALBUM SEARCH (step -1) ── */}
@@ -767,8 +766,7 @@ export default function ListenPage() {
               position: 'fixed', inset: 0, zIndex: 0,
               backgroundImage: `url(${albumArt})`,
               backgroundSize: 'cover', backgroundPosition: 'center',
-              filter: 'blur(28px) saturate(0.85) brightness(0.4)',
-              transform: 'scale(1.1)',
+              filter: 'none',
               pointerEvents: 'none',
             }} />
           )}
@@ -793,10 +791,10 @@ export default function ListenPage() {
 
               {/* Album info */}
               <div style={{ textAlign: 'center', marginBottom: 40 }}>
-                <div style={{ fontFamily: fonts.serif, fontSize: 'clamp(1.6rem, 4vw, 2.8rem)', color: tx(0.85), lineHeight: 1.05, marginBottom: 6 }}>
+                <div style={{ fontFamily: fonts.serif, fontSize: 'clamp(1.6rem, 4vw, 2.8rem)', color: dk(0.85), lineHeight: 1.05, marginBottom: 6 }}>
                   {albumInput}
                 </div>
-                <div style={{ fontFamily: fonts.mono, fontSize: 11, color: tx(0.42), letterSpacing: '0.12em', textTransform: 'uppercase' }}>
+                <div style={{ fontFamily: fonts.mono, fontSize: 11, color: dk(0.42), letterSpacing: '0.12em', textTransform: 'uppercase' }}>
                   {artistName}
                 </div>
               </div>
@@ -804,7 +802,7 @@ export default function ListenPage() {
               {/* Questions */}
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 28 }}>
                 <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontFamily: fonts.mono, fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: tx(0.35), marginBottom: 12 }}>
+                  <div style={{ fontFamily: fonts.mono, fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: dk(0.35), marginBottom: 12 }}>
                     What kind of listen?
                   </div>
                   <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
@@ -815,7 +813,7 @@ export default function ListenPage() {
                 </div>
 
                 <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontFamily: fonts.mono, fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: tx(0.35), marginBottom: 12 }}>
+                  <div style={{ fontFamily: fonts.mono, fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: dk(0.35), marginBottom: 12 }}>
                     Entry type
                   </div>
                   <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
@@ -830,18 +828,18 @@ export default function ListenPage() {
               <div style={{ marginTop: 40, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, minHeight: 40 }}>
                 {researchState === 'loading' && (
                   <>
-                    <div key={phraseIndex} style={{ fontFamily: fonts.mono, fontSize: 11, color: tx(0.35), letterSpacing: '0.1em', animation: 'ln-fade 0.5s ease' }}>
+                    <div key={phraseIndex} style={{ fontFamily: fonts.mono, fontSize: 11, color: dk(0.35), letterSpacing: '0.1em', animation: 'ln-fade 0.5s ease' }}>
                       {LOADING_PHRASES[phraseIndex % LOADING_PHRASES.length]}
                     </div>
                     <div style={{ display: 'flex', gap: 6 }}>
                       {[0, 1, 2].map(i => (
-                        <div key={i} style={{ width: 4, height: 4, borderRadius: '50%', background: tx(0.28), animation: `ln-dot 1.4s ease-in-out ${i * 0.22}s infinite` }} />
+                        <div key={i} style={{ width: 4, height: 4, borderRadius: '50%', background: dk(0.28), animation: `ln-dot 1.4s ease-in-out ${i * 0.22}s infinite` }} />
                       ))}
                     </div>
                   </>
                 )}
                 {researchState === 'done' && (!relationship || !entryType) && (
-                  <div style={{ fontFamily: fonts.mono, fontSize: 11, color: tx(0.3), letterSpacing: '0.08em' }}>
+                  <div style={{ fontFamily: fonts.mono, fontSize: 11, color: dk(0.3), letterSpacing: '0.08em' }}>
                     Choose both options above to continue
                   </div>
                 )}
