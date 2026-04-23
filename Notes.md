@@ -7,7 +7,6 @@
 **DEV**
 - [ ] Connect domain listeningnotes.blog (currently pointing to Tumblr)
 - [ ] Instagram + Reddit auto-distribution after posting
-- [ ] Moderation inbox in /session (approve/reject comments + submissions)
 
 **HOME**
 - [ ] Brainstorm alternative to scrolling album strip for recent entries
@@ -34,8 +33,7 @@
 - [ ] Spotify data panel (monthly listeners, artist ranking)
 - [ ] Discogs genre tags via Claude API
 - [ ] Apple Music playback (requires MusicKit JS + Apple developer account)
-- [ ] Session hub (/session) — styling needs a full pass
-- [ ] Inbox (/session/inbox) — placeholder only, needs to be built out
+- [ ] Inbox (/session/inbox) — build out with Comments + Submissions tabs
 - [ ] Future: randomize album art layout per visit (10+ layouts, more entries = more unlocked)
 
 **SECURITY**
@@ -46,6 +44,15 @@
 ---
 
 ## Complete
+- [x] Public /submit page — album, artist, year, note, optional name/email
+- [x] Submissions DB table + API routes (POST, GET, PATCH status)
+- [x] Session submissions inbox (/session/submissions) — tabs, note preview, listen/dismiss
+- [x] Session hub redesigned — three horizontal app-icon cards
+- [x] Ln. logo in TopNav, inverts for dark mode
+- [x] NavBeacon added to TopNav on all pages, hidden on homepage
+- [x] NavBeacon updated to CSS variables (respects light/dark mode)
+- [x] Accent color changed to dreamy LED blue-white (#c8dfff / #ddeeff)
+- [x] Live beacon dot restored to green (#7cff9b)
 - [x] Codebase refactor — library/, main_components/, session_components/ structure
 - [x] Individual post pages with their own URL
 - [x] Horizon bar logic

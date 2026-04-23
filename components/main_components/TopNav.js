@@ -2,6 +2,7 @@
 
 import { useState, useRef } from 'react';
 import Link from 'next/link';
+import NavBeacon from './NavBeacon';
 
 function SurpriseLink({ href, label }) {
   const ref = useRef(null);
@@ -39,7 +40,7 @@ function SurpriseLink({ href, label }) {
   );
 }
 
-export default function TopNav({ onToggleTheme, theme }) {
+export default function TopNav({ onToggleTheme, theme, hideBeacon = false }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [openGroup, setOpenGroup] = useState(null);
 
@@ -55,7 +56,13 @@ export default function TopNav({ onToggleTheme, theme }) {
   return (
     <nav className="topnav" onMouseLeave={() => setOpenGroup(null)}>
       <div className="topnav-inner">
-        <Link href="/" className="topnav-wordmark">Listening Notes</Link>
+        <Link href="/" className="topnav-wordmark" style={{ display: 'flex', alignItems: 'center' }}>
+          <img
+            src="/Logo.png"
+            alt="Listening Notes"
+            style={{ height: '48px', width: 'auto', filter: theme === 'dark' ? 'invert(1)' : 'none', transition: 'filter 0.2s' }}
+          />
+        </Link>
         <div className="topnav-links">
           {groups.map(g => (
             <div key={g.label} className="topnav-group" onMouseEnter={() => setOpenGroup(g.label)}>
@@ -76,6 +83,7 @@ export default function TopNav({ onToggleTheme, theme }) {
           )}
         </div>
         <div className="topnav-right">
+          {!hideBeacon && <NavBeacon />}
           <a href="https://instagram.com/listeningnotes.blog" target="_blank" rel="noopener noreferrer" className="topnav-icon-btn" aria-label="Instagram">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.5" fill="currentColor" stroke="none"/></svg>
           </a>
