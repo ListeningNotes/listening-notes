@@ -1,9 +1,13 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { fonts, colors } from '../../library/sitewide_visuals';
+import { fonts } from '../../library/sitewide_visuals';
 
 const PASSWORD = 'listeningnotes';
+const BG = '#f5f2ed';
+const TEXT = '#1a1916';
+const MUTED = '#9a9590';
+const BORDER = '#e0dcd5';
 
 export default function SessionHub() {
   const [authed, setAuthed] = useState(false);
@@ -28,10 +32,10 @@ export default function SessionHub() {
     return (
       <div style={{
         minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
-        background: colors.background, fontFamily: fonts.sans,
+        background: BG, fontFamily: fonts.sans,
       }}>
         <div style={{ textAlign: 'center', maxWidth: 320 }}>
-          <div style={{ fontFamily: fonts.serif, fontSize: 28, color: colors.text, marginBottom: 32 }}>
+          <div style={{ fontFamily: fonts.serif, fontSize: 28, color: TEXT, marginBottom: 32 }}>
             listening notes
           </div>
           <input
@@ -43,10 +47,10 @@ export default function SessionHub() {
             autoFocus
             style={{
               width: '100%', boxSizing: 'border-box',
-              background: 'transparent',
-              border: `1px solid ${error ? '#c0392b' : colors.border}`,
+              background: '#fff',
+              border: `1px solid ${error ? '#c0392b' : BORDER}`,
               borderRadius: 8, padding: '12px 16px',
-              fontFamily: fonts.mono, fontSize: 13, color: colors.text,
+              fontFamily: fonts.mono, fontSize: 13, color: TEXT,
               outline: 'none', textAlign: 'center',
               transition: 'border-color 0.15s',
             }}
@@ -62,71 +66,50 @@ export default function SessionHub() {
   }
 
   const actions = [
-    {
-      href: '/session/listen',
-      label: 'Listen',
-      sub: 'Start a session',
-      icon: '▶',
-    },
-    {
-      href: '/session/entries',
-      label: 'Entries',
-      sub: 'Manage the archive',
-      icon: '≡',
-    },
-    {
-      href: '/',
-      label: 'Site',
-      sub: 'Back to the public view',
-      icon: '↗',
-    },
+    { href: '/session/listen', label: 'Listen',  sub: 'Start a session' },
+    { href: '/session/entries', label: 'Entries', sub: 'Manage the archive' },
+    { href: '/',               label: 'Site',    sub: 'Back to public view' },
   ];
 
   return (
     <div style={{
       minHeight: '100vh', display: 'flex', flexDirection: 'column',
       alignItems: 'center', justifyContent: 'center',
-      background: colors.background, fontFamily: fonts.sans,
-      gap: 48,
+      background: BG, fontFamily: fonts.sans, gap: 8,
     }}>
-      <div style={{ fontFamily: fonts.serif, fontSize: 28, color: colors.text }}>
-        session
-      </div>
-
-      <div style={{ display: 'flex', gap: 16 }}>
-        {actions.map(({ href, label, sub, icon }) => (
-          <Link key={href} href={href} style={{ textDecoration: 'none' }}>
-            <div style={{
-              width: 180, padding: '28px 24px',
-              background: colors.panel,
-              border: `1px solid ${colors.border}`,
-              borderRadius: 16,
-              display: 'flex', flexDirection: 'column', gap: 12,
+      {actions.map(({ href, label, sub }) => (
+        <Link key={href} href={href} style={{ textDecoration: 'none', width: 280 }}>
+          <div
+            style={{
+              padding: '20px 28px',
+              background: '#fff',
+              border: `1px solid ${BORDER}`,
+              borderRadius: 12,
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
               cursor: 'pointer',
-              transition: 'border-color 0.15s, transform 0.15s',
+              transition: 'border-color 0.15s, box-shadow 0.15s',
             }}
-              onMouseEnter={e => {
-                e.currentTarget.style.borderColor = 'rgba(200,212,122,0.5)';
-                e.currentTarget.style.transform = 'translateY(-2px)';
-              }}
-              onMouseLeave={e => {
-                e.currentTarget.style.borderColor = colors.border;
-                e.currentTarget.style.transform = 'translateY(0)';
-              }}
-            >
-              <div style={{ fontSize: 22, color: colors.accent }}>{icon}</div>
-              <div>
-                <div style={{ fontFamily: fonts.serif, fontSize: 20, color: colors.text, marginBottom: 4 }}>
-                  {label}
-                </div>
-                <div style={{ fontFamily: fonts.mono, fontSize: 10, color: colors.secondary_text, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
-                  {sub}
-                </div>
+            onMouseEnter={e => {
+              e.currentTarget.style.borderColor = '#c8d47a';
+              e.currentTarget.style.boxShadow = '0 2px 12px rgba(0,0,0,0.06)';
+            }}
+            onMouseLeave={e => {
+              e.currentTarget.style.borderColor = BORDER;
+              e.currentTarget.style.boxShadow = 'none';
+            }}
+          >
+            <div>
+              <div style={{ fontFamily: fonts.serif, fontSize: 20, color: TEXT, marginBottom: 2 }}>
+                {label}
+              </div>
+              <div style={{ fontFamily: fonts.mono, fontSize: 10, color: MUTED, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
+                {sub}
               </div>
             </div>
-          </Link>
-        ))}
-      </div>
+            <div style={{ fontFamily: fonts.mono, fontSize: 14, color: MUTED }}>→</div>
+          </div>
+        </Link>
+      ))}
     </div>
   );
 }
