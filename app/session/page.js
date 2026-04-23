@@ -66,9 +66,9 @@ export default function SessionHub() {
   }
 
   const actions = [
-    { href: '/session/listen', label: 'Listen',  sub: 'Start a session' },
+    { href: '/session/listen',  label: 'Listen',  sub: 'Start a session' },
     { href: '/session/entries', label: 'Entries', sub: 'Manage the archive' },
-    { href: '/',               label: 'Site',    sub: 'Back to public view' },
+    { href: '/session/inbox',   label: 'Inbox',   sub: 'Notes & ideas' },
   ];
 
   return (
