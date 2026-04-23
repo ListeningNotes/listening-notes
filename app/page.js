@@ -27,7 +27,7 @@ export default function HomePage() {
 
   return (
     <div className="hp">
-      <TopNav onToggleTheme={toggleTheme} theme={theme} />
+      <TopNav onToggleTheme={toggleTheme} theme={theme} hideBeacon />
       <Hero />
       <div className="hero-divider" />
       <div className="hp-strip-section">
