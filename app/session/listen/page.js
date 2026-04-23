@@ -766,15 +766,27 @@ export default function ListenPage() {
       {/* ── SESSION (step >= 0) ── */}
       {step >= 0 && (
         <>
-          {/* Base dark background */}
-          <div style={{ position: 'fixed', inset: 0, zIndex: 0, background: '#0c0a14', pointerEvents: 'none' }} />
+          {/* White base */}
+          <div style={{ position: 'fixed', inset: 0, zIndex: 0, background: '#fff', pointerEvents: 'none' }} />
 
-          {/* Album art — sweeps up from bottom during loading, then snaps full */}
+          {/* Grayscale faded art — always visible, color fills in over it */}
+          {albumArt && (
+            <div style={{
+              position: 'fixed', inset: 0, zIndex: 1,
+              backgroundImage: `url(${albumArt})`,
+              backgroundSize: 'cover', backgroundPosition: 'center',
+              filter: 'grayscale(1) brightness(0.55)',
+              transform: 'scale(1.04)',
+              pointerEvents: 'none',
+            }} />
+          )}
+
+          {/* Full-color art — sweeps up from bottom */}
           {albumArt && (
             <div
               className={researchState === 'loading' ? 'ln-art-loading' : 'ln-art-done'}
               style={{
-                position: 'fixed', inset: 0, zIndex: 1,
+                position: 'fixed', inset: 0, zIndex: 2,
                 backgroundImage: `url(${albumArt})`,
                 backgroundSize: 'cover', backgroundPosition: 'center',
                 transform: 'scale(1.04)',
