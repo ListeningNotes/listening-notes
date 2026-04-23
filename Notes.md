@@ -34,8 +34,8 @@
 - [ ] Spotify data panel (monthly listeners, artist ranking)
 - [ ] Discogs genre tags via Claude API
 - [ ] Apple Music playback (requires MusicKit JS + Apple developer account)
-- [ ] Rewrite AlbumSelection with new home screen: three buttons + floating album art + spring swap
-- [ ] Submissions page (/session/submissions) — placeholder needed
+- [ ] Session hub (/session) — styling needs a full pass
+- [ ] Inbox (/session/inbox) — placeholder only, needs to be built out
 - [ ] Future: randomize album art layout per visit (10+ layouts, more entries = more unlocked)
 
 **SECURITY**
@@ -64,6 +64,12 @@
 - [x] Comments pending moderation queue
 - [x] Format route preserves writer voice
 - [x] PATCH route for /api/entries/[slug]
+- [x] Session: full redesign at /session/listen — sidebar layout, 6-step flow (Debrief, Tracks, Notes, Reflect, Tags, Preview)
+- [x] Session: frosted glass panel with blurred art background
+- [x] Session: grayscale-to-color fill-in on loading background (B&W art revealed by color sweep)
+- [x] Session: rating + Masterpiece/Favorite merged into Album Notes step
+- [x] Session: hub page at /session — clean 3-button layout (Listen, Entries, Inbox)
+- [x] Session: /session/inbox placeholder route
 
 ---
 
@@ -148,8 +154,10 @@ Think of the codebase as a house. Every piece has a room.
 | `page.js` | `/` | Homepage — imports TopNav, Hero, AlbumStrip |
 | `entries/[slug]/page.js` | `/entries/pet-sounds` | Fetches entry server-side, passes to FullPostPage |
 | `entries/[slug]/FullPostPage.js` | — | Full public post page with comments |
-| `session/page.js` | `/session` | Private session tool — all note-taking logic |
+| `session/page.js` | `/session` | Hub — password gate + 3 buttons (Listen, Entries, Inbox) |
+| `session/listen/page.js` | `/session/listen` | Full listening session — 6-step flow, sidebar, frosted panel |
 | `session/entries/page.js` | `/session/entries` | Private CMS — edit/delete all entries |
+| `session/inbox/page.js` | `/session/inbox` | Inbox — placeholder, not yet built |
 
 ---
 
