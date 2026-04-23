@@ -729,6 +729,12 @@ export default function ListenPage() {
   return (
     <>
       <style>{`
+        @keyframes ln-art-sweep {
+          0%   { clip-path: inset(100% 0 0 0); }
+          100% { clip-path: inset(10% 0 0 0); }
+        }
+        .ln-art-loading { animation: ln-art-sweep 14s cubic-bezier(0.4,0,0.2,1) forwards; }
+        .ln-art-done    { clip-path: inset(0%) !important; transition: clip-path 0.7s ease !important; }
         @keyframes ln-panel-appear {
           from { opacity: 0; transform: translateY(14px) scale(0.99); }
           to   { opacity: 1; transform: translateY(0) scale(1); }
@@ -760,41 +766,36 @@ export default function ListenPage() {
       {/* ── SESSION (step >= 0) ── */}
       {step >= 0 && (
         <>
-          {/* Full bleed album art background — behind panel */}
+          {/* Base dark background */}
+          <div style={{ position: 'fixed', inset: 0, zIndex: 0, background: '#0c0a14', pointerEvents: 'none' }} />
+
+          {/* Album art — sweeps up from bottom during loading, then snaps full */}
           {albumArt && (
-            <div style={{
-              position: 'fixed', inset: 0, zIndex: 0,
-              backgroundImage: `url(${albumArt})`,
-              backgroundSize: 'cover', backgroundPosition: 'center',
-              filter: 'none',
-              pointerEvents: 'none',
-            }} />
+            <div
+              className={researchState === 'loading' ? 'ln-art-loading' : 'ln-art-done'}
+              style={{
+                position: 'fixed', inset: 0, zIndex: 1,
+                backgroundImage: `url(${albumArt})`,
+                backgroundSize: 'cover', backgroundPosition: 'center',
+                transform: 'scale(1.04)',
+                pointerEvents: 'none',
+              }}
+            />
           )}
-          {!albumArt && <div style={{ position: 'fixed', inset: 0, zIndex: 0, background: '#1a1410', pointerEvents: 'none' }} />}
 
           {/* ── LOADING SCREEN ── */}
           {showLoadingScreen && (
             <div style={{
-              position: 'fixed', inset: 0, zIndex: 20,
+              position: 'fixed', inset: 0, zIndex: 10,
               display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
-              padding: '0 24px', fontFamily: fonts.sans, background: '#f0ede6',
+              padding: '0 24px', fontFamily: fonts.sans,
             }}>
-              {albumArt && (
-                <div style={{
-                  width: 220, height: 220, borderRadius: 16, overflow: 'hidden',
-                  flexShrink: 0, marginBottom: 28,
-                  boxShadow: `0 16px 56px ${bdr(0.18)}`,
-                }}>
-                  <img src={albumArt} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-                </div>
-              )}
-
-              {/* Album info */}
-              <div style={{ textAlign: 'center', marginBottom: 40 }}>
-                <div style={{ fontFamily: fonts.serif, fontSize: 'clamp(1.6rem, 4vw, 2.8rem)', color: dk(0.85), lineHeight: 1.05, marginBottom: 6 }}>
+              {/* Album title */}
+              <div style={{ textAlign: 'center', marginBottom: 56 }}>
+                <div style={{ fontFamily: fonts.serif, fontSize: 'clamp(2rem, 5vw, 4rem)', color: '#fff', lineHeight: 1.05, marginBottom: 8, textShadow: '0 2px 20px rgba(0,0,0,0.6)' }}>
                   {albumInput}
                 </div>
-                <div style={{ fontFamily: fonts.mono, fontSize: 11, color: dk(0.42), letterSpacing: '0.12em', textTransform: 'uppercase' }}>
+                <div style={{ fontFamily: fonts.mono, fontSize: 12, color: 'rgba(255,255,255,0.38)', letterSpacing: '0.12em', textTransform: 'uppercase' }}>
                   {artistName}
                 </div>
               </div>
@@ -802,49 +803,65 @@ export default function ListenPage() {
               {/* Questions */}
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 28 }}>
                 <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontFamily: fonts.mono, fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: dk(0.35), marginBottom: 12 }}>
+                  <div style={{ fontFamily: fonts.mono, fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.35)', marginBottom: 12 }}>
                     What kind of listen?
                   </div>
                   <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
                     {['First Listen', 'Revisit', 'Formative', 'Study'].map(r => (
-                      <PillBtn key={r} onClick={() => setRelationship(r === relationship ? '' : r)} active={relationship === r}>{r}</PillBtn>
+                      <button key={r} onClick={() => setRelationship(r === relationship ? '' : r)} style={{
+                        fontFamily: fonts.mono, fontSize: 11, letterSpacing: '0.06em',
+                        color: relationship === r ? '#1a1916' : 'rgba(255,255,255,0.65)',
+                        background: relationship === r ? '#c8d47a' : 'rgba(255,255,255,0.1)',
+                        border: `1px solid ${relationship === r ? '#c8d47a' : 'rgba(255,255,255,0.18)'}`,
+                        borderRadius: 50, padding: '9px 20px', cursor: 'pointer',
+                        transition: 'all 0.15s ease',
+                        boxShadow: relationship === r ? '0 0 18px rgba(200,212,122,0.3)' : 'none',
+                      }}>{r}</button>
                     ))}
                   </div>
                 </div>
 
                 <div style={{ textAlign: 'center' }}>
-                  <div style={{ fontFamily: fonts.mono, fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: dk(0.35), marginBottom: 12 }}>
+                  <div style={{ fontFamily: fonts.mono, fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.35)', marginBottom: 12 }}>
                     Entry type
                   </div>
                   <div style={{ display: 'flex', gap: 8, justifyContent: 'center' }}>
                     {['Personal Library', 'Submission'].map(t => (
-                      <PillBtn key={t} onClick={() => setEntryType(t === entryType ? '' : t)} active={entryType === t}>{t}</PillBtn>
+                      <button key={t} onClick={() => setEntryType(t === entryType ? '' : t)} style={{
+                        fontFamily: fonts.mono, fontSize: 11, letterSpacing: '0.06em',
+                        color: entryType === t ? '#1a1916' : 'rgba(255,255,255,0.65)',
+                        background: entryType === t ? '#c8d47a' : 'rgba(255,255,255,0.1)',
+                        border: `1px solid ${entryType === t ? '#c8d47a' : 'rgba(255,255,255,0.18)'}`,
+                        borderRadius: 50, padding: '9px 20px', cursor: 'pointer',
+                        transition: 'all 0.15s ease',
+                        boxShadow: entryType === t ? '0 0 18px rgba(200,212,122,0.3)' : 'none',
+                      }}>{t}</button>
                     ))}
                   </div>
                 </div>
               </div>
 
-              {/* Loading state indicator */}
-              <div style={{ marginTop: 40, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, minHeight: 40 }}>
+              {/* Loading indicator — pinned bottom */}
+              <div style={{ position: 'absolute', bottom: 52, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14 }}>
                 {researchState === 'loading' && (
                   <>
-                    <div key={phraseIndex} style={{ fontFamily: fonts.mono, fontSize: 11, color: dk(0.35), letterSpacing: '0.1em', animation: 'ln-fade 0.5s ease' }}>
+                    <div key={phraseIndex} style={{ fontFamily: fonts.mono, fontSize: 11, color: 'rgba(255,255,255,0.35)', letterSpacing: '0.1em', animation: 'ln-fade 0.5s ease' }}>
                       {LOADING_PHRASES[phraseIndex % LOADING_PHRASES.length]}
                     </div>
                     <div style={{ display: 'flex', gap: 6 }}>
                       {[0, 1, 2].map(i => (
-                        <div key={i} style={{ width: 4, height: 4, borderRadius: '50%', background: dk(0.28), animation: `ln-dot 1.4s ease-in-out ${i * 0.22}s infinite` }} />
+                        <div key={i} style={{ width: 4, height: 4, borderRadius: '50%', background: 'rgba(255,255,255,0.3)', animation: `ln-dot 1.4s ease-in-out ${i * 0.22}s infinite` }} />
                       ))}
                     </div>
                   </>
                 )}
                 {researchState === 'done' && (!relationship || !entryType) && (
-                  <div style={{ fontFamily: fonts.mono, fontSize: 11, color: dk(0.3), letterSpacing: '0.08em' }}>
+                  <div style={{ fontFamily: fonts.mono, fontSize: 11, color: 'rgba(255,255,255,0.4)', letterSpacing: '0.08em' }}>
                     Choose both options above to continue
                   </div>
                 )}
                 {researchState === 'error' && (
-                  <div style={{ fontFamily: fonts.mono, fontSize: 11, color: '#c0392b' }}>{researchError}</div>
+                  <div style={{ fontFamily: fonts.mono, fontSize: 11, color: '#ef4444' }}>{researchError}</div>
                 )}
               </div>
             </div>
