@@ -12,9 +12,9 @@ export default function TrackThread({ track, trackIndex, slug, commentsByTrack, 
   return (
     <div id={'track-' + trackIndex} style={{ borderBottom: '1px solid #2a2a2a' }}>
       <div onClick={() => setOpen(v => !v)} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 0', cursor: 'pointer' }}>
-        <span style={{ fontFamily: fonts.mono, fontSize: '10px', color: '#555', width: '20px', textAlign: 'right', flexShrink: 0 }}>{track.number}</span>
-        <span style={{ fontSize: '13px', color: '#e8e4dc', flex: 1 }}>{track.title}</span>
-        {track.rating && <span style={{ fontSize: '11px', color: '#c8d47a', letterSpacing: '1px' }}>{track.rating}</span>}
+        <span style={{ fontFamily: fonts.mono, fontSize: '10px', color: '#555', width: '20px', textAlign: 'right', flexShrink: 0 }}>{track.num}</span>
+        <span style={{ fontSize: '13px', color: '#e8e4dc', flex: 1 }}>{track.name}</span>
+        {track.stars > 0 && <span style={{ fontSize: '11px', color: '#c8d47a', letterSpacing: '1px' }}>{'★'.repeat(track.stars)}</span>}
         <span style={{
           fontFamily: fonts.mono, fontSize: '9px', letterSpacing: '0.06em',
           color: count ? '#c8d47a' : '#555',

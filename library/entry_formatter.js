@@ -18,12 +18,22 @@ export function parseHorizon(horizon) {
 
 export function parseTracksFromNotes(notesText) {
   if (!notesText) return [];
-  const matches = [...notesText.matchAll(/(\d+)\.\s+([^\u2014\u2013\n]+?)\s*[\u2014\u2013]\s*(\u2605[\u2605\u2606\s]*)/g)];
-  return matches.map(m => ({
-    num: parseInt(m[1]),
-    name: m[2].replace(/\*\*/g, '').trim(),
-    stars: (m[3].match(/\u2605/g) || []).length,
-  }));
+  const results = [];
+  const blocks = notesText.split(/\n\s*\n(?=\d+\.)/);
+  for (const block of blocks) {
+    // Accept em-dash, en-dash, or plain hyphen as separator; require stars after
+    const m = block.match(/^(\d+)\.\s+(.+?)\s+[-\u2014\u2013]+\s+([\u2605\u2606 ]+)/m);
+    if (!m) continue;
+    const stars = (m[3].match(/\u2605/g) || []).length;
+    const note = block.slice(m.index + m[0].length).replace(/^\n+/, '').trim();
+    results.push({
+      num: parseInt(m[1]),
+      name: m[2].replace(/\*\*/g, '').trim(),
+      stars,
+      note,
+    });
+  }
+  return results;
 }
 
 export function splitNotes(notesText) {

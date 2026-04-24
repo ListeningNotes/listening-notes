@@ -37,13 +37,28 @@
 - [ ] Future: randomize album art layout per visit (10+ layouts, more entries = more unlocked)
 
 **SECURITY**
-- [ ] API routes unprotected — POST /api/entries, /api/research, /api/format, /api/reflect open to anyone
-- [ ] Fix: server-side session token approach (deferred until public launch)
 - [ ] Upvote abuse prevention (IP or cookie check)
+
+**BEFORE GOING LIVE — SESSION PASSWORD**
+The session is now protected by a JWT "wristband" cookie (see `library/wristband.js`). Two env vars control it:
+- `SESSION_PASSWORD` — the password typed into the gate
+- `SESSION_SECRET` — the signing key for the JWT (never share, never change after launch or it logs everyone out)
+
+Steps before going live:
+1. **Pick a strong password** (something longer/random — `listeningnotes` is fine for dev only)
+2. Update `.env.local`: `SESSION_PASSWORD=<new strong password>`
+3. Restart `npm run dev` (env vars only load at boot)
+4. Test: log out, log back in with the new password
+5. In Vercel dashboard → Project → Settings → Environment Variables, add:
+   - `SESSION_PASSWORD` = <same strong password>
+   - `SESSION_SECRET` = <same as .env.local>
+6. Redeploy
+7. Verify: visit `/session` on production, log in with the new password
 
 ---
 
 ## Complete
+- [x] Session auth — real JWT cookie protection (wristband system) on all session API routes
 - [x] Public /submit page — album, artist, year, note, optional name/email
 - [x] Submissions DB table + API routes (POST, GET, PATCH status)
 - [x] Session submissions inbox (/session/submissions) — tabs, note preview, listen/dismiss
@@ -98,6 +113,7 @@ Think of the codebase as a house. Every piece has a room.
 | `ai_integration.js` | Claude API calls: `research_album`, `format_post`, `ask_echo` |
 | `music_data_api.js` | External music APIs: `fetchTracklist` (MusicBrainz), `fetchAlbumArtUrl` (iTunes), `searchArtistAlbums` (iTunes) |
 | `session_timers.js` | `TrackLength`, `SessionDuration`, `LOADING_PHRASES` |
+| `wristband.js` | Session auth: `issueWristband`, `checkWristband`, `requireWristband`, `WRISTBAND_COOKIE` |
 
 ---
 
@@ -117,6 +133,11 @@ Think of the codebase as a house. Every piece has a room.
 | `POST /api/research` | Calls Claude to research an album |
 | `POST /api/format` | Calls Claude to format raw notes into a post |
 | `POST /api/reflect` | Calls Claude as listening companion (Echo) |
+| `POST /api/auth/login` | Checks password, issues wristband cookie |
+| `POST /api/auth/logout` | Clears wristband cookie |
+| `GET /api/auth/check` | Returns `{authed: true/false}` based on wristband cookie |
+
+Protected routes (require wristband cookie): `POST /api/entries`, `PATCH/DELETE /api/entries/[slug]`, `POST /api/research`, `POST /api/format`, `POST /api/reflect`. Public routes stay public: all GETs, `/api/comments`, `/api/submissions`.
 
 ---
 
@@ -201,7 +222,8 @@ fonts.sans    DM Sans
 ## Environment Variables
 - `DATABASE_URL` — Neon Postgres connection string
 - `ANTHROPIC_API_KEY` — Claude API key
-- `SESSION_SECRET` — saved in Vercel + .env.local (not yet wired to route protection)
+- `SESSION_SECRET` — JWT signing key (don't change after launch — invalidates every session)
+- `SESSION_PASSWORD` — the password typed into the session gate
 
 ## Git Workflow
 - Commit after each verified working checkpoint

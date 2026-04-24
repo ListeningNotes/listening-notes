@@ -6,8 +6,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-
-const PASSWORD = 'listeningnotes';
+import PasswordGate from '../../../components/session_components/PasswordGate';
 
 // ── DESIGN TOKENS ──────────────────────────────────────────────────────────
 const MONO  = "'DM Mono', 'Courier New', monospace";
@@ -24,40 +23,6 @@ function inputStyle(focused) {
     background: '#fff', border: `1px solid ${focused ? '#1a1916' : '#e0dcd5'}`, borderRadius: 8,
     padding: '9px 14px', fontFamily: MONO, fontSize: 12, color: '#1a1916', outline: 'none', width: '100%', boxSizing: 'border-box',
   };
-}
-
-// ── PASSWORD GATE ──────────────────────────────────────────────────────────
-// Shown before the entries list. Same pattern as the main session gate.
-
-function PasswordGate({ onAuth }) {
-  const [pw, setPw] = useState('');
-  const [error, setError] = useState(false);
-
-  function handleAuth() {
-    if (pw === PASSWORD) onAuth();
-    else setError(true);
-  }
-
-  return (
-    <div style={{ minHeight: '100vh', background: '#f5f3ef', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-      <div style={{ background: '#fff', border: BORDER, borderRadius: 20, padding: 48, width: '100%', maxWidth: 360, display: 'flex', flexDirection: 'column', gap: 20, boxShadow: '0 4px 32px rgba(0,0,0,0.08)' }}>
-        <div>
-          <div style={{ fontFamily: 'Fraunces, serif', fontSize: 26, fontWeight: 900, color: '#1a1916', letterSpacing: '-0.02em' }}>Listening Notes</div>
-          <div style={{ ...labelStyle, marginTop: 4 }}>entries access</div>
-        </div>
-        <input type="password" placeholder="password" value={pw}
-          onChange={e => { setPw(e.target.value); setError(false); }}
-          onKeyDown={e => e.key === 'Enter' && handleAuth()}
-          style={{ background: '#fff', border: `1px solid ${error ? '#ef4444' : '#e0dcd5'}`, borderRadius: 8, padding: '12px 16px', fontFamily: MONO, fontSize: 13, color: '#1a1916', outline: 'none' }}
-        />
-        {error && <div style={{ fontFamily: MONO, fontSize: 11, color: '#ef4444' }}>incorrect password</div>}
-        <button onClick={handleAuth}
-          style={{ background: '#1a1916', color: '#fff', borderRadius: 8, padding: '12px 0', fontFamily: MONO, fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase', cursor: 'pointer', border: 'none', fontWeight: 600 }}>
-          Enter →
-        </button>
-      </div>
-    </div>
-  );
 }
 
 // ── EDIT MODAL ─────────────────────────────────────────────────────────────
@@ -98,7 +63,7 @@ function EditModal({ entry, onSave, onDelete, onClose }) {
       const res = await fetch(`/api/entries/${entry.slug}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...fields, password: PASSWORD }),
+        body: JSON.stringify(fields),
       });
       const data = await res.json();
       if (data.error) throw new Error(data.error);
@@ -114,8 +79,6 @@ function EditModal({ entry, onSave, onDelete, onClose }) {
     try {
       const res = await fetch(`/api/entries/${entry.slug}`, {
         method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password: PASSWORD }),
       });
       const data = await res.json();
       if (data.error) throw new Error(data.error);
@@ -253,21 +216,21 @@ function EditModal({ entry, onSave, onDelete, onClose }) {
 
 export default function SessionEntries() {
   const [authed, setAuthed] = useState(false);
+  const [checking, setChecking] = useState(true);
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [editing, setEditing] = useState(null); // the entry currently open in EditModal, or null
   const [sortBy, setSortBy] = useState('newest');
 
-  // Check localStorage for existing auth on mount
+  // Ask the server if our wristband cookie is still valid
   useEffect(() => {
-    if (localStorage.getItem('ln_session_auth') === 'true') setAuthed(true);
+    fetch('/api/auth/check')
+      .then(r => r.json())
+      .then(d => setAuthed(!!d.authed))
+      .catch(() => {})
+      .finally(() => setChecking(false));
   }, []);
-
-  function handleAuth() {
-    setAuthed(true);
-    localStorage.setItem('ln_session_auth', 'true');
-  }
 
   // Load all entries once authenticated
   useEffect(() => {
@@ -304,7 +267,8 @@ export default function SessionEntries() {
       return 0;
     });
 
-  if (!authed) return <PasswordGate onAuth={handleAuth} />;
+  if (checking) return <div style={{ minHeight: '100vh', background: '#f5f3ef' }} />;
+  if (!authed) return <PasswordGate onAuth={() => setAuthed(true)} />;
 
   return (
     <>

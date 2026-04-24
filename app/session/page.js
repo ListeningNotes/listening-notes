@@ -2,8 +2,8 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { fonts } from '../../library/sitewide_visuals';
+import PasswordGate from '../../components/session_components/PasswordGate';
 
-const PASSWORD = 'listeningnotes';
 const BG = '#f5f2ed';
 const TEXT = '#1a1916';
 const MUTED = '#9a9590';
@@ -11,58 +11,22 @@ const BORDER = '#e0dcd5';
 
 export default function SessionHub() {
   const [authed, setAuthed] = useState(false);
-  const [pw, setPw] = useState('');
-  const [error, setError] = useState(false);
+  const [checking, setChecking] = useState(true);
 
   useEffect(() => {
-    if (localStorage.getItem('ln_session_auth') === 'true') setAuthed(true);
+    fetch('/api/auth/check')
+      .then(r => r.json())
+      .then(d => setAuthed(!!d.authed))
+      .catch(() => {})
+      .finally(() => setChecking(false));
   }, []);
 
-  function handleAuth() {
-    if (pw === PASSWORD) {
-      localStorage.setItem('ln_session_auth', 'true');
-      setAuthed(true);
-    } else {
-      setError(true);
-      setPw('');
-    }
+  if (checking) {
+    return <div style={{ minHeight: '100vh', background: BG }} />;
   }
 
   if (!authed) {
-    return (
-      <div style={{
-        minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
-        background: BG, fontFamily: fonts.sans,
-      }}>
-        <div style={{ textAlign: 'center', maxWidth: 320 }}>
-          <div style={{ fontFamily: fonts.serif, fontSize: 28, color: TEXT, marginBottom: 32 }}>
-            listening notes
-          </div>
-          <input
-            type="password"
-            value={pw}
-            onChange={e => { setPw(e.target.value); setError(false); }}
-            onKeyDown={e => e.key === 'Enter' && handleAuth()}
-            placeholder="password"
-            autoFocus
-            style={{
-              width: '100%', boxSizing: 'border-box',
-              background: '#fff',
-              border: `1px solid ${error ? '#c0392b' : BORDER}`,
-              borderRadius: 8, padding: '12px 16px',
-              fontFamily: fonts.mono, fontSize: 13, color: TEXT,
-              outline: 'none', textAlign: 'center',
-              transition: 'border-color 0.15s',
-            }}
-          />
-          {error && (
-            <div style={{ fontFamily: fonts.mono, fontSize: 11, color: '#c0392b', marginTop: 10, letterSpacing: '0.06em' }}>
-              incorrect
-            </div>
-          )}
-        </div>
-      </div>
-    );
+    return <PasswordGate onAuth={() => setAuthed(true)} />;
   }
 
   const actions = [

@@ -12,7 +12,7 @@ import Link from 'next/link';
 import StarRating from './StarRating';
 import HorizonGenerator from './Entry_modal/HorizonGenerator';
 import StickyHeader from './Entry_modal/StickyHeader';
-import { parseTracksFromNotes, splitNotes } from '../../library/entry_formatter';
+import { parseTracksFromNotes, splitNotes, parseRating } from '../../library/entry_formatter';
 
 
 const WIDGET_BG = 'rgba(8,6,14,0.50)';
@@ -79,9 +79,13 @@ export default function EntryModal({ slug, onClose }) {
     ? (Array.isArray(entry.tags) ? entry.tags : entry.tags.split(',').map(t => t.trim()).filter(Boolean))
     : [];
 
-  const { albumNotes, trackNotes } = splitNotes(entry?.notes);
-  const tracks = parseTracksFromNotes(entry?.notes);
-  const masterpiece = entry?.masterpiece === true;
+  const { albumNotes, trackNotes: trackNotesFallback } = splitNotes(entry?.notes);
+  const trackNotes = entry?.track_notes || trackNotesFallback;
+  const tracks = parseTracksFromNotes(entry?.track_notes || entry?.notes);
+  const allTracksFive = tracks.length > 0 && tracks.every(t => t.stars === 5);
+  const masterpiece = allTracksFive || entry?.rating === 'Masterpiece';
+  const displayRating = masterpiece ? 5 : parseRating(entry?.rating);
+  const isFavorite = entry?.favorite === true || entry?.favorite === 'true';
   const isSubmission = entry?.entry_type === 'Submission';
 
   return (
@@ -212,7 +216,7 @@ export default function EntryModal({ slug, onClose }) {
                   </div>
                   <div style={{ height: 1, background: 'rgba(255,255,255,0.08)', marginBottom: 12 }} />
                   <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 7 }}>
-                    <StarRating rating={entry.rating} size={18} glow={masterpiece} />
+                    <StarRating rating={displayRating} size={18} glow={masterpiece} />
                     {masterpiece && (
                       <>
                         <span style={{ color: 'rgba(255,255,255,0.18)', fontFamily: fonts.mono, fontSize: 9 }}>·</span>
@@ -222,6 +226,12 @@ export default function EntryModal({ slug, onClose }) {
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontFamily: fonts.mono, fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
                     {entry.relationship && <span style={{ color: 'rgba(255,255,255,0.3)' }}>{entry.relationship}</span>}
+                    {isFavorite && (
+                      <>
+                        {entry.relationship && <span style={{ color: 'rgba(255,255,255,0.15)' }}>·</span>}
+                        <span style={{ color: 'rgba(200,212,122,0.7)' }}>Favorite</span>
+                      </>
+                    )}
                     {isSubmission && (
                       <>
                         <span style={{ color: 'rgba(255,255,255,0.15)' }}>·</span>
