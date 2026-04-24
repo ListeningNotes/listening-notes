@@ -42,7 +42,7 @@ export default function HorizonGenerator({ horizon, tracks, animate }) {
                   transform: animate ? 'scaleY(1)' : 'scaleY(0)',
                   opacity: animate ? 1 : 0,
                   transition: animate
-                    ? 'transform 0.5s cubic-bezier(0.34,1.4,0.64,1) ' + (i * 35) + 'ms, opacity 0.3s ease ' + (i * 35) + 'ms'
+                    ? 'transform 0.5s cubic-bezier(0.34,1.4,0.64,1), opacity 0.3s ease'
                     : 'none',
                 }}
               />

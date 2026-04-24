@@ -12,7 +12,7 @@ export default function HorizonBar({ horizon, tracks, commentsByTrack, onBarClic
         {bars.map((h, i) => {
           const track = tracks[i];
           const count = (commentsByTrack[String(i)] || []).length;
-          const label = track ? (i + 1) + '. ' + track.title : 'Track ' + (i + 1);
+          const label = track ? (i + 1) + '. ' + track.name : 'Track ' + (i + 1);
           return (
             <div
               key={i}

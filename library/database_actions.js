@@ -55,7 +55,6 @@ export async function update_entry(slug, fields) {
       background = COALESCE(${fields.background ?? null}, background),
       notes = COALESCE(${fields.notes ?? null}, notes),
       track_notes = COALESCE(${fields.track_notes ?? null}, track_notes),
-      track_notes = COALESCE(${fields.track_notes ?? null}, track_notes),
       tags = COALESCE(${fields.tags ?? null}, tags),
       horizon = COALESCE(${fields.horizon ?? null}, horizon),
       album_art = COALESCE(${fields.album_art ?? null}, album_art),

@@ -1,42 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import PasswordGate from '../../../components/session_components/PasswordGate';
 
-const PASSWORD = 'listeningnotes';
 const MONO  = "'DM Mono', 'Courier New', monospace";
 const SERIF = "'DM Serif Display', Georgia, serif";
 const SANS  = "'DM Sans', system-ui, sans-serif";
 const BORDER = '1px solid #e0dcd5';
 const labelStyle = { fontFamily: MONO, fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#7a776f' };
-
-function PasswordGate({ onAuth }) {
-  const [pw, setPw] = useState('');
-  const [error, setError] = useState(false);
-  function handleAuth() {
-    if (pw === PASSWORD) onAuth();
-    else setError(true);
-  }
-  return (
-    <div style={{ minHeight: '100vh', background: '#f5f3ef', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-      <div style={{ background: '#fff', border: BORDER, borderRadius: 20, padding: 48, width: '100%', maxWidth: 360, display: 'flex', flexDirection: 'column', gap: 20, boxShadow: '0 4px 32px rgba(0,0,0,0.08)' }}>
-        <div>
-          <div style={{ fontFamily: 'Fraunces, serif', fontSize: 26, fontWeight: 900, color: '#1a1916', letterSpacing: '-0.02em' }}>Listening Notes</div>
-          <div style={{ ...labelStyle, marginTop: 4 }}>submissions inbox</div>
-        </div>
-        <input type="password" placeholder="password" value={pw}
-          onChange={e => { setPw(e.target.value); setError(false); }}
-          onKeyDown={e => e.key === 'Enter' && handleAuth()}
-          style={{ background: '#fff', border: `1px solid ${error ? '#ef4444' : '#e0dcd5'}`, borderRadius: 8, padding: '12px 16px', fontFamily: MONO, fontSize: 13, color: '#1a1916', outline: 'none' }}
-        />
-        {error && <div style={{ fontFamily: MONO, fontSize: 11, color: '#ef4444' }}>incorrect password</div>}
-        <button onClick={handleAuth}
-          style={{ background: '#1a1916', color: '#fff', borderRadius: 8, padding: '12px 0', fontFamily: MONO, fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase', cursor: 'pointer', border: 'none' }}>
-          Enter →
-        </button>
-      </div>
-    </div>
-  );
-}
 
 function NoteModal({ submission, onClose }) {
   return (
@@ -65,19 +36,19 @@ function NoteModal({ submission, onClose }) {
 
 export default function SubmissionsInbox() {
   const [authed, setAuthed] = useState(false);
+  const [checking, setChecking] = useState(true);
   const [submissions, setSubmissions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('pending');
   const [viewing, setViewing] = useState(null);
 
   useEffect(() => {
-    if (localStorage.getItem('ln_session_auth') === 'true') setAuthed(true);
+    fetch('/api/auth/check')
+      .then(r => r.json())
+      .then(d => setAuthed(!!d.authed))
+      .catch(() => {})
+      .finally(() => setChecking(false));
   }, []);
-
-  function handleAuth() {
-    setAuthed(true);
-    localStorage.setItem('ln_session_auth', 'true');
-  }
 
   useEffect(() => {
     if (!authed) return;
@@ -104,7 +75,8 @@ export default function SubmissionsInbox() {
     dismissed: submissions.filter(s => s.status === 'dismissed').length,
   };
 
-  if (!authed) return <PasswordGate onAuth={handleAuth} />;
+  if (checking) return <div style={{ minHeight: '100vh', background: '#f5f3ef' }} />;
+  if (!authed) return <PasswordGate onAuth={() => setAuthed(true)} />;
 
   return (
     <>

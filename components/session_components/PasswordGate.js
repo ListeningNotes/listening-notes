@@ -2,16 +2,33 @@
 import { useState } from 'react';
 import { fonts } from '../../library/sitewide_visuals';
 
-const PASSWORD = 'listeningnotes';
 const border = '1px solid #e0dcd5';
 
 export default function PasswordGate({ onAuth }) {
   const [pw, setPw] = useState('');
   const [error, setError] = useState(false);
+  const [loading, setLoading] = useState(false);
 
-  function handleAuth() {
-    if (pw === PASSWORD) { onAuth(); }
-    else setError(true);
+  async function handleAuth() {
+    if (loading || !pw) return;
+    setLoading(true);
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: pw }),
+      });
+      if (res.ok) {
+        onAuth();
+      } else {
+        setError(true);
+        setPw('');
+      }
+    } catch {
+      setError(true);
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -24,12 +41,13 @@ export default function PasswordGate({ onAuth }) {
         <input type="password" placeholder="password" value={pw}
           onChange={e => { setPw(e.target.value); setError(false); }}
           onKeyDown={e => e.key === 'Enter' && handleAuth()}
-          style={{ background: '#fff', border: `1px solid ${error ? '#ef4444' : '#e0dcd5'}`, borderRadius: 8, padding: '12px 16px', fontFamily: fonts.mono, fontSize: 13, color: '#1a1916', outline: 'none' }}
+          disabled={loading}
+          style={{ background: '#fff', border: `1px solid ${error ? '#ef4444' : '#e0dcd5'}`, borderRadius: 8, padding: '12px 16px', fontFamily: fonts.mono, fontSize: 13, color: '#1a1916', outline: 'none', opacity: loading ? 0.6 : 1 }}
         />
         {error && <div style={{ fontFamily: fonts.mono, fontSize: 11, color: '#ef4444' }}>incorrect password</div>}
-        <button onClick={handleAuth}
-          style={{ background: '#1a1916', color: '#fff', borderRadius: 8, padding: '12px 0', fontFamily: fonts.mono, fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase', cursor: 'pointer', border: 'none', fontWeight: 600 }}>
-          Enter →
+        <button onClick={handleAuth} disabled={loading}
+          style={{ background: '#1a1916', color: '#fff', borderRadius: 8, padding: '12px 0', fontFamily: fonts.mono, fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase', cursor: loading ? 'default' : 'pointer', border: 'none', fontWeight: 600, opacity: loading ? 0.6 : 1 }}>
+          {loading ? 'Checking…' : 'Enter →'}
         </button>
       </div>
     </div>

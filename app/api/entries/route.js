@@ -1,4 +1,5 @@
 import { pull_all_entries, save_new_entry } from '@/library/database_actions';
+import { requireWristband } from '@/library/wristband';
 
 export async function GET() {
   try {
@@ -10,6 +11,8 @@ export async function GET() {
 }
 
 export async function POST(request) {
+  const blocked = await requireWristband(request);
+  if (blocked) return blocked;
   try {
     const body = await request.json();
     const entry = await save_new_entry(body);

@@ -35,9 +35,8 @@ export default function FullPostPage({ entry }) {
     ? (Array.isArray(entry.tags) ? entry.tags : entry.tags.split(',').map(t => t.trim()).filter(Boolean))
     : [];
 
-  // Split notes into album-level prose and per-track notes
-  const { album: albumNotes, tracks: trackNotesRaw } = splitNotes(entry.notes);
-  const parsedTracks = parseTracksFromNotes(entry.notes);
+  const { albumNotes } = splitNotes(entry.notes);
+  const parsedTracks = parseTracksFromNotes(entry.track_notes || entry.notes);
   const horizonBars = parseHorizon(entry.horizon);
 
   // Load comments from the API for this entry
@@ -58,8 +57,10 @@ export default function FullPostPage({ entry }) {
     const el = document.getElementById('track-' + i);
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
-  const StarVisualConversion = entry.rating ? '★'.repeat(Math.floor(parseFloat(entry.rating))) + (parseFloat(entry.rating) % 1 >= 0.5 ? '½' : '') : '';
-  const isMasterpiece = entry.masterpiece === true;
+  const allTracksFive = parsedTracks.length > 0 && parsedTracks.every(t => t.stars === 5);
+  const isMasterpiece = allTracksFive || entry.rating === 'Masterpiece';
+  const displayRating = isMasterpiece ? 5 : parseFloat(entry.rating) || 0;
+  const StarVisualConversion = displayRating > 0 ? '★'.repeat(Math.floor(displayRating)) + (displayRating % 1 >= 0.5 ? '½' : '') : '';
 
   return (
     <div style={{ background: '#0e0e0e', minHeight: '100vh', color: '#e8e4dc', fontFamily: fonts.sans }}>

@@ -77,6 +77,7 @@ function OrbBtn({ onClick, children, disabled = false, size = 'md', style: extra
 
 export default function ListenPage() {
   const [authed, setAuthed] = useState(false);
+  const [checking, setChecking] = useState(true);
   const [step, setStep] = useState(-1); // -1 = album search
   const [maxStep, setMaxStep] = useState(-1);
 
@@ -133,7 +134,11 @@ export default function ListenPage() {
   const timerRef = useRef(null);
 
   useEffect(() => {
-    if (localStorage.getItem('ln_session_auth') === 'true') setAuthed(true);
+    fetch('/api/auth/check')
+      .then(r => r.json())
+      .then(d => setAuthed(!!d.authed))
+      .catch(() => {})
+      .finally(() => setChecking(false));
   }, []);
 
   useEffect(() => {
@@ -181,7 +186,6 @@ export default function ListenPage() {
 
   function handleAuth() {
     setAuthed(true);
-    localStorage.setItem('ln_session_auth', 'true');
   }
 
   function advanceTo(newStep) {
@@ -326,6 +330,7 @@ export default function ListenPage() {
     finally { setSaving(false); }
   }
 
+  if (checking) return <div style={{ minHeight: '100vh', background: '#f5f3ef' }} />;
   if (!authed) return <PasswordGate onAuth={handleAuth} />;
 
   const showLoadingScreen = step >= 0 && (researchState === 'loading' || !relationship || !entryType);

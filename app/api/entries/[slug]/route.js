@@ -1,6 +1,5 @@
 import { pull_entry_by_slug, update_entry, delete_entry } from '@/library/database_actions';
-
-const PASSWORD = 'listeningnotes';
+import { requireWristband } from '@/library/wristband';
 
 export async function GET(request, { params }) {
   try {
@@ -14,11 +13,12 @@ export async function GET(request, { params }) {
 }
 
 export async function PATCH(request, { params }) {
+  const blocked = await requireWristband(request);
+  if (blocked) return blocked;
   try {
     const { slug } = await params;
     const body = await request.json();
-    const { password, slug: _ignore, ...fields } = body;
-    if (password !== PASSWORD) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+    const { slug: _ignore, ...fields } = body;
     const entry = await update_entry(slug, fields);
     if (!entry) return Response.json({ error: 'Not found' }, { status: 404 });
     return Response.json({ entry });
@@ -28,10 +28,10 @@ export async function PATCH(request, { params }) {
 }
 
 export async function DELETE(request, { params }) {
+  const blocked = await requireWristband(request);
+  if (blocked) return blocked;
   try {
     const { slug } = await params;
-    const { password } = await request.json();
-    if (password !== PASSWORD) return Response.json({ error: 'Unauthorized' }, { status: 401 });
     const result = await delete_entry(slug);
     return Response.json(result);
   } catch (error) {
