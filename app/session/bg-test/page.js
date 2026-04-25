@@ -1,14 +1,15 @@
-// app/session/page.js
-// Session hub — the private dashboard landing page.
-// Password protected. Never linked publicly.
-
 'use client';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { fonts } from '../../library/sitewide_visuals';
-import PasswordGate from '../../components/session_components/PasswordGate';
+import { fonts } from '../../../library/sitewide_visuals';
 import { Headphones, Stack, Envelope, PaperPlane } from '@phosphor-icons/react';
-import backgrounds from '../../components/session_components/backgrounds';
+import RainingAlbums from '../../../components/session_components/backgrounds/RainingAlbums';
+import BouncingDVD   from '../../../components/session_components/backgrounds/BouncingDVD';
+import FloatingOrbs  from '../../../components/session_components/backgrounds/FloatingOrbs';
+import StarField     from '../../../components/session_components/backgrounds/StarField';
+import WaveGrid      from '../../../components/session_components/backgrounds/WaveGrid';
+
+const ALL = { RainingAlbums, BouncingDVD, FloatingOrbs, StarField, WaveGrid };
 
 const cards = [
   { href: '/session/listen',  label: 'Listen',  Icon: Headphones },
@@ -17,35 +18,20 @@ const cards = [
   { href: '/session/share',   label: 'Share',   Icon: PaperPlane },
 ];
 
-export default function SessionHub() {
-  const [authed, setAuthed]   = useState(false);
-  const [checking, setChecking] = useState(true);
-  const [albums, setAlbums]   = useState([]);
-  // Pick once per mount, stable across re-renders
-  const Background = useRef(backgrounds[Math.floor(Math.random() * backgrounds.length)]).current;
+export default function BgTest() {
+  const [active, setActive] = useState('RainingAlbums');
+  const [albums, setAlbums] = useState([]);
+  const Background = ALL[active];
 
   useEffect(() => {
-    fetch('/api/auth/check')
-      .then(r => r.json())
-      .then(d => setAuthed(!!d.authed))
-      .catch(() => {})
-      .finally(() => setChecking(false));
-  }, []);
-
-  useEffect(() => {
-    if (!authed) return;
     fetch('/api/entries')
       .then(r => r.json())
       .then(d => {
         const withArt = (d.entries || []).filter(e => e.album_art);
-        const shuffled = withArt.sort(() => Math.random() - 0.5).slice(0, 8);
-        setAlbums(shuffled);
+        setAlbums(withArt.sort(() => Math.random() - 0.5).slice(0, 8));
       })
       .catch(() => {});
-  }, [authed]);
-
-  if (checking) return <div style={{ minHeight: '100vh', background: '#eef0ec' }} />;
-  if (!authed)  return <PasswordGate onAuth={() => setAuthed(true)} />;
+  }, []);
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: fonts.sans, position: 'relative', overflow: 'hidden', background: '#eef0ec' }}>
@@ -54,13 +40,12 @@ export default function SessionHub() {
         .hub-card:hover { transform: translateY(-6px) scale(1.04); box-shadow: 0 24px 60px rgba(0,0,0,0.15); }
       `}</style>
 
-      {/* ── Background (randomly selected) ── */}
       <Background albums={albums} />
 
-      {/* ── Frosted glass — blur(Xpx) = blur strength, last rgba = tint opacity ── */}
+      {/* Frosted glass */}
       <div style={{ position: 'absolute', inset: 0, zIndex: 1, backdropFilter: 'blur(0.5px)', WebkitBackdropFilter: 'blur(5px)', background: 'rgba(220,222,220,0.5)', pointerEvents: 'none' }} />
 
-      {/* ── Logo ── */}
+      {/* Logo */}
       <div style={{ position: 'absolute', top: '12vh', left: '50%', transform: 'translateX(-50%)', textAlign: 'center', zIndex: 2, whiteSpace: 'nowrap' }}>
         <img src="/Logo.png" alt="Listening Notes" style={{ height: 160, width: 'auto', display: 'block', margin: '0 auto 8px' }} />
         <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 11, fontWeight: 500, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'rgba(0,0,0,0.3)' }}>
@@ -68,7 +53,7 @@ export default function SessionHub() {
         </div>
       </div>
 
-      {/* ── Cards ── */}
+      {/* Cards */}
       <div style={{ display: 'flex', gap: 80, alignItems: 'center', position: 'relative', zIndex: 2 }}>
         {cards.map(({ href, label, Icon }) => (
           <Link key={href} href={href} style={{ textDecoration: 'none' }}>
@@ -78,6 +63,21 @@ export default function SessionHub() {
               <div style={{ position: 'relative', zIndex: 1, fontFamily: fonts.sans, fontSize: 13, color: 'rgba(26,25,22,0.5)', letterSpacing: '0.01em' }}>{label}</div>
             </div>
           </Link>
+        ))}
+      </div>
+
+      {/* Picker */}
+      <div style={{ position: 'fixed', bottom: 24, left: '50%', transform: 'translateX(-50%)', zIndex: 10, display: 'flex', gap: 8, background: 'rgba(255,255,255,0.9)', borderRadius: 14, padding: '10px 14px', boxShadow: '0 4px 24px rgba(0,0,0,0.12)', backdropFilter: 'blur(12px)' }}>
+        {Object.keys(ALL).map(name => (
+          <button key={name} onClick={() => setActive(name)} style={{
+            fontFamily: "'DM Mono', monospace", fontSize: 10, letterSpacing: '0.08em',
+            textTransform: 'uppercase', padding: '6px 14px', borderRadius: 8, border: 'none',
+            cursor: 'pointer',
+            background: active === name ? '#1a1916' : 'transparent',
+            color: active === name ? '#fff' : '#7a776f',
+          }}>
+            {name}
+          </button>
         ))}
       </div>
     </div>
