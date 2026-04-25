@@ -6,11 +6,10 @@
 
 **DEV**
 - [ ] Connect domain listeningnotes.blog (currently pointing to Tumblr)
-- [ ] Instagram + Reddit auto-distribution after posting
+- [ ] Instagram + Reddit auto-distribution (placeholder lives at `/session/share`; real implementation pending — see to-do list on that page)
 
 **HOME**
 - [ ] Brainstorm alternative to scrolling album strip for recent entries
-- [ ] Connect navigation bar links to actual pages
 - [ ] Jiggle animation on album tile hover
 - [ ] Better live track logic (sticky state past Last.fm delay)
 - [ ] Beacon centering fix when open
@@ -19,45 +18,71 @@
 - [ ] Album art loads fully before data appears (or click-to-reveal)
 - [ ] Sticky collapse animation is glitchy — needs smoother transition
 - [ ] Horizon track names only load for some albums
-- [ ] Star display glitch (screenshot taken)
 - [ ] Subtle background fade behind modal
 - [ ] Link to full page (open in new tab)
-- [ ] Favorite not showing — showing · instead
-- [ ] Masterpiece logic: only if ALL tracks are 5 stars (not just the album rating)
-- [ ] Horizon bars should all rise simultaneously, not staggered
 
-**SLUG PAGE**
-- [ ] Full redesign of the public entry/post page
+**PUBLIC PAGES — VISUAL POLISH**
+- [ ] `/about` — visual pass (typography, hero, section transitions)
+- [ ] `/archive` — visual pass (tile sizing, filter bar, hover states)
+- [ ] `/compare` — design + build (currently coming-soon placeholder)
+- [ ] Slug page (`/entries/[slug]`) — full redesign
 
 **SESSION**
 - [ ] Spotify data panel (monthly listeners, artist ranking)
 - [ ] Discogs genre tags via Claude API
 - [ ] Apple Music playback (requires MusicKit JS + Apple developer account)
 - [ ] Inbox (/session/inbox) — build out with Comments + Submissions tabs
+- [ ] Share (/session/share) — wire Reddit + Instagram backends (currently placeholder)
 - [ ] Future: randomize album art layout per visit (10+ layouts, more entries = more unlocked)
 
 **SECURITY**
 - [ ] Upvote abuse prevention (IP or cookie check)
 
-**BEFORE GOING LIVE — SESSION PASSWORD**
+**BEFORE GOING LIVE — DEPLOYMENT CHECKLIST**
+
 The session is now protected by a JWT "wristband" cookie (see `library/wristband.js`). Two env vars control it:
 - `SESSION_PASSWORD` — the password typed into the gate
 - `SESSION_SECRET` — the signing key for the JWT (never share, never change after launch or it logs everyone out)
 
-Steps before going live:
-1. **Pick a strong password** (something longer/random — `listeningnotes` is fine for dev only)
+**Step 1 — Strengthen the password (local):**
+1. Pick a strong password (something longer/random — `listeningnotes` is fine for dev only)
 2. Update `.env.local`: `SESSION_PASSWORD=<new strong password>`
 3. Restart `npm run dev` (env vars only load at boot)
 4. Test: log out, log back in with the new password
-5. In Vercel dashboard → Project → Settings → Environment Variables, add:
-   - `SESSION_PASSWORD` = <same strong password>
-   - `SESSION_SECRET` = <same as .env.local>
-6. Redeploy
-7. Verify: visit `/session` on production, log in with the new password
+
+**Step 2 — Set Vercel env vars:**
+In Vercel dashboard → Project → Settings → Environment Variables, confirm/add:
+- `SESSION_PASSWORD` = <same strong password>
+- `SESSION_SECRET` = <same as .env.local>
+- `DATABASE_URL` (already there)
+- `ANTHROPIC_API_KEY` (already there)
+
+**Step 3 — Merge `session-redesign` → `main`:**
+```
+git checkout main
+git merge session-redesign     # fast-forward, no conflicts expected
+git push origin main           # this triggers Vercel deploy
+```
+
+**Step 4 — Smoke-test prod:**
+- `/` (homepage)
+- `/about`, `/archive`, `/shuffle`, `/compare`
+- `/session` — log in with new password
+- Run a real listen session end-to-end
+
+**Step 5 — If anything breaks:**
+Vercel dashboard → Deployments → click last good deploy → "Promote to Production" rolls back instantly.
 
 ---
 
 ## Complete
+- [x] Public `/about` page — unified About + Specs + Index with sticky jump nav, star + relationship index reference
+- [x] Public `/archive` page — album-tile grid with search, 5 sort modes, relationship + type filters, favorites/masterpiece toggles
+- [x] Public `/compare` placeholder route
+- [x] Public `/shuffle` route — server-side random redirect to a random entry
+- [x] TopNav flattened — About · Archive · Compare · Submit · Surprise (no dropdowns)
+- [x] Session hub — fourth card added (Share) with placeholder route at `/session/share`
+- [x] Phase 1 display fixes — favorite indicator, masterpiece logic (all-tracks-5★ rule), simultaneous horizon bar animation, star display glitch, track_notes wiring across modal + slug page
 - [x] Session auth — real JWT cookie protection (wristband system) on all session API routes
 - [x] Public /submit page — album, artist, year, note, optional name/email
 - [x] Submissions DB table + API routes (POST, GET, PATCH status)
@@ -180,12 +205,19 @@ Protected routes (require wristband cookie): `POST /api/entries`, `PATCH/DELETE 
 | File | URL | What it does |
 |------|-----|-------------|
 | `page.js` | `/` | Homepage — imports TopNav, Hero, AlbumStrip |
+| `about/page.js` | `/about` | Unified About / Specs / Index with sticky jump nav |
+| `archive/page.js` | `/archive` | Sortable + filterable album-tile grid of every entry |
+| `compare/page.js` | `/compare` | Coming-soon placeholder |
+| `shuffle/page.js` | `/shuffle` | Server-side: picks random entry, redirects to its slug |
+| `submit/page.js` | `/submit` | Public album submission form |
 | `entries/[slug]/page.js` | `/entries/pet-sounds` | Fetches entry server-side, passes to FullPostPage |
 | `entries/[slug]/FullPostPage.js` | — | Full public post page with comments |
-| `session/page.js` | `/session` | Hub — password gate + 3 buttons (Listen, Entries, Inbox) |
+| `session/page.js` | `/session` | Hub — password gate + 4 buttons (Listen, Entries, Inbox, Share) |
 | `session/listen/page.js` | `/session/listen` | Full listening session — 6-step flow, sidebar, frosted panel |
 | `session/entries/page.js` | `/session/entries` | Private CMS — edit/delete all entries |
+| `session/submissions/page.js` | `/session/submissions` | Submission inbox — pending/reviewed/dismissed tabs |
 | `session/inbox/page.js` | `/session/inbox` | Inbox — placeholder, not yet built |
+| `session/share/page.js` | `/session/share` | Share placeholder — Reddit/Instagram integration to-do list |
 
 ---
 
