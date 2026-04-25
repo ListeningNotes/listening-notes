@@ -33,6 +33,7 @@ export default function SessionHub() {
     { href: '/session/listen',  label: 'Listen',  sub: 'Start a session',       icon: '♫' },
     { href: '/session/entries', label: 'Entries', sub: 'Manage the archive',    icon: '▤' },
     { href: '/session/inbox',   label: 'Inbox',   sub: 'Comments & submissions', icon: '✉' },
+    { href: '/session/share',   label: 'Share',   sub: 'Post to Reddit & Instagram', icon: '↗' },
   ];
 
   return (
