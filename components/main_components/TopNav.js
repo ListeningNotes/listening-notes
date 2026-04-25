@@ -42,19 +42,17 @@ function SurpriseLink({ href, label }) {
 
 export default function TopNav({ onToggleTheme, theme, hideBeacon = false }) {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [openGroup, setOpenGroup] = useState(null);
 
-  const groups = [
-    { label: 'Listen', links: [{ href: '/about', label: 'About' }, { href: '/specs', label: 'Specs' }, { href: '/index', label: 'Index' }] },
-    { label: 'Explore', links: [{ href: '/archive', label: 'Archive' }, { href: '/compare', label: 'Compare' }] },
-  ];
-  const standalone = [
-    { href: '/submit', label: 'Submit' },
-    { href: '/shuffle', label: 'Surprise', surprise: true },
+  const links = [
+    { href: '/about',    label: 'About'   },
+    { href: '/archive',  label: 'Archive' },
+    { href: '/compare',  label: 'Compare' },
+    { href: '/submit',   label: 'Submit'  },
+    { href: '/shuffle',  label: 'Surprise', surprise: true },
   ];
 
   return (
-    <nav className="topnav" onMouseLeave={() => setOpenGroup(null)}>
+    <nav className="topnav">
       <div className="topnav-inner">
         <Link href="/" className="topnav-wordmark" style={{ display: 'flex', alignItems: 'center' }}>
           <img
@@ -64,20 +62,7 @@ export default function TopNav({ onToggleTheme, theme, hideBeacon = false }) {
           />
         </Link>
         <div className="topnav-links">
-          {groups.map(g => (
-            <div key={g.label} className="topnav-group" onMouseEnter={() => setOpenGroup(g.label)}>
-              <span className="topnav-link topnav-link--group">
-                {g.label}
-                <svg width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M2 3.5l3 3 3-3"/></svg>
-              </span>
-              {openGroup === g.label && (
-                <div className="topnav-dropdown">
-                  {g.links.map(l => <Link key={l.href} href={l.href} className="topnav-dropdown-link">{l.label}</Link>)}
-                </div>
-              )}
-            </div>
-          ))}
-          {standalone.map(l => l.surprise
+          {links.map(l => l.surprise
             ? <SurpriseLink key={l.href} href={l.href} label={l.label} />
             : <Link key={l.href} href={l.href} className="topnav-link">{l.label}</Link>
           )}
@@ -108,7 +93,7 @@ export default function TopNav({ onToggleTheme, theme, hideBeacon = false }) {
       </div>
       {menuOpen && (
         <div className="topnav-drawer">
-          {groups.flatMap(g => g.links).concat(standalone).map(l => (
+          {links.map(l => (
             <Link key={l.href} href={l.href} className="topnav-drawer-link" onClick={() => setMenuOpen(false)}>{l.label}</Link>
           ))}
         </div>
