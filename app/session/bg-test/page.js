@@ -3,13 +3,16 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { fonts } from '../../../library/sitewide_visuals';
 import { Headphones, Stack, Envelope, PaperPlane } from '@phosphor-icons/react';
-import RainingAlbums from '../../../components/session_components/backgrounds/RainingAlbums';
-import BouncingDVD   from '../../../components/session_components/backgrounds/BouncingDVD';
-import FloatingOrbs  from '../../../components/session_components/backgrounds/FloatingOrbs';
-import StarField     from '../../../components/session_components/backgrounds/StarField';
-import WaveGrid      from '../../../components/session_components/backgrounds/WaveGrid';
-
-const ALL = { RainingAlbums, BouncingDVD, FloatingOrbs, StarField, WaveGrid };
+import Rain        from '../../../components/session_components/backgrounds/Rain';
+import DVD         from '../../../components/session_components/backgrounds/DVD';
+import Gallery       from '../../../components/session_components/backgrounds/Gallery';
+import Fizzy       from '../../../components/session_components/backgrounds/Fizzy';
+import SplitScreen from '../../../components/session_components/backgrounds/SplitScreen';
+import Snake       from '../../../components/session_components/backgrounds/Snake';
+import Pong        from '../../../components/session_components/backgrounds/Pong';
+import Solitaire   from '../../../components/session_components/backgrounds/Solitaire';
+import Reel        from '../../../components/session_components/backgrounds/Reel';
+const ALL = { Rain, DVD, Gallery, Fizzy, SplitScreen, Snake, Pong, Solitaire, Reel };
 
 const cards = [
   { href: '/session/listen',  label: 'Listen',  Icon: Headphones },
@@ -19,7 +22,7 @@ const cards = [
 ];
 
 export default function BgTest() {
-  const [active, setActive] = useState('RainingAlbums');
+  const [active, setActive] = useState('Rain');
   const [albums, setAlbums] = useState([]);
   const Background = ALL[active];
 
@@ -28,7 +31,7 @@ export default function BgTest() {
       .then(r => r.json())
       .then(d => {
         const withArt = (d.entries || []).filter(e => e.album_art);
-        setAlbums(withArt.sort(() => Math.random() - 0.5).slice(0, 8));
+        setAlbums(withArt.sort(() => Math.random() - 0.5));
       })
       .catch(() => {});
   }, []);
@@ -40,7 +43,7 @@ export default function BgTest() {
         .hub-card:hover { transform: translateY(-6px) scale(1.04); box-shadow: 0 24px 60px rgba(0,0,0,0.15); }
       `}</style>
 
-      <Background albums={albums} />
+      <Background key={active} albums={albums} />
 
       {/* Frosted glass */}
       <div style={{ position: 'absolute', inset: 0, zIndex: 1, backdropFilter: 'blur(0.5px)', WebkitBackdropFilter: 'blur(5px)', background: 'rgba(220,222,220,0.5)', pointerEvents: 'none' }} />
