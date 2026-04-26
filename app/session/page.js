@@ -38,8 +38,7 @@ export default function SessionHub() {
       .then(r => r.json())
       .then(d => {
         const withArt = (d.entries || []).filter(e => e.album_art);
-        const shuffled = withArt.sort(() => Math.random() - 0.5).slice(0, 8);
-        setAlbums(shuffled);
+        setAlbums(withArt.sort(() => Math.random() - 0.5));
       })
       .catch(() => {});
   }, [authed]);

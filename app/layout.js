@@ -9,21 +9,13 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <head>
+      <body>
         <script
+          suppressHydrationWarning
           dangerouslySetInnerHTML={{
-            __html: `
-              try {
-                var stored = localStorage.getItem('ln-theme');
-                if (stored) {
-                  document.documentElement.setAttribute('data-theme', stored);
-                }
-              } catch(e) {}
-            `,
+            __html: `try{var s=localStorage.getItem('ln-theme');if(s)document.documentElement.setAttribute('data-theme',s);}catch(e){}`,
           }}
         />
-      </head>
-      <body>
         <Lightswitch>
           {children}
         </Lightswitch>

@@ -33,7 +33,6 @@
 - [ ] Apple Music playback (requires MusicKit JS + Apple developer account)
 - [ ] Inbox (/session/inbox) — build out with Comments + Submissions tabs
 - [ ] Share (/session/share) — wire Reddit + Instagram backends (currently placeholder)
-- [ ] Future: randomize album art layout per visit (10+ layouts, more entries = more unlocked)
 
 **SECURITY**
 - [ ] Upvote abuse prevention (IP or cookie check)
@@ -117,6 +116,7 @@ Vercel dashboard → Deployments → click last good deploy → "Promote to Prod
 - [x] Session: rating + Masterpiece/Favorite merged into Album Notes step
 - [x] Session: hub page at /session — clean 3-button layout (Listen, Entries, Inbox)
 - [x] Session: /session/inbox placeholder route
+- [x] Session: animated canvas backgrounds (9 unique scenes — Rain, DVD, Gallery, Fizzy, SplitScreen, Snake, Pong, Solitaire, Reel) — randomly assigned on load, each uses album art from listening history
 
 ---
 
@@ -196,6 +196,16 @@ Protected routes (require wristband cookie): `POST /api/entries`, `PATCH/DELETE 
 | `AlbumSelection.js` | Artist search + album grid picker |
 | `LoadingResearch.js` | Full-screen loading overlay during research |
 | `StarRating.js` | Interactive star input (click to rate) |
+| `backgrounds/Rain.js` | Album art tiles falling in sparse lanes at varying sizes/speeds |
+| `backgrounds/DVD.js` | Single album bouncing wall-to-wall DVD-style |
+| `backgrounds/Gallery.js` | Slow-drifting full-bleed album panorama |
+| `backgrounds/Fizzy.js` | Floating bubbles of album art |
+| `backgrounds/SplitScreen.js` | Screen split into panels, each cycling albums |
+| `backgrounds/Snake.js` | Snake game played with album tiles |
+| `backgrounds/Pong.js` | Pong — album art as the ball, diagonal physics |
+| `backgrounds/Solitaire.js` | Album cards tossed from random positions, leaving ghost trails |
+| `backgrounds/Reel.js` | Album carousel spinning on a 3D reel, starts spinning on load |
+| `backgrounds/index.js` | Exports all backgrounds as a named array |
 
 ---
 

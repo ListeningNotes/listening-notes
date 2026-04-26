@@ -1,16 +1,23 @@
-import RainingAlbums from './RainingAlbums';
-import BouncingDVD   from './BouncingDVD';
-import FloatingOrbs  from './FloatingOrbs';
-import StarField     from './StarField';
-import WaveGrid      from './WaveGrid';
-
+import Rain        from './Rain';
+import DVD         from './DVD';
+import Gallery       from './Gallery';
+import Fizzy       from './Fizzy';
+import SplitScreen from './SplitScreen';
+import Snake       from './Snake';
+import Pong        from './Pong';
+import Solitaire   from './Solitaire';
+import Reel        from './Reel';
 // Add new backgrounds here — each receives an `albums` prop (may be ignored)
 const backgrounds = [
-  RainingAlbums,
-  BouncingDVD,
-  FloatingOrbs,
-  StarField,
-  WaveGrid,
+  Rain,
+  DVD,
+  Gallery,
+  Fizzy,
+  SplitScreen,
+  Snake,
+  Pong,
+  Solitaire,
+  Reel,
 ];
 
 export default backgrounds;
