@@ -9,7 +9,8 @@ export const colors = {
 };
 
 export const fonts = {
-  serif: "'DM Serif Display', Georgia, serif",
-  mono:  "'DM Mono', 'Courier New', monospace",
-  sans:  "'DM Sans', system-ui, sans-serif",
+  serif:  "'DM Serif Display', Georgia, serif",
+  mono:   "'DM Mono', 'Courier New', monospace",
+  sans:   "'DM Sans', system-ui, sans-serif",
+  museo:  "'MuseoModerno', system-ui, sans-serif",
 };

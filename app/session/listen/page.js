@@ -661,7 +661,7 @@ export default function ListenPage() {
   function renderAlbumSearch() {
     return (
       <div style={{ width: '100%', maxWidth: 680 }}>
-        <div style={{ fontFamily: fonts.serif, fontSize: 'clamp(2rem, 4vw, 3rem)', color: dk(0.85), lineHeight: 1.1, marginBottom: 40, textAlign: 'center' }}>
+        <div style={{ fontFamily: fonts.museo, fontSize: 'clamp(2rem, 4vw, 3rem)', fontWeight: 600, color: dk(0.85), lineHeight: 1.1, marginBottom: 40, textAlign: 'center' }}>
           What are you<br />listening to?
         </div>
 
