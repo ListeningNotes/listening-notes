@@ -41,36 +41,105 @@ export default function Snake({ albums = [] }) {
 
     function placeFood() {
       const occupied = new Set(positions.map(p => `${p.x},${p.y}`));
+      const head     = positions[0];
+      const midX     = Math.floor(cols / 2);
+      const midY     = Math.floor(rows / 2);
+
+      // Score each quadrant: favour far from head + low snake density
+      const quads = [
+        { x1: 0,    y1: 0,    x2: midX, y2: midY  },
+        { x1: midX, y1: 0,    x2: cols, y2: midY  },
+        { x1: 0,    y1: midY, x2: midX, y2: rows  },
+        { x1: midX, y1: midY, x2: cols, y2: rows  },
+      ].map(q => {
+        const cx      = (q.x1 + q.x2) / 2;
+        const cy      = (q.y1 + q.y2) / 2;
+        const dist    = Math.abs(cx - head.x) + Math.abs(cy - head.y);
+        const density = positions.filter(p => p.x >= q.x1 && p.x < q.x2 && p.y >= q.y1 && p.y < q.y2).length;
+        return { q, score: dist - density * 2 };
+      }).sort((a, b) => b.score - a.score);
+
+      for (const { q } of quads) {
+        for (let a = 0; a < 60; a++) {
+          const fx = q.x1 + Math.floor(Math.random() * (q.x2 - q.x1));
+          const fy = q.y1 + Math.floor(Math.random() * (q.y2 - q.y1));
+          if (!occupied.has(`${fx},${fy}`)) { food = { x: fx, y: fy }; return; }
+        }
+      }
+      // Fallback
       let fx, fy;
-      do {
-        fx = Math.floor(Math.random() * cols);
-        fy = Math.floor(Math.random() * rows);
-      } while (occupied.has(`${fx},${fy}`));
+      do { fx = Math.floor(Math.random() * cols); fy = Math.floor(Math.random() * rows); }
+      while (occupied.has(`${fx},${fy}`));
       food = { x: fx, y: fy };
     }
 
+    // BFS flood fill — count open cells reachable from (sx, sy)
+    function floodFill(sx, sy, body) {
+      const visited = new Set([`${sx},${sy}`]);
+      const queue   = [{ x: sx, y: sy }];
+      while (queue.length) {
+        const { x, y } = queue.shift();
+        for (const d of [{ x:1,y:0 },{ x:-1,y:0 },{ x:0,y:1 },{ x:0,y:-1 }]) {
+          const nx = x + d.x, ny = y + d.y;
+          const key = `${nx},${ny}`;
+          if (nx < 0 || nx >= cols || ny < 0 || ny >= rows) continue;
+          if (body.has(key) || visited.has(key)) continue;
+          visited.add(key);
+          queue.push({ x: nx, y: ny });
+        }
+      }
+      return visited.size;
+    }
+
     function autoSteer() {
-      const head  = positions[0];
-      const body  = new Set(positions.slice(1).map(p => `${p.x},${p.y}`));
-      const safe  = [
-        { x: 1, y: 0 }, { x: -1, y: 0 },
-        { x: 0, y: 1 }, { x: 0,  y: -1 },
-      ].filter(d => {
+      const head = positions[0];
+      const tail = positions[positions.length - 1];
+      const body = new Set(positions.slice(1).map(p => `${p.x},${p.y}`));
+      const dirs = [{ x:1,y:0 },{ x:-1,y:0 },{ x:0,y:1 },{ x:0,y:-1 }];
+
+      const safe = dirs.filter(d => {
         if (d.x === -dir.x && d.y === -dir.y) return false;
-        const nx = head.x + d.x;
-        const ny = head.y + d.y;
+        const nx = head.x + d.x, ny = head.y + d.y;
         if (nx < 0 || nx >= cols || ny < 0 || ny >= rows) return false;
         return !body.has(`${nx},${ny}`);
       });
 
       if (!safe.length) { init(); return; }
 
-      safe.sort((a, b) => {
-        const da = Math.abs(head.x + a.x - food.x) + Math.abs(head.y + a.y - food.y);
-        const db = Math.abs(head.x + b.x - food.x) + Math.abs(head.y + b.y - food.y);
-        return da - db;
+      // Require meaningful open space — at least 35% of board or 2× snake length
+      const minSpace = Math.max(Math.floor(cols * rows * 0.35), positions.length * 2);
+
+      // Body centre of mass — used to reward moves that stretch outward
+      const cmx = positions.reduce((s, p) => s + p.x, 0) / positions.length;
+      const cmy = positions.reduce((s, p) => s + p.y, 0) / positions.length;
+
+      const scored = safe.map(d => {
+        const nx         = head.x + d.x, ny = head.y + d.y;
+        const space      = floodFill(nx, ny, body);
+        const distFood   = Math.abs(nx - food.x) + Math.abs(ny - food.y);
+        const distTail   = Math.abs(nx - tail.x) + Math.abs(ny - tail.y);
+        // How far this move takes the head away from the body cluster
+        const spread     = Math.abs(nx - cmx) + Math.abs(ny - cmy);
+        // Small bonus for continuing straight — reduces tight zigzagging
+        const straight   = (d.x === dir.x && d.y === dir.y) ? 3 : 0;
+        return { d, space, distFood, distTail, spread, straight };
       });
-      next = Math.random() < 0.82 ? safe[0] : safe[Math.floor(Math.random() * safe.length)];
+
+      const roomy = scored.filter(s => s.space >= minSpace);
+
+      if (roomy.length) {
+        // Enough space — head toward food, but reward spreading out and straight lines
+        roomy.sort((a, b) => {
+          const sa = -a.distFood * 3 + a.spread * 1.5 + a.straight;
+          const sb = -b.distFood * 3 + b.spread * 1.5 + b.straight;
+          return sb - sa;
+        });
+        next = Math.random() < 0.9 ? roomy[0].d : roomy[Math.min(1, roomy.length - 1)].d;
+      } else {
+        // Tight — chase the tail to buy space rather than getting cornered
+        scored.sort((a, b) => a.distTail - b.distTail || b.space - a.space);
+        next = scored[0].d;
+      }
     }
 
     function shiftTo(nx, ny) {
