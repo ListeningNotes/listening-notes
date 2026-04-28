@@ -57,7 +57,7 @@ export default function SessionHub() {
       <Background albums={albums} />
 
       {/* ── Frosted glass — blur(Xpx) = blur strength, last rgba = tint opacity ── */}
-      <div style={{ position: 'absolute', inset: 0, zIndex: 1, backdropFilter: 'blur(0.5px)', WebkitBackdropFilter: 'blur(5px)', background: 'rgba(220,222,220,0.5)', pointerEvents: 'none' }} />
+      <div style={{ position: 'absolute', inset: 0, zIndex: 1, backdropFilter: 'blur(1px)', WebkitBackdropFilter: 'blur(1px)', background: 'rgba(214, 214, 214, 0.33)', pointerEvents: 'none' }} />
 
       {/* ── Logo ── */}
       <div style={{ position: 'absolute', top: '12vh', left: '50%', transform: 'translateX(-50%)', textAlign: 'center', zIndex: 2, whiteSpace: 'nowrap' }}>
