@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useRef } from 'react';
 
+// Fallback gradient palette — used until real art loads
 const PALETTE = [
   ['#e85d04', '#fca311'],
   ['#4361ee', '#4cc9f0'],
@@ -15,6 +16,26 @@ const PALETTE = [
   ['#ef476f', '#ffd166'],
   ['#118ab2', '#06d6a0'],
 ];
+
+// Fetch ~350 album art URLs from iTunes across several genres
+async function fetchNetworkArt() {
+  const terms = ['rock', 'jazz', 'pop', 'hip hop', 'electronic', 'indie', 'classical', 'r&b'];
+  const results = await Promise.all(
+    terms.map(t =>
+      fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(t)}&entity=album&limit=50`)
+        .then(r => r.json())
+        .then(d => (d.results || []).map(a => a.artworkUrl100).filter(Boolean))
+        .catch(() => [])
+    )
+  );
+  // Deduplicate and shuffle
+  const all = [...new Set(results.flat())];
+  for (let i = all.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [all[i], all[j]] = [all[j], all[i]];
+  }
+  return all;
+}
 
 const NODE_COUNT = 320;
 const SPRING     = 0.0012;
@@ -75,6 +96,20 @@ export default function AlbumNetwork({ searchQuery = '', collapsed = false, albu
 
   // Keep props in sync without restarting RAF
   useEffect(() => { propsRef.current = { searchQuery, collapsed, albumArt, onCollapsed }; });
+
+  // Fetch real album art and assign to nodes as images load
+  useEffect(() => {
+    fetchNetworkArt().then(urls => {
+      const nodes = stateRef.current.nodes;
+      if (!nodes.length) return;
+      urls.slice(0, NODE_COUNT).forEach((url, i) => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.src = url;
+        nodes[i].img = img;
+      });
+    });
+  }, []);
 
   // Preload art
   useEffect(() => {
@@ -164,13 +199,24 @@ export default function AlbumNetwork({ searchQuery = '', collapsed = false, albu
       nodes.forEach(n => {
         if (n.opacity < 0.008) return;
         ctx.globalAlpha = n.opacity;
-        const hs   = n.size / 2;
-        const grad = ctx.createLinearGradient(n.x - hs, n.y - hs, n.x + hs, n.y + hs);
-        grad.addColorStop(0, n.color[0]);
-        grad.addColorStop(1, n.color[1]);
-        ctx.fillStyle = grad;
-        rrect(ctx, n.x - hs, n.y - hs, n.size, n.size, 2);
-        ctx.fill();
+        const hs = n.size / 2;
+
+        if (n.img?.complete && n.img.naturalWidth > 0) {
+          // Real album art — clip to rounded square then draw
+          ctx.save();
+          rrect(ctx, n.x - hs, n.y - hs, n.size, n.size, 2);
+          ctx.clip();
+          ctx.drawImage(n.img, n.x - hs, n.y - hs, n.size, n.size);
+          ctx.restore();
+        } else {
+          // Gradient fallback while image loads
+          const grad = ctx.createLinearGradient(n.x - hs, n.y - hs, n.x + hs, n.y + hs);
+          grad.addColorStop(0, n.color[0]);
+          grad.addColorStop(1, n.color[1]);
+          ctx.fillStyle = grad;
+          rrect(ctx, n.x - hs, n.y - hs, n.size, n.size, 2);
+          ctx.fill();
+        }
       });
       ctx.globalAlpha = 1;
 
