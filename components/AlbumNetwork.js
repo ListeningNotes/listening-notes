@@ -42,10 +42,16 @@ const SPRING     = 0.0012;
 const DAMP       = 0.978;
 
 function makeNodes(w, h) {
-  const margin = 52;
+  const cx   = w / 2;
+  const cy   = h / 2;
+  const maxR = Math.min(w, h) * 0.44; // circle fits inside viewport
+
   const nodes = Array.from({ length: NODE_COUNT }, () => {
-    const x = margin + Math.random() * (w - margin * 2);
-    const y = margin + Math.random() * (h - margin * 2);
+    // sqrt gives uniform area distribution (no center clustering)
+    const angle = Math.random() * Math.PI * 2;
+    const r     = Math.sqrt(Math.random()) * maxR;
+    const x     = cx + Math.cos(angle) * r;
+    const y     = cy + Math.sin(angle) * r;
     return {
       x, y, homeX: x, homeY: y,
       vx: (Math.random() - 0.5) * 0.3,
