@@ -77,8 +77,8 @@ export default function NavBeacon() {
               <img src={artUrl} alt={trackName} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
             </div>
           )}
-          <div style={{ fontFamily: 'Fraunces, serif', fontWeight: 900, fontSize: '15px', color: 'var(--text)', lineHeight: 1.2, marginBottom: '3px' }}>{trackName}</div>
-          <div style={{ fontFamily: 'var(--font-mono)', fontSize: '10px', color: 'var(--text-muted)', letterSpacing: '0.06em', marginBottom: '14px' }}>{artistName}</div>
+          <div style={{ fontFamily: 'var(--font-nunito), sans-serif', fontWeight: 900, fontSize: '15px', color: 'var(--text)', lineHeight: 1.2, marginBottom: '3px' }}>{trackName}</div>
+          <div style={{ fontFamily: 'var(--font-nunito), sans-serif', fontSize: '10px', color: 'var(--text-muted)', letterSpacing: '0.06em', marginBottom: '14px' }}>{artistName}</div>
           {recents.length > 0 && (
             <>
               <div style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '10px', paddingTop: '12px', borderTop: '1px solid var(--border)' }}>Recently played</div>
