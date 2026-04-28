@@ -21,47 +21,58 @@ export default function EchoOrb({ albumArt = '', mood = 'default', active = fals
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
-    const SIZE = 96; // canvas px — larger than orb so halo can bleed outside
+    const SIZE = 120; // canvas px — generous bleed for halo
     canvas.width  = SIZE;
     canvas.height = SIZE;
 
-    // Halo particles orbit just outside the 56px orb (radius 28px → orbit ~32–38px)
-    const particles = Array.from({ length: 28 }, (_, i) => ({
-      angle:      (i / 28) * Math.PI * 2 + Math.random() * 0.15,
-      r:          32 + Math.random() * 6,
-      speed:      0.005 + Math.random() * 0.007,
-      size:       1.4 + Math.random() * 2.2,
-      phase:      Math.random() * Math.PI * 2,
-      phaseSpeed: 0.014 + Math.random() * 0.018,
-    }));
+    // Three orbit rings at different radii for depth
+    const particles = Array.from({ length: 48 }, (_, i) => {
+      const ring = i % 3; // 0 = inner, 1 = mid, 2 = outer
+      return {
+        angle:      (i / 48) * Math.PI * 2 + Math.random() * 0.4,
+        r:          [30, 36, 43][ring] + Math.random() * 4,
+        speed:      ([0.009, 0.006, 0.004][ring] + Math.random() * 0.005) * (Math.random() < 0.5 ? 1 : -1),
+        size:       [2.2, 3.0, 2.0][ring] + Math.random() * 1.8,
+        phase:      Math.random() * Math.PI * 2,
+        phaseSpeed: 0.018 + Math.random() * 0.022,
+        wobble:     3 + Math.random() * 5,
+      };
+    });
 
+    let t = 0;
     let raf;
     function draw() {
       const { mood: m, active: a, loading: l } = propsRef.current;
       ctx.clearRect(0, 0, SIZE, SIZE);
+      t += 0.012;
 
       const [r, g, b]  = MOOD_RGB[m] || MOOD_RGB.default;
-      const speedMult  = l ? 2.6 : a ? 1.5 : 1;
+      const speedMult  = l ? 3.0 : a ? 1.8 : 1;
       const cx = SIZE / 2, cy = SIZE / 2;
+
+      // Global breathe — whole halo inhales and exhales
+      const breathe = 0.72 + 0.28 * Math.sin(t * 0.6);
 
       particles.forEach(p => {
         p.angle += p.speed * speedMult;
         p.phase += p.phaseSpeed * speedMult;
 
-        const wobble = Math.sin(p.phase) * 2.8;
+        const wobble = Math.sin(p.phase) * p.wobble;
         const px = cx + Math.cos(p.angle) * (p.r + wobble);
         const py = cy + Math.sin(p.angle) * (p.r + wobble);
 
-        const pulse     = 0.5 + 0.5 * Math.sin(p.phase * 0.8);
-        const baseAlpha = l ? 0.92 : a ? 0.78 : 0.52;
-        const alpha     = baseAlpha * pulse;
+        const flicker    = 0.4 + 0.6 * Math.abs(Math.sin(p.phase * 1.3 + t));
+        const baseAlpha  = l ? 1.0 : a ? 0.88 : 0.6;
+        const alpha      = baseAlpha * flicker * breathe;
 
-        const grad = ctx.createRadialGradient(px, py, 0, px, py, p.size * 2.2);
-        grad.addColorStop(0, `rgba(${r},${g},${b},${alpha.toFixed(3)})`);
+        const sz = p.size * (l ? 2.8 : 2.2);
+        const grad = ctx.createRadialGradient(px, py, 0, px, py, sz);
+        grad.addColorStop(0, `rgba(${r},${g},${b},${Math.min(1, alpha).toFixed(3)})`);
+        grad.addColorStop(0.5, `rgba(${r},${g},${b},${(alpha * 0.3).toFixed(3)})`);
         grad.addColorStop(1, `rgba(${r},${g},${b},0)`);
         ctx.fillStyle = grad;
         ctx.beginPath();
-        ctx.arc(px, py, p.size * 2.2, 0, Math.PI * 2);
+        ctx.arc(px, py, sz, 0, Math.PI * 2);
         ctx.fill();
       });
 
@@ -93,8 +104,8 @@ export default function EchoOrb({ albumArt = '', mood = 'default', active = fals
             top:  '50%',
             left: '50%',
             transform: 'translate(-50%,-50%)',
-            width:  96,
-            height: 96,
+            width:  120,
+            height: 120,
             pointerEvents: 'none',
           }}
         />
