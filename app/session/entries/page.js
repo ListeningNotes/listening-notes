@@ -10,9 +10,9 @@ import { useState, useEffect } from 'react';
 const PASSWORD = 'listeningnotes';
 
 // ── DESIGN TOKENS ──────────────────────────────────────────────────────────
-const MONO  = "'DM Mono', 'Courier New', monospace";
-const SERIF = "'DM Serif Display', Georgia, serif";
-const SANS  = "'DM Sans', system-ui, sans-serif";
+const MONO  = "'Nunito', sans-serif";
+const SERIF = "'Nunito', sans-serif";
+const SANS  = "'Nunito', sans-serif";
 const BORDER = '1px solid #e0dcd5';
 
 // Shared label style — the small uppercase labels above form fields
@@ -42,7 +42,7 @@ function PasswordGate({ onAuth }) {
     <div style={{ minHeight: '100vh', background: '#f5f3ef', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
       <div style={{ background: '#fff', border: BORDER, borderRadius: 20, padding: 48, width: '100%', maxWidth: 360, display: 'flex', flexDirection: 'column', gap: 20, boxShadow: '0 4px 32px rgba(0,0,0,0.08)' }}>
         <div>
-          <div style={{ fontFamily: 'Fraunces, serif', fontSize: 26, fontWeight: 900, color: '#1a1916', letterSpacing: '-0.02em' }}>Listening Notes</div>
+          <div style={{ fontFamily: SANS, fontSize: 26, fontWeight: 900, color: '#1a1916', letterSpacing: '-0.02em' }}>Listening Notes</div>
           <div style={{ ...labelStyle, marginTop: 4 }}>entries access</div>
         </div>
         <input type="password" placeholder="password" value={pw}
@@ -319,7 +319,7 @@ export default function SessionEntries() {
 
         {/* Sticky nav — search, sort, back to session */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '14px 28px', borderBottom: BORDER, background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(12px)', position: 'sticky', top: 0, zIndex: 10 }}>
-          <a href="/session" style={{ fontFamily: 'Fraunces, serif', fontSize: 18, fontWeight: 900, color: '#1a1916', letterSpacing: '-0.02em', textDecoration: 'none' }}>Listening Notes</a>
+          <a href="/session" style={{ fontFamily: SANS, fontSize: 18, fontWeight: 900, color: '#1a1916', letterSpacing: '-0.02em', textDecoration: 'none' }}>Listening Notes</a>
           <span style={{ color: '#d0ccc5' }}>·</span>
           <span style={{ ...labelStyle }}>entries</span>
           {/* Shows filtered count vs total — e.g. "12 / 31" when searching */}
