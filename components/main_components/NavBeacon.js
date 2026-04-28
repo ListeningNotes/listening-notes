@@ -80,7 +80,7 @@ export default function NavBeacon() {
               <img src={artUrl} alt={trackName} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
             </div>
           )}
-          <div style={{ fontFamily: 'Fraunces, serif', fontWeight: 900, fontSize: '15px', color: '#e8e4dc', lineHeight: 1.2, marginBottom: '3px' }}>{trackName}</div>
+          <div style={{ fontFamily: fonts.sans, fontWeight: 900, fontSize: '15px', color: '#e8e4dc', lineHeight: 1.2, marginBottom: '3px' }}>{trackName}</div>
           <div style={{ fontFamily: fonts.mono, fontSize: '10px', color: '#555', letterSpacing: '0.06em', marginBottom: '14px' }}>{artistName}</div>
           {recents.length > 0 && (
             <>
