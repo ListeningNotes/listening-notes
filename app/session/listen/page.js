@@ -6,6 +6,7 @@ import PasswordGate from '../../../components/session_components/PasswordGate';
 import StarRating from '../../../components/session_components/StarRating';
 import EchoOrb from '../../../components/EchoOrb';
 import EchoChat from '../../../components/EchoChat';
+import AlbumNetwork from '../../../components/AlbumNetwork';
 import { TrackLength, SessionDuration, LOADING_PHRASES } from '../../../library/session_timers';
 
 const STEPS = [
@@ -118,13 +119,7 @@ export default function ListenPage() {
   const [elapsed, setElapsed] = useState(0);
   const timerRef = useRef(null);
 
-  // Window size for EchoOrb CSS transition
-  const [windowW, setWindowW] = useState(1440);
-  const [windowH, setWindowH] = useState(900);
-
   useEffect(() => {
-    setWindowW(window.innerWidth);
-    setWindowH(window.innerHeight);
     fetch('/api/auth/check')
       .then(r => r.json())
       .then(d => setAuthed(!!d.authed))
@@ -417,23 +412,6 @@ export default function ListenPage() {
 
   if (checking) return <div style={{ minHeight: '100vh', background: '#f5f2ec' }} />;
   if (!authed) return <PasswordGate onAuth={handleAuth} />;
-
-  // Orb sizing — CSS-transitioned from full-screen to compact 48px
-  const orbIsCompact = step >= 0 && researchState === 'done';
-  const orbStyle = {
-    position: 'fixed',
-    right:  orbIsCompact ? 24 : 0,
-    bottom: orbIsCompact ? 24 : 0,
-    width:  orbIsCompact ? 48 : windowW,
-    height: orbIsCompact ? 48 : windowH,
-    zIndex: orbIsCompact ? 20 : (step === -1 && !confirmPhase ? 0 : 5),
-    borderRadius:  orbIsCompact ? '50%' : 0,
-    background:    orbIsCompact ? 'transparent' : '#f5f2ec',
-    boxShadow:     orbIsCompact ? '0 4px 24px rgba(112,96,160,0.35)' : 'none',
-    transition: 'right 0.6s ease-in-out, bottom 0.6s ease-in-out, width 0.6s ease-in-out, height 0.6s ease-in-out, border-radius 0.6s ease-in-out',
-    overflow: 'hidden',
-    pointerEvents: step >= 0 && researchState === 'loading' ? 'none' : 'auto',
-  };
 
   const showLoadingScreen = step >= 0 && researchState !== 'done' && researchState !== 'error';
 
@@ -792,18 +770,29 @@ export default function ListenPage() {
         textarea::placeholder { color: rgba(255,255,255,0.28); }
       `}</style>
 
-      {/* ── Persistent EchoOrb — full-screen on landing, compact in session ── */}
-      <EchoOrb
-        mood={echoMood}
-        active={echoActive}
-        loading={showLoadingScreen}
-        albumArt={showLoadingScreen ? albumArt : null}
-        onClick={orbIsCompact ? () => setEchoChatOpen(v => !v) : undefined}
-        style={orbStyle}
-      />
+      {/* ── AlbumNetwork — landing + loading backdrop ── */}
+      {(step === -1 || showLoadingScreen) && (
+        <AlbumNetwork
+          searchQuery={step === -1 && !confirmPhase ? artistInput : ''}
+          collapsed={step >= 0}
+          albumArt={albumArt || pendingAlbum?.artUrl || ''}
+          onCollapsed={() => {}}
+        />
+      )}
+
+      {/* ── EchoOrb — compact 56px, shown once session starts ── */}
+      {step >= 0 && (
+        <EchoOrb
+          albumArt={albumArt}
+          mood={echoMood}
+          active={echoActive}
+          loading={researchState === 'loading'}
+          onClick={researchState === 'done' ? () => setEchoChatOpen(v => !v) : undefined}
+        />
+      )}
 
       {/* EchoChat float panel — session only */}
-      {orbIsCompact && (
+      {researchState === 'done' && (
         <EchoChat
           open={echoChatOpen}
           onClose={() => setEchoChatOpen(false)}

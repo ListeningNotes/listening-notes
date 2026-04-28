@@ -1,177 +1,130 @@
 'use client';
-import { useRef, useEffect, useCallback } from 'react';
+import { useRef, useEffect } from 'react';
 
-const MOOD_COLORS = {
-  melancholic: '#6070a0',
-  intense:     '#2a2030',
-  warm:        '#c09060',
-  curious:     '#8060c0',
-  joyful:      '#80b040',
-  thinking:    '#909090',
-  default:     '#7060a0',
+const MOOD_RGB = {
+  melancholic: [96,  112, 160],
+  intense:     [42,  32,  48 ],
+  warm:        [192, 144, 96 ],
+  curious:     [128, 96,  192],
+  joyful:      [128, 176, 64 ],
+  thinking:    [144, 144, 144],
+  default:     [112, 96,  160],
 };
 
-function hexToRgb(hex) {
-  return [parseInt(hex.slice(1,3),16), parseInt(hex.slice(3,5),16), parseInt(hex.slice(5,7),16)];
-}
-
-// Smoke particle system. Works at any canvas size — particle count, size,
-// and boundary scale proportionally from a 1440×900 reference.
-export default function EchoOrb({ mood = 'default', active = false, onClick, loading = false, albumArt = null, style = {} }) {
-  const containerRef = useRef(null);
-  const canvasRef    = useRef(null);
-  const animRef      = useRef(null);
-  const stateRef     = useRef({ mood, active, loading });
-  const systemRef    = useRef(null);
+// 56px rounded-square orb — album art fills it, smoke halo orbits outside.
+export default function EchoOrb({ albumArt = '', mood = 'default', active = false, loading = false, onClick }) {
+  const canvasRef = useRef(null);
+  const propsRef  = useRef({ mood, active, loading });
+  useEffect(() => { propsRef.current = { mood, active, loading }; });
 
   useEffect(() => {
-    stateRef.current = { mood: active ? 'curious' : mood, active, loading };
-  }, [mood, active, loading]);
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const SIZE = 96; // canvas px — larger than orb so halo can bleed outside
+    canvas.width  = SIZE;
+    canvas.height = SIZE;
 
-  const initSystem = useCallback((w, h) => {
-    const count = Math.max(6, Math.round(180 * (w * h) / (1440 * 900)));
-    const cx = w / 2, cy = h / 2;
-    const maxR = Math.min(w, h) * 0.4;
-    const baseSize = Math.min(w, h) * 0.09;
+    // Halo particles orbit just outside the 56px orb (radius 28px → orbit ~32–38px)
+    const particles = Array.from({ length: 28 }, (_, i) => ({
+      angle:      (i / 28) * Math.PI * 2 + Math.random() * 0.15,
+      r:          32 + Math.random() * 6,
+      speed:      0.005 + Math.random() * 0.007,
+      size:       1.4 + Math.random() * 2.2,
+      phase:      Math.random() * Math.PI * 2,
+      phaseSpeed: 0.014 + Math.random() * 0.018,
+    }));
 
-    const particles = Array.from({ length: count }, () => {
-      const angle = Math.random() * Math.PI * 2;
-      const r = Math.sqrt(Math.random()) * maxR;
-      return {
-        x: cx + Math.cos(angle) * r,
-        y: cy + Math.sin(angle) * r,
-        vx: (Math.random() - 0.5) * 0.5,
-        vy: (Math.random() - 0.5) * 0.5,
-        size: baseSize + Math.random() * baseSize * 1.4,
-        opacity: 0,
-        targetOpacity: 0.04 + Math.random() * 0.09,
-        phaseOffset: Math.random() * Math.PI * 2,
-        age: Math.random() * 600,
-      };
-    });
+    let raf;
+    function draw() {
+      const { mood: m, active: a, loading: l } = propsRef.current;
+      ctx.clearRect(0, 0, SIZE, SIZE);
 
-    systemRef.current = { particles, w, h };
+      const [r, g, b]  = MOOD_RGB[m] || MOOD_RGB.default;
+      const speedMult  = l ? 2.6 : a ? 1.5 : 1;
+      const cx = SIZE / 2, cy = SIZE / 2;
+
+      particles.forEach(p => {
+        p.angle += p.speed * speedMult;
+        p.phase += p.phaseSpeed * speedMult;
+
+        const wobble = Math.sin(p.phase) * 2.8;
+        const px = cx + Math.cos(p.angle) * (p.r + wobble);
+        const py = cy + Math.sin(p.angle) * (p.r + wobble);
+
+        const pulse     = 0.5 + 0.5 * Math.sin(p.phase * 0.8);
+        const baseAlpha = l ? 0.92 : a ? 0.78 : 0.52;
+        const alpha     = baseAlpha * pulse;
+
+        const grad = ctx.createRadialGradient(px, py, 0, px, py, p.size * 2.2);
+        grad.addColorStop(0, `rgba(${r},${g},${b},${alpha.toFixed(3)})`);
+        grad.addColorStop(1, `rgba(${r},${g},${b},0)`);
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(px, py, p.size * 2.2, 0, Math.PI * 2);
+        ctx.fill();
+      });
+
+      raf = requestAnimationFrame(draw);
+    }
+    draw();
+    return () => cancelAnimationFrame(raf);
   }, []);
 
-  useEffect(() => {
-    const container = containerRef.current;
-    const canvas    = canvasRef.current;
-    if (!container || !canvas) return;
-
-    const ctx = canvas.getContext('2d');
-    let lastW = 0, lastH = 0;
-    let resizeTimer = null;
-
-    function setup() {
-      const { width, height } = container.getBoundingClientRect();
-      const w = Math.round(width);
-      const h = Math.round(height);
-      if (w === lastW && h === lastH) return;
-      lastW = w; lastH = h;
-      canvas.width  = w;
-      canvas.height = h;
-      initSystem(w, h);
-    }
-
-    setup();
-
-    const observer = new ResizeObserver(() => {
-      clearTimeout(resizeTimer);
-      resizeTimer = setTimeout(setup, 700);
-    });
-    observer.observe(container);
-
-    function draw() {
-      const sys = systemRef.current;
-      if (!sys) { animRef.current = requestAnimationFrame(draw); return; }
-      const { particles, w, h } = sys;
-      const { mood: m, loading: ld } = stateRef.current;
-      const [r, g, b] = hexToRgb(MOOD_COLORS[m] || MOOD_COLORS.default);
-      const speed  = ld ? 2.2 : 1;
-      const opMult = ld ? 1.5 : 1;
-      const cx = w / 2, cy = h / 2;
-      const boundary = Math.min(w, h) * 0.42;
-
-      ctx.clearRect(0, 0, w, h);
-
-      for (const p of particles) {
-        p.age += speed;
-
-        const dx = cx - p.x, dy = cy - p.y;
-        const dist = Math.sqrt(dx * dx + dy * dy);
-        if (dist > boundary * 0.55) {
-          p.vx += dx * 0.00006;
-          p.vy += dy * 0.00006;
-        }
-        p.vx += (Math.random() - 0.5) * 0.013 * speed;
-        p.vy += (Math.random() - 0.5) * 0.013 * speed;
-        p.vx *= 0.987;
-        p.vy *= 0.987;
-        p.x += p.vx * speed;
-        p.y += p.vy * speed;
-
-        const breatheOp = (Math.sin(p.age * 0.006 + p.phaseOffset) + 1) / 2;
-        const tOp = p.targetOpacity * opMult * (0.45 + 0.55 * breatheOp);
-        p.opacity += (tOp - p.opacity) * 0.02;
-
-        const breatheSize = (Math.sin(p.age * 0.004 + p.phaseOffset * 1.3) + 1) / 2;
-        const s = p.size * (0.78 + 0.22 * breatheSize);
-
-        const grad = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, s);
-        grad.addColorStop(0, `rgba(${r},${g},${b},${p.opacity})`);
-        grad.addColorStop(1, `rgba(${r},${g},${b},0)`);
-        ctx.beginPath();
-        ctx.arc(p.x, p.y, s, 0, Math.PI * 2);
-        ctx.fillStyle = grad;
-        ctx.fill();
-      }
-
-      animRef.current = requestAnimationFrame(draw);
-    }
-
-    draw();
-
-    return () => {
-      cancelAnimationFrame(animRef.current);
-      clearTimeout(resizeTimer);
-      observer.disconnect();
-    };
-  }, [initSystem]);
-
   return (
-    <div
-      ref={containerRef}
-      onClick={onClick}
-      style={{
-        position: 'relative',
-        overflow: 'hidden',
-        cursor: onClick ? 'pointer' : 'default',
-        ...style,
-      }}
-    >
-      <canvas
-        ref={canvasRef}
-        style={{ display: 'block', width: '100%', height: '100%' }}
-      />
-      {loading && albumArt && (
-        <img
-          src={albumArt}
-          alt=""
+    <>
+      <div
+        onClick={onClick}
+        style={{
+          position: 'fixed',
+          bottom: 24,
+          right: 24,
+          width: 56,
+          height: 56,
+          zIndex: 20,
+          cursor: onClick ? 'pointer' : 'default',
+        }}
+      >
+        {/* Halo — centered on orb, bleeds outside */}
+        <canvas
+          ref={canvasRef}
           style={{
             position: 'absolute',
-            top: '50%',
+            top:  '50%',
             left: '50%',
             transform: 'translate(-50%,-50%)',
-            width: '40%',
-            height: '40%',
-            objectFit: 'cover',
-            borderRadius: 6,
+            width:  96,
+            height: 96,
             pointerEvents: 'none',
-            boxShadow: '0 4px 28px rgba(0,0,0,0.45)',
-            transition: 'opacity 0.5s ease',
           }}
         />
-      )}
-    </div>
+
+        {/* Orb — album art fills the square */}
+        <div style={{
+          position: 'absolute',
+          inset: 0,
+          borderRadius: 8,
+          overflow: 'hidden',
+          background: '#1a1520',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.38)',
+          animation: loading ? 'echo-orb-pulse 0.85s ease-in-out infinite' : 'none',
+        }}>
+          {albumArt && (
+            <img
+              src={albumArt}
+              alt=""
+              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+            />
+          )}
+        </div>
+      </div>
+
+      <style>{`
+        @keyframes echo-orb-pulse {
+          0%,100% { transform: scale(1); }
+          50%      { transform: scale(1.07); }
+        }
+      `}</style>
+    </>
   );
 }
