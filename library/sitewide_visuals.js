@@ -9,7 +9,8 @@ export const colors = {
 };
 
 export const fonts = {
-  serif: "'Nunito', sans-serif",
-  mono:  "'Nunito', sans-serif",
-  sans:  "'Nunito', sans-serif",
+  serif:  "'Nunito', sans-serif",
+  mono:   "'Nunito', sans-serif",
+  sans:   "'Nunito', sans-serif",
+  museo:  "'Nunito', sans-serif",
 };
