@@ -83,7 +83,7 @@ export default function FullPostPage({ entry }) {
         padding: '12px 32px',
       }}>
         <div style={{ maxWidth: '860px', margin: '0 auto', display: 'flex', alignItems: 'center', gap: '20px' }}>
-          <a href="/" style={{ fontFamily: 'Fraunces, serif', fontWeight: 900, fontSize: '18px', color: '#e8e4dc', textDecoration: 'none', letterSpacing: '-0.02em', flexShrink: 0 }}>Listening Notes</a>
+          <a href="/" style={{ fontFamily: "'Nunito', sans-serif", fontWeight: 900, fontSize: '18px', color: '#e8e4dc', textDecoration: 'none', letterSpacing: '-0.02em', flexShrink: 0 }}>Listening Notes</a>
           <div style={{ display: 'flex', gap: '2px', flex: 1 }}>
             <a href="/" style={navLinkStyle}>← All entries</a>
             <span style={{ fontFamily: fonts.mono, fontSize: '10px', color: '#333', alignSelf: 'center', padding: '0 4px' }}>/</span>

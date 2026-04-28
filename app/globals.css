@@ -1,4 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,700;0,9..144,900;1,9..144,900&family=DM+Serif+Display:ital@0;1&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300;1,400;1,500&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,300;1,9..40,400&family=Syne:wght@400;500;600;700;800&family=MuseoModerno:wght@400;600;700&display=swap');
 
 @import "tailwindcss";
 
@@ -20,9 +19,9 @@
   --r-md: 12px;
   --r-lg: 20px;
   --r-xl: 28px;
-  --font-serif: 'DM Serif Display', Georgia, serif;
-  --font-mono:  'DM Mono', 'Courier New', monospace;
-  --font-sans:  'DM Sans', system-ui, sans-serif;
+  --font-serif: var(--font-nunito), sans-serif;
+  --font-mono:  var(--font-nunito), sans-serif;
+  --font-sans:  var(--font-nunito), sans-serif;
   --ease: 0.22s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -541,7 +540,7 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 }
 
 .topnav-wordmark {
-  font-family: 'Fraunces', serif;
+  font-family: var(--font-nunito), sans-serif;
   font-size: 2.2rem;
   font-weight: 700;
   font-style: normal;
@@ -561,7 +560,7 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 }
 
 .topnav-link {
-  font-family: 'DM Mono', monospace;
+  font-family: var(--font-nunito), sans-serif;
   font-size: 0.85rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -629,7 +628,7 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   background: var(--bg);
 }
 .topnav-drawer-link {
-  font-family: 'DM Mono', monospace;
+  font-family: var(--font-nunito), sans-serif;
   font-size: 0.9rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -759,7 +758,7 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   align-items: center;
   justify-content: center;
   color: rgba(124,255,155,0.85);
-  font-family: 'DM Mono', monospace;
+  font-family: var(--font-nunito), sans-serif;
   font-size: 0.65rem;
   letter-spacing: 0.18em;
   text-transform: uppercase;
@@ -791,7 +790,7 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   animation: beacon-breathe 2.5s ease-in-out infinite;
 }
 .beacon-status-text {
-  font-family: 'DM Mono', monospace;
+  font-family: var(--font-nunito), sans-serif;
   font-size: 0.7rem;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -799,7 +798,7 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 }
 
 .beacon-track {
-  font-family: 'Fraunces', serif;
+  font-family: var(--font-nunito), sans-serif;
   font-style: normal;
   font-weight: 700;
   font-size: 2.4rem;
@@ -809,7 +808,7 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   transition: opacity 0.5s ease;
 }
 .beacon-artist {
-  font-family: 'DM Mono', monospace;
+  font-family: var(--font-nunito), sans-serif;
   font-size: 0.85rem;
   letter-spacing: 0.08em;
   color: var(--text-muted);
@@ -844,7 +843,7 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 }
 
 .recent-panel-header {
-  font-family: 'DM Mono', monospace;
+  font-family: var(--font-nunito), sans-serif;
   font-size: 0.65rem;
   letter-spacing: 0.14em;
   text-transform: uppercase;
@@ -853,7 +852,7 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 }
 
 .recent-panel-empty {
-  font-family: 'DM Sans', sans-serif;
+  font-family: var(--font-nunito), sans-serif;
   font-size: 0.8rem;
   color: var(--text-muted);
 }
@@ -877,14 +876,14 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   flex-shrink: 0;
 }
 .recent-item-track {
-  font-family: 'DM Sans', sans-serif;
+  font-family: var(--font-nunito), sans-serif;
   font-size: 0.82rem;
   font-weight: 500;
   color: var(--text);
   line-height: 1.3;
 }
 .recent-item-artist {
-  font-family: 'DM Mono', monospace;
+  font-family: var(--font-nunito), sans-serif;
   font-size: 0.68rem;
   color: var(--text-muted);
   letter-spacing: 0.04em;
@@ -990,13 +989,13 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 .strip-tile:hover .strip-tile-hover { opacity: 1; }
 
 .strip-tile-hover-album {
-  font-family: 'DM Serif Display', serif;
+  font-family: var(--font-nunito), sans-serif;
   font-size: 0.9rem;
   color: #fff;
   line-height: 1.2;
 }
 .strip-tile-hover-artist {
-  font-family: 'DM Mono', monospace;
+  font-family: var(--font-nunito), sans-serif;
   font-size: 0.62rem;
   letter-spacing: 0.08em;
   color: rgba(124,255,155,0.7);
@@ -1050,7 +1049,7 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 }
 
 .hp-cta-btn {
-  font-family: 'DM Mono', monospace;
+  font-family: var(--font-nunito), sans-serif;
   font-size: 0.85rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
@@ -1308,7 +1307,7 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 }
 
 .beacon-recent-track {
-  font-family: 'Fraunces', serif;
+  font-family: var(--font-nunito), sans-serif;
   font-weight: 900;
   font-size: 1rem;
   color: var(--text);
@@ -1317,7 +1316,7 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 }
 
 .beacon-recent-artist {
-  font-family: 'DM Mono', monospace;
+  font-family: var(--font-nunito), sans-serif;
   font-size: 0.7rem;
   letter-spacing: 0.06em;
   color: var(--text-muted);
