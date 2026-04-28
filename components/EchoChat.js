@@ -6,9 +6,7 @@ export default function EchoChat({ open, onClose, messages, onSend, loading, inp
   const inputEl = useRef(null);
 
   useEffect(() => {
-    if (open) {
-      setTimeout(() => inputEl.current?.focus(), 60);
-    }
+    if (open) setTimeout(() => inputEl.current?.focus(), 60);
   }, [open]);
 
   useEffect(() => {
@@ -29,13 +27,13 @@ export default function EchoChat({ open, onClose, messages, onSend, loading, inp
       {/* Click-away backdrop */}
       <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 19 }} />
 
-      {/* Chat panel — floats above the orb (bottom-right) */}
+      {/* Chat panel — tail points toward orb (bottom-right corner) */}
       <div style={{
         position: 'fixed',
-        bottom: 84,
+        bottom: 88,
         right: 24,
-        width: 280,
-        borderRadius: 12,
+        width: 240,
+        borderRadius: '12px 12px 0 12px',
         background: '#f5f2ec',
         border: '1px solid rgba(0,0,0,0.08)',
         boxShadow: '0 8px 40px rgba(0,0,0,0.18)',
@@ -43,13 +41,13 @@ export default function EchoChat({ open, onClose, messages, onSend, loading, inp
         flexDirection: 'column',
         overflow: 'hidden',
         zIndex: 21,
-        maxHeight: '60vh',
+        maxHeight: '58vh',
       }}>
 
         {/* Thread */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '14px 14px 10px' }}>
           {messages.length === 0 && (
-            <div style={{ fontFamily: "'Nunito', sans-serif", fontSize: 12, color: 'rgba(26,21,32,0.35)', fontStyle: 'italic', paddingTop: 8 }}>
+            <div style={{ fontFamily: "'Nunito', sans-serif", fontSize: 12, color: 'rgba(26,21,32,0.32)', fontStyle: 'italic', paddingTop: 8 }}>
               ask echo something...
             </div>
           )}
@@ -60,7 +58,7 @@ export default function EchoChat({ open, onClose, messages, onSend, loading, inp
               justifyContent: m.role === 'user' ? 'flex-end' : 'flex-start',
             }}>
               <div style={{
-                maxWidth: '85%',
+                maxWidth: '86%',
                 fontFamily: "'Nunito', sans-serif",
                 fontSize: 13,
                 lineHeight: 1.65,
@@ -90,7 +88,7 @@ export default function EchoChat({ open, onClose, messages, onSend, loading, inp
             value={input}
             onChange={e => setInput(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey && input.trim()) { e.preventDefault(); onSend(input.trim()); } }}
-            placeholder="ask echo something..."
+            placeholder="reply to echo..."
             style={{
               flex: 1, background: 'transparent', border: 'none', outline: 'none',
               fontFamily: "'Nunito', sans-serif", fontSize: 13, color: '#1a1520',
