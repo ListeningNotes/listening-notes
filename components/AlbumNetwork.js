@@ -56,7 +56,7 @@ function makeNodes(w, h) {
       x, y, homeX: x, homeY: y,
       vx: (Math.random() - 0.5) * 0.3,
       vy: (Math.random() - 0.5) * 0.3,
-      size:  9 + Math.random() * 3,
+      size:  20 + Math.random() * 16,
       color: PALETTE[Math.floor(Math.random() * PALETTE.length)],
       opacity: 1,
       targetOpacity: 1,
