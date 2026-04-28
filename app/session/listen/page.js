@@ -6,7 +6,7 @@ import PasswordGate from '../../../components/session_components/PasswordGate';
 import StarRating from '../../../components/session_components/StarRating';
 import EchoOrb from '../../../components/EchoOrb';
 import EchoChat from '../../../components/EchoChat';
-import AlbumNetwork from '../../../components/AlbumNetwork';
+import EchoNetwork from '../../../components/EchoNetwork';
 import { TrackLength, SessionDuration, LOADING_PHRASES } from '../../../library/session_timers';
 
 const STEPS = [
@@ -770,9 +770,9 @@ export default function ListenPage() {
         textarea::placeholder { color: rgba(255,255,255,0.28); }
       `}</style>
 
-      {/* ── AlbumNetwork — landing + loading backdrop ── */}
+      {/* ── EchoNetwork — landing + loading backdrop ── */}
       {(step === -1 || showLoadingScreen) && (
-        <AlbumNetwork
+        <EchoNetwork
           searchQuery={step === -1 && !confirmPhase ? artistInput : ''}
           collapsed={step >= 0}
           albumArt={albumArt || pendingAlbum?.artUrl || ''}
