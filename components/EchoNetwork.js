@@ -1,21 +1,6 @@
 'use client';
 import { useEffect, useRef } from 'react';
 
-// Fallback gradient palette — used until real art loads
-const PALETTE = [
-  ['#e85d04', '#fca311'],
-  ['#4361ee', '#4cc9f0'],
-  ['#7209b7', '#b5179e'],
-  ['#2dc653', '#51cf66'],
-  ['#f72585', '#ff6b6b'],
-  ['#06d6a0', '#1b9aaa'],
-  ['#ffd60a', '#f77f00'],
-  ['#a8dadc', '#457b9d'],
-  ['#e9c46a', '#f4a261'],
-  ['#8338ec', '#3a86ff'],
-  ['#ef476f', '#ffd166'],
-  ['#118ab2', '#06d6a0'],
-];
 
 // Fetch ~350 album art URLs from iTunes across several genres
 async function fetchNetworkArt() {
@@ -44,7 +29,7 @@ const DAMP       = 0.978;
 function makeNodes(w, h) {
   const cx   = w / 2;
   const cy   = h / 2;
-  const maxR = Math.min(w, h) * 0.52; // circle fits inside viewport
+  const maxR = Math.min(w, h) * 0.50; // circle fits inside viewport
 
   const nodes = Array.from({ length: NODE_COUNT }, () => {
     // sqrt gives uniform area distribution (no center clustering)
@@ -57,7 +42,6 @@ function makeNodes(w, h) {
       vx: (Math.random() - 0.5) * 0.3,
       vy: (Math.random() - 0.5) * 0.3,
       size:  26 + Math.random() * 18,
-      color: PALETTE[Math.floor(Math.random() * PALETTE.length)],
       opacity: 1,
       targetOpacity: 1,
       // spiral data
@@ -224,21 +208,13 @@ export default function AlbumNetwork({ searchQuery = '', collapsed = false, albu
         const hs = n.size / 2;
 
         if (n.img?.complete && n.img.naturalWidth > 0) {
-          // Real album art — clip to rounded square then draw
           ctx.save();
           rrect(ctx, n.x - hs, n.y - hs, n.size, n.size, 2);
           ctx.clip();
           ctx.drawImage(n.img, n.x - hs, n.y - hs, n.size, n.size);
           ctx.restore();
-        } else {
-          // Gradient fallback while image loads
-          const grad = ctx.createLinearGradient(n.x - hs, n.y - hs, n.x + hs, n.y + hs);
-          grad.addColorStop(0, n.color[0]);
-          grad.addColorStop(1, n.color[1]);
-          ctx.fillStyle = grad;
-          rrect(ctx, n.x - hs, n.y - hs, n.size, n.size, 2);
-          ctx.fill();
         }
+        // Skip entirely until art loads — no color fallback
       });
       ctx.globalAlpha = 1;
 
