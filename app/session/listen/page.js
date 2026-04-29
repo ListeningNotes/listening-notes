@@ -808,25 +808,17 @@ export default function ListenPage() {
       {step === -1 && !confirmPhase && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 1, display: 'flex', flexDirection: 'column' }}>
 
-          {/* Top nav */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '14px 28px', flexShrink: 0 }}>
-            <span style={{ fontFamily: fonts.sans, fontWeight: 900, fontSize: 18, color: '#1a1520', letterSpacing: '-0.02em' }}>Listening Notes</span>
-            <span style={{ color: 'rgba(26,21,32,0.2)' }}>·</span>
-            <span style={{ fontFamily: fonts.mono, fontWeight: 600, fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(153,153,153,0.8)' }}>session</span>
-            <div style={{ marginLeft: 'auto' }}>
-              <a href="/session" style={{ fontFamily: fonts.mono, fontWeight: 600, fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(26,21,32,0.5)', textDecoration: 'none', padding: '6px 10px', borderRadius: 8, border: '1px solid rgba(26,21,32,0.12)', background: 'rgba(245,242,236,0.6)', backdropFilter: 'blur(8px)' }}>← Session</a>
-            </div>
+          {/* Back button — top left only */}
+          <div style={{ padding: '14px 28px', flexShrink: 0 }}>
+            <a href="/session" style={{ fontFamily: fonts.mono, fontWeight: 600, fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(26,21,32,0.5)', textDecoration: 'none', padding: '6px 10px', borderRadius: 8, border: '1px solid rgba(26,21,32,0.12)', background: 'rgba(245,242,236,0.6)', backdropFilter: 'blur(8px)' }}>← Session</a>
           </div>
 
           {/* Echo prompt + search */}
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: albums.length > 0 ? 'flex-start' : 'center', padding: '48px 24px', overflowY: 'auto' }}>
             <div style={{ width: '100%', maxWidth: 520, marginBottom: albums.length > 0 ? 36 : 0 }}>
               <div style={{ textAlign: 'center', marginBottom: 32 }}>
-                <div style={{ fontFamily: fonts.sans, fontWeight: 700, fontSize: 26, color: '#1a1520', lineHeight: 1.2, marginBottom: 12 }}>
+                <div style={{ fontFamily: fonts.sans, fontWeight: 700, fontSize: 26, color: '#1a1520', lineHeight: 1.2 }}>
                   what should we listen to?
-                </div>
-                <div style={{ fontFamily: fonts.mono, fontWeight: 600, fontSize: 11, letterSpacing: '0.28em', color: 'rgba(153,153,153,0.7)' }}>
-                  E C H O
                 </div>
               </div>
 
