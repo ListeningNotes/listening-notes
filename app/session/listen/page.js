@@ -830,7 +830,7 @@ export default function ListenPage() {
               {/* Inner gloss — matches hub cards */}
               <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(145deg, rgba(255,255,255,0.6) 0%, transparent 60%)', pointerEvents: 'none' }} />
               <div style={{ textAlign: 'center', marginBottom: 24 }}>
-                <div style={{ fontFamily: fonts.sans, fontWeight: 700, fontSize: 26, color: '#1a1520', lineHeight: 1.2, animation: 'echo-breathe 4.5s ease-in-out infinite', display: 'inline-block' }}>
+                <div style={{ fontFamily: fonts.sans, fontWeight: 700, fontSize: 26, color: '#1a1520', lineHeight: 1.2 }}>
                   what should we listen to?
                 </div>
               </div>
