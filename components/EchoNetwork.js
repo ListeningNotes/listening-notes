@@ -188,16 +188,16 @@ export default function AlbumNetwork({ searchQuery = '', collapsed = false, albu
             Math.sin(ny * 5.2 - t * 1.1) * Math.cos(nx * 2.9 + t * 0.6) * 0.9 +
             Math.sin((nx + ny) * 3.8 + t * 0.5) * 0.6;
 
-          // Flow pushes nodes like a current
-          n.vx += Math.cos(flowAngle) * 0.22;
-          n.vy += Math.sin(flowAngle) * 0.22;
+          // Flow pushes nodes like a gentle current
+          n.vx += Math.cos(flowAngle) * 0.055;
+          n.vy += Math.sin(flowAngle) * 0.055;
 
-          // Soft spring back so they don't drift off
-          n.vx += (n.homeX - n.x) * 0.0009;
-          n.vy += (n.homeY - n.y) * 0.0009;
+          // Strong spring back keeps the circle shape intact
+          n.vx += (n.homeX - n.x) * 0.004;
+          n.vy += (n.homeY - n.y) * 0.004;
 
-          n.vx *= 0.955;
-          n.vy *= 0.955;
+          n.vx *= 0.974;
+          n.vy *= 0.974;
           n.x  += n.vx;
           n.y  += n.vy;
           n.opacity += (targetOpacity - n.opacity) * 0.04;
