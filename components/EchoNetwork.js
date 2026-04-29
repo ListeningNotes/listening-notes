@@ -176,10 +176,16 @@ export default function AlbumNetwork({ searchQuery = '', collapsed = false, albu
           onCollapsed?.();
         }
       } else {
-        // Normal drift + spring
+        // Breathing — slow sine expands/contracts the whole network
+        const breathe = 1 + 0.055 * Math.sin(now * 0.00055);
+
         nodes.forEach(n => {
-          n.vx += (n.homeX - n.x) * SPRING;
-          n.vy += (n.homeY - n.y) * SPRING;
+          // Home position pulses radially from center
+          const bx = cx + Math.cos(n.angle) * n.dist * breathe;
+          const by = cy + Math.sin(n.angle) * n.dist * breathe;
+
+          n.vx += (bx - n.x) * SPRING;
+          n.vy += (by - n.y) * SPRING;
           n.vx *= DAMP;
           n.vy *= DAMP;
           n.x  += n.vx;
