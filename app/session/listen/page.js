@@ -818,7 +818,7 @@ export default function ListenPage() {
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: albums.length > 0 ? 'flex-start' : 'center', padding: albums.length > 0 ? '32px 24px' : '0 24px', overflowY: 'auto' }}>
             <div style={{ width: '100%', maxWidth: 520, marginBottom: albums.length > 0 ? 36 : 0 }}>
               <div style={{
-                background: 'rgba(255,255,255,0.72)',
+                background: 'rgba(255,255,255,0.45)',
                 backdropFilter: 'blur(18px)',
                 WebkitBackdropFilter: 'blur(18px)',
                 borderRadius: 40,
@@ -846,7 +846,7 @@ export default function ListenPage() {
                   autoFocus
                 />
                 {searching && (
-                  <div style={{ position: 'absolute', right: 18, top: '50%', transform: 'translateY(-50%)', fontFamily: fonts.mono, fontSize: 11, color: 'rgba(26,21,32,0.35)', letterSpacing: '0.06em' }}>searching…</div>
+                  <div style={{ position: 'absolute', right: 18, top: '50%', transform: 'translateY(-50%)', fontFamily: fonts.mono, fontSize: 11, color: 'rgba(26,21,32,0.35)', letterSpacing: '0.06em' }}>thinking...</div>
                 )}
               </div>
 
