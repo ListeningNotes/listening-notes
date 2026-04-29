@@ -816,8 +816,8 @@ export default function ListenPage() {
           </div>
 
           {/* Echo prompt + search */}
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: albums.length > 0 ? 'flex-start' : 'center', padding: albums.length > 0 ? '32px 24px' : '0 24px', overflowY: 'auto' }}>
-            <div style={{ width: '100%', maxWidth: 520, marginBottom: albums.length > 0 ? 36 : 0 }}>
+          <div onClick={() => { setArtistInput(''); setAlbums([]); setShowManual(false); }} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: albums.length > 0 ? 'flex-start' : 'center', padding: albums.length > 0 ? '32px 24px' : '0 24px', overflowY: 'auto' }}>
+            <div onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: 520, marginBottom: albums.length > 0 ? 36 : 0 }}>
               <div style={{
                 background: 'rgba(255,255,255,0.45)',
                 backdropFilter: 'blur(18px)',
@@ -877,7 +877,7 @@ export default function ListenPage() {
             </div>
 
             {albums.length > 0 && (
-              <div style={{ width: '100%', maxWidth: 960 }}>
+              <div onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: 960 }}>
                 <div style={{ fontFamily: fonts.mono, fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(26,21,32,0.32)', marginBottom: 20, paddingLeft: 4, fontStyle: 'italic' }}>
                   found in echo's network
                 </div>
