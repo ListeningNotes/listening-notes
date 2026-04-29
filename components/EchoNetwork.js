@@ -37,7 +37,7 @@ async function fetchNetworkArt() {
   return all;
 }
 
-const NODE_COUNT = 320;
+const NODE_COUNT = 200;
 const SPRING     = 0.0012;
 const DAMP       = 0.978;
 
