@@ -816,7 +816,16 @@ export default function ListenPage() {
           {/* Echo prompt + search */}
           <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: albums.length > 0 ? 'flex-start' : 'center', padding: '48px 24px', overflowY: 'auto' }}>
             <div style={{ width: '100%', maxWidth: 520, marginBottom: albums.length > 0 ? 36 : 0 }}>
-              <div style={{ textAlign: 'center', marginBottom: 32 }}>
+              <div style={{
+                background: 'rgba(200,196,190,0.38)',
+                backdropFilter: 'blur(18px)',
+                WebkitBackdropFilter: 'blur(18px)',
+                borderRadius: 22,
+                border: '1px solid rgba(255,255,255,0.45)',
+                padding: '28px 28px 24px',
+                boxShadow: '0 4px 32px rgba(0,0,0,0.06)',
+              }}>
+              <div style={{ textAlign: 'center', marginBottom: 24 }}>
                 <div style={{ fontFamily: fonts.sans, fontWeight: 700, fontSize: 26, color: '#1a1520', lineHeight: 1.2 }}>
                   what should we listen to?
                 </div>
@@ -859,6 +868,7 @@ export default function ListenPage() {
                   )}
                 </div>
               )}
+              </div> {/* end frosted card */}
             </div>
 
             {albums.length > 0 && (
