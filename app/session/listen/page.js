@@ -815,7 +815,7 @@ export default function ListenPage() {
           </div>
 
           {/* Echo prompt + search */}
-          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: albums.length > 0 ? 'flex-start' : 'center', padding: '48px 24px', overflowY: 'auto' }}>
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: albums.length > 0 ? 'flex-start' : 'center', padding: albums.length > 0 ? '32px 24px' : '0 24px', overflowY: 'auto' }}>
             <div style={{ width: '100%', maxWidth: 520, marginBottom: albums.length > 0 ? 36 : 0 }}>
               <div style={{
                 background: 'rgba(255,255,255,0.72)',
