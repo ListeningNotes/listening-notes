@@ -44,7 +44,7 @@ const DAMP       = 0.978;
 function makeNodes(w, h) {
   const cx   = w / 2;
   const cy   = h / 2;
-  const maxR = Math.min(w, h) * 0.44; // circle fits inside viewport
+  const maxR = Math.min(w, h) * 0.52; // circle fits inside viewport
 
   const nodes = Array.from({ length: NODE_COUNT }, () => {
     // sqrt gives uniform area distribution (no center clustering)
@@ -56,7 +56,7 @@ function makeNodes(w, h) {
       x, y, homeX: x, homeY: y,
       vx: (Math.random() - 0.5) * 0.3,
       vy: (Math.random() - 0.5) * 0.3,
-      size:  20 + Math.random() * 16,
+      size:  26 + Math.random() * 18,
       color: PALETTE[Math.floor(Math.random() * PALETTE.length)],
       opacity: 1,
       targetOpacity: 1,
