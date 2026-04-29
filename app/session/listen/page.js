@@ -762,6 +762,7 @@ export default function ListenPage() {
         .ln-art-done    { clip-path: inset(0%) !important; transition: clip-path 0.7s ease !important; }
         @keyframes ln-panel-appear { from{opacity:0;transform:translateY(14px) scale(0.99)} to{opacity:1;transform:translateY(0) scale(1)} }
         @keyframes ln-fade  { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes echo-breathe { 0%,100%{opacity:0.72;transform:scale(1)} 50%{opacity:1;transform:scale(1.012)} }
         @keyframes ln-pulse { 0%,100%{opacity:0.35} 50%{opacity:0.8} }
         @keyframes ln-dot   { 0%,80%,100%{opacity:0.18;transform:scale(0.7)} 40%{opacity:1;transform:scale(1)} }
         ::-webkit-scrollbar { width: 3px; }
@@ -829,7 +830,7 @@ export default function ListenPage() {
               {/* Inner gloss — matches hub cards */}
               <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(145deg, rgba(255,255,255,0.6) 0%, transparent 60%)', pointerEvents: 'none' }} />
               <div style={{ textAlign: 'center', marginBottom: 24 }}>
-                <div style={{ fontFamily: fonts.sans, fontWeight: 700, fontSize: 26, color: '#1a1520', lineHeight: 1.2 }}>
+                <div style={{ fontFamily: fonts.sans, fontWeight: 700, fontSize: 26, color: '#1a1520', lineHeight: 1.2, animation: 'echo-breathe 4.5s ease-in-out infinite', display: 'inline-block' }}>
                   what should we listen to?
                 </div>
               </div>
