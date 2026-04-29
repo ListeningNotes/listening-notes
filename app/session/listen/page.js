@@ -762,6 +762,7 @@ export default function ListenPage() {
         .ln-art-done    { clip-path: inset(0%) !important; transition: clip-path 0.7s ease !important; }
         @keyframes ln-panel-appear { from{opacity:0;transform:translateY(14px) scale(0.99)} to{opacity:1;transform:translateY(0) scale(1)} }
         @keyframes ln-fade  { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes echo-emerge { 0%{opacity:0;transform:scale(0.5)} 60%{transform:scale(1.04)} 100%{opacity:1;transform:scale(1)} }
         @keyframes echo-breathe { 0%,100%{opacity:0.72;transform:scale(1)} 50%{opacity:1;transform:scale(1.012)} }
         @keyframes ln-pulse { 0%,100%{opacity:0.35} 50%{opacity:0.8} }
         @keyframes ln-dot   { 0%,80%,100%{opacity:0.18;transform:scale(0.7)} 40%{opacity:1;transform:scale(1)} }
@@ -877,21 +878,24 @@ export default function ListenPage() {
 
             {albums.length > 0 && (
               <div style={{ width: '100%', maxWidth: 960 }}>
-                <div style={{ fontFamily: fonts.mono, fontWeight: 600, fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(26,21,32,0.4)', marginBottom: 16, paddingLeft: 4 }}>
-                  Albums by {albums[0]?.artist} — choose one to begin
+                <div style={{ fontFamily: fonts.mono, fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(26,21,32,0.32)', marginBottom: 20, paddingLeft: 4, fontStyle: 'italic' }}>
+                  found in echo's network
                 </div>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 14 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))', gap: 16 }}>
                   {albums.map((album, i) => (
                     <button key={i} onClick={() => handleAlbumPick(album)}
-                      style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left', borderRadius: 10, transition: 'transform 0.15s' }}
-                      onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-3px)'}
-                      onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
+                      style={{
+                        background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left',
+                        animation: `echo-emerge 0.45s cubic-bezier(0.34,1.2,0.64,1) ${i * 45}ms both`,
+                      }}
+                      onMouseEnter={e => e.currentTarget.querySelector('.album-art-wrap').style.transform = 'scale(1.05)'}
+                      onMouseLeave={e => e.currentTarget.querySelector('.album-art-wrap').style.transform = 'scale(1)'}
                     >
-                      <div style={{ borderRadius: 10, overflow: 'hidden', aspectRatio: '1', background: 'rgba(26,21,32,0.08)', marginBottom: 8, boxShadow: '0 4px 16px rgba(0,0,0,0.1)' }}>
+                      <div className="album-art-wrap" style={{ borderRadius: 4, overflow: 'hidden', aspectRatio: '1', background: 'rgba(26,21,32,0.06)', marginBottom: 8, boxShadow: '0 4px 20px rgba(0,0,0,0.12)', transition: 'transform 0.2s cubic-bezier(0.34,1.2,0.64,1)' }}>
                         {album.art && <img src={album.art} alt={album.name} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />}
                       </div>
-                      <div style={{ fontFamily: fonts.sans, fontWeight: 600, fontSize: 12, color: '#1a1520', lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{album.name}</div>
-                      {album.year && <div style={{ fontFamily: fonts.mono, fontSize: 10, color: 'rgba(26,21,32,0.4)', marginTop: 2 }}>{album.year}</div>}
+                      <div style={{ fontFamily: fonts.sans, fontWeight: 600, fontSize: 11, color: '#1a1520', lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{album.name}</div>
+                      {album.year && <div style={{ fontFamily: fonts.mono, fontSize: 10, color: 'rgba(26,21,32,0.35)', marginTop: 2 }}>{album.year}</div>}
                     </button>
                   ))}
                 </div>
