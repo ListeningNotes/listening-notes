@@ -176,18 +176,28 @@ export default function AlbumNetwork({ searchQuery = '', collapsed = false, albu
           onCollapsed?.();
         }
       } else {
-        // Breathing — slow sine expands/contracts the whole network
-        const breathe = 1 + 0.055 * Math.sin(now * 0.00055);
+        // Flow field — time-varying currents create school-of-fish movement
+        const t = now * 0.00028;
 
         nodes.forEach(n => {
-          // Home position pulses radially from center
-          const bx = cx + Math.cos(n.angle) * n.dist * breathe;
-          const by = cy + Math.sin(n.angle) * n.dist * breathe;
+          // Smooth noise via layered sines — each region gets a slowly rotating direction
+          const nx = n.homeX / w;
+          const ny = n.homeY / h;
+          const flowAngle =
+            Math.sin(nx * 4.1 + t * 1.3) * Math.cos(ny * 3.7 + t * 0.8) * Math.PI * 1.4 +
+            Math.sin(ny * 5.2 - t * 1.1) * Math.cos(nx * 2.9 + t * 0.6) * 0.9 +
+            Math.sin((nx + ny) * 3.8 + t * 0.5) * 0.6;
 
-          n.vx += (bx - n.x) * SPRING;
-          n.vy += (by - n.y) * SPRING;
-          n.vx *= DAMP;
-          n.vy *= DAMP;
+          // Flow pushes nodes like a current
+          n.vx += Math.cos(flowAngle) * 0.22;
+          n.vy += Math.sin(flowAngle) * 0.22;
+
+          // Soft spring back so they don't drift off
+          n.vx += (n.homeX - n.x) * 0.0009;
+          n.vy += (n.homeY - n.y) * 0.0009;
+
+          n.vx *= 0.955;
+          n.vy *= 0.955;
           n.x  += n.vx;
           n.y  += n.vy;
           n.opacity += (targetOpacity - n.opacity) * 0.04;
@@ -198,8 +208,8 @@ export default function AlbumNetwork({ searchQuery = '', collapsed = false, albu
       ctx.lineWidth = 0.4;
       edges.forEach(([i, j]) => {
         const a = nodes[i], b = nodes[j];
-        const alpha = Math.min(a.opacity, b.opacity) * 0.05;
-        if (alpha < 0.003) return;
+        const alpha = Math.min(a.opacity, b.opacity) * 0.22;
+        if (alpha < 0.01) return;
         ctx.strokeStyle = `rgba(80,70,110,${alpha.toFixed(3)})`;
         ctx.beginPath();
         ctx.moveTo(a.x, a.y);
