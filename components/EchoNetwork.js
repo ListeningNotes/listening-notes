@@ -13,7 +13,6 @@ async function fetchNetworkArt() {
         .catch(() => [])
     )
   );
-  // Deduplicate and shuffle
   const all = [...new Set(results.flat())];
   for (let i = all.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
@@ -23,16 +22,13 @@ async function fetchNetworkArt() {
 }
 
 const NODE_COUNT = 300;
-const SPRING     = 0.0012;
-const DAMP       = 0.978;
 
 function makeNodes(w, h) {
   const cx   = w / 2;
   const cy   = h / 2;
-  const maxR = Math.min(w, h) * 0.50; // circle fits inside viewport
+  const maxR = Math.min(w, h) * 0.50;
 
   const nodes = Array.from({ length: NODE_COUNT }, () => {
-    // sqrt gives uniform area distribution (no center clustering)
     const angle = Math.random() * Math.PI * 2;
     const r     = Math.sqrt(Math.random()) * maxR;
     const x     = cx + Math.cos(angle) * r;
@@ -43,14 +39,12 @@ function makeNodes(w, h) {
       vy: (Math.random() - 0.5) * 0.3,
       size:  26 + Math.random() * 18,
       opacity: 1,
-      targetOpacity: 1,
-      // spiral data
       angle: Math.atan2(y - h / 2, x - w / 2),
       dist:  Math.hypot(x - w / 2, y - h / 2),
+      isSpotlit: false,
     };
   });
 
-  // Sparse edges — 1–2 per node using nearby indices
   const edges = [];
   for (let i = 0; i < NODE_COUNT; i++) {
     const n = Math.random() < 0.45 ? 2 : 1;
@@ -76,23 +70,33 @@ function rrect(ctx, x, y, w, h, r) {
   ctx.closePath();
 }
 
-export default function AlbumNetwork({ searchQuery = '', collapsed = false, albumArt = '', onCollapsed }) {
+export default function AlbumNetwork({
+  searchQuery = '', collapsed = false, albumArt = '', onCollapsed,
+  dimmed = false, zooming = false,
+  spotlitArts = [], spotlit = false, onSpotlit = null,
+  cardsEmerging = false,
+}) {
   const canvasRef = useRef(null);
-  const propsRef  = useRef({ searchQuery, collapsed, albumArt, onCollapsed });
+  const propsRef  = useRef({ searchQuery, collapsed, albumArt, onCollapsed, zooming, spotlit, onSpotlit, cardsEmerging });
   const stateRef  = useRef({
     nodes: [], edges: [], w: 0, h: 0,
     collapseT: null, artImg: null, artOpacity: 0, collapseDone: false,
+    zoomT: null,
+    spotlitNodes: [],
+    spotlitT: null,
+    spotlitReported: false,
   });
 
   // Keep props in sync without restarting RAF
-  useEffect(() => { propsRef.current = { searchQuery, collapsed, albumArt, onCollapsed }; });
+  useEffect(() => { propsRef.current = { searchQuery, collapsed, albumArt, onCollapsed, zooming, spotlit, onSpotlit, cardsEmerging }; });
 
-  // Fetch real album art and assign to nodes as images load
+  // Fetch random network art and assign to nodes as images load
   useEffect(() => {
     fetchNetworkArt().then(urls => {
       const nodes = stateRef.current.nodes;
       if (!nodes.length) return;
       urls.slice(0, NODE_COUNT).forEach((url, i) => {
+        if (nodes[i].isSpotlit) return; // don't overwrite spotlit art
         const img = new Image();
         img.crossOrigin = 'anonymous';
         img.src = url;
@@ -101,7 +105,49 @@ export default function AlbumNetwork({ searchQuery = '', collapsed = false, albu
     });
   }, []);
 
-  // Preload art
+  // Load search result arts into specific evenly-distributed nodes
+  // These appear IN the network during turbulence, then get spotlit when zoomReady
+  useEffect(() => {
+    const s = stateRef.current;
+    const nodes = s.nodes;
+
+    // Clear previous spotlit nodes
+    s.spotlitNodes.forEach(n => {
+      n.isSpotlit = false;
+      n.size = n._origSize || n.size;
+    });
+    s.spotlitNodes = [];
+    s.spotlitT = null;
+    s.spotlitReported = false;
+
+    if (!spotlitArts.length || !nodes.length) return;
+
+    // Pick evenly distributed nodes by angle so they're spread around the circle
+    const byAngle = nodes
+      .map((n, i) => ({ n, i, angle: n.angle }))
+      .sort((a, b) => a.angle - b.angle);
+
+    const chosen = spotlitArts.map((_, i) => {
+      const idx = Math.floor((i / spotlitArts.length) * byAngle.length);
+      return byAngle[idx].n;
+    });
+
+    // Load search arts into those nodes, make them slightly larger so they stand out
+    spotlitArts.forEach((url, i) => {
+      if (!url || !chosen[i]) return;
+      chosen[i]._origSize = chosen[i].size;
+      chosen[i].size = 38; // consistent size for spotlit nodes
+      chosen[i].isSpotlit = true;
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => { chosen[i].img = img; };
+      img.src = url;
+    });
+
+    s.spotlitNodes = chosen;
+  }, [spotlitArts.join('|')]);
+
+  // Preload session album art (for collapse animation)
   useEffect(() => {
     if (!albumArt) return;
     const img = new Image();
@@ -123,25 +169,31 @@ export default function AlbumNetwork({ searchQuery = '', collapsed = false, albu
 
     let raf;
     function draw(now) {
-      const { searchQuery, collapsed, onCollapsed } = propsRef.current;
+      const { searchQuery, collapsed, onCollapsed, zooming, spotlit, onSpotlit, cardsEmerging } = propsRef.current;
       const { nodes, edges, w, h } = s;
       const cx = w / 2, cy = h / 2;
 
-      // Cream background
+      // Track zoom start for turbulence
+      if (zooming && s.zoomT === null) s.zoomT = now;
+      if (!zooming) s.zoomT = null;
+
+      // Track spotlit start
+      if (spotlit && s.spotlitNodes.length > 0 && s.spotlitT === null) s.spotlitT = now;
+      if (!spotlit) { s.spotlitT = null; s.spotlitReported = false; }
+
       ctx.fillStyle = '#f5f2ec';
       ctx.fillRect(0, 0, w, h);
 
-      const hasSearch    = searchQuery.trim().length > 0;
+      const hasSearch     = searchQuery.trim().length > 0;
       const targetOpacity = hasSearch ? 0.07 : 1;
 
-      // Trigger collapse
+      // Collapse animation
       if (collapsed && s.collapseT === null) s.collapseT = now;
 
       if (s.collapseT !== null) {
         const elapsed = (now - s.collapseT) / 800;
         const t       = Math.min(elapsed, 1);
-        const ease    = t * t * (3 - 2 * t); // smoothstep
-
+        const ease    = t * t * (3 - 2 * t);
         nodes.forEach(n => {
           const angle = n.angle + elapsed * 2.8;
           const dist  = n.dist * (1 - ease);
@@ -149,22 +201,18 @@ export default function AlbumNetwork({ searchQuery = '', collapsed = false, albu
           n.y = cy + Math.sin(angle) * dist;
           n.opacity = Math.max(0, 1 - t * 1.3);
         });
-
-        // Album art fades in at center
-        if (t > 0.45 && s.artImg) {
-          s.artOpacity = Math.min(1, (t - 0.45) / 0.55);
-        }
-
-        if (t >= 1 && !s.collapseDone) {
-          s.collapseDone = true;
-          onCollapsed?.();
-        }
+        if (t > 0.45 && s.artImg) s.artOpacity = Math.min(1, (t - 0.45) / 0.55);
+        if (t >= 1 && !s.collapseDone) { s.collapseDone = true; onCollapsed?.(); }
       } else {
-        // Flow field — time-varying currents create school-of-fish movement
+        // Flow field with turbulence burst on zoom
         const t = now * 0.00028;
+        const turbulence = s.zoomT !== null
+          ? Math.max(0, 1 - (now - s.zoomT) / 1800)
+          : 0;
+        const flowStrength   = 0.055 + turbulence * 0.32;
+        const springStrength = 0.004 - turbulence * 0.003;
 
         nodes.forEach(n => {
-          // Smooth noise via layered sines — each region gets a slowly rotating direction
           const nx = n.homeX / w;
           const ny = n.homeY / h;
           const flowAngle =
@@ -172,19 +220,41 @@ export default function AlbumNetwork({ searchQuery = '', collapsed = false, albu
             Math.sin(ny * 5.2 - t * 1.1) * Math.cos(nx * 2.9 + t * 0.6) * 0.9 +
             Math.sin((nx + ny) * 3.8 + t * 0.5) * 0.6;
 
-          // Flow pushes nodes like a gentle current
-          n.vx += Math.cos(flowAngle) * 0.055;
-          n.vy += Math.sin(flowAngle) * 0.055;
+          n.vx += Math.cos(flowAngle) * flowStrength;
+          n.vy += Math.sin(flowAngle) * flowStrength;
+          n.vx += (n.homeX - n.x) * springStrength;
+          n.vy += (n.homeY - n.y) * springStrength;
 
-          // Strong spring back keeps the circle shape intact
-          n.vx += (n.homeX - n.x) * 0.004;
-          n.vy += (n.homeY - n.y) * 0.004;
+          // Spotlit nodes: slow down to stabilise, and grow larger as they're "found"
+          if (n.isSpotlit && s.spotlitT !== null) {
+            n.vx *= 0.80;
+            n.vy *= 0.80;
+            n.size += (52 - n.size) * 0.055; // grow toward 52px
+          }
 
           n.vx *= 0.974;
           n.vy *= 0.974;
           n.x  += n.vx;
           n.y  += n.vy;
-          n.opacity += (targetOpacity - n.opacity) * 0.04;
+
+          // Opacity targeting:
+          // • Cards emerging: spotlit nodes fade to 0 — the DOM card IS the node leaving
+          // • Lock-on: spotlit stay full, irrelevant fade out
+          // • Scan phase (first 350ms): everything bright while Echo searches
+          let nodeTarget = targetOpacity;
+          let lerpRate   = 0.04;
+          if (cardsEmerging && n.isSpotlit) {
+            nodeTarget = 0;
+            lerpRate   = 0.10; // fade out faster than normal
+          } else if (spotlit && s.spotlitT !== null) {
+            const age = now - s.spotlitT;
+            if (age < 350) {
+              nodeTarget = 1.0;
+            } else {
+              nodeTarget = n.isSpotlit ? 1.0 : 0.06;
+            }
+          }
+          n.opacity += (nodeTarget - n.opacity) * lerpRate;
         });
       }
 
@@ -201,24 +271,55 @@ export default function AlbumNetwork({ searchQuery = '', collapsed = false, albu
         ctx.stroke();
       });
 
-      // Nodes
-      nodes.forEach(n => {
+      function drawNode(n) {
         if (n.opacity < 0.008) return;
+        if (!n.img?.complete || n.img.naturalWidth === 0) return;
         ctx.globalAlpha = n.opacity;
         const hs = n.size / 2;
+        ctx.save();
+        rrect(ctx, n.x - hs, n.y - hs, n.size, n.size, 3);
+        ctx.clip();
+        ctx.drawImage(n.img, n.x - hs, n.y - hs, n.size, n.size);
+        ctx.restore();
+      }
 
-        if (n.img?.complete && n.img.naturalWidth > 0) {
-          ctx.save();
-          rrect(ctx, n.x - hs, n.y - hs, n.size, n.size, 2);
-          ctx.clip();
-          ctx.drawImage(n.img, n.x - hs, n.y - hs, n.size, n.size);
-          ctx.restore();
-        }
-        // Skip entirely until art loads — no color fallback
-      });
+      // Irrelevant nodes first, found nodes on top so they're never obscured
+      nodes.forEach(n => { if (!n.isSpotlit) drawNode(n); });
+      nodes.forEach(n => { if (n.isSpotlit)  drawNode(n); });
       ctx.globalAlpha = 1;
 
-      // Album art at center during collapse
+      // Spotlit glow — white halos pulse around found nodes, only after scan phase
+      if (s.spotlitT !== null && s.spotlitNodes.length > 0) {
+        const elapsed = now - s.spotlitT;
+        if (elapsed > 350) {
+          const glowAge = elapsed - 350; // time since lock-on
+          s.spotlitNodes.forEach((n, i) => {
+            if (n.opacity < 0.3) return;
+            // Fade glow in over first 200ms of lock-on so it doesn't snap
+            const fadeIn = Math.min(1, glowAge / 200);
+            const pulse  = 0.5 + 0.5 * Math.sin(glowAge * 0.005 + i * 1.1);
+            const innerR = n.size / 2;
+            const outerR = innerR + 12 + pulse * 10;
+
+            const grad = ctx.createRadialGradient(n.x, n.y, innerR * 0.6, n.x, n.y, outerR + 8);
+            grad.addColorStop(0,   `rgba(255,255,255,${(0.85 * pulse * fadeIn).toFixed(3)})`);
+            grad.addColorStop(0.4, `rgba(255,255,255,${(0.35 * pulse * fadeIn).toFixed(3)})`);
+            grad.addColorStop(1,   'rgba(255,255,255,0)');
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            ctx.arc(n.x, n.y, outerR + 8, 0, Math.PI * 2);
+            ctx.fill();
+          });
+
+          // Report positions 650ms after lock-on (nodes have grown and settled)
+          if (!s.spotlitReported && glowAge > 650 && onSpotlit) {
+            s.spotlitReported = true;
+            onSpotlit(s.spotlitNodes.map(n => ({ x: n.x, y: n.y, size: n.size })));
+          }
+        }
+      }
+
+      // Collapse centre art
       if (s.artImg && s.artOpacity > 0) {
         const sz = 88;
         ctx.globalAlpha = s.artOpacity;
@@ -240,7 +341,13 @@ export default function AlbumNetwork({ searchQuery = '', collapsed = false, albu
   return (
     <canvas
       ref={canvasRef}
-      style={{ position: 'fixed', inset: 0, zIndex: 0, display: 'block' }}
+      style={{
+        position: 'fixed', inset: 0, zIndex: 0, display: 'block',
+        opacity: dimmed ? 0.12 : 1,
+        transform: zooming ? 'scale(1.65)' : 'scale(1)',
+        transition: 'transform 2.2s cubic-bezier(0.25,1.0,0.5,1), opacity 1.8s ease',
+        transformOrigin: 'center center',
+      }}
     />
   );
 }
