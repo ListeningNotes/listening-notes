@@ -6,7 +6,7 @@
 
 **DEV**
 - [ ] Connect domain listeningnotes.blog (currently pointing to Tumblr)
-- [ ] Instagram + Reddit auto-distribution (placeholder lives at `/session/share`; real implementation pending — see to-do list on that page)
+- [ ] Instagram + Reddit auto-distribution (placeholder lives at `/dashboard/share`; real implementation pending — see to-do list on that page)
 
 **HOME**
 - [ ] Brainstorm alternative to scrolling album strip for recent entries
@@ -27,12 +27,12 @@
 - [ ] `/compare` — design + build (currently coming-soon placeholder)
 - [ ] Slug page (`/entries/[slug]`) — full redesign
 
-**SESSION**
+**DASHBOARD**
 - [ ] Spotify data panel (monthly listeners, artist ranking)
 - [ ] Discogs genre tags via Claude API
 - [ ] Apple Music playback (requires MusicKit JS + Apple developer account)
-- [ ] Inbox (/session/inbox) — build out with Comments + Submissions tabs
-- [ ] Share (/session/share) — wire Reddit + Instagram backends (currently placeholder)
+- [ ] Inbox (`/dashboard/inbox`) — build out with Comments + Submissions tabs
+- [ ] Share (`/dashboard/share`) — wire Reddit + Instagram backends (currently placeholder)
 
 **SECURITY**
 - [ ] Upvote abuse prevention (IP or cookie check)
@@ -56,20 +56,13 @@ In Vercel dashboard → Project → Settings → Environment Variables, confirm/
 - `DATABASE_URL` (already there)
 - `ANTHROPIC_API_KEY` (already there)
 
-**Step 3 — Merge `session-redesign` → `main`:**
-```
-git checkout main
-git merge session-redesign     # fast-forward, no conflicts expected
-git push origin main           # this triggers Vercel deploy
-```
-
-**Step 4 — Smoke-test prod:**
+**Step 3 — Smoke-test prod:**
 - `/` (homepage)
 - `/about`, `/archive`, `/shuffle`, `/compare`
-- `/session` — log in with new password
+- `/dashboard` — log in with new password
 - Run a real listen session end-to-end
 
-**Step 5 — If anything breaks:**
+**Step 4 — If anything breaks:**
 Vercel dashboard → Deployments → click last good deploy → "Promote to Production" rolls back instantly.
 
 ---
@@ -80,12 +73,12 @@ Vercel dashboard → Deployments → click last good deploy → "Promote to Prod
 - [x] Public `/compare` placeholder route
 - [x] Public `/shuffle` route — server-side random redirect to a random entry
 - [x] TopNav flattened — About · Archive · Compare · Submit · Surprise (no dropdowns)
-- [x] Session hub — fourth card added (Share) with placeholder route at `/session/share`
+- [x] Session hub — fourth card added (Share) with placeholder route at `/dashboard/share`
 - [x] Phase 1 display fixes — favorite indicator, masterpiece logic (all-tracks-5★ rule), simultaneous horizon bar animation, star display glitch, track_notes wiring across modal + slug page
 - [x] Session auth — real JWT cookie protection (wristband system) on all session API routes
 - [x] Public /submit page — album, artist, year, note, optional name/email
 - [x] Submissions DB table + API routes (POST, GET, PATCH status)
-- [x] Session submissions inbox (/session/submissions) — tabs, note preview, listen/dismiss
+- [x] Session submissions inbox (/dashboard/submissions) — tabs, note preview, listen/dismiss
 - [x] Session hub redesigned — three horizontal app-icon cards
 - [x] Ln. logo in TopNav, inverts for dark mode
 - [x] NavBeacon added to TopNav on all pages, hidden on homepage
@@ -105,18 +98,17 @@ Vercel dashboard → Deployments → click last good deploy → "Promote to Prod
 - [x] Session: frosted loading overlay with fill animation
 - [x] Session: album art full-bleed background with glass panels
 - [x] Session: draft auto-save to localStorage
-- [x] Session: /session/entries CMS
+- [x] Session: /dashboard/entries CMS
 - [x] Session: AI chat companion (Echo)
 - [x] Comments pending moderation queue
 - [x] Format route preserves writer voice
 - [x] PATCH route for /api/entries/[slug]
-- [x] Session: full redesign at /session/listen — sidebar layout, 6-step flow (Debrief, Tracks, Notes, Reflect, Tags, Preview)
-- [x] Session: frosted glass panel with blurred art background
-- [x] Session: grayscale-to-color fill-in on loading background (B&W art revealed by color sweep)
+- [x] Session: full 6-step flow (Debrief, Tracks, Notes, Reflect, Tags, Preview) — sidebar layout, frosted glass panel, blurred art background, grayscale-to-color fill animation
 - [x] Session: rating + Masterpiece/Favorite merged into Album Notes step
-- [x] Session: hub page at /session — clean 3-button layout (Listen, Entries, Inbox)
-- [x] Session: /session/inbox placeholder route
 - [x] Session: animated canvas backgrounds (9 unique scenes — Rain, DVD, Gallery, Fizzy, SplitScreen, Snake, Pong, Solitaire, Reel) — randomly assigned on load, each uses album art from listening history
+- [x] Echo album discovery — artist search → EchoNetwork canvas animation → album cards reel in from nodes → flying album pick animation → PreListenQuestionnaire (Q1: relationship, Q2: source)
+- [x] URL restructure — `/session` → `/dashboard`, listening experience split into `/dashboard/echo` (album search) + `/dashboard/echo/session` (note-taking)
+- [x] 1,362-line monolith refactored into hooks + step components: `useAlbumSelection`, `useListeningSession`, `SessionButton`, six step components in `steps/`, shared styles in `library/session_styles.js`
 
 ---
 
@@ -135,6 +127,7 @@ Think of the codebase as a house. Every piece has a room.
 | `slug_generator.js` | `create_slug` — turns "Pet Sounds" into "pet-sounds" |
 | `entry_formatter.js` | Parses entry data for display: `parseHorizon`, `parseTracksFromNotes`, `splitNotes`, `parseRating` |
 | `sitewide_visuals.js` | Design tokens: all colors and fonts. Change here = changes everywhere. |
+| `session_styles.js` | Style helpers scoped to the session panel: `tx()`, `bdr()`, `dk()`, `lbl` |
 | `ai_integration.js` | Claude API calls: `research_album`, `format_post`, `ask_echo` |
 | `music_data_api.js` | External music APIs: `fetchTracklist` (MusicBrainz), `fetchAlbumArtUrl` (iTunes), `searchArtistAlbums` (iTunes) |
 | `session_timers.js` | `TrackLength`, `SessionDuration`, `LOADING_PHRASES` |
@@ -157,12 +150,12 @@ Think of the codebase as a house. Every piece has a room.
 | `POST /api/comments/upvote` | Upvotes a comment |
 | `POST /api/research` | Calls Claude to research an album |
 | `POST /api/format` | Calls Claude to format raw notes into a post |
-| `POST /api/reflect` | Calls Claude as listening companion (Echo) |
+| `POST /api/echo` | Echo AI — research briefing, reflection chat, floating chat panel |
 | `POST /api/auth/login` | Checks password, issues wristband cookie |
 | `POST /api/auth/logout` | Clears wristband cookie |
 | `GET /api/auth/check` | Returns `{authed: true/false}` based on wristband cookie |
 
-Protected routes (require wristband cookie): `POST /api/entries`, `PATCH/DELETE /api/entries/[slug]`, `POST /api/research`, `POST /api/format`, `POST /api/reflect`. Public routes stay public: all GETs, `/api/comments`, `/api/submissions`.
+Protected routes (require wristband cookie): `POST /api/entries`, `PATCH/DELETE /api/entries/[slug]`, `POST /api/research`, `POST /api/format`, `POST /api/echo`. Public routes stay public: all GETs, `/api/comments`, `/api/submissions`.
 
 ---
 
@@ -189,23 +182,45 @@ Protected routes (require wristband cookie): `POST /api/entries`, `PATCH/DELETE 
 | `Slug_Page/MetadataLabelInline.js` | Section label (no border, inline) |
 | `Slug_Page/Chip.js` | Pill tag (relationship, type, favorite) |
 
-**`session_components/`** — private session tool UI
+**`session_components/`** — private dashboard UI
 | File | What it does |
 |------|-------------|
 | `PasswordGate.js` | Password screen |
-| `AlbumSelection.js` | Artist search + album grid picker |
-| `LoadingResearch.js` | Full-screen loading overlay during research |
+| `SessionButton.js` | Frosted pill button — accent=true gives yellow-green highlight |
 | `StarRating.js` | Interactive star input (click to rate) |
-| `backgrounds/Rain.js` | Album art tiles falling in sparse lanes at varying sizes/speeds |
+| `steps/AlbumDebrief.js` | Step 0 — Echo narrative + raw research sections |
+| `steps/TrackNotes.js` | Step 1 — expandable track list with per-track notes and ratings |
+| `steps/AlbumNotes.js` | Step 2 — star rating, Masterpiece/Favorite flags, free-text notes |
+| `steps/ReflectChat.js` | Step 3 — Echo-powered reflection chat with quick-prompt shortcuts |
+| `steps/TagsEditor.js` | Step 4 — add/remove/review tags before preview |
+| `steps/SessionPreview.js` | Step 5 — formatted entry preview with save action |
+| `steps/PreListenQuestionnaire.js` | Two questions before research fires (relationship + source) |
+| `backgrounds/Rain.js` | Album art tiles falling in sparse lanes |
 | `backgrounds/DVD.js` | Single album bouncing wall-to-wall DVD-style |
 | `backgrounds/Gallery.js` | Slow-drifting full-bleed album panorama |
 | `backgrounds/Fizzy.js` | Floating bubbles of album art |
 | `backgrounds/SplitScreen.js` | Screen split into panels, each cycling albums |
 | `backgrounds/Snake.js` | Snake game played with album tiles |
-| `backgrounds/Pong.js` | Pong — album art as the ball, diagonal physics |
-| `backgrounds/Solitaire.js` | Album cards tossed from random positions, leaving ghost trails |
-| `backgrounds/Reel.js` | Album carousel spinning on a 3D reel, starts spinning on load |
+| `backgrounds/Pong.js` | Pong — album art as the ball |
+| `backgrounds/Solitaire.js` | Album cards tossed from random positions |
+| `backgrounds/Reel.js` | Album carousel spinning on a 3D reel |
 | `backgrounds/index.js` | Exports all backgrounds as a named array |
+
+**Top-level components**
+| File | What it does |
+|------|-------------|
+| `EchoNetwork.js` | Canvas animation — floating nodes that become album art |
+| `EchoOrb.js` | Compact 56px orb, pulsing mood indicator during session |
+| `EchoChat.js` | Floating chat panel for talking to Echo mid-session |
+
+---
+
+### Hooks
+| File | What it does |
+|------|-------------|
+| `hooks/useListeningBeacon.js` | Polls Last.fm every 15s for current track. Used by Hero and NavBeacon. |
+| `hooks/useAlbumSelection.js` | Owns the full album search and selection flow: artist search, EchoNetwork animation, card phases, grid pagination, fly-to-center animation, manual entry |
+| `hooks/useListeningSession.js` | Owns every API call and piece of state for an active session: research, notes, tracks, ratings, tags, Echo chat, formatting, saving |
 
 ---
 
@@ -222,17 +237,14 @@ Protected routes (require wristband cookie): `POST /api/entries`, `PATCH/DELETE 
 | `submit/page.js` | `/submit` | Public album submission form |
 | `entries/[slug]/page.js` | `/entries/pet-sounds` | Fetches entry server-side, passes to FullPostPage |
 | `entries/[slug]/FullPostPage.js` | — | Full public post page with comments |
-| `session/page.js` | `/session` | Hub — password gate + 4 buttons (Listen, Entries, Inbox, Share) |
-| `session/listen/page.js` | `/session/listen` | Full listening session — 6-step flow, sidebar, frosted panel |
-| `session/entries/page.js` | `/session/entries` | Private CMS — edit/delete all entries |
-| `session/submissions/page.js` | `/session/submissions` | Submission inbox — pending/reviewed/dismissed tabs |
-| `session/inbox/page.js` | `/session/inbox` | Inbox — placeholder, not yet built |
-| `session/share/page.js` | `/session/share` | Share placeholder — Reddit/Instagram integration to-do list |
-
----
-
-### Hooks
-`/hooks/useListeningBeacon.js` — polls Last.fm every 15s for current track. Used by Hero and NavBeacon.
+| `dashboard/page.js` | `/dashboard` | Hub — password gate + 4 buttons (Listen, Entries, Inbox, Share) |
+| `dashboard/echo/page.js` | `/dashboard/echo` | Album search — EchoNetwork, artist search, album grid, PreListenQuestionnaire |
+| `dashboard/echo/session/page.js` | `/dashboard/echo/session` | Full listening session — 6-step flow, sidebar, frosted panel |
+| `dashboard/entries/page.js` | `/dashboard/entries` | Private CMS — edit/delete all entries |
+| `dashboard/submissions/page.js` | `/dashboard/submissions` | Submission inbox — pending/reviewed/dismissed tabs |
+| `dashboard/inbox/page.js` | `/dashboard/inbox` | Inbox — placeholder, not yet built |
+| `dashboard/share/page.js` | `/dashboard/share` | Share placeholder — Reddit/Instagram integration to-do list |
+| `dashboard/bg-test/page.js` | `/dashboard/bg-test` | Dev tool — preview all 9 canvas backgrounds |
 
 ---
 
