@@ -1,0 +1,351 @@
+'use client';
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { fonts } from '../../library/sitewide_visuals';
+import { useAlbumSelection } from '../../hooks/useAlbumSelection';
+import PasswordGate from '../../components/session_components/PasswordGate';
+import EchoNetwork from '../../components/EchoNetwork';
+import PreListenQuestionnaire from '../../components/session_components/steps/PreListenQuestionnaire';
+import { useEffect } from 'react';
+
+// Calculate where each album card will land in the final centered flex-wrap grid.
+// Returns [{x, y}] — top-left corner of each card in viewport coords.
+function calcGridTargets(count) {
+  const W = window.innerWidth;
+  const H = window.innerHeight;
+  const CARD = 160, GAP = 20, TOP_BAR = 52, PER_ROW = 5;
+  const rows       = Math.ceil(count / PER_ROW);
+  const gridH      = rows * CARD + (rows - 1) * GAP;
+  const gridW      = PER_ROW * CARD + (PER_ROW - 1) * GAP;
+  const startY     = TOP_BAR + Math.max(0, (H - TOP_BAR - gridH) / 2);
+
+  return Array.from({ length: count }, (_, i) => {
+    const row      = Math.floor(i / PER_ROW);
+    const col      = i % PER_ROW;
+    const rowCount = Math.min(count - row * PER_ROW, PER_ROW);
+    const rowW     = rowCount * CARD + (rowCount - 1) * GAP;
+    const rowStartX = (W - rowW) / 2;
+    return { x: rowStartX + col * (CARD + GAP), y: startY + row * (CARD + GAP) };
+  });
+}
+
+export default function EchoPage() {
+  const router = useRouter();
+
+  const [authed, setAuthed]   = useState(false);
+  const [checking, setChecking] = useState(true);
+
+  // Confirm flow — two sequential questions before research fires
+  const [confirmPhase, setConfirmPhase] = useState(null); // null | 'q1' | 'q2'
+  const [pendingAlbum, setPendingAlbum] = useState(null);
+
+  // Held here so they're available at the moment handleAlbumSelect fires
+  const [relationship, setRelationship] = useState('');
+  const [entryType, setEntryType]       = useState('');
+
+  // Album search + Echo network animation
+  const {
+    artistInput, setArtistInput,
+    albums,
+    searching,
+    revealed,
+    zoomReady,
+    echoFaded,
+    albumPage, setAlbumPage,
+    nodePositions,
+    cardPhase,
+    manualAlbum, setManualAlbum,
+    showManual, setShowManual,
+    pickingAlbum,
+    pickReady,
+    handleReveal,
+    handleClearSearch,
+    handleSpotlit,
+    handleGridAlbumClick,
+    handleAlbumPick,
+    handleManualSubmit,
+  } = useAlbumSelection({
+    step: -1,
+    onAlbumPick({ album, artist, year, artUrl }) {
+      setPendingAlbum({ album, artist, year, artUrl });
+      setRelationship('');
+      setEntryType('');
+      setConfirmPhase('q1');
+    },
+  });
+
+  useEffect(() => {
+    fetch('/api/auth/check')
+      .then(r => r.json())
+      .then(d => setAuthed(!!d.authed))
+      .catch(() => {})
+      .finally(() => setChecking(false));
+  }, []);
+
+  function handleAuth() { setAuthed(true); }
+
+  // Called after Q2 is answered — save pending data and navigate to session page
+  function handleAlbumSelect({ album, artist, year, artUrl }) {
+    const pending = { album, artist, year, artUrl, relationship, entryType };
+    localStorage.setItem('ln_pending_session', JSON.stringify(pending));
+    router.push('/echo/session');
+  }
+
+  if (checking) return <div style={{ minHeight: '100vh', background: '#f5f2ec' }} />;
+  if (!authed) return <PasswordGate onAuth={handleAuth} />;
+
+  return (
+    <>
+      <style>{`
+        @keyframes echo-grid-emerge { 0%{opacity:0;transform:scale(0.05)} 60%{transform:scale(1.03)} 100%{opacity:1;transform:scale(1)} }
+        @keyframes echo-card-in { 0%{opacity:0;transform:scale(0.78)} 100%{opacity:1;transform:scale(1)} }
+        @keyframes echo-reel-in { 0%{opacity:0;transform:translate(var(--nx),var(--ny)) scale(0.12)} 28%{opacity:1} 100%{opacity:1;transform:translate(0,0) scale(1)} }
+        @keyframes echo-breathe { 0%,100%{opacity:0.72;transform:scale(1)} 50%{opacity:1;transform:scale(1.012)} }
+        @keyframes ln-fade  { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes ln-pulse { 0%,100%{opacity:0.35} 50%{opacity:0.8} }
+        @keyframes confirm-glow { 0%,100%{box-shadow:0 0 32px 12px rgba(255,255,255,0.55),0 0 70px 28px rgba(255,255,255,0.22),0 12px 40px rgba(0,0,0,0.28)} 50%{box-shadow:0 0 48px 20px rgba(255,255,255,0.78),0 0 100px 44px rgba(255,255,255,0.32),0 12px 40px rgba(0,0,0,0.28)} }
+        ::-webkit-scrollbar { width: 3px; }
+        ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 99px; }
+        input::placeholder  { color: rgba(255,255,255,0.3); }
+      `}</style>
+
+      {/* ── EchoNetwork — landing backdrop ── */}
+      <EchoNetwork
+        searchQuery=''
+        collapsed={false}
+        albumArt={pendingAlbum?.artUrl || ''}
+        onCollapsed={() => {}}
+        dimmed={echoFaded}
+        zooming={revealed}
+        spotlitArts={albums.slice(albumPage * 15, (albumPage + 1) * 15).map(a => a.art || '')}
+        spotlit={zoomReady && cardPhase !== 'grid'}
+        onSpotlit={handleSpotlit}
+        cardsEmerging={cardPhase === 'growing'}
+      />
+
+      {/* ── ALBUM SEARCH (no confirm) ── */}
+      {!confirmPhase && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 1, display: 'flex', flexDirection: 'column' }}>
+
+          {/* Top bar */}
+          <div style={{ padding: '14px 28px', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 12 }}>
+            <a href="/dashboard" style={{ fontFamily: fonts.mono, fontWeight: 600, fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(26,21,32,0.5)', textDecoration: 'none', padding: '6px 10px', borderRadius: 8, border: '1px solid rgba(26,21,32,0.12)', background: 'rgba(245,242,236,0.6)', backdropFilter: 'blur(8px)', flexShrink: 0 }}>← Dashboard</a>
+            {revealed && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(245,242,236,0.72)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(26,21,32,0.14)', borderRadius: 20, padding: '7px 8px 7px 16px', animation: 'ln-fade 0.25s ease' }}>
+                <span style={{ fontFamily: fonts.sans, fontSize: 14, color: '#1a1520' }}>{artistInput}</span>
+                <button onClick={handleClearSearch} style={{ width: 22, height: 22, borderRadius: '50%', background: 'rgba(26,21,32,0.1)', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, color: 'rgba(26,21,32,0.55)', lineHeight: 1, padding: 0, flexShrink: 0 }}>×</button>
+              </div>
+            )}
+          </div>
+
+          {/* Frosted prompt card */}
+          {!revealed && (
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 24px' }}>
+              <div style={{ width: '100%', maxWidth: 520 }}>
+                <div style={{
+                  background: 'rgba(255,255,255,0.45)',
+                  backdropFilter: 'blur(18px)',
+                  WebkitBackdropFilter: 'blur(18px)',
+                  borderRadius: 40,
+                  boxShadow: '0 8px 32px rgba(0,0,0,0.08)',
+                  padding: '32px 32px 28px',
+                  position: 'relative',
+                  overflow: 'hidden',
+                }}>
+                  <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(145deg, rgba(255,255,255,0.6) 0%, transparent 60%)', pointerEvents: 'none' }} />
+                  <div style={{ textAlign: 'center', marginBottom: 24 }}>
+                    <div style={{ fontFamily: fonts.sans, fontWeight: 700, fontSize: 26, color: '#1a1520', lineHeight: 1.2 }}>
+                      Who do you want to listen to?
+                    </div>
+                  </div>
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      value={artistInput}
+                      onChange={e => setArtistInput(e.target.value)}
+                      onKeyDown={e => e.key === 'Enter' && handleReveal()}
+                      placeholder="search by artist..."
+                      style={{ width: '100%', boxSizing: 'border-box', background: 'rgba(245,242,236,0.72)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(26,21,32,0.14)', borderRadius: 14, padding: '16px 22px', fontFamily: fonts.sans, fontWeight: 400, fontSize: 16, color: '#1a1520', outline: 'none', boxShadow: '0 2px 20px rgba(0,0,0,0.06)' }}
+                      onFocus={e => e.target.style.borderColor = 'rgba(26,21,32,0.4)'}
+                      onBlur={e => e.target.style.borderColor = 'rgba(26,21,32,0.14)'}
+                      autoFocus
+                    />
+                    {searching && (
+                      <div style={{ position: 'absolute', right: 18, top: '50%', transform: 'translateY(-50%)', fontFamily: fonts.mono, fontSize: 11, color: 'rgba(26,21,32,0.3)', letterSpacing: '0.06em' }}>…</div>
+                    )}
+                  </div>
+                  {artistInput.trim() && (
+                    <div style={{ marginTop: 12, display: 'flex', gap: 8, alignItems: 'center' }}>
+                      {!showManual ? (
+                        <button onClick={() => setShowManual(true)} style={{ fontFamily: fonts.mono, fontWeight: 600, fontSize: 11, letterSpacing: '0.08em', color: 'rgba(26,21,32,0.4)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+                          + type album manually
+                        </button>
+                      ) : (
+                        <>
+                          <input value={manualAlbum} onChange={e => setManualAlbum(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleManualSubmit()} placeholder="album title..." autoFocus style={{ flex: 1, background: 'rgba(245,242,236,0.8)', border: '1px solid rgba(26,21,32,0.14)', borderRadius: 8, padding: '9px 14px', fontFamily: fonts.mono, fontSize: 12, color: '#1a1520', outline: 'none' }} />
+                          <button onClick={handleManualSubmit} disabled={!manualAlbum.trim()} style={{ background: '#1a1520', color: '#f5f2ec', border: 'none', borderRadius: 8, padding: '9px 18px', fontFamily: fonts.mono, fontWeight: 700, fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer', opacity: manualAlbum.trim() ? 1 : 0.3 }}>Start →</button>
+                        </>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Growing phase */}
+          {cardPhase === 'growing' && nodePositions && (() => {
+            const CARD     = 160;
+            const pageAlbums = albums.slice(albumPage * 15, (albumPage + 1) * 15);
+            const count    = Math.min(pageAlbums.length, nodePositions.length);
+            const targets  = calcGridTargets(count);
+            return (
+              <div style={{ position: 'fixed', inset: 0, zIndex: 4, pointerEvents: 'none' }}>
+                {pageAlbums.map((album, i) => {
+                  if (i >= count) return null;
+                  const node   = nodePositions[i];
+                  const target = targets[i];
+                  const nx = node.x - CARD / 2 - target.x;
+                  const ny = node.y - CARD / 2 - target.y;
+                  return (
+                    <div
+                      key={i}
+                      onClick={e => { e.stopPropagation(); handleAlbumPick(album); }}
+                      style={{
+                        position: 'fixed',
+                        left: target.x,
+                        top:  target.y,
+                        width: CARD,
+                        pointerEvents: 'auto',
+                        cursor: 'pointer',
+                        textAlign: 'left',
+                        '--nx': `${nx}px`,
+                        '--ny': `${ny}px`,
+                        animation: `echo-reel-in 0.75s cubic-bezier(0.25,1.0,0.5,1) ${i * 120}ms both`,
+                      }}
+                    >
+                      <div style={{ borderRadius: 6, overflow: 'hidden', aspectRatio: '1', boxShadow: '0 8px 40px rgba(0,0,0,0.35)', width: CARD }}>
+                        {album.art && <img src={album.art} alt={album.name} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />}
+                      </div>
+                      <div style={{ fontFamily: fonts.sans, fontWeight: 600, fontSize: 11, color: '#1a1520', marginTop: 8, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{album.name}</div>
+                      {album.year && <div style={{ fontFamily: fonts.mono, fontSize: 10, color: 'rgba(26,21,32,0.4)', marginTop: 2 }}>{album.year}</div>}
+                    </div>
+                  );
+                })}
+              </div>
+            );
+          })()}
+
+          {/* Grid phase */}
+          {revealed && cardPhase === 'grid' && (
+            <div
+              onClick={handleClearSearch}
+              style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', overflowY: 'auto', padding: '0 32px 32px' }}
+            >
+              {albums.length > 0 && (() => {
+                const CARDS_PER_PAGE = 15;
+                const totalPages = Math.ceil(albums.length / CARDS_PER_PAGE);
+                const pageAlbums = albums.slice(albumPage * CARDS_PER_PAGE, (albumPage + 1) * CARDS_PER_PAGE);
+                return (
+                  <div onClick={e => e.stopPropagation()} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 28, width: '100%', maxWidth: 960 }}>
+                    <div key={albumPage} style={{ width: '100%', animation: 'ln-fade 0.5s ease both' }}>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 20, justifyContent: 'center' }}>
+                        {pageAlbums.map((album, i) => (
+                          <button key={albumPage + '-' + i}
+                            onClick={e => handleGridAlbumClick(e, album)}
+                            style={{
+                              width: 160, flexShrink: 0,
+                              background: 'none', border: 'none', padding: 0,
+                              cursor: pickingAlbum ? 'default' : 'pointer', textAlign: 'left',
+                              opacity: pickingAlbum ? 0 : 1,
+                              transform: pickingAlbum ? 'scale(0.96)' : 'scale(1)',
+                              transition: 'opacity 0.22s ease, transform 0.22s ease',
+                              pointerEvents: pickingAlbum ? 'none' : 'auto',
+                            }}
+                            onMouseEnter={e => { if (!pickingAlbum) e.currentTarget.querySelector('.album-art-wrap').style.transform = 'scale(1.06)'; }}
+                            onMouseLeave={e => e.currentTarget.querySelector('.album-art-wrap').style.transform = 'scale(1)'}
+                          >
+                            <div className="album-art-wrap" style={{ borderRadius: 6, overflow: 'hidden', aspectRatio: '1', marginBottom: 8, boxShadow: '0 6px 28px rgba(0,0,0,0.22)', transition: 'transform 0.2s cubic-bezier(0.34,1.2,0.64,1)' }}>
+                              {album.art && <img src={album.art} alt={album.name} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />}
+                            </div>
+                            <div style={{ fontFamily: fonts.sans, fontWeight: 600, fontSize: 11, color: '#1a1520', lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{album.name}</div>
+                            {album.year && <div style={{ fontFamily: fonts.mono, fontSize: 10, color: 'rgba(26,21,32,0.4)', marginTop: 2 }}>{album.year}</div>}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {totalPages > 1 && (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+                        <button onClick={() => setAlbumPage(p => Math.max(0, p - 1))} disabled={albumPage === 0} style={{ width: 36, height: 36, borderRadius: '50%', background: albumPage === 0 ? 'rgba(245,242,236,0.3)' : 'rgba(245,242,236,0.75)', backdropFilter: 'blur(8px)', border: '1px solid rgba(26,21,32,0.12)', cursor: albumPage === 0 ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, color: albumPage === 0 ? 'rgba(26,21,32,0.2)' : 'rgba(26,21,32,0.6)', transition: 'all 0.2s' }}>←</button>
+                        <span style={{ fontFamily: fonts.mono, fontSize: 10, color: 'rgba(26,21,32,0.35)', letterSpacing: '0.1em' }}>{albumPage + 1} / {totalPages}</span>
+                        <button onClick={() => setAlbumPage(p => Math.min(totalPages - 1, p + 1))} disabled={albumPage === totalPages - 1} style={{ width: 36, height: 36, borderRadius: '50%', background: albumPage === totalPages - 1 ? 'rgba(245,242,236,0.3)' : 'rgba(245,242,236,0.75)', backdropFilter: 'blur(8px)', border: '1px solid rgba(26,21,32,0.12)', cursor: albumPage === totalPages - 1 ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16, color: albumPage === totalPages - 1 ? 'rgba(26,21,32,0.2)' : 'rgba(26,21,32,0.6)', transition: 'all 0.2s' }}>→</button>
+                      </div>
+                    )}
+                  </div>
+                );
+              })()}
+              {!searching && albums.length === 0 && (
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, animation: 'ln-fade 0.6s ease' }}>
+                  <div style={{ fontFamily: fonts.mono, fontSize: 11, color: 'rgba(26,21,32,0.4)', letterSpacing: '0.06em' }}>nothing found</div>
+                  <button onClick={handleClearSearch} style={{ fontFamily: fonts.mono, fontSize: 10, color: 'rgba(26,21,32,0.5)', background: 'rgba(245,242,236,0.7)', backdropFilter: 'blur(8px)', border: '1px solid rgba(26,21,32,0.12)', borderRadius: 20, padding: '7px 16px', cursor: 'pointer' }}>← try again</button>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Flying album */}
+          {pickingAlbum && (() => {
+            const GRID = 160;
+            const DEST = 220;
+            const { rect, album } = pickingAlbum;
+            const gridCX = rect.left + GRID / 2;
+            const gridCY = rect.top  + GRID / 2;
+            const winCX  = window.innerWidth  / 2;
+            const winCY  = window.innerHeight / 2;
+            const destCY = winCY;
+            const dx = gridCX - winCX;
+            const dy = gridCY - destCY;
+            const s0 = GRID / DEST;
+            return (
+              <div style={{
+                position: 'fixed',
+                left: winCX - DEST / 2,
+                top:  destCY - DEST / 2,
+                width: DEST,
+                height: DEST,
+                zIndex: 7,
+                pointerEvents: 'none',
+                transformOrigin: 'center center',
+                transform: pickReady ? 'translate(0,0) scale(1)' : `translate(${dx}px,${dy}px) scale(${s0})`,
+                transition: pickReady
+                  ? 'transform 1.1s cubic-bezier(0.22,1,0.36,1), opacity 0.3s ease'
+                  : 'opacity 0.3s ease',
+              }}>
+                <div style={{
+                  width: '100%', height: '100%', overflow: 'hidden',
+                  borderRadius: pickReady ? 16 : 6,
+                  boxShadow: '0 12px 56px rgba(0,0,0,0.40)',
+                  transition: 'border-radius 1.1s cubic-bezier(0.22,1,0.36,1)',
+                }}>
+                  {album.art && <img src={album.art} alt={album.name} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />}
+                </div>
+              </div>
+            );
+          })()}
+        </div>
+      )}
+
+      {/* ── PRE-LISTEN QUESTIONNAIRE ── */}
+      {confirmPhase && (
+        <PreListenQuestionnaire
+          pendingAlbum={pendingAlbum}
+          confirmPhase={confirmPhase}
+          onPhaseChange={setConfirmPhase}
+          onConfirm={handleAlbumSelect}
+          setRelationship={setRelationship}
+          setEntryType={setEntryType}
+        />
+      )}
+    </>
+  );
+}

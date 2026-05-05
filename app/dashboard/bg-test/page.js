@@ -15,10 +15,10 @@ import Reel        from '../../../components/session_components/backgrounds/Reel
 const ALL = { Rain, DVD, Gallery, Fizzy, SplitScreen, Snake, Pong, Solitaire, Reel };
 
 const cards = [
-  { href: '/session/listen',  label: 'Listen',  Icon: Headphones },
-  { href: '/session/entries', label: 'Entries', Icon: Stack },
-  { href: '/session/inbox',   label: 'Inbox',   Icon: Envelope },
-  { href: '/session/share',   label: 'Share',   Icon: PaperPlane },
+  { href: '/echo',  label: 'Listen',  Icon: Headphones },
+  { href: '/dashboard/entries', label: 'Entries', Icon: Stack },
+  { href: '/dashboard/inbox',   label: 'Inbox',   Icon: Envelope },
+  { href: '/dashboard/share',   label: 'Share',   Icon: PaperPlane },
 ];
 
 export default function BgTest() {

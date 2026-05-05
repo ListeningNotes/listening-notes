@@ -18,7 +18,7 @@ export default function Inbox() {
       <div style={{ fontFamily: fonts.mono, fontSize: 11, color: MUTED, letterSpacing: '0.08em', textTransform: 'uppercase' }}>
         coming soon
       </div>
-      <Link href="/session" style={{
+      <Link href="/dashboard" style={{
         marginTop: 24, fontFamily: fonts.mono, fontSize: 11,
         color: MUTED, letterSpacing: '0.06em', textDecoration: 'none',
         borderBottom: `1px solid ${BORDER}`,
