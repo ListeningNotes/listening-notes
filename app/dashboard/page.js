@@ -11,7 +11,7 @@ import { Headphones, Stack, Envelope, PaperPlane } from '@phosphor-icons/react';
 import backgrounds from '../../components/session_components/backgrounds';
 
 const cards = [
-  { href: '/echo',  label: 'Listen',  Icon: Headphones },
+  { href: '/dashboard/echo',  label: 'Listen',  Icon: Headphones },
   { href: '/dashboard/entries', label: 'Entries', Icon: Stack },
   { href: '/dashboard/inbox',   label: 'Inbox',   Icon: Envelope },
   { href: '/dashboard/share',   label: 'Share',   Icon: PaperPlane },

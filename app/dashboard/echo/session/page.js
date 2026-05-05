@@ -1,20 +1,20 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { fonts } from '../../../library/sitewide_visuals';
-import { tx, bdr } from '../../../library/session_styles';
-import { useListeningSession } from '../../../hooks/useListeningSession';
-import PasswordGate from '../../../components/session_components/PasswordGate';
-import EchoOrb from '../../../components/EchoOrb';
-import EchoChat from '../../../components/EchoChat';
-import EchoNetwork from '../../../components/EchoNetwork';
-import { SessionDuration, LOADING_PHRASES } from '../../../library/session_timers';
-import AlbumDebrief from '../../../components/session_components/steps/AlbumDebrief';
-import TrackNotes from '../../../components/session_components/steps/TrackNotes';
-import AlbumNotes from '../../../components/session_components/steps/AlbumNotes';
-import ReflectChat from '../../../components/session_components/steps/ReflectChat';
-import TagsEditor from '../../../components/session_components/steps/TagsEditor';
-import SessionPreview from '../../../components/session_components/steps/SessionPreview';
+import { fonts } from '../../../../library/sitewide_visuals';
+import { tx, bdr } from '../../../../library/session_styles';
+import { useListeningSession } from '../../../../hooks/useListeningSession';
+import PasswordGate from '../../../../components/session_components/PasswordGate';
+import EchoOrb from '../../../../components/EchoOrb';
+import EchoChat from '../../../../components/EchoChat';
+import EchoNetwork from '../../../../components/EchoNetwork';
+import { SessionDuration, LOADING_PHRASES } from '../../../../library/session_timers';
+import AlbumDebrief from '../../../../components/session_components/steps/AlbumDebrief';
+import TrackNotes from '../../../../components/session_components/steps/TrackNotes';
+import AlbumNotes from '../../../../components/session_components/steps/AlbumNotes';
+import ReflectChat from '../../../../components/session_components/steps/ReflectChat';
+import TagsEditor from '../../../../components/session_components/steps/TagsEditor';
+import SessionPreview from '../../../../components/session_components/steps/SessionPreview';
 
 const STEPS = [
   { id: 0, label: 'Album Debrief' },
@@ -64,7 +64,7 @@ export default function EchoSessionPage() {
     if (!authed) return;
     try {
       const raw = localStorage.getItem('ln_pending_session');
-      if (!raw) { router.replace('/echo'); return; }
+      if (!raw) { router.replace('/dashboard/echo'); return; }
       const pending = JSON.parse(raw);
       const { album, artist, year, artUrl, relationship: rel, entryType: et } = pending;
 
@@ -78,7 +78,7 @@ export default function EchoSessionPage() {
       // Pass relationship/entryType explicitly to avoid stale-closure issue
       doResearch(album, artist, artUrl, { relationship: rel || '', entryType: et || '' });
     } catch {
-      router.replace('/echo');
+      router.replace('/dashboard/echo');
     }
   }, [authed]);
 
@@ -244,7 +244,7 @@ export default function EchoSessionPage() {
               {/* Main content */}
               <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', overflow: step === 3 ? 'hidden' : 'auto' }}>
                 <div style={{ flex: 1, padding: step === 3 ? '36px 48px 36px' : '40px 48px 56px', display: step === 3 ? 'flex' : 'block', flexDirection: step === 3 ? 'column' : undefined, overflowY: step === 3 ? 'hidden' : undefined }}>
-                  {step === 0 && <AlbumDebrief brief={brief} researchState={researchState} researchError={researchError} echoDebrief={echoDebrief} echoDebriefLoading={echoDebriefLoading} onNext={() => advanceTo(1)} onReset={() => router.replace('/echo')} />}
+                  {step === 0 && <AlbumDebrief brief={brief} researchState={researchState} researchError={researchError} echoDebrief={echoDebrief} echoDebriefLoading={echoDebriefLoading} onNext={() => advanceTo(1)} onReset={() => router.replace('/dashboard/echo')} />}
                   {step === 1 && <TrackNotes tracks={tracks} tracksLoading={tracksLoading} trackNotes={trackNotes} setTrackNotes={setTrackNotes} trackRatings={trackRatings} setTrackRatings={setTrackRatings} openTrack={openTrack} setOpenTrack={setOpenTrack} onNext={() => advanceTo(2)} />}
                   {step === 2 && <AlbumNotes rating={rating} setRating={setRating} Masterpiece={Masterpiece} setMasterpiece={setMasterpiece} Favorite={Favorite} setFavorite={setFavorite} overallNotes={overallNotes} setOverallNotes={setOverallNotes} onNext={() => advanceTo(3)} />}
                   {step === 3 && <ReflectChat chatMessages={chatMessages} chatInput={chatInput} setChatInput={setChatInput} chatLoading={chatLoading} chatEndRef={chatEndRef} sendChat={sendChat} onNext={() => advanceTo(4)} />}
