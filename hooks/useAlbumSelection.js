@@ -1,0 +1,156 @@
+'use client';
+import { useState, useEffect, useRef } from 'react';
+import { searchArtistAlbums } from '../library/music_data_api';
+
+// Manages the full album search and selection flow:
+// artist search → Echo network animation → cards emerging →
+// grid browsing/pagination → fly-to-centre animation → manual entry.
+//
+// onAlbumPick({ album, artist, year, artUrl }) is called once the user
+// has chosen an album (grid click or manual submit) so the confirm
+// questions can open in the parent.
+
+export function useAlbumSelection({ step, onAlbumPick }) {
+  const [artistInput, setArtistInput]     = useState('');
+  const [albums, setAlbums]               = useState([]);
+  const [searching, setSearching]         = useState(false);
+  const [revealed, setRevealed]           = useState(false);   // Enter pressed — zoom + turbulence
+  const [zoomReady, setZoomReady]         = useState(false);   // turbulence settled — albums can emerge
+  const [echoFaded, setEchoFaded]         = useState(false);   // Echo fades after cards are grown
+  const [albumPage, setAlbumPage]         = useState(0);
+  const [nodePositions, setNodePositions] = useState(null);    // [{x,y,size}] from canvas
+  const [cardPhase, setCardPhase]         = useState('hidden'); // 'hidden'|'growing'|'grid'
+  const [manualAlbum, setManualAlbum]     = useState('');
+  const [showManual, setShowManual]       = useState(false);
+  const [pickingAlbum, setPickingAlbum]   = useState(null);   // { album, rect } — fly-to-centre
+  const [pickReady, setPickReady]         = useState(false);
+
+  const debounceRef  = useRef(null);
+  const zoomTimerRef = useRef(null);
+  const fadeTimerRef = useRef(null);
+  const cardPhaseRef = useRef(null);
+  const pickTimerRef = useRef(null);
+  const pickRafRef   = useRef(null);
+
+  // Debounced artist search — only active on the album search screen (step -1)
+  useEffect(() => {
+    if (step !== -1) return;
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    if (!artistInput.trim()) { setAlbums([]); setSearching(false); setRevealed(false); return; }
+    setSearching(true);
+    debounceRef.current = setTimeout(async () => {
+      const results = await searchArtistAlbums(artistInput);
+      setAlbums(results);
+      setSearching(false);
+    }, 520);
+    return () => clearTimeout(debounceRef.current);
+  }, [artistInput, step]);
+
+  // Reset to first page whenever a new result set arrives
+  useEffect(() => { setAlbumPage(0); }, [albums]);
+
+  // No-results fallback: if zoomReady but nothing found, fade Echo and show "nothing found"
+  useEffect(() => {
+    if (!zoomReady || albums.length > 0) return;
+    const t = setTimeout(() => {
+      setEchoFaded(true);
+      setCardPhase('grid');
+    }, 1800);
+    return () => clearTimeout(t);
+  }, [zoomReady, albums.length]);
+
+  // Enter pressed — Echo zooms and turbulence plays while results load.
+  // Albums are held back until turbulence settles (1800ms).
+  function handleReveal() {
+    if (!artistInput.trim()) return;
+    setRevealed(true);
+    clearTimeout(zoomTimerRef.current);
+    zoomTimerRef.current = setTimeout(() => setZoomReady(true), 1800);
+  }
+
+  // Called by EchoNetwork once spotlit nodes have glowed for 600ms.
+  // positions: [{x, y, size}] — real canvas coords for each spotlit node.
+  function handleSpotlit(positions) {
+    setNodePositions(positions);
+    setCardPhase('growing');
+    const allGrownMs = (positions.length - 1) * 120 + 800;
+    clearTimeout(fadeTimerRef.current);
+    fadeTimerRef.current = setTimeout(() => setEchoFaded(true), allGrownMs);
+    clearTimeout(cardPhaseRef.current);
+    cardPhaseRef.current = setTimeout(() => {
+      setCardPhase('grid');
+      setNodePositions(null);
+    }, allGrownMs + 600);
+  }
+
+  // Resets all search state back to the initial empty screen
+  function handleClearSearch() {
+    clearTimeout(zoomTimerRef.current);
+    clearTimeout(fadeTimerRef.current);
+    clearTimeout(cardPhaseRef.current);
+    setArtistInput('');
+    setAlbums([]);
+    setSearching(false);
+    setRevealed(false);
+    setZoomReady(false);
+    setEchoFaded(false);
+    setNodePositions(null);
+    setCardPhase('hidden');
+    setAlbumPage(0);
+    setShowManual(false);
+    clearTimeout(pickTimerRef.current);
+    cancelAnimationFrame(pickRafRef.current);
+    setPickingAlbum(null);
+    setPickReady(false);
+  }
+
+  // Grid click: fade others, fly chosen card to Q1 art position, then open confirm
+  function handleGridAlbumClick(e, album) {
+    e.stopPropagation();
+    const rect = e.currentTarget.getBoundingClientRect();
+    setPickReady(false);
+    setPickingAlbum({ album, rect });
+    cancelAnimationFrame(pickRafRef.current);
+    pickRafRef.current = requestAnimationFrame(() =>
+      requestAnimationFrame(() => setPickReady(true))
+    );
+    clearTimeout(pickTimerRef.current);
+    pickTimerRef.current = setTimeout(() => {
+      handleAlbumPick(album);
+      setTimeout(() => { setPickingAlbum(null); setPickReady(false); }, 350);
+    }, 1050);
+  }
+
+  // Notify parent that an album has been chosen from the grid
+  function handleAlbumPick(album) {
+    onAlbumPick({ album: album.name, artist: album.artist, year: album.year, artUrl: album.artLarge });
+  }
+
+  // Notify parent that a manually typed album has been chosen
+  function handleManualSubmit() {
+    if (!manualAlbum.trim() || !artistInput.trim()) return;
+    onAlbumPick({ album: manualAlbum.trim(), artist: artistInput.trim(), year: '', artUrl: '' });
+  }
+
+  return {
+    artistInput, setArtistInput,
+    albums,
+    searching,
+    revealed,
+    zoomReady,
+    echoFaded,
+    albumPage, setAlbumPage,
+    nodePositions,
+    cardPhase,
+    manualAlbum, setManualAlbum,
+    showManual, setShowManual,
+    pickingAlbum,
+    pickReady,
+    handleReveal,
+    handleClearSearch,
+    handleSpotlit,
+    handleGridAlbumClick,
+    handleAlbumPick,
+    handleManualSubmit,
+  };
+}

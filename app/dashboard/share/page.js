@@ -62,12 +62,12 @@ export default function SessionShare() {
         </ul>
       </div>
 
-      <Link href="/session" style={{
+      <Link href="/dashboard" style={{
         marginTop: 8, fontFamily: fonts.mono, fontSize: 10, letterSpacing: '0.14em',
         textTransform: 'uppercase', color: MUTED, textDecoration: 'none',
         padding: '8px 18px', border: `1px solid ${BORDER}`, borderRadius: 999, background: '#fff',
       }}>
-        ← Back to session
+        ← Back to dashboard
       </Link>
     </div>
   );

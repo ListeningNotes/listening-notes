@@ -283,7 +283,7 @@ export default function SessionEntries() {
 
         {/* Sticky nav — search, sort, back to session */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '14px 28px', borderBottom: BORDER, background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(12px)', position: 'sticky', top: 0, zIndex: 10 }}>
-          <a href="/session" style={{ fontFamily: 'Fraunces, serif', fontSize: 18, fontWeight: 900, color: '#1a1916', letterSpacing: '-0.02em', textDecoration: 'none' }}>Listening Notes</a>
+          <a href="/dashboard" style={{ fontFamily: 'Fraunces, serif', fontSize: 18, fontWeight: 900, color: '#1a1916', letterSpacing: '-0.02em', textDecoration: 'none' }}>Listening Notes</a>
           <span style={{ color: '#d0ccc5' }}>·</span>
           <span style={{ ...labelStyle }}>entries</span>
           {/* Shows filtered count vs total — e.g. "12 / 31" when searching */}
@@ -302,7 +302,7 @@ export default function SessionEntries() {
               <option value="oldest">Oldest</option>
               <option value="alpha">A–Z</option>
             </select>
-            <a href="/session" style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#7a776f', textDecoration: 'none', padding: '7px 14px', border: BORDER, borderRadius: 8, background: '#fff' }}>← Session</a>
+            <a href="/dashboard" style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#7a776f', textDecoration: 'none', padding: '7px 14px', border: BORDER, borderRadius: 8, background: '#fff' }}>← Dashboard</a>
           </div>
         </div>
 

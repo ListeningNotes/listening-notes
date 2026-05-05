@@ -88,7 +88,7 @@ export default function SubmissionsInbox() {
       <div style={{ minHeight: '100vh', background: '#f5f3ef', fontFamily: SANS, color: '#1a1916' }}>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '14px 28px', borderBottom: BORDER, background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(12px)', position: 'sticky', top: 0, zIndex: 10 }}>
-          <a href="/session" style={{ fontFamily: 'Fraunces, serif', fontSize: 18, fontWeight: 900, color: '#1a1916', letterSpacing: '-0.02em', textDecoration: 'none' }}>Listening Notes</a>
+          <a href="/dashboard" style={{ fontFamily: 'Fraunces, serif', fontSize: 18, fontWeight: 900, color: '#1a1916', letterSpacing: '-0.02em', textDecoration: 'none' }}>Listening Notes</a>
           <span style={{ color: '#d0ccc5' }}>·</span>
           <span style={labelStyle}>submissions</span>
 
@@ -102,7 +102,7 @@ export default function SubmissionsInbox() {
           </div>
 
           <div style={{ marginLeft: 'auto' }}>
-            <a href="/session" style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#7a776f', textDecoration: 'none', padding: '7px 14px', border: BORDER, borderRadius: 8, background: '#fff' }}>← Session</a>
+            <a href="/dashboard" style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#7a776f', textDecoration: 'none', padding: '7px 14px', border: BORDER, borderRadius: 8, background: '#fff' }}>← Dashboard</a>
           </div>
         </div>
 
@@ -134,7 +134,7 @@ export default function SubmissionsInbox() {
                       style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '5px 10px', borderRadius: 6, border: BORDER, background: '#fff', color: '#7a776f', cursor: 'pointer' }}>
                       Note
                     </button>
-                    <a href="/session"
+                    <a href="/dashboard"
                       style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', padding: '5px 10px', borderRadius: 6, border: 'none', background: '#1a1916', color: '#fff', cursor: 'pointer', textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}
                       onClick={() => updateStatus(s.id, 'reviewed')}>
                       Listen →
