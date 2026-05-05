@@ -1,11 +1,11 @@
 'use client';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { fonts } from '../../library/sitewide_visuals';
-import { useAlbumSelection } from '../../hooks/useAlbumSelection';
-import PasswordGate from '../../components/session_components/PasswordGate';
-import EchoNetwork from '../../components/EchoNetwork';
-import PreListenQuestionnaire from '../../components/session_components/steps/PreListenQuestionnaire';
+import { fonts } from '../../../library/sitewide_visuals';
+import { useAlbumSelection } from '../../../hooks/useAlbumSelection';
+import PasswordGate from '../../../components/session_components/PasswordGate';
+import EchoNetwork from '../../../components/EchoNetwork';
+import PreListenQuestionnaire from '../../../components/session_components/steps/PreListenQuestionnaire';
 import { useEffect } from 'react';
 
 // Calculate where each album card will land in the final centered flex-wrap grid.
@@ -88,7 +88,7 @@ export default function EchoPage() {
   function handleAlbumSelect({ album, artist, year, artUrl }) {
     const pending = { album, artist, year, artUrl, relationship, entryType };
     localStorage.setItem('ln_pending_session', JSON.stringify(pending));
-    router.push('/echo/session');
+    router.push('/dashboard/echo/session');
   }
 
   if (checking) return <div style={{ minHeight: '100vh', background: '#f5f2ec' }} />;
