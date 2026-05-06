@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { fonts } from '../../../../library/sitewide_visuals';
 import { LOADING_PHRASES } from '../../../../library/session_timers';
-import EchoPuzzle from '../../../../components/EchoPuzzle';
+import EchoNetwork from '../../../../components/EchoNetwork';
 
 const FALLBACK = {
   album: 'Kind of Blue',
@@ -92,7 +92,12 @@ export default function LoadingTestPage() {
         html, body { background: #f5f2ec !important; }
       `}</style>
 
-      <EchoPuzzle albumArt={artUrl} progress={progress} onComplete={() => setDone(true)} />
+      <EchoNetwork
+        searchQuery='' collapsed={false} albumArt='' onCollapsed={() => {}}
+        dimmed={false} zooming={false} pulsing={false}
+        spotlitArts={[]} spotlit={false} onSpotlit={() => {}} cardsEmerging={false}
+        nodeArt={artUrl}
+      />
 
       {/* Phrase card */}
       {!done && (

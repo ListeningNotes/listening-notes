@@ -52,9 +52,8 @@ function makeNodes(w, h) {
       dist:  Math.hypot(x - w / 2, y - h / 2),
       isSpotlit: false,
       focusAlpha: 0, focusRevealDelay: 0, focusRevealT: null,
-      // First 150 nodes are always visible; the rest spawn in during zoom-out
-      spawnAlpha: idx < 150 ? 1 : 0,
-      spawnDelay: idx < 150 ? 0 : 400 + Math.random() * 1800,
+      spawnAlpha: 1,
+      spawnDelay: 0,
     };
   });
 
@@ -89,6 +88,7 @@ export default function AlbumNetwork({
   spotlitArts = [], spotlit = false, onSpotlit = null,
   cardsEmerging = false, onReady = null,
   focusArt = '',
+  nodeArt = '',
 }) {
   const canvasRef = useRef(null);
   const propsRef  = useRef({ searchQuery, collapsed, albumArt, onCollapsed, zooming, spotlit, onSpotlit, cardsEmerging, onReady });
@@ -216,6 +216,24 @@ export default function AlbumNetwork({
     img.src = focusArt;
   }, [focusArt]);
 
+  // nodeArt: load album into focusImg without redistributing nodes
+  useEffect(() => {
+    if (!nodeArt) return;
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      const s = stateRef.current;
+      s.focusImg = img;
+      s.focusRevealStartT = null;
+      s.nodes.forEach(n => {
+        n.focusAlpha = 0;
+        n.focusRevealT = null;
+        n.focusRevealDelay = Math.random() * 2000;
+      });
+    };
+    img.src = nodeArt;
+  }, [nodeArt]);
+
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -242,17 +260,6 @@ export default function AlbumNetwork({
       // Pulse: flow field surge without canvas scale (loading screen thinking animation)
       if (pulsing && s.pulseT === null) s.pulseT = now;
       if (!pulsing) s.pulseT = null;
-
-      // Spawn secondary nodes in as zoom releases
-      if (s.zoomReleaseT !== null) {
-        const elapsed = now - s.zoomReleaseT;
-        nodes.forEach(n => {
-          if (n.spawnAlpha >= 1) return;
-          if (elapsed >= n.spawnDelay) {
-            n.spawnAlpha = Math.min(1, (elapsed - n.spawnDelay) / 700);
-          }
-        });
-      }
 
       // Track spotlit start
       if (spotlit && s.spotlitNodes.length > 0 && s.spotlitT === null) s.spotlitT = now;
@@ -347,16 +354,12 @@ export default function AlbumNetwork({
         });
       }
 
-      // Edges — only drawn when both endpoints have loaded art so we never
-      // show the string web before the album images appear beneath them.
+      // Edges — always drawn (like main echo page) so the web is visible from first frame.
       // When pulsing, strings bow and vibrate like plucked wires.
       ctx.lineWidth = 0.4;
       const tSec = now * 0.001;
       edges.forEach(([i, j]) => {
         const a = nodes[i], b = nodes[j];
-        const aReady = (a.img?.complete && a.img.naturalWidth > 0) || a.focusAlpha > 0;
-        const bReady = (b.img?.complete && b.img.naturalWidth > 0) || b.focusAlpha > 0;
-        if (!aReady || !bReady) return;
         const alpha = Math.min(a.opacity, b.opacity) * Math.min(a.spawnAlpha, b.spawnAlpha) * 0.22;
         if (alpha < 0.01) return;
         ctx.strokeStyle = `rgba(80,70,110,${alpha.toFixed(3)})`;
@@ -395,7 +398,16 @@ export default function AlbumNetwork({
         }
         if (s.focusImg && n.focusAlpha > 0) {
           ctx.globalAlpha = baseAlpha * n.focusAlpha;
-          ctx.drawImage(s.focusImg, 0, 0, w, h);
+          // Map album across cluster bounds so full cover spreads across all nodes
+          const clR  = Math.min(w, h) * 0.50;
+          const clX  = cx - clR, clY = cy - clR, clD = 2 * clR;
+          const img  = s.focusImg;
+          const scX  = img.naturalWidth  / clD;
+          const scY  = img.naturalHeight / clD;
+          ctx.drawImage(img,
+            (dx - clX) * scX, (dy - clY) * scY, n.size * scX, n.size * scY,
+            dx, dy, n.size, n.size
+          );
         }
         ctx.restore();
         ctx.globalAlpha = 1;
