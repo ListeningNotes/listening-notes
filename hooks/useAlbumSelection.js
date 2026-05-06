@@ -24,6 +24,7 @@ export function useAlbumSelection({ step, onAlbumPick }) {
   const [showManual, setShowManual]       = useState(false);
   const [pickingAlbum, setPickingAlbum]   = useState(null);   // { album, rect } — fly-to-centre
   const [pickReady, setPickReady]         = useState(false);
+  const [pickFading, setPickFading]       = useState(false);  // fades album out before removing
 
   const debounceRef  = useRef(null);
   const zoomTimerRef = useRef(null);
@@ -102,6 +103,7 @@ export function useAlbumSelection({ step, onAlbumPick }) {
     cancelAnimationFrame(pickRafRef.current);
     setPickingAlbum(null);
     setPickReady(false);
+    setPickFading(false);
   }
 
   // Grid click: fade others, fly chosen card to Q1 art position, then open confirm
@@ -117,13 +119,14 @@ export function useAlbumSelection({ step, onAlbumPick }) {
     clearTimeout(pickTimerRef.current);
     pickTimerRef.current = setTimeout(() => {
       handleAlbumPick(album);
-      setTimeout(() => { setPickingAlbum(null); setPickReady(false); }, 350);
+      setPickFading(true);
+      setTimeout(() => { setPickingAlbum(null); setPickReady(false); setPickFading(false); }, 400);
     }, 1050);
   }
 
   // Notify parent that an album has been chosen from the grid
   function handleAlbumPick(album) {
-    onAlbumPick({ album: album.name, artist: album.artist, year: album.year, artUrl: album.artLarge });
+    onAlbumPick({ album: album.name, artist: album.artist, year: album.year, artUrl: album.art, artLarge: album.artLarge });
   }
 
   // Notify parent that a manually typed album has been chosen
@@ -146,6 +149,7 @@ export function useAlbumSelection({ step, onAlbumPick }) {
     showManual, setShowManual,
     pickingAlbum,
     pickReady,
+    pickFading,
     handleReveal,
     handleClearSearch,
     handleSpotlit,

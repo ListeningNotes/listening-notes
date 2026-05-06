@@ -12,12 +12,12 @@ export function SessionDuration(seconds) {
 }
 
 export const LOADING_PHRASES = [
-  'Searching the archive...',
-  'Pulling press records...',
-  'Checking release dates...',
-  'Reading liner notes...',
-  'Cross-referencing labels...',
-  'Scanning chart history...',
-  'Digging through the stacks...',
-  'Consulting the canon...',
+  "Let me read up on this one...",
+  "Getting familiar with the record...",
+  "Looking into the release...",
+  "Checking what people said about this...",
+  "Pulling everything I know...",
+  "Let me do some digging...",
+  "Reading up before we start...",
+  "Give me a moment with this one...",
 ];
