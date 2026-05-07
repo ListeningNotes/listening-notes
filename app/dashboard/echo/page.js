@@ -1,12 +1,28 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { fonts } from '../../../library/sitewide_visuals';
 import { useAlbumSelection } from '../../../hooks/useAlbumSelection';
 import PasswordGate from '../../../components/session_components/PasswordGate';
 import EchoNetwork from '../../../components/EchoNetwork';
 import PreListenQuestionnaire from '../../../components/session_components/steps/PreListenQuestionnaire';
-import { useEffect } from 'react';
+
+const ECHO_PROMPTS = [
+  'Who do you want to listen to?',
+  'What artist do you wan to hear?',
+  "How's it going? Who do you wanna hear?",
+  "What are we listening to tonight?",
+  "Ready. Who should I search?",
+  "What's been stuck in your head lately?",
+  "Hey. Who should I search for you?",
+  "Hey there. Who should I search?",
+  "Who should I search for you?",
+  "Go ahead and tell me who to look up.",
+  "What artist do you want to explore?",
+  "What do you feel like hearing?",
+  "Ready? Give me an artist.",
+  "What's calling you right now?",
+];
 
 // Calculate where each album card will land in the final centered flex-wrap grid.
 // Returns [{x, y}] — top-left corner of each card in viewport coords.
@@ -35,6 +51,15 @@ export default function EchoPage() {
   const [authed, setAuthed]   = useState(false);
   const [checking, setChecking] = useState(true);
 
+  // Typewriter entrance
+  const [echoReady, setEchoReady]     = useState(false);
+  const [echoPrompt]                  = useState(() => ECHO_PROMPTS[Math.floor(Math.random() * ECHO_PROMPTS.length)]);
+  const [typedText, setTypedText]     = useState('');
+  const [typingDone, setTypingDone]   = useState(false);
+  const [cardVisible, setCardVisible] = useState(false);
+  const [inputVisible, setInputVisible] = useState(false);
+  const inputRef = useRef(null);
+
   // Confirm flow — two sequential questions before research fires
   const [confirmPhase, setConfirmPhase] = useState(null); // null | 'q1' | 'q2'
   const [pendingAlbum, setPendingAlbum] = useState(null);
@@ -58,6 +83,7 @@ export default function EchoPage() {
     showManual, setShowManual,
     pickingAlbum,
     pickReady,
+    pickFading,
     handleReveal,
     handleClearSearch,
     handleSpotlit,
@@ -66,8 +92,8 @@ export default function EchoPage() {
     handleManualSubmit,
   } = useAlbumSelection({
     step: -1,
-    onAlbumPick({ album, artist, year, artUrl }) {
-      setPendingAlbum({ album, artist, year, artUrl });
+    onAlbumPick({ album, artist, year, artUrl, artLarge }) {
+      setPendingAlbum({ album, artist, year, artUrl, artLarge });
       setRelationship('');
       setEntryType('');
       setConfirmPhase('q1');
@@ -82,11 +108,54 @@ export default function EchoPage() {
       .finally(() => setChecking(false));
   }, []);
 
+  // Fallback: force echoReady after 3s in case images are slow
+  useEffect(() => {
+    const t = setTimeout(() => setEchoReady(true), 3000);
+    return () => clearTimeout(t);
+  }, []);
+
+  // When canvas is ready, fade the card in over two frames so the transition fires
+  useEffect(() => {
+    if (!echoReady || !authed) return;
+    requestAnimationFrame(() => requestAnimationFrame(() => setCardVisible(true)));
+  }, [echoReady, authed]);
+
+  // Start typewriter once card has begun fading in
+  useEffect(() => {
+    if (!cardVisible) return;
+    let i = 0;
+    const id = setInterval(() => {
+      i++;
+      setTypedText(echoPrompt.slice(0, i));
+      if (i >= echoPrompt.length) {
+        clearInterval(id);
+        setTimeout(() => setTypingDone(true), 120);
+      }
+    }, 22);
+    return () => clearInterval(id);
+  }, [cardVisible]);
+
+  // Preload artLarge the moment a grid album is clicked so it's ready for the session page
+  useEffect(() => {
+    if (!pickingAlbum?.album?.artLarge) return;
+    const img = new Image();
+    img.src = pickingAlbum.album.artLarge;
+  }, [pickingAlbum]);
+
+  // After typing finishes, let input mount for two frames then trigger its transition
+  useEffect(() => {
+    if (!typingDone) return;
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      setInputVisible(true);
+      setTimeout(() => inputRef.current?.focus(), 60);
+    }));
+  }, [typingDone]);
+
   function handleAuth() { setAuthed(true); }
 
   // Called after Q2 is answered — save pending data and navigate to session page
   function handleAlbumSelect({ album, artist, year, artUrl }) {
-    const pending = { album, artist, year, artUrl, relationship, entryType };
+    const pending = { album, artist, year, artUrl: pendingAlbum?.artLarge || artUrl, relationship, entryType };
     localStorage.setItem('ln_pending_session', JSON.stringify(pending));
     router.push('/dashboard/echo/session');
   }
@@ -104,6 +173,8 @@ export default function EchoPage() {
         @keyframes ln-fade  { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
         @keyframes ln-pulse { 0%,100%{opacity:0.35} 50%{opacity:0.8} }
         @keyframes confirm-glow { 0%,100%{box-shadow:0 0 32px 12px rgba(255,255,255,0.55),0 0 70px 28px rgba(255,255,255,0.22),0 12px 40px rgba(0,0,0,0.28)} 50%{box-shadow:0 0 48px 20px rgba(255,255,255,0.78),0 0 100px 44px rgba(255,255,255,0.32),0 12px 40px rgba(0,0,0,0.28)} }
+        @keyframes echo-cursor-blink { 0%,49%{opacity:1} 50%,100%{opacity:0} }
+        html, body { background: #f5f2ec !important; }
         ::-webkit-scrollbar { width: 3px; }
         ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 99px; }
         input::placeholder  { color: rgba(255,255,255,0.3); }
@@ -121,6 +192,7 @@ export default function EchoPage() {
         spotlit={zoomReady && cardPhase !== 'grid'}
         onSpotlit={handleSpotlit}
         cardsEmerging={cardPhase === 'growing'}
+        onReady={() => setEchoReady(true)}
       />
 
       {/* ── ALBUM SEARCH (no confirm) ── */}
@@ -140,8 +212,12 @@ export default function EchoPage() {
 
           {/* Frosted prompt card */}
           {!revealed && (
-            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 24px' }}>
-              <div style={{ width: '100%', maxWidth: 520 }}>
+            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 24px',
+              opacity: cardVisible ? 1 : 0,
+              transform: cardVisible ? 'translateY(0)' : 'translateY(10px)',
+              transition: 'opacity 0.7s ease, transform 0.7s cubic-bezier(0.16,1,0.3,1)',
+            }}>
+              <div style={{ width: 'fit-content', minWidth: 320, maxWidth: 'min(560px, calc(100vw - 48px))' }}>
                 <div style={{
                   background: 'rgba(255,255,255,0.45)',
                   backdropFilter: 'blur(18px)',
@@ -154,36 +230,47 @@ export default function EchoPage() {
                 }}>
                   <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(145deg, rgba(255,255,255,0.6) 0%, transparent 60%)', pointerEvents: 'none' }} />
                   <div style={{ textAlign: 'center', marginBottom: 24 }}>
-                    <div style={{ fontFamily: fonts.sans, fontWeight: 700, fontSize: 26, color: '#1a1520', lineHeight: 1.2 }}>
-                      Who do you want to listen to?
+                    <div style={{ fontFamily: fonts.sans, fontWeight: 700, fontSize: 26, color: '#1a1520', lineHeight: 1.2, minHeight: '1.3em', whiteSpace: 'nowrap' }}>
+                      {typedText}
+                      {!typingDone && echoReady && (
+                        <span style={{ display: 'inline-block', marginLeft: 1, animation: 'echo-cursor-blink 0.75s step-end infinite' }}>|</span>
+                      )}
                     </div>
                   </div>
-                  <div style={{ position: 'relative' }}>
-                    <input
-                      value={artistInput}
-                      onChange={e => setArtistInput(e.target.value)}
-                      onKeyDown={e => e.key === 'Enter' && handleReveal()}
-                      placeholder="search by artist..."
-                      style={{ width: '100%', boxSizing: 'border-box', background: 'rgba(245,242,236,0.72)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(26,21,32,0.14)', borderRadius: 14, padding: '16px 22px', fontFamily: fonts.sans, fontWeight: 400, fontSize: 16, color: '#1a1520', outline: 'none', boxShadow: '0 2px 20px rgba(0,0,0,0.06)' }}
-                      onFocus={e => e.target.style.borderColor = 'rgba(26,21,32,0.4)'}
-                      onBlur={e => e.target.style.borderColor = 'rgba(26,21,32,0.14)'}
-                      autoFocus
-                    />
-                    {searching && (
-                      <div style={{ position: 'absolute', right: 18, top: '50%', transform: 'translateY(-50%)', fontFamily: fonts.mono, fontSize: 11, color: 'rgba(26,21,32,0.3)', letterSpacing: '0.06em' }}>…</div>
-                    )}
-                  </div>
-                  {artistInput.trim() && (
-                    <div style={{ marginTop: 12, display: 'flex', gap: 8, alignItems: 'center' }}>
-                      {!showManual ? (
-                        <button onClick={() => setShowManual(true)} style={{ fontFamily: fonts.mono, fontWeight: 600, fontSize: 11, letterSpacing: '0.08em', color: 'rgba(26,21,32,0.4)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
-                          + type album manually
-                        </button>
-                      ) : (
-                        <>
-                          <input value={manualAlbum} onChange={e => setManualAlbum(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleManualSubmit()} placeholder="album title..." autoFocus style={{ flex: 1, background: 'rgba(245,242,236,0.8)', border: '1px solid rgba(26,21,32,0.14)', borderRadius: 8, padding: '9px 14px', fontFamily: fonts.mono, fontSize: 12, color: '#1a1520', outline: 'none' }} />
-                          <button onClick={handleManualSubmit} disabled={!manualAlbum.trim()} style={{ background: '#1a1520', color: '#f5f2ec', border: 'none', borderRadius: 8, padding: '9px 18px', fontFamily: fonts.mono, fontWeight: 700, fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer', opacity: manualAlbum.trim() ? 1 : 0.3 }}>Start →</button>
-                        </>
+                  {typingDone && (
+                    <div style={{
+                      opacity: inputVisible ? 1 : 0,
+                      transform: inputVisible ? 'translateY(0)' : 'translateY(-14px)',
+                      transition: 'opacity 1.4s cubic-bezier(0.16,1,0.3,1), transform 1.4s cubic-bezier(0.16,1,0.3,1)',
+                    }}>
+                      <div style={{ position: 'relative' }}>
+                        <input
+                          ref={inputRef}
+                          value={artistInput}
+                          onChange={e => setArtistInput(e.target.value)}
+                          onKeyDown={e => e.key === 'Enter' && handleReveal()}
+                          placeholder=""
+                          style={{ width: '100%', boxSizing: 'border-box', background: 'rgba(245,242,236,0.72)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)', border: '1px solid rgba(26,21,32,0.14)', borderRadius: 14, padding: '16px 22px', fontFamily: fonts.sans, fontWeight: 400, fontSize: 16, color: '#1a1520', outline: 'none', boxShadow: '0 2px 20px rgba(0,0,0,0.06)' }}
+                          onFocus={e => e.target.style.borderColor = 'rgba(26,21,32,0.4)'}
+                          onBlur={e => e.target.style.borderColor = 'rgba(26,21,32,0.14)'}
+                        />
+                        {searching && (
+                          <div style={{ position: 'absolute', right: 18, top: '50%', transform: 'translateY(-50%)', fontFamily: fonts.mono, fontSize: 11, color: 'rgba(26,21,32,0.3)', letterSpacing: '0.06em' }}>…</div>
+                        )}
+                      </div>
+                      {artistInput.trim() && (
+                        <div style={{ marginTop: 12, display: 'flex', gap: 8, alignItems: 'center' }}>
+                          {!showManual ? (
+                            <button onClick={() => setShowManual(true)} style={{ fontFamily: fonts.mono, fontWeight: 600, fontSize: 11, letterSpacing: '0.08em', color: 'rgba(26,21,32,0.4)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+                              + type album manually
+                            </button>
+                          ) : (
+                            <>
+                              <input value={manualAlbum} onChange={e => setManualAlbum(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleManualSubmit()} placeholder="album title..." autoFocus style={{ flex: 1, background: 'rgba(245,242,236,0.8)', border: '1px solid rgba(26,21,32,0.14)', borderRadius: 8, padding: '9px 14px', fontFamily: fonts.mono, fontSize: 12, color: '#1a1520', outline: 'none' }} />
+                              <button onClick={handleManualSubmit} disabled={!manualAlbum.trim()} style={{ background: '#1a1520', color: '#f5f2ec', border: 'none', borderRadius: 8, padding: '9px 18px', fontFamily: fonts.mono, fontWeight: 700, fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer', opacity: manualAlbum.trim() ? 1 : 0.3 }}>Start →</button>
+                            </>
+                          )}
+                        </div>
                       )}
                     </div>
                   )}
@@ -293,47 +380,50 @@ export default function EchoPage() {
             </div>
           )}
 
-          {/* Flying album */}
-          {pickingAlbum && (() => {
-            const GRID = 160;
-            const DEST = 220;
-            const { rect, album } = pickingAlbum;
-            const gridCX = rect.left + GRID / 2;
-            const gridCY = rect.top  + GRID / 2;
-            const winCX  = window.innerWidth  / 2;
-            const winCY  = window.innerHeight / 2;
-            const destCY = winCY;
-            const dx = gridCX - winCX;
-            const dy = gridCY - destCY;
-            const s0 = GRID / DEST;
-            return (
-              <div style={{
-                position: 'fixed',
-                left: winCX - DEST / 2,
-                top:  destCY - DEST / 2,
-                width: DEST,
-                height: DEST,
-                zIndex: 7,
-                pointerEvents: 'none',
-                transformOrigin: 'center center',
-                transform: pickReady ? 'translate(0,0) scale(1)' : `translate(${dx}px,${dy}px) scale(${s0})`,
-                transition: pickReady
-                  ? 'transform 1.1s cubic-bezier(0.22,1,0.36,1), opacity 0.3s ease'
-                  : 'opacity 0.3s ease',
-              }}>
-                <div style={{
-                  width: '100%', height: '100%', overflow: 'hidden',
-                  borderRadius: pickReady ? 16 : 6,
-                  boxShadow: '0 12px 56px rgba(0,0,0,0.40)',
-                  transition: 'border-radius 1.1s cubic-bezier(0.22,1,0.36,1)',
-                }}>
-                  {album.art && <img src={album.art} alt={album.name} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />}
-                </div>
-              </div>
-            );
-          })()}
         </div>
       )}
+
+      {/* Flying album — lives outside !confirmPhase so it persists through the transition */}
+      {pickingAlbum && (() => {
+        const GRID = 160;
+        const DEST = 220;
+        const { rect, album } = pickingAlbum;
+        const gridCX = rect.left + GRID / 2;
+        const gridCY = rect.top  + GRID / 2;
+        const winCX  = window.innerWidth  / 2;
+        const winCY  = window.innerHeight / 2;
+        // Offset upward so the art lands above the frosted card in the questionnaire
+        const destCY = winCY - 160;
+        const dx = gridCX - winCX;
+        const dy = gridCY - destCY;
+        const s0 = GRID / DEST;
+        return (
+          <div style={{
+            position: 'fixed',
+            left: winCX - DEST / 2,
+            top:  destCY - DEST / 2,
+            width: DEST,
+            height: DEST,
+            zIndex: 8,
+            pointerEvents: 'none',
+            transformOrigin: 'center center',
+            opacity: pickFading ? 0 : 1,
+            transform: pickReady ? 'translate(0,0) scale(1)' : `translate(${dx}px,${dy}px) scale(${s0})`,
+            transition: pickReady
+              ? 'transform 1.1s cubic-bezier(0.22,1,0.36,1), opacity 0.4s ease'
+              : 'opacity 0.3s ease',
+          }}>
+            <div style={{
+              width: '100%', height: '100%', overflow: 'hidden',
+              borderRadius: pickReady ? 16 : 6,
+              boxShadow: '0 12px 56px rgba(0,0,0,0.40)',
+              transition: 'border-radius 1.1s cubic-bezier(0.22,1,0.36,1)',
+            }}>
+              {album.art && <img src={album.art} alt={album.name} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />}
+            </div>
+          </div>
+        );
+      })()}
 
       {/* ── PRE-LISTEN QUESTIONNAIRE ── */}
       {confirmPhase && (
