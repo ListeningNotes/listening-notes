@@ -28,10 +28,14 @@ const STEPS = [
 export default function EchoSessionPage() {
   const router = useRouter();
 
-  const [authed, setAuthed]   = useState(false);
+  const [authed, setAuthed]     = useState(false);
   const [checking, setChecking] = useState(true);
-  const [step, setStep]       = useState(0);
-  const [maxStep, setMaxStep] = useState(0);
+  const [step, setStep]         = useState(0);
+  const [maxStep, setMaxStep]   = useState(0);
+
+  // Typewriter for loading phrases
+  const [loadTyped, setLoadTyped]   = useState('');
+  const [loadCursor, setLoadCursor] = useState(true);
 
   const {
     brief, researchState, researchError, phraseIndex,
@@ -82,6 +86,21 @@ export default function EchoSessionPage() {
     }
   }, [authed]);
 
+  // Restart typewriter each time the loading phrase rotates
+  useEffect(() => {
+    if (researchState !== 'loading') return;
+    const phrase = LOADING_PHRASES[phraseIndex % LOADING_PHRASES.length];
+    setLoadTyped('');
+    setLoadCursor(true);
+    let i = 0;
+    const id = setInterval(() => {
+      i++;
+      setLoadTyped(phrase.slice(0, i));
+      if (i >= phrase.length) { clearInterval(id); setTimeout(() => setLoadCursor(false), 200); }
+    }, 30);
+    return () => clearInterval(id);
+  }, [phraseIndex, researchState]);
+
   function advanceTo(newStep) {
     setStep(newStep);
     setMaxStep(m => Math.max(m, newStep));
@@ -95,23 +114,25 @@ export default function EchoSessionPage() {
   return (
     <>
       <style>{`
-        @keyframes ln-art-sweep { 0%{clip-path:inset(100% 0 0 0)} 100%{clip-path:inset(10% 0 0 0)} }
-        .ln-art-loading { animation: ln-art-sweep 14s cubic-bezier(0.4,0,0.2,1) forwards; }
-        .ln-art-done    { clip-path: inset(0%) !important; transition: clip-path 0.7s ease !important; }
         @keyframes ln-panel-appear { from{opacity:0;transform:translateY(14px) scale(0.99)} to{opacity:1;transform:translateY(0) scale(1)} }
         @keyframes ln-fade  { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
-        @keyframes ln-dot   { 0%,80%,100%{opacity:0.18;transform:scale(0.7)} 40%{opacity:1;transform:scale(1)} }
+        @keyframes echo-cursor-blink { 0%,49%{opacity:1} 50%,100%{opacity:0} }
+        @keyframes q-art-glow {
+          0%,100% { box-shadow: 0 8px 40px rgba(0,0,0,0.10), 0 0 60px 30px rgba(255,255,255,0.45); transform: scale(1); }
+          50%      { box-shadow: 0 12px 52px rgba(0,0,0,0.15), 0 0 90px 55px rgba(255,255,255,0.65); transform: scale(1.012); }
+        }
+        html, body { background: #f5f2ec !important; }
         ::-webkit-scrollbar { width: 3px; }
         ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 99px; }
         textarea::placeholder { color: rgba(255,255,255,0.28); }
       `}</style>
 
-      {/* EchoNetwork — loading backdrop only */}
+      {/* EchoNetwork — flows during loading, hidden once session panel is up */}
       {showLoadingScreen && (
         <EchoNetwork
           searchQuery=''
-          collapsed={true}
-          albumArt={albumArt}
+          collapsed={false}
+          albumArt=''
           onCollapsed={() => {}}
           dimmed={false}
           zooming={false}
@@ -122,7 +143,7 @@ export default function EchoSessionPage() {
         />
       )}
 
-      {/* EchoOrb — compact 56px */}
+      {/* EchoOrb */}
       <EchoOrb
         albumArt={albumArt}
         mood={echoMood}
@@ -144,32 +165,49 @@ export default function EchoSessionPage() {
         />
       )}
 
-      {/* White base */}
-      <div style={{ position: 'fixed', inset: 0, zIndex: 0, background: '#fff', pointerEvents: 'none' }} />
+      {/* Art backgrounds — only visible once session panel is up */}
+      {!showLoadingScreen && <>
+        <div style={{ position: 'fixed', inset: 0, zIndex: 0, background: '#fff', pointerEvents: 'none' }} />
+        {albumArt && (
+          <div style={{ position: 'fixed', inset: 0, zIndex: 1, backgroundImage: `url(${albumArt})`, backgroundSize: 'cover', backgroundPosition: 'center', filter: 'grayscale(1) brightness(0.55)', transform: 'scale(1.04)', pointerEvents: 'none' }} />
+        )}
+        {albumArt && (
+          <div style={{ position: 'fixed', inset: 0, zIndex: 2, backgroundImage: `url(${albumArt})`, backgroundSize: 'cover', backgroundPosition: 'center', transform: 'scale(1.04)', pointerEvents: 'none' }} />
+        )}
+      </>}
 
-      {/* Grayscale faded art */}
-      {albumArt && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 1, backgroundImage: `url(${albumArt})`, backgroundSize: 'cover', backgroundPosition: 'center', filter: 'grayscale(1) brightness(0.55)', transform: 'scale(1.04)', pointerEvents: 'none' }} />
-      )}
-
-      {/* Full-color art sweeps up */}
-      {albumArt && (
-        <div
-          className={researchState === 'loading' ? 'ln-art-loading' : 'ln-art-done'}
-          style={{ position: 'fixed', inset: 0, zIndex: 2, backgroundImage: `url(${albumArt})`, backgroundSize: 'cover', backgroundPosition: 'center', transform: 'scale(1.04)', pointerEvents: 'none' }}
-        />
-      )}
-
-      {/* Loading text overlay */}
+      {/* Echo loading card — same frosted style as the search screen */}
       {showLoadingScreen && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 6, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'flex-end', paddingBottom: 52, pointerEvents: 'none' }}>
-          {researchState === 'loading' && (
-            <div key={phraseIndex} style={{ fontFamily: fonts.mono, fontSize: 11, color: 'rgba(26,21,32,0.5)', letterSpacing: '0.1em', animation: 'ln-fade 0.5s ease' }}>
-              {LOADING_PHRASES[phraseIndex % LOADING_PHRASES.length]}
+        <div style={{ position: 'fixed', inset: 0, zIndex: 6, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 24px' }}>
+
+          {albumArt && (
+            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
+              <img src={albumArt} alt='' style={{ width: 200, height: 200, borderRadius: 16, objectFit: 'cover', animation: 'q-art-glow 2.4s ease-in-out infinite' }} />
             </div>
           )}
-          {researchState === 'error' && (
-            <div style={{ fontFamily: fonts.mono, fontSize: 11, color: '#ef4444' }}>{researchError}</div>
+
+          {albumInput && (
+            <div style={{ fontFamily: fonts.mono, fontSize: 12, color: 'rgba(26,21,32,0.45)', letterSpacing: '0.06em', marginBottom: 20, textAlign: 'center' }}>
+              {albumInput}{artistName ? ` · ${artistName}` : ''}
+            </div>
+          )}
+
+          {researchState === 'error' ? (
+            <div style={{ fontFamily: fonts.mono, fontSize: 12, color: '#ef4444', letterSpacing: '0.06em' }}>{researchError}</div>
+          ) : (
+            <div style={{
+              width: 'fit-content', minWidth: 280, maxWidth: 'min(500px, calc(100vw - 48px))',
+              background: 'rgba(255,255,255,0.45)',
+              backdropFilter: 'blur(18px)', WebkitBackdropFilter: 'blur(18px)',
+              borderRadius: 40, boxShadow: '0 8px 32px rgba(0,0,0,0.08)',
+              padding: '28px 36px', position: 'relative', overflow: 'hidden', textAlign: 'center',
+            }}>
+              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(145deg, rgba(255,255,255,0.6) 0%, transparent 60%)', pointerEvents: 'none' }} />
+              <div style={{ fontFamily: fonts.sans, fontWeight: 700, fontSize: 22, color: '#1a1520', lineHeight: 1.2, whiteSpace: 'nowrap' }}>
+                {loadTyped}
+                {loadCursor && <span style={{ display: 'inline-block', marginLeft: 1, animation: 'echo-cursor-blink 0.75s step-end infinite' }}>|</span>}
+              </div>
+            </div>
           )}
         </div>
       )}
