@@ -29,6 +29,8 @@ async function fetchNetworkArt() {
 }
 
 const NODE_COUNT      = 300;
+const TILE_COLS       = 20; // 20×15 = 300 exactly — every slot filled, clean rectangle
+const TILE_ROWS       = 15;
 const FOCUS_SPREAD_MS = 6000; // total time for the focus wave to cross all nodes
 const FOCUS_FADE_MS   = 700;  // crossfade duration per node
 
@@ -89,6 +91,10 @@ export default function AlbumNetwork({
   cardsEmerging = false, onReady = null,
   focusArt = '',
   nodeArt = '',
+  assembling = false,
+  rippleCount = 0,
+  completing = false,
+  onAssembled = null,
 }) {
   const canvasRef = useRef(null);
   const propsRef  = useRef({ searchQuery, collapsed, albumArt, onCollapsed, zooming, spotlit, onSpotlit, cardsEmerging, onReady });
@@ -102,10 +108,16 @@ export default function AlbumNetwork({
     imagesLoaded: 0,
     onReadyCalled: false,
     focusImg: null, focusRevealStartT: null,
+    assembleStartT: null,
+    ripples: [], rippleTotal: 0,
+    rippleTimestamps: [],
+    assemblePhase: 'idle',
+    convergenceStartT: null,
+    assembleComplete: false,
   });
 
   // Keep props in sync without restarting RAF
-  useEffect(() => { propsRef.current = { searchQuery, collapsed, albumArt, onCollapsed, zooming, pulsing, spotlit, onSpotlit, cardsEmerging, onReady }; });
+  useEffect(() => { propsRef.current = { searchQuery, collapsed, albumArt, onCollapsed, zooming, pulsing, spotlit, onSpotlit, cardsEmerging, onReady, assembling, onAssembled }; });
 
   // Fetch random network art and assign to nodes as images load.
   // Calls onReady once 50 nodes have art so the page can sequence its entrance animation.
@@ -216,7 +228,10 @@ export default function AlbumNetwork({
     img.src = focusArt;
   }, [focusArt]);
 
-  // nodeArt: load album into focusImg without redistributing nodes
+  // nodeArt: load album art, slice into TILE_COLS×TILE_ROWS pieces,
+  // assign each node its own tile crop + final grid destination.
+  // Inner half (by distance from center) = group 1 (ripple 1 triggers crossfade).
+  // Outer half = group 2 (ripple 2 triggers crossfade).
   useEffect(() => {
     if (!nodeArt) return;
     const img = new Image();
@@ -224,15 +239,103 @@ export default function AlbumNetwork({
     img.onload = () => {
       const s = stateRef.current;
       s.focusImg = img;
-      s.focusRevealStartT = null;
-      s.nodes.forEach(n => {
-        n.focusAlpha = 0;
+      const nodes = s.nodes;
+      const { w, h } = s;
+      const cx = w / 2, cy = h / 2;
+
+      // gridSize matches the standalone album art: min(60vw, 60vh)
+      const gridSize  = Math.min(w, h) * 0.60;
+      const cellW     = gridSize / TILE_COLS;
+      const cellH     = gridSize / TILE_ROWS;
+      const gridLeft  = cx - gridSize / 2;
+      const gridTop   = cy - gridSize / 2;
+
+      // Build tile slots sorted by distance from grid center (center tiles assigned first)
+      const allSlots = [];
+      for (let r = 0; r < TILE_ROWS; r++)
+        for (let c = 0; c < TILE_COLS; c++)
+          allSlots.push({ c, r, dist: Math.hypot(c + 0.5 - TILE_COLS / 2, r + 0.5 - TILE_ROWS / 2) });
+      allSlots.sort((a, b) => a.dist - b.dist);
+
+      // Sort nodes by distance from canvas center (innermost → slot 0, outermost → last slot)
+      const sorted = [...nodes].sort((a, b) =>
+        Math.hypot(a.homeX - cx, a.homeY - cy) - Math.hypot(b.homeX - cx, b.homeY - cy)
+      );
+
+      sorted.forEach((n, i) => {
+        const slot = allSlots[i];
+        // Pixel-align each tile's bounds by rounding to the nearest integer.
+        // Adjacent tiles share an exact boundary → no sub-pixel gaps.
+        const px0 = Math.round(gridLeft + slot.c       * cellW);
+        const py0 = Math.round(gridTop  + slot.r       * cellH);
+        const px1 = Math.round(gridLeft + (slot.c + 1) * cellW);
+        const py1 = Math.round(gridTop  + (slot.r + 1) * cellH);
+        n.tileLeft  = px0;
+        n.tileTop   = py0;
+        n.tileW     = px1 - px0;
+        n.tileH     = py1 - py0;
+        n.tileDestX = px0 + (px1 - px0) / 2;
+        n.tileDestY = py0 + (py1 - py0) / 2;
+        n.tileSrcX  = (slot.c / TILE_COLS) * img.naturalWidth;
+        n.tileSrcY  = (slot.r / TILE_ROWS) * img.naturalHeight;
+        n.tileSrcW  = img.naturalWidth  / TILE_COLS;
+        n.tileSrcH  = img.naturalHeight / TILE_ROWS;
+        n.focusAlpha   = 0;
         n.focusRevealT = null;
-        n.focusRevealDelay = Math.random() * 2000;
       });
     };
     img.src = nodeArt;
   }, [nodeArt]);
+
+  // 3-ripple sequence:
+  // Ripple 1 — visual wave, crossfades inner 50% of nodes
+  // Ripple 2 — visual wave, crossfades outer 50% of nodes
+  // Ripple 3 — scatters all nodes outward, then draws them one-by-one into mosaic
+  // Ripple 4+ — additional visual waves through the converging network
+  useEffect(() => {
+    if (rippleCount === 0) return;
+    const s = stateRef.current;
+    if (!s.nodes.length) return;
+
+    const now = performance.now();
+    s.rippleTimestamps.push(now);
+    s.rippleTotal = s.rippleTimestamps.length;
+    s.ripples.push({ startT: now });
+
+    if (rippleCount === 1) {
+      const { nodes } = s;
+      // No scatter — nodes fly from wherever they are in echo's flow field.
+      // Fully random delays so pieces arrive from all around, not centre-first.
+      nodes.forEach(n => {
+        n.assembleHomeX = n.tileDestX ?? n.x;
+        n.assembleHomeY = n.tileDestY ?? n.y;
+        n.locked = false;
+        n.lockFlashT = null;
+        n.cornerRadius = 6;
+        n.convergenceDelay = Math.random() * 12000 + 300;
+      });
+
+      s.assemblePhase = 'converging';
+      s.convergenceStartT = now; // start immediately as wave fires
+    }
+  }, [rippleCount]);
+
+  // Assembly: snapshot current positions as home targets, reset all assembly state
+  useEffect(() => {
+    if (!assembling) return;
+    const s = stateRef.current;
+    if (!s.nodes.length) return;
+    s.nodes.forEach(n => {
+      n.assembleHomeX = n.x;
+      n.assembleHomeY = n.y;
+    });
+    s.assembleStartT = null;
+    s.rippleTimestamps = [];
+    s.rippleTotal = 0;
+    s.assemblePhase = 'idle';
+    s.convergenceStartT = null;
+    s.assembleComplete = false;
+  }, [assembling]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -248,7 +351,7 @@ export default function AlbumNetwork({
 
     let raf;
     function draw(now) {
-      const { searchQuery, collapsed, onCollapsed, zooming, pulsing, spotlit, onSpotlit, cardsEmerging } = propsRef.current;
+      const { searchQuery, collapsed, onCollapsed, zooming, pulsing, spotlit, onSpotlit, cardsEmerging, assembling, onAssembled } = propsRef.current;
       const { nodes, edges, w, h } = s;
       const cx = w / 2, cy = h / 2;
 
@@ -287,6 +390,74 @@ export default function AlbumNetwork({
         });
         if (t > 0.45 && s.artImg) s.artOpacity = Math.min(1, (t - 0.45) / 0.55);
         if (t >= 1 && !s.collapseDone) { s.collapseDone = true; onCollapsed?.(); }
+      } else if (assembling) {
+        if (s.assembleStartT === null) s.assembleStartT = now;
+        s.ripples = s.ripples.filter(r => now - r.startT < 4000);
+
+        const converging = s.assemblePhase === 'converging';
+        const convElapsed = s.convergenceStartT ? now - s.convergenceStartT : -1;
+        const t = now * 0.00028;
+
+        nodes.forEach(n => {
+          const pulling = converging
+            && n.assembleHomeX !== undefined
+            && convElapsed >= (n.convergenceDelay || 0);
+
+          if (pulling) {
+            if (!n.locked) {
+              // Pure lerp — exponential ease-out, mathematically cannot overshoot
+              n.vx = 0; n.vy = 0;
+              n.x += (n.assembleHomeX - n.x) * 0.13;
+              n.y += (n.assembleHomeY - n.y) * 0.13;
+              const dToTarget = Math.hypot(n.x - n.assembleHomeX, n.y - n.assembleHomeY);
+              n.cornerRadius = Math.min(6, dToTarget * 0.12);
+              if (dToTarget < 0.5) {
+                n.x = n.assembleHomeX;
+                n.y = n.assembleHomeY;
+                n.cornerRadius = 0;
+                n.locked = true;
+              }
+            }
+          } else {
+            // Regular echo flow field until it's this node's turn
+            const nx = n.homeX / w, ny = n.homeY / h;
+            const flowAngle =
+              Math.sin(nx * 4.1 + t * 1.3) * Math.cos(ny * 3.7 + t * 0.8) * Math.PI * 1.4 +
+              Math.sin(ny * 5.2 - t * 1.1) * Math.cos(nx * 2.9 + t * 0.6) * 0.9 +
+              Math.sin((nx + ny) * 3.8 + t * 0.5) * 0.6;
+            n.vx += Math.cos(flowAngle) * 0.055;
+            n.vy += Math.sin(flowAngle) * 0.055;
+            n.vx += (n.homeX - n.x) * 0.004;
+            n.vy += (n.homeY - n.y) * 0.004;
+
+            // Wave kick from ripple 1 only
+            if (s.rippleTimestamps.length > 0) {
+              const age = now - s.rippleTimestamps[0];
+              if (age >= 0 && age < 4000) {
+                const dist = Math.hypot(n.x - cx, n.y - cy);
+                const fromFront = dist - (age / 1000) * 450;
+                if (fromFront > -40 && fromFront < 40) {
+                  const kick = Math.sin(((fromFront + 40) / 80) * Math.PI) * 1.8;
+                  n.vx += (n.x - cx) / (dist || 1) * kick;
+                  n.vy += (n.y - cy) / (dist || 1) * kick;
+                }
+              }
+            }
+            n.vx *= 0.974; n.vy *= 0.974;
+          }
+          n.x += n.vx; n.y += n.vy;
+        });
+
+        // All nodes locked into their tile positions → fire onAssembled
+        if (!s.assembleComplete && converging && convElapsed > 5000) {
+          const maxDelay = Math.max(...nodes.map(n => n.convergenceDelay || 0));
+          if (convElapsed > maxDelay + 3000) {
+            if (nodes.every(n => !n.assembleHomeX || n.locked)) {
+              s.assembleComplete = true;
+              onAssembled?.();
+            }
+          }
+        }
       } else {
         // Flow field with turbulence burst on zoom
         const t = now * 0.00028;
@@ -343,8 +514,21 @@ export default function AlbumNetwork({
         });
       }
 
-      // Advance focus reveal wave
-      if (s.focusImg) {
+      // Advance focus reveal
+      if (s.focusImg && assembling && s.rippleTimestamps.length > 0) {
+        // Single wave from ripple 1 sweeps all nodes centre-outward
+        const rStartT = s.rippleTimestamps[0];
+        nodes.forEach(n => {
+          if (n.focusRevealT !== null) {
+            if (n.focusAlpha < 1) n.focusAlpha = Math.min(1, (now - n.focusRevealT) / FOCUS_FADE_MS);
+            return;
+          }
+          const nodeDist = Math.hypot(n.homeX - cx, n.homeY - cy);
+          const wavePassT = rStartT + (nodeDist / 450) * 1000;
+          if (now >= wavePassT) n.focusRevealT = wavePassT;
+        });
+      } else if (s.focusImg && !assembling) {
+        // focusArt (non-assembly) mode — delay-based spread
         if (s.focusRevealStartT === null) s.focusRevealStartT = now;
         const elapsed = now - s.focusRevealStartT;
         nodes.forEach(n => {
@@ -387,26 +571,26 @@ export default function AlbumNetwork({
 
         const baseAlpha = n.opacity * n.spawnAlpha;
 
-        const hs = n.size / 2;
-        const dx = n.x - hs, dy = n.y - hs;
+        // Locked tiles use exact cell dimensions (tileW × tileH) so adjacent cells share
+        // a flush edge with zero gap. Flying tiles stay as squares.
+        const drawW = n.locked && n.tileW ? n.tileW : n.size;
+        const drawH = n.locked && n.tileH ? n.tileH : n.size;
+        const dx = n.locked ? n.tileLeft : n.x - n.size / 2;
+        const dy = n.locked ? n.tileTop  : n.y - n.size / 2;
+        const cr = n.cornerRadius ?? 3;
+
         ctx.save();
-        rrect(ctx, dx, dy, n.size, n.size, 3);
+        rrect(ctx, dx, dy, drawW, drawH, cr);
         ctx.clip();
         if (hasThumbnail && n.focusAlpha < 1) {
           ctx.globalAlpha = baseAlpha * (1 - n.focusAlpha);
-          ctx.drawImage(n.img, dx, dy, n.size, n.size);
+          ctx.drawImage(n.img, dx, dy, drawW, drawH);
         }
         if (s.focusImg && n.focusAlpha > 0) {
           ctx.globalAlpha = baseAlpha * n.focusAlpha;
-          // Map album across cluster bounds so full cover spreads across all nodes
-          const clR  = Math.min(w, h) * 0.50;
-          const clX  = cx - clR, clY = cy - clR, clD = 2 * clR;
-          const img  = s.focusImg;
-          const scX  = img.naturalWidth  / clD;
-          const scY  = img.naturalHeight / clD;
-          ctx.drawImage(img,
-            (dx - clX) * scX, (dy - clY) * scY, n.size * scX, n.size * scY,
-            dx, dy, n.size, n.size
+          ctx.drawImage(s.focusImg,
+            n.tileSrcX, n.tileSrcY, n.tileSrcW, n.tileSrcH,
+            dx, dy, drawW, drawH
           );
         }
         ctx.restore();
@@ -417,6 +601,48 @@ export default function AlbumNetwork({
       nodes.forEach(n => { if (!n.isSpotlit) drawNode(n); });
       nodes.forEach(n => { if (n.isSpotlit)  drawNode(n); });
       ctx.globalAlpha = 1;
+
+      // Round the assembled mosaic corners throughout assembly by painting background
+      // colour over the four corner areas — matches the standalone album's borderRadius
+      if (assembling && s.assemblePhase === 'converging') {
+        const gs = Math.min(w, h) * 0.60;
+        const gl = cx - gs / 2, gt = cy - gs / 2;
+        const gx = gl + gs,    gb = gt + gs;
+        const cr = 16;
+        ctx.fillStyle = '#f5f2ec';
+
+        // Top-left
+        ctx.beginPath();
+        ctx.moveTo(gl, gt);
+        ctx.lineTo(gl + cr, gt);
+        ctx.arc(gl + cr, gt + cr, cr, -Math.PI / 2, Math.PI, true);
+        ctx.closePath();
+        ctx.fill();
+
+        // Top-right
+        ctx.beginPath();
+        ctx.moveTo(gx, gt);
+        ctx.lineTo(gx - cr, gt);
+        ctx.arc(gx - cr, gt + cr, cr, -Math.PI / 2, 0, false);
+        ctx.closePath();
+        ctx.fill();
+
+        // Bottom-right
+        ctx.beginPath();
+        ctx.moveTo(gx, gb);
+        ctx.lineTo(gx - cr, gb);
+        ctx.arc(gx - cr, gb - cr, cr, Math.PI / 2, 0, true);
+        ctx.closePath();
+        ctx.fill();
+
+        // Bottom-left
+        ctx.beginPath();
+        ctx.moveTo(gl, gb);
+        ctx.lineTo(gl + cr, gb);
+        ctx.arc(gl + cr, gb - cr, cr, Math.PI / 2, Math.PI, false);
+        ctx.closePath();
+        ctx.fill();
+      }
 
       // Spotlit glow — white halos pulse around found nodes, only after scan phase
       if (s.spotlitT !== null && s.spotlitNodes.length > 0) {
@@ -473,9 +699,11 @@ export default function AlbumNetwork({
       ref={canvasRef}
       style={{
         position: 'fixed', inset: 0, zIndex: 0, display: 'block',
-        opacity: dimmed ? 0.12 : 1,
+        opacity: completing ? 0 : dimmed ? 0.12 : 1,
         transform: zooming ? 'scale(1.65)' : 'scale(1)',
-        transition: 'transform 2.2s cubic-bezier(0.25,1.0,0.5,1), opacity 1.8s ease',
+        transition: completing
+          ? 'opacity 1.2s ease'
+          : 'transform 2.2s cubic-bezier(0.25,1.0,0.5,1), opacity 1.8s ease',
         transformOrigin: 'center center',
       }}
     />
