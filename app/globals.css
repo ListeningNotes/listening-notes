@@ -541,8 +541,6 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   z-index: 0;
   background-size: cover;
   background-position: center;
-  filter: blur(64px) saturate(1.4);
-  transform: scale(1.25);
   pointer-events: none;
 }
 .hp-bg::after {
