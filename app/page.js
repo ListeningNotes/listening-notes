@@ -19,6 +19,16 @@ export default function HomePage() {
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalSlug, setModalSlug] = useState(null);
+  // Keep the last two covers mounted so a new one can crossfade over the old.
+  const [bgLayers, setBgLayers] = useState([]);
+
+  useEffect(() => {
+    if (!bgArt) return;
+    setBgLayers(prev => {
+      if (prev.length && prev[prev.length - 1].art === bgArt) return prev;
+      return [...prev, { art: bgArt, key: Date.now() }].slice(-2);
+    });
+  }, [bgArt]);
 
   useEffect(() => {
     fetch('/api/entries')
@@ -33,9 +43,15 @@ export default function HomePage() {
 
   return (
     <div className="hp">
-      {bgArt && (
-        <div className="hp-bg" style={{ backgroundImage: `url(${bgArt})` }} aria-hidden="true" />
-      )}
+      {bgLayers.map(layer => (
+        <div
+          key={layer.key}
+          className="hp-bg"
+          style={{ backgroundImage: `url(${layer.art})` }}
+          aria-hidden="true"
+        />
+      ))}
+      {bgLayers.length > 0 && <div className="hp-bg-tint" aria-hidden="true" />}
       <TopNav onToggleTheme={toggleTheme} theme={theme} hideBeacon />
       <main className="hp-main">
         <div className="hp-hero-grid">

@@ -534,7 +534,7 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   overflow-x: hidden;
 }
 
-/* ── Now-playing blurred background ── */
+/* ── Now-playing background (crossfades between covers) ── */
 .hp-bg {
   position: fixed;
   inset: 0;
@@ -542,13 +542,19 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   background-size: cover;
   background-position: center;
   pointer-events: none;
+  animation: hp-bg-in 1.4s ease forwards;
 }
-.hp-bg::after {
-  content: '';
-  position: absolute;
+@keyframes hp-bg-in {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+.hp-bg-tint {
+  position: fixed;
   inset: 0;
+  z-index: 1;
   background: var(--bg);
   opacity: 0.35;
+  pointer-events: none;
 }
 
 /* ── Homepage grid layout ── */
