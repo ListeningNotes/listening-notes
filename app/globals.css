@@ -525,12 +525,78 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 ═══════════════════════════════════════════════════ */
 
 .hp {
-  display: flex;
-  flex-direction: column;
   background: var(--bg);
-  color: var(--text);
+  color: var(--ink);
+  min-height: 100vh;
+  position: relative;
   overflow-x: hidden;
-  padding-top: 0;
+}
+
+/* ── Ambient album scatter ── */
+.hp-ambient {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  filter: saturate(0.7);
+}
+.hp-ambient-tile {
+  position: absolute;
+  border-radius: 8px;
+  background-size: cover;
+  background-position: center;
+}
+
+/* ── Homepage grid layout ── */
+.hp-main {
+  position: relative;
+  z-index: 5;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 120px 24px 80px;
+}
+.hp-hero-grid {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+.hp-recent {
+  background: var(--panel);
+  backdrop-filter: var(--card-blur);
+  -webkit-backdrop-filter: var(--card-blur);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius);
+  padding: 28px;
+  box-shadow: var(--shadow-soft);
+  margin-bottom: 40px;
+}
+.hp-recent-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 20px;
+}
+.hp-recent-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.hp-recent-link {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink);
+  text-decoration: none;
+  border-bottom: 1px solid var(--ink);
+  padding-bottom: 2px;
+}
+
+@media (max-width: 860px) {
+  .hp-hero-grid { grid-template-columns: 1fr; }
 }
 
 .topnav {
