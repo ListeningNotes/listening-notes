@@ -610,6 +610,25 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   letter-spacing: 0.1em;
   color: rgba(255,255,255,0.5);
 }
+.hp-tuner-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.hp-tuner-row label {
+  width: 84px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.6);
+}
+.hp-tuner-row input {
+  width: 130px;
+}
+.hp-tuner-row span {
+  width: 44px;
+  text-align: right;
+  color: #fff;
+}
 
 /* Glass sheen — diagonal light-catch on the homepage widgets */
 .hp-now-card::before,

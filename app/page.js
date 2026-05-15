@@ -20,10 +20,14 @@ export default function HomePage() {
   const Background = backgrounds[bgIndex];
   const stepBg = d => setBgIndex(i => (i + d + backgrounds.length) % backgrounds.length);
 
+  // Live-tunable widget frosting (temporary controls).
+  const [blur, setBlur] = useState(48);
+  const [frost, setFrost] = useState(45);
+
   const cardGlass = {
-    backdropFilter: 'blur(48px)',
-    WebkitBackdropFilter: 'blur(48px)',
-    background: 'rgba(255,255,255,0.45)',
+    backdropFilter: `blur(${blur}px)`,
+    WebkitBackdropFilter: `blur(${blur}px)`,
+    background: `rgba(255,255,255,${frost / 100})`,
   };
 
   // Albums with art, shuffled — fed to the screensaver background.
@@ -48,6 +52,14 @@ export default function HomePage() {
       <div className="hp-screensaver" aria-hidden="true">
         <Background key={bgIndex} albums={bgAlbums} />
       </div>
+      <div
+        aria-hidden="true"
+        style={{
+          position: 'fixed', inset: 0, zIndex: 1,
+          backdropFilter: 'blur(1px)', WebkitBackdropFilter: 'blur(1px)',
+          background: 'rgba(214,214,214,0.33)', pointerEvents: 'none',
+        }}
+      />
       <TopNav onToggleTheme={toggleTheme} theme={theme} hideBeacon />
       <main className="hp-main">
         <div className="hp-hero-grid">
@@ -76,7 +88,7 @@ export default function HomePage() {
         <EntryModal slug={modalSlug} onClose={() => setModalSlug(null)} />
       )}
 
-      {/* Temporary screensaver picker */}
+      {/* Temporary screensaver picker + widget tuning */}
       <div className="hp-tuner">
         <div className="hp-tuner-flip">
           <button onClick={() => stepBg(-1)} aria-label="Previous background">◀</button>
@@ -84,6 +96,18 @@ export default function HomePage() {
           <button onClick={() => stepBg(1)} aria-label="Next background">▶</button>
         </div>
         <div className="hp-tuner-count">{bgIndex + 1} / {backgrounds.length}</div>
+        <div className="hp-tuner-row">
+          <label>Blur</label>
+          <input type="range" min="0" max="80" value={blur}
+            onChange={e => setBlur(Number(e.target.value))} />
+          <span>{blur}px</span>
+        </div>
+        <div className="hp-tuner-row">
+          <label>White frost</label>
+          <input type="range" min="0" max="100" value={frost}
+            onChange={e => setFrost(Number(e.target.value))} />
+          <span>{frost}%</span>
+        </div>
       </div>
     </div>
   );
