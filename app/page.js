@@ -13,7 +13,9 @@ import EntryModal from '../components/main_components/EntryModal';
 export default function HomePage() {
   const { theme, toggle: toggleTheme } = useTheme();
   const { track } = useListeningBeacon();
-  const bgArt = track?.image || '';
+  // Last.fm serves a 300x300 thumbnail; swap the size segment out of the URL
+  // to pull the original full-resolution upload for a crisp background.
+  const bgArt = track?.image ? track.image.replace('/300x300/', '/') : '';
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalSlug, setModalSlug] = useState(null);
