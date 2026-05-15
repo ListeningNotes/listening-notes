@@ -580,8 +580,6 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   position: relative;
   overflow: hidden;
   background: var(--panel);
-  backdrop-filter: var(--card-blur);
-  -webkit-backdrop-filter: var(--card-blur);
   border: 1px solid var(--panel-border);
   border-radius: var(--radius);
   padding: 28px;
@@ -620,8 +618,6 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 .hp-now-card {
   position: relative;
   background: var(--panel);
-  backdrop-filter: var(--card-blur);
-  -webkit-backdrop-filter: var(--card-blur);
   border: 1px solid var(--panel-border);
   border-radius: var(--radius);
   box-shadow: var(--shadow-lift);
@@ -769,8 +765,6 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   position: relative;
   overflow: hidden;
   background: var(--panel);
-  backdrop-filter: var(--card-blur);
-  -webkit-backdrop-filter: var(--card-blur);
   border: 1px solid var(--panel-border);
   border-radius: var(--radius);
   padding: 28px;
@@ -835,8 +829,6 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   gap: 48px;
   pointer-events: all;
   background: var(--panel);
-  backdrop-filter: var(--card-blur);
-  -webkit-backdrop-filter: var(--card-blur);
   border-radius: 20px;
   border: 1px solid var(--panel-border);
   box-shadow: var(--shadow-soft);

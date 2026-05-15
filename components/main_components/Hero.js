@@ -32,7 +32,10 @@ export default function Hero() {
   }, []);
 
   return (
-    <div className={'hp-now-card' + (panelOpen ? ' hp-now-card--open' : '')}>
+    <div
+      className={'hp-now-card' + (panelOpen ? ' hp-now-card--open' : '')}
+      style={{ backdropFilter: 'blur(48px)', WebkitBackdropFilter: 'blur(48px)' }}
+    >
       <button
         className="hp-now-row"
         onClick={() => setPanelOpen(v => !v)}
