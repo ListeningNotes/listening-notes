@@ -14,7 +14,7 @@
   --ink:          #1a1a1a;
   --ink-soft:     #6b6b6b;
   --ink-faint:    #a8a8a8;
-  --accent:       #c8d47a;
+  --accent:       #b5b2ab;
   --border:       rgba(26, 26, 26, 0.08);
   --gold:         #E8B84B;
   --card-blur:    blur(24px);
@@ -54,7 +54,7 @@
   --ink:          #e8e4dc;
   --ink-soft:     #888888;
   --ink-faint:    #555555;
-  --accent:       #c8d47a;
+  --accent:       #b5b2ab;
   --border:       rgba(255, 255, 255, 0.08);
   --shadow-soft:  0 2px 12px rgba(0,0,0,0.3), 0 8px 32px rgba(0,0,0,0.2);
   --shadow-lift:  0 4px 20px rgba(0,0,0,0.4), 0 16px 48px rgba(0,0,0,0.3);
