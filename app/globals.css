@@ -1112,25 +1112,9 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   letter-spacing: 0.04em;
 }
 
-.hp-strip-section {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  padding-bottom: 24px;
-}
-
-.strip-outer {
-  width: 100%;
-  overflow: hidden;
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 0;
-}
-
 .strip-viewport {
   position: relative;
-  flex: 1;
+  width: 100%;
   overflow: hidden;
 }
 
@@ -1141,29 +1125,6 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   padding: 4px 0;
 }
 
-.strip-arrow {
-  flex-shrink: 0;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  color: var(--text);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  z-index: 10;
-  transition: background 0.15s, transform 0.1s;
-  flex-shrink: 0;
-}
-.strip-arrow:hover {
-  background: var(--bg2);
-  transform: scale(1.05);
-}
-.strip-arrow--left { margin-right: 12px; }
-.strip-arrow--right { margin-left: 12px; }
-
 .strip-tile {
   flex-shrink: 0;
   width: 210px;
@@ -1173,7 +1134,9 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   position: relative;
   display: block;
   text-decoration: none;
+  transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
+.strip-tile:hover { transform: translateY(-4px); }
 
 .strip-tile-img {
   width: 100%;
@@ -1221,34 +1184,14 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   font-family: var(--font-nunito), sans-serif;
   font-size: 0.62rem;
   letter-spacing: 0.08em;
-  color: rgba(124,255,155,0.7);
+  color: var(--accent);
   margin-top: 2px;
-}
-
-.strip-fade-right {
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 120px;
-  height: 100%;
-  background: linear-gradient(to left, var(--bg), transparent);
-  pointer-events: none;
-}
-.strip-fade-left {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 120px;
-  height: 100%;
-  background: linear-gradient(to right, var(--bg), transparent);
-  pointer-events: none;
-  z-index: 1;
 }
 
 .strip-skeleton {
   display: flex;
   gap: 12px;
-  padding: 4px 24px;
+  padding: 4px 0;
   overflow: hidden;
 }
 .strip-skeleton-tile {
@@ -1333,16 +1276,6 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 .hp [class*="neon-"] {
   display: none !important;
 }
-/* Strip label */
-.strip-label {
-  font-family: var(--font-mono);
-  font-size: 0.7rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  padding: 0 0 8px 24px;
-}
-
 /* Nav dropdowns */
 .topnav-group {
   position: relative;
@@ -1429,16 +1362,6 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 @keyframes gold-explode {
   0%   { opacity: 1; transform: translate(0,0) scale(1) rotate(0deg); }
   100% { opacity: 0; transform: translate(var(--gx), var(--gy)) scale(0.1) rotate(var(--gr, 180deg)); }
-}
-
-/* Strip label bigger */
-.strip-label {
-  font-family: var(--font-mono);
-  font-size: 0.8rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  padding: 0 0 8px 32px;
 }
 
 .topnav-group:hover .topnav-link--group {
