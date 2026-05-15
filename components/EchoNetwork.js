@@ -95,7 +95,6 @@ export default function AlbumNetwork({
   rippleCount = 0,
   completing = false,
   onAssembled = null,
-  uniformArt = '',
 }) {
   const canvasRef = useRef(null);
   const propsRef  = useRef({ searchQuery, collapsed, albumArt, onCollapsed, zooming, spotlit, onSpotlit, cardsEmerging, onReady });
@@ -120,20 +119,9 @@ export default function AlbumNetwork({
   // Keep props in sync without restarting RAF
   useEffect(() => { propsRef.current = { searchQuery, collapsed, albumArt, onCollapsed, zooming, pulsing, spotlit, onSpotlit, cardsEmerging, onReady, assembling, onAssembled }; });
 
-  // When uniformArt is set, every node shows that single cover.
-  useEffect(() => {
-    if (!uniformArt) return;
-    const img = new Image();
-    img.onload = () => {
-      stateRef.current.nodes.forEach(n => { if (!n.isSpotlit) n.img = img; });
-    };
-    img.src = uniformArt;
-  }, [uniformArt]);
-
   // Fetch random network art and assign to nodes as images load.
   // Calls onReady once 50 nodes have art so the page can sequence its entrance animation.
   useEffect(() => {
-    if (uniformArt) return;
     fetchNetworkArt().then(urls => {
       const s = stateRef.current;
       const nodes = s.nodes;
@@ -153,7 +141,7 @@ export default function AlbumNetwork({
         img.src = url;
       });
     });
-  }, [uniformArt]);
+  }, []);
 
   // Load search result arts into specific evenly-distributed nodes
   // These appear IN the network during turbulence, then get spotlit when zoomReady

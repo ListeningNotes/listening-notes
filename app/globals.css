@@ -552,13 +552,6 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   background: var(--bg);
   pointer-events: none;
 }
-.hp-screensaver {
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  animation: hp-bg-in 1.4s ease forwards;
-}
 @keyframes hp-bg-in {
   from { opacity: 0; }
   to   { opacity: 1; }
@@ -580,35 +573,6 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   font-family: var(--font-label);
   font-size: 11px;
   box-shadow: 0 8px 32px rgba(0,0,0,0.35);
-}
-.hp-tuner-flip {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.hp-tuner-flip button {
-  width: 28px;
-  height: 28px;
-  border-radius: 7px;
-  background: rgba(255,255,255,0.12);
-  color: #fff;
-  font-size: 11px;
-  cursor: pointer;
-  flex-shrink: 0;
-}
-.hp-tuner-flip button:hover { background: rgba(255,255,255,0.22); }
-.hp-tuner-name {
-  flex: 1;
-  text-align: center;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: #fff;
-}
-.hp-tuner-count {
-  text-align: center;
-  font-size: 9px;
-  letter-spacing: 0.1em;
-  color: rgba(255,255,255,0.5);
 }
 .hp-tuner-row {
   display: flex;
