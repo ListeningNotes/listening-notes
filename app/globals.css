@@ -534,66 +534,6 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   overflow-x: hidden;
 }
 
-/* ── Now-playing background (crossfades between covers) ── */
-.hp-bg {
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  background-size: cover;
-  background-position: center;
-  transform: scale(1.12);
-  pointer-events: none;
-  animation: hp-bg-in 1.4s ease forwards;
-}
-.hp-bg-fade {
-  position: fixed;
-  inset: 0;
-  z-index: 1;
-  background: var(--bg);
-  pointer-events: none;
-}
-@keyframes hp-bg-in {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-
-/* Temporary frosting tuning controls */
-.hp-tuner {
-  position: fixed;
-  right: 16px;
-  bottom: 16px;
-  z-index: 999;
-  background: #1a1a1a;
-  color: #fff;
-  border-radius: 12px;
-  padding: 14px 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  font-family: var(--font-label);
-  font-size: 11px;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.35);
-}
-.hp-tuner-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.hp-tuner-row label {
-  width: 84px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: rgba(255,255,255,0.6);
-}
-.hp-tuner-row input {
-  width: 130px;
-}
-.hp-tuner-row span {
-  width: 44px;
-  text-align: right;
-  color: #fff;
-}
-
 /* Glass sheen — diagonal light-catch on the homepage widgets */
 .hp-now-card::before,
 .hp-pulse-card::before,
