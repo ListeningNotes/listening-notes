@@ -8,7 +8,7 @@ function titleCase(str) {
   return str.replace(/\b\w/g, c => c.toUpperCase());
 }
 
-export default function PulseCard({ entries = [] }) {
+export default function PulseCard({ entries = [], glass }) {
   const weekAgo = Date.now() - WEEK_MS;
 
   const thisWeek = entries.filter(e => {
@@ -38,7 +38,7 @@ export default function PulseCard({ entries = [] }) {
   const topTag = topEntry ? titleCase(topEntry[0]) : '—';
 
   return (
-    <div className="hp-pulse-card" style={{ backdropFilter: 'blur(48px)', WebkitBackdropFilter: 'blur(48px)' }}>
+    <div className="hp-pulse-card" style={glass}>
       <div className="hp-pulse-label">This week</div>
       <div className="hp-pulse-stats">
         <div className="hp-stat">
