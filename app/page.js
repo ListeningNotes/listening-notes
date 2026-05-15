@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useTheme } from '../components/main_components/Lightswitch';
 import backgrounds from '../components/session_components/backgrounds';
@@ -15,18 +15,15 @@ export default function HomePage() {
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalSlug, setModalSlug] = useState(null);
-  // Pick one random screensaver background per visit (same logic as the dashboard).
-  const Background = useRef(backgrounds[Math.floor(Math.random() * backgrounds.length)]).current;
-  // Live-tunable frosting + background (temporary controls).
-  const [blur, setBlur] = useState(48);
-  const [frost, setFrost] = useState(45);
-  const [bgBlur, setBgBlur] = useState(0);
-  const [bgFade, setBgFade] = useState(0);
+  // Screensaver background — starts random, flip through with the panel.
+  const [bgIndex, setBgIndex] = useState(() => Math.floor(Math.random() * backgrounds.length));
+  const Background = backgrounds[bgIndex];
+  const stepBg = d => setBgIndex(i => (i + d + backgrounds.length) % backgrounds.length);
 
   const cardGlass = {
-    backdropFilter: `blur(${blur}px)`,
-    WebkitBackdropFilter: `blur(${blur}px)`,
-    background: `rgba(255,255,255,${frost / 100})`,
+    backdropFilter: 'blur(48px)',
+    WebkitBackdropFilter: 'blur(48px)',
+    background: 'rgba(255,255,255,0.45)',
   };
 
   // Albums with art, shuffled — fed to the screensaver background.
@@ -48,20 +45,9 @@ export default function HomePage() {
 
   return (
     <div className="hp">
-      <div
-        className="hp-screensaver"
-        style={{ filter: bgBlur ? `blur(${bgBlur}px)` : 'none' }}
-        aria-hidden="true"
-      >
-        <Background albums={bgAlbums} />
+      <div className="hp-screensaver" aria-hidden="true">
+        <Background key={bgIndex} albums={bgAlbums} />
       </div>
-      {bgFade > 0 && (
-        <div
-          className="hp-bg-fade"
-          style={{ opacity: bgFade / 100 }}
-          aria-hidden="true"
-        />
-      )}
       <TopNav onToggleTheme={toggleTheme} theme={theme} hideBeacon />
       <main className="hp-main">
         <div className="hp-hero-grid">
@@ -90,32 +76,14 @@ export default function HomePage() {
         <EntryModal slug={modalSlug} onClose={() => setModalSlug(null)} />
       )}
 
-      {/* Temporary frosting tuning controls */}
+      {/* Temporary screensaver picker */}
       <div className="hp-tuner">
-        <div className="hp-tuner-row">
-          <label>Blur</label>
-          <input type="range" min="0" max="80" value={blur}
-            onChange={e => setBlur(Number(e.target.value))} />
-          <span>{blur}px</span>
+        <div className="hp-tuner-flip">
+          <button onClick={() => stepBg(-1)} aria-label="Previous background">◀</button>
+          <span className="hp-tuner-name">{Background.name || 'Background'}</span>
+          <button onClick={() => stepBg(1)} aria-label="Next background">▶</button>
         </div>
-        <div className="hp-tuner-row">
-          <label>White frost</label>
-          <input type="range" min="0" max="100" value={frost}
-            onChange={e => setFrost(Number(e.target.value))} />
-          <span>{frost}%</span>
-        </div>
-        <div className="hp-tuner-row">
-          <label>BG blur</label>
-          <input type="range" min="0" max="80" value={bgBlur}
-            onChange={e => setBgBlur(Number(e.target.value))} />
-          <span>{bgBlur}px</span>
-        </div>
-        <div className="hp-tuner-row">
-          <label>BG fade</label>
-          <input type="range" min="0" max="100" value={bgFade}
-            onChange={e => setBgFade(Number(e.target.value))} />
-          <span>{bgFade}%</span>
-        </div>
+        <div className="hp-tuner-count">{bgIndex + 1} / {backgrounds.length}</div>
       </div>
     </div>
   );
