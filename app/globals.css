@@ -40,6 +40,8 @@
   --font-serif: var(--font-nunito), sans-serif;
   --font-mono:  var(--font-nunito), sans-serif;
   --font-sans:  var(--font-nunito), sans-serif;
+  --font-display: var(--font-dm-serif), 'DM Serif Display', serif;
+  --font-label:   var(--font-dm-mono), 'DM Mono', monospace;
   --ease: 0.22s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -597,6 +599,91 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 
 @media (max-width: 860px) {
   .hp-hero-grid { grid-template-columns: 1fr; }
+}
+
+/* ── Now card (Hero) ── */
+.hp-now-card {
+  background: var(--panel);
+  backdrop-filter: var(--card-blur);
+  -webkit-backdrop-filter: var(--card-blur);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--radius);
+  padding: 32px;
+  box-shadow: var(--shadow-lift);
+  display: flex;
+  gap: 28px;
+  align-items: center;
+}
+.hp-now-art {
+  width: 180px;
+  height: 180px;
+  flex-shrink: 0;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+}
+.hp-now-art img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.hp-now-art-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-warm);
+  color: var(--ink-faint);
+  font-size: 3rem;
+}
+.hp-now-meta {
+  min-width: 0;
+}
+.hp-now-label {
+  font-family: var(--font-label);
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.hp-pulse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ink-faint);
+  flex-shrink: 0;
+}
+.hp-pulse-dot--live {
+  background: var(--accent);
+  animation: hp-pulse 2s ease-in-out infinite;
+}
+@keyframes hp-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.8); }
+}
+.hp-now-title {
+  font-family: var(--font-display);
+  font-size: 40px;
+  line-height: 1.05;
+  letter-spacing: -0.02em;
+  font-weight: 400;
+  color: var(--ink);
+  margin: 0 0 8px 0;
+}
+.hp-now-artist {
+  font-size: 16px;
+  color: var(--ink-soft);
+}
+
+@media (max-width: 860px) {
+  .hp-now-card { flex-direction: column; text-align: center; }
+  .hp-now-label { justify-content: center; }
 }
 
 .topnav {
