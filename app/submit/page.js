@@ -20,11 +20,11 @@ const field = {
 
 const label = {
   display: 'block',
-  fontFamily: 'var(--font-mono)',
+  fontFamily: 'var(--font-label)',
   fontSize: '0.7rem',
   letterSpacing: '0.1em',
   textTransform: 'uppercase',
-  color: 'var(--text-muted)',
+  color: 'var(--ink-soft)',
   marginBottom: '6px',
 };
 
@@ -71,29 +71,29 @@ export default function SubmitPage() {
   }
 
   return (
-    <div style={{ minHeight: '100vh' }}>
+    <div style={{ minHeight: '100vh', background: 'var(--bg)', color: 'var(--ink)' }}>
       <TopNav onToggleTheme={toggleTheme} theme={theme} />
 
       <div style={{ maxWidth: '560px', margin: '0 auto', padding: '120px 24px 80px' }}>
 
-        <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--r-xl)', padding: '36px' }}>
+        <div style={{ background: 'var(--panel)', backdropFilter: 'var(--card-blur)', WebkitBackdropFilter: 'var(--card-blur)', border: '1px solid var(--panel-border)', borderRadius: 'var(--radius)', padding: '36px', boxShadow: 'var(--shadow-lift)' }}>
 
         <div style={{ marginBottom: '32px' }}>
-          <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--accent)', marginBottom: '12px' }}>
+          <div style={{ fontFamily: 'var(--font-label)', fontSize: '0.7rem', letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--accent)', marginBottom: '12px' }}>
             Submit an album
           </div>
-          <h1 style={{ fontFamily: 'var(--font-serif)', fontSize: '2.4rem', fontWeight: 400, margin: '0 0 12px', lineHeight: 1.2 }}>
+          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '2.4rem', fontWeight: 400, margin: '0 0 12px', lineHeight: 1.2 }}>
             What should I listen to?
           </h1>
-          <p style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85rem', color: 'var(--text-muted)', margin: 0, lineHeight: 1.7 }}>
+          <p style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85rem', color: 'var(--ink-soft)', margin: 0, lineHeight: 1.7 }}>
             Recommend an album and tell me what to listen for. I'll add it to my queue and write it up when I do.
           </p>
         </div>
 
         {done ? (
-          <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 'var(--r-lg)', padding: '32px', textAlign: 'center' }}>
-            <div style={{ fontFamily: 'var(--font-serif)', fontSize: '1.6rem', marginBottom: '10px' }}>Submitted.</div>
-            <p style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8rem', color: 'var(--text-muted)', margin: 0, lineHeight: 1.7 }}>
+          <div style={{ background: 'var(--bg-warm)', border: '1px solid var(--border)', borderRadius: 'var(--r-lg)', padding: '32px', textAlign: 'center' }}>
+            <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.6rem', marginBottom: '10px' }}>Submitted.</div>
+            <p style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8rem', color: 'var(--ink-soft)', margin: 0, lineHeight: 1.7 }}>
               {form.name ? `Thanks, ${form.name}. ` : ''}I'll give it a listen.
               {form.email ? " I'll let you know when it goes up." : ''}
             </p>
