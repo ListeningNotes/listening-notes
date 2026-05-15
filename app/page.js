@@ -57,7 +57,7 @@ export default function HomePage() {
           <Hero />
           <PulseCard entries={entries} />
         </div>
-        <section className="hp-recent">
+        <section className="hp-recent" style={{ backdropFilter: 'blur(48px)', WebkitBackdropFilter: 'blur(48px)' }}>
           <div className="hp-recent-header">
             <div className="hp-recent-label">Recently logged</div>
             <Link href="/archive" className="hp-recent-link">See archive →</Link>

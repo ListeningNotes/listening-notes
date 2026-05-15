@@ -38,7 +38,7 @@ export default function PulseCard({ entries = [] }) {
   const topTag = topEntry ? titleCase(topEntry[0]) : '—';
 
   return (
-    <div className="hp-pulse-card">
+    <div className="hp-pulse-card" style={{ backdropFilter: 'blur(48px)', WebkitBackdropFilter: 'blur(48px)' }}>
       <div className="hp-pulse-label">This week</div>
       <div className="hp-pulse-stats">
         <div className="hp-stat">
