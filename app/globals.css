@@ -17,7 +17,7 @@
   --accent:       #b5b2ab;
   --border:       rgba(26, 26, 26, 0.08);
   --gold:         #E8B84B;
-  --card-blur:    blur(24px);
+  --card-blur:    blur(48px);
   --shadow-soft:  0 2px 12px rgba(0,0,0,0.04), 0 8px 32px rgba(0,0,0,0.04);
   --shadow-lift:  0 4px 20px rgba(0,0,0,0.06), 0 16px 48px rgba(0,0,0,0.06);
   --radius:       24px;
