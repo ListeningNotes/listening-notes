@@ -534,6 +534,25 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   overflow-x: hidden;
 }
 
+/* ── Now-playing blurred background ── */
+.hp-bg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background-size: cover;
+  background-position: center;
+  filter: blur(64px) saturate(1.4);
+  transform: scale(1.25);
+  pointer-events: none;
+}
+.hp-bg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--bg);
+  opacity: 0.35;
+}
+
 /* ── Homepage grid layout ── */
 .hp-main {
   position: relative;

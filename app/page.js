@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useTheme } from '../components/main_components/Lightswitch';
+import { useListeningBeacon } from '../hooks/useListeningBeacon';
 import TopNav from '../components/main_components/TopNav';
 import Hero from '../components/main_components/Hero';
 import PulseCard from '../components/main_components/PulseCard';
@@ -11,6 +12,8 @@ import EntryModal from '../components/main_components/EntryModal';
 
 export default function HomePage() {
   const { theme, toggle: toggleTheme } = useTheme();
+  const { track } = useListeningBeacon();
+  const bgArt = track?.image || '';
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalSlug, setModalSlug] = useState(null);
@@ -28,6 +31,9 @@ export default function HomePage() {
 
   return (
     <div className="hp">
+      {bgArt && (
+        <div className="hp-bg" style={{ backgroundImage: `url(${bgArt})` }} aria-hidden="true" />
+      )}
       <TopNav onToggleTheme={toggleTheme} theme={theme} hideBeacon />
       <main className="hp-main">
         <div className="hp-hero-grid">
