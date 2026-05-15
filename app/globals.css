@@ -759,42 +759,6 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   margin-top: 2px;
 }
 
-/* ── Session-style glass widgets ──
-   Vivid blurred backdrop, thin dark veil, light text — like the
-   Echo session card. These overrides win by source order. */
-.hp-now-card,
-.hp-pulse-card,
-.hp-recent {
-  background: rgba(0, 0, 0, 0.38);
-  backdrop-filter: blur(48px) saturate(1.6);
-  -webkit-backdrop-filter: blur(48px) saturate(1.6);
-  border-color: rgba(255, 255, 255, 0.14);
-}
-.hp-now-title,
-.hp-now-recent-track,
-.hp-stat-num {
-  color: rgba(255, 255, 255, 0.96);
-}
-.hp-now-artist,
-.hp-now-recent-artist {
-  color: rgba(255, 255, 255, 0.62);
-}
-.hp-now-recent-label,
-.hp-now-recent-empty,
-.hp-now-chevron,
-.hp-pulse-label,
-.hp-stat-label,
-.hp-recent-label {
-  color: rgba(255, 255, 255, 0.42);
-}
-.hp-recent-link {
-  color: rgba(255, 255, 255, 0.92);
-  border-bottom-color: rgba(255, 255, 255, 0.45);
-}
-.hp-now-recent {
-  border-top-color: rgba(255, 255, 255, 0.12);
-}
-
 @media (max-width: 860px) {
   .hp-now-row { flex-direction: column; text-align: center; }
   .hp-now-label { justify-content: center; }
