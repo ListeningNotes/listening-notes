@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useListeningBeacon } from '../../hooks/useListeningBeacon';
 
-export default function Hero() {
+export default function Hero({ glass }) {
   const { track, isLive } = useListeningBeacon();
   const artUrl = track?.image || '';
   const trackName = track?.name || '';
@@ -34,7 +34,7 @@ export default function Hero() {
   return (
     <div
       className={'hp-now-card' + (panelOpen ? ' hp-now-card--open' : '')}
-      style={{ backdropFilter: 'blur(48px)', WebkitBackdropFilter: 'blur(48px)' }}
+      style={glass}
     >
       <button
         className="hp-now-row"

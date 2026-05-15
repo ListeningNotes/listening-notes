@@ -21,6 +21,15 @@ export default function HomePage() {
   const [modalSlug, setModalSlug] = useState(null);
   // Keep the last two covers mounted so a new one can crossfade over the old.
   const [bgLayers, setBgLayers] = useState([]);
+  // Live-tunable card frosting (temporary controls).
+  const [blur, setBlur] = useState(48);
+  const [frost, setFrost] = useState(45);
+
+  const cardGlass = {
+    backdropFilter: `blur(${blur}px)`,
+    WebkitBackdropFilter: `blur(${blur}px)`,
+    background: `rgba(255,255,255,${frost / 100})`,
+  };
 
   useEffect(() => {
     if (!bgArt) return;
@@ -54,10 +63,10 @@ export default function HomePage() {
       <TopNav onToggleTheme={toggleTheme} theme={theme} hideBeacon />
       <main className="hp-main">
         <div className="hp-hero-grid">
-          <Hero />
-          <PulseCard entries={entries} />
+          <Hero glass={cardGlass} />
+          <PulseCard entries={entries} glass={cardGlass} />
         </div>
-        <section className="hp-recent" style={{ backdropFilter: 'blur(48px)', WebkitBackdropFilter: 'blur(48px)' }}>
+        <section className="hp-recent" style={cardGlass}>
           <div className="hp-recent-header">
             <div className="hp-recent-label">Recently logged</div>
             <Link href="/archive" className="hp-recent-link">See archive →</Link>
@@ -78,6 +87,22 @@ export default function HomePage() {
       {modalSlug && (
         <EntryModal slug={modalSlug} onClose={() => setModalSlug(null)} />
       )}
+
+      {/* Temporary frosting tuning controls */}
+      <div className="hp-tuner">
+        <div className="hp-tuner-row">
+          <label>Blur</label>
+          <input type="range" min="0" max="80" value={blur}
+            onChange={e => setBlur(Number(e.target.value))} />
+          <span>{blur}px</span>
+        </div>
+        <div className="hp-tuner-row">
+          <label>White frost</label>
+          <input type="range" min="0" max="100" value={frost}
+            onChange={e => setFrost(Number(e.target.value))} />
+          <span>{frost}%</span>
+        </div>
+      </div>
     </div>
   );
 }
