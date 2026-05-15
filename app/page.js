@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useTheme } from '../components/main_components/Lightswitch';
 import TopNav from '../components/main_components/TopNav';
 import Hero from '../components/main_components/Hero';
+import PulseCard from '../components/main_components/PulseCard';
 import AlbumStrip from '../components/main_components/AlbumStrip';
 import EntryModal from '../components/main_components/EntryModal';
 
@@ -71,9 +72,7 @@ export default function HomePage() {
       <main className="hp-main">
         <div className="hp-hero-grid">
           <Hero />
-          <div className="hp-pulse-card hp-pulse-card--placeholder">
-            <div className="hp-pulse-label">This week</div>
-          </div>
+          <PulseCard entries={entries} />
         </div>
         <section className="hp-recent">
           <div className="hp-recent-header">
