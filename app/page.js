@@ -21,9 +21,11 @@ export default function HomePage() {
   const [modalSlug, setModalSlug] = useState(null);
   // Keep the last two covers mounted so a new one can crossfade over the old.
   const [bgLayers, setBgLayers] = useState([]);
-  // Live-tunable card frosting (temporary controls).
+  // Live-tunable frosting + background (temporary controls).
   const [blur, setBlur] = useState(48);
   const [frost, setFrost] = useState(45);
+  const [bgBlur, setBgBlur] = useState(0);
+  const [bgFade, setBgFade] = useState(0);
 
   const cardGlass = {
     backdropFilter: `blur(${blur}px)`,
@@ -56,10 +58,20 @@ export default function HomePage() {
         <div
           key={layer.key}
           className="hp-bg"
-          style={{ backgroundImage: `url(${layer.art})` }}
+          style={{
+            backgroundImage: `url(${layer.art})`,
+            filter: bgBlur ? `blur(${bgBlur}px)` : 'none',
+          }}
           aria-hidden="true"
         />
       ))}
+      {bgFade > 0 && (
+        <div
+          className="hp-bg-fade"
+          style={{ opacity: bgFade / 100 }}
+          aria-hidden="true"
+        />
+      )}
       <TopNav onToggleTheme={toggleTheme} theme={theme} hideBeacon />
       <main className="hp-main">
         <div className="hp-hero-grid">
@@ -101,6 +113,18 @@ export default function HomePage() {
           <input type="range" min="0" max="100" value={frost}
             onChange={e => setFrost(Number(e.target.value))} />
           <span>{frost}%</span>
+        </div>
+        <div className="hp-tuner-row">
+          <label>BG blur</label>
+          <input type="range" min="0" max="80" value={bgBlur}
+            onChange={e => setBgBlur(Number(e.target.value))} />
+          <span>{bgBlur}px</span>
+        </div>
+        <div className="hp-tuner-row">
+          <label>BG fade</label>
+          <input type="range" min="0" max="100" value={bgFade}
+            onChange={e => setBgFade(Number(e.target.value))} />
+          <span>{bgFade}%</span>
         </div>
       </div>
     </div>
