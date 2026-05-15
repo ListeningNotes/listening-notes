@@ -14,34 +14,25 @@ const SECTIONS = [
 
 const STAR_NOTES = [
   { stars: '★★★★★', body: 'A full-body yes. An album or track that feels complete and emotionally alive. I return to it willingly and often. Nothing pulls me out of the experience; even its rough edges feel necessary. These are the tracks and albums that stay with me and sometimes shape how I listen to music altogether.' },
-  { stars: '★★★★☆', body: 'Strong, memorable, and successful. The core vision lands, even if there are a few moments that don\u2019t fully click for me. I might not love every second, but the highs are real and meaningful. Albums and tracks at this level earn repeat listens and attention.' },
-  { stars: '★★★☆☆', body: 'Interesting, but uneven. I appreciate the ideas more than the execution, or the experience more than the replay value. These albums or tracks might matter to me more conceptually or contextually, but don\u2019t quite pull me in emotionally.' },
-  { stars: '★★☆☆☆', body: 'Respect more than attachment. I\u2019m glad it exists and I\u2019m glad I listened, but I don\u2019t feel drawn back. Albums or tracks at this level might have some compelling moments, yet the immersion breaks too often. My attention drifts, the balance feels off, or the piece just doesn\u2019t quite land for me.' },
-  { stars: '★☆☆☆☆', body: 'Not for me. Either actively uncomfortable to listen to, or lacking the elements I need to stay engaged. Sometimes I hear intention, but the execution just doesn\u2019t hold me. These ratings never mean \u201cbad\u201d \u2014 just disconnected from my listening habits.' },
-  { stars: '½',     body: 'Half-stars appear when I\u2019m genuinely pulled in two directions \u2014 simply too strong to place lower, but not fully aligned enough to place higher. I\u2019ve actively wrestled with these albums or tracks and ultimately decided to meet in the middle.' },
+  { stars: '★★★★☆', body: 'Strong, memorable, and successful. The core vision lands, even if there are a few moments that don’t fully click for me. I might not love every second, but the highs are real and meaningful. Albums and tracks at this level earn repeat listens and attention.' },
+  { stars: '★★★☆☆', body: 'Interesting, but uneven. I appreciate the ideas more than the execution, or the experience more than the replay value. These albums or tracks might matter to me more conceptually or contextually, but don’t quite pull me in emotionally.' },
+  { stars: '★★☆☆☆', body: 'Respect more than attachment. I’m glad it exists and I’m glad I listened, but I don’t feel drawn back. Albums or tracks at this level might have some compelling moments, yet the immersion breaks too often. My attention drifts, the balance feels off, or the piece just doesn’t quite land for me.' },
+  { stars: '★☆☆☆☆', body: 'Not for me. Either actively uncomfortable to listen to, or lacking the elements I need to stay engaged. Sometimes I hear intention, but the execution just doesn’t hold me. These ratings never mean “bad” — just disconnected from my listening habits.' },
+  { stars: '½',     body: 'Half-stars appear when I’m genuinely pulled in two directions — simply too strong to place lower, but not fully aligned enough to place higher. I’ve actively wrestled with these albums or tracks and ultimately decided to meet in the middle.' },
   { stars: 'Masterpiece', body: 'Entire 5-star track list. Flawless.' },
 ];
 
 const RELATIONSHIP_NOTES = [
-  { label: 'First listen', body: 'My first time listening to an album front to back with intention. I may already know a handful of tracks, but this is the first time I\u2019m hearing the full album as a complete work.' },
-  { label: 'Revisit',      body: 'An album I\u2019ve lived with before and am returning to with fresh attention, often in a new listening setup or emotional context.' },
-  { label: 'Formative',    body: 'An album that shaped my relationship with music or how I listen, regardless of when I first heard it. These tend to be albums I\u2019ve spent a significant portion of my life with.' },
-  { label: 'Study',        body: 'A listen rooted in history, influence, or research. Usually the album matters culturally or technologically, even if it\u2019s not built for repeat listening.' },
+  { label: 'First listen', body: 'My first time listening to an album front to back with intention. I may already know a handful of tracks, but this is the first time I’m hearing the full album as a complete work.' },
+  { label: 'Revisit',      body: 'An album I’ve lived with before and am returning to with fresh attention, often in a new listening setup or emotional context.' },
+  { label: 'Formative',    body: 'An album that shaped my relationship with music or how I listen, regardless of when I first heard it. These tend to be albums I’ve spent a significant portion of my life with.' },
+  { label: 'Study',        body: 'A listen rooted in history, influence, or research. Usually the album matters culturally or technologically, even if it’s not built for repeat listening.' },
   { label: 'Submission',   body: 'An album recommended to me by someone else and listened to as a response or exchange.' },
 ];
 
 export default function AboutPage() {
   const { theme, toggle } = useTheme();
   const [activeSection, setActiveSection] = useState('about');
-
-  useEffect(() => {
-    document.documentElement.setAttribute('data-theme', 'dark');
-    document.body.style.background = '#0e0e0e';
-    return () => {
-      document.documentElement.removeAttribute('data-theme');
-      document.body.style.background = '';
-    };
-  }, []);
 
   // Highlight active jump-nav item based on scroll position
   useEffect(() => {
@@ -65,18 +56,18 @@ export default function AboutPage() {
   }
 
   return (
-    <div style={{ background: '#0e0e0e', minHeight: '100vh', color: '#e8e4dc', fontFamily: fonts.sans }}>
+    <div style={{ background: 'var(--bg)', minHeight: '100vh', color: 'var(--ink)', fontFamily: fonts.sans }}>
       <TopNav onToggleTheme={toggle} theme={theme} />
 
       {/* Hero */}
-      <header style={{ maxWidth: 760, margin: '0 auto', padding: '88px 24px 48px' }}>
-        <div style={{ fontFamily: fonts.mono, fontSize: 11, letterSpacing: '0.18em', textTransform: 'uppercase', color: '#ddeeff', opacity: 0.7, marginBottom: 18 }}>
+      <header style={{ maxWidth: 760, margin: '0 auto', padding: '120px 24px 48px' }}>
+        <div style={{ fontFamily: 'var(--font-label)', fontSize: 11, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--accent)', marginBottom: 18 }}>
           About
         </div>
-        <h1 style={{ fontFamily: fonts.serif, fontSize: 'clamp(38px, 6vw, 60px)', margin: 0, lineHeight: 1.08, letterSpacing: '-0.02em' }}>
+        <h1 style={{ fontFamily: 'var(--font-display)', fontWeight: 400, fontSize: 'clamp(38px, 6vw, 60px)', margin: 0, lineHeight: 1.08, letterSpacing: '-0.02em' }}>
           A practice of intentional listening.
         </h1>
-        <p style={{ fontFamily: fonts.sans, fontSize: 17, lineHeight: 1.6, color: '#a8a39a', marginTop: 24, maxWidth: 580 }}>
+        <p style={{ fontFamily: fonts.sans, fontSize: 17, lineHeight: 1.6, color: 'var(--ink-soft)', marginTop: 24, maxWidth: 580 }}>
           Listening Notes started as an answer to a question about my favorite albums and grew into a practice of documenting intentional listening.
         </p>
       </header>
@@ -87,18 +78,19 @@ export default function AboutPage() {
         display: 'flex', justifyContent: 'center',
       }}>
         <div style={{
-          display: 'inline-flex', gap: 4, padding: 4, background: 'rgba(22,22,22,0.85)',
-          backdropFilter: 'blur(12px)', border: '1px solid #2a2a2a', borderRadius: 999,
+          display: 'inline-flex', gap: 4, padding: 4, background: 'var(--panel)',
+          backdropFilter: 'var(--card-blur)', WebkitBackdropFilter: 'var(--card-blur)',
+          border: '1px solid var(--panel-border)', borderRadius: 999, boxShadow: 'var(--shadow-soft)',
         }}>
           {SECTIONS.map(s => (
             <button
               key={s.id}
               onClick={() => jumpTo(s.id)}
               style={{
-                fontFamily: fonts.mono, fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase',
+                fontFamily: 'var(--font-label)', fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase',
                 padding: '8px 18px', borderRadius: 999, border: 'none', cursor: 'pointer',
-                background: activeSection === s.id ? '#ddeeff' : 'transparent',
-                color: activeSection === s.id ? '#0e0e0e' : '#a8a39a',
+                background: activeSection === s.id ? 'var(--accent)' : 'transparent',
+                color: activeSection === s.id ? '#1a1a1a' : 'var(--ink-soft)',
                 transition: 'background 0.2s, color 0.2s',
               }}
             >
@@ -125,7 +117,7 @@ export default function AboutPage() {
             At its core is the idea that listening is worth documenting. I have always been someone who likes to record things, preserve things, and leave a trace of who I am in this world. That is why I do not really think of these entries as judgments. They are more like evidence of an encounter. They show what stood out to me, what confused me, what moved me, and what stays with me even after the album has ended. Over time entries start to reveal patterns not only in my musical taste, but also patterns in how I listen. That is part of what this project has grown into for me. It is not only about asking what my favorite music is. It is also about asking what kind of listener I am and how my taste takes shape over time.
           </p>
           <p>
-            A major turning point in how I listened came in 2024 when I visited the Art of Noise exhibition at SFMOMA and experienced Devon Turnbull&rsquo;s high-fidelity listening room installation. That experience genuinely changed something in me. It was not about volume or spectacle. It was about precision and the feeling that recorded sound could be presented with a kind of care that made its full shape more visible. Since then I have been much more conscious of listening as an intentional practice. Right now that means listening with my own Hi-Fi headphone setup while I slowly work towards building a dedicated listening room of my own. The setup used for listening can be explored more <button onClick={() => jumpTo('specs')} style={{ background: 'none', border: 'none', padding: 0, color: '#ddeeff', textDecoration: 'underline', cursor: 'pointer', font: 'inherit' }}>here</button>.
+            A major turning point in how I listened came in 2024 when I visited the Art of Noise exhibition at SFMOMA and experienced Devon Turnbull&rsquo;s high-fidelity listening room installation. That experience genuinely changed something in me. It was not about volume or spectacle. It was about precision and the feeling that recorded sound could be presented with a kind of care that made its full shape more visible. Since then I have been much more conscious of listening as an intentional practice. Right now that means listening with my own Hi-Fi headphone setup while I slowly work towards building a dedicated listening room of my own. The setup used for listening can be explored more <button onClick={() => jumpTo('specs')} style={{ background: 'none', border: 'none', padding: 0, color: 'var(--ink)', textDecoration: 'underline', cursor: 'pointer', font: 'inherit' }}>here</button>.
           </p>
           <p>
             I also know this project was never meant to stay private. Part of what has always fascinated me about music is how differently people can hear the same exact album. I have spent so much time reading other people&rsquo;s thoughts by looking up reddit threads or interpretations on Genius just to understand how a piece landed for someone else. I do not want Listening Notes to just be a private diary hidden away. I want it to be a place where exposure can happen, music can be shared, and opinions are openly discussed.
@@ -170,7 +162,7 @@ export default function AboutPage() {
 
         {/* INDEX */}
         <Section id="index" label="Index">
-          <p style={{ color: '#a8a39a', marginTop: 0 }}>
+          <p style={{ color: 'var(--ink-soft)', marginTop: 0 }}>
             How ratings and tags are used across entries.
           </p>
 
@@ -178,10 +170,10 @@ export default function AboutPage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 18, marginTop: 16 }}>
             {STAR_NOTES.map((s) => (
               <div key={s.stars} style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: 20, alignItems: 'baseline' }}>
-                <div style={{ fontFamily: fonts.mono, fontSize: 14, color: '#E8B84B', letterSpacing: '0.04em', whiteSpace: 'nowrap' }}>
+                <div style={{ fontFamily: 'var(--font-label)', fontSize: 14, color: 'var(--gold)', letterSpacing: '0.04em', whiteSpace: 'nowrap' }}>
                   {s.stars}
                 </div>
-                <div style={{ fontSize: 15, lineHeight: 1.6, color: '#cfc9be' }}>
+                <div style={{ fontSize: 15, lineHeight: 1.6, color: 'var(--ink-soft)' }}>
                   {s.body}
                 </div>
               </div>
@@ -192,10 +184,10 @@ export default function AboutPage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 18, marginTop: 16 }}>
             {RELATIONSHIP_NOTES.map((r) => (
               <div key={r.label} style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: 20, alignItems: 'baseline' }}>
-                <div style={{ fontFamily: fonts.mono, fontSize: 11, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#ddeeff' }}>
+                <div style={{ fontFamily: 'var(--font-label)', fontSize: 11, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--accent)' }}>
                   {r.label}
                 </div>
-                <div style={{ fontSize: 15, lineHeight: 1.6, color: '#cfc9be' }}>
+                <div style={{ fontSize: 15, lineHeight: 1.6, color: 'var(--ink-soft)' }}>
                   {r.body}
                 </div>
               </div>
@@ -204,10 +196,10 @@ export default function AboutPage() {
         </Section>
 
         {/* Footer back link */}
-        <div style={{ marginTop: 80, paddingTop: 32, borderTop: '1px solid #2a2a2a', textAlign: 'center' }}>
+        <div style={{ marginTop: 80, paddingTop: 32, borderTop: '1px solid var(--border)', textAlign: 'center' }}>
           <Link href="/" style={{
-            fontFamily: fonts.mono, fontSize: 11, letterSpacing: '0.14em', textTransform: 'uppercase',
-            color: '#a8a39a', textDecoration: 'none',
+            fontFamily: 'var(--font-label)', fontSize: 11, letterSpacing: '0.14em', textTransform: 'uppercase',
+            color: 'var(--ink-soft)', textDecoration: 'none',
           }}>
             ← Back home
           </Link>
@@ -222,13 +214,13 @@ function Section({ id, label, children }) {
   return (
     <section id={id} style={{ marginTop: 72, scrollMarginTop: 96 }}>
       <div style={{
-        fontFamily: fonts.mono, fontSize: 10, letterSpacing: '0.2em', textTransform: 'uppercase',
-        color: '#7a766c', marginBottom: 14, paddingBottom: 12, borderBottom: '1px solid #2a2a2a',
+        fontFamily: 'var(--font-label)', fontSize: 10, letterSpacing: '0.2em', textTransform: 'uppercase',
+        color: 'var(--ink-faint)', marginBottom: 14, paddingBottom: 12, borderBottom: '1px solid var(--border)',
       }}>
         {label}
       </div>
       <div style={{
-        fontFamily: fonts.sans, fontSize: 16, lineHeight: 1.75, color: '#cfc9be',
+        fontFamily: fonts.sans, fontSize: 16, lineHeight: 1.75, color: 'var(--ink-soft)',
       }}>
         {children}
       </div>
@@ -237,12 +229,13 @@ function Section({ id, label, children }) {
 }
 
 const subheadingStyle = {
-  fontFamily: fonts.serif,
+  fontFamily: 'var(--font-display)',
+  fontWeight: 400,
   fontSize: 24,
   letterSpacing: '-0.01em',
   marginTop: 40,
   marginBottom: 12,
-  color: '#e8e4dc',
+  color: 'var(--ink)',
 };
 
 const specListStyle = {
@@ -252,13 +245,13 @@ const specListStyle = {
   display: 'flex',
   flexDirection: 'column',
   gap: 10,
-  fontFamily: 'DM Mono, monospace',
+  fontFamily: 'var(--font-label)',
   fontSize: 13,
 };
 
 const specLinkStyle = {
-  color: '#ddeeff',
+  color: 'var(--ink)',
   textDecoration: 'none',
-  borderBottom: '1px solid rgba(221,238,255,0.3)',
+  borderBottom: '1px solid var(--accent)',
   paddingBottom: 1,
 };
