@@ -555,10 +555,12 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   width: 100%;
   gap: 48px;
   pointer-events: all;
-  background: #ffffff;
-  border-radius: 16px;
-  border: 1px solid rgba(0,0,0,0.08);
-  box-shadow: 0 4px 32px rgba(0,0,0,0.1);
+  background: var(--panel);
+  backdrop-filter: var(--card-blur);
+  -webkit-backdrop-filter: var(--card-blur);
+  border-radius: 20px;
+  border: 1px solid var(--panel-border);
+  box-shadow: var(--shadow-soft);
 }
 
 .topnav-wordmark {
@@ -1159,14 +1161,14 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   top: 100%;
   left: 50%;
   transform: translateX(-50%);
-  background: #ffffff;
-  border: 1px solid rgba(0,0,0,0.08);
+  background: var(--panel-solid);
+  border: 1px solid var(--border);
   border-top: none;
   border-radius: 0 0 16px 16px;
   padding: 8px 8px 12px;
   min-width: 160px;
   z-index: 200;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+  box-shadow: var(--shadow-soft);
   display: flex;
   flex-direction: column;
   gap: 2px;
@@ -1240,22 +1242,9 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   padding: 0 0 8px 32px;
 }
 
-[data-theme='dark'] .topnav-inner {
-  background: #1c1c1c;
-  border-color: rgba(124,255,155,0.08);
-}
-[data-theme='dark'] .topnav-dropdown {
-  background: #1c1c1c;
-  border-color: rgba(124,255,155,0.08);
-}
-
 .topnav-group:hover .topnav-link--group {
   border-radius: 8px 8px 0 0;
   background: var(--bg2);
-}
-[data-theme='dark'] .topnav-dropdown {
-  background: #1c1c1c;
-  border-color: rgba(124,255,155,0.08);
 }
 
 /* ── Beacon Stage (expanded recent listens) ── */

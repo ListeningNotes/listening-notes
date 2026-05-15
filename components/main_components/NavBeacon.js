@@ -44,7 +44,9 @@ export default function NavBeacon() {
         onClick={() => setOpen(v => !v)}
         style={{
           display: 'flex', alignItems: 'center', gap: '8px',
-          background: 'var(--surface)', border: '1px solid var(--border)',
+          background: 'var(--panel)',
+          backdropFilter: 'var(--card-blur)', WebkitBackdropFilter: 'var(--card-blur)',
+          border: '1px solid var(--panel-border)',
           borderRadius: '999px', padding: '5px 12px 5px 6px', cursor: 'pointer',
           transition: 'border-color 0.2s',
         }}
@@ -57,7 +59,7 @@ export default function NavBeacon() {
             {trackName || '—'}
           </span>
           <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-            {isLive && <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#7cff9b', flexShrink: 0, animation: 'ln-pulse 2.5s ease-in-out infinite' }} />}
+            {isLive && <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: 'var(--accent)', flexShrink: 0, animation: 'ln-pulse 2.5s ease-in-out infinite' }} />}
             <span style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>
               {isLive ? 'Now listening' : 'Last played'}
             </span>
@@ -68,9 +70,9 @@ export default function NavBeacon() {
       {open && (
         <div style={{
           position: 'absolute', top: 'calc(100% + 10px)', right: 0,
-          background: 'var(--surface)', border: '1px solid var(--border)',
-          borderRadius: 'var(--r-lg)', padding: '16px', width: '240px', zIndex: 300,
-          boxShadow: '0 24px 60px rgba(0,0,0,0.15)',
+          background: 'var(--panel-solid)', border: '1px solid var(--border)',
+          borderRadius: 'var(--radius)', padding: '16px', width: '240px', zIndex: 300,
+          boxShadow: 'var(--shadow-lift)',
         }}>
           {artUrl && (
             <div style={{ width: '100%', aspectRatio: '1', borderRadius: '10px', overflow: 'hidden', marginBottom: '12px' }}>
