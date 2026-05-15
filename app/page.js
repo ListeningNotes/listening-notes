@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useTheme } from '../components/main_components/Lightswitch';
+import { useListeningBeacon } from '../hooks/useListeningBeacon';
 import EchoNetwork from '../components/EchoNetwork';
 import TopNav from '../components/main_components/TopNav';
 import Hero from '../components/main_components/Hero';
@@ -12,6 +13,8 @@ import EntryModal from '../components/main_components/EntryModal';
 
 export default function HomePage() {
   const { theme, toggle: toggleTheme } = useTheme();
+  const { track } = useListeningBeacon();
+  const trackArt = track?.image || '';
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalSlug, setModalSlug] = useState(null);
@@ -39,7 +42,7 @@ export default function HomePage() {
 
   return (
     <div className="hp">
-      <EchoNetwork />
+      {trackArt && <EchoNetwork uniformArt={trackArt} />}
       <div
         aria-hidden="true"
         style={{
