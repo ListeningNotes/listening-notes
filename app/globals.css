@@ -581,24 +581,34 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   font-size: 11px;
   box-shadow: 0 8px 32px rgba(0,0,0,0.35);
 }
-.hp-tuner-row {
+.hp-tuner-flip {
   display: flex;
   align-items: center;
   gap: 10px;
 }
-.hp-tuner-row label {
-  width: 84px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: rgba(255,255,255,0.6);
-}
-.hp-tuner-row input {
-  width: 130px;
-}
-.hp-tuner-row span {
-  width: 44px;
-  text-align: right;
+.hp-tuner-flip button {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  background: rgba(255,255,255,0.12);
   color: #fff;
+  font-size: 11px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.hp-tuner-flip button:hover { background: rgba(255,255,255,0.22); }
+.hp-tuner-name {
+  flex: 1;
+  text-align: center;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: #fff;
+}
+.hp-tuner-count {
+  text-align: center;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  color: rgba(255,255,255,0.5);
 }
 
 /* Glass sheen — diagonal light-catch on the homepage widgets */
