@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useTheme } from '../components/main_components/Lightswitch';
-import backgrounds from '../components/session_components/backgrounds';
+import EchoNetwork from '../components/EchoNetwork';
 import TopNav from '../components/main_components/TopNav';
 import Hero from '../components/main_components/Hero';
 import PulseCard from '../components/main_components/PulseCard';
@@ -15,10 +15,6 @@ export default function HomePage() {
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalSlug, setModalSlug] = useState(null);
-  // Screensaver background — starts random, flip through with the panel.
-  const [bgIndex, setBgIndex] = useState(() => Math.floor(Math.random() * backgrounds.length));
-  const Background = backgrounds[bgIndex];
-  const stepBg = d => setBgIndex(i => (i + d + backgrounds.length) % backgrounds.length);
 
   // Live-tunable widget frosting (temporary controls).
   const [blur, setBlur] = useState(48);
@@ -29,12 +25,6 @@ export default function HomePage() {
     WebkitBackdropFilter: `blur(${blur}px)`,
     background: `rgba(255,255,255,${frost / 100})`,
   };
-
-  // Albums with art, shuffled — fed to the screensaver background.
-  const bgAlbums = useMemo(
-    () => entries.filter(e => e?.album_art).sort(() => Math.random() - 0.5),
-    [entries]
-  );
 
   useEffect(() => {
     fetch('/api/entries')
@@ -49,9 +39,7 @@ export default function HomePage() {
 
   return (
     <div className="hp">
-      <div className="hp-screensaver" aria-hidden="true">
-        <Background key={bgIndex} albums={bgAlbums} />
-      </div>
+      <EchoNetwork />
       <div
         aria-hidden="true"
         style={{
@@ -88,14 +76,8 @@ export default function HomePage() {
         <EntryModal slug={modalSlug} onClose={() => setModalSlug(null)} />
       )}
 
-      {/* Temporary screensaver picker + widget tuning */}
+      {/* Temporary widget tuning */}
       <div className="hp-tuner">
-        <div className="hp-tuner-flip">
-          <button onClick={() => stepBg(-1)} aria-label="Previous background">◀</button>
-          <span className="hp-tuner-name">{Background.name || 'Background'}</span>
-          <button onClick={() => stepBg(1)} aria-label="Next background">▶</button>
-        </div>
-        <div className="hp-tuner-count">{bgIndex + 1} / {backgrounds.length}</div>
         <div className="hp-tuner-row">
           <label>Blur</label>
           <input type="range" min="0" max="80" value={blur}
