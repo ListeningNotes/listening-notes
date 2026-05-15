@@ -3,7 +3,7 @@ import { fonts } from '../../../library/sitewide_visuals';
 
 export default function MetadataLabelInline({ children }) {
   return (
-    <span style={{ fontFamily: fonts.mono, fontSize: '9px', letterSpacing: '0.16em', textTransform: 'uppercase', color: '#555' }}>
+    <span style={{ fontFamily: fonts.mono, fontSize: '9px', letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--ink-faint)' }}>
       {children}
     </span>
   );
