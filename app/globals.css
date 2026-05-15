@@ -552,6 +552,13 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   background: var(--bg);
   pointer-events: none;
 }
+.hp-screensaver {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  animation: hp-bg-in 1.4s ease forwards;
+}
 @keyframes hp-bg-in {
   from { opacity: 0; }
   to   { opacity: 1; }
