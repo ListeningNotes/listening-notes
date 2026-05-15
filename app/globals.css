@@ -8,7 +8,7 @@
   /* Redesign tokens — cream / frosted glass */
   --bg:           #f5f3ee;
   --bg-warm:      #efebe2;
-  --panel:        rgba(255, 255, 255, 0.55);
+  --panel:        rgba(255, 255, 255, 0.45);
   --panel-solid:  #ffffff;
   --panel-border: rgba(255, 255, 255, 0.6);
   --ink:          #1a1a1a;
@@ -48,7 +48,7 @@
 [data-theme='dark'] {
   --bg:           #0e0e0e;
   --bg-warm:      #161616;
-  --panel:        rgba(20, 20, 20, 0.55);
+  --panel:        rgba(20, 20, 20, 0.45);
   --panel-solid:  #161616;
   --panel-border: rgba(255, 255, 255, 0.08);
   --ink:          #e8e4dc;
@@ -548,12 +548,16 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   from { opacity: 0; }
   to   { opacity: 1; }
 }
-.hp-bg-tint {
-  position: fixed;
+
+/* Glass sheen — diagonal light-catch on the homepage widgets */
+.hp-now-card::before,
+.hp-pulse-card::before,
+.hp-recent::before {
+  content: '';
+  position: absolute;
   inset: 0;
-  z-index: 1;
-  background: var(--bg);
-  opacity: 0.35;
+  border-radius: inherit;
+  background: linear-gradient(145deg, rgba(255,255,255,0.6) 0%, transparent 60%);
   pointer-events: none;
 }
 
@@ -573,6 +577,8 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   align-items: start;
 }
 .hp-recent {
+  position: relative;
+  overflow: hidden;
   background: var(--panel);
   backdrop-filter: var(--card-blur);
   -webkit-backdrop-filter: var(--card-blur);
@@ -612,6 +618,7 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 
 /* ── Now card (Hero) ── */
 .hp-now-card {
+  position: relative;
   background: var(--panel);
   backdrop-filter: var(--card-blur);
   -webkit-backdrop-filter: var(--card-blur);
@@ -759,6 +766,8 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 
 /* ── Pulse card ── */
 .hp-pulse-card {
+  position: relative;
+  overflow: hidden;
   background: var(--panel);
   backdrop-filter: var(--card-blur);
   -webkit-backdrop-filter: var(--card-blur);
