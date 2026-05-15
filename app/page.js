@@ -1,9 +1,9 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useTheme } from '../components/main_components/Lightswitch';
-import { useListeningBeacon } from '../hooks/useListeningBeacon';
+import backgrounds from '../components/session_components/backgrounds';
 import TopNav from '../components/main_components/TopNav';
 import Hero from '../components/main_components/Hero';
 import PulseCard from '../components/main_components/PulseCard';
@@ -12,15 +12,11 @@ import EntryModal from '../components/main_components/EntryModal';
 
 export default function HomePage() {
   const { theme, toggle: toggleTheme } = useTheme();
-  const { track } = useListeningBeacon();
-  // Last.fm serves a 300x300 thumbnail; swap the size segment out of the URL
-  // to pull the original full-resolution upload for a crisp background.
-  const bgArt = track?.image ? track.image.replace('/300x300/', '/') : '';
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalSlug, setModalSlug] = useState(null);
-  // Keep the last two covers mounted so a new one can crossfade over the old.
-  const [bgLayers, setBgLayers] = useState([]);
+  // Pick one random screensaver background per visit (same logic as the dashboard).
+  const Background = useRef(backgrounds[Math.floor(Math.random() * backgrounds.length)]).current;
   // Live-tunable frosting + background (temporary controls).
   const [blur, setBlur] = useState(48);
   const [frost, setFrost] = useState(45);
@@ -33,13 +29,11 @@ export default function HomePage() {
     background: `rgba(255,255,255,${frost / 100})`,
   };
 
-  useEffect(() => {
-    if (!bgArt) return;
-    setBgLayers(prev => {
-      if (prev.length && prev[prev.length - 1].art === bgArt) return prev;
-      return [...prev, { art: bgArt, key: Date.now() }].slice(-2);
-    });
-  }, [bgArt]);
+  // Albums with art, shuffled — fed to the screensaver background.
+  const bgAlbums = useMemo(
+    () => entries.filter(e => e?.album_art).sort(() => Math.random() - 0.5),
+    [entries]
+  );
 
   useEffect(() => {
     fetch('/api/entries')
@@ -54,17 +48,13 @@ export default function HomePage() {
 
   return (
     <div className="hp">
-      {bgLayers.map(layer => (
-        <div
-          key={layer.key}
-          className="hp-bg"
-          style={{
-            backgroundImage: `url(${layer.art})`,
-            filter: bgBlur ? `blur(${bgBlur}px)` : 'none',
-          }}
-          aria-hidden="true"
-        />
-      ))}
+      <div
+        className="hp-screensaver"
+        style={{ filter: bgBlur ? `blur(${bgBlur}px)` : 'none' }}
+        aria-hidden="true"
+      >
+        <Background albums={bgAlbums} />
+      </div>
       {bgFade > 0 && (
         <div
           className="hp-bg-fade"
