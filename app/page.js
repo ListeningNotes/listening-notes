@@ -51,7 +51,6 @@ export default function HomePage() {
           aria-hidden="true"
         />
       ))}
-      {bgLayers.length > 0 && <div className="hp-bg-tint" aria-hidden="true" />}
       <TopNav onToggleTheme={toggleTheme} theme={theme} hideBeacon />
       <main className="hp-main">
         <div className="hp-hero-grid">
