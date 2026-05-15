@@ -4,17 +4,35 @@
 
 :root {
   --sb-width: 260px;
-  --bg:        #f5f3ef;
-  --bg2:       #ece9e3;
-  --surface:   #ffffff;
-  --border:    #e0dcd5;
-  --text:      #1a1916;
-  --text-muted:#7a776f;
-  --accent:    #c8dfff;
+
+  /* Redesign tokens — cream / frosted glass */
+  --bg:           #f5f3ee;
+  --bg-warm:      #efebe2;
+  --panel:        rgba(255, 255, 255, 0.55);
+  --panel-solid:  #ffffff;
+  --panel-border: rgba(255, 255, 255, 0.6);
+  --ink:          #1a1a1a;
+  --ink-soft:     #6b6b6b;
+  --ink-faint:    #a8a8a8;
+  --accent:       #c8d47a;
+  --border:       rgba(26, 26, 26, 0.08);
+  --gold:         #E8B84B;
+  --card-blur:    blur(24px);
+  --shadow-soft:  0 2px 12px rgba(0,0,0,0.04), 0 8px 32px rgba(0,0,0,0.04);
+  --shadow-lift:  0 4px 20px rgba(0,0,0,0.06), 0 16px 48px rgba(0,0,0,0.06);
+  --radius:       24px;
+  --radius-pill:  999px;
+
+  /* Legacy aliases — map old token names onto the new system */
+  --bg2:       var(--bg-warm);
+  --surface:   var(--panel-solid);
+  --text:      var(--ink);
+  --text-muted:var(--ink-soft);
   --accent-dk: #99c0f0;
-  --link:      #5a5750;
-  --sb-bg:     #ffffff;
-  --sb-border: #e8e5df;
+  --link:      var(--ink-soft);
+  --sb-bg:     var(--panel-solid);
+  --sb-border: var(--border);
+
   --r-sm: 6px;
   --r-md: 12px;
   --r-lg: 20px;
@@ -26,17 +44,21 @@
 }
 
 [data-theme='dark'] {
-  --bg:        #0e0e0e;
-  --bg2:       #161616;
-  --surface:   #1c1c1c;
-  --border:    #2a2a2a;
-  --text:      #e8e4dc;
-  --text-muted:#666;
-  --accent:    #ddeeff;
+  --bg:           #0e0e0e;
+  --bg-warm:      #161616;
+  --panel:        rgba(20, 20, 20, 0.55);
+  --panel-solid:  #161616;
+  --panel-border: rgba(255, 255, 255, 0.08);
+  --ink:          #e8e4dc;
+  --ink-soft:     #888888;
+  --ink-faint:    #555555;
+  --accent:       #c8d47a;
+  --border:       rgba(255, 255, 255, 0.08);
+  --shadow-soft:  0 2px 12px rgba(0,0,0,0.3), 0 8px 32px rgba(0,0,0,0.2);
+  --shadow-lift:  0 4px 20px rgba(0,0,0,0.4), 0 16px 48px rgba(0,0,0,0.3);
+
   --accent-dk: #b8d8ff;
-  --link:      #888;
   --sb-bg:     #111111;
-  --sb-border: #222;
 }
 
 *, *::before, *::after {
