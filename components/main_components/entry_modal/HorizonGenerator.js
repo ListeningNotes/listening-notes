@@ -22,7 +22,7 @@ export default function HorizonGenerator({ horizon, tracks, animate }) {
 
   return (
     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', margin: '28px 0 24px', gap: 14 }}>
-      <div style={{ fontFamily: fonts.mono, fontSize: 8, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.2)', flexShrink: 0 }}>
+      <div style={{ fontFamily: fonts.mono, fontSize: 8, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--ink-faint)', flexShrink: 0 }}>
         Horizon
       </div>
       <div style={{ display: 'flex', alignItems: 'flex-end', gap: 3, height: 32, width: barWidth }}>
@@ -36,7 +36,7 @@ export default function HorizonGenerator({ horizon, tracks, animate }) {
                 style={{
                   width: '100%',
                   height: Math.round(h * 100) + '%',
-                  background: '#c8d47a',
+                  background: 'var(--accent)',
                   borderRadius: '1px 1px 0 0',
                   transformOrigin: 'bottom',
                   transform: animate ? 'scaleY(1)' : 'scaleY(0)',
