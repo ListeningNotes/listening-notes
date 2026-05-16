@@ -2,23 +2,75 @@
 
 import { useEffect, useRef } from 'react';
 
+const IDLE_MS    = 15000; // idle time before the strip drifts on its own
+const AUTO_SPEED = 0.5;   // px per frame while auto-scrolling
+
 export default function AlbumStrip({ entries, onTileClick }) {
   const scrollRef = useRef(null);
 
-  // Let a vertical mouse-wheel scroll the strip horizontally.
-  // Trackpads with horizontal intent already scroll natively.
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
+
+    let idleTimer = null;
+    let raf = null;
+    let auto = false;
+    let dir = 1;
+
+    function stopAuto() {
+      auto = false;
+      if (raf) { cancelAnimationFrame(raf); raf = null; }
+    }
+
+    function tick() {
+      if (!auto) return;
+      const max = el.scrollWidth - el.clientWidth;
+      if (max > 0) {
+        el.scrollLeft += AUTO_SPEED * dir;
+        if (el.scrollLeft >= max)      { el.scrollLeft = max; dir = -1; }
+        else if (el.scrollLeft <= 0)   { el.scrollLeft = 0;   dir = 1;  }
+      }
+      raf = requestAnimationFrame(tick);
+    }
+
+    function startAuto() {
+      if (auto) return;
+      auto = true;
+      raf = requestAnimationFrame(tick);
+    }
+
+    // Any interaction with the strip stops the drift and restarts the idle clock.
+    function onInteract() {
+      stopAuto();
+      clearTimeout(idleTimer);
+      idleTimer = setTimeout(startAuto, IDLE_MS);
+    }
+
+    // Let a vertical mouse-wheel scroll the strip horizontally.
     function onWheel(e) {
       if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
         el.scrollLeft += e.deltaY;
         e.preventDefault();
       }
+      onInteract();
     }
+
     el.addEventListener('wheel', onWheel, { passive: false });
-    return () => el.removeEventListener('wheel', onWheel);
-  }, []);
+    el.addEventListener('pointerdown', onInteract);
+    el.addEventListener('pointermove', onInteract);
+    el.addEventListener('touchstart', onInteract, { passive: true });
+
+    idleTimer = setTimeout(startAuto, IDLE_MS);
+
+    return () => {
+      el.removeEventListener('wheel', onWheel);
+      el.removeEventListener('pointerdown', onInteract);
+      el.removeEventListener('pointermove', onInteract);
+      el.removeEventListener('touchstart', onInteract);
+      clearTimeout(idleTimer);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, [entries]);
 
   if (entries.length === 0) return null;
 
