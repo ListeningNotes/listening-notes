@@ -83,7 +83,7 @@ export default function HomePage() {
               cx="297.054688"
               cy="216.71875"
               r="14.132812"
-              style={{ fill: isLive ? 'var(--live)' : 'var(--ink)', transition: 'fill 0.45s ease' }}
+              className={'hp-logo-dot' + (isLive ? ' hp-logo-dot--live' : '')}
             />
           </svg>
         </Link>
