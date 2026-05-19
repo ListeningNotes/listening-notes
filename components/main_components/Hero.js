@@ -16,13 +16,16 @@ export default function Hero() {
           : <div className="hp-beacon-art-ph">♪</div>
         }
       </div>
-      <div className="hp-beacon-meta">
+      <div className="hp-beacon-body">
         <div className="hp-beacon-label">
           <span className={'hp-beacon-dot' + (isLive ? ' hp-beacon-dot--live' : '')} />
           {isLive ? 'Now listening' : 'Last played'}
         </div>
         <div className="hp-beacon-title">{trackName || '—'}</div>
         {artistName && <div className="hp-beacon-artist">{artistName}</div>}
+      </div>
+      <div className={'hp-beacon-eq' + (isLive ? ' hp-beacon-eq--live' : '')} aria-hidden="true">
+        <span /><span /><span /><span />
       </div>
     </div>
   );

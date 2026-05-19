@@ -656,24 +656,26 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   50% { opacity: 0.4; transform: scale(0.8); }
 }
 
-/* ── Beacon (below the strip) — frosted pill case ── */
+/* ── Beacon (below the strip) — wide frosted music-player case ── */
 .hp-beacon {
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 12px 30px 12px 12px;
+  gap: 20px;
+  width: 430px;
+  max-width: calc(100vw - 48px);
+  padding: 16px;
   background: var(--panel);
   border: 1px solid var(--panel-border);
-  border-radius: 999px;
+  border-radius: 26px;
   box-shadow: var(--shadow-soft), inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 .hp-beacon-art {
-  width: 60px;
-  height: 60px;
+  width: 104px;
+  height: 104px;
   flex-shrink: 0;
-  border-radius: 12px;
+  border-radius: 16px;
   overflow: hidden;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.16);
 }
 .hp-beacon-art img {
   width: 100%;
@@ -689,22 +691,26 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   justify-content: center;
   background: var(--bg-warm);
   color: var(--ink-faint);
-  font-size: 1.8rem;
+  font-size: 2.2rem;
+}
+.hp-beacon-body {
+  flex: 1;
+  min-width: 0;
 }
 .hp-beacon-label {
   font-family: var(--font-label);
-  font-size: 10px;
+  font-size: 9.5px;
   letter-spacing: 0.15em;
   text-transform: uppercase;
   color: var(--ink-faint);
   display: flex;
   align-items: center;
   gap: 7px;
-  margin-bottom: 5px;
+  margin-bottom: 8px;
 }
 .hp-beacon-dot {
-  width: 7px;
-  height: 7px;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
   background: var(--ink-faint);
   flex-shrink: 0;
@@ -719,15 +725,48 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 }
 .hp-beacon-title {
   font-family: var(--font-display);
-  font-size: 24px;
-  line-height: 1.1;
+  font-size: 26px;
+  line-height: 1.12;
   letter-spacing: -0.01em;
   color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 .hp-beacon-artist {
-  font-size: 13px;
+  font-size: 14px;
   color: var(--ink-soft);
-  margin-top: 3px;
+  margin-top: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* Equalizer — animated bars when the beacon is live */
+.hp-beacon-eq {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 20px;
+  flex-shrink: 0;
+  align-self: flex-start;
+}
+.hp-beacon-eq span {
+  width: 3px;
+  height: 28%;
+  border-radius: 2px;
+  background: var(--ink-faint);
+}
+.hp-beacon-eq--live span {
+  background: var(--live);
+  animation: eq-bounce 0.9s ease-in-out infinite;
+}
+.hp-beacon-eq--live span:nth-child(1) { animation-duration: 0.86s; }
+.hp-beacon-eq--live span:nth-child(2) { animation-duration: 0.62s; animation-delay: 0.12s; }
+.hp-beacon-eq--live span:nth-child(3) { animation-duration: 1.04s; animation-delay: 0.05s; }
+.hp-beacon-eq--live span:nth-child(4) { animation-duration: 0.74s; animation-delay: 0.2s; }
+@keyframes eq-bounce {
+  0%, 100% { height: 22%; }
+  50%      { height: 100%; }
 }
 
 /* ── Dot navigation (fixed top bar) ── */
