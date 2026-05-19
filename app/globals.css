@@ -556,6 +556,41 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   background: linear-gradient(to left, var(--bg), transparent);
 }
 
+/* Temporary layout tuning controls */
+.hp-tuner {
+  position: fixed;
+  right: 16px;
+  bottom: 16px;
+  z-index: 999;
+  background: #1a1a1a;
+  color: #fff;
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font-family: var(--font-label);
+  font-size: 11px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.35);
+}
+.hp-tuner-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.hp-tuner-row label {
+  width: 98px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.6);
+}
+.hp-tuner-row input { width: 130px; }
+.hp-tuner-row span {
+  width: 46px;
+  text-align: right;
+  color: #fff;
+}
+
 /* ── Homepage layout — scroll strip, beacon, dot nav ── */
 .hp-main {
   flex: 1;
@@ -593,8 +628,12 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 }
 
 /* Centered logo — matches the /dashboard logo size */
+.hp-logo {
+  display: block;
+  transform: translateY(var(--logo-y, 0px));
+}
 .hp-logo svg {
-  height: 142px;
+  height: var(--logo-size, 142px);
   width: auto;
   display: block;
 }
@@ -1115,6 +1154,7 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   overflow-x: auto;
   overflow-y: hidden;
   scrollbar-width: none;
+  transform: translateY(var(--strip-y, 0px));
 }
 .hp-strip::-webkit-scrollbar { display: none; }
 
@@ -1122,13 +1162,13 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   display: flex;
   gap: 44px;
   width: max-content;
-  padding: 48px calc(50vw - 170px);
+  padding: 48px calc(50vw - var(--tile, 340px) / 2);
 }
 
 .strip-tile {
   flex-shrink: 0;
-  width: 340px;
-  height: 340px;
+  width: var(--tile, 340px);
+  height: var(--tile, 340px);
   border-radius: 26px;
   overflow: hidden;
   position: relative;
