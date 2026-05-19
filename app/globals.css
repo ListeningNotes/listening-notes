@@ -17,6 +17,7 @@
   --accent:       #b5b2ab;
   --border:       rgba(26, 26, 26, 0.08);
   --gold:         #E8B84B;
+  --live:         #4caf72;
   --card-blur:    blur(48px);
   --shadow-soft:  0 2px 12px rgba(0,0,0,0.04), 0 8px 32px rgba(0,0,0,0.04);
   --shadow-lift:  0 4px 20px rgba(0,0,0,0.06), 0 16px 48px rgba(0,0,0,0.06);
@@ -592,11 +593,10 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 }
 
 /* Centered logo — matches the /dashboard logo size */
-.hp-logo img {
-  height: 160px;
+.hp-logo svg {
+  height: 142px;
   width: auto;
   display: block;
-  transition: filter 0.2s;
 }
 
 @keyframes hp-pulse {
