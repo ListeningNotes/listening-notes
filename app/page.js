@@ -23,6 +23,19 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [modalSlug, setModalSlug] = useState(null);
 
+  // Temporary layout tuning controls.
+  const [logoSize, setLogoSize] = useState(142);
+  const [logoY, setLogoY] = useState(0);
+  const [tileSize, setTileSize] = useState(340);
+  const [stripY, setStripY] = useState(0);
+
+  const tuneVars = {
+    '--logo-size': `${logoSize}px`,
+    '--logo-y': `${logoY}px`,
+    '--tile': `${tileSize}px`,
+    '--strip-y': `${stripY}px`,
+  };
+
   useEffect(() => {
     fetch('/api/entries')
       .then(r => r.json())
@@ -35,7 +48,7 @@ export default function HomePage() {
   }, []);
 
   return (
-    <div className="hp">
+    <div className="hp" style={tuneVars}>
       <div className="hp-corner">
         <a
           href="https://instagram.com/listeningnotes.blog"
@@ -105,6 +118,34 @@ export default function HomePage() {
       {modalSlug && (
         <EntryModal slug={modalSlug} onClose={() => setModalSlug(null)} />
       )}
+
+      {/* Temporary layout tuning controls */}
+      <div className="hp-tuner">
+        <div className="hp-tuner-row">
+          <label>Logo size</label>
+          <input type="range" min="60" max="280" value={logoSize}
+            onChange={e => setLogoSize(Number(e.target.value))} />
+          <span>{logoSize}px</span>
+        </div>
+        <div className="hp-tuner-row">
+          <label>Logo position</label>
+          <input type="range" min="-120" max="120" value={logoY}
+            onChange={e => setLogoY(Number(e.target.value))} />
+          <span>{logoY}px</span>
+        </div>
+        <div className="hp-tuner-row">
+          <label>Strip size</label>
+          <input type="range" min="180" max="480" value={tileSize}
+            onChange={e => setTileSize(Number(e.target.value))} />
+          <span>{tileSize}px</span>
+        </div>
+        <div className="hp-tuner-row">
+          <label>Strip position</label>
+          <input type="range" min="-160" max="160" value={stripY}
+            onChange={e => setStripY(Number(e.target.value))} />
+          <span>{stripY}px</span>
+        </div>
+      </div>
     </div>
   );
 }
