@@ -656,19 +656,24 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   50% { opacity: 0.4; transform: scale(0.8); }
 }
 
-/* ── Beacon (below the strip) ── */
+/* ── Beacon (below the strip) — frosted pill case ── */
 .hp-beacon {
   display: flex;
   align-items: center;
-  gap: 18px;
+  gap: 16px;
+  padding: 12px 30px 12px 12px;
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: 999px;
+  box-shadow: var(--shadow-soft), inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 .hp-beacon-art {
-  width: 76px;
-  height: 76px;
+  width: 60px;
+  height: 60px;
   flex-shrink: 0;
-  border-radius: 14px;
+  border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 6px 22px rgba(0,0,0,0.14);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
 }
 .hp-beacon-art img {
   width: 100%;
