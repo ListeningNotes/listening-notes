@@ -97,6 +97,8 @@ export default function HomePage() {
           </svg>
         </Link>
 
+        <Hero />
+
         {loading ? (
           <div className="hp-strip">
             <div className="hp-strip-track">
@@ -108,8 +110,6 @@ export default function HomePage() {
         ) : (
           <AlbumStrip entries={entries} onTileClick={setModalSlug} />
         )}
-
-        <Hero />
       </main>
       {modalSlug && (
         <EntryModal slug={modalSlug} onClose={() => setModalSlug(null)} />
