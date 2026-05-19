@@ -591,9 +591,9 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   background: var(--bg-warm);
 }
 
-/* Centered logo */
+/* Centered logo — matches the /dashboard logo size */
 .hp-logo img {
-  height: 84px;
+  height: 160px;
   width: auto;
   display: block;
   transition: filter 0.2s;
