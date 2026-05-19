@@ -17,6 +17,21 @@ export default function AlbumStrip({ entries, onTileClick }) {
     let auto = false;
     let dir = 1;
 
+    // Roundabout depth: tiles shrink + dim as they near the screen edges.
+    function applyDepth() {
+      const center = window.innerWidth / 2;
+      const track = el.firstElementChild;
+      if (!track) return;
+      for (const tile of track.children) {
+        const r = tile.getBoundingClientRect();
+        const tileCenter = r.left + r.width / 2;
+        const norm = Math.min(Math.abs(tileCenter - center) / center, 1);
+        const eased = norm * norm; // hold size near centre, fall off toward edges
+        tile.style.setProperty('--depth', (1 - eased * 0.42).toFixed(3));
+        tile.style.setProperty('--dim', (1 - eased * 0.4).toFixed(3));
+      }
+    }
+
     function stopAuto() {
       auto = false;
       if (raf) { cancelAnimationFrame(raf); raf = null; }
@@ -39,14 +54,12 @@ export default function AlbumStrip({ entries, onTileClick }) {
       raf = requestAnimationFrame(tick);
     }
 
-    // Any interaction with the strip stops the drift and restarts the idle clock.
     function onInteract() {
       stopAuto();
       clearTimeout(idleTimer);
       idleTimer = setTimeout(startAuto, IDLE_MS);
     }
 
-    // Let a vertical mouse-wheel scroll the strip horizontally.
     function onWheel(e) {
       if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
         el.scrollLeft += e.deltaY;
@@ -59,7 +72,11 @@ export default function AlbumStrip({ entries, onTileClick }) {
     el.addEventListener('pointerdown', onInteract);
     el.addEventListener('pointermove', onInteract);
     el.addEventListener('touchstart', onInteract, { passive: true });
+    el.addEventListener('scroll', applyDepth, { passive: true });
+    window.addEventListener('resize', applyDepth);
 
+    applyDepth();
+    const settle = setTimeout(applyDepth, 120);
     idleTimer = setTimeout(startAuto, IDLE_MS);
 
     return () => {
@@ -67,7 +84,10 @@ export default function AlbumStrip({ entries, onTileClick }) {
       el.removeEventListener('pointerdown', onInteract);
       el.removeEventListener('pointermove', onInteract);
       el.removeEventListener('touchstart', onInteract);
+      el.removeEventListener('scroll', applyDepth);
+      window.removeEventListener('resize', applyDepth);
       clearTimeout(idleTimer);
+      clearTimeout(settle);
       if (raf) cancelAnimationFrame(raf);
     };
   }, [entries]);

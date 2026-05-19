@@ -599,14 +599,6 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   transition: filter 0.2s;
 }
 
-.hp-strip-label {
-  font-family: var(--font-label);
-  font-size: 11px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--ink-faint);
-}
-
 @keyframes hp-pulse {
   0%, 100% { opacity: 1; transform: scale(1); }
   50% { opacity: 0.4; transform: scale(0.8); }
@@ -1113,7 +1105,7 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   display: flex;
   gap: 22px;
   width: max-content;
-  padding: 14px 48px;
+  padding: 40px calc(50vw - 120px);
 }
 
 .strip-tile {
@@ -1129,10 +1121,12 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   cursor: pointer;
   background: var(--bg-warm);
   box-shadow: var(--shadow-soft);
-  transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.3s ease;
+  transform: scale(var(--depth, 1));
+  opacity: var(--dim, 1);
+  transition: transform 0.18s ease-out, opacity 0.18s ease-out, box-shadow 0.3s ease;
 }
 .strip-tile:hover {
-  transform: translateY(-6px);
+  transform: scale(calc(var(--depth, 1) * 1.05));
   box-shadow: var(--shadow-lift);
 }
 
@@ -1205,7 +1199,7 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   .topnav-hamburger { display: flex; }
 
   .strip-tile { width: 168px; height: 168px; border-radius: 16px; }
-  .hp-strip-track { gap: 14px; padding: 12px 24px; }
+  .hp-strip-track { gap: 14px; padding: 32px calc(50vw - 84px); }
 }
 
 /* Hide Neon button on homepage */

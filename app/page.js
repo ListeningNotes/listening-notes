@@ -75,7 +75,6 @@ export default function HomePage() {
           />
         </Link>
 
-        <div className="hp-strip-label">Recently logged</div>
         {loading ? (
           <div className="hp-strip">
             <div className="hp-strip-track">
