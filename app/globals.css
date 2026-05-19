@@ -633,7 +633,7 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   transform: translateY(var(--logo-y, 0px));
 }
 .hp-logo svg {
-  height: var(--logo-size, 142px);
+  height: 140px;
   width: auto;
   display: block;
 }
@@ -1162,14 +1162,14 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   display: flex;
   gap: 44px;
   width: max-content;
-  padding: 48px calc(50vw - var(--tile, 340px) / 2);
+  padding: 48px calc(50vw - 130px);
 }
 
 .strip-tile {
   flex-shrink: 0;
-  width: var(--tile, 340px);
-  height: var(--tile, 340px);
-  border-radius: 26px;
+  width: 260px;
+  height: 260px;
+  border-radius: 22px;
   overflow: hidden;
   position: relative;
   display: block;
