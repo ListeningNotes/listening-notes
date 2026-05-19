@@ -53,28 +53,27 @@ export default function HomePage() {
         </button>
       </div>
 
-      <main className="hp-main">
-        <header className="hp-head">
-          <Link href="/" className="hp-logo" aria-label="Listening Notes">
-            <img
-              src="/Logo.png"
-              alt="Listening Notes"
-              style={{ filter: theme === 'dark' ? 'invert(1)' : 'none' }}
-            />
+      <nav className="hp-dotnav" aria-label="Site navigation">
+        {NAV.map(p => (
+          <Link
+            key={p.href}
+            href={p.href}
+            className={'hp-dot' + (p.href === '/' ? ' hp-dot--active' : '')}
+            aria-label={p.label}
+          >
+            <span className="hp-dot-label">{p.label}</span>
           </Link>
-          <nav className="hp-dotnav" aria-label="Site navigation">
-            {NAV.map(p => (
-              <Link
-                key={p.href}
-                href={p.href}
-                className={'hp-dot' + (p.href === '/' ? ' hp-dot--active' : '')}
-                aria-label={p.label}
-              >
-                <span className="hp-dot-label">{p.label}</span>
-              </Link>
-            ))}
-          </nav>
-        </header>
+        ))}
+      </nav>
+
+      <main className="hp-main">
+        <Link href="/" className="hp-logo" aria-label="Listening Notes">
+          <img
+            src="/Logo.png"
+            alt="Listening Notes"
+            style={{ filter: theme === 'dark' ? 'invert(1)' : 'none' }}
+          />
+        </Link>
 
         <div className="hp-strip-label">Recently logged</div>
         {loading ? (

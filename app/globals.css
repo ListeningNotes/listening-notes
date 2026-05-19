@@ -591,13 +591,7 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   background: var(--bg-warm);
 }
 
-/* Centered logo + dot nav header */
-.hp-head {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 24px;
-}
+/* Centered logo */
 .hp-logo img {
   height: 84px;
   width: auto;
@@ -683,8 +677,13 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   margin-top: 3px;
 }
 
-/* ── Dot navigation ── */
+/* ── Dot navigation (fixed top bar) ── */
 .hp-dotnav {
+  position: fixed;
+  top: 28px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 100;
   display: flex;
   align-items: center;
   gap: 18px;
