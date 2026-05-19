@@ -535,6 +535,26 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   flex-direction: column;
 }
 
+/* Soft fade into the background at the left/right screen edges */
+.hp::before,
+.hp::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  width: 160px;
+  z-index: 50;
+  pointer-events: none;
+}
+.hp::before {
+  left: 0;
+  background: linear-gradient(to right, var(--bg), transparent);
+}
+.hp::after {
+  right: 0;
+  background: linear-gradient(to left, var(--bg), transparent);
+}
+
 /* ── Homepage layout — scroll strip, beacon, dot nav ── */
 .hp-main {
   flex: 1;
