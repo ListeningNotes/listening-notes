@@ -17,7 +17,7 @@
   --accent:       #b5b2ab;
   --border:       rgba(26, 26, 26, 0.08);
   --gold:         #E8B84B;
-  --live:         #4caf72;
+  --live:         #7cff9b;
   --card-blur:    blur(48px);
   --shadow-soft:  0 2px 12px rgba(0,0,0,0.04), 0 8px 32px rgba(0,0,0,0.04);
   --shadow-lift:  0 4px 20px rgba(0,0,0,0.06), 0 16px 48px rgba(0,0,0,0.06);
@@ -598,6 +598,19 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   width: auto;
   display: block;
 }
+/* Logo period — black when idle, green + lit glow when the beacon is live */
+.hp-logo-dot {
+  fill: var(--ink);
+  transition: fill 0.45s ease;
+}
+.hp-logo-dot--live {
+  fill: var(--live);
+  animation: logo-dot-glow 2.4s ease-in-out infinite;
+}
+@keyframes logo-dot-glow {
+  0%, 100% { filter: drop-shadow(0 0 1.5px rgba(124, 255, 155, 0.55)); }
+  50%      { filter: drop-shadow(0 0 5px rgba(124, 255, 155, 0.95)); }
+}
 
 @keyframes hp-pulse {
   0%, 100% { opacity: 1; transform: scale(1); }
@@ -653,8 +666,12 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   flex-shrink: 0;
 }
 .hp-beacon-dot--live {
-  background: var(--accent);
-  animation: hp-pulse 2s ease-in-out infinite;
+  background: var(--live);
+  animation: beacon-dot-glow 2.4s ease-in-out infinite;
+}
+@keyframes beacon-dot-glow {
+  0%, 100% { box-shadow: 0 0 5px rgba(124, 255, 155, 0.5); }
+  50%      { box-shadow: 0 0 11px rgba(124, 255, 155, 0.9); }
 }
 .hp-beacon-title {
   font-family: var(--font-display);
