@@ -659,8 +659,7 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 /* ── Beacon (below the strip) — wide frosted music-player case ── */
 .hp-beacon {
   display: flex;
-  align-items: center;
-  gap: 20px;
+  flex-direction: column;
   width: 430px;
   max-width: calc(100vw - 48px);
   padding: 16px;
@@ -668,6 +667,15 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   border: 1px solid var(--panel-border);
   border-radius: 26px;
   box-shadow: var(--shadow-soft), inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  font: inherit;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.hp-beacon-row {
+  display: flex;
+  align-items: center;
+  gap: 20px;
 }
 .hp-beacon-art {
   width: 104px;
@@ -767,6 +775,74 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 @keyframes eq-bounce {
   0%, 100% { height: 22%; }
   50%      { height: 100%; }
+}
+
+/* Expandable recent-tracks panel inside the beacon */
+.hp-beacon-recent-wrap {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 0.34s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.hp-beacon--open .hp-beacon-recent-wrap {
+  grid-template-rows: 1fr;
+}
+.hp-beacon-recent {
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+.hp-beacon-recent-empty {
+  font-family: var(--font-label);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.hp-beacon-recent-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.hp-beacon-recent-art {
+  width: 40px;
+  height: 40px;
+  border-radius: 8px;
+  object-fit: cover;
+  flex-shrink: 0;
+  background: var(--bg-warm);
+}
+.hp-beacon-recent-art--ph {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink-faint);
+  font-size: 1.1rem;
+}
+.hp-beacon-recent-meta {
+  flex: 1;
+  min-width: 0;
+}
+.hp-beacon-recent-track {
+  font-size: 14px;
+  color: var(--ink);
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.hp-beacon-recent-artist {
+  font-family: var(--font-label);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  color: var(--ink-soft);
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* ── Dot navigation (fixed top bar) ── */
