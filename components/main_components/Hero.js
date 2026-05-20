@@ -1,92 +1,101 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useListeningBeacon } from '../../hooks/useListeningBeacon';
 
 export default function Hero() {
-  const { track, isLive } = useListeningBeacon();
+  const { track: trackObj, isLive } = useListeningBeacon();
+  const trackName = trackObj?.name || '—';
+  const artistName = trackObj?.artist || '';
+  const artUrl = trackObj?.image || '';
   const [panelOpen, setPanelOpen] = useState(false);
-  const [recents, setRecents] = useState([]);
+  const [recentStack, setRecentStack] = useState([]);
+  const prevTrack = useRef(null);
+  const prevArtRef = useRef('');
 
-  // Pull the two tracks played just before the current one.
+  // Pull recent tracks from last.fm and keep the last few past listens.
   useEffect(() => {
-    async function fetchRecents() {
+    async function fetchRecent() {
       try {
-        const res = await fetch('https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=listeningnotes&api_key=f022ca293645cd4cf2beeb3be7ae4b6f&limit=5&format=json');
+        const res = await fetch('https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=listeningnotes&api_key=f022ca293645cd4cf2beeb3be7ae4b6f&limit=6&format=json');
         const data = await res.json();
         const tracks = data?.recenttracks?.track || [];
         const nowPlaying = tracks.find(t => t['@attr']?.nowplaying);
         const past = tracks
           .filter(t => !t['@attr']?.nowplaying)
-          .filter(t => !(nowPlaying && t.name === nowPlaying.name && t.artist['#text'] === nowPlaying.artist['#text']))
-          .slice(0, 2)
           .map(t => ({
-            name: t.name,
+            track: t.name,
             artist: t.artist['#text'],
-            art: t.image?.[2]?.['#text'] || '',
-          }));
-        setRecents(past);
-      } catch {}
+            art: t.image?.[3]?.['#text'] || t.image?.[2]?.['#text'] || '',
+          }))
+          .filter(t => !(nowPlaying && t.track === nowPlaying.name && t.artist === nowPlaying.artist['#text']));
+        setRecentStack(past.slice(0, 3));
+      } catch (e) {}
     }
-    fetchRecents();
-    const iv = setInterval(fetchRecents, 30000);
-    return () => clearInterval(iv);
+    fetchRecent();
+    const interval = setInterval(fetchRecent, 30000);
+    return () => clearInterval(interval);
   }, []);
 
-  const artUrl = track?.image || '';
-  const trackName = track?.name || '';
-  const artistName = track?.artist || '';
+  // When the current track changes, push the previous one onto the recent stack.
+  useEffect(() => {
+    if (!trackObj?.name) return;
+    const key = trackObj.name + '|||' + trackObj.artist;
+    if (key === prevTrack.current) return;
+    if (prevTrack.current) {
+      const [prevName, prevArtist] = prevTrack.current.split('|||');
+      const prevArt = prevArtRef.current;
+      setRecentStack(prev => {
+        const newEntry = { track: prevName, artist: prevArtist, art: prevArt };
+        const filtered = prev.filter(t => !(t.track === trackObj.name && t.artist === trackObj.artist));
+        return [newEntry, ...filtered].slice(0, 3);
+      });
+    } else {
+      setRecentStack(prev => prev.filter(t => !(t.track === trackObj.name && t.artist === trackObj.artist)));
+    }
+    prevTrack.current = key;
+    prevArtRef.current = artUrl;
+  }, [trackObj]);
+
+  const sizes = [0.82, 0.68, 0.56];
 
   return (
-    <button
-      className={'hp-beacon' + (panelOpen ? ' hp-beacon--open' : '')}
-      onClick={() => setPanelOpen(v => !v)}
-      aria-expanded={panelOpen}
-      aria-label="Toggle recent tracks"
-    >
-      <div className="hp-beacon-row">
-        <div className="hp-beacon-art">
-          {artUrl
-            ? <img src={artUrl} alt={trackName} />
-            : <div className="hp-beacon-art-ph">♪</div>
-          }
-        </div>
-        <div className="hp-beacon-body">
-          <div className="hp-beacon-label">
-            <span className={'hp-beacon-dot' + (isLive ? ' hp-beacon-dot--live' : '')} />
-            {isLive ? 'Now listening' : 'Last played'}
-          </div>
-          <div className="hp-beacon-title">{trackName || '—'}</div>
-          {artistName && <div className="hp-beacon-artist">{artistName}</div>}
-        </div>
+    <div className={'beacon-stage' + (panelOpen ? ' beacon-stage--open' : '')}>
+      {recentStack.slice(0, 3).map((item, i) => (
         <div
-          className={'hp-beacon-eq' + (isLive ? ' hp-beacon-eq--live' : '')}
-          aria-hidden="true"
+          key={i}
+          className="beacon-recent-tile"
+          style={{ '--scale': sizes[i], '--delay': ((i + 1) * 0.08) + 's' }}
         >
-          <span /><span /><span /><span />
+          {item.art && <img src={item.art} alt={item.track} className="beacon-recent-art" />}
+          <div className="beacon-recent-meta">
+            <div className="beacon-recent-track">{item.track}</div>
+            <div className="beacon-recent-artist">{item.artist}</div>
+          </div>
         </div>
-      </div>
-
-      <div className="hp-beacon-recent-wrap" aria-hidden={!panelOpen}>
-        <div className="hp-beacon-recent">
-          {recents.length === 0 ? (
-            <div className="hp-beacon-recent-empty">No recent tracks.</div>
-          ) : (
-            recents.map((r, i) => (
-              <div key={i} className="hp-beacon-recent-item">
-                {r.art
-                  ? <img src={r.art} alt={r.name} className="hp-beacon-recent-art" />
-                  : <div className="hp-beacon-recent-art hp-beacon-recent-art--ph">♪</div>
-                }
-                <div className="hp-beacon-recent-meta">
-                  <div className="hp-beacon-recent-track">{r.name}</div>
-                  <div className="hp-beacon-recent-artist">{r.artist}</div>
-                </div>
-              </div>
-            ))
-          )}
+      ))}
+      <button
+        className="beacon-card beacon-card--main"
+        onClick={() => setPanelOpen(v => !v)}
+        aria-expanded={panelOpen}
+        aria-label="Toggle recent listens"
+      >
+        <div className={'beacon-art-wrap' + (isLive ? ' beacon-art-wrap--live' : '')}>
+          {artUrl
+            ? <img src={artUrl} alt={trackName} className={'beacon-art' + (!isLive ? ' beacon-art--idle' : '')} />
+            : <div className="beacon-art-placeholder">♪</div>
+          }
+          {!isLive && artUrl && <div className="beacon-idle-overlay"><span>Last played</span></div>}
         </div>
-      </div>
-    </button>
+        <div className="beacon-meta">
+          <div className="beacon-status">
+            <span className={'beacon-dot' + (isLive ? ' beacon-dot--live' : '')} />
+            <span className="beacon-status-text">{isLive ? 'Now listening' : 'Not listening'}</span>
+          </div>
+          <div className="beacon-track">{trackName || '—'}</div>
+          {artistName && <div className="beacon-artist">{artistName}</div>}
+        </div>
+      </button>
+    </div>
   );
 }
