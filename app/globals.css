@@ -659,8 +659,8 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 /* ── Beacon (below the strip) — wide frosted music-player case ── */
 .hp-beacon {
   display: flex;
-  flex-direction: column;
-  width: 430px;
+  align-items: center;
+  width: auto;
   max-width: calc(100vw - 48px);
   padding: 16px;
   background: var(--panel);
@@ -676,6 +676,7 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   display: flex;
   align-items: center;
   gap: 20px;
+  flex-shrink: 0;
 }
 .hp-beacon-art {
   width: 104px;
@@ -702,8 +703,9 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   font-size: 2.2rem;
 }
 .hp-beacon-body {
-  flex: 1;
+  width: 220px;
   min-width: 0;
+  flex-shrink: 0;
 }
 .hp-beacon-label {
   font-family: var(--font-label);
@@ -777,23 +779,25 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   50%      { height: 100%; }
 }
 
-/* Expandable recent-tracks panel inside the beacon */
+/* Expandable recent-tracks panel — slides out horizontally */
 .hp-beacon-recent-wrap {
   display: grid;
-  grid-template-rows: 0fr;
-  transition: grid-template-rows 0.34s cubic-bezier(0.4, 0, 0.2, 1);
+  grid-template-columns: 0fr;
+  transition: grid-template-columns 0.34s cubic-bezier(0.4, 0, 0.2, 1);
 }
 .hp-beacon--open .hp-beacon-recent-wrap {
-  grid-template-rows: 1fr;
+  grid-template-columns: 1fr;
 }
 .hp-beacon-recent {
-  min-height: 0;
+  min-width: 0;
   overflow: hidden;
   display: flex;
   flex-direction: column;
+  justify-content: center;
   gap: 10px;
-  padding-top: 16px;
-  border-top: 1px solid var(--border);
+  padding-left: 18px;
+  margin-left: 18px;
+  border-left: 1px solid var(--border);
 }
 .hp-beacon-recent-empty {
   font-family: var(--font-label);
@@ -823,7 +827,7 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   font-size: 1.1rem;
 }
 .hp-beacon-recent-meta {
-  flex: 1;
+  width: 160px;
   min-width: 0;
 }
 .hp-beacon-recent-track {
