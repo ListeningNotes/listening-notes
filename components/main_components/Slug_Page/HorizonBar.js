@@ -21,20 +21,20 @@ export default function HorizonBar({ horizon, tracks, commentsByTrack, onBarClic
               style={{ flex: 1, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', cursor: 'pointer', position: 'relative' }}
             >
               {count > 0 && (
-                <div style={{ position: 'absolute', top: '-8px', left: '50%', transform: 'translateX(-50%)', width: '5px', height: '5px', borderRadius: '50%', background: '#c8d47a' }} />
+                <div style={{ position: 'absolute', top: '-8px', left: '50%', transform: 'translateX(-50%)', width: '5px', height: '5px', borderRadius: '50%', background: 'var(--accent)' }} />
               )}
               <div
-                style={{ borderRadius: '2px 2px 0 0', background: '#c8d47a', height: (h * 100) + '%', transition: 'background 0.15s, transform 0.1s', transformOrigin: 'bottom' }}
-                onMouseEnter={e => { e.currentTarget.style.background = '#e0ec9a'; e.currentTarget.parentNode.style.transform = 'scaleX(1.1)'; }}
-                onMouseLeave={e => { e.currentTarget.style.background = '#c8d47a'; e.currentTarget.parentNode.style.transform = 'scaleX(1)'; }}
+                style={{ borderRadius: '2px 2px 0 0', background: 'var(--accent)', height: (h * 100) + '%', transition: 'filter 0.15s, transform 0.1s', transformOrigin: 'bottom' }}
+                onMouseEnter={e => { e.currentTarget.style.filter = 'brightness(1.12)'; e.currentTarget.parentNode.style.transform = 'scaleX(1.1)'; }}
+                onMouseLeave={e => { e.currentTarget.style.filter = 'none'; e.currentTarget.parentNode.style.transform = 'scaleX(1)'; }}
               />
             </div>
           );
         })}
       </div>
       <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '6px' }}>
-        <span style={{ fontFamily: fonts.mono, fontSize: '9px', color: '#555', letterSpacing: '0.1em' }}>track 1</span>
-        <span style={{ fontFamily: fonts.mono, fontSize: '9px', color: '#555', letterSpacing: '0.1em' }}>track {bars.length}</span>
+        <span style={{ fontFamily: fonts.mono, fontSize: '9px', color: 'var(--ink-faint)', letterSpacing: '0.1em' }}>track 1</span>
+        <span style={{ fontFamily: fonts.mono, fontSize: '9px', color: 'var(--ink-faint)', letterSpacing: '0.1em' }}>track {bars.length}</span>
       </div>
     </div>
   );

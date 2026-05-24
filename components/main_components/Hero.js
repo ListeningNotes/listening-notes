@@ -13,6 +13,7 @@ export default function Hero() {
   const prevTrack = useRef(null);
   const prevArtRef = useRef('');
 
+  // Pull recent tracks from last.fm and keep the last few past listens.
   useEffect(() => {
     async function fetchRecent() {
       try {
@@ -22,16 +23,21 @@ export default function Hero() {
         const nowPlaying = tracks.find(t => t['@attr']?.nowplaying);
         const past = tracks
           .filter(t => !t['@attr']?.nowplaying)
-          .map(t => ({ track: t.name, artist: t.artist['#text'], art: t.image?.[3]?.['#text'] || t.image?.[2]?.['#text'] || '' }))
+          .map(t => ({
+            track: t.name,
+            artist: t.artist['#text'],
+            art: t.image?.[3]?.['#text'] || t.image?.[2]?.['#text'] || '',
+          }))
           .filter(t => !(nowPlaying && t.track === nowPlaying.name && t.artist === nowPlaying.artist['#text']));
         setRecentStack(past.slice(0, 3));
-      } catch(e) {}
+      } catch (e) {}
     }
     fetchRecent();
     const interval = setInterval(fetchRecent, 30000);
     return () => clearInterval(interval);
   }, []);
 
+  // When the current track changes, push the previous one onto the recent stack.
   useEffect(() => {
     if (!trackObj?.name) return;
     const key = trackObj.name + '|||' + trackObj.artist;
@@ -54,39 +60,42 @@ export default function Hero() {
   const sizes = [0.82, 0.68, 0.56];
 
   return (
-    <section className="hero">
-      {artUrl && <div className="hero-blur-bg" style={{ backgroundImage: 'url(' + artUrl + ')' }} />}
-      <div className="hero-fade-bottom" />
-      <div className="hero-inner" style={{ zIndex: 3 }}>
-        <div className={'beacon-stage' + (panelOpen ? ' beacon-stage--open' : '')}>
-          {recentStack.slice(0, 3).map((item, i) => (
-            <div key={i} className="beacon-recent-tile" style={{ '--scale': sizes[i], '--delay': ((i + 1) * 0.08) + 's' }}>
-              {item.art && <img src={item.art} alt={item.track} className="beacon-recent-art" />}
-              <div className="beacon-recent-meta">
-                <div className="beacon-recent-track">{item.track}</div>
-                <div className="beacon-recent-artist">{item.artist}</div>
-              </div>
-            </div>
-          ))}
-          <button className="beacon-card beacon-card--main" onClick={() => setPanelOpen(v => !v)} aria-expanded={panelOpen} aria-label="Toggle recent listens">
-            <div className={'beacon-art-wrap' + (isLive ? ' beacon-art-wrap--live' : '')}>
-              {artUrl
-                ? <img src={artUrl} alt={trackName} className={'beacon-art' + (!isLive ? ' beacon-art--idle' : '')} />
-                : <div className="beacon-art-placeholder">♪</div>
-              }
-              {!isLive && artUrl && <div className="beacon-idle-overlay"><span>Last played</span></div>}
-            </div>
-            <div className="beacon-meta">
-              <div className="beacon-status">
-                <span className={'beacon-dot' + (isLive ? ' beacon-dot--live' : '')} />
-                <span className="beacon-status-text">{isLive ? 'Now listening' : 'Not listening'}</span>
-              </div>
-              <div className="beacon-track">{trackName || '—'}</div>
-              {artistName && <div className="beacon-artist">{artistName}</div>}
-            </div>
-          </button>
+    <div className={'beacon-stage' + (panelOpen ? ' beacon-stage--open' : '')}>
+      {recentStack.slice(0, 3).map((item, i) => (
+        <div
+          key={i}
+          className="beacon-recent-tile"
+          style={{ '--scale': sizes[i], '--delay': ((i + 1) * 0.08) + 's' }}
+        >
+          {item.art && <img src={item.art} alt={item.track} className="beacon-recent-art" />}
+          <div className="beacon-recent-meta">
+            <div className="beacon-recent-track">{item.track}</div>
+            <div className="beacon-recent-artist">{item.artist}</div>
+          </div>
         </div>
-      </div>
-    </section>
+      ))}
+      <button
+        className="beacon-card beacon-card--main"
+        onClick={() => setPanelOpen(v => !v)}
+        aria-expanded={panelOpen}
+        aria-label="Toggle recent listens"
+      >
+        <div className={'beacon-art-wrap' + (isLive ? ' beacon-art-wrap--live' : '')}>
+          {artUrl
+            ? <img src={artUrl} alt={trackName} className={'beacon-art' + (!isLive ? ' beacon-art--idle' : '')} />
+            : <div className="beacon-art-placeholder">♪</div>
+          }
+          {!isLive && artUrl && <div className="beacon-idle-overlay"><span>Last played</span></div>}
+        </div>
+        <div className="beacon-meta">
+          <div className="beacon-status">
+            <span className={'beacon-dot' + (isLive ? ' beacon-dot--live' : '')} />
+            <span className="beacon-status-text">{isLive ? 'Now listening' : 'Not listening'}</span>
+          </div>
+          <div className="beacon-track">{trackName || '—'}</div>
+          {artistName && <div className="beacon-artist">{artistName}</div>}
+        </div>
+      </button>
+    </div>
   );
 }
