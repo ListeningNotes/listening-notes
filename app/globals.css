@@ -598,7 +598,7 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   transform: translateY(var(--logo-y, 0px));
 }
 .hp-logo svg {
-  height: 140px;
+  height: 160px;
   width: auto;
   display: block;
 }
