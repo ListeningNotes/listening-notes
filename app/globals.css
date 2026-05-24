@@ -1476,7 +1476,7 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
   opacity: 0;
   pointer-events: none;
   transform: translateX(-50%) scale(0.3);
@@ -1520,18 +1520,18 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 .beacon-recent-track {
   font-family: var(--font-nunito), sans-serif;
   font-weight: 900;
-  font-size: 1rem;
+  font-size: 0.85rem;
   color: var(--text);
   line-height: 1.2;
-  max-width: 200px;
+  max-width: 140px;
 }
 
 .beacon-recent-artist {
   font-family: var(--font-nunito), sans-serif;
-  font-size: 0.7rem;
+  font-size: 0.62rem;
   letter-spacing: 0.06em;
   color: var(--text-muted);
-  margin-top: 3px;
+  margin-top: 2px;
 }
 
 /* Echo effect — tiles fade + desaturate progressively, revive on hover */
