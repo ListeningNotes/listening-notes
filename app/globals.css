@@ -603,6 +603,21 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   transition: filter 0.2s;
 }
 
+/* Small top-left logo used as a wayfinder on non-homepage pages */
+.hp-logo-mini {
+  position: fixed;
+  top: 22px;
+  left: 28px;
+  z-index: 100;
+  display: block;
+}
+.hp-logo-mini img {
+  height: 36px;
+  width: auto;
+  display: block;
+  transition: filter 0.2s;
+}
+
 @keyframes hp-pulse {
   0%, 100% { opacity: 1; transform: scale(1); }
   50% { opacity: 0.4; transform: scale(0.8); }

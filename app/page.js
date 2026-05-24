@@ -3,17 +3,10 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useTheme } from '../components/main_components/Lightswitch';
+import DotNav from '../components/main_components/DotNav';
 import Hero from '../components/main_components/Hero';
 import AlbumStrip from '../components/main_components/AlbumStrip';
 import EntryModal from '../components/main_components/EntryModal';
-
-const NAV = [
-  { href: '/', label: 'Home' },
-  { href: '/archive', label: 'Archive' },
-  { href: '/compare', label: 'Compare' },
-  { href: '/about', label: 'About' },
-  { href: '/submit', label: 'Submit' },
-];
 
 export default function HomePage() {
   const { theme, toggle: toggleTheme } = useTheme();
@@ -53,19 +46,6 @@ export default function HomePage() {
         </button>
       </div>
 
-      <nav className="hp-dotnav" aria-label="Site navigation">
-        {NAV.map(p => (
-          <Link
-            key={p.href}
-            href={p.href}
-            className={'hp-dot' + (p.href === '/' ? ' hp-dot--active' : '')}
-            aria-label={p.label}
-          >
-            <span className="hp-dot-label">{p.label}</span>
-          </Link>
-        ))}
-      </nav>
-
       <main className="hp-main">
         <Link href="/" className="hp-logo" aria-label="Listening Notes">
           <img
@@ -74,6 +54,8 @@ export default function HomePage() {
             style={{ filter: theme === 'dark' ? 'invert(1)' : 'none' }}
           />
         </Link>
+
+        <DotNav />
 
         {loading ? (
           <div className="hp-strip">
