@@ -70,7 +70,7 @@ export default function HomePage() {
 
       <main className="hp-main">
         <Link href="/" className="hp-logo" aria-label="Listening Notes">
-          <svg viewBox="79 99 235 134" role="img" aria-label="Listening Notes">
+          <svg viewBox="79 92 235 148" role="img" aria-label="Listening Notes">
             <g style={{ fill: 'var(--ink)' }}>
               <g transform="translate(73.734177, 220.794814)">
                 <path d="M 44.65625 0 C 37.46875 0 31.160156 -1.601562 25.734375 -4.8125 C 20.304688 -8.019531 16.097656 -12.28125 13.109375 -17.59375 C 10.128906 -22.90625 8.640625 -28.773438 8.640625 -35.203125 L 8.640625 -116.21875 L 36.53125 -116.21875 L 36.53125 -33.203125 C 36.53125 -30.546875 37.46875 -28.222656 39.34375 -26.234375 C 41.226562 -24.242188 43.550781 -23.25 46.3125 -23.25 L 77.03125 -23.25 L 77.03125 0 Z M 44.65625 0 " />
