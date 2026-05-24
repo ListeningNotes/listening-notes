@@ -556,41 +556,6 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   background: linear-gradient(to left, var(--bg), transparent);
 }
 
-/* Temporary layout tuning controls */
-.hp-tuner {
-  position: fixed;
-  right: 16px;
-  bottom: 16px;
-  z-index: 999;
-  background: #1a1a1a;
-  color: #fff;
-  border-radius: 12px;
-  padding: 14px 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  font-family: var(--font-label);
-  font-size: 11px;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.35);
-}
-.hp-tuner-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.hp-tuner-row label {
-  width: 98px;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: rgba(255,255,255,0.6);
-}
-.hp-tuner-row input { width: 130px; }
-.hp-tuner-row span {
-  width: 46px;
-  text-align: right;
-  color: #fff;
-}
-
 /* ── Homepage layout — scroll strip, beacon, dot nav ── */
 .hp-main {
   flex: 1;
@@ -1084,11 +1049,11 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 
 .beacon-art-wrap {
   position: relative;
-  width: 260px;
-  height: 260px;
-  border-radius: 22px;
+  width: 180px;
+  height: 180px;
+  border-radius: 18px;
   overflow: hidden;
-  box-shadow: 0 24px 60px rgba(0,0,0,0.18);
+  box-shadow: 0 18px 44px rgba(0,0,0,0.16);
   transition: box-shadow 0.4s, transform 0.4s;
 }
 .beacon-card:hover .beacon-art-wrap {
@@ -1184,10 +1149,10 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   font-family: var(--font-nunito), sans-serif;
   font-style: normal;
   font-weight: 700;
-  font-size: 2.4rem;
-  line-height: 1.1;
+  font-size: 1.5rem;
+  line-height: 1.15;
   color: var(--text);
-  max-width: 500px;
+  max-width: 360px;
   transition: opacity 0.5s ease;
 }
 .beacon-artist {
@@ -1486,7 +1451,7 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 .beacon-stage {
   position: relative;
   width: 100%;
-  height: 340px;
+  height: 250px;
 }
 
 /* Closed: centered. Open: shifts left */
@@ -1500,7 +1465,7 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 }
 
 .beacon-stage--open .beacon-card--main {
-  transform: translateX(calc(-50% - 245px));
+  transform: translateX(calc(-50% - 170px));
 }
 
 /* Recent tiles — all start from center, fan right */
@@ -1528,24 +1493,24 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 
 .beacon-stage--open .beacon-recent-tile:nth-child(1) {
   left: 50%;
-  transform: translateX(-70px) scale(0.88);
+  transform: translateX(-50px) scale(0.88);
 }
 .beacon-stage--open .beacon-recent-tile:nth-child(2) {
   left: 50%;
-  transform: translateX(155px) scale(0.76);
+  transform: translateX(108px) scale(0.76);
 }
 .beacon-stage--open .beacon-recent-tile:nth-child(3) {
   left: 50%;
-  transform: translateX(345px) scale(0.64);
+  transform: translateX(238px) scale(0.64);
 }
 
 .beacon-recent-art {
-  width: 260px;
-  height: 260px;
+  width: 180px;
+  height: 180px;
   object-fit: cover;
-  border-radius: 18px;
+  border-radius: 14px;
   display: block;
-  box-shadow: 0 14px 36px rgba(0,0,0,0.18);
+  box-shadow: 0 10px 26px rgba(0,0,0,0.16);
 }
 
 .beacon-recent-meta {

@@ -23,15 +23,6 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true);
   const [modalSlug, setModalSlug] = useState(null);
 
-  // Temporary position tuning controls.
-  const [logoY, setLogoY] = useState(0);
-  const [stripY, setStripY] = useState(0);
-
-  const tuneVars = {
-    '--logo-y': `${logoY}px`,
-    '--strip-y': `${stripY}px`,
-  };
-
   useEffect(() => {
     fetch('/api/entries')
       .then(r => r.json())
@@ -44,7 +35,7 @@ export default function HomePage() {
   }, []);
 
   return (
-    <div className="hp" style={tuneVars}>
+    <div className="hp">
       <div className="hp-corner">
         <a
           href="https://instagram.com/listeningnotes.blog"
@@ -114,22 +105,6 @@ export default function HomePage() {
       {modalSlug && (
         <EntryModal slug={modalSlug} onClose={() => setModalSlug(null)} />
       )}
-
-      {/* Temporary position tuning controls */}
-      <div className="hp-tuner">
-        <div className="hp-tuner-row">
-          <label>Logo position</label>
-          <input type="range" min="-120" max="120" value={logoY}
-            onChange={e => setLogoY(Number(e.target.value))} />
-          <span>{logoY}px</span>
-        </div>
-        <div className="hp-tuner-row">
-          <label>Strip position</label>
-          <input type="range" min="-160" max="160" value={stripY}
-            onChange={e => setStripY(Number(e.target.value))} />
-          <span>{stripY}px</span>
-        </div>
-      </div>
     </div>
   );
 }
