@@ -595,25 +595,12 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 /* Centered logo — matches the /dashboard logo size */
 .hp-logo {
   display: block;
-  transform: translateY(var(--logo-y, 0px));
 }
-.hp-logo svg {
+.hp-logo img {
   height: 160px;
   width: auto;
   display: block;
-}
-/* Logo period — black when idle, green + lit glow when the beacon is live */
-.hp-logo-dot {
-  fill: var(--ink);
-  transition: fill 0.45s ease;
-}
-.hp-logo-dot--live {
-  fill: var(--live);
-  animation: logo-dot-glow 2.4s ease-in-out infinite;
-}
-@keyframes logo-dot-glow {
-  0%, 100% { filter: drop-shadow(0 0 1.5px rgba(124, 255, 155, 0.55)); }
-  50%      { filter: drop-shadow(0 0 5px rgba(124, 255, 155, 0.95)); }
+  transition: filter 0.2s;
 }
 
 @keyframes hp-pulse {
