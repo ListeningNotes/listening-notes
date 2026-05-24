@@ -1084,11 +1084,11 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 
 .beacon-art-wrap {
   position: relative;
-  width: 340px;
-  height: 340px;
-  border-radius: 18px;
+  width: 260px;
+  height: 260px;
+  border-radius: 22px;
   overflow: hidden;
-  box-shadow: 0 32px 80px rgba(0,0,0,0.2);
+  box-shadow: 0 24px 60px rgba(0,0,0,0.18);
   transition: box-shadow 0.4s, transform 0.4s;
 }
 .beacon-card:hover .beacon-art-wrap {
@@ -1486,7 +1486,7 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 .beacon-stage {
   position: relative;
   width: 100%;
-  height: 420px;
+  height: 340px;
 }
 
 /* Closed: centered. Open: shifts left */
@@ -1500,7 +1500,7 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 }
 
 .beacon-stage--open .beacon-card--main {
-  transform: translateX(calc(-50% - 320px));
+  transform: translateX(calc(-50% - 245px));
 }
 
 /* Recent tiles — all start from center, fan right */
@@ -1528,24 +1528,24 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 
 .beacon-stage--open .beacon-recent-tile:nth-child(1) {
   left: 50%;
-  transform: translateX(-90px) scale(0.88);
+  transform: translateX(-70px) scale(0.88);
 }
 .beacon-stage--open .beacon-recent-tile:nth-child(2) {
   left: 50%;
-  transform: translateX(200px) scale(0.76);
+  transform: translateX(155px) scale(0.76);
 }
 .beacon-stage--open .beacon-recent-tile:nth-child(3) {
   left: 50%;
-  transform: translateX(450px) scale(0.64);
+  transform: translateX(345px) scale(0.64);
 }
 
 .beacon-recent-art {
-  width: 300px;
-  height: 300px;
+  width: 260px;
+  height: 260px;
   object-fit: cover;
-  border-radius: 16px;
+  border-radius: 18px;
   display: block;
-  box-shadow: 0 16px 48px rgba(0,0,0,0.2);
+  box-shadow: 0 14px 36px rgba(0,0,0,0.18);
 }
 
 .beacon-recent-meta {
