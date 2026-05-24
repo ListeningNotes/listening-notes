@@ -597,7 +597,7 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   display: block;
 }
 .hp-logo img {
-  height: 160px;
+  height: 140px;
   width: auto;
   display: block;
   transition: filter 0.2s;
