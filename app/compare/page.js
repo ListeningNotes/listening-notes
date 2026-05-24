@@ -11,7 +11,7 @@ export default function ComparePage() {
   return (
     <div style={{ background: 'var(--bg)', minHeight: '100vh', color: 'var(--ink)', fontFamily: fonts.sans }}>
       <Link href="/" className="hp-logo-mini" aria-label="Listening Notes">
-        <img src="/Logo.png" alt="Listening Notes" style={{ filter: theme === 'dark' ? 'invert(1)' : 'none' }} />
+        <img src="/Logo.png" alt="Listening Notes" style={{ height: 30, width: 'auto', display: 'block', filter: theme === 'dark' ? 'invert(1)' : 'none' }} />
       </Link>
       <div className="hp-corner">
         <a
