@@ -8,16 +8,15 @@
 import { fonts } from '../../library/sitewide_visuals';
 
 import { useEffect, useState, useRef, useCallback } from 'react';
-import Link from 'next/link';
 import StarRating from './StarRating';
 import HorizonGenerator from './Entry_modal/HorizonGenerator';
 import StickyHeader from './Entry_modal/StickyHeader';
 import { parseTracksFromNotes, splitNotes, parseRating } from '../../library/entry_formatter';
 
 
-const WIDGET_BG = 'rgba(8,6,14,0.50)';
-const WIDGET_BORDER = 'rgba(255,255,255,0.09)';
-const DIVIDER = 'rgba(255,255,255,0.07)';
+const WIDGET_BG = 'var(--panel)';
+const WIDGET_BORDER = 'var(--panel-border)';
+const DIVIDER = 'var(--border)';
 
 
 export default function EntryModal({ slug, onClose }) {
@@ -117,25 +116,25 @@ export default function EntryModal({ slug, onClose }) {
           background-clip:text;
           animation:ln-master-shine-kf 30s ease-in-out infinite;
         }
-        .ln-horizon-bar{transition:background 0.2s}
-        .ln-horizon-bar-wrap:hover .ln-horizon-bar{background:#dce88a}
+        .ln-horizon-bar{transition:filter 0.2s}
+        .ln-horizon-bar-wrap:hover .ln-horizon-bar{filter:brightness(1.12)}
         .ln-horizon-tooltip{
           position:absolute;bottom:calc(100% + 6px);left:50%;transform:translateX(-50%);
-          background:rgba(8,6,14,0.9);border:1px solid rgba(255,255,255,0.12);
+          background:var(--panel-solid);border:1px solid var(--border);
           border-radius:6px;padding:4px 8px;white-space:nowrap;
-          font-family:${fonts.sans};font-size:10px;color:rgba(232,228,220,0.9);
+          font-family:${fonts.sans};font-size:10px;color:var(--ink-soft);
           opacity:0;pointer-events:none;transition:opacity 0.15s;z-index:10;
           backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
         }
         .ln-horizon-bar-wrap:hover .ln-horizon-tooltip{opacity:1}
         .ln-notes-scroll::-webkit-scrollbar{width:4px}
         .ln-notes-scroll::-webkit-scrollbar-track{background:transparent}
-        .ln-notes-scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.1);border-radius:2px}
-        .ln-notes-scroll::-webkit-scrollbar-thumb:hover{background:rgba(255,255,255,0.2)}
+        .ln-notes-scroll::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+        .ln-notes-scroll::-webkit-scrollbar-thumb:hover{background:var(--ink-faint)}
       `}</style>
 
-      {/* Invisible backdrop — clicking closes the modal */}
-      <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 500 }} />
+      {/* Backdrop tint — clicking closes the modal */}
+      <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 500, background: 'rgba(0,0,0,0.15)', backdropFilter: 'blur(2px)', WebkitBackdropFilter: 'blur(2px)' }} />
 
       {/* Modal container */}
       <div
@@ -148,6 +147,7 @@ export default function EntryModal({ slug, onClose }) {
           width: '78vw', maxWidth: 940, height: '86vh',
           borderRadius: 16, overflow: 'hidden',
           border: '1px solid ' + WIDGET_BORDER,
+          boxShadow: 'var(--shadow-lift)',
           zIndex: 501,
           animation: 'ln-modal-in 0.3s cubic-bezier(0.34,1.2,0.64,1) forwards',
         }}
@@ -156,8 +156,8 @@ export default function EntryModal({ slug, onClose }) {
         {entry?.album_art && (
           <img src={entry.album_art} alt={entry.album} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
         )}
-        {/* Dark tint over the art so text is readable */}
-        <div style={{ position: 'absolute', inset: 0, background: 'rgba(6,4,12,0.18)' }} />
+        {/* Light wash over the art so dark text reads on cream */}
+        <div style={{ position: 'absolute', inset: 0, background: 'rgba(255,255,255,0.25)' }} />
 
         {/* Close button */}
         <button
@@ -166,8 +166,9 @@ export default function EntryModal({ slug, onClose }) {
           style={{
             position: 'absolute', top: 14, right: 14, zIndex: 20,
             width: 28, height: 28, borderRadius: '50%',
-            background: 'rgba(0,0,0,0.4)', border: '1px solid ' + WIDGET_BORDER,
-            color: 'rgba(255,255,255,0.45)', fontSize: 12, cursor: 'pointer',
+            background: 'var(--panel)', border: '1px solid ' + WIDGET_BORDER,
+            backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
+            color: 'var(--ink-soft)', fontSize: 12, cursor: 'pointer',
             display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: fonts.sans,
           }}
         >
@@ -206,36 +207,36 @@ export default function EntryModal({ slug, onClose }) {
             <div style={{ padding: '20px 22px', width: 270, flexShrink: 0, borderRight: '1px solid ' + DIVIDER, fontFamily: fonts.sans, display: 'flex', flexDirection: 'column' }}>
               {loading ? (
                 // Skeleton loading bars
-                [70, 50, 40].map((w, i) => <div key={i} style={{ height: 10, width: w + '%', background: 'rgba(255,255,255,0.08)', borderRadius: 3, marginBottom: 8 }} />)
+                [70, 50, 40].map((w, i) => <div key={i} style={{ height: 10, width: w + '%', background: 'var(--border)', borderRadius: 3, marginBottom: 8 }} />)
               ) : entry ? (
                 <>
-                  <div style={{ fontSize: 26, fontWeight: 700, color: '#f0ece4', lineHeight: 1.05, letterSpacing: '-0.02em', marginBottom: 3 }}>{entry.album}</div>
-                  <div style={{ fontSize: 13, fontWeight: 400, color: 'rgba(255,255,255,0.42)', marginBottom: 14 }}>
+                  <div style={{ fontSize: 26, fontWeight: 700, color: 'var(--ink)', lineHeight: 1.05, letterSpacing: '-0.02em', marginBottom: 3 }}>{entry.album}</div>
+                  <div style={{ fontSize: 13, fontWeight: 400, color: 'var(--ink-soft)', marginBottom: 14 }}>
                     {entry.artist}
-                    {entry.year && <><span style={{ color: 'rgba(255,255,255,0.2)' }}> · </span>{entry.year}</>}
+                    {entry.year && <><span style={{ color: 'var(--ink-faint)' }}> · </span>{entry.year}</>}
                   </div>
-                  <div style={{ height: 1, background: 'rgba(255,255,255,0.08)', marginBottom: 12 }} />
+                  <div style={{ height: 1, background: 'var(--border)', marginBottom: 12 }} />
                   <div style={{ display: 'flex', alignItems: 'center', gap: 7, marginBottom: 7 }}>
                     <StarRating rating={displayRating} size={18} glow={masterpiece} />
                     {masterpiece && (
                       <>
-                        <span style={{ color: 'rgba(255,255,255,0.18)', fontFamily: fonts.mono, fontSize: 9 }}>·</span>
+                        <span style={{ color: 'var(--ink-faint)', fontFamily: fonts.mono, fontSize: 9 }}>·</span>
                         <span className="ln-masterpiece-shine" style={{ fontFamily: fonts.mono, fontSize: 9, letterSpacing: '0.12em', textTransform: 'uppercase', fontWeight: 500 }}>Masterpiece</span>
                       </>
                     )}
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontFamily: fonts.mono, fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
-                    {entry.relationship && <span style={{ color: 'rgba(255,255,255,0.3)' }}>{entry.relationship}</span>}
+                    {entry.relationship && <span style={{ color: 'var(--ink-soft)' }}>{entry.relationship}</span>}
                     {isFavorite && (
                       <>
-                        {entry.relationship && <span style={{ color: 'rgba(255,255,255,0.15)' }}>·</span>}
-                        <span style={{ color: 'rgba(200,212,122,0.7)' }}>Favorite</span>
+                        {entry.relationship && <span style={{ color: 'var(--ink-faint)' }}>·</span>}
+                        <span style={{ color: 'var(--accent)' }}>Favorite</span>
                       </>
                     )}
                     {isSubmission && (
                       <>
-                        <span style={{ color: 'rgba(255,255,255,0.15)' }}>·</span>
-                        <span style={{ color: 'rgba(200,212,122,0.6)' }}>Submission</span>
+                        <span style={{ color: 'var(--ink-faint)' }}>·</span>
+                        <span style={{ color: 'var(--accent)' }}>Submission</span>
                       </>
                     )}
                   </div>
@@ -246,11 +247,11 @@ export default function EntryModal({ slug, onClose }) {
             {/* Right column: background text */}
             <div style={{ flex: 1, padding: '20px 22px', minWidth: 0, fontFamily: fonts.sans }}>
               {loading ? (
-                [100, 90, 95, 85, 88].map((w, i) => <div key={i} style={{ height: 9, width: w + '%', background: 'rgba(255,255,255,0.08)', borderRadius: 3, marginBottom: 8 }} />)
+                [100, 90, 95, 85, 88].map((w, i) => <div key={i} style={{ height: 9, width: w + '%', background: 'var(--border)', borderRadius: 3, marginBottom: 8 }} />)
               ) : entry?.background ? (
                 <>
-                  <div style={{ fontFamily: fonts.mono, fontSize: 8, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.2)', marginBottom: 10 }}>Background</div>
-                  <div style={{ fontSize: 12.5, fontWeight: 300, lineHeight: 1.8, color: 'rgba(200,196,192,0.78)' }}>{entry.background}</div>
+                  <div style={{ fontFamily: fonts.mono, fontSize: 8, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ink-faint)', marginBottom: 10 }}>Background</div>
+                  <div style={{ fontSize: 12.5, fontWeight: 300, lineHeight: 1.8, color: 'var(--ink-soft)' }}>{entry.background}</div>
                 </>
               ) : null}
             </div>
@@ -261,13 +262,13 @@ export default function EntryModal({ slug, onClose }) {
           <div ref={scrollRef} className="ln-notes-scroll" onScroll={handleScroll} style={{ flex: 1, overflowY: 'auto', padding: '20px 24px', fontFamily: fonts.sans }}>
             {loading ? (
               // Skeleton loading bars
-              [100, 92, 97, 85, 90, 88, 95, 78].map((w, i) => <div key={i} style={{ height: 9, width: w + '%', background: 'rgba(255,255,255,0.08)', borderRadius: 3, marginBottom: 10 }} />)
+              [100, 92, 97, 85, 90, 88, 95, 78].map((w, i) => <div key={i} style={{ height: 9, width: w + '%', background: 'var(--border)', borderRadius: 3, marginBottom: 10 }} />)
             ) : entry ? (
               <>
                 {albumNotes && (
                   <>
-                    <div style={{ fontFamily: fonts.mono, fontSize: 8, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.2)', marginBottom: 12 }}>Album Notes</div>
-                    <div style={{ fontSize: 14, fontWeight: 400, lineHeight: 1.88, color: 'rgba(232,228,220,0.92)', whiteSpace: 'pre-wrap' }}>{albumNotes}</div>
+                    <div style={{ fontFamily: fonts.mono, fontSize: 8, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ink-faint)', marginBottom: 12 }}>Album Notes</div>
+                    <div style={{ fontSize: 14, fontWeight: 400, lineHeight: 1.88, color: 'var(--ink)', whiteSpace: 'pre-wrap' }}>{albumNotes}</div>
                   </>
                 )}
 
@@ -278,15 +279,15 @@ export default function EntryModal({ slug, onClose }) {
 
                 {trackNotes && (
                   <>
-                    <div style={{ fontFamily: fonts.mono, fontSize: 8, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.2)', marginBottom: 12 }}>Track Notes</div>
-                    <div style={{ fontSize: 13.5, fontWeight: 400, lineHeight: 1.88, color: 'rgba(210,206,200,0.85)', whiteSpace: 'pre-wrap' }}>{trackNotes}</div>
+                    <div style={{ fontFamily: fonts.mono, fontSize: 8, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ink-faint)', marginBottom: 12 }}>Track Notes</div>
+                    <div style={{ fontSize: 13.5, fontWeight: 400, lineHeight: 1.88, color: 'var(--ink-soft)', whiteSpace: 'pre-wrap' }}>{trackNotes}</div>
                   </>
                 )}
 
                 {tags.length > 0 && (
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 28, paddingTop: 20, borderTop: '1px solid ' + DIVIDER }}>
                     {tags.map((tag, i) => (
-                      <span key={i} style={{ fontFamily: fonts.mono, fontSize: 8, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.28)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 4, padding: '3px 8px' }}>
+                      <span key={i} style={{ fontFamily: fonts.mono, fontSize: 8, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ink-faint)', border: '1px solid var(--border)', borderRadius: 4, padding: '3px 8px' }}>
                         {tag}
                       </span>
                     ))}
@@ -295,7 +296,7 @@ export default function EntryModal({ slug, onClose }) {
                 <div style={{ height: 16 }} />
               </>
             ) : (
-              <div style={{ color: 'rgba(255,255,255,0.3)', fontFamily: fonts.mono, fontSize: 11 }}>entry not found</div>
+              <div style={{ color: 'var(--ink-faint)', fontFamily: fonts.mono, fontSize: 11 }}>entry not found</div>
             )}
           </div>
         </div>
@@ -303,20 +304,22 @@ export default function EntryModal({ slug, onClose }) {
         {/* Footer bar — first 3 tags on the left, full page link on the right */}
         <div style={{
           position: 'absolute', bottom: 0, left: 0, right: 0, height: 44,
-          background: 'rgba(6,4,12,0.55)', borderTop: '1px solid rgba(255,255,255,0.06)',
+          background: 'var(--panel)',
+          backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)',
+          borderTop: '1px solid var(--border)',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 20px',
         }}>
           <div style={{ display: 'flex', gap: 6, fontFamily: fonts.mono, alignItems: 'center' }}>
             {tags.slice(0, 3).map((tag, i) => (
               <span key={i} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                {i > 0 && <span style={{ color: 'rgba(255,255,255,0.15)' }}>·</span>}
-                <span style={{ fontSize: 8, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'rgba(255,255,255,0.25)' }}>{tag}</span>
+                {i > 0 && <span style={{ color: 'var(--ink-faint)' }}>·</span>}
+                <span style={{ fontSize: 8, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--ink-faint)' }}>{tag}</span>
               </span>
             ))}
           </div>
           {/* Link to the full public entry page with comments */}
           {entry && (
-            <a href={'/entries/' + entry.slug} style={{ fontFamily: fonts.mono, fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#c8d47a', textDecoration: 'none' }}>
+            <a href={'/entries/' + entry.slug} style={{ fontFamily: fonts.mono, fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ink)', textDecoration: 'none' }}>
               Full page + comments ↗
             </a>
           )}

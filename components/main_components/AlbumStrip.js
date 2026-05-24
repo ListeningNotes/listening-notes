@@ -1,79 +1,120 @@
 'use client';
 
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef } from 'react';
+
+const IDLE_MS    = 15000; // idle time before the strip drifts on its own
+const AUTO_SPEED = 0.5;   // px per frame while auto-scrolling
 
 export default function AlbumStrip({ entries, onTileClick }) {
-  const trackRef = useRef(null);
-  const animFrameRef = useRef(null);
-  const posRef = useRef(0);
-  const pausedRef = useRef(false);
-  const speed = 0.5;
-
-  const tiles = entries.length > 0 ? [...entries, ...entries, ...entries] : [];
-
-  const tick = useCallback(() => {
-    const el = trackRef.current;
-    if (!el) { animFrameRef.current = requestAnimationFrame(tick); return; }
-    if (!pausedRef.current) {
-      const third = el.scrollWidth / 3;
-      posRef.current += speed;
-      if (posRef.current >= third) posRef.current -= third;
-      el.style.transform = 'translateX(-' + posRef.current + 'px)';
-    }
-    animFrameRef.current = requestAnimationFrame(tick);
-  }, []);
+  const scrollRef = useRef(null);
 
   useEffect(() => {
-    animFrameRef.current = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(animFrameRef.current);
-  }, [tick, entries]);
-
-  function nudge(dir) {
-    const el = trackRef.current;
+    const el = scrollRef.current;
     if (!el) return;
-    const third = el.scrollWidth / 3;
-    pausedRef.current = true;
-    posRef.current += dir * 280;
-    if (posRef.current < 0) posRef.current += third;
-    if (posRef.current >= third) posRef.current -= third;
-    el.style.transform = 'translateX(-' + posRef.current + 'px)';
-    setTimeout(() => { pausedRef.current = false; }, 1200);
-  }
+
+    let idleTimer = null;
+    let raf = null;
+    let auto = false;
+    let dir = 1;
+
+    // Roundabout depth: tiles shrink + dim as they near the screen edges.
+    function applyDepth() {
+      const center = window.innerWidth / 2;
+      const track = el.firstElementChild;
+      if (!track) return;
+      for (const tile of track.children) {
+        const r = tile.getBoundingClientRect();
+        const tileCenter = r.left + r.width / 2;
+        const norm = Math.min(Math.abs(tileCenter - center) / center, 1);
+        const eased = norm * norm; // hold size near centre, fall off toward edges
+        tile.style.setProperty('--depth', (1 - eased * 0.42).toFixed(3));
+        tile.style.setProperty('--dim', (1 - eased * 0.4).toFixed(3));
+      }
+    }
+
+    function stopAuto() {
+      auto = false;
+      if (raf) { cancelAnimationFrame(raf); raf = null; }
+    }
+
+    function tick() {
+      if (!auto) return;
+      const max = el.scrollWidth - el.clientWidth;
+      if (max > 0) {
+        el.scrollLeft += AUTO_SPEED * dir;
+        if (el.scrollLeft >= max)      { el.scrollLeft = max; dir = -1; }
+        else if (el.scrollLeft <= 0)   { el.scrollLeft = 0;   dir = 1;  }
+      }
+      raf = requestAnimationFrame(tick);
+    }
+
+    function startAuto() {
+      if (auto) return;
+      auto = true;
+      raf = requestAnimationFrame(tick);
+    }
+
+    function onInteract() {
+      stopAuto();
+      clearTimeout(idleTimer);
+      idleTimer = setTimeout(startAuto, IDLE_MS);
+    }
+
+    function onWheel(e) {
+      if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
+        el.scrollLeft += e.deltaY;
+        e.preventDefault();
+      }
+      onInteract();
+    }
+
+    el.addEventListener('wheel', onWheel, { passive: false });
+    el.addEventListener('pointerdown', onInteract);
+    el.addEventListener('pointermove', onInteract);
+    el.addEventListener('touchstart', onInteract, { passive: true });
+    el.addEventListener('scroll', applyDepth, { passive: true });
+    window.addEventListener('resize', applyDepth);
+
+    applyDepth();
+    const settle = setTimeout(applyDepth, 120);
+    idleTimer = setTimeout(startAuto, IDLE_MS);
+
+    return () => {
+      el.removeEventListener('wheel', onWheel);
+      el.removeEventListener('pointerdown', onInteract);
+      el.removeEventListener('pointermove', onInteract);
+      el.removeEventListener('touchstart', onInteract);
+      el.removeEventListener('scroll', applyDepth);
+      window.removeEventListener('resize', applyDepth);
+      clearTimeout(idleTimer);
+      clearTimeout(settle);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, [entries]);
 
   if (entries.length === 0) return null;
 
   return (
-    <div className="strip-outer">
-      <button className="strip-arrow strip-arrow--left" onClick={() => nudge(-1)} aria-label="Previous">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
-      </button>
-      <div className="strip-viewport">
-        <div className="strip-track" ref={trackRef}>
-          {tiles.map((entry, i) => (
-            <button
-              key={entry.id + '-' + i}
-              className="strip-tile"
-              onClick={() => onTileClick(entry.slug)}
-              aria-label={entry.album + ' by ' + entry.artist}
-              style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer' }}
-            >
-              {entry.album_art
-                ? <img src={entry.album_art} alt={entry.album} className="strip-tile-img" draggable={false} loading="lazy" />
-                : <div className="strip-tile-placeholder">{entry.album?.[0] ?? '♪'}</div>
-              }
-              <div className="strip-tile-hover">
-                <div className="strip-tile-hover-album">{entry.album}</div>
-                <div className="strip-tile-hover-artist">{entry.artist}</div>
-              </div>
-            </button>
-          ))}
-        </div>
-        <div className="strip-fade-left" />
-        <div className="strip-fade-right" />
+    <div className="hp-strip" ref={scrollRef}>
+      <div className="hp-strip-track">
+        {entries.map(entry => (
+          <button
+            key={entry.id}
+            className="strip-tile"
+            onClick={() => onTileClick(entry.slug)}
+            aria-label={entry.album + ' by ' + entry.artist}
+          >
+            {entry.album_art
+              ? <img src={entry.album_art} alt={entry.album} className="strip-tile-img" draggable={false} loading="lazy" />
+              : <div className="strip-tile-placeholder">{entry.album?.[0] ?? '♪'}</div>
+            }
+            <div className="strip-tile-hover">
+              <div className="strip-tile-hover-album">{entry.album}</div>
+              <div className="strip-tile-hover-artist">{entry.artist}</div>
+            </div>
+          </button>
+        ))}
       </div>
-      <button className="strip-arrow strip-arrow--right" onClick={() => nudge(1)} aria-label="Next">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18l6-6-6-6"/></svg>
-      </button>
     </div>
   );
 }

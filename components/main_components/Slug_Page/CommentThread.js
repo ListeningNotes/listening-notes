@@ -3,20 +3,20 @@ import { useState } from 'react';
 import { fonts } from '../../../library/sitewide_visuals';
 
 const inputStyle = {
-  background: 'rgba(255,255,255,0.04)', border: '1px solid #2a2a2a', borderRadius: '6px',
-  color: '#e8e4dc', padding: '7px 10px', fontFamily: fonts.mono, fontSize: '11px',
+  background: 'var(--panel)', border: '1px solid var(--border)', borderRadius: '6px',
+  color: 'var(--ink)', padding: '7px 10px', fontFamily: fonts.mono, fontSize: '11px',
   outline: 'none', flex: 1, backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
 };
 
 const accentBtnSm = {
   fontFamily: fonts.mono, fontSize: '9px', letterSpacing: '0.12em', textTransform: 'uppercase',
-  color: '#0e0e0e', background: '#c8d47a', border: 'none', borderRadius: '6px',
+  color: '#1a1a1a', background: 'var(--accent)', border: 'none', borderRadius: '6px',
   padding: '7px 14px', cursor: 'pointer',
 };
 
 const ghostBtnSm = {
   fontFamily: fonts.mono, fontSize: '9px', letterSpacing: '0.12em', textTransform: 'uppercase',
-  color: '#555', background: 'none', border: '1px solid #2a2a2a', borderRadius: '6px',
+  color: 'var(--ink-soft)', background: 'none', border: '1px solid var(--border)', borderRadius: '6px',
   padding: '7px 14px', cursor: 'pointer',
 };
 
@@ -85,31 +85,31 @@ export default function CommentThread({ comment, slug, onReplyPosted }) {
   return (
     <div style={{ display: 'flex', gap: 0, marginBottom: '2px' }}>
       <div onClick={() => setCollapsed(v => !v)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '32px', flexShrink: 0, cursor: 'pointer' }}>
-        <div style={{ width: '22px', height: '22px', borderRadius: '50%', background: '#1c1c1c', border: '1px solid #2a2a2a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: fonts.mono, fontSize: '8px', color: '#555', flexShrink: 0 }}>
+        <div style={{ width: '22px', height: '22px', borderRadius: '50%', background: 'var(--bg-warm)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: fonts.mono, fontSize: '8px', color: 'var(--ink-soft)', flexShrink: 0 }}>
           {initials}
         </div>
         {(comment.replies?.length > 0 || !collapsed) && (
-          <div style={{ flex: 1, width: '1px', background: collapsed ? 'transparent' : '#2a2a2a', margin: '3px 0', minHeight: '12px', transition: 'background 0.2s' }} />
+          <div style={{ flex: 1, width: '1px', background: collapsed ? 'transparent' : 'var(--border)', margin: '3px 0', minHeight: '12px', transition: 'background 0.2s' }} />
         )}
       </div>
 
       <div style={{ flex: 1, paddingTop: '2px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-          <span style={{ fontFamily: fonts.mono, fontSize: '11px', color: '#e8e4dc', letterSpacing: '0.04em' }}>{comment.author_name}</span>
-          <span style={{ fontFamily: fonts.mono, fontSize: '9px', color: '#444' }}>{timeAgo(comment.created_at)}</span>
+          <span style={{ fontFamily: fonts.mono, fontSize: '11px', color: 'var(--ink)', letterSpacing: '0.04em' }}>{comment.author_name}</span>
+          <span style={{ fontFamily: fonts.mono, fontSize: '9px', color: 'var(--ink-faint)' }}>{timeAgo(comment.created_at)}</span>
         </div>
 
         {!collapsed && (
           <>
-            <div style={{ fontSize: '13px', lineHeight: 1.7, color: '#a8a49c', marginBottom: '8px' }}>{comment.content}</div>
+            <div style={{ fontSize: '13px', lineHeight: 1.7, color: 'var(--ink-soft)', marginBottom: '8px' }}>{comment.content}</div>
             <div style={{ display: 'flex', gap: '14px', marginBottom: '10px' }}>
-              <button onClick={handleUpvote} style={{ fontFamily: fonts.mono, fontSize: '9px', letterSpacing: '0.08em', textTransform: 'uppercase', color: upvoted ? '#c8d47a' : '#555', background: 'none', border: 'none', cursor: upvoted ? 'default' : 'pointer', padding: 0 }}>
+              <button onClick={handleUpvote} style={{ fontFamily: fonts.mono, fontSize: '9px', letterSpacing: '0.08em', textTransform: 'uppercase', color: upvoted ? 'var(--accent)' : 'var(--ink-faint)', background: 'none', border: 'none', cursor: upvoted ? 'default' : 'pointer', padding: 0 }}>
                 ↑ {upvotes}
               </button>
-              <button onClick={() => setReplying(v => !v)} style={{ fontFamily: fonts.mono, fontSize: '9px', letterSpacing: '0.08em', textTransform: 'uppercase', color: '#555', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+              <button onClick={() => setReplying(v => !v)} style={{ fontFamily: fonts.mono, fontSize: '9px', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ink-faint)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
                 reply
               </button>
-              <button onClick={() => setCollapsed(true)} style={{ fontFamily: fonts.mono, fontSize: '9px', letterSpacing: '0.08em', textTransform: 'uppercase', color: '#555', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+              <button onClick={() => setCollapsed(true)} style={{ fontFamily: fonts.mono, fontSize: '9px', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ink-faint)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
                 collapse
               </button>
             </div>
@@ -139,7 +139,7 @@ export default function CommentThread({ comment, slug, onReplyPosted }) {
         )}
 
         {collapsed && (
-          <button onClick={() => setCollapsed(false)} style={{ fontFamily: fonts.mono, fontSize: '9px', letterSpacing: '0.08em', textTransform: 'uppercase', color: '#444', background: 'none', border: 'none', cursor: 'pointer', padding: '0 0 10px' }}>
+          <button onClick={() => setCollapsed(false)} style={{ fontFamily: fonts.mono, fontSize: '9px', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ink-faint)', background: 'none', border: 'none', cursor: 'pointer', padding: '0 0 10px' }}>
             {comment.replies?.length > 0 ? `expand (${comment.replies.length} repl${comment.replies.length > 1 ? 'ies' : 'y'})` : 'expand'}
           </button>
         )}

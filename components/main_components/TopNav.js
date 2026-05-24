@@ -53,7 +53,7 @@ export default function TopNav({ onToggleTheme, theme, hideBeacon = false }) {
 
   return (
     <nav className="topnav">
-      <div className="topnav-inner">
+      <div className="topnav-inner" style={{ backdropFilter: 'blur(48px)', WebkitBackdropFilter: 'blur(48px)' }}>
         <Link href="/" className="topnav-wordmark" style={{ display: 'flex', alignItems: 'center' }}>
           <img
             src="/Logo.png"

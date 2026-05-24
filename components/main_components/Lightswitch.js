@@ -2,10 +2,8 @@
 // Manages the light/dark theme for the entire site.
 // Wraps the app in a React context so any component can read or toggle the theme.
 //
-// Theme priority on load:
-// 1. If the user has manually set a theme, use that (stored in localStorage)
-// 2. Otherwise, auto-detect based on sunrise/sunset for Rocklin, CA
-// 3. If the API fails, fall back to time-of-day (dark before 7am and after 7pm)
+// Light (cream) is the default and primary identity of the site.
+// Dark mode is an opt-in toggle, stored as a preference in localStorage.
 
 'use client';
 
@@ -21,48 +19,19 @@ export function useTheme() {
   return useContext(ThemeContext);
 }
 
-// Fetches real sunrise/sunset times for Rocklin, CA from a free API.
-// Returns 'dark' if it's currently before sunrise or after sunset, 'light' otherwise.
-async function getSunsetTheme() {
-  try {
-    const res = await fetch(
-      'https://api.sunrise-sunset.org/json?lat=38.7907&lng=-121.2358&formatted=0',
-      { cache: 'no-store' }
-    );
-    const data = await res.json();
-    const sunrise = new Date(data.results.sunrise);
-    const sunset = new Date(data.results.sunset);
-    const now = new Date();
-    return (now < sunrise || now > sunset) ? 'dark' : 'light';
-  } catch {
-    // API failed — fall back to simple hour-based check
-    const hour = new Date().getHours();
-    return (hour >= 19 || hour < 7) ? 'dark' : 'light';
-  }
-}
-
 // ThemeProvider — wraps the whole app in layout.js.
-// Handles reading saved preference, auto-detecting theme, and applying it to the <html> element.
+// Reads any saved preference, defaults to light, applies it to the <html> element.
 export function Lightswitch({ children }) {
   const [theme, setTheme] = useState('light');
   const [mounted, setMounted] = useState(false); // prevents flash of wrong theme on first render
 
-  // On mount: check localStorage first, then auto-detect from sunrise/sunset
+  // On mount: use the saved preference if present, otherwise default to light
   useEffect(() => {
     const stored = localStorage.getItem('ln-theme');
-    if (stored) {
-      // User has a saved preference — use it immediately
-      setTheme(stored);
-      document.documentElement.setAttribute('data-theme', stored);
-      setMounted(true);
-    } else {
-      // No preference saved — detect based on time of day at your location
-      getSunsetTheme().then(auto => {
-        setTheme(auto);
-        document.documentElement.setAttribute('data-theme', auto);
-        setMounted(true);
-      });
-    }
+    const initial = stored || 'light';
+    setTheme(initial);
+    document.documentElement.setAttribute('data-theme', initial);
+    setMounted(true);
   }, []);
 
   // Keep the data-theme attribute on <html> in sync whenever theme changes
