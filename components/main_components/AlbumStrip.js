@@ -2,8 +2,7 @@
 
 import { useEffect, useRef } from 'react';
 
-const IDLE_MS    = 15000; // idle time before the strip drifts on its own
-const AUTO_SPEED = 0.5;   // px per frame while auto-scrolling
+const AUTO_SPEED = 0.5; // px per frame while auto-scrolling
 
 export default function AlbumStrip({ entries, onTileClick }) {
   const scrollRef = useRef(null);
@@ -12,9 +11,8 @@ export default function AlbumStrip({ entries, onTileClick }) {
     const el = scrollRef.current;
     if (!el) return;
 
-    let idleTimer = null;
     let raf = null;
-    let auto = false;
+    let paused = false;
     let dir = 1;
 
     // Roundabout depth: tiles shrink + dim as they near the screen edges.
@@ -32,61 +30,49 @@ export default function AlbumStrip({ entries, onTileClick }) {
       }
     }
 
-    function stopAuto() {
-      auto = false;
-      if (raf) { cancelAnimationFrame(raf); raf = null; }
-    }
-
     function tick() {
-      if (!auto) return;
-      const max = el.scrollWidth - el.clientWidth;
-      if (max > 0) {
-        el.scrollLeft += AUTO_SPEED * dir;
-        if (el.scrollLeft >= max)      { el.scrollLeft = max; dir = -1; }
-        else if (el.scrollLeft <= 0)   { el.scrollLeft = 0;   dir = 1;  }
+      if (!paused) {
+        const max = el.scrollWidth - el.clientWidth;
+        if (max > 0) {
+          el.scrollLeft += AUTO_SPEED * dir;
+          if (el.scrollLeft >= max)    { el.scrollLeft = max; dir = -1; }
+          else if (el.scrollLeft <= 0) { el.scrollLeft = 0;   dir = 1;  }
+        }
       }
       raf = requestAnimationFrame(tick);
     }
 
-    function startAuto() {
-      if (auto) return;
-      auto = true;
-      raf = requestAnimationFrame(tick);
-    }
+    function pause()  { paused = true;  }
+    function resume() { paused = false; }
 
-    function onInteract() {
-      stopAuto();
-      clearTimeout(idleTimer);
-      idleTimer = setTimeout(startAuto, IDLE_MS);
-    }
-
+    // Translate vertical wheel to horizontal scroll for trackpads/mice.
     function onWheel(e) {
       if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
         el.scrollLeft += e.deltaY;
         e.preventDefault();
       }
-      onInteract();
     }
 
+    el.addEventListener('mouseenter', pause);
+    el.addEventListener('mouseleave', resume);
+    el.addEventListener('touchstart', pause, { passive: true });
+    el.addEventListener('touchend', resume, { passive: true });
     el.addEventListener('wheel', onWheel, { passive: false });
-    el.addEventListener('pointerdown', onInteract);
-    el.addEventListener('pointermove', onInteract);
-    el.addEventListener('touchstart', onInteract, { passive: true });
     el.addEventListener('scroll', applyDepth, { passive: true });
     window.addEventListener('resize', applyDepth);
 
     applyDepth();
     const settle = setTimeout(applyDepth, 120);
-    idleTimer = setTimeout(startAuto, IDLE_MS);
+    raf = requestAnimationFrame(tick);
 
     return () => {
+      el.removeEventListener('mouseenter', pause);
+      el.removeEventListener('mouseleave', resume);
+      el.removeEventListener('touchstart', pause);
+      el.removeEventListener('touchend', resume);
       el.removeEventListener('wheel', onWheel);
-      el.removeEventListener('pointerdown', onInteract);
-      el.removeEventListener('pointermove', onInteract);
-      el.removeEventListener('touchstart', onInteract);
       el.removeEventListener('scroll', applyDepth);
       window.removeEventListener('resize', applyDepth);
-      clearTimeout(idleTimer);
       clearTimeout(settle);
       if (raf) cancelAnimationFrame(raf);
     };
