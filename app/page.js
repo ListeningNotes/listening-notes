@@ -13,6 +13,10 @@ export default function HomePage() {
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalSlug, setModalSlug] = useState(null);
+  const [originRect, setOriginRect] = useState(null);
+
+  const openEntry = (slug, rect) => { setOriginRect(rect); setModalSlug(slug); };
+  const closeEntry = () => { setModalSlug(null); setOriginRect(null); };
 
   useEffect(() => {
     fetch('/api/entries')
@@ -66,13 +70,13 @@ export default function HomePage() {
             </div>
           </div>
         ) : (
-          <AlbumStrip entries={entries} onTileClick={setModalSlug} />
+          <AlbumStrip entries={entries} onTileClick={openEntry} openSlug={modalSlug} />
         )}
 
         <Hero />
       </main>
       {modalSlug && (
-        <EntryModal slug={modalSlug} onClose={() => setModalSlug(null)} />
+        <EntryModal slug={modalSlug} originRect={originRect} onClose={closeEntry} />
       )}
     </div>
   );

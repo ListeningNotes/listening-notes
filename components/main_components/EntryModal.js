@@ -7,7 +7,7 @@
 'use client';
 import { fonts } from '../../library/sitewide_visuals';
 
-import { useEffect, useState, useRef, useCallback } from 'react';
+import { useEffect, useLayoutEffect, useState, useRef, useCallback } from 'react';
 import StarRating from './StarRating';
 import HorizonGenerator from './Entry_modal/HorizonGenerator';
 import StickyHeader from './Entry_modal/StickyHeader';
@@ -19,12 +19,37 @@ const WIDGET_BORDER = 'var(--panel-border)';
 const DIVIDER = 'var(--border)';
 
 
-export default function EntryModal({ slug, onClose }) {
+export default function EntryModal({ slug, originRect, onClose }) {
   const [entry, setEntry] = useState(null);
   const [loading, setLoading] = useState(true);
   const [animateBars, setAnimateBars] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const scrollRef = useRef(null);
+  const dialogRef = useRef(null);
+  const closingRef = useRef(false);
+
+  // Map the modal's resting box onto a target rect (a strip tile), so it can
+  // grow out of / shrink back into that tile. transform-origin is the top-left.
+  function flipFrom(node, target) {
+    const final = node.getBoundingClientRect();
+    return `translate(${target.left - final.left}px, ${target.top - final.top}px)`
+      + ` scale(${target.width / final.width}, ${target.height / final.height})`;
+  }
+
+  // Animate the modal shrinking back toward the (still-drifting) tile, then close.
+  const requestClose = useCallback(() => {
+    if (closingRef.current) return;
+    closingRef.current = true;
+    const node = dialogRef.current;
+    const ghost = document.querySelector('[data-tile-slug="' + slug + '"]');
+    const target = ghost ? ghost.getBoundingClientRect() : originRect;
+    if (!node || !target) { onClose(); return; }
+    node.style.transformOrigin = '0 0';
+    node.style.transition = 'transform 0.32s cubic-bezier(0.4,0,0.5,1), opacity 0.32s ease';
+    node.style.transform = flipFrom(node, target);
+    node.style.opacity = '0';
+    setTimeout(onClose, 300);
+  }, [slug, originRect, onClose]);
 
   // Fetch entry data when slug changes
   useEffect(() => {
@@ -57,15 +82,30 @@ export default function EntryModal({ slug, onClose }) {
 
   // Close on Escape key
   useEffect(() => {
-    const onKey = e => { if (e.key === 'Escape') onClose(); };
+    const onKey = e => { if (e.key === 'Escape') requestClose(); };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [onClose]);
+  }, [requestClose]);
 
   // Prevent page scrolling while modal is open
   useEffect(() => {
     document.body.style.overflow = 'hidden';
     return () => { document.body.style.overflow = ''; };
+  }, []);
+
+  // Grow the modal out of the clicked tile on open.
+  useLayoutEffect(() => {
+    const node = dialogRef.current;
+    if (!node) return;
+    if (!originRect) { node.style.opacity = '1'; return; }
+    node.style.transformOrigin = '0 0';
+    node.style.transition = 'none';
+    node.style.opacity = '0.5';
+    node.style.transform = flipFrom(node, originRect);
+    node.getBoundingClientRect(); // flush styles so the next change animates
+    node.style.transition = 'transform 0.42s cubic-bezier(0.33,1.06,0.42,1), opacity 0.3s ease';
+    node.style.transform = 'none';
+    node.style.opacity = '1';
   }, []);
 
   // Show the sticky bar when the user scrolls more than 40px into the notes
@@ -99,10 +139,6 @@ export default function EntryModal({ slug, onClose }) {
           0%,80%,100%{background-position:-200% center}
           83%{background-position:200% center}
         }
-        @keyframes ln-modal-in {
-          from{opacity:0;transform:translate(-50%,calc(-50% + 12px))}
-          to{opacity:1;transform:translate(-50%,-50%)}
-        }
         .ln-star-glow{animation:ln-star-glow-kf 2.8s ease-in-out infinite}
         .ln-star-glow:nth-child(2){animation-delay:.18s}
         .ln-star-glow:nth-child(3){animation-delay:.36s}
@@ -134,22 +170,23 @@ export default function EntryModal({ slug, onClose }) {
       `}</style>
 
       {/* Backdrop tint — clicking closes the modal */}
-      <div onClick={onClose} style={{ position: 'fixed', inset: 0, zIndex: 500, background: 'rgba(0,0,0,0.15)', backdropFilter: 'blur(2px)', WebkitBackdropFilter: 'blur(2px)' }} />
+      <div onClick={requestClose} style={{ position: 'fixed', inset: 0, zIndex: 500, background: 'rgba(0,0,0,0.15)', backdropFilter: 'blur(2px)', WebkitBackdropFilter: 'blur(2px)' }} />
 
+      {/* Centering wrapper — pointer-events pass through to the backdrop */}
+      <div style={{ position: 'fixed', inset: 0, zIndex: 501, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
       {/* Modal container */}
       <div
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
         onClick={e => e.stopPropagation()} // prevent clicks inside from closing
         style={{
-          position: 'fixed', top: '50%', left: '50%',
-          transform: 'translate(-50%,-50%)',
+          position: 'relative', pointerEvents: 'auto',
           width: '78vw', maxWidth: 940, height: '86vh',
           borderRadius: 16, overflow: 'hidden',
           border: '1px solid ' + WIDGET_BORDER,
           boxShadow: 'var(--shadow-lift)',
-          zIndex: 501,
-          animation: 'ln-modal-in 0.3s cubic-bezier(0.34,1.2,0.64,1) forwards',
+          willChange: 'transform',
         }}
       >
         {/* Full-bleed album art — fills the entire modal background */}
@@ -161,7 +198,7 @@ export default function EntryModal({ slug, onClose }) {
 
         {/* Close button */}
         <button
-          onClick={onClose}
+          onClick={requestClose}
           aria-label="Close"
           style={{
             position: 'absolute', top: 14, right: 14, zIndex: 20,
@@ -324,6 +361,7 @@ export default function EntryModal({ slug, onClose }) {
             </a>
           )}
         </div>
+      </div>
       </div>
     </>
   );

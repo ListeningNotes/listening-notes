@@ -1242,21 +1242,16 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 /* ── Recent-logs strip (scroll-driven) ── */
 .hp-strip {
   width: 100%;
-  overflow-x: auto;
-  overflow-y: hidden;
-  scrollbar-width: none;
-  /* override html-level smooth scrolling so the per-frame auto-scroll
-     writes apply instantly instead of chaining smooth animations */
-  scroll-behavior: auto;
+  overflow: hidden;
   transform: translateY(var(--strip-y, 0px));
 }
-.hp-strip::-webkit-scrollbar { display: none; }
 
 .hp-strip-track {
   display: flex;
   gap: 44px;
   width: max-content;
   padding: 48px calc(50vw - 130px);
+  will-change: transform;
 }
 
 .strip-tile {
@@ -1272,12 +1267,12 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   cursor: pointer;
   background: var(--bg-warm);
   box-shadow: var(--shadow-soft);
-  transform: scale(var(--depth, 1));
+  transform: scale(calc(var(--depth, 1) * var(--grow, 1)));
   opacity: var(--dim, 1);
   transition: transform 0.18s ease-out, opacity 0.18s ease-out, box-shadow 0.3s ease;
 }
 .strip-tile:hover {
-  transform: scale(calc(var(--depth, 1) * 1.05));
+  --grow: 1.05;
   box-shadow: var(--shadow-lift);
 }
 
@@ -1287,11 +1282,19 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   object-fit: cover;
   display: block;
   pointer-events: none;
-  transition: transform 0.35s ease;
 }
-.strip-tile:hover .strip-tile-img {
-  transform: scale(1.04);
+
+/* Open tile leaves a dimmed gap in the strip while its modal is up */
+.strip-tile--ghost {
+  box-shadow: var(--shadow-soft);
 }
+.strip-tile--ghost .strip-tile-img,
+.strip-tile--ghost .strip-tile-placeholder {
+  opacity: 0.12;
+  filter: grayscale(0.6);
+  transition: opacity 0.3s ease, filter 0.3s ease;
+}
+.strip-tile--ghost .strip-tile-hover { opacity: 0 !important; }
 
 .strip-tile-placeholder {
   width: 100%;
