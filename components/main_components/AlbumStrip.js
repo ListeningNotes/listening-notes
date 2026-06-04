@@ -2,78 +2,94 @@
 
 import { useEffect, useRef } from 'react';
 
-const AUTO_SPEED = 0.5; // px per frame while auto-scrolling
+const AUTO_SPEED = 0.5; // px per frame while drifting
 
-export default function AlbumStrip({ entries, onTileClick }) {
+export default function AlbumStrip({ entries, onTileClick, openSlug }) {
   const scrollRef = useRef(null);
+  const speedRef = useRef(1);        // current drift multiplier
+  const targetSpeedRef = useRef(1);  // 1 = drifting, 0 = frozen (modal open)
+
+  // Freeze the drift while a modal is open; the tick eases toward this target.
+  useEffect(() => {
+    targetSpeedRef.current = openSlug ? 0 : 1;
+  }, [openSlug]);
 
   useEffect(() => {
     const el = scrollRef.current;
     if (!el) return;
+    const track = el.firstElementChild;
+    if (!track) return;
 
     let raf = null;
-    let paused = false;
     let dir = 1;
+    let offset = 0;       // subpixel-precise horizontal position of the track
+    let lastTouchX = null;
 
-    // Roundabout depth: tiles shrink + dim as they near the screen edges.
+    function maxOffset() {
+      return Math.max(track.scrollWidth - el.clientWidth, 0);
+    }
+
+    function clamp() {
+      const max = maxOffset();
+      if (offset >= max) { offset = max; dir = -1; }
+      else if (offset <= 0) { offset = 0; dir = 1; }
+    }
+
+    // Roundabout depth: tiles ease down in size + brightness toward the edges.
     function applyDepth() {
       const center = window.innerWidth / 2;
-      const track = el.firstElementChild;
-      if (!track) return;
       for (const tile of track.children) {
         const r = tile.getBoundingClientRect();
         const tileCenter = r.left + r.width / 2;
         const norm = Math.min(Math.abs(tileCenter - center) / center, 1);
         const eased = norm * norm; // hold size near centre, fall off toward edges
-        tile.style.setProperty('--depth', (1 - eased * 0.42).toFixed(3));
-        tile.style.setProperty('--dim', (1 - eased * 0.4).toFixed(3));
+        tile.style.setProperty('--depth', (1 - eased * 0.18).toFixed(3));
+        tile.style.setProperty('--dim', (1 - eased * 0.16).toFixed(3));
       }
     }
 
+    // Drift eases to a stop when frozen and eases back in on resume; manual
+    // input still adds to the offset regardless of the drift multiplier.
     function tick() {
-      if (!paused) {
-        const max = el.scrollWidth - el.clientWidth;
-        if (max > 0) {
-          el.scrollLeft += AUTO_SPEED * dir;
-          if (el.scrollLeft >= max)    { el.scrollLeft = max; dir = -1; }
-          else if (el.scrollLeft <= 0) { el.scrollLeft = 0;   dir = 1;  }
-        }
-      }
+      speedRef.current += (targetSpeedRef.current - speedRef.current) * 0.12;
+      offset += AUTO_SPEED * dir * speedRef.current;
+      clamp();
+      track.style.transform = `translateX(${-offset}px)`;
+      applyDepth();
       raf = requestAnimationFrame(tick);
     }
 
-    function pause()  { paused = true;  }
-    function resume() { paused = false; }
-
-    // Translate vertical wheel to horizontal scroll for trackpads/mice.
+    // Either axis nudges the strip horizontally — sideways swipe or vertical wheel.
     function onWheel(e) {
-      if (Math.abs(e.deltaY) > Math.abs(e.deltaX)) {
-        el.scrollLeft += e.deltaY;
-        e.preventDefault();
-      }
+      const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+      if (delta === 0) return;
+      offset += delta;
+      clamp();
+      e.preventDefault();
     }
 
-    el.addEventListener('mouseenter', pause);
-    el.addEventListener('mouseleave', resume);
-    el.addEventListener('touchstart', pause, { passive: true });
-    el.addEventListener('touchend', resume, { passive: true });
-    el.addEventListener('wheel', onWheel, { passive: false });
-    el.addEventListener('scroll', applyDepth, { passive: true });
-    window.addEventListener('resize', applyDepth);
+    function onTouchStart(e) { lastTouchX = e.touches[0].clientX; }
+    function onTouchMove(e) {
+      if (lastTouchX === null) return;
+      const x = e.touches[0].clientX;
+      offset -= x - lastTouchX;
+      lastTouchX = x;
+      clamp();
+    }
+    function onTouchEnd() { lastTouchX = null; }
 
-    applyDepth();
-    const settle = setTimeout(applyDepth, 120);
+    el.addEventListener('touchstart', onTouchStart, { passive: true });
+    el.addEventListener('touchmove', onTouchMove, { passive: true });
+    el.addEventListener('touchend', onTouchEnd, { passive: true });
+    el.addEventListener('wheel', onWheel, { passive: false });
+
     raf = requestAnimationFrame(tick);
 
     return () => {
-      el.removeEventListener('mouseenter', pause);
-      el.removeEventListener('mouseleave', resume);
-      el.removeEventListener('touchstart', pause);
-      el.removeEventListener('touchend', resume);
+      el.removeEventListener('touchstart', onTouchStart);
+      el.removeEventListener('touchmove', onTouchMove);
+      el.removeEventListener('touchend', onTouchEnd);
       el.removeEventListener('wheel', onWheel);
-      el.removeEventListener('scroll', applyDepth);
-      window.removeEventListener('resize', applyDepth);
-      clearTimeout(settle);
       if (raf) cancelAnimationFrame(raf);
     };
   }, [entries]);
@@ -86,8 +102,12 @@ export default function AlbumStrip({ entries, onTileClick }) {
         {entries.map(entry => (
           <button
             key={entry.id}
-            className="strip-tile"
-            onClick={() => onTileClick(entry.slug)}
+            data-tile-slug={entry.slug}
+            className={'strip-tile' + (entry.slug === openSlug ? ' strip-tile--ghost' : '')}
+            onClick={e => {
+              const r = e.currentTarget.getBoundingClientRect();
+              onTileClick(entry.slug, { left: r.left, top: r.top, width: r.width, height: r.height });
+            }}
             aria-label={entry.album + ' by ' + entry.artist}
           >
             {entry.album_art
