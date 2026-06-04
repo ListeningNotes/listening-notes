@@ -1245,6 +1245,9 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   overflow-x: auto;
   overflow-y: hidden;
   scrollbar-width: none;
+  /* override html-level smooth scrolling so the per-frame auto-scroll
+     writes apply instantly instead of chaining smooth animations */
+  scroll-behavior: auto;
   transform: translateY(var(--strip-y, 0px));
 }
 .hp-strip::-webkit-scrollbar { display: none; }
