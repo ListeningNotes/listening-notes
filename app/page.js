@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useTheme } from '../components/main_components/Lightswitch';
 import DotNav from '../components/main_components/DotNav';
-import Hero from '../components/main_components/Hero';
+import ListeningBeacon from '../components/main_components/ListeningBeacon';
 import AlbumStrip from '../components/main_components/AlbumStrip';
 import EntryModal from '../components/main_components/EntryModal';
 
@@ -73,7 +73,7 @@ export default function HomePage() {
           <AlbumStrip entries={entries} onTileClick={openEntry} openSlug={modalSlug} />
         )}
 
-        <Hero />
+        <ListeningBeacon />
       </main>
       {modalSlug && (
         <EntryModal slug={modalSlug} originRect={originRect} onClose={closeEntry} />

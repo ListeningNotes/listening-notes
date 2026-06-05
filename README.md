@@ -74,7 +74,7 @@ The furniture — visual pieces
     EchoChat.js                Floating chat panel for talking to Echo mid-session
     main_components/           Everything on the public side
       TopNav.js                The navigation bar
-      Hero.js                  The big beacon section on the homepage
+      ListeningBeacon.js       The big beacon section on the homepage
       AlbumStrip.js            The scrolling row of albums
       NavBeacon.js             The small beacon on non-homepage pages
       EntryModal.js            The popup when you click an album
@@ -139,7 +139,7 @@ The rooms — full pages assembled from furniture
 | How Echo talks to you | library/ai_integration.js, ask_echo |
 | The loading screen phrases | library/session_timers.js, LOADING_PHRASES |
 | The navigation links | components/main_components/TopNav.js |
-| The homepage hero and beacon | components/main_components/Hero.js |
+| The homepage listening beacon | components/main_components/ListeningBeacon.js |
 | The scrolling album strip | components/main_components/AlbumStrip.js |
 | The modal that pops up when you click an album | components/main_components/EntryModal.js |
 | The full entry post page | app/entries/[slug]/FullPostPage.js |

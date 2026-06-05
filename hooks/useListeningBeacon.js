@@ -1,6 +1,6 @@
 // hooks/useListeningBeacon.js
 // Custom React hook that polls the Last.fm API to get the current listening status.
-// Used by the Hero beacon on the homepage and the NavBeacon on entry pages.
+// Used by the ListeningBeacon on the homepage and the NavBeacon on entry pages.
 //
 // Returns:
 // - track: { name, artist, image } — the current or last played track

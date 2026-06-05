@@ -2,6 +2,12 @@
 
 ---
 
+## Working With Claude
+
+**Naming new code — always ask first.** Before creating ANY new function, page (route), or JavaScript file, Claude must pause and let me name it — propose options, then I pick or override. This applies to NEW things only (editing/renaming existing code follows the normal flow) and to every session. Reason: I want to be able to read and understand my own code later, even without a tool to explain it — names I chose are names I'll recognize.
+
+---
+
 ## Pending
 
 **DEV**
@@ -166,7 +172,7 @@ Protected routes (require wristband cookie): `POST /api/entries`, `PATCH/DELETE 
 | File | What it does |
 |------|-------------|
 | `TopNav.js` | Floating pill navigation (homepage) |
-| `Hero.js` | Full-bleed beacon section (homepage) |
+| `ListeningBeacon.js` | Full-bleed beacon section (homepage) |
 | `AlbumStrip.js` | Auto-scrolling album tiles (homepage) |
 | `NavBeacon.js` | Compact listening beacon (all pages except homepage) |
 | `EntryModal.js` | Album overlay modal (homepage click) |
@@ -218,7 +224,7 @@ Protected routes (require wristband cookie): `POST /api/entries`, `PATCH/DELETE 
 ### Hooks
 | File | What it does |
 |------|-------------|
-| `hooks/useListeningBeacon.js` | Polls Last.fm every 15s for current track. Used by Hero and NavBeacon. |
+| `hooks/useListeningBeacon.js` | Polls Last.fm every 15s for current track. Used by ListeningBeacon and NavBeacon. |
 | `hooks/useAlbumSelection.js` | Owns the full album search and selection flow: artist search, EchoNetwork animation, card phases, grid pagination, fly-to-center animation, manual entry |
 | `hooks/useListeningSession.js` | Owns every API call and piece of state for an active session: research, notes, tracks, ratings, tags, Echo chat, formatting, saving |
 
@@ -229,7 +235,7 @@ Protected routes (require wristband cookie): `POST /api/entries`, `PATCH/DELETE 
 
 | File | URL | What it does |
 |------|-----|-------------|
-| `page.js` | `/` | Homepage — imports TopNav, Hero, AlbumStrip |
+| `page.js` | `/` | Homepage — imports DotNav, AlbumStrip, ListeningBeacon |
 | `about/page.js` | `/about` | Unified About / Specs / Index with sticky jump nav |
 | `archive/page.js` | `/archive` | Sortable + filterable album-tile grid of every entry |
 | `compare/page.js` | `/compare` | Coming-soon placeholder |
