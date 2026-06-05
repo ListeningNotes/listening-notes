@@ -9,19 +9,16 @@ import PreListenQuestionnaire from '../../../components/session_components/steps
 
 const ECHO_PROMPTS = [
   'Who do you want to listen to?',
-  'What artist do you wan to hear?',
+  'What artist do you want to hear?',
   "How's it going? Who do you wanna hear?",
-  "What are we listening to tonight?",
   "Ready. Who should I search?",
-  "What's been stuck in your head lately?",
-  "Hey. Who should I search for you?",
-  "Hey there. Who should I search?",
+  "Who's been stuck in your head lately?",
+  "Hey. Who should I search for?",
   "Who should I search for you?",
-  "Go ahead and tell me who to look up.",
+  "Go ahead, tell me who to look up.",
   "What artist do you want to explore?",
   "What do you feel like hearing?",
   "Ready? Give me an artist.",
-  "What's calling you right now?",
 ];
 
 // Calculate where each album card will land in the final centered flex-wrap grid.

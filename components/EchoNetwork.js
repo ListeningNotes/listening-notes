@@ -416,6 +416,7 @@ export default function AlbumNetwork({
                 n.y = n.assembleHomeY;
                 n.cornerRadius = 0;
                 n.locked = true;
+                n.lockFlashT = now;
               }
             }
           } else {
@@ -594,6 +595,19 @@ export default function AlbumNetwork({
           );
         }
         ctx.restore();
+
+        // White flash on lock — fades out over 180ms
+        if (n.lockFlashT !== null && now - n.lockFlashT < 180) {
+          const flashAlpha = (1 - (now - n.lockFlashT) / 180) * baseAlpha;
+          ctx.save();
+          rrect(ctx, dx, dy, drawW, drawH, cr);
+          ctx.clip();
+          ctx.globalAlpha = flashAlpha;
+          ctx.fillStyle = '#ffffff';
+          ctx.fillRect(dx, dy, drawW, drawH);
+          ctx.restore();
+        }
+
         ctx.globalAlpha = 1;
       }
 

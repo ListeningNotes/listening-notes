@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { fonts } from '../../../../library/sitewide_visuals';
 import { tx, bdr } from '../../../../library/session_styles';
@@ -33,12 +33,19 @@ export default function EchoSessionPage() {
   const [step, setStep]         = useState(0);
   const [maxStep, setMaxStep]   = useState(0);
 
-  // Typewriter for loading phrases
-  const [loadTyped, setLoadTyped]   = useState('');
-  const [loadCursor, setLoadCursor] = useState(true);
+  // Loading animation state (mirrors loading-test flow)
+  const [zoomed, setZoomed]           = useState(true);
+  const [dimmed, setDimmed]           = useState(true);
+  const [nodeArt, setNodeArt]         = useState('');
+  const [assembling, setAssembling]   = useState(false);
+  const [loadTyped, setLoadTyped]     = useState('');
+  const [rippleCount, setRippleCount] = useState(0);
+  const [completing, setCompleting]   = useState(false);
+  const [expandScale, setExpandScale] = useState(1);
+  const [assembled, setAssembled]     = useState(false);
 
   const {
-    brief, researchState, researchError, phraseIndex,
+    brief, researchState, researchError,
     albumArt, setAlbumArt, albumInput, setAlbumInput, artistName, setArtistName,
     overallNotes, setOverallNotes,
     rating, setRating, Masterpiece, setMasterpiece, Favorite, setFavorite,
@@ -86,20 +93,71 @@ export default function EchoSessionPage() {
     }
   }, [authed]);
 
-  // Restart typewriter each time the loading phrase rotates
+  // Animation timing — all relative to auth completing, fires exactly once.
+  // Reads artUrl directly from localStorage (same pattern as loading-test).
   useEffect(() => {
-    if (researchState !== 'loading') return;
-    const phrase = LOADING_PHRASES[phraseIndex % LOADING_PHRASES.length];
-    setLoadTyped('');
-    setLoadCursor(true);
-    let i = 0;
-    const id = setInterval(() => {
-      i++;
-      setLoadTyped(phrase.slice(0, i));
-      if (i >= phrase.length) { clearInterval(id); setTimeout(() => setLoadCursor(false), 200); }
-    }, 30);
-    return () => clearInterval(id);
-  }, [phraseIndex, researchState]);
+    if (!authed) return;
+    let artUrl = '';
+    try {
+      const raw = localStorage.getItem('ln_pending_session');
+      artUrl = raw ? (JSON.parse(raw)?.artUrl ?? '') : '';
+    } catch { /* ignore */ }
+
+    // nodeArt + assembling fire immediately so the image starts loading right away.
+    // The zoom transition starts at t=300ms and takes ~2.2s (ends ~t=2500ms).
+    // Ripple 1 fires at t=2200ms so the wave sweeps in as the canvas finishes panning back.
+    if (artUrl) { setNodeArt(artUrl); setAssembling(true); }
+    const t1 = setTimeout(() => setZoomed(false), 300);
+    const t2 = setTimeout(() => setDimmed(false), 600);
+    const t3 = setTimeout(() => setRippleCount(1), 2200);
+    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
+  }, [authed]);
+
+  // Typewriter — visual only, cycles through phrases while loading
+  useEffect(() => {
+    if (!authed) return;
+    let idx = 0, cancelled = false;
+    function runPhrase() {
+      if (cancelled) return;
+      const phrase = LOADING_PHRASES[idx];
+      let i = 0;
+      const typeId = setInterval(() => {
+        if (cancelled) { clearInterval(typeId); return; }
+        i++;
+        setLoadTyped(phrase.slice(0, i));
+        if (i >= phrase.length) {
+          clearInterval(typeId);
+          setTimeout(() => {
+            if (cancelled) return;
+            const backId = setInterval(() => {
+              if (cancelled) { clearInterval(backId); return; }
+              i--;
+              setLoadTyped(phrase.slice(0, i));
+              if (i <= 0) {
+                clearInterval(backId);
+                idx = (idx + 1) % LOADING_PHRASES.length;
+                setTimeout(() => { if (!cancelled) runPhrase(); }, 80);
+              }
+            }, 18);
+          }, 1800);
+        }
+      }, 30);
+    }
+    runPhrase();
+    return () => { cancelled = true; };
+  }, [authed]);
+
+  const handleAssembled = useCallback(() => {
+    setCompleting(true);
+    // One frame later: animate art to full-bleed from grid size
+    setTimeout(() => {
+      const gridSize = Math.min(window.innerWidth, window.innerHeight) * 0.60;
+      const scale = Math.max(window.innerWidth / gridSize, window.innerHeight / gridSize) * 1.05;
+      setExpandScale(scale);
+    }, 16);
+    // Show session panel once expansion has landed
+    setTimeout(() => setAssembled(true), 1200);
+  }, []);
 
   function advanceTo(newStep) {
     setStep(newStep);
@@ -109,7 +167,9 @@ export default function EchoSessionPage() {
   if (checking) return <div style={{ minHeight: '100vh', background: '#f5f2ec' }} />;
   if (!authed) return <PasswordGate onAuth={() => setAuthed(true)} />;
 
-  const showLoadingScreen = researchState !== 'done' && researchState !== 'error';
+  // Show loading until animation completes AND research finishes
+  const researchDone = researchState === 'done' || researchState === 'error';
+  const showLoadingScreen = !assembled || !researchDone;
 
   return (
     <>
@@ -117,29 +177,20 @@ export default function EchoSessionPage() {
         @keyframes ln-panel-appear { from{opacity:0;transform:translateY(14px) scale(0.99)} to{opacity:1;transform:translateY(0) scale(1)} }
         @keyframes ln-fade  { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
         @keyframes echo-cursor-blink { 0%,49%{opacity:1} 50%,100%{opacity:0} }
-        @keyframes q-art-glow {
-          0%,100% { box-shadow: 0 8px 40px rgba(0,0,0,0.10), 0 0 60px 30px rgba(255,255,255,0.45); transform: scale(1); }
-          50%      { box-shadow: 0 12px 52px rgba(0,0,0,0.15), 0 0 90px 55px rgba(255,255,255,0.65); transform: scale(1.012); }
-        }
         html, body { background: #f5f2ec !important; }
         ::-webkit-scrollbar { width: 3px; }
         ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 99px; }
         textarea::placeholder { color: rgba(255,255,255,0.28); }
       `}</style>
 
-      {/* EchoNetwork — flows during loading, hidden once session panel is up */}
+      {/* EchoNetwork — puzzle assembly loading animation */}
       {showLoadingScreen && (
         <EchoNetwork
-          searchQuery=''
-          collapsed={false}
-          albumArt=''
-          onCollapsed={() => {}}
-          dimmed={false}
-          zooming={false}
-          spotlitArts={[]}
-          spotlit={false}
-          onSpotlit={() => {}}
-          cardsEmerging={false}
+          searchQuery='' collapsed={false} albumArt='' onCollapsed={() => {}}
+          dimmed={dimmed} zooming={zoomed} pulsing={false}
+          spotlitArts={[]} spotlit={false} onSpotlit={() => {}} cardsEmerging={false}
+          nodeArt={nodeArt} assembling={assembling} rippleCount={rippleCount}
+          completing={completing} onAssembled={handleAssembled}
         />
       )}
 
@@ -165,6 +216,23 @@ export default function EchoSessionPage() {
         />
       )}
 
+      {/* Art expansion — assembled mosaic zooms to full-bleed before session panel appears */}
+      {completing && nodeArt && (
+        <img
+          src={nodeArt}
+          alt=""
+          style={{
+            position: 'fixed', zIndex: 5, pointerEvents: 'none', display: 'block',
+            top: '50%', left: '50%',
+            width: 'min(60vw, 60vh)', height: 'min(60vw, 60vh)',
+            objectFit: 'cover',
+            borderRadius: 16,
+            transform: `translate(-50%, -50%) scale(${expandScale})`,
+            transition: 'transform 1.1s cubic-bezier(0.4, 0, 0.2, 1)',
+          }}
+        />
+      )}
+
       {/* Art backgrounds — only visible once session panel is up */}
       {!showLoadingScreen && <>
         <div style={{ position: 'fixed', inset: 0, zIndex: 0, background: '#fff', pointerEvents: 'none' }} />
@@ -176,36 +244,27 @@ export default function EchoSessionPage() {
         )}
       </>}
 
-      {/* Echo loading card — same frosted style as the search screen */}
+      {/* Typewriter pill — visible during loading, fades when completing */}
       {showLoadingScreen && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 6, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 24px' }}>
-
-          {albumArt && (
-            <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 20 }}>
-              <img src={albumArt} alt='' style={{ width: 200, height: 200, borderRadius: 16, objectFit: 'cover', animation: 'q-art-glow 2.4s ease-in-out infinite' }} />
-            </div>
-          )}
-
-          {albumInput && (
-            <div style={{ fontFamily: fonts.mono, fontSize: 12, color: 'rgba(26,21,32,0.45)', letterSpacing: '0.06em', marginBottom: 20, textAlign: 'center' }}>
-              {albumInput}{artistName ? ` · ${artistName}` : ''}
-            </div>
-          )}
-
+        <div style={{
+          position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+          zIndex: 10, pointerEvents: 'none',
+          opacity: completing ? 0 : 1,
+          transition: completing ? 'opacity 0.6s ease' : 'none',
+        }}>
           {researchState === 'error' ? (
-            <div style={{ fontFamily: fonts.mono, fontSize: 12, color: '#ef4444', letterSpacing: '0.06em' }}>{researchError}</div>
+            <div style={{ fontFamily: fonts.mono, fontSize: 12, color: '#ef4444', letterSpacing: '0.06em', textAlign: 'center' }}>{researchError}</div>
           ) : (
             <div style={{
-              width: 'fit-content', minWidth: 280, maxWidth: 'min(500px, calc(100vw - 48px))',
-              background: 'rgba(255,255,255,0.45)',
-              backdropFilter: 'blur(18px)', WebkitBackdropFilter: 'blur(18px)',
-              borderRadius: 40, boxShadow: '0 8px 32px rgba(0,0,0,0.08)',
-              padding: '28px 36px', position: 'relative', overflow: 'hidden', textAlign: 'center',
+              width: 'fit-content', minWidth: 0, maxWidth: 'min(480px, calc(100vw - 48px))',
+              background: 'rgba(255,255,255,0.55)', backdropFilter: 'blur(18px)', WebkitBackdropFilter: 'blur(18px)',
+              borderRadius: 40, boxShadow: '0 8px 32px rgba(0,0,0,0.07)',
+              padding: '18px 28px', textAlign: 'center', position: 'relative', overflow: 'hidden',
             }}>
               <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(145deg, rgba(255,255,255,0.6) 0%, transparent 60%)', pointerEvents: 'none' }} />
-              <div style={{ fontFamily: fonts.sans, fontWeight: 700, fontSize: 22, color: '#1a1520', lineHeight: 1.2, whiteSpace: 'nowrap' }}>
+              <div style={{ fontFamily: fonts.sans, fontWeight: 700, fontSize: 18, color: '#1a1520', whiteSpace: 'nowrap', lineHeight: 1.2 }}>
                 {loadTyped}
-                {loadCursor && <span style={{ display: 'inline-block', marginLeft: 1, animation: 'echo-cursor-blink 0.75s step-end infinite' }}>|</span>}
+                <span style={{ display: 'inline-block', marginLeft: 1, animation: 'echo-cursor-blink 0.75s step-end infinite' }}>|</span>
               </div>
             </div>
           )}
