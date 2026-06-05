@@ -63,7 +63,7 @@ export default function SessionHub() {
       <div style={{ position: 'absolute', top: '12vh', left: '50%', transform: 'translateX(-50%)', textAlign: 'center', zIndex: 2, whiteSpace: 'nowrap' }}>
         <img src="/Logo.png" alt="Listening Notes" style={{ height: 160, width: 'auto', display: 'block', margin: '0 auto 8px' }} />
         <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 11, fontWeight: 500, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'rgba(0,0,0,0.3)' }}>
-          session
+          dashboard
         </div>
       </div>
 
