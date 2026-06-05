@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useListeningBeacon } from '../../hooks/useListeningBeacon';
 
-export default function Hero() {
+export default function ListeningBeacon() {
   const { track: trackObj, isLive } = useListeningBeacon();
   const trackName = trackObj?.name || '—';
   const artistName = trackObj?.artist || '';
