@@ -562,9 +562,17 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  gap: 48px;
-  padding: 64px 0 64px;
+  justify-content: flex-start;
+  gap: 36px;
+  padding: 52px 0 64px;
+}
+
+/* Homepage only: dot-nav flows in directly under the logo instead of being
+   pinned to the top edge (it sits right after the logo in the markup). */
+.hp .hp-dotnav {
+  position: static;
+  transform: none;
+  margin-top: -18px;
 }
 
 /* Corner icons — Instagram + theme toggle */
