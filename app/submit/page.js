@@ -101,9 +101,6 @@ export default function SubmitPage() {
         <div style={{ background: 'var(--panel)', backdropFilter: 'var(--card-blur)', WebkitBackdropFilter: 'var(--card-blur)', border: '1px solid var(--panel-border)', borderRadius: 'var(--radius)', padding: '36px', boxShadow: 'var(--shadow-lift)' }}>
 
         <div style={{ marginBottom: '32px' }}>
-          <div style={{ fontFamily: 'var(--font-label)', fontSize: '0.7rem', letterSpacing: '0.15em', textTransform: 'uppercase', color: 'var(--accent)', marginBottom: '12px' }}>
-            Submit an album
-          </div>
           <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '2.4rem', fontWeight: 400, margin: '0 0 12px', lineHeight: 1.2 }}>
             What should I listen to?
           </h1>

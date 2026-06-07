@@ -36,12 +36,6 @@ export default function ComparePage() {
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
         minHeight: 'calc(100vh - 120px)', padding: '0 24px', textAlign: 'center', gap: 24,
       }}>
-        <div style={{
-          fontFamily: 'var(--font-label)', fontSize: 11, letterSpacing: '0.18em', textTransform: 'uppercase',
-          color: 'var(--accent)',
-        }}>
-          Compare
-        </div>
         <h1 style={{
           fontFamily: 'var(--font-display)', fontWeight: 400, fontSize: 'clamp(40px, 8vw, 72px)', margin: 0, lineHeight: 1.05,
           letterSpacing: '-0.02em', maxWidth: 720,
