@@ -57,6 +57,27 @@ export default function AboutPage() {
 
   return (
     <div style={{ background: 'var(--bg)', minHeight: '100vh', color: 'var(--ink)', fontFamily: fonts.sans }}>
+      <style>{`
+        /* Sticky jump-nav tucks right under the fixed header backdrop (.hp-headerbar:
+           92px tall, or 130px on phones where the dot-nav wraps to a second row) and
+           sits above it (z 95 > the bar's z 90). Its own full-width bg fade masks the
+           content scrolling behind the pill, matching the header bar. Invisible when
+           the nav is in normal flow (bg == page bg). */
+        .about-jumpnav {
+          top: 70px;
+          z-index: 95;
+          background: linear-gradient(to bottom, var(--bg) 0%, var(--bg) 72%, transparent 100%);
+        }
+        @media (max-width: 480px) {
+          .about-jumpnav { top: 108px; }
+        }
+        /* Clear the sticky header (bar + jump-nav) when jumping to a section so its
+           heading isn't tucked underneath. Matches the jump-nav offsets above. */
+        .about-section { scroll-margin-top: 160px; }
+        @media (max-width: 480px) {
+          .about-section { scroll-margin-top: 204px; }
+        }
+      `}</style>
       <Link href="/" className="hp-logo-mini" aria-label="Listening Notes">
         <img src="/Logo.png" alt="Listening Notes" style={{ height: 30, width: 'auto', display: 'block', filter: theme === 'dark' ? 'invert(1)' : 'none' }} />
       </Link>
@@ -82,9 +103,6 @@ export default function AboutPage() {
 
       {/* Hero */}
       <header style={{ maxWidth: 760, margin: '0 auto', padding: '120px 24px 48px' }}>
-        <div style={{ fontFamily: 'var(--font-label)', fontSize: 11, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--accent)', marginBottom: 18 }}>
-          About
-        </div>
         <h1 style={{ fontFamily: 'var(--font-display)', fontWeight: 400, fontSize: 'clamp(38px, 6vw, 60px)', margin: 0, lineHeight: 1.08, letterSpacing: '-0.02em' }}>
           A practice of intentional listening.
         </h1>
@@ -94,8 +112,8 @@ export default function AboutPage() {
       </header>
 
       {/* Sticky jump nav */}
-      <nav style={{
-        position: 'sticky', top: 12, zIndex: 50, padding: '12px 24px',
+      <nav className="about-jumpnav" style={{
+        position: 'sticky', padding: '12px 24px 28px',
         display: 'flex', justifyContent: 'center',
       }}>
         <div style={{
@@ -183,10 +201,6 @@ export default function AboutPage() {
 
         {/* INDEX */}
         <Section id="index" label="Index">
-          <p style={{ color: 'var(--ink-soft)', marginTop: 0 }}>
-            How ratings and tags are used across entries.
-          </p>
-
           <h3 style={subheadingStyle}>Star Notes</h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 18, marginTop: 16 }}>
             {STAR_NOTES.map((s) => (
@@ -233,7 +247,7 @@ export default function AboutPage() {
 // ── Section wrapper ─────────────────────────────────────────────────────
 function Section({ id, label, children }) {
   return (
-    <section id={id} style={{ marginTop: 72, scrollMarginTop: 96 }}>
+    <section id={id} className="about-section" style={{ marginTop: 72 }}>
       <div style={{
         fontFamily: 'var(--font-label)', fontSize: 10, letterSpacing: '0.2em', textTransform: 'uppercase',
         color: 'var(--ink-faint)', marginBottom: 14, paddingBottom: 12, borderBottom: '1px solid var(--border)',

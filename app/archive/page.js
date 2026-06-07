@@ -109,9 +109,6 @@ export default function ArchivePage() {
 
       {/* Hero */}
       <header style={{ maxWidth: 1100, margin: '0 auto', padding: '120px 24px 32px' }}>
-        <div style={{ fontFamily: 'var(--font-label)', fontSize: 11, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--accent)', marginBottom: 14 }}>
-          Archive
-        </div>
         <h1 style={{ fontFamily: 'var(--font-display)', fontWeight: 400, fontSize: 'clamp(38px, 6vw, 60px)', margin: 0, lineHeight: 1.08, letterSpacing: '-0.02em' }}>
           Every album, in one place.
         </h1>
