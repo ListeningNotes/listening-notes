@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useTheme } from '../components/main_components/Lightswitch';
 import DotNav from '../components/main_components/DotNav';
 import ListeningBeacon from '../components/main_components/ListeningBeacon';
+import PulsePanel from '../components/main_components/PulsePanel';
 import AlbumStrip from '../components/main_components/AlbumStrip';
 import EntryModal from '../components/main_components/EntryModal';
 
@@ -61,6 +62,15 @@ export default function HomePage() {
 
         <DotNav />
 
+        <div className="hp-dashboard">
+          <div className="hp-dash-cell hp-dash-beacon">
+            <ListeningBeacon />
+          </div>
+          <div className="hp-dash-cell hp-dash-pulse">
+            <PulsePanel entries={entries} />
+          </div>
+        </div>
+
         {loading ? (
           <div className="hp-strip">
             <div className="hp-strip-track">
@@ -72,8 +82,6 @@ export default function HomePage() {
         ) : (
           <AlbumStrip entries={entries} onTileClick={openEntry} openSlug={modalSlug} />
         )}
-
-        <ListeningBeacon />
       </main>
       {modalSlug && (
         <EntryModal slug={modalSlug} originRect={originRect} onClose={closeEntry} />
