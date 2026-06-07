@@ -902,6 +902,84 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   }
 }
 
+/* ── Homepage masthead on phones ──────────────────────────────────────────
+   Desktop keeps the single labelled dot-row under the logo. On a phone six
+   labels in one row collide, so the homepage nav becomes two relaxed rows of
+   three (dot stacked above an in-flow label), and the logo / strip shrink so
+   the logo -> nav -> strip -> beacon rhythm sits in one comfortable column.
+   All rules are scoped to `.hp` so the fixed dot-nav on other pages is
+   untouched. */
+@media (max-width: 480px) {
+  .hp-main {
+    padding: 34px 0 52px;
+    gap: 26px;
+  }
+  /* The shared .hp-headerbar backdrop (z-index 90) is sized tall for the fixed
+     dot-nav on other pages; on the homepage the nav is in-flow, so that band
+     would otherwise mask the top of the logo. Lift the logo above it. */
+  .hp .hp-logo {
+    position: relative;
+    z-index: 95;
+  }
+  .hp-logo img {
+    height: 112px;
+  }
+
+  /* Two rows of three; each dot is now a tap-friendly column (dot + label). */
+  .hp .hp-dotnav {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    column-gap: 10px;
+    row-gap: 20px;
+    width: 100%;
+    max-width: 300px;
+    margin-top: 2px;
+  }
+  .hp .hp-dot {
+    width: auto;
+    height: auto;
+    background: transparent;
+    border-radius: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 9px;
+    padding: 2px 0;
+  }
+  /* The visible dot moves to a pseudo-element so the label can flow beneath it
+     instead of being absolutely positioned. Theme-adaptive colour keeps the
+     inactive dots visible in dark mode too. */
+  .hp .hp-dot::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--ink-faint);
+    transition: background 0.2s, transform 0.2s;
+  }
+  .hp .hp-dot--active::before {
+    background: var(--ink);
+    transform: scale(1.15);
+  }
+  .hp .hp-dot-label {
+    position: static;
+    transform: none;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+  }
+
+  /* Smaller tiles + tighter vertical padding so the strip stops dominating. */
+  .hp .strip-tile {
+    width: 188px;
+    height: 188px;
+    border-radius: 18px;
+  }
+  .hp .hp-strip-track {
+    gap: 22px;
+    padding: 26px calc(50vw - 94px);
+  }
+}
+
 .topnav {
   position: fixed;
   top: 0;
