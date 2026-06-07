@@ -9,6 +9,7 @@ const NAV = [
   { href: '/compare', label: 'Compare' },
   { href: '/about', label: 'About' },
   { href: '/submit', label: 'Submit' },
+  { href: '/shuffle', label: 'Surprise' },
 ];
 
 // Site-wide dot navigation. Highlights the dot whose href matches the

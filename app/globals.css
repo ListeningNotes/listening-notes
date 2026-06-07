@@ -618,6 +618,19 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   transition: filter 0.2s;
 }
 
+/* Fixed header backdrop. Sits above page content but below the nav items, so
+   content scrolls beneath it and disappears instead of showing through the nav. */
+.hp-headerbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 92px;
+  z-index: 90;
+  pointer-events: none;
+  background: linear-gradient(to bottom, var(--bg) 0%, var(--bg) 62px, transparent 100%);
+}
+
 @keyframes hp-pulse {
   0%, 100% { opacity: 1; transform: scale(1); }
   50% { opacity: 0.4; transform: scale(0.8); }
@@ -819,13 +832,13 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 /* ── Dot navigation (fixed top bar) ── */
 .hp-dotnav {
   position: fixed;
-  top: 28px;
+  top: 24px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 100;
   display: flex;
-  align-items: center;
-  gap: 18px;
+  align-items: flex-start;
+  gap: 54px;
 }
 .hp-dot {
   position: relative;
@@ -842,23 +855,43 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 .hp-dot--active {
   background: var(--ink);
 }
+/* Page labels sit under every dot and stay visible at all times. */
 .hp-dot-label {
   position: absolute;
-  top: calc(100% + 12px);
+  top: calc(100% + 11px);
   left: 50%;
   transform: translateX(-50%);
   font-family: var(--font-label);
   font-size: 10px;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--ink-soft);
   white-space: nowrap;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.18s;
+  transition: color 0.18s;
 }
 .hp-dot:hover .hp-dot-label {
-  opacity: 1;
+  color: var(--ink);
+}
+.hp-dot--active .hp-dot-label {
+  color: var(--ink);
+}
+
+/* On phones the labelled dots are too wide to share the top row with the logo
+   and corner icons, so drop them to their own second row and grow the header
+   backdrop to cover both rows. */
+@media (max-width: 480px) {
+  .hp-dotnav {
+    top: 74px;
+    gap: 42px;
+  }
+  .hp-dot-label {
+    font-size: 9px;
+    letter-spacing: 0.06em;
+  }
+  .hp-headerbar {
+    height: 130px;
+    background: linear-gradient(to bottom, var(--bg) 0%, var(--bg) 108px, transparent 100%);
+  }
 }
 
 .topnav {
