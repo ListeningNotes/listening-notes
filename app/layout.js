@@ -36,6 +36,7 @@ export default function RootLayout({ children }) {
           }}
         />
         <Lightswitch>
+          <div className="hp-headerbar" aria-hidden="true" />
           {children}
         </Lightswitch>
       </body>
