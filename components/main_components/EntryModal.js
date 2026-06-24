@@ -9,8 +9,8 @@ import { fonts } from '../../library/sitewide_visuals';
 
 import { useEffect, useLayoutEffect, useState, useRef, useCallback } from 'react';
 import StarRating from './StarRating';
-import HorizonGenerator from './Entry_modal/HorizonGenerator';
-import StickyHeader from './Entry_modal/StickyHeader';
+import HorizonGenerator from './entry_modal/HorizonGenerator';
+import StickyHeader from './entry_modal/StickyHeader';
 import { parseTracksFromNotes, splitNotes, parseRating } from '../../library/entry_formatter';
 
 
