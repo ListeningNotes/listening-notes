@@ -41,6 +41,7 @@ export default function EchoSessionPage() {
   const [completing, setCompleting]   = useState(false);
   const [expandScale, setExpandScale] = useState(1);
   const [assembled, setAssembled]     = useState(false);
+  const [puzzleDone, setPuzzleDone]   = useState(false);
 
   const {
     brief, researchState, researchError,
@@ -142,17 +143,25 @@ export default function EchoSessionPage() {
     return () => { cancelled = true; };
   }, [authed]);
 
-  const handleAssembled = useCallback(() => {
+  // The puzzle finished assembling — but don't reveal yet.
+  const handleAssembled = useCallback(() => setPuzzleDone(true), []);
+
+  // Run the final art-expansion + panel reveal only once the puzzle has
+  // assembled AND research has finished. Web search makes research much
+  // slower than the animation, so gating on both keeps the loading screen
+  // alive (pill cycling) instead of freezing on full-bleed art.
+  useEffect(() => {
+    const researchDone = researchState === 'done' || researchState === 'error';
+    if (!puzzleDone || !researchDone) return;
     setCompleting(true);
-    // One frame later: animate art to full-bleed from grid size
-    setTimeout(() => {
+    const t1 = setTimeout(() => {
       const gridSize = Math.min(window.innerWidth, window.innerHeight) * 0.60;
       const scale = Math.max(window.innerWidth / gridSize, window.innerHeight / gridSize) * 1.05;
       setExpandScale(scale);
     }, 16);
-    // Show session panel once expansion has landed
-    setTimeout(() => setAssembled(true), 1200);
-  }, []);
+    const t2 = setTimeout(() => setAssembled(true), 1200);
+    return () => { clearTimeout(t1); clearTimeout(t2); };
+  }, [puzzleDone, researchState]);
 
   function advanceTo(newStep) {
     setStep(newStep);
@@ -258,7 +267,7 @@ export default function EchoSessionPage() {
             {albumArt ? (
               <div style={{ position: 'absolute', inset: 0, backgroundImage: `url(${albumArt})`, backgroundSize: 'cover', backgroundPosition: 'center', filter: 'blur(48px) saturate(1.4)', transform: 'scale(1.15)', zIndex: 0 }} />
             ) : <div style={{ position: 'absolute', inset: 0, background: '#1a1410', zIndex: 0 }} />}
-            <div style={{ position: 'absolute', inset: 0, background: 'rgba(255,255,255,0.10)', zIndex: 1 }} />
+            <div style={{ position: 'absolute', inset: 0, background: 'rgba(16,12,20,0.34)', zIndex: 1 }} />
 
             <div style={{ position: 'relative', zIndex: 2, display: 'flex', width: '100%', height: '100%' }}>
 

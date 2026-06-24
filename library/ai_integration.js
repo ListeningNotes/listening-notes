@@ -8,20 +8,23 @@ export async function research_album(album, artist) {
   const client = get_client();
   const message = await client.messages.create({
     model: 'claude-sonnet-4-6',
-    max_tokens: 1600,
+    max_tokens: 3000,
+    tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 5 }],
     messages: [{
       role: 'user',
-      content: `You are a music journalist and researcher with deep knowledge of recorded music history. Return a detailed JSON object about the album "${album}"${artist ? ` by ${artist}` : ''}.
+      content: `You are a music journalist and researcher. Research the album "${album}"${artist ? ` by ${artist}` : ''} and return a detailed JSON object about it.
 
-RULES:
+RESEARCH:
+- Use the web_search tool to verify the facts — producers, engineers, studios, release dates, labels, chart positions, sales/certifications, and critical reception. Prefer reputable sources (Wikipedia, Discogs, AllMusic, Pitchfork, official label/artist pages, established music press).
+- Ground every specific claim in what you actually find. If you cannot verify a detail, say so plainly rather than inventing it.
+
+WRITING:
 - Be specific. Name actual producers, engineers, studios, instruments, collaborators.
-- Include real dates, chart positions, certification numbers, sales figures where you know them confidently.
 - Describe the sonic and production details vividly.
 - For context, describe what was actually happening in music at that exact moment.
-- For reception, name actual publications or critics if you know them.
-- Only state facts you are confident are accurate.
+- For reception, name actual publications or critics you found.
 
-Return ONLY valid JSON with no markdown fences:
+After researching, return ONLY valid JSON with no markdown fences as your final message:
 {
   "album": "exact album title",
   "artist": "artist name",
@@ -39,10 +42,34 @@ Return ONLY valid JSON with no markdown fences:
     }]
   });
 
-  const text = message.content[0].text;
-  console.log("RAW FORMAT RESPONSE:", text);
+  // The final JSON lives in the last text block (after any search/tool blocks).
+  const jsonBlock = [...message.content].reverse().find(b => b.type === 'text' && b.text.includes('{'));
+  const text = jsonBlock ? jsonBlock.text : '';
   const parsed = JSON.parse(text.slice(text.indexOf('{'), text.lastIndexOf('}') + 1));
   if (parsed.notes_prose && !parsed.album_notes) parsed.album_notes = parsed.notes_prose;
+
+  // Collect the REAL sources the search returned — citations first, then raw results.
+  // These are genuine URLs from Anthropic's web search, never model-invented.
+  const sources = [];
+  const seen = new Set();
+  const add = (url, title) => {
+    if (!url || seen.has(url)) return;
+    seen.add(url);
+    sources.push({ url, title: title || url });
+  };
+  for (const b of message.content) {
+    if (b.type === 'text' && Array.isArray(b.citations)) {
+      b.citations.forEach(c => add(c.url, c.title));
+    }
+  }
+  if (sources.length === 0) {
+    for (const b of message.content) {
+      if (b.type === 'web_search_tool_result' && Array.isArray(b.content)) {
+        b.content.forEach(r => add(r.url, r.title));
+      }
+    }
+  }
+  parsed.sources = sources.slice(0, 8);
   return parsed;
 }
 
