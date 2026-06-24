@@ -126,7 +126,7 @@ export function useAlbumSelection({ step, onAlbumPick }) {
 
   // Notify parent that an album has been chosen from the grid
   function handleAlbumPick(album) {
-    onAlbumPick({ album: album.name, artist: album.artist, year: album.year, artUrl: album.art, artLarge: album.artLarge });
+    onAlbumPick({ album: album.name, artist: album.artist, year: album.year, artUrl: album.art, artLarge: album.artLarge, collectionId: album.collectionId });
   }
 
   // Notify parent that a manually typed album has been chosen

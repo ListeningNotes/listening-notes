@@ -73,7 +73,7 @@ export default function EchoSessionPage() {
       const raw = localStorage.getItem('ln_pending_session');
       if (!raw) { router.replace('/dashboard/echo'); return; }
       const pending = JSON.parse(raw);
-      const { album, artist, year, artUrl, relationship: rel, entryType: et } = pending;
+      const { album, artist, year, artUrl, collectionId, relationship: rel, entryType: et } = pending;
 
       setAlbumInput(album);
       setArtistName(artist);
@@ -82,7 +82,7 @@ export default function EchoSessionPage() {
       setEntryType(et || '');
 
       // Pass relationship/entryType explicitly to avoid stale-closure issue
-      doResearch(album, artist, artUrl, { relationship: rel || '', entryType: et || '' });
+      doResearch(album, artist, artUrl, { relationship: rel || '', entryType: et || '', collectionId });
     } catch {
       router.replace('/dashboard/echo');
     }
