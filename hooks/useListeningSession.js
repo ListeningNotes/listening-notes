@@ -37,12 +37,6 @@ export function useListeningSession({ step }) {
   // Echo debrief + floating chat
   const [echoDebrief, setEchoDebrief]               = useState(null);
   const [echoDebriefLoading, setEchoDebriefLoading] = useState(false);
-  const [echoMood, setEchoMood]                     = useState('thinking');
-  const [echoActive, setEchoActive]                 = useState(false);
-  const [echoChatOpen, setEchoChatOpen]             = useState(false);
-  const [echoChatHistory, setEchoChatHistory]       = useState([]);
-  const [echoChatInput, setEchoChatInput]           = useState('');
-  const [echoChatLoading, setEchoChatLoading]       = useState(false);
 
   // Reflect chat (step 3 quick-prompts)
   const [chatMessages, setChatMessages] = useState([]);
@@ -140,8 +134,6 @@ export function useListeningSession({ step }) {
     setSessionTags([]);
     setPhraseIndex(0);
     setChatMessages([]);
-    setEchoChatHistory([]);
-    setEchoChatOpen(false);
     if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
 
     try {
@@ -155,7 +147,6 @@ export function useListeningSession({ step }) {
       setBrief(data);
       restoreDraft(data.album);
       setResearchState('done');
-      setEchoMood('curious');
 
       if (!existingArt) {
         fetchAlbumArtUrl(data.album, data.artist, data.year).then(url => { if (url) setAlbumArt(url); });
@@ -184,7 +175,6 @@ export function useListeningSession({ step }) {
         const echoData = await echoRes.json();
         if (!echoData.error) {
           setEchoDebrief(echoData.reply);
-          setEchoActive(true);
         }
       } catch {}
       setEchoDebriefLoading(false);
@@ -193,40 +183,6 @@ export function useListeningSession({ step }) {
       setResearchError(err.message || 'Research failed.');
       setResearchState('error');
     }
-  }
-
-  // Echo floating chat panel — used across all steps
-  async function sendEchoChat(message, phase = 'chat') {
-    if (echoChatLoading || !message.trim()) return;
-    setEchoChatInput('');
-    const userMsg = { role: 'user', content: message };
-    setEchoChatHistory(prev => [...prev, userMsg]);
-    setEchoChatLoading(true);
-    setEchoActive(false);
-    try {
-      const res = await fetch('/api/echo', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message,
-          phase,
-          conversationHistory: echoChatHistory,
-          entryContext: {
-            album: brief?.album || '', artist: brief?.artist || '', year: brief?.year || '',
-            entryType, relationship,
-            trackNotes: Object.values(trackNotes).filter(Boolean),
-            rating: rating ? rating + ' stars' : '',
-            tags: sessionTags,
-          },
-          echoMemory: '',
-        }),
-      });
-      const data = await res.json();
-      if (!data.error) {
-        setEchoChatHistory(prev => [...prev, { role: 'assistant', content: data.reply }]);
-      }
-    } catch {}
-    setEchoChatLoading(false);
   }
 
   // Reflect chat — step 3 quick-prompts
@@ -335,12 +291,6 @@ export function useListeningSession({ step }) {
     // Echo
     echoDebrief,
     echoDebriefLoading,
-    echoMood, setEchoMood,
-    echoActive,
-    echoChatOpen, setEchoChatOpen,
-    echoChatHistory,
-    echoChatInput, setEchoChatInput,
-    echoChatLoading,
     // Reflect chat
     chatMessages,
     chatInput, setChatInput,
@@ -360,7 +310,6 @@ export function useListeningSession({ step }) {
     doResearch,
     doFormat,
     doSave,
-    sendEchoChat,
     sendChat,
     restoreDraft,
   };
