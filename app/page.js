@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { useTheme } from '../components/main_components/Lightswitch';
 import DotNav from '../components/main_components/DotNav';
 import ListeningBeacon from '../components/main_components/ListeningBeacon';
-import PulsePanel from '../components/main_components/PulsePanel';
 import AlbumStrip from '../components/main_components/AlbumStrip';
 import EntryModal from '../components/main_components/EntryModal';
 
@@ -65,9 +64,6 @@ export default function HomePage() {
         <div className="hp-dashboard">
           <div className="hp-dash-cell hp-dash-beacon">
             <ListeningBeacon />
-          </div>
-          <div className="hp-dash-cell hp-dash-pulse">
-            <PulsePanel entries={entries} />
           </div>
         </div>
 
