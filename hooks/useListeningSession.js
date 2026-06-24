@@ -34,10 +34,6 @@ export function useListeningSession({ step }) {
   const [trackRatings, setTrackRatings]   = useState({});
   const [openTrack, setOpenTrack]         = useState(null);
 
-  // Echo debrief + floating chat
-  const [echoDebrief, setEchoDebrief]               = useState(null);
-  const [echoDebriefLoading, setEchoDebriefLoading] = useState(false);
-
   // Reflect chat (step 3 quick-prompts)
   const [chatMessages, setChatMessages] = useState([]);
   const [chatInput, setChatInput]       = useState('');
@@ -119,8 +115,6 @@ export function useListeningSession({ step }) {
     setResearchState('loading');
     setResearchError('');
     setBrief(null);
-    setEchoDebrief(null);
-    setEchoDebriefLoading(false);
     setTracks(null);
     setTrackNotes({});
     setTrackRatings({});
@@ -153,31 +147,6 @@ export function useListeningSession({ step }) {
       }
       setTracksLoading(true);
       fetchTracklist(data.album, data.artist).then(t => { setTracks(t || []); setTracksLoading(false); });
-
-      // Get Echo's research briefing
-      setEchoDebriefLoading(true);
-      try {
-        const echoRes = await fetch('/api/echo', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            message: JSON.stringify(data),
-            phase: 'research',
-            conversationHistory: [],
-            entryContext: {
-              album: data.album, artist: data.artist, year: data.year,
-              entryType: etToUse, relationship: relToUse,
-              trackNotes: [], rating: '', tags: [],
-            },
-            echoMemory: '',
-          }),
-        });
-        const echoData = await echoRes.json();
-        if (!echoData.error) {
-          setEchoDebrief(echoData.reply);
-        }
-      } catch {}
-      setEchoDebriefLoading(false);
 
     } catch (err) {
       setResearchError(err.message || 'Research failed.');
@@ -249,7 +218,6 @@ export function useListeningSession({ step }) {
           relationship: relationship || '',
           rating: Masterpiece ? 'Masterpiece' : (rating ? rating + ' stars' : ''),
           favorite: Favorite,
-          background: output.background,
           notes: output.album_notes,
           track_notes: output.track_notes || '',
           tags: sessionTags,
@@ -288,9 +256,6 @@ export function useListeningSession({ step }) {
     trackNotes, setTrackNotes,
     trackRatings, setTrackRatings,
     openTrack, setOpenTrack,
-    // Echo
-    echoDebrief,
-    echoDebriefLoading,
     // Reflect chat
     chatMessages,
     chatInput, setChatInput,

@@ -10,8 +10,6 @@ export default function AlbumDebrief({
   brief,
   researchState,
   researchError,
-  echoDebrief,
-  echoDebriefLoading,
   onNext,
   onReset,
 }) {
@@ -29,25 +27,7 @@ export default function AlbumDebrief({
   return (
     <div style={{ width: '100%' }}>
 
-      {/* Echo debrief — narrative briefing, shown as skeleton while loading */}
-      {echoDebriefLoading && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 32 }}>
-          {[88, 72, 84, 58, 78].map((w, i) => (
-            <div key={i} style={{ height: 9, width: w + '%', borderRadius: 4, background: 'rgba(255,255,255,0.12)', animation: `ln-pulse 1.6s ease-in-out ${i * 0.12}s infinite` }} />
-          ))}
-        </div>
-      )}
-
-      {echoDebrief && !echoDebriefLoading && (
-        <div style={{ marginBottom: 36, paddingBottom: 32, borderBottom: `1px solid ${bdr(0.07)}` }}>
-          <div style={{ ...lbl, marginBottom: 14 }}>Echo</div>
-          <div style={{ fontFamily: fonts.sans, fontSize: 15, lineHeight: 1.8, color: tx(0.92), whiteSpace: 'pre-wrap' }}>
-            {echoDebrief}
-          </div>
-        </div>
-      )}
-
-      {/* Raw research sections */}
+      {/* Research sections */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 22, marginBottom: 36 }}>
         {[['Context', brief.context], ['Production', brief.production], ['Reception', brief.reception], ['Listen For', brief.listen_for]].map(([l, val]) => val ? (
           <div key={l} style={{ borderTop: `1px solid ${bdr(0.07)}`, paddingTop: 18 }}>

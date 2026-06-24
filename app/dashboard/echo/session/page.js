@@ -51,7 +51,6 @@ export default function EchoSessionPage() {
     entryType, setEntryType, relationship, setRelationship,
     tracks, tracksLoading, trackNotes, setTrackNotes, trackRatings, setTrackRatings,
     openTrack, setOpenTrack,
-    echoDebrief, echoDebriefLoading,
     chatMessages, chatInput, setChatInput, chatLoading, chatEndRef,
     sessionTags, setSessionTags, tagInput, setTagInput,
     formatting, output, saving, saved,
@@ -323,7 +322,7 @@ export default function EchoSessionPage() {
               {/* Main content */}
               <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', overflow: step === 3 ? 'hidden' : 'auto' }}>
                 <div style={{ flex: 1, padding: step === 3 ? '36px 48px 36px' : '40px 48px 56px', display: step === 3 ? 'flex' : 'block', flexDirection: step === 3 ? 'column' : undefined, overflowY: step === 3 ? 'hidden' : undefined }}>
-                  {step === 0 && <AlbumDebrief brief={brief} researchState={researchState} researchError={researchError} echoDebrief={echoDebrief} echoDebriefLoading={echoDebriefLoading} onNext={() => advanceTo(1)} onReset={() => router.replace('/dashboard/echo')} />}
+                  {step === 0 && <AlbumDebrief brief={brief} researchState={researchState} researchError={researchError} onNext={() => advanceTo(1)} onReset={() => router.replace('/dashboard/echo')} />}
                   {step === 1 && <TrackNotes tracks={tracks} tracksLoading={tracksLoading} trackNotes={trackNotes} setTrackNotes={setTrackNotes} trackRatings={trackRatings} setTrackRatings={setTrackRatings} openTrack={openTrack} setOpenTrack={setOpenTrack} onNext={() => advanceTo(2)} />}
                   {step === 2 && <AlbumNotes rating={rating} setRating={setRating} Masterpiece={Masterpiece} setMasterpiece={setMasterpiece} Favorite={Favorite} setFavorite={setFavorite} overallNotes={overallNotes} setOverallNotes={setOverallNotes} onNext={() => advanceTo(3)} />}
                   {step === 3 && <ReflectChat chatMessages={chatMessages} chatInput={chatInput} setChatInput={setChatInput} chatLoading={chatLoading} chatEndRef={chatEndRef} sendChat={sendChat} onNext={() => advanceTo(4)} />}

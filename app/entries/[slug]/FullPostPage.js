@@ -144,13 +144,6 @@ export default function FullPostPage({ entry }) {
       {/* ── CONTENT ── */}
       <div className="ln-content" style={{ maxWidth: '860px', margin: '0 auto' }}>
 
-        {entry.background && (
-          <section style={{ marginBottom: '48px' }}>
-            <MetadataLabel>Background</MetadataLabel>
-            <p style={{ lineHeight: 1.85, color: 'var(--ink-soft)', fontSize: '14px' }}>{entry.background}</p>
-          </section>
-        )}
-
         {albumNotes && (
           <section style={{ marginBottom: '48px' }}>
             <MetadataLabel>Notes</MetadataLabel>
