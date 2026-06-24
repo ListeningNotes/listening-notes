@@ -5,8 +5,6 @@ import { fonts } from '../../../../library/sitewide_visuals';
 import { tx, bdr } from '../../../../library/session_styles';
 import { useListeningSession } from '../../../../hooks/useListeningSession';
 import PasswordGate from '../../../../components/session_components/PasswordGate';
-import EchoOrb from '../../../../components/EchoOrb';
-import EchoChat from '../../../../components/EchoChat';
 import EchoNetwork from '../../../../components/EchoNetwork';
 import { SessionDuration, LOADING_PHRASES } from '../../../../library/session_timers';
 import AlbumDebrief from '../../../../components/session_components/steps/AlbumDebrief';
@@ -52,14 +50,12 @@ export default function EchoSessionPage() {
     entryType, setEntryType, relationship, setRelationship,
     tracks, tracksLoading, trackNotes, setTrackNotes, trackRatings, setTrackRatings,
     openTrack, setOpenTrack,
-    echoDebrief, echoDebriefLoading, echoMood, setEchoMood,
-    echoActive, echoChatOpen, setEchoChatOpen,
-    echoChatHistory, echoChatInput, setEchoChatInput, echoChatLoading,
+    echoDebrief, echoDebriefLoading,
     chatMessages, chatInput, setChatInput, chatLoading, chatEndRef,
     sessionTags, setSessionTags, tagInput, setTagInput,
     formatting, output, saving, saved,
     elapsed,
-    doResearch, doFormat, doSave, sendEchoChat, sendChat,
+    doResearch, doFormat, doSave, sendChat,
   } = useListeningSession({ step });
 
   useEffect(() => {
@@ -84,7 +80,6 @@ export default function EchoSessionPage() {
       if (artUrl) setAlbumArt(artUrl);
       setRelationship(rel || '');
       setEntryType(et || '');
-      setEchoMood('thinking');
 
       // Pass relationship/entryType explicitly to avoid stale-closure issue
       doResearch(album, artist, artUrl, { relationship: rel || '', entryType: et || '' });
@@ -191,28 +186,6 @@ export default function EchoSessionPage() {
           spotlitArts={[]} spotlit={false} onSpotlit={() => {}} cardsEmerging={false}
           nodeArt={nodeArt} assembling={assembling} rippleCount={rippleCount}
           completing={completing} onAssembled={handleAssembled}
-        />
-      )}
-
-      {/* EchoOrb */}
-      <EchoOrb
-        albumArt={albumArt}
-        mood={echoMood}
-        active={echoActive}
-        loading={researchState === 'loading'}
-        onClick={researchState === 'done' ? () => setEchoChatOpen(v => !v) : undefined}
-      />
-
-      {/* EchoChat float panel */}
-      {researchState === 'done' && (
-        <EchoChat
-          open={echoChatOpen}
-          onClose={() => setEchoChatOpen(false)}
-          messages={echoChatHistory}
-          onSend={msg => sendEchoChat(msg, 'chat')}
-          loading={echoChatLoading}
-          input={echoChatInput}
-          setInput={setEchoChatInput}
         />
       )}
 
