@@ -7,7 +7,7 @@ function get_client() {
 export async function research_album(album, artist) {
   const client = get_client();
   const message = await client.messages.create({
-    model: 'claude-sonnet-4-20250514',
+    model: 'claude-sonnet-4-6',
     max_tokens: 1600,
     messages: [{
       role: 'user',
@@ -69,7 +69,7 @@ export async function format_post({ brief, notes, rating, masterpiece, favorite,
   })();
 
   const message = await client.messages.create({
-    model: 'claude-sonnet-4-20250514',
+    model: 'claude-sonnet-4-6',
     max_tokens: 4000,
     messages: [{
       role: 'user',
@@ -148,7 +148,7 @@ Keep responses concise and conversational. You're a smart friend who knows music
   user += `Listener asks: ${message}`;
 
   const msg = await client.messages.create({
-    model: 'claude-sonnet-4-20250514',
+    model: 'claude-sonnet-4-6',
     max_tokens: 600,
     system,
     messages: [{ role: 'user', content: user }],
