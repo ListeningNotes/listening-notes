@@ -58,11 +58,8 @@ export default function AboutPage() {
   return (
     <div style={{ background: 'var(--bg)', minHeight: '100vh', color: 'var(--ink)', fontFamily: fonts.sans }}>
       <style>{`
-        /* Sticky jump-nav tucks right under the fixed header backdrop (.hp-headerbar:
-           92px tall, or 130px on phones where the dot-nav wraps to a second row) and
-           sits above it (z 95 > the bar's z 90). Its own full-width bg fade masks the
-           content scrolling behind the pill, matching the header bar. Invisible when
-           the nav is in normal flow (bg == page bg). */
+        /* Sticky jump-nav. Its own full-width bg fade masks the content scrolling
+           behind the pill. Invisible when the nav is in normal flow (bg == page bg). */
         .about-jumpnav {
           top: 70px;
           z-index: 95;
