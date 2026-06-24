@@ -1,33 +1,49 @@
-export async function fetchTracklist(albumName, artistName) {
+// Pull the FULL, ordered tracklist from iTunes/Apple Music. Two steps:
+//   1. find the album's collection (scored match, like fetchAlbumArtUrl)
+//   2. look up that exact collection's songs — returns every track in order
+// A bare song-search (the old approach) only returns a partial, relevance-
+// ranked grab-bag across editions, which dropped and reordered tracks.
+// Optional collectionId skips step 1 when the caller already has the exact id.
+export async function fetchTracklist(albumName, artistName, collectionId = null) {
   try {
-    const query = encodeURIComponent(`${albumName} ${artistName}`);
-    const res = await fetch(`https://itunes.apple.com/search?term=${query}&entity=song&limit=50`);
-    const data = await res.json();
+    let id = collectionId;
 
-    if (!data.results?.length) return null;
+    if (!id) {
+      const norm = s => String(s || '').toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, ' ').trim();
+      const query = encodeURIComponent(`${artistName} ${albumName}`);
+      const searchRes = await fetch(`https://itunes.apple.com/search?term=${query}&entity=album&limit=25`);
+      const searchData = await searchRes.json();
+      const results = (searchData.results || []).filter(r => r.wrapperType === 'collection' && r.collectionId);
+      if (!results.length) return null;
 
-    // Find the most likely matching album by name
-    const normalized = albumName.toLowerCase();
-    const songs = data.results.filter(r =>
-      r.wrapperType === 'track' &&
-      r.collectionName?.toLowerCase().includes(normalized)
-    );
+      const nAlbum = norm(albumName), nArtist = norm(artistName);
+      let best = null, bestScore = -Infinity;
+      for (const r of results) {
+        const ra = norm(r.collectionName || ''), rar = norm(r.artistName || '');
+        let score = 0;
+        if (ra === nAlbum) score += 40;
+        else if (ra.includes(nAlbum) || nAlbum.includes(ra)) score += 20;
+        if (rar === nArtist) score += 30;
+        else if (rar.includes(nArtist) || nArtist.includes(rar)) score += 15;
+        // Prefer a plain edition over deluxe/expanded when scores otherwise tie.
+        if (/\b(deluxe|expanded|special|anniversary)\b/.test(ra)) score -= 3;
+        if (score > bestScore) { bestScore = score; best = r; }
+      }
+      if (!best) return null;
+      id = best.collectionId;
+    }
 
+    const lookupRes = await fetch(`https://itunes.apple.com/lookup?id=${id}&entity=song&limit=300`);
+    const lookupData = await lookupRes.json();
+    const songs = (lookupData.results || []).filter(r => r.wrapperType === 'track' && r.kind === 'song');
     if (!songs.length) return null;
 
-    // Sort by disc/track number and dedupe
-    const seen = new Set();
     return songs
-      .sort((a, b) => a.trackNumber - b.trackNumber)
-      .filter(s => {
-        if (seen.has(s.trackId)) return false;
-        seen.add(s.trackId);
-        return true;
-      })
-      .map(s => ({
-        number: s.trackNumber,
+      .sort((a, b) => (a.discNumber || 1) - (b.discNumber || 1) || (a.trackNumber || 0) - (b.trackNumber || 0))
+      .map((s, i) => ({
+        number: i + 1,
         title: s.trackName,
-        duration: s.trackTimeMillis ? Math.round(s.trackTimeMillis / 1000) : null
+        duration: s.trackTimeMillis ? Math.round(s.trackTimeMillis / 1000) : null,
       }));
   } catch { return null; }
 }
@@ -108,6 +124,7 @@ export async function searchArtistAlbums(artistQuery) {
         artist: artistName,
         year: (r.releaseDate || '').slice(0, 4),
         trackCount,
+        collectionId: r.collectionId,
         art: r.artworkUrl100.replace(/\d+x\d+bb/, '600x600bb'),
         artLarge: r.artworkUrl100.replace(/\d+x\d+bb/, '3000x3000bb'),
       });

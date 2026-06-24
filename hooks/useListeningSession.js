@@ -111,6 +111,7 @@ export function useListeningSession({ step }) {
   async function doResearch(album, artist, existingArt, opts = {}) {
     const relToUse = opts.relationship !== undefined ? opts.relationship : relationship;
     const etToUse  = opts.entryType  !== undefined ? opts.entryType  : entryType;
+    const collectionId = opts.collectionId || null;
 
     setResearchState('loading');
     setResearchError('');
@@ -146,7 +147,7 @@ export function useListeningSession({ step }) {
         fetchAlbumArtUrl(data.album, data.artist, data.year).then(url => { if (url) setAlbumArt(url); });
       }
       setTracksLoading(true);
-      fetchTracklist(data.album, data.artist).then(t => { setTracks(t || []); setTracksLoading(false); });
+      fetchTracklist(data.album, data.artist, collectionId).then(t => { setTracks(t || []); setTracksLoading(false); });
 
     } catch (err) {
       setResearchError(err.message || 'Research failed.');
