@@ -8,69 +8,103 @@ export async function research_album(album, artist) {
   const client = get_client();
   const message = await client.messages.create({
     model: 'claude-sonnet-4-6',
-    max_tokens: 3000,
+    max_tokens: 4000,
     tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 5 }],
     messages: [{
       role: 'user',
-      content: `You are a music journalist and researcher. Research the album "${album}"${artist ? ` by ${artist}` : ''} and return a detailed JSON object about it.
+      content: `Research the album "${album}"${artist ? ` by ${artist}` : ''} using the web_search tool, then write a sourced briefing.
 
-RESEARCH:
-- Use the web_search tool to verify the facts — producers, engineers, studios, release dates, labels, chart positions, sales/certifications, and critical reception. Prefer reputable sources (Wikipedia, Discogs, AllMusic, Pitchfork, official label/artist pages, established music press).
-- Ground every specific claim in what you actually find. If you cannot verify a detail, say so plainly rather than inventing it.
+Verify the facts against reputable sources (Wikipedia, Discogs, AllMusic, Pitchfork, official label/artist pages, established music press). Ground every specific claim in what you actually find, and cite the sources as you write. If you cannot verify a detail, say so rather than inventing it.
 
-WRITING:
-- Be specific. Name actual producers, engineers, studios, instruments, collaborators.
-- Describe the sonic and production details vividly.
-- For context, describe what was actually happening in music at that exact moment.
-- For reception, name actual publications or critics you found.
+Write your final answer EXACTLY in this shape — the META line first, then each section under its exact "## HEADER" marker on its own line:
 
-After researching, return ONLY valid JSON with no markdown fences as your final message:
-{
-  "album": "exact album title",
-  "artist": "artist name",
-  "year": "release year",
-  "genre": "specific genre(s), comma separated",
-  "label": "record label",
-  "debut": false,
-  "notable_first": "",
-  "production": "3-4 sentences about producer, studio, sonic details.",
-  "context": "3-4 sentences about the artist and music landscape at the time.",
-  "reception": "3-4 sentences about critical and commercial reception.",
-  "key_facts": ["fact", "fact", "fact", "fact"],
-  "listen_for": "3-4 specific sonic or compositional details worth paying attention to"
-}`
+META: {"year": "release year", "genre": "specific genre(s), comma separated"}
+## CONTEXT
+2-4 sentences: the artist and what was happening in music at the time.
+## PRODUCTION
+2-4 sentences: producer, studio, engineers, instruments, sonic details.
+## RECEPTION
+2-4 sentences: critical and commercial reception, naming real publications/critics.
+## LISTEN FOR
+2-4 sentences: specific sonic or compositional details worth paying attention to.
+## KEY FACTS
+- one verifiable fact
+- one verifiable fact
+- one verifiable fact`
     }]
   });
 
-  // The final JSON lives in the last text block (after any search/tool blocks).
-  const jsonBlock = [...message.content].reverse().find(b => b.type === 'text' && b.text.includes('{'));
-  const text = jsonBlock ? jsonBlock.text : '';
-  const parsed = JSON.parse(text.slice(text.indexOf('{'), text.lastIndexOf('}') + 1));
-  if (parsed.notes_prose && !parsed.album_notes) parsed.album_notes = parsed.notes_prose;
-
-  // Collect the REAL sources the search returned — citations first, then raw results.
-  // These are genuine URLs from Anthropic's web search, never model-invented.
-  const sources = [];
-  const seen = new Set();
-  const add = (url, title) => {
-    if (!url || seen.has(url)) return;
-    seen.add(url);
-    sources.push({ url, title: title || url });
+  // Walk the response in order, mapping each text run to its real web-search
+  // citations. Sources are numbered the first time they're cited.
+  const SECTION_BY_HEADER = {
+    'CONTEXT': 'context', 'PRODUCTION': 'production', 'RECEPTION': 'reception',
+    'LISTEN FOR': 'listen_for', 'LISTEN_FOR': 'listen_for',
+    'KEY FACTS': 'key_facts', 'KEY_FACTS': 'key_facts',
   };
-  for (const b of message.content) {
-    if (b.type === 'text' && Array.isArray(b.citations)) {
-      b.citations.forEach(c => add(c.url, c.title));
+  const sectionsMap = { context: [], production: [], reception: [], listen_for: [], key_facts: [] };
+  const sourceReg = new Map();
+  const numFor = (url, title) => {
+    if (!url) return null;
+    if (!sourceReg.has(url)) sourceReg.set(url, { n: sourceReg.size + 1, url, title: title || url });
+    return sourceReg.get(url).n;
+  };
+  let meta = {};
+  let current = null;
+
+  for (const block of message.content) {
+    if (block.type !== 'text') continue;
+    const cites = (block.citations || []).map(c => numFor(c.url, c.title)).filter(Boolean);
+    let buf = [];
+    const flush = () => {
+      // Preserve internal whitespace so adjacent cited/uncited runs reconstruct
+      // into prose without words jamming together; only skip empty runs.
+      const text = buf.join('\n');
+      if (text.trim() && current) sectionsMap[current].push({ text, cites });
+      buf = [];
+    };
+    for (const line of block.text.split('\n')) {
+      const mMeta = line.match(/^\s*META:\s*(\{.*\})/);
+      const mHead = line.match(/^\s*#{1,3}\s*(.+?)\s*$/);
+      const headKey = mHead && SECTION_BY_HEADER[mHead[1].toUpperCase()];
+      if (mMeta) { flush(); try { meta = JSON.parse(mMeta[1]); } catch { /* ignore */ } continue; }
+      if (headKey) { flush(); current = headKey; continue; }
+      buf.push(line);
     }
+    flush();
   }
-  if (sources.length === 0) {
-    for (const b of message.content) {
-      if (b.type === 'web_search_tool_result' && Array.isArray(b.content)) {
-        b.content.forEach(r => add(r.url, r.title));
+
+  // If the model cited nothing inline, still surface the real search results.
+  if (sourceReg.size === 0) {
+    for (const block of message.content) {
+      if (block.type === 'web_search_tool_result' && Array.isArray(block.content)) {
+        block.content.forEach(r => numFor(r.url, r.title));
       }
     }
   }
-  parsed.sources = sources.slice(0, 8);
-  return parsed;
+  const sources = [...sourceReg.values()].sort((a, b) => a.n - b.n);
+
+  let sections = [
+    ['context', 'Context'], ['production', 'Production'],
+    ['reception', 'Reception'], ['listen_for', 'Listen For'],
+  ].map(([key, label]) => ({ key, label, runs: sectionsMap[key] }))
+   .filter(s => s.runs.length > 0);
+  const key_facts = sectionsMap.key_facts;
+
+  // Fallback: if the marker format wasn't followed, show whatever prose came back.
+  if (sections.length === 0 && key_facts.length === 0) {
+    const raw = message.content.filter(b => b.type === 'text').map(b => b.text).join('\n').trim();
+    if (raw) sections = [{ key: 'context', label: 'Context', runs: [{ text: raw, cites: [] }] }];
+  }
+
+  return {
+    album,
+    artist,
+    year: meta.year || '',
+    genre: meta.genre || '',
+    sections,
+    key_facts,
+    sources,
+  };
 }
 
 export async function format_post({ brief, notes, rating, masterpiece, favorite, entryType, relationship, trackNotes, trackRatings, tracks }) {
