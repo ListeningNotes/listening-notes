@@ -69,9 +69,6 @@ export default function SessionPreview({
             ))}
           </div>
         </div>
-        <div style={{ marginLeft: 'auto', fontFamily: fonts.sans, fontSize: 12.5, lineHeight: 1.8, color: tx(0.55), maxWidth: 380 }}>
-          {output.background}
-        </div>
       </div>
 
       <div style={{ ...lbl, marginBottom: 12 }}>Album Notes</div>

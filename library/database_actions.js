@@ -17,7 +17,7 @@ export async function pull_entry_by_slug(slug) {
 export async function save_new_entry(body) {
   const {
     album, artist, year, entry_type, relationship,
-    rating, favorite, background, notes, track_notes, tags,
+    rating, favorite, background = '', notes, track_notes, tags,
     horizon, album_art, post_link
   } = body;
 

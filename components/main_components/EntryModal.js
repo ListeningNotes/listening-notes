@@ -280,18 +280,6 @@ export default function EntryModal({ slug, originRect, onClose }) {
                 </>
               ) : null}
             </div>
-
-            {/* Right column: background text */}
-            <div style={{ flex: 1, padding: '20px 22px', minWidth: 0, fontFamily: fonts.sans }}>
-              {loading ? (
-                [100, 90, 95, 85, 88].map((w, i) => <div key={i} style={{ height: 9, width: w + '%', background: 'var(--border)', borderRadius: 3, marginBottom: 8 }} />)
-              ) : entry?.background ? (
-                <>
-                  <div style={{ fontFamily: fonts.mono, fontSize: 8, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ink-faint)', marginBottom: 10 }}>Background</div>
-                  <div style={{ fontSize: 12.5, fontWeight: 300, lineHeight: 1.8, color: 'var(--ink-soft)' }}>{entry.background}</div>
-                </>
-              ) : null}
-            </div>
           </div>
           </div>
 

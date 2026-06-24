@@ -41,7 +41,6 @@ function EditModal({ entry, onSave, onDelete, onClose }) {
     entry_type: entry.entry_type || '',
     favorite: entry.favorite === true || entry.favorite === 'true',
     masterpiece: entry.masterpiece === true,
-    background: entry.background || '',
     notes: entry.notes || '',
     // Tags stored as array in DB, displayed as comma-separated string in the input
     tags: Array.isArray(entry.tags) ? entry.tags.join(', ') : (entry.tags || ''),
@@ -170,11 +169,6 @@ function EditModal({ entry, onSave, onDelete, onClose }) {
                 <span style={{ fontFamily: MONO, fontSize: 11, color: fields[key] ? '#1a1916' : '#aaa8a2' }}>{label}</span>
               </label>
             ))}
-          </div>
-
-          <div>
-            <div style={{ ...labelStyle, marginBottom: 6 }}>Background</div>
-            <textarea value={fields.background} onChange={e => set('background', e.target.value)} style={taStyle(100)} />
           </div>
 
           <div>

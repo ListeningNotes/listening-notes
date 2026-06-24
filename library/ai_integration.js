@@ -110,27 +110,19 @@ Entry type: ${entryType || 'First Listen'}
 Relationship: ${relationship || ''}
 Rating: ${rating ? rating + '/5' + (masterpiece ? ' (masterpiece)' : '') : 'unrated'}
 
-Background context:
-- Production: ${brief.production}
-- Context: ${brief.context}
-- Reception: ${brief.reception}
-
 Raw listener notes:
 ${notes}
 
 ${trackNotesBlock ? `Per-track notes:\n${trackNotesBlock}` : ''}
 
-Write a blog post in two parts:
-1. BACKGROUND (1 short paragraph, 3-4 sentences max): Set the scene factually but warmly.
-2. NOTES: Return the raw listener notes almost exactly as written. Fix spelling only. Do not rewrite, restructure, or improve sentences. Preserve all paragraph breaks exactly as they appear in the raw notes.
+This is a personal journal entry. Return the raw listener notes almost exactly as written — fix spelling only. Do not rewrite, restructure, summarize, or improve sentences, and do not add any album background or context of your own. Preserve all paragraph breaks exactly as they appear in the raw notes.
 
-Include this horizon bar between the two sections (already calculated, use exactly): ${horizonString}
+Include this horizon bar (already calculated, use exactly): ${horizonString}
 
 Also generate 8-12 tags relevant to this entry.
 
 Return ONLY valid JSON, no markdown fences:
 {
-  "background": "full background section",
   "album_notes": "full album-level notes section (no track notes here)",
   "track_notes": "all per-track notes formatted as: 1. Track Title — ★★★★★\nnote text\n\n2. Track Title — ★★★\nnote text",
   "horizon": "${horizonString}",
