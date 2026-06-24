@@ -569,8 +569,6 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 
 /* Homepage only: dot-nav flows in directly under the logo instead of being
    pinned to the top edge (it sits right after the logo in the markup). */
-/* Lift the homepage logo + nav above the fixed header backdrop (.hp-headerbar,
-   z 90) so the bar's bg fade doesn't paint over them. */
 .hp .hp-logo {
   position: relative;
   z-index: 91;
@@ -654,19 +652,6 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   width: auto;
   display: block;
   transition: filter 0.2s;
-}
-
-/* Fixed header backdrop. Sits above page content but below the nav items, so
-   content scrolls beneath it and disappears instead of showing through the nav. */
-.hp-headerbar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 92px;
-  z-index: 90;
-  pointer-events: none;
-  background: linear-gradient(to bottom, var(--bg) 0%, var(--bg) 62px, transparent 100%);
 }
 
 @keyframes hp-pulse {
@@ -926,10 +911,6 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
     font-size: 9px;
     letter-spacing: 0.06em;
   }
-  .hp-headerbar {
-    height: 130px;
-    background: linear-gradient(to bottom, var(--bg) 0%, var(--bg) 108px, transparent 100%);
-  }
 }
 
 /* ── Homepage masthead on phones ──────────────────────────────────────────
@@ -944,9 +925,6 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
     padding: 34px 0 52px;
     gap: 26px;
   }
-  /* The shared .hp-headerbar backdrop (z-index 90) is sized tall for the fixed
-     dot-nav on other pages; on the homepage the nav is in-flow, so that band
-     would otherwise mask the top of the logo. Lift the logo above it. */
   .hp .hp-logo {
     position: relative;
     z-index: 95;
