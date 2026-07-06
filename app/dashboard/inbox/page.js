@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import PasswordGate from '../../../components/session_components/PasswordGate';
 import backgrounds from '../../../components/session_components/backgrounds';
+import { fonts } from '../../../library/sitewide_visuals';
 
 const MONO  = "'DM Mono', 'Courier New', monospace";
 const SERIF = "'DM Serif Display', Georgia, serif";
@@ -140,7 +141,7 @@ export default function Inbox() {
 
         {/* Back to dashboard — same style + place as /dashboard/echo */}
         <div style={{ position: 'relative', zIndex: 3, padding: '14px 28px', display: 'flex', alignItems: 'center', gap: 12 }}>
-          <a href="/dashboard" style={{ fontFamily: MONO, fontWeight: 600, fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(26,21,32,0.5)', textDecoration: 'none', padding: '6px 10px', borderRadius: 8, border: '1px solid rgba(26,21,32,0.12)', background: 'rgba(245,242,236,0.6)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', flexShrink: 0 }}>← Dashboard</a>
+          <a href="/dashboard" style={{ fontFamily: fonts.mono, fontWeight: 600, fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(26,21,32,0.5)', textDecoration: 'none', padding: '6px 10px', borderRadius: 8, border: '1px solid rgba(26,21,32,0.12)', background: 'rgba(245,242,236,0.6)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', flexShrink: 0 }}>← Dashboard</a>
         </div>
 
         <div style={{ position: 'relative', zIndex: 2, maxWidth: 940, margin: '0 auto', padding: '8px 24px 48px' }}>
