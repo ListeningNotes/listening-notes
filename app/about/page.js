@@ -177,8 +177,7 @@ export default function AboutPage() {
                 iFi Zen DAC 3 ↗
               </a>
             </li>
-            <li>Wired connection from laptop</li>
-            <li>Apple Music source audio (Lossless / Dolby Atmos when available)</li>
+            <li>Lossless Apple Music source audio</li>
           </ul>
 
           <h3 style={subheadingStyle}>Why it matters</h3>
