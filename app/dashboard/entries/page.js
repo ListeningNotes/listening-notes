@@ -241,7 +241,7 @@ export default function SessionEntries() {
   if (checking) return <div style={{ minHeight: '100vh', background: '#eef0ec' }} />;
   if (!authed) return <PasswordGate onAuth={() => setAuthed(true)} />;
 
-  const COLS = '24px 74px 1fr 1fr 70px 120px 110px';
+  const COLS = '74px 1fr 1fr 70px 130px 110px';
 
   // Clickable column header with a sort caret.
   const SortHead = ({ field, initialDir = 'asc', children }) => {
@@ -296,7 +296,6 @@ export default function SessionEntries() {
               <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(160deg, rgba(255,255,255,0.5) 0%, transparent 45%)', pointerEvents: 'none' }} />
               <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, flex: 1 }}>
                 <div style={{ display: 'grid', gridTemplateColumns: COLS, padding: '14px 20px', borderBottom: HAIR, flexShrink: 0, alignItems: 'center' }}>
-                  <div />
                   <SortHead field="date" initialDir="desc">Added</SortHead>
                   <SortHead field="album">Album</SortHead>
                   <SortHead field="artist">Artist</SortHead>
@@ -313,9 +312,6 @@ export default function SessionEntries() {
                 {filtered.map((entry) => (
                   <div key={entry.slug} className="se-row" style={{ display: 'grid', gridTemplateColumns: COLS, padding: '10px 20px', borderBottom: '1px solid rgba(26,25,22,0.05)', alignItems: 'center', cursor: 'pointer' }}
                     onClick={() => setEditing(entry)}>
-                    <div style={{ display: 'flex', justifyContent: 'center' }}>
-                      {entry.favorite === true && <span title="Favorite" style={{ color: '#e0245e', fontSize: 13, lineHeight: 1 }}>♥</span>}
-                    </div>
                     <div style={{ padding: '0 8px' }}>
                       {entry.album_art
                         ? <img src={entry.album_art} alt="" style={{ width: 36, height: 36, borderRadius: 7, objectFit: 'cover', display: 'block' }} />
@@ -332,6 +328,7 @@ export default function SessionEntries() {
                         return isNaN(n) ? entry.rating : n;
                       })()}
                       {entry.masterpiece === true && <span title="Masterpiece" style={{ color: '#E8B84B', fontSize: 14, lineHeight: 1 }}>★</span>}
+                      {entry.favorite === true && <span title="Favorite" style={{ color: '#e0245e', fontSize: 14, lineHeight: 1 }}>♥</span>}
                     </div>
                     <div style={{ padding: '0 8px', fontFamily: MONO, fontSize: 10, color: 'rgba(26,25,22,0.4)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{entry.entry_type || '—'}</div>
                   </div>
