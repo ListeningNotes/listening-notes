@@ -56,3 +56,32 @@ export async function upvote_comment(id) {
   `;
   return result[0] || null;
 }
+
+// Moderation — the dashboard inbox reviews comments awaiting approval.
+export async function pull_pending_comments() {
+  return await database`
+    SELECT id, entry_slug, track_index, parent_id,
+           author_name, author_email, content, created_at
+    FROM comments
+    WHERE pending = true
+    ORDER BY created_at DESC
+  `;
+}
+
+export async function approve_comment(id) {
+  const result = await database`
+    UPDATE comments SET pending = false
+    WHERE id = ${id}
+    RETURNING id
+  `;
+  return result[0] || null;
+}
+
+export async function dismiss_comment(id) {
+  const result = await database`
+    DELETE FROM comments
+    WHERE id = ${id}
+    RETURNING id
+  `;
+  return result[0] || null;
+}

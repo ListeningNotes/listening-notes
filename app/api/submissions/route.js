@@ -1,4 +1,5 @@
 import { save_submission, pull_submissions } from '@/library/submission_actions';
+import { requireWristband } from '@/library/wristband';
 
 export async function POST(request) {
   try {
@@ -19,7 +20,10 @@ export async function POST(request) {
   }
 }
 
-export async function GET() {
+export async function GET(request) {
+  const blocked = await requireWristband(request);
+  if (blocked) return blocked;
+
   try {
     const submissions = await pull_submissions();
     return Response.json({ submissions });
