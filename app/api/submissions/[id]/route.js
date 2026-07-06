@@ -1,6 +1,10 @@
 import { update_submission_status } from '@/library/submission_actions';
+import { requireWristband } from '@/library/wristband';
 
 export async function PATCH(request, { params }) {
+  const blocked = await requireWristband(request);
+  if (blocked) return blocked;
+
   try {
     const { id } = await params;
     const { status } = await request.json();
