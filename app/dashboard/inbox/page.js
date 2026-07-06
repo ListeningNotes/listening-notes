@@ -10,26 +10,14 @@ const SANS  = "'DM Sans', system-ui, sans-serif";
 const SYNE  = "'Syne', sans-serif";
 
 const INK = '#1a1916';
+const FOLDER_BG = 'rgba(255,255,255,0.8)';
 const label = { fontFamily: MONO, fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(26,25,22,0.45)' };
-
-// Frosted-glass "widget" recipe — matches the hub cards + homepage modal.
-const glass = {
-  background: 'rgba(255,255,255,0.72)',
-  backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
-  border: '1px solid rgba(255,255,255,0.55)',
-  boxShadow: '0 8px 32px rgba(0,0,0,0.09)',
-  position: 'relative',
-  overflow: 'hidden',
-};
-const Sheen = () => (
-  <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(145deg, rgba(255,255,255,0.55) 0%, transparent 55%)', pointerEvents: 'none' }} />
-);
 
 function NoteModal({ submission, onClose }) {
   return (
     <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(26,25,22,0.28)', backdropFilter: 'blur(4px)', WebkitBackdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: 24 }}>
-      <div onClick={e => e.stopPropagation()} style={{ ...glass, borderRadius: 24, width: '100%', maxWidth: 520 }}>
-        <Sheen />
+      <div onClick={e => e.stopPropagation()} style={{ background: FOLDER_BG, backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.6)', boxShadow: '0 24px 80px rgba(0,0,0,0.18)', borderRadius: 24, width: '100%', maxWidth: 520, position: 'relative', overflow: 'hidden' }}>
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(145deg, rgba(255,255,255,0.5) 0%, transparent 55%)', pointerEvents: 'none' }} />
         <div style={{ position: 'relative', zIndex: 1, padding: '22px 28px', borderBottom: '1px solid rgba(26,25,22,0.08)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
             <div style={{ fontFamily: SERIF, fontSize: 19, color: INK }}>{submission.album}</div>
@@ -99,26 +87,48 @@ export default function Inbox() {
   if (checking) return <div style={{ minHeight: '100vh', background: '#eef0ec' }} />;
   if (!authed) return <PasswordGate onAuth={() => setAuthed(true)} />;
 
-  const pill = (active) => ({
+  // A folder tab that connects to the open panel when active.
+  const FolderTab = ({ id, children }) => {
+    const active = tab === id;
+    return (
+      <button onClick={() => setTab(id)}
+        style={{
+          fontFamily: MONO, fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase',
+          padding: active ? '11px 24px 13px' : '9px 22px 11px',
+          border: 'none', cursor: 'pointer',
+          borderRadius: '16px 16px 0 0',
+          marginBottom: active ? -1 : 0,
+          background: active ? FOLDER_BG : 'rgba(255,255,255,0.42)',
+          color: active ? INK : 'rgba(26,25,22,0.42)',
+          backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
+          boxShadow: active ? '0 -6px 18px rgba(0,0,0,0.05)' : 'none',
+          position: 'relative', zIndex: active ? 2 : 1,
+          transition: 'background 0.15s, color 0.15s, padding 0.12s',
+        }}>
+        {children}
+      </button>
+    );
+  };
+
+  const subFilter = (f) => ({
     fontFamily: MONO, fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase',
-    padding: '8px 16px', borderRadius: 999, cursor: 'pointer',
-    border: active ? 'none' : '1px solid rgba(26,25,22,0.12)',
-    background: active ? INK : 'rgba(255,255,255,0.55)',
-    color: active ? '#fff' : 'rgba(26,25,22,0.5)',
-    backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
+    padding: '4px 4px', border: 'none', background: 'none', cursor: 'pointer',
+    color: filter === f ? INK : 'rgba(26,25,22,0.35)',
+    borderBottom: filter === f ? '1.5px solid ' + INK : '1.5px solid transparent',
   });
-  const actionBtn = (danger) => ({
+  const rowAction = (danger, solid) => ({
     fontFamily: MONO, fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase',
-    padding: '6px 12px', borderRadius: 999, cursor: 'pointer',
-    border: danger ? '1px solid rgba(239,68,68,0.4)' : '1px solid rgba(26,25,22,0.12)',
-    background: danger ? 'rgba(255,255,255,0.55)' : 'rgba(255,255,255,0.55)',
-    color: danger ? '#ef4444' : 'rgba(26,25,22,0.55)',
+    padding: '6px 13px', borderRadius: 999, cursor: 'pointer',
+    border: danger ? '1px solid rgba(239,68,68,0.4)' : (solid ? 'none' : '1px solid rgba(26,25,22,0.12)'),
+    background: solid ? INK : 'rgba(255,255,255,0.6)',
+    color: solid ? '#fff' : (danger ? '#ef4444' : 'rgba(26,25,22,0.55)'),
+    textDecoration: 'none', display: 'inline-flex', alignItems: 'center',
   });
 
   return (
     <>
       <style>{`
-        .inbox-row:hover { background: rgba(255,255,255,0.45); }
+        .inbox-row:hover { background: rgba(255,255,255,0.4); }
         .inbox-row { transition: background 0.12s; }
         html, body { background: #eef0ec; }
         ::-webkit-scrollbar { width: 4px; }
@@ -126,108 +136,107 @@ export default function Inbox() {
       `}</style>
 
       <div style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden', background: '#eef0ec', fontFamily: SANS, color: INK }}>
-
-        {/* Animated album background + frosted overlay (matches the hub) */}
         <Background albums={albums} />
         <div style={{ position: 'absolute', inset: 0, zIndex: 1, backdropFilter: 'blur(3px)', WebkitBackdropFilter: 'blur(3px)', background: 'rgba(224,224,220,0.5)', pointerEvents: 'none' }} />
 
-        <div style={{ position: 'relative', zIndex: 2, maxWidth: 940, margin: '0 auto', padding: '28px 24px 48px' }}>
+        <div style={{ position: 'relative', zIndex: 2, maxWidth: 940, margin: '0 auto', padding: '30px 24px 48px' }}>
 
-          {/* Floating header widget */}
-          <div style={{ ...glass, borderRadius: 22, padding: '14px 20px', display: 'flex', alignItems: 'center', gap: 14, marginBottom: 22 }}>
-            <Sheen />
-            <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', gap: 14, width: '100%' }}>
-              <span style={{ fontFamily: SYNE, fontSize: 15, fontWeight: 700, letterSpacing: '-0.01em', color: INK }}>Inbox</span>
-              <div style={{ display: 'flex', gap: 6, marginLeft: 8 }}>
-                <button onClick={() => setTab('submissions')} style={pill(tab === 'submissions')}>Submissions {subCounts.pending > 0 ? `(${subCounts.pending})` : ''}</button>
-                <button onClick={() => setTab('comments')} style={pill(tab === 'comments')}>Comments {comments.length > 0 ? `(${comments.length})` : ''}</button>
-              </div>
-              <a href="/dashboard" style={{ ...label, marginLeft: 'auto', textDecoration: 'none' }}>← Dashboard</a>
-            </div>
+          {/* Title + back */}
+          <div style={{ display: 'flex', alignItems: 'baseline', marginBottom: 14, padding: '0 4px' }}>
+            <span style={{ fontFamily: SYNE, fontSize: 22, fontWeight: 700, letterSpacing: '-0.01em', color: INK }}>Inbox</span>
+            <a href="/dashboard" style={{ ...label, marginLeft: 'auto', textDecoration: 'none' }}>← Dashboard</a>
           </div>
 
-          {/* ── SUBMISSIONS ── */}
-          {tab === 'submissions' && (
-            <>
-              <div style={{ display: 'flex', gap: 6, marginBottom: 16 }}>
-                {['pending', 'reviewed', 'dismissed'].map(f => (
-                  <button key={f} onClick={() => setFilter(f)} style={pill(filter === f)}>
-                    {f} {subCounts[f] > 0 ? `(${subCounts[f]})` : ''}
-                  </button>
-                ))}
-              </div>
+          {/* Folder tabs */}
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 5, paddingLeft: 14, position: 'relative', zIndex: 2 }}>
+            <FolderTab id="submissions">Submissions{subCounts.pending > 0 ? ` (${subCounts.pending})` : ''}</FolderTab>
+            <FolderTab id="comments">Comments{comments.length > 0 ? ` (${comments.length})` : ''}</FolderTab>
+          </div>
 
-              {subLoading ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  {[...Array(4)].map((_, i) => <div key={i} style={{ height: 60, borderRadius: 16, background: 'rgba(255,255,255,0.4)' }} />)}
-                </div>
-              ) : filtered.length === 0 ? (
-                <div style={{ ...glass, borderRadius: 22, padding: '56px 0', textAlign: 'center', fontFamily: MONO, fontSize: 11, color: 'rgba(26,25,22,0.4)' }}>
-                  <Sheen /><span style={{ position: 'relative', zIndex: 1 }}>No {filter} submissions.</span>
-                </div>
-              ) : (
-                <div style={{ ...glass, borderRadius: 22 }}>
-                  <Sheen />
-                  <div style={{ position: 'relative', zIndex: 1 }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 60px 130px 130px', padding: '12px 22px', borderBottom: '1px solid rgba(26,25,22,0.08)' }}>
-                      {['Album', 'Artist', 'Year', 'From', ''].map((h, i) => <div key={i} style={label}>{h}</div>)}
-                    </div>
-                    {filtered.map(s => (
-                      <div key={s.id} className="inbox-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 60px 130px 130px', padding: '14px 22px', borderBottom: '1px solid rgba(26,25,22,0.06)', alignItems: 'center' }}>
-                        <div style={{ fontFamily: SANS, fontSize: 13, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.album}</div>
-                        <div style={{ fontFamily: MONO, fontSize: 11, color: 'rgba(26,25,22,0.55)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.artist}</div>
-                        <div style={{ fontFamily: MONO, fontSize: 11, color: 'rgba(26,25,22,0.4)' }}>{s.year || '—'}</div>
-                        <div style={{ fontFamily: MONO, fontSize: 11, color: 'rgba(26,25,22,0.4)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.submitter_name || 'Anonymous'}</div>
-                        <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
-                          <button onClick={() => setViewing(s)} style={actionBtn(false)}>Note</button>
-                          <a href="/dashboard" onClick={() => updateStatus(s.id, 'reviewed')} style={{ ...actionBtn(false), background: INK, color: '#fff', border: 'none', textDecoration: 'none', display: 'inline-flex', alignItems: 'center' }}>Listen →</a>
-                          {s.status !== 'dismissed' && <button onClick={() => updateStatus(s.id, 'dismissed')} style={actionBtn(true)}>✕</button>}
-                        </div>
-                      </div>
+          {/* Open folder */}
+          <div style={{
+            position: 'relative', zIndex: 1, minHeight: 460,
+            background: FOLDER_BG, backdropFilter: 'blur(22px)', WebkitBackdropFilter: 'blur(22px)',
+            border: '1px solid rgba(255,255,255,0.55)', borderRadius: '20px 20px 24px 24px',
+            boxShadow: '0 12px 44px rgba(0,0,0,0.10)', overflow: 'hidden',
+          }}>
+            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(160deg, rgba(255,255,255,0.5) 0%, transparent 45%)', pointerEvents: 'none' }} />
+            <div style={{ position: 'relative', zIndex: 1, padding: '22px 26px 28px' }}>
+
+              {/* ── SUBMISSIONS ── */}
+              {tab === 'submissions' && (
+                <>
+                  <div style={{ display: 'flex', gap: 18, marginBottom: 18 }}>
+                    {['pending', 'reviewed', 'dismissed'].map(f => (
+                      <button key={f} onClick={() => setFilter(f)} style={subFilter(f)}>
+                        {f}{subCounts[f] > 0 ? ` ${subCounts[f]}` : ''}
+                      </button>
                     ))}
                   </div>
-                </div>
-              )}
-            </>
-          )}
 
-          {/* ── COMMENTS ── */}
-          {tab === 'comments' && (
-            <>
-              {comLoading ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  {[...Array(3)].map((_, i) => <div key={i} style={{ height: 96, borderRadius: 20, background: 'rgba(255,255,255,0.4)' }} />)}
-                </div>
-              ) : comments.length === 0 ? (
-                <div style={{ ...glass, borderRadius: 22, padding: '56px 0', textAlign: 'center', fontFamily: MONO, fontSize: 11, color: 'rgba(26,25,22,0.4)' }}>
-                  <Sheen /><span style={{ position: 'relative', zIndex: 1 }}>No comments awaiting moderation.</span>
-                </div>
-              ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  {comments.map(c => (
-                    <div key={c.id} style={{ ...glass, borderRadius: 20, padding: '18px 22px' }}>
-                      <Sheen />
-                      <div style={{ position: 'relative', zIndex: 1 }}>
-                        <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 10, flexWrap: 'wrap' }}>
-                          <span style={{ fontFamily: SANS, fontSize: 13, fontWeight: 600 }}>{c.author_name}</span>
-                          <a href={`/entries/${c.entry_slug}`} target="_blank" rel="noopener noreferrer" style={{ fontFamily: MONO, fontSize: 10, color: 'rgba(26,25,22,0.5)', textDecoration: 'none', borderBottom: '1px solid rgba(26,25,22,0.15)' }}>
-                            on {c.entry_slug}{c.track_index >= 0 ? ` · track ${c.track_index + 1}` : ''} ↗
-                          </a>
-                          <span style={{ fontFamily: MONO, fontSize: 10, color: 'rgba(26,25,22,0.3)', marginLeft: 'auto' }}>{new Date(c.created_at).toLocaleDateString()}</span>
-                        </div>
-                        <p style={{ fontFamily: SANS, fontSize: 14, color: INK, lineHeight: 1.7, margin: '0 0 14px' }}>{c.content}</p>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                          <button onClick={() => approveComment(c.id)} style={{ ...actionBtn(false), fontSize: 10, padding: '8px 18px', background: INK, color: '#fff', border: 'none' }}>Approve</button>
-                          <button onClick={() => dismissComment(c.id)} style={{ ...actionBtn(true), fontSize: 10, padding: '8px 18px' }}>Dismiss</button>
-                          {c.author_email && <span style={{ fontFamily: MONO, fontSize: 10, color: 'rgba(26,25,22,0.3)', marginLeft: 'auto' }}>{c.author_email}</span>}
-                        </div>
-                      </div>
+                  {subLoading ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                      {[...Array(4)].map((_, i) => <div key={i} style={{ height: 46, borderRadius: 10, background: 'rgba(255,255,255,0.4)' }} />)}
                     </div>
-                  ))}
-                </div>
+                  ) : filtered.length === 0 ? (
+                    <div style={{ padding: '80px 0', textAlign: 'center', fontFamily: MONO, fontSize: 11, color: 'rgba(26,25,22,0.35)' }}>No {filter} submissions.</div>
+                  ) : (
+                    <div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 60px 130px 130px', padding: '0 6px 10px', borderBottom: '1px solid rgba(26,25,22,0.1)' }}>
+                        {['Album', 'Artist', 'Year', 'From', ''].map((h, i) => <div key={i} style={label}>{h}</div>)}
+                      </div>
+                      {filtered.map(s => (
+                        <div key={s.id} className="inbox-row" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 60px 130px 130px', padding: '13px 6px', borderBottom: '1px solid rgba(26,25,22,0.06)', alignItems: 'center', borderRadius: 8 }}>
+                          <div style={{ fontFamily: SANS, fontSize: 13, fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.album}</div>
+                          <div style={{ fontFamily: MONO, fontSize: 11, color: 'rgba(26,25,22,0.55)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.artist}</div>
+                          <div style={{ fontFamily: MONO, fontSize: 11, color: 'rgba(26,25,22,0.4)' }}>{s.year || '—'}</div>
+                          <div style={{ fontFamily: MONO, fontSize: 11, color: 'rgba(26,25,22,0.4)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{s.submitter_name || 'Anonymous'}</div>
+                          <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
+                            <button onClick={() => setViewing(s)} style={rowAction(false, false)}>Note</button>
+                            <a href="/dashboard" onClick={() => updateStatus(s.id, 'reviewed')} style={rowAction(false, true)}>Listen →</a>
+                            {s.status !== 'dismissed' && <button onClick={() => updateStatus(s.id, 'dismissed')} style={rowAction(true, false)}>✕</button>}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </>
               )}
-            </>
-          )}
+
+              {/* ── COMMENTS ── */}
+              {tab === 'comments' && (
+                <>
+                  {comLoading ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+                      {[...Array(3)].map((_, i) => <div key={i} style={{ height: 70, borderRadius: 10, background: 'rgba(255,255,255,0.4)' }} />)}
+                    </div>
+                  ) : comments.length === 0 ? (
+                    <div style={{ padding: '80px 0', textAlign: 'center', fontFamily: MONO, fontSize: 11, color: 'rgba(26,25,22,0.35)' }}>No comments awaiting moderation.</div>
+                  ) : (
+                    <div>
+                      {comments.map((c, i) => (
+                        <div key={c.id} style={{ padding: '18px 6px', borderBottom: i < comments.length - 1 ? '1px solid rgba(26,25,22,0.08)' : 'none' }}>
+                          <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 8, flexWrap: 'wrap' }}>
+                            <span style={{ fontFamily: SANS, fontSize: 13, fontWeight: 600 }}>{c.author_name}</span>
+                            <a href={`/entries/${c.entry_slug}`} target="_blank" rel="noopener noreferrer" style={{ fontFamily: MONO, fontSize: 10, color: 'rgba(26,25,22,0.5)', textDecoration: 'none', borderBottom: '1px solid rgba(26,25,22,0.15)' }}>
+                              on {c.entry_slug}{c.track_index >= 0 ? ` · track ${c.track_index + 1}` : ''} ↗
+                            </a>
+                            <span style={{ fontFamily: MONO, fontSize: 10, color: 'rgba(26,25,22,0.3)', marginLeft: 'auto' }}>{new Date(c.created_at).toLocaleDateString()}</span>
+                          </div>
+                          <p style={{ fontFamily: SANS, fontSize: 14, color: INK, lineHeight: 1.7, margin: '0 0 12px' }}>{c.content}</p>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                            <button onClick={() => approveComment(c.id)} style={{ ...rowAction(false, true), fontSize: 10, padding: '7px 18px' }}>Approve</button>
+                            <button onClick={() => dismissComment(c.id)} style={{ ...rowAction(true, false), fontSize: 10, padding: '7px 18px' }}>Dismiss</button>
+                            {c.author_email && <span style={{ fontFamily: MONO, fontSize: 10, color: 'rgba(26,25,22,0.3)', marginLeft: 'auto' }}>{c.author_email}</span>}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 
