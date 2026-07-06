@@ -7,7 +7,6 @@ import backgrounds from '../../../components/session_components/backgrounds';
 const MONO  = "'DM Mono', 'Courier New', monospace";
 const SERIF = "'DM Serif Display', Georgia, serif";
 const SANS  = "'DM Sans', system-ui, sans-serif";
-const SYNE  = "'Syne', sans-serif";
 
 const INK = '#1a1916';
 const FOLDER_BG = 'rgba(255,255,255,0.8)';
@@ -141,10 +140,9 @@ export default function Inbox() {
 
         <div style={{ position: 'relative', zIndex: 2, maxWidth: 940, margin: '0 auto', padding: '30px 24px 48px' }}>
 
-          {/* Title + back */}
-          <div style={{ display: 'flex', alignItems: 'baseline', marginBottom: 14, padding: '0 4px' }}>
-            <span style={{ fontFamily: SYNE, fontSize: 22, fontWeight: 700, letterSpacing: '-0.01em', color: INK }}>Inbox</span>
-            <a href="/dashboard" style={{ ...label, marginLeft: 'auto', textDecoration: 'none' }}>← Dashboard</a>
+          {/* Back to dashboard — matches the Listen page */}
+          <div style={{ marginBottom: 16, padding: '0 4px' }}>
+            <a href="/dashboard" style={{ fontFamily: MONO, fontWeight: 600, fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(26,21,32,0.5)', textDecoration: 'none', padding: '6px 10px', borderRadius: 8, border: '1px solid rgba(26,21,32,0.12)', background: 'rgba(245,242,236,0.6)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', display: 'inline-block' }}>← Dashboard</a>
           </div>
 
           {/* Folder tabs */}
