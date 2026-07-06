@@ -111,7 +111,7 @@ export default function SubmitPage() {
             What should I listen to?
           </h1>
           <p style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85rem', color: 'var(--ink-soft)', margin: 0, lineHeight: 1.7 }}>
-            Recommend an album and tell me what to listen for. I'll add it to my queue and write it up when I do.
+            Recommend an album and tell me what to listen for.
           </p>
         </div>
 
@@ -149,17 +149,17 @@ export default function SubmitPage() {
             </div>
 
             <div style={{ maxWidth: '160px' }}>
-              <span style={label}>Year</span>
-              <input style={field} value={form.year} onChange={set('year')} placeholder="e.g. 2004" />
+              <span style={label}>Year<span style={{ color: 'var(--accent)' }}>*</span></span>
+              <input style={field} value={form.year} onChange={set('year')} />
             </div>
 
             <div>
-              <span style={label}>What makes it special? What should I listen for? <span style={{ color: 'var(--accent)' }}>*</span></span>
+              <span style={label}>Note<span style={{ color: 'var(--accent)' }}>*</span></span>
               <textarea
                 style={{ ...field, resize: 'vertical', minHeight: '120px', lineHeight: 1.7 }}
                 value={form.note}
                 onChange={set('note')}
-                placeholder="Tell me what you hear in it, why it matters to you, or just make the case..."
+                placeholder="Let me know why you're submitting this album."
               />
             </div>
 
@@ -183,14 +183,23 @@ export default function SubmitPage() {
               <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8rem', color: '#e05555' }}>{error}</div>
             )}
 
-            <div>
+            <div style={{ display: 'flex', justifyContent: 'center', paddingTop: '4px' }}>
               <button
                 type="submit"
                 disabled={submitting}
-                className="hp-cta-btn hp-cta-btn--filled"
-                style={{ opacity: submitting ? 0.6 : 1, cursor: submitting ? 'not-allowed' : 'pointer' }}
+                style={{
+                  fontFamily: 'var(--font-mono)', fontSize: '0.8rem', letterSpacing: '0.09em', textTransform: 'uppercase',
+                  color: 'var(--ink)',
+                  background: 'var(--accent)',
+                  border: '1px solid var(--accent)',
+                  borderRadius: 50, padding: '13px 40px',
+                  boxShadow: submitting ? 'none' : '0 4px 16px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.4)',
+                  opacity: submitting ? 0.6 : 1,
+                  cursor: submitting ? 'not-allowed' : 'pointer',
+                  transition: 'all 0.2s ease',
+                }}
               >
-                {submitting ? 'Sending…' : 'Submit →'}
+                {submitting ? 'Sending…' : 'Submit'}
               </button>
             </div>
 
