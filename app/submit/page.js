@@ -124,7 +124,13 @@ export default function SubmitPage() {
                 {form.email ? " I'll let you know when it goes up." : ''}
               </p>
             </div>
-            <button onClick={handleReset} className="hp-cta-btn" style={{ marginTop: '20px', cursor: 'pointer' }}>
+            <button onClick={handleReset} style={{
+              marginTop: '20px', cursor: 'pointer',
+              fontFamily: 'var(--font-mono)', fontSize: '0.8rem', letterSpacing: '0.06em',
+              color: 'var(--ink-soft)', background: 'var(--surface)',
+              border: '1px solid var(--border)', borderRadius: 'var(--r-sm)',
+              padding: '11px 24px',
+            }}>
               Submit another album →
             </button>
           </div>
