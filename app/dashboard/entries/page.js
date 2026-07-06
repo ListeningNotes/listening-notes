@@ -324,8 +324,13 @@ export default function SessionEntries() {
                     <div style={{ padding: '0 8px', fontFamily: MONO, fontSize: 11, color: 'rgba(26,25,22,0.55)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{entry.artist}</div>
                     <div style={{ padding: '0 8px', fontFamily: MONO, fontSize: 11, color: 'rgba(26,25,22,0.4)' }}>{entry.year || '—'}</div>
                     <div style={{ padding: '0 8px', fontFamily: MONO, fontSize: 11, color: INK, display: 'flex', alignItems: 'center', gap: 5 }}>
-                      {entry.masterpiece === true ? '5' : (entry.rating || '—')}
-                      {entry.masterpiece === true && <span title="Masterpiece" style={{ color: '#E8B84B', fontSize: 12, lineHeight: 1 }}>★</span>}
+                      {(() => {
+                        if (entry.masterpiece === true) return '5';
+                        if (!entry.rating) return '—';
+                        const n = parseFloat(String(entry.rating).replace(/[^0-9.]/g, ''));
+                        return isNaN(n) ? entry.rating : n;
+                      })()}
+                      {entry.masterpiece === true && <span title="Masterpiece" style={{ color: '#E8B84B', fontSize: 14, lineHeight: 1 }}>★</span>}
                     </div>
                     <div style={{ padding: '0 8px', fontFamily: MONO, fontSize: 10, color: 'rgba(26,25,22,0.4)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{entry.entry_type || '—'}</div>
                   </div>
