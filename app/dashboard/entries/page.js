@@ -193,9 +193,9 @@ export default function SessionEntries() {
   const [editing, setEditing] = useState(null);
   const [sortField, setSortField] = useState(null); // null = default (newest first)
   const [sortDir, setSortDir] = useState('asc');
-  const toggleSort = (field) => {
+  const toggleSort = (field, initialDir = 'asc') => {
     if (sortField === field) setSortDir(d => (d === 'asc' ? 'desc' : 'asc'));
-    else { setSortField(field); setSortDir('asc'); }
+    else { setSortField(field); setSortDir(initialDir); }
   };
   const [albums, setAlbums] = useState([]);
   const Background = useRef(backgrounds[Math.floor(Math.random() * backgrounds.length)]).current;
@@ -226,6 +226,7 @@ export default function SessionEntries() {
       if (!sortField) return new Date(b.created_at) - new Date(a.created_at);
       const num = v => parseFloat(String(v ?? '').replace(/[^0-9.]/g, '')) || 0;
       const pick = {
+        date: e => new Date(e.created_at).getTime(),
         album: e => (e.album || '').toLowerCase(),
         artist: e => (e.artist || '').toLowerCase(),
         type: e => (e.entry_type || '').toLowerCase(),
@@ -240,13 +241,13 @@ export default function SessionEntries() {
   if (checking) return <div style={{ minHeight: '100vh', background: '#eef0ec' }} />;
   if (!authed) return <PasswordGate onAuth={() => setAuthed(true)} />;
 
-  const COLS = '24px 56px 1fr 1fr 70px 120px 110px';
+  const COLS = '24px 74px 1fr 1fr 70px 120px 110px';
 
   // Clickable column header with a sort caret.
-  const SortHead = ({ field, children }) => {
+  const SortHead = ({ field, initialDir = 'asc', children }) => {
     const active = sortField === field;
     return (
-      <button onClick={() => toggleSort(field)}
+      <button onClick={() => toggleSort(field, initialDir)}
         style={{ ...labelStyle, padding: '0 8px', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 4, color: active ? INK : labelStyle.color }}>
         {children}
         <span style={{ fontSize: 8, lineHeight: 1, color: active ? INK : 'rgba(26,25,22,0.28)' }}>{active ? (sortDir === 'asc' ? '▲' : '▼') : '▾'}</span>
@@ -296,7 +297,7 @@ export default function SessionEntries() {
               <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, flex: 1 }}>
                 <div style={{ display: 'grid', gridTemplateColumns: COLS, padding: '14px 20px', borderBottom: HAIR, flexShrink: 0, alignItems: 'center' }}>
                   <div />
-                  <div style={{ ...labelStyle, padding: '0 8px' }}>Art</div>
+                  <SortHead field="date" initialDir="desc">Added</SortHead>
                   <SortHead field="album">Album</SortHead>
                   <SortHead field="artist">Artist</SortHead>
                   <SortHead field="year">Year</SortHead>
