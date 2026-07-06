@@ -11,7 +11,8 @@
 ## Pending
 
 **DEV**
-- [ ] Connect domain listeningnotes.blog (currently pointing to Tumblr)
+- [x] Domain live — `www.listeningnotes.blog` points to Vercel (HTTPS, working)
+- [ ] Bare apex `listeningnotes.blog` still can't reach Vercel — Tumblr locks its apex A record, so this needs a later move to Cloudflare DNS (www works today)
 - [ ] Instagram + Reddit auto-distribution (placeholder lives at `/dashboard/share`; real implementation pending — see to-do list on that page)
 
 **HOME**
@@ -23,9 +24,10 @@
 **MODAL**
 - [ ] Album art loads fully before data appears (or click-to-reveal)
 - [ ] Sticky collapse animation is glitchy — needs smoother transition
-- [ ] Horizon track names only load for some albums
+- [ ] Horizon track names only load for some albums (may be improved now that tracklists use the iTunes collection lookup — verify)
 - [ ] Subtle background fade behind modal
 - [ ] Link to full page (open in new tab)
+- [ ] The AI "background" right-column was removed from the modal (posts are notes-only now) — glance at the header proportions since it's one column shorter
 
 **PUBLIC PAGES — VISUAL POLISH**
 - [ ] `/about` — visual pass (typography, hero, section transitions)
@@ -43,37 +45,30 @@
 **SECURITY**
 - [ ] Upvote abuse prevention (IP or cookie check)
 
-**BEFORE GOING LIVE — DEPLOYMENT CHECKLIST**
+**LIVE STATUS (as of 2026-06-24)**
 
-The session is now protected by a JWT "wristband" cookie (see `library/wristband.js`). Two env vars control it:
-- `SESSION_PASSWORD` — the password typed into the gate
-- `SESSION_SECRET` — the signing key for the JWT (never share, never change after launch or it logs everyone out)
+The site is live at `www.listeningnotes.blog` (Vercel, HTTPS). Session is protected by a JWT "wristband" cookie (`library/wristband.js`). Env vars set in Vercel: `SESSION_PASSWORD`, `SESSION_SECRET` (never change after launch), `DATABASE_URL`, `ANTHROPIC_API_KEY`.
 
-**Step 1 — Strengthen the password (local):**
-1. Pick a strong password (something longer/random — `listeningnotes` is fine for dev only)
-2. Update `.env.local`: `SESSION_PASSWORD=<new strong password>`
-3. Restart `npm run dev` (env vars only load at boot)
-4. Test: log out, log back in with the new password
+**Billing gotcha (learned the hard way):** the `ANTHROPIC_API_KEY` bills from the **Developer/API credit balance** in the Claude Console — a *separate pool* from the Claude.ai subscription "usage credits." Same account (Miyel), two banks. If the site returns `credit balance too low`, top up the **API** balance (Console → Billing) and turn on **auto-reload** so it never stalls. Web search (~5¢/album) draws from this too.
 
-**Step 2 — Set Vercel env vars:**
-In Vercel dashboard → Project → Settings → Environment Variables, confirm/add:
-- `SESSION_PASSWORD` = <same strong password>
-- `SESSION_SECRET` = <same as .env.local>
-- `DATABASE_URL` (already there)
-- `ANTHROPIC_API_KEY` (already there)
-
-**Step 3 — Smoke-test prod:**
-- `/` (homepage)
-- `/about`, `/archive`, `/shuffle`, `/compare`
-- `/dashboard` — log in with new password
-- Run a real listen session end-to-end
-
-**Step 4 — If anything breaks:**
-Vercel dashboard → Deployments → click last good deploy → "Promote to Production" rolls back instantly.
+**Rollback:** Vercel → Deployments → last good deploy → "Promote to Production" is instant.
 
 ---
 
 ## Complete
+
+**2026-06-24 session — research overhaul + journal direction**
+- [x] Domain live — `www.listeningnotes.blog` on Vercel (apex still on Tumblr, needs Cloudflare later)
+- [x] Fixed retired model id → `claude-sonnet-4-6` (old `claude-sonnet-4-20250514` 404'd, broke all AI)
+- [x] **Web-searched cited research** — `research_album` uses the Anthropic `web_search` tool to verify facts, writes cited prose, and AlbumDebrief renders Wikipedia-style `[n]` footnote markers + a numbered Sources list (real, clickable links)
+- [x] **Tracklist fix** — pulls the full ordered list via iTunes *collection lookup* (threads exact `collectionId` from the picker) instead of a partial song-search
+- [x] **Journal direction** — removed the AI-written `background` from posts (post page, modal, preview, CMS); posts are now the user's own notes only
+- [x] Removed the Echo interpretive **debrief** from the session; removed **EchoOrb + EchoChat** (bottom-right orb + chat popup)
+- [x] Removed the global white **header fade** (`.hp-headerbar`)
+- [x] Readability pass on the session debrief (dark scrim, upright body, contrast); Echo prompt now sentence-cased
+- [x] Fixed the loading-screen **freeze** (gate the panel reveal on research finishing, since web search is slower)
+
+**Earlier**
 - [x] Public `/about` page — unified About + Specs + Index with sticky jump nav, star + relationship index reference
 - [x] Public `/archive` page — album-tile grid with search, 5 sort modes, relationship + type filters, favorites/masterpiece toggles
 - [x] Public `/compare` placeholder route
@@ -134,8 +129,8 @@ Think of the codebase as a house. Every piece has a room.
 | `entry_formatter.js` | Parses entry data for display: `parseHorizon`, `parseTracksFromNotes`, `splitNotes`, `parseRating` |
 | `sitewide_visuals.js` | Design tokens: all colors and fonts. Change here = changes everywhere. |
 | `session_styles.js` | Style helpers scoped to the session panel: `tx()`, `bdr()`, `dk()`, `lbl` |
-| `ai_integration.js` | Claude API calls: `research_album`, `format_post`, `ask_echo` |
-| `music_data_api.js` | External music APIs: `fetchTracklist` (MusicBrainz), `fetchAlbumArtUrl` (iTunes), `searchArtistAlbums` (iTunes) |
+| `ai_integration.js` | Claude API calls: `research_album` (web-searched, returns cited-prose `sections` + numbered `sources`), `format_post` (notes-only now — no AI background), `ask_echo` |
+| `music_data_api.js` | External music APIs (all iTunes/Apple Music): `fetchTracklist` (collection lookup via exact `collectionId`, complete + ordered), `fetchAlbumArtUrl`, `searchArtistAlbums` (now also returns `collectionId`) |
 | `session_timers.js` | `TrackLength`, `SessionDuration`, `LOADING_PHRASES` |
 | `wristband.js` | Session auth: `issueWristband`, `checkWristband`, `requireWristband`, `WRISTBAND_COOKIE` |
 
@@ -154,9 +149,9 @@ Think of the codebase as a house. Every piece has a room.
 | `GET /api/comments?slug=` | Returns approved comments for an entry |
 | `POST /api/comments` | Submits a new comment (pending approval) |
 | `POST /api/comments/upvote` | Upvotes a comment |
-| `POST /api/research` | Calls Claude to research an album |
+| `POST /api/research` | Calls Claude (with web search) to research an album — returns cited sections + numbered sources |
 | `POST /api/format` | Calls Claude to format raw notes into a post |
-| `POST /api/echo` | Echo AI — research briefing, reflection chat, floating chat panel |
+| `POST /api/echo` | Echo AI — Reflect-step chat only (the research-briefing debrief + floating chat panel were removed) |
 | `POST /api/auth/login` | Checks password, issues wristband cookie |
 | `POST /api/auth/logout` | Clears wristband cookie |
 | `GET /api/auth/check` | Returns `{authed: true/false}` based on wristband cookie |
@@ -194,7 +189,7 @@ Protected routes (require wristband cookie): `POST /api/entries`, `PATCH/DELETE 
 | `PasswordGate.js` | Password screen |
 | `SessionButton.js` | Frosted pill button — accent=true gives yellow-green highlight |
 | `StarRating.js` | Interactive star input (click to rate) |
-| `steps/AlbumDebrief.js` | Step 0 — Echo narrative + raw research sections |
+| `steps/AlbumDebrief.js` | Step 0 — web-grounded research as cited prose with `[n]` footnote links + numbered Sources list (Echo narrative removed) |
 | `steps/TrackNotes.js` | Step 1 — expandable track list with per-track notes and ratings |
 | `steps/AlbumNotes.js` | Step 2 — star rating, Masterpiece/Favorite flags, free-text notes |
 | `steps/ReflectChat.js` | Step 3 — Echo-powered reflection chat with quick-prompt shortcuts |
@@ -215,9 +210,9 @@ Protected routes (require wristband cookie): `POST /api/entries`, `PATCH/DELETE 
 **Top-level components**
 | File | What it does |
 |------|-------------|
-| `EchoNetwork.js` | Canvas animation — floating nodes that become album art |
-| `EchoOrb.js` | Compact 56px orb, pulsing mood indicator during session |
-| `EchoChat.js` | Floating chat panel for talking to Echo mid-session |
+| `EchoNetwork.js` | Canvas animation — floating nodes → album art (search backdrop + session puzzle-load screen) |
+
+*(EchoOrb.js and EchoChat.js were removed — the bottom-right orb + click-to-chat popup are gone.)*
 
 ---
 
@@ -226,7 +221,7 @@ Protected routes (require wristband cookie): `POST /api/entries`, `PATCH/DELETE 
 |------|-------------|
 | `hooks/useListeningBeacon.js` | Polls Last.fm every 15s for current track. Used by ListeningBeacon and NavBeacon. |
 | `hooks/useAlbumSelection.js` | Owns the full album search and selection flow: artist search, EchoNetwork animation, card phases, grid pagination, fly-to-center animation, manual entry |
-| `hooks/useListeningSession.js` | Owns every API call and piece of state for an active session: research, notes, tracks, ratings, tags, Echo chat, formatting, saving |
+| `hooks/useListeningSession.js` | Owns every API call and piece of state for an active session: research, notes, tracks, ratings, tags, Reflect chat, formatting, saving (Echo debrief/orb/chat state removed) |
 
 ---
 
