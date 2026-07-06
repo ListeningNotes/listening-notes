@@ -43,8 +43,8 @@ export default function SubmitPage() {
   async function handleSubmit(e) {
     e.preventDefault();
     setError('');
-    if (!form.album.trim() || !form.artist.trim() || !form.note.trim()) {
-      setError('Album, artist, and note are required.');
+    if (!form.album.trim() || !form.artist.trim() || !form.year.trim() || !form.note.trim()) {
+      setError('Album, artist, year, and note are required.');
       return;
     }
     setSubmitting(true);
