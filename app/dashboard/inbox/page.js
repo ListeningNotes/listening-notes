@@ -138,12 +138,12 @@ export default function Inbox() {
         <Background albums={albums} />
         <div style={{ position: 'absolute', inset: 0, zIndex: 1, backdropFilter: 'blur(3px)', WebkitBackdropFilter: 'blur(3px)', background: 'rgba(224,224,220,0.5)', pointerEvents: 'none' }} />
 
-        <div style={{ position: 'relative', zIndex: 2, maxWidth: 940, margin: '0 auto', padding: '30px 24px 48px' }}>
+        {/* Back to dashboard — same style + place as /dashboard/echo */}
+        <div style={{ position: 'relative', zIndex: 3, padding: '14px 28px', display: 'flex', alignItems: 'center', gap: 12 }}>
+          <a href="/dashboard" style={{ fontFamily: MONO, fontWeight: 600, fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(26,21,32,0.5)', textDecoration: 'none', padding: '6px 10px', borderRadius: 8, border: '1px solid rgba(26,21,32,0.12)', background: 'rgba(245,242,236,0.6)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', flexShrink: 0 }}>← Dashboard</a>
+        </div>
 
-          {/* Back to dashboard — matches the Listen page */}
-          <div style={{ marginBottom: 16, padding: '0 4px' }}>
-            <a href="/dashboard" style={{ fontFamily: MONO, fontWeight: 600, fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(26,21,32,0.5)', textDecoration: 'none', padding: '6px 10px', borderRadius: 8, border: '1px solid rgba(26,21,32,0.12)', background: 'rgba(245,242,236,0.6)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', display: 'inline-block' }}>← Dashboard</a>
-          </div>
+        <div style={{ position: 'relative', zIndex: 2, maxWidth: 940, margin: '0 auto', padding: '8px 24px 48px' }}>
 
           {/* Folder tabs */}
           <div style={{ display: 'flex', alignItems: 'flex-end', gap: 5, paddingLeft: 14, position: 'relative', zIndex: 2 }}>
