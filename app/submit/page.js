@@ -140,11 +140,11 @@ export default function SubmitPage() {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
               <div>
                 <span style={label}>Album <span style={{ color: 'var(--accent)' }}>*</span></span>
-                <input style={field} value={form.album} onChange={set('album')} placeholder="e.g. Madvillainy" />
+                <input style={field} value={form.album} onChange={set('album')}/>
               </div>
               <div>
                 <span style={label}>Artist <span style={{ color: 'var(--accent)' }}>*</span></span>
-                <input style={field} value={form.artist} onChange={set('artist')} placeholder="e.g. Madvillain" />
+                <input style={field} value={form.artist} onChange={set('artist')} />
               </div>
             </div>
 
