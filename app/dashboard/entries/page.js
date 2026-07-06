@@ -1,37 +1,38 @@
-// app/session/entries/page.js
+// app/dashboard/entries/page.js
 // Your private CMS — view, edit, and delete all entries in the database.
 // Password protected, same gate as the main session tool.
-// Accessible at /session/entries via the "Entries" button in the session nav.
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import PasswordGate from '../../../components/session_components/PasswordGate';
+import backgrounds from '../../../components/session_components/backgrounds';
+import { fonts } from '../../../library/sitewide_visuals';
 
-// ── DESIGN TOKENS ──────────────────────────────────────────────────────────
 const MONO  = "'DM Mono', 'Courier New', monospace";
 const SERIF = "'DM Serif Display', Georgia, serif";
 const SANS  = "'DM Sans', system-ui, sans-serif";
-const BORDER = '1px solid #e0dcd5';
+const INK = '#1a1916';
+const PANEL_BG = 'rgba(255,255,255,0.8)';
+const HAIR = '1px solid rgba(26,25,22,0.08)';
+const labelStyle = { fontFamily: MONO, fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(26,25,22,0.45)' };
 
-// Shared label style — the small uppercase labels above form fields
-const labelStyle = { fontFamily: MONO, fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#7a776f' };
+// Frosted controls (search / sort)
+const controlStyle = {
+  background: 'rgba(255,255,255,0.6)', border: '1px solid rgba(26,25,22,0.12)', borderRadius: 10,
+  padding: '8px 14px', fontFamily: MONO, fontSize: 12, color: INK, outline: 'none',
+  backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
+};
 
-// Input style function — border darkens when focused
+// ── EDIT MODAL ──────────────────────────────────────────────────────────────
 function inputStyle(focused) {
   return {
-    background: '#fff', border: `1px solid ${focused ? '#1a1916' : '#e0dcd5'}`, borderRadius: 8,
-    padding: '9px 14px', fontFamily: MONO, fontSize: 12, color: '#1a1916', outline: 'none', width: '100%', boxSizing: 'border-box',
+    background: 'rgba(255,255,255,0.7)', border: `1px solid ${focused ? INK : 'rgba(26,25,22,0.14)'}`, borderRadius: 10,
+    padding: '9px 14px', fontFamily: MONO, fontSize: 12, color: INK, outline: 'none', width: '100%', boxSizing: 'border-box',
   };
 }
 
-// ── EDIT MODAL ─────────────────────────────────────────────────────────────
-// Opens when you click an entry row. Full edit form for all fields.
-// Save calls PATCH /api/entries/[slug], Delete calls DELETE /api/entries/[slug].
-// Delete requires two clicks — first click shows confirmation, second executes.
-
 function EditModal({ entry, onSave, onDelete, onClose }) {
-  // Local copy of all editable fields — changes here don't affect the list until saved
   const [fields, setFields] = useState({
     album: entry.album || '',
     artist: entry.artist || '',
@@ -42,20 +43,17 @@ function EditModal({ entry, onSave, onDelete, onClose }) {
     favorite: entry.favorite === true || entry.favorite === 'true',
     masterpiece: entry.masterpiece === true,
     notes: entry.notes || '',
-    // Tags stored as array in DB, displayed as comma-separated string in the input
     tags: Array.isArray(entry.tags) ? entry.tags.join(', ') : (entry.tags || ''),
     horizon: entry.horizon || '',
     album_art: entry.album_art || '',
   });
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
-  const [confirmDelete, setConfirmDelete] = useState(false); // two-click delete safety
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const [error, setError] = useState('');
 
-  // Helper to update a single field without spreading manually every time
   function set(key, val) { setFields(f => ({ ...f, [key]: val })); }
 
-  // Sends updated fields to the API and notifies the parent list to update
   async function handleSave() {
     setSaving(true); setError('');
     try {
@@ -66,76 +64,65 @@ function EditModal({ entry, onSave, onDelete, onClose }) {
       });
       const data = await res.json();
       if (data.error) throw new Error(data.error);
-      onSave(data.entry); // pass updated entry back to parent to refresh the list
+      onSave(data.entry);
     } catch (err) { setError(err.message); }
     finally { setSaving(false); }
   }
 
-  // First click: shows confirmation state. Second click: executes delete.
   async function handleDelete() {
     if (!confirmDelete) { setConfirmDelete(true); return; }
     setDeleting(true);
     try {
-      const res = await fetch(`/api/entries/${entry.slug}`, {
-        method: 'DELETE',
-      });
+      const res = await fetch(`/api/entries/${entry.slug}`, { method: 'DELETE' });
       const data = await res.json();
       if (data.error) throw new Error(data.error);
-      onDelete(entry.slug); // tell parent to remove this entry from the list
+      onDelete(entry.slug);
     } catch (err) { setError(err.message); setDeleting(false); }
   }
 
-  // Textarea style helper — accepts a minimum height value
-  const taStyle = (minH = 80) => ({
-    background: '#fff', border: BORDER, borderRadius: 8, padding: '9px 14px',
-    fontFamily: MONO, fontSize: 12, color: '#1a1916', outline: 'none',
-    width: '100%', boxSizing: 'border-box', resize: 'vertical', minHeight: minH,
-  });
+  const taStyle = (minH = 80) => ({ ...inputStyle(), resize: 'vertical', minHeight: minH });
 
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(26,25,22,0.55)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: 24 }}>
-      <div style={{ background: '#f5f3ef', border: BORDER, borderRadius: 20, width: '100%', maxWidth: 700, maxHeight: '90vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 24px 80px rgba(0,0,0,0.2)' }}>
+    <div onClick={onClose} style={{ position: 'fixed', inset: 0, background: 'rgba(26,25,22,0.3)', backdropFilter: 'blur(5px)', WebkitBackdropFilter: 'blur(5px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: 24 }}>
+      <div onClick={e => e.stopPropagation()} style={{ background: PANEL_BG, backdropFilter: 'blur(24px)', WebkitBackdropFilter: 'blur(24px)', border: '1px solid rgba(255,255,255,0.6)', borderRadius: 24, width: '100%', maxWidth: 700, maxHeight: '90vh', display: 'flex', flexDirection: 'column', overflow: 'hidden', boxShadow: '0 24px 80px rgba(0,0,0,0.2)', position: 'relative' }}>
+        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(160deg, rgba(255,255,255,0.5) 0%, transparent 40%)', pointerEvents: 'none' }} />
 
-        {/* Modal header — album name, action buttons */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 28px', borderBottom: BORDER, background: '#fff' }}>
+        {/* Header */}
+        <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 26px', borderBottom: HAIR }}>
           <div>
-            <div style={{ fontFamily: SERIF, fontSize: 18, color: '#1a1916' }}>{entry.album}</div>
-            <div style={{ fontFamily: MONO, fontSize: 10, color: '#aaa8a2', marginTop: 2 }}>{entry.artist}</div>
+            <div style={{ fontFamily: SERIF, fontSize: 18, color: INK }}>{entry.album}</div>
+            <div style={{ fontFamily: MONO, fontSize: 10, color: 'rgba(26,25,22,0.4)', marginTop: 2 }}>{entry.artist}</div>
           </div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-            {/* Opens the public entry page in a new tab */}
             <a href={`/entries/${entry.slug}`} target="_blank" rel="noreferrer"
-              style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#7a776f', textDecoration: 'none', padding: '7px 14px', border: BORDER, borderRadius: 8, background: '#f5f3ef' }}>
+              style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(26,25,22,0.55)', textDecoration: 'none', padding: '7px 14px', border: '1px solid rgba(26,25,22,0.12)', borderRadius: 999, background: 'rgba(255,255,255,0.5)' }}>
               View →
             </a>
             <button onClick={handleSave} disabled={saving}
-              style={{ background: '#1a1916', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 20px', fontFamily: MONO, fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600, opacity: saving ? 0.5 : 1 }}>
+              style={{ background: INK, color: '#fff', border: 'none', borderRadius: 999, padding: '8px 20px', fontFamily: MONO, fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600, opacity: saving ? 0.5 : 1 }}>
               {saving ? 'Saving…' : 'Save'}
             </button>
-            {/* Delete button — turns red and shows confirm text on first click */}
             <button onClick={handleDelete} disabled={deleting}
-              style={{ background: confirmDelete ? '#ef4444' : '#fff', color: confirmDelete ? '#fff' : '#ef4444', border: `1px solid ${confirmDelete ? '#ef4444' : '#fca5a5'}`, borderRadius: 8, padding: '8px 14px', fontFamily: MONO, fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer', transition: 'all 0.15s' }}>
+              style={{ background: confirmDelete ? '#ef4444' : 'rgba(255,255,255,0.5)', color: confirmDelete ? '#fff' : '#ef4444', border: `1px solid ${confirmDelete ? '#ef4444' : 'rgba(239,68,68,0.4)'}`, borderRadius: 999, padding: '8px 14px', fontFamily: MONO, fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer', transition: 'all 0.15s' }}>
               {deleting ? '…' : confirmDelete ? 'Confirm delete' : 'Delete'}
             </button>
             {confirmDelete && (
-              <button onClick={() => setConfirmDelete(false)} style={{ fontFamily: MONO, fontSize: 10, color: '#aaa8a2', background: 'none', border: 'none', cursor: 'pointer' }}>cancel</button>
+              <button onClick={() => setConfirmDelete(false)} style={{ fontFamily: MONO, fontSize: 10, color: 'rgba(26,25,22,0.4)', background: 'none', border: 'none', cursor: 'pointer' }}>cancel</button>
             )}
-            <button onClick={onClose} style={{ fontFamily: MONO, fontSize: 11, color: '#7a776f', background: '#f0ede8', border: BORDER, borderRadius: 8, padding: '8px 14px', cursor: 'pointer' }}>✕</button>
+            <button onClick={onClose} style={{ fontFamily: MONO, fontSize: 11, color: 'rgba(26,25,22,0.5)', background: 'rgba(255,255,255,0.6)', border: '1px solid rgba(26,25,22,0.1)', borderRadius: 10, padding: '8px 13px', cursor: 'pointer' }}>✕</button>
           </div>
         </div>
 
-        {/* Scrollable form body */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: 28, display: 'flex', flexDirection: 'column', gap: 20 }}>
-          {error && <div style={{ fontFamily: MONO, fontSize: 11, color: '#ef4444', padding: '8px 12px', background: '#fff5f5', border: '1px solid #fca5a5', borderRadius: 6 }}>{error}</div>}
+        {/* Form body */}
+        <div style={{ position: 'relative', zIndex: 1, flex: 1, overflowY: 'auto', padding: 26, display: 'flex', flexDirection: 'column', gap: 20 }}>
+          {error && <div style={{ fontFamily: MONO, fontSize: 11, color: '#ef4444', padding: '8px 12px', background: 'rgba(255,245,245,0.8)', border: '1px solid #fca5a5', borderRadius: 8 }}>{error}</div>}
 
-          {/* Album, Artist, Year */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 100px', gap: 12 }}>
             <div><div style={{ ...labelStyle, marginBottom: 6 }}>Album</div><input value={fields.album} onChange={e => set('album', e.target.value)} style={inputStyle()} /></div>
             <div><div style={{ ...labelStyle, marginBottom: 6 }}>Artist</div><input value={fields.artist} onChange={e => set('artist', e.target.value)} style={inputStyle()} /></div>
             <div><div style={{ ...labelStyle, marginBottom: 6 }}>Year</div><input value={fields.year} onChange={e => set('year', e.target.value)} style={inputStyle()} /></div>
           </div>
 
-          {/* Rating, Relationship, Entry Type */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
             <div>
               <div style={{ ...labelStyle, marginBottom: 6 }}>Rating</div>
@@ -143,16 +130,14 @@ function EditModal({ entry, onSave, onDelete, onClose }) {
             </div>
             <div>
               <div style={{ ...labelStyle, marginBottom: 6 }}>Relationship</div>
-              <select value={fields.relationship} onChange={e => set('relationship', e.target.value)}
-                style={{ ...inputStyle(), appearance: 'none' }}>
+              <select value={fields.relationship} onChange={e => set('relationship', e.target.value)} style={{ ...inputStyle(), appearance: 'none' }}>
                 <option value="">—</option>
                 <option>First Listen</option><option>Revisit</option><option>Formative</option><option>Study</option><option>Submission</option>
               </select>
             </div>
             <div>
               <div style={{ ...labelStyle, marginBottom: 6 }}>Entry Type</div>
-              <select value={fields.entry_type} onChange={e => set('entry_type', e.target.value)}
-                style={{ ...inputStyle(), appearance: 'none' }}>
+              <select value={fields.entry_type} onChange={e => set('entry_type', e.target.value)} style={{ ...inputStyle(), appearance: 'none' }}>
                 <option value="">—</option>
                 <option value="Personal Library">Personal Library</option>
                 <option value="Submission">Submission</option>
@@ -160,13 +145,11 @@ function EditModal({ entry, onSave, onDelete, onClose }) {
             </div>
           </div>
 
-          {/* Favorite and Masterpiece checkboxes */}
           <div style={{ display: 'flex', gap: 20 }}>
-            {[['Favorite', 'favorite'], ['Masterpiece', 'masterpiece']].map(([label, key]) => (
+            {[['Favorite', 'favorite'], ['Masterpiece', 'masterpiece']].map(([lbl, key]) => (
               <label key={key} style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
-                <input type="checkbox" checked={fields[key]} onChange={e => set(key, e.target.checked)}
-                  style={{ accentColor: '#1a1916', cursor: 'pointer', width: 14, height: 14 }} />
-                <span style={{ fontFamily: MONO, fontSize: 11, color: fields[key] ? '#1a1916' : '#aaa8a2' }}>{label}</span>
+                <input type="checkbox" checked={fields[key]} onChange={e => set(key, e.target.checked)} style={{ accentColor: INK, cursor: 'pointer', width: 14, height: 14 }} />
+                <span style={{ fontFamily: MONO, fontSize: 11, color: fields[key] ? INK : 'rgba(26,25,22,0.4)' }}>{lbl}</span>
               </label>
             ))}
           </div>
@@ -176,7 +159,6 @@ function EditModal({ entry, onSave, onDelete, onClose }) {
             <textarea value={fields.notes} onChange={e => set('notes', e.target.value)} style={taStyle(160)} />
           </div>
 
-          {/* Tags + Horizon side by side */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             <div>
               <div style={{ ...labelStyle, marginBottom: 6 }}>Tags (comma separated)</div>
@@ -188,14 +170,11 @@ function EditModal({ entry, onSave, onDelete, onClose }) {
             </div>
           </div>
 
-          {/* Album art URL with live preview thumbnail */}
           <div>
             <div style={{ ...labelStyle, marginBottom: 6 }}>Album Art URL</div>
             <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
               <input value={fields.album_art} onChange={e => set('album_art', e.target.value)} style={{ ...inputStyle(), flex: 1 }} />
-              {fields.album_art && (
-                <img src={fields.album_art} alt="" style={{ width: 60, height: 60, borderRadius: 8, objectFit: 'cover', flexShrink: 0, border: BORDER }} />
-              )}
+              {fields.album_art && <img src={fields.album_art} alt="" style={{ width: 60, height: 60, borderRadius: 10, objectFit: 'cover', flexShrink: 0, border: '1px solid rgba(26,25,22,0.12)' }} />}
             </div>
           </div>
         </div>
@@ -204,50 +183,34 @@ function EditModal({ entry, onSave, onDelete, onClose }) {
   );
 }
 
-// ── MAIN ENTRIES PAGE ──────────────────────────────────────────────────────
-// Loads all entries from the database and displays them in a sortable, searchable table.
-// Clicking a row opens the EditModal.
-
+// ── MAIN ENTRIES PAGE ────────────────────────────────────────────────────────
 export default function SessionEntries() {
   const [authed, setAuthed] = useState(false);
   const [checking, setChecking] = useState(true);
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [editing, setEditing] = useState(null); // the entry currently open in EditModal, or null
+  const [editing, setEditing] = useState(null);
   const [sortBy, setSortBy] = useState('newest');
+  const [albums, setAlbums] = useState([]);
+  const Background = useRef(backgrounds[Math.floor(Math.random() * backgrounds.length)]).current;
 
-  // Ask the server if our wristband cookie is still valid
   useEffect(() => {
-    fetch('/api/auth/check')
-      .then(r => r.json())
-      .then(d => setAuthed(!!d.authed))
-      .catch(() => {})
-      .finally(() => setChecking(false));
+    fetch('/api/auth/check').then(r => r.json()).then(d => setAuthed(!!d.authed)).catch(() => {}).finally(() => setChecking(false));
   }, []);
 
-  // Load all entries once authenticated
   useEffect(() => {
     if (!authed) return;
-    fetch('/api/entries')
-      .then(r => r.json())
-      .then(d => { setEntries(d.entries || []); setLoading(false); })
-      .catch(() => setLoading(false));
+    fetch('/api/entries').then(r => r.json()).then(d => {
+      const list = d.entries || [];
+      setEntries(list); setLoading(false);
+      setAlbums(list.filter(e => e.album_art).sort(() => Math.random() - 0.5));
+    }).catch(() => setLoading(false));
   }, [authed]);
 
-  // Replace the edited entry in the list without refetching everything
-  function handleSave(updated) {
-    setEntries(prev => prev.map(e => e.slug === updated.slug ? updated : e));
-    setEditing(null);
-  }
+  function handleSave(updated) { setEntries(prev => prev.map(e => e.slug === updated.slug ? updated : e)); setEditing(null); }
+  function handleDelete(slug) { setEntries(prev => prev.filter(e => e.slug !== slug)); setEditing(null); }
 
-  // Remove the deleted entry from the list without refetching
-  function handleDelete(slug) {
-    setEntries(prev => prev.filter(e => e.slug !== slug));
-    setEditing(null);
-  }
-
-  // Filter by search query and sort — computed from entries state on every render
   const filtered = entries
     .filter(e => {
       if (!search.trim()) return true;
@@ -261,101 +224,87 @@ export default function SessionEntries() {
       return 0;
     });
 
-  if (checking) return <div style={{ minHeight: '100vh', background: '#f5f3ef' }} />;
+  if (checking) return <div style={{ minHeight: '100vh', background: '#eef0ec' }} />;
   if (!authed) return <PasswordGate onAuth={() => setAuthed(true)} />;
+
+  const COLS = '60px 1fr 1fr 80px 100px 100px 48px';
 
   return (
     <>
       <style>{`
-        .se-row:hover { background: #f0ede8; }
-        .se-row { transition: background 0.1s; }
+        .se-row:hover { background: rgba(255,255,255,0.42); }
+        .se-row { transition: background 0.12s; }
+        html, body { background: #eef0ec; }
         ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-thumb { background: #e0dcd5; border-radius: 99px; }
+        ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.14); border-radius: 99px; }
       `}</style>
 
-      <div style={{ minHeight: '100vh', background: '#f5f3ef', fontFamily: SANS, color: '#1a1916' }}>
+      {/* Fixed album background + frosted overlay */}
+      <div style={{ position: 'fixed', inset: 0, zIndex: 0, background: '#eef0ec', overflow: 'hidden' }}>
+        <Background albums={albums} />
+        <div style={{ position: 'absolute', inset: 0, backdropFilter: 'blur(3px)', WebkitBackdropFilter: 'blur(3px)', background: 'rgba(224,224,220,0.5)' }} />
+      </div>
 
-        {/* Sticky nav — search, sort, back to session */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '14px 28px', borderBottom: BORDER, background: 'rgba(255,255,255,0.85)', backdropFilter: 'blur(12px)', position: 'sticky', top: 0, zIndex: 10 }}>
-          <a href="/dashboard" style={{ fontFamily: 'Fraunces, serif', fontSize: 18, fontWeight: 900, color: '#1a1916', letterSpacing: '-0.02em', textDecoration: 'none' }}>Listening Notes</a>
-          <span style={{ color: '#d0ccc5' }}>·</span>
-          <span style={{ ...labelStyle }}>entries</span>
-          {/* Shows filtered count vs total — e.g. "12 / 31" when searching */}
-          <span style={{ fontFamily: MONO, fontSize: 10, color: '#c0bdb7', marginLeft: 4 }}>{filtered.length} / {entries.length}</span>
+      <div style={{ minHeight: '100vh', position: 'relative', zIndex: 1, fontFamily: SANS, color: INK }}>
 
+        {/* Top bar — back button (echo style) + search / sort */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 28px', flexWrap: 'wrap' }}>
+          <a href="/dashboard" style={{ fontFamily: fonts.mono, fontWeight: 600, fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(26,21,32,0.5)', textDecoration: 'none', padding: '6px 10px', borderRadius: 8, border: '1px solid rgba(26,21,32,0.12)', background: 'rgba(245,242,236,0.6)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', flexShrink: 0 }}>← Dashboard</a>
+          <span style={{ fontFamily: MONO, fontSize: 10, color: 'rgba(26,25,22,0.35)', letterSpacing: '0.08em' }}>{filtered.length} / {entries.length}</span>
           <div style={{ marginLeft: 'auto', display: 'flex', gap: 10, alignItems: 'center' }}>
-            <input
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              placeholder="Search album or artist…"
-              style={{ background: '#fff', border: BORDER, borderRadius: 8, padding: '7px 14px', fontFamily: MONO, fontSize: 12, color: '#1a1916', outline: 'none', width: 220 }}
-            />
-            <select value={sortBy} onChange={e => setSortBy(e.target.value)}
-              style={{ background: '#fff', border: BORDER, borderRadius: 8, padding: '7px 10px', fontFamily: MONO, fontSize: 11, color: '#7a776f', outline: 'none', cursor: 'pointer' }}>
+            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search album or artist…" style={{ ...controlStyle, width: 220 }} />
+            <select value={sortBy} onChange={e => setSortBy(e.target.value)} style={{ ...controlStyle, cursor: 'pointer', fontSize: 11, color: 'rgba(26,25,22,0.6)' }}>
               <option value="newest">Newest</option>
               <option value="oldest">Oldest</option>
               <option value="alpha">A–Z</option>
             </select>
-            <a href="/dashboard" style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: '#7a776f', textDecoration: 'none', padding: '7px 14px', border: BORDER, borderRadius: 8, background: '#fff' }}>← Dashboard</a>
           </div>
         </div>
 
-        {/* Entries table */}
-        <div style={{ maxWidth: 1000, margin: '0 auto', padding: '32px 24px' }}>
+        {/* Entries panel */}
+        <div style={{ maxWidth: 1000, margin: '0 auto', padding: '10px 24px 48px' }}>
           {loading ? (
-            // Skeleton loading rows while entries are being fetched
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {[...Array(8)].map((_, i) => <div key={i} style={{ height: 56, borderRadius: 10, background: '#ece9e3', animation: 'pulse 1.4s ease-in-out infinite', animationDelay: i * 0.08 + 's' }} />)}
+              {[...Array(8)].map((_, i) => <div key={i} style={{ height: 52, borderRadius: 12, background: 'rgba(255,255,255,0.4)' }} />)}
             </div>
           ) : (
-            <div style={{ background: '#fff', border: BORDER, borderRadius: 14, overflow: 'hidden' }}>
-              {/* Column headers */}
-              <div style={{ display: 'grid', gridTemplateColumns: '60px 1fr 1fr 80px 100px 100px 48px', gap: 0, padding: '8px 16px', borderBottom: BORDER, background: '#f5f3ef' }}>
-                {['Art', 'Album', 'Artist', 'Year', 'Rating', 'Type', ''].map((h, i) => (
-                  <div key={i} style={{ ...labelStyle, padding: '4px 8px' }}>{h}</div>
+            <div style={{ background: PANEL_BG, backdropFilter: 'blur(22px)', WebkitBackdropFilter: 'blur(22px)', border: '1px solid rgba(255,255,255,0.55)', borderRadius: 24, boxShadow: '0 12px 44px rgba(0,0,0,0.10)', overflow: 'hidden', position: 'relative' }}>
+              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(160deg, rgba(255,255,255,0.5) 0%, transparent 45%)', pointerEvents: 'none' }} />
+              <div style={{ position: 'relative', zIndex: 1 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: COLS, padding: '14px 20px', borderBottom: HAIR }}>
+                  {['Art', 'Album', 'Artist', 'Year', 'Rating', 'Type', ''].map((h, i) => <div key={i} style={{ ...labelStyle, padding: '0 8px' }}>{h}</div>)}
+                </div>
+
+                {filtered.length === 0 && (
+                  <div style={{ padding: '56px 24px', textAlign: 'center', fontFamily: MONO, fontSize: 11, color: 'rgba(26,25,22,0.35)' }}>No entries found.</div>
+                )}
+
+                {filtered.map((entry) => (
+                  <div key={entry.slug} className="se-row" style={{ display: 'grid', gridTemplateColumns: COLS, padding: '10px 20px', borderBottom: '1px solid rgba(26,25,22,0.05)', alignItems: 'center', cursor: 'pointer' }}
+                    onClick={() => setEditing(entry)}>
+                    <div style={{ padding: '0 8px' }}>
+                      {entry.album_art
+                        ? <img src={entry.album_art} alt="" style={{ width: 36, height: 36, borderRadius: 7, objectFit: 'cover', display: 'block' }} />
+                        : <div style={{ width: 36, height: 36, borderRadius: 7, background: 'rgba(0,0,0,0.06)' }} />}
+                    </div>
+                    <div style={{ padding: '0 8px', fontFamily: SANS, fontSize: 13, fontWeight: 500, color: INK, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{entry.album}</div>
+                    <div style={{ padding: '0 8px', fontFamily: MONO, fontSize: 11, color: 'rgba(26,25,22,0.55)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{entry.artist}</div>
+                    <div style={{ padding: '0 8px', fontFamily: MONO, fontSize: 11, color: 'rgba(26,25,22,0.4)' }}>{entry.year || '—'}</div>
+                    <div style={{ padding: '0 8px', fontFamily: MONO, fontSize: 11, color: INK }}>{entry.rating || '—'}</div>
+                    <div style={{ padding: '0 8px', fontFamily: MONO, fontSize: 10, color: 'rgba(26,25,22,0.4)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{entry.entry_type || '—'}</div>
+                    <div style={{ padding: '0 8px', display: 'flex', gap: 6 }}>
+                      {entry.favorite === true && <span title="Favorite" style={{ fontSize: 12 }}>♥</span>}
+                      {entry.masterpiece === true && <span title="Masterpiece" style={{ fontSize: 10, color: INK, fontFamily: MONO }}>M</span>}
+                    </div>
+                  </div>
                 ))}
               </div>
-
-              {filtered.length === 0 && (
-                <div style={{ padding: '48px 24px', textAlign: 'center', fontFamily: MONO, fontSize: 11, color: '#aaa8a2' }}>No entries found.</div>
-              )}
-
-              {/* Entry rows — clicking any row opens EditModal */}
-              {filtered.map((entry) => (
-                <div key={entry.slug} className="se-row" style={{ display: 'grid', gridTemplateColumns: '60px 1fr 1fr 80px 100px 100px 48px', gap: 0, padding: '10px 16px', borderBottom: BORDER, alignItems: 'center', cursor: 'pointer' }}
-                  onClick={() => setEditing(entry)}>
-                  <div style={{ padding: '0 8px' }}>
-                    {entry.album_art
-                      ? <img src={entry.album_art} alt="" style={{ width: 36, height: 36, borderRadius: 6, objectFit: 'cover', display: 'block' }} />
-                      : <div style={{ width: 36, height: 36, borderRadius: 6, background: '#ece9e3' }} />
-                    }
-                  </div>
-                  <div style={{ padding: '0 8px', fontFamily: SANS, fontSize: 13, fontWeight: 500, color: '#1a1916', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{entry.album}</div>
-                  <div style={{ padding: '0 8px', fontFamily: MONO, fontSize: 11, color: '#7a776f', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{entry.artist}</div>
-                  <div style={{ padding: '0 8px', fontFamily: MONO, fontSize: 11, color: '#aaa8a2' }}>{entry.year || '—'}</div>
-                  <div style={{ padding: '0 8px', fontFamily: MONO, fontSize: 11, color: '#1a1916' }}>{entry.rating || '—'}</div>
-                  <div style={{ padding: '0 8px', fontFamily: MONO, fontSize: 10, color: '#aaa8a2', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{entry.entry_type || '—'}</div>
-                  {/* Small icons for favorite and masterpiece flags */}
-                  <div style={{ padding: '0 8px', display: 'flex', gap: 6 }}>
-                    {entry.favorite === true && <span title="Favorite" style={{ fontSize: 12 }}>♥</span>}
-                    {entry.masterpiece === true && <span title="Masterpiece" style={{ fontSize: 10, color: '#1a1916', fontFamily: MONO }}>M</span>}
-                  </div>
-                </div>
-              ))}
             </div>
           )}
         </div>
       </div>
 
-      {/* Edit modal — rendered outside the table so it overlays everything */}
-      {editing && (
-        <EditModal
-          entry={editing}
-          onSave={handleSave}
-          onDelete={handleDelete}
-          onClose={() => setEditing(null)}
-        />
-      )}
+      {editing && <EditModal entry={editing} onSave={handleSave} onDelete={handleDelete} onClose={() => setEditing(null)} />}
     </>
   );
 }
