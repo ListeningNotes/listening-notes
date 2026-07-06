@@ -327,8 +327,8 @@ export default function SessionEntries() {
                         const n = parseFloat(String(entry.rating).replace(/[^0-9.]/g, ''));
                         return isNaN(n) ? entry.rating : n;
                       })()}
-                      {entry.masterpiece === true && <span title="Masterpiece" style={{ color: '#E8B84B', fontSize: 14, lineHeight: 1 }}>★</span>}
-                      {entry.favorite === true && <span title="Favorite" style={{ color: '#e0245e', fontSize: 14, lineHeight: 1 }}>♥</span>}
+                      {entry.masterpiece === true && <span title="Masterpiece" style={{ color: '#E8B84B', fontSize: 18, lineHeight: 1 }}>★</span>}
+                      {entry.favorite === true && <span title="Favorite" style={{ color: '#e0245e', fontSize: 18, lineHeight: 1 }}>♥</span>}
                     </div>
                     <div style={{ padding: '0 8px', fontFamily: MONO, fontSize: 10, color: 'rgba(26,25,22,0.4)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{entry.entry_type || '—'}</div>
                   </div>
