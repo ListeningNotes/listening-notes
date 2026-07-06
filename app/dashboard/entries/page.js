@@ -191,7 +191,12 @@ export default function SessionEntries() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [editing, setEditing] = useState(null);
-  const [sortBy, setSortBy] = useState('newest');
+  const [sortField, setSortField] = useState(null); // null = default (newest first)
+  const [sortDir, setSortDir] = useState('asc');
+  const toggleSort = (field) => {
+    if (sortField === field) setSortDir(d => (d === 'asc' ? 'desc' : 'asc'));
+    else { setSortField(field); setSortDir('asc'); }
+  };
   const [albums, setAlbums] = useState([]);
   const Background = useRef(backgrounds[Math.floor(Math.random() * backgrounds.length)]).current;
 
@@ -218,16 +223,36 @@ export default function SessionEntries() {
       return (e.album || '').toLowerCase().includes(q) || (e.artist || '').toLowerCase().includes(q);
     })
     .sort((a, b) => {
-      if (sortBy === 'newest') return new Date(b.created_at) - new Date(a.created_at);
-      if (sortBy === 'oldest') return new Date(a.created_at) - new Date(b.created_at);
-      if (sortBy === 'alpha') return (a.album || '').localeCompare(b.album || '');
-      return 0;
+      if (!sortField) return new Date(b.created_at) - new Date(a.created_at);
+      const num = v => parseFloat(String(v ?? '').replace(/[^0-9.]/g, '')) || 0;
+      const pick = {
+        album: e => (e.album || '').toLowerCase(),
+        artist: e => (e.artist || '').toLowerCase(),
+        type: e => (e.entry_type || '').toLowerCase(),
+        year: e => num(e.year),
+        rating: e => (e.masterpiece === true ? 999 : num(e.rating)),
+      }[sortField];
+      const av = pick(a), bv = pick(b);
+      const cmp = typeof av === 'number' ? av - bv : av.localeCompare(bv);
+      return sortDir === 'asc' ? cmp : -cmp;
     });
 
   if (checking) return <div style={{ minHeight: '100vh', background: '#eef0ec' }} />;
   if (!authed) return <PasswordGate onAuth={() => setAuthed(true)} />;
 
-  const COLS = '60px 1fr 1fr 80px 100px 100px 48px';
+  const COLS = '24px 56px 1fr 1fr 70px 120px 110px';
+
+  // Clickable column header with a sort caret.
+  const SortHead = ({ field, children }) => {
+    const active = sortField === field;
+    return (
+      <button onClick={() => toggleSort(field)}
+        style={{ ...labelStyle, padding: '0 8px', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 4, color: active ? INK : labelStyle.color }}>
+        {children}
+        <span style={{ fontSize: 8, lineHeight: 1, color: active ? INK : 'rgba(26,25,22,0.28)' }}>{active ? (sortDir === 'asc' ? '▲' : '▼') : '▾'}</span>
+      </button>
+    );
+  };
 
   return (
     <>
@@ -247,22 +272,20 @@ export default function SessionEntries() {
 
       <div style={{ height: '100vh', position: 'relative', zIndex: 1, fontFamily: SANS, color: INK, display: 'flex', flexDirection: 'column' }}>
 
-        {/* Top bar — back button (echo style) + search / sort */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 28px', flexWrap: 'wrap', flexShrink: 0 }}>
+        {/* Top bar — back button (echo style) */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 28px', flexShrink: 0 }}>
           <a href="/dashboard" style={{ fontFamily: fonts.mono, fontWeight: 600, fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(26,21,32,0.5)', textDecoration: 'none', padding: '6px 10px', borderRadius: 8, border: '1px solid rgba(26,21,32,0.12)', background: 'rgba(245,242,236,0.6)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', flexShrink: 0 }}>← Dashboard</a>
           <span style={{ fontFamily: MONO, fontSize: 10, color: 'rgba(26,25,22,0.35)', letterSpacing: '0.08em' }}>{filtered.length} / {entries.length}</span>
-          <div style={{ marginLeft: 'auto', display: 'flex', gap: 10, alignItems: 'center' }}>
-            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search album or artist…" style={{ ...controlStyle, width: 220 }} />
-            <select value={sortBy} onChange={e => setSortBy(e.target.value)} style={{ ...controlStyle, cursor: 'pointer', fontSize: 11, color: 'rgba(26,25,22,0.6)' }}>
-              <option value="newest">Newest</option>
-              <option value="oldest">Oldest</option>
-              <option value="alpha">A–Z</option>
-            </select>
-          </div>
         </div>
 
         {/* Entries panel */}
-        <div style={{ flex: 1, minHeight: 0, width: '100%', maxWidth: 1000, alignSelf: 'center', padding: '10px 24px 24px', display: 'flex', flexDirection: 'column' }}>
+        <div style={{ flex: 1, minHeight: 0, width: '100%', maxWidth: 1000, alignSelf: 'center', padding: '4px 24px 24px', display: 'flex', flexDirection: 'column' }}>
+
+          {/* Centered search */}
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 14, flexShrink: 0 }}>
+            <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search album or artist…" style={{ ...controlStyle, width: 'min(420px, 100%)', textAlign: 'center' }} />
+          </div>
+
           {loading ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {[...Array(8)].map((_, i) => <div key={i} style={{ height: 52, borderRadius: 12, background: 'rgba(255,255,255,0.4)' }} />)}
@@ -271,8 +294,14 @@ export default function SessionEntries() {
             <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', background: PANEL_BG, backdropFilter: 'blur(22px)', WebkitBackdropFilter: 'blur(22px)', border: '1px solid rgba(255,255,255,0.55)', borderRadius: 24, boxShadow: '0 12px 44px rgba(0,0,0,0.10)', overflow: 'hidden', position: 'relative' }}>
               <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(160deg, rgba(255,255,255,0.5) 0%, transparent 45%)', pointerEvents: 'none' }} />
               <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, flex: 1 }}>
-                <div style={{ display: 'grid', gridTemplateColumns: COLS, padding: '14px 20px', borderBottom: HAIR, flexShrink: 0 }}>
-                  {['Art', 'Album', 'Artist', 'Year', 'Rating', 'Type', ''].map((h, i) => <div key={i} style={{ ...labelStyle, padding: '0 8px' }}>{h}</div>)}
+                <div style={{ display: 'grid', gridTemplateColumns: COLS, padding: '14px 20px', borderBottom: HAIR, flexShrink: 0, alignItems: 'center' }}>
+                  <div />
+                  <div style={{ ...labelStyle, padding: '0 8px' }}>Art</div>
+                  <SortHead field="album">Album</SortHead>
+                  <SortHead field="artist">Artist</SortHead>
+                  <SortHead field="year">Year</SortHead>
+                  <SortHead field="rating">Rating</SortHead>
+                  <SortHead field="type">Type</SortHead>
                 </div>
                 <div style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
 
@@ -283,6 +312,9 @@ export default function SessionEntries() {
                 {filtered.map((entry) => (
                   <div key={entry.slug} className="se-row" style={{ display: 'grid', gridTemplateColumns: COLS, padding: '10px 20px', borderBottom: '1px solid rgba(26,25,22,0.05)', alignItems: 'center', cursor: 'pointer' }}
                     onClick={() => setEditing(entry)}>
+                    <div style={{ display: 'flex', justifyContent: 'center' }}>
+                      {entry.favorite === true && <span title="Favorite" style={{ color: '#e0245e', fontSize: 13, lineHeight: 1 }}>♥</span>}
+                    </div>
                     <div style={{ padding: '0 8px' }}>
                       {entry.album_art
                         ? <img src={entry.album_art} alt="" style={{ width: 36, height: 36, borderRadius: 7, objectFit: 'cover', display: 'block' }} />
@@ -291,12 +323,11 @@ export default function SessionEntries() {
                     <div style={{ padding: '0 8px', fontFamily: SANS, fontSize: 13, fontWeight: 500, color: INK, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{entry.album}</div>
                     <div style={{ padding: '0 8px', fontFamily: MONO, fontSize: 11, color: 'rgba(26,25,22,0.55)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{entry.artist}</div>
                     <div style={{ padding: '0 8px', fontFamily: MONO, fontSize: 11, color: 'rgba(26,25,22,0.4)' }}>{entry.year || '—'}</div>
-                    <div style={{ padding: '0 8px', fontFamily: MONO, fontSize: 11, color: INK }}>{entry.rating || '—'}</div>
-                    <div style={{ padding: '0 8px', fontFamily: MONO, fontSize: 10, color: 'rgba(26,25,22,0.4)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{entry.entry_type || '—'}</div>
-                    <div style={{ padding: '0 8px', display: 'flex', gap: 6 }}>
-                      {entry.favorite === true && <span title="Favorite" style={{ fontSize: 12 }}>♥</span>}
-                      {entry.masterpiece === true && <span title="Masterpiece" style={{ fontSize: 10, color: INK, fontFamily: MONO }}>M</span>}
+                    <div style={{ padding: '0 8px', fontFamily: MONO, fontSize: 11, color: INK, display: 'flex', alignItems: 'center', gap: 5 }}>
+                      {entry.masterpiece === true ? '5' : (entry.rating || '—')}
+                      {entry.masterpiece === true && <span title="Masterpiece" style={{ color: '#E8B84B', fontSize: 12, lineHeight: 1 }}>★</span>}
                     </div>
+                    <div style={{ padding: '0 8px', fontFamily: MONO, fontSize: 10, color: 'rgba(26,25,22,0.4)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{entry.entry_type || '—'}</div>
                   </div>
                 ))}
                 </div>
