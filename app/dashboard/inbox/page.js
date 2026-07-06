@@ -135,32 +135,32 @@ export default function Inbox() {
         ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.14); border-radius: 99px; }
       `}</style>
 
-      <div style={{ minHeight: '100vh', position: 'relative', overflow: 'hidden', background: '#eef0ec', fontFamily: SANS, color: INK }}>
+      <div style={{ height: '100vh', position: 'relative', overflow: 'hidden', background: '#eef0ec', fontFamily: SANS, color: INK, display: 'flex', flexDirection: 'column' }}>
         <Background albums={albums} />
         <div style={{ position: 'absolute', inset: 0, zIndex: 1, backdropFilter: 'blur(3px)', WebkitBackdropFilter: 'blur(3px)', background: 'rgba(224,224,220,0.5)', pointerEvents: 'none' }} />
 
         {/* Back to dashboard — same style + place as /dashboard/echo */}
-        <div style={{ position: 'relative', zIndex: 3, padding: '14px 28px', display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div style={{ position: 'relative', zIndex: 3, padding: '14px 28px', display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
           <a href="/dashboard" style={{ fontFamily: fonts.mono, fontWeight: 600, fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(26,21,32,0.5)', textDecoration: 'none', padding: '6px 10px', borderRadius: 8, border: '1px solid rgba(26,21,32,0.12)', background: 'rgba(245,242,236,0.6)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', flexShrink: 0 }}>← Dashboard</a>
         </div>
 
-        <div style={{ position: 'relative', zIndex: 2, maxWidth: 940, margin: '0 auto', padding: '8px 24px 48px' }}>
+        <div style={{ position: 'relative', zIndex: 2, flex: 1, minHeight: 0, width: '100%', maxWidth: 940, alignSelf: 'center', padding: '8px 24px 24px', display: 'flex', flexDirection: 'column' }}>
 
           {/* Folder tabs */}
-          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 5, paddingLeft: 14, position: 'relative', zIndex: 2 }}>
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: 5, paddingLeft: 14, position: 'relative', zIndex: 2, flexShrink: 0 }}>
             <FolderTab id="submissions">Submissions{subCounts.pending > 0 ? ` (${subCounts.pending})` : ''}</FolderTab>
             <FolderTab id="comments">Comments{comments.length > 0 ? ` (${comments.length})` : ''}</FolderTab>
           </div>
 
           {/* Open folder */}
           <div style={{
-            position: 'relative', zIndex: 1, minHeight: 460,
+            position: 'relative', zIndex: 1, flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column',
             background: FOLDER_BG, backdropFilter: 'blur(22px)', WebkitBackdropFilter: 'blur(22px)',
             border: '1px solid rgba(255,255,255,0.55)', borderRadius: '20px 20px 24px 24px',
             boxShadow: '0 12px 44px rgba(0,0,0,0.10)', overflow: 'hidden',
           }}>
             <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(160deg, rgba(255,255,255,0.5) 0%, transparent 45%)', pointerEvents: 'none' }} />
-            <div style={{ position: 'relative', zIndex: 1, padding: '22px 26px 28px' }}>
+            <div style={{ position: 'relative', zIndex: 1, flex: 1, minHeight: 0, overflowY: 'auto', padding: '22px 26px 28px' }}>
 
               {/* ── SUBMISSIONS ── */}
               {tab === 'submissions' && (
