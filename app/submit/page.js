@@ -71,6 +71,12 @@ export default function SubmitPage() {
     }
   }
 
+  function handleReset() {
+    setForm({ album: '', artist: '', year: '', note: '', name: '', email: '' });
+    setError('');
+    setDone(false);
+  }
+
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)', color: 'var(--ink)' }}>
       <Link href="/" className="hp-logo-mini" aria-label="Listening Notes">
@@ -110,12 +116,17 @@ export default function SubmitPage() {
         </div>
 
         {done ? (
-          <div style={{ background: 'var(--bg-warm)', border: '1px solid var(--border)', borderRadius: 'var(--r-lg)', padding: '32px', textAlign: 'center' }}>
-            <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.6rem', marginBottom: '10px' }}>Submitted.</div>
-            <p style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8rem', color: 'var(--ink-soft)', margin: 0, lineHeight: 1.7 }}>
-              {form.name ? `Thanks, ${form.name}. ` : ''}I'll give it a listen.
-              {form.email ? " I'll let you know when it goes up." : ''}
-            </p>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ background: 'var(--bg-warm)', border: '1px solid var(--border)', borderRadius: 'var(--r-lg)', padding: '32px' }}>
+              <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.6rem', marginBottom: '10px' }}>Submitted.</div>
+              <p style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8rem', color: 'var(--ink-soft)', margin: 0, lineHeight: 1.7 }}>
+                {form.name ? `Thanks, ${form.name}. ` : ''}I'll give it a listen.
+                {form.email ? " I'll let you know when it goes up." : ''}
+              </p>
+            </div>
+            <button onClick={handleReset} className="hp-cta-btn" style={{ marginTop: '20px', cursor: 'pointer' }}>
+              Submit another album →
+            </button>
           </div>
         ) : (
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
