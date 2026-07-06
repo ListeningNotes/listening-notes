@@ -245,10 +245,10 @@ export default function SessionEntries() {
         <div style={{ position: 'absolute', inset: 0, backdropFilter: 'blur(3px)', WebkitBackdropFilter: 'blur(3px)', background: 'rgba(224,224,220,0.5)' }} />
       </div>
 
-      <div style={{ minHeight: '100vh', position: 'relative', zIndex: 1, fontFamily: SANS, color: INK }}>
+      <div style={{ height: '100vh', position: 'relative', zIndex: 1, fontFamily: SANS, color: INK, display: 'flex', flexDirection: 'column' }}>
 
         {/* Top bar — back button (echo style) + search / sort */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 28px', flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 28px', flexWrap: 'wrap', flexShrink: 0 }}>
           <a href="/dashboard" style={{ fontFamily: fonts.mono, fontWeight: 600, fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(26,21,32,0.5)', textDecoration: 'none', padding: '6px 10px', borderRadius: 8, border: '1px solid rgba(26,21,32,0.12)', background: 'rgba(245,242,236,0.6)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', flexShrink: 0 }}>← Dashboard</a>
           <span style={{ fontFamily: MONO, fontSize: 10, color: 'rgba(26,25,22,0.35)', letterSpacing: '0.08em' }}>{filtered.length} / {entries.length}</span>
           <div style={{ marginLeft: 'auto', display: 'flex', gap: 10, alignItems: 'center' }}>
@@ -262,18 +262,19 @@ export default function SessionEntries() {
         </div>
 
         {/* Entries panel */}
-        <div style={{ maxWidth: 1000, margin: '0 auto', padding: '10px 24px 48px' }}>
+        <div style={{ flex: 1, minHeight: 0, width: '100%', maxWidth: 1000, alignSelf: 'center', padding: '10px 24px 24px', display: 'flex', flexDirection: 'column' }}>
           {loading ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {[...Array(8)].map((_, i) => <div key={i} style={{ height: 52, borderRadius: 12, background: 'rgba(255,255,255,0.4)' }} />)}
             </div>
           ) : (
-            <div style={{ background: PANEL_BG, backdropFilter: 'blur(22px)', WebkitBackdropFilter: 'blur(22px)', border: '1px solid rgba(255,255,255,0.55)', borderRadius: 24, boxShadow: '0 12px 44px rgba(0,0,0,0.10)', overflow: 'hidden', position: 'relative' }}>
+            <div style={{ flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column', background: PANEL_BG, backdropFilter: 'blur(22px)', WebkitBackdropFilter: 'blur(22px)', border: '1px solid rgba(255,255,255,0.55)', borderRadius: 24, boxShadow: '0 12px 44px rgba(0,0,0,0.10)', overflow: 'hidden', position: 'relative' }}>
               <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(160deg, rgba(255,255,255,0.5) 0%, transparent 45%)', pointerEvents: 'none' }} />
-              <div style={{ position: 'relative', zIndex: 1 }}>
-                <div style={{ display: 'grid', gridTemplateColumns: COLS, padding: '14px 20px', borderBottom: HAIR }}>
+              <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, flex: 1 }}>
+                <div style={{ display: 'grid', gridTemplateColumns: COLS, padding: '14px 20px', borderBottom: HAIR, flexShrink: 0 }}>
                   {['Art', 'Album', 'Artist', 'Year', 'Rating', 'Type', ''].map((h, i) => <div key={i} style={{ ...labelStyle, padding: '0 8px' }}>{h}</div>)}
                 </div>
+                <div style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
 
                 {filtered.length === 0 && (
                   <div style={{ padding: '56px 24px', textAlign: 'center', fontFamily: MONO, fontSize: 11, color: 'rgba(26,25,22,0.35)' }}>No entries found.</div>
@@ -298,6 +299,7 @@ export default function SessionEntries() {
                     </div>
                   </div>
                 ))}
+                </div>
               </div>
             </div>
           )}
