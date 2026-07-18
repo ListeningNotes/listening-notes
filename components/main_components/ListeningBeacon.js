@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useListeningBeacon } from '../../hooks/useListeningBeacon';
 
-export default function ListeningBeacon() {
+export default function ListeningBeacon({ compact = false }) {
   const { track: trackObj, isLive } = useListeningBeacon();
   const trackName = trackObj?.name || '—';
   const artistName = trackObj?.artist || '';
@@ -58,6 +58,26 @@ export default function ListeningBeacon() {
   }, [trackObj]);
 
   const sizes = [0.82, 0.68, 0.56];
+
+  if (compact) {
+    return (
+      <div className="beacon-mini">
+        <div className="beacon-mini-art">
+          {artUrl
+            ? <img src={artUrl} alt={trackName} className={'beacon-mini-img' + (!isLive ? ' beacon-art--idle' : '')} />
+            : <div className="beacon-art-placeholder">♪</div>
+          }
+        </div>
+        <div className="beacon-mini-meta">
+          <div className="beacon-mini-track">
+            <span className={'beacon-dot' + (isLive ? ' beacon-dot--live' : '')} />
+            {trackName}
+          </div>
+          {artistName && <div className="beacon-mini-artist">{artistName}</div>}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={'beacon-stage' + (panelOpen ? ' beacon-stage--open' : '')}>

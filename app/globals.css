@@ -556,6 +556,16 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   background: linear-gradient(to left, var(--bg), transparent);
 }
 
+/* This edge fade was for the desktop horizontal album-strip scroll — the
+   two-screen mobile/tablet layout doesn't need it and it's getting reworked
+   soon anyway, so drop it there. Desktop keeps it. */
+@media (max-width: 768px) {
+  .hp::before,
+  .hp::after {
+    display: none;
+  }
+}
+
 /* ── Homepage layout — scroll strip, beacon, dot nav ── */
 .hp-main {
   flex: 1;
@@ -1001,6 +1011,12 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 @media (max-width: 768px) {
   .hp-desktop-layout { display: none; }
 
+  /* Instagram + theme toggle move down into .hp-screen-one-controls on
+     screen one and disappear entirely on screen two — scrolling in means
+     you've "entered" the site, so those two utility icons go away until
+     you scroll back up. */
+  .hp .hp-corner { display: none; }
+
   .hp-mobile-screens {
     width: 100%;
     height: 100dvh;
@@ -1025,15 +1041,42 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
     justify-content: center;
     gap: 28px;
   }
+
+  /* .beacon-stage has a fixed height that only fits its collapsed art+meta
+     content when the desktop 250px value has room to spare; on mobile the
+     un-scaled card (art 180px + meta) runs taller, so give it enough room
+     to avoid the dot-nav on screen two overlapping the artist name. */
+  .hp-mobile-screens .beacon-stage {
+    height: 320px;
+  }
   .hp-screen--one .hp-logo img {
     height: 112px;
   }
 
-  .hp-scroll-btn {
+  /* Screen one's bottom row: Instagram (left), scroll cue (center), theme
+     toggle (right) — the row itself owns the fixed bottom position, so its
+     three children lay out as normal flex items. */
+  .hp-screen-one-controls {
     position: absolute;
     bottom: max(28px, env(safe-area-inset-bottom));
     left: 50%;
     transform: translateX(-50%);
+    display: flex;
+    align-items: center;
+    gap: 20px;
+  }
+  .hp-screen-one-controls .hp-icon-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 1px solid var(--panel-border);
+    background: var(--panel);
+    backdrop-filter: var(--card-blur);
+    -webkit-backdrop-filter: var(--card-blur);
+    box-shadow: var(--shadow-soft);
+  }
+
+  .hp-scroll-btn {
     width: 44px;
     height: 44px;
     border-radius: 50%;
@@ -1055,19 +1098,76 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
     background: var(--bg-warm);
   }
   @keyframes hp-scroll-btn-bob {
-    0%, 100% { transform: translateX(-50%) translateY(0); }
-    50% { transform: translateX(-50%) translateY(5px); }
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(5px); }
   }
 
   .hp-screen--two {
     justify-content: flex-start;
-    padding-top: max(28px, env(safe-area-inset-top));
+    padding-top: max(20px, env(safe-area-inset-top));
+    gap: 8px;
+  }
+
+  /* Screen two's "you're in the site now" header: tiny logo, small art,
+     track/artist stacked with just a status dot (no NOW LISTENING label) —
+     reads as a mini nav bar rather than the screensaver-style beacon. */
+  .hp-mini-header {
+    width: 100%;
+    display: flex;
+    align-items: center;
     gap: 12px;
+    padding: 0 24px;
   }
-  .hp-screen--two .beacon-stage {
-    transform: scale(0.82);
-    transform-origin: top center;
+  .hp-mini-header .hp-logo img {
+    height: 26px;
   }
+  .beacon-mini {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-width: 0;
+  }
+  .beacon-mini-art {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    overflow: hidden;
+    flex-shrink: 0;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.14);
+  }
+  .beacon-mini-img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+  .beacon-mini-meta {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .beacon-mini-track {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--font-nunito), sans-serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+    color: var(--ink);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .beacon-mini-artist {
+    font-family: var(--font-nunito), sans-serif;
+    font-size: 0.72rem;
+    color: var(--ink-soft);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
   .hp-screen--two .hp-dotnav {
     margin-top: 0;
   }
@@ -1075,6 +1175,27 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
     margin-top: auto;
     width: 100%;
     padding-bottom: max(18px, env(safe-area-inset-bottom));
+  }
+  .hp-screen--two .hp-screen-strip .strip-tile {
+    width: 96px;
+    height: 96px;
+    border-radius: 14px;
+  }
+  .hp-screen--two .hp-screen-strip .hp-strip-track {
+    gap: 14px;
+    padding: 10px calc(50vw - 48px);
+  }
+
+  /* The beacon widget's own panel box (background/border/shadow) is dropped
+     on mobile — screen one and two now show the beacon at the same native
+     size with no surrounding card. */
+  .hp-mobile-screens .hp-dashboard {
+    background: none;
+    border: none;
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    padding: 0;
   }
 
   /* Six dots become a tap-friendly 2x3 grid, same treatment the old ≤480px
