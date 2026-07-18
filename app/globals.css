@@ -988,6 +988,138 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   }
 }
 
+/* ── Homepage two-screen snap layout (phones + tablets, ≤768px) ──────────────
+   Below 769px the homepage swaps from one long column to two full-height
+   "screens" that snap like app pages: screen one is just the logo + beacon
+   with a bouncing scroll cue; screen two brings the beacon to the top (under
+   the notch), the six nav dots below it, and the recent-listens strip at the
+   bottom. Desktop/tablet-wide keeps the original single-column layout,
+   untouched — the two layouts are separate markup, toggled by display. */
+@media (min-width: 769px) {
+  .hp-mobile-screens { display: none; }
+}
+@media (max-width: 768px) {
+  .hp-desktop-layout { display: none; }
+
+  .hp-mobile-screens {
+    width: 100%;
+    height: 100dvh;
+    overflow-y: auto;
+    scroll-snap-type: y mandatory;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y; /* stops stray pinch/double-tap zoom from fighting the swipe */
+  }
+  .hp-screen {
+    width: 100%;
+    height: 100dvh;
+    flex-shrink: 0;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+  }
+
+  .hp-screen--one {
+    justify-content: center;
+    gap: 28px;
+  }
+  .hp-screen--one .hp-logo img {
+    height: 112px;
+  }
+
+  .hp-scroll-btn {
+    position: absolute;
+    bottom: max(28px, env(safe-area-inset-bottom));
+    left: 50%;
+    transform: translateX(-50%);
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 1px solid var(--panel-border);
+    background: var(--panel);
+    backdrop-filter: var(--card-blur);
+    -webkit-backdrop-filter: var(--card-blur);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--ink-soft);
+    cursor: pointer;
+    box-shadow: var(--shadow-soft);
+    touch-action: manipulation; /* removes tap delay + double-tap-zoom ambiguity */
+    animation: hp-scroll-btn-bob 2.2s ease-in-out infinite;
+  }
+  .hp-scroll-btn:hover {
+    color: var(--ink);
+    background: var(--bg-warm);
+  }
+  @keyframes hp-scroll-btn-bob {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    50% { transform: translateX(-50%) translateY(5px); }
+  }
+
+  .hp-screen--two {
+    justify-content: flex-start;
+    padding-top: max(28px, env(safe-area-inset-top));
+    gap: 12px;
+  }
+  .hp-screen--two .beacon-stage {
+    transform: scale(0.82);
+    transform-origin: top center;
+  }
+  .hp-screen--two .hp-dotnav {
+    margin-top: 0;
+  }
+  .hp-screen--two .hp-screen-strip {
+    margin-top: auto;
+    width: 100%;
+    padding-bottom: max(18px, env(safe-area-inset-bottom));
+  }
+
+  /* Six dots become a tap-friendly 2x3 grid, same treatment the old ≤480px
+     homepage nav used — reused here for the whole ≤768px two-screen range. */
+  .hp-mobile-screens .hp-dotnav {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    column-gap: 10px;
+    row-gap: 20px;
+    width: 100%;
+    max-width: 300px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .hp-mobile-screens .hp-dot {
+    width: auto;
+    height: auto;
+    background: transparent;
+    border-radius: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 9px;
+    padding: 2px 0;
+  }
+  .hp-mobile-screens .hp-dot::before {
+    content: '';
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--ink-faint);
+    transition: background 0.2s, transform 0.2s;
+  }
+  .hp-mobile-screens .hp-dot--active::before {
+    background: var(--ink);
+    transform: scale(1.15);
+  }
+  .hp-mobile-screens .hp-dot-label {
+    position: static;
+    transform: none;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+  }
+}
+
 .topnav {
   position: fixed;
   top: 0;

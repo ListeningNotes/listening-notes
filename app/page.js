@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useTheme } from '../components/main_components/Lightswitch';
 import DotNav from '../components/main_components/DotNav';
@@ -8,15 +8,29 @@ import ListeningBeacon from '../components/main_components/ListeningBeacon';
 import AlbumStrip from '../components/main_components/AlbumStrip';
 import EntryModal from '../components/main_components/EntryModal';
 
+function ScrollButton({ onClick }) {
+  return (
+    <button className="hp-scroll-btn" onClick={onClick} aria-label="Scroll to next screen">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="6 9 12 15 18 9" />
+      </svg>
+    </button>
+  );
+}
+
 export default function HomePage() {
   const { theme, toggle: toggleTheme } = useTheme();
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalSlug, setModalSlug] = useState(null);
   const [originRect, setOriginRect] = useState(null);
+  const screenTwoRef = useRef(null);
 
   const openEntry = (slug, rect) => { setOriginRect(rect); setModalSlug(slug); };
   const closeEntry = () => { setModalSlug(null); setOriginRect(null); };
+  const scrollToScreenTwo = () => {
+    screenTwoRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
 
   useEffect(() => {
     fetch('/api/entries')
@@ -28,6 +42,28 @@ export default function HomePage() {
       })
       .catch(() => setLoading(false));
   }, []);
+
+  const logo = (
+    <Link href="/" className="hp-logo" aria-label="Listening Notes">
+      <img
+        src="/Logo.png"
+        alt="Listening Notes"
+        style={{ filter: theme === 'dark' ? 'invert(1)' : 'none' }}
+      />
+    </Link>
+  );
+
+  const strip = loading ? (
+    <div className="hp-strip">
+      <div className="hp-strip-track">
+        {Array.from({ length: 8 }).map((_, i) => (
+          <div key={i} className="strip-tile strip-tile--skeleton" />
+        ))}
+      </div>
+    </div>
+  ) : (
+    <AlbumStrip entries={entries} onTileClick={openEntry} openSlug={modalSlug} />
+  );
 
   return (
     <div className="hp">
@@ -50,35 +86,40 @@ export default function HomePage() {
         </button>
       </div>
 
-      <main className="hp-main">
-        <Link href="/" className="hp-logo" aria-label="Listening Notes">
-          <img
-            src="/Logo.png"
-            alt="Listening Notes"
-            style={{ filter: theme === 'dark' ? 'invert(1)' : 'none' }}
-          />
-        </Link>
-
+      <main className="hp-main hp-desktop-layout">
+        {logo}
         <DotNav />
-
         <div className="hp-dashboard">
           <div className="hp-dash-cell hp-dash-beacon">
             <ListeningBeacon />
           </div>
         </div>
+        {strip}
+      </main>
 
-        {loading ? (
-          <div className="hp-strip">
-            <div className="hp-strip-track">
-              {Array.from({ length: 8 }).map((_, i) => (
-                <div key={i} className="strip-tile strip-tile--skeleton" />
-              ))}
+      <div className="hp-mobile-screens">
+        <section className="hp-screen hp-screen--one">
+          {logo}
+          <div className="hp-dashboard">
+            <div className="hp-dash-cell hp-dash-beacon">
+              <ListeningBeacon />
             </div>
           </div>
-        ) : (
-          <AlbumStrip entries={entries} onTileClick={openEntry} openSlug={modalSlug} />
-        )}
-      </main>
+          <ScrollButton onClick={scrollToScreenTwo} />
+        </section>
+        <section className="hp-screen hp-screen--two" ref={screenTwoRef}>
+          <div className="hp-dashboard">
+            <div className="hp-dash-cell hp-dash-beacon">
+              <ListeningBeacon />
+            </div>
+          </div>
+          <DotNav />
+          <div className="hp-screen-strip">
+            {strip}
+          </div>
+        </section>
+      </div>
+
       {modalSlug && (
         <EntryModal slug={modalSlug} originRect={originRect} onClose={closeEntry} />
       )}
