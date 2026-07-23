@@ -4,7 +4,7 @@ import { useEffect, useRef } from 'react';
 
 const AUTO_SPEED = 0.5; // px per frame while drifting
 
-export default function AlbumStrip({ entries, onTileClick, openSlug }) {
+export default function AlbumStrip({ entries, onTileClick, openSlug, variant = 'scroll' }) {
   const scrollRef = useRef(null);
   const speedRef = useRef(1);        // current drift multiplier
   const targetSpeedRef = useRef(1);  // 1 = drifting, 0 = frozen (modal open)
@@ -15,6 +15,7 @@ export default function AlbumStrip({ entries, onTileClick, openSlug }) {
   }, [openSlug]);
 
   useEffect(() => {
+    if (variant === 'grid') return; // static grid — no drift/touch/wheel drag
     const el = scrollRef.current;
     if (!el) return;
     const track = el.firstElementChild;
@@ -92,18 +93,24 @@ export default function AlbumStrip({ entries, onTileClick, openSlug }) {
       el.removeEventListener('wheel', onWheel);
       if (raf) cancelAnimationFrame(raf);
     };
-  }, [entries]);
+  }, [entries, variant]);
 
   if (entries.length === 0) return null;
 
+  const isGrid = variant === 'grid';
+  // The grid scrolls within its own container now, so it isn't limited to
+  // what fits on one screen — just a sane cap so it doesn't load hundreds
+  // of images if the account has a huge history.
+  const displayEntries = isGrid ? entries.slice(0, 24) : entries;
+
   return (
-    <div className="hp-strip" ref={scrollRef}>
-      <div className="hp-strip-track">
-        {entries.map(entry => (
+    <div className={'hp-strip' + (isGrid ? ' hp-strip--grid' : '')} ref={scrollRef}>
+      <div className={'hp-strip-track' + (isGrid ? ' hp-strip-track--grid' : '')}>
+        {displayEntries.map(entry => (
           <button
             key={entry.id}
             data-tile-slug={entry.slug}
-            className={'strip-tile' + (entry.slug === openSlug ? ' strip-tile--ghost' : '')}
+            className={'strip-tile' + (isGrid ? ' strip-tile--grid' : '') + (entry.slug === openSlug ? ' strip-tile--ghost' : '')}
             onClick={e => {
               const r = e.currentTarget.getBoundingClientRect();
               onTileClick(entry.slug, { left: r.left, top: r.top, width: r.width, height: r.height });

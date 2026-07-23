@@ -1042,6 +1042,50 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
     gap: 28px;
   }
 
+  /* Screensaver background — the currently-playing album art, blurred and
+     scaled up so blurred edges don't show, tinted toward the page background
+     so it never fights body text for contrast regardless of how dark/bright
+     the source art is. New layers stack on top and fade in via animation;
+     only the last two are kept mounted, so the old one just sits underneath
+     — the new one fading in over it reads as a crossfade. */
+  .hp-screensaver-bg {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    z-index: 0;
+  }
+  /* A negative z-index here would escape past .hp's own opaque background
+     and render invisible, so instead the background stays at z-index 0 and
+     every other direct child gets lifted above it explicitly. Skip
+     .hp-screen-one-controls — it already manages its own absolute
+     centering (left: 50% + translateX), and forcing position: relative
+     onto it here would turn that into a relative offset and shift it. */
+  .hp-screen--one > :not(.hp-screensaver-bg):not(.hp-screen-one-controls) {
+    position: relative;
+    z-index: 1;
+  }
+  .hp-screensaver-bg-layer {
+    position: absolute;
+    inset: -10%;
+    background-size: cover;
+    background-position: center;
+    filter: blur(70px) saturate(1.3);
+    transform: scale(1.15);
+    opacity: 0;
+    animation: hp-screensaver-bg-in 1.8s ease forwards;
+  }
+  .hp-screensaver-bg::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--bg);
+    opacity: 0.6;
+  }
+  @keyframes hp-screensaver-bg-in {
+    from { opacity: 0; }
+    to   { opacity: 0.5; }
+  }
+
   /* .beacon-stage has a fixed height that only fits its collapsed art+meta
      content when the desktop 250px value has room to spare; on mobile the
      un-scaled card (art 180px + meta) runs taller, so give it enough room
@@ -1104,28 +1148,84 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 
   .hp-screen--two {
     justify-content: flex-start;
-    padding-top: max(20px, env(safe-area-inset-top));
-    gap: 8px;
+    /* Apple's safe-area-inset-top clears the Dynamic Island with a fair
+       amount of buffer below it — trim some of that back so the navbar
+       sits closer to the island's actual edges instead of floating well
+       below it. Floors at 16px on notch-less devices (inset is 0 there). */
+    padding-top: max(16px, calc(env(safe-area-inset-top) - 16px));
+    gap: 14px;
   }
 
-  /* Screen two's "you're in the site now" header: tiny logo, small art,
-     track/artist stacked with just a status dot (no NOW LISTENING label) —
-     reads as a mini nav bar rather than the screensaver-style beacon. */
-  .hp-mini-header {
+  /* The site's real navbar for screen two — logo, beacon, and the
+     up-arrow all sit in one row right at the top of the phone screen.
+     Logo doubles as the live indicator (its printed period is a real SVG
+     <circle> that recolors while something's actually playing — see
+     .hp-logo-mark-dot); the up-arrow is pushed to the far right via
+     margin-left: auto, logo + beacon sit together on the left. */
+  .hp-mini-nav-row {
     width: 100%;
-    display: flex;
+    display: grid;
+    grid-template-columns: 1fr 2fr 1fr; /* proportional, not content-sized —
+      the beacon's column is a real fraction of the row (flexible across
+      screen widths) rather than a fixed px value, and stays that width
+      regardless of title length since it's set by the track, not the
+      content. Outer columns keep it centered no matter how wide the logo
+      or the up-button end up being. */
     align-items: center;
-    gap: 12px;
-    padding: 0 24px;
+    gap: 10px;
+    padding: 0 20px;
   }
-  .hp-mini-header .hp-logo img {
-    height: 26px;
+  .hp-logo--mini-live {
+    display: block;
+    justify-self: start;
+  }
+  .hp-logo-mark {
+    height: 28px; /* smaller — reads as one navbar unit with the beacon art, not its own bigger element */
+    width: auto;
+    display: block;
+  }
+  .hp-logo-mark path {
+    fill: var(--ink);
+  }
+  .hp-logo-mark-dot {
+    fill: var(--ink);
+  }
+  .hp-logo-mark-dot--live {
+    fill: #7cff9b;
+    animation: hp-logo-dot-pulse 2.5s ease-in-out infinite;
+  }
+  @keyframes hp-logo-dot-pulse {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0.55; }
+  }
+  .hp-mini-nav-row .hp-scroll-btn {
+    position: static;
+    width: 36px;
+    height: 36px;
+    justify-self: end;
+    flex-shrink: 0;
+    animation: none;
+  }
+
+  .beacon-mini-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-self: center; /* the box below can be narrower than its grid
+      track (it shrinks/grows with the title), so center it within that
+      track rather than stretching to fill it */
+    min-width: 0;
+    gap: 0;
   }
   .beacon-mini {
     display: flex;
     align-items: center;
     gap: 10px;
     min-width: 0;
+    max-width: 190px; /* free to expand/contract with the title up to this
+      cap — past it, growing further would push the art too far off-center,
+      so it marquees inside the capped width instead (same mechanics as
+      screen one) */
   }
   .beacon-mini-art {
     width: 40px;
@@ -1142,27 +1242,42 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
     display: block;
   }
   .beacon-mini-meta {
+    flex: 1;
     min-width: 0;
     display: flex;
     flex-direction: column;
+    align-items: center;
     gap: 2px;
   }
-  .beacon-mini-track {
+  .beacon-mini-track-clip {
+    width: 100%;
+    min-width: 0;
+    overflow: hidden;
     display: flex;
-    align-items: center;
-    gap: 6px;
+    justify-content: center;
+  }
+  .beacon-mini-track-clip.is-marqueeing {
+    justify-content: flex-start; /* start of the title, not the visually-centered middle */
+  }
+  .beacon-mini-track-text {
+    display: inline-block;
+    flex-shrink: 0;
+    white-space: nowrap;
     font-family: var(--font-nunito), sans-serif;
     font-weight: 700;
-    font-size: 0.9rem;
+    font-size: 0.85rem;
+    line-height: 1;
     color: var(--ink);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
   }
   .beacon-mini-artist {
+    width: 100%; /* without this it has nothing to clip against — align-items:
+      center on the parent lets a block child size to its own content, so a
+      long artist name was just overflowing past the row instead of eliding */
     font-family: var(--font-nunito), sans-serif;
-    font-size: 0.72rem;
+    font-size: 0.7rem;
+    line-height: 1;
     color: var(--ink-soft);
+    text-align: center;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -1171,19 +1286,53 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   .hp-screen--two .hp-dotnav {
     margin-top: 0;
   }
+
+  /* Recent listens: titled grid that scrolls within its own bounded area —
+     overscroll-behavior: contain stops it from handing off to the outer
+     screen-snap scroller once you hit the top/bottom of the list. */
   .hp-screen--two .hp-screen-strip {
-    margin-top: auto;
+    flex: 1;
+    min-height: 0;
     width: 100%;
-    padding-bottom: max(18px, env(safe-area-inset-bottom));
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 0 20px;
   }
-  .hp-screen--two .hp-screen-strip .strip-tile {
-    width: 96px;
-    height: 96px;
-    border-radius: 14px;
+  .hp-screen-strip-title {
+    font-family: var(--font-nunito), sans-serif;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-soft);
   }
-  .hp-screen--two .hp-screen-strip .hp-strip-track {
-    gap: 14px;
-    padding: 10px calc(50vw - 48px);
+  .hp-screen-strip-scroll {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
+  }
+  .hp-screen--two .hp-screen-strip .hp-strip--grid {
+    width: 100%;
+  }
+  .hp-screen--two .hp-screen-strip .hp-strip-track--grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    width: 100%;
+    padding: 0;
+  }
+  .hp-screen--two .hp-screen-strip .strip-tile--grid {
+    width: 100%;
+    height: auto;
+    min-width: 0;
+    aspect-ratio: 1 / 1;
+    border-radius: 16px;
+    transform: none;
+    opacity: 1;
   }
 
   /* The beacon widget's own panel box (background/border/shadow) is dropped
@@ -1198,15 +1347,15 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
     padding: 0;
   }
 
-  /* Six dots become a tap-friendly 2x3 grid, same treatment the old ≤480px
-     homepage nav used — reused here for the whole ≤768px two-screen range. */
+  /* Six dots as one equally-spaced row across the screen, labels stacked
+     underneath each dot. */
   .hp-mobile-screens .hp-dotnav {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    column-gap: 10px;
-    row-gap: 20px;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    column-gap: 4px;
     width: 100%;
-    max-width: 300px;
+    max-width: 100%;
+    padding: 0 10px;
     margin-left: auto;
     margin-right: auto;
   }
@@ -1218,7 +1367,7 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 9px;
+    gap: 8px;
     padding: 2px 0;
   }
   .hp-mobile-screens .hp-dot::before {
@@ -1236,8 +1385,8 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   .hp-mobile-screens .hp-dot-label {
     position: static;
     transform: none;
-    font-size: 10px;
-    letter-spacing: 0.1em;
+    font-size: 8px;
+    letter-spacing: 0.04em;
   }
 }
 
@@ -1527,14 +1676,43 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   color: var(--text-muted);
 }
 
+/* Fixed-width lane the title scrolls inside when it's too long to fit —
+   short titles just sit centered and still, no animation applied. */
+.beacon-track-clip {
+  width: 100%;
+  max-width: 360px;
+  margin: 0 auto;
+  overflow: hidden;
+  display: flex;
+  justify-content: center;
+}
+.beacon-track-clip.is-marqueeing {
+  justify-content: flex-start; /* start of the title, not the visually-centered middle */
+}
+
+/* Shared by both the full and mini marquee titles — the trailing copy that
+   makes the wraparound loop seamless. Gap width must match MARQUEE_GAP in
+   ListeningBeacon.js exactly or the loop point will visibly jump. */
+.marquee-track {
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+}
+.marquee-track-gap {
+  width: 48px;
+  flex-shrink: 0;
+}
+
 .beacon-track {
+  display: inline-block;
+  flex-shrink: 0;
   font-family: var(--font-nunito), sans-serif;
   font-style: normal;
   font-weight: 700;
   font-size: 1.5rem;
   line-height: 1.15;
   color: var(--text);
-  max-width: 360px;
+  white-space: nowrap;
   transition: opacity 0.5s ease;
 }
 .beacon-artist {
