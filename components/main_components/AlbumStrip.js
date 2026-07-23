@@ -1,18 +1,20 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import AlbumPreview from './AlbumPreview';
 
 const AUTO_SPEED = 0.5; // px per frame while drifting
 
-export default function AlbumStrip({ entries, onTileClick, openSlug, variant = 'scroll' }) {
+export default function AlbumStrip({ entries, variant = 'scroll' }) {
   const scrollRef = useRef(null);
   const speedRef = useRef(1);        // current drift multiplier
-  const targetSpeedRef = useRef(1);  // 1 = drifting, 0 = frozen (modal open)
+  const targetSpeedRef = useRef(1);  // 1 = drifting, 0 = frozen (a tile is active)
+  const [activeSlug, setActiveSlug] = useState(null);
 
-  // Freeze the drift while a modal is open; the tick eases toward this target.
+  // Freeze the drift while a tile is active; the tick eases toward this target.
   useEffect(() => {
-    targetSpeedRef.current = openSlug ? 0 : 1;
-  }, [openSlug]);
+    targetSpeedRef.current = activeSlug ? 0 : 1;
+  }, [activeSlug]);
 
   useEffect(() => {
     if (variant === 'grid') return; // static grid — no drift/touch/wheel drag
@@ -103,30 +105,40 @@ export default function AlbumStrip({ entries, onTileClick, openSlug, variant = '
   // of images if the account has a huge history.
   const displayEntries = isGrid ? entries.slice(0, 24) : entries;
 
+  // Tapping a tile blurs/dims its art and fades AlbumPreview's metadata in
+  // on top; tapping it again (anywhere but the Read More link) fades it back
+  // out. Tapping a different tile switches which one is active.
+  function handleTileClick(slug) {
+    setActiveSlug(prev => (prev === slug ? null : slug));
+  }
+
   return (
     <div className={'hp-strip' + (isGrid ? ' hp-strip--grid' : '')} ref={scrollRef}>
       <div className={'hp-strip-track' + (isGrid ? ' hp-strip-track--grid' : '')}>
-        {displayEntries.map(entry => (
-          <button
-            key={entry.id}
-            data-tile-slug={entry.slug}
-            className={'strip-tile' + (isGrid ? ' strip-tile--grid' : '') + (entry.slug === openSlug ? ' strip-tile--ghost' : '')}
-            onClick={e => {
-              const r = e.currentTarget.getBoundingClientRect();
-              onTileClick(entry.slug, { left: r.left, top: r.top, width: r.width, height: r.height });
-            }}
-            aria-label={entry.album + ' by ' + entry.artist}
-          >
-            {entry.album_art
-              ? <img src={entry.album_art} alt={entry.album} className="strip-tile-img" draggable={false} loading="lazy" />
-              : <div className="strip-tile-placeholder">{entry.album?.[0] ?? '♪'}</div>
-            }
-            <div className="strip-tile-hover">
-              <div className="strip-tile-hover-album">{entry.album}</div>
-              <div className="strip-tile-hover-artist">{entry.artist}</div>
+        {displayEntries.map(entry => {
+          const isActive = entry.slug === activeSlug;
+          return (
+            <div
+              key={entry.id}
+              role="button"
+              tabIndex={0}
+              className={'strip-tile' + (isGrid ? ' strip-tile--grid' : '') + (isActive ? ' strip-tile--active' : '')}
+              onClick={() => handleTileClick(entry.slug)}
+              onKeyDown={e => {
+                if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleTileClick(entry.slug); }
+              }}
+              aria-label={entry.album + ' by ' + entry.artist}
+            >
+              {entry.album_art
+                ? <img src={entry.album_art} alt={entry.album} className="strip-tile-img" draggable={false} loading="lazy" />
+                : <div className="strip-tile-placeholder">{entry.album?.[0] ?? '♪'}</div>
+              }
+              <div className="strip-tile-meta">
+                <AlbumPreview entry={entry} />
+              </div>
             </div>
-          </button>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

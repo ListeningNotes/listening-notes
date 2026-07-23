@@ -1,6 +1,6 @@
 // components/EntryModal.js
-// The overlay modal that opens when you click an album tile on the homepage.
-// Shows the full entry — art, metadata, background, notes, horizon bar, tags.
+// The overlay modal that opens when you click an entry tile on the archive
+// page. Shows the full entry — art, metadata, background, notes, horizon bar, tags.
 // Does NOT load a new page — it overlays the current page and updates the URL
 // to /entries/[slug] so the entry is shareable, then restores / on close.
 
