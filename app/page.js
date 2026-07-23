@@ -19,33 +19,15 @@ function ScrollButton({ onClick, direction = 'down' }) {
   );
 }
 
-// Crossfades the screensaver background art: keeps the last two art URLs
-// mounted so the new one can fade in on top of the old one via CSS, instead
-// of the instant swap a plain <img src> change would give.
-function useCrossfadeLayers(url) {
-  const [layers, setLayers] = useState([]);
-  const idRef = useRef(0);
-  useEffect(() => {
-    if (!url) return;
-    setLayers(prev => {
-      if (prev.length && prev[prev.length - 1].url === url) return prev;
-      idRef.current += 1;
-      return [...prev, { url, id: idRef.current }].slice(-2);
-    });
-  }, [url]);
-  return layers;
-}
-
 export default function HomePage() {
   const { theme, toggle: toggleTheme } = useTheme();
-  const { track: liveTrack, isLive } = useListeningBeacon();
+  const { isLive } = useListeningBeacon();
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [modalSlug, setModalSlug] = useState(null);
   const [originRect, setOriginRect] = useState(null);
   const screenOneRef = useRef(null);
   const screenTwoRef = useRef(null);
-  const bgLayers = useCrossfadeLayers(liveTrack?.image || '');
 
   const openEntry = (slug, rect) => { setOriginRect(rect); setModalSlug(slug); };
   const closeEntry = () => { setModalSlug(null); setOriginRect(null); };
@@ -154,15 +136,6 @@ export default function HomePage() {
 
       <div className="hp-mobile-screens">
         <section className="hp-screen hp-screen--one" ref={screenOneRef}>
-          <div className="hp-screensaver-bg" aria-hidden="true">
-            {bgLayers.map((layer, i) => (
-              <div
-                key={layer.id}
-                className="hp-screensaver-bg-layer"
-                style={{ backgroundImage: `url(${layer.url})`, zIndex: i }}
-              />
-            ))}
-          </div>
           {logo}
           <div className="hp-dashboard">
             <div className="hp-dash-cell hp-dash-beacon">
