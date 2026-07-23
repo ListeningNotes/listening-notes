@@ -77,7 +77,7 @@ function MarqueeTitle({ text, clipClassName, textClassName }) {
   );
 }
 
-export default function ListeningBeacon({ compact = false }) {
+export default function ListeningBeacon({ compact = false, statusAboveArt = false }) {
   const { track: trackObj, isLive } = useListeningBeacon();
   const trackName = trackObj?.name || '—';
   const artistName = trackObj?.artist || '';
@@ -133,6 +133,13 @@ export default function ListeningBeacon({ compact = false }) {
 
   const sizes = [0.82, 0.68, 0.56];
 
+  const statusLine = (
+    <div className="beacon-status">
+      <span className={'beacon-dot' + (isLive ? ' beacon-dot--live' : '')} />
+      <span className="beacon-status-text">{isLive ? 'Now listening' : 'Not listening'}</span>
+    </div>
+  );
+
   if (compact) {
     return (
       <div className="beacon-mini-wrap">
@@ -177,6 +184,7 @@ export default function ListeningBeacon({ compact = false }) {
         aria-expanded={panelOpen}
         aria-label="Toggle recent listens"
       >
+        {statusAboveArt && statusLine}
         <div className={'beacon-art-wrap' + (isLive ? ' beacon-art-wrap--live' : '')}>
           {artUrl
             ? <img src={artUrl} alt={trackName} className={'beacon-art' + (!isLive ? ' beacon-art--idle' : '')} />
@@ -185,10 +193,7 @@ export default function ListeningBeacon({ compact = false }) {
           {!isLive && artUrl && <div className="beacon-idle-overlay"><span>Last played</span></div>}
         </div>
         <div className="beacon-meta">
-          <div className="beacon-status">
-            <span className={'beacon-dot' + (isLive ? ' beacon-dot--live' : '')} />
-            <span className="beacon-status-text">{isLive ? 'Now listening' : 'Not listening'}</span>
-          </div>
+          {!statusAboveArt && statusLine}
           <MarqueeTitle
             text={trackName || '—'}
             clipClassName="beacon-track-clip"

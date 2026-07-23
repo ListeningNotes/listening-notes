@@ -1052,6 +1052,25 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   .hp-screen--one .hp-logo img {
     height: 112px;
   }
+  .hp-logo-mark.hp-logo-mark--large {
+    /* compound selector — .hp-logo-mark (28px, defined later in the file)
+       is the same specificity as a lone .hp-logo-mark--large would be, so
+       source order made it win; this needs the extra class to actually
+       override it.
+       Height is 82px, not 112px: this SVG is cropped tight to the glyphs
+       (no padding), while the old PNG had transparent margin around them,
+       so the same box-height rendered smaller letters. 82px here measures
+       out to the same actual letter height (~70.6px) the PNG rendered at
+       112px — matched via direct pixel measurement, not a guess. */
+    height: 82px;
+    width: auto;
+  }
+  /* Experiment: the live status now reads via the logo's dot instead —
+     drop the separate dot from the "Now listening" line above the art on
+     screen one only (desktop's beacon-status is untouched). */
+  .hp-screen--one .beacon-status .beacon-dot {
+    display: none;
+  }
 
   /* Screen one's bottom row: Instagram (left), scroll cue (center), theme
      toggle (right) — the row itself owns the fixed bottom position, so its
