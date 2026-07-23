@@ -7,7 +7,6 @@ import { useListeningBeacon } from '../hooks/useListeningBeacon';
 import DotNav from '../components/main_components/DotNav';
 import ListeningBeacon from '../components/main_components/ListeningBeacon';
 import AlbumStrip from '../components/main_components/AlbumStrip';
-import EntryModal from '../components/main_components/EntryModal';
 
 function ScrollButton({ onClick, direction = 'down' }) {
   return (
@@ -24,13 +23,9 @@ export default function HomePage() {
   const { isLive } = useListeningBeacon();
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [modalSlug, setModalSlug] = useState(null);
-  const [originRect, setOriginRect] = useState(null);
   const screenOneRef = useRef(null);
   const screenTwoRef = useRef(null);
 
-  const openEntry = (slug, rect) => { setOriginRect(rect); setModalSlug(slug); };
-  const closeEntry = () => { setModalSlug(null); setOriginRect(null); };
   const scrollToScreenTwo = () => {
     screenTwoRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
@@ -47,6 +42,18 @@ export default function HomePage() {
         setLoading(false);
       })
       .catch(() => setLoading(false));
+  }, []);
+
+  // SiteNav's logo, clicked from any other page, flags this via
+  // sessionStorage before navigating here (a full page navigation can't
+  // carry it as component state) — land on screen two instead of the
+  // default screen one.
+  useEffect(() => {
+    if (sessionStorage.getItem('ln-goto') === 'screen-two') {
+      sessionStorage.removeItem('ln-goto');
+      scrollToScreenTwo();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const logo = (
@@ -122,7 +129,7 @@ export default function HomePage() {
         </div>
       );
     }
-    return <AlbumStrip entries={entries} onTileClick={openEntry} openSlug={modalSlug} variant={variant} />;
+    return <AlbumStrip entries={entries} variant={variant} />;
   }
 
   return (
@@ -200,10 +207,6 @@ export default function HomePage() {
           </div>
         </section>
       </div>
-
-      {modalSlug && (
-        <EntryModal slug={modalSlug} originRect={originRect} onClose={closeEntry} />
-      )}
     </div>
   );
 }

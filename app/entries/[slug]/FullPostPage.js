@@ -6,11 +6,10 @@
 
 'use client';
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
 import { fonts } from '../../../library/sitewide_visuals';
 import { parseHorizon, parseTracksFromNotes, splitNotes } from '../../../library/entry_formatter';
 import DotNav from '../../../components/main_components/DotNav';
-import { useTheme } from '../../../components/main_components/Lightswitch';
+import SiteNav from '../../../components/main_components/SiteNav';
 import HorizonBar from '../../../components/main_components/Slug_Page/HorizonBar';
 import TrackThread from '../../../components/main_components/Slug_Page/TrackThread';
 import MetadataLabel from '../../../components/main_components/Slug_Page/MetadataLabel';
@@ -19,7 +18,6 @@ import Chip from '../../../components/main_components/Slug_Page/Chip';
 
 
 export default function FullPostPage({ entry }) {
-  const { theme, toggle } = useTheme();
   const [commentsByTrack, setCommentsByTrack] = useState({});
   const [commentsLoaded, setCommentsLoaded] = useState(false);
 
@@ -79,28 +77,8 @@ export default function FullPostPage({ entry }) {
         }
       `}</style>
 
-      {/* ── NAV ── shared site nav (logo + corner icons + dot nav), identical to every other public page */}
-      <Link href="/" className="hp-logo-mini" aria-label="Listening Notes">
-        <img src="/Logo.png" alt="Listening Notes" style={{ height: 30, width: 'auto', display: 'block', filter: theme === 'dark' ? 'invert(1)' : 'none' }} />
-      </Link>
-      <div className="hp-corner">
-        <a
-          href="https://instagram.com/listeningnotes.blog"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="hp-icon-btn"
-          aria-label="Instagram"
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.5" fill="currentColor" stroke="none"/></svg>
-        </a>
-        <button className="hp-icon-btn" onClick={toggle} aria-label="Toggle theme">
-          {theme === 'dark' ? (
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-          ) : (
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1111.21 3a7 7 0 109.79 9.79z"/></svg>
-          )}
-        </button>
-      </div>
+      {/* ── NAV ── shared site nav (logo + dot nav), identical to every other public page */}
+      <SiteNav />
       <DotNav />
 
       {/* ── HERO ── Blurred album art background with metadata overlay */}

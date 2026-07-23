@@ -664,6 +664,44 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   transition: filter 0.2s;
 }
 
+/* SiteNav — the sitewide logo (doubling as the live indicator, matching
+   homepage screen two), used by every page except the homepage. Unlike
+   .hp-mini-nav-row (mobile-only, screen two's own layout) these rules apply
+   at every width, since other pages don't have a separate desktop layout. */
+.sitenav-logo-wrap {
+  position: fixed;
+  top: 22px;
+  left: 28px;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.sitenav-logo { display: block; }
+.sitenav-logo-mark {
+  height: 30px;
+  width: auto;
+  display: block;
+}
+.sitenav-logo-mark path { fill: var(--ink); }
+.sitenav-logo-dot { fill: var(--ink); }
+.sitenav-logo-dot--live {
+  fill: #7cff9b;
+  animation: sitenav-logo-dot-pulse 2.5s ease-in-out infinite;
+}
+@keyframes sitenav-logo-dot-pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.55; }
+}
+/* The compact beacon's own art/marquee styling (.beacon-mini*) only exists
+   inside the ≤768px media query below (it was built for screen two, which
+   is mobile-only) — showing it wider than that would render unstyled, so
+   it's scoped off until there's a desktop-appropriate version. */
+.sitenav-beacon { display: none; }
+@media (max-width: 768px) {
+  .sitenav-beacon { display: block; }
+}
+
 @keyframes hp-pulse {
   0%, 100% { opacity: 1; transform: scale(1); }
   50% { opacity: 0.4; transform: scale(0.8); }
@@ -881,12 +919,11 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   background: rgba(26, 26, 26, 0.18);
   transition: background 0.2s, transform 0.2s;
 }
-.hp-dot:hover {
-  background: rgba(26, 26, 26, 0.45);
-  transform: scale(1.3);
-}
 .hp-dot--active {
   background: var(--ink);
+}
+.hp-dot:hover {
+  background: rgba(26, 26, 26, 0.45);
 }
 /* Page labels sit under every dot and stay visible at all times. */
 .hp-dot-label {
@@ -977,7 +1014,6 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   }
   .hp .hp-dot--active::before {
     background: var(--ink);
-    transform: scale(1.15);
   }
   .hp .hp-dot-label {
     position: static;
@@ -1305,9 +1341,12 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
     height: auto;
     min-width: 0;
     aspect-ratio: 1 / 1;
-    border-radius: 16px;
-    transform: none;
+    border-radius: 24px; /* rounder, to read like the listening beacon's art square */
+    transform: translateZ(0); /* keep the layer-promotion fix above even with the scroll-strip scale reset */
     opacity: 1;
+  }
+  .hp-screen--two .hp-screen-strip .strip-tile--grid .strip-tile-meta {
+    border-radius: 24px;
   }
 
   /* The beacon widget's own panel box (background/border/shadow) is dropped
@@ -1322,17 +1361,13 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
     padding: 0;
   }
 
-  /* Six dots as one equally-spaced row across the screen, labels stacked
-     underneath each dot. */
+  /* A compact centered row, same spacing style as every other page's dot
+     nav — not stretched edge to edge. Home is dropped entirely on the
+     homepage (see DotNav.js) — never just hidden — so this is always
+     exactly 5 (Archive, Compare, About, Submit, Surprise). */
   .hp-mobile-screens .hp-dotnav {
-    display: grid;
-    grid-template-columns: repeat(6, minmax(0, 1fr));
-    column-gap: 4px;
-    width: 100%;
-    max-width: 100%;
-    padding: 0 10px;
-    margin-left: auto;
-    margin-right: auto;
+    display: flex;
+    gap: 32px;
   }
   .hp-mobile-screens .hp-dot {
     width: auto;
@@ -1355,7 +1390,6 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   }
   .hp-mobile-screens .hp-dot--active::before {
     background: var(--ink);
-    transform: scale(1.15);
   }
   .hp-mobile-screens .hp-dot-label {
     position: static;
@@ -1798,9 +1832,15 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   padding: 0;
   border: none;
   cursor: pointer;
-  background: var(--bg-warm);
   box-shadow: var(--shadow-soft);
-  transform: scale(calc(var(--depth, 1) * var(--grow, 1)));
+  /* translateZ(0) + will-change force this rounded/clipped box onto its own
+     compositing layer, PERSISTENTLY — iOS Safari clips correctly while a
+     child's filter/opacity transition is actively running, but tears the
+     layer back down once the transition settles, and the rounded corners
+     snap to square right at that moment. will-change keeps the layer alive
+     at rest too, not just mid-transition. */
+  transform: scale(calc(var(--depth, 1) * var(--grow, 1))) translateZ(0);
+  will-change: transform;
   opacity: var(--dim, 1);
   transition: transform 0.18s ease-out, opacity 0.18s ease-out, box-shadow 0.3s ease;
 }
@@ -1815,19 +1855,17 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   object-fit: cover;
   display: block;
   pointer-events: none;
+  will-change: filter, opacity;
+  transition: filter 0.3s ease, opacity 0.3s ease;
 }
-
-/* Open tile leaves a dimmed gap in the strip while its modal is up */
-.strip-tile--ghost {
-  box-shadow: var(--shadow-soft);
+/* Tapping a tile blurs + dims its own art in place and fades AlbumPreview's
+   metadata in on top — no separate flip/turn animation, just a soft focus
+   pull, which also sidesteps every 3D-transform clipping bug Safari has
+   given us on this component so far. */
+.strip-tile--active .strip-tile-img {
+  filter: blur(6px);
+  opacity: 0.82;
 }
-.strip-tile--ghost .strip-tile-img,
-.strip-tile--ghost .strip-tile-placeholder {
-  opacity: 0.12;
-  filter: grayscale(0.6);
-  transition: opacity 0.3s ease, filter 0.3s ease;
-}
-.strip-tile--ghost .strip-tile-hover { opacity: 0 !important; }
 
 .strip-tile-placeholder {
   width: 100%;
@@ -1840,36 +1878,24 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   font-size: 3rem;
 }
 
-.strip-tile-hover {
+.strip-tile-meta {
   position: absolute;
   inset: 0;
-  background: linear-gradient(to top, rgba(0,0,0,0.78) 0%, transparent 55%);
+  border-radius: 20px;
+  overflow: hidden;
   opacity: 0;
-  transition: opacity 0.25s;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  padding: 16px;
+  pointer-events: none;
+  will-change: opacity;
+  transition: opacity 0.3s ease;
 }
-.strip-tile:hover .strip-tile-hover { opacity: 1; }
-
-.strip-tile-hover-album {
-  font-family: var(--font-sans);
-  font-size: 1rem;
-  font-weight: 600;
-  color: #fff;
-  line-height: 1.25;
-}
-.strip-tile-hover-artist {
-  font-family: var(--font-label);
-  font-size: 0.7rem;
-  letter-spacing: 0.08em;
-  color: rgba(255,255,255,0.7);
-  margin-top: 3px;
+.strip-tile--active .strip-tile-meta {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .strip-tile--skeleton {
   cursor: default;
+  background: var(--bg-warm);
   animation: skeleton-pulse 1.4s ease-in-out infinite;
 }
 @keyframes skeleton-pulse {
@@ -1886,6 +1912,7 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   .topnav-hamburger { display: flex; }
 
   .strip-tile { width: 220px; height: 220px; border-radius: 18px; }
+  .strip-tile-meta { border-radius: 18px; }
   .hp-strip-track { gap: 24px; padding: 36px calc(50vw - 110px); }
 }
 

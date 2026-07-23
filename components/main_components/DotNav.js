@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 
 const NAV = [
   { href: '/', label: 'Home' },
@@ -36,19 +36,39 @@ function explode(e) {
   }
 }
 
-// Site-wide dot navigation. Highlights the dot whose href matches the
-// current pathname; each dot reveals its page label on hover.
+// Site-wide dot navigation. Every page's dot always renders — the current
+// page's is just highlighted (bigger, filled in), never removed or hidden.
+// An earlier version removed/hid the current page's dot, which either
+// reflowed the row (a different dot slid into the spot you'd just clicked
+// and briefly looked highlighted for the wrong page) or left an awkward
+// blank gap. Always rendering the same fixed set avoids both.
+//
+// Home is the one exception: it's dropped entirely on the homepage itself
+// (linking to where you already are makes no sense there), not just
+// highlighted — every other page still shows it normally.
 export default function DotNav() {
   const pathname = usePathname();
+  const router = useRouter();
+  const isHome = pathname === '/';
+
+  // Home behaves exactly like clicking the logo — land on screen two, not
+  // screen one — flagged via sessionStorage since a full page navigation
+  // can't carry it as component state (see SiteNav.js for the other half).
+  function handleHomeClick(e) {
+    e.preventDefault();
+    sessionStorage.setItem('ln-goto', 'screen-two');
+    router.push('/');
+  }
+
   return (
     <nav className="hp-dotnav" aria-label="Site navigation">
-      {NAV.map(p => (
+      {NAV.filter(p => !(isHome && p.href === '/')).map(p => (
         <Link
           key={p.href}
           href={p.href}
           className={'hp-dot' + (pathname === p.href ? ' hp-dot--active' : '')}
           aria-label={p.label}
-          onClick={p.surprise ? explode : undefined}
+          onClick={p.href === '/' ? handleHomeClick : (p.surprise ? explode : undefined)}
         >
           <span className="hp-dot-label">{p.label}</span>
         </Link>
