@@ -664,22 +664,37 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   transition: filter 0.2s;
 }
 
-/* SiteNav — the sitewide logo (doubling as the live indicator, matching
-   homepage screen two), used by every page except the homepage. Unlike
-   .hp-mini-nav-row (mobile-only, screen two's own layout) these rules apply
-   at every width, since other pages don't have a separate desktop layout. */
-.sitenav-logo-wrap {
+/* SiteNav — the ONE sitewide nav row: logo (doubling as the live indicator)
+   on the left, a caret + the compact beacon centered, day/night toggle on
+   the right. Used by every page, including the homepage's screen two —
+   there's no separate/bespoke version anymore. Fixed across the top of the
+   page everywhere except the homepage, where it flows in place inside
+   screen two (see the .hp override below), matching how that screen's
+   layout already works. */
+.sitenav-row {
   position: fixed;
   top: 22px;
-  left: 28px;
+  left: 0;
+  right: 0;
   z-index: 100;
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr 2fr 1fr;
   align-items: center;
-  gap: 14px;
+  gap: 10px;
+  padding: 0 28px;
 }
-.sitenav-logo { display: block; }
+.hp .sitenav-row {
+  position: relative;
+  top: auto;
+  left: auto;
+  right: auto;
+  width: 100%;
+  padding: 0 20px;
+}
+
+.sitenav-logo { display: block; justify-self: start; }
 .sitenav-logo-mark {
-  height: 30px;
+  height: 28px;
   width: auto;
   display: block;
 }
@@ -693,6 +708,36 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   0%, 100% { opacity: 1; }
   50%      { opacity: 0.55; }
 }
+
+/* Center slot — the way back to screen one (the big "now listening" screen)
+   from anywhere on the site. The caret floats absolutely above the beacon
+   rather than stacking in flow with it — that way the beacon's own center
+   lines up with the logo and theme toggle on the row's shared center line,
+   with the caret just hovering above as a hint, not shifting anything. */
+.sitenav-beacon-slot {
+  position: relative;
+  justify-self: center;
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  min-height: 58px; /* holds the row's height steady whether or not the
+    beacon is showing, so the dot nav below never has to guess which case
+    it's clearing */
+  text-decoration: none;
+  cursor: pointer;
+}
+.sitenav-caret {
+  position: absolute;
+  top: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: var(--ink-faint);
+  transition: color 0.2s, transform 0.2s;
+}
+.sitenav-beacon-slot:hover .sitenav-caret {
+  color: var(--ink-soft);
+  transform: translateX(-50%) translateY(-2px);
+}
 /* The compact beacon's own art/marquee styling (.beacon-mini*) only exists
    inside the ≤768px media query below (it was built for screen two, which
    is mobile-only) — showing it wider than that would render unstyled, so
@@ -700,6 +745,13 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 .sitenav-beacon { display: none; }
 @media (max-width: 768px) {
   .sitenav-beacon { display: block; }
+}
+
+.sitenav-theme-btn {
+  justify-self: end;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
 }
 
 @keyframes hp-pulse {
@@ -903,18 +955,20 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 /* ── Dot navigation (fixed top bar) ── */
 .hp-dotnav {
   position: fixed;
-  top: 24px;
+  top: 96px; /* clears .sitenav-row above it (top:22px + its reserved
+    min-height), which now spans the full page instead of a small
+    left-corner box — the homepage overrides this back to in-flow below */
   left: 50%;
   transform: translateX(-50%);
   z-index: 100;
   display: flex;
   align-items: flex-start;
-  gap: 54px;
+  gap: 64px;
 }
 .hp-dot {
   position: relative;
-  width: 9px;
-  height: 9px;
+  width: 11px;
+  height: 11px;
   border-radius: 50%;
   background: rgba(26, 26, 26, 0.18);
   transition: background 0.2s, transform 0.2s;
@@ -932,7 +986,7 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   left: 50%;
   transform: translateX(-50%);
   font-family: var(--font-label);
-  font-size: 10px;
+  font-size: 13px;
   letter-spacing: 0.1em;
   text-transform: uppercase;
   color: var(--ink-soft);
@@ -951,11 +1005,10 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
    backdrop to cover both rows. */
 @media (max-width: 480px) {
   .hp-dotnav {
-    top: 74px;
-    gap: 42px;
+    gap: 50px;
   }
   .hp-dot-label {
-    font-size: 9px;
+    font-size: 11px;
     letter-spacing: 0.06em;
   }
 }
@@ -1006,8 +1059,8 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
      inactive dots visible in dark mode too. */
   .hp .hp-dot::before {
     content: '';
-    width: 8px;
-    height: 8px;
+    width: 10px;
+    height: 10px;
     border-radius: 50%;
     background: var(--ink-faint);
     transition: background 0.2s, transform 0.2s;
@@ -1018,7 +1071,7 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   .hp .hp-dot-label {
     position: static;
     transform: none;
-    font-size: 10px;
+    font-size: 12px;
     letter-spacing: 0.1em;
   }
 
@@ -1120,37 +1173,32 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
     align-items: center;
     gap: 20px;
   }
+  /* Plain icons, no circular bubble chrome — matches the caret's minimal
+     style in the shared nav row above. */
   .hp-screen-one-controls .hp-icon-btn {
     width: 44px;
     height: 44px;
-    border-radius: 50%;
-    border: 1px solid var(--panel-border);
-    background: var(--panel);
-    backdrop-filter: var(--card-blur);
-    -webkit-backdrop-filter: var(--card-blur);
-    box-shadow: var(--shadow-soft);
+    color: var(--ink-faint);
+    transition: color 0.2s;
+  }
+  .hp-screen-one-controls .hp-icon-btn:hover {
+    color: var(--ink-soft);
   }
 
   .hp-scroll-btn {
     width: 44px;
     height: 44px;
-    border-radius: 50%;
-    border: 1px solid var(--panel-border);
-    background: var(--panel);
-    backdrop-filter: var(--card-blur);
-    -webkit-backdrop-filter: var(--card-blur);
     display: flex;
     align-items: center;
     justify-content: center;
-    color: var(--ink-soft);
+    color: var(--ink-faint);
     cursor: pointer;
-    box-shadow: var(--shadow-soft);
     touch-action: manipulation; /* removes tap delay + double-tap-zoom ambiguity */
     animation: hp-scroll-btn-bob 2.2s ease-in-out infinite;
+    transition: color 0.2s;
   }
   .hp-scroll-btn:hover {
-    color: var(--ink);
-    background: var(--bg-warm);
+    color: var(--ink-soft);
   }
   @keyframes hp-scroll-btn-bob {
     0%, 100% { transform: translateY(0); }
@@ -1167,29 +1215,6 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
     gap: 14px;
   }
 
-  /* The site's real navbar for screen two — logo, beacon, and the
-     up-arrow all sit in one row right at the top of the phone screen.
-     Logo doubles as the live indicator (its printed period is a real SVG
-     <circle> that recolors while something's actually playing — see
-     .hp-logo-mark-dot); the up-arrow is pushed to the far right via
-     margin-left: auto, logo + beacon sit together on the left. */
-  .hp-mini-nav-row {
-    width: 100%;
-    display: grid;
-    grid-template-columns: 1fr 2fr 1fr; /* proportional, not content-sized —
-      the beacon's column is a real fraction of the row (flexible across
-      screen widths) rather than a fixed px value, and stays that width
-      regardless of title length since it's set by the track, not the
-      content. Outer columns keep it centered no matter how wide the logo
-      or the up-button end up being. */
-    align-items: center;
-    gap: 10px;
-    padding: 0 20px;
-  }
-  .hp-logo--mini-live {
-    display: block;
-    justify-self: start;
-  }
   .hp-logo-mark {
     height: 28px; /* smaller — reads as one navbar unit with the beacon art, not its own bigger element */
     width: auto;
@@ -1209,15 +1234,6 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
     0%, 100% { opacity: 1; }
     50%      { opacity: 0.55; }
   }
-  .hp-mini-nav-row .hp-scroll-btn {
-    position: static;
-    width: 36px;
-    height: 36px;
-    justify-self: end;
-    flex-shrink: 0;
-    animation: none;
-  }
-
   .beacon-mini-wrap {
     display: flex;
     flex-direction: column;
@@ -1364,10 +1380,15 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   /* A compact centered row, same spacing style as every other page's dot
      nav — not stretched edge to edge. Home is dropped entirely on the
      homepage (see DotNav.js) — never just hidden — so this is always
-     exactly 5 (Archive, Compare, About, Submit, Surprise). */
+     exactly 5 (Archive, Compare, About, Submit, Surprise). Each .hp-dot's
+     own width is driven by its label text (see below), which already does
+     most of the visual separating, so the gap here can stay tight without
+     the row overflowing a phone's width. */
   .hp-mobile-screens .hp-dotnav {
     display: flex;
-    gap: 32px;
+    justify-content: center;
+    width: 100%;
+    gap: 12px;
   }
   .hp-mobile-screens .hp-dot {
     width: auto;
@@ -1382,8 +1403,8 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   }
   .hp-mobile-screens .hp-dot::before {
     content: '';
-    width: 8px;
-    height: 8px;
+    width: 10px;
+    height: 10px;
     border-radius: 50%;
     background: var(--ink-faint);
     transition: background 0.2s, transform 0.2s;
@@ -1394,7 +1415,7 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   .hp-mobile-screens .hp-dot-label {
     position: static;
     transform: none;
-    font-size: 8px;
+    font-size: 11px;
     letter-spacing: 0.04em;
   }
 }

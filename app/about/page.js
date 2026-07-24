@@ -60,32 +60,24 @@ export default function AboutPage() {
         /* Sticky jump-nav. Its own full-width bg fade masks the content scrolling
            behind the pill. Invisible when the nav is in normal flow (bg == page bg). */
         .about-jumpnav {
-          top: 70px;
+          top: 150px; /* clears SiteNav + DotNav, now a taller fixed stack
+            than when this offset was first tuned (no more hero above it to
+            hold this nav below that stack until you actually scroll) */
           z-index: 95;
           background: linear-gradient(to bottom, var(--bg) 0%, var(--bg) 72%, transparent 100%);
         }
         @media (max-width: 480px) {
-          .about-jumpnav { top: 108px; }
+          .about-jumpnav { top: 170px; }
         }
         /* Clear the sticky header (bar + jump-nav) when jumping to a section so its
            heading isn't tucked underneath. Matches the jump-nav offsets above. */
-        .about-section { scroll-margin-top: 160px; }
+        .about-section { scroll-margin-top: 190px; }
         @media (max-width: 480px) {
-          .about-section { scroll-margin-top: 204px; }
+          .about-section { scroll-margin-top: 210px; }
         }
       `}</style>
       <SiteNav />
       <DotNav />
-
-      {/* Hero */}
-      <header style={{ maxWidth: 760, margin: '0 auto', padding: '120px 24px 48px' }}>
-        <h1 style={{ fontFamily: 'var(--font-display)', fontWeight: 400, fontSize: 'clamp(38px, 6vw, 60px)', margin: 0, lineHeight: 1.08, letterSpacing: '-0.02em' }}>
-          A practice of intentional listening.
-        </h1>
-        <p style={{ fontFamily: fonts.sans, fontSize: 17, lineHeight: 1.6, color: 'var(--ink-soft)', marginTop: 24, maxWidth: 580 }}>
-          Listening Notes started as an answer to a question about my favorite albums and grew into a practice of documenting intentional listening.
-        </p>
-      </header>
 
       {/* Sticky jump nav */}
       <nav className="about-jumpnav" style={{

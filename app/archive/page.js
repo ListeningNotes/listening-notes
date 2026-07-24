@@ -88,9 +88,7 @@ export default function ArchivePage() {
 
       {/* Hero */}
       <header style={{ maxWidth: 1100, margin: '0 auto', padding: '120px 24px 32px' }}>
-        <h1 style={{ fontFamily: 'var(--font-display)', fontWeight: 400, fontSize: 'clamp(38px, 6vw, 60px)', margin: 0, lineHeight: 1.08, letterSpacing: '-0.02em' }}>
-          Every album, in one place.
-        </h1>
+        
         <p style={{ fontFamily: fonts.sans, fontSize: 16, lineHeight: 1.6, color: 'var(--ink-soft)', marginTop: 18, maxWidth: 580 }}>
           {entries.length > 0 ? `${entries.length} entries and counting.` : 'Loading the archive…'}
         </p>
