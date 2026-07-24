@@ -81,8 +81,10 @@ export default function FullPostPage({ entry }) {
       <SiteNav />
       <DotNav />
 
-      {/* ── HERO ── Blurred album art background with metadata overlay */}
-      <div style={{ position: 'relative', height: '360px', overflow: 'hidden' }}>
+      {/* ── HERO ── Blurred album art background with metadata overlay.
+          390px, not 360 — the album thumbnail/title sit bottom-anchored in
+          here, and need the extra room to clear SiteNav + DotNav above. */}
+      <div style={{ position: 'relative', height: '390px', overflow: 'hidden' }}>
         {entry.album_art && (
           <div style={{ position: 'absolute', inset: '-40px', backgroundImage: 'url(' + entry.album_art + ')', backgroundSize: 'cover', backgroundPosition: 'center', filter: 'blur(50px) saturate(1.3) brightness(1.05)', transform: 'scale(1.2)' }} />
         )}

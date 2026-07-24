@@ -86,7 +86,7 @@ export default function SubmitPage() {
 
         <div style={{ marginBottom: '32px' }}>
           <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '2.4rem', fontWeight: 400, margin: '0 0 12px', lineHeight: 1.2 }}>
-            What should I listen to?
+            Submit an Album
           </h1>
           <p style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85rem', color: 'var(--ink-soft)', margin: 0, lineHeight: 1.7 }}>
             Recommend an album and tell me what to listen for.
