@@ -28,11 +28,11 @@ export default function AlbumNotes({
               type="checkbox"
               checked={val}
               onChange={e => fn(e.target.checked)}
-              style={{ accentColor: '#c8d47a', cursor: 'pointer', width: 15, height: 15 }}
+              style={{ accentColor: '#f0ede8', cursor: 'pointer', width: 15, height: 15 }}
             />
             <span style={{
               fontFamily: fonts.mono, fontSize: 10, letterSpacing: '0.08em', textTransform: 'uppercase',
-              color: val ? '#6a7a18' : tx(0.35), transition: 'color 0.15s',
+              color: val ? tx(0.95) : tx(0.35), transition: 'color 0.15s',
             }}>{name}</span>
           </label>
         ))}
@@ -41,6 +41,12 @@ export default function AlbumNotes({
       <div style={{ borderTop: `1px solid ${bdr(0.07)}`, paddingTop: 20, marginBottom: 16 }}>
         <div style={{ ...lbl, marginBottom: 14 }}>Album Notes</div>
         <textarea
+          ref={el => {
+            // Size on mount too, so returning to this step doesn't clip long notes.
+            if (!el) return;
+            el.style.height = 'auto';
+            el.style.height = el.scrollHeight + 'px';
+          }}
           value={overallNotes}
           onChange={e => {
             setOverallNotes(e.target.value);
