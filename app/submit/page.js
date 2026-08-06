@@ -80,7 +80,7 @@ export default function SubmitPage() {
       <SiteNav />
       <DotNav />
 
-      <div style={{ maxWidth: '560px', margin: '0 auto', padding: '120px 24px 80px' }}>
+      <div style={{ maxWidth: '560px', margin: '0 auto', padding: '168px 24px 80px' }}>
 
         <div style={{ background: 'var(--panel)', backdropFilter: 'var(--card-blur)', WebkitBackdropFilter: 'var(--card-blur)', border: '1px solid var(--panel-border)', borderRadius: 'var(--radius)', padding: '36px', boxShadow: 'var(--shadow-lift)' }}>
 
