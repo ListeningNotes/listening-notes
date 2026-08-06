@@ -1,6 +1,6 @@
 'use client';
 import { fonts } from '../../../library/sitewide_visuals';
-import { tx, bdr, lbl } from '../../../library/session_styles';
+import { tx, bdr, dk, lbl } from '../../../library/session_styles';
 import SessionButton from '../SessionButton';
 
 // Step 5 — formatted entry preview with save action.
@@ -88,7 +88,7 @@ export default function SessionPreview({
       {sessionTags.length > 0 && (
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, paddingTop: 20, borderTop: `1px solid ${bdr(0.07)}`, marginBottom: 32 }}>
           {sessionTags.map((t, i) => (
-            <span key={i} style={{ fontFamily: fonts.mono, fontSize: 9, letterSpacing: '0.08em', textTransform: 'uppercase', color: tx(0.38), border: `1px solid ${bdr(0.1)}`, borderRadius: 20, padding: '3px 10px', background: 'rgba(255,255,255,0.4)' }}>#{t}</span>
+            <span key={i} style={{ fontFamily: fonts.mono, fontSize: 9, letterSpacing: '0.08em', textTransform: 'uppercase', color: tx(0.7), border: `1px solid ${bdr(0.14)}`, borderRadius: 20, padding: '3px 10px', background: dk(0.42) }}>#{t}</span>
           ))}
         </div>
       )}
@@ -100,7 +100,7 @@ export default function SessionPreview({
           </SessionButton>
         ) : (
           <>
-            <span style={{ fontFamily: fonts.mono, fontSize: 11, color: '#6a7a18', letterSpacing: '0.1em' }}>✓ Saved</span>
+            <span style={{ fontFamily: fonts.mono, fontSize: 11, color: tx(0.9), letterSpacing: '0.1em' }}>✓ Saved</span>
             <a href="/dashboard" style={{ fontFamily: fonts.mono, fontSize: 11, color: tx(0.35), letterSpacing: '0.08em', textDecoration: 'none' }}>← Back to dashboard</a>
           </>
         )}

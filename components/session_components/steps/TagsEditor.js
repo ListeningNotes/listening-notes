@@ -1,6 +1,6 @@
 'use client';
 import { fonts } from '../../../library/sitewide_visuals';
-import { tx, bdr, lbl } from '../../../library/session_styles';
+import { tx, bdr, dk, lbl } from '../../../library/session_styles';
 import SessionButton from '../SessionButton';
 
 // Step 4 — add, remove, and review tags before moving to preview.
@@ -41,11 +41,11 @@ export default function TagsEditor({
             <span key={i} style={{
               display: 'inline-flex', alignItems: 'center', gap: 6,
               fontFamily: fonts.mono, fontSize: 10, letterSpacing: '0.08em', textTransform: 'uppercase',
-              color: tx(0.6), border: `1px solid ${bdr(0.12)}`, borderRadius: 20,
-              padding: '5px 12px', background: 'rgba(255,255,255,0.5)',
+              color: tx(0.78), border: `1px solid ${bdr(0.14)}`, borderRadius: 20,
+              padding: '5px 12px', background: dk(0.42),
             }}>
               #{tag}
-              <button onClick={() => removeTag(tag)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: tx(0.35), fontSize: 11, padding: 0, lineHeight: 1 }}>×</button>
+              <button onClick={() => removeTag(tag)} style={{ background: 'none', border: 'none', cursor: 'pointer', color: tx(0.5), fontSize: 11, padding: 0, lineHeight: 1 }}>×</button>
             </span>
           ))}
         </div>
@@ -57,7 +57,7 @@ export default function TagsEditor({
           onChange={e => setTagInput(e.target.value)}
           onKeyDown={e => { if (e.key === 'Enter') addTag(tagInput); }}
           placeholder="Add a tag..."
-          style={{ flex: 1, background: 'rgba(255,255,255,0.5)', border: `1px solid ${bdr(0.1)}`, borderRadius: 20, padding: '9px 18px', fontFamily: fonts.mono, fontSize: 11, color: tx(0.78), outline: 'none' }}
+          style={{ flex: 1, background: dk(0.45), border: `1px solid ${bdr(0.16)}`, borderRadius: 20, padding: '9px 18px', fontFamily: fonts.mono, fontSize: 11, color: tx(0.9), outline: 'none' }}
         />
         <SessionButton onClick={() => addTag(tagInput)} disabled={!tagInput.trim()}>Add</SessionButton>
       </div>

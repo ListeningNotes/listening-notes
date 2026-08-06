@@ -6,7 +6,7 @@ import { tx, bdr } from '../../../../library/session_styles';
 import { useListeningSession } from '../../../../hooks/useListeningSession';
 import PasswordGate from '../../../../components/session_components/PasswordGate';
 import EchoNetwork from '../../../../components/EchoNetwork';
-import { SessionDuration, LOADING_PHRASES } from '../../../../library/session_timers';
+import { SessionDuration } from '../../../../library/session_timers';
 import AlbumDebrief from '../../../../components/session_components/steps/AlbumDebrief';
 import TrackNotes from '../../../../components/session_components/steps/TrackNotes';
 import AlbumNotes from '../../../../components/session_components/steps/AlbumNotes';
@@ -36,7 +36,6 @@ export default function EchoSessionPage() {
   const [dimmed, setDimmed]           = useState(true);
   const [nodeArt, setNodeArt]         = useState('');
   const [assembling, setAssembling]   = useState(false);
-  const [loadTyped, setLoadTyped]     = useState('');
   const [rippleCount, setRippleCount] = useState(0);
   const [completing, setCompleting]   = useState(false);
   const [expandScale, setExpandScale] = useState(1);
@@ -108,50 +107,14 @@ export default function EchoSessionPage() {
     return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
   }, [authed]);
 
-  // Typewriter — visual only, cycles through phrases while loading
-  useEffect(() => {
-    if (!authed) return;
-    let idx = 0, cancelled = false;
-    function runPhrase() {
-      if (cancelled) return;
-      const phrase = LOADING_PHRASES[idx];
-      let i = 0;
-      const typeId = setInterval(() => {
-        if (cancelled) { clearInterval(typeId); return; }
-        i++;
-        setLoadTyped(phrase.slice(0, i));
-        if (i >= phrase.length) {
-          clearInterval(typeId);
-          setTimeout(() => {
-            if (cancelled) return;
-            const backId = setInterval(() => {
-              if (cancelled) { clearInterval(backId); return; }
-              i--;
-              setLoadTyped(phrase.slice(0, i));
-              if (i <= 0) {
-                clearInterval(backId);
-                idx = (idx + 1) % LOADING_PHRASES.length;
-                setTimeout(() => { if (!cancelled) runPhrase(); }, 80);
-              }
-            }, 18);
-          }, 1800);
-        }
-      }, 30);
-    }
-    runPhrase();
-    return () => { cancelled = true; };
-  }, [authed]);
-
-  // The puzzle finished assembling — but don't reveal yet.
+  // The puzzle finished assembling.
   const handleAssembled = useCallback(() => setPuzzleDone(true), []);
 
-  // Run the final art-expansion + panel reveal only once the puzzle has
-  // assembled AND research has finished. Web search makes research much
-  // slower than the animation, so gating on both keeps the loading screen
-  // alive (pill cycling) instead of freezing on full-bleed art.
+  // Reveal the session as soon as the puzzle has assembled. The briefing keeps
+  // streaming in behind the panel, so there is nothing left to wait on here —
+  // which is the whole point: ~4s on this screen instead of ~55s.
   useEffect(() => {
-    const researchDone = researchState === 'done' || researchState === 'error';
-    if (!puzzleDone || !researchDone) return;
+    if (!puzzleDone) return;
     setCompleting(true);
     const t1 = setTimeout(() => {
       const gridSize = Math.min(window.innerWidth, window.innerHeight) * 0.60;
@@ -160,7 +123,7 @@ export default function EchoSessionPage() {
     }, 16);
     const t2 = setTimeout(() => setAssembled(true), 1200);
     return () => { clearTimeout(t1); clearTimeout(t2); };
-  }, [puzzleDone, researchState]);
+  }, [puzzleDone]);
 
   function advanceTo(newStep) {
     setStep(newStep);
@@ -170,9 +133,8 @@ export default function EchoSessionPage() {
   if (checking) return <div style={{ minHeight: '100vh', background: '#f5f2ec' }} />;
   if (!authed) return <PasswordGate onAuth={() => setAuthed(true)} />;
 
-  // Show loading until animation completes AND research finishes
-  const researchDone = researchState === 'done' || researchState === 'error';
-  const showLoadingScreen = !assembled || !researchDone;
+  // Show loading only until the assembly animation completes.
+  const showLoadingScreen = !assembled;
 
   return (
     <>
@@ -180,10 +142,16 @@ export default function EchoSessionPage() {
         @keyframes ln-panel-appear { from{opacity:0;transform:translateY(14px) scale(0.99)} to{opacity:1;transform:translateY(0) scale(1)} }
         @keyframes ln-fade  { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
         @keyframes echo-cursor-blink { 0%,49%{opacity:1} 50%,100%{opacity:0} }
+        @keyframes ln-dot   { 0%,60%,100%{opacity:0.25;transform:translateY(0)} 30%{opacity:0.9;transform:translateY(-3px)} }
+        @keyframes ln-pulse { 0%,100%{opacity:0.35} 50%{opacity:0.8} }
+        @keyframes ln-lit {
+          0%,100% { box-shadow: 0 0 16px 2px rgba(255,255,255,0.32), 0 0 40px 10px rgba(255,255,255,0.12), inset 0 1px 0 rgba(255,255,255,0.20); }
+          50%     { box-shadow: 0 0 28px 6px rgba(255,255,255,0.60), 0 0 68px 20px rgba(255,255,255,0.24), inset 0 1px 0 rgba(255,255,255,0.34); }
+        }
         html, body { background: #f5f2ec !important; }
         ::-webkit-scrollbar { width: 3px; }
         ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 99px; }
-        textarea::placeholder { color: rgba(255,255,255,0.28); }
+        textarea::placeholder, input::placeholder { color: rgba(255,255,255,0.3); }
       `}</style>
 
       {/* EchoNetwork — puzzle assembly loading animation */}
@@ -224,33 +192,6 @@ export default function EchoSessionPage() {
           <div style={{ position: 'fixed', inset: 0, zIndex: 2, backgroundImage: `url(${albumArt})`, backgroundSize: 'cover', backgroundPosition: 'center', transform: 'scale(1.04)', pointerEvents: 'none' }} />
         )}
       </>}
-
-      {/* Typewriter pill — visible during loading, fades when completing */}
-      {showLoadingScreen && (
-        <div style={{
-          position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
-          zIndex: 10, pointerEvents: 'none',
-          opacity: completing ? 0 : 1,
-          transition: completing ? 'opacity 0.6s ease' : 'none',
-        }}>
-          {researchState === 'error' ? (
-            <div style={{ fontFamily: fonts.mono, fontSize: 12, color: '#ef4444', letterSpacing: '0.06em', textAlign: 'center' }}>{researchError}</div>
-          ) : (
-            <div style={{
-              width: 'fit-content', minWidth: 0, maxWidth: 'min(480px, calc(100vw - 48px))',
-              background: 'rgba(255,255,255,0.55)', backdropFilter: 'blur(18px)', WebkitBackdropFilter: 'blur(18px)',
-              borderRadius: 40, boxShadow: '0 8px 32px rgba(0,0,0,0.07)',
-              padding: '18px 28px', textAlign: 'center', position: 'relative', overflow: 'hidden',
-            }}>
-              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(145deg, rgba(255,255,255,0.6) 0%, transparent 60%)', pointerEvents: 'none' }} />
-              <div style={{ fontFamily: fonts.sans, fontWeight: 700, fontSize: 18, color: '#1a1520', whiteSpace: 'nowrap', lineHeight: 1.2 }}>
-                {loadTyped}
-                <span style={{ display: 'inline-block', marginLeft: 1, animation: 'echo-cursor-blink 0.75s step-end infinite' }}>|</span>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
 
       {/* ── Panel ── */}
       {!showLoadingScreen && (
@@ -307,9 +248,13 @@ export default function EchoSessionPage() {
                     const isReachable = s.id <= maxStep;
                     return (
                       <button key={s.id} onClick={() => isReachable && !isCurrent && setStep(s.id)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: 10, width: '100%', textAlign: 'left', background: isCurrent ? 'rgba(255,255,255,0.18)' : 'transparent', border: 'none', cursor: isReachable && !isCurrent ? 'pointer' : 'default', transition: 'background 0.15s' }}>
-                        <span style={{ fontFamily: fonts.mono, fontSize: 9, width: 14, textAlign: 'center', flexShrink: 0, color: isCurrent ? '#6a7a18' : isPast ? '#6a7a18' : tx(0.25) }}>
-                          {isPast ? '✓' : s.id + 1}
-                        </span>
+                        <span style={{
+                          width: 10, height: 10, borderRadius: '50%', flexShrink: 0,
+                          background: isCurrent ? 'rgba(255,255,255,0.95)' : isPast ? bdr(0.42) : 'transparent',
+                          border: `1px solid ${isCurrent ? 'rgba(255,255,255,0.95)' : isPast ? bdr(0.42) : bdr(0.26)}`,
+                          boxShadow: isCurrent ? '0 0 10px 2px rgba(255,255,255,0.5), 0 0 24px 7px rgba(255,255,255,0.18)' : 'none',
+                          transition: 'background 0.25s, box-shadow 0.25s, border-color 0.25s',
+                        }} />
                         <span style={{ fontFamily: fonts.mono, fontSize: 11, letterSpacing: '0.04em', color: isCurrent ? tx(0.88) : isPast ? tx(0.5) : tx(0.28), transition: 'color 0.15s' }}>
                           {s.label}
                         </span>

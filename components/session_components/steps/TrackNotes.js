@@ -1,4 +1,5 @@
 'use client';
+import { useState } from 'react';
 import { fonts } from '../../../library/sitewide_visuals';
 import { tx, bdr, lbl } from '../../../library/session_styles';
 import { TrackLength } from '../../../library/session_timers';
@@ -18,6 +19,9 @@ export default function TrackNotes({
   setOpenTrack,
   onNext,
 }) {
+  // Kept hidden by default so a running average doesn't steer the next rating.
+  const [avgShown, setAvgShown] = useState(false);
+
   const ratedCount = Object.values(trackRatings).filter(v => v > 0);
   const avg = ratedCount.length
     ? (ratedCount.reduce((a, b) => a + b, 0) / ratedCount.length).toFixed(2)
@@ -27,7 +31,18 @@ export default function TrackNotes({
     <div style={{ width: '100%' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
         <span style={lbl}>Track Notes</span>
-        {avg && <span style={{ fontFamily: fonts.mono, fontSize: 10, color: tx(0.35) }}>avg {avg} / 5</span>}
+        {avg && (
+          <button
+            onClick={() => setAvgShown(v => !v)}
+            style={{
+              fontFamily: fonts.mono, fontSize: 10, letterSpacing: '0.06em',
+              color: avgShown ? tx(0.55) : tx(0.3),
+              background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+            }}
+          >
+            {avgShown ? `avg ${avg} / 5` : 'reveal average'}
+          </button>
+        )}
       </div>
 
       {tracksLoading && !tracks && (
@@ -66,6 +81,13 @@ export default function TrackNotes({
               <div style={{ paddingBottom: 14, paddingLeft: 28, paddingRight: 4 }}>
                 <textarea
                   autoFocus
+                  ref={el => {
+                    // Size to content on open, not only while typing — otherwise
+                    // reopening a track clips its notes behind overflow:hidden.
+                    if (!el) return;
+                    el.style.height = 'auto';
+                    el.style.height = el.scrollHeight + 'px';
+                  }}
                   value={trackNotes[i] || ''}
                   onChange={e => {
                     setTrackNotes(prev => ({ ...prev, [i]: e.target.value }));
