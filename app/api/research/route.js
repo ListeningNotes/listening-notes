@@ -1,14 +1,61 @@
-import { research_album } from '@/library/ai_integration';
+import { research_album_live } from '@/library/ai_integration';
+import { pull_briefing, save_briefing } from '@/library/database_actions';
 import { requireWristband } from '@/library/wristband';
 
+// Streams the briefing as NDJSON — one complete brief object per line, each
+// superseding the last. The client renders whatever arrived most recently, so
+// the debrief fills in as Claude writes instead of appearing all at once.
+//
+// An album already researched comes straight back from the briefings table as
+// a single line. Pass refresh:true to skip the stored copy and research again.
 export async function POST(request) {
   const blocked = await requireWristband(request);
   if (blocked) return blocked;
-  try {
-    const { album, artist } = await request.json();
-    const data = await research_album(album, artist);
-    return Response.json(data);
-  } catch (error) {
-    return Response.json({ error: error.message }, { status: 500 });
+
+  const { album, artist, refresh } = await request.json();
+  const encoder = new TextEncoder();
+
+  if (!refresh) {
+    try {
+      const stored = await pull_briefing(album, artist);
+      if (stored?.brief) {
+        const brief = { ...stored.brief, done: true, cached: true, researched_at: stored.refreshed_at };
+        return new Response(JSON.stringify(brief) + '\n', {
+          headers: { 'Content-Type': 'application/x-ndjson; charset=utf-8', 'Cache-Control': 'no-store' },
+        });
+      }
+    } catch {
+      // A cache lookup failure is never a reason to fail the request — fall
+      // through and research as though nothing was stored.
+    }
   }
+
+  const stream = new ReadableStream({
+    async start(controller) {
+      let last = null;
+      try {
+        for await (const brief of research_album_live(album, artist)) {
+          last = brief;
+          controller.enqueue(encoder.encode(JSON.stringify(brief) + '\n'));
+        }
+      } catch (error) {
+        controller.enqueue(encoder.encode(JSON.stringify({ error: error.message }) + '\n'));
+      } finally {
+        controller.close();
+      }
+      // Store only a briefing that actually finished with something in it, so a
+      // truncated or empty run doesn't get cached and served forever.
+      if (last?.done && (last.sections?.length || last.key_facts?.length)) {
+        try { await save_briefing(album, artist, last); } catch { /* caching is best-effort */ }
+      }
+    },
+  });
+
+  return new Response(stream, {
+    headers: {
+      'Content-Type': 'application/x-ndjson; charset=utf-8',
+      'Cache-Control': 'no-store',
+      'X-Accel-Buffering': 'no',
+    },
+  });
 }

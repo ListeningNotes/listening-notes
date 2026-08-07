@@ -1,7 +1,9 @@
 'use client';
 import { fonts } from '../../../library/sitewide_visuals';
-import { tx, bdr, lbl } from '../../../library/session_styles';
+import { tx, bdr, dk, lbl } from '../../../library/session_styles';
 import SessionButton from '../SessionButton';
+import HorizonChart from '../../main_components/HorizonChart';
+import StarDisplay from '../../main_components/StarRating';
 
 // Step 5 — formatted entry preview with save action.
 // Three states: waiting to format / formatting in progress / formatted output ready.
@@ -16,6 +18,8 @@ export default function SessionPreview({
   saving,
   saved,
   overallNotes,
+  tracks,
+  trackRatings,
   doFormat,
   doSave,
 }) {
@@ -63,19 +67,21 @@ export default function SessionPreview({
           <div style={{ fontFamily: fonts.mono, fontSize: 11, color: tx(0.38), marginBottom: 10 }}>
             {brief?.artist}{brief?.year ? ' · ' + brief.year : ''}
           </div>
-          <div style={{ display: 'flex', gap: 3 }}>
-            {[1, 2, 3, 4, 5].map(i => (
-              <span key={i} style={{ fontSize: 14, color: i <= Math.floor(rating) ? '#c8960a' : tx(0.15) }}>★</span>
-            ))}
-          </div>
+          <StarDisplay rating={rating} size={16} />
         </div>
       </div>
 
       <div style={{ ...lbl, marginBottom: 12 }}>Album Notes</div>
       <div style={{ fontFamily: fonts.sans, fontSize: 14, lineHeight: 1.9, color: tx(0.88), whiteSpace: 'pre-wrap', marginBottom: 28 }}>{output.album_notes}</div>
 
-      {output.horizon && (
-        <div style={{ textAlign: 'center', fontFamily: fonts.mono, fontSize: 18, letterSpacing: '0.06em', color: tx(0.18), margin: '24px 0' }}>{output.horizon}</div>
+      {/* Drawn, not typed. This used to render the ▁▂▃█ block characters as
+          text, and the font fell back per-glyph — which is why the bars sat on
+          different baselines. As flex children of one flex-end row they can't. */}
+      {tracks?.length > 0 && (
+        <div style={{ margin: '28px 0 8px' }}>
+          <div style={{ ...lbl, marginBottom: 10 }}>Listening Horizon</div>
+          <HorizonChart tracks={tracks} trackRatings={trackRatings} height={90} labels animate={false} />
+        </div>
       )}
 
       {output.track_notes && (
@@ -88,19 +94,19 @@ export default function SessionPreview({
       {sessionTags.length > 0 && (
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, paddingTop: 20, borderTop: `1px solid ${bdr(0.07)}`, marginBottom: 32 }}>
           {sessionTags.map((t, i) => (
-            <span key={i} style={{ fontFamily: fonts.mono, fontSize: 9, letterSpacing: '0.08em', textTransform: 'uppercase', color: tx(0.38), border: `1px solid ${bdr(0.1)}`, borderRadius: 20, padding: '3px 10px', background: 'rgba(255,255,255,0.4)' }}>#{t}</span>
+            <span key={i} style={{ fontFamily: fonts.mono, fontSize: 9, letterSpacing: '0.08em', textTransform: 'uppercase', color: tx(0.7), border: `1px solid ${bdr(0.14)}`, borderRadius: 20, padding: '3px 10px', background: dk(0.42) }}>#{t}</span>
           ))}
         </div>
       )}
 
-      <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 16 }}>
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 16, marginTop: 8 }}>
         {!saved ? (
           <SessionButton onClick={doSave} disabled={saving} accent style={{ padding: '12px 40px', fontSize: 12 }}>
             {saving ? 'Saving…' : 'Save to Site →'}
           </SessionButton>
         ) : (
           <>
-            <span style={{ fontFamily: fonts.mono, fontSize: 11, color: '#6a7a18', letterSpacing: '0.1em' }}>✓ Saved</span>
+            <span style={{ fontFamily: fonts.mono, fontSize: 11, color: tx(0.9), letterSpacing: '0.1em' }}>✓ Saved</span>
             <a href="/dashboard" style={{ fontFamily: fonts.mono, fontSize: 11, color: tx(0.35), letterSpacing: '0.08em', textDecoration: 'none' }}>← Back to dashboard</a>
           </>
         )}

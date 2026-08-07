@@ -7,7 +7,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import { fonts } from '../../../library/sitewide_visuals';
-import { parseHorizon, parseTracksFromNotes, splitNotes } from '../../../library/entry_formatter';
+import { parseHorizon, entryTracks, splitNotes } from '../../../library/entry_formatter';
 import DotNav from '../../../components/main_components/DotNav';
 import SiteNav from '../../../components/main_components/SiteNav';
 import HorizonBar from '../../../components/main_components/Slug_Page/HorizonBar';
@@ -15,6 +15,7 @@ import TrackThread from '../../../components/main_components/Slug_Page/TrackThre
 import MetadataLabel from '../../../components/main_components/Slug_Page/MetadataLabel';
 import MetadataLabelInline from '../../../components/main_components/Slug_Page/MetadataLabelInline';
 import Chip from '../../../components/main_components/Slug_Page/Chip';
+import StarRating from '../../../components/main_components/StarRating';
 
 
 export default function FullPostPage({ entry }) {
@@ -27,7 +28,7 @@ export default function FullPostPage({ entry }) {
     : [];
 
   const { albumNotes } = splitNotes(entry.notes);
-  const parsedTracks = parseTracksFromNotes(entry.track_notes || entry.notes);
+  const parsedTracks = entryTracks(entry);
   const horizonBars = parseHorizon(entry.horizon);
 
   // Load comments from the API for this entry
@@ -51,7 +52,6 @@ export default function FullPostPage({ entry }) {
   const allTracksFive = parsedTracks.length > 0 && parsedTracks.every(t => t.stars === 5);
   const isMasterpiece = allTracksFive || entry.rating === 'Masterpiece';
   const displayRating = isMasterpiece ? 5 : parseFloat(entry.rating) || 0;
-  const StarVisualConversion = displayRating > 0 ? '★'.repeat(Math.floor(displayRating)) + (displayRating % 1 >= 0.5 ? '½' : '') : '';
 
   return (
     <div style={{ background: 'var(--bg)', minHeight: '100vh', color: 'var(--ink)', fontFamily: fonts.sans }}>
@@ -111,7 +111,7 @@ export default function FullPostPage({ entry }) {
                 {entry.artist}{entry.year ? ' · ' + entry.year : ''}
               </div>
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
-                {StarVisualConversion && <span style={{ color: 'var(--gold)', fontSize: '14px', letterSpacing: '2px' }}>{StarVisualConversion}</span>}
+                {displayRating > 0 && <StarRating rating={displayRating} size={15} glow={isMasterpiece} style={{ verticalAlign: 'middle' }} />}
                 {entry.relationship && <Chip>{entry.relationship}</Chip>}
                 {entry.entry_type && <Chip>{entry.entry_type}</Chip>}
                 {(entry.favorite === true || entry.favorite === 'true') && <Chip accent>Favorite</Chip>}

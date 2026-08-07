@@ -32,9 +32,27 @@ export default function HorizonBar({ horizon, tracks, commentsByTrack, onBarClic
           );
         })}
       </div>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '6px' }}>
-        <span style={{ fontFamily: fonts.mono, fontSize: '9px', color: 'var(--ink-faint)', letterSpacing: '0.1em' }}>track 1</span>
-        <span style={{ fontFamily: fonts.mono, fontSize: '9px', color: 'var(--ink-faint)', letterSpacing: '0.1em' }}>track {bars.length}</span>
+      {/* Track titles on a diagonal beneath their own bar — the end of each
+          title points at the bar it belongs to. Replaces the old "track 1 /
+          track N" endpoints, which said nothing about the shape. */}
+      <div style={{ display: 'flex', gap: '3px', height: bars.length > 20 ? 62 : 76, marginTop: '6px' }}>
+        {bars.map((_, i) => {
+          const track = tracks[i];
+          return (
+            <div key={i} style={{ flex: 1, minWidth: 0, position: 'relative' }}>
+              <span style={{
+                position: 'absolute', top: 0, right: '50%',
+                transformOrigin: '100% 0', transform: 'rotate(-52deg)',
+                whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                maxWidth: bars.length > 20 ? 78 : 104, display: 'block', textAlign: 'right',
+                fontFamily: fonts.mono, fontSize: '9.5px', lineHeight: 1.2,
+                color: 'var(--ink-faint)', pointerEvents: 'none',
+              }}>
+                {track ? track.name : i + 1}
+              </span>
+            </div>
+          );
+        })}
       </div>
     </div>
   );

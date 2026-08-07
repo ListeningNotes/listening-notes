@@ -2,6 +2,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { searchArtistAlbums } from '../library/music_data_api';
 
+// Per-card delay as the album cards fly out of the network into the grid.
+// The grid's echo-reel-in animation reads this too — change both together.
+export const CARD_STAGGER_MS = 65;
+
 // Manages the full album search and selection flow:
 // artist search → Echo network animation → cards emerging →
 // grid browsing/pagination → fly-to-centre animation → manual entry.
@@ -56,32 +60,34 @@ export function useAlbumSelection({ step, onAlbumPick }) {
     const t = setTimeout(() => {
       setEchoFaded(true);
       setCardPhase('grid');
-    }, 1800);
+    }, 900);
     return () => clearTimeout(t);
   }, [zoomReady, albums.length]);
 
   // Enter pressed — Echo zooms and turbulence plays while results load.
-  // Albums are held back until turbulence settles (1800ms).
+  // Albums are held back until turbulence settles. iTunes answers in well
+  // under half a second, so this hold is purely for the look — keep it short.
   function handleReveal() {
     if (!artistInput.trim()) return;
     setRevealed(true);
     clearTimeout(zoomTimerRef.current);
-    zoomTimerRef.current = setTimeout(() => setZoomReady(true), 1800);
+    zoomTimerRef.current = setTimeout(() => setZoomReady(true), 900);
   }
 
-  // Called by EchoNetwork once spotlit nodes have glowed for 600ms.
+  // Called by EchoNetwork once spotlit nodes have locked on (~1s after spotlit).
   // positions: [{x, y, size}] — real canvas coords for each spotlit node.
+  // CARD_STAGGER_MS must stay in step with the echo-reel-in delay on the grid.
   function handleSpotlit(positions) {
     setNodePositions(positions);
     setCardPhase('growing');
-    const allGrownMs = (positions.length - 1) * 120 + 800;
+    const allGrownMs = (positions.length - 1) * CARD_STAGGER_MS + 600;
     clearTimeout(fadeTimerRef.current);
     fadeTimerRef.current = setTimeout(() => setEchoFaded(true), allGrownMs);
     clearTimeout(cardPhaseRef.current);
     cardPhaseRef.current = setTimeout(() => {
       setCardPhase('grid');
       setNodePositions(null);
-    }, allGrownMs + 600);
+    }, allGrownMs + 300);
   }
 
   // Resets all search state back to the initial empty screen

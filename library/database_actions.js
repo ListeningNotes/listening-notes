@@ -1,5 +1,6 @@
 import database from './database_connection.js';
 import { create_slug } from './slug_generator.js';
+import { serializeTracks } from './entry_formatter.js';
 
 export async function pull_all_entries() {
   return await database`
@@ -18,7 +19,7 @@ export async function save_new_entry(body) {
   const {
     album, artist, year, entry_type, relationship,
     rating, favorite, background = '', notes, track_notes, tags,
-    horizon, album_art, post_link
+    horizon, album_art, post_link, tracks = null
   } = body;
 
   const slug = create_slug(album);
@@ -27,11 +28,12 @@ export async function save_new_entry(body) {
     INSERT INTO entries (
       album, artist, year, entry_type, relationship,
       rating, favorite, background, notes, track_notes, tags,
-      horizon, album_art, post_link, slug
+      horizon, album_art, post_link, slug, tracks
     ) VALUES (
       ${album}, ${artist}, ${year}, ${entry_type}, ${relationship},
       ${rating}, ${favorite}, ${background}, ${notes}, ${track_notes}, ${tags},
-      ${horizon}, ${album_art}, ${post_link}, ${slug}
+      ${horizon}, ${album_art}, ${post_link}, ${slug},
+      ${tracks ? JSON.stringify(tracks) : null}
     )
     RETURNING *
   `;
@@ -43,8 +45,19 @@ export async function update_entry(slug, fields) {
     fields.tags = fields.tags.split(',').map(t => t.trim()).filter(Boolean);
   }
 
+  // Editing tracks re-derives both text shapes from them here rather than in the
+  // caller, so there's no way to update the track list and leave the prose
+  // stars or the horizon behind.
+  if (Array.isArray(fields.tracks)) {
+    const derived = serializeTracks(fields.tracks);
+    fields.track_notes = derived.track_notes;
+    fields.horizon = derived.horizon;
+  }
+
   const result = await database`
     UPDATE entries SET
+      tracks = COALESCE(${fields.tracks ? JSON.stringify(fields.tracks) : null}::jsonb, tracks),
+      masterpiece = COALESCE(${fields.masterpiece ?? null}, masterpiece),
       album = COALESCE(${fields.album ?? null}, album),
       artist = COALESCE(${fields.artist ?? null}, artist),
       year = COALESCE(${fields.year ?? null}, year),
@@ -68,4 +81,32 @@ export async function update_entry(slug, fields) {
 export async function delete_entry(slug) {
   await database`DELETE FROM entries WHERE slug = ${slug}`;
   return { deleted: true };
+}
+
+// ── Briefings ──────────────────────────────────────────────────────────
+// A researched album is kept so the same listen never pays for the same web
+// search twice. Album history doesn't change, so these are held indefinitely
+// and only replaced when the user asks for fresh research.
+
+// Album and artist as typed vary — casing, punctuation, "and" vs "&" — so the
+// key is normalised the same way the iTunes lookups do it.
+const briefing_key = (album, artist) =>
+  `${album} ${artist}`.toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, ' ').trim();
+
+export async function pull_briefing(album, artist) {
+  const result = await database`
+    SELECT brief, refreshed_at FROM briefings
+    WHERE lookup_key = ${briefing_key(album, artist)} LIMIT 1
+  `;
+  return result[0] || null;
+}
+
+export async function save_briefing(album, artist, brief) {
+  await database`
+    INSERT INTO briefings (lookup_key, album, artist, brief)
+    VALUES (${briefing_key(album, artist)}, ${album}, ${artist}, ${JSON.stringify(brief)})
+    ON CONFLICT (lookup_key) DO UPDATE
+      SET brief = EXCLUDED.brief, artist = EXCLUDED.artist,
+          album = EXCLUDED.album, refreshed_at = NOW()
+  `;
 }

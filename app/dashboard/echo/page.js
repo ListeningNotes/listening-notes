@@ -2,7 +2,8 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { fonts } from '../../../library/sitewide_visuals';
-import { useAlbumSelection } from '../../../hooks/useAlbumSelection';
+import { useAlbumSelection, CARD_STAGGER_MS } from '../../../hooks/useAlbumSelection';
+import { handOff } from '../../../library/baton';
 import PasswordGate from '../../../components/session_components/PasswordGate';
 import EchoNetwork from '../../../components/EchoNetwork';
 import PreListenQuestionnaire from '../../../components/session_components/steps/PreListenQuestionnaire';
@@ -94,6 +95,9 @@ export default function EchoPage() {
       setRelationship('');
       setEntryType('');
       setConfirmPhase('q1');
+      // Research needs nothing but the album and artist, so start it here and
+      // let it run through the two questions and the loading animation.
+      handOff(album, artist);
     },
   });
 
@@ -165,7 +169,7 @@ export default function EchoPage() {
       <style>{`
         @keyframes echo-grid-emerge { 0%{opacity:0;transform:scale(0.05)} 60%{transform:scale(1.03)} 100%{opacity:1;transform:scale(1)} }
         @keyframes echo-card-in { 0%{opacity:0;transform:scale(0.78)} 100%{opacity:1;transform:scale(1)} }
-        @keyframes echo-reel-in { 0%{opacity:0;transform:translate(var(--nx),var(--ny)) scale(0.12)} 28%{opacity:1} 100%{opacity:1;transform:translate(0,0) scale(1)} }
+        @keyframes echo-reel-in { 0%{opacity:0;transform:translate(var(--nx),var(--ny)) scale(0.12)} 24%{opacity:1} 100%{opacity:1;transform:translate(0,0) scale(1)} }
         @keyframes echo-breathe { 0%,100%{opacity:0.72;transform:scale(1)} 50%{opacity:1;transform:scale(1.012)} }
         @keyframes ln-fade  { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
         @keyframes ln-pulse { 0%,100%{opacity:0.35} 50%{opacity:0.8} }
@@ -304,7 +308,7 @@ export default function EchoPage() {
                         textAlign: 'left',
                         '--nx': `${nx}px`,
                         '--ny': `${ny}px`,
-                        animation: `echo-reel-in 0.75s cubic-bezier(0.25,1.0,0.5,1) ${i * 120}ms both`,
+                        animation: `echo-reel-in 0.55s cubic-bezier(0.25,1.0,0.5,1) ${i * CARD_STAGGER_MS}ms both`,
                       }}
                     >
                       <div style={{ borderRadius: 6, overflow: 'hidden', aspectRatio: '1', boxShadow: '0 8px 40px rgba(0,0,0,0.35)', width: CARD }}>
