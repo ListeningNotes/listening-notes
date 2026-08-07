@@ -1,4 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
+import { requireWristband } from '@/library/wristband';
 
 const client = new Anthropic();
 
@@ -26,6 +27,10 @@ Phase behavior:
 If echoMemory is provided, use it naturally — the way someone who has listened alongside them for months would. Don't announce it. Just know them.`;
 
 export async function POST(request) {
+  // This route bills against the API key on every call, so it stays behind the
+  // wristband like /api/research and /api/format.
+  const blocked = await requireWristband(request);
+  if (blocked) return blocked;
   try {
     const { message, phase, conversationHistory = [], entryContext = {}, echoMemory = '' } = await request.json();
 

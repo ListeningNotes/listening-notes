@@ -3,7 +3,10 @@ import { fonts } from '../../../library/sitewide_visuals';
 import { tx, bdr, dk, lbl } from '../../../library/session_styles';
 import SessionButton from '../SessionButton';
 
-// Step 3 — Echo-powered reflection chat with quick-prompt shortcuts.
+// Echo-powered reflection chat with quick-prompt shortcuts. No longer a step of
+// its own — it opens as a drawer from Track Notes, where the questions actually
+// come up mid-listen. onNext is optional and only renders the step footer;
+// onClose renders the drawer header.
 
 export default function ReflectChat({
   chatMessages,
@@ -13,9 +16,19 @@ export default function ReflectChat({
   chatEndRef,
   sendChat,
   onNext,
+  onClose,
 }) {
   return (
     <div style={{ width: '100%', display: 'flex', flexDirection: 'column', height: '100%' }}>
+      {onClose && (
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: 14, marginBottom: 4, borderBottom: `1px solid ${bdr(0.08)}` }}>
+          <span style={lbl}>Ask Echo</span>
+          <button onClick={onClose} style={{
+            fontFamily: fonts.mono, fontSize: 13, lineHeight: 1, color: tx(0.5),
+            background: 'none', border: 'none', cursor: 'pointer', padding: 4,
+          }}>✕</button>
+        </div>
+      )}
       <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 12, paddingBottom: 16 }}>
 
         {chatMessages.length === 0 && (
@@ -72,12 +85,14 @@ export default function ReflectChat({
         <SessionButton onClick={() => sendChat()} disabled={!chatInput.trim() || chatLoading} style={{ padding: '10px 18px' }}>→</SessionButton>
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 20, marginTop: 16 }}>
-        <button onClick={onNext} style={{ fontFamily: fonts.mono, fontSize: 10, letterSpacing: '0.08em', textTransform: 'uppercase', color: tx(0.35), background: 'none', border: 'none', cursor: 'pointer' }}>
-          Skip →
-        </button>
-        <SessionButton onClick={onNext} accent>Continue →</SessionButton>
-      </div>
+      {onNext && (
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 20, marginTop: 16 }}>
+          <button onClick={onNext} style={{ fontFamily: fonts.mono, fontSize: 10, letterSpacing: '0.08em', textTransform: 'uppercase', color: tx(0.35), background: 'none', border: 'none', cursor: 'pointer' }}>
+            Skip →
+          </button>
+          <SessionButton onClick={onNext} accent>Continue →</SessionButton>
+        </div>
+      )}
     </div>
   );
 }

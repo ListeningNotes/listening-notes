@@ -4,6 +4,18 @@ export function parseRating(rating) {
   return isNaN(n) ? 0 : n;
 }
 
+// The horizon bar is nothing but the track ratings drawn as block characters,
+// so it can be shown live during a session rather than only after formatting.
+// buildHorizon and parseHorizon are inverses — keep the block set in step.
+export function buildHorizon(tracks, trackRatings) {
+  if (!tracks?.length) return '';
+  const bars = ['▁','▂','▃','▄','▅','▆','▇','█'];
+  return tracks.map((_, i) => {
+    const r = trackRatings?.[i] || 0;
+    return bars[Math.round((r / 5) * (bars.length - 1))];
+  }).join('');
+}
+
 export function parseHorizon(horizon) {
   if (!horizon) return [];
   const BLOCK_MAP = { '\u2581': 0.12, '\u2582': 0.25, '\u2583': 0.37, '\u2584': 0.50, '\u2585': 0.62, '\u2586': 0.75, '\u2587': 0.87, '\u2588': 1.00 };
@@ -34,6 +46,41 @@ export function parseTracksFromNotes(notesText) {
     });
   }
   return results;
+}
+
+// The canonical track list for an entry. Reads the structured tracks column
+// when it's there, and falls back to parsing the prose for anything not
+// migrated — so a new entry and a 2024 one look the same to a renderer.
+// Returns the shape the pages already use: { num, name, stars, note }.
+export function entryTracks(entry) {
+  if (Array.isArray(entry?.tracks) && entry.tracks.length) {
+    return entry.tracks.map(t => ({
+      num: t.number,
+      name: t.title,
+      stars: t.rating,          // real number — half ratings survive here
+      note: t.note || '',
+    }));
+  }
+  return parseTracksFromNotes(entry?.track_notes || entry?.notes);
+}
+
+// Renders a structured track list back into the two stored text shapes. Both
+// are derived from the same source now, so they can't drift the way ★ text and
+// the horizon string did.
+export function serializeTracks(tracks) {
+  const list = tracks || [];
+  const track_notes = list
+    .filter(t => (t.note || '').trim() || t.rating > 0)
+    .map(t => {
+      const stars = t.rating
+        ? '★'.repeat(Math.floor(t.rating)) + (t.rating % 1 >= 0.5 ? '½' : '')
+        : '';
+      return `${t.number}. ${t.title}${stars ? ' — ' + stars : ''}${t.note ? '\n' + t.note : ''}`;
+    })
+    .join('\n\n');
+
+  const ratings = Object.fromEntries(list.map((t, i) => [i, t.rating || 0]));
+  return { track_notes, horizon: buildHorizon(list, ratings) };
 }
 
 export function splitNotes(notesText) {

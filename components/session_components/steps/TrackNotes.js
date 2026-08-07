@@ -1,12 +1,15 @@
 'use client';
-import { useState } from 'react';
 import { fonts } from '../../../library/sitewide_visuals';
-import { tx, bdr, lbl } from '../../../library/session_styles';
+import { tx, bdr, dk, lbl } from '../../../library/session_styles';
 import { TrackLength } from '../../../library/session_timers';
 import SessionButton from '../SessionButton';
 import StarRating from '../StarRating';
 
 // Step 1 — expandable track list with per-track notes and star ratings.
+// Three states are readable at a glance: the track being written about (lit
+// surface), tracks already covered (filled marker), and ones still to do
+// (hollow marker). onAsk opens the Echo drawer, which the page owns so it can
+// sit inside the panel rather than floating over the whole viewport.
 
 export default function TrackNotes({
   tracks,
@@ -18,29 +21,29 @@ export default function TrackNotes({
   openTrack,
   setOpenTrack,
   onNext,
+  onAsk,
 }) {
-  // Kept hidden by default so a running average doesn't steer the next rating.
-  const [avgShown, setAvgShown] = useState(false);
-
-  const ratedCount = Object.values(trackRatings).filter(v => v > 0);
-  const avg = ratedCount.length
-    ? (ratedCount.reduce((a, b) => a + b, 0) / ratedCount.length).toFixed(2)
-    : null;
-
   return (
     <div style={{ width: '100%' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, gap: 12 }}>
         <span style={lbl}>Track Notes</span>
-        {avg && (
+        {/* Lit like the step markers in the sidebar — the same "this is live"
+            language, so it reads as part of the panel rather than a toolbar. */}
+        {onAsk && (
           <button
-            onClick={() => setAvgShown(v => !v)}
+            onClick={onAsk}
+            title="Ask Echo"
+            aria-label="Ask Echo"
             style={{
-              fontFamily: fonts.mono, fontSize: 10, letterSpacing: '0.06em',
-              color: avgShown ? tx(0.55) : tx(0.3),
-              background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+              width: 34, height: 34, borderRadius: '50%', flexShrink: 0,
+              fontFamily: fonts.mono, fontSize: 16, lineHeight: 1,
+              color: dk(0.82), background: 'rgba(255,255,255,0.92)',
+              border: `1px solid ${bdr(0.5)}`, cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              animation: 'ln-lit 2.4s ease-in-out infinite',
             }}
           >
-            {avgShown ? `avg ${avg} / 5` : 'reveal average'}
+            ?
           </button>
         )}
       </div>
@@ -48,37 +51,60 @@ export default function TrackNotes({
       {tracksLoading && !tracks && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {[...Array(10)].map((_, i) => (
-            <div key={i} style={{ height: 38, borderRadius: 8, background: 'rgba(0,0,0,0.06)', animation: `ln-pulse 1.6s ease-in-out ${i * 0.06}s infinite` }} />
+            <div key={i} style={{ height: 46, borderRadius: 8, background: bdr(0.06), animation: `ln-pulse 1.6s ease-in-out ${i * 0.06}s infinite` }} />
           ))}
         </div>
       )}
 
       {tracks && tracks.length === 0 && (
-        <div style={{ paddingTop: 60, textAlign: 'center', fontFamily: fonts.mono, fontSize: 11, color: tx(0.28) }}>
+        <div style={{ paddingTop: 60, textAlign: 'center', fontFamily: fonts.mono, fontSize: 12, color: tx(0.3) }}>
           No tracklist found — continue with album notes
         </div>
       )}
 
       {tracks && tracks.map((t, i) => {
-        const isOpen = openTrack === i;
+        const isOpen  = openTrack === i;
+        const covered = !!(trackNotes[i]?.trim()) || (trackRatings[i] || 0) > 0;
         return (
-          <div key={i} style={{ borderBottom: `1px solid ${bdr(0.07)}` }}>
+          <div
+            key={i}
+            style={{
+              borderRadius: 10,
+              background: isOpen ? dk(0.34) : 'transparent',
+              boxShadow: isOpen ? `inset 0 0 0 1px ${bdr(0.12)}` : 'none',
+              marginBottom: isOpen ? 8 : 0,
+              borderBottom: isOpen ? 'none' : `1px solid ${bdr(0.06)}`,
+              transition: 'background 0.18s, box-shadow 0.18s',
+            }}
+          >
             <div
               onClick={() => setOpenTrack(isOpen ? null : i)}
-              style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '11px 0', cursor: 'pointer', userSelect: 'none' }}
+              style={{ display: 'flex', alignItems: 'center', gap: 12, padding: isOpen ? '15px 16px' : '15px 6px', cursor: 'pointer', userSelect: 'none' }}
             >
-              <span style={{ fontFamily: fonts.mono, fontSize: 10, color: tx(0.22), minWidth: 20 }}>{t.number}.</span>
-              <span style={{ fontFamily: fonts.mono, fontSize: 12, color: tx(0.75), flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.title}</span>
-              {t.duration && <span style={{ fontFamily: fonts.mono, fontSize: 10, color: tx(0.22) }}>{TrackLength(t.duration)}</span>}
+              {/* Covered / still to do */}
+              <span style={{
+                width: 7, height: 7, borderRadius: '50%', flexShrink: 0,
+                background: covered ? tx(0.7) : 'transparent',
+                border: `1px solid ${covered ? tx(0.7) : bdr(0.25)}`,
+                transition: 'background 0.2s, border-color 0.2s',
+              }} />
+              <span style={{ fontFamily: fonts.mono, fontSize: 12, color: tx(0.3), minWidth: 22, flexShrink: 0 }}>{t.number}.</span>
+              <span style={{
+                fontFamily: fonts.mono, fontSize: 14, flex: 1, minWidth: 0,
+                color: isOpen ? tx(0.95) : covered ? tx(0.78) : tx(0.6),
+                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                transition: 'color 0.18s',
+              }}>{t.title}</span>
+              {t.duration && <span style={{ fontFamily: fonts.mono, fontSize: 11, color: tx(0.25), flexShrink: 0 }}>{TrackLength(t.duration)}</span>}
               <div onClick={e => e.stopPropagation()} style={{ flexShrink: 0 }}>
-                <StarRating value={trackRatings[i] || 0} onChange={v => setTrackRatings(prev => ({ ...prev, [i]: v }))} size={14} />
+                <StarRating value={trackRatings[i] || 0} onChange={v => setTrackRatings(prev => ({ ...prev, [i]: v }))} size={20} />
               </div>
-              <span style={{ fontFamily: fonts.mono, fontSize: 10, color: tx(0.25), flexShrink: 0, width: 12, textAlign: 'center' }}>
+              <span style={{ fontFamily: fonts.mono, fontSize: 11, color: tx(0.3), flexShrink: 0, width: 12, textAlign: 'center' }}>
                 {isOpen ? '▴' : '▾'}
               </span>
             </div>
             {isOpen && (
-              <div style={{ paddingBottom: 14, paddingLeft: 28, paddingRight: 4 }}>
+              <div style={{ padding: '0 16px 16px 48px' }}>
                 <textarea
                   autoFocus
                   ref={el => {
@@ -97,9 +123,9 @@ export default function TrackNotes({
                   placeholder="notes for this track..."
                   rows={2}
                   style={{
-                    fontFamily: fonts.mono, fontSize: 12, color: tx(0.7),
+                    fontFamily: fonts.mono, fontSize: 13, lineHeight: 1.8, color: tx(0.85),
                     background: 'transparent', border: 'none',
-                    borderBottom: `1px solid ${bdr(0.08)}`, outline: 'none',
+                    borderBottom: `1px solid ${bdr(0.12)}`, outline: 'none',
                     width: '100%', padding: '4px 0', resize: 'none', overflow: 'hidden', display: 'block',
                   }}
                 />

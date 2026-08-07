@@ -2,7 +2,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { fonts } from '../../../../library/sitewide_visuals';
-import { tx, bdr } from '../../../../library/session_styles';
+import { tx, bdr, dk } from '../../../../library/session_styles';
 import { useListeningSession } from '../../../../hooks/useListeningSession';
 import PasswordGate from '../../../../components/session_components/PasswordGate';
 import EchoNetwork from '../../../../components/EchoNetwork';
@@ -10,6 +10,7 @@ import { SessionDuration } from '../../../../library/session_timers';
 import AlbumDebrief from '../../../../components/session_components/steps/AlbumDebrief';
 import TrackNotes from '../../../../components/session_components/steps/TrackNotes';
 import AlbumNotes from '../../../../components/session_components/steps/AlbumNotes';
+import ScoreScreen from '../../../../components/session_components/steps/ScoreScreen';
 import ReflectChat from '../../../../components/session_components/steps/ReflectChat';
 import TagsEditor from '../../../../components/session_components/steps/TagsEditor';
 import SessionPreview from '../../../../components/session_components/steps/SessionPreview';
@@ -18,7 +19,7 @@ const STEPS = [
   { id: 0, label: 'Album Debrief' },
   { id: 1, label: 'Track Notes' },
   { id: 2, label: 'Album Notes' },
-  { id: 3, label: 'Reflect' },
+  { id: 3, label: 'Score' },
   { id: 4, label: 'Tags' },
   { id: 5, label: 'Preview' },
 ];
@@ -30,6 +31,8 @@ export default function EchoSessionPage() {
   const [checking, setChecking] = useState(true);
   const [step, setStep]         = useState(0);
   const [maxStep, setMaxStep]   = useState(0);
+  const [stepDir, setStepDir]   = useState(1);   // 1 forward, -1 back — drives the slide
+  const [askOpen, setAskOpen]   = useState(false);
 
   // Loading animation state (mirrors loading-test flow)
   const [zoomed, setZoomed]           = useState(true);
@@ -112,6 +115,15 @@ export default function EchoSessionPage() {
     return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
   }, [authed, skipIntro]);
 
+  // Escape closes the Echo drawer — along with the ✕ and clicking away, since
+  // a panel that traps you is worse than no panel.
+  useEffect(() => {
+    if (!askOpen) return;
+    const onKey = e => { if (e.key === 'Escape') setAskOpen(false); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [askOpen]);
+
   // The puzzle finished assembling.
   const handleAssembled = useCallback(() => setPuzzleDone(true), []);
 
@@ -130,9 +142,12 @@ export default function EchoSessionPage() {
     return () => { clearTimeout(t1); clearTimeout(t2); };
   }, [puzzleDone]);
 
-  function advanceTo(newStep) {
+  // Every step change goes through here so the slide knows which way to travel.
+  function goToStep(newStep) {
+    setStepDir(newStep >= step ? 1 : -1);
     setStep(newStep);
     setMaxStep(m => Math.max(m, newStep));
+    setAskOpen(false);
   }
 
   if (checking) return <div style={{ minHeight: '100vh', background: '#f5f2ec' }} />;
@@ -149,6 +164,10 @@ export default function EchoSessionPage() {
         @keyframes ln-fade  { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
         @keyframes echo-cursor-blink { 0%,49%{opacity:1} 50%,100%{opacity:0} }
         @keyframes ln-dot   { 0%,60%,100%{opacity:0.25;transform:translateY(0)} 30%{opacity:0.9;transform:translateY(-3px)} }
+        /* Steps rise from below going forward, settle from above going back. */
+        @keyframes ln-step-fwd  { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes ln-step-back { from{opacity:0;transform:translateY(-20px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes ln-drawer-in { from{opacity:0;transform:translateX(28px)} to{opacity:1;transform:translateX(0)} }
         @keyframes ln-pulse { 0%,100%{opacity:0.35} 50%{opacity:0.8} }
         @keyframes ln-lit {
           0%,100% { box-shadow: 0 0 16px 2px rgba(255,255,255,0.32), 0 0 40px 10px rgba(255,255,255,0.12), inset 0 1px 0 rgba(255,255,255,0.20); }
@@ -263,7 +282,7 @@ export default function EchoSessionPage() {
                     const isCurrent = s.id === step;
                     const isReachable = s.id <= maxStep;
                     return (
-                      <button key={s.id} onClick={() => isReachable && !isCurrent && setStep(s.id)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: 10, width: '100%', textAlign: 'left', background: isCurrent ? 'rgba(255,255,255,0.18)' : 'transparent', border: 'none', cursor: isReachable && !isCurrent ? 'pointer' : 'default', transition: 'background 0.15s' }}>
+                      <button key={s.id} onClick={() => isReachable && !isCurrent && goToStep(s.id)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: 10, width: '100%', textAlign: 'left', background: isCurrent ? 'rgba(255,255,255,0.18)' : 'transparent', border: 'none', cursor: isReachable && !isCurrent ? 'pointer' : 'default', transition: 'background 0.15s' }}>
                         <span style={{
                           width: 10, height: 10, borderRadius: '50%', flexShrink: 0,
                           background: isCurrent ? 'rgba(255,255,255,0.95)' : isPast ? bdr(0.42) : 'transparent',
@@ -281,16 +300,48 @@ export default function EchoSessionPage() {
               </div>
 
               {/* Main content */}
-              <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', overflow: step === 3 ? 'hidden' : 'auto' }}>
-                <div style={{ flex: 1, padding: step === 3 ? '36px 48px 36px' : '40px 48px 56px', display: step === 3 ? 'flex' : 'block', flexDirection: step === 3 ? 'column' : undefined, overflowY: step === 3 ? 'hidden' : undefined }}>
-                  {step === 0 && <AlbumDebrief brief={brief} researchState={researchState} researchError={researchError} onNext={() => advanceTo(1)} onReset={() => router.replace('/dashboard/echo')} onRefresh={refreshResearch} />}
-                  {step === 1 && <TrackNotes tracks={tracks} tracksLoading={tracksLoading} trackNotes={trackNotes} setTrackNotes={setTrackNotes} trackRatings={trackRatings} setTrackRatings={setTrackRatings} openTrack={openTrack} setOpenTrack={setOpenTrack} onNext={() => advanceTo(2)} />}
-                  {step === 2 && <AlbumNotes rating={rating} setRating={setRating} Masterpiece={Masterpiece} setMasterpiece={setMasterpiece} Favorite={Favorite} setFavorite={setFavorite} overallNotes={overallNotes} setOverallNotes={setOverallNotes} onNext={() => advanceTo(3)} />}
-                  {step === 3 && <ReflectChat chatMessages={chatMessages} chatInput={chatInput} setChatInput={setChatInput} chatLoading={chatLoading} chatEndRef={chatEndRef} sendChat={sendChat} onNext={() => advanceTo(4)} />}
-                  {step === 4 && <TagsEditor sessionTags={sessionTags} setSessionTags={setSessionTags} tagInput={tagInput} setTagInput={setTagInput} formatting={formatting} onNext={() => advanceTo(5)} />}
-                  {step === 5 && <SessionPreview brief={brief} albumArt={albumArt} output={output} formatting={formatting} rating={rating} sessionTags={sessionTags} saving={saving} saved={saved} overallNotes={overallNotes} doFormat={doFormat} doSave={doSave} />}
+              <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', overflow: 'auto' }}>
+                <div style={{ flex: 1, padding: '40px 48px 56px' }}>
+                  {/* Keyed on step so each screen mounts fresh and slides in. */}
+                  <div key={step} style={{ animation: `${stepDir > 0 ? 'ln-step-fwd' : 'ln-step-back'} 0.35s cubic-bezier(0.22,1,0.36,1) both` }}>
+                    {step === 0 && <AlbumDebrief brief={brief} researchState={researchState} researchError={researchError} onNext={() => goToStep(1)} onReset={() => router.replace('/dashboard/echo')} onRefresh={refreshResearch} />}
+                    {step === 1 && <TrackNotes tracks={tracks} tracksLoading={tracksLoading} trackNotes={trackNotes} setTrackNotes={setTrackNotes} trackRatings={trackRatings} setTrackRatings={setTrackRatings} openTrack={openTrack} setOpenTrack={setOpenTrack} onNext={() => goToStep(2)} onAsk={() => setAskOpen(true)} />}
+                    {step === 2 && <AlbumNotes tracks={tracks} trackRatings={trackRatings} overallNotes={overallNotes} setOverallNotes={setOverallNotes} onNext={() => goToStep(3)} />}
+                    {step === 3 && <ScoreScreen tracks={tracks} trackRatings={trackRatings} rating={rating} setRating={setRating} Masterpiece={Masterpiece} setMasterpiece={setMasterpiece} Favorite={Favorite} setFavorite={setFavorite} onNext={() => goToStep(4)} />}
+                    {step === 4 && <TagsEditor sessionTags={sessionTags} setSessionTags={setSessionTags} tagInput={tagInput} setTagInput={setTagInput} formatting={formatting} onNext={() => goToStep(5)} />}
+                    {step === 5 && <SessionPreview brief={brief} albumArt={albumArt} output={output} formatting={formatting} rating={rating} sessionTags={sessionTags} saving={saving} saved={saved} overallNotes={overallNotes} tracks={tracks} trackRatings={trackRatings} doFormat={doFormat} doSave={doSave} />}
+                  </div>
                 </div>
               </div>
+
+              {/* Ask Echo — slides in over the track list, tracks still visible
+                  beside it. Lives here rather than inside TrackNotes so it can
+                  sit inside the panel instead of floating over the viewport. */}
+              {step === 1 && askOpen && (
+                <div
+                  onClick={() => setAskOpen(false)}
+                  style={{ position: 'absolute', inset: 0, zIndex: 4, background: dk(0.28) }}
+                />
+              )}
+              {step === 1 && askOpen && (
+                <div style={{
+                  position: 'absolute', top: 0, right: 0, bottom: 0,
+                  width: 'min(420px, 58%)', zIndex: 5,
+                  display: 'flex', flexDirection: 'column',
+                  padding: '22px 22px 20px',
+                  background: dk(0.62),
+                  backdropFilter: 'blur(22px)', WebkitBackdropFilter: 'blur(22px)',
+                  borderLeft: `1px solid ${bdr(0.14)}`,
+                  boxShadow: `-18px 0 50px ${dk(0.35)}`,
+                  animation: 'ln-drawer-in 0.3s cubic-bezier(0.22,1,0.36,1)',
+                }}>
+                  <ReflectChat
+                    chatMessages={chatMessages} chatInput={chatInput} setChatInput={setChatInput}
+                    chatLoading={chatLoading} chatEndRef={chatEndRef} sendChat={sendChat}
+                    onClose={() => setAskOpen(false)}
+                  />
+                </div>
+              )}
             </div>
           </div>
         </div>
