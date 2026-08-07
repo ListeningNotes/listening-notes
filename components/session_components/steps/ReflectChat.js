@@ -72,8 +72,8 @@ export default function ReflectChat({
         <SessionButton onClick={() => sendChat()} disabled={!chatInput.trim() || chatLoading} style={{ padding: '10px 18px' }}>→</SessionButton>
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 16 }}>
-        <button onClick={onNext} style={{ fontFamily: fonts.mono, fontSize: 10, letterSpacing: '0.08em', textTransform: 'uppercase', color: tx(0.25), background: 'none', border: 'none', cursor: 'pointer' }}>
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 20, marginTop: 16 }}>
+        <button onClick={onNext} style={{ fontFamily: fonts.mono, fontSize: 10, letterSpacing: '0.08em', textTransform: 'uppercase', color: tx(0.35), background: 'none', border: 'none', cursor: 'pointer' }}>
           Skip →
         </button>
         <SessionButton onClick={onNext} accent>Continue →</SessionButton>

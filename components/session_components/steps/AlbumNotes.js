@@ -64,7 +64,7 @@ export default function AlbumNotes({
         <div style={{ ...lbl, marginTop: 8, textAlign: 'right' }}>{overallNotes.length} chars</div>
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+      <div style={{ display: 'flex', justifyContent: 'center', marginTop: 8 }}>
         <SessionButton onClick={onNext} disabled={overallNotes.trim().length < 10} accent>Continue →</SessionButton>
       </div>
     </div>

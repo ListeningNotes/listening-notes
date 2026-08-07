@@ -169,6 +169,20 @@ export function useListeningSession({ step }) {
     }
   }
 
+  // Throw away the stored briefing and research the album again. Deliberately
+  // does not touch notes, ratings or tags — only the briefing is replaced, so
+  // this is safe to hit in the middle of a listen.
+  function refreshResearch() {
+    const album  = albumInput || brief?.album;
+    const artist = artistName || brief?.artist;
+    if (!album) return;
+    setResearchState('loading');
+    setResearchError('');
+    setBrief(null);
+    handOff(album, artist, { refresh: true });
+    takeOver(album, artist, onResearchUpdate);
+  }
+
   // Reflect chat — step 3 quick-prompts
   async function sendChat(msg) {
     if (chatLoading) return;
@@ -287,6 +301,7 @@ export function useListeningSession({ step }) {
     elapsed,
     // Functions
     doResearch,
+    refreshResearch,
     doFormat,
     doSave,
     sendChat,

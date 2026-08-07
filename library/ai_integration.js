@@ -184,12 +184,26 @@ export async function format_post({ brief, notes, rating, masterpiece, favorite,
     }).join('');
   })();
 
+  // Only the tags are generated. The notes are the listener's own writing and
+  // the track block is already assembled above, so sending either through the
+  // model could only ever damage them: a quote mark in the prose was enough to
+  // silently truncate a whole entry. Prose never makes the round trip now.
+  const TAGS_SCHEMA = {
+    type: 'object',
+    properties: {
+      tags: { type: 'array', items: { type: 'string' }, description: '8-12 short tags for this entry' },
+    },
+    required: ['tags'],
+    additionalProperties: false,
+  };
+
   const message = await client.messages.create({
     model: 'claude-sonnet-4-6',
-    max_tokens: 4000,
+    max_tokens: 1000,
+    output_config: { format: { type: 'json_schema', schema: TAGS_SCHEMA } },
     messages: [{
       role: 'user',
-      content: `You are the voice behind "Listening Notes," a music blog. Thoughtful, intimate, editorial.
+      content: `Generate 8-12 tags for an entry in "Listening Notes," a personal music journal.
 
 Album: ${brief.album}
 Artist: ${brief.artist}
@@ -199,32 +213,29 @@ Entry type: ${entryType || 'First Listen'}
 Relationship: ${relationship || ''}
 Rating: ${rating ? rating + '/5' + (masterpiece ? ' (masterpiece)' : '') : 'unrated'}
 
-Raw listener notes:
+What the listener wrote:
 ${notes}
 
 ${trackNotesBlock ? `Per-track notes:\n${trackNotesBlock}` : ''}
 
-This is a personal journal entry. Return the raw listener notes almost exactly as written — fix spelling only. Do not rewrite, restructure, summarize, or improve sentences, and do not add any album background or context of your own. Preserve all paragraph breaks exactly as they appear in the raw notes.
-
-Include this horizon bar (already calculated, use exactly): ${horizonString}
-
-Also generate 8-12 tags relevant to this entry.
-
-Return ONLY valid JSON, no markdown fences:
-{
-  "album_notes": "full album-level notes section (no track notes here)",
-  "track_notes": "all per-track notes formatted as: 1. Track Title — ★★★★★\nnote text\n\n2. Track Title — ★★★\nnote text",
-  "horizon": "${horizonString}",
-  "tags": ["tag1", "tag2"]
-}`
+Cover the artist, the album, its genre and era, and the themes and feelings in what was written. Keep each tag to a few words at most.`
     }]
   });
 
-  const text = message.content[0].text;
-  console.log("RAW FORMAT RESPONSE:", text);
-  const parsed = JSON.parse(text.slice(text.indexOf('{'), text.lastIndexOf('}') + 1));
-  if (parsed.notes_prose && !parsed.album_notes) parsed.album_notes = parsed.notes_prose;
-  return parsed;
+  let tags = [];
+  try {
+    tags = JSON.parse(message.content.find(b => b.type === 'text')?.text || '{}').tags || [];
+  } catch {
+    // Tags are the only thing at stake here — an entry is still worth saving
+    // without them, and they can be added by hand on the Tags step.
+  }
+
+  return {
+    album_notes: notes,        // exactly as written — never round-tripped
+    track_notes: trackNotesBlock,
+    horizon: horizonString,
+    tags,
+  };
 }
 
 export async function ask_echo({ message, brief, overallNotes, trackNotes, tracks }) {

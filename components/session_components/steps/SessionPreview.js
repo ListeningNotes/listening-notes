@@ -93,7 +93,7 @@ export default function SessionPreview({
         </div>
       )}
 
-      <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: 16 }}>
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 16, marginTop: 8 }}>
         {!saved ? (
           <SessionButton onClick={doSave} disabled={saving} accent style={{ padding: '12px 40px', fontSize: 12 }}>
             {saving ? 'Saving…' : 'Save to Site →'}
