@@ -2,6 +2,8 @@
 import { fonts } from '../../../library/sitewide_visuals';
 import { tx, bdr, dk, lbl } from '../../../library/session_styles';
 import SessionButton from '../SessionButton';
+import HorizonChart from '../../main_components/HorizonChart';
+import StarDisplay from '../../main_components/StarRating';
 
 // Step 5 — formatted entry preview with save action.
 // Three states: waiting to format / formatting in progress / formatted output ready.
@@ -16,6 +18,8 @@ export default function SessionPreview({
   saving,
   saved,
   overallNotes,
+  tracks,
+  trackRatings,
   doFormat,
   doSave,
 }) {
@@ -63,19 +67,21 @@ export default function SessionPreview({
           <div style={{ fontFamily: fonts.mono, fontSize: 11, color: tx(0.38), marginBottom: 10 }}>
             {brief?.artist}{brief?.year ? ' · ' + brief.year : ''}
           </div>
-          <div style={{ display: 'flex', gap: 3 }}>
-            {[1, 2, 3, 4, 5].map(i => (
-              <span key={i} style={{ fontSize: 14, color: i <= Math.floor(rating) ? '#c8960a' : tx(0.15) }}>★</span>
-            ))}
-          </div>
+          <StarDisplay rating={rating} size={16} />
         </div>
       </div>
 
       <div style={{ ...lbl, marginBottom: 12 }}>Album Notes</div>
       <div style={{ fontFamily: fonts.sans, fontSize: 14, lineHeight: 1.9, color: tx(0.88), whiteSpace: 'pre-wrap', marginBottom: 28 }}>{output.album_notes}</div>
 
-      {output.horizon && (
-        <div style={{ textAlign: 'center', fontFamily: fonts.mono, fontSize: 18, letterSpacing: '0.06em', color: tx(0.18), margin: '24px 0' }}>{output.horizon}</div>
+      {/* Drawn, not typed. This used to render the ▁▂▃█ block characters as
+          text, and the font fell back per-glyph — which is why the bars sat on
+          different baselines. As flex children of one flex-end row they can't. */}
+      {tracks?.length > 0 && (
+        <div style={{ margin: '28px 0 8px' }}>
+          <div style={{ ...lbl, marginBottom: 10 }}>Listening Horizon</div>
+          <HorizonChart tracks={tracks} trackRatings={trackRatings} height={90} labels animate={false} />
+        </div>
       )}
 
       {output.track_notes && (

@@ -2,6 +2,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { fetchTracklist, fetchAlbumArtUrl } from '../library/music_data_api';
 import { handOff, takeOver } from '../library/baton';
+import { serializeTracks } from '../library/entry_formatter';
 
 // Owns every API call and piece of state for an active listening session:
 // research → note-taking → Echo chat → formatting → saving.
@@ -238,6 +239,17 @@ export function useListeningSession({ step }) {
     if (!output) return;
     setSaving(true);
     try {
+      // Tracks are saved as data, and the two text shapes are derived from that
+      // same list — so the stars in the prose and the bars in the horizon can't
+      // disagree the way they used to.
+      const structuredTracks = (tracks || []).map((t, i) => ({
+        number: t.number || i + 1,
+        title: t.title,
+        rating: trackRatings[i] || 0,
+        note: (trackNotes[i] || '').trim(),
+      })).filter(t => t.rating > 0 || t.note);
+      const derived = serializeTracks(structuredTracks);
+
       const res = await fetch('/api/entries', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -248,9 +260,10 @@ export function useListeningSession({ step }) {
           rating: Masterpiece ? 'Masterpiece' : (rating ? rating + ' stars' : ''),
           favorite: Favorite,
           notes: output.album_notes,
-          track_notes: output.track_notes || '',
+          tracks: structuredTracks,
+          track_notes: derived.track_notes,
           tags: sessionTags,
-          horizon: output.horizon || '',
+          horizon: derived.horizon,
           album_art: albumArt,
           post_link: '',
         }),

@@ -1,4 +1,5 @@
 import Anthropic from '@anthropic-ai/sdk';
+import { buildHorizon } from './entry_formatter.js';
 
 function get_client() {
   return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
@@ -175,14 +176,8 @@ export async function format_post({ brief, notes, rating, masterpiece, favorite,
       }).filter(Boolean).join('\n\n')
     : '';
 
-  const horizonString = (() => {
-    if (!tracks?.length) return '';
-    const bars = ['▁','▂','▃','▄','▅','▆','▇','█'];
-    return tracks.map((_, i) => {
-      const r = trackRatings?.[i] || 0;
-      return bars[Math.round((r / 5) * (bars.length - 1))];
-    }).join('');
-  })();
+  // Same bar the Score screen shows live during the session.
+  const horizonString = buildHorizon(tracks, trackRatings);
 
   // Only the tags are generated. The notes are the listener's own writing and
   // the track block is already assembled above, so sending either through the

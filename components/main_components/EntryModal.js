@@ -11,7 +11,7 @@ import { useEffect, useLayoutEffect, useState, useRef, useCallback } from 'react
 import StarRating from './StarRating';
 import HorizonGenerator from './entry_modal/HorizonGenerator';
 import StickyHeader from './entry_modal/StickyHeader';
-import { parseTracksFromNotes, splitNotes, parseRating } from '../../library/entry_formatter';
+import { entryTracks, splitNotes, parseRating } from '../../library/entry_formatter';
 
 
 const WIDGET_BG = 'var(--panel)';
@@ -120,7 +120,7 @@ export default function EntryModal({ slug, originRect, onClose }) {
 
   const { albumNotes, trackNotes: trackNotesFallback } = splitNotes(entry?.notes);
   const trackNotes = entry?.track_notes || trackNotesFallback;
-  const tracks = parseTracksFromNotes(entry?.track_notes || entry?.notes);
+  const tracks = entryTracks(entry);
   const allTracksFive = tracks.length > 0 && tracks.every(t => t.stars === 5);
   const masterpiece = allTracksFive || entry?.rating === 'Masterpiece';
   const displayRating = masterpiece ? 5 : parseRating(entry?.rating);

@@ -2,41 +2,33 @@
 import { fonts } from '../../../library/sitewide_visuals';
 import { tx, bdr, lbl } from '../../../library/session_styles';
 import SessionButton from '../SessionButton';
-import StarRating from '../StarRating';
+import HorizonChart from '../../main_components/HorizonChart';
 
-// Step 2 — overall star rating, Masterpiece/Favorite flags, and free-text album notes.
+// Step 2 — free-text album notes. The rating moved to the Score step so this
+// screen is only writing; the horizon sits above it as a reminder of how the
+// album actually went, track by track, while the impressions are being written.
 
 export default function AlbumNotes({
-  rating,
-  setRating,
-  Masterpiece,
-  setMasterpiece,
-  Favorite,
-  setFavorite,
+  tracks,
+  trackRatings,
   overallNotes,
   setOverallNotes,
   onNext,
 }) {
+  const list = tracks || [];
+  const hasRatings = Object.values(trackRatings || {}).some(v => v > 0);
+
   return (
     <div style={{ width: '100%' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap', marginBottom: 24 }}>
-        <StarRating value={rating} onChange={setRating} size={24} />
-        <div style={{ width: 1, height: 20, background: bdr(0.1), flexShrink: 0 }} />
-        {[['Masterpiece', Masterpiece, setMasterpiece], ['Favorite', Favorite, setFavorite]].map(([name, val, fn]) => (
-          <label key={name} style={{ display: 'flex', alignItems: 'center', gap: 7, cursor: 'pointer' }}>
-            <input
-              type="checkbox"
-              checked={val}
-              onChange={e => fn(e.target.checked)}
-              style={{ accentColor: '#f0ede8', cursor: 'pointer', width: 15, height: 15 }}
-            />
-            <span style={{
-              fontFamily: fonts.mono, fontSize: 10, letterSpacing: '0.08em', textTransform: 'uppercase',
-              color: val ? tx(0.95) : tx(0.35), transition: 'color 0.15s',
-            }}>{name}</span>
-          </label>
-        ))}
-      </div>
+
+      {list.length > 0 && hasRatings && (
+        <div style={{ marginBottom: 26 }}>
+          <div style={{ ...lbl, marginBottom: 10 }}>Listening Horizon</div>
+          {/* No labels here — this is a glance at the album's shape while
+              writing, not the screen where the shape gets studied. */}
+          <HorizonChart tracks={list} trackRatings={trackRatings} height={46} color={tx(0.6)} />
+        </div>
+      )}
 
       <div style={{ borderTop: `1px solid ${bdr(0.07)}`, paddingTop: 20, marginBottom: 16 }}>
         <div style={{ ...lbl, marginBottom: 14 }}>Album Notes</div>

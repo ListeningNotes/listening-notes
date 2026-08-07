@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { fonts } from '../../../library/sitewide_visuals';
+import StarRating from '../StarRating';
 import CommentThread from './CommentThread';
 import NewCommentForm from './NewCommentForm';
 
@@ -14,7 +15,7 @@ export default function TrackThread({ track, trackIndex, slug, commentsByTrack, 
       <div onClick={() => setOpen(v => !v)} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 0', cursor: 'pointer' }}>
         <span style={{ fontFamily: fonts.mono, fontSize: '10px', color: 'var(--ink-faint)', width: '20px', textAlign: 'right', flexShrink: 0 }}>{track.num}</span>
         <span style={{ fontSize: '13px', color: 'var(--ink)', flex: 1 }}>{track.name}</span>
-        {track.stars > 0 && <span style={{ fontSize: '11px', color: 'var(--accent)', letterSpacing: '1px' }}>{'★'.repeat(track.stars)}</span>}
+        {track.stars > 0 && <StarRating rating={track.stars} size={12} />}
         <span style={{
           fontFamily: fonts.mono, fontSize: '9px', letterSpacing: '0.06em',
           color: count ? 'var(--ink)' : 'var(--ink-faint)',
