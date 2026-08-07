@@ -7,6 +7,7 @@
 import { useState, useEffect, useRef } from 'react';
 import PasswordGate from '../../../components/session_components/PasswordGate';
 import backgrounds from '../../../components/session_components/backgrounds';
+import StarRating from '../../../components/session_components/StarRating';
 import { fonts } from '../../../library/sitewide_visuals';
 
 const MONO  = "'DM Mono', 'Courier New', monospace";
@@ -46,6 +47,7 @@ function EditModal({ entry, onSave, onDelete, onClose }) {
     tags: Array.isArray(entry.tags) ? entry.tags.join(', ') : (entry.tags || ''),
     horizon: entry.horizon || '',
     album_art: entry.album_art || '',
+    tracks: Array.isArray(entry.tracks) ? entry.tracks.map(t => ({ ...t })) : [],
   });
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -53,6 +55,9 @@ function EditModal({ entry, onSave, onDelete, onClose }) {
   const [error, setError] = useState('');
 
   function set(key, val) { setFields(f => ({ ...f, [key]: val })); }
+  function setTrack(i, key, val) {
+    setFields(f => ({ ...f, tracks: f.tracks.map((t, n) => (n === i ? { ...t, [key]: val } : t)) }));
+  }
 
   async function handleSave() {
     setSaving(true); setError('');
@@ -159,15 +164,51 @@ function EditModal({ entry, onSave, onDelete, onClose }) {
             <textarea value={fields.notes} onChange={e => set('notes', e.target.value)} style={taStyle(160)} />
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+          {/* Tracks — the stars and notes that used to be locked inside the
+              prose. Saving re-derives both the track text and the horizon from
+              these, so the three can't disagree. */}
+          {fields.tracks.length > 0 && (
             <div>
-              <div style={{ ...labelStyle, marginBottom: 6 }}>Tags (comma separated)</div>
-              <input value={fields.tags} onChange={e => set('tags', e.target.value)} style={inputStyle()} />
+              <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginBottom: 8 }}>
+                <div style={labelStyle}>Tracks ({fields.tracks.length})</div>
+                <div style={{ fontFamily: MONO, fontSize: 10, color: 'rgba(26,25,22,0.4)' }}>
+                  horizon rebuilds on save
+                </div>
+              </div>
+              <div style={{ border: '1px solid rgba(26,25,22,0.1)', borderRadius: 12, overflow: 'hidden' }}>
+                {fields.tracks.map((t, i) => (
+                  <div key={i} style={{
+                    padding: '12px 14px',
+                    borderTop: i ? '1px solid rgba(26,25,22,0.07)' : 'none',
+                    background: i % 2 ? 'rgba(255,255,255,0.35)' : 'transparent',
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+                      <span style={{ fontFamily: MONO, fontSize: 11, color: 'rgba(26,25,22,0.35)', minWidth: 22 }}>{t.number}.</span>
+                      <input
+                        value={t.title || ''}
+                        onChange={e => setTrack(i, 'title', e.target.value)}
+                        style={{ ...inputStyle(), flex: 1, padding: '6px 10px', fontSize: 13 }}
+                      />
+                      <StarRating value={t.rating || 0} onChange={v => setTrack(i, 'rating', v)} size={18} />
+                      <span style={{ fontFamily: MONO, fontSize: 10, color: 'rgba(26,25,22,0.4)', minWidth: 26, textAlign: 'right' }}>
+                        {t.rating || '—'}
+                      </span>
+                    </div>
+                    <textarea
+                      value={t.note || ''}
+                      onChange={e => setTrack(i, 'note', e.target.value)}
+                      placeholder="no note"
+                      style={{ ...taStyle(56), fontSize: 12, marginLeft: 32, width: 'calc(100% - 32px)' }}
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
-            <div>
-              <div style={{ ...labelStyle, marginBottom: 6 }}>Horizon</div>
-              <input value={fields.horizon} onChange={e => set('horizon', e.target.value)} placeholder="▁▂▃▆▇…" style={inputStyle()} />
-            </div>
+          )}
+
+          <div>
+            <div style={{ ...labelStyle, marginBottom: 6 }}>Tags (comma separated)</div>
+            <input value={fields.tags} onChange={e => set('tags', e.target.value)} style={inputStyle()} />
           </div>
 
           <div>

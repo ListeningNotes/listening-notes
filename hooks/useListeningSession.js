@@ -1,7 +1,8 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import { fetchTracklist, fetchAlbumArtUrl } from '../library/music_data_api';
-import { LOADING_PHRASES } from '../library/session_timers';
+import { handOff, takeOver } from '../library/baton';
+import { serializeTracks } from '../library/entry_formatter';
 
 // Owns every API call and piece of state for an active listening session:
 // research → note-taking → Echo chat → formatting → saving.
@@ -14,7 +15,6 @@ export function useListeningSession({ step }) {
   const [brief, setBrief]                 = useState(null);
   const [researchState, setResearchState] = useState('idle');
   const [researchError, setResearchError] = useState('');
-  const [phraseIndex, setPhraseIndex]     = useState(0);
 
   // Entry data
   const [albumArt, setAlbumArt]           = useState('');
@@ -54,9 +54,10 @@ export function useListeningSession({ step }) {
   const [elapsed, setElapsed] = useState(0);
   const timerRef = useRef(null);
 
-  // Start timer once research completes
+  // Start the timer as soon as the session begins. The panel now opens before
+  // the briefing has finished, so waiting on 'done' would undercount the listen.
   useEffect(() => {
-    if (researchState === 'done' && !timerRef.current) {
+    if (researchState !== 'idle' && !timerRef.current) {
       timerRef.current = setInterval(() => setElapsed(e => e + 1), 1000);
     }
   }, [researchState]);
@@ -70,47 +71,71 @@ export function useListeningSession({ step }) {
       rating, Masterpiece, Favorite, entryType, relationship,
     };
     localStorage.setItem('ln_session_draft', JSON.stringify(draft));
-  }, [overallNotes, trackNotes, trackRatings, rating, Masterpiece, Favorite, entryType, relationship]);
+    // brief is a dependency because it now arrives after the user can type —
+    // without it, notes written before the briefing landed would go unsaved.
+  }, [brief, overallNotes, trackNotes, trackRatings, rating, Masterpiece, Favorite, entryType, relationship]);
 
-  // Cycle loading phrases while research is in flight
+  // Format one step early. The tags on step 4 are produced by this call, so
+  // starting it at step 3 means they're already there when the user arrives
+  // instead of being watched for.
+  const formattedNotesRef = useRef('');
   useEffect(() => {
-    if (researchState !== 'loading') return;
-    const interval = setInterval(() => setPhraseIndex(i => (i + 1) % LOADING_PHRASES.length), 1800);
-    return () => clearInterval(interval);
-  }, [researchState]);
-
-  // Auto-format when the user reaches the preview step
-  useEffect(() => {
-    if (step === 4 && !output && !formatting && brief && overallNotes.trim()) doFormat();
+    if (step >= 3 && !output && !formatting && brief && overallNotes.trim()) {
+      formattedNotesRef.current = overallNotes;
+      doFormat();
+    }
   }, [step]);
+
+  // Going back and editing the notes after a format leaves the output stale —
+  // drop it so the next step re-runs against what's actually written.
+  useEffect(() => {
+    if (output && overallNotes !== formattedNotesRef.current) setOutput(null);
+  }, [overallNotes]);
 
   // Seed tags from formatted output on first format
   useEffect(() => {
     if (output?.tags?.length && sessionTags.length === 0) setSessionTags(output.tags);
   }, [output]);
 
+  // Restores a saved draft without clobbering anything already typed. The
+  // session is now usable before the briefing lands, so this can fire while
+  // the user is mid-sentence — every field yields to what's already there.
   function restoreDraft(albumName) {
     try {
       const s = JSON.parse(localStorage.getItem('ln_session_draft'));
-      if (s && s.album === albumName) {
-        setOverallNotes(s.overallNotes || '');
-        setTrackNotes(s.trackNotes || {});
-        setTrackRatings(s.trackRatings || {});
-        setRating(s.rating || 0);
-        setMasterpiece(s.Masterpiece || false);
-        setFavorite(s.Favorite || false);
-        setEntryType(s.entryType || '');
-        setRelationship(s.relationship || '');
-      }
+      if (!s || s.album !== albumName) return;
+      setOverallNotes(prev => prev || s.overallNotes || '');
+      setTrackNotes(prev => (Object.keys(prev).length ? prev : (s.trackNotes || {})));
+      setTrackRatings(prev => (Object.keys(prev).length ? prev : (s.trackRatings || {})));
+      setRating(prev => prev || s.rating || 0);
+      setMasterpiece(prev => prev || s.Masterpiece || false);
+      setFavorite(prev => prev || s.Favorite || false);
+      setEntryType(prev => prev || s.entryType || '');
+      setRelationship(prev => prev || s.relationship || '');
     } catch {}
   }
 
-  // opts allows the echo page to pass relationship/entryType at call-time,
-  // avoiding the stale-closure problem when these values are set from
-  // localStorage immediately before doResearch is called.
-  async function doResearch(album, artist, existingArt, opts = {}) {
-    const relToUse = opts.relationship !== undefined ? opts.relationship : relationship;
-    const etToUse  = opts.entryType  !== undefined ? opts.entryType  : entryType;
+  // Each snapshot the baton hands us. The brief arrives in pieces, so this
+  // fires many times — the last one carries done:true.
+  const restoredRef = useRef(false);
+  function onResearchUpdate(partial, error, finished) {
+    if (error) {
+      setResearchError(error);
+      setResearchState('error');
+      return;
+    }
+    if (partial) {
+      setBrief(partial);
+      if (!restoredRef.current) { restoredRef.current = true; restoreDraft(partial.album); }
+      if (partial.done) setResearchState('done');
+    } else if (finished) {
+      setResearchState('done');
+    }
+  }
+
+  // Starts the session's data fetches and returns straight away. The briefing
+  // streams in behind the user rather than blocking entry to the session.
+  function doResearch(album, artist, existingArt, opts = {}) {
     const collectionId = opts.collectionId || null;
 
     setResearchState('loading');
@@ -127,32 +152,36 @@ export function useListeningSession({ step }) {
     setSaved(false);
     setOutput(null);
     setSessionTags([]);
-    setPhraseIndex(0);
     setChatMessages([]);
+    restoredRef.current = false;
     if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
 
-    try {
-      const res = await fetch('/api/research', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ album, artist }),
-      });
-      const data = await res.json();
-      if (data.error) throw new Error(data.error);
-      setBrief(data);
-      restoreDraft(data.album);
-      setResearchState('done');
-
-      if (!existingArt) {
-        fetchAlbumArtUrl(data.album, data.artist, data.year).then(url => { if (url) setAlbumArt(url); });
-      }
-      setTracksLoading(true);
-      fetchTracklist(data.album, data.artist, collectionId).then(t => { setTracks(t || []); setTracksLoading(false); });
-
-    } catch (err) {
-      setResearchError(err.message || 'Research failed.');
-      setResearchState('error');
+    // Neither of these depends on the briefing, so they run in parallel with it.
+    if (!existingArt) {
+      fetchAlbumArtUrl(album, artist, '').then(url => { if (url) setAlbumArt(url); });
     }
+    setTracksLoading(true);
+    fetchTracklist(album, artist, collectionId).then(t => { setTracks(t || []); setTracksLoading(false); });
+
+    // Inherit the call the album picker started; if there isn't one, start now.
+    if (!takeOver(album, artist, onResearchUpdate)) {
+      handOff(album, artist);
+      takeOver(album, artist, onResearchUpdate);
+    }
+  }
+
+  // Throw away the stored briefing and research the album again. Deliberately
+  // does not touch notes, ratings or tags — only the briefing is replaced, so
+  // this is safe to hit in the middle of a listen.
+  function refreshResearch() {
+    const album  = albumInput || brief?.album;
+    const artist = artistName || brief?.artist;
+    if (!album) return;
+    setResearchState('loading');
+    setResearchError('');
+    setBrief(null);
+    handOff(album, artist, { refresh: true });
+    takeOver(album, artist, onResearchUpdate);
   }
 
   // Reflect chat — step 3 quick-prompts
@@ -210,6 +239,17 @@ export function useListeningSession({ step }) {
     if (!output) return;
     setSaving(true);
     try {
+      // Tracks are saved as data, and the two text shapes are derived from that
+      // same list — so the stars in the prose and the bars in the horizon can't
+      // disagree the way they used to.
+      const structuredTracks = (tracks || []).map((t, i) => ({
+        number: t.number || i + 1,
+        title: t.title,
+        rating: trackRatings[i] || 0,
+        note: (trackNotes[i] || '').trim(),
+      })).filter(t => t.rating > 0 || t.note);
+      const derived = serializeTracks(structuredTracks);
+
       const res = await fetch('/api/entries', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -220,9 +260,10 @@ export function useListeningSession({ step }) {
           rating: Masterpiece ? 'Masterpiece' : (rating ? rating + ' stars' : ''),
           favorite: Favorite,
           notes: output.album_notes,
-          track_notes: output.track_notes || '',
+          tracks: structuredTracks,
+          track_notes: derived.track_notes,
           tags: sessionTags,
-          horizon: output.horizon || '',
+          horizon: derived.horizon,
           album_art: albumArt,
           post_link: '',
         }),
@@ -240,7 +281,6 @@ export function useListeningSession({ step }) {
     brief,
     researchState,
     researchError,
-    phraseIndex,
     // Entry data
     albumArt, setAlbumArt,
     albumInput, setAlbumInput,
@@ -274,6 +314,7 @@ export function useListeningSession({ step }) {
     elapsed,
     // Functions
     doResearch,
+    refreshResearch,
     doFormat,
     doSave,
     sendChat,

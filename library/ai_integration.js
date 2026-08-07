@@ -1,18 +1,17 @@
 import Anthropic from '@anthropic-ai/sdk';
+import { buildHorizon } from './entry_formatter.js';
 
 function get_client() {
   return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 }
 
-export async function research_album(album, artist) {
-  const client = get_client();
-  const message = await client.messages.create({
-    model: 'claude-sonnet-4-6',
-    max_tokens: 4000,
-    tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 5 }],
-    messages: [{
-      role: 'user',
-      content: `Research the album "${album}"${artist ? ` by ${artist}` : ''} using the web_search tool, then write a sourced briefing.
+const RESEARCH_CALL = (album, artist) => ({
+  model: 'claude-sonnet-4-6',
+  max_tokens: 4000,
+  tools: [{ type: 'web_search_20250305', name: 'web_search', max_uses: 5 }],
+  messages: [{
+    role: 'user',
+    content: `Research the album "${album}"${artist ? ` by ${artist}` : ''} using the web_search tool, then write a sourced briefing.
 
 Verify the facts against reputable sources (Wikipedia, Discogs, AllMusic, Pitchfork, official label/artist pages, established music press). Ground every specific claim in what you actually find, and cite the sources as you write. If you cannot verify a detail, say so rather than inventing it.
 
@@ -31,80 +30,137 @@ META: {"year": "release year", "genre": "specific genre(s), comma separated"}
 - one verifiable fact
 - one verifiable fact
 - one verifiable fact`
-    }]
-  });
+  }],
+});
 
-  // Walk the response in order, mapping each text run to its real web-search
-  // citations. Sources are numbered the first time they're cited.
-  const SECTION_BY_HEADER = {
-    'CONTEXT': 'context', 'PRODUCTION': 'production', 'RECEPTION': 'reception',
-    'LISTEN FOR': 'listen_for', 'LISTEN_FOR': 'listen_for',
-    'KEY FACTS': 'key_facts', 'KEY_FACTS': 'key_facts',
-  };
+const SECTION_BY_HEADER = {
+  'CONTEXT': 'context', 'PRODUCTION': 'production', 'RECEPTION': 'reception',
+  'LISTEN FOR': 'listen_for', 'LISTEN_FOR': 'listen_for',
+  'KEY FACTS': 'key_facts', 'KEY_FACTS': 'key_facts',
+};
+
+// Assembles the brief one text block at a time, mapping each run to its real
+// web-search citations and numbering sources the first time they're cited.
+// The model answers in ~18 separate text blocks (one per cited run), so feeding
+// them in as they close lets the page fill in progressively; drained in one go
+// the builder produces exactly the same result.
+function briefBuilder(album, artist) {
   const sectionsMap = { context: [], production: [], reception: [], listen_for: [], key_facts: [] };
   const sourceReg = new Map();
+  const rawText = [];
+  let meta = {};
+  let current = null;   // a section header carries across block boundaries
+
   const numFor = (url, title) => {
     if (!url) return null;
     if (!sourceReg.has(url)) sourceReg.set(url, { n: sourceReg.size + 1, url, title: title || url });
     return sourceReg.get(url).n;
   };
-  let meta = {};
-  let current = null;
 
-  for (const block of message.content) {
-    if (block.type !== 'text') continue;
-    const cites = (block.citations || []).map(c => numFor(c.url, c.title)).filter(Boolean);
-    let buf = [];
-    const flush = () => {
-      // Preserve internal whitespace so adjacent cited/uncited runs reconstruct
-      // into prose without words jamming together; only skip empty runs.
-      const text = buf.join('\n');
-      if (text.trim() && current) sectionsMap[current].push({ text, cites });
-      buf = [];
-    };
-    for (const line of block.text.split('\n')) {
-      const mMeta = line.match(/^\s*META:\s*(\{.*\})/);
-      const mHead = line.match(/^\s*#{1,3}\s*(.+?)\s*$/);
-      const headKey = mHead && SECTION_BY_HEADER[mHead[1].toUpperCase()];
-      if (mMeta) { flush(); try { meta = JSON.parse(mMeta[1]); } catch { /* ignore */ } continue; }
-      if (headKey) { flush(); current = headKey; continue; }
-      buf.push(line);
+  return {
+    addText(text, citations) {
+      rawText.push(text);
+      const cites = (citations || []).map(c => numFor(c.url, c.title)).filter(Boolean);
+      let buf = [];
+      const flush = () => {
+        // Preserve internal whitespace so adjacent cited/uncited runs reconstruct
+        // into prose without words jamming together; only skip empty runs.
+        const t = buf.join('\n');
+        if (t.trim() && current) sectionsMap[current].push({ text: t, cites });
+        buf = [];
+      };
+      for (const line of text.split('\n')) {
+        const mMeta = line.match(/^\s*META:\s*(\{.*\})/);
+        const mHead = line.match(/^\s*#{1,3}\s*(.+?)\s*$/);
+        const headKey = mHead && SECTION_BY_HEADER[mHead[1].toUpperCase()];
+        if (mMeta) { flush(); try { meta = JSON.parse(mMeta[1]); } catch { /* ignore */ } continue; }
+        if (headKey) { flush(); current = headKey; continue; }
+        buf.push(line);
+      }
+      flush();
+    },
+
+    // Used only when the model cited nothing inline — surfaces the real results.
+    addSearchResults(results) {
+      (results || []).forEach(r => numFor(r.url, r.title));
+    },
+
+    hasSources: () => sourceReg.size > 0,
+
+    // done=false is a snapshot mid-stream. The prose fallback is held back until
+    // the end so a half-written answer isn't mistaken for one that ignored the
+    // header format.
+    build(done) {
+      // complete marks a section the model has finished and moved on from, so
+      // the page can serve whole sections in order rather than growing them
+      // a fragment at a time.
+      let sections = [
+        ['context', 'Context'], ['production', 'Production'],
+        ['reception', 'Reception'], ['listen_for', 'Listen For'],
+      ].map(([key, label]) => ({ key, label, runs: sectionsMap[key], complete: done || current !== key }))
+       .filter(s => s.runs.length > 0);
+      const key_facts = sectionsMap.key_facts;
+
+      // Fallback: if the marker format wasn't followed, show whatever prose came back.
+      if (done && sections.length === 0 && key_facts.length === 0) {
+        const raw = rawText.join('\n').trim();
+        if (raw) sections = [{ key: 'context', label: 'Context', runs: [{ text: raw, cites: [] }], complete: true }];
+      }
+
+      return {
+        album,
+        artist,
+        year: meta.year || '',
+        genre: meta.genre || '',
+        sections,
+        key_facts,
+        key_facts_complete: done || current !== 'key_facts',
+        sources: [...sourceReg.values()].sort((a, b) => a.n - b.n),
+        done,
+      };
+    },
+  };
+}
+
+// Streams the briefing, yielding the whole brief-so-far each time a text block
+// closes. Same call and same thoroughness as research_album — the difference is
+// that the caller can start rendering at ~21s instead of waiting the full ~55s.
+export async function* research_album_live(album, artist) {
+  const client = get_client();
+  const builder = briefBuilder(album, artist);
+  const stream = client.messages.stream(RESEARCH_CALL(album, artist));
+
+  let open = null;   // the text block currently being written
+
+  for await (const event of stream) {
+    if (event.type === 'content_block_start') {
+      open = event.content_block.type === 'text' ? { text: '', citations: [] } : null;
+    } else if (event.type === 'content_block_delta' && open) {
+      if (event.delta.type === 'text_delta') open.text += event.delta.text;
+      else if (event.delta.type === 'citations_delta') open.citations.push(event.delta.citation);
+    } else if (event.type === 'content_block_stop' && open) {
+      builder.addText(open.text, open.citations);
+      open = null;
+      yield builder.build(false);
     }
-    flush();
   }
 
-  // If the model cited nothing inline, still surface the real search results.
-  if (sourceReg.size === 0) {
-    for (const block of message.content) {
+  if (!builder.hasSources()) {
+    const final = await stream.finalMessage();
+    for (const block of final.content) {
       if (block.type === 'web_search_tool_result' && Array.isArray(block.content)) {
-        block.content.forEach(r => numFor(r.url, r.title));
+        builder.addSearchResults(block.content);
       }
     }
   }
-  const sources = [...sourceReg.values()].sort((a, b) => a.n - b.n);
+  yield builder.build(true);
+}
 
-  let sections = [
-    ['context', 'Context'], ['production', 'Production'],
-    ['reception', 'Reception'], ['listen_for', 'Listen For'],
-  ].map(([key, label]) => ({ key, label, runs: sectionsMap[key] }))
-   .filter(s => s.runs.length > 0);
-  const key_facts = sectionsMap.key_facts;
-
-  // Fallback: if the marker format wasn't followed, show whatever prose came back.
-  if (sections.length === 0 && key_facts.length === 0) {
-    const raw = message.content.filter(b => b.type === 'text').map(b => b.text).join('\n').trim();
-    if (raw) sections = [{ key: 'context', label: 'Context', runs: [{ text: raw, cites: [] }] }];
-  }
-
-  return {
-    album,
-    artist,
-    year: meta.year || '',
-    genre: meta.genre || '',
-    sections,
-    key_facts,
-    sources,
-  };
+// One-shot version — drains the stream and hands back only the finished brief.
+export async function research_album(album, artist) {
+  let brief = null;
+  for await (const partial of research_album_live(album, artist)) brief = partial;
+  return brief;
 }
 
 export async function format_post({ brief, notes, rating, masterpiece, favorite, entryType, relationship, trackNotes, trackRatings, tracks }) {
@@ -120,21 +176,29 @@ export async function format_post({ brief, notes, rating, masterpiece, favorite,
       }).filter(Boolean).join('\n\n')
     : '';
 
-  const horizonString = (() => {
-    if (!tracks?.length) return '';
-    const bars = ['▁','▂','▃','▄','▅','▆','▇','█'];
-    return tracks.map((_, i) => {
-      const r = trackRatings?.[i] || 0;
-      return bars[Math.round((r / 5) * (bars.length - 1))];
-    }).join('');
-  })();
+  // Same bar the Score screen shows live during the session.
+  const horizonString = buildHorizon(tracks, trackRatings);
+
+  // Only the tags are generated. The notes are the listener's own writing and
+  // the track block is already assembled above, so sending either through the
+  // model could only ever damage them: a quote mark in the prose was enough to
+  // silently truncate a whole entry. Prose never makes the round trip now.
+  const TAGS_SCHEMA = {
+    type: 'object',
+    properties: {
+      tags: { type: 'array', items: { type: 'string' }, description: '8-12 short tags for this entry' },
+    },
+    required: ['tags'],
+    additionalProperties: false,
+  };
 
   const message = await client.messages.create({
     model: 'claude-sonnet-4-6',
-    max_tokens: 4000,
+    max_tokens: 1000,
+    output_config: { format: { type: 'json_schema', schema: TAGS_SCHEMA } },
     messages: [{
       role: 'user',
-      content: `You are the voice behind "Listening Notes," a music blog. Thoughtful, intimate, editorial.
+      content: `Generate 8-12 tags for an entry in "Listening Notes," a personal music journal.
 
 Album: ${brief.album}
 Artist: ${brief.artist}
@@ -144,32 +208,29 @@ Entry type: ${entryType || 'First Listen'}
 Relationship: ${relationship || ''}
 Rating: ${rating ? rating + '/5' + (masterpiece ? ' (masterpiece)' : '') : 'unrated'}
 
-Raw listener notes:
+What the listener wrote:
 ${notes}
 
 ${trackNotesBlock ? `Per-track notes:\n${trackNotesBlock}` : ''}
 
-This is a personal journal entry. Return the raw listener notes almost exactly as written — fix spelling only. Do not rewrite, restructure, summarize, or improve sentences, and do not add any album background or context of your own. Preserve all paragraph breaks exactly as they appear in the raw notes.
-
-Include this horizon bar (already calculated, use exactly): ${horizonString}
-
-Also generate 8-12 tags relevant to this entry.
-
-Return ONLY valid JSON, no markdown fences:
-{
-  "album_notes": "full album-level notes section (no track notes here)",
-  "track_notes": "all per-track notes formatted as: 1. Track Title — ★★★★★\nnote text\n\n2. Track Title — ★★★\nnote text",
-  "horizon": "${horizonString}",
-  "tags": ["tag1", "tag2"]
-}`
+Cover the artist, the album, its genre and era, and the themes and feelings in what was written. Keep each tag to a few words at most.`
     }]
   });
 
-  const text = message.content[0].text;
-  console.log("RAW FORMAT RESPONSE:", text);
-  const parsed = JSON.parse(text.slice(text.indexOf('{'), text.lastIndexOf('}') + 1));
-  if (parsed.notes_prose && !parsed.album_notes) parsed.album_notes = parsed.notes_prose;
-  return parsed;
+  let tags = [];
+  try {
+    tags = JSON.parse(message.content.find(b => b.type === 'text')?.text || '{}').tags || [];
+  } catch {
+    // Tags are the only thing at stake here — an entry is still worth saving
+    // without them, and they can be added by hand on the Tags step.
+  }
+
+  return {
+    album_notes: notes,        // exactly as written — never round-tripped
+    track_notes: trackNotesBlock,
+    horizon: horizonString,
+    tags,
+  };
 }
 
 export async function ask_echo({ message, brief, overallNotes, trackNotes, tracks }) {
