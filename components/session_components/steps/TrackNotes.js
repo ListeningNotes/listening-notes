@@ -109,7 +109,7 @@ export default function TrackNotes({
         );
       })}
 
-      <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 24 }}>
+      <div style={{ display: 'flex', justifyContent: 'center', marginTop: 32 }}>
         <SessionButton onClick={onNext} accent>Continue →</SessionButton>
       </div>
     </div>

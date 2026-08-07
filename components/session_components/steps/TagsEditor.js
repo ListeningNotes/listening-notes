@@ -62,7 +62,7 @@ export default function TagsEditor({
         <SessionButton onClick={() => addTag(tagInput)} disabled={!tagInput.trim()}>Add</SessionButton>
       </div>
 
-      <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+      <div style={{ display: 'flex', justifyContent: 'center' }}>
         <SessionButton onClick={onNext} accent>Preview →</SessionButton>
       </div>
     </div>

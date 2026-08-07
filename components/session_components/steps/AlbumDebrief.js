@@ -65,6 +65,7 @@ export default function AlbumDebrief({
   researchError,
   onNext,
   onReset,
+  onRefresh,
 }) {
   // Collapsed by default — the citations are there to be checked, not read.
   const [sourcesShown, setSourcesShown] = useState(false);
@@ -98,6 +99,13 @@ export default function AlbumDebrief({
   });
 
   const sections = (brief?.sections || []).filter(s => s.complete);
+
+  // When this briefing was last researched — only present on a stored one.
+  let researchedOn = '';
+  if (brief?.researched_at) {
+    const d = new Date(brief.researched_at);
+    if (!isNaN(d)) researchedOn = d.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+  }
 
   // Key facts become one typed block: each fact on its own line, so the reveal
   // runs through them in order the same way the prose sections do.
@@ -182,7 +190,27 @@ export default function AlbumDebrief({
         </div>
       )}
 
-      <div style={{ display: 'flex', justifyContent: 'center', marginTop: brief?.done ? 0 : 24 }}>
+      {/* Kept from a previous listen — offer a re-research, since that's the
+          only thing that costs a fresh web search. */}
+      {brief?.cached && (
+        <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'baseline', gap: 10, marginTop: 28, marginBottom: 4 }}>
+          <span style={{ ...lbl, textTransform: 'none', letterSpacing: '0.04em' }}>
+            From an earlier listen{researchedOn ? ` · ${researchedOn}` : ''}
+          </span>
+          <button
+            onClick={onRefresh}
+            style={{
+              fontFamily: fonts.mono, fontSize: 10, letterSpacing: '0.06em',
+              color: tx(0.5), background: 'none', border: 'none',
+              borderBottom: `1px solid ${bdr(0.2)}`, cursor: 'pointer', padding: '0 0 1px',
+            }}
+          >
+            research again
+          </button>
+        </div>
+      )}
+
+      <div style={{ display: 'flex', justifyContent: 'center', marginTop: 24 }}>
         <SessionButton onClick={onNext} accent pulse>Start Listening →</SessionButton>
       </div>
     </div>

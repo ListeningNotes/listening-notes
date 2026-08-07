@@ -54,8 +54,13 @@ export default function EchoSessionPage() {
     sessionTags, setSessionTags, tagInput, setTagInput,
     formatting, output, saving, saved,
     elapsed,
-    doResearch, doFormat, doSave, sendChat,
+    doResearch, refreshResearch, doFormat, doSave, sendChat,
   } = useListeningSession({ step });
+
+  // An album already in the briefings table comes back instantly, so there is
+  // nothing to wait through — the assembly animation is for albums being
+  // researched for the first time.
+  const skipIntro = brief?.cached === true;
 
   useEffect(() => {
     fetch('/api/auth/check')
@@ -90,7 +95,7 @@ export default function EchoSessionPage() {
   // Animation timing — all relative to auth completing, fires exactly once.
   // Reads artUrl directly from localStorage (same pattern as loading-test).
   useEffect(() => {
-    if (!authed) return;
+    if (!authed || skipIntro) return;
     let artUrl = '';
     try {
       const raw = localStorage.getItem('ln_pending_session');
@@ -105,7 +110,7 @@ export default function EchoSessionPage() {
     const t2 = setTimeout(() => setDimmed(false), 600);
     const t3 = setTimeout(() => setRippleCount(1), 2200);
     return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
-  }, [authed]);
+  }, [authed, skipIntro]);
 
   // The puzzle finished assembling.
   const handleAssembled = useCallback(() => setPuzzleDone(true), []);
@@ -133,8 +138,9 @@ export default function EchoSessionPage() {
   if (checking) return <div style={{ minHeight: '100vh', background: '#f5f2ec' }} />;
   if (!authed) return <PasswordGate onAuth={() => setAuthed(true)} />;
 
-  // Show loading only until the assembly animation completes.
-  const showLoadingScreen = !assembled;
+  // Show loading only until the assembly animation completes — and not at all
+  // when the briefing was already on file.
+  const showLoadingScreen = !assembled && !skipIntro;
 
   return (
     <>
@@ -149,8 +155,18 @@ export default function EchoSessionPage() {
           50%     { box-shadow: 0 0 28px 6px rgba(255,255,255,0.60), 0 0 68px 20px rgba(255,255,255,0.24), inset 0 1px 0 rgba(255,255,255,0.34); }
         }
         html, body { background: #f5f2ec !important; }
-        ::-webkit-scrollbar { width: 3px; }
-        ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 99px; }
+        /* The panel is dark, so a dark hairline thumb was invisible — and 3px
+           is nothing to aim at on a long preview. Wide grab area, slim look. */
+        ::-webkit-scrollbar { width: 12px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb {
+          background: rgba(255,255,255,0.3);
+          border: 4px solid transparent;
+          background-clip: content-box;
+          border-radius: 99px;
+        }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.5); background-clip: content-box; }
+        * { scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.32) transparent; }
         textarea::placeholder, input::placeholder { color: rgba(255,255,255,0.3); }
       `}</style>
 
@@ -267,7 +283,7 @@ export default function EchoSessionPage() {
               {/* Main content */}
               <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', overflow: step === 3 ? 'hidden' : 'auto' }}>
                 <div style={{ flex: 1, padding: step === 3 ? '36px 48px 36px' : '40px 48px 56px', display: step === 3 ? 'flex' : 'block', flexDirection: step === 3 ? 'column' : undefined, overflowY: step === 3 ? 'hidden' : undefined }}>
-                  {step === 0 && <AlbumDebrief brief={brief} researchState={researchState} researchError={researchError} onNext={() => advanceTo(1)} onReset={() => router.replace('/dashboard/echo')} />}
+                  {step === 0 && <AlbumDebrief brief={brief} researchState={researchState} researchError={researchError} onNext={() => advanceTo(1)} onReset={() => router.replace('/dashboard/echo')} onRefresh={refreshResearch} />}
                   {step === 1 && <TrackNotes tracks={tracks} tracksLoading={tracksLoading} trackNotes={trackNotes} setTrackNotes={setTrackNotes} trackRatings={trackRatings} setTrackRatings={setTrackRatings} openTrack={openTrack} setOpenTrack={setOpenTrack} onNext={() => advanceTo(2)} />}
                   {step === 2 && <AlbumNotes rating={rating} setRating={setRating} Masterpiece={Masterpiece} setMasterpiece={setMasterpiece} Favorite={Favorite} setFavorite={setFavorite} overallNotes={overallNotes} setOverallNotes={setOverallNotes} onNext={() => advanceTo(3)} />}
                   {step === 3 && <ReflectChat chatMessages={chatMessages} chatInput={chatInput} setChatInput={setChatInput} chatLoading={chatLoading} chatEndRef={chatEndRef} sendChat={sendChat} onNext={() => advanceTo(4)} />}
