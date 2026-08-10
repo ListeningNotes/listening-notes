@@ -35,6 +35,14 @@ export default function FullPostPage({ entry }) {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
+  // Snapping has to be set on the document, since the document is what
+  // scrolls here — so it goes on and comes back off with this page rather
+  // than living in globals.css where it would follow you to other routes.
+  useEffect(() => {
+    document.documentElement.classList.add('ln-snap');
+    return () => document.documentElement.classList.remove('ln-snap');
+  }, []);
+
   // Parse tags — stored as either an array or comma-separated string in the DB
   const tags = entry.tags
     ? (Array.isArray(entry.tags) ? entry.tags : entry.tags.split(',').map(t => t.trim()).filter(Boolean))
@@ -99,6 +107,18 @@ export default function FullPostPage({ entry }) {
           0%, 100% { transform: translateY(0); }
           50%      { transform: translateY(5px); }
         }
+        /* Wipes each star's gold in from the left; StarRating staggers the
+           delay so the rating counts itself up 1-2-3-4-5 on arrival. */
+        @keyframes ln-star-fill {
+          from { clip-path: inset(0 100% 0 0); }
+          to   { clip-path: inset(0 0 0 0); }
+        }
+        .ln-star-fill {
+          animation: ln-star-fill 0.34s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .ln-star-fill { animation: none; }
+        }
 
         /* Layout — base (desktop). The phone layout is separate markup below,
            swapped in by display, the same way the homepage splits
@@ -114,6 +134,24 @@ export default function FullPostPage({ entry }) {
           /* ── SCREEN ONE ── a full viewport of album: art on top, everything
              we know about it centred underneath, and a cue to scroll on. */
           .ln-hero { display: none; }
+
+          /* proximity, not mandatory: screen two is long-form notes and tracks,
+             and a mandatory snap area taller than the screen fights you the
+             whole way down it. proximity still pulls screen one and the top of
+             the notes into place, then leaves you alone to read. */
+          html.ln-snap { scroll-snap-type: y proximity; }
+          /* The snap target for screen two is a zero-height marker rather than
+             the content block itself. A snap area taller than the scrollport
+             is the classic way to end up fighting the scroll on the way down,
+             and .ln-content runs thousands of pixels; a marker has no height
+             to argue about. Its scroll-margin lands the notes exactly where
+             the scroll cue puts them, clear of the blur band. */
+          .ln-screen-one { scroll-snap-align: start; }
+          .ln-snap-point {
+            height: 0;
+            scroll-snap-align: start;
+            scroll-margin-top: max(150px, 18vh);
+          }
 
           .ln-screen-one {
             display: flex;
@@ -252,7 +290,7 @@ export default function FullPostPage({ entry }) {
           {entry.artist}{entry.year ? ' · ' + entry.year : ''}
         </div>
         {displayRating > 0 && (
-          <StarRating rating={displayRating} size={24} glow={isMasterpiece} />
+          <StarRating rating={displayRating} size={24} glow={isMasterpiece} animate />
         )}
         <div className="ln-screen-one-chips">
           {entry.relationship && <Chip>{entry.relationship}</Chip>}
@@ -317,6 +355,8 @@ export default function FullPostPage({ entry }) {
       </div>
 
       {/* ── CONTENT ── */}
+      <div className="ln-snap-point" aria-hidden="true" />
+
       <div id="ln-content" className="ln-content" style={{ maxWidth: '860px', margin: '0 auto' }}>
 
         {albumNotes && (
