@@ -683,6 +683,30 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   gap: 10px;
   padding: 0 28px;
 }
+/* The band that hides scrolling page content behind the fixed header. It has
+   to cover this row AND the dot-nav below it (which is a separate fixed
+   element, so one band spanning both is simpler than giving each its own).
+   Solid down past the dot labels, then a short fade so text dissolves out
+   instead of meeting a hard line. z-index -1 puts it behind this row's own
+   logo/beacon/toggle, while the row's stacking context keeps it above the
+   page; the dot-nav is a later sibling, so it paints on top too. */
+.sitenav-row::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 180px;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.22s ease;
+  background: linear-gradient(to bottom, var(--bg) 0%, var(--bg) 84%, transparent 100%);
+}
+.sitenav-row--scrolled::before {
+  opacity: 1;
+}
+
 .hp .sitenav-row {
   position: relative;
   top: auto;
@@ -690,6 +714,10 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   right: auto;
   width: 100%;
   padding: 0 20px;
+}
+/* The homepage keeps this row in normal flow, so nothing scrolls under it. */
+.hp .sitenav-row::before {
+  display: none;
 }
 
 .sitenav-logo { display: block; justify-self: start; }
@@ -970,14 +998,19 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   width: 11px;
   height: 11px;
   border-radius: 50%;
-  background: rgba(26, 26, 26, 0.18);
+  /* Theme variables, not a fixed near-black: at 18% black these were all but
+     invisible on the dark theme. It went unnoticed while the only thing
+     behind them was page art, but the nav's backdrop now puts a flat --bg
+     panel behind every dot. Matches the homepage dots, which already use
+     --ink-faint. */
+  background: var(--ink-faint);
   transition: background 0.2s, transform 0.2s;
 }
 .hp-dot--active {
   background: var(--ink);
 }
 .hp-dot:hover {
-  background: rgba(26, 26, 26, 0.45);
+  background: var(--ink-soft);
 }
 /* The visible dot is 11px across — far under the ~44px a fingertip expects,
    so on a phone you have to aim at it. This invisible square widens the tap
