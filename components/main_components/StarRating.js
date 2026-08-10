@@ -10,10 +10,11 @@ function StarSVG({ size }) {
   );
 }
 
-// `animate` wipes the gold in one star at a time, left to right, so the rating
-// counts itself up on arrival. Opt-in — every rating in a list animating at
-// once would be a mess. The .ln-star-fill keyframes are defined by whoever
-// switches this on, the same way .ln-star-glow is defined in EntryModal.
+// `animate` lights the stars up one at a time, so the rating counts itself
+// out on arrival. The 0.34s gap is the whole effect — long enough to read as
+// separate beats rather than one sweep. Opt-in: every rating in a list doing
+// this at once would be a mess. The .ln-star-fill keyframes are defined by
+// whoever switches this on, the same way .ln-star-glow is in EntryModal.
 export default function StarRating({ rating, size = 18, glow = false, animate = false, style = {} }) {
   if (!rating && rating !== 0) return null;
   const numeric = parseFloat(rating);
@@ -37,7 +38,7 @@ export default function StarRating({ rating, size = 18, glow = false, animate = 
                   overflow: 'hidden',
                   width: fill === 'half' ? size / 2 : size,
                   color: '#E8B84B',
-                  ...(animate ? { animationDelay: ((i - 1) * 0.11) + 's' } : null),
+                  ...(animate ? { animationDelay: ((i - 1) * 0.34) + 's' } : null),
                 }}
               >
                 <StarSVG size={size} />

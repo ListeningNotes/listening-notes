@@ -107,14 +107,16 @@ export default function FullPostPage({ entry }) {
           0%, 100% { transform: translateY(0); }
           50%      { transform: translateY(5px); }
         }
-        /* Wipes each star's gold in from the left; StarRating staggers the
-           delay so the rating counts itself up 1-2-3-4-5 on arrival. */
+        /* Each star lights up whole, rather than the gold sliding across it —
+           StarRating staggers the delay so the rating counts itself out
+           one, two, three, four, five. The per-star fade is quick so each one
+           reads as switching on; the pacing lives in the stagger. */
         @keyframes ln-star-fill {
-          from { clip-path: inset(0 100% 0 0); }
-          to   { clip-path: inset(0 0 0 0); }
+          from { opacity: 0; }
+          to   { opacity: 1; }
         }
         .ln-star-fill {
-          animation: ln-star-fill 0.34s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+          animation: ln-star-fill 0.18s ease-out backwards;
         }
         @media (prefers-reduced-motion: reduce) {
           .ln-star-fill { animation: none; }
@@ -129,6 +131,11 @@ export default function FullPostPage({ entry }) {
         .ln-content     { padding: 48px 48px 100px; }
         .ln-screen-one  { display: none; }
         .ln-topblur     { display: none; }
+        /* How much of the top the header occupies on screen two. The dot nav
+           is hidden by then, so this only has to clear the logo row (which
+           ends at 58px) — not the 150px the labelled dots needed. Everything
+           that has to sit under the header reads this one value. */
+        .ln-entry       { --ln-band: 96px; }
 
         @media (max-width: 768px) {
           /* ── SCREEN ONE ── a full viewport of album: art on top, everything
@@ -150,7 +157,7 @@ export default function FullPostPage({ entry }) {
           .ln-snap-point {
             height: 0;
             scroll-snap-align: start;
-            scroll-margin-top: max(150px, 18vh);
+            scroll-margin-top: var(--ln-band);
           }
 
           .ln-screen-one {
@@ -221,7 +228,7 @@ export default function FullPostPage({ entry }) {
             display: block;
             position: fixed;
             top: 0; left: 0; right: 0;
-            height: max(150px, 18vh);
+            height: var(--ln-band);
             z-index: 99; /* under the nav row (100), over the page */
             pointer-events: none;
             overflow: hidden;
@@ -258,7 +265,7 @@ export default function FullPostPage({ entry }) {
 
           .ln-content {
             padding: 28px 24px 80px;
-            scroll-margin-top: max(150px, 18vh);
+            scroll-margin-top: var(--ln-band);
           }
         }
       `}</style>
