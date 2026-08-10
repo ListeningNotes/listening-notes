@@ -738,10 +738,9 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 }
 
 /* Center slot — the way back to screen one (the big "now listening" screen)
-   from anywhere on the site. The caret floats absolutely above the beacon
-   rather than stacking in flow with it — that way the beacon's own center
-   lines up with the logo and theme toggle on the row's shared center line,
-   with the caret just hovering above as a hint, not shifting anything. */
+   from anywhere on the site. It used to carry a small up-caret hinting at
+   that, but it crowded the beacon in a row this tight; the beacon itself is
+   the affordance now. Note the slot is empty when nothing is playing. */
 .sitenav-beacon-slot {
   position: relative;
   justify-self: center;
@@ -753,18 +752,6 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
     it's clearing */
   text-decoration: none;
   cursor: pointer;
-}
-.sitenav-caret {
-  position: absolute;
-  top: 4px;
-  left: 50%;
-  transform: translateX(-50%);
-  color: var(--ink-faint);
-  transition: color 0.2s, transform 0.2s;
-}
-.sitenav-beacon-slot:hover .sitenav-caret {
-  color: var(--ink-soft);
-  transform: translateX(-50%) translateY(-2px);
 }
 /* The compact beacon's own art/marquee styling (.beacon-mini*) only exists
    inside the ≤768px media query below (it was built for screen two, which
