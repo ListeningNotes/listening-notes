@@ -15,6 +15,7 @@ import HorizonChart from '../../main_components/HorizonChart';
 export default function ScoreScreen({
   tracks,
   trackRatings,
+  trackFavorites,
   rating,
   setRating,
   Masterpiece,
@@ -56,7 +57,7 @@ export default function ScoreScreen({
 
       {list.length > 0 ? (
         <>
-          <HorizonChart tracks={list} trackRatings={trackRatings} height={130} labels />
+          <HorizonChart tracks={list} trackRatings={trackRatings} favorites={trackFavorites} height={130} labels />
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginTop: 10, marginBottom: 34 }}>
             <span style={lbl}>{rated.length} of {list.length} rated</span>
             {avg && (

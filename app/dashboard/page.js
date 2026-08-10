@@ -3,7 +3,7 @@
 // Password protected. Never linked publicly.
 
 'use client';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { fonts } from '../../library/sitewide_visuals';
 import PasswordGate from '../../components/session_components/PasswordGate';
@@ -22,7 +22,9 @@ export default function SessionHub() {
   const [checking, setChecking] = useState(true);
   const [albums, setAlbums]   = useState([]);
   // Pick once per mount, stable across re-renders
-  const Background = useRef(backgrounds[Math.floor(Math.random() * backgrounds.length)]).current;
+  // Lazy initialiser so the pick happens once, not on every render — the
+  // useRef form re-rolled the dice each time and threw the result away.
+  const [Background] = useState(() => backgrounds[Math.floor(Math.random() * backgrounds.length)]);
 
   useEffect(() => {
     fetch('/api/auth/check')

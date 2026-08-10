@@ -18,6 +18,8 @@ export default function TrackNotes({
   setTrackNotes,
   trackRatings,
   setTrackRatings,
+  trackFavorites,
+  setTrackFavorites,
   openTrack,
   setOpenTrack,
   onNext,
@@ -64,7 +66,8 @@ export default function TrackNotes({
 
       {tracks && tracks.map((t, i) => {
         const isOpen  = openTrack === i;
-        const covered = !!(trackNotes[i]?.trim()) || (trackRatings[i] || 0) > 0;
+        const fav     = !!trackFavorites?.[i];
+        const covered = !!(trackNotes[i]?.trim()) || (trackRatings[i] || 0) > 0 || fav;
         return (
           <div
             key={i}
@@ -96,6 +99,22 @@ export default function TrackNotes({
                 transition: 'color 0.18s',
               }}>{t.title}</span>
               {t.duration && <span style={{ fontFamily: fonts.mono, fontSize: 11, color: tx(0.25), flexShrink: 0 }}>{TrackLength(t.duration)}</span>}
+              {/* Favourite is deliberately separate from the rating — a song can
+                  be the one you keep returning to without being the best on the
+                  record. */}
+              <button
+                onClick={e => { e.stopPropagation(); setTrackFavorites(prev => ({ ...prev, [i]: !prev[i] })); }}
+                title={fav ? 'Remove from favourites' : 'Mark as a favourite song'}
+                aria-label={fav ? 'Remove from favourites' : 'Mark as a favourite song'}
+                style={{
+                  background: 'none', border: 'none', cursor: 'pointer', padding: '2px 4px',
+                  fontSize: 15, lineHeight: 1, flexShrink: 0,
+                  color: fav ? '#E8B84B' : tx(0.22),
+                  transition: 'color 0.15s',
+                }}
+              >
+                {fav ? '♥' : '♡'}
+              </button>
               <div onClick={e => e.stopPropagation()} style={{ flexShrink: 0 }}>
                 <StarRating value={trackRatings[i] || 0} onChange={v => setTrackRatings(prev => ({ ...prev, [i]: v }))} size={20} />
               </div>

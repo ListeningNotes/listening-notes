@@ -23,6 +23,13 @@ export default function HorizonBar({ horizon, tracks, commentsByTrack, onBarClic
               {count > 0 && (
                 <div style={{ position: 'absolute', top: '-8px', left: '50%', transform: 'translateX(-50%)', width: '5px', height: '5px', borderRadius: '50%', background: 'var(--accent)' }} />
               )}
+              {track?.favorite && (
+                <span style={{
+                  position: 'absolute', bottom: `calc(${h * 100}% + 3px)`, left: '50%',
+                  transform: 'translateX(-50%)', fontSize: '9px', lineHeight: 1,
+                  color: 'var(--gold)', pointerEvents: 'none',
+                }}>♥</span>
+              )}
               <div
                 style={{ borderRadius: '2px 2px 0 0', background: 'var(--accent)', height: (h * 100) + '%', transition: 'filter 0.15s, transform 0.1s', transformOrigin: 'bottom' }}
                 onMouseEnter={e => { e.currentTarget.style.filter = 'brightness(1.12)'; e.currentTarget.parentNode.style.transform = 'scaleX(1.1)'; }}

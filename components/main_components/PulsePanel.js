@@ -49,30 +49,37 @@ function Histogram({ data }) {
   );
 }
 
+// Arc start offsets for the donut. Kept outside the component so the running
+// total isn't a render-scope binding being reassigned mid-render.
+function arcOffsets(data, total, C) {
+  let offset = 0;
+  return data.map(d => {
+    const len = (d.count / total) * C;
+    const start = offset;
+    offset += len;
+    return { len, start };
+  });
+}
+
 function RelationshipDonut({ data }) {
   const total = data.reduce((a, b) => a + b.count, 0) || 1;
   const R = 30;
   const C = 2 * Math.PI * R;
-  let offset = 0;
+  const arcs = arcOffsets(data, total, C);
   return (
     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
       <svg width="76" height="76" viewBox="0 0 80 80" style={{ flexShrink: 0 }}>
         <g transform="rotate(-90 40 40)">
-          {data.map((d, i) => {
-            const len = (d.count / total) * C;
-            const seg = (
-              <circle
-                key={i}
-                cx="40" cy="40" r={R} fill="none"
-                stroke={PIE_PALETTE[i % PIE_PALETTE.length]}
-                strokeWidth="11"
-                strokeDasharray={`${len} ${C - len}`}
-                strokeDashoffset={-offset}
-              />
-            );
-            offset += len;
-            return seg;
-          })}
+          {data.map((d, i) => (
+            <circle
+              key={i}
+              cx="40" cy="40" r={R} fill="none"
+              stroke={PIE_PALETTE[i % PIE_PALETTE.length]}
+              strokeWidth="11"
+              strokeDasharray={`${arcs[i].len} ${C - arcs[i].len}`}
+              strokeDashoffset={-arcs[i].start}
+            />
+          ))}
         </g>
         <text x="40" y="39" textAnchor="middle" style={{ fontFamily: 'var(--font-display)', fontSize: '16px', fill: 'var(--ink)' }}>{total}</text>
         <text x="40" y="50" textAnchor="middle" style={{ fontFamily: 'var(--font-label)', fontSize: '5.5px', letterSpacing: '0.14em', fill: 'var(--ink-faint)' }}>LISTENS</text>

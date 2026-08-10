@@ -51,23 +51,39 @@ export default function EntryModal({ slug, originRect, onClose }) {
     setTimeout(onClose, 300);
   }, [slug, originRect, onClose]);
 
-  // Fetch entry data when slug changes
-  useEffect(() => {
-    if (!slug) return;
+  // Opening a different entry resets the modal. React's documented way to do
+  // that is to adjust state during render when a prop changes — doing it inside
+  // the effect meant every slug change rendered the old entry once first.
+  const [shownSlug, setShownSlug] = useState(slug);
+  if (slug !== shownSlug) {
+    setShownSlug(slug);
     setLoading(true);
     setAnimateBars(false);
     setEntry(null);
     setCollapsed(false);
-    fetch('/api/entries/' + slug)
-      .then(r => r.json())
-      .then(data => {
+  }
+
+  // Fetch entry data when slug changes
+  useEffect(() => {
+    if (!slug) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('/api/entries/' + slug);
+        const data = await res.json();
+        if (cancelled) return;
         setEntry(data.entry || data);
         setLoading(false);
         // Wait two animation frames before triggering bar animation
         // so the bars are in the DOM before we animate them
-        requestAnimationFrame(() => requestAnimationFrame(() => setAnimateBars(true)));
-      })
-      .catch(() => setLoading(false));
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+          if (!cancelled) setAnimateBars(true);
+        }));
+      } catch {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
   }, [slug]);
 
   // Update the URL to /entries/[slug] while modal is open — restores / on close

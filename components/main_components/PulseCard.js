@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { parseRating } from '../../library/entry_formatter';
 
 const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
@@ -9,7 +10,9 @@ function titleCase(str) {
 }
 
 export default function PulseCard({ entries = [], glass }) {
-  const weekAgo = Date.now() - WEEK_MS;
+  // Read the clock once on mount rather than on every render — Date.now()
+  // during render gives a different answer each time React redraws.
+  const [weekAgo] = useState(() => Date.now() - WEEK_MS);
 
   const thisWeek = entries.filter(e => {
     const t = new Date(e.created_at).getTime();

@@ -59,6 +59,7 @@ export function entryTracks(entry) {
       name: t.title,
       stars: t.rating,          // real number — half ratings survive here
       note: t.note || '',
+      favorite: !!t.favorite,   // starred song, separate from the rating
     }));
   }
   return parseTracksFromNotes(entry?.track_notes || entry?.notes);

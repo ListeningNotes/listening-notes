@@ -30,29 +30,39 @@ export function useAlbumSelection({ step, onAlbumPick }) {
   const [pickReady, setPickReady]         = useState(false);
   const [pickFading, setPickFading]       = useState(false);  // fades album out before removing
 
-  const debounceRef  = useRef(null);
   const zoomTimerRef = useRef(null);
   const fadeTimerRef = useRef(null);
   const cardPhaseRef = useRef(null);
   const pickTimerRef = useRef(null);
   const pickRafRef   = useRef(null);
 
-  // Debounced artist search — only active on the album search screen (step -1)
+  // Typing is an event, not something to react to after the fact — clearing the
+  // field and showing the spinner happen here rather than inside the effect,
+  // which used to set state synchronously on every render pass.
+  function updateArtistInput(value) {
+    setArtistInput(value);
+    if (!value.trim()) {
+      setAlbums([]);
+      setSearching(false);
+      setRevealed(false);
+    } else {
+      setSearching(true);
+    }
+  }
+
+  // The effect now owns only the debounce timer.
   useEffect(() => {
     if (step !== -1) return;
-    if (debounceRef.current) clearTimeout(debounceRef.current);
-    if (!artistInput.trim()) { setAlbums([]); setSearching(false); setRevealed(false); return; }
-    setSearching(true);
-    debounceRef.current = setTimeout(async () => {
-      const results = await searchArtistAlbums(artistInput);
+    const query = artistInput.trim();
+    if (!query) return;
+    const id = setTimeout(async () => {
+      const results = await searchArtistAlbums(query);
       setAlbums(results);
+      setAlbumPage(0);   // a new result set always starts on page one
       setSearching(false);
     }, 520);
-    return () => clearTimeout(debounceRef.current);
+    return () => clearTimeout(id);
   }, [artistInput, step]);
-
-  // Reset to first page whenever a new result set arrives
-  useEffect(() => { setAlbumPage(0); }, [albums]);
 
   // No-results fallback: if zoomReady but nothing found, fade Echo and show "nothing found"
   useEffect(() => {
@@ -142,7 +152,8 @@ export function useAlbumSelection({ step, onAlbumPick }) {
   }
 
   return {
-    artistInput, setArtistInput,
+    artistInput,
+    setArtistInput: updateArtistInput,
     albums,
     searching,
     revealed,

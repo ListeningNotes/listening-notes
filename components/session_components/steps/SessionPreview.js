@@ -20,6 +20,7 @@ export default function SessionPreview({
   overallNotes,
   tracks,
   trackRatings,
+  trackFavorites,
   doFormat,
   doSave,
 }) {
@@ -80,7 +81,7 @@ export default function SessionPreview({
       {tracks?.length > 0 && (
         <div style={{ margin: '28px 0 8px' }}>
           <div style={{ ...lbl, marginBottom: 10 }}>Listening Horizon</div>
-          <HorizonChart tracks={tracks} trackRatings={trackRatings} height={90} labels animate={false} />
+          <HorizonChart tracks={tracks} trackRatings={trackRatings} favorites={trackFavorites} height={90} labels animate={false} />
         </div>
       )}
 

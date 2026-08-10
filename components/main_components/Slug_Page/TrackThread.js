@@ -15,6 +15,9 @@ export default function TrackThread({ track, trackIndex, slug, commentsByTrack, 
       <div onClick={() => setOpen(v => !v)} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 0', cursor: 'pointer' }}>
         <span style={{ fontFamily: fonts.mono, fontSize: '10px', color: 'var(--ink-faint)', width: '20px', textAlign: 'right', flexShrink: 0 }}>{track.num}</span>
         <span style={{ fontSize: '13px', color: 'var(--ink)', flex: 1 }}>{track.name}</span>
+        {track.favorite && (
+          <span title="Favourite song" style={{ fontSize: '11px', color: 'var(--gold)', flexShrink: 0, lineHeight: 1 }}>♥</span>
+        )}
         {track.stars > 0 && <StarRating rating={track.stars} size={12} />}
         <span style={{
           fontFamily: fonts.mono, fontSize: '9px', letterSpacing: '0.06em',

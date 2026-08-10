@@ -4,7 +4,7 @@
 
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import PasswordGate from '../../../components/session_components/PasswordGate';
 import backgrounds from '../../../components/session_components/backgrounds';
 import StarRating from '../../../components/session_components/StarRating';
@@ -24,6 +24,20 @@ const controlStyle = {
   padding: '8px 14px', fontFamily: MONO, fontSize: 12, color: INK, outline: 'none',
   backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
 };
+
+// Clickable column header with a sort caret. Defined at module scope — a
+// component created inside another component gets a new identity on every
+// render, which makes React tear down and rebuild the whole subtree.
+function SortHead({ field, initialDir = 'asc', sortField, sortDir, onSort, children }) {
+  const active = sortField === field;
+  return (
+    <button onClick={() => onSort(field, initialDir)}
+      style={{ ...labelStyle, padding: '0 8px', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 4, color: active ? INK : labelStyle.color }}>
+      {children}
+      <span style={{ fontSize: 8, lineHeight: 1, color: active ? INK : 'rgba(26,25,22,0.28)' }}>{active ? (sortDir === 'asc' ? '▲' : '▼') : '▾'}</span>
+    </button>
+  );
+}
 
 // ── EDIT MODAL ──────────────────────────────────────────────────────────────
 function inputStyle(focused) {
@@ -189,6 +203,17 @@ function EditModal({ entry, onSave, onDelete, onClose }) {
                         onChange={e => setTrack(i, 'title', e.target.value)}
                         style={{ ...inputStyle(), flex: 1, padding: '6px 10px', fontSize: 13 }}
                       />
+                      <button
+                        onClick={() => setTrack(i, 'favorite', !t.favorite)}
+                        title={t.favorite ? 'Remove from favourites' : 'Mark as a favourite song'}
+                        style={{
+                          background: 'none', border: 'none', cursor: 'pointer', padding: '2px 4px',
+                          fontSize: 15, lineHeight: 1, flexShrink: 0,
+                          color: t.favorite ? '#E8B84B' : 'rgba(26,25,22,0.25)',
+                        }}
+                      >
+                        {t.favorite ? '♥' : '♡'}
+                      </button>
                       <StarRating value={t.rating || 0} onChange={v => setTrack(i, 'rating', v)} size={18} />
                       <span style={{ fontFamily: MONO, fontSize: 10, color: 'rgba(26,25,22,0.4)', minWidth: 26, textAlign: 'right' }}>
                         {t.rating || '—'}
@@ -239,7 +264,9 @@ export default function SessionEntries() {
     else { setSortField(field); setSortDir(initialDir); }
   };
   const [albums, setAlbums] = useState([]);
-  const Background = useRef(backgrounds[Math.floor(Math.random() * backgrounds.length)]).current;
+  // Lazy initialiser so the pick happens once, not on every render — the
+  // useRef form re-rolled the dice each time and threw the result away.
+  const [Background] = useState(() => backgrounds[Math.floor(Math.random() * backgrounds.length)]);
 
   useEffect(() => {
     fetch('/api/auth/check').then(r => r.json()).then(d => setAuthed(!!d.authed)).catch(() => {}).finally(() => setChecking(false));
@@ -284,18 +311,6 @@ export default function SessionEntries() {
 
   const COLS = '74px 1fr 1fr 70px 130px 110px';
 
-  // Clickable column header with a sort caret.
-  const SortHead = ({ field, initialDir = 'asc', children }) => {
-    const active = sortField === field;
-    return (
-      <button onClick={() => toggleSort(field, initialDir)}
-        style={{ ...labelStyle, padding: '0 8px', background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left', display: 'flex', alignItems: 'center', gap: 4, color: active ? INK : labelStyle.color }}>
-        {children}
-        <span style={{ fontSize: 8, lineHeight: 1, color: active ? INK : 'rgba(26,25,22,0.28)' }}>{active ? (sortDir === 'asc' ? '▲' : '▼') : '▾'}</span>
-      </button>
-    );
-  };
-
   return (
     <>
       <style>{`
@@ -337,12 +352,9 @@ export default function SessionEntries() {
               <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(160deg, rgba(255,255,255,0.5) 0%, transparent 45%)', pointerEvents: 'none' }} />
               <div style={{ position: 'relative', zIndex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, flex: 1 }}>
                 <div style={{ display: 'grid', gridTemplateColumns: COLS, padding: '14px 20px', borderBottom: HAIR, flexShrink: 0, alignItems: 'center' }}>
-                  <SortHead field="date" initialDir="desc">Added</SortHead>
-                  <SortHead field="album">Album</SortHead>
-                  <SortHead field="artist">Artist</SortHead>
-                  <SortHead field="year">Year</SortHead>
-                  <SortHead field="rating">Rating</SortHead>
-                  <SortHead field="type">Type</SortHead>
+                  {[['date','Added','desc'],['album','Album'],['artist','Artist'],['year','Year'],['rating','Rating'],['type','Type']].map(([field, label, dir]) => (
+                    <SortHead key={field} field={field} initialDir={dir || 'asc'} sortField={sortField} sortDir={sortDir} onSort={toggleSort}>{label}</SortHead>
+                  ))}
                 </div>
                 <div style={{ flex: 1, minHeight: 0, overflowY: 'auto' }}>
 

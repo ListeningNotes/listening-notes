@@ -12,6 +12,7 @@ import { fonts } from '../../library/sitewide_visuals';
 export default function HorizonChart({
   tracks = [],
   trackRatings = {},
+  favorites = null,          // index-keyed map; falls back to tracks[i].favorite
   height = 130,
   labels = false,
   color = 'rgba(255,255,255,0.82)',
@@ -20,6 +21,8 @@ export default function HorizonChart({
   animate = true,
 }) {
   if (!tracks.length) return null;
+
+  const isFav = i => (favorites ? !!favorites[i] : !!tracks[i]?.favorite);
 
   const gap      = tracks.length > 24 ? 2 : tracks.length > 14 ? 3 : 4;
   const labelH   = labels ? (tracks.length > 20 ? 62 : 76) : 0;
@@ -30,18 +33,32 @@ export default function HorizonChart({
       <div style={{ display: 'flex', alignItems: 'flex-end', gap, height }}>
         {tracks.map((t, i) => {
           const r = trackRatings?.[i] || 0;
+          const fav = isFav(i);
           return (
             <div
               key={i}
-              title={`${t.number || i + 1}. ${t.title}${r ? ` — ${r} / 5` : ' — unrated'}`}
+              title={`${t.number || i + 1}. ${t.title}${r ? ` — ${r} / 5` : ' — unrated'}${fav ? ' ♥' : ''}`}
               style={{
-                flex: 1, minWidth: 0,
+                flex: 1, minWidth: 0, height: '100%',
+                display: 'flex', flexDirection: 'column', justifyContent: 'flex-end',
+                position: 'relative',
+              }}
+            >
+              {fav && (
+                <span style={{
+                  position: 'absolute', bottom: `calc(${Math.max(3, (r / 5) * 100)}% + 3px)`,
+                  left: '50%', transform: 'translateX(-50%)',
+                  fontSize: 9, lineHeight: 1, color: '#E8B84B', pointerEvents: 'none',
+                }}>♥</span>
+              )}
+              <div style={{
+                width: '100%',
                 height: `${Math.max(3, (r / 5) * 100)}%`,
                 background: r ? color : emptyColor,
                 borderRadius: '3px 3px 0 0',
                 transition: animate ? 'height 0.3s cubic-bezier(0.34,1.2,0.64,1), background 0.2s' : 'none',
-              }}
-            />
+              }} />
+            </div>
           );
         })}
       </div>

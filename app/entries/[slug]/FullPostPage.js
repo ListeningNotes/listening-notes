@@ -6,6 +6,7 @@
 
 'use client';
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { fonts } from '../../../library/sitewide_visuals';
 import { parseHorizon, entryTracks, splitNotes } from '../../../library/entry_formatter';
 import DotNav from '../../../components/main_components/DotNav';
@@ -41,8 +42,22 @@ export default function FullPostPage({ entry }) {
     } catch {}
   }
 
-  // Load comments once when the page mounts
-  useEffect(() => { loadComments(); }, []);
+  // Load comments once when the page mounts. The work is wrapped so nothing is
+  // set during the effect's synchronous pass, and a cancel flag stops a slow
+  // response writing state after the page has moved on.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch('/api/comments?slug=' + entry.slug);
+        const data = await res.json();
+        if (cancelled) return;
+        setCommentsByTrack(data.comments || {});
+        setCommentsLoaded(true);
+      } catch {}
+    })();
+    return () => { cancelled = true; };
+  }, [entry.slug]);
 
   // Smooth scroll to a track section when clicking a horizon bar
   function handleBarClick(i) {
@@ -178,7 +193,7 @@ export default function FullPostPage({ entry }) {
         {/* Footer — date and back link */}
         <div style={{ borderTop: '1px solid var(--border)', paddingTop: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span style={{ fontFamily: fonts.mono, fontSize: '10px', color: 'var(--ink-faint)' }}>{new Date(entry.created_at).toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' })}</span>
-          <a href="/" style={{ fontFamily: fonts.mono, fontSize: '10px', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ink-soft)', textDecoration: 'none' }}>← All entries</a>
+          <Link href="/" style={{ fontFamily: fonts.mono, fontSize: '10px', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ink-soft)', textDecoration: 'none' }}>← All entries</Link>
         </div>
 
       </div>
