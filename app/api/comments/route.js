@@ -13,11 +13,13 @@ export async function POST(request) {
   try {
     const { slug, track_index, parent_id, author_name, author_email, content } = await request.json();
 
-    if (!slug || !author_name?.trim() || !author_email?.trim() || !content?.trim()) {
+    if (!slug || !author_name?.trim() || !content?.trim()) {
       return Response.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(author_email)) {
+    // Email is optional — the comment form stopped asking for one. Anything
+    // that does still send one has to send a valid one.
+    if (author_email?.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(author_email)) {
       return Response.json({ error: 'Invalid email' }, { status: 400 });
     }
 

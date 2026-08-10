@@ -14,7 +14,7 @@ export default function TrackThread({ track, trackIndex, slug, commentsByTrack, 
     <div id={'track-' + trackIndex} style={{ borderBottom: '1px solid var(--border)' }}>
       <div onClick={() => setOpen(v => !v)} style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 0', cursor: 'pointer' }}>
         <span style={{ fontFamily: fonts.mono, fontSize: '10px', color: 'var(--ink-faint)', width: '20px', textAlign: 'right', flexShrink: 0 }}>{track.num}</span>
-        <span style={{ fontSize: '13px', color: 'var(--ink)', flex: 1 }}>{track.name}</span>
+        <span className="ln-track-name" style={{ fontSize: '13px', color: 'var(--ink)', flex: 1, minWidth: 0 }}>{track.name}</span>
         {track.favorite && (
           <span title="Favourite song" style={{ fontSize: '11px', color: 'var(--gold)', flexShrink: 0, lineHeight: 1 }}>♥</span>
         )}
@@ -29,7 +29,6 @@ export default function TrackThread({ track, trackIndex, slug, commentsByTrack, 
         }}>
           {count ? count + ' comment' + (count > 1 ? 's' : '') : '+ comment'}
         </span>
-        <span style={{ fontSize: '10px', color: 'var(--ink-faint)', transform: open ? 'rotate(90deg)' : 'none', transition: 'transform 0.2s', flexShrink: 0 }}>▶</span>
       </div>
 
       {track.note && (

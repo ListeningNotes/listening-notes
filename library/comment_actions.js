@@ -39,7 +39,7 @@ export async function save_comment({ slug, track_index, parent_id, author_name, 
       ${track_index ?? -1},
       ${parent_id ?? null},
       ${author_name.trim()},
-      ${author_email.trim().toLowerCase()},
+      ${author_email?.trim().toLowerCase() ?? ''},
       ${content.trim()},
       true
     )

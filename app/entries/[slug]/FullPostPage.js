@@ -14,7 +14,6 @@ import SiteNav from '../../../components/main_components/SiteNav';
 import HorizonBar from '../../../components/main_components/Slug_Page/HorizonBar';
 import TrackThread from '../../../components/main_components/Slug_Page/TrackThread';
 import MetadataLabel from '../../../components/main_components/Slug_Page/MetadataLabel';
-import MetadataLabelInline from '../../../components/main_components/Slug_Page/MetadataLabelInline';
 import Chip from '../../../components/main_components/Slug_Page/Chip';
 import StarRating from '../../../components/main_components/StarRating';
 
@@ -276,9 +275,12 @@ export default function FullPostPage({ entry }) {
             min-height: 0;
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
-            /* Stops a flick that reaches the end of the notes from chaining
-               into the container and skipping the snap back to screen one. */
-            overscroll-behavior-y: contain;
+            /* Deliberately auto, not contain. Containing it is what made
+               screen one unreachable: with the notes filling the whole screen,
+               refusing to hand the scroll back meant pulling down at the top
+               of the notes did nothing at all, however hard you pulled.
+               Letting it chain is what carries you back up to the album. */
+            overscroll-behavior-y: auto;
           }
 
           /* Section headings pin themselves while their section is what you
@@ -293,6 +295,19 @@ export default function FullPostPage({ entry }) {
             padding-top: 14px;
           }
           .ln-meta-label--sticky + * { margin-top: 16px; }
+
+          /* Track names cut off well before they'd push the stars and the
+             comment pill around. ch is the useful unit here because the ask
+             was in characters — roughly "Daddy Lessons" and no longer, so
+             "Freedom (feat. Kendrick Lamar)" ends at the ellipsis instead of
+             taking the row for itself. Phones only; desktop rows have the
+             width to show a full name. */
+          .ln-track-name {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 15ch;
+          }
 
           .ln-content {
             padding: 0 24px 80px;
@@ -409,14 +424,22 @@ export default function FullPostPage({ entry }) {
             belongs to the same stretch of page they do. */}
         {(parsedTracks.length > 0 || horizonBars.length > 0) && (
           <section style={{ marginBottom: '48px' }}>
-            <MetadataLabel sticky>Track Notes</MetadataLabel>
+            {/* Heading and the horizon's own hint share one row — a separate
+              "Horizon" label directly under a sticky "Track Notes" was two
+              headings stacked on top of each other for one stretch of page. */}
+          <MetadataLabel sticky>
+              <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '10px' }}>
+                <span style={{ whiteSpace: 'nowrap' }}>
+                  Track Notes{horizonBars.length > 0 ? ' + Horizon' : ''}
+                </span>
+                {horizonBars.length > 0 && (
+                  <span style={{ letterSpacing: '0.08em', textAlign: 'right', minWidth: 0 }}>click a bar to jump</span>
+                )}
+              </div>
+            </MetadataLabel>
 
             {horizonBars.length > 0 && (
               <div style={{ marginBottom: '40px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-                  <MetadataLabelInline>Horizon</MetadataLabelInline>
-                  <span style={{ fontFamily: fonts.mono, fontSize: '9px', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ink-faint)' }}>click a bar to jump to track</span>
-                </div>
                 <HorizonBar
                   horizon={entry.horizon}
                   tracks={parsedTracks}
