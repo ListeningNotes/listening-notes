@@ -979,6 +979,19 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 .hp-dot:hover {
   background: rgba(26, 26, 26, 0.45);
 }
+/* The visible dot is 11px across — far under the ~44px a fingertip expects,
+   so on a phone you have to aim at it. This invisible square widens the tap
+   area without changing how the dot looks. The 50px/64px gaps between dots
+   are bigger than the square, so neighbouring targets never overlap. */
+.hp-dot::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 44px;
+  height: 44px;
+}
 /* Page labels sit under every dot and stay visible at all times. */
 .hp-dot-label {
   position: absolute;
@@ -998,6 +1011,19 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 }
 .hp-dot--active .hp-dot-label {
   color: var(--ink);
+}
+
+/* iOS Safari zooms the whole page in whenever you focus a field whose text is
+   under 16px, which knocks the layout sideways and leaves you pinching back
+   out. Fields across the site set their size inline, and inline styles beat
+   the cascade, so this needs !important to land. Phones only — desktop keeps
+   the smaller type it was designed with. */
+@media (max-width: 768px) {
+  input,
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
 }
 
 /* On phones the labelled dots are too wide to share the top row with the logo

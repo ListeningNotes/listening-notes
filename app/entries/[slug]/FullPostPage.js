@@ -81,12 +81,23 @@ export default function FullPostPage({ entry }) {
         }
 
         /* Layout — base (desktop). Responsive overrides live in the media query below. */
-        .ln-hero-pad    { padding: 0 48px 36px; }
+        .ln-hero        { position: relative; height: 390px; overflow: hidden; }
+        .ln-hero-pad    { position: absolute; bottom: 0; left: 0; right: 0; padding: 0 48px 36px; }
         .ln-hero-row    { display: flex; align-items: flex-end; gap: 24px; }
         .ln-content     { padding: 48px 48px 100px; }
 
+        /* On phones .ln-hero-row stacks into a column, so the bottom-anchored
+           block grows tall enough to slide up under the fixed dot-nav and sit
+           behind its labels. Letting the hero size to its own content and
+           padding it clear of the nav keeps the art below the labels however
+           many lines the album title wraps to. */
         @media (max-width: 600px) {
-          .ln-hero-pad    { padding: 0 24px 28px; }
+          .ln-hero        { height: auto; padding-top: 156px; }
+          /* relative, not static: the two gradient washes above are absolutely
+             positioned, and a static block paints underneath positioned
+             siblings — which hid the art and title behind them. relative with
+             no offsets keeps this in normal flow but back on top. */
+          .ln-hero-pad    { position: relative; z-index: 1; inset: auto; padding: 0 24px 28px; }
           .ln-hero-row    { flex-direction: column; align-items: flex-start; gap: 14px; }
           .ln-content     { padding: 40px 24px 80px; }
         }
@@ -97,16 +108,18 @@ export default function FullPostPage({ entry }) {
       <DotNav />
 
       {/* ── HERO ── Blurred album art background with metadata overlay.
-          390px, not 360 — the album thumbnail/title sit bottom-anchored in
-          here, and need the extra room to clear SiteNav + DotNav above. */}
-      <div style={{ position: 'relative', height: '390px', overflow: 'hidden' }}>
+          Sizing lives in .ln-hero above: a fixed 390px on desktop (390 not
+          360 — the bottom-anchored thumbnail/title need the extra room to
+          clear SiteNav + DotNav), and content-sized on phones, where the
+          block stacks and would otherwise run up behind the nav. */}
+      <div className="ln-hero">
         {entry.album_art && (
           <div style={{ position: 'absolute', inset: '-40px', backgroundImage: 'url(' + entry.album_art + ')', backgroundSize: 'cover', backgroundPosition: 'center', filter: 'blur(50px) saturate(1.3) brightness(1.05)', transform: 'scale(1.2)' }} />
         )}
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, var(--bg) 20%, transparent 100%)' }} />
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, var(--bg) 0%, transparent 38%)' }} />
 
-        <div className="ln-hero-pad" style={{ position: 'absolute', bottom: 0, left: 0, right: 0, maxWidth: '860px', margin: '0 auto' }}>
+        <div className="ln-hero-pad" style={{ maxWidth: '860px', margin: '0 auto' }}>
           <div className="ln-hero-row">
             {entry.album_art && (
               <div style={{
