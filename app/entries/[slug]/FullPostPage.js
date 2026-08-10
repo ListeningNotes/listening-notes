@@ -18,6 +18,17 @@ import Chip from '../../../components/main_components/Slug_Page/Chip';
 import StarRating from '../../../components/main_components/StarRating';
 
 
+// Shared by the two actions that close the entry out, so they read as one
+// pair rather than a button next to a text link.
+const footerAction = {
+  fontFamily: fonts.mono, fontSize: '10px', letterSpacing: '0.14em',
+  textTransform: 'uppercase', color: 'var(--ink-soft)',
+  background: 'transparent', border: '1px solid var(--border)',
+  borderRadius: 999, padding: '10px 22px', cursor: 'pointer',
+  textDecoration: 'none', whiteSpace: 'nowrap',
+  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+};
+
 export default function FullPostPage({ entry }) {
   const [commentsByTrack, setCommentsByTrack] = useState({});
   const [commentsLoaded, setCommentsLoaded] = useState(false);
@@ -93,6 +104,11 @@ export default function FullPostPage({ entry }) {
   // have to.
   const titleLength = (entry.album || '').length || 1;
   const titleSize = `clamp(1.25rem, ${(300 / titleLength).toFixed(2)}vw, 2.1rem)`;
+
+  // Says "Posted" because the artist line right above it already carries the
+  // album's own year — a second bare date there would just read as a second
+  // release year.
+  const postedOn = new Date(entry.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 
   const allTracksFive = parsedTracks.length > 0 && parsedTracks.every(t => t.stars === 5);
   const isMasterpiece = allTracksFive || entry.rating === 'Masterpiece';
@@ -365,6 +381,9 @@ export default function FullPostPage({ entry }) {
           {(entry.favorite === true || entry.favorite === 'true') && <Chip accent>Favorite</Chip>}
           {isMasterpiece && <Chip accent>Masterpiece</Chip>}
         </div>
+        <div style={{ fontFamily: fonts.mono, fontSize: '9px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--ink-faint)' }}>
+          Posted {postedOn}
+        </div>
         <div
           className="ln-scroll-cue"
           role="button"
@@ -415,6 +434,9 @@ export default function FullPostPage({ entry }) {
                 {entry.relationship && <Chip>{entry.relationship}</Chip>}
                 {entry.entry_type && <Chip>{entry.entry_type}</Chip>}
                 {(entry.favorite === true || entry.favorite === 'true') && <Chip accent>Favorite</Chip>}
+              </div>
+              <div style={{ fontFamily: fonts.mono, fontSize: '9px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--ink-faint)', marginTop: '12px' }}>
+                Posted {postedOn}
               </div>
             </div>
           </div>
@@ -487,16 +509,9 @@ export default function FullPostPage({ entry }) {
           </section>
         )}
 
-        {/* Footer — date and back link */}
-        <div style={{ borderTop: '1px solid var(--border)', paddingTop: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontFamily: fonts.mono, fontSize: '10px', color: 'var(--ink-faint)' }}>{new Date(entry.created_at).toLocaleDateString('en-US', { year:'numeric', month:'long', day:'numeric' })}</span>
-          <Link href="/" style={{ fontFamily: fonts.mono, fontSize: '10px', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ink-soft)', textDecoration: 'none' }}>← All entries</Link>
-        </div>
-
-        {/* Reaching the end of the tracks is the other moment you want to be
-            back at the album, and it doesn't depend on landing a gesture the
-            way pulling up from the top of the notes does. */}
-        <div style={{ display: 'flex', justifyContent: 'center', marginTop: '32px' }}>
+        {/* Footer — the two ways out, as a matching pair. The posted date used
+            to sit here; it lives up in the album's metadata now. */}
+        <div style={{ borderTop: '1px solid var(--border)', paddingTop: '28px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
           <button
             onClick={() => {
               const screens = document.querySelector('.ln-screens');
@@ -511,15 +526,11 @@ export default function FullPostPage({ entry }) {
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }
             }}
-            style={{
-              fontFamily: fonts.mono, fontSize: '10px', letterSpacing: '0.14em',
-              textTransform: 'uppercase', color: 'var(--ink-soft)',
-              background: 'transparent', border: '1px solid var(--border)',
-              borderRadius: 999, padding: '10px 22px', cursor: 'pointer',
-            }}
+            style={footerAction}
           >
             ↑ Back to top
           </button>
+          <Link href="/" style={footerAction}>← All entries</Link>
         </div>
 
       </div>
