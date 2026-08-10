@@ -112,8 +112,13 @@ export default function ArchivePage() {
       </header>
 
       {/* Filter bar */}
+      {/* Sticks below the fixed header rather than at the very top: the nav's
+          backdrop is an opaque band down to ~136px, and at top:12 this bar
+          slid underneath it and got cut in half. The z-index clears that
+          backdrop too, so the band's bottom fade doesn't wash over the bar —
+          it sits below the dot labels, so it never covers the nav itself. */}
       <div style={{
-        position: 'sticky', top: 12, zIndex: 50, padding: '12px 24px',
+        position: 'sticky', top: 136, zIndex: 101, padding: '12px 24px',
       }}>
         <div className="arc-filters" style={{
           maxWidth: 1100, margin: '0 auto',
