@@ -130,11 +130,10 @@ export default function FullPostPage({ entry }) {
         .ln-hero-row    { display: flex; align-items: flex-end; gap: 24px; }
         .ln-content     { padding: 48px 48px 100px; }
         .ln-screen-one  { display: none; }
-        .ln-topblur     { display: none; }
         /* How much of the top the header occupies on screen two. The dot nav
            is hidden by then, so this only has to clear the logo row (which
-           ends at 58px) — not the 150px the labelled dots needed. Everything
-           that has to sit under the header reads this one value. */
+           ends at 58px) — not the 150px the labelled dots needed. The band
+           height, the snap position and the scroll cue all read this. */
         .ln-entry       { --ln-band: 96px; }
 
         @media (max-width: 768px) {
@@ -213,55 +212,21 @@ export default function FullPostPage({ entry }) {
             animation: ln-cue-bob 2.2s ease-in-out infinite;
           }
 
-          /* ── SCREEN TWO ── the dots go away once you've scrolled in, and the
-             flat sitewide nav band is replaced by the album's own art, blurred.
-             The band is masked at the bottom so text dissolves into the page
-             rather than being cut off on a line. */
-          .ln-entry .sitenav-row::before { display: none; }
+          /* ── SCREEN TWO ── the dots go away once you've scrolled in, so the
+             header is only the logo row and the sitewide --bg band can shrink
+             to match. The 180px it uses elsewhere is sized for the labelled
+             dots, and at that height it covered the notes this page snaps to.
+             Solid down to --ln-band, then a short fade so text dissolves out
+             rather than ending on a line. */
+          .ln-entry .sitenav-row::before {
+            height: calc(var(--ln-band) + 34px);
+            background: linear-gradient(to bottom, var(--bg) 0%, var(--bg) var(--ln-band), transparent 100%);
+          }
           .ln-entry--scrolled .hp-dotnav {
             opacity: 0;
             pointer-events: none;
           }
           .hp-dotnav { transition: opacity 0.25s ease; }
-
-          .ln-topblur {
-            display: block;
-            position: fixed;
-            top: 0; left: 0; right: 0;
-            height: var(--ln-band);
-            z-index: 99; /* under the nav row (100), over the page */
-            pointer-events: none;
-            overflow: hidden;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-            /* Opaque base so the band always hides what scrolls under it, even
-               where the blurred art above it goes soft. */
-            background: var(--bg);
-            -webkit-mask-image: linear-gradient(to bottom, #000 76%, transparent 100%);
-            mask-image: linear-gradient(to bottom, #000 76%, transparent 100%);
-          }
-          .ln-entry--scrolled .ln-topblur { opacity: 1; }
-          .ln-topblur-art {
-            position: absolute;
-            /* Generous overhang: blur() softens an element's own edges, so the
-               art has to start well outside the band or page text shows
-               through the top of it. The --bg underneath is the backstop. */
-            inset: -90px -40%;
-            background-size: cover;
-            background-position: center;
-            filter: blur(38px) saturate(1.3) brightness(1.05);
-            transform: scale(1.1);
-            /* Held back over the --bg base so the band lands mid-tone whatever
-               the sleeve looks like. At full strength a black cover turned the
-               band near-black and swallowed the logo and toggle, which are
-               plain --ink; a white cover did the same in dark mode. This keeps
-               the album's colour without letting it set the contrast. */
-            opacity: 0.38;
-          }
-          .ln-topblur-wash {
-            position: absolute; inset: 0;
-            background: linear-gradient(to bottom, transparent 30%, var(--bg) 100%);
-          }
 
           .ln-content {
             padding: 28px 24px 80px;
@@ -273,15 +238,6 @@ export default function FullPostPage({ entry }) {
       {/* ── NAV ── shared site nav (logo + dot nav), identical to every other public page */}
       <SiteNav />
       <DotNav />
-
-      {/* Screen two's header on phones: the album's own art, blown up and
-          blurred, sitting behind the logo row once you've scrolled in. */}
-      {entry.album_art && (
-        <div className="ln-topblur" aria-hidden="true">
-          <div className="ln-topblur-art" style={{ backgroundImage: 'url(' + entry.album_art + ')' }} />
-          <div className="ln-topblur-wash" />
-        </div>
-      )}
 
       {/* ── SCREEN ONE (phones) ── a full screen of album: art up top, then the
           title, artist, year, rating and qualifiers centred beneath it. The
