@@ -27,58 +27,19 @@ export default function FullPostPage({ entry }) {
   // is what swaps the phone header over to screen two's look — the dot nav
   // goes away and the album's own blurred art takes over the band behind the
   // logo. Same 24px trigger the sitewide nav uses, so the two move together.
+  // On phones the container scrolls, not the document, so window.scrollY stays
+  // at 0 the whole time and can't be what drives this. Watch both: .ln-screens
+  // is the scroller on a phone, the window is the scroller on desktop.
   const [scrolled, setScrolled] = useState(false);
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 24);
-    onScroll();
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
-  }, []);
-
-  // The two screens commit in JS rather than with CSS scroll-snap. CSS snap
-  // pulls symmetrically around a point, which meant the notes position kept
-  // yanking you back for the first ~230px of reading, and it fought going
-  // back up: a small scroll up off the notes got pulled straight back down.
-  // Running it here instead lets the commit follow the direction you're
-  // travelling, which is what makes one flick land cleanly on either screen.
-  //
-  // It only ever acts between the two positions. Once you're into the notes
-  // it does nothing at all, so reading is never interrupted.
-  useEffect(() => {
-    if (window.matchMedia('(min-width: 769px)').matches) return;
-
-    let endTimer;
-    let committing = false;
-    let lastY = window.scrollY;
-    let goingDown = true;
-
-    const onScroll = () => {
-      const y = window.scrollY;
-      if (y !== lastY) goingDown = y > lastY;
-      lastY = y;
-      if (committing) return;
-
-      clearTimeout(endTimer);
-      // Only fires once scrolling has actually stopped — through a drag or a
-      // flick the events keep arriving and keep pushing this back.
-      endTimer = setTimeout(() => {
-        const marker = document.querySelector('.ln-snap-point');
-        if (!marker) return;
-        const band = parseFloat(getComputedStyle(marker).scrollMarginTop) || 96;
-        const notesTop = Math.round(marker.getBoundingClientRect().top + window.scrollY - band);
-        const at = window.scrollY;
-        if (at <= 4 || at >= notesTop - 4) return; // parked already, or reading
-
-        committing = true;
-        window.scrollTo({ top: goingDown ? notesTop : 0, behavior: 'smooth' });
-        setTimeout(() => { committing = false; }, 700);
-      }, 120);
-    };
-
-    window.addEventListener('scroll', onScroll, { passive: true });
+    const screens = document.querySelector('.ln-screens');
+    const read = () => setScrolled(Math.max(screens ? screens.scrollTop : 0, window.scrollY) > 24);
+    read();
+    window.addEventListener('scroll', read, { passive: true });
+    if (screens) screens.addEventListener('scroll', read, { passive: true });
     return () => {
-      window.removeEventListener('scroll', onScroll);
-      clearTimeout(endTimer);
+      window.removeEventListener('scroll', read);
+      if (screens) screens.removeEventListener('scroll', read);
     };
   }, []);
 
@@ -123,13 +84,16 @@ export default function FullPostPage({ entry }) {
     const el = document.getElementById('track-' + i);
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
-  // Which of the three display sizes screen one's title uses. Measured off
-  // character count rather than the rendered box because it only has to pick
-  // a tier, and doing it here avoids a layout read on every render.
-  const titleLength = (entry.album || '').length;
-  const titleSizeClass = titleLength > 44 ? ' ln-screen-one-title--xlong'
-    : titleLength > 28 ? ' ln-screen-one-title--long'
-    : '';
+  // The largest size at which the title still lands inside two rows, rather
+  // than a set of fixed steps — stepping meant a 30-character title dropped to
+  // the same size as a 56-character one and looked shrunken for no reason.
+  // The 300 is measured, not derived: at this display face two rows hold about
+  // 300/length in vw before the clamp starts eating the end of the name.
+  // Anything up to ~35 characters hits the 2.1rem ceiling and never shrinks,
+  // so only genuinely long titles give up any size, and only as much as they
+  // have to.
+  const titleLength = (entry.album || '').length || 1;
+  const titleSize = `clamp(1.25rem, ${(300 / titleLength).toFixed(2)}vw, 2.1rem)`;
 
   const allTracksFive = parsedTracks.length > 0 && parsedTracks.every(t => t.stars === 5);
   const isMasterpiece = allTracksFive || entry.rating === 'Masterpiece';
@@ -188,14 +152,26 @@ export default function FullPostPage({ entry }) {
              we know about it centred underneath, and a cue to scroll on. */
           .ln-hero { display: none; }
 
-          /* A zero-height marker at the boundary between the two screens. It
-             no longer carries scroll-snap-align — the commit is done in JS,
-             see the effect in this file — but its scroll-margin is still the
-             one definition of where the notes come to rest, read both by that
-             effect and by the scroll cue. */
-          .ln-snap-point {
-            height: 0;
-            scroll-margin-top: var(--ln-band);
+          /* The two screens snap inside their own container rather than the
+             document. This is the whole trick, and it is why the homepage
+             feels solid where earlier versions of this page did not: because
+             the long content lives in an inner scroller, both screens stay
+             exactly one viewport tall, and a mandatory snap over
+             viewport-sized areas can commit hard without ever trapping the
+             reading. scroll-snap-stop stops a fast flick skipping past. */
+          .ln-screens {
+            height: 100dvh;
+            overflow-y: auto;
+            scroll-snap-type: y mandatory;
+            -webkit-overflow-scrolling: touch;
+            touch-action: pan-y;
+            overscroll-behavior-y: none;
+          }
+          .ln-screen-one,
+          .ln-screen-two {
+            height: 100dvh;
+            scroll-snap-align: start;
+            scroll-snap-stop: always;
           }
 
           .ln-screen-one {
@@ -216,7 +192,7 @@ export default function FullPostPage({ entry }) {
                pushed it further still. Squaring to the smaller of the two
                shrinks the art on a short screen instead of losing the bottom
                of the page, and flex-shrink lets it give up more if it has to. */
-            height: min(34dvh, 68vw);
+            height: min(40dvh, 78vw);
             width: auto;
             aspect-ratio: 1 / 1;
             flex-shrink: 1;
@@ -243,10 +219,6 @@ export default function FullPostPage({ entry }) {
             -webkit-line-clamp: 2;
             overflow: hidden;
           }
-          /* Long titles step down instead of being cut off at an ellipsis —
-             the point is to fit the name, not to hide it. */
-          .ln-screen-one-title--long  { font-size: clamp(1.2rem, 5vw, 1.6rem); }
-          .ln-screen-one-title--xlong { font-size: clamp(1rem, 4.2vw, 1.3rem); }
           .ln-screen-one-artist {
             font-family: var(--font-label);
             font-size: 11px;
@@ -280,15 +252,50 @@ export default function FullPostPage({ entry }) {
             height: calc(var(--ln-band) + 34px);
             background: linear-gradient(to bottom, var(--bg) 0%, var(--bg) var(--ln-band), transparent 100%);
           }
+          /* SiteNav fades its own band in off window.scrollY, which never moves
+             now that the container is what scrolls — so this page drives it. */
+          .ln-entry--scrolled .sitenav-row::before { opacity: 1; }
           .ln-entry--scrolled .hp-dotnav {
             opacity: 0;
             pointer-events: none;
           }
           .hp-dotnav { transition: opacity 0.25s ease; }
 
+          /* Screen two: the header band holds the top, everything below it
+             scrolls inside. Padding rather than margin so the inner scroller
+             starts below the band — that puts sticky labels at top:0 right
+             underneath the header instead of behind it. */
+          .ln-screen-two {
+            padding-top: var(--ln-band);
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+          }
+          .ln-screen-two-scroll {
+            flex: 1;
+            min-height: 0;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            /* Stops a flick that reaches the end of the notes from chaining
+               into the container and skipping the snap back to screen one. */
+            overscroll-behavior-y: contain;
+          }
+
+          /* Section headings pin themselves while their section is what you
+             are reading, and get pushed out by the next one. They need an
+             opaque background or the text runs underneath them. */
+          .ln-meta-label--sticky {
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            background: var(--bg);
+            margin-bottom: 0 !important;
+            padding-top: 14px;
+          }
+          .ln-meta-label--sticky + * { margin-top: 16px; }
+
           .ln-content {
-            padding: 28px 24px 80px;
-            scroll-margin-top: var(--ln-band);
+            padding: 0 24px 80px;
           }
         }
       `}</style>
@@ -296,6 +303,12 @@ export default function FullPostPage({ entry }) {
       {/* ── NAV ── shared site nav (logo + dot nav), identical to every other public page */}
       <SiteNav />
       <DotNav />
+
+      {/* On phones this is the scroll container the two screens snap inside —
+          the same arrangement as .hp-mobile-screens on the homepage. On
+          desktop it has no height or overflow of its own, so everything below
+          just falls back into normal document flow. */}
+      <div className="ln-screens">
 
       {/* ── SCREEN ONE (phones) ── a full screen of album: art up top, then the
           title, artist, year, rating and qualifiers centred beneath it. The
@@ -306,7 +319,7 @@ export default function FullPostPage({ entry }) {
             <img src={entry.album_art} alt={entry.album} />
           </div>
         )}
-        <h1 className={'ln-screen-one-title' + titleSizeClass}>{entry.album}</h1>
+        <h1 className="ln-screen-one-title" style={{ fontSize: titleSize }}>{entry.album}</h1>
         <div className="ln-screen-one-artist">
           {entry.artist}{entry.year ? ' · ' + entry.year : ''}
         </div>
@@ -324,8 +337,8 @@ export default function FullPostPage({ entry }) {
           role="button"
           tabIndex={0}
           aria-label="Scroll to the notes"
-          onClick={() => document.getElementById('ln-content')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
-          onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') document.getElementById('ln-content')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}
+          onClick={() => document.querySelector('.ln-screen-two')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+          onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') document.querySelector('.ln-screen-two')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}
         >
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="6 9 12 15 18 9" />
@@ -375,36 +388,44 @@ export default function FullPostPage({ entry }) {
         </div>
       </div>
 
-      {/* ── CONTENT ── */}
-      <div className="ln-snap-point" aria-hidden="true" />
+      {/* ── SCREEN TWO ── on phones this is the second snap screen: the header
+          stays put at the top while everything below scrolls inside it, the
+          way Recent Listens does on the homepage. On desktop it is a plain
+          wrapper and the page scrolls normally. */}
+      <section className="ln-screen-two">
+      <div className="ln-screen-two-scroll">
 
       <div id="ln-content" className="ln-content" style={{ maxWidth: '860px', margin: '0 auto' }}>
 
         {albumNotes && (
           <section style={{ marginBottom: '48px' }}>
-            <MetadataLabel>Notes</MetadataLabel>
+            <MetadataLabel sticky>Album Notes</MetadataLabel>
             <div style={{ lineHeight: 1.95, fontSize: '15px', whiteSpace: 'pre-wrap', color: 'var(--ink)' }}>{albumNotes}</div>
           </section>
         )}
 
-        {horizonBars.length > 0 && (
+        {/* Horizon lives under the Track Notes heading rather than on its own:
+            it is a map of the tracks, and clicking a bar jumps to one, so it
+            belongs to the same stretch of page they do. */}
+        {(parsedTracks.length > 0 || horizonBars.length > 0) && (
           <section style={{ marginBottom: '48px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
-              <MetadataLabelInline>Horizon</MetadataLabelInline>
-              <span style={{ fontFamily: fonts.mono, fontSize: '9px', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ink-faint)' }}>click a bar to jump to track</span>
-            </div>
-            <HorizonBar
-              horizon={entry.horizon}
-              tracks={parsedTracks}
-              commentsByTrack={commentsByTrack}
-              onBarClick={handleBarClick}
-            />
-          </section>
-        )}
+            <MetadataLabel sticky>Track Notes</MetadataLabel>
 
-        {parsedTracks.length > 0 && (
-          <section style={{ marginBottom: '48px' }}>
-            <MetadataLabel>Tracks</MetadataLabel>
+            {horizonBars.length > 0 && (
+              <div style={{ marginBottom: '40px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                  <MetadataLabelInline>Horizon</MetadataLabelInline>
+                  <span style={{ fontFamily: fonts.mono, fontSize: '9px', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ink-faint)' }}>click a bar to jump to track</span>
+                </div>
+                <HorizonBar
+                  horizon={entry.horizon}
+                  tracks={parsedTracks}
+                  commentsByTrack={commentsByTrack}
+                  onBarClick={handleBarClick}
+                />
+              </div>
+            )}
+
             <div>
               {parsedTracks.map((t, i) => (
                 <TrackThread
@@ -422,7 +443,7 @@ export default function FullPostPage({ entry }) {
 
         {tags.length > 0 && (
           <section style={{ marginBottom: '48px' }}>
-            <MetadataLabel>Tags</MetadataLabel>
+            <MetadataLabel sticky>Tags</MetadataLabel>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
               {tags.map((tag, i) => (
                 <span key={i} style={{ fontFamily: fonts.mono, fontSize: '9px', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ink-faint)', border: '1px solid var(--border)', borderRadius: '4px', padding: '3px 8px' }}>{tag}</span>
@@ -438,6 +459,11 @@ export default function FullPostPage({ entry }) {
         </div>
 
       </div>
+
+      </div>{/* .ln-screen-two-scroll */}
+      </section>{/* .ln-screen-two */}
+
+      </div>{/* .ln-screens */}
     </div>
   );
 }
