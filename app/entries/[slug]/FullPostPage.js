@@ -132,6 +132,24 @@ export default function FullPostPage({ entry }) {
           .ln-star-fill { animation: none; }
         }
 
+        /* The masterpiece glow, lifted from EntryModal so it works here too.
+           StarRating has always asked for it on a masterpiece, but the
+           keyframes only existed inside the modal's own style block, so on
+           this page the class landed on nothing. A masterpiece should not look
+           like any other five stars. */
+        @keyframes ln-star-glow-kf {
+          0%,100% { filter: brightness(1.15) drop-shadow(0 0 3px rgba(255,210,60,0.5)) drop-shadow(0 0 6px rgba(255,180,30,0.3)); }
+          50%     { filter: brightness(1.45) drop-shadow(0 0 6px rgba(255,210,60,0.9)) drop-shadow(0 0 12px rgba(255,180,30,0.5)); }
+        }
+        .ln-star-glow { animation: ln-star-glow-kf 2.8s ease-in-out infinite; }
+        .ln-star-glow:nth-child(2) { animation-delay: .18s; }
+        .ln-star-glow:nth-child(3) { animation-delay: .36s; }
+        .ln-star-glow:nth-child(4) { animation-delay: .54s; }
+        .ln-star-glow:nth-child(5) { animation-delay: .72s; }
+        @media (prefers-reduced-motion: reduce) {
+          .ln-star-glow { animation: none; }
+        }
+
         /* Layout — base (desktop). The phone layout is separate markup below,
            swapped in by display, the same way the homepage splits
            .hp-desktop-layout from .hp-mobile-screens. Desktop is untouched. */
@@ -424,22 +442,16 @@ export default function FullPostPage({ entry }) {
             belongs to the same stretch of page they do. */}
         {(parsedTracks.length > 0 || horizonBars.length > 0) && (
           <section style={{ marginBottom: '48px' }}>
-            {/* Heading and the horizon's own hint share one row — a separate
-              "Horizon" label directly under a sticky "Track Notes" was two
-              headings stacked on top of each other for one stretch of page. */}
-          <MetadataLabel sticky>
-              <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '10px' }}>
-                <span style={{ whiteSpace: 'nowrap' }}>
-                  Track Notes{horizonBars.length > 0 ? ' + Horizon' : ''}
-                </span>
-                {horizonBars.length > 0 && (
-                  <span style={{ letterSpacing: '0.08em', textAlign: 'right', minWidth: 0 }}>click a bar to jump</span>
-                )}
-              </div>
-            </MetadataLabel>
+            <MetadataLabel sticky>Track Notes</MetadataLabel>
 
+            {/* The hint sits with the bars rather than in the heading: the
+                heading is sticky, and "click a bar to jump" makes no sense
+                still sitting there once you've scrolled the bars away. */}
             {horizonBars.length > 0 && (
               <div style={{ marginBottom: '40px' }}>
+                <div style={{ fontFamily: fonts.mono, fontSize: '9px', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ink-faint)', textAlign: 'right', marginBottom: '10px' }}>
+                  click a bar to jump to track
+                </div>
                 <HorizonBar
                   horizon={entry.horizon}
                   tracks={parsedTracks}
