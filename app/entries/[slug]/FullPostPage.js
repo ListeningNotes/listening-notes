@@ -493,6 +493,35 @@ export default function FullPostPage({ entry }) {
           <Link href="/" style={{ fontFamily: fonts.mono, fontSize: '10px', letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ink-soft)', textDecoration: 'none' }}>← All entries</Link>
         </div>
 
+        {/* Reaching the end of the tracks is the other moment you want to be
+            back at the album, and it doesn't depend on landing a gesture the
+            way pulling up from the top of the notes does. */}
+        <div style={{ display: 'flex', justifyContent: 'center', marginTop: '32px' }}>
+          <button
+            onClick={() => {
+              const screens = document.querySelector('.ln-screens');
+              const inner = document.querySelector('.ln-screen-two-scroll');
+              const paged = screens && screens.scrollHeight > screens.clientHeight;
+              if (paged) {
+                screens.scrollTo({ top: 0, behavior: 'smooth' });
+                // Reset the notes once screen one is covering them, so they
+                // start from the top next time rather than mid-tracklist.
+                setTimeout(() => { if (inner) inner.scrollTop = 0; }, 600);
+              } else {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }
+            }}
+            style={{
+              fontFamily: fonts.mono, fontSize: '10px', letterSpacing: '0.14em',
+              textTransform: 'uppercase', color: 'var(--ink-soft)',
+              background: 'transparent', border: '1px solid var(--border)',
+              borderRadius: 999, padding: '10px 22px', cursor: 'pointer',
+            }}
+          >
+            ↑ Back to top
+          </button>
+        </div>
+
       </div>
 
       </div>{/* .ln-screen-two-scroll */}
