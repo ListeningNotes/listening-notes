@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import PasswordGate from '../../../components/session_components/PasswordGate';
 import backgrounds from '../../../components/session_components/backgrounds';
 import { fonts } from '../../../library/sitewide_visuals';
@@ -12,6 +12,30 @@ const SANS  = "'DM Sans', system-ui, sans-serif";
 const INK = '#1a1916';
 const FOLDER_BG = 'rgba(255,255,255,0.8)';
 const label = { fontFamily: MONO, fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(26,25,22,0.45)' };
+
+// A folder tab that connects to the open panel when active. Module scope so it
+// keeps a stable identity across renders.
+function FolderTab({ id, tab, onSelect, children }) {
+  const active = tab === id;
+  return (
+    <button onClick={() => onSelect(id)}
+      style={{
+        fontFamily: MONO, fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase',
+        padding: active ? '11px 24px 13px' : '9px 22px 11px',
+        border: 'none', cursor: 'pointer',
+        borderRadius: '16px 16px 0 0',
+        marginBottom: active ? -1 : 0,
+        background: active ? FOLDER_BG : 'rgba(255,255,255,0.42)',
+        color: active ? INK : 'rgba(26,25,22,0.42)',
+        backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
+        boxShadow: active ? '0 -6px 18px rgba(0,0,0,0.05)' : 'none',
+        position: 'relative', zIndex: active ? 2 : 1,
+        transition: 'background 0.15s, color 0.15s, padding 0.12s',
+      }}>
+      {children}
+    </button>
+  );
+}
 
 function NoteModal({ submission, onClose }) {
   return (
@@ -40,7 +64,9 @@ export default function Inbox() {
   const [checking, setChecking] = useState(true);
   const [tab, setTab] = useState('submissions');
   const [albums, setAlbums] = useState([]);
-  const Background = useRef(backgrounds[Math.floor(Math.random() * backgrounds.length)]).current;
+  // Lazy initialiser so the pick happens once, not on every render — the
+  // useRef form re-rolled the dice each time and threw the result away.
+  const [Background] = useState(() => backgrounds[Math.floor(Math.random() * backgrounds.length)]);
 
   const [submissions, setSubmissions] = useState([]);
   const [subLoading, setSubLoading] = useState(true);
@@ -87,28 +113,6 @@ export default function Inbox() {
   if (checking) return <div style={{ minHeight: '100vh', background: '#eef0ec' }} />;
   if (!authed) return <PasswordGate onAuth={() => setAuthed(true)} />;
 
-  // A folder tab that connects to the open panel when active.
-  const FolderTab = ({ id, children }) => {
-    const active = tab === id;
-    return (
-      <button onClick={() => setTab(id)}
-        style={{
-          fontFamily: MONO, fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase',
-          padding: active ? '11px 24px 13px' : '9px 22px 11px',
-          border: 'none', cursor: 'pointer',
-          borderRadius: '16px 16px 0 0',
-          marginBottom: active ? -1 : 0,
-          background: active ? FOLDER_BG : 'rgba(255,255,255,0.42)',
-          color: active ? INK : 'rgba(26,25,22,0.42)',
-          backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)',
-          boxShadow: active ? '0 -6px 18px rgba(0,0,0,0.05)' : 'none',
-          position: 'relative', zIndex: active ? 2 : 1,
-          transition: 'background 0.15s, color 0.15s, padding 0.12s',
-        }}>
-        {children}
-      </button>
-    );
-  };
 
   const subFilter = (f) => ({
     fontFamily: MONO, fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase',
@@ -148,8 +152,8 @@ export default function Inbox() {
 
           {/* Folder tabs */}
           <div style={{ display: 'flex', alignItems: 'flex-end', gap: 5, paddingLeft: 14, position: 'relative', zIndex: 2, flexShrink: 0 }}>
-            <FolderTab id="submissions">Submissions{subCounts.pending > 0 ? ` (${subCounts.pending})` : ''}</FolderTab>
-            <FolderTab id="comments">Comments{comments.length > 0 ? ` (${comments.length})` : ''}</FolderTab>
+            <FolderTab id="submissions" tab={tab} onSelect={setTab}>Submissions{subCounts.pending > 0 ? ` (${subCounts.pending})` : ''}</FolderTab>
+            <FolderTab id="comments" tab={tab} onSelect={setTab}>Comments{comments.length > 0 ? ` (${comments.length})` : ''}</FolderTab>
           </div>
 
           {/* Open folder */}

@@ -11,6 +11,7 @@ import HorizonChart from '../../main_components/HorizonChart';
 export default function AlbumNotes({
   tracks,
   trackRatings,
+  trackFavorites,
   overallNotes,
   setOverallNotes,
   onNext,
@@ -26,7 +27,7 @@ export default function AlbumNotes({
           <div style={{ ...lbl, marginBottom: 10 }}>Listening Horizon</div>
           {/* No labels here — this is a glance at the album's shape while
               writing, not the screen where the shape gets studied. */}
-          <HorizonChart tracks={list} trackRatings={trackRatings} height={46} color={tx(0.6)} />
+          <HorizonChart tracks={list} trackRatings={trackRatings} favorites={trackFavorites} height={46} color={tx(0.6)} />
         </div>
       )}
 

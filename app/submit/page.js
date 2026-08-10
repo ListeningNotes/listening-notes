@@ -98,7 +98,7 @@ export default function SubmitPage() {
             <div style={{ background: 'var(--bg-warm)', border: '1px solid var(--border)', borderRadius: 'var(--r-lg)', padding: '32px' }}>
               <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.6rem', marginBottom: '10px' }}>Submitted.</div>
               <p style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8rem', color: 'var(--ink-soft)', margin: 0, lineHeight: 1.7 }}>
-                {form.name ? `Thanks, ${form.name}. ` : ''}I'll give it a listen.
+                {form.name ? `Thanks, ${form.name}. ` : ''}I&apos;ll give it a listen.
                 {form.email ? " I'll let you know when it goes up." : ''}
               </p>
             </div>

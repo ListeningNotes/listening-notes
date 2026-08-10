@@ -32,6 +32,7 @@ export function useListeningSession({ step }) {
   const [tracksLoading, setTracksLoading] = useState(false);
   const [trackNotes, setTrackNotes]       = useState({});
   const [trackRatings, setTrackRatings]   = useState({});
+  const [trackFavorites, setTrackFavorites] = useState({});   // index -> true
   const [openTrack, setOpenTrack]         = useState(null);
 
   // Reflect chat (step 3 quick-prompts)
@@ -67,13 +68,13 @@ export function useListeningSession({ step }) {
     if (!brief) return;
     const draft = {
       album: brief.album, artist: brief.artist, year: brief.year,
-      albumArt, overallNotes, trackNotes, trackRatings,
+      albumArt, overallNotes, trackNotes, trackRatings, trackFavorites,
       rating, Masterpiece, Favorite, entryType, relationship,
     };
     localStorage.setItem('ln_session_draft', JSON.stringify(draft));
     // brief is a dependency because it now arrives after the user can type —
     // without it, notes written before the briefing landed would go unsaved.
-  }, [brief, overallNotes, trackNotes, trackRatings, rating, Masterpiece, Favorite, entryType, relationship]);
+  }, [brief, overallNotes, trackNotes, trackRatings, trackFavorites, rating, Masterpiece, Favorite, entryType, relationship]);
 
   // Format one step early. The tags on step 4 are produced by this call, so
   // starting it at step 3 means they're already there when the user arrives
@@ -107,6 +108,7 @@ export function useListeningSession({ step }) {
       setOverallNotes(prev => prev || s.overallNotes || '');
       setTrackNotes(prev => (Object.keys(prev).length ? prev : (s.trackNotes || {})));
       setTrackRatings(prev => (Object.keys(prev).length ? prev : (s.trackRatings || {})));
+      setTrackFavorites(prev => (Object.keys(prev).length ? prev : (s.trackFavorites || {})));
       setRating(prev => prev || s.rating || 0);
       setMasterpiece(prev => prev || s.Masterpiece || false);
       setFavorite(prev => prev || s.Favorite || false);
@@ -144,6 +146,7 @@ export function useListeningSession({ step }) {
     setTracks(null);
     setTrackNotes({});
     setTrackRatings({});
+    setTrackFavorites({});
     setElapsed(0);
     setOverallNotes('');
     setRating(0);
@@ -246,8 +249,9 @@ export function useListeningSession({ step }) {
         number: t.number || i + 1,
         title: t.title,
         rating: trackRatings[i] || 0,
+        favorite: !!trackFavorites[i],
         note: (trackNotes[i] || '').trim(),
-      })).filter(t => t.rating > 0 || t.note);
+      })).filter(t => t.rating > 0 || t.note || t.favorite);
       const derived = serializeTracks(structuredTracks);
 
       const res = await fetch('/api/entries', {
@@ -296,6 +300,7 @@ export function useListeningSession({ step }) {
     tracksLoading,
     trackNotes, setTrackNotes,
     trackRatings, setTrackRatings,
+    trackFavorites, setTrackFavorites,
     openTrack, setOpenTrack,
     // Reflect chat
     chatMessages,

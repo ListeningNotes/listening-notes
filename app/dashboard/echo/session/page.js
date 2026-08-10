@@ -52,6 +52,7 @@ export default function EchoSessionPage() {
     rating, setRating, Masterpiece, setMasterpiece, Favorite, setFavorite,
     entryType, setEntryType, relationship, setRelationship,
     tracks, tracksLoading, trackNotes, setTrackNotes, trackRatings, setTrackRatings,
+    trackFavorites, setTrackFavorites,
     openTrack, setOpenTrack,
     chatMessages, chatInput, setChatInput, chatLoading, chatEndRef,
     sessionTags, setSessionTags, tagInput, setTagInput,
@@ -305,11 +306,11 @@ export default function EchoSessionPage() {
                   {/* Keyed on step so each screen mounts fresh and slides in. */}
                   <div key={step} style={{ animation: `${stepDir > 0 ? 'ln-step-fwd' : 'ln-step-back'} 0.35s cubic-bezier(0.22,1,0.36,1) both` }}>
                     {step === 0 && <AlbumDebrief brief={brief} researchState={researchState} researchError={researchError} onNext={() => goToStep(1)} onReset={() => router.replace('/dashboard/echo')} onRefresh={refreshResearch} />}
-                    {step === 1 && <TrackNotes tracks={tracks} tracksLoading={tracksLoading} trackNotes={trackNotes} setTrackNotes={setTrackNotes} trackRatings={trackRatings} setTrackRatings={setTrackRatings} openTrack={openTrack} setOpenTrack={setOpenTrack} onNext={() => goToStep(2)} onAsk={() => setAskOpen(true)} />}
-                    {step === 2 && <AlbumNotes tracks={tracks} trackRatings={trackRatings} overallNotes={overallNotes} setOverallNotes={setOverallNotes} onNext={() => goToStep(3)} />}
-                    {step === 3 && <ScoreScreen tracks={tracks} trackRatings={trackRatings} rating={rating} setRating={setRating} Masterpiece={Masterpiece} setMasterpiece={setMasterpiece} Favorite={Favorite} setFavorite={setFavorite} onNext={() => goToStep(4)} />}
+                    {step === 1 && <TrackNotes tracks={tracks} tracksLoading={tracksLoading} trackNotes={trackNotes} setTrackNotes={setTrackNotes} trackRatings={trackRatings} setTrackRatings={setTrackRatings} trackFavorites={trackFavorites} setTrackFavorites={setTrackFavorites} openTrack={openTrack} setOpenTrack={setOpenTrack} onNext={() => goToStep(2)} onAsk={() => setAskOpen(true)} />}
+                    {step === 2 && <AlbumNotes tracks={tracks} trackRatings={trackRatings} trackFavorites={trackFavorites} overallNotes={overallNotes} setOverallNotes={setOverallNotes} onNext={() => goToStep(3)} />}
+                    {step === 3 && <ScoreScreen tracks={tracks} trackRatings={trackRatings} trackFavorites={trackFavorites} rating={rating} setRating={setRating} Masterpiece={Masterpiece} setMasterpiece={setMasterpiece} Favorite={Favorite} setFavorite={setFavorite} onNext={() => goToStep(4)} />}
                     {step === 4 && <TagsEditor sessionTags={sessionTags} setSessionTags={setSessionTags} tagInput={tagInput} setTagInput={setTagInput} formatting={formatting} onNext={() => goToStep(5)} />}
-                    {step === 5 && <SessionPreview brief={brief} albumArt={albumArt} output={output} formatting={formatting} rating={rating} sessionTags={sessionTags} saving={saving} saved={saved} overallNotes={overallNotes} tracks={tracks} trackRatings={trackRatings} doFormat={doFormat} doSave={doSave} />}
+                    {step === 5 && <SessionPreview brief={brief} albumArt={albumArt} output={output} formatting={formatting} rating={rating} sessionTags={sessionTags} saving={saving} saved={saved} overallNotes={overallNotes} tracks={tracks} trackRatings={trackRatings} trackFavorites={trackFavorites} doFormat={doFormat} doSave={doSave} />}
                   </div>
                 </div>
               </div>
