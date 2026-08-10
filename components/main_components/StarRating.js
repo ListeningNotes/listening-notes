@@ -10,7 +10,11 @@ function StarSVG({ size }) {
   );
 }
 
-export default function StarRating({ rating, size = 18, glow = false, style = {} }) {
+// `animate` wipes the gold in one star at a time, left to right, so the rating
+// counts itself up on arrival. Opt-in — every rating in a list animating at
+// once would be a mess. The .ln-star-fill keyframes are defined by whoever
+// switches this on, the same way .ln-star-glow is defined in EntryModal.
+export default function StarRating({ rating, size = 18, glow = false, animate = false, style = {} }) {
   if (!rating && rating !== 0) return null;
   const numeric = parseFloat(rating);
   if (isNaN(numeric)) return null;
@@ -25,13 +29,17 @@ export default function StarRating({ rating, size = 18, glow = false, style = {}
               <StarSVG size={size} />
             </div>
             {fill !== 'empty' && (
-              <div style={{
-                position: 'absolute',
-                inset: 0,
-                overflow: 'hidden',
-                width: fill === 'half' ? size / 2 : size,
-                color: '#E8B84B',
-              }}>
+              <div
+                className={animate ? 'ln-star-fill' : undefined}
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  overflow: 'hidden',
+                  width: fill === 'half' ? size / 2 : size,
+                  color: '#E8B84B',
+                  ...(animate ? { animationDelay: ((i - 1) * 0.11) + 's' } : null),
+                }}
+              >
                 <StarSVG size={size} />
               </div>
             )}
