@@ -35,12 +35,51 @@ export default function FullPostPage({ entry }) {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  // Snapping has to be set on the document, since the document is what
-  // scrolls here — so it goes on and comes back off with this page rather
-  // than living in globals.css where it would follow you to other routes.
+  // The two screens commit in JS rather than with CSS scroll-snap. CSS snap
+  // pulls symmetrically around a point, which meant the notes position kept
+  // yanking you back for the first ~230px of reading, and it fought going
+  // back up: a small scroll up off the notes got pulled straight back down.
+  // Running it here instead lets the commit follow the direction you're
+  // travelling, which is what makes one flick land cleanly on either screen.
+  //
+  // It only ever acts between the two positions. Once you're into the notes
+  // it does nothing at all, so reading is never interrupted.
   useEffect(() => {
-    document.documentElement.classList.add('ln-snap');
-    return () => document.documentElement.classList.remove('ln-snap');
+    if (window.matchMedia('(min-width: 769px)').matches) return;
+
+    let endTimer;
+    let committing = false;
+    let lastY = window.scrollY;
+    let goingDown = true;
+
+    const onScroll = () => {
+      const y = window.scrollY;
+      if (y !== lastY) goingDown = y > lastY;
+      lastY = y;
+      if (committing) return;
+
+      clearTimeout(endTimer);
+      // Only fires once scrolling has actually stopped — through a drag or a
+      // flick the events keep arriving and keep pushing this back.
+      endTimer = setTimeout(() => {
+        const marker = document.querySelector('.ln-snap-point');
+        if (!marker) return;
+        const band = parseFloat(getComputedStyle(marker).scrollMarginTop) || 96;
+        const notesTop = Math.round(marker.getBoundingClientRect().top + window.scrollY - band);
+        const at = window.scrollY;
+        if (at <= 4 || at >= notesTop - 4) return; // parked already, or reading
+
+        committing = true;
+        window.scrollTo({ top: goingDown ? notesTop : 0, behavior: 'smooth' });
+        setTimeout(() => { committing = false; }, 700);
+      }, 120);
+    };
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      clearTimeout(endTimer);
+    };
   }, []);
 
   // Parse tags — stored as either an array or comma-separated string in the DB
@@ -84,6 +123,14 @@ export default function FullPostPage({ entry }) {
     const el = document.getElementById('track-' + i);
     if (el) el.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }
+  // Which of the three display sizes screen one's title uses. Measured off
+  // character count rather than the rendered box because it only has to pick
+  // a tier, and doing it here avoids a layout read on every render.
+  const titleLength = (entry.album || '').length;
+  const titleSizeClass = titleLength > 44 ? ' ln-screen-one-title--xlong'
+    : titleLength > 28 ? ' ln-screen-one-title--long'
+    : '';
+
   const allTracksFive = parsedTracks.length > 0 && parsedTracks.every(t => t.stars === 5);
   const isMasterpiece = allTracksFive || entry.rating === 'Masterpiece';
   const displayRating = isMasterpiece ? 5 : parseFloat(entry.rating) || 0;
@@ -141,21 +188,13 @@ export default function FullPostPage({ entry }) {
              we know about it centred underneath, and a cue to scroll on. */
           .ln-hero { display: none; }
 
-          /* proximity, not mandatory: screen two is long-form notes and tracks,
-             and a mandatory snap area taller than the screen fights you the
-             whole way down it. proximity still pulls screen one and the top of
-             the notes into place, then leaves you alone to read. */
-          html.ln-snap { scroll-snap-type: y proximity; }
-          /* The snap target for screen two is a zero-height marker rather than
-             the content block itself. A snap area taller than the scrollport
-             is the classic way to end up fighting the scroll on the way down,
-             and .ln-content runs thousands of pixels; a marker has no height
-             to argue about. Its scroll-margin lands the notes exactly where
-             the scroll cue puts them, clear of the blur band. */
-          .ln-screen-one { scroll-snap-align: start; }
+          /* A zero-height marker at the boundary between the two screens. It
+             no longer carries scroll-snap-align — the commit is done in JS,
+             see the effect in this file — but its scroll-margin is still the
+             one definition of where the notes come to rest, read both by that
+             effect and by the scroll cue. */
           .ln-snap-point {
             height: 0;
-            scroll-snap-align: start;
             scroll-margin-top: var(--ln-band);
           }
 
@@ -171,11 +210,19 @@ export default function FullPostPage({ entry }) {
             gap: 16px;
           }
           .ln-screen-one-art {
-            width: min(78vw, 320px);
+            /* Sized off viewport HEIGHT as well as width. A width-only size
+               overflowed once Safari's chrome was showing — the chips and the
+               scroll cue ended up under the address bar — and a long title
+               pushed it further still. Squaring to the smaller of the two
+               shrinks the art on a short screen instead of losing the bottom
+               of the page, and flex-shrink lets it give up more if it has to. */
+            height: min(34dvh, 68vw);
+            width: auto;
             aspect-ratio: 1 / 1;
+            flex-shrink: 1;
+            min-height: 0;
             border-radius: 16px;
             overflow: hidden;
-            flex-shrink: 0;
             border: 1px solid var(--panel-border);
             box-shadow: var(--shadow-lift);
           }
@@ -184,11 +231,22 @@ export default function FullPostPage({ entry }) {
           }
           .ln-screen-one-title {
             font-family: var(--font-display);
-            font-size: clamp(1.6rem, 7vw, 2.3rem);
+            font-size: clamp(1.6rem, 6.6vw, 2.1rem);
             font-weight: 400;
             line-height: 1.1;
             color: var(--ink);
+            /* Two rows at most. "Salvation Laughs in the Face of a Grieving
+               Mother" ran to three at full size and shoved the rating, the
+               chips and the scroll cue off the bottom of the screen. */
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            -webkit-line-clamp: 2;
+            overflow: hidden;
           }
+          /* Long titles step down instead of being cut off at an ellipsis —
+             the point is to fit the name, not to hide it. */
+          .ln-screen-one-title--long  { font-size: clamp(1.2rem, 5vw, 1.6rem); }
+          .ln-screen-one-title--xlong { font-size: clamp(1rem, 4.2vw, 1.3rem); }
           .ln-screen-one-artist {
             font-family: var(--font-label);
             font-size: 11px;
@@ -248,7 +306,7 @@ export default function FullPostPage({ entry }) {
             <img src={entry.album_art} alt={entry.album} />
           </div>
         )}
-        <h1 className="ln-screen-one-title">{entry.album}</h1>
+        <h1 className={'ln-screen-one-title' + titleSizeClass}>{entry.album}</h1>
         <div className="ln-screen-one-artist">
           {entry.artist}{entry.year ? ' · ' + entry.year : ''}
         </div>
