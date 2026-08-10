@@ -23,6 +23,18 @@ export default function FullPostPage({ entry }) {
   const [commentsByTrack, setCommentsByTrack] = useState({});
   const [commentsLoaded, setCommentsLoaded] = useState(false);
 
+  // Screen one is a full viewport of album art and metadata; scrolling off it
+  // is what swaps the phone header over to screen two's look — the dot nav
+  // goes away and the album's own blurred art takes over the band behind the
+  // logo. Same 24px trigger the sitewide nav uses, so the two move together.
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 24);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
   // Parse tags — stored as either an array or comma-separated string in the DB
   const tags = entry.tags
     ? (Array.isArray(entry.tags) ? entry.tags : entry.tags.split(',').map(t => t.trim()).filter(Boolean))
@@ -69,7 +81,10 @@ export default function FullPostPage({ entry }) {
   const displayRating = isMasterpiece ? 5 : parseFloat(entry.rating) || 0;
 
   return (
-    <div style={{ background: 'var(--bg)', minHeight: '100vh', color: 'var(--ink)', fontFamily: fonts.sans }}>
+    <div
+      className={'ln-entry' + (scrolled ? ' ln-entry--scrolled' : '')}
+      style={{ background: 'var(--bg)', minHeight: '100vh', color: 'var(--ink)', fontFamily: fonts.sans }}
+    >
 
       <style>{`
         @keyframes ln-pulse {
@@ -80,32 +95,184 @@ export default function FullPostPage({ entry }) {
           0%,100% { opacity:1; } 50% { opacity:0.6; }
         }
 
-        /* Layout — base (desktop). Responsive overrides live in the media query below. */
+        @keyframes ln-cue-bob {
+          0%, 100% { transform: translateY(0); }
+          50%      { transform: translateY(5px); }
+        }
+
+        /* Layout — base (desktop). The phone layout is separate markup below,
+           swapped in by display, the same way the homepage splits
+           .hp-desktop-layout from .hp-mobile-screens. Desktop is untouched. */
         .ln-hero        { position: relative; height: 390px; overflow: hidden; }
         .ln-hero-pad    { position: absolute; bottom: 0; left: 0; right: 0; padding: 0 48px 36px; }
         .ln-hero-row    { display: flex; align-items: flex-end; gap: 24px; }
         .ln-content     { padding: 48px 48px 100px; }
+        .ln-screen-one  { display: none; }
+        .ln-topblur     { display: none; }
 
-        /* On phones .ln-hero-row stacks into a column, so the bottom-anchored
-           block grows tall enough to slide up under the fixed dot-nav and sit
-           behind its labels. Letting the hero size to its own content and
-           padding it clear of the nav keeps the art below the labels however
-           many lines the album title wraps to. */
-        @media (max-width: 600px) {
-          .ln-hero        { height: auto; padding-top: 156px; }
-          /* relative, not static: the two gradient washes above are absolutely
-             positioned, and a static block paints underneath positioned
-             siblings — which hid the art and title behind them. relative with
-             no offsets keeps this in normal flow but back on top. */
-          .ln-hero-pad    { position: relative; z-index: 1; inset: auto; padding: 0 24px 28px; }
-          .ln-hero-row    { flex-direction: column; align-items: flex-start; gap: 14px; }
-          .ln-content     { padding: 40px 24px 80px; }
+        @media (max-width: 768px) {
+          /* ── SCREEN ONE ── a full viewport of album: art on top, everything
+             we know about it centred underneath, and a cue to scroll on. */
+          .ln-hero { display: none; }
+
+          .ln-screen-one {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            min-height: 100dvh;
+            box-sizing: border-box;
+            /* clears the fixed logo row and the dot labels beneath it */
+            padding: 172px 24px 0;
+            gap: 16px;
+          }
+          .ln-screen-one-art {
+            width: min(78vw, 320px);
+            aspect-ratio: 1 / 1;
+            border-radius: 16px;
+            overflow: hidden;
+            flex-shrink: 0;
+            border: 1px solid var(--panel-border);
+            box-shadow: var(--shadow-lift);
+          }
+          .ln-screen-one-art img {
+            width: 100%; height: 100%; object-fit: cover; display: block;
+          }
+          .ln-screen-one-title {
+            font-family: var(--font-display);
+            font-size: clamp(1.6rem, 7vw, 2.3rem);
+            font-weight: 400;
+            line-height: 1.1;
+            color: var(--ink);
+          }
+          .ln-screen-one-artist {
+            font-family: var(--font-label);
+            font-size: 11px;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: var(--ink-soft);
+            margin-top: -8px;
+          }
+          .ln-screen-one-chips {
+            display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
+          }
+          /* margin-top:auto pins the cue to the bottom of the screen however
+             tall the metadata above it runs. */
+          .ln-scroll-cue {
+            margin-top: auto;
+            margin-bottom: max(20px, env(safe-area-inset-bottom));
+            width: 44px; height: 44px;
+            display: flex; align-items: center; justify-content: center;
+            color: var(--ink-faint);
+            touch-action: manipulation;
+            animation: ln-cue-bob 2.2s ease-in-out infinite;
+          }
+
+          /* ── SCREEN TWO ── the dots go away once you've scrolled in, and the
+             flat sitewide nav band is replaced by the album's own art, blurred.
+             The band is masked at the bottom so text dissolves into the page
+             rather than being cut off on a line. */
+          .ln-entry .sitenav-row::before { display: none; }
+          .ln-entry--scrolled .hp-dotnav {
+            opacity: 0;
+            pointer-events: none;
+          }
+          .hp-dotnav { transition: opacity 0.25s ease; }
+
+          .ln-topblur {
+            display: block;
+            position: fixed;
+            top: 0; left: 0; right: 0;
+            height: max(150px, 18vh);
+            z-index: 99; /* under the nav row (100), over the page */
+            pointer-events: none;
+            overflow: hidden;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            /* Opaque base so the band always hides what scrolls under it, even
+               where the blurred art above it goes soft. */
+            background: var(--bg);
+            -webkit-mask-image: linear-gradient(to bottom, #000 76%, transparent 100%);
+            mask-image: linear-gradient(to bottom, #000 76%, transparent 100%);
+          }
+          .ln-entry--scrolled .ln-topblur { opacity: 1; }
+          .ln-topblur-art {
+            position: absolute;
+            /* Generous overhang: blur() softens an element's own edges, so the
+               art has to start well outside the band or page text shows
+               through the top of it. The --bg underneath is the backstop. */
+            inset: -90px -40%;
+            background-size: cover;
+            background-position: center;
+            filter: blur(38px) saturate(1.3) brightness(1.05);
+            transform: scale(1.1);
+            /* Held back over the --bg base so the band lands mid-tone whatever
+               the sleeve looks like. At full strength a black cover turned the
+               band near-black and swallowed the logo and toggle, which are
+               plain --ink; a white cover did the same in dark mode. This keeps
+               the album's colour without letting it set the contrast. */
+            opacity: 0.38;
+          }
+          .ln-topblur-wash {
+            position: absolute; inset: 0;
+            background: linear-gradient(to bottom, transparent 30%, var(--bg) 100%);
+          }
+
+          .ln-content {
+            padding: 28px 24px 80px;
+            scroll-margin-top: max(150px, 18vh);
+          }
         }
       `}</style>
 
       {/* ── NAV ── shared site nav (logo + dot nav), identical to every other public page */}
       <SiteNav />
       <DotNav />
+
+      {/* Screen two's header on phones: the album's own art, blown up and
+          blurred, sitting behind the logo row once you've scrolled in. */}
+      {entry.album_art && (
+        <div className="ln-topblur" aria-hidden="true">
+          <div className="ln-topblur-art" style={{ backgroundImage: 'url(' + entry.album_art + ')' }} />
+          <div className="ln-topblur-wash" />
+        </div>
+      )}
+
+      {/* ── SCREEN ONE (phones) ── a full screen of album: art up top, then the
+          title, artist, year, rating and qualifiers centred beneath it. The
+          desktop hero below is the same information in a different shape. */}
+      <section className="ln-screen-one">
+        {entry.album_art && (
+          <div className="ln-screen-one-art">
+            <img src={entry.album_art} alt={entry.album} />
+          </div>
+        )}
+        <h1 className="ln-screen-one-title">{entry.album}</h1>
+        <div className="ln-screen-one-artist">
+          {entry.artist}{entry.year ? ' · ' + entry.year : ''}
+        </div>
+        {displayRating > 0 && (
+          <StarRating rating={displayRating} size={24} glow={isMasterpiece} />
+        )}
+        <div className="ln-screen-one-chips">
+          {entry.relationship && <Chip>{entry.relationship}</Chip>}
+          {entry.entry_type && <Chip>{entry.entry_type}</Chip>}
+          {(entry.favorite === true || entry.favorite === 'true') && <Chip accent>Favorite</Chip>}
+          {isMasterpiece && <Chip accent>Masterpiece</Chip>}
+        </div>
+        <div
+          className="ln-scroll-cue"
+          role="button"
+          tabIndex={0}
+          aria-label="Scroll to the notes"
+          onClick={() => document.getElementById('ln-content')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+          onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') document.getElementById('ln-content')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}
+        >
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <polyline points="6 9 12 15 18 9" />
+          </svg>
+        </div>
+      </section>
 
       {/* ── HERO ── Blurred album art background with metadata overlay.
           Sizing lives in .ln-hero above: a fixed 390px on desktop (390 not
@@ -150,7 +317,7 @@ export default function FullPostPage({ entry }) {
       </div>
 
       {/* ── CONTENT ── */}
-      <div className="ln-content" style={{ maxWidth: '860px', margin: '0 auto' }}>
+      <div id="ln-content" className="ln-content" style={{ maxWidth: '860px', margin: '0 auto' }}>
 
         {albumNotes && (
           <section style={{ marginBottom: '48px' }}>
