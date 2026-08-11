@@ -5,19 +5,20 @@ import StarRating from '../StarRating';
 import CommentThread from './CommentThread';
 import NewCommentForm from './NewCommentForm';
 
-// The two actions sit under the track rather than in its title row, so it's
-// visible that comments can be read and that one can be left. Before this the
-// only affordance was the whole row being secretly clickable, which made an
-// approved comment look like it had never posted.
-const trackAction = {
+// Quiet text, the same language the actions inside a thread already speak
+// (↑ 0 / reply / collapse). A pill read as a button and pulled the eye away
+// from the writing, which is the thing on this page worth looking at.
+const quietAction = {
   fontFamily: fonts.mono, fontSize: '9px', letterSpacing: '0.1em',
-  textTransform: 'uppercase', background: 'transparent',
-  border: '1px solid var(--border)', borderRadius: 999,
-  padding: '7px 14px', cursor: 'pointer', whiteSpace: 'nowrap',
+  textTransform: 'uppercase', color: 'var(--ink-faint)',
+  background: 'none', border: 'none', padding: 0, cursor: 'pointer',
 };
 
 export default function TrackThread({ track, trackIndex, slug, commentsByTrack, onRefresh }) {
-  const [open, setOpen] = useState(false);
+  // Comments are simply there. Hiding them behind a control was solving a
+  // volume problem this site doesn't have, and it's what made an approved
+  // comment look like it had never posted.
+  const [showComments, setShowComments] = useState(true);
   const [composing, setComposing] = useState(false);
   const trackComments = commentsByTrack[String(trackIndex)] || [];
   const count = trackComments.length;
@@ -34,6 +35,25 @@ export default function TrackThread({ track, trackIndex, slug, commentsByTrack, 
             <span title="Favourite song" style={{ fontSize: '11px', color: 'var(--gold)', lineHeight: 1 }}>♥</span>
           )}
           {track.stars > 0 && <StarRating rating={track.stars} size={12} />}
+          {/* Sits with the rating, where the eye already goes for this track's
+              measurements, and folds the thread away when a track has more
+              conversation than you want open. */}
+          {count > 0 && (
+            <button
+              onClick={() => setShowComments(v => !v)}
+              aria-label={showComments ? 'Hide comments' : 'Show comments'}
+              style={{
+                display: 'flex', alignItems: 'center', gap: '4px',
+                background: 'none', border: 'none', padding: 0, cursor: 'pointer',
+                color: showComments ? 'var(--ink-soft)' : 'var(--ink-faint)',
+              }}
+            >
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+              </svg>
+              <span style={{ fontFamily: fonts.mono, fontSize: '10px' }}>{count}</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -44,44 +64,21 @@ export default function TrackThread({ track, trackIndex, slug, commentsByTrack, 
         <p style={{ fontSize: '13px', lineHeight: 1.8, color: 'var(--ink-soft)', marginBottom: '16px', whiteSpace: 'pre-wrap' }}>{track.note}</p>
       )}
 
-      {/* One control per track, right-aligned under the note. Reading and
-          writing aren't equally likely, so they don't get equal billing: a
-          track with comments offers to open them, a track without offers the
-          only thing there is to do. Adding moves to the foot of the thread,
-          which is where you are when you've just read it. */}
-      <div style={{ display: 'flex', justifyContent: 'flex-end', paddingBottom: '18px' }}>
-        {count > 0 ? (
-          <button onClick={() => setOpen(v => !v)} style={{ ...trackAction, color: open ? 'var(--ink)' : 'var(--ink-soft)' }}>
-            {open ? 'Close comments' : `${count} comment${count > 1 ? 's' : ''}`}
-          </button>
-        ) : (
-          <button onClick={() => setComposing(true)} style={{ ...trackAction, color: 'var(--ink-soft)' }}>
-            + comment
-          </button>
-        )}
-      </div>
-
-      {/* Enough of a gap between top-level comments to tell them apart, but
-          they don't need the air the bubbles did — each one's rail already
-          marks where its branch of the conversation reaches. */}
-      {open && (
-        <div style={{ paddingBottom: '24px' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-            {trackComments.map(c => (
-              <CommentThread key={c.id} comment={c} slug={slug} onReplyPosted={onRefresh} />
-            ))}
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '20px' }}>
-            <button onClick={() => setComposing(true)} style={{ ...trackAction, color: 'var(--ink-soft)' }}>
-              + comment
-            </button>
-          </div>
+      {count > 0 && showComments && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', marginBottom: '16px' }}>
+          {trackComments.map(c => (
+            <CommentThread key={c.id} comment={c} slug={slug} onReplyPosted={onRefresh} />
+          ))}
         </div>
       )}
 
-      {/* Posting is a modal rather than another drop-down: the drop-down is
-          for reading, and a form unfolding inside the tracklist pushed
-          everything below it down the page while you typed. */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', paddingBottom: '18px' }}>
+        <button onClick={() => setComposing(true)} style={quietAction}>+ comment</button>
+      </div>
+
+      {/* Posting is a modal rather than a form unfolding in place: in the
+          tracklist that pushed everything below it down the page while you
+          typed. */}
       {composing && (
         <div
           onClick={() => setComposing(false)}
@@ -117,7 +114,7 @@ export default function TrackThread({ track, trackIndex, slug, commentsByTrack, 
             <NewCommentForm
               slug={slug}
               trackIndex={trackIndex}
-              onPosted={() => { setComposing(false); setOpen(true); onRefresh(); }}
+              onPosted={() => { setComposing(false); setShowComments(true); onRefresh(); }}
             />
           </div>
         </div>
