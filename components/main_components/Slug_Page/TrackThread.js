@@ -44,7 +44,7 @@ export default function TrackThread({ track, trackIndex, slug, commentsByTrack, 
         <p style={{ fontSize: '13px', lineHeight: 1.8, color: 'var(--ink-soft)', marginBottom: '16px', whiteSpace: 'pre-wrap' }}>{track.note}</p>
       )}
 
-      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', paddingBottom: '18px' }}>
+      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center', paddingBottom: '18px' }}>
         {count > 0 && (
           <button onClick={() => setOpen(v => !v)} style={{ ...trackAction, color: open ? 'var(--ink)' : 'var(--ink-soft)' }}>
             {open ? 'Close comments' : `Open comments (${count})`}
