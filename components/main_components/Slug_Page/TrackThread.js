@@ -44,25 +44,38 @@ export default function TrackThread({ track, trackIndex, slug, commentsByTrack, 
         <p style={{ fontSize: '13px', lineHeight: 1.8, color: 'var(--ink-soft)', marginBottom: '16px', whiteSpace: 'pre-wrap' }}>{track.note}</p>
       )}
 
-      <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center', paddingBottom: '18px' }}>
-        {count > 0 && (
+      {/* One control per track, right-aligned under the note. Reading and
+          writing aren't equally likely, so they don't get equal billing: a
+          track with comments offers to open them, a track without offers the
+          only thing there is to do. Adding moves to the foot of the thread,
+          which is where you are when you've just read it. */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', paddingBottom: '18px' }}>
+        {count > 0 ? (
           <button onClick={() => setOpen(v => !v)} style={{ ...trackAction, color: open ? 'var(--ink)' : 'var(--ink-soft)' }}>
-            {open ? 'Close comments' : `Open comments (${count})`}
+            {open ? 'Close comments' : `${count} comment${count > 1 ? 's' : ''}`}
+          </button>
+        ) : (
+          <button onClick={() => setComposing(true)} style={{ ...trackAction, color: 'var(--ink-soft)' }}>
+            + comment
           </button>
         )}
-        <button onClick={() => setComposing(true)} style={{ ...trackAction, color: 'var(--ink-soft)' }}>
-          Add comment
-        </button>
       </div>
 
       {/* Enough of a gap between top-level comments to tell them apart, but
           they don't need the air the bubbles did — each one's rail already
           marks where its branch of the conversation reaches. */}
       {open && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', paddingBottom: '24px' }}>
-          {trackComments.map(c => (
-            <CommentThread key={c.id} comment={c} slug={slug} onReplyPosted={onRefresh} />
-          ))}
+        <div style={{ paddingBottom: '24px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            {trackComments.map(c => (
+              <CommentThread key={c.id} comment={c} slug={slug} onReplyPosted={onRefresh} />
+            ))}
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '20px' }}>
+            <button onClick={() => setComposing(true)} style={{ ...trackAction, color: 'var(--ink-soft)' }}>
+              + comment
+            </button>
+          </div>
         </div>
       )}
 
