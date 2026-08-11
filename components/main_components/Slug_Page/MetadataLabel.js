@@ -13,7 +13,23 @@ export default function MetadataLabel({ children, sticky = false }) {
   // tap back to.
   function backToSectionTop(e) {
     if (!window.matchMedia('(max-width: 768px)').matches) return;
-    e.currentTarget.closest('section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    const section = e.currentTarget.closest('section');
+    if (!section) return;
+
+    // Move only the element that actually scrolls this section. scrollIntoView
+    // walks every scrollable ancestor, so it also dragged the snap container
+    // the two screens sit in — which fights the snap and can leave you parked
+    // past the end of the second screen with blank space below it.
+    let scroller = section.parentElement;
+    while (scroller) {
+      const overflowY = getComputedStyle(scroller).overflowY;
+      if ((overflowY === 'auto' || overflowY === 'scroll') && scroller.scrollHeight > scroller.clientHeight) break;
+      scroller = scroller.parentElement;
+    }
+    if (!scroller) return;
+
+    const top = scroller.scrollTop + (section.getBoundingClientRect().top - scroller.getBoundingClientRect().top);
+    scroller.scrollTo({ top, behavior: 'smooth' });
   }
 
   return (
