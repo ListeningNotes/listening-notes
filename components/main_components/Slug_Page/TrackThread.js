@@ -55,11 +55,11 @@ export default function TrackThread({ track, trackIndex, slug, commentsByTrack, 
         </button>
       </div>
 
-      {/* Wide gaps between top-level comments: each one starts its own
-          conversation, so they shouldn't read as a chain the way a comment and
-          its replies do. */}
+      {/* Enough of a gap between top-level comments to tell them apart, but
+          they don't need the air the bubbles did — each one's rail already
+          marks where its branch of the conversation reaches. */}
       {open && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '30px', paddingBottom: '24px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', paddingBottom: '24px' }}>
           {trackComments.map(c => (
             <CommentThread key={c.id} comment={c} slug={slug} onReplyPosted={onRefresh} />
           ))}
