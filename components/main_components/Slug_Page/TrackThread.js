@@ -24,7 +24,9 @@ export default function TrackThread({ track, trackIndex, slug, commentsByTrack, 
   const count = trackComments.length;
 
   return (
-    <div id={'track-' + trackIndex} style={{ borderBottom: '1px solid var(--border)' }}>
+    // Padding lives on the track itself, so the gap above the divider is the
+    // same whether or not this track has a thread and a + comment under it.
+    <div id={'track-' + trackIndex} style={{ borderBottom: '1px solid var(--border)', paddingBottom: '18px' }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 0' }}>
         {/* Number reads left, flush with the page edge — right-aligning it in
             a fixed box was what made the row look indented. */}
@@ -36,24 +38,24 @@ export default function TrackThread({ track, trackIndex, slug, commentsByTrack, 
           )}
           {track.stars > 0 && <StarRating rating={track.stars} size={12} />}
           {/* Sits with the rating, where the eye already goes for this track's
-              measurements, and folds the thread away when a track has more
-              conversation than you want open. */}
-          {count > 0 && (
-            <button
-              onClick={() => setShowComments(v => !v)}
-              aria-label={showComments ? 'Hide comments' : 'Show comments'}
-              style={{
-                display: 'flex', alignItems: 'center', gap: '4px',
-                background: 'none', border: 'none', padding: 0, cursor: 'pointer',
-                color: showComments ? 'var(--ink-soft)' : 'var(--ink-faint)',
-              }}
-            >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
-              </svg>
-              <span style={{ fontFamily: fonts.mono, fontSize: '10px' }}>{count}</span>
-            </button>
-          )}
+              measurements. With comments it carries the count and folds the
+              thread; with none it carries a plus and opens the modal, so it's
+              the one way in either way and an empty track needs nothing else
+              on it. */}
+          <button
+            onClick={() => (count > 0 ? setShowComments(v => !v) : setComposing(true))}
+            aria-label={count === 0 ? 'Add the first comment' : showComments ? 'Hide comments' : 'Show comments'}
+            style={{
+              display: 'flex', alignItems: 'center', gap: '4px',
+              background: 'none', border: 'none', padding: 0, cursor: 'pointer',
+              color: count > 0 && showComments ? 'var(--ink-soft)' : 'var(--ink-faint)',
+            }}
+          >
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+            </svg>
+            <span style={{ fontFamily: fonts.mono, fontSize: '10px' }}>{count > 0 ? count : '+'}</span>
+          </button>
         </div>
       </div>
 
@@ -72,9 +74,14 @@ export default function TrackThread({ track, trackIndex, slug, commentsByTrack, 
         </div>
       )}
 
-      <div style={{ display: 'flex', justifyContent: 'flex-end', paddingBottom: '18px' }}>
-        <button onClick={() => setComposing(true)} style={quietAction}>+ comment</button>
-      </div>
+      {/* Only at the foot of an open thread. An empty track already has its
+          way in up beside the rating, and repeating it here would put a
+          second control on every track that has nothing to show. */}
+      {count > 0 && showComments && (
+        <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+          <button onClick={() => setComposing(true)} style={quietAction}>+ comment</button>
+        </div>
+      )}
 
       {/* Posting is a modal rather than a form unfolding in place: in the
           tracklist that pushed everything below it down the page while you
