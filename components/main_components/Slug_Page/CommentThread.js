@@ -97,16 +97,15 @@ export default function CommentThread({ comment, slug, onReplyPosted, depth = 0 
   const replyCount = comment.replies?.length || 0;
 
   return (
-    // A reply is inset behind the thread line, so a chain reads as one
-    // conversation rather than a stack of separate comments.
-    <div style={{
-      marginBottom: '12px',
-      paddingLeft: depth > 0 ? '16px' : 0,
-      borderLeft: depth > 0 ? '1px solid var(--border)' : 'none',
-    }}>
+    // Each reply steps in a little and hangs off its parent's tail, so a
+    // conversation reads as one connected chain. No rail down the side —
+    // the bubbles themselves are what join up.
+    <div style={{ paddingLeft: depth > 0 ? '14px' : 0 }}>
       <div style={{
         background: 'var(--bg-warm)', border: '1px solid var(--border)',
-        borderRadius: '18px', padding: '12px 16px',
+        // Big enough that a short comment comes out an oval rather than a
+        // rounded box, while a long one still keeps properly round corners.
+        borderRadius: '26px', padding: '14px 20px',
         maxWidth: '100%', boxSizing: 'border-box',
       }}>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '5px', flexWrap: 'wrap' }}>
@@ -150,13 +149,14 @@ export default function CommentThread({ comment, slug, onReplyPosted, depth = 0 
 
       {replyCount > 0 && showReplies && (
         <>
-          {/* The tail from the sketch — dots trailing off the bubble towards
-              whatever answers it. */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '10px 0 8px 14px' }}>
-            <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: 'var(--border)' }} />
-            <span style={{ width: '4px', height: '4px', borderRadius: '50%', background: 'var(--border)' }} />
+          {/* The tail from the sketch: two dots stepping down and inwards, so
+              the bubble visibly runs into the one that answers it. */}
+          <div style={{ padding: '8px 0 6px 22px' }}>
+            <div style={{ width: '9px', height: '9px', borderRadius: '50%', background: 'var(--ink-faint)', opacity: 0.55, marginBottom: '4px' }} />
+            <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'var(--ink-faint)', opacity: 0.4, marginLeft: '6px' }} />
           </div>
-          <div>
+          {/* Tight together — these are all one conversation. */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
             {comment.replies.map(r => (
               <CommentThread key={r.id} comment={r} slug={slug} onReplyPosted={onReplyPosted} depth={depth + 1} />
             ))}

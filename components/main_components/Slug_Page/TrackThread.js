@@ -55,8 +55,11 @@ export default function TrackThread({ track, trackIndex, slug, commentsByTrack, 
         </button>
       </div>
 
+      {/* Wide gaps between top-level comments: each one starts its own
+          conversation, so they shouldn't read as a chain the way a comment and
+          its replies do. */}
       {open && (
-        <div style={{ paddingBottom: '20px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '30px', paddingBottom: '24px' }}>
           {trackComments.map(c => (
             <CommentThread key={c.id} comment={c} slug={slug} onReplyPosted={onRefresh} />
           ))}
