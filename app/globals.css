@@ -683,6 +683,30 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   gap: 10px;
   padding: 0 28px;
 }
+/* The band that hides scrolling page content behind the fixed header. It has
+   to cover this row AND the dot-nav below it (which is a separate fixed
+   element, so one band spanning both is simpler than giving each its own).
+   Solid down past the dot labels, then a short fade so text dissolves out
+   instead of meeting a hard line. z-index -1 puts it behind this row's own
+   logo/beacon/toggle, while the row's stacking context keeps it above the
+   page; the dot-nav is a later sibling, so it paints on top too. */
+.sitenav-row::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 180px;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.22s ease;
+  background: linear-gradient(to bottom, var(--bg) 0%, var(--bg) 84%, transparent 100%);
+}
+.sitenav-row--scrolled::before {
+  opacity: 1;
+}
+
 .hp .sitenav-row {
   position: relative;
   top: auto;
@@ -690,6 +714,10 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   right: auto;
   width: 100%;
   padding: 0 20px;
+}
+/* The homepage keeps this row in normal flow, so nothing scrolls under it. */
+.hp .sitenav-row::before {
+  display: none;
 }
 
 .sitenav-logo { display: block; justify-self: start; }
@@ -710,10 +738,9 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 }
 
 /* Center slot — the way back to screen one (the big "now listening" screen)
-   from anywhere on the site. The caret floats absolutely above the beacon
-   rather than stacking in flow with it — that way the beacon's own center
-   lines up with the logo and theme toggle on the row's shared center line,
-   with the caret just hovering above as a hint, not shifting anything. */
+   from anywhere on the site. It used to carry a small up-caret hinting at
+   that, but it crowded the beacon in a row this tight; the beacon itself is
+   the affordance now. Note the slot is empty when nothing is playing. */
 .sitenav-beacon-slot {
   position: relative;
   justify-self: center;
@@ -725,18 +752,6 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
     it's clearing */
   text-decoration: none;
   cursor: pointer;
-}
-.sitenav-caret {
-  position: absolute;
-  top: 4px;
-  left: 50%;
-  transform: translateX(-50%);
-  color: var(--ink-faint);
-  transition: color 0.2s, transform 0.2s;
-}
-.sitenav-beacon-slot:hover .sitenav-caret {
-  color: var(--ink-soft);
-  transform: translateX(-50%) translateY(-2px);
 }
 /* The compact beacon's own art/marquee styling (.beacon-mini*) only exists
    inside the ≤768px media query below (it was built for screen two, which
@@ -970,14 +985,32 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   width: 11px;
   height: 11px;
   border-radius: 50%;
-  background: rgba(26, 26, 26, 0.18);
+  /* Theme variables, not a fixed near-black: at 18% black these were all but
+     invisible on the dark theme. It went unnoticed while the only thing
+     behind them was page art, but the nav's backdrop now puts a flat --bg
+     panel behind every dot. Matches the homepage dots, which already use
+     --ink-faint. */
+  background: var(--ink-faint);
   transition: background 0.2s, transform 0.2s;
 }
 .hp-dot--active {
   background: var(--ink);
 }
 .hp-dot:hover {
-  background: rgba(26, 26, 26, 0.45);
+  background: var(--ink-soft);
+}
+/* The visible dot is 11px across — far under the ~44px a fingertip expects,
+   so on a phone you have to aim at it. This invisible square widens the tap
+   area without changing how the dot looks. The 50px/64px gaps between dots
+   are bigger than the square, so neighbouring targets never overlap. */
+.hp-dot::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 44px;
+  height: 44px;
 }
 /* Page labels sit under every dot and stay visible at all times. */
 .hp-dot-label {
@@ -998,6 +1031,19 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 }
 .hp-dot--active .hp-dot-label {
   color: var(--ink);
+}
+
+/* iOS Safari zooms the whole page in whenever you focus a field whose text is
+   under 16px, which knocks the layout sideways and leaves you pinching back
+   out. Fields across the site set their size inline, and inline styles beat
+   the cascade, so this needs !important to land. Phones only — desktop keeps
+   the smaller type it was designed with. */
+@media (max-width: 768px) {
+  input,
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
 }
 
 /* On phones the labelled dots are too wide to share the top row with the logo

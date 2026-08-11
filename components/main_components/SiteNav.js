@@ -14,6 +14,7 @@
 // component state (see app/page.js for the other half).
 
 'use client';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { useTheme } from './Lightswitch';
@@ -26,6 +27,19 @@ export default function SiteNav() {
   const { theme, toggle } = useTheme();
   const { isLive } = useListeningBeacon();
   const isHome = pathname === '/';
+
+  // This row and the dot-nav beneath it are fixed with no background of their
+  // own, so page text scrolled straight through the logo, the toggle and the
+  // dot labels. The backdrop that hides it (.sitenav-row::before) only fades
+  // in once the page has actually moved, so each page's hero art still runs
+  // to the top of the screen while you're sitting at the top of it.
+  const [scrolled, setScrolled] = useState(false);
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 24);
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   function handleLogoClick(e) {
     if (isHome) return;
@@ -42,7 +56,7 @@ export default function SiteNav() {
   }
 
   return (
-    <div className="sitenav-row">
+    <div className={'sitenav-row' + (scrolled ? ' sitenav-row--scrolled' : '')}>
       <Link href="/" onClick={handleLogoClick} className="sitenav-logo" aria-label="Listening Notes">
         <svg viewBox="76 96 241 140" className="sitenav-logo-mark" xmlns="http://www.w3.org/2000/svg">
           <path
@@ -63,9 +77,6 @@ export default function SiteNav() {
       </Link>
 
       <Link href="/" onClick={handleBeaconClick} className="sitenav-beacon-slot" aria-label="Now listening">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round" className="sitenav-caret">
-          <polyline points="18 15 12 9 6 15" />
-        </svg>
         {isLive && (
           <div className="sitenav-beacon">
             <ListeningBeacon compact />

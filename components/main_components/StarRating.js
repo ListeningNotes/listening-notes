@@ -10,7 +10,12 @@ function StarSVG({ size }) {
   );
 }
 
-export default function StarRating({ rating, size = 18, glow = false, style = {} }) {
+// `animate` lights the stars up one at a time, so the rating counts itself
+// out on arrival. The 0.34s gap is the whole effect — long enough to read as
+// separate beats rather than one sweep. Opt-in: every rating in a list doing
+// this at once would be a mess. The .ln-star-fill keyframes are defined by
+// whoever switches this on, the same way .ln-star-glow is in EntryModal.
+export default function StarRating({ rating, size = 18, glow = false, animate = false, style = {} }) {
   if (!rating && rating !== 0) return null;
   const numeric = parseFloat(rating);
   if (isNaN(numeric)) return null;
@@ -25,13 +30,17 @@ export default function StarRating({ rating, size = 18, glow = false, style = {}
               <StarSVG size={size} />
             </div>
             {fill !== 'empty' && (
-              <div style={{
-                position: 'absolute',
-                inset: 0,
-                overflow: 'hidden',
-                width: fill === 'half' ? size / 2 : size,
-                color: '#E8B84B',
-              }}>
+              <div
+                className={animate ? 'ln-star-fill' : undefined}
+                style={{
+                  position: 'absolute',
+                  inset: 0,
+                  overflow: 'hidden',
+                  width: fill === 'half' ? size / 2 : size,
+                  color: '#E8B84B',
+                  ...(animate ? { animationDelay: ((i - 1) * 0.34) + 's' } : null),
+                }}
+              >
                 <StarSVG size={size} />
               </div>
             )}

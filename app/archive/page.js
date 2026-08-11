@@ -84,6 +84,23 @@ export default function ArchivePage() {
         .arc-tile-mp  { position: absolute; top: 8px; left: 8px; font-family: var(--font-label); font-size: 9px; letter-spacing: 0.1em; color: var(--gold); padding: 2px 6px; background: rgba(0,0,0,0.6); border-radius: 4px; }
         .arc-skel { aspect-ratio: 1 / 1; border-radius: 10px; background: var(--bg-warm); animation: arcPulse 1.4s ease-in-out infinite; }
         @keyframes arcPulse { 0%,100% { opacity: 0.6; } 50% { opacity: 0.3; } }
+
+        /* The filter controls are all different widths, so on a narrow screen
+           flex-wrap drops them into ragged rows and strands the last one on a
+           line of its own. A two-column grid gives every control the same
+           footprint, with the search box and the result count spanning the
+           full width. The !important overrides unpick inline styles set on
+           the elements themselves. */
+        @media (max-width: 600px) {
+          .arc-filters { display: grid !important; grid-template-columns: 1fr 1fr; align-items: stretch !important; }
+          .arc-filters > input { grid-column: 1 / -1; min-width: 0 !important; width: 100%; }
+          /* The selects go full width: at the 16px phones need to avoid zoom,
+             "All relationships" is wider than half the bar and truncates. The
+             toggles are short enough to stay paired. */
+          .arc-filters > select { grid-column: 1 / -1; width: 100%; min-width: 0; }
+          .arc-filters > button { width: 100%; min-width: 0; }
+          .arc-filters > span { grid-column: 1 / -1; margin-left: 0 !important; text-align: right; }
+        }
       `}</style>
 
       {/* Hero */}
@@ -95,10 +112,15 @@ export default function ArchivePage() {
       </header>
 
       {/* Filter bar */}
+      {/* Sticks below the fixed header rather than at the very top: the nav's
+          backdrop is an opaque band down to ~136px, and at top:12 this bar
+          slid underneath it and got cut in half. The z-index clears that
+          backdrop too, so the band's bottom fade doesn't wash over the bar —
+          it sits below the dot labels, so it never covers the nav itself. */}
       <div style={{
-        position: 'sticky', top: 12, zIndex: 50, padding: '12px 24px',
+        position: 'sticky', top: 136, zIndex: 101, padding: '12px 24px',
       }}>
-        <div style={{
+        <div className="arc-filters" style={{
           maxWidth: 1100, margin: '0 auto',
           display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap',
           padding: '12px 16px', background: 'var(--panel)',
