@@ -511,7 +511,10 @@ export default function FullPostPage({ entry }) {
 
         {/* Footer — the two ways out, as a matching pair. The posted date used
             to sit here; it lives up in the album's metadata now. */}
+        {/* All Entries leads: its arrow points back the way you came, and the
+            up arrow reads better second. */}
         <div style={{ borderTop: '1px solid var(--border)', paddingTop: '28px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+          <Link href="/" style={footerAction}>← All entries</Link>
           <button
             onClick={() => {
               const screens = document.querySelector('.ln-screens');
@@ -530,7 +533,6 @@ export default function FullPostPage({ entry }) {
           >
             ↑ Back to top
           </button>
-          <Link href="/" style={footerAction}>← All entries</Link>
         </div>
 
       </div>
