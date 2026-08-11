@@ -5,7 +5,10 @@ import { fonts } from '../../../library/sitewide_visuals';
 const inputStyle = {
   background: 'var(--panel)', border: '1px solid var(--border)', borderRadius: '6px',
   color: 'var(--ink)', padding: '7px 10px', fontFamily: fonts.mono, fontSize: '11px',
-  outline: 'none', flex: 1, backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
+  outline: 'none', flex: 1, minWidth: 0, backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
+  // Same reason as the new-comment form: without this, width:100% plus the
+  // padding and border overflowed the column and scrolled the page sideways.
+  boxSizing: 'border-box',
 };
 
 const accentBtnSm = {
@@ -54,7 +57,8 @@ export default function CommentThread({ comment, slug, onReplyPosted }) {
   }
 
   async function handleReply() {
-    if (!replyName.trim() || !replyEmail.trim() || !replyText.trim()) return;
+    // Email optional here too, matching the new-comment form.
+    if (!replyName.trim() || !replyText.trim()) return;
     setPosting(true);
     try {
       const res = await fetch('/api/comments', {
@@ -116,9 +120,9 @@ export default function CommentThread({ comment, slug, onReplyPosted }) {
 
             {replying && (
               <div style={{ marginBottom: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <div style={{ display: 'flex', gap: '8px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   <input value={replyName} onChange={e => setReplyName(e.target.value)} placeholder="Name" style={inputStyle} />
-                  <input value={replyEmail} onChange={e => setReplyEmail(e.target.value)} placeholder="Email (private)" type="email" style={inputStyle} />
+                  <input value={replyEmail} onChange={e => setReplyEmail(e.target.value)} placeholder="Email (optional, private)" type="email" style={inputStyle} />
                 </div>
                 <textarea value={replyText} onChange={e => setReplyText(e.target.value)} placeholder="Reply..." rows={2} style={{ ...inputStyle, resize: 'vertical', width: '100%' }} />
                 <div style={{ display: 'flex', gap: '8px' }}>
