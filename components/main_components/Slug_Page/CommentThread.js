@@ -23,6 +23,11 @@ const ghostBtnSm = {
   padding: '7px 14px', cursor: 'pointer',
 };
 
+const linkBtn = {
+  fontFamily: fonts.mono, fontSize: '9px', letterSpacing: '0.08em', textTransform: 'uppercase',
+  color: 'var(--ink-faint)', background: 'none', border: 'none', cursor: 'pointer', padding: 0,
+};
+
 function timeAgo(dateStr) {
   const diff = Date.now() - new Date(dateStr).getTime();
   const m = Math.floor(diff / 60000);
@@ -35,8 +40,10 @@ function timeAgo(dateStr) {
   return Math.floor(d / 7) + 'w ago';
 }
 
-export default function CommentThread({ comment, slug, onReplyPosted }) {
-  const [collapsed, setCollapsed] = useState(false);
+export default function CommentThread({ comment, slug, onReplyPosted, depth = 0 }) {
+  // Replies start folded away, so a long back-and-forth reads as a single
+  // comment until you ask for the rest of it.
+  const [showReplies, setShowReplies] = useState(false);
   const [replying, setReplying] = useState(false);
   const [upvotes, setUpvotes] = useState(comment.upvotes);
   const [upvoted, setUpvoted] = useState(false);
@@ -44,6 +51,7 @@ export default function CommentThread({ comment, slug, onReplyPosted }) {
   const [replyEmail, setReplyEmail] = useState('');
   const [replyText, setReplyText] = useState('');
   const [posting, setPosting] = useState(false);
+  const [replyPosted, setReplyPosted] = useState(false);
 
   async function handleUpvote() {
     if (upvoted) return;
@@ -75,79 +83,86 @@ export default function CommentThread({ comment, slug, onReplyPosted }) {
       });
       const data = await res.json();
       if (data.comment) {
-        setReplying(false);
         setReplyName(''); setReplyEmail(''); setReplyText('');
-        onReplyPosted();
+        // Replies are held for approval like everything else, so the reply
+        // won't show up yet — say so rather than just closing the form.
+        setReplyPosted(true);
+        setTimeout(() => { setReplying(false); setReplyPosted(false); onReplyPosted(); }, 1600);
       }
     } finally {
       setPosting(false);
     }
   }
 
-  const initials = comment.author_name.slice(0, 2).toUpperCase();
+  const replyCount = comment.replies?.length || 0;
 
   return (
-    <div style={{ display: 'flex', gap: 0, marginBottom: '2px' }}>
-      <div onClick={() => setCollapsed(v => !v)} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', width: '32px', flexShrink: 0, cursor: 'pointer' }}>
-        <div style={{ width: '22px', height: '22px', borderRadius: '50%', background: 'var(--bg-warm)', border: '1px solid var(--border)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: fonts.mono, fontSize: '8px', color: 'var(--ink-soft)', flexShrink: 0 }}>
-          {initials}
-        </div>
-        {(comment.replies?.length > 0 || !collapsed) && (
-          <div style={{ flex: 1, width: '1px', background: collapsed ? 'transparent' : 'var(--border)', margin: '3px 0', minHeight: '12px', transition: 'background 0.2s' }} />
-        )}
-      </div>
-
-      <div style={{ flex: 1, paddingTop: '2px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-          <span style={{ fontFamily: fonts.mono, fontSize: '11px', color: 'var(--ink)', letterSpacing: '0.04em' }}>{comment.author_name}</span>
+    // A reply is inset behind the thread line, so a chain reads as one
+    // conversation rather than a stack of separate comments.
+    <div style={{
+      marginBottom: '12px',
+      paddingLeft: depth > 0 ? '16px' : 0,
+      borderLeft: depth > 0 ? '1px solid var(--border)' : 'none',
+    }}>
+      <div style={{
+        background: 'var(--bg-warm)', border: '1px solid var(--border)',
+        borderRadius: '18px', padding: '12px 16px',
+        maxWidth: '100%', boxSizing: 'border-box',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginBottom: '5px', flexWrap: 'wrap' }}>
+          <span style={{ fontFamily: fonts.mono, fontSize: '10px', color: 'var(--ink)', letterSpacing: '0.06em' }}>{comment.author_name}</span>
           <span style={{ fontFamily: fonts.mono, fontSize: '9px', color: 'var(--ink-faint)' }}>{timeAgo(comment.created_at)}</span>
         </div>
+        <div style={{ fontSize: '13px', lineHeight: 1.65, color: 'var(--ink-soft)', overflowWrap: 'anywhere' }}>{comment.content}</div>
+      </div>
 
-        {!collapsed && (
-          <>
-            <div style={{ fontSize: '13px', lineHeight: 1.7, color: 'var(--ink-soft)', marginBottom: '8px' }}>{comment.content}</div>
-            <div style={{ display: 'flex', gap: '14px', marginBottom: '10px' }}>
-              <button onClick={handleUpvote} style={{ fontFamily: fonts.mono, fontSize: '9px', letterSpacing: '0.08em', textTransform: 'uppercase', color: upvoted ? 'var(--accent)' : 'var(--ink-faint)', background: 'none', border: 'none', cursor: upvoted ? 'default' : 'pointer', padding: 0 }}>
-                ↑ {upvotes}
-              </button>
-              <button onClick={() => setReplying(v => !v)} style={{ fontFamily: fonts.mono, fontSize: '9px', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ink-faint)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
-                reply
-              </button>
-              <button onClick={() => setCollapsed(true)} style={{ fontFamily: fonts.mono, fontSize: '9px', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ink-faint)', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
-                collapse
-              </button>
-            </div>
-
-            {replying && (
-              <div style={{ marginBottom: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <input value={replyName} onChange={e => setReplyName(e.target.value)} placeholder="Name" style={inputStyle} />
-                  <input value={replyEmail} onChange={e => setReplyEmail(e.target.value)} placeholder="Email (optional, private)" type="email" style={inputStyle} />
-                </div>
-                <textarea value={replyText} onChange={e => setReplyText(e.target.value)} placeholder="Reply..." rows={2} style={{ ...inputStyle, resize: 'vertical', width: '100%' }} />
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  <button onClick={handleReply} disabled={posting} style={accentBtnSm}>{posting ? '…' : 'Post reply'}</button>
-                  <button onClick={() => setReplying(false)} style={ghostBtnSm}>Cancel</button>
-                </div>
-              </div>
-            )}
-
-            {comment.replies?.length > 0 && (
-              <div>
-                {comment.replies.map(r => (
-                  <CommentThread key={r.id} comment={r} slug={slug} onReplyPosted={onReplyPosted} />
-                ))}
-              </div>
-            )}
-          </>
-        )}
-
-        {collapsed && (
-          <button onClick={() => setCollapsed(false)} style={{ fontFamily: fonts.mono, fontSize: '9px', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ink-faint)', background: 'none', border: 'none', cursor: 'pointer', padding: '0 0 10px' }}>
-            {comment.replies?.length > 0 ? `expand (${comment.replies.length} repl${comment.replies.length > 1 ? 'ies' : 'y'})` : 'expand'}
+      <div style={{ display: 'flex', gap: '14px', margin: '8px 0 0 6px', flexWrap: 'wrap' }}>
+        <button onClick={handleUpvote} style={{ ...linkBtn, color: upvoted ? 'var(--accent)' : 'var(--ink-faint)', cursor: upvoted ? 'default' : 'pointer' }}>
+          ↑ {upvotes}
+        </button>
+        <button onClick={() => setReplying(v => !v)} style={linkBtn}>reply</button>
+        {replyCount > 0 && (
+          <button onClick={() => setShowReplies(v => !v)} style={{ ...linkBtn, color: showReplies ? 'var(--ink-soft)' : 'var(--ink-faint)' }}>
+            {showReplies ? 'hide replies' : `${replyCount} ${replyCount > 1 ? 'replies' : 'reply'}`}
           </button>
         )}
       </div>
+
+      {replying && (
+        <div style={{ margin: '12px 0 0 6px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          {replyPosted ? (
+            <div style={{ fontFamily: fonts.mono, fontSize: '11px', lineHeight: 1.7, color: 'var(--ink-soft)' }}>
+              Thanks — your reply is in. It&apos;ll appear once it&apos;s been read.
+            </div>
+          ) : (
+            <>
+              <input value={replyName} onChange={e => setReplyName(e.target.value)} placeholder="Name" style={inputStyle} />
+              <input value={replyEmail} onChange={e => setReplyEmail(e.target.value)} placeholder="Email (optional, private)" type="email" style={inputStyle} />
+              <textarea value={replyText} onChange={e => setReplyText(e.target.value)} placeholder="Reply…" rows={2} style={{ ...inputStyle, resize: 'vertical', width: '100%' }} />
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button onClick={handleReply} disabled={posting} style={accentBtnSm}>{posting ? '…' : 'Post reply'}</button>
+                <button onClick={() => setReplying(false)} style={ghostBtnSm}>Cancel</button>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
+      {replyCount > 0 && showReplies && (
+        <>
+          {/* The tail from the sketch — dots trailing off the bubble towards
+              whatever answers it. */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '10px 0 8px 14px' }}>
+            <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: 'var(--border)' }} />
+            <span style={{ width: '4px', height: '4px', borderRadius: '50%', background: 'var(--border)' }} />
+          </div>
+          <div>
+            {comment.replies.map(r => (
+              <CommentThread key={r.id} comment={r} slug={slug} onReplyPosted={onReplyPosted} depth={depth + 1} />
+            ))}
+          </div>
+        </>
+      )}
     </div>
   );
 }

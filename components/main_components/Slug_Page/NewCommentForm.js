@@ -22,6 +22,7 @@ export default function NewCommentForm({ slug, trackIndex, onPosted }) {
   const [email, setEmail] = useState('');
   const [text, setText] = useState('');
   const [posting, setPosting] = useState(false);
+  const [posted, setPosted] = useState(false);
   const [error, setError] = useState('');
 
   async function handlePost() {
@@ -37,13 +38,26 @@ export default function NewCommentForm({ slug, trackIndex, onPosted }) {
       const data = await res.json();
       if (data.error) { setError(data.error); return; }
       setName(''); setEmail(''); setText('');
-      onPosted();
+      // Every comment lands in the moderation queue, so it won't appear on the
+      // page yet. Say so, or posting looks like it silently failed.
+      setPosted(true);
+      setTimeout(onPosted, 1600);
     } catch { setError('Something went wrong.'); }
     finally { setPosting(false); }
   }
 
+  if (posted) {
+    return (
+      <div style={{ fontFamily: fonts.mono, fontSize: '11px', lineHeight: 1.7, color: 'var(--ink-soft)', padding: '8px 0' }}>
+        Thanks — your comment is in. It&apos;ll appear once it&apos;s been read.
+      </div>
+    );
+  }
+
   return (
-    <div style={{ marginBottom: '20px', paddingBottom: '20px', borderBottom: '1px solid var(--border)' }}>
+    // No border or trailing space of its own: this now lives inside the
+    // Add Comment modal, which supplies its own framing.
+    <div>
       {/* Stacked rather than side by side: at the 16px phones need to avoid
           zooming, two fields on one row in this indented column are too narrow
           to read their own placeholders. Email is optional — the moderation
