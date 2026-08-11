@@ -327,6 +327,9 @@ export default function FullPostPage({ entry }) {
             background: var(--bg);
             margin-bottom: 0 !important;
             padding-top: 14px;
+            /* Tap it to get back to the top of its own section. */
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
           }
           .ln-meta-label--sticky + * { margin-top: 16px; }
 
