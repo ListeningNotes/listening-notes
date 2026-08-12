@@ -1,4 +1,5 @@
 import { nest_comments, save_comment } from '@/library/comment_actions';
+import { issue_receipt } from '@/library/wristband';
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
@@ -24,7 +25,18 @@ export async function POST(request) {
     }
 
     const comment = await save_comment({ slug, track_index, parent_id, author_name, author_email, content });
-    return Response.json({ comment });
+
+    // The receipt goes back with the comment so the writer's browser can keep
+    // it and ask to see this one held comment later. Wrapped because a missing
+    // SESSION_SECRET would otherwise turn posting a comment into a 500 — the
+    // comment is already saved by this point, and losing the receipt just puts
+    // that browser back to not seeing its own comment until it's read.
+    let receipt = null;
+    try {
+      receipt = await issue_receipt(comment.id);
+    } catch {}
+
+    return Response.json({ comment, receipt });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }
