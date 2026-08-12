@@ -26,13 +26,7 @@ export default function ComparePage() {
         }}>
           A way to put two albums side by side and trace the differences in how they were heard.
         </p>
-        <Link href="/" style={{
-          fontFamily: 'var(--font-label)', fontSize: 11, letterSpacing: '0.14em', textTransform: 'uppercase',
-          color: 'var(--ink)', textDecoration: 'none', padding: '10px 22px',
-          border: '1px solid var(--border)', borderRadius: 999, marginTop: 8,
-        }}>
-          ← Back home
-        </Link>
+        <Link href="/" className="ln-pill" style={{ marginTop: 8 }}>← Back home</Link>
       </div>
     </div>
   );
