@@ -1,18 +1,44 @@
 import database from './database_connection.js';
 import { create_slug } from './slug_generator.js';
 import { serializeTracks } from './entry_formatter.js';
+import { sizedAlbumArt } from './music_data_api.js';
+
+// Album art is sized on the way out rather than on the way in, so the row
+// keeps whatever URL it was saved with — the full-resolution master. That's
+// deliberate: the Echo session uses the big image as a full-screen backdrop,
+// and a URL pasted by hand into the dashboard's album_art field gets sized
+// down here too, without anyone having to remember to do it. The size is a
+// read-time decision, so changing it later is a number, not a migration.
+//
+// Sized here in the data layer and not in the API routes because /shuffle
+// calls pull_all_entries directly, without going through an HTTP endpoint.
+const LIST_ART_PX = 600;   // grid tiles and the homepage strip — tens at once,
+                           // none rendered wider than ~190pt
+const ENTRY_ART_PX = 1200; // one album page, one cover, up to ~291pt on a
+                           // phone — 1200 keeps it sharp at 3x
+
+// The stored URL travels alongside the sized one as album_art_source. The
+// dashboard's edit form binds to that: it seeds its fields from an entry and
+// PATCHes the whole object back, so without this it would quietly save the
+// 600px URL over the master the row was created with — and every later edit
+// would size it down again from there.
+function withSizedArt(row, px) {
+  return { ...row, album_art: sizedAlbumArt(row.album_art, px), album_art_source: row.album_art };
+}
 
 export async function pull_all_entries() {
-  return await database`
+  const rows = await database`
     SELECT * FROM entries ORDER BY created_at DESC
   `;
+  return rows.map(row => withSizedArt(row, LIST_ART_PX));
 }
 
 export async function pull_entry_by_slug(slug) {
   const result = await database`
     SELECT * FROM entries WHERE slug = ${slug} LIMIT 1
   `;
-  return result[0] || null;
+  const row = result[0];
+  return row ? withSizedArt(row, ENTRY_ART_PX) : null;
 }
 
 export async function save_new_entry(body) {

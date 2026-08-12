@@ -9,6 +9,7 @@ import PasswordGate from '../../../components/session_components/PasswordGate';
 import backgrounds from '../../../components/session_components/backgrounds';
 import StarRating from '../../../components/session_components/StarRating';
 import { fonts } from '../../../library/sitewide_visuals';
+import { sizedAlbumArt } from '../../../library/music_data_api';
 
 const MONO  = "'DM Mono', 'Courier New', monospace";
 const SERIF = "'DM Serif Display', Georgia, serif";
@@ -60,7 +61,10 @@ function EditModal({ entry, onSave, onDelete, onClose }) {
     notes: entry.notes || '',
     tags: Array.isArray(entry.tags) ? entry.tags.join(', ') : (entry.tags || ''),
     horizon: entry.horizon || '',
-    album_art: entry.album_art || '',
+    // The stored URL, not the sized one the rest of the site is served — see
+    // withSizedArt in library/database_actions.js. Saving the sized URL back
+    // here would throw away the full-resolution original.
+    album_art: entry.album_art_source ?? entry.album_art ?? '',
     tracks: Array.isArray(entry.tracks) ? entry.tracks.map(t => ({ ...t })) : [],
   });
   const [saving, setSaving] = useState(false);
@@ -240,7 +244,9 @@ function EditModal({ entry, onSave, onDelete, onClose }) {
             <div style={{ ...labelStyle, marginBottom: 6 }}>Album Art URL</div>
             <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
               <input value={fields.album_art} onChange={e => set('album_art', e.target.value)} style={{ ...inputStyle(), flex: 1 }} />
-              {fields.album_art && <img src={fields.album_art} alt="" style={{ width: 60, height: 60, borderRadius: 10, objectFit: 'cover', flexShrink: 0, border: '1px solid rgba(26,25,22,0.12)' }} />}
+              {/* Sized for the thumbnail it actually is — the field holds the
+                  full-resolution master, and some of those are over 10MB. */}
+              {fields.album_art && <img src={sizedAlbumArt(fields.album_art, 120)} alt="" style={{ width: 60, height: 60, borderRadius: 10, objectFit: 'cover', flexShrink: 0, border: '1px solid rgba(26,25,22,0.12)' }} />}
             </div>
           </div>
         </div>
