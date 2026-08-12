@@ -105,6 +105,18 @@ export default function HomePage() {
     return <AlbumStrip entries={entries} variant={variant} />;
   }
 
+  // The two ways on from the strip. They repeat the dot nav deliberately —
+  // the dots live at the top of the screen and read as chrome, and by the
+  // time you've come to the end of the recent listens you want something to
+  // do rather than somewhere to look. Held back until the entries land, so
+  // they don't appear under a row of loading skeletons.
+  const stripActions = !loading && entries.length > 0 && (
+    <div className="hp-strip-actions">
+      <Link href="/archive" className="ln-pill">See full archive</Link>
+      <Link href="/submit" className="ln-pill">Submit an album</Link>
+    </div>
+  );
+
   return (
     <div className="hp">
       <div className="hp-corner">
@@ -135,6 +147,7 @@ export default function HomePage() {
           </div>
         </div>
         {renderStrip('scroll')}
+        {stripActions}
       </main>
 
       <div className="hp-mobile-screens">
@@ -170,8 +183,11 @@ export default function HomePage() {
           <DotNav />
           <div className="hp-screen-strip">
             <div className="hp-screen-strip-title">Recent Listens</div>
+            {/* Inside the scroller, so they sit at the end of the listens
+                rather than pinned under them. */}
             <div className="hp-screen-strip-scroll">
               {renderStrip('grid')}
+              {stripActions}
             </div>
           </div>
         </section>

@@ -86,60 +86,68 @@ export default function AboutPage() {
            flush at the nav's bottom edge has nothing to mask. */
         .ab-page { --ab-nav-bottom: 136px; }
 
-        /* ── Hero ── one line, in the label face an entry uses for its artist.
-           With the title and the chips gone this is a standfirst rather than a
-           masthead, so it sits closer to the nav than a title block would. */
+        /* ── Hero ── the standfirst IS the title now. The site's name is on
+           every screen already, so repeating it here was the same word twice —
+           but with nothing in its place the page started on body copy an inch
+           under the nav, which read as a rendering fault. Saying what the site
+           is, in the title face, does the job the name was doing. */
         .ab-hero {
-          padding: calc(var(--ab-nav-bottom) + 30px) 48px 20px;
+          padding: calc(var(--ab-nav-bottom) + 38px) 48px 26px;
           max-width: 860px;
           margin: 0 auto;
         }
-        .ab-hero-line {
-          font-family: var(--font-label);
-          font-size: 11px;
-          letter-spacing: 0.12em;
-          text-transform: uppercase;
-          color: var(--ink-soft);
+        .ab-hero h1 {
+          font-family: var(--font-display);
+          font-weight: var(--font-display-weight);
+          font-size: clamp(1.45rem, 3.2vw, 2.05rem);
+          letter-spacing: -0.015em;
+          line-height: 1.2;
+          color: var(--ink);
+          margin: 0;
+          /* Two lines. Left to the full column it ran as one very long line;
+             at 15ch it broke into three and started to look like a poem. */
+          max-width: 26ch;
         }
 
-        /* ── Jump bar ── the archive's filter bar, wearing three buttons.
-           Shares the hero's and the main column's exact box, so its left edge
-           lines up with the writing it belongs to. It hugs its buttons rather
-           than spanning the column: three tabs stretched edge to edge read as
-           a segmented control picking between three states, and these are
-           links down the page. */
+        /* ── Jump nav ── three marks on a rule rather than a frosted slab with
+           a black pill in it. The slab was a lot of furniture for a quiet page
+           and it read as a control you operate; this reads as the contents of
+           the page, which is what it is. What it still has to do is stay put
+           and say where you are, so it pins at the nav's bottom edge and the
+           section you're in carries the rule under it.
+
+           Opaque --bg rather than glass. It shares the main column's exact box,
+           so the fill covers precisely the width the writing occupies — which
+           is the whole job the old blur was doing. */
         .ab-bar-wrap {
           position: sticky;
           top: var(--ab-nav-bottom);
           z-index: 101;
           max-width: 860px; margin: 0 auto;
-          padding: 0 48px 18px;
+          padding: 0 48px 26px;
+          background: var(--bg);
         }
-        .ab-bar {
-          display: inline-flex; gap: 6px;
-          padding: 6px;
-          background: var(--panel);
-          backdrop-filter: var(--card-blur); -webkit-backdrop-filter: var(--card-blur);
-          border: 1px solid var(--panel-border); border-radius: 14px;
-          box-shadow: var(--shadow-soft);
-        }
+        .ab-bar { display: flex; gap: 30px; border-bottom: 1px solid var(--border); }
         .ab-jump {
           font-family: var(--font-label); font-size: 11px;
           letter-spacing: 0.12em; text-transform: uppercase;
-          padding: 9px 18px; border-radius: 9px;
-          border: 1px solid transparent; cursor: pointer;
-          background: transparent; color: var(--ink-soft);
-          transition: background 0.18s, color 0.18s, border-color 0.18s;
+          padding: 0 0 11px; cursor: pointer;
+          background: none; border: none;
+          border-bottom: 2px solid transparent;
+          /* Overlaps the row's own hairline, so the active mark replaces it
+             rather than stacking a second line under it. */
+          margin-bottom: -1px;
+          color: var(--ink-faint);
+          transition: color 0.18s, border-color 0.18s;
         }
-        .ab-jump:hover { color: var(--ink); }
-        /* Same fill the archive's chosen filter chips carry. */
-        .ab-jump--on { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+        .ab-jump:hover { color: var(--ink-soft); }
+        .ab-jump--on { color: var(--ink); border-bottom-color: var(--ink); }
 
         .ab-main { max-width: 860px; margin: 0 auto; padding: 0 48px 100px; }
 
-        /* Clears the nav plus the pinned bar, so a jumped-to section lands with
-           its label just under the bar instead of behind it. */
-        .ab-section { scroll-margin-top: 200px; }
+        /* Clears the nav plus the pinned marks, so a jumped-to section lands
+           with its label just under the rule instead of behind it. */
+        .ab-section { scroll-margin-top: 196px; }
         .ab-section + .ab-section { margin-top: 64px; }
 
         /* Body copy, matched to an entry's album notes: same size, same
@@ -178,11 +186,20 @@ export default function AboutPage() {
         a.ab-rig-name svg { color: var(--ink-faint); transition: color 0.15s; }
         a.ab-rig-name:hover svg { color: var(--ink); }
 
-        /* Relationship rows read as one sentence: the chip is the term and the
-           writing runs on from it, rather than sitting as a lone pill with a
-           paragraph orphaned underneath. */
-        .ab-rel { margin: 0; font-size: 13px; line-height: 1.9; color: var(--ink-soft); }
-        .ab-rel > span:first-child { margin-right: 9px; }
+        /* Relationship rows: term in a fixed column, definition in the next.
+           Run in on one line the chips are all different widths, so every
+           definition started at a different place and the block had no left
+           edge to read down — which is what made it feel off. A column the
+           widest chip fits in gives all five the same two edges. */
+        .ab-rel {
+          /* 90px is the widest chip ("Submission", 78px) plus a little slack —
+             wide enough that none of the five ever clips, narrow enough that
+             the short ones don't leave a trench before the definition. */
+          display: grid; grid-template-columns: 90px 1fr; gap: 18px;
+          align-items: baseline;
+          margin: 0; font-size: 13px; line-height: 1.8; color: var(--ink-soft);
+        }
+        .ab-rel-term { justify-self: start; }
 
         /* An inline link out to another section, quiet enough to sit inside a
            sentence without reading as a button. */
@@ -213,15 +230,17 @@ export default function AboutPage() {
         @media (prefers-reduced-motion: reduce) { .ln-star-glow { animation: none; } }
 
         @media (max-width: 768px) {
-          .ab-hero { padding: calc(var(--ab-nav-bottom) + 18px) 24px 16px; }
-          /* Same 24px gutter as the writing below it — the bar sits directly
-             on top of the prose here, so a wider bar reads as misalignment
-             rather than as a bar. */
-          .ab-bar-wrap { padding: 0 24px 14px; }
-          /* Full width here, thirds apiece — on a phone these are thumb
-             targets first and a control second. */
-          .ab-bar { display: flex; gap: 4px; padding: 5px; }
-          .ab-jump { flex: 1; padding: 9px 6px; font-size: 10px; letter-spacing: 0.08em; }
+          .ab-hero { padding: calc(var(--ab-nav-bottom) + 22px) 24px 20px; }
+          /* Same 24px gutter as the writing below it, so the rule under the
+             marks runs the exact width of the prose. */
+          .ab-bar-wrap { padding: 0 24px 20px; }
+          /* Thirds apiece — on a phone these are thumb targets first, and a
+             tap area the width of the word alone is too small to aim at. */
+          .ab-jump { flex: 1; padding: 2px 0 11px; font-size: 10px; letter-spacing: 0.08em; }
+          /* The definition column can't give up 118px to the term at this
+             width and still hold a readable line, so the term sits above its
+             own definition — tight enough to read as its heading. */
+          .ab-rel { grid-template-columns: 1fr; gap: 7px; }
           .ab-main { padding: 0 24px 80px; }
           .ab-section + .ab-section { margin-top: 52px; }
           /* The bar is shorter here, so a jump doesn't need to duck as far. */
@@ -232,11 +251,8 @@ export default function AboutPage() {
       <SiteNav />
       <DotNav />
 
-      {/* No page title: every screen already carries the logo, so naming the
-          site again here was the same word twice. The standfirst is the whole
-          opening now. */}
       <header className="ab-hero">
-        <div className="ab-hero-line">A practice of documenting intentional listening</div>
+        <h1>A practice of documenting intentional listening</h1>
       </header>
 
       <div className="ab-bar-wrap">
@@ -257,9 +273,12 @@ export default function AboutPage() {
 
       <main className="ab-main">
 
-        {/* ── ABOUT ── */}
+        {/* ── ABOUT ── no section label on this one. The marks above already
+            say About, and the page's own title sits directly over it, so a
+            third "About" inside 70px read as a mistake. Specs and Index keep
+            theirs: they genuinely divide, and by the time you reach them the
+            title is long gone. */}
         <section id="about" className="ab-section">
-          <MetadataLabel>About</MetadataLabel>
           <div className="ab-prose">
             <p>
               Listening Notes started as an answer to a question about my favorite albums and it grew into a practice of documenting intentional listening. Now it is becoming a larger system for mapping taste, preserving musical encounters, and creating space for shared reflection around sound.
@@ -353,7 +372,10 @@ export default function AboutPage() {
           <div>
             {RELATIONSHIP_NOTES.map(r => (
               <div key={r.label} className="ab-row">
-                <p className="ab-rel"><Chip>{r.label}</Chip>{r.body}</p>
+                <div className="ab-rel">
+                  <span className="ab-rel-term"><Chip>{r.label}</Chip></span>
+                  <p style={{ margin: 0 }}>{r.body}</p>
+                </div>
               </div>
             ))}
           </div>

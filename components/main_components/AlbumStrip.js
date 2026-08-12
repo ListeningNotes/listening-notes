@@ -5,6 +5,13 @@ import Link from 'next/link';
 
 const AUTO_SPEED = 0.5; // px per frame while drifting
 
+// The homepage shows the last ten listens and nothing more — it's the front
+// door, not the collection. Everything past ten is one tap away on the
+// archive, which the buttons under the strip point at. Entries arrive
+// newest-first from the API (ORDER BY created_at DESC), so this is a
+// straight take from the top.
+const RECENT_LIMIT = 10;
+
 // How far a finger can travel before a tap counts as a swipe instead. The
 // strip is dragged by the same finger that taps a tile, and these are links
 // now — without this, flicking the strip sideways lands you on whichever
@@ -116,10 +123,7 @@ export default function AlbumStrip({ entries, variant = 'scroll' }) {
   if (entries.length === 0) return null;
 
   const isGrid = variant === 'grid';
-  // The grid scrolls within its own container now, so it isn't limited to
-  // what fits on one screen — just a sane cap so it doesn't load hundreds
-  // of images if the account has a huge history.
-  const displayEntries = isGrid ? entries.slice(0, 24) : entries;
+  const displayEntries = entries.slice(0, RECENT_LIMIT);
 
   // A tile is a plain link to the entry — no metadata step in between. The
   // flip-to-metadata card lives on the archive grid instead (FlipTile.js),
