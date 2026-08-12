@@ -135,9 +135,9 @@ export default function AboutPage() {
           font-size: 20px; letter-spacing: -0.01em; color: var(--ink);
           margin: 0 0 12px;
         }
-        /* Between beats, not before the first one. */
-        .ab-prose .ab-subhead { margin-top: 40px; }
-        .ab-block + .ab-block { margin-top: 44px; }
+        /* Every heading on this page now sits at the top of an .ab-block, so
+           the space between headings is the space between blocks. */
+        .ab-block + .ab-block { margin-top: 48px; }
 
         /* ── Rows ── the tracklist rhythm: a head line that carries the mark,
            the writing underneath it, one hairline closing each one off. */
@@ -240,42 +240,58 @@ export default function AboutPage() {
       <main className="ab-main">
         <div className="ab-panel" key={section}>
 
+          {/* Three principles, two paragraphs apiece, after the lede. Every
+              heading here is lifted out of the paragraph it sits over rather
+              than written for it — a heading in a different voice than the
+              writing underneath reads as an editor's, not the author's. */}
           {section === 'about' && (
-            <div className="ab-prose">
+            <>
               <p className="ab-lede">
                 Listening Notes started as an answer to a question about my favorite albums and it grew into a practice of documenting intentional listening. Now it is becoming a larger system for mapping taste, preserving musical encounters, and creating space for shared reflection around sound.
               </p>
 
-              <h2 className="ab-subhead" style={{ marginTop: 0 }}>An unfinished list</h2>
-              <p>
-                Back in 2020, a close friend asked me to send them a list of my favorite albums, and I never finished it&mdash;actually I never even started. For years I thought I&rsquo;d get around to it one day, but I just kept putting it off. I always thought I was just procrastinating, but now I think I was resisting the format of what was being asked of me. Music has always meant too much to me to throw into a quick list in my notes app and call it done. I did not just want to name the albums, I wanted to capture my feelings around them and why they mattered to me.
-              </p>
+              {/* "Music has always meant too much to me to throw into a quick
+                  list" — the question, and the thing built to answer it. */}
+              <div className="ab-block">
+                <h2 className="ab-subhead">More than a list</h2>
+                <div className="ab-prose">
+                  <p>
+                    Back in 2020, a close friend asked me to send them a list of my favorite albums, and I never finished it&mdash;actually I never even started. For years I thought I&rsquo;d get around to it one day, but I just kept putting it off. I always thought I was just procrastinating, but now I think I was resisting the format of what was being asked of me. Music has always meant too much to me to throw into a quick list in my notes app and call it done. I did not just want to name the albums, I wanted to capture my feelings around them and why they mattered to me.
+                  </p>
+                  <p>
+                    Finally, in December 2025, I started Listening Notes. It was my way of finally addressing that question: what are my favorite albums? But somewhere along the way, it stopped being just about answering that. It became a way to document my relationship with music entirely, and in real time. That shift changed the whole project for me. What started as a Tumblr blog became something much more alive and closer to an archive of my listening habits than just a collection of reviews.
+                  </p>
+                </div>
+              </div>
 
-              <h2 className="ab-subhead">Starting</h2>
-              <p>
-                Finally, in December 2025, I started Listening Notes. It was my way of finally addressing that question: what are my favorite albums? But somewhere along the way, it stopped being just about answering that. It became a way to document my relationship with music entirely, and in real time. That shift changed the whole project for me. What started as a Tumblr blog became something much more alive and closer to an archive of my listening habits than just a collection of reviews.
-              </p>
+              {/* "asking what kind of listener I am" — what the entries are,
+                  and how the listening behind them is done. */}
+              <div className="ab-block">
+                <h2 className="ab-subhead">What kind of listener I am</h2>
+                <div className="ab-prose">
+                  <p>
+                    At its core is the idea that listening is worth documenting. I have always been someone who likes to record things, preserve things, and leave a trace of who I am in this world. That is why I do not really think of these entries as judgments. They are more like evidence of an encounter. They show what stood out to me, what confused me, what moved me, and what stays with me even after the album has ended. Over time entries start to reveal patterns not only in my musical taste, but also patterns in how I listen. That is part of what this project has grown into for me. It is not only about asking what my favorite music is. It is also about asking what kind of listener I am and how my taste takes shape over time.
+                  </p>
+                  <p>
+                    A major turning point in how I listened came in 2024 when I visited the Art of Noise exhibition at SFMOMA and experienced Devon Turnbull&rsquo;s high-fidelity listening room installation. That experience genuinely changed something in me. It was not about volume or spectacle. It was about precision and the feeling that recorded sound could be presented with a kind of care that made its full shape more visible. Since then I have been much more conscious of listening as an intentional practice. Right now that means listening with my own Hi-Fi headphone setup while I slowly work towards building a dedicated listening room of my own. The setup used for listening can be explored more <button type="button" className="ab-inline" onClick={() => show('specs')}>here</button>.
+                  </p>
+                </div>
+              </div>
 
-              <h2 className="ab-subhead">Evidence of an encounter</h2>
-              <p>
-                At its core is the idea that listening is worth documenting. I have always been someone who likes to record things, preserve things, and leave a trace of who I am in this world. That is why I do not really think of these entries as judgments. They are more like evidence of an encounter. They show what stood out to me, what confused me, what moved me, and what stays with me even after the album has ended. Over time entries start to reveal patterns not only in my musical taste, but also patterns in how I listen. That is part of what this project has grown into for me. It is not only about asking what my favorite music is. It is also about asking what kind of listener I am and how my taste takes shape over time.
-              </p>
-
-              <h2 className="ab-subhead">Listening on purpose</h2>
-              <p>
-                A major turning point in how I listened came in 2024 when I visited the Art of Noise exhibition at SFMOMA and experienced Devon Turnbull&rsquo;s high-fidelity listening room installation. That experience genuinely changed something in me. It was not about volume or spectacle. It was about precision and the feeling that recorded sound could be presented with a kind of care that made its full shape more visible. Since then I have been much more conscious of listening as an intentional practice. Right now that means listening with my own Hi-Fi headphone setup while I slowly work towards building a dedicated listening room of my own. The setup used for listening can be explored more <button type="button" className="ab-inline" onClick={() => show('specs')}>here</button>.
-              </p>
-
-              <h2 className="ab-subhead">Never meant to stay private</h2>
-              <p>
-                I also know this project was never meant to stay private. Part of what has always fascinated me about music is how differently people can hear the same exact album. I have spent so much time reading other people&rsquo;s thoughts by looking up reddit threads or interpretations on Genius just to understand how a piece landed for someone else. I do not want Listening Notes to just be a private diary hidden away. I want it to be a place where exposure can happen, music can be shared, and opinions are openly discussed.
-              </p>
-
-              <h2 className="ab-subhead">What it is becoming</h2>
-              <p>
-                Listening Notes is no longer just a blog where I post album thoughts. It has grown into something much bigger. What I am building now is not simply a place to store opinions, but a system for documenting taste, noticing patterns in what moves someone, and treating a relationship to sound as something worth preserving with real care. If someone asked me today for a list of my favorite albums I would point them here because this says much more fully what music actually means to me.
-              </p>
-            </div>
+              {/* "this project was never meant to stay private" — and it closes
+                  on the same list the first principle opens with. */}
+              <div className="ab-block">
+                <h2 className="ab-subhead">Never meant to stay private</h2>
+                <div className="ab-prose">
+                  <p>
+                    I also know this project was never meant to stay private. Part of what has always fascinated me about music is how differently people can hear the same exact album. I have spent so much time reading other people&rsquo;s thoughts by looking up reddit threads or interpretations on Genius just to understand how a piece landed for someone else. I do not want Listening Notes to just be a private diary hidden away. I want it to be a place where exposure can happen, music can be shared, and opinions are openly discussed.
+                  </p>
+                  <p>
+                    Listening Notes is no longer just a blog where I post album thoughts. It has grown into something much bigger. What I am building now is not simply a place to store opinions, but a system for documenting taste, noticing patterns in what moves someone, and treating a relationship to sound as something worth preserving with real care. If someone asked me today for a list of my favorite albums I would point them here because this says much more fully what music actually means to me.
+                  </p>
+                </div>
+              </div>
+            </>
           )}
 
           {section === 'specs' && (
