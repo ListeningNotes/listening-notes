@@ -252,7 +252,7 @@ export default function SubmitPage() {
         {/* Every other page closes on this pair; this one had no way out at all. */}
         <div className="sb-foot">
           <Link href="/" className="ln-pill">← Back home</Link>
-          <Link href="/archive" className="ln-pill">Library →</Link>
+          <Link href="/archive" className="ln-pill">Archive →</Link>
         </div>
       </main>
     </div>
