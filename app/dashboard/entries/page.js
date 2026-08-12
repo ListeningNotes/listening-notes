@@ -9,6 +9,7 @@ import PasswordGate from '../../../components/session_components/PasswordGate';
 import backgrounds from '../../../components/session_components/backgrounds';
 import StarRating from '../../../components/session_components/StarRating';
 import { fonts } from '../../../library/sitewide_visuals';
+import { entryTypeLabel } from '../../../library/entry_formatter';
 import { sizedAlbumArt } from '../../../library/music_data_api';
 
 const MONO  = "'DM Mono', 'Courier New', monospace";
@@ -162,7 +163,7 @@ function EditModal({ entry, onSave, onDelete, onClose }) {
               <div style={{ ...labelStyle, marginBottom: 6 }}>Entry Type</div>
               <select value={fields.entry_type} onChange={e => set('entry_type', e.target.value)} style={{ ...inputStyle(), appearance: 'none' }}>
                 <option value="">—</option>
-                <option value="Personal Library">Personal Library</option>
+                <option value="Personal Library">Library</option>
                 <option value="Submission">Submission</option>
               </select>
             </div>
@@ -389,7 +390,7 @@ export default function SessionEntries() {
                       {entry.masterpiece === true && <span title="Masterpiece" style={{ color: '#E8B84B', fontSize: 18, lineHeight: 1 }}>★</span>}
                       {entry.favorite === true && <span title="Favorite" style={{ color: '#e0245e', fontSize: 18, lineHeight: 1 }}>♥</span>}
                     </div>
-                    <div style={{ padding: '0 8px', fontFamily: MONO, fontSize: 10, color: 'rgba(26,25,22,0.4)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{entry.entry_type || '—'}</div>
+                    <div style={{ padding: '0 8px', fontFamily: MONO, fontSize: 10, color: 'rgba(26,25,22,0.4)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{entryTypeLabel(entry.entry_type) || '—'}</div>
                   </div>
                 ))}
                 </div>

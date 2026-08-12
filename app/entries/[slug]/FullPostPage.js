@@ -8,7 +8,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { fonts } from '../../../library/sitewide_visuals';
-import { parseHorizon, entryTracks, splitNotes } from '../../../library/entry_formatter';
+import { parseHorizon, entryTracks, splitNotes, entryTypeLabel } from '../../../library/entry_formatter';
 import DotNav from '../../../components/main_components/DotNav';
 import SiteNav from '../../../components/main_components/SiteNav';
 import HorizonBar from '../../../components/main_components/Slug_Page/HorizonBar';
@@ -373,7 +373,7 @@ export default function FullPostPage({ entry }) {
         )}
         <div className="ln-screen-one-chips">
           {entry.relationship && <Chip>{entry.relationship}</Chip>}
-          {entry.entry_type && <Chip>{entry.entry_type}</Chip>}
+          {entry.entry_type && <Chip>{entryTypeLabel(entry.entry_type)}</Chip>}
           {(entry.favorite === true || entry.favorite === 'true') && <Chip accent>Favorite</Chip>}
           {isMasterpiece && <Chip accent>Masterpiece</Chip>}
         </div>
@@ -428,7 +428,7 @@ export default function FullPostPage({ entry }) {
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
                 {displayRating > 0 && <StarRating rating={displayRating} size={15} glow={isMasterpiece} style={{ verticalAlign: 'middle' }} />}
                 {entry.relationship && <Chip>{entry.relationship}</Chip>}
-                {entry.entry_type && <Chip>{entry.entry_type}</Chip>}
+                {entry.entry_type && <Chip>{entryTypeLabel(entry.entry_type)}</Chip>}
                 {(entry.favorite === true || entry.favorite === 'true') && <Chip accent>Favorite</Chip>}
               </div>
               <div style={{ fontFamily: fonts.mono, fontSize: '9px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--ink-faint)', marginTop: '12px' }}>
