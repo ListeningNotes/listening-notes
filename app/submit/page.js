@@ -1,32 +1,12 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
+import { fonts } from '../../library/sitewide_visuals';
 import DotNav from '../../components/main_components/DotNav';
 import SiteNav from '../../components/main_components/SiteNav';
-
-const field = {
-  display: 'block',
-  width: '100%',
-  background: 'var(--surface)',
-  border: '1px solid var(--border)',
-  borderRadius: 'var(--r-sm)',
-  color: 'var(--text)',
-  padding: '10px 12px',
-  fontFamily: 'var(--font-mono)',
-  fontSize: '0.85rem',
-  outline: 'none',
-  boxSizing: 'border-box',
-};
-
-const label = {
-  display: 'block',
-  fontFamily: 'var(--font-label)',
-  fontSize: '0.7rem',
-  letterSpacing: '0.1em',
-  textTransform: 'uppercase',
-  color: 'var(--ink-soft)',
-  marginBottom: '6px',
-};
+import MetadataLabel from '../../components/main_components/Slug_Page/MetadataLabel';
+import Chip from '../../components/main_components/Slug_Page/Chip';
 
 export default function SubmitPage() {
   const [form, setForm] = useState({ album: '', artist: '', year: '', note: '', name: '', email: '' });
@@ -76,116 +56,205 @@ export default function SubmitPage() {
   }
 
   return (
-    <div style={{ minHeight: '100vh', background: 'var(--bg)', color: 'var(--ink)' }}>
+    <div className="sb-page" style={{ minHeight: '100vh', background: 'var(--bg)', color: 'var(--ink)', fontFamily: fonts.sans }}>
+      <style>{`
+        /* Same 136px the nav ends on everywhere else — this page used to clear
+           it with a hand-picked 168px of padding, which is the same number
+           arrived at by eye. */
+        .sb-page { --sb-nav-bottom: 136px; }
+
+        /* Opens the way an entry does: title, a line under it in the label
+           face, then the qualifiers. */
+        /* The same 860/48 box About uses, so the title, the section rules and
+           the closing buttons land on the same left edge on both pages. */
+        .sb-hero {
+          max-width: 860px; margin: 0 auto;
+          padding: calc(var(--sb-nav-bottom) + 44px) 48px 26px;
+        }
+        .sb-hero h1 {
+          font-family: var(--font-display);
+          font-size: clamp(1.9rem, 4vw, 2.6rem);
+          font-weight: 400; line-height: 1.05; margin: 0 0 8px;
+        }
+        .sb-hero-line {
+          font-family: var(--font-label); font-size: 11px;
+          letter-spacing: 0.12em; text-transform: uppercase;
+          color: var(--ink-soft); margin-bottom: 14px;
+        }
+        .sb-hero-chips { display: flex; gap: 8px; flex-wrap: wrap; }
+
+        .sb-main { max-width: 860px; margin: 0 auto; padding: 0 48px 100px; }
+        .sb-block + .sb-block { margin-top: 40px; }
+        .sb-fields { display: flex; flex-direction: column; gap: 18px; }
+        .sb-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+        .sb-label {
+          display: block;
+          font-family: var(--font-label); font-size: 10px;
+          letter-spacing: 0.12em; text-transform: uppercase;
+          color: var(--ink-faint); margin-bottom: 7px;
+        }
+        .sb-req { color: var(--gold); }
+
+        /* Frosted like every other input on the site (the archive's search
+           field is the same recipe) rather than the flat white --surface these
+           carried, which read as a different site on the dark theme. */
+        .sb-field {
+          display: block; width: 100%; box-sizing: border-box;
+          background: var(--panel);
+          border: 1px solid var(--border); border-radius: 10px;
+          color: var(--ink);
+          padding: 11px 13px;
+          font-family: ${fonts.sans}; font-size: 14px; line-height: 1.6;
+          outline: none;
+          transition: border-color 0.15s;
+        }
+        .sb-field::placeholder { color: var(--ink-faint); }
+        .sb-field:focus { border-color: var(--ink-faint); }
+        textarea.sb-field { resize: vertical; min-height: 130px; line-height: 1.8; }
+
+        .sb-hint {
+          font-family: var(--font-label); font-size: 10px;
+          letter-spacing: 0.06em; color: var(--ink-faint);
+          margin: -4px 0 2px;
+        }
+        .sb-error { font-size: 13px; color: #e05555; }
+
+        /* The one committing action on the page, so it's the one solid button
+           — the same ink fill the archive gives its Show N. */
+        .sb-submit {
+          display: inline-flex; align-items: center; justify-content: center;
+          padding: 13px 40px; border-radius: 999px;
+          background: var(--ink); color: var(--bg); border: 1px solid var(--ink);
+          font-family: var(--font-mono); font-size: 10px;
+          letter-spacing: 0.14em; text-transform: uppercase;
+          cursor: pointer; transition: opacity 0.18s;
+        }
+        .sb-submit:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        .sb-done {
+          background: var(--panel);
+          backdrop-filter: var(--card-blur); -webkit-backdrop-filter: var(--card-blur);
+          border: 1px solid var(--panel-border); border-radius: var(--r-lg);
+          box-shadow: var(--shadow-soft);
+          padding: 36px 28px; text-align: center;
+        }
+        .sb-done-title { font-family: var(--font-display); font-size: 1.7rem; margin-bottom: 10px; }
+        .sb-done-body { font-size: 14px; line-height: 1.8; color: var(--ink-soft); margin: 0; }
+
+        .sb-foot {
+          margin-top: 48px; padding-top: 28px; border-top: 1px solid var(--border);
+          display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap;
+        }
+
+        @media (max-width: 768px) {
+          .sb-hero { padding: calc(var(--sb-nav-bottom) + 24px) 24px 22px; }
+          .sb-main { padding: 0 24px 80px; }
+          /* Album and artist each get a full row — side by side on a phone
+             leaves neither enough width to read what you've typed. */
+          .sb-pair { grid-template-columns: 1fr; gap: 18px; }
+        }
+      `}</style>
+
       <SiteNav />
       <DotNav />
 
-      <div style={{ maxWidth: '560px', margin: '0 auto', padding: '168px 24px 80px' }}>
-
-        <div style={{ background: 'var(--panel)', backdropFilter: 'var(--card-blur)', WebkitBackdropFilter: 'var(--card-blur)', border: '1px solid var(--panel-border)', borderRadius: 'var(--radius)', padding: '36px', boxShadow: 'var(--shadow-lift)' }}>
-
-        <div style={{ marginBottom: '32px' }}>
-          <h1 style={{ fontFamily: 'var(--font-display)', fontSize: '2.4rem', fontWeight: 400, margin: '0 0 12px', lineHeight: 1.2 }}>
-            Submit an Album
-          </h1>
-          <p style={{ fontFamily: 'var(--font-mono)', fontSize: '0.85rem', color: 'var(--ink-soft)', margin: 0, lineHeight: 1.7 }}>
-            Recommend an album and tell me what to listen for.
-          </p>
+      <header className="sb-hero">
+        <h1>Submit an Album</h1>
+        <div className="sb-hero-line">Recommend a listen and tell me what to listen for</div>
+        <div className="sb-hero-chips">
+          <Chip>Anonymous welcome</Chip>
+          <Chip>Posted as a Submission</Chip>
         </div>
+      </header>
 
+      <main className="sb-main">
         {done ? (
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ background: 'var(--bg-warm)', border: '1px solid var(--border)', borderRadius: 'var(--r-lg)', padding: '32px' }}>
-              <div style={{ fontFamily: 'var(--font-display)', fontSize: '1.6rem', marginBottom: '10px' }}>Submitted.</div>
-              <p style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8rem', color: 'var(--ink-soft)', margin: 0, lineHeight: 1.7 }}>
+          <>
+            <div className="sb-done">
+              <div className="sb-done-title">Submitted.</div>
+              <p className="sb-done-body">
                 {form.name ? `Thanks, ${form.name}. ` : ''}I&apos;ll give it a listen.
-                {form.email ? " I'll let you know when it goes up." : ''}
+                {form.email ? ' I’ll let you know when it goes up.' : ''}
               </p>
             </div>
-            <button onClick={handleReset} style={{
-              marginTop: '20px', cursor: 'pointer',
-              fontFamily: 'var(--font-mono)', fontSize: '0.8rem', letterSpacing: '0.06em',
-              color: 'var(--ink-soft)', background: 'var(--surface)',
-              border: '1px solid var(--border)', borderRadius: 'var(--r-sm)',
-              padding: '11px 24px',
-            }}>
-              Submit another album →
-            </button>
-          </div>
+            <div style={{ display: 'flex', justifyContent: 'center', marginTop: 22 }}>
+              <button type="button" className="ln-pill" onClick={handleReset}>
+                Submit another album →
+              </button>
+            </div>
+          </>
         ) : (
-          <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+          <form onSubmit={handleSubmit}>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-              <div>
-                <span style={label}>Album <span style={{ color: 'var(--accent)' }}>*</span></span>
-                <input style={field} value={form.album} onChange={set('album')}/>
-              </div>
-              <div>
-                <span style={label}>Artist <span style={{ color: 'var(--accent)' }}>*</span></span>
-                <input style={field} value={form.artist} onChange={set('artist')} />
-              </div>
-            </div>
-
-            <div style={{ maxWidth: '160px' }}>
-              <span style={label}>Year<span style={{ color: 'var(--accent)' }}>*</span></span>
-              <input style={field} value={form.year} onChange={set('year')} />
-            </div>
-
-            <div>
-              <span style={label}>Note<span style={{ color: 'var(--accent)' }}>*</span></span>
-              <textarea
-                style={{ ...field, resize: 'vertical', minHeight: '120px', lineHeight: 1.7 }}
-                value={form.note}
-                onChange={set('note')}
-                placeholder="Let me know why you're submitting this album."
-              />
-            </div>
-
-            <div style={{ borderTop: '1px solid var(--border)', paddingTop: '20px' }}>
-              <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.7rem', color: 'var(--text-muted)', letterSpacing: '0.08em', marginBottom: '16px' }}>
-                Optional — leave blank to stay anonymous
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-                <div>
-                  <span style={label}>Your name</span>
-                  <input style={field} value={form.name} onChange={set('name')} placeholder="So I know who sent it" />
+            <div className="sb-block">
+              <MetadataLabel>The Album</MetadataLabel>
+              <div className="sb-fields">
+                <div className="sb-pair">
+                  <div>
+                    <span className="sb-label">Album <span className="sb-req">*</span></span>
+                    <input className="sb-field" value={form.album} onChange={set('album')} />
+                  </div>
+                  <div>
+                    <span className="sb-label">Artist <span className="sb-req">*</span></span>
+                    <input className="sb-field" value={form.artist} onChange={set('artist')} />
+                  </div>
                 </div>
-                <div>
-                  <span style={label}>Email (private)</span>
-                  <input style={field} value={form.email} onChange={set('email')} type="email" placeholder="I'll let you know when it's up" />
+                <div style={{ maxWidth: 170 }}>
+                  <span className="sb-label">Year <span className="sb-req">*</span></span>
+                  <input className="sb-field" value={form.year} onChange={set('year')} />
                 </div>
               </div>
             </div>
 
-            {error && (
-              <div style={{ fontFamily: 'var(--font-mono)', fontSize: '0.8rem', color: '#e05555' }}>{error}</div>
-            )}
+            <div className="sb-block">
+              <MetadataLabel>Your Note</MetadataLabel>
+              <div className="sb-fields">
+                <div>
+                  <span className="sb-label">Why this one <span className="sb-req">*</span></span>
+                  <textarea
+                    className="sb-field"
+                    value={form.note}
+                    onChange={set('note')}
+                    placeholder="What should I be listening for?"
+                  />
+                </div>
+              </div>
+            </div>
 
-            <div style={{ display: 'flex', justifyContent: 'center', paddingTop: '4px' }}>
-              <button
-                type="submit"
-                disabled={submitting}
-                style={{
-                  fontFamily: 'var(--font-mono)', fontSize: '0.8rem', letterSpacing: '0.09em', textTransform: 'uppercase',
-                  color: 'var(--ink)',
-                  background: 'var(--accent)',
-                  border: '1px solid var(--accent)',
-                  borderRadius: 50, padding: '13px 40px',
-                  boxShadow: submitting ? 'none' : '0 4px 16px rgba(0,0,0,0.12), inset 0 1px 0 rgba(255,255,255,0.4)',
-                  opacity: submitting ? 0.6 : 1,
-                  cursor: submitting ? 'not-allowed' : 'pointer',
-                  transition: 'all 0.2s ease',
-                }}
-              >
+            <div className="sb-block">
+              <MetadataLabel>About You</MetadataLabel>
+              <div className="sb-fields">
+                <div className="sb-hint">Optional — leave blank to stay anonymous</div>
+                <div className="sb-pair">
+                  <div>
+                    <span className="sb-label">Your name</span>
+                    <input className="sb-field" value={form.name} onChange={set('name')} placeholder="So I know who sent it" />
+                  </div>
+                  <div>
+                    <span className="sb-label">Email (private)</span>
+                    <input className="sb-field" type="email" value={form.email} onChange={set('email')} placeholder="I'll let you know when it's up" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {error && <div className="sb-error" style={{ marginTop: 22 }}>{error}</div>}
+
+            <div style={{ display: 'flex', justifyContent: 'center', marginTop: 32 }}>
+              <button type="submit" className="sb-submit" disabled={submitting}>
                 {submitting ? 'Sending…' : 'Submit'}
               </button>
             </div>
-
           </form>
         )}
 
+        {/* Every other page closes on this pair; this one had no way out at all. */}
+        <div className="sb-foot">
+          <Link href="/" className="ln-pill">← Back home</Link>
+          <Link href="/archive" className="ln-pill">Library →</Link>
         </div>
-      </div>
+      </main>
     </div>
   );
 }
