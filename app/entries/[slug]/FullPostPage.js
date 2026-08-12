@@ -13,6 +13,7 @@ import DotNav from '../../../components/main_components/DotNav';
 import SiteNav from '../../../components/main_components/SiteNav';
 import HorizonBar from '../../../components/main_components/Slug_Page/HorizonBar';
 import TrackThread from '../../../components/main_components/Slug_Page/TrackThread';
+import CommentBubble from '../../../components/main_components/Slug_Page/CommentBubble';
 import MetadataLabel from '../../../components/main_components/Slug_Page/MetadataLabel';
 import Chip from '../../../components/main_components/Slug_Page/Chip';
 import StarRating from '../../../components/main_components/StarRating';
@@ -54,6 +55,12 @@ export default function FullPostPage({ entry }) {
   const { albumNotes } = splitNotes(entry.notes);
   const parsedTracks = entryTracks(entry);
   const horizonBars = parseHorizon(entry.horizon);
+
+  // Comments about the album rather than any one track. save_comment has
+  // always filed a track-less comment under -1, and nest_comments has always
+  // handed the bucket back — until now nothing on the page ever asked for it,
+  // so there was no way to leave one and nothing would have shown it.
+  const albumComments = commentsByTrack['-1'] || [];
 
   // Load comments from the API for this entry
   async function loadComments() {
@@ -448,10 +455,24 @@ export default function FullPostPage({ entry }) {
 
       <div id="ln-content" className="ln-content" style={{ maxWidth: '860px', margin: '0 auto' }}>
 
-        {albumNotes && (
+        {/* The album's own thread hangs here, on the notes about the album,
+            exactly as a track's hangs on the note about the track. Rendered
+            when there are comments even if the notes are empty: an approved
+            comment going invisible because the writing above it changed is the
+            failure this whole section exists to fix. */}
+        {(albumNotes || albumComments.length > 0) && (
           <section style={{ marginBottom: '48px' }}>
             <MetadataLabel sticky>Album Notes</MetadataLabel>
-            <div style={{ lineHeight: 1.95, fontSize: '15px', whiteSpace: 'pre-wrap', color: 'var(--ink)' }}>{albumNotes}</div>
+            {/* 6px, the same gap a track note leaves under itself before its
+                own bubble. */}
+            <div style={{ lineHeight: 1.95, fontSize: '15px', whiteSpace: 'pre-wrap', color: 'var(--ink)', marginBottom: '6px' }}>{albumNotes}</div>
+            <CommentBubble
+              slug={entry.slug}
+              trackIndex={-1}
+              comments={albumComments}
+              label={entry.album}
+              onRefresh={loadComments}
+            />
           </section>
         )}
 
