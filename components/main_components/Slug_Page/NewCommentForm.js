@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { fonts } from '../../../library/sitewide_visuals';
+import { keep_receipt } from '../../../library/receipts';
 
 const inputStyle = {
   background: 'var(--panel)', border: '1px solid var(--border)', borderRadius: '6px',
@@ -22,7 +23,6 @@ export default function NewCommentForm({ slug, trackIndex, onPosted }) {
   const [email, setEmail] = useState('');
   const [text, setText] = useState('');
   const [posting, setPosting] = useState(false);
-  const [posted, setPosted] = useState(false);
   const [error, setError] = useState('');
 
   async function handlePost() {
@@ -38,20 +38,18 @@ export default function NewCommentForm({ slug, trackIndex, onPosted }) {
       const data = await res.json();
       if (data.error) { setError(data.error); return; }
       setName(''); setEmail(''); setText('');
-      // Every comment lands in the moderation queue, so it won't appear on the
-      // page yet. Say so, or posting looks like it silently failed.
-      setPosted(true);
-      setTimeout(onPosted, 1600);
+
+      // Keeping the receipt is what lets the next load show this comment back
+      // to the person who wrote it while it waits to be read.
+      keep_receipt(data.receipt);
+
+      // Straight out, with no thank-you screen and no 1.6s wait. The comment
+      // itself appearing in the thread is a better confirmation than any
+      // message about it could be, and that used to be impossible: the comment
+      // was invisible even to its author, so a message was all there was.
+      onPosted();
     } catch { setError('Something went wrong.'); }
     finally { setPosting(false); }
-  }
-
-  if (posted) {
-    return (
-      <div style={{ fontFamily: fonts.mono, fontSize: '11px', lineHeight: 1.7, color: 'var(--ink-soft)', padding: '8px 0' }}>
-        Thanks — your comment is in. It&apos;ll appear once it&apos;s been read.
-      </div>
-    );
   }
 
   return (

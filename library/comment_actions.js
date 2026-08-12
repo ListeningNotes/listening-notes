@@ -1,12 +1,19 @@
 import database from './database_connection.js';
 
-export async function nest_comments(slug) {
+// `own_ids` are comment ids the caller has proved they wrote, by sending back
+// receipts the server signed (see issue_receipt in wristband.js). Those come
+// back even while they wait to be read, so the person who wrote one sees it
+// sitting in the thread. Everyone else's held comments stay invisible.
+//
+// The ids must arrive already verified. Passing raw ids from a request here
+// would hand anyone every held comment on the site, since they run 1, 2, 3…
+export async function nest_comments(slug, own_ids = []) {
   const rows = await database`
     SELECT id, entry_slug, track_index, parent_id,
            author_name, content, upvotes, pending, created_at
     FROM comments
     WHERE entry_slug = ${slug}
-      AND pending = false
+      AND (pending = false OR id = ANY(${own_ids}))
     ORDER BY created_at ASC
   `;
 

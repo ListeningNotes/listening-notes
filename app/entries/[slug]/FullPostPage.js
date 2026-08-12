@@ -9,6 +9,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { fonts } from '../../../library/sitewide_visuals';
 import { parseHorizon, entryTracks, splitNotes, entryTypeLabel } from '../../../library/entry_formatter';
+import { kept_receipts } from '../../../library/receipts';
 import DotNav from '../../../components/main_components/DotNav';
 import SiteNav from '../../../components/main_components/SiteNav';
 import HorizonBar from '../../../components/main_components/Slug_Page/HorizonBar';
@@ -62,12 +63,23 @@ export default function FullPostPage({ entry }) {
   // so there was no way to leave one and nothing would have shown it.
   const albumComments = commentsByTrack['-1'] || [];
 
-  // Load comments from the API for this entry
+  // Load the thread for this entry. Posts rather than gets, and sends along
+  // whatever receipts this browser is holding: the reply carries the approved
+  // comments as always, plus any still waiting to be read that this browser can
+  // prove it wrote. Someone else's held comment is never in here.
+  async function fetchComments() {
+    const res = await fetch('/api/comments/receipts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ slug: entry.slug, receipts: kept_receipts() }),
+    });
+    const data = await res.json();
+    return data.comments || {};
+  }
+
   async function loadComments() {
     try {
-      const res = await fetch('/api/comments?slug=' + entry.slug);
-      const data = await res.json();
-      setCommentsByTrack(data.comments || {});
+      setCommentsByTrack(await fetchComments());
       setCommentsLoaded(true);
     } catch {}
   }
@@ -79,14 +91,14 @@ export default function FullPostPage({ entry }) {
     let cancelled = false;
     (async () => {
       try {
-        const res = await fetch('/api/comments?slug=' + entry.slug);
-        const data = await res.json();
+        const comments = await fetchComments();
         if (cancelled) return;
-        setCommentsByTrack(data.comments || {});
+        setCommentsByTrack(comments);
         setCommentsLoaded(true);
       } catch {}
     })();
     return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [entry.slug]);
 
   // Smooth scroll to a track section when clicking a horizon bar

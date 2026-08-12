@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
 import { fonts } from '../../../library/sitewide_visuals';
+import { keep_receipt } from '../../../library/receipts';
 
 const inputStyle = {
   background: 'var(--panel)', border: '1px solid var(--border)', borderRadius: '6px',
@@ -51,7 +52,6 @@ export default function CommentThread({ comment, slug, onReplyPosted, depth = 0 
   const [replyEmail, setReplyEmail] = useState('');
   const [replyText, setReplyText] = useState('');
   const [posting, setPosting] = useState(false);
-  const [replyPosted, setReplyPosted] = useState(false);
 
   async function handleUpvote() {
     if (upvoted) return;
@@ -84,10 +84,11 @@ export default function CommentThread({ comment, slug, onReplyPosted, depth = 0 
       const data = await res.json();
       if (data.comment) {
         setReplyName(''); setReplyEmail(''); setReplyText('');
-        // Replies are held for approval like everything else, so the reply
-        // won't show up yet — say so rather than just closing the form.
-        setReplyPosted(true);
-        setTimeout(() => { setReplying(false); setReplyPosted(false); onReplyPosted(); }, 1600);
+        // Same as a new comment: keep the receipt, close, and let the reply
+        // showing up in the branch be the confirmation.
+        keep_receipt(data.receipt);
+        setReplying(false);
+        onReplyPosted();
       }
     } finally {
       setPosting(false);
@@ -96,8 +97,17 @@ export default function CommentThread({ comment, slug, onReplyPosted, depth = 0 
 
   const replyCount = comment.replies?.length || 0;
 
+  // Your own comment, still waiting to be read. It only ever reaches the
+  // browser that wrote it — the server matches it against a signed receipt — so
+  // there's no need to check whether this reader is allowed to see it. If it
+  // arrived, it's theirs.
+  const held = comment.pending;
+
   return (
-    <div>
+    // Dimmed as a whole so the held comment reads as not-quite-here next to the
+    // ones that are. The note underneath says why; the fade is what makes you
+    // look for it.
+    <div style={held ? { opacity: 0.55 } : undefined}>
       <div
         onClick={() => setCollapsed(v => !v)}
         style={{ display: 'flex', alignItems: 'baseline', gap: '8px', flexWrap: 'wrap', cursor: 'pointer' }}
@@ -113,13 +123,23 @@ export default function CommentThread({ comment, slug, onReplyPosted, depth = 0 
         <>
           <div style={{ fontSize: '13px', lineHeight: 1.7, color: 'var(--ink-soft)', margin: '5px 0 0', overflowWrap: 'anywhere' }}>{comment.content}</div>
 
-          <div style={{ display: 'flex', gap: '14px', margin: '8px 0 0', flexWrap: 'wrap' }}>
-            <button onClick={handleUpvote} style={{ ...linkBtn, color: upvoted ? 'var(--accent)' : 'var(--ink-faint)', cursor: upvoted ? 'default' : 'pointer' }}>
-              ↑ {upvotes}
-            </button>
-            <button onClick={() => setReplying(true)} style={linkBtn}>reply</button>
-            <button onClick={() => setCollapsed(true)} style={linkBtn}>collapse</button>
-          </div>
+          {/* Where the actions would be, so the row underneath a comment says
+              one thing or the other and the thread keeps its rhythm. Nothing to
+              upvote or reply to yet — it isn't a conversation until someone
+              else can see it. */}
+          {held ? (
+            <div style={{ fontFamily: fonts.mono, fontSize: '9px', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ink-faint)', margin: '8px 0 0' }}>
+              Posted — waiting to be read
+            </div>
+          ) : (
+            <div style={{ display: 'flex', gap: '14px', margin: '8px 0 0', flexWrap: 'wrap' }}>
+              <button onClick={handleUpvote} style={{ ...linkBtn, color: upvoted ? 'var(--accent)' : 'var(--ink-faint)', cursor: upvoted ? 'default' : 'pointer' }}>
+                ↑ {upvotes}
+              </button>
+              <button onClick={() => setReplying(true)} style={linkBtn}>reply</button>
+              <button onClick={() => setCollapsed(true)} style={linkBtn}>collapse</button>
+            </div>
+          )}
 
           {/* Replies sit behind the rail, which spans exactly the branch this
               comment owns. Tapping it folds the branch, the way the rail does
@@ -184,21 +204,15 @@ export default function CommentThread({ comment, slug, onReplyPosted, depth = 0 
               {comment.content}
             </div>
 
-            {replyPosted ? (
-              <div style={{ fontFamily: fonts.mono, fontSize: '11px', lineHeight: 1.7, color: 'var(--ink-soft)' }}>
-                Thanks — your reply is in. It&apos;ll appear once it&apos;s been read.
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <input value={replyName} onChange={e => setReplyName(e.target.value)} placeholder="Name" style={inputStyle} />
+              <input value={replyEmail} onChange={e => setReplyEmail(e.target.value)} placeholder="Email (optional, private)" type="email" style={inputStyle} />
+              <textarea value={replyText} onChange={e => setReplyText(e.target.value)} placeholder="Reply…" rows={3} style={{ ...inputStyle, resize: 'vertical', width: '100%' }} />
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button onClick={handleReply} disabled={posting} style={accentBtnSm}>{posting ? '…' : 'Post reply'}</button>
+                <button onClick={() => setReplying(false)} style={ghostBtnSm}>Cancel</button>
               </div>
-            ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <input value={replyName} onChange={e => setReplyName(e.target.value)} placeholder="Name" style={inputStyle} />
-                <input value={replyEmail} onChange={e => setReplyEmail(e.target.value)} placeholder="Email (optional, private)" type="email" style={inputStyle} />
-                <textarea value={replyText} onChange={e => setReplyText(e.target.value)} placeholder="Reply…" rows={3} style={{ ...inputStyle, resize: 'vertical', width: '100%' }} />
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  <button onClick={handleReply} disabled={posting} style={accentBtnSm}>{posting ? '…' : 'Post reply'}</button>
-                  <button onClick={() => setReplying(false)} style={ghostBtnSm}>Cancel</button>
-                </div>
-              </div>
-            )}
+            </div>
           </div>
         </div>
       )}
