@@ -46,7 +46,17 @@
   --font-serif: var(--font-nunito), sans-serif;
   --font-mono:  var(--font-nunito), sans-serif;
   --font-sans:  var(--font-nunito), sans-serif;
-  --font-display: var(--font-dm-serif), 'DM Serif Display', serif;
+  /* The title face. Nunito at 700 — the weight the listening beacon already
+     sets a song title in — rather than the DM Serif Display this used to be.
+     One family carries the whole site now, so the step from body copy to a
+     title is a change of weight, not a change of voice.
+
+     The weight has to travel with the family: every title on the site was
+     written `font-weight: 400` because the old face shipped one weight and
+     400 was it. Left alone they'd all come back as regular Nunito and read
+     as body copy, so they ask for this token instead of a number. */
+  --font-display: var(--font-nunito), sans-serif;
+  --font-display-weight: 700;
   --font-label:   var(--font-dm-mono), 'DM Mono', monospace;
   --ease: 0.22s cubic-bezier(0.4, 0, 0.2, 1);
 }
@@ -868,6 +878,7 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 }
 .hp-beacon-title {
   font-family: var(--font-display);
+  font-weight: var(--font-display-weight);
   font-size: 26px;
   line-height: 1.12;
   letter-spacing: -0.01em;
@@ -2222,6 +2233,7 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   width: 100%; height: 100%;
   display: flex; align-items: center; justify-content: center;
   font-family: var(--font-display);
+  font-weight: var(--font-display-weight);
   font-size: 48px;
   color: var(--ink-faint);
 }

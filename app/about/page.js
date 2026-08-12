@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { ArrowSquareOut } from '@phosphor-icons/react';
 import { fonts } from '../../library/sitewide_visuals';
 import DotNav from '../../components/main_components/DotNav';
 import SiteNav from '../../components/main_components/SiteNav';
@@ -85,22 +86,13 @@ export default function AboutPage() {
            flush at the nav's bottom edge has nothing to mask. */
         .ab-page { --ab-nav-bottom: 136px; }
 
-        /* ── Hero ── the album page opens on a band of art with the title
-           stack anchored to its bottom edge; this is that shape with the site
-           itself as the record. Flat rather than blurred: there's no art here
-           to blur, and a decorative wash in its place was tried on the
-           homepage and thrown out. */
+        /* ── Hero ── one line, in the label face an entry uses for its artist.
+           With the title and the chips gone this is a standfirst rather than a
+           masthead, so it sits closer to the nav than a title block would. */
         .ab-hero {
-          padding: calc(var(--ab-nav-bottom) + 44px) 48px 30px;
+          padding: calc(var(--ab-nav-bottom) + 30px) 48px 20px;
           max-width: 860px;
           margin: 0 auto;
-        }
-        .ab-hero h1 {
-          font-family: var(--font-display);
-          font-size: clamp(1.9rem, 4vw, 2.8rem);
-          font-weight: 400;
-          line-height: 1.05;
-          margin: 0 0 8px;
         }
         .ab-hero-line {
           font-family: var(--font-label);
@@ -108,9 +100,7 @@ export default function AboutPage() {
           letter-spacing: 0.12em;
           text-transform: uppercase;
           color: var(--ink-soft);
-          margin-bottom: 14px;
         }
-        .ab-hero-chips { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
 
         /* ── Jump bar ── the archive's filter bar, wearing three buttons.
            Shares the hero's and the main column's exact box, so its left edge
@@ -161,7 +151,7 @@ export default function AboutPage() {
         .ab-prose p:last-child { margin-bottom: 0; }
 
         .ab-subhead {
-          font-family: var(--font-display); font-weight: 400;
+          font-family: var(--font-display); font-weight: var(--font-display-weight);
           font-size: 20px; letter-spacing: -0.01em; color: var(--ink);
           margin: 40px 0 4px;
         }
@@ -180,8 +170,19 @@ export default function AboutPage() {
           margin: 8px 0 0;
         }
         .ab-rig-name { font-size: 13px; color: var(--ink); }
-        a.ab-rig-name { border-bottom: 1px solid var(--border); padding-bottom: 1px; }
+        a.ab-rig-name {
+          display: inline-flex; align-items: center; gap: 6px;
+          border-bottom: 1px solid var(--border); padding-bottom: 1px;
+        }
         a.ab-rig-name:hover { border-bottom-color: var(--ink-faint); }
+        a.ab-rig-name svg { color: var(--ink-faint); transition: color 0.15s; }
+        a.ab-rig-name:hover svg { color: var(--ink); }
+
+        /* Relationship rows read as one sentence: the chip is the term and the
+           writing runs on from it, rather than sitting as a lone pill with a
+           paragraph orphaned underneath. */
+        .ab-rel { margin: 0; font-size: 13px; line-height: 1.9; color: var(--ink-soft); }
+        .ab-rel > span:first-child { margin-right: 9px; }
 
         /* An inline link out to another section, quiet enough to sit inside a
            sentence without reading as a button. */
@@ -212,7 +213,7 @@ export default function AboutPage() {
         @media (prefers-reduced-motion: reduce) { .ln-star-glow { animation: none; } }
 
         @media (max-width: 768px) {
-          .ab-hero { padding: calc(var(--ab-nav-bottom) + 24px) 24px 22px; }
+          .ab-hero { padding: calc(var(--ab-nav-bottom) + 18px) 24px 16px; }
           /* Same 24px gutter as the writing below it — the bar sits directly
              on top of the prose here, so a wider bar reads as misalignment
              rather than as a bar. */
@@ -231,13 +232,11 @@ export default function AboutPage() {
       <SiteNav />
       <DotNav />
 
+      {/* No page title: every screen already carries the logo, so naming the
+          site again here was the same word twice. The standfirst is the whole
+          opening now. */}
       <header className="ab-hero">
-        <h1>Listening Notes</h1>
         <div className="ab-hero-line">A practice of documenting intentional listening</div>
-        <div className="ab-hero-chips">
-          <Chip>Miyel Brown</Chip>
-          <Chip>Since December 2025</Chip>
-        </div>
       </header>
 
       <div className="ab-bar-wrap">
@@ -296,7 +295,12 @@ export default function AboutPage() {
                 <div className="ab-row-head">
                   {item.href ? (
                     <a className="ab-rig-name" href={item.href} target="_blank" rel="noopener noreferrer">
-                      {item.name} ↗
+                      {item.name}
+                      {/* Phosphor's own mark for a link that leaves the site,
+                          drawn in the line's colour at the line's weight — the
+                          ↗ that used to sit here was a text arrow the emoji
+                          font kept claiming. */}
+                      <ArrowSquareOut size={13} weight="bold" aria-hidden="true" />
                     </a>
                   ) : (
                     <span className="ab-rig-name">{item.name}</span>
@@ -349,10 +353,7 @@ export default function AboutPage() {
           <div>
             {RELATIONSHIP_NOTES.map(r => (
               <div key={r.label} className="ab-row">
-                <div className="ab-row-head">
-                  <Chip>{r.label}</Chip>
-                </div>
-                <p className="ab-row-body">{r.body}</p>
+                <p className="ab-rel"><Chip>{r.label}</Chip>{r.body}</p>
               </div>
             ))}
           </div>

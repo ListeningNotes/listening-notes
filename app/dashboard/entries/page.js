@@ -13,7 +13,9 @@ import { entryTypeLabel } from '../../../library/entry_formatter';
 import { sizedAlbumArt } from '../../../library/music_data_api';
 
 const MONO  = "'DM Mono', 'Courier New', monospace";
-const SERIF = "'DM Serif Display', Georgia, serif";
+// The sitewide title face — Nunito bold, same as --font-display. Kept as a
+// local const because this file predates the token and reaches for it inline.
+const SERIF = "var(--font-nunito), sans-serif";
 const SANS  = "'DM Sans', system-ui, sans-serif";
 const INK = '#1a1916';
 const PANEL_BG = 'rgba(255,255,255,0.8)';
@@ -114,7 +116,7 @@ function EditModal({ entry, onSave, onDelete, onClose }) {
         {/* Header */}
         <div style={{ position: 'relative', zIndex: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '18px 26px', borderBottom: HAIR }}>
           <div>
-            <div style={{ fontFamily: SERIF, fontSize: 18, color: INK }}>{entry.album}</div>
+            <div style={{ fontFamily: SERIF, fontWeight: 700, fontSize: 18, color: INK }}>{entry.album}</div>
             <div style={{ fontFamily: MONO, fontSize: 10, color: 'rgba(26,25,22,0.4)', marginTop: 2 }}>{entry.artist}</div>
           </div>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>

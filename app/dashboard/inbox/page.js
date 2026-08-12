@@ -6,7 +6,9 @@ import backgrounds from '../../../components/session_components/backgrounds';
 import { fonts } from '../../../library/sitewide_visuals';
 
 const MONO  = "'DM Mono', 'Courier New', monospace";
-const SERIF = "'DM Serif Display', Georgia, serif";
+// The sitewide title face — Nunito bold, same as --font-display. Kept as a
+// local const because this file predates the token and reaches for it inline.
+const SERIF = "var(--font-nunito), sans-serif";
 const SANS  = "'DM Sans', system-ui, sans-serif";
 
 const INK = '#1a1916';
@@ -44,7 +46,7 @@ function NoteModal({ submission, onClose }) {
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(145deg, rgba(255,255,255,0.5) 0%, transparent 55%)', pointerEvents: 'none' }} />
         <div style={{ position: 'relative', zIndex: 1, padding: '22px 28px', borderBottom: '1px solid rgba(26,25,22,0.08)', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div>
-            <div style={{ fontFamily: SERIF, fontSize: 19, color: INK }}>{submission.album}</div>
+            <div style={{ fontFamily: SERIF, fontWeight: 700, fontSize: 19, color: INK }}>{submission.album}</div>
             <div style={{ fontFamily: MONO, fontSize: 11, color: 'rgba(26,25,22,0.4)', marginTop: 2 }}>{submission.artist}{submission.year ? ` · ${submission.year}` : ''}</div>
           </div>
           <button onClick={onClose} style={{ fontFamily: MONO, fontSize: 11, color: 'rgba(26,25,22,0.5)', background: 'rgba(255,255,255,0.6)', border: '1px solid rgba(26,25,22,0.1)', borderRadius: 10, padding: '7px 13px', cursor: 'pointer' }}>✕</button>

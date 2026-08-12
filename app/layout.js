@@ -1,5 +1,5 @@
 import './globals.css';
-import { Nunito, DM_Serif_Display, DM_Mono } from 'next/font/google';
+import { Nunito, DM_Mono } from 'next/font/google';
 import { Lightswitch } from '../components/main_components/Lightswitch';
 
 const nunito = Nunito({
@@ -8,12 +8,9 @@ const nunito = Nunito({
   variable: '--font-nunito',
 });
 
-const dmSerif = DM_Serif_Display({
-  subsets: ['latin'],
-  weight: ['400'],
-  variable: '--font-dm-serif',
-});
-
+// DM Serif Display used to load here as --font-dm-serif and was the site's
+// title face. Titles are Nunito 700 now (see --font-display in globals.css),
+// so the whole site runs on two families and this one is no longer fetched.
 const dmMono = DM_Mono({
   subsets: ['latin'],
   weight: ['400', '500'],
@@ -33,7 +30,7 @@ export const viewport = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en" suppressHydrationWarning className={`${nunito.variable} ${dmSerif.variable} ${dmMono.variable}`}>
+    <html lang="en" suppressHydrationWarning className={`${nunito.variable} ${dmMono.variable}`}>
       <body>
         <script
           suppressHydrationWarning

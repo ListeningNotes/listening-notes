@@ -27,7 +27,7 @@ const lbl = {
 function StatTile({ value, label, sub }) {
   return (
     <div style={{ flex: 1, textAlign: 'center', minWidth: 0 }}>
-      <div style={{ fontFamily: 'var(--font-display)', fontSize: '26px', lineHeight: 1, color: 'var(--ink)' }}>{value}</div>
+      <div style={{ fontFamily: 'var(--font-display)', fontWeight: 'var(--font-display-weight)', fontSize: '26px', lineHeight: 1, color: 'var(--ink)' }}>{value}</div>
       <div style={{ ...lbl, fontSize: '8px', color: 'var(--ink-soft)', marginTop: '6px' }}>{label}</div>
       <div style={{ fontFamily: 'var(--font-label)', fontSize: '8.5px', color: 'var(--ink-faint)', marginTop: '3px' }}>{sub}</div>
     </div>
@@ -81,7 +81,7 @@ function RelationshipDonut({ data }) {
             />
           ))}
         </g>
-        <text x="40" y="39" textAnchor="middle" style={{ fontFamily: 'var(--font-display)', fontSize: '16px', fill: 'var(--ink)' }}>{total}</text>
+        <text x="40" y="39" textAnchor="middle" style={{ fontFamily: 'var(--font-display)', fontWeight: 'var(--font-display-weight)', fontSize: '16px', fill: 'var(--ink)' }}>{total}</text>
         <text x="40" y="50" textAnchor="middle" style={{ fontFamily: 'var(--font-label)', fontSize: '5.5px', letterSpacing: '0.14em', fill: 'var(--ink-faint)' }}>LISTENS</text>
       </svg>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', width: '100%' }}>
