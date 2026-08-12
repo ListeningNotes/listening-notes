@@ -234,7 +234,7 @@ export default function FullPostPage({ entry }) {
           .ln-screen-one-title {
             font-family: var(--font-display);
             font-size: clamp(1.6rem, 6.6vw, 2.1rem);
-            font-weight: 400;
+            font-weight: var(--font-display-weight);
             line-height: 1.1;
             color: var(--ink);
             /* Two rows at most. "Salvation Laughs in the Face of a Grieving
@@ -418,7 +418,7 @@ export default function FullPostPage({ entry }) {
               </div>
             )}
             <div style={{ flex: 1, paddingBottom: '4px' }}>
-              <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(1.8rem, 4vw, 2.8rem)', fontWeight: 400, lineHeight: 1.05, color: 'var(--ink)', marginBottom: '6px' }}>
+              <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(1.8rem, 4vw, 2.8rem)', fontWeight: 'var(--font-display-weight)', lineHeight: 1.05, letterSpacing: '-0.015em', color: 'var(--ink)', marginBottom: '6px' }}>
                 {entry.album}
                 {isMasterpiece && <span style={{ fontFamily: 'var(--font-label)', fontSize: '10px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--accent)', marginLeft: '12px', verticalAlign: 'middle', animation: 'ln-breathe 2.8s ease-in-out infinite' }}>Masterpiece</span>}
               </h1>

@@ -15,7 +15,7 @@ export default function ComparePage() {
         minHeight: 'calc(100vh - 120px)', padding: '0 24px', textAlign: 'center', gap: 24,
       }}>
         <h1 style={{
-          fontFamily: 'var(--font-display)', fontWeight: 400, fontSize: 'clamp(40px, 8vw, 72px)', margin: 0, lineHeight: 1.05,
+          fontFamily: 'var(--font-display)', fontWeight: 'var(--font-display-weight)', fontSize: 'clamp(40px, 8vw, 72px)', margin: 0, lineHeight: 1.05,
           letterSpacing: '-0.02em', maxWidth: 720,
         }}>
           Coming soon.

@@ -5,8 +5,6 @@ import Link from 'next/link';
 import { fonts } from '../../library/sitewide_visuals';
 import DotNav from '../../components/main_components/DotNav';
 import SiteNav from '../../components/main_components/SiteNav';
-import MetadataLabel from '../../components/main_components/Slug_Page/MetadataLabel';
-import Chip from '../../components/main_components/Slug_Page/Chip';
 
 export default function SubmitPage() {
   const [form, setForm] = useState({ album: '', artist: '', year: '', note: '', name: '', email: '' });
@@ -74,19 +72,24 @@ export default function SubmitPage() {
         .sb-hero h1 {
           font-family: var(--font-display);
           font-size: clamp(1.9rem, 4vw, 2.6rem);
-          font-weight: 400; line-height: 1.05; margin: 0 0 8px;
+          font-weight: var(--font-display-weight);
+          letter-spacing: -0.015em; line-height: 1.05; margin: 0 0 8px;
         }
         .sb-hero-line {
           font-family: var(--font-label); font-size: 11px;
           letter-spacing: 0.12em; text-transform: uppercase;
           color: var(--ink-soft); margin-bottom: 14px;
         }
-        .sb-hero-chips { display: flex; gap: 8px; flex-wrap: wrap; }
 
         .sb-main { max-width: 860px; margin: 0 auto; padding: 0 48px 100px; }
-        .sb-block + .sb-block { margin-top: 40px; }
-        .sb-fields { display: flex; flex-direction: column; gap: 18px; }
+        .sb-fields { display: flex; flex-direction: column; gap: 20px; }
         .sb-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        /* The only break in the run — what's below it is the part you can skip,
+           so it gets a rule and a little more air rather than a heading. */
+        .sb-optional {
+          display: flex; flex-direction: column; gap: 14px;
+          margin-top: 12px; padding-top: 24px; border-top: 1px solid var(--border);
+        }
 
         .sb-label {
           display: block;
@@ -116,7 +119,6 @@ export default function SubmitPage() {
         .sb-hint {
           font-family: var(--font-label); font-size: 10px;
           letter-spacing: 0.06em; color: var(--ink-faint);
-          margin: -4px 0 2px;
         }
         .sb-error { font-size: 13px; color: #e05555; }
 
@@ -139,7 +141,7 @@ export default function SubmitPage() {
           box-shadow: var(--shadow-soft);
           padding: 36px 28px; text-align: center;
         }
-        .sb-done-title { font-family: var(--font-display); font-size: 1.7rem; margin-bottom: 10px; }
+        .sb-done-title { font-family: var(--font-display); font-weight: var(--font-display-weight); font-size: 1.7rem; margin-bottom: 10px; }
         .sb-done-body { font-size: 14px; line-height: 1.8; color: var(--ink-soft); margin: 0; }
 
         .sb-foot {
@@ -161,11 +163,7 @@ export default function SubmitPage() {
 
       <header className="sb-hero">
         <h1>Submit an Album</h1>
-        <div className="sb-hero-line">Recommend a listen and tell me what to listen for</div>
-        <div className="sb-hero-chips">
-          <Chip>Anonymous welcome</Chip>
-          <Chip>Posted as a Submission</Chip>
-        </div>
+        <div className="sb-hero-line">Recommend an album and tell me what to listen for</div>
       </header>
 
       <main className="sb-main">
@@ -185,63 +183,55 @@ export default function SubmitPage() {
             </div>
           </>
         ) : (
-          <form onSubmit={handleSubmit}>
+          // One run of fields, no headings over them. Album title / Artist /
+          // Year of release / Note is short enough to read straight down —
+          // grouping four fields under three headings named more parts than
+          // the form has.
+          <form onSubmit={handleSubmit} className="sb-fields">
 
-            <div className="sb-block">
-              <MetadataLabel>The Album</MetadataLabel>
-              <div className="sb-fields">
-                <div className="sb-pair">
-                  <div>
-                    <span className="sb-label">Album <span className="sb-req">*</span></span>
-                    <input className="sb-field" value={form.album} onChange={set('album')} />
-                  </div>
-                  <div>
-                    <span className="sb-label">Artist <span className="sb-req">*</span></span>
-                    <input className="sb-field" value={form.artist} onChange={set('artist')} />
-                  </div>
-                </div>
-                <div style={{ maxWidth: 170 }}>
-                  <span className="sb-label">Year <span className="sb-req">*</span></span>
-                  <input className="sb-field" value={form.year} onChange={set('year')} />
-                </div>
+            <div className="sb-pair">
+              <div>
+                <span className="sb-label">Album title <span className="sb-req">*</span></span>
+                <input className="sb-field" value={form.album} onChange={set('album')} />
+              </div>
+              <div>
+                <span className="sb-label">Artist <span className="sb-req">*</span></span>
+                <input className="sb-field" value={form.artist} onChange={set('artist')} />
               </div>
             </div>
 
-            <div className="sb-block">
-              <MetadataLabel>Your Note</MetadataLabel>
-              <div className="sb-fields">
+            <div style={{ maxWidth: 190 }}>
+              <span className="sb-label">Year of release <span className="sb-req">*</span></span>
+              <input className="sb-field" value={form.year} onChange={set('year')} />
+            </div>
+
+            <div>
+              <span className="sb-label">Note <span className="sb-req">*</span></span>
+              <textarea
+                className="sb-field"
+                value={form.note}
+                onChange={set('note')}
+                placeholder="Let me know why you're submitting this album."
+              />
+            </div>
+
+            <div className="sb-optional">
+              <div className="sb-hint">Optional — leave blank to stay anonymous</div>
+              <div className="sb-pair">
                 <div>
-                  <span className="sb-label">Why this one <span className="sb-req">*</span></span>
-                  <textarea
-                    className="sb-field"
-                    value={form.note}
-                    onChange={set('note')}
-                    placeholder="What should I be listening for?"
-                  />
+                  <span className="sb-label">Your name</span>
+                  <input className="sb-field" value={form.name} onChange={set('name')} placeholder="So I know who sent it" />
+                </div>
+                <div>
+                  <span className="sb-label">Email (private)</span>
+                  <input className="sb-field" type="email" value={form.email} onChange={set('email')} placeholder="I'll let you know when it's up" />
                 </div>
               </div>
             </div>
 
-            <div className="sb-block">
-              <MetadataLabel>About You</MetadataLabel>
-              <div className="sb-fields">
-                <div className="sb-hint">Optional — leave blank to stay anonymous</div>
-                <div className="sb-pair">
-                  <div>
-                    <span className="sb-label">Your name</span>
-                    <input className="sb-field" value={form.name} onChange={set('name')} placeholder="So I know who sent it" />
-                  </div>
-                  <div>
-                    <span className="sb-label">Email (private)</span>
-                    <input className="sb-field" type="email" value={form.email} onChange={set('email')} placeholder="I'll let you know when it's up" />
-                  </div>
-                </div>
-              </div>
-            </div>
+            {error && <div className="sb-error">{error}</div>}
 
-            {error && <div className="sb-error" style={{ marginTop: 22 }}>{error}</div>}
-
-            <div style={{ display: 'flex', justifyContent: 'center', marginTop: 32 }}>
+            <div style={{ display: 'flex', justifyContent: 'center', marginTop: 14 }}>
               <button type="submit" className="sb-submit" disabled={submitting}>
                 {submitting ? 'Sending…' : 'Submit'}
               </button>
