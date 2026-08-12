@@ -199,12 +199,7 @@ export default function AboutPage() {
 
         {/* Footer back link */}
         <div style={{ marginTop: 80, paddingTop: 32, borderTop: '1px solid var(--border)', textAlign: 'center' }}>
-          <Link href="/" style={{
-            fontFamily: 'var(--font-label)', fontSize: 11, letterSpacing: '0.14em', textTransform: 'uppercase',
-            color: 'var(--ink-soft)', textDecoration: 'none',
-          }}>
-            ← Back home
-          </Link>
+          <Link href="/" className="ln-pill">← Back home</Link>
         </div>
       </main>
     </div>

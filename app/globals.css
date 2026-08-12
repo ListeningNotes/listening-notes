@@ -9,6 +9,11 @@
   --bg:           #eef0ec;  /* matches the private dashboard's base background */
   --bg-warm:      #efebe2;
   --panel:        rgba(255, 255, 255, 0.45);
+  /* Same frosted glass as --panel, but opaque enough to carry body text on
+     top of it. --panel works on small controls because what's behind them is
+     mostly flat page; a panel the size of the archive's filter sheet sits
+     over album art, and at 45% the labels inside it wash out. */
+  --panel-strong: rgba(255, 255, 255, 0.86);
   --panel-solid:  #ffffff;
   --panel-border: rgba(255, 255, 255, 0.6);
   --ink:          #1a1a1a;
@@ -50,6 +55,9 @@
   --bg:           #0e0e0e;
   --bg-warm:      #161616;
   --panel:        rgba(20, 20, 20, 0.45);
+  /* A touch more opaque than the light theme's: pale text on a dark panel
+     over bright album art is the harder of the two directions to hold. */
+  --panel-strong: rgba(18, 18, 18, 0.9);
   --panel-solid:  #161616;
   --panel-border: rgba(255, 255, 255, 0.08);
   --ink:          #e8e4dc;
@@ -702,6 +710,13 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   opacity: 0;
   transition: opacity 0.22s ease;
   background: linear-gradient(to bottom, var(--bg) 0%, var(--bg) 84%, transparent 100%);
+  /* Forces this band onto its own compositing layer. Without it, page
+     content that the browser HAS promoted — the archive grid's tiles carry
+     a perspective, so each one gets a layer — paints straight over the top
+     of it, and album art scrolls through the logo and the dot labels. Hit
+     testing was always correct here; it was purely what got drawn. */
+  transform: translateZ(0);
+  will-change: opacity, transform;
 }
 .sitenav-row--scrolled::before {
   opacity: 1;
@@ -1407,9 +1422,6 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
     transform: translateZ(0); /* keep the layer-promotion fix above even with the scroll-strip scale reset */
     opacity: 1;
   }
-  .hp-screen--two .hp-screen-strip .strip-tile--grid .strip-tile-meta {
-    border-radius: 24px;
-  }
 
   /* The beacon widget's own panel box (background/border/shadow) is dropped
      on mobile — screen one and two now show the beacon at the same native
@@ -1899,6 +1911,9 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   padding: 0;
   border: none;
   cursor: pointer;
+  text-decoration: none; /* it's an <a> straight to the entry now, not a button */
+  color: inherit;
+  -webkit-tap-highlight-color: transparent;
   box-shadow: var(--shadow-soft);
   /* translateZ(0) + will-change force this rounded/clipped box onto its own
      compositing layer, PERSISTENTLY — iOS Safari clips correctly while a
@@ -1922,16 +1937,6 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   object-fit: cover;
   display: block;
   pointer-events: none;
-  will-change: filter, opacity;
-  transition: filter 0.3s ease, opacity 0.3s ease;
-}
-/* Tapping a tile blurs + dims its own art in place and fades AlbumPreview's
-   metadata in on top — no separate flip/turn animation, just a soft focus
-   pull, which also sidesteps every 3D-transform clipping bug Safari has
-   given us on this component so far. */
-.strip-tile--active .strip-tile-img {
-  filter: blur(6px);
-  opacity: 0.82;
 }
 
 .strip-tile-placeholder {
@@ -1943,21 +1948,6 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   background: var(--bg-warm);
   color: var(--ink-faint);
   font-size: 3rem;
-}
-
-.strip-tile-meta {
-  position: absolute;
-  inset: 0;
-  border-radius: 20px;
-  overflow: hidden;
-  opacity: 0;
-  pointer-events: none;
-  will-change: opacity;
-  transition: opacity 0.3s ease;
-}
-.strip-tile--active .strip-tile-meta {
-  opacity: 1;
-  pointer-events: auto;
 }
 
 .strip-tile--skeleton {
@@ -1979,7 +1969,6 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   .topnav-hamburger { display: flex; }
 
   .strip-tile { width: 220px; height: 220px; border-radius: 18px; }
-  .strip-tile-meta { border-radius: 18px; }
   .hp-strip-track { gap: 24px; padding: 36px calc(50vw - 110px); }
 }
 
@@ -2173,3 +2162,186 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 .beacon-recent-tile:nth-child(1) { opacity: 0.62; filter: saturate(0.65); transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease, filter 0.4s ease; }
 .beacon-recent-tile:nth-child(2) { opacity: 0.46; filter: saturate(0.48); transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease, filter 0.4s ease; }
 .beacon-recent-tile:nth-child(3) { opacity: 0.32; filter: saturate(0.32); transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease, filter 0.4s ease; }
+
+/* ── FlipTile — the archive grid's album tile ──────────────────────────────
+   Two behaviours in one component (see FlipTile.js): on desktop it's a
+   still tile with a hover wash that opens EntryModal, on a phone it turns
+   over to its metadata card.
+
+   Only .ft-inner rotates, and each face carries its own border-radius +
+   overflow. Putting the clipping on the rotating box instead is what tears
+   the rounded corners off in iOS Safari — the same class of bug the
+   .strip-tile notes above describe. */
+.ft {
+  position: relative;
+  aspect-ratio: 1 / 1;
+  perspective: 900px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.ft-inner {
+  position: absolute;
+  inset: 0;
+  transform-style: preserve-3d;
+  /* Slow enough to read as a card being turned over rather than a state
+     swap — the turn is most of what sells this, so it gets the time. */
+  transition: transform 0.72s cubic-bezier(0.4, 0, 0.2, 1);
+}
+/* will-change ONLY on the card that's actually turned over, never on the
+   whole grid. Blanket will-change put all 34 tiles on their own compositing
+   layers, and those layers painted straight over the fixed nav's backdrop —
+   album art scrolled through the logo and the dot labels. One card at a
+   time is also the state that needs it: face-up there's no 3D transform to
+   tear, face-down there is (see the .strip-tile notes above). */
+.ft--flipped .ft-inner {
+  transform: rotateY(180deg);
+  will-change: transform;
+}
+
+.ft-face {
+  position: absolute;
+  inset: 0;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--bg-warm);
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+.ft-face--back { transform: rotateY(180deg); }
+
+.ft-art { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* The back face keeps the album's own art behind the metadata, blurred, so
+   the card still belongs to the record it came from — and mirrored on the
+   same axis the card turns on, the way the back of a real card would be.
+   The negative X scale is what makes the turn read as one object rotating
+   rather than two images cross-fading. The metadata on top is a separate
+   element, so it stays the right way round. */
+.ft-art--blurred { filter: blur(7px); transform: scale(-1.12, 1.12); }
+
+.ft-placeholder {
+  width: 100%; height: 100%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-display);
+  font-size: 48px;
+  color: var(--ink-faint);
+}
+
+/* Lift only where there's a pointer to hover with — on a phone the tile's
+   job is to turn over, and a hover state left stuck on after a tap looks
+   like the tile is still selected. */
+@media (hover: hover) {
+  .ft { transition: transform 0.18s ease, box-shadow 0.18s ease; }
+  .ft:hover { transform: translateY(-3px); box-shadow: var(--shadow-lift); }
+  .ft:hover .ft-hover { opacity: 1; }
+}
+
+.ft-hover {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  padding: 12px 12px 10px;
+  background: linear-gradient(to top, rgba(0,0,0,0.85), rgba(0,0,0,0));
+  opacity: 0;
+  transition: opacity 0.18s;
+  pointer-events: none;
+}
+.ft-hover-album {
+  font-family: var(--font-sans); font-size: 12px; font-weight: 600;
+  color: #fff; line-height: 1.25;
+  overflow: hidden; text-overflow: ellipsis;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+}
+.ft-hover-artist {
+  font-family: var(--font-label); font-size: 10px;
+  color: rgba(255,255,255,0.7); margin-top: 3px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+/* At the smallest step a tile is ~100px wide and two lines of album title
+   plus an artist fill the whole thing. */
+.arc-grid[data-density="small"] .ft-hover { padding: 8px 8px 7px; }
+.arc-grid[data-density="small"] .ft-hover-album { font-size: 10px; -webkit-line-clamp: 1; }
+.arc-grid[data-density="small"] .ft-hover-artist { font-size: 8.5px; }
+
+/* ── EntryMarks — favourite + masterpiece ─────────────────────────────────
+   Phosphor's Heart and SketchLogo, filled. Colour is set here rather than
+   passed as a prop: the icons inherit currentColor, so these two rules are
+   the whole palette. Red and blue are the same hue wheel at matched
+   saturation and lightness, so neither mark pulls harder than the other,
+   and both clear 4.5:1 against the card in either theme. Never on the
+   resting grid (that's just album art) and only on the widest grid step;
+   see EntryMarks in AlbumPreview.js. */
+.ln-marks {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  flex-shrink: 0;
+}
+/* inline-flex, so the SVG doesn't sit on a text baseline and pick up the
+   line box's leading — the same trap the star row hit. */
+.ln-mark { display: inline-flex; }
+.ln-mark--fav { color: #f0484f; }
+.ln-mark--mp  { color: #4a9bf0; }
+
+@media (prefers-reduced-motion: reduce) {
+  .ft-inner { transition: none; }
+}
+
+/* ── GridDensity — the three-step album-size control ─────────────────────── */
+.gd {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+  padding: 2px;
+  /* Translucent to match the bar's other controls — no backdrop-filter of
+     its own, since the bar has already blurred what's behind. */
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+}
+.gd-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 26px;
+  padding: 0;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--ink-faint);
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+}
+.gd-btn svg { fill: currentColor; }
+.gd-btn:hover { color: var(--ink-soft); }
+.gd-btn--on { color: var(--bg); background: var(--ink); }
+.gd-btn--on:hover { color: var(--bg); }
+
+/* ── .ln-pill — the standard page-action button ───────────────────────────
+   One definition for the outlined pill that closes a page out: "All entries"
+   and "Back to top" at the foot of an album, "Back home" on Archive, About
+   and Compare. These were four near-copies of the same inline style that had
+   already drifted apart on font and size; this is the version they agree on.
+   Works as either a <Link> or a <button> — nothing here assumes which. */
+.ln-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 22px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink-soft);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+.ln-pill:hover {
+  color: var(--ink);
+  border-color: var(--ink-faint);
+}

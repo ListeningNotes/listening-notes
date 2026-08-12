@@ -18,16 +18,9 @@ import Chip from '../../../components/main_components/Slug_Page/Chip';
 import StarRating from '../../../components/main_components/StarRating';
 
 
-// Shared by the two actions that close the entry out, so they read as one
-// pair rather than a button next to a text link.
-const footerAction = {
-  fontFamily: fonts.mono, fontSize: '10px', letterSpacing: '0.14em',
-  textTransform: 'uppercase', color: 'var(--ink-soft)',
-  background: 'transparent', border: '1px solid var(--border)',
-  borderRadius: 999, padding: '10px 22px', cursor: 'pointer',
-  textDecoration: 'none', whiteSpace: 'nowrap',
-  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-};
+// The pair of actions that close the entry out used to share a local style
+// object; it's .ln-pill in globals.css now, so the same button reads the
+// same way at the foot of every page on the site.
 
 export default function FullPostPage({ entry }) {
   const [commentsByTrack, setCommentsByTrack] = useState({});
@@ -517,7 +510,7 @@ export default function FullPostPage({ entry }) {
         {/* All Entries leads: its arrow points back the way you came, and the
             up arrow reads better second. */}
         <div style={{ borderTop: '1px solid var(--border)', paddingTop: '28px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-          <Link href="/" style={footerAction}>← All entries</Link>
+          <Link href="/" className="ln-pill">← All entries</Link>
           <button
             onClick={() => {
               const screens = document.querySelector('.ln-screens');
@@ -532,7 +525,7 @@ export default function FullPostPage({ entry }) {
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }
             }}
-            style={footerAction}
+            className="ln-pill"
           >
             ↑ Back to top
           </button>

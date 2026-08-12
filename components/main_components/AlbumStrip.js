@@ -1,20 +1,39 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
-import AlbumPreview from './AlbumPreview';
+import { useEffect, useRef } from 'react';
+import Link from 'next/link';
 
 const AUTO_SPEED = 0.5; // px per frame while drifting
 
+// How far a finger can travel before a tap counts as a swipe instead. The
+// strip is dragged by the same finger that taps a tile, and these are links
+// now — without this, flicking the strip sideways lands you on whichever
+// album happened to be under your thumb.
+const TAP_SLOP = 8;
+
 export default function AlbumStrip({ entries, variant = 'scroll' }) {
   const scrollRef = useRef(null);
-  const speedRef = useRef(1);        // current drift multiplier
-  const targetSpeedRef = useRef(1);  // 1 = drifting, 0 = frozen (a tile is active)
-  const [activeSlug, setActiveSlug] = useState(null);
+  const draggedRef = useRef(false);
+  const tapStartRef = useRef(null);
 
-  // Freeze the drift while a tile is active; the tick eases toward this target.
-  useEffect(() => {
-    targetSpeedRef.current = activeSlug ? 0 : 1;
-  }, [activeSlug]);
+  // A tile is a plain link to the entry now, so a swipe that ends on one
+  // would otherwise navigate. These mark the gesture as a drag once the
+  // finger passes TAP_SLOP on either axis, and the tile's click handler
+  // bows out. Both axes matter: the scroll strip is dragged sideways, and
+  // the phone's recent-listens grid sits inside a vertical scroller.
+  function onTapStart(e) {
+    draggedRef.current = false;
+    const t = e.touches[0];
+    tapStartRef.current = { x: t.clientX, y: t.clientY };
+  }
+  function onTapMove(e) {
+    const start = tapStartRef.current;
+    if (!start) return;
+    const t = e.touches[0];
+    if (Math.abs(t.clientX - start.x) > TAP_SLOP || Math.abs(t.clientY - start.y) > TAP_SLOP) {
+      draggedRef.current = true;
+    }
+  }
 
   useEffect(() => {
     if (variant === 'grid') return; // static grid — no drift/touch/wheel drag
@@ -51,11 +70,8 @@ export default function AlbumStrip({ entries, variant = 'scroll' }) {
       }
     }
 
-    // Drift eases to a stop when frozen and eases back in on resume; manual
-    // input still adds to the offset regardless of the drift multiplier.
     function tick() {
-      speedRef.current += (targetSpeedRef.current - speedRef.current) * 0.12;
-      offset += AUTO_SPEED * dir * speedRef.current;
+      offset += AUTO_SPEED * dir;
       clamp();
       track.style.transform = `translateX(${-offset}px)`;
       applyDepth();
@@ -105,40 +121,32 @@ export default function AlbumStrip({ entries, variant = 'scroll' }) {
   // of images if the account has a huge history.
   const displayEntries = isGrid ? entries.slice(0, 24) : entries;
 
-  // Tapping a tile blurs/dims its art and fades AlbumPreview's metadata in
-  // on top; tapping it again (anywhere but the Read More link) fades it back
-  // out. Tapping a different tile switches which one is active.
-  function handleTileClick(slug) {
-    setActiveSlug(prev => (prev === slug ? null : slug));
-  }
-
+  // A tile is a plain link to the entry — no metadata step in between. The
+  // flip-to-metadata card lives on the archive grid instead (FlipTile.js),
+  // which is what tells the two grids apart: the homepage is "take me to
+  // this record", the archive is "tell me about this record".
   return (
-    <div className={'hp-strip' + (isGrid ? ' hp-strip--grid' : '')} ref={scrollRef}>
+    <div
+      className={'hp-strip' + (isGrid ? ' hp-strip--grid' : '')}
+      ref={scrollRef}
+      onTouchStart={onTapStart}
+      onTouchMove={onTapMove}
+    >
       <div className={'hp-strip-track' + (isGrid ? ' hp-strip-track--grid' : '')}>
-        {displayEntries.map(entry => {
-          const isActive = entry.slug === activeSlug;
-          return (
-            <div
-              key={entry.id}
-              role="button"
-              tabIndex={0}
-              className={'strip-tile' + (isGrid ? ' strip-tile--grid' : '') + (isActive ? ' strip-tile--active' : '')}
-              onClick={() => handleTileClick(entry.slug)}
-              onKeyDown={e => {
-                if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleTileClick(entry.slug); }
-              }}
-              aria-label={entry.album + ' by ' + entry.artist}
-            >
-              {entry.album_art
-                ? <img src={entry.album_art} alt={entry.album} className="strip-tile-img" draggable={false} loading="lazy" />
-                : <div className="strip-tile-placeholder">{entry.album?.[0] ?? '♪'}</div>
-              }
-              <div className="strip-tile-meta">
-                <AlbumPreview entry={entry} />
-              </div>
-            </div>
-          );
-        })}
+        {displayEntries.map(entry => (
+          <Link
+            key={entry.id}
+            href={`/entries/${entry.slug}`}
+            className={'strip-tile' + (isGrid ? ' strip-tile--grid' : '')}
+            onClick={e => { if (draggedRef.current) e.preventDefault(); }}
+            aria-label={entry.album + ' by ' + entry.artist}
+          >
+            {entry.album_art
+              ? <img src={entry.album_art} alt={entry.album} className="strip-tile-img" draggable={false} loading="lazy" />
+              : <div className="strip-tile-placeholder">{entry.album?.[0] ?? '♪'}</div>
+            }
+          </Link>
+        ))}
       </div>
     </div>
   );
