@@ -1424,6 +1424,11 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
     width: 100%;
     padding: 0;
   }
+  /* Sits at the end of the scrolled listens, with room above it so it reads
+     as the end of the list rather than another row of it. */
+  .hp-screen-strip-scroll .hp-strip-actions {
+    padding: 22px 0 8px;
+  }
   .hp-screen--two .hp-screen-strip .strip-tile--grid {
     width: 100%;
     height: auto;
@@ -1909,6 +1914,17 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   width: max-content;
   padding: 22px calc(50vw - 100px);
   will-change: transform;
+}
+
+/* The pair of ways on at the foot of the recent listens — See full archive /
+   Submit an album. Wraps on a narrow screen so neither ever gets clipped. */
+.hp-strip-actions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding: 4px 20px 0;
 }
 
 .strip-tile {

@@ -97,7 +97,10 @@ export default function SubmitPage() {
           letter-spacing: 0.12em; text-transform: uppercase;
           color: var(--ink-faint); margin-bottom: 7px;
         }
-        .sb-req { color: var(--gold); }
+        /* Red, not the site's gold: gold is the rating colour everywhere else
+           on the site, and a required-field mark is not a rating. Same red the
+           validation message below the form uses. */
+        .sb-req { color: #e05555; }
 
         /* Frosted like every other input on the site (the archive's search
            field is the same recipe) rather than the flat white --surface these
