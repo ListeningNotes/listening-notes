@@ -1,3 +1,29 @@
+// Apple serves album art two ways, and entries in the database carry both:
+//
+//   raw origin   https://a1.mzstatic.com/r40/<path>
+//   thumb service https://is1-ssl.mzstatic.com/image/thumb/<path>/<W>x<H>bb.jpg
+//
+// The <path> is the same in each, so any raw URL can be re-pointed at the
+// thumb service and any thumb URL can be re-sized, just by rewriting around
+// that shared middle. Everything else — Discogs, Bandcamp, Spotify's CDN,
+// anything hand-pasted into the dashboard's album_art field — is returned
+// untouched, because there's no equivalent resizing endpoint to send it to.
+//
+// This matters more than it looks. The raw URLs are full-resolution masters
+// (one cover in the archive is 14MB) and the thumb URLs were being stored at
+// 3000x3000. The archive grid renders every entry at once, so the page was
+// pulling ~75MB of artwork to fill tiles a couple of hundred pixels wide.
+// Sizing on the way out brings that to under 3MB.
+const APPLE_THUMB = /^https?:\/\/[a-z0-9-]+\.mzstatic\.com\/image\/thumb\/(.+?)\/\d+x\d+bb\.(?:jpg|png)$/i;
+const APPLE_RAW   = /^https?:\/\/[a-z0-9-]+\.mzstatic\.com\/r\d+\/(.+)$/i;
+
+export function sizedAlbumArt(url, size = 600) {
+  if (typeof url !== 'string' || !url) return url;
+  const path = url.match(APPLE_THUMB)?.[1] ?? url.match(APPLE_RAW)?.[1];
+  if (!path) return url;
+  return `https://is1-ssl.mzstatic.com/image/thumb/${path}/${size}x${size}bb.jpg`;
+}
+
 // Pull the FULL, ordered tracklist from iTunes/Apple Music. Two steps:
 //   1. find the album's collection (scored match, like fetchAlbumArtUrl)
 //   2. look up that exact collection's songs — returns every track in order
