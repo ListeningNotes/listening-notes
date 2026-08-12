@@ -5,6 +5,9 @@ import Link from 'next/link';
 import { fonts } from '../../library/sitewide_visuals';
 import DotNav from '../../components/main_components/DotNav';
 import SiteNav from '../../components/main_components/SiteNav';
+import MetadataLabel from '../../components/main_components/Slug_Page/MetadataLabel';
+import Chip from '../../components/main_components/Slug_Page/Chip';
+import StarRating from '../../components/main_components/StarRating';
 
 const SECTIONS = [
   { id: 'about',  label: 'About'  },
@@ -12,14 +15,27 @@ const SECTIONS = [
   { id: 'index',  label: 'Index'  },
 ];
 
+// The rig, as rows rather than a bulleted list — same shape as a tracklist,
+// where the thing's name reads left and what it is reads right.
+const RIG = [
+  { name: 'Sennheiser HD 600',  role: 'Headphones', href: 'https://us.sennheiser-hearing.com/products/hd-600' },
+  { name: 'iFi Zen DAC 3',      role: 'DAC + Amp',  href: 'https://ifi-audio.com/products/zen-dac-3' },
+  { name: 'Apple Music Lossless', role: 'Source' },
+];
+
+// Index rows carry the real mark, not a typed-out one: `rating` is handed to
+// the same StarRating every album and every track on the site is scored with,
+// so this page reads as a legend for those pages rather than a description of
+// them. `note` is the short form that sits opposite, where a track row keeps
+// its stars.
 const STAR_NOTES = [
-  { stars: '★★★★★', body: 'A full-body yes. An album or track that feels complete and emotionally alive. I return to it willingly and often. Nothing pulls me out of the experience; even its rough edges feel necessary. These are the tracks and albums that stay with me and sometimes shape how I listen to music altogether.' },
-  { stars: '★★★★☆', body: 'Strong, memorable, and successful. The core vision lands, even if there are a few moments that don’t fully click for me. I might not love every second, but the highs are real and meaningful. Albums and tracks at this level earn repeat listens and attention.' },
-  { stars: '★★★☆☆', body: 'Interesting, but uneven. I appreciate the ideas more than the execution, or the experience more than the replay value. These albums or tracks might matter to me more conceptually or contextually, but don’t quite pull me in emotionally.' },
-  { stars: '★★☆☆☆', body: 'Respect more than attachment. I’m glad it exists and I’m glad I listened, but I don’t feel drawn back. Albums or tracks at this level might have some compelling moments, yet the immersion breaks too often. My attention drifts, the balance feels off, or the piece just doesn’t quite land for me.' },
-  { stars: '★☆☆☆☆', body: 'Not for me. Either actively uncomfortable to listen to, or lacking the elements I need to stay engaged. Sometimes I hear intention, but the execution just doesn’t hold me. These ratings never mean “bad” — just disconnected from my listening habits.' },
-  { stars: '½',     body: 'Half-stars appear when I’m genuinely pulled in two directions — simply too strong to place lower, but not fully aligned enough to place higher. I’ve actively wrestled with these albums or tracks and ultimately decided to meet in the middle.' },
-  { stars: 'Masterpiece', body: 'Entire 5-star track list. Flawless.' },
+  { rating: 5, note: '5.0', body: 'A full-body yes. An album or track that feels complete and emotionally alive. I return to it willingly and often. Nothing pulls me out of the experience; even its rough edges feel necessary. These are the tracks and albums that stay with me and sometimes shape how I listen to music altogether.' },
+  { rating: 4, note: '4.0', body: 'Strong, memorable, and successful. The core vision lands, even if there are a few moments that don’t fully click for me. I might not love every second, but the highs are real and meaningful. Albums and tracks at this level earn repeat listens and attention.' },
+  { rating: 3, note: '3.0', body: 'Interesting, but uneven. I appreciate the ideas more than the execution, or the experience more than the replay value. These albums or tracks might matter to me more conceptually or contextually, but don’t quite pull me in emotionally.' },
+  { rating: 2, note: '2.0', body: 'Respect more than attachment. I’m glad it exists and I’m glad I listened, but I don’t feel drawn back. Albums or tracks at this level might have some compelling moments, yet the immersion breaks too often. My attention drifts, the balance feels off, or the piece just doesn’t quite land for me.' },
+  { rating: 1, note: '1.0', body: 'Not for me. Either actively uncomfortable to listen to, or lacking the elements I need to stay engaged. Sometimes I hear intention, but the execution just doesn’t hold me. These ratings never mean “bad” — just disconnected from my listening habits.' },
+  { rating: 0.5, note: 'Half', body: 'Half-stars appear when I’m genuinely pulled in two directions — simply too strong to place lower, but not fully aligned enough to place higher. I’ve actively wrestled with these albums or tracks and ultimately decided to meet in the middle.' },
+  { rating: 5, masterpiece: true, body: 'Entire 5-star track list. Flawless.' },
 ];
 
 const RELATIONSHIP_NOTES = [
@@ -33,14 +49,15 @@ const RELATIONSHIP_NOTES = [
 export default function AboutPage() {
   const [activeSection, setActiveSection] = useState('about');
 
-  // Highlight active jump-nav item based on scroll position
+  // Which section the jump bar lights up. The line it measures against sits
+  // just under the bar itself, so a section claims the highlight at the moment
+  // its label slides beneath the bar rather than when it first appears.
   useEffect(() => {
     function onScroll() {
-      const offset = window.innerHeight * 0.35;
-      let current = 'about';
+      let current = SECTIONS[0].id;
       for (const s of SECTIONS) {
         const el = document.getElementById(s.id);
-        if (el && el.getBoundingClientRect().top <= offset) current = s.id;
+        if (el && el.getBoundingClientRect().top <= 220) current = s.id;
       }
       setActiveSection(current);
     }
@@ -50,205 +67,305 @@ export default function AboutPage() {
   }, []);
 
   function jumpTo(id) {
-    const el = document.getElementById(id);
-    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
   return (
-    <div style={{ background: 'var(--bg)', minHeight: '100vh', color: 'var(--ink)', fontFamily: fonts.sans }}>
+    <div className="ab-page" style={{ background: 'var(--bg)', minHeight: '100vh', color: 'var(--ink)', fontFamily: fonts.sans }}>
       <style>{`
-        /* Sticky jump-nav. Its own full-width bg fade masks the content scrolling
-           behind the pill. Invisible when the nav is in normal flow (bg == page bg). */
-        .about-jumpnav {
-          top: 150px; /* clears SiteNav + DotNav, now a taller fixed stack
-            than when this offset was first tuned (no more hero above it to
-            hold this nav below that stack until you actually scroll) */
-          z-index: 95;
-          background: linear-gradient(to bottom, var(--bg) 0%, var(--bg) 72%, transparent 100%);
+        /* The fixed nav (SiteNav + the labelled dot row under it) ends at 136px
+           on every breakpoint — the same constant the archive parks its filter
+           bar on. The jump bar lands there too, so the two pages pin their one
+           sticky control to the same line.
+
+           This is also what closed the seam the old jump-nav left: that one
+           floated at 150px carrying its own --bg gradient to mask the text
+           behind it, which never quite met the nav's own fade, so a band of
+           scrolling prose stayed visible between the two. Frosted glass sitting
+           flush at the nav's bottom edge has nothing to mask. */
+        .ab-page { --ab-nav-bottom: 136px; }
+
+        /* ── Hero ── the album page opens on a band of art with the title
+           stack anchored to its bottom edge; this is that shape with the site
+           itself as the record. Flat rather than blurred: there's no art here
+           to blur, and a decorative wash in its place was tried on the
+           homepage and thrown out. */
+        .ab-hero {
+          padding: calc(var(--ab-nav-bottom) + 44px) 48px 30px;
+          max-width: 860px;
+          margin: 0 auto;
         }
-        @media (max-width: 480px) {
-          .about-jumpnav { top: 170px; }
+        .ab-hero h1 {
+          font-family: var(--font-display);
+          font-size: clamp(1.9rem, 4vw, 2.8rem);
+          font-weight: 400;
+          line-height: 1.05;
+          margin: 0 0 8px;
         }
-        /* Clear the sticky header (bar + jump-nav) when jumping to a section so its
-           heading isn't tucked underneath. Matches the jump-nav offsets above. */
-        .about-section { scroll-margin-top: 190px; }
-        @media (max-width: 480px) {
-          .about-section { scroll-margin-top: 210px; }
+        .ab-hero-line {
+          font-family: var(--font-label);
+          font-size: 11px;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+          color: var(--ink-soft);
+          margin-bottom: 14px;
+        }
+        .ab-hero-chips { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+
+        /* ── Jump bar ── the archive's filter bar, wearing three buttons.
+           Shares the hero's and the main column's exact box, so its left edge
+           lines up with the writing it belongs to. It hugs its buttons rather
+           than spanning the column: three tabs stretched edge to edge read as
+           a segmented control picking between three states, and these are
+           links down the page. */
+        .ab-bar-wrap {
+          position: sticky;
+          top: var(--ab-nav-bottom);
+          z-index: 101;
+          max-width: 860px; margin: 0 auto;
+          padding: 0 48px 18px;
+        }
+        .ab-bar {
+          display: inline-flex; gap: 6px;
+          padding: 6px;
+          background: var(--panel);
+          backdrop-filter: var(--card-blur); -webkit-backdrop-filter: var(--card-blur);
+          border: 1px solid var(--panel-border); border-radius: 14px;
+          box-shadow: var(--shadow-soft);
+        }
+        .ab-jump {
+          font-family: var(--font-label); font-size: 11px;
+          letter-spacing: 0.12em; text-transform: uppercase;
+          padding: 9px 18px; border-radius: 9px;
+          border: 1px solid transparent; cursor: pointer;
+          background: transparent; color: var(--ink-soft);
+          transition: background 0.18s, color 0.18s, border-color 0.18s;
+        }
+        .ab-jump:hover { color: var(--ink); }
+        /* Same fill the archive's chosen filter chips carry. */
+        .ab-jump--on { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+
+        .ab-main { max-width: 860px; margin: 0 auto; padding: 0 48px 100px; }
+
+        /* Clears the nav plus the pinned bar, so a jumped-to section lands with
+           its label just under the bar instead of behind it. */
+        .ab-section { scroll-margin-top: 200px; }
+        .ab-section + .ab-section { margin-top: 64px; }
+
+        /* Body copy, matched to an entry's album notes: same size, same
+           leading, same full-strength ink. The paragraph gap is the actual
+           readability fix — these were <p> tags with no margin, so seven
+           paragraphs ran together as one unbroken block. */
+        .ab-prose { font-size: 15px; line-height: 1.95; color: var(--ink); }
+        .ab-prose p { margin: 0 0 22px; }
+        .ab-prose p:last-child { margin-bottom: 0; }
+
+        .ab-subhead {
+          font-family: var(--font-display); font-weight: 400;
+          font-size: 20px; letter-spacing: -0.01em; color: var(--ink);
+          margin: 40px 0 4px;
+        }
+
+        /* ── Rows ── the tracklist rhythm: a head line that carries the mark,
+           the writing underneath it, one hairline closing each one off. */
+        .ab-row { border-bottom: 1px solid var(--border); padding: 14px 0; }
+        .ab-row-head { display: flex; align-items: center; gap: 12px; min-height: 20px; }
+        .ab-row-tail {
+          margin-left: auto; flex-shrink: 0;
+          font-family: ${fonts.mono}; font-size: 10px;
+          letter-spacing: 0.08em; color: var(--ink-faint);
+        }
+        .ab-row-body {
+          font-size: 13px; line-height: 1.8; color: var(--ink-soft);
+          margin: 8px 0 0;
+        }
+        .ab-rig-name { font-size: 13px; color: var(--ink); }
+        a.ab-rig-name { border-bottom: 1px solid var(--border); padding-bottom: 1px; }
+        a.ab-rig-name:hover { border-bottom-color: var(--ink-faint); }
+
+        /* An inline link out to another section, quiet enough to sit inside a
+           sentence without reading as a button. */
+        .ab-inline {
+          background: none; border: none; padding: 0; font: inherit; cursor: pointer;
+          color: var(--ink); border-bottom: 1px solid var(--ink-faint);
+        }
+
+        /* 48px above the rule, then 28px below it — the same gap an entry
+           leaves between its last track and the pair of buttons that close
+           the page out. */
+        .ab-foot {
+          margin-top: 48px; padding-top: 28px; border-top: 1px solid var(--border);
+          display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap;
+        }
+
+        /* The masterpiece glow lives with whoever asks StarRating for it — the
+           keyframes are defined per page, the same way the entry page does it. */
+        @keyframes ab-star-glow {
+          0%,100% { filter: brightness(1.15) drop-shadow(0 0 3px rgba(255,210,60,0.5)); }
+          50%     { filter: brightness(1.45) drop-shadow(0 0 6px rgba(255,210,60,0.9)); }
+        }
+        .ln-star-glow { animation: ab-star-glow 2.8s ease-in-out infinite; }
+        .ln-star-glow:nth-child(2) { animation-delay: .18s; }
+        .ln-star-glow:nth-child(3) { animation-delay: .36s; }
+        .ln-star-glow:nth-child(4) { animation-delay: .54s; }
+        .ln-star-glow:nth-child(5) { animation-delay: .72s; }
+        @media (prefers-reduced-motion: reduce) { .ln-star-glow { animation: none; } }
+
+        @media (max-width: 768px) {
+          .ab-hero { padding: calc(var(--ab-nav-bottom) + 24px) 24px 22px; }
+          /* Same 24px gutter as the writing below it — the bar sits directly
+             on top of the prose here, so a wider bar reads as misalignment
+             rather than as a bar. */
+          .ab-bar-wrap { padding: 0 24px 14px; }
+          /* Full width here, thirds apiece — on a phone these are thumb
+             targets first and a control second. */
+          .ab-bar { display: flex; gap: 4px; padding: 5px; }
+          .ab-jump { flex: 1; padding: 9px 6px; font-size: 10px; letter-spacing: 0.08em; }
+          .ab-main { padding: 0 24px 80px; }
+          .ab-section + .ab-section { margin-top: 52px; }
+          /* The bar is shorter here, so a jump doesn't need to duck as far. */
+          .ab-section { scroll-margin-top: 190px; }
         }
       `}</style>
+
       <SiteNav />
       <DotNav />
 
-      {/* Sticky jump nav */}
-      <nav className="about-jumpnav" style={{
-        position: 'sticky', padding: '12px 24px 28px',
-        display: 'flex', justifyContent: 'center',
-      }}>
-        <div style={{
-          display: 'inline-flex', gap: 4, padding: 4, background: 'var(--panel)',
-          backdropFilter: 'var(--card-blur)', WebkitBackdropFilter: 'var(--card-blur)',
-          border: '1px solid var(--panel-border)', borderRadius: 999, boxShadow: 'var(--shadow-soft)',
-        }}>
+      <header className="ab-hero">
+        <h1>Listening Notes</h1>
+        <div className="ab-hero-line">A practice of documenting intentional listening</div>
+        <div className="ab-hero-chips">
+          <Chip>Miyel Brown</Chip>
+          <Chip>Since December 2025</Chip>
+        </div>
+      </header>
+
+      <div className="ab-bar-wrap">
+        <div className="ab-bar">
           {SECTIONS.map(s => (
             <button
               key={s.id}
+              type="button"
+              className={'ab-jump' + (activeSection === s.id ? ' ab-jump--on' : '')}
+              aria-current={activeSection === s.id ? 'true' : undefined}
               onClick={() => jumpTo(s.id)}
-              style={{
-                fontFamily: 'var(--font-label)', fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase',
-                padding: '8px 18px', borderRadius: 999, border: 'none', cursor: 'pointer',
-                background: activeSection === s.id ? 'var(--accent)' : 'transparent',
-                color: activeSection === s.id ? '#1a1a1a' : 'var(--ink-soft)',
-                transition: 'background 0.2s, color 0.2s',
-              }}
             >
               {s.label}
             </button>
           ))}
         </div>
-      </nav>
+      </div>
 
-      <main style={{ maxWidth: 720, margin: '0 auto', padding: '40px 24px 120px' }}>
+      <main className="ab-main">
 
-        {/* ABOUT */}
-        <Section id="about" label="About">
-          <p>
-            Listening Notes started as an answer to a question about my favorite albums and it grew into a practice of documenting intentional listening. Now it is becoming a larger system for mapping taste, preserving musical encounters, and creating space for shared reflection around sound.
-          </p>
-          <p>
-            Back in 2020, a close friend asked me to send them a list of my favorite albums, and I never finished it&mdash;actually I never even started. For years I thought I&rsquo;d get around to it one day, but I just kept putting it off. I always thought I was just procrastinating, but now I think I was resisting the format of what was being asked of me. Music has always meant too much to me to throw into a quick list in my notes app and call it done. I did not just want to name the albums, I wanted to capture my feelings around them and why they mattered to me.
-          </p>
-          <p>
-            Finally, in December 2025, I started Listening Notes. It was my way of finally addressing that question: what are my favorite albums? But somewhere along the way, it stopped being just about answering that. It became a way to document my relationship with music entirely, and in real time. That shift changed the whole project for me. What started as a Tumblr blog became something much more alive and closer to an archive of my listening habits than just a collection of reviews.
-          </p>
-          <p>
-            At its core is the idea that listening is worth documenting. I have always been someone who likes to record things, preserve things, and leave a trace of who I am in this world. That is why I do not really think of these entries as judgments. They are more like evidence of an encounter. They show what stood out to me, what confused me, what moved me, and what stays with me even after the album has ended. Over time entries start to reveal patterns not only in my musical taste, but also patterns in how I listen. That is part of what this project has grown into for me. It is not only about asking what my favorite music is. It is also about asking what kind of listener I am and how my taste takes shape over time.
-          </p>
-          <p>
-            A major turning point in how I listened came in 2024 when I visited the Art of Noise exhibition at SFMOMA and experienced Devon Turnbull&rsquo;s high-fidelity listening room installation. That experience genuinely changed something in me. It was not about volume or spectacle. It was about precision and the feeling that recorded sound could be presented with a kind of care that made its full shape more visible. Since then I have been much more conscious of listening as an intentional practice. Right now that means listening with my own Hi-Fi headphone setup while I slowly work towards building a dedicated listening room of my own. The setup used for listening can be explored more <button onClick={() => jumpTo('specs')} style={{ background: 'none', border: 'none', padding: 0, color: 'var(--ink)', textDecoration: 'underline', cursor: 'pointer', font: 'inherit' }}>here</button>.
-          </p>
-          <p>
-            I also know this project was never meant to stay private. Part of what has always fascinated me about music is how differently people can hear the same exact album. I have spent so much time reading other people&rsquo;s thoughts by looking up reddit threads or interpretations on Genius just to understand how a piece landed for someone else. I do not want Listening Notes to just be a private diary hidden away. I want it to be a place where exposure can happen, music can be shared, and opinions are openly discussed.
-          </p>
-          <p>
-            Listening Notes is no longer just a blog where I post album thoughts. It has grown into something much bigger. What I am building now is not simply a place to store opinions, but a system for documenting taste, noticing patterns in what moves someone, and treating a relationship to sound as something worth preserving with real care. If someone asked me today for a list of my favorite albums I would point them here because this says much more fully what music actually means to me.
-          </p>
-        </Section>
+        {/* ── ABOUT ── */}
+        <section id="about" className="ab-section">
+          <MetadataLabel>About</MetadataLabel>
+          <div className="ab-prose">
+            <p>
+              Listening Notes started as an answer to a question about my favorite albums and it grew into a practice of documenting intentional listening. Now it is becoming a larger system for mapping taste, preserving musical encounters, and creating space for shared reflection around sound.
+            </p>
+            <p>
+              Back in 2020, a close friend asked me to send them a list of my favorite albums, and I never finished it&mdash;actually I never even started. For years I thought I&rsquo;d get around to it one day, but I just kept putting it off. I always thought I was just procrastinating, but now I think I was resisting the format of what was being asked of me. Music has always meant too much to me to throw into a quick list in my notes app and call it done. I did not just want to name the albums, I wanted to capture my feelings around them and why they mattered to me.
+            </p>
+            <p>
+              Finally, in December 2025, I started Listening Notes. It was my way of finally addressing that question: what are my favorite albums? But somewhere along the way, it stopped being just about answering that. It became a way to document my relationship with music entirely, and in real time. That shift changed the whole project for me. What started as a Tumblr blog became something much more alive and closer to an archive of my listening habits than just a collection of reviews.
+            </p>
+            <p>
+              At its core is the idea that listening is worth documenting. I have always been someone who likes to record things, preserve things, and leave a trace of who I am in this world. That is why I do not really think of these entries as judgments. They are more like evidence of an encounter. They show what stood out to me, what confused me, what moved me, and what stays with me even after the album has ended. Over time entries start to reveal patterns not only in my musical taste, but also patterns in how I listen. That is part of what this project has grown into for me. It is not only about asking what my favorite music is. It is also about asking what kind of listener I am and how my taste takes shape over time.
+            </p>
+            <p>
+              A major turning point in how I listened came in 2024 when I visited the Art of Noise exhibition at SFMOMA and experienced Devon Turnbull&rsquo;s high-fidelity listening room installation. That experience genuinely changed something in me. It was not about volume or spectacle. It was about precision and the feeling that recorded sound could be presented with a kind of care that made its full shape more visible. Since then I have been much more conscious of listening as an intentional practice. Right now that means listening with my own Hi-Fi headphone setup while I slowly work towards building a dedicated listening room of my own. The setup used for listening can be explored more <button type="button" className="ab-inline" onClick={() => jumpTo('specs')}>here</button>.
+            </p>
+            <p>
+              I also know this project was never meant to stay private. Part of what has always fascinated me about music is how differently people can hear the same exact album. I have spent so much time reading other people&rsquo;s thoughts by looking up reddit threads or interpretations on Genius just to understand how a piece landed for someone else. I do not want Listening Notes to just be a private diary hidden away. I want it to be a place where exposure can happen, music can be shared, and opinions are openly discussed.
+            </p>
+            <p>
+              Listening Notes is no longer just a blog where I post album thoughts. It has grown into something much bigger. What I am building now is not simply a place to store opinions, but a system for documenting taste, noticing patterns in what moves someone, and treating a relationship to sound as something worth preserving with real care. If someone asked me today for a list of my favorite albums I would point them here because this says much more fully what music actually means to me.
+            </p>
+          </div>
+        </section>
 
-        {/* SPECS */}
-        <Section id="specs" label="Specs">
-          <h3 style={subheadingStyle}>Current listening setup</h3>
-          <ul style={specListStyle}>
-            <li>
-              <a href="https://us.sennheiser-hearing.com/products/hd-600" target="_blank" rel="noopener noreferrer" style={specLinkStyle}>
-                Sennheiser HD 600 headphones ↗
-              </a>
-            </li>
-            <li>
-              <a href="https://ifi-audio.com/products/zen-dac-3" target="_blank" rel="noopener noreferrer" style={specLinkStyle}>
-                iFi Zen DAC 3 ↗
-              </a>
-            </li>
-            <li>Lossless Apple Music source audio</li>
-          </ul>
+        {/* ── SPECS ── */}
+        <section id="specs" className="ab-section">
+          <MetadataLabel>Specs</MetadataLabel>
 
-          <h3 style={subheadingStyle}>Why it matters</h3>
-          <p>
-            The HD 600s were chosen for one reason: neutrality. They don&rsquo;t exaggerate bass, widen space artificially, or smooth over rough edges. They&rsquo;re open-back, which means sound isn&rsquo;t sealed inside the earcup&mdash;it breathes. That design trades isolation for realism. Space feels very natural through these headphones. If a mix has depth, you hear it. If it doesn&rsquo;t, that&rsquo;s revealed too.
-          </p>
-          <p>
-            The iFi Zen DAC serves two roles at once. As a DAC, it converts digital audio&mdash;numbers&mdash;into a continuous electrical signal. As an amplifier, it supplies that signal with enough voltage and current to properly move the headphone drivers. This matters more than volume to me. Proper amplification stabilizes timing, dynamics, and control. The sound stops straining and quiet details hold steady instead of flickering.
-          </p>
-          <p>
-            What changed my understanding completely was learning what&rsquo;s actually happening here. These headphones don&rsquo;t &ldquo;play back&rdquo; music the way a screen plays video. They recreate it physically. The electrical signal coming from the amp causes the drivers to move air&mdash;microscopically, precisely&mdash;right in front of my ears. That&rsquo;s also when I noticed that wired headphones don&rsquo;t need to be charged. They aren&rsquo;t computers, they&rsquo;re more like instruments. Power comes from the amplifier, timing comes from the signal, and the performance happens in real time. In that sense, every listening session is a small live performance built from scratch, moment by moment. This is different from the headphones I used before. Wireless headphones compress the signal, process it digitally, and rely on tiny internal amplifiers powered by batteries. With the wired setup, everything is separated: conversion, amplification, and transduction each have room to do their job properly.
-          </p>
-          <p>
-            The result isn&rsquo;t &ldquo;better&rdquo; sound in a flashy way. It&rsquo;s more stable sound and much more legible. Music stops floating vaguely and starts occupying space with intention. That stability is what makes active listening possible.
-          </p>
-        </Section>
-
-        {/* INDEX */}
-        <Section id="index" label="Index">
-          <h3 style={subheadingStyle}>Star Notes</h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 18, marginTop: 16 }}>
-            {STAR_NOTES.map((s) => (
-              <div key={s.stars} style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: 20, alignItems: 'baseline' }}>
-                <div style={{ fontFamily: 'var(--font-label)', fontSize: 14, color: 'var(--gold)', letterSpacing: '0.04em', whiteSpace: 'nowrap' }}>
-                  {s.stars}
-                </div>
-                <div style={{ fontSize: 15, lineHeight: 1.6, color: 'var(--ink-soft)' }}>
-                  {s.body}
+          <div style={{ marginBottom: 8 }}>
+            {RIG.map(item => (
+              <div key={item.name} className="ab-row">
+                <div className="ab-row-head">
+                  {item.href ? (
+                    <a className="ab-rig-name" href={item.href} target="_blank" rel="noopener noreferrer">
+                      {item.name} ↗
+                    </a>
+                  ) : (
+                    <span className="ab-rig-name">{item.name}</span>
+                  )}
+                  <span className="ab-row-tail">{item.role}</span>
                 </div>
               </div>
             ))}
           </div>
 
-          <h3 style={subheadingStyle}>Relationship Notes</h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 18, marginTop: 16 }}>
-            {RELATIONSHIP_NOTES.map((r) => (
-              <div key={r.label} style={{ display: 'grid', gridTemplateColumns: '120px 1fr', gap: 20, alignItems: 'baseline' }}>
-                <div style={{ fontFamily: 'var(--font-label)', fontSize: 11, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--accent)' }}>
-                  {r.label}
+          <h3 className="ab-subhead">Why it matters</h3>
+          <div className="ab-prose">
+            <p>
+              The HD 600s were chosen for one reason: neutrality. They don&rsquo;t exaggerate bass, widen space artificially, or smooth over rough edges. They&rsquo;re open-back, which means sound isn&rsquo;t sealed inside the earcup&mdash;it breathes. That design trades isolation for realism. Space feels very natural through these headphones. If a mix has depth, you hear it. If it doesn&rsquo;t, that&rsquo;s revealed too.
+            </p>
+            <p>
+              The iFi Zen DAC serves two roles at once. As a DAC, it converts digital audio&mdash;numbers&mdash;into a continuous electrical signal. As an amplifier, it supplies that signal with enough voltage and current to properly move the headphone drivers. This matters more than volume to me. Proper amplification stabilizes timing, dynamics, and control. The sound stops straining and quiet details hold steady instead of flickering.
+            </p>
+            <p>
+              What changed my understanding completely was learning what&rsquo;s actually happening here. These headphones don&rsquo;t &ldquo;play back&rdquo; music the way a screen plays video. They recreate it physically. The electrical signal coming from the amp causes the drivers to move air&mdash;microscopically, precisely&mdash;right in front of my ears. That&rsquo;s also when I noticed that wired headphones don&rsquo;t need to be charged. They aren&rsquo;t computers, they&rsquo;re more like instruments. Power comes from the amplifier, timing comes from the signal, and the performance happens in real time. In that sense, every listening session is a small live performance built from scratch, moment by moment. This is different from the headphones I used before. Wireless headphones compress the signal, process it digitally, and rely on tiny internal amplifiers powered by batteries. With the wired setup, everything is separated: conversion, amplification, and transduction each have room to do their job properly.
+            </p>
+            <p>
+              The result isn&rsquo;t &ldquo;better&rdquo; sound in a flashy way. It&rsquo;s more stable sound and much more legible. Music stops floating vaguely and starts occupying space with intention. That stability is what makes active listening possible.
+            </p>
+          </div>
+        </section>
+
+        {/* ── INDEX ── the legend for the marks every entry is scored with, so
+            the stars and chips here are the real components, not a drawing of
+            them. */}
+        <section id="index" className="ab-section">
+          <MetadataLabel>Index</MetadataLabel>
+
+          <h3 className="ab-subhead">Star Notes</h3>
+          <div>
+            {STAR_NOTES.map(s => (
+              <div key={s.masterpiece ? 'masterpiece' : s.note} className="ab-row">
+                <div className="ab-row-head">
+                  <StarRating rating={s.rating} size={14} glow={s.masterpiece} />
+                  {s.masterpiece
+                    ? <span style={{ marginLeft: 'auto' }}><Chip accent>Masterpiece</Chip></span>
+                    : <span className="ab-row-tail">{s.note}</span>}
                 </div>
-                <div style={{ fontSize: 15, lineHeight: 1.6, color: 'var(--ink-soft)' }}>
-                  {r.body}
-                </div>
+                <p className="ab-row-body">{s.body}</p>
               </div>
             ))}
           </div>
-        </Section>
 
-        {/* Footer back link */}
-        <div style={{ marginTop: 80, paddingTop: 32, borderTop: '1px solid var(--border)', textAlign: 'center' }}>
+          <h3 className="ab-subhead">Relationship Notes</h3>
+          <div>
+            {RELATIONSHIP_NOTES.map(r => (
+              <div key={r.label} className="ab-row">
+                <div className="ab-row-head">
+                  <Chip>{r.label}</Chip>
+                </div>
+                <p className="ab-row-body">{r.body}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* The two ways out, the same pair an entry closes on. */}
+        <div className="ab-foot">
           <Link href="/" className="ln-pill">← Back home</Link>
+          <button type="button" className="ln-pill" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+            ↑ Back to top
+          </button>
         </div>
       </main>
     </div>
   );
 }
-
-// ── Section wrapper ─────────────────────────────────────────────────────
-function Section({ id, label, children }) {
-  return (
-    <section id={id} className="about-section" style={{ marginTop: 72 }}>
-      <div style={{
-        fontFamily: 'var(--font-label)', fontSize: 10, letterSpacing: '0.2em', textTransform: 'uppercase',
-        color: 'var(--ink-faint)', marginBottom: 14, paddingBottom: 12, borderBottom: '1px solid var(--border)',
-      }}>
-        {label}
-      </div>
-      <div style={{
-        fontFamily: fonts.sans, fontSize: 16, lineHeight: 1.75, color: 'var(--ink-soft)',
-      }}>
-        {children}
-      </div>
-    </section>
-  );
-}
-
-const subheadingStyle = {
-  fontFamily: 'var(--font-display)',
-  fontWeight: 400,
-  fontSize: 24,
-  letterSpacing: '-0.01em',
-  marginTop: 40,
-  marginBottom: 12,
-  color: 'var(--ink)',
-};
-
-const specListStyle = {
-  listStyle: 'none',
-  padding: 0,
-  margin: 0,
-  display: 'flex',
-  flexDirection: 'column',
-  gap: 10,
-  fontFamily: 'var(--font-label)',
-  fontSize: 13,
-};
-
-const specLinkStyle = {
-  color: 'var(--ink)',
-  textDecoration: 'none',
-  borderBottom: '1px solid var(--accent)',
-  paddingBottom: 1,
-};
