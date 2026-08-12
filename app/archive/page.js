@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { fonts } from '../../library/sitewide_visuals';
-import { parseRating } from '../../library/entry_formatter';
+import { parseRating, entryTypeLabel } from '../../library/entry_formatter';
 import DotNav from '../../components/main_components/DotNav';
 import SiteNav from '../../components/main_components/SiteNav';
 import EntryModal from '../../components/main_components/EntryModal';
@@ -653,7 +653,7 @@ export default function ArchivePage() {
                 {TYPES.map(t => (
                   <button key={t} type="button"
                     className={'arc-opt' + (entryType === t ? ' arc-opt--on' : '')}
-                    onClick={() => setEntryType(entryType === t ? '' : t)}>{t}</button>
+                    onClick={() => setEntryType(entryType === t ? '' : t)}>{entryTypeLabel(t)}</button>
                 ))}
               </div>
             </div>

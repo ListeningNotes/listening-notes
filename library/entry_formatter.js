@@ -96,3 +96,12 @@ export function splitNotes(notesText) {
   }
   return { albumNotes: clean, trackNotes: '' };
 }
+
+// The column stores 'Personal Library'; the site just says 'Library'. This
+// is display only — the stored value is still what the archive filter
+// compares against and what new entries are written with, so the label can
+// change without touching a single row. Anywhere entry_type is shown to a
+// reader should go through here; anywhere it's compared or saved should not.
+export function entryTypeLabel(type) {
+  return type === 'Personal Library' ? 'Library' : (type || '');
+}

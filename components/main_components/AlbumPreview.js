@@ -19,7 +19,7 @@ import { Heart, SketchLogo } from '@phosphor-icons/react';
 import { fonts } from '../../library/sitewide_visuals';
 import { useTheme } from './Lightswitch';
 import StarRating from './StarRating';
-import { parseTracksFromNotes, parseRating } from '../../library/entry_formatter';
+import { parseTracksFromNotes, parseRating, entryTypeLabel } from '../../library/entry_formatter';
 
 // An album counts as a masterpiece if it's flagged as one or if every track
 // on it got five stars. Unchanged from what this card has always done — it's
@@ -90,7 +90,7 @@ export default function AlbumPreview({ entry, scale = 1 }) {
 
       <div style={{
         position: 'relative', height: '100%', display: 'flex', flexDirection: 'column',
-        justifyContent: 'center', padding: px(14), gap: px(10),
+        justifyContent: 'center', padding: px(14), gap: px(8),
       }}>
         {/* minHeight 0 + overflow hidden let this block give way rather than
             push the button off the card: on a tile this small an unusually
@@ -121,7 +121,7 @@ export default function AlbumPreview({ entry, scale = 1 }) {
               stars, which is exactly what pushed the listen-type line off
               the bottom of the card. */}
           {(displayRating > 0 || ((masterpiece || isFav) && roomForDetail)) && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: px(6), marginTop: px(9) }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: px(6), marginTop: px(6) }}>
               {displayRating > 0 && <StarRating rating={displayRating} size={px(15)} />}
               {/* Two albums across only. At three and four the card is down
                   to title, artist and stars — the marks are the first thing
@@ -133,9 +133,14 @@ export default function AlbumPreview({ entry, scale = 1 }) {
               )}
             </div>
           )}
-          {entry.relationship && roomForDetail && (
-            <div style={{ marginTop: px(6), fontFamily: fonts.mono, fontSize: px(7.5), letterSpacing: '0.08em', textTransform: 'uppercase', color: textFaint }}>
-              {entry.relationship}
+          {/* How it was heard and where it came from, on one line: FIRST
+              LISTEN · SUBMISSION. Two facts of the same kind, so they read
+              as one line of provenance rather than two stacked labels. The
+              two fields can't collide — Submission was removed as a
+              relationship, so it only ever appears as a type. */}
+          {roomForDetail && (entry.relationship || entry.entry_type) && (
+            <div style={{ marginTop: px(3), fontFamily: fonts.mono, fontSize: px(7.5), letterSpacing: '0.08em', textTransform: 'uppercase', color: textFaint }}>
+              {[entry.relationship, entryTypeLabel(entry.entry_type)].filter(Boolean).join(' · ')}
             </div>
           )}
         </div>

@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { fonts } from '../../../../library/sitewide_visuals';
 import { tx, bdr, dk } from '../../../../library/session_styles';
+import { entryTypeLabel } from '../../../../library/entry_formatter';
 import { useListeningSession } from '../../../../hooks/useListeningSession';
 import PasswordGate from '../../../../components/session_components/PasswordGate';
 import EchoNetwork from '../../../../components/EchoNetwork';
@@ -272,7 +273,7 @@ export default function EchoSessionPage() {
                 {(relationship || entryType || elapsed > 0) && (
                   <div style={{ padding: '10px 16px', borderTop: `1px solid ${bdr(0.08)}`, borderBottom: `1px solid ${bdr(0.08)}`, marginBottom: 12 }}>
                     {relationship && <div style={{ fontFamily: fonts.mono, fontSize: 9, color: tx(0.38), letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 3 }}>{relationship}</div>}
-                    {entryType && <div style={{ fontFamily: fonts.mono, fontSize: 9, color: tx(0.38), letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 3 }}>{entryType}</div>}
+                    {entryType && <div style={{ fontFamily: fonts.mono, fontSize: 9, color: tx(0.38), letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 3 }}>{entryTypeLabel(entryType)}</div>}
                     {elapsed > 0 && <div style={{ fontFamily: fonts.mono, fontSize: 9, color: tx(0.25), letterSpacing: '0.1em', marginTop: 4 }}>{SessionDuration(elapsed)}</div>}
                   </div>
                 )}
