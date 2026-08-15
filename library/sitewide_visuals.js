@@ -11,6 +11,7 @@ export const colors_light = {
   border:         'rgba(26, 26, 26, 0.08)',
   gold:           '#E8B84B',
   fav:            '#f0484f',
+  mp:             '#4a9bf0',
   shadow_soft:    '0 2px 12px rgba(0,0,0,0.04), 0 8px 32px rgba(0,0,0,0.04)',
   shadow_lift:    '0 4px 20px rgba(0,0,0,0.06), 0 16px 48px rgba(0,0,0,0.06)',
 };
@@ -28,6 +29,7 @@ export const colors_dark = {
   border:         'rgba(255, 255, 255, 0.08)',
   gold:           '#E8B84B',
   fav:            '#f0484f',
+  mp:             '#4a9bf0',
   shadow_soft:    '0 2px 12px rgba(0,0,0,0.3), 0 8px 32px rgba(0,0,0,0.2)',
   shadow_lift:    '0 4px 20px rgba(0,0,0,0.4), 0 16px 48px rgba(0,0,0,0.3)',
 };
