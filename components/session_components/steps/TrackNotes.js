@@ -1,5 +1,6 @@
 'use client';
-import { fonts } from '../../../library/sitewide_visuals';
+import { Heart } from '@phosphor-icons/react';
+import { fonts, colors } from '../../../library/sitewide_visuals';
 import { tx, bdr, dk, lbl } from '../../../library/session_styles';
 import { TrackLength } from '../../../library/session_timers';
 import SessionButton from '../SessionButton';
@@ -88,12 +89,14 @@ export default function TrackNotes({
                 aria-label={fav ? 'Remove from favourites' : 'Mark as a favourite song'}
                 style={{
                   background: 'none', border: 'none', cursor: 'pointer', padding: '2px 4px',
-                  fontSize: 15, lineHeight: 1, flexShrink: 0,
-                  color: fav ? '#E8B84B' : tx(0.22),
+                  display: 'inline-flex', lineHeight: 1, flexShrink: 0,
+                  color: fav ? colors.fav : tx(0.22),
                   transition: 'color 0.15s',
                 }}
               >
-                {fav ? '♥' : '♡'}
+                {/* Filled once it's a favourite, outline while it isn't —
+                    one icon in two weights rather than two glyphs. */}
+                <Heart size={16} weight={fav ? 'fill' : 'regular'} />
               </button>
               <div onClick={e => e.stopPropagation()} style={{ flexShrink: 0 }}>
                 <StarRating value={trackRatings[i] || 0} onChange={v => setTrackRatings(prev => ({ ...prev, [i]: v }))} size={20} />

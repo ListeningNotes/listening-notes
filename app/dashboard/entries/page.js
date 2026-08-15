@@ -5,6 +5,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { Heart } from '@phosphor-icons/react';
 import PasswordGate from '../../../components/session_components/PasswordGate';
 import backgrounds from '../../../components/session_components/backgrounds';
 import StarRating from '../../../components/session_components/StarRating';
@@ -215,11 +216,11 @@ function EditModal({ entry, onSave, onDelete, onClose }) {
                         title={t.favorite ? 'Remove from favourites' : 'Mark as a favourite song'}
                         style={{
                           background: 'none', border: 'none', cursor: 'pointer', padding: '2px 4px',
-                          fontSize: 15, lineHeight: 1, flexShrink: 0,
-                          color: t.favorite ? '#E8B84B' : 'rgba(26,25,22,0.25)',
+                          display: 'inline-flex', lineHeight: 1, flexShrink: 0,
+                          color: t.favorite ? 'var(--fav)' : 'rgba(26,25,22,0.25)',
                         }}
                       >
-                        {t.favorite ? '♥' : '♡'}
+                        <Heart size={16} weight={t.favorite ? 'fill' : 'regular'} />
                       </button>
                       <StarRating value={t.rating || 0} onChange={v => setTrack(i, 'rating', v)} size={18} />
                       <span style={{ fontFamily: MONO, fontSize: 10, color: 'rgba(26,25,22,0.4)', minWidth: 26, textAlign: 'right' }}>
@@ -390,7 +391,7 @@ export default function SessionEntries() {
                         return isNaN(n) ? entry.rating : n;
                       })()}
                       {entry.masterpiece === true && <span title="Masterpiece" style={{ color: '#E8B84B', fontSize: 18, lineHeight: 1 }}>★</span>}
-                      {entry.favorite === true && <span title="Favorite" style={{ color: '#e0245e', fontSize: 18, lineHeight: 1 }}>♥</span>}
+                      {entry.favorite === true && <span title="Favorite" style={{ color: 'var(--fav)', display: 'inline-flex', lineHeight: 1 }}><Heart size={16} weight="fill" /></span>}
                     </div>
                     <div style={{ padding: '0 8px', fontFamily: MONO, fontSize: 10, color: 'rgba(26,25,22,0.4)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{entryTypeLabel(entry.entry_type) || '—'}</div>
                   </div>

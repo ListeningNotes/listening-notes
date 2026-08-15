@@ -22,6 +22,11 @@
   --accent:       #b5b2ab;
   --border:       rgba(26, 26, 26, 0.08);
   --gold:         #E8B84B;
+  /* The favourite red, shared by every heart on the site — the marks on an
+     archive card, the track rows, and both horizons. Was hardcoded in
+     .ln-mark--fav while the hearts elsewhere were gold, which is how the two
+     drifted apart. */
+  --fav:          #f0484f;
   --live:         #7cff9b;
   --card-blur:    blur(48px);
   --shadow-soft:  0 2px 12px rgba(0,0,0,0.04), 0 8px 32px rgba(0,0,0,0.04);
@@ -2306,7 +2311,7 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 /* inline-flex, so the SVG doesn't sit on a text baseline and pick up the
    line box's leading — the same trap the star row hit. */
 .ln-mark { display: inline-flex; }
-.ln-mark--fav { color: #f0484f; }
+.ln-mark--fav { color: var(--fav); }
 .ln-mark--mp  { color: #4a9bf0; }
 
 @media (prefers-reduced-motion: reduce) {

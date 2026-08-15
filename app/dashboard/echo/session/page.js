@@ -55,7 +55,7 @@ export default function EchoSessionPage() {
     tracks, tracksLoading, trackNotes, setTrackNotes, trackRatings, setTrackRatings,
     trackFavorites, setTrackFavorites,
     openTrack, setOpenTrack,
-    chatMessages, chatInput, setChatInput, chatLoading, chatEndRef,
+    chatMessages, chatInput, setChatInput, chatLoading,
     sessionTags, setSessionTags, tagInput, setTagInput,
     formatting, output, saving, saved,
     elapsed,
@@ -125,6 +125,18 @@ export default function EchoSessionPage() {
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [askOpen]);
+
+  // Below this there isn't room for a 220px sidebar, a readable set of notes and
+  // a conversation all at once — the notes end up a few characters wide. The
+  // column stops pushing and lays over the notes instead, which is worse than
+  // side by side but better than squeezing both into nothing.
+  const [narrow, setNarrow] = useState(false);
+  useEffect(() => {
+    const measure = () => setNarrow(window.innerWidth < 1040);
+    measure();
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
+  }, []);
 
   // The puzzle finished assembling.
   const handleAssembled = useCallback(() => setPuzzleDone(true), []);
@@ -245,7 +257,10 @@ export default function EchoSessionPage() {
       {!showLoadingScreen && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '24px', boxSizing: 'border-box' }}>
           <div style={{
-            width: '100%', maxWidth: 1100, height: 'calc(100vh - 48px)',
+            // Height comes from the padded box around it rather than its own vh
+            // sum. Two sources of truth for the same height drifted apart while
+            // a window was being dragged, which is what made resizing jump.
+            width: '100%', maxWidth: 1100, height: '100%',
             position: 'relative', overflow: 'hidden', borderRadius: 22,
             border: `1px solid ${bdr(0.1)}`, boxShadow: `0 24px 80px ${bdr(0.35)}`,
             display: 'flex', animation: 'ln-panel-appear 0.5s cubic-bezier(0.34,1.2,0.64,1)',
@@ -260,7 +275,10 @@ export default function EchoSessionPage() {
             <div style={{ position: 'relative', zIndex: 2, display: 'flex', width: '100%', height: '100%' }}>
 
               {/* Sidebar */}
-              <div style={{ width: 220, flexShrink: 0, borderRight: `1px solid ${bdr(0.1)}`, display: 'flex', flexDirection: 'column', padding: '20px 0', background: 'rgba(0,0,0,0.08)' }}>
+              {/* Scrolls on a short window. Without it the artwork and album
+                  details pushed the step markers off the bottom with no way to
+                  reach them. */}
+              <div style={{ width: 220, flexShrink: 0, borderRight: `1px solid ${bdr(0.1)}`, display: 'flex', flexDirection: 'column', padding: '20px 0', background: 'rgba(0,0,0,0.08)', overflowY: 'auto' }}>
                 <a href="/dashboard" style={{ fontFamily: fonts.mono, fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: tx(0.3), textDecoration: 'none', padding: '0 20px', marginBottom: 16, display: 'block' }}>← Dashboard</a>
 
                 {albumArt && (
@@ -315,7 +333,7 @@ export default function EchoSessionPage() {
               {/* Main content — narrows rather than hides when Echo opens, so
                   the notes stay writable with the conversation beside them. */}
               <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', overflow: 'auto' }}>
-                <div style={{ flex: 1, padding: chatOpen ? '40px 30px 56px' : '40px 48px 56px', transition: 'padding 0.32s cubic-bezier(0.22,1,0.36,1)' }}>
+                <div style={{ flex: 1, padding: chatOpen && !narrow ? '40px 30px 56px' : '40px 48px 56px', transition: 'padding 0.32s cubic-bezier(0.22,1,0.36,1)' }}>
                   {/* Keyed on step so each screen mounts fresh and slides in. */}
                   <div key={step} style={{ animation: `${stepDir > 0 ? 'ln-step-fwd' : 'ln-step-back'} 0.35s cubic-bezier(0.22,1,0.36,1) both` }}>
                     {step === 0 && <AlbumDebrief brief={brief} researchState={researchState} researchError={researchError} onNext={() => goToStep(1)} onReset={() => router.replace('/dashboard/echo')} onRefresh={refreshResearch} />}
@@ -330,22 +348,32 @@ export default function EchoSessionPage() {
 
               {/* Ask Echo — a column of the panel rather than a layer over it,
                   so the notes narrow instead of going dark and the same thread
-                  stays open from Track Notes through Album Notes. */}
+                  stays open from Track Notes through Album Notes. On a window
+                  too narrow to hold both it lays over the notes instead. */}
+              {narrow && chatOpen && (
+                <div onClick={() => setAskOpen(false)} style={{ position: 'absolute', inset: 0, zIndex: 4, background: dk(0.28) }} />
+              )}
               <div style={{
-                width: chatOpen ? 'clamp(300px, 34%, 380px)' : 0,
-                flexShrink: 0, overflow: 'hidden',
+                ...(narrow
+                  ? { position: 'absolute', top: 0, right: 0, bottom: 0, zIndex: 5,
+                      width: chatOpen ? 'min(380px, 82%)' : 0,
+                      boxShadow: chatOpen ? `-18px 0 50px ${dk(0.35)}` : 'none' }
+                  : { position: 'relative', flexShrink: 0,
+                      width: chatOpen ? 'clamp(300px, 34%, 380px)' : 0 }),
+                overflow: 'hidden',
                 borderLeft: chatOpen ? `1px solid ${bdr(0.14)}` : '1px solid transparent',
-                background: chatOpen ? dk(0.5) : 'transparent',
+                background: chatOpen ? dk(narrow ? 0.62 : 0.5) : 'transparent',
                 backdropFilter: 'blur(22px)', WebkitBackdropFilter: 'blur(22px)',
                 transition: 'width 0.32s cubic-bezier(0.22,1,0.36,1), background 0.32s',
               }}>
                 {/* minWidth keeps the conversation from reflowing while the
                     column travels — it gets clipped, not squeezed. */}
-                <div style={{ width: '100%', minWidth: 300, height: '100%', display: 'flex', flexDirection: 'column', padding: '22px 22px 20px', boxSizing: 'border-box' }}>
+                <div style={{ width: '100%', minWidth: 280, height: '100%', display: 'flex', flexDirection: 'column', padding: '22px 22px 20px', boxSizing: 'border-box' }}>
                   <ReflectChat
                     chatMessages={chatMessages} chatInput={chatInput} setChatInput={setChatInput}
-                    chatLoading={chatLoading} chatEndRef={chatEndRef} sendChat={sendChat}
+                    chatLoading={chatLoading} sendChat={sendChat}
                     prompts={askPrompts}
+                    open={chatOpen}
                     onClose={() => setAskOpen(false)}
                   />
                 </div>

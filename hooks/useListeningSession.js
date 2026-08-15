@@ -39,7 +39,6 @@ export function useListeningSession({ step }) {
   const [chatMessages, setChatMessages] = useState([]);
   const [chatInput, setChatInput]       = useState('');
   const [chatLoading, setChatLoading]   = useState(false);
-  const chatEndRef = useRef(null);
 
   // Tags
   const [sessionTags, setSessionTags] = useState([]);
@@ -236,8 +235,10 @@ export function useListeningSession({ step }) {
       });
       const data = await res.json();
       if (data.error) throw new Error(data.error);
+      // Keeping the thread pinned to the newest message is ReflectChat's job —
+      // it owns the scroller, and scrolling into view from here dragged the
+      // panel behind the column along with it.
       setChatMessages(prev => [...prev, { role: 'ai', text: data.reply }]);
-      setTimeout(() => chatEndRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
     } catch (err) {
       setChatMessages(prev => [...prev, { role: 'ai', text: 'Something went wrong: ' + err.message }]);
     } finally { setChatLoading(false); }
@@ -327,7 +328,6 @@ export function useListeningSession({ step }) {
     chatMessages,
     chatInput, setChatInput,
     chatLoading,
-    chatEndRef,
     // Tags
     sessionTags, setSessionTags,
     tagInput, setTagInput,

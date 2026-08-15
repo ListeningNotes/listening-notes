@@ -24,19 +24,28 @@ function withOffsets(runs) {
   });
 }
 
+// How far each section has been revealed, kept by its own text and outside the
+// component. The step remounts every time you navigate back to the debrief, so
+// without this a briefing you've already read types itself in from nothing on
+// every visit. Keyed by content, so a re-researched briefing still types.
+const revealed = new Map();
+
 // Reveals a finished section a few characters at a time so it reads as though
 // it's being typed in. No caret — just the text arriving. A run's [n] citation
 // appears only once that run has fully landed.
 function TypedRuns({ runs, cite, style }) {
   const full = runs.map(r => r.text).join('');
-  const [shown, setShown] = useState(0);
+  const [shown, setShown] = useState(() => revealed.get(full) || 0);
 
   // A section only reaches this component once it's finished, so `full` is
-  // fixed for the life of the instance and the reveal runs exactly once.
+  // fixed for the life of the instance. Picks up where it left off — a section
+  // that finished comes straight back whole, one abandoned halfway resumes.
   useEffect(() => {
-    let n = 0;
+    let n = revealed.get(full) || 0;
+    if (n >= full.length) { setShown(full.length); return; }
     const id = setInterval(() => {
       n += 3;
+      revealed.set(full, n);
       setShown(n);
       if (n >= full.length) clearInterval(id);
     }, 16);

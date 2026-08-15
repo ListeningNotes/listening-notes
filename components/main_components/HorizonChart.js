@@ -1,5 +1,6 @@
 'use client';
-import { fonts } from '../../library/sitewide_visuals';
+import { Heart } from '@phosphor-icons/react';
+import { fonts, colors } from '../../library/sitewide_visuals';
 
 // One horizon renderer for every surface that draws one during a session —
 // Album Notes, Score and Preview. Every bar shares a single baseline because
@@ -29,7 +30,11 @@ export default function HorizonChart({
   const labelMax = tracks.length > 20 ? 78 : 104;
 
   return (
-    <div style={{ width: '100%' }}>
+    // Headroom above the bars. A 5-star bar fills the row exactly, so without
+    // this its top sits flush against whatever is above it — and the ♥ on a
+    // 5-star favourite is drawn above the row entirely, landing on the label.
+    // Both read as a bar that's been cut off rather than one that peaked.
+    <div style={{ width: '100%', paddingTop: 13 }}>
       <div style={{ display: 'flex', alignItems: 'flex-end', gap, height }}>
         {tracks.map((t, i) => {
           const r = trackRatings?.[i] || 0;
@@ -45,11 +50,13 @@ export default function HorizonChart({
               }}
             >
               {fav && (
+                // Phosphor's Heart, same as the marks on an archive card —
+                // inline-flex so the icon isn't sitting on a text baseline.
                 <span style={{
-                  position: 'absolute', bottom: `calc(${Math.max(3, (r / 5) * 100)}% + 3px)`,
+                  position: 'absolute', bottom: `calc(${Math.max(3, (r / 5) * 100)}% + 4px)`,
                   left: '50%', transform: 'translateX(-50%)',
-                  fontSize: 9, lineHeight: 1, color: '#E8B84B', pointerEvents: 'none',
-                }}>♥</span>
+                  display: 'inline-flex', lineHeight: 1, color: colors.fav, pointerEvents: 'none',
+                }}><Heart size={10} weight="fill" /></span>
               )}
               <div style={{
                 width: '100%',
