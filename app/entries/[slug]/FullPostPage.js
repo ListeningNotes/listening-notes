@@ -119,6 +119,10 @@ export default function FullPostPage({ entry }) {
 
   const allTracksFive = parsedTracks.length > 0 && parsedTracks.every(t => t.stars === 5);
   const isMasterpiece = allTracksFive || entry.rating === 'Masterpiece';
+  // Everything here is the library. A submission is a note about where a
+  // record came from, so it's worth adding when true and worth nothing when
+  // false — "Library" on every other entry was labelling the default.
+  const isSubmission = entry.entry_type === 'Submission';
   const displayRating = isMasterpiece ? 5 : parseFloat(entry.rating) || 0;
 
   return (
@@ -140,17 +144,18 @@ export default function FullPostPage({ entry }) {
           0%, 100% { transform: translateY(0); }
           50%      { transform: translateY(5px); }
         }
-        /* The whole row lights at once. This used to stagger one to five, and
-           the last star landed a second and a half after the page did — an
-           effect on desktop, a slow page on a phone. The small overshoot is
-           what carries the moment now that the pacing is gone. */
+        /* Each star lights up whole, rather than the gold sliding across it —
+           StarRating staggers the delay so the rating counts itself out
+           one, two, three, four, five. The per-star fade is quick so each one
+           reads as switching on; the pacing lives in the stagger. On a
+           masterpiece the sparkle then fires once the fifth has landed, which
+           is the whole point of the count — it arrives somewhere. */
         @keyframes ln-star-fill {
-          0%   { opacity: 0; transform: scale(0.8); }
-          60%  { opacity: 1; transform: scale(1.08); }
-          100% { opacity: 1; transform: scale(1); }
+          from { opacity: 0; }
+          to   { opacity: 1; }
         }
         .ln-star-fill {
-          animation: ln-star-fill 0.26s cubic-bezier(0.34, 1.4, 0.64, 1) backwards;
+          animation: ln-star-fill 0.18s ease-out backwards;
         }
         @media (prefers-reduced-motion: reduce) {
           .ln-star-fill { animation: none; }
@@ -394,7 +399,7 @@ export default function FullPostPage({ entry }) {
         )}
         <div className="ln-screen-one-chips">
           {entry.relationship && <Chip>{entry.relationship}</Chip>}
-          {entry.entry_type && <Chip>{entryTypeLabel(entry.entry_type)}</Chip>}
+          {isSubmission && <Chip>Submission</Chip>}
           {(entry.favorite === true || entry.favorite === 'true') && <Chip tone="fav">Favorite</Chip>}
           {isMasterpiece && <Chip tone="mp">Masterpiece</Chip>}
         </div>
@@ -449,7 +454,7 @@ export default function FullPostPage({ entry }) {
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
                 {displayRating > 0 && <StarRating rating={displayRating} size={15} glow={isMasterpiece} style={{ verticalAlign: 'middle' }} />}
                 {entry.relationship && <Chip>{entry.relationship}</Chip>}
-                {entry.entry_type && <Chip>{entryTypeLabel(entry.entry_type)}</Chip>}
+                {isSubmission && <Chip>Submission</Chip>}
                 {(entry.favorite === true || entry.favorite === 'true') && <Chip tone="fav">Favorite</Chip>}
               </div>
               <div style={{ fontFamily: fonts.mono, fontSize: '9px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--ink-faint)', marginTop: '12px' }}>

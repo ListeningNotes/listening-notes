@@ -138,9 +138,11 @@ export default function AlbumPreview({ entry, scale = 1 }) {
               as one line of provenance rather than two stacked labels. The
               two fields can't collide — Submission was removed as a
               relationship, so it only ever appears as a type. */}
-          {roomForDetail && (entry.relationship || entry.entry_type) && (
+          {roomForDetail && (entry.relationship || entry.entry_type === 'Submission') && (
             <div style={{ marginTop: px(3), fontFamily: fonts.mono, fontSize: px(7.5), letterSpacing: '0.08em', textTransform: 'uppercase', color: textFaint }}>
-              {[entry.relationship, entryTypeLabel(entry.entry_type)].filter(Boolean).join(' · ')}
+              {/* Only a submission earns a word here — the rest is the library
+                  by definition, and saying so on every tile said nothing. */}
+              {[entry.relationship, entry.entry_type === 'Submission' ? 'Submission' : ''].filter(Boolean).join(' · ')}
             </div>
           )}
         </div>
