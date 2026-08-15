@@ -358,11 +358,18 @@ export default function FullPostPage({ entry }) {
              "Freedom (feat. Kendrick Lamar)" ends at the ellipsis instead of
              taking the row for itself. Phones only; desktop rows have the
              width to show a full name. */
+          /* Takes whatever the row has left and clips only when it genuinely
+             runs out. This was capped at 15ch, which truncated titles with
+             half the row still empty — "I'm Not In Your Mind" became "I'm Not
+             In Your Mi…" nowhere near the stars. flex:1 with min-width:0 is
+             what lets a flex item shrink below its content and ellipsis at
+             the real boundary instead of a guessed one. */
           .ln-track-name {
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            max-width: 15ch;
+            flex: 1;
+            min-width: 0;
           }
 
           .ln-content {

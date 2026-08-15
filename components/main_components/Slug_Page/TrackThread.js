@@ -18,7 +18,7 @@ export default function TrackThread({ track, trackIndex, slug, commentsByTrack, 
         <span className="ln-track-name" style={{ fontSize: '13px', color: 'var(--ink)', minWidth: 0 }}>{track.name}</span>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginLeft: 'auto', flexShrink: 0 }}>
           {track.favorite && (
-            <span title="Favourite song" style={{ display: 'inline-flex', color: 'var(--fav)', lineHeight: 1 }}><Heart size={12} weight="fill" /></span>
+            <span title="Favourite song" style={{ display: 'inline-flex', color: 'var(--fav, #f0484f)', lineHeight: 1 }}><Heart size={12} weight="fill" /></span>
           )}
           {track.stars > 0 && <StarRating rating={track.stars} size={12} />}
         </div>

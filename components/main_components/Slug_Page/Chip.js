@@ -6,9 +6,13 @@ import { fonts } from '../../../library/sitewide_visuals';
 // heart or diamond it stands for are recognisably the same thing. The border
 // takes the colour too, at low opacity — a coloured word inside a grey outline
 // reads as text that happens to be tinted rather than as a labelled state.
+// The literals are fallbacks, not duplicates: color-mix() with an undefined
+// custom property is invalid, and an invalid border colour drops the whole
+// border — so a stale stylesheet turned the masterpiece chip into plain text
+// with no box at all, while the favourite chip beside it looked fine.
 const TONES = {
-  fav: { color: 'var(--fav)', border: 'color-mix(in srgb, var(--fav) 40%, transparent)' },
-  mp:  { color: 'var(--mp)',  border: 'color-mix(in srgb, var(--mp) 40%, transparent)' },
+  fav: { color: 'var(--fav, #f0484f)', border: 'color-mix(in srgb, var(--fav, #f0484f) 40%, transparent)' },
+  mp:  { color: 'var(--mp, #4a9bf0)',  border: 'color-mix(in srgb, var(--mp, #4a9bf0) 40%, transparent)' },
 };
 
 export default function Chip({ children, accent, tone }) {
