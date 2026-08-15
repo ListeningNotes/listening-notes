@@ -136,6 +136,21 @@ const NOT_THE_ALBUM = [
 const norm = s => String(s || '').toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, ' ').trim();
 const words = s => norm(s).split(' ').filter(Boolean);
 
+// Apple splits some genres finer than an archive this size can use — Adult
+// Alternative, Alternative Folk and Alternative would each be a filter button
+// matching one or two records. Folded here, at the source, so the archive's
+// filter row stays readable. A genre typed by hand in the CMS is left as typed.
+const GENRE_FOLD = {
+  'adult alternative': 'Alternative',
+  'alternative folk': 'Alternative',
+  'hip-hop': 'Hip-Hop/Rap',
+};
+
+export function foldGenre(genre) {
+  const g = String(genre || '').trim();
+  return GENRE_FOLD[g.toLowerCase()] || g;
+}
+
 // Did what was typed name this artist, and if so, what's left over? "the beach
 // boys" leaves nothing — a plain discography browse. "beach boys pet sounds"
 // leaves ["pet","sounds"], which is what titles then get matched against.
@@ -289,7 +304,7 @@ export async function searchArtistAlbums(artistQuery) {
         // Apple's own genre for the record. A controlled vocabulary — Rock,
         // Alternative, Hip-Hop/Rap — which is what makes it filterable, where
         // the briefing's free-text genre is a sentence and isn't.
-        genre: r.primaryGenreName || '',
+        genre: foldGenre(r.primaryGenreName),
         art: r.artworkUrl100.replace(/\d+x\d+bb/, '600x600bb'),
         artLarge: r.artworkUrl100.replace(/\d+x\d+bb/, '3000x3000bb'),
         _theirs: theirs,
