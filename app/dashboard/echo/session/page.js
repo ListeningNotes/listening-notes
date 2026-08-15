@@ -13,16 +13,18 @@ import TrackNotes from '../../../../components/session_components/steps/TrackNot
 import AlbumNotes from '../../../../components/session_components/steps/AlbumNotes';
 import ScoreScreen from '../../../../components/session_components/steps/ScoreScreen';
 import ReflectChat from '../../../../components/session_components/steps/ReflectChat';
-import TagsEditor from '../../../../components/session_components/steps/TagsEditor';
 import SessionPreview from '../../../../components/session_components/steps/SessionPreview';
 
+// Tags used to sit between Score and Preview. They were generated rather than
+// written, and nothing on the site ever found anything by one — the archive
+// searches the notes instead now, and genre is its own field. The step and the
+// display are gone; the column and everything already in it are untouched.
 const STEPS = [
   { id: 0, label: 'Album Debrief' },
   { id: 1, label: 'Track Notes' },
   { id: 2, label: 'Album Notes' },
   { id: 3, label: 'Score' },
-  { id: 4, label: 'Tags' },
-  { id: 5, label: 'Preview' },
+  { id: 4, label: 'Preview' },
 ];
 
 export default function EchoSessionPage() {
@@ -51,12 +53,11 @@ export default function EchoSessionPage() {
     albumArt, setAlbumArt, albumInput, setAlbumInput, artistName, setArtistName,
     overallNotes, setOverallNotes,
     rating, setRating, Masterpiece, setMasterpiece, Favorite, setFavorite,
-    entryType, setEntryType, relationship, setRelationship,
+    entryType, setEntryType, relationship, setRelationship, setGenre,
     tracks, tracksLoading, trackNotes, setTrackNotes, trackRatings, setTrackRatings,
     trackFavorites, setTrackFavorites,
     openTrack, setOpenTrack,
     chatMessages, chatInput, setChatInput, chatLoading,
-    sessionTags, setSessionTags, tagInput, setTagInput,
     formatting, output, saving, saved,
     elapsed,
     doResearch, refreshResearch, doFormat, doSave, sendChat,
@@ -82,13 +83,14 @@ export default function EchoSessionPage() {
       const raw = localStorage.getItem('ln_pending_session');
       if (!raw) { router.replace('/dashboard/echo'); return; }
       const pending = JSON.parse(raw);
-      const { album, artist, year, artUrl, collectionId, relationship: rel, entryType: et } = pending;
+      const { album, artist, year, artUrl, collectionId, genre: gen, relationship: rel, entryType: et } = pending;
 
       setAlbumInput(album);
       setArtistName(artist);
       if (artUrl) setAlbumArt(artUrl);
       setRelationship(rel || '');
       setEntryType(et || '');
+      setGenre(gen || '');
 
       // Pass relationship/entryType explicitly to avoid stale-closure issue
       doResearch(album, artist, artUrl, { relationship: rel || '', entryType: et || '', collectionId });
@@ -340,8 +342,7 @@ export default function EchoSessionPage() {
                     {step === 1 && <TrackNotes tracks={tracks} tracksLoading={tracksLoading} trackNotes={trackNotes} setTrackNotes={setTrackNotes} trackRatings={trackRatings} setTrackRatings={setTrackRatings} trackFavorites={trackFavorites} setTrackFavorites={setTrackFavorites} openTrack={openTrack} setOpenTrack={setOpenTrack} onNext={() => goToStep(2)} />}
                     {step === 2 && <AlbumNotes tracks={tracks} trackRatings={trackRatings} trackFavorites={trackFavorites} overallNotes={overallNotes} setOverallNotes={setOverallNotes} onNext={() => goToStep(3)} />}
                     {step === 3 && <ScoreScreen tracks={tracks} trackRatings={trackRatings} trackFavorites={trackFavorites} rating={rating} setRating={setRating} Masterpiece={Masterpiece} setMasterpiece={setMasterpiece} Favorite={Favorite} setFavorite={setFavorite} onNext={() => goToStep(4)} />}
-                    {step === 4 && <TagsEditor sessionTags={sessionTags} setSessionTags={setSessionTags} tagInput={tagInput} setTagInput={setTagInput} formatting={formatting} onNext={() => goToStep(5)} />}
-                    {step === 5 && <SessionPreview brief={brief} albumArt={albumArt} output={output} formatting={formatting} rating={rating} sessionTags={sessionTags} saving={saving} saved={saved} overallNotes={overallNotes} tracks={tracks} trackRatings={trackRatings} trackFavorites={trackFavorites} doFormat={doFormat} doSave={doSave} />}
+                    {step === 4 && <SessionPreview brief={brief} albumArt={albumArt} output={output} formatting={formatting} rating={rating} saving={saving} saved={saved} overallNotes={overallNotes} tracks={tracks} trackRatings={trackRatings} trackFavorites={trackFavorites} doFormat={doFormat} doSave={doSave} />}
                   </div>
                 </div>
               </div>

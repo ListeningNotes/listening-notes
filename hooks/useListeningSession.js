@@ -26,6 +26,10 @@ export function useListeningSession({ step }) {
   const [Favorite, setFavorite]           = useState(false);
   const [entryType, setEntryType]         = useState('');
   const [relationship, setRelationship]   = useState('');
+  // Apple's genre for the record, carried from the album picker. Falls back to
+  // the briefing's, which is prose rather than a category, so it only stands in
+  // when the record was typed in by hand.
+  const [genre, setGenre]                 = useState('');
 
   // Tracks
   const [tracks, setTracks]               = useState(null);
@@ -39,10 +43,6 @@ export function useListeningSession({ step }) {
   const [chatMessages, setChatMessages] = useState([]);
   const [chatInput, setChatInput]       = useState('');
   const [chatLoading, setChatLoading]   = useState(false);
-
-  // Tags
-  const [sessionTags, setSessionTags] = useState([]);
-  const [tagInput, setTagInput]       = useState('');
 
   // Preview
   const [formatting, setFormatting] = useState(false);
@@ -75,9 +75,8 @@ export function useListeningSession({ step }) {
     // without it, notes written before the briefing landed would go unsaved.
   }, [brief, overallNotes, trackNotes, trackRatings, trackFavorites, rating, Masterpiece, Favorite, entryType, relationship]);
 
-  // Format one step early. The tags on step 4 are produced by this call, so
-  // starting it at step 3 means they're already there when the user arrives
-  // instead of being watched for.
+  // Format one step early, so the preview is already written by the time the
+  // Score step is done rather than being watched for on arrival.
   const formattedNotesRef = useRef('');
   useEffect(() => {
     if (step >= 3 && !output && !formatting && brief && overallNotes.trim()) {
@@ -91,11 +90,6 @@ export function useListeningSession({ step }) {
   useEffect(() => {
     if (output && overallNotes !== formattedNotesRef.current) setOutput(null);
   }, [overallNotes]);
-
-  // Seed tags from formatted output on first format
-  useEffect(() => {
-    if (output?.tags?.length && sessionTags.length === 0) setSessionTags(output.tags);
-  }, [output]);
 
   // Restores a saved draft without clobbering anything already typed. The
   // session is now usable before the briefing lands, so this can fire while
@@ -153,7 +147,6 @@ export function useListeningSession({ step }) {
     setFavorite(false);
     setSaved(false);
     setOutput(null);
-    setSessionTags([]);
     setChatMessages([]);
     restoredRef.current = false;
     if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
@@ -173,7 +166,7 @@ export function useListeningSession({ step }) {
   }
 
   // Throw away the stored briefing and research the album again. Deliberately
-  // does not touch notes, ratings or tags — only the briefing is replaced, so
+  // does not touch notes or ratings — only the briefing is replaced, so
   // this is safe to hit in the middle of a listen.
   function refreshResearch() {
     const album  = albumInput || brief?.album;
@@ -228,7 +221,6 @@ export function useListeningSession({ step }) {
             trackNotes: trackContextLines(),
             albumNotes: overallNotes.trim(),
             rating: rating ? rating + ' stars' : '',
-            tags: sessionTags,
           },
           echoMemory: '',
         }),
@@ -281,6 +273,7 @@ export function useListeningSession({ step }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           album: brief.album, artist: brief.artist, year: brief.year,
+          genre: genre || brief.genre || '',
           entry_type: entryType || 'Personal Library',
           relationship: relationship || '',
           rating: Masterpiece ? 'Masterpiece' : (rating ? rating + ' stars' : ''),
@@ -288,7 +281,6 @@ export function useListeningSession({ step }) {
           notes: output.album_notes,
           tracks: structuredTracks,
           track_notes: derived.track_notes,
-          tags: sessionTags,
           horizon: derived.horizon,
           album_art: albumArt,
           post_link: '',
@@ -317,6 +309,7 @@ export function useListeningSession({ step }) {
     Favorite, setFavorite,
     entryType, setEntryType,
     relationship, setRelationship,
+    genre, setGenre,
     // Tracks
     tracks,
     tracksLoading,
@@ -328,9 +321,6 @@ export function useListeningSession({ step }) {
     chatMessages,
     chatInput, setChatInput,
     chatLoading,
-    // Tags
-    sessionTags, setSessionTags,
-    tagInput, setTagInput,
     // Preview
     formatting,
     output,

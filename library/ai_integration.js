@@ -163,9 +163,11 @@ export async function research_album(album, artist) {
   return brief;
 }
 
+// Assembles an entry out of what was written. Nothing here reaches a model any
+// more: the only generated thing was the tag list, and tags are gone — the
+// archive searches the notes and genre is its own field. So this is now a
+// local, instant, free assembly of prose that was never round-tripped anyway.
 export async function format_post({ brief, notes, rating, masterpiece, favorite, entryType, relationship, trackNotes, trackRatings, tracks }) {
-  const client = get_client();
-
   const trackNotesBlock = tracks?.length
     ? tracks.map((t, i) => {
         const note = trackNotes?.[i];
@@ -179,57 +181,10 @@ export async function format_post({ brief, notes, rating, masterpiece, favorite,
   // Same bar the Score screen shows live during the session.
   const horizonString = buildHorizon(tracks, trackRatings);
 
-  // Only the tags are generated. The notes are the listener's own writing and
-  // the track block is already assembled above, so sending either through the
-  // model could only ever damage them: a quote mark in the prose was enough to
-  // silently truncate a whole entry. Prose never makes the round trip now.
-  const TAGS_SCHEMA = {
-    type: 'object',
-    properties: {
-      tags: { type: 'array', items: { type: 'string' }, description: '8-12 short tags for this entry' },
-    },
-    required: ['tags'],
-    additionalProperties: false,
-  };
-
-  const message = await client.messages.create({
-    model: 'claude-sonnet-4-6',
-    max_tokens: 1000,
-    output_config: { format: { type: 'json_schema', schema: TAGS_SCHEMA } },
-    messages: [{
-      role: 'user',
-      content: `Generate 8-12 tags for an entry in "Listening Notes," a personal music journal.
-
-Album: ${brief.album}
-Artist: ${brief.artist}
-Year: ${brief.year}
-Genre: ${brief.genre}
-Entry type: ${entryType || 'First Listen'}
-Relationship: ${relationship || ''}
-Rating: ${rating ? rating + '/5' + (masterpiece ? ' (masterpiece)' : '') : 'unrated'}
-
-What the listener wrote:
-${notes}
-
-${trackNotesBlock ? `Per-track notes:\n${trackNotesBlock}` : ''}
-
-Cover the artist, the album, its genre and era, and the themes and feelings in what was written. Keep each tag to a few words at most.`
-    }]
-  });
-
-  let tags = [];
-  try {
-    tags = JSON.parse(message.content.find(b => b.type === 'text')?.text || '{}').tags || [];
-  } catch {
-    // Tags are the only thing at stake here — an entry is still worth saving
-    // without them, and they can be added by hand on the Tags step.
-  }
-
   return {
     album_notes: notes,        // exactly as written — never round-tripped
     track_notes: trackNotesBlock,
     horizon: horizonString,
-    tags,
   };
 }
 

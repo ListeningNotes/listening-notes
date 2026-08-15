@@ -14,7 +14,6 @@ export default function SessionPreview({
   output,
   formatting,
   rating,
-  sessionTags,
   saving,
   saved,
   overallNotes,
@@ -90,14 +89,6 @@ export default function SessionPreview({
           <div style={{ ...lbl, marginBottom: 12, marginTop: 4 }}>Track Notes</div>
           <div style={{ fontFamily: fonts.sans, fontSize: 14, lineHeight: 1.9, color: tx(0.72), whiteSpace: 'pre-wrap', marginBottom: 28 }}>{output.track_notes}</div>
         </>
-      )}
-
-      {sessionTags.length > 0 && (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, paddingTop: 20, borderTop: `1px solid ${bdr(0.07)}`, marginBottom: 32 }}>
-          {sessionTags.map((t, i) => (
-            <span key={i} style={{ fontFamily: fonts.mono, fontSize: 9, letterSpacing: '0.08em', textTransform: 'uppercase', color: tx(0.7), border: `1px solid ${bdr(0.14)}`, borderRadius: 20, padding: '3px 10px', background: dk(0.42) }}>#{t}</span>
-          ))}
-        </div>
       )}
 
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 16, marginTop: 8 }}>

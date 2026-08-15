@@ -48,11 +48,6 @@ export default function FullPostPage({ entry }) {
     };
   }, []);
 
-  // Parse tags — stored as either an array or comma-separated string in the DB
-  const tags = entry.tags
-    ? (Array.isArray(entry.tags) ? entry.tags : entry.tags.split(',').map(t => t.trim()).filter(Boolean))
-    : [];
-
   const { albumNotes } = splitNotes(entry.notes);
   const parsedTracks = entryTracks(entry);
   const horizonBars = parseHorizon(entry.horizon);
@@ -522,17 +517,6 @@ export default function FullPostPage({ entry }) {
                   commentsByTrack={commentsByTrack}
                   onRefresh={loadComments}
                 />
-              ))}
-            </div>
-          </section>
-        )}
-
-        {tags.length > 0 && (
-          <section style={{ marginBottom: '48px' }}>
-            <MetadataLabel sticky>Tags</MetadataLabel>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-              {tags.map((tag, i) => (
-                <span key={i} style={{ fontFamily: fonts.mono, fontSize: '9px', letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ink-faint)', border: '1px solid var(--border)', borderRadius: '4px', padding: '3px 8px' }}>{tag}</span>
               ))}
             </div>
           </section>

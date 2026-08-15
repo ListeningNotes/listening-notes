@@ -199,11 +199,31 @@ export async function searchArtistAlbums(artistQuery) {
       // Every returned artist is checked, not just the first: searching
       // "radiohead ok computer" hands back three string quartets and no
       // Radiohead, and trusting results[0] pulled in a stranger's catalogue.
+      //
+      // Apple's term search is an AND across the whole string, so "idles tangk"
+      // matches no artist and no album and came back completely empty. When the
+      // full query finds nobody, the leading words are tried on their own —
+      // that's where the artist's name actually is.
       (async () => {
-        const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(query)}&entity=musicArtist&limit=5`);
-        const data = await res.json();
-        const artists = data.results || [];
-        const best = artists.find(a => residualTerms(query, a.artistName || '') !== null);
+        // Longest leading run first, so "twelve foot ninja silent machine"
+        // reaches Twelve Foot Ninja before it can reach a band called Twelve.
+        // Runs under four characters are never tried at all — otherwise "i'm in
+        // your mind fuzz" ends up at an artist named I.
+        const lead = words(query);
+        const attempts = [query];
+        for (let n = lead.length - 1; n >= 1; n--) {
+          const term = lead.slice(0, n).join(' ');
+          if (term.length >= 4) attempts.push(term);
+        }
+
+        let best = null;
+        // Capped so a long query can't turn one search into a dozen calls.
+        for (const term of attempts.slice(0, 4)) {
+          const res = await fetch(`https://itunes.apple.com/search?term=${encodeURIComponent(term)}&entity=musicArtist&limit=5`);
+          const data = await res.json();
+          best = (data.results || []).find(a => residualTerms(query, a.artistName || '') !== null);
+          if (best) break;
+        }
         if (!best) return [];
         // 200, not 100: a prolific artist's catalogue was being truncated by
         // the API before any of this code got to see it.
@@ -266,6 +286,10 @@ export async function searchArtistAlbums(artistQuery) {
         year: (r.releaseDate || '').slice(0, 4),
         trackCount: r.trackCount || 0,
         collectionId: r.collectionId,
+        // Apple's own genre for the record. A controlled vocabulary — Rock,
+        // Alternative, Hip-Hop/Rap — which is what makes it filterable, where
+        // the briefing's free-text genre is a sentence and isn't.
+        genre: r.primaryGenreName || '',
         art: r.artworkUrl100.replace(/\d+x\d+bb/, '600x600bb'),
         artLarge: r.artworkUrl100.replace(/\d+x\d+bb/, '3000x3000bb'),
         _theirs: theirs,

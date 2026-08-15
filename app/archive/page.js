@@ -52,6 +52,7 @@ export default function ArchivePage() {
   const [sortDir, setSortDir] = useState('desc');
   const [relationship, setRelationship] = useState('');
   const [entryType, setEntryType] = useState('');
+  const [genre, setGenre] = useState('');
   const [favoritesOnly, setFavoritesOnly] = useState(false);
   const [masterpiecesOnly, setMasterpiecesOnly] = useState(false);
   // null until the entries land — the range can't be known before the data
@@ -150,6 +151,18 @@ export default function ArchivePage() {
     return { min: Math.min(...years), max: Math.max(...years) };
   }, [entries]);
 
+  // Genre is an open vocabulary coming from Apple, so the options are whatever
+  // the archive actually contains rather than a list held here that would drift
+  // out of date the first time something new gets logged.
+  const genres = useMemo(() => {
+    const seen = new Map();
+    for (const e of entries) {
+      const g = (e.genre || '').trim();
+      if (g && !seen.has(g.toLowerCase())) seen.set(g.toLowerCase(), g);
+    }
+    return [...seen.values()].sort((a, b) => a.localeCompare(b));
+  }, [entries]);
+
   // Opens sitting on the full span once the entries arrive. Only ever seeds
   // it once, so a reload of the list doesn't yank the handles out from under
   // someone who has already moved them.
@@ -169,9 +182,20 @@ export default function ArchivePage() {
     const dir = sortDir === 'asc' ? 1 : -1;
     return entries
       .filter(e => {
-        if (q && !((e.album || '').toLowerCase().includes(q) || (e.artist || '').toLowerCase().includes(q))) return false;
+        // Searches the writing, not just the labels. Finding a record by
+        // something you remember saying about it is the thing tags were
+        // standing in for, and your own words are better at it than a
+        // generated keyword ever was.
+        if (q && !(
+          (e.album || '').toLowerCase().includes(q) ||
+          (e.artist || '').toLowerCase().includes(q) ||
+          (e.genre || '').toLowerCase().includes(q) ||
+          (e.notes || '').toLowerCase().includes(q) ||
+          (e.track_notes || '').toLowerCase().includes(q)
+        )) return false;
         if (relationship && e.relationship !== relationship) return false;
         if (entryType && e.entry_type !== entryType) return false;
+        if (genre && (e.genre || '') !== genre) return false;
         if (favoritesOnly && !(e.favorite === true || e.favorite === 'true')) return false;
         if (masterpiecesOnly && e.rating !== 'Masterpiece' && e.masterpiece !== true) return false;
         if (yearActive) {
@@ -191,7 +215,7 @@ export default function ArchivePage() {
         if (sortBy === 'year')   return dir * ((releaseYear(a) || 0) - (releaseYear(b) || 0));
         return dir * (new Date(a.created_at) - new Date(b.created_at));
       });
-  }, [entries, search, sortBy, sortDir, relationship, entryType, favoritesOnly, masterpiecesOnly, yearActive, yearRange]);
+  }, [entries, search, sortBy, sortDir, relationship, entryType, genre, favoritesOnly, masterpiecesOnly, yearActive, yearRange]);
 
   const activeSort = SORTS.find(s => s.value === sortBy) ?? SORTS[0];
 
@@ -207,7 +231,7 @@ export default function ArchivePage() {
   }
 
   function clearFilters() {
-    setSearch(''); setRelationship(''); setEntryType('');
+    setSearch(''); setRelationship(''); setEntryType(''); setGenre('');
     setFavoritesOnly(false); setMasterpiecesOnly(false);
     setSortBy('posted'); setSortDir('desc');
     setYearRange(yearBounds ? [yearBounds.min, yearBounds.max] : null);
@@ -217,7 +241,7 @@ export default function ArchivePage() {
   // badge — the search box is in plain sight, so counting it would put a
   // number on the button with nothing behind it to explain the number.
   const tuckedAwayCount =
-    (relationship ? 1 : 0) + (entryType ? 1 : 0) +
+    (relationship ? 1 : 0) + (entryType ? 1 : 0) + (genre ? 1 : 0) +
     (favoritesOnly ? 1 : 0) + (masterpiecesOnly ? 1 : 0) +
     (yearActive ? 1 : 0) +
     (sortBy !== 'posted' || sortDir !== 'desc' ? 1 : 0);
@@ -516,7 +540,7 @@ export default function ArchivePage() {
               onChange={e => setSearch(e.target.value)}
               onFocus={() => setSearchOpen(true)}
               onBlur={() => { if (!search) setSearchOpen(false); }}
-              placeholder="Search"
+              placeholder="Search albums, artists, notes"
               aria-label="Search album or artist"
             />
           </label>
@@ -657,6 +681,23 @@ export default function ArchivePage() {
                 ))}
               </div>
             </div>
+
+            {/* Only worth a group once there's more than one genre to choose
+                between — on a young archive it would be a row with a single
+                option and nothing to compare it against. */}
+            {genres.length > 1 && (
+              <div className="arc-sheet-group">
+                <div className="arc-sheet-label">Genre</div>
+                <div className="arc-sheet-opts">
+                  <button type="button" className={'arc-opt' + (!genre ? ' arc-opt--on' : '')} onClick={() => setGenre('')}>All</button>
+                  {genres.map(g => (
+                    <button key={g} type="button"
+                      className={'arc-opt' + (genre === g ? ' arc-opt--on' : '')}
+                      onClick={() => setGenre(genre === g ? '' : g)}>{g}</button>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {yearBounds && yearRange && (
               <div className="arc-sheet-group">
