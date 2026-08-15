@@ -193,11 +193,8 @@ export default function AboutPage() {
           0%,100% { filter: brightness(1.15) drop-shadow(0 0 3px rgba(255,210,60,0.5)); }
           50%     { filter: brightness(1.45) drop-shadow(0 0 6px rgba(255,210,60,0.9)); }
         }
+        /* In unison, matching the entry page and the modal. */
         .ln-star-glow { animation: ab-star-glow 2.8s ease-in-out infinite; }
-        .ln-star-glow:nth-child(2) { animation-delay: .18s; }
-        .ln-star-glow:nth-child(3) { animation-delay: .36s; }
-        .ln-star-glow:nth-child(4) { animation-delay: .54s; }
-        .ln-star-glow:nth-child(5) { animation-delay: .72s; }
         @media (prefers-reduced-motion: reduce) { .ln-star-glow { animation: none; } }
 
         @media (max-width: 768px) {
