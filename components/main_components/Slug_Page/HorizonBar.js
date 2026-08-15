@@ -37,7 +37,7 @@ export default function HorizonBar({ horizon, tracks, commentsByTrack, onBarClic
                   gap: '3px', lineHeight: 1, pointerEvents: 'none',
                 }}>
                   {fav && (
-                    <span style={{ display: 'inline-flex', color: 'var(--fav)', lineHeight: 1 }}>
+                    <span style={{ display: 'inline-flex', color: 'var(--fav, #f0484f)', lineHeight: 1 }}>
                       <Heart size={10} weight="fill" />
                     </span>
                   )}

@@ -217,7 +217,7 @@ function EditModal({ entry, onSave, onDelete, onClose }) {
                         style={{
                           background: 'none', border: 'none', cursor: 'pointer', padding: '2px 4px',
                           display: 'inline-flex', lineHeight: 1, flexShrink: 0,
-                          color: t.favorite ? 'var(--fav)' : 'rgba(26,25,22,0.25)',
+                          color: t.favorite ? 'var(--fav, #f0484f)' : 'rgba(26,25,22,0.25)',
                         }}
                       >
                         <Heart size={16} weight={t.favorite ? 'fill' : 'regular'} />
@@ -392,8 +392,8 @@ export default function SessionEntries() {
                         const n = parseFloat(String(entry.rating).replace(/[^0-9.]/g, ''));
                         return isNaN(n) ? entry.rating : n;
                       })()}
-                      {entry.masterpiece === true && <span title="Masterpiece" style={{ color: 'var(--mp)', display: 'inline-flex', lineHeight: 1 }}><SketchLogo size={16} weight="fill" /></span>}
-                      {entry.favorite === true && <span title="Favorite" style={{ color: 'var(--fav)', display: 'inline-flex', lineHeight: 1 }}><Heart size={16} weight="fill" /></span>}
+                      {entry.masterpiece === true && <span title="Masterpiece" style={{ color: 'var(--mp, #4a9bf0)', display: 'inline-flex', lineHeight: 1 }}><SketchLogo size={16} weight="fill" /></span>}
+                      {entry.favorite === true && <span title="Favorite" style={{ color: 'var(--fav, #f0484f)', display: 'inline-flex', lineHeight: 1 }}><Heart size={16} weight="fill" /></span>}
                     </div>
                     <div style={{ padding: '0 8px', fontFamily: MONO, fontSize: 10, color: 'rgba(26,25,22,0.4)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{entryTypeLabel(entry.entry_type) || '—'}</div>
                   </div>
