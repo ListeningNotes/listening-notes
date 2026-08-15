@@ -150,11 +150,9 @@ export default function EntryModal({ slug, originRect, onClose }) {
           0%,80%,100%{background-position:-200% center}
           83%{background-position:200% center}
         }
+        /* In unison, matching the entry page — the travelling shimmer read as
+           a sequence when a masterpiece is one state. */
         .ln-star-glow{animation:ln-star-glow-kf 2.8s ease-in-out infinite}
-        .ln-star-glow:nth-child(2){animation-delay:.18s}
-        .ln-star-glow:nth-child(3){animation-delay:.36s}
-        .ln-star-glow:nth-child(4){animation-delay:.54s}
-        .ln-star-glow:nth-child(5){animation-delay:.72s}
         .ln-masterpiece-shine{
           background:linear-gradient(105deg,rgba(255,210,60,.7) 0%,rgba(255,255,200,1) 40%,rgba(232,184,75,.7) 60%,rgba(255,210,60,.7) 100%);
           background-size:200% auto;

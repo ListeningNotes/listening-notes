@@ -140,16 +140,17 @@ export default function FullPostPage({ entry }) {
           0%, 100% { transform: translateY(0); }
           50%      { transform: translateY(5px); }
         }
-        /* Each star lights up whole, rather than the gold sliding across it —
-           StarRating staggers the delay so the rating counts itself out
-           one, two, three, four, five. The per-star fade is quick so each one
-           reads as switching on; the pacing lives in the stagger. */
+        /* The whole row lights at once. This used to stagger one to five, and
+           the last star landed a second and a half after the page did — an
+           effect on desktop, a slow page on a phone. The small overshoot is
+           what carries the moment now that the pacing is gone. */
         @keyframes ln-star-fill {
-          from { opacity: 0; }
-          to   { opacity: 1; }
+          0%   { opacity: 0; transform: scale(0.8); }
+          60%  { opacity: 1; transform: scale(1.08); }
+          100% { opacity: 1; transform: scale(1); }
         }
         .ln-star-fill {
-          animation: ln-star-fill 0.18s ease-out backwards;
+          animation: ln-star-fill 0.26s cubic-bezier(0.34, 1.4, 0.64, 1) backwards;
         }
         @media (prefers-reduced-motion: reduce) {
           .ln-star-fill { animation: none; }
@@ -164,11 +165,10 @@ export default function FullPostPage({ entry }) {
           0%,100% { filter: brightness(1.15) drop-shadow(0 0 3px rgba(255,210,60,0.5)) drop-shadow(0 0 6px rgba(255,180,30,0.3)); }
           50%     { filter: brightness(1.45) drop-shadow(0 0 6px rgba(255,210,60,0.9)) drop-shadow(0 0 12px rgba(255,180,30,0.5)); }
         }
+        /* All five breathe together. The per-star delays made the glow travel
+           along the row forever, which is the directional reading a
+           masterpiece shouldn't have — it's one state, not a sequence. */
         .ln-star-glow { animation: ln-star-glow-kf 2.8s ease-in-out infinite; }
-        .ln-star-glow:nth-child(2) { animation-delay: .18s; }
-        .ln-star-glow:nth-child(3) { animation-delay: .36s; }
-        .ln-star-glow:nth-child(4) { animation-delay: .54s; }
-        .ln-star-glow:nth-child(5) { animation-delay: .72s; }
         @media (prefers-reduced-motion: reduce) {
           .ln-star-glow { animation: none; }
         }
@@ -390,7 +390,7 @@ export default function FullPostPage({ entry }) {
           {entry.artist}{entry.year ? ' · ' + entry.year : ''}
         </div>
         {displayRating > 0 && (
-          <StarRating rating={displayRating} size={24} glow={isMasterpiece} animate />
+          <StarRating rating={displayRating} size={24} glow={isMasterpiece} animate burst={isMasterpiece} />
         )}
         <div className="ln-screen-one-chips">
           {entry.relationship && <Chip>{entry.relationship}</Chip>}
