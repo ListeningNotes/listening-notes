@@ -205,8 +205,8 @@ function editionPenalty(name) {
 // Now two searches run together: the artist's full catalogue, and a direct album
 // title search. They're merged, pressings of one record collapse into it, and
 // what's left is ranked rather than sorted by release date.
-export async function searchArtistAlbums(artistQuery) {
-  const query = artistQuery.trim();
+export async function searchAlbums(searchQuery) {
+  const query = searchQuery.trim();
   if (!query) return [];
   try {
     const [byArtist, byTitle] = await Promise.all([

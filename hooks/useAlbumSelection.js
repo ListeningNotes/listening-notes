@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
-import { searchArtistAlbums } from '../library/music_data_api';
+import { searchAlbums } from '../library/music_data_api';
 
 // Per-card delay as the album cards fly out of the network into the grid.
 // The grid's echo-reel-in animation reads this too — change both together.
@@ -56,7 +56,7 @@ export function useAlbumSelection({ step, onAlbumPick }) {
     const query = artistInput.trim();
     if (!query) return;
     const id = setTimeout(async () => {
-      const results = await searchArtistAlbums(query);
+      const results = await searchAlbums(query);
       setAlbums(results);
       setAlbumPage(0);   // a new result set always starts on page one
       setSearching(false);
