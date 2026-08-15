@@ -8,12 +8,15 @@ export default function HorizonBar({ horizon, tracks, commentsByTrack, onBarClic
   if (!bars.length) return null;
 
   return (
-    <div>
+    // Headroom for the marks. They used to hang off the top of the row with
+    // nothing above them to hang into.
+    <div style={{ paddingTop: '16px' }}>
       <div style={{ display: 'flex', alignItems: 'flex-end', gap: '3px', height: '52px' }}>
         {bars.map((h, i) => {
           const track = tracks[i];
           const count = (commentsByTrack[String(i)] || []).length;
           const label = track ? (i + 1) + '. ' + track.name : 'Track ' + (i + 1);
+          const fav = !!track?.favorite;
           return (
             <div
               key={i}
@@ -21,15 +24,27 @@ export default function HorizonBar({ horizon, tracks, commentsByTrack, onBarClic
               title={label}
               style={{ flex: 1, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'flex-end', cursor: 'pointer', position: 'relative' }}
             >
-              {count > 0 && (
-                <div style={{ position: 'absolute', top: '-8px', left: '50%', transform: 'translateX(-50%)', width: '5px', height: '5px', borderRadius: '50%', background: 'var(--accent)' }} />
-              )}
-              {track?.favorite && (
-                <span style={{
-                  position: 'absolute', bottom: `calc(${h * 100}% + 4px)`, left: '50%',
-                  transform: 'translateX(-50%)', display: 'inline-flex', lineHeight: 1,
-                  color: 'var(--fav)', pointerEvents: 'none',
-                }}><Heart size={10} weight="fill" /></span>
+              {/* One row holding both marks, so a favourite that also has
+                  comments reads as two things side by side. The heart used to
+                  be pinned to the top of its own bar, which put it under the
+                  comment dot on a tall bar and inside the bar's click area.
+                  pointerEvents:none keeps the whole column clickable through
+                  them — the marks are labels, not targets. */}
+              {(count > 0 || fav) && (
+                <div style={{
+                  position: 'absolute', bottom: '100%', marginBottom: '4px', left: '50%',
+                  transform: 'translateX(-50%)', display: 'flex', alignItems: 'center',
+                  gap: '3px', lineHeight: 1, pointerEvents: 'none',
+                }}>
+                  {fav && (
+                    <span style={{ display: 'inline-flex', color: 'var(--fav)', lineHeight: 1 }}>
+                      <Heart size={10} weight="fill" />
+                    </span>
+                  )}
+                  {count > 0 && (
+                    <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: 'var(--accent)' }} />
+                  )}
+                </div>
               )}
               <div
                 style={{ borderRadius: '2px 2px 0 0', background: 'var(--accent)', height: (h * 100) + '%', transition: 'filter 0.15s, transform 0.1s', transformOrigin: 'bottom' }}

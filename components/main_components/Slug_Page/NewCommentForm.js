@@ -20,7 +20,6 @@ const accentBtnSm = {
 
 export default function NewCommentForm({ slug, trackIndex, onPosted }) {
   const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
   const [text, setText] = useState('');
   const [posting, setPosting] = useState(false);
   const [error, setError] = useState('');
@@ -33,11 +32,11 @@ export default function NewCommentForm({ slug, trackIndex, onPosted }) {
       const res = await fetch('/api/comments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ slug, track_index: trackIndex, author_name: name, author_email: email, content: text }),
+        body: JSON.stringify({ slug, track_index: trackIndex, author_name: name, content: text }),
       });
       const data = await res.json();
       if (data.error) { setError(data.error); return; }
-      setName(''); setEmail(''); setText('');
+      setName(''); setText('');
 
       // Keeping the receipt is what lets the next load show this comment back
       // to the person who wrote it while it waits to be read.
@@ -56,14 +55,12 @@ export default function NewCommentForm({ slug, trackIndex, onPosted }) {
     // No border or trailing space of its own: this now lives inside the
     // Add Comment modal, which supplies its own framing.
     <div>
-      {/* Stacked rather than side by side: at the 16px phones need to avoid
-          zooming, two fields on one row in this indented column are too narrow
-          to read their own placeholders. Email is optional — the moderation
-          queue is what keeps junk out, so requiring one would only cost
-          comments; it's here so anyone who wants an answer can get one. */}
+      {/* A name and the comment, nothing else. The email field came out on
+          purpose: with nowhere for a reply to be sent, the way to find out
+          whether anyone answered is to come back and look — which is the
+          behaviour worth having until accounts exist to notify. */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '8px' }}>
         <input value={name} onChange={e => setName(e.target.value)} placeholder="Name" style={inputStyle} />
-        <input value={email} onChange={e => setEmail(e.target.value)} placeholder="Email (optional, private)" type="email" style={inputStyle} />
       </div>
       <textarea value={text} onChange={e => setText(e.target.value)} placeholder="Drop a comment here" rows={3} style={{ ...inputStyle, resize: 'vertical', width: '100%', marginBottom: '8px' }} />
       {error && <div style={{ fontFamily: fonts.mono, fontSize: '10px', color: '#d4604f', marginBottom: '8px' }}>{error}</div>}

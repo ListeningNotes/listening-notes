@@ -249,7 +249,14 @@ export default function FullPostPage({ entry }) {
             font-family: var(--font-display);
             font-size: clamp(1.6rem, 6.6vw, 2.1rem);
             font-weight: var(--font-display-weight);
-            line-height: 1.1;
+            /* 1.1 packed the two rows so tightly that overflow:hidden sliced
+               the bottom off the second one — parentheses and descenders sit
+               below the line box at this size, and "TV Animation BLEACH
+               (Original Soundtrack 3)" lost the underside of its brackets.
+               The extra leading plus a little padding gives them somewhere to
+               go without letting a third row through. */
+            line-height: 1.22;
+            padding-bottom: 0.1em;
             color: var(--ink);
             /* Two rows at most. "Salvation Laughs in the Face of a Grieving
                Mother" ran to three at full size and shoved the rating, the
@@ -388,8 +395,8 @@ export default function FullPostPage({ entry }) {
         <div className="ln-screen-one-chips">
           {entry.relationship && <Chip>{entry.relationship}</Chip>}
           {entry.entry_type && <Chip>{entryTypeLabel(entry.entry_type)}</Chip>}
-          {(entry.favorite === true || entry.favorite === 'true') && <Chip accent>Favorite</Chip>}
-          {isMasterpiece && <Chip accent>Masterpiece</Chip>}
+          {(entry.favorite === true || entry.favorite === 'true') && <Chip tone="fav">Favorite</Chip>}
+          {isMasterpiece && <Chip tone="mp">Masterpiece</Chip>}
         </div>
         <div style={{ fontFamily: fonts.mono, fontSize: '9px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--ink-faint)' }}>
           Posted {postedOn}
@@ -443,7 +450,7 @@ export default function FullPostPage({ entry }) {
                 {displayRating > 0 && <StarRating rating={displayRating} size={15} glow={isMasterpiece} style={{ verticalAlign: 'middle' }} />}
                 {entry.relationship && <Chip>{entry.relationship}</Chip>}
                 {entry.entry_type && <Chip>{entryTypeLabel(entry.entry_type)}</Chip>}
-                {(entry.favorite === true || entry.favorite === 'true') && <Chip accent>Favorite</Chip>}
+                {(entry.favorite === true || entry.favorite === 'true') && <Chip tone="fav">Favorite</Chip>}
               </div>
               <div style={{ fontFamily: fonts.mono, fontSize: '9px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--ink-faint)', marginTop: '12px' }}>
                 Posted {postedOn}

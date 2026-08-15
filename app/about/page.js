@@ -353,7 +353,7 @@ export default function AboutPage() {
                       <div className="ab-row-head">
                         <StarRating rating={s.rating} size={14} glow={s.masterpiece} />
                         {s.masterpiece
-                          ? <span style={{ marginLeft: 'auto' }}><Chip accent>Masterpiece</Chip></span>
+                          ? <span style={{ marginLeft: 'auto' }}><Chip tone="mp">Masterpiece</Chip></span>
                           : <span className="ab-row-tail">{s.note}</span>}
                       </div>
                       <p className="ab-row-body">{s.body}</p>
