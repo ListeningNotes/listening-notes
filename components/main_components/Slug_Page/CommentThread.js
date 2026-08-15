@@ -49,7 +49,6 @@ export default function CommentThread({ comment, slug, onReplyPosted, depth = 0 
   const [upvotes, setUpvotes] = useState(comment.upvotes);
   const [upvoted, setUpvoted] = useState(false);
   const [replyName, setReplyName] = useState('');
-  const [replyEmail, setReplyEmail] = useState('');
   const [replyText, setReplyText] = useState('');
   const [posting, setPosting] = useState(false);
 
@@ -65,7 +64,6 @@ export default function CommentThread({ comment, slug, onReplyPosted, depth = 0 
   }
 
   async function handleReply() {
-    // Email optional here too, matching the new-comment form.
     if (!replyName.trim() || !replyText.trim()) return;
     setPosting(true);
     try {
@@ -77,13 +75,12 @@ export default function CommentThread({ comment, slug, onReplyPosted, depth = 0 
           track_index: comment.track_index,
           parent_id: comment.id,
           author_name: replyName,
-          author_email: replyEmail,
           content: replyText,
         }),
       });
       const data = await res.json();
       if (data.comment) {
-        setReplyName(''); setReplyEmail(''); setReplyText('');
+        setReplyName(''); setReplyText('');
         // Same as a new comment: keep the receipt, close, and let the reply
         // showing up in the branch be the confirmation.
         keep_receipt(data.receipt);
@@ -206,7 +203,6 @@ export default function CommentThread({ comment, slug, onReplyPosted, depth = 0 
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               <input value={replyName} onChange={e => setReplyName(e.target.value)} placeholder="Name" style={inputStyle} />
-              <input value={replyEmail} onChange={e => setReplyEmail(e.target.value)} placeholder="Email (optional, private)" type="email" style={inputStyle} />
               <textarea value={replyText} onChange={e => setReplyText(e.target.value)} placeholder="Reply…" rows={3} style={{ ...inputStyle, resize: 'vertical', width: '100%' }} />
               <div style={{ display: 'flex', gap: '8px' }}>
                 <button onClick={handleReply} disabled={posting} style={accentBtnSm}>{posting ? '…' : 'Post reply'}</button>
