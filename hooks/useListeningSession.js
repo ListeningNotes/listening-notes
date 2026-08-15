@@ -187,7 +187,25 @@ export function useListeningSession({ step }) {
     takeOver(album, artist, onResearchUpdate);
   }
 
-  // Reflect chat — step 3 quick-prompts
+  // Every track that has anything on it, as one line Echo can actually read:
+  // the title, what it scored, and what was written. Sending bare note text
+  // stripped off which song each thought belonged to.
+  function trackContextLines() {
+    const list = tracks || [];
+    if (!list.length) return Object.values(trackNotes).filter(Boolean);
+    return list.map((t, i) => {
+      const note = (trackNotes[i] || '').trim();
+      const stars = trackRatings[i] || 0;
+      const fav = !!trackFavorites[i];
+      if (!note && !stars && !fav) return null;
+      const marks = [];
+      if (stars) marks.push(`${stars}★`);
+      if (fav) marks.push('favourite');
+      return `${t.number || i + 1}. ${t.title}${marks.length ? ` (${marks.join(', ')})` : ''}${note ? ` — ${note}` : ''}`;
+    }).filter(Boolean);
+  }
+
+  // Reflect chat — the column beside Track Notes and Album Notes
   async function sendChat(msg) {
     if (chatLoading) return;
     const message = msg || chatInput.trim();
@@ -201,12 +219,15 @@ export function useListeningSession({ step }) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           message,
-          phase: 'reflection',
+          // Mid-listen the job is to push on the track just written about;
+          // by Album Notes it's to surface the pattern across all of them.
+          phase: step >= 2 ? 'reflection' : 'notation',
           conversationHistory: chatMessages.map(m => ({ role: m.role === 'user' ? 'user' : 'assistant', content: m.text })),
           entryContext: {
             album: brief?.album || '', artist: brief?.artist || '', year: brief?.year || '',
             entryType, relationship,
-            trackNotes: Object.values(trackNotes).filter(Boolean),
+            trackNotes: trackContextLines(),
+            albumNotes: overallNotes.trim(),
             rating: rating ? rating + ' stars' : '',
             tags: sessionTags,
           },

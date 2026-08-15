@@ -52,6 +52,11 @@ export async function POST(request) {
     if (Array.isArray(entryContext.trackNotes) && entryContext.trackNotes.length > 0) {
       contextBlock += `Track notes:\n${entryContext.trackNotes.map((n, i) => `  ${i + 1}. ${n}`).join('\n')}\n`;
     }
+    // The album review as it stands. Echo should be helping finish this draft,
+    // not writing over the top of one it can't see.
+    if (entryContext.albumNotes) {
+      contextBlock += `Album notes written so far:\n${entryContext.albumNotes}\n`;
+    }
     if (Array.isArray(entryContext.tags) && entryContext.tags.length > 0) {
       contextBlock += `Tags: ${entryContext.tags.join(', ')}\n`;
     }

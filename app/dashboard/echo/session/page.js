@@ -145,12 +145,24 @@ export default function EchoSessionPage() {
   }, [puzzleDone]);
 
   // Every step change goes through here so the slide knows which way to travel.
+  // Deliberately leaves askOpen alone: moving from Track Notes to Album Notes
+  // shouldn't shut the conversation you're carrying between them.
   function goToStep(newStep) {
     setStepDir(newStep >= step ? 1 : -1);
     setStep(newStep);
     setMaxStep(m => Math.max(m, newStep));
-    setAskOpen(false);
   }
+
+  // The two writing steps. Everywhere else the column stays out of the way,
+  // but askOpen is remembered so it reopens on the way back.
+  const canAsk = step === 1 || step === 2;
+  const chatOpen = canAsk && askOpen;
+
+  // What you'd ask mid-listen isn't what you'd ask once every track is written
+  // up and the whole record has to become one take.
+  const askPrompts = step === 2
+    ? ['Pull my track notes into one take', 'What am I circling around?', 'Where do my notes contradict each other?']
+    : ['Reflect on my notes so far', 'What patterns do you notice?', 'Push back on something I said'];
 
   if (checking) return <div style={{ minHeight: '100vh', background: '#f5f2ec' }} />;
   if (!authed) return <PasswordGate onAuth={() => setAuthed(true)} />;
@@ -169,7 +181,6 @@ export default function EchoSessionPage() {
         /* Steps rise from below going forward, settle from above going back. */
         @keyframes ln-step-fwd  { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
         @keyframes ln-step-back { from{opacity:0;transform:translateY(-20px)} to{opacity:1;transform:translateY(0)} }
-        @keyframes ln-drawer-in { from{opacity:0;transform:translateX(28px)} to{opacity:1;transform:translateX(0)} }
         @keyframes ln-pulse { 0%,100%{opacity:0.35} 50%{opacity:0.8} }
         @keyframes ln-lit {
           0%,100% { box-shadow: 0 0 16px 2px rgba(255,255,255,0.32), 0 0 40px 10px rgba(255,255,255,0.12), inset 0 1px 0 rgba(255,255,255,0.20); }
@@ -301,13 +312,14 @@ export default function EchoSessionPage() {
                 </div>
               </div>
 
-              {/* Main content */}
+              {/* Main content — narrows rather than hides when Echo opens, so
+                  the notes stay writable with the conversation beside them. */}
               <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', overflow: 'auto' }}>
-                <div style={{ flex: 1, padding: '40px 48px 56px' }}>
+                <div style={{ flex: 1, padding: chatOpen ? '40px 30px 56px' : '40px 48px 56px', transition: 'padding 0.32s cubic-bezier(0.22,1,0.36,1)' }}>
                   {/* Keyed on step so each screen mounts fresh and slides in. */}
                   <div key={step} style={{ animation: `${stepDir > 0 ? 'ln-step-fwd' : 'ln-step-back'} 0.35s cubic-bezier(0.22,1,0.36,1) both` }}>
                     {step === 0 && <AlbumDebrief brief={brief} researchState={researchState} researchError={researchError} onNext={() => goToStep(1)} onReset={() => router.replace('/dashboard/echo')} onRefresh={refreshResearch} />}
-                    {step === 1 && <TrackNotes tracks={tracks} tracksLoading={tracksLoading} trackNotes={trackNotes} setTrackNotes={setTrackNotes} trackRatings={trackRatings} setTrackRatings={setTrackRatings} trackFavorites={trackFavorites} setTrackFavorites={setTrackFavorites} openTrack={openTrack} setOpenTrack={setOpenTrack} onNext={() => goToStep(2)} onAsk={() => setAskOpen(true)} />}
+                    {step === 1 && <TrackNotes tracks={tracks} tracksLoading={tracksLoading} trackNotes={trackNotes} setTrackNotes={setTrackNotes} trackRatings={trackRatings} setTrackRatings={setTrackRatings} trackFavorites={trackFavorites} setTrackFavorites={setTrackFavorites} openTrack={openTrack} setOpenTrack={setOpenTrack} onNext={() => goToStep(2)} />}
                     {step === 2 && <AlbumNotes tracks={tracks} trackRatings={trackRatings} trackFavorites={trackFavorites} overallNotes={overallNotes} setOverallNotes={setOverallNotes} onNext={() => goToStep(3)} />}
                     {step === 3 && <ScoreScreen tracks={tracks} trackRatings={trackRatings} trackFavorites={trackFavorites} rating={rating} setRating={setRating} Masterpiece={Masterpiece} setMasterpiece={setMasterpiece} Favorite={Favorite} setFavorite={setFavorite} onNext={() => goToStep(4)} />}
                     {step === 4 && <TagsEditor sessionTags={sessionTags} setSessionTags={setSessionTags} tagInput={tagInput} setTagInput={setTagInput} formatting={formatting} onNext={() => goToStep(5)} />}
@@ -316,33 +328,49 @@ export default function EchoSessionPage() {
                 </div>
               </div>
 
-              {/* Ask Echo — slides in over the track list, tracks still visible
-                  beside it. Lives here rather than inside TrackNotes so it can
-                  sit inside the panel instead of floating over the viewport. */}
-              {step === 1 && askOpen && (
-                <div
-                  onClick={() => setAskOpen(false)}
-                  style={{ position: 'absolute', inset: 0, zIndex: 4, background: dk(0.28) }}
-                />
-              )}
-              {step === 1 && askOpen && (
-                <div style={{
-                  position: 'absolute', top: 0, right: 0, bottom: 0,
-                  width: 'min(420px, 58%)', zIndex: 5,
-                  display: 'flex', flexDirection: 'column',
-                  padding: '22px 22px 20px',
-                  background: dk(0.62),
-                  backdropFilter: 'blur(22px)', WebkitBackdropFilter: 'blur(22px)',
-                  borderLeft: `1px solid ${bdr(0.14)}`,
-                  boxShadow: `-18px 0 50px ${dk(0.35)}`,
-                  animation: 'ln-drawer-in 0.3s cubic-bezier(0.22,1,0.36,1)',
-                }}>
+              {/* Ask Echo — a column of the panel rather than a layer over it,
+                  so the notes narrow instead of going dark and the same thread
+                  stays open from Track Notes through Album Notes. */}
+              <div style={{
+                width: chatOpen ? 'clamp(300px, 34%, 380px)' : 0,
+                flexShrink: 0, overflow: 'hidden',
+                borderLeft: chatOpen ? `1px solid ${bdr(0.14)}` : '1px solid transparent',
+                background: chatOpen ? dk(0.5) : 'transparent',
+                backdropFilter: 'blur(22px)', WebkitBackdropFilter: 'blur(22px)',
+                transition: 'width 0.32s cubic-bezier(0.22,1,0.36,1), background 0.32s',
+              }}>
+                {/* minWidth keeps the conversation from reflowing while the
+                    column travels — it gets clipped, not squeezed. */}
+                <div style={{ width: '100%', minWidth: 300, height: '100%', display: 'flex', flexDirection: 'column', padding: '22px 22px 20px', boxSizing: 'border-box' }}>
                   <ReflectChat
                     chatMessages={chatMessages} chatInput={chatInput} setChatInput={setChatInput}
                     chatLoading={chatLoading} chatEndRef={chatEndRef} sendChat={sendChat}
+                    prompts={askPrompts}
                     onClose={() => setAskOpen(false)}
                   />
                 </div>
+              </div>
+
+              {/* Lit like the step markers in the sidebar — the same "this is
+                  live" language. Hides while the column is open; the ✕ in the
+                  chat header is the way back. */}
+              {canAsk && !askOpen && (
+                <button
+                  onClick={() => setAskOpen(true)}
+                  title="Ask Echo"
+                  aria-label="Ask Echo"
+                  style={{
+                    position: 'absolute', top: 18, right: 18, zIndex: 4,
+                    width: 34, height: 34, borderRadius: '50%',
+                    fontFamily: fonts.mono, fontSize: 16, lineHeight: 1,
+                    color: dk(0.82), background: 'rgba(255,255,255,0.92)',
+                    border: `1px solid ${bdr(0.5)}`, cursor: 'pointer',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    animation: 'ln-lit 2.4s ease-in-out infinite',
+                  }}
+                >
+                  ?
+                </button>
               )}
             </div>
           </div>
