@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { fonts } from '../../library/sitewide_visuals';
-import { parseRating, entryTypeLabel } from '../../library/entry_formatter';
+import { parseRating } from '../../library/entry_formatter';
 import DotNav from '../../components/main_components/DotNav';
 import SiteNav from '../../components/main_components/SiteNav';
 import EntryModal from '../../components/main_components/EntryModal';
@@ -23,11 +23,11 @@ const SORTS = [
   { value: 'year',   label: 'Release year', defaultDir: 'desc', asc: 'Oldest first', desc: 'Newest first' },
 ];
 
-// Submission lived here as well as in Type, which was the same question
-// asked twice — and no entry ever used it, every submission was recorded
-// through entry_type. It's Type's alone now.
+// Type used to be a filter here — Library or Submission. The archive is the
+// library, so that split was a filter between "everything" and "everything",
+// and the only half worth naming is already written on the entries that are
+// submissions. Removed rather than hidden; nothing else read it.
 const RELATIONSHIPS = ['First Listen', 'Revisit', 'Formative', 'Study'];
-const TYPES = ['Personal Library', 'Submission'];
 
 // The year column is free text ("2019", occasionally with more around it).
 const releaseYear = entry => {
@@ -51,7 +51,6 @@ export default function ArchivePage() {
   const [sortBy, setSortBy] = useState('posted');
   const [sortDir, setSortDir] = useState('desc');
   const [relationship, setRelationship] = useState('');
-  const [entryType, setEntryType] = useState('');
   const [genre, setGenre] = useState('');
   const [genresOpen, setGenresOpen] = useState(false);
   const [favoritesOnly, setFavoritesOnly] = useState(false);
@@ -211,7 +210,6 @@ export default function ArchivePage() {
           (e.track_notes || '').toLowerCase().includes(q)
         )) return false;
         if (relationship && e.relationship !== relationship) return false;
-        if (entryType && e.entry_type !== entryType) return false;
         if (genre && (e.genre || '') !== genre) return false;
         if (favoritesOnly && !(e.favorite === true || e.favorite === 'true')) return false;
         if (masterpiecesOnly && e.rating !== 'Masterpiece' && e.masterpiece !== true) return false;
@@ -232,7 +230,7 @@ export default function ArchivePage() {
         if (sortBy === 'year')   return dir * ((releaseYear(a) || 0) - (releaseYear(b) || 0));
         return dir * (new Date(a.created_at) - new Date(b.created_at));
       });
-  }, [entries, search, sortBy, sortDir, relationship, entryType, genre, favoritesOnly, masterpiecesOnly, yearActive, yearRange]);
+  }, [entries, search, sortBy, sortDir, relationship, genre, favoritesOnly, masterpiecesOnly, yearActive, yearRange]);
 
   const activeSort = SORTS.find(s => s.value === sortBy) ?? SORTS[0];
 
@@ -248,7 +246,7 @@ export default function ArchivePage() {
   }
 
   function clearFilters() {
-    setSearch(''); setRelationship(''); setEntryType(''); setGenre(''); setGenresOpen(false);
+    setSearch(''); setRelationship(''); setGenre(''); setGenresOpen(false);
     setFavoritesOnly(false); setMasterpiecesOnly(false);
     setSortBy('posted'); setSortDir('desc');
     setYearRange(yearBounds ? [yearBounds.min, yearBounds.max] : null);
@@ -258,7 +256,7 @@ export default function ArchivePage() {
   // badge — the search box is in plain sight, so counting it would put a
   // number on the button with nothing behind it to explain the number.
   const tuckedAwayCount =
-    (relationship ? 1 : 0) + (entryType ? 1 : 0) + (genre ? 1 : 0) +
+    (relationship ? 1 : 0) + (genre ? 1 : 0) +
     (favoritesOnly ? 1 : 0) + (masterpiecesOnly ? 1 : 0) +
     (yearActive ? 1 : 0) +
     (sortBy !== 'posted' || sortDir !== 'desc' ? 1 : 0);
@@ -687,17 +685,6 @@ export default function ArchivePage() {
               </div>
             </div>
 
-            <div className="arc-sheet-group">
-              <div className="arc-sheet-label">Type</div>
-              <div className="arc-sheet-opts">
-                <button type="button" className={'arc-opt' + (!entryType ? ' arc-opt--on' : '')} onClick={() => setEntryType('')}>All</button>
-                {TYPES.map(t => (
-                  <button key={t} type="button"
-                    className={'arc-opt' + (entryType === t ? ' arc-opt--on' : '')}
-                    onClick={() => setEntryType(entryType === t ? '' : t)}>{entryTypeLabel(t)}</button>
-                ))}
-              </div>
-            </div>
 
             {/* Only worth a group once there's more than one genre to choose
                 between — on a young archive it would be a row with a single

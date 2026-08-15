@@ -2,6 +2,12 @@
 import { useEffect, useRef } from 'react';
 import { goldBurst } from '../../library/gold_burst';
 
+// Seconds between one star lighting and the next. The burst reads this so the
+// sparkle can't fire before the row has finished counting itself out — change
+// this and the timing downstream follows.
+const STAR_STAGGER = 0.34;
+const STAR_FILL_MS = 180;   // matches the .ln-star-fill fade
+
 const STAR_PATH = 'M9 1.5l2.163 4.38 4.837.703-3.5 3.412.826 4.818L9 12.39l-4.326 2.273.826-4.818L2 6.583l4.837-.703z';
 
 function StarSVG({ size }) {
@@ -34,14 +40,22 @@ export default function StarRating({ rating, size = 18, glow = false, animate = 
     // the sparkle out of the top-left corner of the page.
     const box = el.getBoundingClientRect();
     if (!box.width || !box.height) return;
+    // Waits for the row to finish counting itself out. Firing early would step
+    // on the very thing the sparkle is meant to be the reward for.
+    const filled = Math.max(1, Math.ceil(parseFloat(rating) || 5));
+    const after = (filled - 1) * STAR_STAGGER * 1000 + STAR_FILL_MS;
     const t = setTimeout(() => {
+      const r = el.getBoundingClientRect();
+      if (!r.width || !r.height) return;   // scrolled away or hidden by now
       goldBurst(
-        { clientX: box.left + box.width / 2, clientY: box.top + box.height / 2 },
-        { count: 24, spread: 70 },
+        { clientX: r.left + r.width / 2, clientY: r.top + r.height / 2 },
+        // Starts on a ring just outside the stars and travels outward, so it
+        // breaks out from around the row rather than erupting through it.
+        { count: 26, spread: 64, ringX: r.width / 2 + 6, ringY: r.height / 2 + 6 },
       );
-    }, 240);
+    }, after);
     return () => clearTimeout(t);
-  }, [burst]);
+  }, [burst, rating]);
 
   if (!rating && rating !== 0) return null;
   const numeric = parseFloat(rating);
@@ -65,6 +79,7 @@ export default function StarRating({ rating, size = 18, glow = false, animate = 
                   overflow: 'hidden',
                   width: fill === 'half' ? size / 2 : size,
                   color: '#E8B84B',
+                  ...(animate ? { animationDelay: ((i - 1) * STAR_STAGGER) + 's' } : null),
                 }}
               >
                 <StarSVG size={size} />
