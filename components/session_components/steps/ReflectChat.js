@@ -1,4 +1,5 @@
 'use client';
+import { useEffect, useRef } from 'react';
 import { fonts } from '../../../library/sitewide_visuals';
 import { tx, bdr, dk, lbl } from '../../../library/session_styles';
 import SessionButton from '../SessionButton';
@@ -21,12 +22,24 @@ export default function ReflectChat({
   chatInput,
   setChatInput,
   chatLoading,
-  chatEndRef,
   sendChat,
   prompts = DEFAULT_PROMPTS,
+  open = true,
   onNext,
   onClose,
 }) {
+  const scrollRef = useRef(null);
+
+  // Reopening lands on the last thing said, not the top of the thread — the
+  // column stays mounted while closed, so this has to fire on `open` rather
+  // than on mount. Sets scrollTop on the thread's own scroller instead of
+  // scrolling an element into view, which would drag the panel behind it.
+  useEffect(() => {
+    if (!open) return;
+    const el = scrollRef.current;
+    if (el) el.scrollTop = el.scrollHeight;
+  }, [open, chatMessages.length, chatLoading]);
+
   return (
     <div style={{ width: '100%', display: 'flex', flexDirection: 'column', height: '100%' }}>
       {onClose && (
@@ -38,7 +51,7 @@ export default function ReflectChat({
           }}>✕</button>
         </div>
       )}
-      <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 12, paddingBottom: 16 }}>
+      <div ref={scrollRef} style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 12, paddingBottom: 16 }}>
 
         {chatMessages.length === 0 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingTop: 4 }}>
@@ -80,7 +93,6 @@ export default function ReflectChat({
           </div>
         )}
 
-        <div ref={chatEndRef} />
       </div>
 
       <div style={{ borderTop: `1px solid ${bdr(0.07)}`, paddingTop: 14, display: 'flex', gap: 10, alignItems: 'center' }}>

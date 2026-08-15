@@ -1,4 +1,5 @@
 'use client';
+import { Heart } from '@phosphor-icons/react';
 import { fonts } from '../../../library/sitewide_visuals';
 import { parseHorizon } from '../../../library/entry_formatter';
 
@@ -25,10 +26,10 @@ export default function HorizonBar({ horizon, tracks, commentsByTrack, onBarClic
               )}
               {track?.favorite && (
                 <span style={{
-                  position: 'absolute', bottom: `calc(${h * 100}% + 3px)`, left: '50%',
-                  transform: 'translateX(-50%)', fontSize: '9px', lineHeight: 1,
-                  color: 'var(--gold)', pointerEvents: 'none',
-                }}>♥</span>
+                  position: 'absolute', bottom: `calc(${h * 100}% + 4px)`, left: '50%',
+                  transform: 'translateX(-50%)', display: 'inline-flex', lineHeight: 1,
+                  color: 'var(--fav)', pointerEvents: 'none',
+                }}><Heart size={10} weight="fill" /></span>
               )}
               <div
                 style={{ borderRadius: '2px 2px 0 0', background: 'var(--accent)', height: (h * 100) + '%', transition: 'filter 0.15s, transform 0.1s', transformOrigin: 'bottom' }}
