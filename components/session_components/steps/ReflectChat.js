@@ -4,9 +4,17 @@ import { tx, bdr, dk, lbl } from '../../../library/session_styles';
 import SessionButton from '../SessionButton';
 
 // Echo-powered reflection chat with quick-prompt shortcuts. No longer a step of
-// its own — it opens as a drawer from Track Notes, where the questions actually
-// come up mid-listen. onNext is optional and only renders the step footer;
-// onClose renders the drawer header.
+// its own — it lives in a column beside the writing, open across Track Notes and
+// Album Notes, because the conversation and the notes get worked on together.
+// onNext is optional and only renders the step footer; onClose renders the header.
+// prompts are handed in per step — what you'd ask mid-listen isn't what you'd ask
+// when you're trying to land the overall take.
+
+const DEFAULT_PROMPTS = [
+  'Reflect on my notes so far',
+  'What patterns do you notice?',
+  'Push back on something I said',
+];
 
 export default function ReflectChat({
   chatMessages,
@@ -15,6 +23,7 @@ export default function ReflectChat({
   chatLoading,
   chatEndRef,
   sendChat,
+  prompts = DEFAULT_PROMPTS,
   onNext,
   onClose,
 }) {
@@ -34,7 +43,7 @@ export default function ReflectChat({
         {chatMessages.length === 0 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, paddingTop: 4 }}>
             <div style={{ ...lbl, marginBottom: 8 }}>Quick prompts</div>
-            {['Reflect on my notes so far', 'What patterns do you notice?', 'Push back on something I said'].map(p => (
+            {prompts.map(p => (
               <button key={p} onClick={() => sendChat(p)} style={{
                 fontFamily: fonts.mono, fontSize: 11, color: tx(0.75),
                 background: dk(0.42), border: `1px solid ${bdr(0.14)}`,

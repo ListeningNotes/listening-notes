@@ -8,8 +8,8 @@ import StarRating from '../StarRating';
 // Step 1 — expandable track list with per-track notes and star ratings.
 // Three states are readable at a glance: the track being written about (lit
 // surface), tracks already covered (filled marker), and ones still to do
-// (hollow marker). onAsk opens the Echo drawer, which the page owns so it can
-// sit inside the panel rather than floating over the whole viewport.
+// (hollow marker). The Echo toggle used to live in this header; it moved to the
+// panel chrome so the same button follows you into Album Notes.
 
 export default function TrackNotes({
   tracks,
@@ -23,31 +23,11 @@ export default function TrackNotes({
   openTrack,
   setOpenTrack,
   onNext,
-  onAsk,
 }) {
   return (
     <div style={{ width: '100%' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20, gap: 12 }}>
+      <div style={{ marginBottom: 20 }}>
         <span style={lbl}>Track Notes</span>
-        {/* Lit like the step markers in the sidebar — the same "this is live"
-            language, so it reads as part of the panel rather than a toolbar. */}
-        {onAsk && (
-          <button
-            onClick={onAsk}
-            title="Ask Echo"
-            aria-label="Ask Echo"
-            style={{
-              width: 34, height: 34, borderRadius: '50%', flexShrink: 0,
-              fontFamily: fonts.mono, fontSize: 16, lineHeight: 1,
-              color: dk(0.82), background: 'rgba(255,255,255,0.92)',
-              border: `1px solid ${bdr(0.5)}`, cursor: 'pointer',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              animation: 'ln-lit 2.4s ease-in-out infinite',
-            }}
-          >
-            ?
-          </button>
-        )}
       </div>
 
       {tracksLoading && !tracks && (
