@@ -53,6 +53,7 @@ export default function ArchivePage() {
   const [relationship, setRelationship] = useState('');
   const [entryType, setEntryType] = useState('');
   const [genre, setGenre] = useState('');
+  const [genresOpen, setGenresOpen] = useState(false);
   const [favoritesOnly, setFavoritesOnly] = useState(false);
   const [masterpiecesOnly, setMasterpiecesOnly] = useState(false);
   // null until the entries land — the range can't be known before the data
@@ -154,14 +155,30 @@ export default function ArchivePage() {
   // Genre is an open vocabulary coming from Apple, so the options are whatever
   // the archive actually contains rather than a list held here that would drift
   // out of date the first time something new gets logged.
+  //
+  // Ordered by how much of the archive each one accounts for, because that's
+  // the order they're worth offering in — and because the tail of one-off
+  // genres is what would eventually turn this row into a wall.
   const genres = useMemo(() => {
     const seen = new Map();
     for (const e of entries) {
       const g = (e.genre || '').trim();
-      if (g && !seen.has(g.toLowerCase())) seen.set(g.toLowerCase(), g);
+      if (!g) continue;
+      const key = g.toLowerCase();
+      const hit = seen.get(key);
+      if (hit) hit.count++;
+      else seen.set(key, { name: g, count: 1 });
     }
-    return [...seen.values()].sort((a, b) => a.localeCompare(b));
+    return [...seen.values()].sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
   }, [entries]);
+
+  // The ones carrying more than a single record lead, up to a dozen. Everything
+  // else waits behind the toggle — reachable, just not in the way.
+  const genresShown = useMemo(() => genres.filter(g => g.count > 1).slice(0, 12), [genres]);
+  const genresRest = useMemo(
+    () => genres.filter(g => !genresShown.includes(g)),
+    [genres, genresShown],
+  );
 
   // Opens sitting on the full span once the entries arrive. Only ever seeds
   // it once, so a reload of the list doesn't yank the handles out from under
@@ -231,7 +248,7 @@ export default function ArchivePage() {
   }
 
   function clearFilters() {
-    setSearch(''); setRelationship(''); setEntryType(''); setGenre('');
+    setSearch(''); setRelationship(''); setEntryType(''); setGenre(''); setGenresOpen(false);
     setFavoritesOnly(false); setMasterpiecesOnly(false);
     setSortBy('posted'); setSortDir('desc');
     setYearRange(yearBounds ? [yearBounds.min, yearBounds.max] : null);
@@ -690,11 +707,26 @@ export default function ArchivePage() {
                 <div className="arc-sheet-label">Genre</div>
                 <div className="arc-sheet-opts">
                   <button type="button" className={'arc-opt' + (!genre ? ' arc-opt--on' : '')} onClick={() => setGenre('')}>All</button>
-                  {genres.map(g => (
-                    <button key={g} type="button"
-                      className={'arc-opt' + (genre === g ? ' arc-opt--on' : '')}
-                      onClick={() => setGenre(genre === g ? '' : g)}>{g}</button>
+                  {genresShown.map(g => (
+                    <button key={g.name} type="button"
+                      className={'arc-opt' + (genre === g.name ? ' arc-opt--on' : '')}
+                      onClick={() => setGenre(genre === g.name ? '' : g.name)}>{g.name}</button>
                   ))}
+                  {/* A hidden genre that's currently doing the filtering still
+                      shows, collapsed or not — otherwise the archive would be
+                      filtered by something with nothing on screen saying so. */}
+                  {genresRest.map(g => (
+                    (genresOpen || genre === g.name) && (
+                      <button key={g.name} type="button"
+                        className={'arc-opt' + (genre === g.name ? ' arc-opt--on' : '')}
+                        onClick={() => setGenre(genre === g.name ? '' : g.name)}>{g.name}</button>
+                    )
+                  ))}
+                  {genresRest.length > 0 && (
+                    <button type="button" className="arc-opt" onClick={() => setGenresOpen(v => !v)}>
+                      {genresOpen ? 'Less' : `+${genresRest.length} more`}
+                    </button>
+                  )}
                 </div>
               </div>
             )}
