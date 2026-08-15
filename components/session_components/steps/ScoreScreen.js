@@ -1,6 +1,7 @@
 'use client';
 import { useState } from 'react';
-import { fonts } from '../../../library/sitewide_visuals';
+import { Heart, SketchLogo } from '@phosphor-icons/react';
+import { fonts, colors } from '../../../library/sitewide_visuals';
 import { tx, bdr, dk, lbl } from '../../../library/session_styles';
 import { goldBurst } from '../../../library/gold_burst';
 import SessionButton from '../SessionButton';
@@ -40,7 +41,10 @@ export default function ScoreScreen({
     if (next) goldBurst(e);
   }
 
+  // inline-flex so the mark sits on the pill's centre line rather than the
+  // text baseline — the same reason .ln-mark does it on an archive card.
   const pill = (active) => ({
+    display: 'inline-flex', alignItems: 'center', gap: 8,
     fontFamily: fonts.mono, fontSize: 11, letterSpacing: '0.09em', textTransform: 'uppercase',
     color: active ? tx(0.96) : tx(0.5),
     background: active ? dk(0.58) : dk(0.34),
@@ -86,11 +90,17 @@ export default function ScoreScreen({
         </div>
 
         <div style={{ display: 'flex', justifyContent: 'center', gap: 12, flexWrap: 'wrap' }}>
+          {/* Phosphor's SketchLogo and Heart — the same two marks an archive
+              card carries, in the same two colours. These were a ✦ and a ♥
+              text glyph, which is why a masterpiece looked like one thing here
+              and another thing on the entry it produced. */}
           <button onClick={toggleMasterpiece} style={pill(Masterpiece)}>
-            {Masterpiece ? '✦ Masterpiece' : 'Masterpiece'}
+            {Masterpiece && <SketchLogo size={13} weight="fill" color={colors.mp} />}
+            Masterpiece
           </button>
           <button onClick={() => setFavorite(!Favorite)} style={pill(Favorite)}>
-            {Favorite ? '♥ Favorite' : 'Favorite'}
+            {Favorite && <Heart size={13} weight="fill" color={colors.fav} />}
+            Favorite
           </button>
         </div>
       </div>

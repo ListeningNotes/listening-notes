@@ -5,7 +5,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Heart } from '@phosphor-icons/react';
+import { Heart, SketchLogo } from '@phosphor-icons/react';
 import PasswordGate from '../../../components/session_components/PasswordGate';
 import backgrounds from '../../../components/session_components/backgrounds';
 import StarRating from '../../../components/session_components/StarRating';
@@ -390,7 +390,7 @@ export default function SessionEntries() {
                         const n = parseFloat(String(entry.rating).replace(/[^0-9.]/g, ''));
                         return isNaN(n) ? entry.rating : n;
                       })()}
-                      {entry.masterpiece === true && <span title="Masterpiece" style={{ color: '#E8B84B', fontSize: 18, lineHeight: 1 }}>★</span>}
+                      {entry.masterpiece === true && <span title="Masterpiece" style={{ color: 'var(--mp)', display: 'inline-flex', lineHeight: 1 }}><SketchLogo size={16} weight="fill" /></span>}
                       {entry.favorite === true && <span title="Favorite" style={{ color: 'var(--fav)', display: 'inline-flex', lineHeight: 1 }}><Heart size={16} weight="fill" /></span>}
                     </div>
                     <div style={{ padding: '0 8px', fontFamily: MONO, fontSize: 10, color: 'rgba(26,25,22,0.4)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{entryTypeLabel(entry.entry_type) || '—'}</div>
