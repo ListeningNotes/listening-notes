@@ -142,7 +142,7 @@ export function useAlbumSelection({ step, onAlbumPick }) {
 
   // Notify parent that an album has been chosen from the grid
   function handleAlbumPick(album) {
-    onAlbumPick({ album: album.name, artist: album.artist, year: album.year, artUrl: album.art, artLarge: album.artLarge, collectionId: album.collectionId });
+    onAlbumPick({ album: album.name, artist: album.artist, year: album.year, artUrl: album.art, artLarge: album.artLarge, collectionId: album.collectionId, genre: album.genre });
   }
 
   // Notify parent that a manually typed album has been chosen

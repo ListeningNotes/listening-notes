@@ -57,9 +57,6 @@ export async function POST(request) {
     if (entryContext.albumNotes) {
       contextBlock += `Album notes written so far:\n${entryContext.albumNotes}\n`;
     }
-    if (Array.isArray(entryContext.tags) && entryContext.tags.length > 0) {
-      contextBlock += `Tags: ${entryContext.tags.join(', ')}\n`;
-    }
 
     const systemPrompt = contextBlock
       ? `${systemWithMemory}\n\nSession context:\n${contextBlock.trim()}\n\nPhase: ${phase || 'chat'}`

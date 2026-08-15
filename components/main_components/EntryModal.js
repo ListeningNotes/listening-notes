@@ -1,6 +1,6 @@
 // components/EntryModal.js
 // The overlay modal that opens when you click an entry tile on the archive
-// page. Shows the full entry — art, metadata, background, notes, horizon bar, tags.
+// page. Shows the full entry — art, metadata, background, notes, horizon bar.
 // Does NOT load a new page — it overlays the current page and updates the URL
 // to /entries/[slug] so the entry is shareable, then restores / on close.
 
@@ -128,11 +128,6 @@ export default function EntryModal({ slug, originRect, onClose }) {
   const handleScroll = useCallback(() => {
     if (scrollRef.current) setCollapsed(scrollRef.current.scrollTop > 40);
   }, []);
-
-  // Parse tags — stored as array or comma string in the DB
-  const tags = entry?.tags
-    ? (Array.isArray(entry.tags) ? entry.tags : entry.tags.split(',').map(t => t.trim()).filter(Boolean))
-    : [];
 
   const { albumNotes, trackNotes: trackNotesFallback } = splitNotes(entry?.notes);
   const trackNotes = entry?.track_notes || trackNotesFallback;
@@ -325,15 +320,6 @@ export default function EntryModal({ slug, originRect, onClose }) {
                   </>
                 )}
 
-                {tags.length > 0 && (
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 28, paddingTop: 20, borderTop: '1px solid ' + DIVIDER }}>
-                    {tags.map((tag, i) => (
-                      <span key={i} style={{ fontFamily: fonts.mono, fontSize: 8, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--ink-faint)', border: '1px solid var(--border)', borderRadius: 4, padding: '3px 8px' }}>
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                )}
                 <div style={{ height: 16 }} />
               </>
             ) : (
@@ -342,7 +328,9 @@ export default function EntryModal({ slug, originRect, onClose }) {
           </div>
         </div>
 
-        {/* Footer bar — first 3 tags on the left, full page link on the right */}
+        {/* Footer bar — genre on the left, full page link on the right. Held
+            the first three tags until tags came out; genre is the thing that
+            was actually being looked for in them. */}
         <div style={{
           position: 'absolute', bottom: 0, left: 0, right: 0, height: 44,
           background: 'var(--panel)',
@@ -351,12 +339,9 @@ export default function EntryModal({ slug, originRect, onClose }) {
           display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 20px',
         }}>
           <div style={{ display: 'flex', gap: 6, fontFamily: fonts.mono, alignItems: 'center' }}>
-            {tags.slice(0, 3).map((tag, i) => (
-              <span key={i} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                {i > 0 && <span style={{ color: 'var(--ink-faint)' }}>·</span>}
-                <span style={{ fontSize: 8, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--ink-faint)' }}>{tag}</span>
-              </span>
-            ))}
+            {entry?.genre && (
+              <span style={{ fontSize: 8, letterSpacing: '0.06em', textTransform: 'uppercase', color: 'var(--ink-faint)' }}>{entry.genre}</span>
+            )}
           </div>
           {/* Link to the full public entry page with comments */}
           {entry && (

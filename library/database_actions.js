@@ -43,8 +43,8 @@ export async function pull_entry_by_slug(slug) {
 
 export async function save_new_entry(body) {
   const {
-    album, artist, year, entry_type, relationship,
-    rating, favorite, background = '', notes, track_notes, tags,
+    album, artist, year, genre = '', entry_type, relationship,
+    rating, favorite, background = '', notes, track_notes, tags = null,
     horizon, album_art, post_link, tracks = null
   } = body;
 
@@ -52,11 +52,11 @@ export async function save_new_entry(body) {
 
   const result = await database`
     INSERT INTO entries (
-      album, artist, year, entry_type, relationship,
+      album, artist, year, genre, entry_type, relationship,
       rating, favorite, background, notes, track_notes, tags,
       horizon, album_art, post_link, slug, tracks
     ) VALUES (
-      ${album}, ${artist}, ${year}, ${entry_type}, ${relationship},
+      ${album}, ${artist}, ${year}, ${genre}, ${entry_type}, ${relationship},
       ${rating}, ${favorite}, ${background}, ${notes}, ${track_notes}, ${tags},
       ${horizon}, ${album_art}, ${post_link}, ${slug},
       ${tracks ? JSON.stringify(tracks) : null}
@@ -87,6 +87,7 @@ export async function update_entry(slug, fields) {
       album = COALESCE(${fields.album ?? null}, album),
       artist = COALESCE(${fields.artist ?? null}, artist),
       year = COALESCE(${fields.year ?? null}, year),
+      genre = COALESCE(${fields.genre ?? null}, genre),
       entry_type = COALESCE(${fields.entry_type ?? null}, entry_type),
       relationship = COALESCE(${fields.relationship ?? null}, relationship),
       rating = COALESCE(${fields.rating ?? null}, rating),

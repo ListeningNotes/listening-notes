@@ -63,7 +63,7 @@ function EditModal({ entry, onSave, onDelete, onClose }) {
     favorite: entry.favorite === true || entry.favorite === 'true',
     masterpiece: entry.masterpiece === true,
     notes: entry.notes || '',
-    tags: Array.isArray(entry.tags) ? entry.tags.join(', ') : (entry.tags || ''),
+    genre: entry.genre || '',
     horizon: entry.horizon || '',
     // The stored URL, not the sized one the rest of the site is served — see
     // withSizedArt in library/database_actions.js. Saving the sized URL back
@@ -239,9 +239,11 @@ function EditModal({ entry, onSave, onDelete, onClose }) {
             </div>
           )}
 
+          {/* Was the tags field. Genre is what the archive filters on now, and
+              it arrives from Apple, so this is where a wrong one gets fixed. */}
           <div>
-            <div style={{ ...labelStyle, marginBottom: 6 }}>Tags (comma separated)</div>
-            <input value={fields.tags} onChange={e => set('tags', e.target.value)} style={inputStyle()} />
+            <div style={{ ...labelStyle, marginBottom: 6 }}>Genre</div>
+            <input value={fields.genre} onChange={e => set('genre', e.target.value)} style={inputStyle()} />
           </div>
 
           <div>

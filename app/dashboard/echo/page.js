@@ -90,8 +90,8 @@ export default function EchoPage() {
     handleManualSubmit,
   } = useAlbumSelection({
     step: -1,
-    onAlbumPick({ album, artist, year, artUrl, artLarge, collectionId }) {
-      setPendingAlbum({ album, artist, year, artUrl, artLarge, collectionId });
+    onAlbumPick({ album, artist, year, artUrl, artLarge, collectionId, genre }) {
+      setPendingAlbum({ album, artist, year, artUrl, artLarge, collectionId, genre });
       setRelationship('');
       setEntryType('');
       setConfirmPhase('q1');
@@ -156,7 +156,7 @@ export default function EchoPage() {
 
   // Called after Q2 is answered — save pending data and navigate to session page
   function handleAlbumSelect({ album, artist, year, artUrl }) {
-    const pending = { album, artist, year, artUrl: pendingAlbum?.artLarge || artUrl, collectionId: pendingAlbum?.collectionId, relationship, entryType };
+    const pending = { album, artist, year, artUrl: pendingAlbum?.artLarge || artUrl, collectionId: pendingAlbum?.collectionId, genre: pendingAlbum?.genre || '', relationship, entryType };
     localStorage.setItem('ln_pending_session', JSON.stringify(pending));
     router.push('/dashboard/echo/session');
   }
