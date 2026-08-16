@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useRef } from 'react';
+import { backgroundScale } from '../../../library/background_scale';
 
 const CELL  = 100;
 const SPEED = 250;
@@ -23,8 +24,11 @@ export default function Snake({ albums = [] }) {
     });
 
     function resize() {
-      canvas.width  = canvas.parentElement?.clientWidth  || window.innerWidth;
-      canvas.height = canvas.parentElement?.clientHeight || window.innerHeight;
+      // Mobile draws into a larger coordinate space than it displays, so the
+      // artwork keeps its desktop share of the screen. 1 on desktop.
+      const k = backgroundScale();
+      canvas.width  = Math.round((canvas.parentElement?.clientWidth  || window.innerWidth) / k);
+      canvas.height = Math.round((canvas.parentElement?.clientHeight || window.innerHeight) / k);
       cols = Math.floor(canvas.width  / CELL);
       rows = Math.floor(canvas.height / CELL);
       init();
@@ -257,5 +261,8 @@ export default function Snake({ albums = [] }) {
     return () => { clearInterval(interval); window.removeEventListener('resize', resize); };
   }, [albums]);
 
-  return <canvas ref={canvasRef} style={{ position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none' }} />;
+  // width/height are what make the scaled coordinate space work: an
+  // absolutely positioned canvas with only inset:0 keeps its intrinsic
+  // bitmap size and overflows, instead of scaling the bitmap into the box.
+  return <canvas ref={canvasRef} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', zIndex: 0, pointerEvents: 'none' }} />;
 }

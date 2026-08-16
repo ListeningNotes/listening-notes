@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
+import { backgroundScale } from '../../../library/background_scale';
 
 const TILE_MIN  = 80;
 const TILE_MAX  = 280;
@@ -16,7 +17,10 @@ export default function Rain({ albums = [] }) {
 
     function build() {
       const W      = wrapRef.current?.clientWidth || window.innerWidth;
-      const lanes  = Math.max(3, Math.floor(W / (TILE_MAX + GAP)));
+      // Tiles keep their desktop share of the width. 1 on desktop.
+      const k      = backgroundScale();
+      const tMin   = TILE_MIN * k, tMax = TILE_MAX * k, gap = GAP * k;
+      const lanes  = Math.max(3, Math.floor(W / (tMax + gap)));
       const step   = W / lanes;
       const built  = [];
 
@@ -30,10 +34,10 @@ export default function Rain({ albums = [] }) {
           cursor++;
           // Bias toward extremes so "close" and "far" tiles are more common than mid-size
           const t    = Math.random();
-          const size = Math.round(TILE_MIN + (t < 0.4 ? t / 0.4 * 0.3 : (t - 0.4) / 0.6) * (TILE_MAX - TILE_MIN));
+          const size = Math.round(tMin + (t < 0.4 ? t / 0.4 * 0.3 : (t - 0.4) / 0.6) * (tMax - tMin));
           const dur  = FALL_MIN + Math.random() * (FALL_MAX - FALL_MIN);
           // Bigger tiles fall slightly faster (parallax feel)
-          const speed = dur * (1 - (size - TILE_MIN) / (TILE_MAX - TILE_MIN) * 0.3);
+          const speed = dur * (1 - (size - tMin) / (tMax - tMin) * 0.3);
           const delay = -(Math.random() * speed);
           const angle = (Math.random() - 0.5) * 12;
           const x    = lane * step + (step - size) / 2;

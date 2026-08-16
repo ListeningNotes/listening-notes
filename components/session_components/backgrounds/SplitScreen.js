@@ -1,4 +1,5 @@
 'use client';
+import { backgroundScale } from '../../../library/background_scale';
 
 const TILE  = 400;
 const GAP   = 10;
@@ -16,7 +17,11 @@ export default function SplitScreen({ albums = [] }) {
   const topBand = [...topSet, ...topSet];
   const botBand = [...botSet, ...botSet];
 
-  const step        = TILE + GAP;
+  // Bands keep their desktop share of the width. 1 on desktop.
+  const k     = backgroundScale();
+  const tile  = Math.round(TILE * k);
+  const gap   = Math.round(GAP * k);
+  const step  = tile + gap;
   const topDuration = (step * topBand.length) / 2 / SPEED / 60;
   const botDuration = (step * botBand.length) / 2 / SPEED / 60;
 
@@ -26,14 +31,14 @@ export default function SplitScreen({ albums = [] }) {
   `;
 
   const rowStyle = (dir, duration) => ({
-    display: 'flex', gap: GAP, width: 'max-content', alignItems: 'center',
+    display: 'flex', gap, width: 'max-content', alignItems: 'center',
     animation: `${dir} ${duration}s linear infinite`,
     willChange: 'transform',
   });
 
   const imgStyle = {
-    width: TILE, height: TILE,
-    objectFit: 'cover', display: 'block', flexShrink: 0, borderRadius: 16,
+    width: tile, height: tile,
+    objectFit: 'cover', display: 'block', flexShrink: 0, borderRadius: Math.round(16 * k),
   };
 
   const halfStyle = { flex: 1, overflow: 'hidden', display: 'flex', alignItems: 'center' };
