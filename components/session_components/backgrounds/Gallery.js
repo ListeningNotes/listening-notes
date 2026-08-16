@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useRef } from 'react';
+import { backgroundScale } from '../../../library/background_scale';
 
 const ADVANCE  = 5000;
 const EASE     = 0.06;
@@ -32,8 +33,11 @@ export default function Gallery({ albums = [] }) {
     }
 
     function resize() {
-      W = canvas.width  = canvas.parentElement?.clientWidth  || window.innerWidth;
-      H = canvas.height = canvas.parentElement?.clientHeight || window.innerHeight;
+      // Mobile draws into a larger coordinate space than it displays, so the
+      // artwork keeps its desktop share of the screen. 1 on desktop.
+      const k = backgroundScale();
+      W = canvas.width  = Math.round((canvas.parentElement?.clientWidth  || window.innerWidth) / k);
+      H = canvas.height = Math.round((canvas.parentElement?.clientHeight || window.innerHeight) / k);
     }
 
     function rr(x, y, w, h) {
@@ -142,5 +146,8 @@ export default function Gallery({ albums = [] }) {
     };
   }, [albums]);
 
-  return <canvas ref={canvasRef} style={{ position: 'absolute', inset: 0, zIndex: 0, pointerEvents: 'none' }} />;
+  // width/height are what make the scaled coordinate space work: an
+  // absolutely positioned canvas with only inset:0 keeps its intrinsic
+  // bitmap size and overflows, instead of scaling the bitmap into the box.
+  return <canvas ref={canvasRef} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', zIndex: 0, pointerEvents: 'none' }} />;
 }

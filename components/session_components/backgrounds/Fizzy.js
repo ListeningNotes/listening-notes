@@ -1,11 +1,14 @@
 'use client';
+import { backgroundScale } from '../../../library/background_scale';
 
 const COUNT = 32;
 
 // depth 0 = far: tiny, slow, faint — depth 1 = close: large, fast, vivid
 function makeParticle(i, albums) {
   const depth    = Math.random();
-  const size     = Math.round(28 + depth * 120);   // 28px → 148px
+  // Bubbles keep their desktop share of the screen. 1 on desktop.
+  const k        = backgroundScale();
+  const size     = Math.round((28 + depth * 120) * k);   // 28px → 148px on desktop
   const duration = 36 - depth * 22;                // 36s (far) → 14s (close)
   const opacity  = 0.2 + depth * 0.7;
   const spin     = depth * 200;                     // close ones spin more
@@ -19,7 +22,7 @@ function makeParticle(i, albums) {
     spin,
     size,
     opacity,
-    borderRadius: 6 + depth * 16,
+    borderRadius: (6 + depth * 16) * k,
     shadow: depth > 0.7
       ? '0 12px 40px rgba(0,0,0,0.25)'
       : depth > 0.4
