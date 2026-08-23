@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { ArrowSquareOut } from '@phosphor-icons/react';
+import { ArrowSquareOut, Heart } from '@phosphor-icons/react';
 import { fonts } from '../../library/sitewide_visuals';
 import DotNav from '../../components/main_components/DotNav';
 import SiteNav from '../../components/main_components/SiteNav';
@@ -36,6 +36,10 @@ const STAR_NOTES = [
   { rating: 1, note: '1.0', body: 'Not for me. Either actively uncomfortable to listen to, or lacking the elements I need to stay engaged. Sometimes I hear intention, but the execution just doesn’t hold me. These ratings never mean “bad” — just disconnected from my listening habits.' },
   { rating: 0.5, note: 'Half', body: 'Half-stars appear when I’m genuinely pulled in two directions — simply too strong to place lower, but not fully aligned enough to place higher. I’ve actively wrestled with these albums or tracks and ultimately decided to meet in the middle.' },
   { rating: 5, masterpiece: true, body: 'Entire 5-star track list. Flawless.' },
+  // The one row here that isn't a rating, and the row that exists to say so.
+  // A heart and a score answer different questions, and the pair only makes
+  // sense once you know they can disagree.
+  { favorite: true, body: 'Not a rating — a different question. A favorite is something I reach for outside the album it came from: it turns up in playlists, on walks, on repeat, with none of the record around it. Stars are about how well something works in its own context. A heart is about whether it followed me out. That is why plenty of five-star tracks aren’t favorites, and why a favorite occasionally sits lower than you would expect.' },
 ];
 
 const RELATIONSHIP_NOTES = [
@@ -346,12 +350,19 @@ export default function AboutPage() {
                 <h2 className="ab-subhead">Star Notes</h2>
                 <div>
                   {STAR_NOTES.map(s => (
-                    <div key={s.masterpiece ? 'masterpiece' : s.note} className="ab-row">
+                    <div key={s.favorite ? 'favorite' : s.masterpiece ? 'masterpiece' : s.note} className="ab-row">
                       <div className="ab-row-head">
-                        <StarRating rating={s.rating} size={14} glow={s.masterpiece} />
-                        {s.masterpiece
-                          ? <span style={{ marginLeft: 'auto' }}><Chip tone="mp">Masterpiece</Chip></span>
-                          : <span className="ab-row-tail">{s.note}</span>}
+                        {/* The favourite row leads with the heart rather than
+                            stars, because stars in front of it would say the
+                            opposite of what it's here to explain. */}
+                        {s.favorite
+                          ? <span className="ln-mark ln-mark--fav"><Heart size={15} weight="fill" /></span>
+                          : <StarRating rating={s.rating} size={14} glow={s.masterpiece} />}
+                        {s.favorite
+                          ? <span style={{ marginLeft: 'auto' }}><Chip tone="fav">Favorite</Chip></span>
+                          : s.masterpiece
+                            ? <span style={{ marginLeft: 'auto' }}><Chip tone="mp">Masterpiece</Chip></span>
+                            : <span className="ab-row-tail">{s.note}</span>}
                       </div>
                       <p className="ab-row-body">{s.body}</p>
                     </div>
