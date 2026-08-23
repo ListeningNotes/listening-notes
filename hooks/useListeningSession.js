@@ -59,6 +59,9 @@ export function useListeningSession({ step }) {
   const [output, setOutput]         = useState(null);
   const [saving, setSaving]         = useState(false);
   const [saved, setSaved]           = useState(false);
+  // The row that came back. Held so the Preview can point at the entry it just
+  // made rather than only saying it worked.
+  const [savedEntry, setSavedEntry] = useState(null);
 
   // Session timer
   const [elapsed, setElapsed] = useState(0);
@@ -252,6 +255,7 @@ export function useListeningSession({ step }) {
     setMasterpiece(false);
     setFavorite(false);
     setSaved(false);
+    setSavedEntry(null);
     setOutput(null);
     setChatMessages([]);
     restoredRef.current = false;
@@ -392,8 +396,14 @@ export function useListeningSession({ step }) {
           genre: genre || brief.genre || '',
           entry_type: entryType || 'Personal Library',
           relationship: relationship || '',
-          rating: Masterpiece ? 'Masterpiece' : (rating ? rating + ' stars' : ''),
+          // The score and the mark are two different things and travel in two
+          // different columns. Writing 'Masterpiece' into rating threw the
+          // stars away, left the masterpiece column false, and drew no stars
+          // at all on the entry — parseFloat can't read a word. A masterpiece
+          // with no stars set is five; that's what the mark means.
+          rating: rating ? rating + ' stars' : (Masterpiece ? '5 stars' : ''),
           favorite: Favorite,
+          masterpiece: Masterpiece,
           notes: output.album_notes,
           tracks: structuredTracks,
           track_notes: derived.track_notes,
@@ -405,6 +415,7 @@ export function useListeningSession({ step }) {
       const data = await res.json();
       if (data.error) throw new Error(data.error);
       setSaved(true);
+      setSavedEntry(data.entry || null);
       localStorage.removeItem('ln_session_draft');
       // The listen is an entry now. Leaving the draft behind would offer it
       // back on the Listen page as though it were still unfinished.
@@ -450,6 +461,7 @@ export function useListeningSession({ step }) {
     output,
     saving,
     saved,
+    savedEntry,
     // Timer
     elapsed,
     // Functions

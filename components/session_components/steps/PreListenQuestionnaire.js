@@ -65,16 +65,25 @@ export default function PreListenQuestionnaire({
     borderRadius: 8, padding: '6px 10px', cursor: 'pointer',
   };
 
+  // The label is what the button says; the value is what the column holds. They
+  // came apart here: 'First listen' with a small L never matched the archive's
+  // First Listen filter, and 'Personal collection' matched nothing anywhere —
+  // every other file in the app tests for 'Personal Library'.
+  //
+  // Q2 hands its answer to onConfirm directly as well as setting it. Setting
+  // state and calling the parent in the same breath meant the parent read the
+  // value from before the click — which is why every session came out as
+  // Library no matter which button was pressed.
   const buttons = confirmPhase === 'q1'
     ? [
-        { label: 'First listen', action: () => { setRelationship('First listen'); onPhaseChange('q2'); } },
+        { label: 'First listen', action: () => { setRelationship('First Listen'); onPhaseChange('q2'); } },
         { label: 'Revisit',      action: () => { setRelationship('Revisit');      onPhaseChange('q2'); } },
         { label: 'Formative',    action: () => { setRelationship('Formative');    onPhaseChange('q2'); } },
         { label: 'Study',        action: () => { setRelationship('Study');        onPhaseChange('q2'); } },
       ]
     : [
-        { label: 'Personal collection', action: () => { setEntryType('Personal collection'); onConfirm(pendingAlbum); } },
-        { label: 'Submission',          action: () => { setEntryType('Submission');          onConfirm(pendingAlbum); } },
+        { label: 'Personal collection', action: () => { setEntryType('Personal Library'); onConfirm(pendingAlbum, { entryType: 'Personal Library' }); } },
+        { label: 'Submission',          action: () => { setEntryType('Submission');       onConfirm(pendingAlbum, { entryType: 'Submission' }); } },
       ];
 
   return (
