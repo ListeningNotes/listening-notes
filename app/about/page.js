@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { ArrowSquareOut, Heart } from '@phosphor-icons/react';
+import { ArrowSquareOut, Heart, SketchLogo } from '@phosphor-icons/react';
 import { fonts } from '../../library/sitewide_visuals';
 import DotNav from '../../components/main_components/DotNav';
 import SiteNav from '../../components/main_components/SiteNav';
@@ -35,7 +35,10 @@ const STAR_NOTES = [
   { rating: 2, note: '2.0', body: 'Respect more than attachment. I’m glad it exists and I’m glad I listened, but I don’t feel drawn back. Albums or tracks at this level might have some compelling moments, yet the immersion breaks too often. My attention drifts, the balance feels off, or the piece just doesn’t quite land for me.' },
   { rating: 1, note: '1.0', body: 'Not for me. Either actively uncomfortable to listen to, or lacking the elements I need to stay engaged. Sometimes I hear intention, but the execution just doesn’t hold me. These ratings never mean “bad” — just disconnected from my listening habits.' },
   { rating: 0.5, note: 'Half', body: 'Half-stars appear when I’m genuinely pulled in two directions — simply too strong to place lower, but not fully aligned enough to place higher. I’ve actively wrestled with these albums or tracks and ultimately decided to meet in the middle.' },
-  { rating: 5, masterpiece: true, body: 'Entire 5-star track list. Flawless.' },
+  // No `rating` on either of these two: they draw their own mark rather than
+  // a row of stars, so a number here would be read by nothing and would only
+  // suggest they sit on the same scale as the rows above.
+  { masterpiece: true, body: 'Entire 5-star track list. Flawless.' },
   // The one row here that isn't a rating, and the row that exists to say so.
   // A heart and a score answer different questions, and the pair only makes
   // sense once you know they can disagree.
@@ -191,15 +194,11 @@ export default function AboutPage() {
           display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap;
         }
 
-        /* The masterpiece glow lives with whoever asks StarRating for it — the
-           keyframes are defined per page, the same way the entry page does it. */
-        @keyframes ab-star-glow {
-          0%,100% { filter: brightness(1.15) drop-shadow(0 0 3px rgba(255,210,60,0.5)); }
-          50%     { filter: brightness(1.45) drop-shadow(0 0 6px rgba(255,210,60,0.9)); }
-        }
-        /* In unison, matching the entry page and the modal. */
-        .ln-star-glow { animation: ab-star-glow 2.8s ease-in-out infinite; }
-        @media (prefers-reduced-motion: reduce) { .ln-star-glow { animation: none; } }
+        /* The masterpiece glow keyframes used to live here, for the row of
+           five that led the Masterpiece entry. That row draws the diamond
+           now, so nothing on this page asks StarRating to glow and the
+           animation went with it. The entry page and the modal keep their
+           own copies — this was never the shared definition. */
 
         @media (max-width: 768px) {
           /* Same 24px gutter as the writing below it, so the rule under the
@@ -352,16 +351,22 @@ export default function AboutPage() {
                   {STAR_NOTES.map(s => (
                     <div key={s.favorite ? 'favorite' : s.masterpiece ? 'masterpiece' : s.note} className="ab-row">
                       <div className="ab-row-head">
-                        {/* The favourite row leads with the heart rather than
-                            stars, because stars in front of it would say the
-                            opposite of what it's here to explain. */}
-                        {s.favorite
-                          ? <span className="ln-mark ln-mark--fav"><Heart size={15} weight="fill" /></span>
-                          : <StarRating rating={s.rating} size={14} glow={s.masterpiece} />}
-                        {s.favorite
-                          ? <span style={{ marginLeft: 'auto' }}><Chip tone="fav">Favorite</Chip></span>
-                          : s.masterpiece
-                            ? <span style={{ marginLeft: 'auto' }}><Chip tone="mp">Masterpiece</Chip></span>
+                        {/* The two mark rows lead with their own mark, not
+                            with stars. A row of five in front of Masterpiece
+                            said "this is a score", and the diamond is exactly
+                            the thing that isn't one — same reason the heart
+                            leads the favourite row. Both are the marks the
+                            archive actually draws, so this reads as a legend
+                            for them rather than a picture of one. */}
+                        {s.masterpiece
+                          ? <span className="ln-mark ln-mark--mp"><SketchLogo size={15} weight="fill" /></span>
+                          : s.favorite
+                            ? <span className="ln-mark ln-mark--fav"><Heart size={15} weight="fill" /></span>
+                            : <StarRating rating={s.rating} size={14} />}
+                        {s.masterpiece
+                          ? <span style={{ marginLeft: 'auto' }}><Chip tone="mp">Masterpiece</Chip></span>
+                          : s.favorite
+                            ? <span style={{ marginLeft: 'auto' }}><Chip tone="fav">Favorite</Chip></span>
                             : <span className="ab-row-tail">{s.note}</span>}
                       </div>
                       <p className="ab-row-body">{s.body}</p>
