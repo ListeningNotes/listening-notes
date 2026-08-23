@@ -60,6 +60,11 @@ export async function pull_entry_by_slug(slug, { includeChain = false } = {}) {
   return includeChain ? sized : withoutChain(sized);
 }
 
+// Everything here belongs to one person until there are accounts to tell them
+// apart. Resolved by handle rather than by a hardcoded id, so the row can be
+// renamed — or seeded fresh in another database — without touching this file.
+const SITE_OWNER_HANDLE = 'listening-notes';
+
 // ── Discovery chain ────────────────────────────────────────────────────
 // Where an album came from. source_entry_id points at the *sender's entry*,
 // not at the album — null means this was a find of your own. Walking the
@@ -114,7 +119,8 @@ export async function save_new_entry(body) {
     album, artist, year, genre = '', entry_type, relationship,
     rating, favorite, masterpiece = false, background = '', notes,
     track_notes, tags = null, horizon, album_art, post_link, tracks = null,
-    source_entry_id = null, received_from = null, received_date = null
+    source_entry_id = null, received_from = null, received_date = null,
+    user_id = null
   } = body;
 
   const slug = create_slug(album);
@@ -124,7 +130,7 @@ export async function save_new_entry(body) {
       album, artist, year, genre, entry_type, relationship,
       rating, favorite, masterpiece, background, notes, track_notes, tags,
       horizon, album_art, post_link, slug, tracks,
-      source_entry_id, received_from, received_date
+      source_entry_id, received_from, received_date, user_id
     ) VALUES (
       ${album}, ${artist}, ${year}, ${genre}, ${entry_type}, ${relationship},
       ${rating}, ${favorite}, ${masterpiece}, ${background}, ${notes},
@@ -132,13 +138,18 @@ export async function save_new_entry(body) {
       ${horizon}, ${album_art}, ${post_link}, ${slug},
       ${tracks ? JSON.stringify(tracks) : null},
       ${entryRef(source_entry_id)}, ${blankToNull(received_from)},
-      ${blankToNull(received_date)}
+      ${blankToNull(received_date)},
+      COALESCE(${entryRef(user_id)}, (SELECT id FROM users WHERE handle = ${SITE_OWNER_HANDLE}))
     )
     RETURNING *
   `;
   return result[0];
 }
 
+// album_key and rating_value are GENERATED ALWAYS columns — Postgres derives
+// them from album/artist and rating/masterpiece, and rejects any attempt to
+// write them. They are deliberately absent from the SET list below and from
+// the INSERT above; adding either is an error, not a convenience.
 export async function update_entry(slug, fields) {
   if (fields.tags && typeof fields.tags === 'string') {
     fields.tags = fields.tags.split(',').map(t => t.trim()).filter(Boolean);
