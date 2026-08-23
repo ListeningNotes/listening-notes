@@ -10,6 +10,10 @@ import { serializeTracks } from '../library/entry_formatter';
 // step is passed in so the hook can auto-format when the user reaches
 // the preview step (step 4).
 
+// The five screens of a listen, in order. Exported because the session sidebar
+// draws them and the Listen page has to name the one a draft was left on.
+export const SESSION_STEPS = ['Album Debrief', 'Track Notes', 'Album Notes', 'Score', 'Preview'];
+
 export function useListeningSession({ step }) {
   // Research
   const [brief, setBrief]                 = useState(null);
@@ -43,6 +47,12 @@ export function useListeningSession({ step }) {
   const [chatMessages, setChatMessages] = useState([]);
   const [chatInput, setChatInput]       = useState('');
   const [chatLoading, setChatLoading]   = useState(false);
+
+  // Draft — the row in `drafts` this listen is being kept in, and what the
+  // button in the sidebar is currently showing.
+  const [draftState, setDraftState] = useState('idle');   // idle | saving | saved | error
+  const draftIdRef      = useRef(null);
+  const collectionIdRef = useRef('');
 
   // Preview
   const [formatting, setFormatting] = useState(false);
@@ -91,6 +101,99 @@ export function useListeningSession({ step }) {
     if (output && overallNotes !== formattedNotesRef.current) setOutput(null);
   }, [overallNotes]);
 
+  // The whole tracklist with each song's marks on it — what gets written to
+  // the drafts row, and what a resumed session reads back. Untouched songs stay
+  // in, because a draft has to be able to rebuild the list itself; the entry
+  // save filters them out, which is why it builds its own.
+  function draftTrackRows() {
+    return (tracks || []).map((t, i) => ({
+      number: t.number || i + 1,
+      title: t.title,
+      duration: t.duration ?? null,
+      rating: trackRatings[i] || 0,
+      favorite: !!trackFavorites[i],
+      note: (trackNotes[i] || '').trim(),
+    }));
+  }
+
+  // Puts a saved draft back on the screen. Unlike restoreDraft below this one
+  // does overwrite — it runs as part of starting the session, before anything
+  // can have been typed, and the row is the reason the session was opened.
+  function hydrateDraft(draft) {
+    draftIdRef.current = draft.id;
+    if (draft.album_art) setAlbumArt(draft.album_art);
+    setOverallNotes(draft.notes || '');
+    setRating(draft.rating || 0);
+    setMasterpiece(!!draft.masterpiece);
+    setFavorite(!!draft.favorite);
+    setEntryType(draft.entry_type || '');
+    setRelationship(draft.relationship || '');
+    setGenre(draft.genre || '');
+    setElapsed(draft.elapsed || 0);
+
+    const rows = Array.isArray(draft.tracks) ? draft.tracks : [];
+    if (rows.length) {
+      setTracks(rows.map(t => ({ number: t.number, title: t.title, duration: t.duration ?? null })));
+      const notes = {}, ratings = {}, favourites = {};
+      rows.forEach((t, i) => {
+        if (t.note)     notes[i] = t.note;
+        if (t.rating)   ratings[i] = t.rating;
+        if (t.favorite) favourites[i] = true;
+      });
+      setTrackNotes(notes);
+      setTrackRatings(ratings);
+      setTrackFavorites(favourites);
+    }
+    // The browser's own copy has nothing to add over the row we just read.
+    restoredRef.current = true;
+  }
+
+  // Writes everything on screen to the drafts table. One row per record, so
+  // hitting this twice in a listen updates rather than piles up.
+  async function saveDraft() {
+    const album = brief?.album || albumInput;
+    if (!album || draftState === 'saving') return;
+    setDraftState('saving');
+    try {
+      const res = await fetch('/api/drafts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          album,
+          artist: brief?.artist || artistName || '',
+          year: brief?.year || '',
+          genre: genre || brief?.genre || '',
+          entry_type: entryType,
+          relationship,
+          album_art: albumArt,
+          collection_id: collectionIdRef.current,
+          step,
+          elapsed,
+          rating,
+          masterpiece: Masterpiece,
+          favorite: Favorite,
+          notes: overallNotes,
+          tracks: draftTrackRows(),
+        }),
+      });
+      const data = await res.json();
+      if (data.error) throw new Error(data.error);
+      draftIdRef.current = data.draft?.id ?? draftIdRef.current;
+      setDraftState('saved');
+    } catch (err) {
+      setDraftState('error');
+      alert('Saving the draft failed: ' + err.message);
+    }
+  }
+
+  // The button says SAVED for a moment and then goes back to offering. Long
+  // enough to read, short enough that it's ready again when you next reach it.
+  useEffect(() => {
+    if (draftState !== 'saved' && draftState !== 'error') return;
+    const t = setTimeout(() => setDraftState('idle'), 2600);
+    return () => clearTimeout(t);
+  }, [draftState]);
+
   // Restores a saved draft without clobbering anything already typed. The
   // session is now usable before the briefing lands, so this can fire while
   // the user is mid-sentence — every field yields to what's already there.
@@ -132,6 +235,9 @@ export function useListeningSession({ step }) {
   // streams in behind the user rather than blocking entry to the session.
   function doResearch(album, artist, existingArt, opts = {}) {
     const collectionId = opts.collectionId || null;
+    const draft = opts.draft || null;
+    collectionIdRef.current = collectionId || '';
+    draftIdRef.current = draft?.id ?? null;
 
     setResearchState('loading');
     setResearchError('');
@@ -151,12 +257,22 @@ export function useListeningSession({ step }) {
     restoredRef.current = false;
     if (timerRef.current) { clearInterval(timerRef.current); timerRef.current = null; }
 
+    // Resuming: everything above just cleared the session, so put the saved
+    // one back before any of it can be seen.
+    const draftTracks = Array.isArray(draft?.tracks) ? draft.tracks : [];
+    if (draft) hydrateDraft(draft);
+
     // Neither of these depends on the briefing, so they run in parallel with it.
     if (!existingArt) {
       fetchAlbumArtUrl(album, artist, '').then(url => { if (url) setAlbumArt(url); });
     }
-    setTracksLoading(true);
-    fetchTracklist(album, artist, collectionId).then(t => { setTracks(t || []); setTracksLoading(false); });
+    // A draft carries its own tracklist. Asking Apple again would be a second
+    // chance to come back in a different order, and every note is filed by
+    // position — so the saved list is the one a resumed listen keeps.
+    if (!draftTracks.length) {
+      setTracksLoading(true);
+      fetchTracklist(album, artist, collectionId).then(t => { setTracks(t || []); setTracksLoading(false); });
+    }
 
     // Inherit the call the album picker started; if there isn't one, start now.
     if (!takeOver(album, artist, onResearchUpdate)) {
@@ -290,6 +406,12 @@ export function useListeningSession({ step }) {
       if (data.error) throw new Error(data.error);
       setSaved(true);
       localStorage.removeItem('ln_session_draft');
+      // The listen is an entry now. Leaving the draft behind would offer it
+      // back on the Listen page as though it were still unfinished.
+      if (draftIdRef.current) {
+        fetch(`/api/drafts/${draftIdRef.current}`, { method: 'DELETE' }).catch(() => {});
+        draftIdRef.current = null;
+      }
     } catch (err) { alert('Save failed: ' + err.message); }
     finally { setSaving(false); }
   }
@@ -317,6 +439,8 @@ export function useListeningSession({ step }) {
     trackRatings, setTrackRatings,
     trackFavorites, setTrackFavorites,
     openTrack, setOpenTrack,
+    // Draft
+    draftState,
     // Reflect chat
     chatMessages,
     chatInput, setChatInput,
@@ -331,6 +455,7 @@ export function useListeningSession({ step }) {
     // Functions
     doResearch,
     refreshResearch,
+    saveDraft,
     doFormat,
     doSave,
     sendChat,

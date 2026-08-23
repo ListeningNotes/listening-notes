@@ -116,14 +116,15 @@ export async function delete_entry(slug) {
 // and only replaced when the user asks for fresh research.
 
 // Album and artist as typed vary — casing, punctuation, "and" vs "&" — so the
-// key is normalised the same way the iTunes lookups do it.
-const briefing_key = (album, artist) =>
+// key is normalised the same way the iTunes lookups do it. Drafts key on the
+// same shape: one unfinished listen per record, no matter how it was typed.
+const lookup_key = (album, artist) =>
   `${album} ${artist}`.toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, ' ').trim();
 
 export async function pull_briefing(album, artist) {
   const result = await database`
     SELECT brief, refreshed_at FROM briefings
-    WHERE lookup_key = ${briefing_key(album, artist)} LIMIT 1
+    WHERE lookup_key = ${lookup_key(album, artist)} LIMIT 1
   `;
   return result[0] || null;
 }
@@ -131,9 +132,70 @@ export async function pull_briefing(album, artist) {
 export async function save_briefing(album, artist, brief) {
   await database`
     INSERT INTO briefings (lookup_key, album, artist, brief)
-    VALUES (${briefing_key(album, artist)}, ${album}, ${artist}, ${JSON.stringify(brief)})
+    VALUES (${lookup_key(album, artist)}, ${album}, ${artist}, ${JSON.stringify(brief)})
     ON CONFLICT (lookup_key) DO UPDATE
       SET brief = EXCLUDED.brief, artist = EXCLUDED.artist,
           album = EXCLUDED.album, refreshed_at = NOW()
   `;
+}
+
+// ── Drafts ─────────────────────────────────────────────────────────────
+// A listen that was saved and walked away from. One row per record — saving
+// the same album twice overwrites the first, because there is only ever one
+// unfinished listen of a given album in progress.
+//
+// The tracks column holds the whole tracklist with each song's marks on it
+// rather than a sparse map of what was written, so a resumed session gets its
+// track numbering back without waiting on Apple to answer again. Same shape as
+// entries.tracks, with the untouched songs left in.
+
+export async function pull_drafts() {
+  return await database`
+    SELECT * FROM drafts ORDER BY updated_at DESC
+  `;
+}
+
+export async function save_draft(body) {
+  const {
+    album, artist, year = '', genre = '', entry_type = '', relationship = '',
+    album_art = '', collection_id = '', step = 0, elapsed = 0,
+    rating = 0, masterpiece = false, favorite = false, notes = '', tracks = null,
+  } = body;
+
+  if (!album) throw new Error('A draft needs an album');
+
+  const result = await database`
+    INSERT INTO drafts (
+      lookup_key, album, artist, year, genre, entry_type, relationship,
+      album_art, collection_id, step, elapsed, rating, masterpiece,
+      favorite, notes, tracks
+    ) VALUES (
+      ${lookup_key(album, artist)}, ${album}, ${artist}, ${year}, ${genre},
+      ${entry_type}, ${relationship}, ${album_art}, ${String(collection_id || '')},
+      ${step}, ${elapsed}, ${rating}, ${masterpiece}, ${favorite}, ${notes},
+      ${tracks ? JSON.stringify(tracks) : null}
+    )
+    ON CONFLICT (lookup_key) DO UPDATE SET
+      album = EXCLUDED.album, artist = EXCLUDED.artist, year = EXCLUDED.year,
+      genre = EXCLUDED.genre, entry_type = EXCLUDED.entry_type,
+      relationship = EXCLUDED.relationship, album_art = EXCLUDED.album_art,
+      collection_id = EXCLUDED.collection_id, step = EXCLUDED.step,
+      elapsed = EXCLUDED.elapsed, rating = EXCLUDED.rating,
+      masterpiece = EXCLUDED.masterpiece, favorite = EXCLUDED.favorite,
+      notes = EXCLUDED.notes, tracks = EXCLUDED.tracks, updated_at = NOW()
+    RETURNING *
+  `;
+  return result[0];
+}
+
+// Called both by the ✕ on the Listen page and by a finished session — once the
+// entry is saved for real, the draft it grew out of has nothing left to hold.
+export async function delete_draft(id) {
+  await database`DELETE FROM drafts WHERE id = ${id}`;
+  return { deleted: true };
+}
+
+export async function delete_draft_for_album(album, artist) {
+  await database`DELETE FROM drafts WHERE lookup_key = ${lookup_key(album, artist)}`;
+  return { deleted: true };
 }

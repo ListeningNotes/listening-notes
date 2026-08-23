@@ -7,6 +7,7 @@ import { handOff } from '../../../library/baton';
 import PasswordGate from '../../../components/session_components/PasswordGate';
 import EchoNetwork from '../../../components/EchoNetwork';
 import PreListenQuestionnaire from '../../../components/session_components/steps/PreListenQuestionnaire';
+import { SESSION_STEPS } from '../../../hooks/useListeningSession';
 
 const ECHO_PROMPTS = [
   'Who do you want to listen to?',
@@ -43,6 +44,18 @@ function calcGridTargets(count) {
   });
 }
 
+// How long a draft has been sitting there. Rounded hard on purpose — the point
+// is 'this morning' or 'last week', not a timestamp.
+function sinceLabel(iso) {
+  const mins = Math.floor((Date.now() - new Date(iso).getTime()) / 60000);
+  if (mins < 1)  return 'just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return days === 1 ? 'yesterday' : `${days}d ago`;
+}
+
 export default function EchoPage() {
   const router = useRouter();
 
@@ -65,6 +78,12 @@ export default function EchoPage() {
   // Held here so they're available at the moment handleAlbumSelect fires
   const [relationship, setRelationship] = useState('');
   const [entryType, setEntryType]       = useState('');
+
+  // Listens saved and walked away from. Offered under the prompt card, so the
+  // first thing the page asks isn't 'who?' when there's already an answer
+  // waiting halfway through.
+  const [drafts, setDrafts]                 = useState([]);
+  const [confirmDiscard, setConfirmDiscard] = useState(null);   // draft id
 
   // Album search + Echo network animation
   const {
@@ -108,6 +127,14 @@ export default function EchoPage() {
       .catch(() => {})
       .finally(() => setChecking(false));
   }, []);
+
+  useEffect(() => {
+    if (!authed) return;
+    fetch('/api/drafts')
+      .then(r => r.json())
+      .then(d => setDrafts(d.drafts || []))
+      .catch(() => {});
+  }, [authed]);
 
   // Fallback: force echoReady after 3s in case images are slow
   useEffect(() => {
@@ -153,6 +180,32 @@ export default function EchoPage() {
   }, [typingDone]);
 
   function handleAuth() { setAuthed(true); }
+
+  // Reopens a saved listen. The whole row travels with the album so the session
+  // page can put the notes back without asking for them again, and the two
+  // questions are skipped — they were answered the first time round.
+  function resumeDraft(draft) {
+    localStorage.setItem('ln_pending_session', JSON.stringify({
+      album: draft.album,
+      artist: draft.artist || '',
+      year: draft.year || '',
+      artUrl: draft.album_art || '',
+      collectionId: draft.collection_id || null,
+      genre: draft.genre || '',
+      relationship: draft.relationship || '',
+      entryType: draft.entry_type || '',
+      draft,
+    }));
+    router.push('/dashboard/echo/session');
+  }
+
+  // Two taps, because there's no undo on the other side of this one.
+  async function discardDraft(id) {
+    if (confirmDiscard !== id) { setConfirmDiscard(id); return; }
+    setDrafts(prev => prev.filter(d => d.id !== id));
+    setConfirmDiscard(null);
+    try { await fetch(`/api/drafts/${id}`, { method: 'DELETE' }); } catch {}
+  }
 
   // Called after Q2 is answered — save pending data and navigate to session page
   function handleAlbumSelect({ album, artist, year, artUrl }) {
@@ -276,6 +329,64 @@ export default function EchoPage() {
                     </div>
                   )}
                 </div>
+
+                {/* Unfinished listens — anything left mid-session, newest
+                    first. Under the card rather than over it: the page's job is
+                    still to ask who you want to hear, this is only the answer
+                    you already gave and didn't finish. */}
+                {drafts.length > 0 && typingDone && (
+                  <div style={{
+                    marginTop: 18,
+                    opacity: inputVisible ? 1 : 0,
+                    transform: inputVisible ? 'translateY(0)' : 'translateY(-8px)',
+                    transition: 'opacity 1.4s cubic-bezier(0.16,1,0.3,1), transform 1.4s cubic-bezier(0.16,1,0.3,1)',
+                  }}>
+                    <div style={{ fontFamily: fonts.mono, fontSize: 9, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(26,21,32,0.4)', textAlign: 'center', marginBottom: 10 }}>
+                      Unfinished
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 232, overflowY: 'auto' }}>
+                      {drafts.map(draft => (
+                        <div key={draft.id} style={{
+                          display: 'flex', alignItems: 'center', gap: 12,
+                          background: 'rgba(255,255,255,0.45)',
+                          backdropFilter: 'blur(18px)', WebkitBackdropFilter: 'blur(18px)',
+                          border: '1px solid rgba(255,255,255,0.5)', borderRadius: 16,
+                          padding: 8, boxShadow: '0 4px 18px rgba(0,0,0,0.06)',
+                        }}>
+                          <button onClick={() => resumeDraft(draft)} style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 12, background: 'none', border: 'none', padding: 0, cursor: 'pointer', textAlign: 'left' }}>
+                            {draft.album_art
+                              ? <img src={draft.album_art} alt="" style={{ width: 42, height: 42, borderRadius: 10, objectFit: 'cover', flexShrink: 0, display: 'block' }} />
+                              : <div style={{ width: 42, height: 42, borderRadius: 10, background: 'rgba(26,21,32,0.08)', flexShrink: 0 }} />}
+                            <div style={{ minWidth: 0 }}>
+                              <div style={{ fontFamily: fonts.sans, fontWeight: 600, fontSize: 14, color: '#1a1520', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{draft.album}</div>
+                              <div style={{ fontFamily: fonts.mono, fontSize: 10, color: 'rgba(26,21,32,0.45)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                {draft.artist} · {SESSION_STEPS[draft.step] || SESSION_STEPS[0]} · {sinceLabel(draft.updated_at)}
+                              </div>
+                            </div>
+                          </button>
+                          <button
+                            onClick={() => discardDraft(draft.id)}
+                            onBlur={() => setConfirmDiscard(c => (c === draft.id ? null : c))}
+                            title="Discard this draft"
+                            style={{
+                              flexShrink: 0, cursor: 'pointer', borderRadius: 99,
+                              fontFamily: fonts.mono, fontSize: 10, letterSpacing: '0.06em',
+                              padding: confirmDiscard === draft.id ? '6px 12px' : '0',
+                              width: confirmDiscard === draft.id ? 'auto' : 24,
+                              height: 24, lineHeight: 1,
+                              display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              background: confirmDiscard === draft.id ? '#1a1520' : 'rgba(26,21,32,0.08)',
+                              color: confirmDiscard === draft.id ? '#f5f2ec' : 'rgba(26,21,32,0.5)',
+                              border: 'none',
+                            }}
+                          >
+                            {confirmDiscard === draft.id ? 'discard?' : '×'}
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           )}
