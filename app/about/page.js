@@ -39,7 +39,7 @@ const STAR_NOTES = [
   // The one row here that isn't a rating, and the row that exists to say so.
   // A heart and a score answer different questions, and the pair only makes
   // sense once you know they can disagree.
-  { favorite: true, body: 'Not a rating — a different question. A favorite is something I reach for outside the album it came from: it turns up in playlists, on walks, on repeat, with none of the record around it. Stars are about how well something works in its own context. A heart is about whether it followed me out. That is why plenty of five-star tracks aren’t favorites, and why a favorite occasionally sits lower than you would expect.' },
+  { favorite: true, body: 'An overall favorite track outside the context of the album. Plenty of 5-star tracks may not be favorited and some favorited may sit lower than expected.' },
 ];
 
 const RELATIONSHIP_NOTES = [
