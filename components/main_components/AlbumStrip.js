@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import { beginVisit, isNewSince } from '../../library/dog_ear';
 
 const AUTO_SPEED = 0.5; // px per frame while drifting
 
@@ -22,6 +23,28 @@ export default function AlbumStrip({ entries, variant = 'scroll' }) {
   const scrollRef = useRef(null);
   const draggedRef = useRef(false);
   const tapStartRef = useRef(null);
+
+  // How far the reader had got last time. Read in an effect rather than
+  // during render because it comes out of localStorage, which the server
+  // doesn't have — starting at null means the first paint carries no badges
+  // and they arrive a frame later, instead of the markup disagreeing with
+  // itself between the server and the browser.
+  //
+  // The fold is set from the newest entry on the page, not from the clock —
+  // see dog_ear.js for why comparing a row against Date.now() is wrong here.
+  // Guarded by a ref so it happens once per visit: entries arriving again
+  // must not move the fold and wipe the badges mid-read.
+  const [fold, setFold] = useState(null);
+  const foldedRef = useRef(false);
+  useEffect(() => {
+    if (foldedRef.current || entries.length === 0) return;
+    foldedRef.current = true;
+    const newest = entries.reduce(
+      (max, e) => (max === null || new Date(e.created_at) > new Date(max) ? e.created_at : max),
+      null,
+    );
+    setFold(beginVisit(newest));
+  }, [entries]);
 
   // A tile is a plain link to the entry now, so a swipe that ends on one
   // would otherwise navigate. These mark the gesture as a drag once the
@@ -149,6 +172,13 @@ export default function AlbumStrip({ entries, variant = 'scroll' }) {
               ? <img src={entry.album_art} alt={entry.album} className="strip-tile-img" draggable={false} loading="lazy" />
               : <div className="strip-tile-placeholder">{entry.album?.[0] ?? '♪'}</div>
             }
+            {/* Sits above the art rather than on the metadata card, because
+                the strip has no card — a homepage tile is "take me to this
+                record", and this is the one thing worth saying before you
+                get there. */}
+            {isNewSince(entry.created_at, fold) && (
+              <span className="ln-new-mark" aria-label="Posted since your last visit">New</span>
+            )}
           </Link>
         ))}
       </div>
