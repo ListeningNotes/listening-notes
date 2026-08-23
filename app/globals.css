@@ -30,6 +30,12 @@
   /* The masterpiece blue, paired with --fav on the same hue wheel. Lived only
      inside .ln-mark--mp while the session and the CMS drew a gold ✦ and ★. */
   --mp:           #4a9bf0;
+  /* Third of the same set: posted since you were last here. Not a property of
+     the record like --fav and --mp are — a property of the reader, which is
+     why it's the only one of the three that can be true for one person and
+     false for the next. Amber keeps it clear of the red and the blue, and of
+     --live below, which is green and already means something else. */
+  --new:          #f0a24a;
   --live:         #7cff9b;
   --card-blur:    blur(48px);
   --shadow-soft:  0 2px 12px rgba(0,0,0,0.04), 0 8px 32px rgba(0,0,0,0.04);
@@ -2400,4 +2406,41 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 .ln-xref:hover {
   color: var(--ink);
   text-decoration-color: var(--ink);
+}
+
+/* ── .ln-new-mark — posted since your last visit ──────────────────────────
+   The third mark, next to the favourite heart and the masterpiece diamond,
+   but earned differently: those are facts about the record, this is a fact
+   about the reader. Set by library/dog_ear.js out of the browser's own
+   storage, so it says "new to you", not "recent".
+
+   Chip geometry — mono, 10px, 4px radius, 3px/8px — so it reads as the same
+   family as the Favorite and Masterpiece chips on an entry page. What it
+   can't borrow is their transparency: those sit on a page background, and
+   this sits on album art that might be any colour at all. Hence a filled
+   ground and a shadow, so it stays legible over a white sleeve and a black
+   one both.
+
+   The literal in each color-mix() is a fallback, not a duplicate: color-mix()
+   with an undefined custom property is invalid, and an invalid background
+   would drop the ground out from under the text — the same way a stale
+   stylesheet once left the masterpiece chip with no border. See Chip.js. */
+.ln-new-mark {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 2;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  line-height: 1;
+  letter-spacing: 0.08em;
+  border-radius: 4px;
+  padding: 4px 8px;
+  color: #fff;
+  background: color-mix(in srgb, var(--new, #f0a24a) 92%, transparent);
+  border: 1px solid color-mix(in srgb, #fff 34%, transparent);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.22);
+  /* The tile is the link; the badge is decoration sitting on top of it, and
+     shouldn't eat the click or the hover. */
+  pointer-events: none;
 }
