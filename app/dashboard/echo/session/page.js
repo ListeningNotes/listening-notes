@@ -4,8 +4,9 @@ import { useRouter } from 'next/navigation';
 import { fonts } from '../../../../library/sitewide_visuals';
 import { tx, bdr, dk } from '../../../../library/session_styles';
 import { entryTypeLabel } from '../../../../library/entry_formatter';
-import { useListeningSession } from '../../../../hooks/useListeningSession';
+import { useListeningSession, SESSION_STEPS } from '../../../../hooks/useListeningSession';
 import PasswordGate from '../../../../components/session_components/PasswordGate';
+import SessionButton from '../../../../components/session_components/SessionButton';
 import EchoNetwork from '../../../../components/EchoNetwork';
 import { SessionDuration } from '../../../../library/session_timers';
 import AlbumDebrief from '../../../../components/session_components/steps/AlbumDebrief';
@@ -19,16 +20,20 @@ import SessionPreview from '../../../../components/session_components/steps/Sess
 // written, and nothing on the site ever found anything by one — the archive
 // searches the notes instead now, and genre is its own field. The step and the
 // display are gone; the column and everything already in it are untouched.
-const STEPS = [
-  { id: 0, label: 'Album Debrief' },
-  { id: 1, label: 'Track Notes' },
-  { id: 2, label: 'Album Notes' },
-  { id: 3, label: 'Score' },
-  { id: 4, label: 'Preview' },
-];
+// The list itself lives with the hook, since the Listen page names steps too.
 
 export default function EchoSessionPage() {
   const router = useRouter();
+
+  // What the Listen page left behind: the album to open, and — when a saved
+  // draft was picked up — the whole row rather than an id, so the session can
+  // be put back without a second round trip. Read once here rather than in the
+  // effects below, because whether this is a resumed listen decides what the
+  // very first frame shows.
+  const [pending] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('ln_pending_session')); } catch { return null; }
+  });
+  const resumed = !!pending?.draft;
 
   const [authed, setAuthed]     = useState(false);
   const [checking, setChecking] = useState(true);
@@ -60,7 +65,8 @@ export default function EchoSessionPage() {
     chatMessages, chatInput, setChatInput, chatLoading,
     formatting, output, saving, saved,
     elapsed,
-    doResearch, refreshResearch, doFormat, doSave, sendChat,
+    draftState,
+    doResearch, refreshResearch, doFormat, doSave, sendChat, saveDraft,
   } = useListeningSession({ step });
 
   // An album already in the briefings table comes back instantly, so there is
@@ -76,38 +82,33 @@ export default function EchoSessionPage() {
       .finally(() => setChecking(false));
   }, []);
 
-  // On mount: read pending session from localStorage and kick off research
+  // On mount: open the album the Listen page handed over and kick off research
   useEffect(() => {
     if (!authed) return;
-    try {
-      const raw = localStorage.getItem('ln_pending_session');
-      if (!raw) { router.replace('/dashboard/echo'); return; }
-      const pending = JSON.parse(raw);
-      const { album, artist, year, artUrl, collectionId, genre: gen, relationship: rel, entryType: et } = pending;
+    if (!pending?.album) { router.replace('/dashboard/echo'); return; }
+    const { album, artist, artUrl, collectionId, genre: gen, relationship: rel, entryType: et, draft } = pending;
 
-      setAlbumInput(album);
-      setArtistName(artist);
-      if (artUrl) setAlbumArt(artUrl);
-      setRelationship(rel || '');
-      setEntryType(et || '');
-      setGenre(gen || '');
+    setAlbumInput(album);
+    setArtistName(artist);
+    if (artUrl) setAlbumArt(artUrl);
+    setRelationship(rel || '');
+    setEntryType(et || '');
+    setGenre(gen || '');
 
-      // Pass relationship/entryType explicitly to avoid stale-closure issue
-      doResearch(album, artist, artUrl, { relationship: rel || '', entryType: et || '', collectionId });
-    } catch {
-      router.replace('/dashboard/echo');
-    }
+    // A resumed listen reopens on the step it was left on, and everything up
+    // to it stays reachable in the sidebar.
+    if (draft) { setStep(draft.step || 0); setMaxStep(draft.step || 0); }
+
+    // Pass relationship/entryType explicitly to avoid stale-closure issue
+    doResearch(album, artist, artUrl, { relationship: rel || '', entryType: et || '', collectionId, draft });
   }, [authed]);
 
   // Animation timing — all relative to auth completing, fires exactly once.
-  // Reads artUrl directly from localStorage (same pattern as loading-test).
   useEffect(() => {
-    if (!authed || skipIntro) return;
-    let artUrl = '';
-    try {
-      const raw = localStorage.getItem('ln_pending_session');
-      artUrl = raw ? (JSON.parse(raw)?.artUrl ?? '') : '';
-    } catch { /* ignore */ }
+    // Nothing to assemble on the way back into a listen already in progress —
+    // the ceremony is for a record being opened for the first time.
+    if (!authed || skipIntro || resumed) return;
+    const artUrl = pending?.artUrl ?? '';
 
     // nodeArt + assembling fire immediately so the image starts loading right away.
     // The zoom transition starts at t=300ms and takes ~2.2s (ends ~t=2500ms).
@@ -117,7 +118,7 @@ export default function EchoSessionPage() {
     const t2 = setTimeout(() => setDimmed(false), 600);
     const t3 = setTimeout(() => setRippleCount(1), 2200);
     return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
-  }, [authed, skipIntro]);
+  }, [authed, skipIntro, resumed]);
 
   // Escape closes the Echo drawer — along with the ✕ and clicking away, since
   // a panel that traps you is worse than no panel.
@@ -183,7 +184,7 @@ export default function EchoSessionPage() {
 
   // Show loading only until the assembly animation completes — and not at all
   // when the briefing was already on file.
-  const showLoadingScreen = !assembled && !skipIntro;
+  const showLoadingScreen = !assembled && !skipIntro && !resumed;
 
   return (
     <>
@@ -310,12 +311,12 @@ export default function EchoSessionPage() {
                 )}
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 2, padding: '0 10px' }}>
-                  {STEPS.map(s => {
-                    const isPast = s.id < step;
-                    const isCurrent = s.id === step;
-                    const isReachable = s.id <= maxStep;
+                  {SESSION_STEPS.map((label, id) => {
+                    const isPast = id < step;
+                    const isCurrent = id === step;
+                    const isReachable = id <= maxStep;
                     return (
-                      <button key={s.id} onClick={() => isReachable && !isCurrent && goToStep(s.id)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: 10, width: '100%', textAlign: 'left', background: isCurrent ? 'rgba(255,255,255,0.18)' : 'transparent', border: 'none', cursor: isReachable && !isCurrent ? 'pointer' : 'default', transition: 'background 0.15s' }}>
+                      <button key={id} onClick={() => isReachable && !isCurrent && goToStep(id)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: 10, width: '100%', textAlign: 'left', background: isCurrent ? 'rgba(255,255,255,0.18)' : 'transparent', border: 'none', cursor: isReachable && !isCurrent ? 'pointer' : 'default', transition: 'background 0.15s' }}>
                         <span style={{
                           width: 10, height: 10, borderRadius: '50%', flexShrink: 0,
                           background: isCurrent ? 'rgba(255,255,255,0.95)' : isPast ? bdr(0.42) : 'transparent',
@@ -324,11 +325,32 @@ export default function EchoSessionPage() {
                           transition: 'background 0.25s, box-shadow 0.25s, border-color 0.25s',
                         }} />
                         <span style={{ fontFamily: fonts.mono, fontSize: 11, letterSpacing: '0.04em', color: isCurrent ? tx(0.88) : isPast ? tx(0.5) : tx(0.28), transition: 'color 0.15s' }}>
-                          {s.label}
+                          {label}
                         </span>
                       </button>
                     );
                   })}
+                </div>
+
+                {/* Save as Draft — the way out of a listen that isn't finished.
+                    Sits under the steps rather than beside Next, because it
+                    belongs to the session as a whole and not to any one screen.
+                    Leaving is the ← Dashboard link above; this is what makes
+                    leaving safe. */}
+                <div style={{ marginTop: 'auto', padding: '18px 16px 0' }}>
+                  <SessionButton
+                    onClick={saveDraft}
+                    disabled={draftState === 'saving' || !(brief?.album || albumInput)}
+                    style={{ width: '100%', padding: '10px 8px', fontSize: 10, letterSpacing: '0.08em' }}
+                  >
+                    {draftState === 'saving' ? 'Saving…'
+                      : draftState === 'saved' ? 'Draft saved'
+                      : draftState === 'error' ? 'Try again'
+                      : 'Save as Draft'}
+                  </SessionButton>
+                  <div style={{ fontFamily: fonts.mono, fontSize: 8.5, lineHeight: 1.5, letterSpacing: '0.06em', color: tx(0.28), textAlign: 'center', marginTop: 8 }}>
+                    Pick it back up from Listen
+                  </div>
                 </div>
               </div>
 
