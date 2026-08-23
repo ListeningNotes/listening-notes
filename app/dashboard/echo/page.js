@@ -207,9 +207,12 @@ export default function EchoPage() {
     try { await fetch(`/api/drafts/${id}`, { method: 'DELETE' }); } catch {}
   }
 
-  // Called after Q2 is answered — save pending data and navigate to session page
-  function handleAlbumSelect({ album, artist, year, artUrl }) {
-    const pending = { album, artist, year, artUrl: pendingAlbum?.artLarge || artUrl, collectionId: pendingAlbum?.collectionId, genre: pendingAlbum?.genre || '', relationship, entryType };
+  // Called after Q2 is answered — save pending data and navigate to session page.
+  // The answer to Q2 arrives as an argument rather than being read off state:
+  // the button that sets it calls this in the same breath, so the state here is
+  // still one render behind. Q1's answer is a phase older and has landed.
+  function handleAlbumSelect({ album, artist, year, artUrl }, chosen = {}) {
+    const pending = { album, artist, year, artUrl: pendingAlbum?.artLarge || artUrl, collectionId: pendingAlbum?.collectionId, genre: pendingAlbum?.genre || '', relationship, entryType: chosen.entryType ?? entryType };
     localStorage.setItem('ln_pending_session', JSON.stringify(pending));
     router.push('/dashboard/echo/session');
   }

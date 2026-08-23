@@ -1,6 +1,8 @@
 'use client';
-import { fonts } from '../../../library/sitewide_visuals';
+import { Heart, SketchLogo } from '@phosphor-icons/react';
+import { fonts, colors } from '../../../library/sitewide_visuals';
 import { tx, bdr, dk, lbl } from '../../../library/session_styles';
+import { entryTypeLabel } from '../../../library/entry_formatter';
 import SessionButton from '../SessionButton';
 import HorizonChart from '../../main_components/HorizonChart';
 import StarDisplay from '../../main_components/StarRating';
@@ -8,14 +10,31 @@ import StarDisplay from '../../main_components/StarRating';
 // Step 5 — formatted entry preview with save action.
 // Three states: waiting to format / formatting in progress / formatted output ready.
 
+// The two ways on from a finished entry. Accent is the post — that's the thing
+// that was just made; the entries tab is where it gets corrected.
+const savedLink = (accent) => ({
+  fontFamily: fonts.mono, fontSize: 11, letterSpacing: '0.08em',
+  textTransform: 'uppercase', textDecoration: 'none',
+  color: accent ? tx(0.96) : tx(0.7),
+  background: accent ? dk(0.58) : dk(0.42),
+  border: `1px solid ${accent ? bdr(0.5) : bdr(0.16)}`,
+  borderRadius: 50, padding: '10px 22px',
+  boxShadow: accent ? `0 0 16px 2px rgba(255,255,255,0.3), 0 4px 14px ${dk(0.4)}` : `0 2px 8px ${dk(0.28)}`,
+});
+
 export default function SessionPreview({
   brief,
   albumArt,
   output,
   formatting,
   rating,
+  Masterpiece,
+  Favorite,
+  entryType,
+  relationship,
   saving,
   saved,
+  savedEntry,
   overallNotes,
   tracks,
   trackRatings,
@@ -68,6 +87,25 @@ export default function SessionPreview({
             {brief?.artist}{brief?.year ? ' · ' + brief.year : ''}
           </div>
           <StarDisplay rating={rating} size={16} />
+
+          {/* Everything else about to be written to the row. These were all
+              invisible until the entry existed, which is a bad time to find
+              out the type is wrong or the mark didn't take. */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginTop: 10 }}>
+            {[relationship, entryTypeLabel(entryType)].filter(Boolean).map(t => (
+              <span key={t} style={{ fontFamily: fonts.mono, fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: tx(0.45), border: `1px solid ${bdr(0.14)}`, borderRadius: 4, padding: '3px 8px' }}>{t}</span>
+            ))}
+            {Masterpiece && (
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontFamily: fonts.mono, fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: tx(0.7) }}>
+                <SketchLogo size={13} weight="fill" color={colors.mp} />Masterpiece
+              </span>
+            )}
+            {Favorite && (
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontFamily: fonts.mono, fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: tx(0.7) }}>
+                <Heart size={13} weight="fill" color={colors.fav} />Favorite
+              </span>
+            )}
+          </div>
         </div>
       </div>
 
@@ -97,10 +135,19 @@ export default function SessionPreview({
             {saving ? 'Saving…' : 'Save to Site →'}
           </SessionButton>
         ) : (
-          <>
+          // Saying "saved" and leaving you on the dashboard meant finding the
+          // entry again by hand to check it. These go straight to the two
+          // places you'd actually want: the post, and the row behind it.
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
             <span style={{ fontFamily: fonts.mono, fontSize: 11, color: tx(0.9), letterSpacing: '0.1em' }}>✓ Saved</span>
-            <a href="/dashboard" style={{ fontFamily: fonts.mono, fontSize: 11, color: tx(0.35), letterSpacing: '0.08em', textDecoration: 'none' }}>← Back to dashboard</a>
-          </>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', justifyContent: 'center' }}>
+              {savedEntry?.slug && (
+                <a href={`/entries/${savedEntry.slug}`} target="_blank" rel="noreferrer" style={savedLink(true)}>View the post →</a>
+              )}
+              <a href="/dashboard/entries" style={savedLink(false)}>Edit in entries</a>
+            </div>
+            <a href="/dashboard" style={{ fontFamily: fonts.mono, fontSize: 10, color: tx(0.32), letterSpacing: '0.08em', textDecoration: 'none' }}>← Back to dashboard</a>
+          </div>
         )}
       </div>
     </div>

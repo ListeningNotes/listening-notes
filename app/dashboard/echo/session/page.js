@@ -63,7 +63,7 @@ export default function EchoSessionPage() {
     trackFavorites, setTrackFavorites,
     openTrack, setOpenTrack,
     chatMessages, chatInput, setChatInput, chatLoading,
-    formatting, output, saving, saved,
+    formatting, output, saving, saved, savedEntry,
     elapsed,
     draftState,
     doResearch, refreshResearch, doFormat, doSave, sendChat, saveDraft,
@@ -364,7 +364,7 @@ export default function EchoSessionPage() {
                     {step === 1 && <TrackNotes tracks={tracks} tracksLoading={tracksLoading} trackNotes={trackNotes} setTrackNotes={setTrackNotes} trackRatings={trackRatings} setTrackRatings={setTrackRatings} trackFavorites={trackFavorites} setTrackFavorites={setTrackFavorites} openTrack={openTrack} setOpenTrack={setOpenTrack} onNext={() => goToStep(2)} />}
                     {step === 2 && <AlbumNotes tracks={tracks} trackRatings={trackRatings} trackFavorites={trackFavorites} overallNotes={overallNotes} setOverallNotes={setOverallNotes} onNext={() => goToStep(3)} />}
                     {step === 3 && <ScoreScreen tracks={tracks} trackRatings={trackRatings} trackFavorites={trackFavorites} rating={rating} setRating={setRating} Masterpiece={Masterpiece} setMasterpiece={setMasterpiece} Favorite={Favorite} setFavorite={setFavorite} onNext={() => goToStep(4)} />}
-                    {step === 4 && <SessionPreview brief={brief} albumArt={albumArt} output={output} formatting={formatting} rating={rating} saving={saving} saved={saved} overallNotes={overallNotes} tracks={tracks} trackRatings={trackRatings} trackFavorites={trackFavorites} doFormat={doFormat} doSave={doSave} />}
+                    {step === 4 && <SessionPreview brief={brief} albumArt={albumArt} output={output} formatting={formatting} rating={rating} Masterpiece={Masterpiece} Favorite={Favorite} entryType={entryType} relationship={relationship} saving={saving} saved={saved} savedEntry={savedEntry} overallNotes={overallNotes} tracks={tracks} trackRatings={trackRatings} trackFavorites={trackFavorites} doFormat={doFormat} doSave={doSave} />}
                   </div>
                 </div>
               </div>

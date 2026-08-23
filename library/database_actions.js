@@ -41,11 +41,15 @@ export async function pull_entry_by_slug(slug) {
   return row ? withSizedArt(row, ENTRY_ART_PX) : null;
 }
 
+// masterpiece is a column, not a rating. The session used to write the word
+// into `rating` instead of setting the boolean, which cost the star score, left
+// the column false, and — because parseFloat('Masterpiece') is NaN — drew no
+// stars at all on the entry it produced.
 export async function save_new_entry(body) {
   const {
     album, artist, year, genre = '', entry_type, relationship,
-    rating, favorite, background = '', notes, track_notes, tags = null,
-    horizon, album_art, post_link, tracks = null
+    rating, favorite, masterpiece = false, background = '', notes,
+    track_notes, tags = null, horizon, album_art, post_link, tracks = null
   } = body;
 
   const slug = create_slug(album);
@@ -53,11 +57,12 @@ export async function save_new_entry(body) {
   const result = await database`
     INSERT INTO entries (
       album, artist, year, genre, entry_type, relationship,
-      rating, favorite, background, notes, track_notes, tags,
+      rating, favorite, masterpiece, background, notes, track_notes, tags,
       horizon, album_art, post_link, slug, tracks
     ) VALUES (
       ${album}, ${artist}, ${year}, ${genre}, ${entry_type}, ${relationship},
-      ${rating}, ${favorite}, ${background}, ${notes}, ${track_notes}, ${tags},
+      ${rating}, ${favorite}, ${masterpiece}, ${background}, ${notes},
+      ${track_notes}, ${tags},
       ${horizon}, ${album_art}, ${post_link}, ${slug},
       ${tracks ? JSON.stringify(tracks) : null}
     )
