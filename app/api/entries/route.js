@@ -1,9 +1,11 @@
 import { pull_all_entries, save_new_entry } from '@/library/database_actions';
-import { requireWristband } from '@/library/wristband';
+import { checkWristband, requireWristband } from '@/library/wristband';
 
-export async function GET() {
+// The dashboard reads this list too, and its source picker needs the chain.
+// Anyone else gets it stripped — see withoutChain in database_actions.
+export async function GET(request) {
   try {
-    const entries = await pull_all_entries();
+    const entries = await pull_all_entries({ includeChain: await checkWristband(request) });
     return Response.json({ entries });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });

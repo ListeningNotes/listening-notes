@@ -52,7 +52,16 @@ function inputStyle(focused) {
   };
 }
 
-function EditModal({ entry, onSave, onDelete, onClose }) {
+// A date column arrives as an ISO string over JSON; <input type="date"> wants
+// the bare YYYY-MM-DD in front of the T.
+function dateInputValue(value) {
+  if (!value) return '';
+  if (typeof value === 'string') return value.slice(0, 10);
+  const d = new Date(value);
+  return isNaN(d) ? '' : d.toISOString().slice(0, 10);
+}
+
+function EditModal({ entry, entries, onSave, onDelete, onClose }) {
   const [fields, setFields] = useState({
     album: entry.album || '',
     artist: entry.artist || '',
@@ -70,6 +79,11 @@ function EditModal({ entry, onSave, onDelete, onClose }) {
     // here would throw away the full-resolution original.
     album_art: entry.album_art_source ?? entry.album_art ?? '',
     tracks: Array.isArray(entry.tracks) ? entry.tracks.map(t => ({ ...t })) : [],
+    // Where this album came from. Sent on every save including when blank, so
+    // clearing the fields actually clears the columns — see update_entry.
+    source_entry_id: entry.source_entry_id ?? '',
+    received_from: entry.received_from ?? '',
+    received_date: dateInputValue(entry.received_date),
   });
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -179,6 +193,43 @@ function EditModal({ entry, onSave, onDelete, onClose }) {
                 <span style={{ fontFamily: MONO, fontSize: 11, color: fields[key] ? INK : 'rgba(26,25,22,0.4)' }}>{lbl}</span>
               </label>
             ))}
+          </div>
+
+          {/* Where this one came from. An entry with no source is a find of
+              your own; an entry with one is a pass-along, and the chain walks
+              upward from here. Recording it is the whole of Phase 0 — nothing
+              reads these yet, but an album logged without them can never be
+              tree data later. */}
+          <div>
+            <div style={{ ...labelStyle, marginBottom: 6 }}>Came from</div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 150px', gap: 12, marginBottom: 12 }}>
+              <input
+                value={fields.received_from}
+                onChange={e => set('received_from', e.target.value)}
+                placeholder="Who sent it — leave blank if you found it yourself"
+                style={inputStyle()}
+              />
+              <input
+                type="date"
+                value={fields.received_date}
+                onChange={e => set('received_date', e.target.value)}
+                style={inputStyle()}
+              />
+            </div>
+            {/* Points at the sender's entry, not at the album. Every entry but
+                this one is offered; the deeper loops are caught on save. */}
+            <select
+              value={fields.source_entry_id}
+              onChange={e => set('source_entry_id', e.target.value)}
+              style={{ ...inputStyle(), appearance: 'none' }}
+            >
+              <option value="">No source entry — my own find</option>
+              {(entries || [])
+                .filter(e => e.id !== entry.id)
+                .map(e => (
+                  <option key={e.id} value={e.id}>{e.album} — {e.artist}</option>
+                ))}
+            </select>
           </div>
 
           <div>
@@ -405,7 +456,7 @@ export default function SessionEntries() {
         </div>
       </div>
 
-      {editing && <EditModal entry={editing} onSave={handleSave} onDelete={handleDelete} onClose={() => setEditing(null)} />}
+      {editing && <EditModal entry={editing} entries={entries} onSave={handleSave} onDelete={handleDelete} onClose={() => setEditing(null)} />}
     </>
   );
 }

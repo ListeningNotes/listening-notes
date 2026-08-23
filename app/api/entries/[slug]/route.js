@@ -1,10 +1,10 @@
 import { pull_entry_by_slug, update_entry, delete_entry } from '@/library/database_actions';
-import { requireWristband } from '@/library/wristband';
+import { checkWristband, requireWristband } from '@/library/wristband';
 
 export async function GET(request, { params }) {
   try {
     const { slug } = await params;
-    const entry = await pull_entry_by_slug(slug);
+    const entry = await pull_entry_by_slug(slug, { includeChain: await checkWristband(request) });
     if (!entry) return Response.json({ error: 'Not found' }, { status: 404 });
     return Response.json({ entry });
   } catch (error) {
