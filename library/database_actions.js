@@ -26,19 +26,83 @@ function withSizedArt(row, px) {
   return { ...row, album_art: sizedAlbumArt(row.album_art, px), album_art_source: row.album_art };
 }
 
-export async function pull_all_entries() {
+// Who sent you an album is somebody else's name, and these reads all go out to
+// the public site — the entry page hands its whole row to the browser, so a
+// column nothing renders still ships in the HTML. The chain is private until
+// there's a considered decision about showing it, so it's dropped on the way
+// out unless the caller is holding a wristband and asks for it.
+const CHAIN_FIELDS = ['source_entry_id', 'received_from', 'received_date'];
+
+export function withoutChain(row) {
+  if (!row) return row;
+  const clean = { ...row };
+  for (const field of CHAIN_FIELDS) delete clean[field];
+  return clean;
+}
+
+export async function pull_all_entries({ includeChain = false } = {}) {
   const rows = await database`
     SELECT * FROM entries ORDER BY created_at DESC
   `;
-  return rows.map(row => withSizedArt(row, LIST_ART_PX));
+  return rows.map(row => {
+    const sized = withSizedArt(row, LIST_ART_PX);
+    return includeChain ? sized : withoutChain(sized);
+  });
 }
 
-export async function pull_entry_by_slug(slug) {
+export async function pull_entry_by_slug(slug, { includeChain = false } = {}) {
   const result = await database`
     SELECT * FROM entries WHERE slug = ${slug} LIMIT 1
   `;
   const row = result[0];
-  return row ? withSizedArt(row, ENTRY_ART_PX) : null;
+  if (!row) return null;
+  const sized = withSizedArt(row, ENTRY_ART_PX);
+  return includeChain ? sized : withoutChain(sized);
+}
+
+// ── Discovery chain ────────────────────────────────────────────────────
+// Where an album came from. source_entry_id points at the *sender's entry*,
+// not at the album — null means this was a find of your own. Walking the
+// column upward gives the whole lineage; that's the entire tree mechanic.
+//
+// Deliberately not a foreign key. An FK would either refuse to let you delete
+// a mis-logged entry that something descends from, or quietly null out its
+// children's source and rewrite their history. The chain is recorded fact, so
+// a pointer at a deleted entry stays a pointer at a deleted entry — and since
+// id is a serial that never reuses numbers, it can't drift onto a different
+// album later. Phase 2 can draw that as an unknown node.
+
+// Empty strings arrive from every text input on the form. The column means
+// "nothing recorded", and '' is not that.
+const blankToNull = v => (v === '' || v === undefined ? null : v);
+
+// A source is an entries.id or nothing. Anything unparseable is nothing —
+// better an unrecorded origin than a pointer at whatever row id 0 rounds to.
+function entryRef(value) {
+  if (value === null || value === undefined || value === '') return null;
+  const n = parseInt(value, 10);
+  return Number.isInteger(n) && n > 0 ? n : null;
+}
+
+// An album can't be sent back up its own chain. Walks from the proposed source
+// upward looking for the entry being edited, so both self-linking and the
+// longer A→B→C→A loops are caught. The depth guard is belt-and-braces: nothing
+// should be able to write a cycle, but a recursive CTE that meets one never
+// returns.
+async function wouldFormCycle(entry_id, source_entry_id) {
+  if (!entry_id || !source_entry_id) return false;
+  if (entry_id === source_entry_id) return true;
+  const hit = await database`
+    WITH RECURSIVE chain(id, source_entry_id, depth) AS (
+      SELECT id, source_entry_id, 1 FROM entries WHERE id = ${source_entry_id}
+      UNION ALL
+      SELECT e.id, e.source_entry_id, c.depth + 1
+        FROM entries e JOIN chain c ON e.id = c.source_entry_id
+       WHERE c.depth < 50
+    )
+    SELECT 1 FROM chain WHERE id = ${entry_id} LIMIT 1
+  `;
+  return hit.length > 0;
 }
 
 // masterpiece is a column, not a rating. The session used to write the word
@@ -49,7 +113,8 @@ export async function save_new_entry(body) {
   const {
     album, artist, year, genre = '', entry_type, relationship,
     rating, favorite, masterpiece = false, background = '', notes,
-    track_notes, tags = null, horizon, album_art, post_link, tracks = null
+    track_notes, tags = null, horizon, album_art, post_link, tracks = null,
+    source_entry_id = null, received_from = null, received_date = null
   } = body;
 
   const slug = create_slug(album);
@@ -58,13 +123,16 @@ export async function save_new_entry(body) {
     INSERT INTO entries (
       album, artist, year, genre, entry_type, relationship,
       rating, favorite, masterpiece, background, notes, track_notes, tags,
-      horizon, album_art, post_link, slug, tracks
+      horizon, album_art, post_link, slug, tracks,
+      source_entry_id, received_from, received_date
     ) VALUES (
       ${album}, ${artist}, ${year}, ${genre}, ${entry_type}, ${relationship},
       ${rating}, ${favorite}, ${masterpiece}, ${background}, ${notes},
       ${track_notes}, ${tags},
       ${horizon}, ${album_art}, ${post_link}, ${slug},
-      ${tracks ? JSON.stringify(tracks) : null}
+      ${tracks ? JSON.stringify(tracks) : null},
+      ${entryRef(source_entry_id)}, ${blankToNull(received_from)},
+      ${blankToNull(received_date)}
     )
     RETURNING *
   `;
@@ -74,6 +142,24 @@ export async function save_new_entry(body) {
 export async function update_entry(slug, fields) {
   if (fields.tags && typeof fields.tags === 'string') {
     fields.tags = fields.tags.split(',').map(t => t.trim()).filter(Boolean);
+  }
+
+  // The chain fields can't ride the COALESCE block below, because COALESCE
+  // reads null as "leave it alone" and these three need to be clearable —
+  // "actually this was my own find" is a real edit, and an entry that can be
+  // given a source but never stripped of one is a trap. So each is applied
+  // only when the caller actually sent the key, and null then means null.
+  const touched = key => Object.prototype.hasOwnProperty.call(fields, key);
+  const set_source = touched('source_entry_id');
+  const set_from = touched('received_from');
+  const set_date = touched('received_date');
+  const source_entry_id = set_source ? entryRef(fields.source_entry_id) : null;
+
+  if (set_source && source_entry_id) {
+    const row = await database`SELECT id FROM entries WHERE slug = ${slug} LIMIT 1`;
+    if (await wouldFormCycle(row[0]?.id, source_entry_id)) {
+      throw new Error('That would send this album back up its own chain.');
+    }
   }
 
   // Editing tracks re-derives both text shapes from them here rather than in the
@@ -103,7 +189,10 @@ export async function update_entry(slug, fields) {
       tags = COALESCE(${fields.tags ?? null}, tags),
       horizon = COALESCE(${fields.horizon ?? null}, horizon),
       album_art = COALESCE(${fields.album_art ?? null}, album_art),
-      post_link = COALESCE(${fields.post_link ?? null}, post_link)
+      post_link = COALESCE(${fields.post_link ?? null}, post_link),
+      source_entry_id = CASE WHEN ${set_source} THEN ${source_entry_id}::int ELSE source_entry_id END,
+      received_from = CASE WHEN ${set_from} THEN ${set_from ? blankToNull(fields.received_from) : null}::text ELSE received_from END,
+      received_date = CASE WHEN ${set_date} THEN ${set_date ? blankToNull(fields.received_date) : null}::date ELSE received_date END
     WHERE slug = ${slug}
     RETURNING *
   `;
