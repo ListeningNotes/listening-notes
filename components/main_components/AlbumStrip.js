@@ -6,12 +6,17 @@ import { beginVisit, isNewSince } from '../../library/dog_ear';
 
 const AUTO_SPEED = 0.5; // px per frame while drifting
 
-// The homepage shows the last ten listens and nothing more — it's the front
-// door, not the collection. Everything past ten is one tap away on the
-// archive, which the buttons under the strip point at. Entries arrive
+// The homepage shows the last twenty listens and nothing more — it's the
+// front door, not the collection. Everything past twenty is one tap away on
+// the archive, which the buttons under the strip point at. Entries arrive
 // newest-first from the API (ORDER BY created_at DESC), so this is a
 // straight take from the top.
-const RECENT_LIMIT = 10;
+//
+// Was ten, which ran out of strip before it ran out of interest. Twenty is
+// also ten rows of the phone's two-across grid, so it lengthens the scroll on
+// both — that's the same number doing two jobs, worth remembering if only one
+// of them ever needs changing.
+const RECENT_LIMIT = 20;
 
 // How far a finger can travel before a tap counts as a swipe instead. The
 // strip is dragged by the same finger that taps a tile, and these are links
