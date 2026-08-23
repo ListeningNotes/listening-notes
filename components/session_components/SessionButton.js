@@ -7,9 +7,11 @@ import { tx, bdr, dk } from '../../library/session_styles';
 // underneath it. accent=true is the primary action, pulse=true adds the
 // breathing white glow — reserved for the button that starts a listen.
 
-export default function SessionButton({ onClick, disabled = false, accent = false, pulse = false, children, style: extra = {} }) {
+// `title` is here so a caller that shortens the label — the session sidebar
+// does, once it collapses to a rail — can still say what the button is.
+export default function SessionButton({ onClick, disabled = false, accent = false, pulse = false, title, children, style: extra = {} }) {
   return (
-    <button onClick={onClick} disabled={disabled} style={{
+    <button onClick={onClick} disabled={disabled} title={title} style={{
       fontFamily: fonts.mono, fontSize: 11, letterSpacing: '0.09em', textTransform: 'uppercase',
       color: disabled ? tx(0.3) : accent ? tx(0.96) : tx(0.8),
       background: disabled ? dk(0.22) : accent ? dk(0.58) : dk(0.42),

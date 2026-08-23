@@ -134,12 +134,31 @@ export default function EchoSessionPage() {
   // column stops pushing and lays over the notes instead, which is worse than
   // side by side but better than squeezing both into nothing.
   const [narrow, setNarrow] = useState(false);
+
+  // Narrower still, and the 220px sidebar is the thing to give up. Half a
+  // laptop screen — this window on the left, Apple Music on the right — lands
+  // around 640–870px, and at that width the artwork and the album details are
+  // eating the room the writing needs. The steps still have to be reachable,
+  // so the column becomes a rail of markers rather than disappearing.
+  const [tight, setTight] = useState(false);
   useEffect(() => {
-    const measure = () => setNarrow(window.innerWidth < 1040);
+    const measure = () => {
+      setNarrow(window.innerWidth < 1040);
+      setTight(window.innerWidth < 900);
+    };
     measure();
     window.addEventListener('resize', measure);
     return () => window.removeEventListener('resize', measure);
   }, []);
+
+  // The width decides, but not permanently — the album details are worth a
+  // look now and then even in a small window. null means "do what the width
+  // says"; the toggle sets it, and crossing the breakpoint hands control back,
+  // so the automatic behaviour reasserts itself at each new size rather than
+  // one click switching it off for the rest of the session.
+  const [railOverride, setRailOverride] = useState(null);
+  useEffect(() => { setRailOverride(null); }, [tight]);
+  const railed = railOverride ?? tight;
 
   // The puzzle finished assembling.
   const handleAssembled = useCallback(() => setPuzzleDone(true), []);
@@ -281,16 +300,33 @@ export default function EchoSessionPage() {
               {/* Scrolls on a short window. Without it the artwork and album
                   details pushed the step markers off the bottom with no way to
                   reach them. */}
-              <div style={{ width: 220, flexShrink: 0, borderRight: `1px solid ${bdr(0.1)}`, display: 'flex', flexDirection: 'column', padding: '20px 0', background: 'rgba(0,0,0,0.08)', overflowY: 'auto' }}>
-                <a href="/dashboard" style={{ fontFamily: fonts.mono, fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: tx(0.3), textDecoration: 'none', padding: '0 20px', marginBottom: 16, display: 'block' }}>← Dashboard</a>
+              <div style={{ width: railed ? 56 : 220, flexShrink: 0, borderRight: `1px solid ${bdr(0.1)}`, display: 'flex', flexDirection: 'column', padding: '20px 0', background: 'rgba(0,0,0,0.08)', overflowY: 'auto', overflowX: 'hidden', transition: 'width 0.28s cubic-bezier(0.22,1,0.36,1)' }}>
+                <a
+                  href="/dashboard"
+                  title="Dashboard"
+                  style={{ fontFamily: fonts.mono, fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: tx(0.3), textDecoration: 'none', padding: railed ? 0 : '0 20px', marginBottom: 10, display: 'block', textAlign: railed ? 'center' : 'left', whiteSpace: 'nowrap' }}
+                >
+                  {railed ? '←' : '← Dashboard'}
+                </a>
 
-                {albumArt && (
+                {/* The way back to the artwork and the album details without
+                    dragging the window wider. */}
+                <button
+                  onClick={() => setRailOverride(!railed)}
+                  title={railed ? 'Show album details' : 'Collapse to steps only'}
+                  aria-label={railed ? 'Show album details' : 'Collapse to steps only'}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: tx(0.3), fontFamily: fonts.mono, fontSize: 11, lineHeight: 1, padding: railed ? '4px 0' : '4px 20px', marginBottom: 12, textAlign: railed ? 'center' : 'right', width: '100%' }}
+                >
+                  {railed ? '»' : '«'}
+                </button>
+
+                {!railed && albumArt && (
                   <div style={{ margin: '0 16px 16px', borderRadius: 12, overflow: 'hidden', aspectRatio: '1', boxShadow: `0 8px 32px ${bdr(0.3)}`, flexShrink: 0 }}>
                     <img src={albumArt} alt={brief?.album} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
                   </div>
                 )}
 
-                {brief && (
+                {!railed && brief && (
                   <div style={{ padding: '0 16px', marginBottom: 16 }}>
                     <div style={{ fontFamily: fonts.serif, fontSize: 15, color: tx(0.9), lineHeight: 1.2, marginBottom: 4, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical' }}>{brief.album}</div>
                     <div style={{ fontFamily: fonts.mono, fontSize: 10, color: tx(0.45), letterSpacing: '0.05em', marginBottom: 10 }}>{brief.artist}</div>
@@ -302,7 +338,7 @@ export default function EchoSessionPage() {
                   </div>
                 )}
 
-                {(relationship || entryType || elapsed > 0) && (
+                {!railed && (relationship || entryType || elapsed > 0) && (
                   <div style={{ padding: '10px 16px', borderTop: `1px solid ${bdr(0.08)}`, borderBottom: `1px solid ${bdr(0.08)}`, marginBottom: 12 }}>
                     {relationship && <div style={{ fontFamily: fonts.mono, fontSize: 9, color: tx(0.38), letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 3 }}>{relationship}</div>}
                     {entryType && <div style={{ fontFamily: fonts.mono, fontSize: 9, color: tx(0.38), letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 3 }}>{entryTypeLabel(entryType)}</div>}
@@ -310,13 +346,17 @@ export default function EchoSessionPage() {
                   </div>
                 )}
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 2, padding: '0 10px' }}>
+                {/* The one thing the rail keeps. Losing the artwork costs you
+                    nothing mid-listen; losing the way back to Track Notes
+                    strands you. Collapsed, the markers centre and the labels
+                    go to the tooltip. */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 2, padding: railed ? '0 6px' : '0 10px' }}>
                   {SESSION_STEPS.map((label, id) => {
                     const isPast = id < step;
                     const isCurrent = id === step;
                     const isReachable = id <= maxStep;
                     return (
-                      <button key={id} onClick={() => isReachable && !isCurrent && goToStep(id)} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: 10, width: '100%', textAlign: 'left', background: isCurrent ? 'rgba(255,255,255,0.18)' : 'transparent', border: 'none', cursor: isReachable && !isCurrent ? 'pointer' : 'default', transition: 'background 0.15s' }}>
+                      <button key={id} onClick={() => isReachable && !isCurrent && goToStep(id)} title={railed ? label : undefined} aria-label={railed ? label : undefined} style={{ display: 'flex', alignItems: 'center', justifyContent: railed ? 'center' : 'flex-start', gap: 10, padding: railed ? '10px 0' : '9px 12px', borderRadius: 10, width: '100%', textAlign: 'left', background: isCurrent ? 'rgba(255,255,255,0.18)' : 'transparent', border: 'none', cursor: isReachable && !isCurrent ? 'pointer' : 'default', transition: 'background 0.15s' }}>
                         <span style={{
                           width: 10, height: 10, borderRadius: '50%', flexShrink: 0,
                           background: isCurrent ? 'rgba(255,255,255,0.95)' : isPast ? bdr(0.42) : 'transparent',
@@ -324,9 +364,11 @@ export default function EchoSessionPage() {
                           boxShadow: isCurrent ? '0 0 10px 2px rgba(255,255,255,0.5), 0 0 24px 7px rgba(255,255,255,0.18)' : 'none',
                           transition: 'background 0.25s, box-shadow 0.25s, border-color 0.25s',
                         }} />
-                        <span style={{ fontFamily: fonts.mono, fontSize: 11, letterSpacing: '0.04em', color: isCurrent ? tx(0.88) : isPast ? tx(0.5) : tx(0.28), transition: 'color 0.15s' }}>
-                          {label}
-                        </span>
+                        {!railed && (
+                          <span style={{ fontFamily: fonts.mono, fontSize: 11, letterSpacing: '0.04em', color: isCurrent ? tx(0.88) : isPast ? tx(0.5) : tx(0.28), transition: 'color 0.15s', whiteSpace: 'nowrap' }}>
+                            {label}
+                          </span>
+                        )}
                       </button>
                     );
                   })}
@@ -337,27 +379,36 @@ export default function EchoSessionPage() {
                     belongs to the session as a whole and not to any one screen.
                     Leaving is the ← Dashboard link above; this is what makes
                     leaving safe. */}
-                <div style={{ marginTop: 'auto', padding: '18px 16px 0' }}>
+                {/* Kept in the rail too — this is what makes leaving safe, and
+                    a narrow window is no reason to make it unreachable. The
+                    word shortens; the button doesn't go anywhere. */}
+                <div style={{ marginTop: 'auto', padding: railed ? '18px 6px 0' : '18px 16px 0' }}>
                   <SessionButton
                     onClick={saveDraft}
                     disabled={draftState === 'saving' || !(brief?.album || albumInput)}
-                    style={{ width: '100%', padding: '10px 8px', fontSize: 10, letterSpacing: '0.08em' }}
+                    title={railed ? 'Save as Draft' : undefined}
+                    style={{ width: '100%', padding: railed ? '10px 0' : '10px 8px', fontSize: railed ? 9 : 10, letterSpacing: railed ? 0 : '0.08em' }}
                   >
-                    {draftState === 'saving' ? 'Saving…'
-                      : draftState === 'saved' ? 'Draft saved'
-                      : draftState === 'error' ? 'Try again'
-                      : 'Save as Draft'}
+                    {draftState === 'saving' ? (railed ? '…' : 'Saving…')
+                      : draftState === 'saved' ? (railed ? 'Saved' : 'Draft saved')
+                      : draftState === 'error' ? (railed ? 'Retry' : 'Try again')
+                      : (railed ? 'Draft' : 'Save as Draft')}
                   </SessionButton>
-                  <div style={{ fontFamily: fonts.mono, fontSize: 8.5, lineHeight: 1.5, letterSpacing: '0.06em', color: tx(0.28), textAlign: 'center', marginTop: 8 }}>
-                    Pick it back up from Listen
-                  </div>
+                  {!railed && (
+                    <div style={{ fontFamily: fonts.mono, fontSize: 8.5, lineHeight: 1.5, letterSpacing: '0.06em', color: tx(0.28), textAlign: 'center', marginTop: 8 }}>
+                      Pick it back up from Listen
+                    </div>
+                  )}
                 </div>
               </div>
 
               {/* Main content — narrows rather than hides when Echo opens, so
                   the notes stay writable with the conversation beside them. */}
               <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', overflow: 'auto' }}>
-                <div style={{ flex: 1, padding: chatOpen && !narrow ? '40px 30px 56px' : '40px 48px 56px', transition: 'padding 0.32s cubic-bezier(0.22,1,0.36,1)' }}>
+                {/* The gutters give way too once the window is tight — the
+                    point of collapsing the sidebar is room for the writing,
+                    and 48px of air either side gives a good deal of it back. */}
+                <div style={{ flex: 1, padding: tight ? '32px 20px 48px' : (chatOpen && !narrow ? '40px 30px 56px' : '40px 48px 56px'), transition: 'padding 0.32s cubic-bezier(0.22,1,0.36,1)' }}>
                   {/* Keyed on step so each screen mounts fresh and slides in. */}
                   <div key={step} style={{ animation: `${stepDir > 0 ? 'ln-step-fwd' : 'ln-step-back'} 0.35s cubic-bezier(0.22,1,0.36,1) both` }}>
                     {step === 0 && <AlbumDebrief brief={brief} researchState={researchState} researchError={researchError} onNext={() => goToStep(1)} onReset={() => router.replace('/dashboard/echo')} onRefresh={refreshResearch} />}
