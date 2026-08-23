@@ -2381,3 +2381,23 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   color: var(--ink);
   border-color: var(--ink-faint);
 }
+
+/* ── .ln-xref — a mention that turned out to be something you've logged ───
+   Applied at display time by library/cross_references.js, never stored in the
+   note. It has to sit inside running prose without breaking the line up, so
+   it borrows the text's own colour and carries only a faint underline —
+   readable as a link when you're looking for one, quiet when you're not.
+   [data-xref] says whether it landed on an album or an artist; nothing styles
+   on it yet, but the hook is there if the two should ever read differently. */
+.ln-xref {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.18em;
+  text-decoration-color: var(--ink-faint);
+  transition: color 0.15s, text-decoration-color 0.15s;
+}
+.ln-xref:hover {
+  color: var(--ink);
+  text-decoration-color: var(--ink);
+}

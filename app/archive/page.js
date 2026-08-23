@@ -48,6 +48,15 @@ export default function ArchivePage() {
 
   const [search, setSearch] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);
+
+  // An artist named in a review links here with ?q=their name — the archive
+  // filtered to one artist is the artist page this site doesn't otherwise
+  // have. Read off window rather than through useSearchParams, which would
+  // want a Suspense boundary and cost this page its prerender.
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search).get('q');
+    if (q) { setSearch(q); setSearchOpen(true); }
+  }, []);
   const [sortBy, setSortBy] = useState('posted');
   const [sortDir, setSortDir] = useState('desc');
   const [relationship, setRelationship] = useState('');
@@ -775,7 +784,7 @@ export default function ArchivePage() {
         </div>
       </main>
 
-      {modalSlug && !isPhone && <EntryModal slug={modalSlug} onClose={() => setModalSlug(null)} />}
+      {modalSlug && !isPhone && <EntryModal slug={modalSlug} references={entries} onClose={() => setModalSlug(null)} />}
     </div>
   );
 }
