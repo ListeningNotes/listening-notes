@@ -5,11 +5,12 @@
 // It receives the entry data from page.js which fetched it server-side.
 
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { fonts } from '../../../library/sitewide_visuals';
 import { parseHorizon, entryTracks, splitNotes, entryTypeLabel } from '../../../library/entry_formatter';
 import { kept_receipts } from '../../../library/receipts';
+import { buildReferenceIndex, createReferenceLinker } from '../../../library/cross_references';
 import DotNav from '../../../components/main_components/DotNav';
 import SiteNav from '../../../components/main_components/SiteNav';
 import HorizonBar from '../../../components/main_components/Slug_Page/HorizonBar';
@@ -24,7 +25,7 @@ import StarRating from '../../../components/main_components/StarRating';
 // object; it's .ln-pill in globals.css now, so the same button reads the
 // same way at the foot of every page on the site.
 
-export default function FullPostPage({ entry }) {
+export default function FullPostPage({ entry, references = [] }) {
   const [commentsByTrack, setCommentsByTrack] = useState({});
   const [commentsLoaded, setCommentsLoaded] = useState(false);
 
@@ -51,6 +52,19 @@ export default function FullPostPage({ entry }) {
   const { albumNotes } = splitNotes(entry.notes);
   const parsedTracks = entryTracks(entry);
   const horizonBars = parseHorizon(entry.horizon);
+
+  // The index only changes when the archive does; the linker is rebuilt every
+  // render on purpose. It carries the "first mention on this page" tally, so
+  // reusing one across renders would spend every link on the first pass and
+  // leave the prose bare on the second, once the comments arrive.
+  //
+  // Linking happens here rather than inside TrackThread for the same reason:
+  // the album notes and every track note are one page sharing one tally, and
+  // that only holds if they're linked in a known order by whoever owns it.
+  const referenceIndex = useMemo(() => buildReferenceIndex(references), [references]);
+  const link = createReferenceLinker(referenceIndex, { selfSlug: entry.slug, selfArtist: entry.artist });
+  const linkedAlbumNotes = link(albumNotes, 'album');
+  const linkedTrackNotes = parsedTracks.map((t, i) => link(t.note, 'track' + i));
 
   // Comments about the album rather than any one track. save_comment has
   // always filed a track-less comment under -1, and nest_comments has always
@@ -491,7 +505,7 @@ export default function FullPostPage({ entry }) {
             <MetadataLabel sticky>Album Notes</MetadataLabel>
             {/* 6px, the same gap a track note leaves under itself before its
                 own bubble. */}
-            <div style={{ lineHeight: 1.95, fontSize: '15px', whiteSpace: 'pre-wrap', color: 'var(--ink)', marginBottom: '6px' }}>{albumNotes}</div>
+            <div style={{ lineHeight: 1.95, fontSize: '15px', whiteSpace: 'pre-wrap', color: 'var(--ink)', marginBottom: '6px' }}>{linkedAlbumNotes}</div>
             <CommentBubble
               slug={entry.slug}
               trackIndex={-1}
@@ -531,6 +545,7 @@ export default function FullPostPage({ entry }) {
                 <TrackThread
                   key={i}
                   track={t}
+                  note={linkedTrackNotes[i]}
                   trackIndex={i}
                   slug={entry.slug}
                   commentsByTrack={commentsByTrack}

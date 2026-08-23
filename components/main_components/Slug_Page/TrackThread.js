@@ -4,7 +4,10 @@ import { fonts } from '../../../library/sitewide_visuals';
 import StarRating from '../StarRating';
 import CommentBubble from './CommentBubble';
 
-export default function TrackThread({ track, trackIndex, slug, commentsByTrack, onRefresh }) {
+// `note` is the track's own note with any cross-references already turned
+// into links — see FullPostPage for why the linking happens up there and not
+// here. Falls back to the plain text so the component still stands alone.
+export default function TrackThread({ track, note, trackIndex, slug, commentsByTrack, onRefresh }) {
   const trackComments = commentsByTrack[String(trackIndex)] || [];
 
   return (
@@ -28,7 +31,7 @@ export default function TrackThread({ track, trackIndex, slug, commentsByTrack, 
           already closes the track off, and having both drew two lines a few
           pixels apart. */}
       {track.note && (
-        <p style={{ fontSize: '13px', lineHeight: 1.8, color: 'var(--ink-soft)', marginBottom: '6px', whiteSpace: 'pre-wrap' }}>{track.note}</p>
+        <p style={{ fontSize: '13px', lineHeight: 1.8, color: 'var(--ink-soft)', marginBottom: '6px', whiteSpace: 'pre-wrap' }}>{note ?? track.note}</p>
       )}
 
       {/* The way in, at the end of the note you've just read. Lives in
