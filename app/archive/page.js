@@ -10,6 +10,17 @@ import EntryModal from '../../components/main_components/EntryModal';
 import FlipTile from '../../components/main_components/FlipTile';
 import GridDensity, { DEFAULT_DENSITY, readStoredDensity, storeDensity } from '../../components/main_components/GridDensity';
 
+// Beyonce should find Beyoncé, and Bjork should find Bjork. Accents are a
+// spelling most people don't reach for and half the archive's artists have
+// one, so they come off both the query and the name before comparing. This
+// only started mattering when the search stopped covering the notes, which
+// had been quietly catching the unaccented spellings all along.
+const foldForSearch = value => String(value || '')
+  .normalize('NFD')
+  .replace(/\p{Diacritic}/gu, '')
+  .toLowerCase()
+  .trim();
+
 // Sorting is a field plus a direction rather than one flat list: picking a
 // field applies the direction that field is normally wanted in, and picking
 // it again turns it around. `desc` is what the arrow points at, so each
@@ -48,6 +59,15 @@ export default function ArchivePage() {
 
   const [search, setSearch] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);
+
+  // An artist named in a review links here with ?q=their name — the archive
+  // filtered to one artist is the artist page this site doesn't otherwise
+  // have. Read off window rather than through useSearchParams, which would
+  // want a Suspense boundary and cost this page its prerender.
+  useEffect(() => {
+    const q = new URLSearchParams(window.location.search).get('q');
+    if (q) { setSearch(q); setSearchOpen(true); }
+  }, []);
   const [sortBy, setSortBy] = useState('posted');
   const [sortDir, setSortDir] = useState('desc');
   const [relationship, setRelationship] = useState('');
@@ -194,20 +214,22 @@ export default function ArchivePage() {
   );
 
   const filtered = useMemo(() => {
-    const q = search.trim().toLowerCase();
+    const q = foldForSearch(search);
     const dir = sortDir === 'asc' ? 1 : -1;
     return entries
       .filter(e => {
-        // Searches the writing, not just the labels. Finding a record by
-        // something you remember saying about it is the thing tags were
-        // standing in for, and your own words are better at it than a
-        // generated keyword ever was.
+        // Names only — the album and the artist, nothing else.
+        //
+        // This used to search the writing as well, on the reasoning that
+        // finding a record by something you remember saying about it was what
+        // tags had been standing in for. In practice it answered a question
+        // nobody asked: searching Bjork returned MAGDALENE, because a review
+        // mentions her, and an archive that hands you a record by an artist
+        // it doesn't have reads as broken rather than clever. Genre came out
+        // with it — there is a genre filter for that, sitting right there.
         if (q && !(
-          (e.album || '').toLowerCase().includes(q) ||
-          (e.artist || '').toLowerCase().includes(q) ||
-          (e.genre || '').toLowerCase().includes(q) ||
-          (e.notes || '').toLowerCase().includes(q) ||
-          (e.track_notes || '').toLowerCase().includes(q)
+          foldForSearch(e.album).includes(q) ||
+          foldForSearch(e.artist).includes(q)
         )) return false;
         if (relationship && e.relationship !== relationship) return false;
         if (genre && (e.genre || '') !== genre) return false;
@@ -775,7 +797,7 @@ export default function ArchivePage() {
         </div>
       </main>
 
-      {modalSlug && !isPhone && <EntryModal slug={modalSlug} onClose={() => setModalSlug(null)} />}
+      {modalSlug && !isPhone && <EntryModal slug={modalSlug} references={entries} onClose={() => setModalSlug(null)} />}
     </div>
   );
 }

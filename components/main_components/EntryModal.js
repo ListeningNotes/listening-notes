@@ -7,11 +7,12 @@
 'use client';
 import { fonts } from '../../library/sitewide_visuals';
 
-import { useEffect, useLayoutEffect, useState, useRef, useCallback } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useState, useRef, useCallback } from 'react';
 import StarRating from './StarRating';
 import HorizonGenerator from './entry_modal/HorizonGenerator';
 import StickyHeader from './entry_modal/StickyHeader';
 import { entryTracks, splitNotes, parseRating } from '../../library/entry_formatter';
+import { buildReferenceIndex, createReferenceLinker } from '../../library/cross_references';
 
 
 const WIDGET_BG = 'var(--panel)';
@@ -19,7 +20,7 @@ const WIDGET_BORDER = 'var(--panel-border)';
 const DIVIDER = 'var(--border)';
 
 
-export default function EntryModal({ slug, originRect, onClose }) {
+export default function EntryModal({ slug, originRect, references = [], onClose }) {
   const [entry, setEntry] = useState(null);
   const [loading, setLoading] = useState(true);
   const [animateBars, setAnimateBars] = useState(false);
@@ -132,6 +133,14 @@ export default function EntryModal({ slug, originRect, onClose }) {
   const { albumNotes, trackNotes: trackNotesFallback } = splitNotes(entry?.notes);
   const trackNotes = entry?.track_notes || trackNotesFallback;
   const tracks = entryTracks(entry);
+
+  // The archive lends its already-loaded list, so opening a tile costs no
+  // extra request. Same rules as the full page: one linker per render, album
+  // notes before track notes, and the entry being read never links to itself.
+  const referenceIndex = useMemo(() => buildReferenceIndex(references), [references]);
+  const link = createReferenceLinker(referenceIndex, { selfSlug: entry?.slug, selfArtist: entry?.artist });
+  const linkedAlbumNotes = link(albumNotes, 'album');
+  const linkedTrackNotes = link(trackNotes, 'tracks');
   const allTracksFive = tracks.length > 0 && tracks.every(t => t.stars === 5);
   const masterpiece = allTracksFive || entry?.rating === 'Masterpiece';
   const displayRating = masterpiece ? 5 : parseRating(entry?.rating);
@@ -302,7 +311,7 @@ export default function EntryModal({ slug, originRect, onClose }) {
                 {albumNotes && (
                   <>
                     <div style={{ fontFamily: fonts.mono, fontSize: 8, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ink-faint)', marginBottom: 12 }}>Album Notes</div>
-                    <div style={{ fontSize: 14, fontWeight: 400, lineHeight: 1.88, color: 'var(--ink)', whiteSpace: 'pre-wrap' }}>{albumNotes}</div>
+                    <div style={{ fontSize: 14, fontWeight: 400, lineHeight: 1.88, color: 'var(--ink)', whiteSpace: 'pre-wrap' }}>{linkedAlbumNotes}</div>
                   </>
                 )}
 
@@ -314,7 +323,7 @@ export default function EntryModal({ slug, originRect, onClose }) {
                 {trackNotes && (
                   <>
                     <div style={{ fontFamily: fonts.mono, fontSize: 8, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ink-faint)', marginBottom: 12 }}>Track Notes</div>
-                    <div style={{ fontSize: 13.5, fontWeight: 400, lineHeight: 1.88, color: 'var(--ink-soft)', whiteSpace: 'pre-wrap' }}>{trackNotes}</div>
+                    <div style={{ fontSize: 13.5, fontWeight: 400, lineHeight: 1.88, color: 'var(--ink-soft)', whiteSpace: 'pre-wrap' }}>{linkedTrackNotes}</div>
                   </>
                 )}
 
