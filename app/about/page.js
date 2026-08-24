@@ -75,8 +75,9 @@ export default function AboutPage() {
       <style>{`
         /* The fixed nav (SiteNav + the labelled dot row under it) ends at 136px
            on every breakpoint — the same constant the archive parks its filter
-           bar on. */
-        .ab-page { --ab-nav-bottom: 136px; padding-top: var(--ab-nav-bottom); }
+           bar on. --safe-top is 0 in a browser tab and pushes the whole stack
+           down when the site is running from a home screen. */
+        .ab-page { --ab-nav-bottom: calc(136px + var(--safe-top)); padding-top: var(--ab-nav-bottom); }
 
         /* ── The marks ── three names on a rule: which page you're on, and the
            way to the other two. They pin at the nav's bottom edge, with 34px of

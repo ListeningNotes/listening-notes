@@ -5,6 +5,20 @@
 :root {
   --sb-width: 260px;
 
+  /* How much further down every fixed thing across the top of the page has
+     to start. In a Safari tab this is 0px and the whole site lands exactly
+     where it always did — the toolbar already sits above the page, so
+     safe-area-inset-top reports 0 there. Added to a home screen it is not:
+     black-translucent runs the page under the clock, and anything pinned at
+     a hardcoded top lands inside the Dynamic Island.
+
+     The 38px subtracted is the 22px .sitenav-row already sits at plus the
+     16px of extra buffer Apple builds into the inset. Landing on inset-16
+     is what makes the fixed row come to rest in the same place as the
+     homepage's screen two, which pads itself by the same amount and is the
+     one screen that already felt right installed. */
+  --safe-top: max(0px, calc(env(safe-area-inset-top) - 38px));
+
   /* Redesign tokens — cream / frosted glass */
   --bg:           #eef0ec;  /* matches the private dashboard's base background */
   --bg-warm:      #efebe2;
@@ -705,7 +719,7 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
    layout already works. */
 .sitenav-row {
   position: fixed;
-  top: 22px;
+  top: calc(22px + var(--safe-top));
   left: 0;
   right: 0;
   z-index: 100;
@@ -1010,9 +1024,10 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 /* ── Dot navigation (fixed top bar) ── */
 .hp-dotnav {
   position: fixed;
-  top: 96px; /* clears .sitenav-row above it (top:22px + its reserved
-    min-height), which now spans the full page instead of a small
-    left-corner box — the homepage overrides this back to in-flow below */
+  top: calc(96px + var(--safe-top)); /* clears .sitenav-row above it (top:22px
+    + its reserved min-height), which now spans the full page instead of a
+    small left-corner box — the homepage overrides this back to in-flow
+    below. Shifts down with the row when installed to a home screen. */
   left: 50%;
   transform: translateX(-50%);
   z-index: 100;

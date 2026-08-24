@@ -338,7 +338,7 @@ export default function ArchivePage() {
            136px on every breakpoint. The page starts just below that, and
            the filter bar parks there once you scroll — there's no separate
            page title anymore, so the grid is the first thing you see. */
-        .arc-page { --arc-nav-bottom: 136px; padding-top: calc(var(--arc-nav-bottom) + 16px); }
+        .arc-page { --arc-nav-bottom: calc(136px + var(--safe-top)); padding-top: calc(var(--arc-nav-bottom) + 16px); }
 
         .arc-bar-wrap { position: sticky; top: var(--arc-nav-bottom); z-index: 101; padding: 0 24px 10px; }
         .arc-bar {
