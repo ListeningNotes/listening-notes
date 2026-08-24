@@ -139,10 +139,43 @@ CREATE TABLE IF NOT EXISTS users (
   CONSTRAINT users_handle_key UNIQUE (handle)
 );
 
+-- ── settings ───────────────────────────────────────────────────────────────
+-- Everything that makes a copy someone's own rather than a photocopy of the
+-- journal it came from: the name on the cover, who keeps it, the portrait, the
+-- links. These began life typed into the source, which meant a new copy wore
+-- the first journal's name and pointed at its Instagram until somebody edited
+-- code. They belong in a drawer the owner can open.
+--
+-- One row, forced by the check on id. A settings table that can hold two rows
+-- eventually holds two rows, and then nothing agrees about which is real.
+--
+-- Every column is nullable with no default. A blank setting has to be a real
+-- answer — "no Instagram" is a position, not an omission, and the site is
+-- expected to render nothing rather than something broken.
+CREATE TABLE IF NOT EXISTS settings (
+  id integer PRIMARY KEY DEFAULT 1 CHECK (id = 1),
+  journal_name text,
+  keeper_name text,
+  bio text,
+  portrait_url text,
+  instagram_url text,
+  lastfm_user text,
+  site_address text,
+  founded_at date,
+  pinned_entry_id integer,
+  updated_at timestamp without time zone DEFAULT now()
+);
+
 -- Foreign keys, added once every table exists
 DO $$ BEGIN
   IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'comments_parent_id_fkey') THEN
     ALTER TABLE comments ADD CONSTRAINT comments_parent_id_fkey FOREIGN KEY (parent_id) REFERENCES comments(id) ON DELETE CASCADE;
+  END IF;
+END $$;
+DO $$ BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'settings_pinned_entry_id_fkey') THEN
+    ALTER TABLE settings ADD CONSTRAINT settings_pinned_entry_id_fkey
+      FOREIGN KEY (pinned_entry_id) REFERENCES entries(id) ON DELETE SET NULL;
   END IF;
 END $$;
 DO $$ BEGIN
