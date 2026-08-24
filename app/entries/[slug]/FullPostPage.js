@@ -204,7 +204,7 @@ export default function FullPostPage({ entry, references = [] }) {
            is hidden by then, so this only has to clear the logo row (which
            ends at 58px) — not the 150px the labelled dots needed. The band
            height, the snap position and the scroll cue all read this. */
-        .ln-entry       { --ln-band: 96px; }
+        .ln-entry       { --ln-band: calc(96px + var(--safe-top)); }
 
         @media (max-width: 768px) {
           /* ── SCREEN ONE ── a full viewport of album: art on top, everything

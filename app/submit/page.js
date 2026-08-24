@@ -59,7 +59,7 @@ export default function SubmitPage() {
         /* Same 136px the nav ends on everywhere else — this page used to clear
            it with a hand-picked 168px of padding, which is the same number
            arrived at by eye. */
-        .sb-page { --sb-nav-bottom: 136px; }
+        .sb-page { --sb-nav-bottom: calc(136px + var(--safe-top)); }
 
         /* Opens the way an entry does: title, a line under it in the label
            face, then the qualifiers. */
