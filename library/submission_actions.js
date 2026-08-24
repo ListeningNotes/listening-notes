@@ -25,6 +25,14 @@ export async function pull_submissions() {
   `;
 }
 
+// Same as count_pending_comments: the cover wants a number, not the rows.
+export async function count_pending_submissions() {
+  const [row] = await database`
+    SELECT COUNT(*)::int AS n FROM submissions WHERE status = 'pending'
+  `;
+  return row?.n ?? 0;
+}
+
 export async function update_submission_status(id, status) {
   const result = await database`
     UPDATE submissions SET status = ${status}
