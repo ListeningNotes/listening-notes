@@ -20,6 +20,15 @@ const dmMono = DM_Mono({
 export const metadata = {
   title: 'Listening Notes',
   description: 'A listening journal.',
+  // Added to a home screen, the site opens without Safari's chrome. The
+  // translucent status bar lets the page run to the top of the screen; the
+  // mobile nav already pads itself off env(safe-area-inset-top), so nothing
+  // ends up under the clock. app/apple-icon.png is picked up automatically.
+  appleWebApp: {
+    capable: true,
+    title: 'Listening Notes',
+    statusBarStyle: 'black-translucent',
+  },
 };
 
 export const viewport = {
