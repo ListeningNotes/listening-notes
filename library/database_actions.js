@@ -50,6 +50,56 @@ export async function pull_all_entries({ includeChain = false } = {}) {
   });
 }
 
+// ── The public feed ────────────────────────────────────────────────────────
+// What another journal is allowed to read. This is an allow-list rather than a
+// blocklist on purpose: a column added later should stay private until someone
+// decides otherwise, not leak because nobody remembered to exclude it.
+//
+// The writing is deliberately absent — no notes, no per-track notes, no
+// background. A feed that carries the whole entry gives a reader no reason to
+// visit the journal, which is the same rule the export card follows. What is
+// here is enough to say *which record this was and how it landed*: the album,
+// the rating, how it was heard, and a link.
+//
+// `horizon` is the borderline one and it's included. It's the track ratings
+// drawn as blocks — the shape of a listen rather than anything written — and
+// it makes a comparison between two people worth looking at. `tracks` and
+// `track_notes` stay out; those are writing.
+const PUBLIC_FIELDS = [
+  'slug', 'album', 'artist', 'year', 'genre',
+  'album_key', 'rating', 'rating_value', 'relationship', 'entry_type',
+  'favorite', 'masterpiece', 'horizon', 'album_art', 'created_at',
+];
+
+export async function pull_public_entries() {
+  // created_at is `timestamp without time zone` holding a UTC value, which the
+  // driver reads as though it were local and "converts" — adding the reader's
+  // offset to a time that was already UTC. On a machine at UTC-7 every entry
+  // came back seven hours late, and a feed is exactly where that shows: dates
+  // on items, and sorting against anyone else's.
+  //
+  // Casting to text in the query sidesteps the driver's conversion entirely
+  // and gives the stored value verbatim, which can then be labelled UTC — the
+  // one thing it actually is. Deterministic, and independent of wherever this
+  // happens to be running.
+  const rows = await database`
+    SELECT *, created_at::text AS created_at_utc
+    FROM entries
+    ORDER BY created_at DESC
+  `;
+  // Picked in JS rather than named in the SELECT so the allow-list is applied
+  // in exactly one place and cannot drift away from the list above.
+  return rows.map(row => {
+    const out = {};
+    for (const field of PUBLIC_FIELDS) out[field] = row[field];
+    out.album_art = sizedAlbumArt(row.album_art, LIST_ART_PX);
+    out.created_at = row.created_at_utc
+      ? row.created_at_utc.replace(' ', 'T') + 'Z'
+      : null;
+    return out;
+  });
+}
+
 export async function pull_entry_by_slug(slug, { includeChain = false } = {}) {
   const result = await database`
     SELECT * FROM entries WHERE slug = ${slug} LIMIT 1

@@ -20,6 +20,15 @@ const dmMono = DM_Mono({
 export const metadata = {
   title: 'Listening Notes',
   description: 'A listening journal.',
+  // Puts <link rel="alternate" type="application/rss+xml"> in the head, so a
+  // reader handed nothing but the site address can still find the feed. This
+  // is what following looks like here: the subscription lives on the reader's
+  // side, and the journal never learns who is out there.
+  alternates: {
+    types: {
+      'application/rss+xml': '/feed.xml',
+    },
+  },
   // Added to a home screen, the site opens without Safari's chrome. The
   // translucent status bar lets the page run to the top of the screen; the
   // mobile nav already pads itself off env(safe-area-inset-top), so nothing
