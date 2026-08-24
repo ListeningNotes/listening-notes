@@ -24,6 +24,10 @@ export default function HomePage() {
   const { isLive } = useListeningBeacon();
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
+  // Whether the person looking at this is the person who writes it. Not a
+  // permission check — the writing side guards itself — just what decides
+  // whether the cover shows its extra line.
+  const [authed, setAuthed] = useState(false);
   const screenOneRef = useRef(null);
   const screenTwoRef = useRef(null);
 
@@ -40,6 +44,18 @@ export default function HomePage() {
         setLoading(false);
       })
       .catch(() => setLoading(false));
+  }, []);
+
+  // Asking on the cover rather than only on the writing pages does two jobs.
+  // It decides whether to show the way in — and because /api/auth/check renews
+  // an ageing wristband, simply opening the journal keeps the key alive. On a
+  // home screen, where there is no address bar to sign in from, that is what
+  // stops the door quietly locking itself.
+  useEffect(() => {
+    fetch('/api/auth/check')
+      .then(r => r.json())
+      .then(d => setAuthed(!!d.authed))
+      .catch(() => {});
   }, []);
 
   // SiteNav's logo, clicked from any other page, flags this via
@@ -105,6 +121,21 @@ export default function HomePage() {
     return <AlbumStrip entries={entries} variant={variant} />;
   }
 
+  // The writing entrance.
+  //
+  // There is no login button anywhere on this site, and that is deliberate. A
+  // journal does not ask you who you are; it is already yours. Signed in, the
+  // cover simply has one more line on it than it did before — you are not going
+  // somewhere else, you are seeing the part of your own page that was always
+  // there. Signed out it renders nothing at all, so a visitor sees a cover with
+  // no seam in it.
+  //
+  // Getting the cookie the first time is a URL you type once. After that it
+  // renews itself on every visit here.
+  const writingLine = authed && (
+    <Link href="/dashboard/echo" className="hp-write">+ Start a listen</Link>
+  );
+
   // The two ways on from the strip. They repeat the dot nav deliberately —
   // the dots live at the top of the screen and read as chrome, and by the
   // time you've come to the end of the recent listens you want something to
@@ -119,6 +150,29 @@ export default function HomePage() {
 
   return (
     <div className="hp">
+      <style>{`
+        /* Quiet enough to belong to the cover rather than sit on top of it —
+           this is a line of the page, not a button pinned to it. */
+        .hp-write {
+          display: inline-flex;
+          align-items: center;
+          margin-top: 18px;
+          padding: 9px 20px;
+          border: 1px solid var(--border);
+          border-radius: 999px;
+          font-family: var(--font-mono);
+          font-size: 10px;
+          letter-spacing: 0.14em;
+          text-transform: uppercase;
+          color: var(--ink-soft);
+          text-decoration: none;
+          background: transparent;
+          transition: color 0.15s, border-color 0.15s;
+        }
+        .hp-write:hover { color: var(--ink); border-color: var(--ink-faint); }
+        .hp-write:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 3px; }
+      `}</style>
+
       <div className="hp-corner">
         <a
           href="https://instagram.com/listeningnotes.blog"
@@ -146,6 +200,7 @@ export default function HomePage() {
             <ListeningBeacon />
           </div>
         </div>
+        {writingLine}
         {renderStrip('scroll')}
         {stripActions}
       </main>
@@ -158,6 +213,7 @@ export default function HomePage() {
               <ListeningBeacon statusAboveArt />
             </div>
           </div>
+          {writingLine}
           <div className="hp-screen-one-controls">
             <a
               href="https://instagram.com/listeningnotes.blog"
