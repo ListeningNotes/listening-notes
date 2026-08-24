@@ -76,7 +76,7 @@ export default function BgTest() {
             fontFamily: "'DM Mono', monospace", fontSize: 10, letterSpacing: '0.08em',
             textTransform: 'uppercase', padding: '6px 14px', borderRadius: 8, border: 'none',
             cursor: 'pointer',
-            background: active === name ? '#1a1916' : 'transparent',
+            background: active === name ? '#4a4643' : 'transparent',
             color: active === name ? '#fff' : '#7a776f',
           }}>
             {name}
