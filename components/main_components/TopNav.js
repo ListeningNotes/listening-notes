@@ -1,8 +1,10 @@
 'use client';
 
+
 import { useState, useRef } from 'react';
 import Link from 'next/link';
 import NavBeacon from './NavBeacon';
+import { useBookplate } from './Bookplate';
 
 function SurpriseLink({ href, label }) {
   const ref = useRef(null);
@@ -41,6 +43,7 @@ function SurpriseLink({ href, label }) {
 }
 
 export default function TopNav({ onToggleTheme, theme, hideBeacon = false }) {
+  const { instagram_url } = useBookplate();
   const [menuOpen, setMenuOpen] = useState(false);
 
   const links = [
@@ -69,9 +72,13 @@ export default function TopNav({ onToggleTheme, theme, hideBeacon = false }) {
         </div>
         <div className="topnav-right">
           {!hideBeacon && <NavBeacon />}
-          <a href="https://instagram.com/listeningnotes.blog" target="_blank" rel="noopener noreferrer" className="topnav-icon-btn" aria-label="Instagram">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.5" fill="currentColor" stroke="none"/></svg>
-          </a>
+          {/* Nothing at all when the journal has no Instagram — an empty
+              link is worse than no icon. */}
+          {instagram_url && (
+            <a href={instagram_url} target="_blank" rel="noopener noreferrer" className="topnav-icon-btn" aria-label="Instagram">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.5" fill="currentColor" stroke="none"/></svg>
+            </a>
+          )}
           <button className="topnav-icon-btn" onClick={onToggleTheme} aria-label="Toggle theme">
             {theme === 'dark' ? (
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">

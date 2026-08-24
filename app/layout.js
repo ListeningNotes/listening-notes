@@ -1,6 +1,8 @@
 import './globals.css';
 import { Nunito, DM_Mono } from 'next/font/google';
 import { Lightswitch } from '../components/main_components/Lightswitch';
+import { Bookplate } from '../components/main_components/Bookplate';
+import { pull_settings } from '../library/settings_actions';
 
 const nunito = Nunito({
   subsets: ['latin'],
@@ -46,7 +48,14 @@ export const viewport = {
   viewportFit: 'cover',
 };
 
-export default function RootLayout({ children }) {
+// Async because the journal's details are read here, once, and handed down —
+// see components/main_components/Bookplate.js. This is what makes every page
+// render on request rather than being prerendered at build time, which is the
+// right trade: the alternative is a site that keeps showing the name it was
+// built with after its owner changes it.
+export default async function RootLayout({ children }) {
+  const settings = await pull_settings();
+
   return (
     <html lang="en" suppressHydrationWarning className={`${nunito.variable} ${dmMono.variable}`}>
       <body>
@@ -56,9 +65,11 @@ export default function RootLayout({ children }) {
             __html: `try{var s=localStorage.getItem('ln-theme');if(s)document.documentElement.setAttribute('data-theme',s);}catch(e){}`,
           }}
         />
-        <Lightswitch>
-          {children}
-        </Lightswitch>
+        <Bookplate settings={settings}>
+          <Lightswitch>
+            {children}
+          </Lightswitch>
+        </Bookplate>
       </body>
     </html>
   );
