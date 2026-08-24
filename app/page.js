@@ -28,6 +28,9 @@ export default function HomePage() {
   // permission check — the writing side guards itself — just what decides
   // whether the cover shows its extra line.
   const [authed, setAuthed] = useState(false);
+  // How many submissions and comments are sitting unread. Null until asked,
+  // so the line can hold its place without flashing a zero on the way.
+  const [waiting, setWaiting] = useState(null);
   const screenOneRef = useRef(null);
   const screenTwoRef = useRef(null);
 
@@ -54,7 +57,18 @@ export default function HomePage() {
   useEffect(() => {
     fetch('/api/auth/check')
       .then(r => r.json())
-      .then(d => setAuthed(!!d.authed))
+      .then(d => {
+        setAuthed(!!d.authed);
+        // Only asked once the wristband is confirmed — the endpoint answers
+        // 401 to anyone else, and a failed request on every public visit is
+        // noise in the log for no reason.
+        if (d.authed) {
+          fetch('/api/waiting')
+            .then(r => (r.ok ? r.json() : null))
+            .then(w => w && setWaiting(w))
+            .catch(() => {});
+        }
+      })
       .catch(() => {});
   }, []);
 
@@ -132,8 +146,20 @@ export default function HomePage() {
   //
   // Getting the cookie the first time is a URL you type once. After that it
   // renews itself on every visit here.
+  // Two lines, not four. Starting a listen makes something that doesn't exist
+  // yet, so it has no home but here. Messages earns its place for a different
+  // reason: it is the only one you need to see *without going to look*, and a
+  // count on the cover means opening your journal is enough to learn someone
+  // sent you something. Everything else — editing an entry, printing a card —
+  // belongs on the entry it acts on, not stacked up here.
   const writingLine = authed && (
-    <Link href="/dashboard/echo" className="hp-write">+ Start a listen</Link>
+    <div className="hp-write-row">
+      <Link href="/dashboard/echo" className="hp-write">+ Start a listen</Link>
+      <Link href="/dashboard/inbox" className="hp-write">
+        Messages
+        {waiting?.total > 0 && <span className="hp-write-count">{waiting.total}</span>}
+      </Link>
+    </div>
   );
 
   // The two ways on from the strip. They repeat the dot nav deliberately —
@@ -171,6 +197,25 @@ export default function HomePage() {
         }
         .hp-write:hover { color: var(--ink); border-color: var(--ink-faint); }
         .hp-write:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 3px; }
+        .hp-write-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+
+        /* The count is the point of the line, so it carries the one bit of
+           colour on the cover. --fav is the same red the favourite heart
+           uses; nothing else here competes with it. */
+        .hp-write-count {
+          margin-left: 7px;
+          min-width: 16px;
+          height: 16px;
+          padding: 0 4px;
+          border-radius: 999px;
+          background: var(--fav);
+          color: #fff;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 9px;
+          letter-spacing: 0;
+        }
       `}</style>
 
       <div className="hp-corner">
