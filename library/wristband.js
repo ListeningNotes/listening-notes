@@ -7,7 +7,24 @@
 import { SignJWT, jwtVerify } from 'jose';
 
 const COOKIE_NAME = 'ln_session';
-const EXPIRES_IN = '30d';
+
+// One number, two places to spend it. The token's own expiry and the cookie's
+// maxAge have to agree, and they were written separately as '30d' and
+// 60*60*24*30 — the same value twice, which is the shape a drift bug takes
+// right before someone edits one of them.
+const LIFETIME_SECONDS = 60 * 60 * 24 * 30;   // 30 days
+const EXPIRES_IN = `${LIFETIME_SECONDS}s`;
+
+// A wristband is renewed rather than left to run out. Without this, a cookie
+// issued today stops working in thirty days no matter how much the site is
+// used — and on a home screen there is no address bar to go and sign in again
+// with, so expiry means locked out of your own journal with no visible door.
+//
+// Renewing on *every* check would sign a token and set a cookie on every page
+// load, so it waits until a third of the life has gone. In practice a journal
+// touched more than once a month never expires, and one abandoned for a month
+// asks again — which is the right way round.
+const RENEW_AFTER_SECONDS = LIFETIME_SECONDS / 3;   // 10 days
 
 function getSecret() {
   const secret = process.env.SESSION_SECRET;
@@ -24,16 +41,30 @@ export async function issueWristband() {
     .sign(getSecret());
 }
 
+// Returns the wristband's contents if the wax seal holds, or null. Callers that
+// only want a yes/no should use checkWristband below — this one exists because
+// renewal needs to know how old the band is, which a boolean throws away.
+export async function readWristband(request) {
+  const token = request.cookies.get(COOKIE_NAME)?.value;
+  if (!token) return null;
+  try {
+    const { payload } = await jwtVerify(token, getSecret());
+    return payload;
+  } catch {
+    return null;
+  }
+}
+
 // Returns true if the request carries a wristband with a valid wax seal.
 export async function checkWristband(request) {
-  const token = request.cookies.get(COOKIE_NAME)?.value;
-  if (!token) return false;
-  try {
-    await jwtVerify(token, getSecret());
-    return true;
-  } catch {
-    return false;
-  }
+  return (await readWristband(request)) !== null;
+}
+
+// Whether a valid wristband is old enough to be worth replacing. `iat` is the
+// second it was issued, set by setIssuedAt when it was stamped.
+export function shouldRenewWristband(payload) {
+  if (!payload?.iat) return true;   // no issue time to judge by — replace it
+  return Math.floor(Date.now() / 1000) - payload.iat > RENEW_AFTER_SECONDS;
 }
 
 // Door-guard for protected routes. Returns null if the wristband is valid
@@ -92,6 +123,6 @@ export const WRISTBAND_COOKIE = {
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
     path: '/',
-    maxAge: 60 * 60 * 24 * 30, // 30 days, matches EXPIRES_IN
+    maxAge: LIFETIME_SECONDS,
   },
 };
