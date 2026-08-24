@@ -19,6 +19,10 @@ const MONO  = "'DM Mono', 'Courier New', monospace";
 const SERIF = "var(--font-nunito), sans-serif";
 const SANS  = "'DM Sans', system-ui, sans-serif";
 const INK = '#1a1916';
+// Solid buttons fill with this rather than INK. INK is the text colour and
+// stays near-black for legibility; a button-sized slab of it reads as harsh,
+// so the fill is a softer warm grey (still ~9:1 against white).
+const SOLID = '#4a4643';
 const PANEL_BG = 'rgba(255,255,255,0.8)';
 const HAIR = '1px solid rgba(26,25,22,0.08)';
 const labelStyle = { fontFamily: MONO, fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(26,25,22,0.45)' };
@@ -140,7 +144,7 @@ function EditModal({ entry, entries, onSave, onDelete, onClose }) {
               View →
             </a>
             <button onClick={handleSave} disabled={saving}
-              style={{ background: INK, color: '#fff', border: 'none', borderRadius: 999, padding: '8px 20px', fontFamily: MONO, fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600, opacity: saving ? 0.5 : 1 }}>
+              style={{ background: SOLID, color: '#fff', border: 'none', borderRadius: 999, padding: '8px 20px', fontFamily: MONO, fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer', fontWeight: 600, opacity: saving ? 0.5 : 1 }}>
               {saving ? 'Saving…' : 'Save'}
             </button>
             <button onClick={handleDelete} disabled={deleting}

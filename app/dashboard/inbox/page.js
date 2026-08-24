@@ -12,6 +12,8 @@ const SERIF = "var(--font-nunito), sans-serif";
 const SANS  = "'DM Sans', system-ui, sans-serif";
 
 const INK = '#1a1916';
+// See the note in /dashboard/entries: INK is text, SOLID is button fill.
+const SOLID = '#4a4643';
 const FOLDER_BG = 'rgba(255,255,255,0.8)';
 const label = { fontFamily: MONO, fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(26,25,22,0.45)' };
 
@@ -126,7 +128,7 @@ export default function Inbox() {
     fontFamily: MONO, fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase',
     padding: '6px 13px', borderRadius: 999, cursor: 'pointer',
     border: danger ? '1px solid rgba(239,68,68,0.4)' : (solid ? 'none' : '1px solid rgba(26,25,22,0.12)'),
-    background: solid ? INK : 'rgba(255,255,255,0.6)',
+    background: solid ? SOLID : 'rgba(255,255,255,0.6)',
     color: solid ? '#fff' : (danger ? '#ef4444' : 'rgba(26,25,22,0.55)'),
     textDecoration: 'none', display: 'inline-flex', alignItems: 'center',
   });

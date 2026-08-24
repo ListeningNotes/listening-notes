@@ -324,7 +324,7 @@ export default function EchoPage() {
                           ) : (
                             <>
                               <input value={manualAlbum} onChange={e => setManualAlbum(e.target.value)} onKeyDown={e => e.key === 'Enter' && handleManualSubmit()} placeholder="album title..." autoFocus style={{ flex: 1, background: 'rgba(245,242,236,0.8)', border: '1px solid rgba(26,21,32,0.14)', borderRadius: 8, padding: '9px 14px', fontFamily: fonts.mono, fontSize: 12, color: '#1a1520', outline: 'none' }} />
-                              <button onClick={handleManualSubmit} disabled={!manualAlbum.trim()} style={{ background: '#1a1520', color: '#f5f2ec', border: 'none', borderRadius: 8, padding: '9px 18px', fontFamily: fonts.mono, fontWeight: 700, fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer', opacity: manualAlbum.trim() ? 1 : 0.3 }}>Start →</button>
+                              <button onClick={handleManualSubmit} disabled={!manualAlbum.trim()} style={{ background: '#474151', color: '#f5f2ec', border: 'none', borderRadius: 8, padding: '9px 18px', fontFamily: fonts.mono, fontWeight: 700, fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase', cursor: 'pointer', opacity: manualAlbum.trim() ? 1 : 0.3 }}>Start →</button>
                             </>
                           )}
                         </div>
