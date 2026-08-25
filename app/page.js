@@ -395,7 +395,9 @@ export default function HomePage() {
                its masthead is the first thing on it, so without this the
                journal's name sits under the clock. Bottom clears the row of
                utility icons this screen parks on its lower edge. */
-            padding: max(14px, calc(env(safe-area-inset-top) + 4px)) 18px 96px;
+            --idc-gutter: 18px;
+            --idc-floor: 96px;
+            padding: max(14px, calc(env(safe-area-inset-top) + 4px)) var(--idc-gutter) var(--idc-floor);
           }
           /* The front stops floating in the middle of the pane. It had a
              hundred pixels of air above it and a hundred and twenty below,
