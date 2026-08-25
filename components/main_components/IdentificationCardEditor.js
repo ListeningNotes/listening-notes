@@ -97,7 +97,16 @@ export function useIdentificationCardEditor(settings) {
   // card behind the fields is still showing what a visitor currently sees.
   const begin = useCallback(() => {
     setName(settings.keeper_name || '');
-    setBio(settings.bio || '');
+    // Whatever the card is showing, not whatever column it came out of. The
+    // paragraph falls back to about_intro when bio is empty, so seeding from
+    // bio alone opened the editor on a blank field under a card that plainly
+    // had writing on it — and saving would then have wiped the writing.
+    //
+    // It settles the two columns as a side effect: about_intro was the lede of
+    // an about page that no longer exists, this card is the only thing left
+    // reading it, and the first save moves it into the field the card is
+    // actually for.
+    setBio(settings.bio || settings.about_intro || '');
     setPortrait(settings.portrait_url || '');
     // instagram_url predates the list and is folded in here, so an owner sees
     // every link they have rather than every link but one. Saving writes the
