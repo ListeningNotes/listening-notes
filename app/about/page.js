@@ -52,10 +52,16 @@ const STAR_ROWS = [
   { key: 'formative', formative: true },
 ];
 
-// Formative has moved up to the marks — it is a flag on the record now, not an
-// occasion. These four remain because entries already carry them and a reader
-// looking at an older one still deserves to know what the word meant.
-const RELATIONSHIP_ROWS = ['first_listen', 'revisit', 'study', 'submission'];
+// Formative moved up to the marks — it is a flag on the record now, not an
+// occasion. First listen left entirely: nothing carries it any more, because a
+// listen number on the page says the same thing without a label. What remains
+// are the words entries still hold, kept because a reader looking at an older
+// one deserves to know what they meant.
+//
+// The shipped definition of first_listen stays in library/definitions.js. A
+// copy of this software may well want it, and dropping the key would take it
+// away from everyone to tidy one journal.
+const RELATIONSHIP_ROWS = ['revisit', 'study', 'submission'];
 
 export default function AboutPage() {
   const { about_intro, has_note: hasNote } = useBookplate();

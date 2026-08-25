@@ -47,8 +47,9 @@ export function useBookplate() {
 }
 
 export function Bookplate({ settings, children }) {
+  const value = { ...EMPTY, ...(settings || {}) };
   return (
-    <BookplateContext.Provider value={{ ...EMPTY, ...(settings || {}) }}>
+    <BookplateContext.Provider value={value}>
       {children}
     </BookplateContext.Provider>
   );

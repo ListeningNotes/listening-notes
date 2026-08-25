@@ -61,13 +61,47 @@ export const viewport = {
 // busy, but correctness first.
 export const dynamic = 'force-dynamic';
 
+// What every page is allowed to carry.
+//
+// Bookplate is a client component, and every prop handed to one is serialised
+// into the page whether or not anything reads it. Spreading the settings row
+// therefore ships each new column to every page by default — which is not
+// hypothetical: adding `definitions` put two kilobytes of prose about rating
+// scales into the HTML of every album page. An allow-list makes that
+// impossible rather than something to remember.
+//
+// The list lives here rather than beside the context it fills, because a
+// 'use client' module cannot hand a plain array to a server component — the
+// import arrives as a client reference, not a value. And this is where the
+// decision belongs anyway: what ships to every page is a layout question.
+//
+// Bulk text belongs to whoever renders it. /about fetches the definitions and
+// /why reads its essay on the server; these are the short facts.
+const BOOKPLATE_FIELDS = [
+  'journal_name', 'keeper_name', 'bio', 'portrait_url',
+  'instagram_url', 'lastfm_user', 'site_address',
+  'founded_at', 'pinned_entry_id',
+];
+
 // Async because the journal's details are read here, once, and handed down —
 // see components/main_components/Bookplate.js.
 export default async function RootLayout({ children }) {
-  const { why_essay, ...rest } = await pull_settings();
-  // The essay stays on the server. /why and /about read it there; every other
-  // page would only be carrying it down the wire for nothing.
-  const settings = { ...rest, has_note: Boolean(why_essay && why_essay.trim()) };
+  const all = await pull_settings();
+
+  // Named keys only, rather than spreading what is left after removing the
+  // essay. Bookplate is a client component, so every prop handed to it is
+  // serialised into the page whether or not anything reads it — which means a
+  // column added to settings later ships to every page by default. That is not
+  // hypothetical: `definitions` was added and two kilobytes of prose about
+  // rating scales turned up in the HTML of every album page. An allow-list
+  // makes the leak impossible rather than a thing to remember.
+  //
+  // Bulk text belongs to whoever renders it. /about fetches the definitions,
+  // /why reads the essay on the server, and this carries the short facts.
+  const settings = Object.fromEntries(
+    BOOKPLATE_FIELDS.filter(key => key in all).map(key => [key, all[key]])
+  );
+  settings.has_note = Boolean(all.why_essay && all.why_essay.trim());
 
   return (
     <html lang="en" suppressHydrationWarning className={`${nunito.variable} ${dmMono.variable}`}>
