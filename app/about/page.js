@@ -1,13 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { ArrowSquareOut, Heart, SketchLogo } from '@phosphor-icons/react';
+import { ArrowSquareOut, Fingerprint, Heart, SketchLogo } from '@phosphor-icons/react';
 import { fonts } from '../../library/sitewide_visuals';
 import DotNav from '../../components/main_components/DotNav';
 import SiteNav from '../../components/main_components/SiteNav';
 import Chip from '../../components/main_components/Slug_Page/Chip';
 import StarRating from '../../components/main_components/StarRating';
+import { useBookplate } from '../../components/main_components/Bookplate';
+import { DEFAULT_DEFINITIONS } from '../../library/definitions';
 
 const SECTIONS = [
   { id: 'about',  label: 'About'  },
@@ -28,32 +30,43 @@ const RIG = [
 // so this page reads as a legend for those pages rather than a description of
 // them. `note` is the short form that sits opposite, where a track row keeps
 // its stars.
-const STAR_NOTES = [
-  { rating: 5, note: '5.0', body: 'A full-body yes. An album or track that feels complete and emotionally alive. I return to it willingly and often. Nothing pulls me out of the experience; even its rough edges feel necessary. These are the tracks and albums that stay with me and sometimes shape how I listen to music altogether.' },
-  { rating: 4, note: '4.0', body: 'Strong, memorable, and successful. The core vision lands, even if there are a few moments that don’t fully click for me. I might not love every second, but the highs are real and meaningful. Albums and tracks at this level earn repeat listens and attention.' },
-  { rating: 3, note: '3.0', body: 'Interesting, but uneven. I appreciate the ideas more than the execution, or the experience more than the replay value. These albums or tracks might matter to me more conceptually or contextually, but don’t quite pull me in emotionally.' },
-  { rating: 2, note: '2.0', body: 'Respect more than attachment. I’m glad it exists and I’m glad I listened, but I don’t feel drawn back. Albums or tracks at this level might have some compelling moments, yet the immersion breaks too often. My attention drifts, the balance feels off, or the piece just doesn’t quite land for me.' },
-  { rating: 1, note: '1.0', body: 'Not for me. Either actively uncomfortable to listen to, or lacking the elements I need to stay engaged. Sometimes I hear intention, but the execution just doesn’t hold me. These ratings never mean “bad” — just disconnected from my listening habits.' },
-  { rating: 0.5, note: 'Half', body: 'Half-stars appear when I’m genuinely pulled in two directions — simply too strong to place lower, but not fully aligned enough to place higher. I’ve actively wrestled with these albums or tracks and ultimately decided to meet in the middle.' },
-  // No `rating` on either of these two: they draw their own mark rather than
-  // a row of stars, so a number here would be read by nothing and would only
-  // suggest they sit on the same scale as the rows above.
-  { masterpiece: true, body: 'Entire 5-star track list. Flawless.' },
-  // The one row here that isn't a rating, and the row that exists to say so.
-  // A heart and a score answer different questions, and the pair only makes
-  // sense once you know they can disagree.
-  { favorite: true, body: 'An overall favorite track outside the context of the album. Plenty of 5-star tracks may not be favorited and some favorited may sit lower than expected.' },
-];
-
-const RELATIONSHIP_NOTES = [
-  { label: 'First listen', body: 'My first time listening to an album front to back with intention. I may already know a handful of tracks, but this is the first time I’m hearing the full album as a complete work.' },
-  { label: 'Revisit',      body: 'An album I’ve lived with before and am returning to with fresh attention, often in a new listening setup or emotional context.' },
-  { label: 'Formative',    body: 'An album that shaped my relationship with music or how I listen, regardless of when I first heard it. These tend to be albums I’ve spent a significant portion of my life with.' },
-  { label: 'Study',        body: 'A listen rooted in history, influence, or research. Usually the album matters culturally or technologically, even if it’s not built for repeat listening.' },
-  { label: 'Submission',   body: 'An album recommended to me by someone else and listened to as a response or exchange.' },
+// Structure only. What each row draws — a rating, a diamond, a heart — is a
+// property of the page; what it *says* belongs to whoever keeps the journal and
+// comes from their definitions. Shipped wording lives in library/definitions.js
+// and is editable from settings, so this page reads as a legend for the marks
+// rather than as one person's opinions compiled into everybody's software.
+const STAR_ROWS = [
+  { key: '5.0', rating: 5 },
+  { key: '4.0', rating: 4 },
+  { key: '3.0', rating: 3 },
+  { key: '2.0', rating: 2 },
+  { key: '1.0', rating: 1 },
+  { key: 'half', rating: 0.5 },
+  // Neither of these draws stars. A row of five in front of Masterpiece said
+  // "this is a score", and the diamond is exactly the thing that isn't one —
+  // same reason the heart leads the favourite row. A heart and a score answer
+  // different questions, and the pair only makes sense once you know they can
+  // disagree.
+  { key: 'masterpiece', masterpiece: true },
+  { key: 'favorite', favorite: true },
+  { key: 'formative', formative: true },
 ];
 
 export default function AboutPage() {
+  const { about_intro, has_note: hasNote } = useBookplate();
+
+  // Fetched here rather than carried in the Bookplate context: this is a couple
+  // of kilobytes of prose that only the Index tab renders, and anything put in
+  // that context is serialised into the HTML of every page on the site. The
+  // shipped text stands in until the request lands, so the tab is never empty.
+  const [definitions, setDefinitions] = useState(DEFAULT_DEFINITIONS);
+  useEffect(() => {
+    fetch('/api/settings')
+      .then(r => r.json())
+      .then(d => d?.settings?.definitions && setDefinitions(d.settings.definitions))
+      .catch(() => {});
+  }, []);
+
   // One section on screen at a time. This used to be all three stacked into a
   // single scroll with the marks jumping between them, which is the thing that
   // read as a wall: every other screen on the site is one group of one kind of
@@ -247,51 +260,18 @@ export default function AboutPage() {
               writing underneath reads as an editor's, not the author's. */}
           {section === 'about' && (
             <>
-              <p className="ab-lede">
-                Listening Notes started as an answer to a question about my favorite albums and it grew into a practice of documenting intentional listening. Now it is becoming a larger system for mapping taste, preserving musical encounters, and creating space for shared reflection around sound.
-              </p>
+              {/* The opening paragraph and the note behind it both come from
+                  the journal's own details rather than from this file. A copy
+                  of this software arrives with the page and without the
+                  writing: no paragraph, no link, and /why does not exist until
+                  its owner has written one. */}
+              {about_intro && <p className="ab-lede">{about_intro}</p>}
 
-              {/* "Music has always meant too much to me to throw into a quick
-                  list" — the question, and the thing built to answer it. */}
-              <div className="ab-block">
-                <h2 className="ab-subhead">More than a list</h2>
-                <div className="ab-prose">
-                  <p>
-                    Back in 2020, a close friend asked me to send them a list of my favorite albums, and I never finished it&mdash;actually I never even started. For years I thought I&rsquo;d get around to it one day, but I just kept putting it off. I always thought I was just procrastinating, but now I think I was resisting the format of what was being asked of me. Music has always meant too much to me to throw into a quick list in my notes app and call it done. I did not just want to name the albums, I wanted to capture my feelings around them and why they mattered to me.
-                  </p>
-                  <p>
-                    Finally, in December 2025, I started Listening Notes. It was my way of finally addressing that question: what are my favorite albums? But somewhere along the way, it stopped being just about answering that. It became a way to document my relationship with music entirely, and in real time. That shift changed the whole project for me. What started as a Tumblr blog became something much more alive and closer to an archive of my listening habits than just a collection of reviews.
-                  </p>
+              {hasNote && (
+                <div className="ab-block">
+                  <Link href="/why" className="ln-pill">Read the full note →</Link>
                 </div>
-              </div>
-
-              {/* "asking what kind of listener I am" — what the entries are,
-                  and how the listening behind them is done. */}
-              <div className="ab-block">
-                <h2 className="ab-subhead">What kind of listener I am</h2>
-                <div className="ab-prose">
-                  <p>
-                    At its core is the idea that listening is worth documenting. I have always been someone who likes to record things, preserve things, and leave a trace of who I am in this world. That is why I do not really think of these entries as judgments. They are more like evidence of an encounter. They show what stood out to me, what confused me, what moved me, and what stays with me even after the album has ended. Over time entries start to reveal patterns not only in my musical taste, but also patterns in how I listen. That is part of what this project has grown into for me. It is not only about asking what my favorite music is. It is also about asking what kind of listener I am and how my taste takes shape over time.
-                  </p>
-                  <p>
-                    A major turning point in how I listened came in 2024 when I visited the Art of Noise exhibition at SFMOMA and experienced Devon Turnbull&rsquo;s high-fidelity listening room installation. That experience genuinely changed something in me. It was not about volume or spectacle. It was about precision and the feeling that recorded sound could be presented with a kind of care that made its full shape more visible. Since then I have been much more conscious of listening as an intentional practice. Right now that means listening with my own Hi-Fi headphone setup while I slowly work towards building a dedicated listening room of my own. The setup used for listening can be explored more <button type="button" className="ab-inline" onClick={() => show('specs')}>here</button>.
-                  </p>
-                </div>
-              </div>
-
-              {/* "this project was never meant to stay private" — and it closes
-                  on the same list the first principle opens with. */}
-              <div className="ab-block">
-                <h2 className="ab-subhead">Never meant to stay private</h2>
-                <div className="ab-prose">
-                  <p>
-                    I also know this project was never meant to stay private. Part of what has always fascinated me about music is how differently people can hear the same exact album. I have spent so much time reading other people&rsquo;s thoughts by looking up reddit threads or interpretations on Genius just to understand how a piece landed for someone else. I do not want Listening Notes to just be a private diary hidden away. I want it to be a place where exposure can happen, music can be shared, and opinions are openly discussed.
-                  </p>
-                  <p>
-                    Listening Notes is no longer just a blog where I post album thoughts. It has grown into something much bigger. What I am building now is not simply a place to store opinions, but a system for documenting taste, noticing patterns in what moves someone, and treating a relationship to sound as something worth preserving with real care. If someone asked me today for a list of my favorite albums I would point them here because this says much more fully what music actually means to me.
-                  </p>
-                </div>
-              </div>
+              )}
             </>
           )}
 
@@ -349,8 +329,10 @@ export default function AboutPage() {
               <div className="ab-block">
                 <h2 className="ab-subhead">Star Notes</h2>
                 <div>
-                  {STAR_NOTES.map(s => (
-                    <div key={s.favorite ? 'favorite' : s.masterpiece ? 'masterpiece' : s.note} className="ab-row">
+                  {STAR_ROWS.map(row => {
+                    const def = definitions[row.key];
+                    return (
+                    <div key={row.key} className="ab-row">
                       <div className="ab-row-head">
                         {/* The two mark rows lead with their own mark, not
                             with stars. A row of five in front of Masterpiece
@@ -359,36 +341,28 @@ export default function AboutPage() {
                             leads the favourite row. Both are the marks the
                             archive actually draws, so this reads as a legend
                             for them rather than a picture of one. */}
-                        {s.masterpiece
+                        {row.masterpiece
                           ? <span className="ln-mark ln-mark--mp"><SketchLogo size={15} weight="fill" /></span>
-                          : s.favorite
+                          : row.favorite
                             ? <span className="ln-mark ln-mark--fav"><Heart size={15} weight="fill" /></span>
-                            : <StarRating rating={s.rating} size={14} />}
-                        {s.masterpiece
-                          ? <span style={{ marginLeft: 'auto' }}><Chip tone="mp">Masterpiece</Chip></span>
-                          : s.favorite
-                            ? <span style={{ marginLeft: 'auto' }}><Chip tone="fav">Favorite</Chip></span>
-                            : <span className="ab-row-tail">{s.note}</span>}
+                            : row.formative
+                              ? <span className="ln-mark ln-mark--formative"><Fingerprint size={15} weight="bold" /></span>
+                              : <StarRating rating={row.rating} size={14} />}
+                        {row.masterpiece
+                          ? <span style={{ marginLeft: 'auto' }}><Chip tone="mp">{def.label}</Chip></span>
+                          : row.favorite
+                            ? <span style={{ marginLeft: 'auto' }}><Chip tone="fav">{def.label}</Chip></span>
+                            : row.formative
+                              ? <span style={{ marginLeft: 'auto' }}><Chip tone="formative">{def.label}</Chip></span>
+                              : <span className="ab-row-tail">{def.label}</span>}
                       </div>
-                      <p className="ab-row-body">{s.body}</p>
+                      <p className="ab-row-body">{def.body}</p>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
 
-              <div className="ab-block">
-                <h2 className="ab-subhead">Relationship Notes</h2>
-                <div>
-                  {RELATIONSHIP_NOTES.map(r => (
-                    <div key={r.label} className="ab-row">
-                      <div className="ab-rel">
-                        <span className="ab-rel-term"><Chip>{r.label}</Chip></span>
-                        <p style={{ margin: 0 }}>{r.body}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
             </>
           )}
 

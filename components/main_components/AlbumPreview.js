@@ -15,7 +15,7 @@
 
 'use client';
 import Link from 'next/link';
-import { Heart, SketchLogo } from '@phosphor-icons/react';
+import { Heart, SketchLogo, Fingerprint } from '@phosphor-icons/react';
 import { fonts } from '../../library/sitewide_visuals';
 import { useTheme } from './Lightswitch';
 import StarRating from './StarRating';
@@ -44,7 +44,12 @@ function isMasterpiece(entry) {
 export function EntryMarks({ entry, size = 13 }) {
   const isFav = entry.favorite === true || entry.favorite === 'true';
   const mp = isMasterpiece(entry);
-  if (!isFav && !mp) return null;
+  // Formative reads only from the flag, never from the legacy relationship
+  // column. Nine older entries say relationship = 'Formative' and they are not
+  // being rewritten — but the mark answers to the flag, so an old entry shows
+  // it once its owner sets it and not before.
+  const formative = entry.formative === true || entry.formative === 'true';
+  if (!isFav && !mp && !formative) return null;
   return (
     <div className="ln-marks">
       {isFav && (
@@ -55,6 +60,11 @@ export function EntryMarks({ entry, size = 13 }) {
       {mp && (
         <span className="ln-mark ln-mark--mp" role="img" aria-label="Masterpiece" title="Masterpiece">
           <SketchLogo size={size} weight="fill" />
+        </span>
+      )}
+      {formative && (
+        <span className="ln-mark ln-mark--formative" role="img" aria-label="Formative" title="Formative">
+          <Fingerprint size={size} weight="bold" />
         </span>
       )}
     </div>
@@ -133,16 +143,13 @@ export default function AlbumPreview({ entry, scale = 1 }) {
               )}
             </div>
           )}
-          {/* How it was heard and where it came from, on one line: FIRST
-              LISTEN · SUBMISSION. Two facts of the same kind, so they read
-              as one line of provenance rather than two stacked labels. The
-              two fields can't collide — Submission was removed as a
-              relationship, so it only ever appears as a type. */}
-          {roomForDetail && (entry.relationship || entry.entry_type === 'Submission') && (
+          {/* This line used to pair a relationship with a type — FIRST LISTEN ·
+              SUBMISSION. The relationship half is gone, and only a submission
+              earns a word here anyway: everything else is the library by
+              definition, and saying so on every tile said nothing. */}
+          {roomForDetail && entry.entry_type === 'Submission' && (
             <div style={{ marginTop: px(3), fontFamily: fonts.mono, fontSize: px(7.5), letterSpacing: '0.08em', textTransform: 'uppercase', color: textFaint }}>
-              {/* Only a submission earns a word here — the rest is the library
-                  by definition, and saying so on every tile said nothing. */}
-              {[entry.relationship, entry.entry_type === 'Submission' ? 'Submission' : ''].filter(Boolean).join(' · ')}
+              Submission
             </div>
           )}
         </div>

@@ -38,8 +38,6 @@ const SORTS = [
 // library, so that split was a filter between "everything" and "everything",
 // and the only half worth naming is already written on the entries that are
 // submissions. Removed rather than hidden; nothing else read it.
-const RELATIONSHIPS = ['First Listen', 'Revisit', 'Formative', 'Study'];
-
 // The year column is free text ("2019", occasionally with more around it).
 const releaseYear = entry => {
   const m = String(entry.year || '').match(/\d{4}/);
@@ -70,7 +68,6 @@ export default function ArchivePage() {
   }, []);
   const [sortBy, setSortBy] = useState('posted');
   const [sortDir, setSortDir] = useState('desc');
-  const [relationship, setRelationship] = useState('');
   const [genre, setGenre] = useState('');
   const [genresOpen, setGenresOpen] = useState(false);
   const [favoritesOnly, setFavoritesOnly] = useState(false);
@@ -231,7 +228,6 @@ export default function ArchivePage() {
           foldForSearch(e.album).includes(q) ||
           foldForSearch(e.artist).includes(q)
         )) return false;
-        if (relationship && e.relationship !== relationship) return false;
         if (genre && (e.genre || '') !== genre) return false;
         if (favoritesOnly && !(e.favorite === true || e.favorite === 'true')) return false;
         if (masterpiecesOnly && e.rating !== 'Masterpiece' && e.masterpiece !== true) return false;
@@ -252,7 +248,7 @@ export default function ArchivePage() {
         if (sortBy === 'year')   return dir * ((releaseYear(a) || 0) - (releaseYear(b) || 0));
         return dir * (new Date(a.created_at) - new Date(b.created_at));
       });
-  }, [entries, search, sortBy, sortDir, relationship, genre, favoritesOnly, masterpiecesOnly, yearActive, yearRange]);
+  }, [entries, search, sortBy, sortDir, genre, favoritesOnly, masterpiecesOnly, yearActive, yearRange]);
 
   const activeSort = SORTS.find(s => s.value === sortBy) ?? SORTS[0];
 
@@ -268,7 +264,7 @@ export default function ArchivePage() {
   }
 
   function clearFilters() {
-    setSearch(''); setRelationship(''); setGenre(''); setGenresOpen(false);
+    setSearch(''); setGenre(''); setGenresOpen(false);
     setFavoritesOnly(false); setMasterpiecesOnly(false);
     setSortBy('posted'); setSortDir('desc');
     setYearRange(yearBounds ? [yearBounds.min, yearBounds.max] : null);
@@ -278,7 +274,7 @@ export default function ArchivePage() {
   // badge — the search box is in plain sight, so counting it would put a
   // number on the button with nothing behind it to explain the number.
   const tuckedAwayCount =
-    (relationship ? 1 : 0) + (genre ? 1 : 0) +
+    (genre ? 1 : 0) +
     (favoritesOnly ? 1 : 0) + (masterpiecesOnly ? 1 : 0) +
     (yearActive ? 1 : 0) +
     (sortBy !== 'posted' || sortDir !== 'desc' ? 1 : 0);
@@ -695,17 +691,6 @@ export default function ArchivePage() {
               </div>
             )}
 
-            <div className="arc-sheet-group">
-              <div className="arc-sheet-label">Relationship</div>
-              <div className="arc-sheet-opts">
-                <button type="button" className={'arc-opt' + (!relationship ? ' arc-opt--on' : '')} onClick={() => setRelationship('')}>All</button>
-                {RELATIONSHIPS.map(r => (
-                  <button key={r} type="button"
-                    className={'arc-opt' + (relationship === r ? ' arc-opt--on' : '')}
-                    onClick={() => setRelationship(relationship === r ? '' : r)}>{r}</button>
-                ))}
-              </div>
-            </div>
 
 
             {/* Only worth a group once there's more than one genre to choose

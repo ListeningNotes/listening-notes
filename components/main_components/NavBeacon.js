@@ -1,17 +1,23 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import { useListeningBeacon } from '../../hooks/useListeningBeacon';
+import { useBookplate } from './Bookplate';
 
 export default function NavBeacon() {
   const { track, isLive } = useListeningBeacon();
   const [open, setOpen] = useState(false);
   const [recents, setRecents] = useState([]);
   const ref = useRef(null);
+  const { lastfm_user } = useBookplate();
 
   useEffect(() => {
+    // A journal with no Last.fm account has no recent tracks to show, and
+    // polling with an empty user just collects errors every thirty seconds.
+    // recents is already [] — nothing ever filled it.
+    if (!lastfm_user) return;
     async function fetchRecents() {
       try {
-        const res = await fetch('https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=listeningnotes&api_key=f022ca293645cd4cf2beeb3be7ae4b6f&limit=5&format=json');
+        const res = await fetch(`https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${encodeURIComponent(lastfm_user)}&api_key=f022ca293645cd4cf2beeb3be7ae4b6f&limit=5&format=json`);
         const data = await res.json();
         const all = data?.recenttracks?.track || [];
         setRecents(all.filter(t => !t['@attr']?.nowplaying).slice(0, 3).map(t => ({
@@ -24,7 +30,7 @@ export default function NavBeacon() {
     fetchRecents();
     const iv = setInterval(fetchRecents, 30000);
     return () => clearInterval(iv);
-  }, []);
+  }, [lastfm_user]);
 
   useEffect(() => {
     function handleClick(e) {

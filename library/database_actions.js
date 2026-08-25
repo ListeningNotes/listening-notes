@@ -40,20 +40,97 @@ export function withoutChain(row) {
   return clean;
 }
 
+// ── Listens ────────────────────────────────────────────────────────────────
+// An album has many listens and each one is its own entry, so every entry sits
+// somewhere in a sequence: the third time you played this record, of four.
+//
+// Counted at read time rather than written into a column. A stored number goes
+// wrong the moment a listen in the middle is deleted, and it can only be fixed
+// by rewriting rows — which is the thing the additive rule exists to avoid.
+// Derived, it is never wrong and never needed a migration.
+//
+// Grouped on album_key, the generated column that already knows lower-cased
+// artist + album with the accents flattened, so a Beyoncé listen and a Beyonce
+// listen count as the same record.
+//
+// Ordered by created_at with id as the tie-break: two entries saved in the same
+// second would otherwise swap places between reads, and a listen number that
+// moves is worse than one that is arbitrary.
+const WITH_LISTEN_NUMBERS = `
+  SELECT *,
+         ROW_NUMBER() OVER (PARTITION BY album_key ORDER BY created_at, id)::int AS listen_number,
+         COUNT(*)     OVER (PARTITION BY album_key)::int                        AS listen_total
+  FROM entries
+`;
+
 export async function pull_all_entries({ includeChain = false } = {}) {
-  const rows = await database`
-    SELECT * FROM entries ORDER BY created_at DESC
-  `;
+  const rows = await database.query(
+    `${WITH_LISTEN_NUMBERS} ORDER BY created_at DESC`
+  );
   return rows.map(row => {
     const sized = withSizedArt(row, LIST_ART_PX);
     return includeChain ? sized : withoutChain(sized);
   });
 }
 
+// ── The public feed ────────────────────────────────────────────────────────
+// What another journal is allowed to read. This is an allow-list rather than a
+// blocklist on purpose: a column added later should stay private until someone
+// decides otherwise, not leak because nobody remembered to exclude it.
+//
+// The writing is deliberately absent — no notes, no per-track notes, no
+// background. A feed that carries the whole entry gives a reader no reason to
+// visit the journal, which is the same rule the export card follows. What is
+// here is enough to say *which record this was and how it landed*: the album,
+// the rating, how it was heard, and a link.
+//
+// `horizon` is the borderline one and it's included. It's the track ratings
+// drawn as blocks — the shape of a listen rather than anything written — and
+// it makes a comparison between two people worth looking at. `tracks` and
+// `track_notes` stay out; those are writing.
+const PUBLIC_FIELDS = [
+  'slug', 'album', 'artist', 'year', 'genre',
+  'album_key', 'rating', 'rating_value', 'entry_type',
+  'favorite', 'masterpiece', 'formative', 'horizon', 'album_art', 'created_at',
+  'listen_number', 'listen_total',
+];
+
+export async function pull_public_entries() {
+  // created_at is `timestamp without time zone` holding a UTC value, which the
+  // driver reads as though it were local and "converts" — adding the reader's
+  // offset to a time that was already UTC. On a machine at UTC-7 every entry
+  // came back seven hours late, and a feed is exactly where that shows: dates
+  // on items, and sorting against anyone else's.
+  //
+  // Casting to text in the query sidesteps the driver's conversion entirely
+  // and gives the stored value verbatim, which can then be labelled UTC — the
+  // one thing it actually is. Deterministic, and independent of wherever this
+  // happens to be running.
+  const rows = await database.query(
+    `SELECT *, created_at::text AS created_at_utc
+     FROM (${WITH_LISTEN_NUMBERS}) ranked
+     ORDER BY created_at DESC`
+  );
+  // Picked in JS rather than named in the SELECT so the allow-list is applied
+  // in exactly one place and cannot drift away from the list above.
+  return rows.map(row => {
+    const out = {};
+    for (const field of PUBLIC_FIELDS) out[field] = row[field];
+    out.album_art = sizedAlbumArt(row.album_art, LIST_ART_PX);
+    out.created_at = row.created_at_utc
+      ? row.created_at_utc.replace(' ', 'T') + 'Z'
+      : null;
+    return out;
+  });
+}
+
 export async function pull_entry_by_slug(slug, { includeChain = false } = {}) {
-  const result = await database`
-    SELECT * FROM entries WHERE slug = ${slug} LIMIT 1
-  `;
+  // The window has to run over the whole album before one row can be picked
+  // out of it, so the filter goes outside rather than in the FROM.
+  const result = await database.query(
+    `SELECT * FROM (${WITH_LISTEN_NUMBERS}) ranked WHERE slug = $1 LIMIT 1`,
+    [slug]
+  );
   const row = result[0];
   if (!row) return null;
   const sized = withSizedArt(row, ENTRY_ART_PX);
@@ -114,26 +191,63 @@ async function wouldFormCycle(entry_id, source_entry_id) {
 // into `rating` instead of setting the boolean, which cost the star score, left
 // the column false, and — because parseFloat('Masterpiece') is NaN — drew no
 // stars at all on the entry it produced.
+// ── Slugs ──────────────────────────────────────────────────────────────────
+// An album gets listened to more than once, and each listen is its own entry
+// rather than an overwrite. That breaks the old arrangement: the slug came
+// from the album title alone, and (user_id, slug) is unique, so the second
+// listen of In Rainbows produced `in-rainbows` a second time and the save died
+// on a constraint violation.
+//
+// So the first entry for a title keeps the bare slug — every URL already
+// posted, linked or printed on a card stays exactly where it is — and later
+// ones take the next free number after it.
+//
+// The number is NOT the listen number, deliberately. Two different albums can
+// share a title (Blue, 1, Untitled), and those collide here while being
+// unrelated records. Listen number is counted from album_key, which knows the
+// artist; this only has to produce an address nobody else is using.
+//
+// A title made entirely of punctuation slugs to nothing — !!! is a real band —
+// so there is a floor to fall back to.
+const SLUG_FLOOR = 'entry';
+
+async function next_free_slug(album) {
+  const base = create_slug(album) || SLUG_FLOOR;
+
+  // Checked across every entry rather than per owner. The index is on
+  // (user_id, slug), so a globally free slug is always free — and it avoids
+  // guessing the owner here, which the INSERT below only resolves later.
+  const rows = await database`
+    SELECT slug FROM entries WHERE slug = ${base} OR slug LIKE ${base + '-%'}
+  `;
+  const taken = new Set(rows.map(r => r.slug));
+  if (!taken.has(base)) return base;
+
+  let n = 2;
+  while (taken.has(`${base}-${n}`)) n++;
+  return `${base}-${n}`;
+}
+
 export async function save_new_entry(body) {
   const {
     album, artist, year, genre = '', entry_type, relationship,
-    rating, favorite, masterpiece = false, background = '', notes,
+    rating, favorite, masterpiece = false, formative = false, background = '', notes,
     track_notes, tags = null, horizon, album_art, post_link, tracks = null,
     source_entry_id = null, received_from = null, received_date = null,
     user_id = null
   } = body;
 
-  const slug = create_slug(album);
+  const slug = await next_free_slug(album);
 
   const result = await database`
     INSERT INTO entries (
       album, artist, year, genre, entry_type, relationship,
-      rating, favorite, masterpiece, background, notes, track_notes, tags,
+      rating, favorite, masterpiece, formative, background, notes, track_notes, tags,
       horizon, album_art, post_link, slug, tracks,
       source_entry_id, received_from, received_date, user_id
     ) VALUES (
       ${album}, ${artist}, ${year}, ${genre}, ${entry_type}, ${relationship},
-      ${rating}, ${favorite}, ${masterpiece}, ${background}, ${notes},
+      ${rating}, ${favorite}, ${masterpiece}, ${formative}, ${background}, ${notes},
       ${track_notes}, ${tags},
       ${horizon}, ${album_art}, ${post_link}, ${slug},
       ${tracks ? JSON.stringify(tracks) : null},
@@ -186,6 +300,7 @@ export async function update_entry(slug, fields) {
     UPDATE entries SET
       tracks = COALESCE(${fields.tracks ? JSON.stringify(fields.tracks) : null}::jsonb, tracks),
       masterpiece = COALESCE(${fields.masterpiece ?? null}, masterpiece),
+      formative = COALESCE(${fields.formative ?? null}, formative),
       album = COALESCE(${fields.album ?? null}, album),
       artist = COALESCE(${fields.artist ?? null}, artist),
       year = COALESCE(${fields.year ?? null}, year),
@@ -264,7 +379,7 @@ export async function save_draft(body) {
   const {
     album, artist, year = '', genre = '', entry_type = '', relationship = '',
     album_art = '', collection_id = '', step = 0, elapsed = 0,
-    rating = 0, masterpiece = false, favorite = false, notes = '', tracks = null,
+    rating = 0, masterpiece = false, favorite = false, formative = false, notes = '', tracks = null,
   } = body;
 
   if (!album) throw new Error('A draft needs an album');
@@ -272,12 +387,12 @@ export async function save_draft(body) {
   const result = await database`
     INSERT INTO drafts (
       lookup_key, album, artist, year, genre, entry_type, relationship,
-      album_art, collection_id, step, elapsed, rating, masterpiece,
+      album_art, collection_id, step, elapsed, rating, masterpiece, formative,
       favorite, notes, tracks
     ) VALUES (
       ${lookup_key(album, artist)}, ${album}, ${artist}, ${year}, ${genre},
       ${entry_type}, ${relationship}, ${album_art}, ${String(collection_id || '')},
-      ${step}, ${elapsed}, ${rating}, ${masterpiece}, ${favorite}, ${notes},
+      ${step}, ${elapsed}, ${rating}, ${masterpiece}, ${formative}, ${favorite}, ${notes},
       ${tracks ? JSON.stringify(tracks) : null}
     )
     ON CONFLICT (lookup_key) DO UPDATE SET
@@ -286,7 +401,8 @@ export async function save_draft(body) {
       relationship = EXCLUDED.relationship, album_art = EXCLUDED.album_art,
       collection_id = EXCLUDED.collection_id, step = EXCLUDED.step,
       elapsed = EXCLUDED.elapsed, rating = EXCLUDED.rating,
-      masterpiece = EXCLUDED.masterpiece, favorite = EXCLUDED.favorite,
+      masterpiece = EXCLUDED.masterpiece, formative = EXCLUDED.formative,
+      favorite = EXCLUDED.favorite,
       notes = EXCLUDED.notes, tracks = EXCLUDED.tracks, updated_at = NOW()
     RETURNING *
   `;
