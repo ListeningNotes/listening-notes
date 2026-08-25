@@ -2,12 +2,14 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import { FlipHorizontal } from '@phosphor-icons/react';
 import { useTheme } from '../components/main_components/Lightswitch';
 import { useListeningBeacon } from '../hooks/useListeningBeacon';
 import DotNav from '../components/main_components/DotNav';
 import SiteNav from '../components/main_components/SiteNav';
 import ListeningBeacon from '../components/main_components/ListeningBeacon';
 import AlbumStrip from '../components/main_components/AlbumStrip';
+import IdentityCard from '../components/main_components/IdentityCard';
 import { useBookplate } from '../components/main_components/Bookplate';
 
 function ScrollButton({ onClick, direction = 'down' }) {
@@ -16,6 +18,19 @@ function ScrollButton({ onClick, direction = 'down' }) {
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ transform: direction === 'up' ? 'rotate(180deg)' : 'none' }}>
         <polyline points="6 9 12 15 18 9" />
       </svg>
+    </button>
+  );
+}
+
+// The one control that turns the cover over. Deliberately a single button and
+// not a pair of tabs: a card has two sides, and a thing with two sides is
+// turned, not selected from. Phosphor's flip mark rather than a hand-drawn
+// card, which at 13px read as a mushroom.
+function FlipButton({ onClick, children }) {
+  return (
+    <button type="button" className="ln-pill hp-flip" onClick={onClick}>
+      <FlipHorizontal size={14} weight="bold" aria-hidden="true" />
+      {children}
     </button>
   );
 }
@@ -33,6 +48,13 @@ export default function HomePage() {
   // How many submissions and comments are sitting unread. Null until asked,
   // so the line can hold its place without flashing a zero on the way.
   const [waiting, setWaiting] = useState(null);
+  // Which way up the cover is. Front is the beacon — what is playing. Back is
+  // the card — whose journal this is. Not a route, because it is not a
+  // different page: it is the same page, turned over.
+  const [flipped, setFlipped] = useState(false);
+  // The counts printed on the back. Null until they land, so the card holds
+  // the shape of its number rows rather than flashing zeros into them.
+  const [stamps, setStamps] = useState(null);
   const screenOneRef = useRef(null);
   const screenTwoRef = useRef(null);
 
@@ -49,6 +71,17 @@ export default function HomePage() {
         setLoading(false);
       })
       .catch(() => setLoading(false));
+  }, []);
+
+  // Five integers for the back of the card. Fetched on mount rather than on
+  // first flip: it is a few hundred bytes, and a card that assembles itself
+  // while you are looking at it is a worse card than one that was already
+  // printed. A failure leaves stamps null and the card prints blank rules.
+  useEffect(() => {
+    fetch('/api/public/stamps')
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => d && setStamps(d))
+      .catch(() => {});
   }, []);
 
   // Asking on the cover rather than only on the writing pages does two jobs.
@@ -176,8 +209,16 @@ export default function HomePage() {
     </div>
   );
 
+  // One card, described once, mounted on whichever of the two layouts is on
+  // screen. Both are in the DOM at all times — the desktop and mobile markup
+  // are separate trees toggled by display — so this is written as a function
+  // rather than an element to keep the two instances honestly separate.
+  const cardFace = () => (
+    <IdentityCard stamps={stamps} onFlipBack={() => setFlipped(false)} />
+  );
+
   return (
-    <div className="hp">
+    <div className={'hp' + (flipped ? ' hp--flipped' : '')}>
       <style>{`
         /* Quiet enough to belong to the cover rather than sit on top of it —
            this is a line of the page, not a button pinned to it. */
@@ -204,6 +245,117 @@ export default function HomePage() {
         /* The count is the point of the line, so it carries the one bit of
            colour on the cover. --fav is the same red the favourite heart
            uses; nothing else here competes with it. */
+        /* ── The cover, both sides of it ─────────────────────────────────
+           .idc-scene holds the perspective, .idc-flip is the sheet that turns,
+           and the two faces are stacked in one grid cell so the box is as tall
+           as the taller of them without anything being measured in JavaScript.
+
+           z-index 91 is not arbitrary: the logo and the dot row carry that
+           value so they paint over the fixed edge fades at 50, and putting them
+           inside a transformed element makes their z-index local to it. The
+           scene inherits the number they used to hold. .hp-corner stays at 100
+           and so stays above the card. */
+        .idc-scene {
+          position: relative;
+          z-index: 91;
+          width: 100%;
+          perspective: 1800px;
+          display: flex;
+          justify-content: center;
+        }
+        .idc-flip {
+          position: relative;
+          width: 100%;
+          display: grid;
+          transform-style: preserve-3d;
+          transition: transform 0.72s cubic-bezier(0.42, 0.02, 0.18, 1);
+        }
+        .idc-flip--over { transform: rotateY(180deg); }
+        .idc-face {
+          grid-area: 1 / 1;
+          min-width: 0;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          /* Without this the far side of the sheet shows through the near one
+             for the whole turn, and both sides read at once. */
+          backface-visibility: hidden;
+          -webkit-backface-visibility: hidden;
+        }
+        /* The gap .hp-main used to hand these children directly, now that they
+           are one level further in. */
+        .idc-face--front { gap: 22px; }
+        .idc-face--back { transform: rotateY(180deg); }
+
+        /* Desktop gives the card a fixed height, because a card has one. It
+           does not grow to fit what is written on it — the writing scrolls
+           inside it instead, which is also what stops a long note from
+           dragging the recent listens half a screen down the page. */
+        @media (min-width: 769px) {
+          /* Tall enough to print the whole card on a roomy screen, short
+             enough to stay on a 13-inch one — below that the card keeps its
+             shape and the writing scrolls inside it, which is the right way
+             round for an object that has a fixed size. */
+          .hp-desktop-layout .idc-scene { min-height: clamp(520px, calc(100vh - 170px), 790px); }
+          .hp-desktop-layout .idc { height: clamp(520px, calc(100vh - 170px), 790px); }
+        }
+
+        /* On a phone the card fills screen one and scrolls inside itself. The
+           document does not scroll here — screen one and screen two are snapped
+           panes — so anything taller than the pane has to carry its own
+           scroller or its bottom is unreachable. */
+        @media (max-width: 768px) {
+          .hp-screen--one .idc-scene {
+            flex: 1;
+            min-height: 0;
+            width: 100%;
+            /* Top clears the notch — the card runs to the edge of the pane and
+               its masthead is the first thing on it, so without this the
+               journal's name sits under the clock. Bottom clears the row of
+               utility icons this screen parks on its lower edge. */
+            padding: max(14px, calc(env(safe-area-inset-top) + 4px)) 18px 96px;
+          }
+          /* minmax(0, 1fr), not the default auto row: a grid row sized to its
+             content treats height:100% on the child as a floor rather than a
+             ceiling, so a card with more written on it than fits simply grew
+             past the pane and slid its footer under the utility icons. This
+             pins the row to the pane and hands the overflow to .idc-inner,
+             which is the thing that knows how to scroll. */
+          .hp-screen--one .idc-flip { height: 100%; grid-template-rows: minmax(0, 1fr); }
+          .hp-screen--one .idc-face { min-height: 0; }
+          .hp-screen--one .idc { height: 100%; max-height: 100%; }
+          /* Above the turned card, which now owns the pane. */
+          .hp-screen-one-controls { z-index: 95; }
+        }
+
+        /* The recent listens belong to the front of the cover. They sit outside
+           the sheet that turns — a horizontal scroller inside a 3D transform is
+           a bad idea on iOS — so they are faded out instead, which reads as the
+           whole cover having gone over rather than a panel in the middle of it
+           having changed. inert on the wrapper keeps them off the tab order
+           while they are invisible. */
+        .hp-strip,
+        .hp-strip-actions { transition: opacity 0.4s ease, visibility 0s; }
+        /* visibility, not just opacity: an invisible link is still tabbable and
+           still read aloud. This takes them out of both, and delays the
+           visibility switch until the fade has finished so it isn't a pop. */
+        .hp--flipped .hp-strip,
+        .hp--flipped .hp-strip-actions {
+          opacity: 0;
+          visibility: hidden;
+          pointer-events: none;
+          transition: opacity 0.32s ease, visibility 0s linear 0.32s;
+        }
+
+        .hp-flip { gap: 8px; }
+        .hp-flip svg { color: var(--ink-faint); transition: color 0.15s; }
+        .hp-flip:hover svg { color: var(--ink); }
+
+        @media (prefers-reduced-motion: reduce) {
+          .idc-flip { transition: none; }
+        }
+
         .hp-write-count {
           margin-left: 7px;
           min-width: 16px;
@@ -240,27 +392,51 @@ export default function HomePage() {
       </div>
 
       <main className="hp-main hp-desktop-layout">
-        {logo}
-        <DotNav />
-        <div className="hp-dashboard">
-          <div className="hp-dash-cell hp-dash-beacon">
-            <ListeningBeacon />
+        <div className="idc-scene">
+          <div className={'idc-flip' + (flipped ? ' idc-flip--over' : '')}>
+            {/* inert on the side facing away: backface-visibility hides it from
+                the eye, and nothing else. Without this the card's links stay in
+                the tab order behind the beacon, and a screen reader reads both
+                sides of the cover as one page. */}
+            <div className="idc-face idc-face--front" inert={flipped ? true : undefined}>
+              {logo}
+              <DotNav />
+              <div className="hp-dashboard">
+                <div className="hp-dash-cell hp-dash-beacon">
+                  <ListeningBeacon />
+                </div>
+              </div>
+              {writingLine}
+              <FlipButton onClick={() => setFlipped(true)}>Turn the card</FlipButton>
+            </div>
+            <div className="idc-face idc-face--back" inert={flipped ? undefined : true}>
+              {cardFace()}
+            </div>
           </div>
         </div>
-        {writingLine}
         {renderStrip('scroll')}
         {stripActions}
       </main>
 
       <div className="hp-mobile-screens">
         <section className="hp-screen hp-screen--one" id="hp-screen-one" ref={screenOneRef}>
-          {screenOneLiveLogo}
-          <div className="hp-dashboard">
-            <div className="hp-dash-cell hp-dash-beacon">
-              <ListeningBeacon statusAboveArt />
+          <div className="idc-scene">
+            <div className={'idc-flip' + (flipped ? ' idc-flip--over' : '')}>
+              <div className="idc-face idc-face--front" inert={flipped ? true : undefined}>
+                {screenOneLiveLogo}
+                <div className="hp-dashboard">
+                  <div className="hp-dash-cell hp-dash-beacon">
+                    <ListeningBeacon statusAboveArt />
+                  </div>
+                </div>
+                {writingLine}
+                <FlipButton onClick={() => setFlipped(true)}>Turn the card</FlipButton>
+              </div>
+              <div className="idc-face idc-face--back" inert={flipped ? undefined : true}>
+                {cardFace()}
+              </div>
             </div>
           </div>
-          {writingLine}
           <div className="hp-screen-one-controls">
             {instagram_url && <a
               href={instagram_url}

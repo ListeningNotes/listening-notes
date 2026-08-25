@@ -106,8 +106,10 @@ export default async function WhyPage() {
           : <p key={i} className="why-para">{b.text}</p>
         )}
 
+        {/* The way back is the card, because the card is what sent you here.
+            /about was the answer while there was an about page to go back to. */}
         <div className="why-foot">
-          <Link href="/about" className="ln-pill">← Back to about</Link>
+          <Link href="/" className="ln-pill">← The card</Link>
         </div>
       </article>
     </div>
