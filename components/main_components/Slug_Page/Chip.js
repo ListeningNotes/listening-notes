@@ -13,6 +13,7 @@ import { fonts } from '../../../library/sitewide_visuals';
 const TONES = {
   fav: { color: 'var(--fav, #f0484f)', border: 'color-mix(in srgb, var(--fav, #f0484f) 40%, transparent)' },
   mp:  { color: 'var(--mp, #4a9bf0)',  border: 'color-mix(in srgb, var(--mp, #4a9bf0) 40%, transparent)' },
+  formative: { color: 'var(--formative, #3fa96b)', border: 'color-mix(in srgb, var(--formative, #3fa96b) 40%, transparent)' },
 };
 
 export default function Chip({ children, accent, tone }) {

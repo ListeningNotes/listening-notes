@@ -44,6 +44,12 @@
   /* The masterpiece blue, paired with --fav on the same hue wheel. Lived only
      inside .ln-mark--mp while the session and the CMS drew a gold ✦ and ★. */
   --mp:           #4a9bf0;
+  /* Formative — the third mark on a record, and the third of this set. Green,
+     but deliberately not --live's mint below: that one means something is
+     playing right now, and these two would otherwise be the same idea in two
+     places. Deeper and less electric, so it sits with --fav and --mp as a
+     property of the album rather than a signal about the moment. */
+  --formative:    #3fa96b;
   /* Third of the same set: posted since you were last here. Not a property of
      the record like --fav and --mp are — a property of the reader, which is
      why it's the only one of the three that can be true for one person and
@@ -2337,6 +2343,7 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 .ln-mark { display: inline-flex; }
 .ln-mark--fav { color: var(--fav); }
 .ln-mark--mp  { color: var(--mp); }
+.ln-mark--formative { color: var(--formative); }
 
 @media (prefers-reduced-motion: reduce) {
   .ft-inner { transition: none; }
