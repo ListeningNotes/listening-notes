@@ -19,7 +19,7 @@
 // the page's own colour, and turning something over should not change the
 // colour of the room.
 
-import { useMemo } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import {
   DiscordLogo, FacebookLogo, FlipHorizontal, GithubLogo, InstagramLogo,
@@ -163,6 +163,32 @@ export default function IdentityCard({ stamps, onFlipBack }) {
 
   const address = site_address ? site_address.replace(/^https?:\/\//, '') : null;
 
+  // Whether the column has anything left below the fold.
+  //
+  // The soft edge at the bottom exists to say "there is more" — but it is a
+  // position on the box, not on the writing, so it went on softening whatever
+  // happened to be down there even once you had scrolled to the end. What was
+  // down there is the QR code, and a QR code with its bottom rows faded out is
+  // a QR code that does not scan. So the fade is only drawn while it is telling
+  // the truth: something is still hidden.
+  const innerRef = useRef(null);
+  const [more, setMore] = useState(false);
+  useEffect(() => {
+    const el = innerRef.current;
+    if (!el) return;
+    const check = () => setMore(el.scrollHeight - el.clientHeight - el.scrollTop > 2);
+    check();
+    el.addEventListener('scroll', check, { passive: true });
+    const observer = new ResizeObserver(check);
+    observer.observe(el);
+    return () => {
+      el.removeEventListener('scroll', check);
+      observer.disconnect();
+    };
+    // stamps and the bio arrive after the first paint and both change how tall
+    // the column is, so the measurement has to be taken again when they land.
+  }, [stamps, blurb]);
+
   return (
     <section className="idc" aria-label="About this journal">
       {/* href + precedence lets React hoist this once into the head rather than
@@ -181,8 +207,13 @@ export default function IdentityCard({ stamps, onFlipBack }) {
              beacon on the page's own colour and this is the same page. */
           background: none;
           /* The turn control anchors to this, not to the scroller — it has to
-             hold still while the column moves under it. */
+             hold still while the column moves under it. The padding is the band
+             it sits in: floating it over the scroller instead meant that as
+             soon as the column was one line too long for the screen, the pill
+             came down on top of the QR code and took a bite out of it. A code
+             with a bite out of it does not scan. */
           position: relative;
+          padding-bottom: 48px;
         }
         /* Everything inside scrolls, the column itself does not. On a phone the
            landing page is a fixed pair of snapped panes with no document scroll
@@ -200,23 +231,31 @@ export default function IdentityCard({ stamps, onFlipBack }) {
           overflow-y: auto;
           -webkit-overflow-scrolling: touch;
           text-align: center;
-          /* 58px of floor against a 26px fade and the turn control below it, so
-             at rest the fade lands in the padding and is invisible, and it only
-             starts eating ink once there is ink scrolling under it. */
-          padding: 2px 4px 58px;
-          mask-image: linear-gradient(to bottom, #000 calc(100% - 26px), transparent);
-          -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 26px), transparent);
+          /* 24px of floor against a 20px fade, so at rest the fade lands in the
+             padding and is invisible, and only starts eating ink once there is
+             ink scrolling under it. */
+          padding: 2px 4px 24px;
         }
-        /* Firefox still wants the prefix-free scrollbar hidden separately; the
-           fade is the affordance here, a 6px grey bar down the side of a card
-           is not. */
+        /* Only while something is genuinely still below — see the note beside
+           the measurement in the component. */
+        .idc-inner--more {
+          mask-image: linear-gradient(to bottom, #000 calc(100% - 20px), transparent);
+          -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 20px), transparent);
+        }
+        /* The fade is the affordance here; a 6px grey bar down the side of a
+           card is not. */
         .idc-inner { scrollbar-width: none; }
         .idc-inner::-webkit-scrollbar { display: none; }
 
-        /* ── Header ── the mark, then the name under it. The dot on the period
-           is lit while something is playing, which is the same fact the front
-           of the cover carries and the only thing on this side that moves. */
-        .idc-mark { display: block; height: 34px; width: auto; margin: 0 auto; }
+        /* ── Header ── the mark, on its own. The journal's name was set under
+           it in condensed caps and said the same thing twice: every copy of
+           this software is a listening journal, so printing the words is a
+           label on a label. The mark keeps the name in its aria-label, which
+           is where a reader who cannot see it still needs it.
+           The dot on the period is lit while something is playing — the same
+           fact the front of the cover carries, and the only thing on this side
+           that moves. */
+        .idc-mark { display: block; height: 46px; width: auto; margin: 4px auto 0; }
         .idc-mark path { fill: var(--ink); }
         /* The dot on the period. globals.css defines these two classes inside
            a max-width:768px block for the cover's own logo, so on a wide screen
@@ -234,17 +273,6 @@ export default function IdentityCard({ stamps, onFlipBack }) {
         @media (prefers-reduced-motion: reduce) {
           .idc-mark .hp-logo-mark-dot--live { animation: none; }
         }
-        .idc-name {
-          font-family: var(--font-anton), var(--font-display), sans-serif;
-          font-weight: 400;
-          font-size: 25px;
-          line-height: 1.02;
-          letter-spacing: 0.012em;
-          text-transform: uppercase;
-          color: var(--ink);
-          margin: 11px 0 0;
-        }
-
         /* ── Rules ── the dashed lines that divide a form up, drawn as a
            background gradient rather than a dashed border: a CSS dashed border
            picks its own dash length and picks wrong at this weight. */
@@ -342,7 +370,7 @@ export default function IdentityCard({ stamps, onFlipBack }) {
            column. A way back you have to scroll to find is not one. */
         .idc-turn {
           position: absolute;
-          left: 50%; bottom: 0;
+          left: 50%; bottom: 2px;
           transform: translateX(-50%);
           z-index: 2;
           gap: 7px;
@@ -358,20 +386,20 @@ export default function IdentityCard({ stamps, onFlipBack }) {
            scrolling it, and the width to set the bio a line or two shorter. */
         @media (min-width: 769px) {
           .idc { max-width: 376px; }
-          .idc-rule { margin: 16px 0; }
+          .idc-rule { margin: 12px 0; }
         }
 
         @media (max-width: 480px) {
-          .idc-name { font-size: 23px; }
-          .idc-rule { margin: 13px 0; }
+          .idc-mark { height: 36px; }
+          .idc-rule { margin: 10px 0; }
           .idc-bio { font-size: 12px; line-height: 1.6; }
-          .idc-portrait { width: 96px; }
-          .idc-socials { margin-top: 12px; }
+          .idc-portrait { width: 90px; }
+          .idc-socials { margin-top: 8px; }
           .idc-qr { width: 78px; height: 78px; }
         }
       `}</style>
 
-      <div className="idc-inner">
+      <div ref={innerRef} className={'idc-inner' + (more ? ' idc-inner--more' : '')}>
         {/* The site's own mark, with the live dot on its period — the same SVG
             and the same class the cover uses, so the two sides of the page
             report the same thing rather than each deciding for themselves. */}
@@ -380,8 +408,6 @@ export default function IdentityCard({ stamps, onFlipBack }) {
           <path d="M 91.96875 2 C 85 2 78.742188 0.476562 73.203125 -2.5625 C 67.671875 -5.613281 63.300781 -9.847656 60.09375 -15.265625 C 56.882812 -20.691406 55.28125 -26.835938 55.28125 -33.703125 L 55.28125 -84.5 C 55.28125 -86.269531 54.835938 -87.875 53.953125 -89.3125 C 53.066406 -90.75 51.90625 -91.910156 50.46875 -92.796875 C 49.03125 -93.679688 47.425781 -94.125 45.65625 -94.125 C 43.882812 -94.125 42.28125 -93.679688 40.84375 -92.796875 C 39.40625 -91.910156 38.269531 -90.75 37.4375 -89.3125 C 36.601562 -87.875 36.1875 -86.269531 36.1875 -84.5 L 36.1875 0 L 8.96875 0 L 8.96875 -82.515625 C 8.96875 -89.484375 10.539062 -95.625 13.6875 -100.9375 C 16.84375 -106.25 21.21875 -110.453125 26.8125 -113.546875 C 32.40625 -116.648438 38.6875 -118.203125 45.65625 -118.203125 C 52.738281 -118.203125 59.046875 -116.648438 64.578125 -113.546875 C 70.109375 -110.453125 74.476562 -106.25 77.6875 -100.9375 C 80.90625 -95.625 82.515625 -89.484375 82.515625 -82.515625 L 82.515625 -31.703125 C 82.515625 -29.929688 82.957031 -28.300781 83.84375 -26.8125 C 84.726562 -25.320312 85.859375 -24.160156 87.234375 -23.328125 C 88.617188 -22.492188 90.144531 -22.078125 91.8125 -22.078125 C 93.582031 -22.078125 95.210938 -22.492188 96.703125 -23.328125 C 98.203125 -24.160156 99.394531 -25.320312 100.28125 -26.8125 C 101.164062 -28.300781 101.609375 -29.929688 101.609375 -31.703125 L 101.609375 -116.21875 L 128.65625 -116.21875 L 128.65625 -33.703125 C 128.65625 -26.835938 127.050781 -20.691406 123.84375 -15.265625 C 120.632812 -9.847656 116.265625 -5.613281 110.734375 -2.5625 C 105.203125 0.476562 98.945312 2 91.96875 2 Z M 91.96875 2 " transform="translate(153.915942, 220.794814)" />
           <circle cx="297.0547" cy="216.71875" r="14.1328" className={'hp-logo-mark-dot' + (isLive ? ' hp-logo-mark-dot--live' : '')} />
         </svg>
-
-        <h1 className="idc-name">{journal_name}</h1>
 
         <div className="idc-rule" />
 
