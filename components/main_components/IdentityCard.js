@@ -24,8 +24,11 @@ import Link from 'next/link';
 import {
   DiscordLogo, FacebookLogo, GithubLogo, InstagramLogo,
   LinkSimple, LinkedinLogo, MediumLogo, QrCode, RedditLogo, SoundcloudLogo,
-  Check, Eye, EyeSlash, PencilSimple, Plus, SpotifyLogo, ThreadsLogo,
-  TiktokLogo, TwitchLogo, UploadSimple, User, X, XLogo, YoutubeLogo,
+  CassetteTape, Check, DeviceMobileSpeaker, Equalizer, Eye, EyeSlash,
+  GlobeSimple, Guitar, Headphones, MastodonLogo, PencilSimple, PinterestLogo,
+  Plus, Radio, SnapchatLogo, SpeakerHifi, SpotifyLogo, TelegramLogo,
+  ThreadsLogo, TiktokLogo, TwitchLogo, UploadSimple, User, VinylRecord,
+  WhatsappLogo, X, XLogo, YoutubeLogo,
 } from '@phosphor-icons/react';
 import QRCode from 'qrcode';
 import { useIdentificationCardEditor } from './IdentificationCardEditor';
@@ -111,6 +114,62 @@ function monthAndYear(value) {
 // services exist — a copy whose owner is on something nobody here thought of
 // would have to wait for a migration to link to it. Anything unrecognised gets
 // the plain link mark and works exactly as well.
+// ── Marks you can choose ────────────────────────────────────────────────
+// The rig, as a set rather than a picture. Everybody listens on something and
+// almost nobody listens on the same thing, so the software offers the shapes
+// and the owner says which one is theirs — a pair of headphones printed on the
+// card of somebody who plays records is worse than no mark at all.
+//
+// 'none' is a real answer and the first one for a reason: plenty of people
+// listening on whatever came with the phone would rather not describe it, and
+// this is a journal about the listening, not the equipment.
+export const RIG_ICONS = [
+  { name: 'none',       label: 'No rig button', Icon: null },
+  { name: 'headphones', label: 'Headphones',    Icon: Headphones },
+  { name: 'speakers',   label: 'Speakers',      Icon: SpeakerHifi },
+  { name: 'turntable',  label: 'Turntable',     Icon: VinylRecord },
+  { name: 'radio',      label: 'Radio',         Icon: Radio },
+  { name: 'cassette',   label: 'Tape',          Icon: CassetteTape },
+  { name: 'phone',      label: 'Phone',         Icon: DeviceMobileSpeaker },
+  { name: 'guitar',     label: 'Instrument',    Icon: Guitar },
+  { name: 'equalizer',  label: 'Equalizer',     Icon: Equalizer },
+];
+export const DEFAULT_RIG_ICON = 'headphones';
+
+export function rigIcon(name) {
+  const hit = RIG_ICONS.find(r => r.name === (name || DEFAULT_RIG_ICON));
+  return hit ?? RIG_ICONS.find(r => r.name === DEFAULT_RIG_ICON);
+}
+
+// The marks a link can wear. The hostname picks one on its own — see identify()
+// below, which gets it right for every service anybody names — and this is the
+// override for when it does not: a personal site, a service nobody thought of,
+// or simply an owner who would rather show something else.
+export const LINK_ICONS = [
+  { name: 'auto',      label: 'From the address', Icon: null },
+  { name: 'instagram', label: 'Instagram', Icon: InstagramLogo },
+  { name: 'facebook',  label: 'Facebook',  Icon: FacebookLogo },
+  { name: 'x',         label: 'X',         Icon: XLogo },
+  { name: 'snapchat',  label: 'Snapchat',  Icon: SnapchatLogo },
+  { name: 'tiktok',    label: 'TikTok',    Icon: TiktokLogo },
+  { name: 'threads',   label: 'Threads',   Icon: ThreadsLogo },
+  { name: 'youtube',   label: 'YouTube',   Icon: YoutubeLogo },
+  { name: 'reddit',    label: 'Reddit',    Icon: RedditLogo },
+  { name: 'pinterest', label: 'Pinterest', Icon: PinterestLogo },
+  { name: 'discord',   label: 'Discord',   Icon: DiscordLogo },
+  { name: 'twitch',    label: 'Twitch',    Icon: TwitchLogo },
+  { name: 'telegram',  label: 'Telegram',  Icon: TelegramLogo },
+  { name: 'whatsapp',  label: 'WhatsApp',  Icon: WhatsappLogo },
+  { name: 'mastodon',  label: 'Mastodon',  Icon: MastodonLogo },
+  { name: 'soundcloud', label: 'SoundCloud', Icon: SoundcloudLogo },
+  { name: 'spotify',   label: 'Spotify',   Icon: SpotifyLogo },
+  { name: 'medium',    label: 'Medium',    Icon: MediumLogo },
+  { name: 'github',    label: 'GitHub',    Icon: GithubLogo },
+  { name: 'linkedin',  label: 'LinkedIn',  Icon: LinkedinLogo },
+  { name: 'website',   label: 'Website',   Icon: GlobeSimple },
+  { name: 'link',      label: 'Plain link', Icon: LinkSimple },
+];
+
 const SERVICES = [
   [/(^|\.)instagram\.com$/,   'Instagram',  InstagramLogo],
   [/(^|\.)facebook\.com$/,    'Facebook',   FacebookLogo],
@@ -126,9 +185,14 @@ const SERVICES = [
   [/(^|\.)(open\.)?spotify\.com$/, 'Spotify', SpotifyLogo],
   [/(^|\.)twitch\.tv$/,       'Twitch',     TwitchLogo],
   [/(^|\.)medium\.com$/,      'Medium',     MediumLogo],
+  [/(^|\.)snapchat\.com$/,    'Snapchat',   SnapchatLogo],
+  [/(^|\.)pinterest\.(com|co\.uk)$/, 'Pinterest', PinterestLogo],
+  [/(^|\.)(wa\.me|whatsapp\.com)$/, 'WhatsApp', WhatsappLogo],
+  [/(^|\.)(t\.me|telegram\.me)$/, 'Telegram', TelegramLogo],
+  [/(^|\.)(mastodon\.social|mas\.to)$/, 'Mastodon', MastodonLogo],
 ];
 
-export function identify(url) {
+export function identify(url, chosen) {
   let host;
   try {
     host = new URL(/^https?:\/\//i.test(url) ? url : `https://${url}`).hostname.toLowerCase();
@@ -136,11 +200,23 @@ export function identify(url) {
     return null; // not a URL at all — better to drop it than render a dead mark
   }
   const hit = SERVICES.find(([pattern]) => pattern.test(host));
+  // A mark the owner picked wins over the one the hostname suggests. The
+  // hostname is right almost always and the override is for the almost.
+  const picked = chosen && chosen !== 'auto'
+    ? LINK_ICONS.find(i => i.name === chosen)
+    : null;
   return {
     href: /^https?:\/\//i.test(url) ? url : `https://${url}`,
-    label: hit ? hit[1] : host.replace(/^www\./, ''),
-    Icon: hit ? hit[2] : LinkSimple,
+    label: picked ? picked.label : (hit ? hit[1] : host.replace(/^www\./, '')),
+    Icon: picked?.Icon || (hit ? hit[2] : LinkSimple),
   };
+}
+
+// social_links holds plain strings from before icons could be chosen and
+// { url, icon } since. Read through this so neither shape reaches the drawing.
+export function readLink(entry) {
+  if (typeof entry === 'string') return { url: entry, icon: 'auto' };
+  return { url: entry?.url || '', icon: entry?.icon || 'auto' };
 }
 
 // The address, as the thing you point a phone at.
@@ -186,6 +262,7 @@ export default function IdentityCard({ stamps, authed = false }) {
     social_links,
     hidden_fields,
     send_me,
+    rig_icon,
   } = settings;
   const { isLive } = useListeningBeacon();
 
@@ -215,14 +292,19 @@ export default function IdentityCard({ stamps, authed = false }) {
   // instagram_url predates this list and is folded in rather than made to move.
   // De-duplicated on the href, so an owner who has it in both places gets one.
   const socials = useMemo(() => {
-    const raw = [instagram_url, ...(Array.isArray(social_links) ? social_links : [])];
+    const stored = Array.isArray(social_links) ? social_links.map(readLink) : [];
+    const raw = instagram_url ? [{ url: instagram_url, icon: 'auto' }, ...stored] : stored;
     const seen = new Set();
     return raw
-      .filter(u => typeof u === 'string' && u.trim())
-      .map(identify)
+      .filter(l => l.url.trim())
+      .map(l => identify(l.url, l.icon))
       .filter(Boolean)
-      .filter(s => !seen.has(s.href) && seen.add(s.href));
+      .filter(l => !seen.has(l.href) && seen.add(l.href));
   }, [instagram_url, social_links]);
+
+  // The mark this journal listens through, or nothing if its keeper would
+  // rather not say. See RIG_ICONS.
+  const rig = rigIcon(rig_icon);
 
   const address = site_address ? site_address.replace(/^https?:\/\//, '') : null;
 
@@ -811,16 +893,24 @@ export default function IdentityCard({ stamps, authed = false }) {
           background-image: linear-gradient(to right, var(--idc-rule) 0 4px, transparent 4px 9px);
           background-size: 9px 1px; background-repeat: repeat-x;
         }
-        .idc-doors { display: flex; flex-wrap: wrap; gap: 7px; justify-content: center; }
-        .idc-doors .ln-pill { padding: 7px 14px; font-size: 8.5px; letter-spacing: 0.1em; }
-        .idc-socials { display: flex; gap: 4px; justify-content: center; margin-top: 12px; }
-        .idc-social {
+        /* One line: the action, then every other door as a mark beside it. */
+        .idc-row {
           display: flex; align-items: center; justify-content: center;
-          width: 34px; height: 34px; border-radius: 10px;
-          color: var(--ink-faint);
-          transition: color 0.15s, background 0.15s;
+          gap: 6px; flex-wrap: wrap;
+          margin-top: 22px;
         }
-        .idc-social:hover { color: var(--ink); background: var(--bg-warm); }
+        .idc-mark-btn {
+          display: inline-flex; align-items: center; justify-content: center;
+          width: 36px; height: 36px; border-radius: 999px;
+          color: var(--ink-faint);
+          border: 1px solid transparent;
+          transition: color 0.15s, background 0.15s, border-color 0.15s;
+        }
+        .idc-mark-btn:hover {
+          color: var(--ink);
+          background: var(--bg-warm);
+          border-color: var(--idc-rule);
+        }
 
         /* ── The links, opened ── the same marks in the same place, each with
            the address it stands for beside it. */
@@ -830,7 +920,35 @@ export default function IdentityCard({ stamps, authed = false }) {
           gap: 8px; align-items: center;
         }
         .idc-link-row + .idc-link-row { margin-top: 10px; }
-        .idc-link-mark { display: inline-flex; color: var(--ink-faint); }
+        /* The mark, and the picker sitting invisibly on top of it. */
+        .idc-link-mark {
+          position: relative;
+          display: inline-flex; align-items: center; justify-content: center;
+          width: 22px; height: 22px;
+          color: var(--ink-faint);
+        }
+        .idc-mark-pick {
+          position: absolute; inset: -3px;
+          width: calc(100% + 6px); height: calc(100% + 6px);
+          opacity: 0; cursor: pointer;
+          appearance: none; -webkit-appearance: none;
+          border: 0; padding: 0; background: none;
+        }
+        .idc-link-mark:hover { color: var(--ink); }
+        /* :focus-within, not :has(). The build silently drops :has() rules, so
+           a focus ring written that way is a focus ring that never appears. */
+        .idc-link-mark:focus-within {
+          outline: 2px solid var(--ink-faint); outline-offset: 2px; border-radius: 6px;
+          color: var(--ink);
+        }
+
+        .idc-link-row--rig { margin-top: 14px; }
+        .idc-rig-said {
+          font-family: var(--font-label);
+          font-size: 9px; letter-spacing: 0.09em; text-transform: uppercase;
+          color: var(--ink-faint);
+          align-self: center;
+        }
         .idc-link-input {
           min-width: 0; width: 100%;
           border: 0; padding: 0 0 3px; background: transparent;
@@ -1023,35 +1141,69 @@ export default function IdentityCard({ stamps, authed = false }) {
           </p>
         )}
 
-        <Link href="/submit" className="ln-pill idc-send" inert={editing ? true : undefined}>
-          Send an album
-        </Link>
+        {/* ── One row ──────────────────────────────────────────────────────
+            The thing to do, and every other door on the card as a mark beside
+            it. This was three stacked bands — the button, then a rule and the
+            rig, then the links — for four controls that between them are one
+            action and a handful of addresses. Stacked they read as three
+            sections; in a line they read as a row of buttons, which is what
+            they are, and the card gets a hundred pixels back.
 
-        <div className="idc-rule" />
-
-        {/* The note moved on to the download page and the key is going to sit
-            with the entries it explains, which leaves the rig — and that is
-            optional too: plenty of people listening on whatever they have do
-            not have a rig to describe. */}
-        <div className="idc-doors" inert={editing ? true : undefined}>
-          <Link href="/rig" className="ln-pill">The rig</Link>
+            The rig wears whichever mark its keeper chose, or none at all. */}
+        <div className="idc-row" inert={editing ? true : undefined}>
+          <Link href="/submit" className="ln-pill idc-send">Send an album</Link>
+          {rig.Icon && (
+            <Link href="/rig" className="idc-mark-btn" aria-label={`The rig — ${rig.label.toLowerCase()}`} title="The rig">
+              <rig.Icon size={19} weight="regular" aria-hidden="true" />
+            </Link>
+          )}
+          {!editing && socials.map(({ href, label, Icon }) => (
+            <a
+              key={href}
+              href={href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="idc-mark-btn"
+              aria-label={label}
+              title={label}
+            >
+              <Icon size={19} weight="regular" aria-hidden="true" />
+            </a>
+          ))}
         </div>
 
         {editing ? (
           <div className="idc-links">
             {edit.links.map((link, index) => {
-              const known = link.trim() ? identify(link.trim()) : null;
+              const known = link.url.trim() ? identify(link.url.trim(), link.icon) : null;
               const Icon = known ? known.Icon : LinkSimple;
               return (
                 <div className="idc-link-row" key={index}>
-                  <span className="idc-link-mark" aria-hidden="true">
-                    <Icon size={17} weight="regular" />
+                  {/* The mark is the picker. A native select laid over the icon
+                      rather than a popover grid: it opens the platform's own
+                      wheel on a phone and its own menu on a desktop, both of
+                      which handle twenty options better than anything drawn
+                      here would, and it costs no scrolling inside a card that
+                      is already a scroller. */}
+                  <span className="idc-link-mark">
+                    <Icon size={17} weight="regular" aria-hidden="true" />
+                    <select
+                      className="idc-mark-pick"
+                      value={link.icon || 'auto'}
+                      onChange={e => edit.setLinkIcon(index, e.target.value)}
+                      aria-label={`Mark for link ${index + 1}`}
+                      title="Choose a mark"
+                    >
+                      {LINK_ICONS.map(option => (
+                        <option key={option.name} value={option.name}>{option.label}</option>
+                      ))}
+                    </select>
                   </span>
                   <input
                     className="idc-link-input"
                     type="url"
                     inputMode="url"
-                    value={link}
+                    value={link.url}
                     onChange={e => edit.setLink(index, e.target.value)}
                     placeholder="https://…"
                     aria-label={known ? known.label : `Link ${index + 1}`}
@@ -1067,25 +1219,35 @@ export default function IdentityCard({ stamps, authed = false }) {
                 </div>
               );
             })}
+            {/* The rig, chosen the same way. It sits with the links because it
+                is the same kind of thing: a mark on the row under the button,
+                standing for somewhere else to go. */}
+            <div className="idc-link-row idc-link-row--rig">
+              <span className="idc-link-mark">
+                {rigIcon(edit.rig).Icon
+                  ? (() => { const R = rigIcon(edit.rig).Icon; return <R size={17} weight="regular" aria-hidden="true" />; })()
+                  : <X size={15} weight="bold" aria-hidden="true" />}
+                <select
+                  className="idc-mark-pick"
+                  value={edit.rig || DEFAULT_RIG_ICON}
+                  onChange={e => edit.setRig(e.target.value)}
+                  aria-label="Mark for the rig"
+                  title="Choose a mark for your rig"
+                >
+                  {RIG_ICONS.map(option => (
+                    <option key={option.name} value={option.name}>{option.label}</option>
+                  ))}
+                </select>
+              </span>
+              <span className="idc-rig-said">
+                {rigIcon(edit.rig).Icon ? `The rig — ${rigIcon(edit.rig).label.toLowerCase()}` : 'No rig button'}
+              </span>
+            </div>
+
             <button type="button" className="idc-link-add" onClick={edit.addLink}>
               <Plus size={11} weight="bold" aria-hidden="true" />
               Add a link
             </button>
-          </div>
-        ) : socials.length > 0 ? (
-          <div className="idc-socials">
-            {socials.map(({ href, label, Icon }) => (
-              <a
-                key={href}
-                href={href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="idc-social"
-                aria-label={label}
-              >
-                <Icon size={19} weight="regular" aria-hidden="true" />
-              </a>
-            ))}
           </div>
         ) : null}
 

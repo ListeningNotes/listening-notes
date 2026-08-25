@@ -105,6 +105,8 @@ const BOOKPLATE_FIELDS = [
   // Two percentages. Without it the portrait is drawn centred, which for a
   // photograph of a person is often a picture of their chin.
   'portrait_position',
+  // One short word naming an icon.
+  'rig_icon',
 ];
 
 // Async because the journal's details are read here, once, and handed down —

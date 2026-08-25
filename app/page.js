@@ -405,7 +405,15 @@ export default function HomePage() {
              What is left underneath is not a hole: the recent records sit in
              it, pushed to the bottom of the face by their own auto margin, so
              the space distributes itself however tall the phone is. */
-          .hp-screen--one .idc-face--front { justify-content: flex-start; }
+          /* Down a little from the top. The front sat flush once the beacon
+             came up to meet the card; with the card's three stacked bands
+             collapsed into one row there is room to give both of them some
+             air back, and the card follows on its own — it measures the
+             beacon rather than being told where it is. */
+          .hp-screen--one .idc-face--front {
+            justify-content: flex-start;
+            padding-top: 46px;
+          }
           /* Directly under what is playing, not pushed to the floor. Pinned to
              the bottom it left a two-hundred-pixel hole in the middle of the
              screen, which is the thing this row exists to not be — and sitting
