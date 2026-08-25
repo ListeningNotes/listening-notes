@@ -94,7 +94,10 @@ export function useIdentificationCardEditor(settings) {
   const [posX, setPosX] = useState(50);
   const [posY, setPosY] = useState(50);
   const [portrait, setPortrait] = useState('');
-  const [links, setLinks] = useState([BLANK]);
+  // Each link is an address and the mark it wears. The mark is usually 'auto',
+  // which means the hostname decides — see identify() in IdentityCard.
+  const [links, setLinks] = useState([{ url: BLANK, icon: 'auto' }]);
+  const [rig, setRig] = useState('');
   const [hidden, setHidden] = useState(() => new Set());
 
   // Opening takes a copy. Everything typed after this point is a draft, and
@@ -122,8 +125,14 @@ export function useIdentificationCardEditor(settings) {
     // whole list back and clears the old column, so the same address cannot
     // end up stored in two places disagreeing.
     const stored = Array.isArray(settings.social_links) ? settings.social_links : [];
-    const all = [settings.instagram_url, ...stored].filter(u => typeof u === 'string' && u.trim());
-    setLinks(all.length ? [...new Set(all)] : [BLANK]);
+    const all = [settings.instagram_url, ...stored]
+      // Plain strings from before marks could be chosen, objects since.
+      .map(entry => (typeof entry === 'string' ? { url: entry, icon: 'auto' } : { url: entry?.url || '', icon: entry?.icon || 'auto' }))
+      .filter(l => l.url.trim());
+    const seen = new Set();
+    const unique = all.filter(l => !seen.has(l.url) && seen.add(l.url));
+    setLinks(unique.length ? unique : [{ url: BLANK, icon: 'auto' }]);
+    setRig(settings.rig_icon || '');
     setHidden(new Set(Array.isArray(settings.hidden_fields) ? settings.hidden_fields : []));
     setTrouble(null);
     setEditing(true);
@@ -132,11 +141,14 @@ export function useIdentificationCardEditor(settings) {
   const cancel = useCallback(() => { setEditing(false); setTrouble(null); }, []);
 
   const setLink = useCallback((index, value) => {
-    setLinks(rows => rows.map((row, i) => (i === index ? value : row)));
+    setLinks(rows => rows.map((row, i) => (i === index ? { ...row, url: value } : row)));
   }, []);
-  const addLink = useCallback(() => setLinks(rows => [...rows, BLANK]), []);
+  const setLinkIcon = useCallback((index, icon) => {
+    setLinks(rows => rows.map((row, i) => (i === index ? { ...row, icon } : row)));
+  }, []);
+  const addLink = useCallback(() => setLinks(rows => [...rows, { url: BLANK, icon: 'auto' }]), []);
   const dropLink = useCallback(index => {
-    setLinks(rows => (rows.length === 1 ? [BLANK] : rows.filter((_, i) => i !== index)));
+    setLinks(rows => (rows.length === 1 ? [{ url: BLANK, icon: 'auto' }] : rows.filter((_, i) => i !== index)));
   }, []);
 
   const toggleHidden = useCallback(key => {
@@ -197,7 +209,9 @@ export function useIdentificationCardEditor(settings) {
     // Blank means blank. An empty field is the owner clearing a detail, not
     // leaving it alone, so it is sent rather than skipped — the settings writer
     // turns an empty string into null on the way in.
-    const cleaned = links.map(u => u.trim()).filter(Boolean);
+    const cleaned = links
+      .map(l => ({ url: l.url.trim(), icon: l.icon || 'auto' }))
+      .filter(l => l.url);
     try {
       const res = await fetch('/api/settings', {
         method: 'PATCH',
@@ -209,6 +223,7 @@ export function useIdentificationCardEditor(settings) {
           portrait_position: portrait.trim() ? `${posX.toFixed(1)}% ${posY.toFixed(1)}%` : '',
           portrait_url: portrait.trim(),
           social_links: cleaned.length ? cleaned : null,
+          rig_icon: rig,
           hidden_fields: hidden.size ? [...hidden] : null,
           // Emptied on purpose. Every link lives in one list now; leaving this
           // filled would put Instagram on the card twice the moment someone
@@ -227,7 +242,7 @@ export function useIdentificationCardEditor(settings) {
       setTrouble(error.message);
     }
     setSaving(false);
-  }, [name, bio, sendMe, posX, posY, portrait, links, hidden, router]);
+  }, [name, bio, sendMe, posX, posY, portrait, links, hidden, rig, router]);
 
   return {
     editing, begin, cancel, save, saving, busy, trouble,
@@ -237,7 +252,8 @@ export function useIdentificationCardEditor(settings) {
     posX, posY, setPosX, setPosY,
     position: `${posX}% ${posY}%`,
     portrait,
-    links, setLink, addLink, dropLink,
+    links, setLink, setLinkIcon, addLink, dropLink,
+    rig, setRig,
     hidden, toggleHidden,
     choosePhoto, removePhoto,
   };

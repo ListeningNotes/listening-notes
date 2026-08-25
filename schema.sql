@@ -205,6 +205,13 @@ CREATE TABLE IF NOT EXISTS settings (
   -- for a photograph of a person is often their head. Two percentages, stored
   -- as a CSS object-position: "50% 32%".
   portrait_position text,
+  -- Which mark stands for the way this journal listens. Everybody has a rig of
+  -- some kind and almost nobody has the same one, so the software offers a set
+  -- and the owner picks: headphones, speakers, a turntable, a radio, a phone.
+  -- One name out of a fixed list, or 'none' to leave the button off entirely —
+  -- plenty of people listening on whatever they have would rather not describe
+  -- it. See RIG_ICONS in components/main_components/IdentityCard.js.
+  rig_icon text,
   -- The portrait itself, when its keeper uploaded one rather than pointing at
   -- one. Base64 in a column and served back by /api/portrait, so that adding a
   -- picture from a phone needs no storage bucket, no third-party account and no
