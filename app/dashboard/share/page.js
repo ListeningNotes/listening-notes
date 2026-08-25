@@ -28,6 +28,7 @@ import { fonts } from '../../../library/sitewide_visuals';
 import { sizedAlbumArt } from '../../../library/music_data_api';
 import { parseRating, parseTracksFromNotes } from '../../../library/entry_formatter';
 import PasswordGate from '../../../components/session_components/PasswordGate';
+import { useBookplate } from '../../../components/main_components/Bookplate';
 import backgrounds from '../../../components/session_components/backgrounds';
 
 // The dashboard's shared chrome: one of the album screensavers running behind
@@ -56,15 +57,13 @@ const SHAPES = {
 // multiplied by this unit, so the proportions arrive intact at 1080.
 const CARD_REF_WIDTH = 190;
 
-// What gets printed along the bottom of slide 2. Also the Instagram handle —
-// the account is @listeningnotes.blog — so the line doubles as the account
-// name someone is already looking at.
+// What gets printed along the bottom of slide 2, and what the Story link is
+// built from. It comes from the journal's own details now — this page used to
+// name one address in the source, which meant a copy of this software printed
+// somebody else's on every card it made.
 //
-// The `www.` is NOT tidy-uppable. The bare apex still points at Tumblr
-// (66.6.44.4) and does not even carry a matching certificate, so anyone typing
-// `listeningnotes.blog` off a slide lands nowhere. Only www reaches Vercel.
-// Drop the prefix once DNS moves to Cloudflare and the apex resolves.
-const SITE_ADDRESS = 'www.listeningnotes.blog';
+// A journal with no address set prints nothing there and the copy button says
+// so, rather than falling back to an address that is not theirs.
 
 // viewBox 18. Lifted from StarRating.js so one shape serves the site and the
 // export — a star that drifts between the two is a star nobody trusts.
@@ -450,7 +449,14 @@ export default function SessionShare() {
   const [query, setQuery] = useState('');
   const [shapeKey, setShapeKey] = useState('portrait');
   const [isDark, setIsDark] = useState(false);
-  const [siteUrl, setSiteUrl] = useState(SITE_ADDRESS);
+  const { site_address } = useBookplate();
+
+  // Derived rather than synced. The field shows the journal's own address until
+  // someone types over it, and `typed` staying null is what "untouched" means —
+  // an effect copying the address into state would have to guess when not to,
+  // and would fight anyone typing a one-off address for a single card.
+  const [typed, setTyped] = useState(null);
+  const siteUrl = typed ?? site_address ?? '';
   const [status, setStatus] = useState('');
   const [tainted, setTainted] = useState(false);
   // A screensaver picked once and kept for the visit, exactly as the entries
@@ -557,12 +563,18 @@ export default function SessionShare() {
     return () => { cancelled = true; };
   }, [selected, shape, isDark, siteUrl]);
 
-  // The link a Story sticker wants. Built from SITE_ADDRESS rather than
-  // window.location on purpose: this page is used on the dev server, and a
-  // localhost URL pasted into Instagram is worse than useless.
+  // The link a Story sticker wants. Built from the journal's stored address
+  // rather than window.location on purpose: this page is used on the dev
+  // server, and a localhost URL pasted into Instagram is worse than useless.
+  // With no address set there is no link worth copying, so it says that
+  // instead of handing over something broken.
   const copyLink = useCallback(async () => {
     if (!selected) return;
-    const url = `https://${SITE_ADDRESS}/entries/${selected.slug}`;
+    if (!site_address) {
+      setStatus('Set your journal’s address in settings first.');
+      return;
+    }
+    const url = `https://${site_address}/entries/${selected.slug}`;
     try {
       await navigator.clipboard.writeText(url);
       setCopied(true);
@@ -572,7 +584,7 @@ export default function SessionShare() {
       // Showing the URL is still better than swallowing it.
       setStatus(url);
     }
-  }, [selected]);
+  }, [selected, site_address]);
 
   const download = useCallback((ref, suffix) => {
     const canvas = ref.current;
@@ -725,7 +737,7 @@ export default function SessionShare() {
                   <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
                     <span style={label}>Address</span>
                     <input className="sh-field" value={siteUrl} placeholder="blank for none"
-                      onChange={e => setSiteUrl(e.target.value)} style={{ width: 178 }} />
+                      onChange={e => setTyped(e.target.value)} style={{ width: 178 }} />
                   </div>
                 </div>
 
