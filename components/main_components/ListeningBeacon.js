@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useRef, useState } from 'react';
 import { useListeningBeacon } from '../../hooks/useListeningBeacon';
+import { useBookplate } from './Bookplate';
 
 const MARQUEE_SPEED = 18;   // px/sec — slow, readable scroll pace
 const MARQUEE_GAP = 48;     // px between the trailing copy and the next lap's leading copy
@@ -86,12 +87,16 @@ export default function ListeningBeacon({ compact = false, statusAboveArt = fals
   const [recentStack, setRecentStack] = useState([]);
   const prevTrack = useRef(null);
   const prevArtRef = useRef('');
+  const { lastfm_user } = useBookplate();
 
   // Pull recent tracks from last.fm and keep the last few past listens.
   useEffect(() => {
+    // No account, nothing to pull — and no endless failing poll behind it.
+    // recentStack is already empty for the same reason.
+    if (!lastfm_user) return;
     async function fetchRecent() {
       try {
-        const res = await fetch('https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=listeningnotes&api_key=f022ca293645cd4cf2beeb3be7ae4b6f&limit=6&format=json');
+        const res = await fetch(`https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${encodeURIComponent(lastfm_user)}&api_key=f022ca293645cd4cf2beeb3be7ae4b6f&limit=6&format=json`);
         const data = await res.json();
         const tracks = data?.recenttracks?.track || [];
         const nowPlaying = tracks.find(t => t['@attr']?.nowplaying);
@@ -109,7 +114,7 @@ export default function ListeningBeacon({ compact = false, statusAboveArt = fals
     fetchRecent();
     const interval = setInterval(fetchRecent, 30000);
     return () => clearInterval(interval);
-  }, []);
+  }, [lastfm_user]);
 
   // When the current track changes, push the previous one onto the recent stack.
   useEffect(() => {

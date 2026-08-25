@@ -72,7 +72,8 @@ export default function EchoPage() {
   const inputRef = useRef(null);
 
   // Confirm flow — two sequential questions before research fires
-  const [confirmPhase, setConfirmPhase] = useState(null); // null | 'q1' | 'q2'
+  const [confirmPhase, setConfirmPhase] = useState(null); // null | 'q2' — q1 asked
+                                                          // for a relationship, which nothing picks any more
   const [pendingAlbum, setPendingAlbum] = useState(null);
 
   // Held here so they're available at the moment handleAlbumSelect fires
@@ -113,7 +114,7 @@ export default function EchoPage() {
       setPendingAlbum({ album, artist, year, artUrl, artLarge, collectionId, genre });
       setRelationship('');
       setEntryType('');
-      setConfirmPhase('q1');
+      setConfirmPhase('q2');
       // Research needs nothing but the album and artist, so start it here and
       // let it run through the two questions and the loading animation.
       handOff(album, artist);
@@ -547,7 +548,6 @@ export default function EchoPage() {
           confirmPhase={confirmPhase}
           onPhaseChange={setConfirmPhase}
           onConfirm={handleAlbumSelect}
-          setRelationship={setRelationship}
           setEntryType={setEntryType}
         />
       )}

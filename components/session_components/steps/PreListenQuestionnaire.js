@@ -7,7 +7,6 @@ export default function PreListenQuestionnaire({
   confirmPhase,
   onPhaseChange,
   onConfirm,
-  setRelationship,
   setEntryType,
 }) {
   const art = pendingAlbum?.artUrl;
@@ -15,9 +14,13 @@ export default function PreListenQuestionnaire({
     ? `${pendingAlbum.album}${pendingAlbum.year ? ` · ${pendingAlbum.year}` : ''}`
     : '';
 
-  const question = confirmPhase === 'q1'
-    ? "What's your relationship with this album?"
-    : "Where's it from?";
+  // There used to be two questions here, and the first asked what your
+  // relationship with the album was — first listen, revisit, formative, study.
+  // Every one of those is now answered without asking: the listen number knows
+  // whether this is the first time, and formative became a flag on the record
+  // rather than a description of one occasion. So the session opens on what is
+  // still a real question.
+  const question = "Where's it from?";
 
   const [typedText, setTypedText]     = useState('');
   const [typingDone, setTypingDone]   = useState(false);
@@ -74,17 +77,10 @@ export default function PreListenQuestionnaire({
   // state and calling the parent in the same breath meant the parent read the
   // value from before the click — which is why every session came out as
   // Library no matter which button was pressed.
-  const buttons = confirmPhase === 'q1'
-    ? [
-        { label: 'First listen', action: () => { setRelationship('First Listen'); onPhaseChange('q2'); } },
-        { label: 'Revisit',      action: () => { setRelationship('Revisit');      onPhaseChange('q2'); } },
-        { label: 'Formative',    action: () => { setRelationship('Formative');    onPhaseChange('q2'); } },
-        { label: 'Study',        action: () => { setRelationship('Study');        onPhaseChange('q2'); } },
-      ]
-    : [
-        { label: 'Personal collection', action: () => { setEntryType('Personal Library'); onConfirm(pendingAlbum, { entryType: 'Personal Library' }); } },
-        { label: 'Submission',          action: () => { setEntryType('Submission');       onConfirm(pendingAlbum, { entryType: 'Submission' }); } },
-      ];
+  const buttons = [
+    { label: 'Personal collection', action: () => { setEntryType('Personal Library'); onConfirm(pendingAlbum, { entryType: 'Personal Library' }); } },
+    { label: 'Submission',          action: () => { setEntryType('Submission');       onConfirm(pendingAlbum, { entryType: 'Submission' }); } },
+  ];
 
   return (
     <>
@@ -96,9 +92,9 @@ export default function PreListenQuestionnaire({
         @keyframes echo-cursor-blink { 0%,49%{opacity:1} 50%,100%{opacity:0} }
       `}</style>
 
-      <button onClick={() => onPhaseChange(confirmPhase === 'q1' ? null : 'q1')} style={topBackBtn}>← back</button>
+      <button onClick={() => onPhaseChange(null)} style={topBackBtn}>← back</button>
 
-      <div onClick={() => onPhaseChange(confirmPhase === 'q1' ? null : 'q1')} style={{ position: 'fixed', inset: 0, zIndex: 6, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 24px', cursor: 'default' }}>
+      <div onClick={() => onPhaseChange(null)} style={{ position: 'fixed', inset: 0, zIndex: 6, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 24px', cursor: 'default' }}>
 
         {/* Glowing album art */}
         {art && (

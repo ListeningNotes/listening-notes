@@ -75,6 +75,16 @@ export async function pull_pending_comments() {
   `;
 }
 
+// Just the number, for the cover. Counting in the database rather than
+// pulling every row and measuring the array — the cover asks on every visit
+// and has no use for the contents.
+export async function count_pending_comments() {
+  const [row] = await database`
+    SELECT COUNT(*)::int AS n FROM comments WHERE pending = true
+  `;
+  return row?.n ?? 0;
+}
+
 export async function approve_comment(id) {
   const result = await database`
     UPDATE comments SET pending = false

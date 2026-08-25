@@ -9,18 +9,34 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useBookplate } from '../components/main_components/Bookplate';
 
 // ── CONFIGURATION ──────────────────────────────────────────────────────────
-const LASTFM_USER = 'listeningnotes';
+// The account is no longer named here — it comes from the journal's own
+// details, so a copy watches its owner's listening rather than this one's.
+// A journal with no Last.fm simply has no beacon, which is a supported answer
+// and not a broken one.
+//
+// The key is still shared. It is read-only and public by design, but every
+// copy hitting Last.fm with the same one shares a rate limit, so this wants
+// moving into the settings drawer too before copies go out.
 const LASTFM_API_KEY = 'f022ca293645cd4cf2beeb3be7ae4b6f'; // read-only, intentionally public
 const REFRESH_MS = 15000;  // poll Last.fm every 15 seconds
 const LIVE_TIMEOUT = 8000; // treat a track as "still live" for 8 seconds after it stops reporting
 
 export function useListeningBeacon() {
+  const { lastfm_user } = useBookplate();
   const [track, setTrack] = useState(null);   // the track object to display
   const [isLive, setIsLive] = useState(false); // whether something is actively playing
 
   useEffect(() => {
+    // No account, no polling. Returning early rather than fetching a URL with
+    // an empty user in it, which Last.fm answers with an error every 15
+    // seconds forever. Nothing needs clearing on the way out: track and isLive
+    // still hold their initial empty values, because without an account there
+    // was never a poll to fill them.
+    if (!lastfm_user) return;
+
     // These are local to the effect so they persist across polls without causing re-renders.
     // Using refs here instead of state prevents unnecessary re-renders on every poll.
     let lastLiveTimestamp = null; // when we last saw a nowplaying track
@@ -31,7 +47,7 @@ export function useListeningBeacon() {
       try {
         // Fetch the most recent track for the account.
         // limit=1 means we only get the single most recent scrobble.
-        const url = `https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${LASTFM_USER}&api_key=${LASTFM_API_KEY}&limit=1&format=json`;
+        const url = `https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${encodeURIComponent(lastfm_user)}&api_key=${LASTFM_API_KEY}&limit=1&format=json`;
         const res = await fetch(url);
         const data = await res.json();
         const t = data?.recenttracks?.track?.[0];
@@ -76,7 +92,7 @@ export function useListeningBeacon() {
     fetch_(); // run immediately on mount
     interval = setInterval(fetch_, REFRESH_MS); // then poll every 15 seconds
     return () => clearInterval(interval); // cleanup when the component unmounts
-  }, []);
+  }, [lastfm_user]);
 
   return { track, isLive };
 }
