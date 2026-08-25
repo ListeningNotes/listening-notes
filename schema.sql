@@ -183,6 +183,24 @@ CREATE TABLE IF NOT EXISTS settings (
   -- falls back to a plain link mark for anything it doesn't recognise.
   --   ["https://instagram.com/name", "https://reddit.com/u/name"]
   social_links jsonb,
+  -- Which of the card's counted rows its keeper would rather not show. They
+  -- are read off the entries and can never be typed over — a journal that can
+  -- be told how many records it has is a journal whose numbers mean nothing —
+  -- but not everyone wants to publish how new they are or how few they have
+  -- logged, so they can be left off. A list of keys: ["since", "albums"].
+  hidden_fields jsonb,
+  -- The portrait itself, when its keeper uploaded one rather than pointing at
+  -- one. Base64 in a column and served back by /api/portrait, so that adding a
+  -- picture from a phone needs no storage bucket, no third-party account and no
+  -- dependency — a copy of this software already has a database and that is all
+  -- this asks for. Downscaled in the browser before it is sent, so this holds
+  -- something like a hundred kilobytes rather than a camera's worth.
+  --
+  -- Deliberately never handed to the page: portrait_url carries the short path
+  -- and this carries the bytes, so a portrait does not end up inlined into the
+  -- HTML of every page on the site.
+  portrait_data text,
+  portrait_mime text,
   -- Only what the owner has rewritten. Anything untouched is absent and falls
   -- back to the text shipped in library/definitions.js, so a copy that never
   -- edits its definitions stores nothing at all.

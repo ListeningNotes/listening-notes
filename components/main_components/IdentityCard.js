@@ -183,6 +183,7 @@ export default function IdentityCard({ stamps, authed = false }) {
     founded_at,
     about_intro,
     social_links,
+    hidden_fields,
     has_note: hasNote,
   } = settings;
   const { isLive } = useListeningBeacon();
@@ -191,6 +192,12 @@ export default function IdentityCard({ stamps, authed = false }) {
   const [editing, setEditing] = useState(false);
 
   const records = stamps?.records ?? null;
+
+  // Rows the keeper would rather not publish. They can never be edited — these
+  // are counted off the entries — but not everyone wants to say how new they
+  // are or how few they have logged, and a number you cannot take off the card
+  // is a number that stops people keeping one.
+  const hiding = Array.isArray(hidden_fields) ? hidden_fields : [];
 
   // Founded date if the keeper set one, otherwise the day the first record was
   // logged. The second is the more honest answer anyway: a listening journal
@@ -499,7 +506,11 @@ export default function IdentityCard({ stamps, authed = false }) {
            subject; in the form it is a proof that the address you pasted is a
            picture, and proving that does not take 200 pixels — the room goes to
            the fields instead, which is what lands Save above the fold. */
-        .idc-inner--editing .idc-portrait { width: 116px; cursor: default; }
+        .idc-inner--editing .idc-portrait { width: 98px; cursor: default; }
+        /* The form's own rhythm is tighter than the card's. A card is read and
+           wants air between its parts; a form is worked through and wants its
+           next field where the last one left off. */
+        .idc-inner--editing .idc-rule { margin: 12px 0; }
 
         .idc-doors { display: flex; flex-wrap: wrap; gap: 7px; justify-content: center; }
         .idc-doors .ln-pill { padding: 8px 15px; font-size: 9px; letter-spacing: 0.11em; }
@@ -628,11 +639,19 @@ export default function IdentityCard({ stamps, authed = false }) {
           <dt className="idc-field-label">Name:</dt>
           <dd className="idc-field-value">{keeper_name}</dd>
 
-          <dt className="idc-field-label">Est:</dt>
-          <dd className="idc-field-value">{since}</dd>
+          {!hiding.includes('since') && (
+            <>
+              <dt className="idc-field-label">Keeping since:</dt>
+              <dd className="idc-field-value">{since}</dd>
+            </>
+          )}
 
-          <dt className="idc-field-label">Albums logged:</dt>
-          <dd className="idc-field-value">{records == null ? null : records}</dd>
+          {!hiding.includes('albums') && (
+            <>
+              <dt className="idc-field-label">Albums logged:</dt>
+              <dd className="idc-field-value">{records == null ? null : records}</dd>
+            </>
+          )}
         </dl>
 
         {blurb && (
