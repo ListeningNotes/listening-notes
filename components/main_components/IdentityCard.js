@@ -772,8 +772,12 @@ export default function IdentityCard({ stamps, authed = false }) {
           font-size: 8.5px; letter-spacing: 0.1em; text-transform: uppercase;
           color: var(--ink-faint);
         }
-        .idc-line-value { min-width: 0; color: var(--ink-soft); }
-        .idc-ask .idc-line-value { color: var(--ink); }
+        /* One colour for both answers. They were set a step apart — the
+           genres soft, the request full — which read as one of the two being
+           less finished than the other rather than as a deliberate hierarchy.
+           The labels beside them are already doing the quietening; the answers
+           are the content and they weigh the same. */
+        .idc-line-value { min-width: 0; color: var(--ink); }
         .idc-ask-input {
           flex: 1; min-width: 0;
           border: 0; padding: 0 0 3px; background: transparent;
