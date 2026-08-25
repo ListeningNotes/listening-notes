@@ -20,7 +20,7 @@
 // none of this renders for a reader, so the markup a visitor receives does not
 // contain it.
 
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 // The counted rows: hideable, never writable. A journal that can be told how
@@ -74,6 +74,34 @@ async function shrink(file) {
     reader.onerror = () => reject(new Error('unreadable'));
     reader.readAsDataURL(blob);
   });
+}
+
+// ── Holding the page still while a field is open ────────────────────────
+// iOS Safari zooms the whole page in whenever you focus a field whose text is
+// under 16px. globals.css answers that by forcing every field on a phone up to
+// 16px, which is the right answer for a form and the wrong one for this card:
+// the card's writing is smaller than that, so the fields grew, the name shrank,
+// and the whole thing resized itself around whatever you were typing into.
+//
+// The other way to stop the zoom is to tell the page it may not scale. Done
+// site-wide that is an accessibility regression — somebody who needs to pinch
+// in can no longer do it anywhere. Done for the length of one edit, by the one
+// person who keeps the journal, it costs nothing and buys the card its own type
+// sizes back.
+//
+// Whatever Next rendered into the tag is kept and put back, rather than a
+// hardcoded string that would quietly drop viewport-fit and unpad the notch.
+let parkedViewport = null;
+
+function holdZoom(hold) {
+  const meta = document.querySelector('meta[name="viewport"]');
+  if (!meta) return;
+  if (hold) {
+    if (parkedViewport === null) parkedViewport = meta.getAttribute('content') || '';
+    meta.setAttribute('content', `${parkedViewport}, maximum-scale=1`);
+  } else if (parkedViewport !== null) {
+    meta.setAttribute('content', parkedViewport);
+  }
 }
 
 // A blank row to type into. Never saved — see save().
@@ -135,10 +163,20 @@ export function useIdentificationCardEditor(settings) {
     setRig(settings.rig_icon || '');
     setHidden(new Set(Array.isArray(settings.hidden_fields) ? settings.hidden_fields : []));
     setTrouble(null);
+    holdZoom(true);
     setEditing(true);
   }, [settings]);
 
-  const cancel = useCallback(() => { setEditing(false); setTrouble(null); }, []);
+  const cancel = useCallback(() => {
+    holdZoom(false);
+    setEditing(false);
+    setTrouble(null);
+  }, []);
+
+  // Whatever happens — a flip away mid-sentence, a navigation, a reload — the
+  // page gets its zoom back. A viewport left locked because a component went
+  // away is a bug somebody would never trace to this file.
+  useEffect(() => () => holdZoom(false), []);
 
   const setLink = useCallback((index, value) => {
     setLinks(rows => rows.map((row, i) => (i === index ? { ...row, url: value } : row)));
@@ -237,6 +275,7 @@ export function useIdentificationCardEditor(settings) {
       // component — so the new values arrive by asking the server to render
       // again, not by pushing them into a context from here.
       router.refresh();
+      holdZoom(false);
       setEditing(false);
     } catch (error) {
       setTrouble(error.message);
