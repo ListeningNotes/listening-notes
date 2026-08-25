@@ -10,7 +10,6 @@ import SiteNav from '../components/main_components/SiteNav';
 import ListeningBeacon from '../components/main_components/ListeningBeacon';
 import AlbumStrip from '../components/main_components/AlbumStrip';
 import IdentityCard from '../components/main_components/IdentityCard';
-import { useBookplate } from '../components/main_components/Bookplate';
 
 function ScrollButton({ onClick, direction = 'down' }) {
   return (
@@ -38,7 +37,6 @@ function FlipButton({ onClick, children }) {
 export default function HomePage() {
   const { theme, toggle: toggleTheme } = useTheme();
   const { isLive } = useListeningBeacon();
-  const { instagram_url } = useBookplate();
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
   // Whether the person looking at this is the person who writes it. Not a
@@ -372,16 +370,11 @@ export default function HomePage() {
         }
       `}</style>
 
+      {/* Instagram used to sit here, and again in the row at the foot of the
+          phone's first screen. It lives on the back of the card now, with every
+          other place its keeper can be found — one row of marks in one place
+          beats the same link pinned to the corner of the cover as well. */}
       <div className="hp-corner">
-        {instagram_url && <a
-          href={instagram_url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="hp-icon-btn"
-          aria-label="Instagram"
-        >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.5" fill="currentColor" stroke="none"/></svg>
-        </a>}
         <button className="hp-icon-btn" onClick={toggleTheme} aria-label="Toggle theme">
           {theme === 'dark' ? (
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
@@ -438,15 +431,6 @@ export default function HomePage() {
             </div>
           </div>
           <div className="hp-screen-one-controls">
-            {instagram_url && <a
-              href={instagram_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hp-icon-btn"
-              aria-label="Instagram"
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.5" fill="currentColor" stroke="none"/></svg>
-            </a>}
             <ScrollButton onClick={scrollToScreenTwo} />
             <button className="hp-icon-btn" onClick={toggleTheme} aria-label="Toggle theme">
               {theme === 'dark' ? (

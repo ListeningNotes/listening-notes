@@ -26,9 +26,108 @@ import {
   LinkSimple, LinkedinLogo, MediumLogo, QrCode, RedditLogo, SoundcloudLogo,
   SpotifyLogo, ThreadsLogo, TiktokLogo, TwitchLogo, User, XLogo, YoutubeLogo,
 } from '@phosphor-icons/react';
-import qrcode from 'qrcode-generator';
+import QRCode from 'qrcode';
 import { useListeningBeacon } from '../../hooks/useListeningBeacon';
 import { useBookplate } from './Bookplate';
+
+// ── The Ln. mark ──────────────────────────────────────────────────────────
+// Drawn once, used twice: at the top of the column, and knocked into the middle
+// of the code. Both need the same glyphs at different sizes and in different
+// colours, and a mark that drifts between the two places is a mark nobody
+// trusts.
+const MARK_BOX = { x: 76, y: 96, w: 241, h: 140 };
+const MARK_GLYPHS = [
+  { d: 'M 44.65625 0 C 37.46875 0 31.160156 -1.601562 25.734375 -4.8125 C 20.304688 -8.019531 16.097656 -12.28125 13.109375 -17.59375 C 10.128906 -22.90625 8.640625 -28.773438 8.640625 -35.203125 L 8.640625 -116.21875 L 36.53125 -116.21875 L 36.53125 -33.203125 C 36.53125 -30.546875 37.46875 -28.222656 39.34375 -26.234375 C 41.226562 -24.242188 43.550781 -23.25 46.3125 -23.25 L 77.03125 -23.25 L 77.03125 0 Z M 44.65625 0 ', transform: 'translate(73.734177, 220.794814)' },
+  { d: 'M 91.96875 2 C 85 2 78.742188 0.476562 73.203125 -2.5625 C 67.671875 -5.613281 63.300781 -9.847656 60.09375 -15.265625 C 56.882812 -20.691406 55.28125 -26.835938 55.28125 -33.703125 L 55.28125 -84.5 C 55.28125 -86.269531 54.835938 -87.875 53.953125 -89.3125 C 53.066406 -90.75 51.90625 -91.910156 50.46875 -92.796875 C 49.03125 -93.679688 47.425781 -94.125 45.65625 -94.125 C 43.882812 -94.125 42.28125 -93.679688 40.84375 -92.796875 C 39.40625 -91.910156 38.269531 -90.75 37.4375 -89.3125 C 36.601562 -87.875 36.1875 -86.269531 36.1875 -84.5 L 36.1875 0 L 8.96875 0 L 8.96875 -82.515625 C 8.96875 -89.484375 10.539062 -95.625 13.6875 -100.9375 C 16.84375 -106.25 21.21875 -110.453125 26.8125 -113.546875 C 32.40625 -116.648438 38.6875 -118.203125 45.65625 -118.203125 C 52.738281 -118.203125 59.046875 -116.648438 64.578125 -113.546875 C 70.109375 -110.453125 74.476562 -106.25 77.6875 -100.9375 C 80.90625 -95.625 82.515625 -89.484375 82.515625 -82.515625 L 82.515625 -31.703125 C 82.515625 -29.929688 82.957031 -28.300781 83.84375 -26.8125 C 84.726562 -25.320312 85.859375 -24.160156 87.234375 -23.328125 C 88.617188 -22.492188 90.144531 -22.078125 91.8125 -22.078125 C 93.582031 -22.078125 95.210938 -22.492188 96.703125 -23.328125 C 98.203125 -24.160156 99.394531 -25.320312 100.28125 -26.8125 C 101.164062 -28.300781 101.609375 -29.929688 101.609375 -31.703125 L 101.609375 -116.21875 L 128.65625 -116.21875 L 128.65625 -33.703125 C 128.65625 -26.835938 127.050781 -20.691406 123.84375 -15.265625 C 120.632812 -9.847656 116.265625 -5.613281 110.734375 -2.5625 C 105.203125 0.476562 98.945312 2 91.96875 2 Z M 91.96875 2 ', transform: 'translate(153.915942, 220.794814)' },
+];
+// The period. It is the one part of the mark that carries a state — lit while
+// something is playing — everywhere except inside the code, which is printed in
+// one ink and has to stay that way to decode.
+const MARK_DOT = { cx: 297.0547, cy: 216.71875, r: 14.1328 };
+
+// ── The code ──────────────────────────────────────────────────────────────
+// Every number here was arrived at by scanning the thing rather than by looking
+// at it, and none of them should move without scanning it again.
+//
+// Version 10 is far larger than this much text needs. It is not carrying the
+// URL, it is carrying the redundancy: correction level H, plus a hole punched
+// in the middle for the mark, costs about a fifth of the code, and a smaller
+// version has nowhere near that much to give away.
+const CODE_VERSION = 10;
+const CODE_SIZE = 57;      // modules across, fixed by the version
+const CODE_QUIET = 4;      // modules of margin, on all four sides
+const MODULE = 0.94;       // a module is drawn slightly under its own cell
+const MODULE_R = 0.34;
+// Fixed, and deliberately not theme-aware. A camera looks for dark on light,
+// and inverting the code for a dark page asks every scanner in the world to be
+// one of the ones that cope. The plate stays paper-coloured on both themes.
+const CODE_INK = '#191917';
+const CODE_PAPER = '#f5f4ef';
+
+// The hole for the mark: a share of the code's area at the mark's own
+// proportions, rounded onto the module grid so it takes whole modules rather
+// than clipping the edge of a row.
+const KNOCK_H = Math.round(Math.sqrt((0.18 * CODE_SIZE * CODE_SIZE) / 1.78));
+const KNOCK_W = Math.round(KNOCK_H * 1.78);
+const KNOCK_X = Math.round((CODE_SIZE - KNOCK_W) / 2);
+const KNOCK_Y = Math.round((CODE_SIZE - KNOCK_H) / 2);
+
+// The mark, scaled to sit inside that hole with a little air around it.
+const MARK_SCALE = (KNOCK_W - 1.2) / MARK_BOX.w;
+const MARK_TRANSFORM = [
+  `translate(${KNOCK_X + (KNOCK_W - MARK_BOX.w * MARK_SCALE) / 2} ${KNOCK_Y + (KNOCK_H - MARK_BOX.h * MARK_SCALE) / 2})`,
+  `scale(${MARK_SCALE})`,
+  `translate(${-MARK_BOX.x} ${-MARK_BOX.y})`,
+].join(' ');
+
+// The three corner squares. A scanner finds these before it decodes anything,
+// so unlike every other module they are drawn hard-edged: rounding them does
+// not soften the look, it stops the code being found at all.
+const FINDERS = [[0, 0], [CODE_SIZE - 7, 0], [0, CODE_SIZE - 7]];
+
+// One rounded module, as a path fragment. Everything after the opening move is
+// identical for all of them, so it is built once rather than formatted a couple
+// of thousand times — the string adds up.
+const MODULE_TAIL = (() => {
+  const straight = (MODULE - 2 * MODULE_R).toFixed(2);
+  const r = MODULE_R;
+  const arc = (dx, dy) => `a${r} ${r} 0 0 1 ${dx} ${dy}`;
+  return `h${straight}${arc(r, r)}v${straight}${arc(-r, r)}h-${straight}${arc(-r, -r)}v-${straight}${arc(r, -r)}z`;
+})();
+
+// Built once per address, at module scope. The two cards on the landing page —
+// the desktop markup and the mobile markup — are separate trees asking for the
+// same code, and an address only changes if its owner moves house.
+const CODE_CACHE = new Map();
+
+function buildCode(url) {
+  if (CODE_CACHE.has(url)) return CODE_CACHE.get(url);
+  let built = null;
+  try {
+    const { modules } = QRCode.create(url, { errorCorrectionLevel: 'H', version: CODE_VERSION });
+    const inFinder = (col, row) =>
+      FINDERS.some(([fx, fy]) => col >= fx && col < fx + 7 && row >= fy && row < fy + 7);
+    const inKnockout = (col, row) =>
+      col >= KNOCK_X && col < KNOCK_X + KNOCK_W && row >= KNOCK_Y && row < KNOCK_Y + KNOCK_H;
+
+    const inset = (1 - MODULE) / 2;
+    let d = '';
+    for (let row = 0; row < modules.size; row++) {
+      for (let col = 0; col < modules.size; col++) {
+        if (!modules.data[row * modules.size + col]) continue;
+        if (inFinder(col, row) || inKnockout(col, row)) continue;
+        d += `M${col + inset + MODULE_R} ${row + inset}${MODULE_TAIL}`;
+      }
+    }
+    built = d;
+  } catch {
+    // Longer than version 10 will hold, most likely. A card with no code on it
+    // is still a card; a card that throws while rendering is a blank page.
+    built = null;
+  }
+  CODE_CACHE.set(url, built);
+  return built;
+}
 
 // A month and a year, never a day. The card says how long the journal has been
 // kept, and a precise date invites arithmetic that isn't the point. UTC because
@@ -81,40 +180,46 @@ function identify(url) {
 
 // The address, as the thing you point a phone at.
 //
-// Drawn as one <path> of black squares rather than a grid of rects: a 29-module
-// code is 841 elements, and at this size the browser spends longer laying them
-// out than it does drawing them. currentColor rather than black, so the code
-// inverts with the rest of the page and stays scannable in the dark — readers
-// scan for contrast, not for colour.
+// Drawn by hand from the module matrix rather than handed to a hosted code
+// service: a service would mean every journal running this software quietly
+// telling a third party what its address is, every time somebody opened the
+// card. The matrix is computed here and the shape of it is ours.
 function AddressCode({ text }) {
-  const path = useMemo(() => {
-    try {
-      const qr = qrcode(0, 'M');
-      qr.addData(text);
-      qr.make();
-      const n = qr.getModuleCount();
-      let d = '';
-      for (let row = 0; row < n; row++) {
-        for (let col = 0; col < n; col++) {
-          if (qr.isDark(row, col)) d += `M${col} ${row}h1v1h-1z`;
-        }
-      }
-      return { d, n };
-    } catch {
-      return null; // too much data for the version chosen — draw nothing
-    }
-  }, [text]);
+  const modules = useMemo(() => buildCode(text), [text]);
+  if (!modules) return null;
 
-  if (!path) return null;
+  const span = CODE_SIZE + CODE_QUIET * 2;
   return (
     <svg
       className="idc-qr"
-      viewBox={`-2 -2 ${path.n + 4} ${path.n + 4}`}
-      shapeRendering="crispEdges"
+      viewBox={`${-CODE_QUIET} ${-CODE_QUIET} ${span} ${span}`}
       role="img"
-      aria-label={`QR code for ${text}`}
+      aria-label={`Scannable code for ${text}`}
     >
-      <path d={path.d} fill="currentColor" />
+      {/* The quiet zone is part of the code, not padding around it — a scanner
+          needs the clear margin to find the edges. Painting it here means the
+          code carries its own margin wherever the box puts it. */}
+      <rect x={-CODE_QUIET} y={-CODE_QUIET} width={span} height={span} fill={CODE_PAPER} />
+      <g fill={CODE_INK}>
+        <path d={modules} />
+        {FINDERS.map(([fx, fy]) => (
+          <g key={`${fx}-${fy}`}>
+            {/* A ring, cut as one path with the even-odd rule, and a solid
+                centre. Both hard-edged — see the note on FINDERS. */}
+            <path d={`M${fx} ${fy}h7v7h-7z M${fx + 1} ${fy + 1}v5h5v-5z`} fillRule="evenodd" />
+            <rect x={fx + 2} y={fy + 2} width="3" height="3" rx="0.6" />
+          </g>
+        ))}
+        {/* The mark, in the hole those modules were skipped for. One ink, and
+            the period is not lit here: a code is read for contrast, and a green
+            dot in the middle of it is a hole a scanner has to correct around. */}
+        <g transform={MARK_TRANSFORM}>
+          {MARK_GLYPHS.map(glyph => (
+            <path key={glyph.transform} d={glyph.d} transform={glyph.transform} />
+          ))}
+          <circle cx={MARK_DOT.cx} cy={MARK_DOT.cy} r={MARK_DOT.r} />
+        </g>
+      </g>
     </svg>
   );
 }
@@ -330,8 +435,11 @@ export default function IdentityCard({ stamps, onFlipBack }) {
           pointer-events: none;
         }
         .idc-face-slot--on { opacity: 1; }
-        .idc-face-slot--code { background: var(--bg-warm); padding: 13%; }
-        .idc-face-slot .idc-qr { width: 100%; height: auto; }
+        /* The code paints its own quiet zone, so it wants the whole width of
+           the box rather than padding around it, and the box behind it takes
+           the code's own paper colour so the two read as one plate. */
+        .idc-face-slot--code { background: ${CODE_PAPER}; }
+        .idc-face-slot .idc-qr { width: 100%; height: auto; display: block; }
 
         /* No portrait set. Registration corners rather than a grey box with a
            person-shaped icon in it — this is a frame waiting for a photo and it
@@ -370,19 +478,42 @@ export default function IdentityCard({ stamps, onFlipBack }) {
           margin: 12px 0 0;
         }
 
-        /* ── The two numbers ── label over value, side by side. The only place
-           on the card where anything sits next to anything else. */
-        .idc-counts { display: flex; gap: 34px; justify-content: center; }
-        .idc-count-label {
-          display: block;
-          font-family: var(--font-label);
-          font-size: 8.5px; letter-spacing: 0.15em; text-transform: uppercase;
-          color: var(--ink-faint);
-          margin-bottom: 6px;
+        /* ── The filled-in rows ── one grid rather than three, so every answer
+           starts at the same place down the card no matter how long its label
+           is. Left-ranged as a block and the block centred: a form reads down
+           its own left edge, and centring the rows individually would give it
+           three of them. */
+        .idc-fields {
+          display: grid;
+          grid-template-columns: auto 1fr;
+          column-gap: 12px;
+          row-gap: 11px;
+          align-items: baseline;
+          width: 100%;
+          max-width: 292px;
+          margin: 0 auto;
+          text-align: left;
         }
-        .idc-count-value {
+        .idc-field-label {
           font-family: var(--font-label);
-          font-size: 13px; letter-spacing: 0.02em; color: var(--ink);
+          font-size: 9px; letter-spacing: 0.11em; text-transform: uppercase;
+          color: var(--ink-faint);
+          white-space: nowrap;
+        }
+        /* The answer sits on its own rule, which is drawn whether or not there
+           is an answer on it yet. Dotted rather than solid, at the same rhythm
+           as the dividers between blocks. */
+        .idc-field-value {
+          margin: 0;
+          min-height: 15px;
+          padding-bottom: 4px;
+          font-family: var(--font-label);
+          font-size: 12.5px; letter-spacing: 0.02em; color: var(--ink);
+          word-break: break-word;
+          background-image: linear-gradient(to right, var(--idc-rule) 0 2px, transparent 2px 5px);
+          background-size: 5px 1px;
+          background-position: left bottom;
+          background-repeat: repeat-x;
         }
 
         /* Left-ranged inside a centred block. Everything else on the card is
@@ -455,10 +586,21 @@ export default function IdentityCard({ stamps, onFlipBack }) {
         {/* The site's own mark, with the live dot on its period — the same SVG
             and the same class the cover uses, so the two sides of the page
             report the same thing rather than each deciding for themselves. */}
-        <svg viewBox="76 96 241 140" className="idc-mark" xmlns="http://www.w3.org/2000/svg" role="img" aria-label={journal_name}>
-          <path d="M 44.65625 0 C 37.46875 0 31.160156 -1.601562 25.734375 -4.8125 C 20.304688 -8.019531 16.097656 -12.28125 13.109375 -17.59375 C 10.128906 -22.90625 8.640625 -28.773438 8.640625 -35.203125 L 8.640625 -116.21875 L 36.53125 -116.21875 L 36.53125 -33.203125 C 36.53125 -30.546875 37.46875 -28.222656 39.34375 -26.234375 C 41.226562 -24.242188 43.550781 -23.25 46.3125 -23.25 L 77.03125 -23.25 L 77.03125 0 Z M 44.65625 0 " transform="translate(73.734177, 220.794814)" />
-          <path d="M 91.96875 2 C 85 2 78.742188 0.476562 73.203125 -2.5625 C 67.671875 -5.613281 63.300781 -9.847656 60.09375 -15.265625 C 56.882812 -20.691406 55.28125 -26.835938 55.28125 -33.703125 L 55.28125 -84.5 C 55.28125 -86.269531 54.835938 -87.875 53.953125 -89.3125 C 53.066406 -90.75 51.90625 -91.910156 50.46875 -92.796875 C 49.03125 -93.679688 47.425781 -94.125 45.65625 -94.125 C 43.882812 -94.125 42.28125 -93.679688 40.84375 -92.796875 C 39.40625 -91.910156 38.269531 -90.75 37.4375 -89.3125 C 36.601562 -87.875 36.1875 -86.269531 36.1875 -84.5 L 36.1875 0 L 8.96875 0 L 8.96875 -82.515625 C 8.96875 -89.484375 10.539062 -95.625 13.6875 -100.9375 C 16.84375 -106.25 21.21875 -110.453125 26.8125 -113.546875 C 32.40625 -116.648438 38.6875 -118.203125 45.65625 -118.203125 C 52.738281 -118.203125 59.046875 -116.648438 64.578125 -113.546875 C 70.109375 -110.453125 74.476562 -106.25 77.6875 -100.9375 C 80.90625 -95.625 82.515625 -89.484375 82.515625 -82.515625 L 82.515625 -31.703125 C 82.515625 -29.929688 82.957031 -28.300781 83.84375 -26.8125 C 84.726562 -25.320312 85.859375 -24.160156 87.234375 -23.328125 C 88.617188 -22.492188 90.144531 -22.078125 91.8125 -22.078125 C 93.582031 -22.078125 95.210938 -22.492188 96.703125 -23.328125 C 98.203125 -24.160156 99.394531 -25.320312 100.28125 -26.8125 C 101.164062 -28.300781 101.609375 -29.929688 101.609375 -31.703125 L 101.609375 -116.21875 L 128.65625 -116.21875 L 128.65625 -33.703125 C 128.65625 -26.835938 127.050781 -20.691406 123.84375 -15.265625 C 120.632812 -9.847656 116.265625 -5.613281 110.734375 -2.5625 C 105.203125 0.476562 98.945312 2 91.96875 2 Z M 91.96875 2 " transform="translate(153.915942, 220.794814)" />
-          <circle cx="297.0547" cy="216.71875" r="14.1328" className={'hp-logo-mark-dot' + (isLive ? ' hp-logo-mark-dot--live' : '')} />
+        <svg
+          viewBox={`${MARK_BOX.x} ${MARK_BOX.y} ${MARK_BOX.w} ${MARK_BOX.h}`}
+          className="idc-mark"
+          role="img"
+          aria-label={journal_name}
+        >
+          {MARK_GLYPHS.map(glyph => (
+            <path key={glyph.transform} d={glyph.d} transform={glyph.transform} />
+          ))}
+          <circle
+            cx={MARK_DOT.cx}
+            cy={MARK_DOT.cy}
+            r={MARK_DOT.r}
+            className={'hp-logo-mark-dot' + (isLive ? ' hp-logo-mark-dot--live' : '')}
+          />
         </svg>
 
         <div className="idc-rule" />
@@ -503,20 +645,20 @@ export default function IdentityCard({ stamps, onFlipBack }) {
 
         <div className="idc-rule" />
 
-        <div className="idc-counts">
-          {since && (
-            <span>
-              <span className="idc-count-label">Keeping since</span>
-              <span className="idc-count-value">{since}</span>
-            </span>
-          )}
-          {records != null && (
-            <span>
-              <span className="idc-count-label">Albums logged</span>
-              <span className="idc-count-value">{records}</span>
-            </span>
-          )}
-        </div>
+        {/* A form, filled in. The label sits outside the line and the answer
+            sits on it, so a value nobody has supplied yet leaves a ruled blank
+            rather than a missing row — which is the state every fresh copy of
+            this software opens in, and it should look deliberate. */}
+        <dl className="idc-fields">
+          <dt className="idc-field-label">Name:</dt>
+          <dd className="idc-field-value">{keeper_name}</dd>
+
+          <dt className="idc-field-label">Est:</dt>
+          <dd className="idc-field-value">{since}</dd>
+
+          <dt className="idc-field-label">Albums logged:</dt>
+          <dd className="idc-field-value">{records == null ? null : records}</dd>
+        </dl>
 
         {blurb && (
           <>
