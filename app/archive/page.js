@@ -38,7 +38,11 @@ const SORTS = [
 // library, so that split was a filter between "everything" and "everything",
 // and the only half worth naming is already written on the entries that are
 // submissions. Removed rather than hidden; nothing else read it.
-const RELATIONSHIPS = ['First Listen', 'Revisit', 'Formative', 'Study'];
+// First Listen came off every entry that had it — with a listen number on the
+// page it was the database repeating what the number already said. Silence is
+// the default now and only the exceptions are named, so the filter offers only
+// the words entries still carry.
+const RELATIONSHIPS = ['Revisit', 'Formative', 'Study'];
 
 // The year column is free text ("2019", occasionally with more around it).
 const releaseYear = entry => {
