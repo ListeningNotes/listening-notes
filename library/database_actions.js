@@ -164,6 +164,43 @@ async function wouldFormCycle(entry_id, source_entry_id) {
 // into `rating` instead of setting the boolean, which cost the star score, left
 // the column false, and — because parseFloat('Masterpiece') is NaN — drew no
 // stars at all on the entry it produced.
+// ── Slugs ──────────────────────────────────────────────────────────────────
+// An album gets listened to more than once, and each listen is its own entry
+// rather than an overwrite. That breaks the old arrangement: the slug came
+// from the album title alone, and (user_id, slug) is unique, so the second
+// listen of In Rainbows produced `in-rainbows` a second time and the save died
+// on a constraint violation.
+//
+// So the first entry for a title keeps the bare slug — every URL already
+// posted, linked or printed on a card stays exactly where it is — and later
+// ones take the next free number after it.
+//
+// The number is NOT the listen number, deliberately. Two different albums can
+// share a title (Blue, 1, Untitled), and those collide here while being
+// unrelated records. Listen number is counted from album_key, which knows the
+// artist; this only has to produce an address nobody else is using.
+//
+// A title made entirely of punctuation slugs to nothing — !!! is a real band —
+// so there is a floor to fall back to.
+const SLUG_FLOOR = 'entry';
+
+async function next_free_slug(album) {
+  const base = create_slug(album) || SLUG_FLOOR;
+
+  // Checked across every entry rather than per owner. The index is on
+  // (user_id, slug), so a globally free slug is always free — and it avoids
+  // guessing the owner here, which the INSERT below only resolves later.
+  const rows = await database`
+    SELECT slug FROM entries WHERE slug = ${base} OR slug LIKE ${base + '-%'}
+  `;
+  const taken = new Set(rows.map(r => r.slug));
+  if (!taken.has(base)) return base;
+
+  let n = 2;
+  while (taken.has(`${base}-${n}`)) n++;
+  return `${base}-${n}`;
+}
+
 export async function save_new_entry(body) {
   const {
     album, artist, year, genre = '', entry_type, relationship,
@@ -173,7 +210,7 @@ export async function save_new_entry(body) {
     user_id = null
   } = body;
 
-  const slug = create_slug(album);
+  const slug = await next_free_slug(album);
 
   const result = await database`
     INSERT INTO entries (
