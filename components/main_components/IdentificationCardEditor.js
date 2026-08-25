@@ -20,7 +20,7 @@
 // none of this renders for a reader, so the markup a visitor receives does not
 // contain it.
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 // The counted rows: hideable, never writable. A journal that can be told how
@@ -104,6 +104,167 @@ function holdZoom(hold) {
   }
 }
 
+// ── The portrait, made into the code ────────────────────────────────────
+// The photograph fills the dark modules and everything else is transparent, so
+// the page shows through and the ragged silhouette of the code is the picture.
+// No plate, no frame, no rounded clip.
+//
+// Polarity is the whole thing and it is the dark modules that must carry the
+// photograph. Dark modules are scattered and isolated, which gives discrete
+// pixels of photo; the light ones form large connected regions and read as a
+// photograph with holes punched through it.
+//
+// The floor is what makes one file work on both themes. Every channel is lifted
+// to at least FLOOR, so no part of the picture is ever as dark as the page it
+// sits on: on a light page the code reads with the right polarity, on a dark one
+// it reads inverted, which phone cameras handle. Nothing else is touched — no
+// gamma, no brightness, no curve — so highlights stay exactly as shot.
+const CODE_VERSION = 4;
+const CODE_QUIET = 4;
+const FLOOR_START = 100;
+const FLOOR_STEP = 20;
+const FLOOR_LIMIT = 200;
+// Drawn at 12 device pixels per module, which is past what any screen shows it
+// at and keeps the edges of each module hard rather than resampled.
+const MODULE_PX = 12;
+
+// The page colours the code is checked against. A picture that only decodes on
+// one of them is a picture that is broken for half the people who open it.
+const PAGE_LIGHT = [238, 240, 236];
+const PAGE_DARK = [14, 14, 14];
+
+// Build the picture once at a given floor, as raw pixels.
+//
+// Every module is one pixel of the photograph, sampled from a square crop the
+// size of the module grid — so the picture is not drawn behind the code and
+// masked, it is drawn *as* the code, one square per module.
+function paintCode(modules, sample, floor) {
+  const span = modules.size + CODE_QUIET * 2;
+  const out = new Uint8ClampedArray(span * span * 4);
+  for (let row = 0; row < modules.size; row++) {
+    for (let col = 0; col < modules.size; col++) {
+      if (!modules.data[row * modules.size + col]) continue;   // light: stays clear
+      const from = (row * modules.size + col) * 3;
+      const to = ((row + CODE_QUIET) * span + col + CODE_QUIET) * 4;
+      out[to]     = Math.max(sample[from], floor);
+      out[to + 1] = Math.max(sample[from + 1], floor);
+      out[to + 2] = Math.max(sample[from + 2], floor);
+      out[to + 3] = 255;
+    }
+  }
+  return { pixels: out, span };
+}
+
+// Lay the picture over a page colour, at one pixel per module, for decoding.
+// Alpha is all-or-nothing, so this is a straight choice rather than a blend.
+function overPage(picture, page) {
+  const { pixels, span } = picture;
+  const flat = new Uint8ClampedArray(span * span * 4);
+  for (let i = 0; i < span * span; i++) {
+    const opaque = pixels[i * 4 + 3] === 255;
+    flat[i * 4]     = opaque ? pixels[i * 4]     : page[0];
+    flat[i * 4 + 1] = opaque ? pixels[i * 4 + 1] : page[1];
+    flat[i * 4 + 2] = opaque ? pixels[i * 4 + 2] : page[2];
+    flat[i * 4 + 3] = 255;
+  }
+  return new ImageData(flat, span, span);
+}
+
+// Sample a loaded image down to one pixel per module, square-cropped from the
+// middle — the same crop the card shows, so the code and the photograph are
+// pictures of the same thing.
+function sampleToGrid(image, size) {
+  const w = image.naturalWidth || image.width;
+  const h = image.naturalHeight || image.height;
+  const side = Math.min(w, h);
+  const canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext('2d', { willReadFrequently: true });
+  ctx.drawImage(image, (w - side) / 2, (h - side) / 2, side, side, 0, 0, size, size);
+  const data = ctx.getImageData(0, 0, size, size).data;
+  const rgb = new Uint8ClampedArray(size * size * 3);
+  for (let i = 0; i < size * size; i++) {
+    rgb[i * 3] = data[i * 4];
+    rgb[i * 3 + 1] = data[i * 4 + 1];
+    rgb[i * 3 + 2] = data[i * 4 + 2];
+  }
+  return rgb;
+}
+
+// Build the code, prove it reads, and hand back a PNG.
+//
+// The proving is not optional and not by eye. Every photograph has its own
+// tonal range and some of them will not carry a code at the starting floor —
+// so it is generated, rasterised and decoded here, and the floor comes up
+// twenty at a time until it reads or until there is no more room to give. If
+// it never reads, this returns null and the card falls back to the plain code,
+// which is a worse picture and a working one.
+export async function buildPortraitCode(url, portraitSrc) {
+  if (!url || !portraitSrc) return null;
+  try {
+    const [{ default: jsQR }, QRCode] = await Promise.all([
+      import('jsqr'),
+      import('qrcode'),
+    ]);
+
+    const image = await new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error('unreadable'));
+      img.src = portraitSrc;
+    });
+
+    const { modules } = QRCode.create(url, {
+      errorCorrectionLevel: 'H',
+      version: CODE_VERSION,
+    });
+    const sample = sampleToGrid(image, modules.size);
+
+    for (let floor = FLOOR_START; floor <= FLOOR_LIMIT; floor += FLOOR_STEP) {
+      const picture = paintCode(modules, sample, floor);
+      const reads = page => {
+        const found = jsQR(overPage(picture, page).data, picture.span, picture.span, {
+          inversionAttempts: 'attemptBoth',
+        });
+        return found?.data === url;
+      };
+      // Both pages, not one. The claim is that a single file works on either,
+      // and the only way that claim stays true is to check it against either.
+      if (!reads(PAGE_LIGHT) || !reads(PAGE_DARK)) continue;
+
+      // It reads. Draw it at size with hard edges and hand back the file.
+      const canvas = document.createElement('canvas');
+      canvas.width = picture.span * MODULE_PX;
+      canvas.height = picture.span * MODULE_PX;
+      const ctx = canvas.getContext('2d');
+      ctx.imageSmoothingEnabled = false;
+      const small = document.createElement('canvas');
+      small.width = picture.span;
+      small.height = picture.span;
+      small.getContext('2d').putImageData(new ImageData(picture.pixels, picture.span, picture.span), 0, 0);
+      ctx.drawImage(small, 0, 0, canvas.width, canvas.height);
+
+      const blob = await new Promise(done => canvas.toBlob(done, 'image/png'));
+      if (!blob) return null;
+      const data = await new Promise((done, fail) => {
+        const reader = new FileReader();
+        reader.onload = () => done(String(reader.result).split(',')[1]);
+        reader.onerror = () => fail(new Error('unreadable'));
+        reader.readAsDataURL(blob);
+      });
+      return { data, floor };
+    }
+    // Nothing in range carried it. The plain code stands in — a worse picture
+    // and a working one — which is the point of doing this in the code rather
+    // than by eye.
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 // A blank row to type into. Never saved — see save().
 const BLANK = '';
 
@@ -129,6 +290,11 @@ export function useIdentificationCardEditor(settings) {
   // The setup, as rows. Blank rows are kept while typing and dropped on save,
   // the same as the links.
   const [gear, setGear] = useState([]);
+  // The address the stored code was built for, so a save that changes nothing
+  // else does not rebuild it.
+  const lastCodeUrl = useRef((settings.site_address || '').replace(/^https?:\/\//, '')
+    ? `https://${(settings.site_address || '').replace(/^https?:\/\//, '')}`
+    : '');
   const [hidden, setHidden] = useState(() => new Set());
 
   // Opening takes a copy. Everything typed after this point is a draft, and
@@ -259,6 +425,26 @@ export function useIdentificationCardEditor(settings) {
   const save = useCallback(async () => {
     setSaving(true);
     setTrouble(null);
+
+    // The code is made out of the photograph and the address, so it is rebuilt
+    // when either moves and left alone otherwise. It is not cheap — a decode
+    // per floor until one reads — and neither of those two changes often.
+    const address = (settings.site_address || '').replace(/^https?:\/\//, '');
+    const url = address ? `https://${address}` : '';
+    const portraitMoved = portrait.trim() !== (settings.portrait_url || '');
+    const addressMoved = url !== lastCodeUrl.current;
+    let codePatch = {};
+    if (portrait.trim() && url && (portraitMoved || addressMoved || !settings.portrait_code_url)) {
+      const built = await buildPortraitCode(url, portrait.trim());
+      codePatch = built
+        ? { portrait_code: built.data, portrait_code_url: `/api/portrait?of=code&v=${Date.now()}` }
+        // Nothing in range carried it. Clear rather than keep a stale picture
+        // of the last photograph, and the card falls back to the plain code.
+        : { portrait_code: '', portrait_code_url: '' };
+      lastCodeUrl.current = url;
+    } else if (!portrait.trim()) {
+      codePatch = { portrait_code: '', portrait_code_url: '' };
+    }
     // Blank means blank. An empty field is the owner clearing a detail, not
     // leaving it alone, so it is sent rather than skipped — the settings writer
     // turns an empty string into null on the way in.
@@ -283,6 +469,7 @@ export function useIdentificationCardEditor(settings) {
           social_links: cleaned.length ? cleaned : null,
           rig_icon: rig,
           rig: gearClean.length ? gearClean : null,
+          ...codePatch,
           hidden_fields: hidden.size ? [...hidden] : null,
           // Emptied on purpose. Every link lives in one list now; leaving this
           // filled would put Instagram on the card twice the moment someone
@@ -302,7 +489,7 @@ export function useIdentificationCardEditor(settings) {
       setTrouble(error.message);
     }
     setSaving(false);
-  }, [name, bio, sendMe, posX, posY, portrait, links, hidden, rig, gear, router]);
+  }, [name, bio, sendMe, posX, posY, portrait, links, hidden, rig, gear, settings, router]);
 
   return {
     editing, begin, cancel, save, saving, busy, trouble,

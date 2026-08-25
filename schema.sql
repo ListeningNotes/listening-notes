@@ -230,6 +230,14 @@ CREATE TABLE IF NOT EXISTS settings (
   -- HTML of every page on the site.
   portrait_data text,
   portrait_mime text,
+  -- The portrait, made into the journal's own QR code: the photograph fills the
+  -- dark modules and everything else is transparent, so the page shows through
+  -- and the silhouette of the code *is* the picture. Base64 PNG with alpha,
+  -- built in the browser when the photograph or the address changes — it is not
+  -- cheap enough to make per request, and it only changes when one of those two
+  -- does. portrait_code_url is the stamped path this is served back on.
+  portrait_code text,
+  portrait_code_url text,
   -- Only what the owner has rewritten. Anything untouched is absent and falls
   -- back to the text shipped in library/definitions.js, so a copy that never
   -- edits its definitions stores nothing at all.

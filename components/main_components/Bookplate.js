@@ -32,6 +32,7 @@ const EMPTY = {
   hidden_fields: null,
   send_me: null,
   portrait_position: null,
+  portrait_code_url: null,
   rig_icon: null,
   rig: null,
   // Whether a long note exists, rather than the note itself. Anything put in

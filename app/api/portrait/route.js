@@ -28,15 +28,22 @@ const ALLOWED = new Set(['image/jpeg', 'image/png', 'image/webp']);
 // GET is public, because the picture is: it is the face on the front of a
 // journal anybody can read. Cached hard and busted by the ?v= the writer puts
 // on the URL, so a portrait is fetched once and a new one is fetched at once.
-export async function GET() {
+export async function GET(request) {
+  // ?of=code asks for the portrait rendered as the journal's QR code rather
+  // than the photograph itself. Same row, same caching, one route — they are
+  // the same picture twice and they change at the same moment.
+  const wantsCode = new URL(request.url).searchParams.get('of') === 'code';
   try {
-    const [row] = await database`SELECT portrait_data, portrait_mime FROM settings WHERE id = 1`;
-    if (!row?.portrait_data) return new Response('No portrait', { status: 404 });
+    const [row] = await database`
+      SELECT portrait_data, portrait_mime, portrait_code FROM settings WHERE id = 1`;
 
-    const bytes = Buffer.from(row.portrait_data, 'base64');
+    const stored = wantsCode ? row?.portrait_code : row?.portrait_data;
+    if (!stored) return new Response('No portrait', { status: 404 });
+
+    const bytes = Buffer.from(stored, 'base64');
     return new Response(bytes, {
       headers: {
-        'Content-Type': row.portrait_mime || 'image/jpeg',
+        'Content-Type': wantsCode ? 'image/png' : (row.portrait_mime || 'image/jpeg'),
         'Content-Length': String(bytes.length),
         'Cache-Control': 'public, max-age=31536000, immutable',
       },
@@ -90,7 +97,10 @@ export async function DELETE(request) {
     // Only clear the pointer if it is pointing here. Somebody who uploaded a
     // photograph and then pasted a link to a different one should keep the
     // link when they clear the upload.
-    const patch = { portrait_data: '', portrait_mime: '' };
+    // The code is made out of the photograph, so it goes when the photograph
+    // goes — a code built from a face nobody can see any more is a picture of
+    // nothing that still scans.
+    const patch = { portrait_data: '', portrait_mime: '', portrait_code: '', portrait_code_url: '' };
     if ((current.portrait_url || '').startsWith('/api/portrait')) patch.portrait_url = '';
     await save_settings(patch);
     return Response.json({ ok: true });

@@ -105,6 +105,8 @@ const BOOKPLATE_FIELDS = [
   // Two percentages. Without it the portrait is drawn centred, which for a
   // photograph of a person is often a picture of their chin.
   'portrait_position',
+  // A short path. The picture it points at is a blob and stays out of here.
+  'portrait_code_url',
   // One short word naming an icon.
   'rig_icon',
   // A handful of short rows, and the card opens them without a fetch.
