@@ -15,7 +15,7 @@
 
 'use client';
 import Link from 'next/link';
-import { Heart, SketchLogo } from '@phosphor-icons/react';
+import { Heart, SketchLogo, Fingerprint } from '@phosphor-icons/react';
 import { fonts } from '../../library/sitewide_visuals';
 import { useTheme } from './Lightswitch';
 import StarRating from './StarRating';
@@ -44,7 +44,12 @@ function isMasterpiece(entry) {
 export function EntryMarks({ entry, size = 13 }) {
   const isFav = entry.favorite === true || entry.favorite === 'true';
   const mp = isMasterpiece(entry);
-  if (!isFav && !mp) return null;
+  // Formative reads only from the flag, never from the legacy relationship
+  // column. Nine older entries say relationship = 'Formative' and they are not
+  // being rewritten — but the mark answers to the flag, so an old entry shows
+  // it once its owner sets it and not before.
+  const formative = entry.formative === true || entry.formative === 'true';
+  if (!isFav && !mp && !formative) return null;
   return (
     <div className="ln-marks">
       {isFav && (
@@ -55,6 +60,11 @@ export function EntryMarks({ entry, size = 13 }) {
       {mp && (
         <span className="ln-mark ln-mark--mp" role="img" aria-label="Masterpiece" title="Masterpiece">
           <SketchLogo size={size} weight="fill" />
+        </span>
+      )}
+      {formative && (
+        <span className="ln-mark ln-mark--formative" role="img" aria-label="Formative" title="Formative">
+          <Fingerprint size={size} weight="fill" />
         </span>
       )}
     </div>

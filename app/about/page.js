@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { ArrowSquareOut, Heart, SketchLogo } from '@phosphor-icons/react';
+import { ArrowSquareOut, Fingerprint, Heart, SketchLogo } from '@phosphor-icons/react';
 import { fonts } from '../../library/sitewide_visuals';
 import DotNav from '../../components/main_components/DotNav';
 import SiteNav from '../../components/main_components/SiteNav';
@@ -49,9 +49,13 @@ const STAR_ROWS = [
   // disagree.
   { key: 'masterpiece', masterpiece: true },
   { key: 'favorite', favorite: true },
+  { key: 'formative', formative: true },
 ];
 
-const RELATIONSHIP_ROWS = ['first_listen', 'revisit', 'formative', 'study', 'submission'];
+// Formative has moved up to the marks — it is a flag on the record now, not an
+// occasion. These four remain because entries already carry them and a reader
+// looking at an older one still deserves to know what the word meant.
+const RELATIONSHIP_ROWS = ['first_listen', 'revisit', 'study', 'submission'];
 
 export default function AboutPage() {
   const { about_intro, has_note: hasNote } = useBookplate();
@@ -346,12 +350,16 @@ export default function AboutPage() {
                           ? <span className="ln-mark ln-mark--mp"><SketchLogo size={15} weight="fill" /></span>
                           : row.favorite
                             ? <span className="ln-mark ln-mark--fav"><Heart size={15} weight="fill" /></span>
-                            : <StarRating rating={row.rating} size={14} />}
+                            : row.formative
+                              ? <span className="ln-mark ln-mark--formative"><Fingerprint size={15} weight="fill" /></span>
+                              : <StarRating rating={row.rating} size={14} />}
                         {row.masterpiece
                           ? <span style={{ marginLeft: 'auto' }}><Chip tone="mp">{def.label}</Chip></span>
                           : row.favorite
                             ? <span style={{ marginLeft: 'auto' }}><Chip tone="fav">{def.label}</Chip></span>
-                            : <span className="ab-row-tail">{def.label}</span>}
+                            : row.formative
+                              ? <span style={{ marginLeft: 'auto' }}><Chip tone="formative">{def.label}</Chip></span>
+                              : <span className="ab-row-tail">{def.label}</span>}
                       </div>
                       <p className="ab-row-body">{def.body}</p>
                     </div>
