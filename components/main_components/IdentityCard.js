@@ -1058,10 +1058,18 @@ export default function IdentityCard({ stamps, authed = false }) {
           backdrop-filter: blur(2px);
           -webkit-backdrop-filter: blur(2px);
           opacity: 0; pointer-events: none;
-          transition: opacity 0.32s ease;
+          /* And taken out of the compositing entirely between uses. A
+             backdrop-filter left on an invisible element is a blur the browser
+             may still decide to do work for. */
+          visibility: hidden;
+          transition: opacity 0.32s ease, visibility 0s linear 0.32s;
           cursor: pointer;
         }
-        .idc-scrim--on { opacity: 1; pointer-events: auto; }
+        .idc-scrim--on {
+          opacity: 1; pointer-events: auto;
+          visibility: visible;
+          transition: opacity 0.32s ease, visibility 0s;
+        }
 
         .idc-sheet {
           position: absolute; left: 0; right: 0; bottom: 0; z-index: 4;
@@ -1070,11 +1078,21 @@ export default function IdentityCard({ stamps, authed = false }) {
           background: var(--bg);
           border-top: 1px solid var(--idc-rule);
           border-radius: 18px 18px 0 0;
-          box-shadow: 0 -14px 40px rgba(0,0,0,0.14);
           transform: translateY(101%);
-          transition: transform 0.42s cubic-bezier(0.22, 0.61, 0.36, 1);
+          /* No shadow while it waits. Parked below the card it still cast one
+             upward, and the card clips to its own box — so the shadow was
+             inside the clip while the sheet was outside it, and the bottom
+             forty pixels of the card carried a grey band belonging to
+             something nobody could see. It arrives with the sheet instead. */
+          box-shadow: none;
+          transition:
+            transform 0.42s cubic-bezier(0.22, 0.61, 0.36, 1),
+            box-shadow 0.42s ease;
         }
-        .idc-sheet--up { transform: none; }
+        .idc-sheet--up {
+          transform: none;
+          box-shadow: 0 -14px 40px rgba(0,0,0,0.14);
+        }
         @media (prefers-reduced-motion: reduce) {
           .idc-sheet { transition: none; }
           .idc-scrim { transition: none; }
