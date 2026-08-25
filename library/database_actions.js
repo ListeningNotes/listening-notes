@@ -40,10 +40,33 @@ export function withoutChain(row) {
   return clean;
 }
 
+// ── Listens ────────────────────────────────────────────────────────────────
+// An album has many listens and each one is its own entry, so every entry sits
+// somewhere in a sequence: the third time you played this record, of four.
+//
+// Counted at read time rather than written into a column. A stored number goes
+// wrong the moment a listen in the middle is deleted, and it can only be fixed
+// by rewriting rows — which is the thing the additive rule exists to avoid.
+// Derived, it is never wrong and never needed a migration.
+//
+// Grouped on album_key, the generated column that already knows lower-cased
+// artist + album with the accents flattened, so a Beyoncé listen and a Beyonce
+// listen count as the same record.
+//
+// Ordered by created_at with id as the tie-break: two entries saved in the same
+// second would otherwise swap places between reads, and a listen number that
+// moves is worse than one that is arbitrary.
+const WITH_LISTEN_NUMBERS = `
+  SELECT *,
+         ROW_NUMBER() OVER (PARTITION BY album_key ORDER BY created_at, id)::int AS listen_number,
+         COUNT(*)     OVER (PARTITION BY album_key)::int                        AS listen_total
+  FROM entries
+`;
+
 export async function pull_all_entries({ includeChain = false } = {}) {
-  const rows = await database`
-    SELECT * FROM entries ORDER BY created_at DESC
-  `;
+  const rows = await database.query(
+    `${WITH_LISTEN_NUMBERS} ORDER BY created_at DESC`
+  );
   return rows.map(row => {
     const sized = withSizedArt(row, LIST_ART_PX);
     return includeChain ? sized : withoutChain(sized);
@@ -69,6 +92,7 @@ const PUBLIC_FIELDS = [
   'slug', 'album', 'artist', 'year', 'genre',
   'album_key', 'rating', 'rating_value', 'relationship', 'entry_type',
   'favorite', 'masterpiece', 'formative', 'horizon', 'album_art', 'created_at',
+  'listen_number', 'listen_total',
 ];
 
 export async function pull_public_entries() {
@@ -82,11 +106,11 @@ export async function pull_public_entries() {
   // and gives the stored value verbatim, which can then be labelled UTC — the
   // one thing it actually is. Deterministic, and independent of wherever this
   // happens to be running.
-  const rows = await database`
-    SELECT *, created_at::text AS created_at_utc
-    FROM entries
-    ORDER BY created_at DESC
-  `;
+  const rows = await database.query(
+    `SELECT *, created_at::text AS created_at_utc
+     FROM (${WITH_LISTEN_NUMBERS}) ranked
+     ORDER BY created_at DESC`
+  );
   // Picked in JS rather than named in the SELECT so the allow-list is applied
   // in exactly one place and cannot drift away from the list above.
   return rows.map(row => {
@@ -101,9 +125,12 @@ export async function pull_public_entries() {
 }
 
 export async function pull_entry_by_slug(slug, { includeChain = false } = {}) {
-  const result = await database`
-    SELECT * FROM entries WHERE slug = ${slug} LIMIT 1
-  `;
+  // The window has to run over the whole album before one row can be picked
+  // out of it, so the filter goes outside rather than in the FROM.
+  const result = await database.query(
+    `SELECT * FROM (${WITH_LISTEN_NUMBERS}) ranked WHERE slug = $1 LIMIT 1`,
+    [slug]
+  );
   const row = result[0];
   if (!row) return null;
   const sized = withSizedArt(row, ENTRY_ART_PX);

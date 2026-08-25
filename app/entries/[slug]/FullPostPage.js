@@ -136,6 +136,19 @@ export default function FullPostPage({ entry, references = [] }) {
   // Everything here is the library. A submission is a note about where a
   // record came from, so it's worth adding when true and worth nothing when
   // false — "Library" on every other entry was labelling the default.
+  // Where this listen sits in the record's history. Listen 1 says so in words
+  // rather than as a number — "First listen" is what anyone would call it, and
+  // "1 of 1" is a fact about a database. Later listens carry the count, since
+  // the interesting part of a fourth listen is that there were three before it.
+  //
+  // Nothing shows on an album played once: "First listen · 1 of 1" is noise on
+  // an entry that has no sequence to be part of.
+  const listenLabel = entry.listen_total > 1
+    ? (entry.listen_number === 1
+        ? `First listen · 1 of ${entry.listen_total}`
+        : `Listen ${entry.listen_number} of ${entry.listen_total}`)
+    : null;
+
   const isSubmission = entry.entry_type === 'Submission';
   const displayRating = isMasterpiece ? 5 : parseFloat(entry.rating) || 0;
 
@@ -419,6 +432,7 @@ export default function FullPostPage({ entry, references = [] }) {
           <StarRating rating={displayRating} size={24} glow={isMasterpiece} animate burst={isMasterpiece} />
         )}
         <div className="ln-screen-one-chips">
+          {listenLabel && <Chip>{listenLabel}</Chip>}
           {entry.relationship && <Chip>{entry.relationship}</Chip>}
           {isSubmission && <Chip>Submission</Chip>}
           {(entry.favorite === true || entry.favorite === 'true') && <Chip tone="fav">Favorite</Chip>}
@@ -474,6 +488,7 @@ export default function FullPostPage({ entry, references = [] }) {
               </div>
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
                 {displayRating > 0 && <StarRating rating={displayRating} size={15} glow={isMasterpiece} style={{ verticalAlign: 'middle' }} />}
+                {listenLabel && <Chip>{listenLabel}</Chip>}
                 {entry.relationship && <Chip>{entry.relationship}</Chip>}
                 {isSubmission && <Chip>Submission</Chip>}
                 {(entry.favorite === true || entry.favorite === 'true') && <Chip tone="fav">Favorite</Chip>}
