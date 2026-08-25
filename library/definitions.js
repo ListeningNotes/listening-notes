@@ -45,11 +45,11 @@ export const DEFAULT_DEFINITIONS = {
   // ── the two marks that are not scores ──────────────────────────────────
   masterpiece: {
     label: 'Masterpiece',
-    body: 'An entire five-star tracklist. Flawless.',
+    body: 'An album with an entire five-star tracklist. Flawless.',
   },
   favorite: {
     label: 'Favorite',
-    body: 'A track that stands on its own outside the album. Plenty of five-star tracks aren\u2019t favorites, and some favorites sit lower than expected.',
+    body: 'A track or album you reach for, separate from how you rated it. Plenty of five-star listens aren\u2019t favorites, and some favorites sit lower than expected.',
   },
 
   // ── how a listen happened ──────────────────────────────────────────────
