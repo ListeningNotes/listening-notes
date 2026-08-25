@@ -196,6 +196,12 @@ CREATE TABLE IF NOT EXISTS settings (
   -- of the bio: a bio is character and this is an instruction, and folded
   -- together nobody writes the instruction.
   send_me text,
+  -- Where in the picture the face is. The card's slot is square and a
+  -- photograph almost never is, so something gets cropped off — and left to
+  -- the browser what gets cropped off is whatever is not in the middle, which
+  -- for a photograph of a person is often their head. Two percentages, stored
+  -- as a CSS object-position: "50% 32%".
+  portrait_position text,
   -- The portrait itself, when its keeper uploaded one rather than pointing at
   -- one. Base64 in a column and served back by /api/portrait, so that adding a
   -- picture from a phone needs no storage bucket, no third-party account and no

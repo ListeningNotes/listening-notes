@@ -40,6 +40,8 @@ const EMPTY = {
   hidden_fields: null,
   // What its keeper would like sent to them. See the column in schema.sql.
   send_me: null,
+  // Where in the portrait to look. A CSS object-position, or null for centred.
+  portrait_position: null,
   definitions: null,
 };
 
@@ -50,7 +52,7 @@ const WRITABLE = [
   'journal_name', 'keeper_name', 'bio', 'portrait_url',
   'instagram_url', 'lastfm_user', 'site_address',
   'founded_at', 'pinned_entry_id', 'about_intro', 'social_links',
-  'hidden_fields', 'send_me', 'definitions',
+  'hidden_fields', 'send_me', 'portrait_position', 'definitions',
   // The uploaded portrait. Written by /api/portrait rather than by a form, but
   // it goes through the same door as everything else in this table.
   'portrait_data', 'portrait_mime',

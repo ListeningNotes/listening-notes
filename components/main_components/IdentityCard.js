@@ -185,6 +185,7 @@ export default function IdentityCard({ stamps, authed = false }) {
     social_links,
     hidden_fields,
     send_me,
+    portrait_position,
     has_note: hasNote,
   } = settings;
   const { isLive } = useListeningBeacon();
@@ -239,6 +240,52 @@ export default function IdentityCard({ stamps, authed = false }) {
   const canTurnSlot = Boolean(portrait_url && address);
   const [slotCode, setSlotCode] = useState(!portrait_url && Boolean(address));
 
+  // ── Framing the picture ─────────────────────────────────────────────────
+  // The slot is square and a photograph almost never is, so the browser crops
+  // whatever is not in the middle — which for a photograph of a person is
+  // frequently their head. This drags the picture inside its box.
+  //
+  // The arithmetic has to be real rather than a guessed sensitivity. Under
+  // object-fit: cover the image is scaled so the smaller side fills the box,
+  // and object-position runs 0% to 100% across exactly the overflow that
+  // leaves. So a drag of dy pixels is worth dy/overflow of that range, and at
+  // the ends the picture stops rather than sliding on under the finger.
+  const dragFrom = useRef(null);
+
+  function frameStart(event) {
+    const img = event.currentTarget.querySelector('img');
+    if (!img?.naturalWidth) return;
+    const box = event.currentTarget.getBoundingClientRect();
+    const cover = Math.max(box.width / img.naturalWidth, box.height / img.naturalHeight);
+    dragFrom.current = {
+      pointerX: event.clientX,
+      pointerY: event.clientY,
+      overX: Math.max(0, img.naturalWidth * cover - box.width),
+      overY: Math.max(0, img.naturalHeight * cover - box.height),
+      fromX: edit.posX,
+      fromY: edit.posY,
+      moved: false,
+    };
+    event.currentTarget.setPointerCapture(event.pointerId);
+  }
+
+  function frameMove(event) {
+    const from = dragFrom.current;
+    if (!from) return;
+    const dx = event.clientX - from.pointerX;
+    const dy = event.clientY - from.pointerY;
+    if (Math.abs(dx) > 2 || Math.abs(dy) > 2) from.moved = true;
+    const clamp = v => Math.min(100, Math.max(0, v));
+    // Dragging the picture down should reveal what is above it, so the
+    // percentage moves against the finger.
+    if (from.overX) edit.setPosX(clamp(from.fromX - (dx / from.overX) * 100));
+    if (from.overY) edit.setPosY(clamp(from.fromY - (dy / from.overY) * 100));
+  }
+
+  function frameEnd() {
+    dragFrom.current = null;
+  }
+
   // A textarea that grows instead of scrolling. Two lines of arithmetic, but
   // they have to run on mount as well as on every keystroke, or a bio that is
   // already three lines long opens showing one of them.
@@ -267,7 +314,12 @@ export default function IdentityCard({ stamps, authed = false }) {
     <>
       <span className={'idc-face-slot' + (showingCode ? '' : ' idc-face-slot--on')} aria-hidden={showingCode}>
         {shownPortrait
-          ? <img src={shownPortrait} alt={keeper_name || 'The keeper'} />
+          ? <img
+              src={shownPortrait}
+              alt={keeper_name || 'The keeper'}
+              draggable={false}
+              style={{ objectPosition: editing ? edit.position : (portrait_position || '50% 50%') }}
+            />
           : <span className="idc-portrait-empty" />}
       </span>
       {address && (
@@ -289,10 +341,21 @@ export default function IdentityCard({ stamps, authed = false }) {
     // camera and the photo library rather than a file browser — which is the
     // whole point, a picture of yourself being on your phone and not at an
     // address you can type.
+    const framing = Boolean(edit.portrait);
     slot = (
-      <div className="idc-portrait idc-portrait--turnable">
+      <div
+        className={'idc-portrait idc-portrait--turnable' + (framing ? ' idc-portrait--framing' : '')}
+        onPointerDown={framing ? frameStart : undefined}
+        onPointerMove={framing ? frameMove : undefined}
+        onPointerUp={framing ? frameEnd : undefined}
+        onPointerCancel={framing ? frameEnd : undefined}
+      >
         {slotFaces}
-        <label className="idc-portrait-hit">
+        {framing && <span className="idc-portrait-hint" aria-hidden="true">Drag to reframe</span>}
+        {/* With no picture the whole box is the way to choose one. With a
+            picture the box is for moving it, so the label shrinks to its own
+            pill and leaves the rest of the box free to be dragged. */}
+        <label className={'idc-portrait-hit' + (framing ? ' idc-portrait-hit--pill' : '')}>
           <input
             className="idc-file"
             type="file"
@@ -300,14 +363,16 @@ export default function IdentityCard({ stamps, authed = false }) {
             onChange={edit.choosePhoto}
             disabled={edit.busy}
           />
-          <span className="idc-portrait-badge" aria-hidden="true">
-            <UploadSimple size={12} weight="bold" />
-          </span>
+          {!framing && (
+            <span className="idc-portrait-badge" aria-hidden="true">
+              <UploadSimple size={12} weight="bold" />
+            </span>
+          )}
           <span className="idc-portrait-said">
-            {edit.busy ? 'Working…' : edit.portrait ? 'Replace the photo' : 'Choose a photo'}
+            {edit.busy ? 'Working…' : framing ? 'Replace' : 'Choose a photo'}
           </span>
         </label>
-        {edit.portrait && (
+        {framing && (
           <button
             type="button"
             className="idc-portrait-badge idc-portrait-badge--drop"
@@ -551,11 +616,17 @@ export default function IdentityCard({ stamps, authed = false }) {
           margin: 0 auto;
           text-align: left;
         }
+        /* Ranged right, so the column reads down its colons rather than down
+           the first letter of each label. The colons are what the eye follows
+           to the answers, and with the labels ranged left they sat at four
+           different places while the answers all started at one — which read
+           as the labels being ragged rather than as a form being aligned. */
         .idc-field-label {
           font-family: var(--font-label);
           font-size: 9px; letter-spacing: 0.11em; text-transform: uppercase;
           color: var(--ink-faint);
           white-space: nowrap;
+          text-align: right;
         }
         /* The answer sits on its own rule, which is drawn whether or not there
            is an answer on it yet. Dotted rather than solid, at the same rhythm
@@ -731,6 +802,38 @@ export default function IdentityCard({ stamps, authed = false }) {
           padding: 4px 10px;
         }
         .idc-portrait-hit:hover .idc-portrait-said { color: var(--ink); }
+
+        /* Once there is a picture, the box is a thing you move rather than a
+           thing you press: the label shrinks to the width of its own pill and
+           the rest of the box takes the drag. pointer-events on the strip has
+           to be off or it would swallow the drag it is sitting on top of. */
+        .idc-portrait-hit--pill {
+          inset: auto 0 10px 0;
+          pointer-events: none;
+        }
+        .idc-portrait-hit--pill .idc-portrait-said { pointer-events: auto; }
+
+        .idc-portrait--framing { cursor: grab; touch-action: none; }
+        .idc-portrait--framing:active { cursor: grabbing; }
+        /* No drag without a photograph, and no drag on a picture already small
+           enough that nothing is being cropped — the browser will not move it
+           and a grab cursor over something that cannot move is a lie. */
+        .idc-portrait--framing img { user-select: none; -webkit-user-drag: none; }
+        /* One line, always. Wrapped it was a two-line placard across the top of
+           the photograph, which on a portrait is squarely over the face — and
+           the whole point of this control is being able to see the face. */
+        .idc-portrait-hint {
+          position: absolute; top: 8px; left: 50%; transform: translateX(-50%);
+          font-family: var(--font-label);
+          font-size: 7.5px; letter-spacing: 0.1em; text-transform: uppercase;
+          white-space: nowrap;
+          color: var(--ink-soft);
+          background: var(--bg);
+          border: 1px solid var(--idc-rule);
+          border-radius: 999px;
+          padding: 3px 8px;
+          pointer-events: none;
+        }
         .idc-portrait-badge--drop {
           right: auto; left: 6px;
           cursor: pointer;
