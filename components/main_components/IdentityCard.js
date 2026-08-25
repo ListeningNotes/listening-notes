@@ -440,6 +440,12 @@ export default function IdentityCard({ stamps, authed = false }) {
     </>
   );
 
+  // Showing the code made out of the portrait, the box stops being a box. No
+  // stock behind it, no shadow under it and no rounded corner clipping it: the
+  // page is the background, which is the whole point of the transparency, and a
+  // radius on the clip would take a bite out of the quiet zone.
+  const bareSlot = showingCode && Boolean(portrait_code_url);
+
   let slot;
   if (editing) {
     const framing = Boolean(edit.portrait);
@@ -496,13 +502,13 @@ export default function IdentityCard({ stamps, authed = false }) {
       </div>
     );
   } else if (!canTurnSlot) {
-    slot = <div ref={photoRef} className="idc-portrait">{slotFaces}</div>;
+    slot = <div ref={photoRef} className={'idc-portrait' + (bareSlot ? ' idc-portrait--bare' : '')}>{slotFaces}</div>;
   } else {
     slot = (
       <button
         type="button"
         ref={photoRef}
-        className="idc-portrait idc-portrait--turnable"
+        className={'idc-portrait idc-portrait--turnable' + (bareSlot ? ' idc-portrait--bare' : '')}
         onClick={() => setSlotCode(v => !v)}
         aria-pressed={slotCode}
         aria-label={slotCode ? 'Show the portrait' : 'Show the code for this address'}
@@ -775,6 +781,12 @@ export default function IdentityCard({ stamps, authed = false }) {
           background: var(--bg-warm);
           box-shadow: 0 18px 44px rgba(0,0,0,0.16);
         }
+        .idc-portrait--bare {
+          background: none;
+          box-shadow: none;
+          border-radius: 0;
+          overflow: visible;
+        }
         .idc-portrait--turnable { cursor: pointer; }
         .idc-portrait--turnable:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 3px; }
         .idc-portrait img { width: 100%; height: 100%; object-fit: cover; display: block; }
@@ -793,6 +805,12 @@ export default function IdentityCard({ stamps, authed = false }) {
            which is the whole point of the alpha. A class rather than :has(),
            because the build drops :has() rules without saying so. */
         .idc-face-slot--photo { background: none; }
+        /* The mark that turns it back, kept legible against whatever the code
+           happens to be over — there is no plate under it any more to sit on. */
+        .idc-portrait--bare .idc-portrait-badge {
+          right: -6px; bottom: -6px;
+          background: var(--bg);
+        }
         .idc-qr--photo {
           width: 100%; height: auto; display: block;
           /* Hard module edges at every size. Without this the browser smooths a

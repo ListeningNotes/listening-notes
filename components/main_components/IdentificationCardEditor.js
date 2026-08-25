@@ -114,16 +114,33 @@ function holdZoom(hold) {
 // pixels of photo; the light ones form large connected regions and read as a
 // photograph with holes punched through it.
 //
-// The floor is what makes one file work on both themes. Every channel is lifted
-// to at least FLOOR, so no part of the picture is ever as dark as the page it
-// sits on: on a light page the code reads with the right polarity, on a dark one
-// it reads inverted, which phone cameras handle. Nothing else is touched — no
-// gamma, no brightness, no curve — so highlights stay exactly as shot.
+// The picture is squeezed into a band rather than only lifted off the bottom.
+//
+// The floor is what the brief called for: every channel raised to at least
+// FLOOR so no part of the picture is ever as dark as the page it sits on. That
+// makes one file work on both themes — right way round on a light page,
+// inverted on a dark one, which phone cameras handle.
+//
+// The ceiling was not in the brief and this is why it is here. A floor lifts
+// the shadows and does nothing to the highlights, so a photograph shot against
+// a bright sky has "dark" modules at 250 sitting on a page at 238 — brighter
+// than the background they are supposed to read against. Polarity breaks in
+// patches and no floor fixes it, because the floor is at the wrong end. The
+// first portrait this was tried on failed the light page at every floor from
+// 100 to 200 and passed the dark page at all of them, which is that fault
+// exactly.
+//
+// So the search looks for the widest band that still decodes, rather than
+// clamping everybody to one. A photograph that needs nothing keeps everything;
+// a bright one gives up only as much of its highlights as it must. Ordered so
+// that the gentlest option wins: caps descend from no cap at all, and the
+// widest surviving band across all the floors is the one that ships.
 const CODE_VERSION = 4;
 const CODE_QUIET = 4;
-const FLOOR_START = 100;
-const FLOOR_STEP = 20;
-const FLOOR_LIMIT = 200;
+const FLOORS = [100, 120, 140, 160, 180, 200];
+const CAPS = [255, 235, 215, 195, 175, 155, 140];
+// Below this there is not enough range left to be a photograph.
+const MIN_RANGE = 40;
 // Drawn at 12 device pixels per module, which is past what any screen shows it
 // at and keeps the edges of each module hard rather than resampled.
 const MODULE_PX = 12;
@@ -138,7 +155,7 @@ const PAGE_DARK = [14, 14, 14];
 // Every module is one pixel of the photograph, sampled from a square crop the
 // size of the module grid — so the picture is not drawn behind the code and
 // masked, it is drawn *as* the code, one square per module.
-function paintCode(modules, sample, floor) {
+function paintCode(modules, sample, floor, cap) {
   const span = modules.size + CODE_QUIET * 2;
   const out = new Uint8ClampedArray(span * span * 4);
   for (let row = 0; row < modules.size; row++) {
@@ -146,9 +163,9 @@ function paintCode(modules, sample, floor) {
       if (!modules.data[row * modules.size + col]) continue;   // light: stays clear
       const from = (row * modules.size + col) * 3;
       const to = ((row + CODE_QUIET) * span + col + CODE_QUIET) * 4;
-      out[to]     = Math.max(sample[from], floor);
-      out[to + 1] = Math.max(sample[from + 1], floor);
-      out[to + 2] = Math.max(sample[from + 2], floor);
+      out[to]     = Math.min(Math.max(sample[from], floor), cap);
+      out[to + 1] = Math.min(Math.max(sample[from + 1], floor), cap);
+      out[to + 2] = Math.min(Math.max(sample[from + 2], floor), cap);
       out[to + 3] = 255;
     }
   }
@@ -235,19 +252,31 @@ export async function buildPortraitCode(url, portraitSrc, position = '50% 50%') 
       Number.parseFloat(py) || 50,
     );
 
-    for (let floor = FLOOR_START; floor <= FLOOR_LIMIT; floor += FLOOR_STEP) {
-      const picture = paintCode(modules, sample, floor);
-      const reads = page => {
-        const found = jsQR(overPage(picture, page).data, picture.span, picture.span, {
-          inversionAttempts: 'attemptBoth',
-        });
-        return found?.data === url;
-      };
-      // Both pages, not one. The claim is that a single file works on either,
-      // and the only way that claim stays true is to check it against either.
-      if (!reads(PAGE_LIGHT) || !reads(PAGE_DARK)) continue;
+    const reads = (picture, page) => {
+      const found = jsQR(overPage(picture, page).data, picture.span, picture.span, {
+        inversionAttempts: 'attemptBoth',
+      });
+      return found?.data === url;
+    };
 
-      // It reads. Draw it at size with hard edges and hand back the file.
+    let best = null;
+    for (const floor of FLOORS) {
+      for (const cap of CAPS) {
+        if (cap - floor < MIN_RANGE) continue;
+        const picture = paintCode(modules, sample, floor, cap);
+        // Both pages, not one. The claim is that a single file works on either,
+        // and the only way that claim stays true is to check it against either.
+        if (!reads(picture, PAGE_LIGHT) || !reads(picture, PAGE_DARK)) continue;
+        // Caps descend, so the first that survives at this floor is the least
+        // this floor can be made to give up.
+        if (!best || cap - floor > best.range) best = { picture, floor, cap, range: cap - floor };
+        break;
+      }
+    }
+
+    if (best) {
+      const picture = best.picture;
+      // Draw it at size with hard edges and hand back the file.
       const canvas = document.createElement('canvas');
       canvas.width = picture.span * MODULE_PX;
       canvas.height = picture.span * MODULE_PX;
@@ -267,7 +296,7 @@ export async function buildPortraitCode(url, portraitSrc, position = '50% 50%') 
         reader.onerror = () => fail(new Error('unreadable'));
         reader.readAsDataURL(blob);
       });
-      return { data, floor };
+      return { data, floor: best.floor, cap: best.cap };
     }
     // Nothing in range carried it. The plain code stands in — a worse picture
     // and a working one — which is the point of doing this in the code rather
