@@ -811,13 +811,31 @@ export default function IdentityCard({ stamps, authed = false }) {
           right: -6px; bottom: -6px;
           background: var(--bg);
         }
-        .idc-qr--photo {
-          width: 100%; height: auto; display: block;
-          /* Hard module edges at every size. Without this the browser smooths a
-             41px picture up to 180 and the modules stop being squares. */
+        /* Sized so the code itself fills the photograph's square, not so the
+           file does. The file is 41 modules across and only 33 of those are
+           code — the rest is the quiet zone, which is empty and has to stay
+           that way. Fitting the file to the box therefore drew the code at
+           four-fifths the size of the picture it replaced, and it is supposed
+           to take the picture's place exactly. So it is drawn 41/33 oversize
+           and the quiet zone hangs off the edges, where it is page anyway.
+           image-rendering keeps the module edges hard rather than resampled. */
+        .idc-face-slot .idc-qr { width: 100%; height: auto; display: block; }
+
+        /* After the rule above, deliberately. They have the same specificity,
+           so source order decides, and written before it this lost every time
+           and the code drew at four-fifths the size of the picture it replaces.
+           (No backticks in this stylesheet — it is a template literal and one
+           of those ends it mid-file. Twice today.) */
+        .idc-face-slot .idc-qr--photo {
+          width: calc(100% * 41 / 33);
+          height: auto;
+          display: block;
+          /* A flex item in a box narrower than it wants to be shrinks back to
+             the box, which undoes the oversize entirely. */
+          flex-shrink: 0;
+          max-width: none;
           image-rendering: pixelated;
         }
-        .idc-face-slot .idc-qr { width: 100%; height: auto; display: block; }
 
         /* No portrait set. Registration corners rather than a grey box with a
            person-shaped icon in it — a frame waiting for a photo should look
