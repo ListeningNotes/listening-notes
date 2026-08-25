@@ -102,6 +102,9 @@ const BOOKPLATE_FIELDS = [
   // top of that page rendered as nothing for as long as the page existed. The
   // back of the card prints it now.
   'about_intro',
+  // A handful of URLs. Short enough to ride along, and the back of the card
+  // is on the landing page, which every visitor lands on.
+  'social_links',
 ];
 
 // Async because the journal's details are read here, once, and handed down —

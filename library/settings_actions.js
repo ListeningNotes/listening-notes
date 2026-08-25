@@ -34,6 +34,8 @@ const EMPTY = {
   // a context nothing had put it into. The card carries it now, so it is worth
   // the two lines it costs to actually deliver it.
   about_intro: null,
+  // A list of plain URLs, or null. See the note on the column in schema.sql.
+  social_links: null,
   definitions: null,
 };
 
@@ -43,7 +45,7 @@ const EMPTY = {
 const WRITABLE = [
   'journal_name', 'keeper_name', 'bio', 'portrait_url',
   'instagram_url', 'lastfm_user', 'site_address',
-  'founded_at', 'pinned_entry_id', 'about_intro', 'definitions',
+  'founded_at', 'pinned_entry_id', 'about_intro', 'social_links', 'definitions',
 ];
 
 // A form posts empty strings for fields left alone; the database should hold
