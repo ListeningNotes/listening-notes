@@ -97,6 +97,8 @@ const BOOKPLATE_FIELDS = [
   // A handful of URLs. Short enough to ride along, and the back of the card
   // is on the landing page, which every visitor lands on.
   'social_links',
+  // Two keys at most, and the card cannot decide what to draw without them.
+  'hidden_fields',
 ];
 
 // Async because the journal's details are read here, once, and handed down —

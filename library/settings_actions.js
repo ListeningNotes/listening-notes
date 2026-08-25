@@ -36,6 +36,8 @@ const EMPTY = {
   about_intro: null,
   // A list of plain URLs, or null. See the note on the column in schema.sql.
   social_links: null,
+  // Which counted rows to leave off the card. A list of keys, or null.
+  hidden_fields: null,
   definitions: null,
 };
 
@@ -45,7 +47,11 @@ const EMPTY = {
 const WRITABLE = [
   'journal_name', 'keeper_name', 'bio', 'portrait_url',
   'instagram_url', 'lastfm_user', 'site_address',
-  'founded_at', 'pinned_entry_id', 'about_intro', 'social_links', 'definitions',
+  'founded_at', 'pinned_entry_id', 'about_intro', 'social_links',
+  'hidden_fields', 'definitions',
+  // The uploaded portrait. Written by /api/portrait rather than by a form, but
+  // it goes through the same door as everything else in this table.
+  'portrait_data', 'portrait_mime',
 ];
 
 // A form posts empty strings for fields left alone; the database should hold
@@ -80,8 +86,10 @@ export async function save_settings(fields) {
   // json refuses — "invalid input syntax for type json" — so the value is
   // serialised here rather than at every call site that might set it.
   // definitions goes through its own, more careful version of this below.
-  if (patch.social_links != null && typeof patch.social_links !== 'string') {
-    patch.social_links = JSON.stringify(patch.social_links);
+  for (const key of ['social_links', 'hidden_fields']) {
+    if (patch[key] != null && typeof patch[key] !== 'string') {
+      patch[key] = JSON.stringify(patch[key]);
+    }
   }
 
   // definitions is the one column edited a piece at a time. Writing it whole

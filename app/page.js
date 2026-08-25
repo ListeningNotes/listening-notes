@@ -266,6 +266,11 @@ export default function HomePage() {
            scene inherits the number they used to hold. .hp-corner stays at 100
            and so stays above the card. */
         .idc-scene {
+          /* One duration, two places that have to agree: the sheet turns for
+             this long and the faces swap at exactly half of it. Written twice
+             they drift, and a swap that lands early shows a mirrored page. */
+          --idc-turn: 0.72s;
+          --idc-half-turn: 0.36s;
           position: relative;
           z-index: 91;
           width: 100%;
@@ -278,7 +283,8 @@ export default function HomePage() {
           width: 100%;
           display: grid;
           transform-style: preserve-3d;
-          transition: transform 0.72s cubic-bezier(0.42, 0.02, 0.18, 1);
+          -webkit-transform-style: preserve-3d;
+          transition: transform var(--idc-turn) cubic-bezier(0.42, 0.02, 0.18, 1);
         }
         .idc-flip--over { transform: rotateY(180deg); }
         .idc-face {
@@ -292,7 +298,26 @@ export default function HomePage() {
              for the whole turn, and both sides read at once. */
           backface-visibility: hidden;
           -webkit-backface-visibility: hidden;
+          /* And with it, on a real iPhone, the far side shows through anyway.
+             Backface culling is honoured for the element it is set on, but a
+             child that gets promoted to its own compositing layer is drawn by a
+             path that never checks — and this page has several: the beacon's
+             frosted panel is a backdrop-filter, the album art is an image, the
+             live dot is an animation. What a reader saw was the whole beacon
+             lying mirrored across the card.
+             So the faces are switched off outright as well, at the instant the
+             sheet is edge-on and neither is visible. Zero-length, half a turn
+             late: an instant swap in the one frame where nothing can be seen
+             happening. backface-visibility stays as the first line of defence
+             where it does work — this is the floor under it. */
+          transition:
+            opacity 0s linear var(--idc-half-turn),
+            visibility 0s linear var(--idc-half-turn);
         }
+        .idc-face--front { opacity: 1; visibility: visible; }
+        .idc-flip--over .idc-face--front { opacity: 0; visibility: hidden; }
+        .idc-face--back { opacity: 0; visibility: hidden; }
+        .idc-flip--over .idc-face--back { opacity: 1; visibility: visible; }
         /* The gap .hp-main used to hand these children directly, now that they
            are one level further in. */
         .idc-face--front { gap: 22px; }
@@ -364,6 +389,8 @@ export default function HomePage() {
         .hp-flip[aria-pressed='true'] { color: var(--ink); }
 
         @media (prefers-reduced-motion: reduce) {
+          /* No turn, so nothing to wait half of — the faces swap on the spot. */
+          .idc-scene { --idc-turn: 0s; --idc-half-turn: 0s; }
           .idc-flip { transition: none; }
         }
 
