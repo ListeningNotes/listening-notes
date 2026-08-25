@@ -212,6 +212,12 @@ CREATE TABLE IF NOT EXISTS settings (
   -- plenty of people listening on whatever they have would rather not describe
   -- it. See RIG_ICONS in components/main_components/IdentityCard.js.
   rig_icon text,
+  -- The listening setup, as rows: [{ "name": "Sennheiser HD 600", "role":
+  -- "Headphones" }]. It used to be a page of its own with several hundred
+  -- words about why any of it matters, which is one person's essay shipped
+  -- inside everybody's software. What is worth saying is what the thing is and
+  -- what it does; the rest is the journal.
+  rig jsonb,
   -- The portrait itself, when its keeper uploaded one rather than pointing at
   -- one. Base64 in a column and served back by /api/portrait, so that adding a
   -- picture from a phone needs no storage bucket, no third-party account and no
