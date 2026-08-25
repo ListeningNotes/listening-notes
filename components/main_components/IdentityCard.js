@@ -23,8 +23,8 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import {
   DiscordLogo, FacebookLogo, FlipHorizontal, GithubLogo, InstagramLogo,
-  LinkSimple, LinkedinLogo, MediumLogo, RedditLogo, SoundcloudLogo,
-  SpotifyLogo, ThreadsLogo, TiktokLogo, TwitchLogo, XLogo, YoutubeLogo,
+  LinkSimple, LinkedinLogo, MediumLogo, QrCode, RedditLogo, SoundcloudLogo,
+  SpotifyLogo, ThreadsLogo, TiktokLogo, TwitchLogo, User, XLogo, YoutubeLogo,
 } from '@phosphor-icons/react';
 import qrcode from 'qrcode-generator';
 import { useListeningBeacon } from '../../hooks/useListeningBeacon';
@@ -86,7 +86,7 @@ function identify(url) {
 // out than it does drawing them. currentColor rather than black, so the code
 // inverts with the rest of the page and stays scannable in the dark — readers
 // scan for contrast, not for colour.
-function QrCode({ text, size = 96 }) {
+function AddressCode({ text }) {
   const path = useMemo(() => {
     try {
       const qr = qrcode(0, 'M');
@@ -109,8 +109,6 @@ function QrCode({ text, size = 96 }) {
   return (
     <svg
       className="idc-qr"
-      width={size}
-      height={size}
       viewBox={`-2 -2 ${path.n + 4} ${path.n + 4}`}
       shapeRendering="crispEdges"
       role="img"
@@ -162,6 +160,18 @@ export default function IdentityCard({ stamps, onFlipBack }) {
   }, [instagram_url, social_links]);
 
   const address = site_address ? site_address.replace(/^https?:\/\//, '') : null;
+
+  // The photo box holds two things and shows one. A portrait and a code are
+  // the same shape of object — a square you look at — and the card only has
+  // room to do one of them properly, so they share the slot and the box is
+  // the switch. That is what let the photo get big: the code used to sit at
+  // the bottom of the column taking a hundred pixels of its own.
+  //
+  // It opens on whichever side has something on it. A journal with no portrait
+  // set showing an empty frame, with the code hidden behind it, would be a card
+  // that starts on its blank side for no reason.
+  const canTurnSlot = Boolean(portrait_url && address);
+  const [slotCode, setSlotCode] = useState(!portrait_url && Boolean(address));
 
   // Whether the column has anything left below the fold.
   //
@@ -285,29 +295,73 @@ export default function IdentityCard({ stamps, onFlipBack }) {
           background-repeat: repeat-x;
         }
 
-        /* ── Portrait ── centred and above its name, rather than beside a
+        /* ── The slot ── centred and above its caption, rather than beside a
            column of fields. This is the change that made the card fit a phone:
-           a photo and a form side by side needs width the screen hasn't got. */
+           a photo and a form side by side needs width the screen hasn't got.
+           It holds two things and shows one — the portrait and the code for
+           the address — which is what paid for the photo being this size. */
         .idc-portrait {
-          width: 102px;
+          display: block;
+          width: 168px;
           margin: 0 auto;
+          padding: 0;
           aspect-ratio: 3 / 4;
           background: var(--bg-warm);
           border: 1px solid var(--idc-rule);
           overflow: hidden;
           position: relative;
         }
+        .idc-portrait--turnable { cursor: pointer; }
+        .idc-portrait--turnable:focus-visible {
+          outline: 2px solid var(--ink-faint);
+          outline-offset: 3px;
+        }
         .idc-portrait img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+        /* The two sides, stacked and cross-faded. Not a rotation: this box
+           already lives inside the sheet that turns the whole cover over, and
+           nesting one 3D transform inside another is where browsers start
+           disagreeing with each other. */
+        .idc-face-slot {
+          position: absolute; inset: 0;
+          display: flex; align-items: center; justify-content: center;
+          opacity: 0;
+          transition: opacity 0.26s ease;
+          pointer-events: none;
+        }
+        .idc-face-slot--on { opacity: 1; }
+        .idc-face-slot--code { background: var(--bg-warm); padding: 13%; }
+        .idc-face-slot .idc-qr { width: 100%; height: auto; }
+
         /* No portrait set. Registration corners rather than a grey box with a
            person-shaped icon in it — this is a frame waiting for a photo and it
            should look like one. */
-        .idc-portrait--empty::before,
-        .idc-portrait--empty::after {
-          content: ''; position: absolute; width: 11px; height: 11px;
+        .idc-portrait-empty { position: absolute; inset: 0; }
+        .idc-portrait-empty::before,
+        .idc-portrait-empty::after {
+          content: ''; position: absolute; width: 13px; height: 13px;
           border: 1px solid var(--idc-rule);
         }
-        .idc-portrait--empty::before { top: 6px; left: 6px; border-right: 0; border-bottom: 0; }
-        .idc-portrait--empty::after  { bottom: 6px; right: 6px; border-left: 0; border-top: 0; }
+        .idc-portrait-empty::before { top: 8px; left: 8px; border-right: 0; border-bottom: 0; }
+        .idc-portrait-empty::after  { bottom: 8px; right: 8px; border-left: 0; border-top: 0; }
+
+        /* The only sign that the box does anything. Quiet enough to read as a
+           mark printed in the corner of a card, loud enough that somebody
+           looking for something to press finds it. */
+        .idc-portrait-badge {
+          position: absolute; right: 6px; bottom: 6px;
+          display: flex; align-items: center; justify-content: center;
+          width: 21px; height: 21px; border-radius: 6px;
+          background: var(--bg);
+          border: 1px solid var(--idc-rule);
+          color: var(--ink-faint);
+          transition: color 0.15s;
+        }
+        .idc-portrait--turnable:hover .idc-portrait-badge { color: var(--ink); }
+
+        @media (prefers-reduced-motion: reduce) {
+          .idc-face-slot { transition: none; }
+        }
 
         .idc-keeper {
           font-family: var(--font-label);
@@ -358,12 +412,10 @@ export default function IdentityCard({ stamps, onFlipBack }) {
         .idc-social:hover { color: var(--ink); background: var(--bg-warm); }
 
         /* ── Signature ── the address, and only in the form you point a phone
-           at. It used to be printed underneath as well, which is a line of type
-           telling a reader the address of the page they are already on; the
-           code is for getting off this screen and onto another one, and it
-           carries the address in its aria-label for anyone not looking. */
-        /* A block element ignores the column's text-align, so it centres
-           itself or it sits hard against the left edge. */
+           at. It lives behind the portrait rather than at the foot of the
+           column, where it cost a rule and a hundred pixels of height that the
+           photo wanted. It carries the address in its aria-label for anyone not
+           looking at it. */
         .idc-qr { display: block; margin: 0 auto; color: var(--ink); }
 
         /* ── The way back ── pinned rather than sitting at the end of the
@@ -387,15 +439,15 @@ export default function IdentityCard({ stamps, onFlipBack }) {
         @media (min-width: 769px) {
           .idc { max-width: 376px; }
           .idc-rule { margin: 12px 0; }
+          .idc-portrait { width: 186px; }
         }
 
         @media (max-width: 480px) {
           .idc-mark { height: 36px; }
           .idc-rule { margin: 10px 0; }
           .idc-bio { font-size: 12px; line-height: 1.6; }
-          .idc-portrait { width: 90px; }
-          .idc-socials { margin-top: 8px; }
-          .idc-qr { width: 78px; height: 78px; }
+          .idc-portrait { width: 156px; }
+          .idc-socials { margin-top: 10px; }
         }
       `}</style>
 
@@ -411,10 +463,43 @@ export default function IdentityCard({ stamps, onFlipBack }) {
 
         <div className="idc-rule" />
 
-        <div className={'idc-portrait' + (portrait_url ? '' : ' idc-portrait--empty')}>
-          {portrait_url && <img src={portrait_url} alt={keeper_name || 'The keeper'} />}
-        </div>
-        {keeper_name && <p className="idc-keeper">{keeper_name}</p>}
+        {(() => {
+          const faces = (
+            <>
+              <span className={'idc-face-slot' + (slotCode ? '' : ' idc-face-slot--on')} aria-hidden={slotCode}>
+                {portrait_url
+                  ? <img src={portrait_url} alt={keeper_name || 'The keeper'} />
+                  : <span className="idc-portrait-empty" />}
+              </span>
+              {address && (
+                <span className={'idc-face-slot idc-face-slot--code' + (slotCode ? ' idc-face-slot--on' : '')} aria-hidden={!slotCode}>
+                  <AddressCode text={`https://${address}`} />
+                </span>
+              )}
+            </>
+          );
+          if (!canTurnSlot) return <div className="idc-portrait">{faces}</div>;
+          return (
+            <button
+              type="button"
+              className="idc-portrait idc-portrait--turnable"
+              onClick={() => setSlotCode(v => !v)}
+              aria-pressed={slotCode}
+              aria-label={slotCode ? 'Show the portrait' : 'Show the code for this address'}
+            >
+              {faces}
+              <span className="idc-portrait-badge" aria-hidden="true">
+                {slotCode ? <User size={12} weight="bold" /> : <QrCode size={12} weight="bold" />}
+              </span>
+            </button>
+          );
+        })()}
+
+        {/* The caption belongs to whichever side is showing: a face has a name
+            under it, a code has the address it points at. */}
+        {(slotCode ? address : keeper_name) && (
+          <p className="idc-keeper">{slotCode ? address : keeper_name}</p>
+        )}
 
         <div className="idc-rule" />
 
@@ -466,12 +551,6 @@ export default function IdentityCard({ stamps, onFlipBack }) {
           </div>
         )}
 
-        {address && (
-          <>
-            <div className="idc-rule" />
-            <QrCode text={`https://${address}`} />
-          </>
-        )}
       </div>
 
       {onFlipBack && (
