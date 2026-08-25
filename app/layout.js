@@ -48,13 +48,26 @@ export const viewport = {
   viewportFit: 'cover',
 };
 
+// Reading the settings here is not on its own enough to stop Next prerendering
+// every page at build time — a plain database call is not a dynamic API, so the
+// answer gets baked into HTML and the site keeps serving the name it was built
+// with no matter what its owner changes. Which defeats the entire point of the
+// settings drawer: it was editable and nothing it said ever reached a visitor.
+//
+// force-dynamic is the fix, declared on the root layout so it covers every page
+// under it. The cost is a database read per request rather than per deploy,
+// which for a personal journal is nothing. The cheaper version — cache the read
+// and invalidate it when settings are saved — is worth doing if this ever gets
+// busy, but correctness first.
+export const dynamic = 'force-dynamic';
+
 // Async because the journal's details are read here, once, and handed down —
-// see components/main_components/Bookplate.js. This is what makes every page
-// render on request rather than being prerendered at build time, which is the
-// right trade: the alternative is a site that keeps showing the name it was
-// built with after its owner changes it.
+// see components/main_components/Bookplate.js.
 export default async function RootLayout({ children }) {
-  const settings = await pull_settings();
+  const { why_essay, ...rest } = await pull_settings();
+  // The essay stays on the server. /why and /about read it there; every other
+  // page would only be carrying it down the wire for nothing.
+  const settings = { ...rest, has_note: Boolean(why_essay && why_essay.trim()) };
 
   return (
     <html lang="en" suppressHydrationWarning className={`${nunito.variable} ${dmMono.variable}`}>

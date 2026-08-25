@@ -163,6 +163,13 @@ CREATE TABLE IF NOT EXISTS settings (
   site_address text,
   founded_at date,
   pinned_entry_id integer,
+  -- The paragraph at the top of /about, and the long note behind it. Both
+  -- live here rather than in the page for the same reason the name does: a
+  -- copy of this software should not open carrying somebody else's writing.
+  -- Blank is the shipped state — no note, no page, no link to one.
+  about_intro text,
+  why_essay text,
+  why_date date,
   updated_at timestamp without time zone DEFAULT now()
 );
 
