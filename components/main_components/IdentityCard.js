@@ -22,7 +22,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import {
-  DiscordLogo, FacebookLogo, FlipHorizontal, GithubLogo, InstagramLogo,
+  DiscordLogo, FacebookLogo, GithubLogo, InstagramLogo,
   LinkSimple, LinkedinLogo, MediumLogo, QrCode, RedditLogo, SoundcloudLogo,
   SpotifyLogo, ThreadsLogo, TiktokLogo, TwitchLogo, User, XLogo, YoutubeLogo,
 } from '@phosphor-icons/react';
@@ -224,7 +224,7 @@ function AddressCode({ text }) {
   );
 }
 
-export default function IdentityCard({ stamps, onFlipBack }) {
+export default function IdentityCard({ stamps }) {
   const {
     journal_name,
     keeper_name,
@@ -321,14 +321,12 @@ export default function IdentityCard({ stamps, onFlipBack }) {
           /* No stock, no border, no shadow. The front of the cover is the
              beacon on the page's own colour and this is the same page. */
           background: none;
-          /* The turn control anchors to this, not to the scroller — it has to
-             hold still while the column moves under it. The padding is the band
-             it sits in: floating it over the scroller instead meant that as
-             soon as the column was one line too long for the screen, the pill
-             came down on top of the QR code and took a bite out of it. A code
-             with a bite out of it does not scan. */
+          /* The way back used to be a pill pinned to the bottom of this box,
+             which meant reserving a band for it so it never came down on top of
+             the code and took a bite out of a thing that has to be read whole.
+             It lives in the page's corner now, on both sides of the cover, and
+             the card gets that band back. */
           position: relative;
-          padding-bottom: 48px;
         }
         /* Everything inside scrolls, the column itself does not. On a phone the
            landing page is a fixed pair of snapped panes with no document scroll
@@ -549,19 +547,6 @@ export default function IdentityCard({ stamps, onFlipBack }) {
            looking at it. */
         .idc-qr { display: block; margin: 0 auto; color: var(--ink); }
 
-        /* ── The way back ── pinned rather than sitting at the end of the
-           column. A way back you have to scroll to find is not one. */
-        .idc-turn {
-          position: absolute;
-          left: 50%; bottom: 2px;
-          transform: translateX(-50%);
-          z-index: 2;
-          gap: 7px;
-          background: var(--bg);
-        }
-        .idc-turn svg { color: var(--ink-faint); transition: color 0.15s; }
-        .idc-turn:hover svg { color: var(--ink); }
-
         /* A phone gets one pane and no document scroll, so the column is
            tuned to land inside one: same card, every measure a notch down. What
            does not fit scrolls under the fade rather than being cut. */
@@ -695,12 +680,6 @@ export default function IdentityCard({ stamps, onFlipBack }) {
 
       </div>
 
-      {onFlipBack && (
-        <button type="button" className="ln-pill idc-turn" onClick={onFlipBack}>
-          <FlipHorizontal size={14} weight="bold" aria-hidden="true" />
-          Turn back
-        </button>
-      )}
     </section>
   );
 }
