@@ -743,29 +743,37 @@ export default function IdentityCard({ stamps, authed = false }) {
         .idc-bio-input:focus { outline: none; }
         .idc-bio-input::placeholder { color: var(--ink-faint); }
 
-        /* What the journal actually listens to. Counted, never chosen. */
-        .idc-genres {
-          font-size: 12px; color: var(--ink-soft);
-          margin: 16px 0 0;
-          display: flex; align-items: center; justify-content: center; gap: 4px;
-        }
+        /* ── The two lines above the button ──────────────────────────────
+           What the journal actually listens to, counted and never chosen, and
+           what its keeper is asking to be sent. They are only interesting next
+           to each other — the two disagreeing is the point — so they are built
+           to the same shape: a label, then the answer, ranged left in a block
+           the width of the writing above them.
 
-        /* ── The ask ── the only forward-looking line on the card, and the last
-           one before the button for sending something. You read what they are
-           after, then you send it. That order is the whole feature, which is
-           why the genres sit above it rather than between it and the button. */
-        .idc-ask {
+           The ask is the last of them, because it is the last thing you read
+           before the button for acting on it. Anything put between the two
+           weakens that, which is why the genres sit above rather than below. */
+        .idc-line {
           margin: 16px auto 0; max-width: 300px;
           font-size: 13px; line-height: 1.6; color: var(--ink);
-          display: flex; align-items: baseline; gap: 7px;
+          display: flex; align-items: baseline; gap: 9px;
           text-align: left;
         }
-        .idc-ask-label {
+        .idc-line-label {
           flex-shrink: 0;
+          /* A fixed column, so the two answers start at the same place and the
+             pair reads as one small table rather than two stray sentences.
+             Wide enough for the longer of the two labels to stay on one line —
+             a two-line label beside a one-line answer reads as a wrapping
+             accident, not as a heading. */
+          width: 76px;
+          white-space: nowrap;
           font-family: var(--font-label);
-          font-size: 9px; letter-spacing: 0.11em; text-transform: uppercase;
+          font-size: 8.5px; letter-spacing: 0.1em; text-transform: uppercase;
           color: var(--ink-faint);
         }
+        .idc-line-value { min-width: 0; color: var(--ink-soft); }
+        .idc-ask .idc-line-value { color: var(--ink); }
         .idc-ask-input {
           flex: 1; min-width: 0;
           border: 0; padding: 0 0 3px; background: transparent;
@@ -974,16 +982,22 @@ export default function IdentityCard({ stamps, authed = false }) {
           <p className="idc-bio">{blurb}</p>
         ) : null}
 
+        {/* Labelled, and shaped like the ask directly under it. Unlabelled it
+            was three words floating between the bio and the request with
+            nothing saying what they were — a reader could as easily have taken
+            them for the genres being asked for as the genres being played,
+            which is precisely the distinction the pair exists to draw. */}
         {genres.length > 0 && showing('genres') && (
-          <p className={'idc-genres' + off('genres')}>
-            {genres.join(' · ')}
+          <p className={'idc-line' + off('genres')}>
+            <span className="idc-line-label">Top genres</span>
+            <span className="idc-line-value">{genres.join(' · ')}</span>
             {eyeFor('genres')}
           </p>
         )}
 
         {(editing || send_me) && (
-          <p className="idc-ask">
-            <span className="idc-ask-label">Send me</span>
+          <p className="idc-line idc-ask">
+            <span className="idc-line-label">Send me</span>
             {editing
               ? <input
                   className="idc-ask-input"
@@ -996,7 +1010,7 @@ export default function IdentityCard({ stamps, authed = false }) {
                   placeholder="something loud, or anything with a saxophone in it"
                   aria-label="Send me"
                 />
-              : <span>{send_me}</span>}
+              : <span className="idc-line-value">{send_me}</span>}
           </p>
         )}
 
