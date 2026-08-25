@@ -24,8 +24,8 @@ import Link from 'next/link';
 import {
   DiscordLogo, FacebookLogo, GithubLogo, InstagramLogo,
   LinkSimple, LinkedinLogo, MediumLogo, QrCode, RedditLogo, SoundcloudLogo,
-  Eye, EyeSlash, PencilSimple, Plus, SpotifyLogo, ThreadsLogo, TiktokLogo,
-  TwitchLogo, UploadSimple, User, X, XLogo, YoutubeLogo,
+  Check, Eye, EyeSlash, PencilSimple, Plus, SpotifyLogo, ThreadsLogo,
+  TiktokLogo, TwitchLogo, UploadSimple, User, X, XLogo, YoutubeLogo,
 } from '@phosphor-icons/react';
 import QRCode from 'qrcode';
 import { useIdentificationCardEditor } from './IdentificationCardEditor';
@@ -178,6 +178,7 @@ export default function IdentityCard({ stamps, authed = false }) {
     keeper_name,
     bio,
     portrait_url,
+    portrait_position,
     instagram_url,
     site_address,
     founded_at,
@@ -185,23 +186,23 @@ export default function IdentityCard({ stamps, authed = false }) {
     social_links,
     hidden_fields,
     send_me,
-    portrait_position,
-    has_note: hasNote,
   } = settings;
   const { isLive } = useListeningBeacon();
+
   // Only ever true for the person who keeps the journal, and only the visible
   // half of that: the writing endpoints check the wristband for themselves.
   const edit = useIdentificationCardEditor(settings);
   const editing = edit.editing;
 
   const records = stamps?.records ?? null;
-
-  // Rows the keeper would rather not publish. They can never be edited — these
-  // are counted off the entries — but not everyone wants to say how new they
-  // are or how few they have logged, and a number you cannot take off the card
-  // is a number that stops people keeping one.
-  const hiding = Array.isArray(hidden_fields) ? hidden_fields : [];
   const genres = stamps?.genres ?? [];
+
+  // Rows the keeper would rather not publish. Counted off the entries and never
+  // editable — but not everyone wants to say how new they are or how few they
+  // have logged, and a number you cannot take off is a number that stops people
+  // keeping a card at all.
+  const hiding = Array.isArray(hidden_fields) ? hidden_fields : [];
+  const showing = key => editing || !hiding.includes(key);
 
   // Founded date if the keeper set one, otherwise the day the first record was
   // logged. The second is the more honest answer anyway: a listening journal
@@ -209,13 +210,10 @@ export default function IdentityCard({ stamps, authed = false }) {
   const since = monthAndYear(founded_at) || monthAndYear(stamps?.first_listen);
 
   // The keeper's own line if they have written one, otherwise the journal's.
-  // Two paragraphs here was one of the things that made the old card a wall,
-  // and of the two this is the one with a face above it.
   const blurb = bio || about_intro;
 
-  // instagram_url predates this list and still feeds the icon in the corner of
-  // the front, so it is folded in here rather than made to move. De-duplicated
-  // on the href, so an owner who lists it in both places gets one mark.
+  // instagram_url predates this list and is folded in rather than made to move.
+  // De-duplicated on the href, so an owner who has it in both places gets one.
   const socials = useMemo(() => {
     const raw = [instagram_url, ...(Array.isArray(social_links) ? social_links : [])];
     const seen = new Set();
@@ -228,15 +226,6 @@ export default function IdentityCard({ stamps, authed = false }) {
 
   const address = site_address ? site_address.replace(/^https?:\/\//, '') : null;
 
-  // The photo box holds two things and shows one. A portrait and a code are
-  // the same shape of object — a square you look at — and the card only has
-  // room to do one of them properly, so they share the slot and the box is
-  // the switch. That is what let the photo get big: the code used to sit at
-  // the bottom of the column taking a hundred pixels of its own.
-  //
-  // It opens on whichever side has something on it. A journal with no portrait
-  // set showing an empty frame, with the code hidden behind it, would be a card
-  // that starts on its blank side for no reason.
   const canTurnSlot = Boolean(portrait_url && address);
   const [slotCode, setSlotCode] = useState(!portrait_url && Boolean(address));
 
@@ -245,11 +234,11 @@ export default function IdentityCard({ stamps, authed = false }) {
   // whatever is not in the middle — which for a photograph of a person is
   // frequently their head. This drags the picture inside its box.
   //
-  // The arithmetic has to be real rather than a guessed sensitivity. Under
-  // object-fit: cover the image is scaled so the smaller side fills the box,
+  // The arithmetic is real rather than a guessed sensitivity. Under
+  // object-fit: cover the image is scaled until its shorter side fills the box,
   // and object-position runs 0% to 100% across exactly the overflow that
-  // leaves. So a drag of dy pixels is worth dy/overflow of that range, and at
-  // the ends the picture stops rather than sliding on under the finger.
+  // leaves. So a drag of forty pixels is worth forty pixels of overflow, and at
+  // the ends the picture stops instead of sliding on under a finger.
   const dragFrom = useRef(null);
 
   function frameStart(event) {
@@ -264,7 +253,6 @@ export default function IdentityCard({ stamps, authed = false }) {
       overY: Math.max(0, img.naturalHeight * cover - box.height),
       fromX: edit.posX,
       fromY: edit.posY,
-      moved: false,
     };
     event.currentTarget.setPointerCapture(event.pointerId);
   }
@@ -272,23 +260,19 @@ export default function IdentityCard({ stamps, authed = false }) {
   function frameMove(event) {
     const from = dragFrom.current;
     if (!from) return;
-    const dx = event.clientX - from.pointerX;
-    const dy = event.clientY - from.pointerY;
-    if (Math.abs(dx) > 2 || Math.abs(dy) > 2) from.moved = true;
     const clamp = v => Math.min(100, Math.max(0, v));
-    // Dragging the picture down should reveal what is above it, so the
-    // percentage moves against the finger.
-    if (from.overX) edit.setPosX(clamp(from.fromX - (dx / from.overX) * 100));
-    if (from.overY) edit.setPosY(clamp(from.fromY - (dy / from.overY) * 100));
+    // Dragging the picture down reveals what is above it, so the percentage
+    // moves against the finger.
+    if (from.overX) edit.setPosX(clamp(from.fromX - ((event.clientX - from.pointerX) / from.overX) * 100));
+    if (from.overY) edit.setPosY(clamp(from.fromY - ((event.clientY - from.pointerY) / from.overY) * 100));
   }
 
   function frameEnd() {
     dragFrom.current = null;
   }
 
-  // A textarea that grows instead of scrolling. Two lines of arithmetic, but
-  // they have to run on mount as well as on every keystroke, or a bio that is
-  // already three lines long opens showing one of them.
+  // A textarea that grows instead of scrolling. It has to run on mount as well
+  // as on every keystroke, or a bio already three lines long opens showing one.
   const grow = event => {
     const el = event.currentTarget;
     el.style.height = 'auto';
@@ -302,8 +286,7 @@ export default function IdentityCard({ stamps, authed = false }) {
 
   // ── The slot ────────────────────────────────────────────────────────────
   // Built here rather than inline, because inline it was an immediately-called
-  // function inside the JSX, and everything inside one of those counts as
-  // render.
+  // function inside the JSX and everything in one of those counts as render.
   //
   // Editing shows the photo side and nothing else: the code is not a thing
   // being changed, and a box that turns to a QR halfway through choosing a
@@ -332,16 +315,18 @@ export default function IdentityCard({ stamps, authed = false }) {
 
   let slot;
   if (editing) {
+    const framing = Boolean(edit.portrait);
     // Same box, same size, same place. Only what pressing it does has changed.
     //
-    // A label wrapping the file input, rather than a button reaching for one:
-    // clicking a label opens its own input with no script and nothing to hold
-    // a reference to, and the input stays in the tab order so the box is
-    // reachable from a keyboard. image/* is what makes an iPhone offer the
-    // camera and the photo library rather than a file browser — which is the
-    // whole point, a picture of yourself being on your phone and not at an
-    // address you can type.
-    const framing = Boolean(edit.portrait);
+    // With no picture the whole box is the way to choose one; with a picture
+    // the box is for moving it, so the label shrinks to its own pill and
+    // leaves the rest free to drag. A label around the file input rather than
+    // a button reaching for one: clicking a label opens its own input with no
+    // script and nothing to hold a reference to, and the input stays in the
+    // tab order so the box is reachable from a keyboard. image/* is what makes
+    // an iPhone offer the camera and the photo library rather than a file
+    // browser, which is the whole point — a picture of yourself is on your
+    // phone, not at an address you can type.
     slot = (
       <div
         className={'idc-portrait idc-portrait--turnable' + (framing ? ' idc-portrait--framing' : '')}
@@ -352,9 +337,6 @@ export default function IdentityCard({ stamps, authed = false }) {
       >
         {slotFaces}
         {framing && <span className="idc-portrait-hint" aria-hidden="true">Drag to reframe</span>}
-        {/* With no picture the whole box is the way to choose one. With a
-            picture the box is for moving it, so the label shrinks to its own
-            pill and leaves the rest of the box free to be dragged. */}
         <label className={'idc-portrait-hit' + (framing ? ' idc-portrait-hit--pill' : '')}>
           <input
             className="idc-file"
@@ -404,17 +386,32 @@ export default function IdentityCard({ stamps, authed = false }) {
     );
   }
 
+  // An eye, for a line that is counted and therefore cannot be written but can
+  // be left off. Drawn only while editing.
+  const eyeFor = key => editing && (
+    <button
+      type="button"
+      className="idc-eye"
+      onClick={() => edit.toggleHidden(key)}
+      aria-pressed={edit.hidden.has(key)}
+      aria-label={edit.hidden.has(key) ? 'Show this on the card' : 'Leave this off the card'}
+    >
+      {edit.hidden.has(key)
+        ? <EyeSlash size={12} weight="regular" aria-hidden="true" />
+        : <Eye size={12} weight="regular" aria-hidden="true" />}
+    </button>
+  );
 
-  // Whether the column has anything left below the fold.
-  //
-  // The soft edge at the bottom exists to say "there is more" — but it is a
-  // position on the box, not on the writing, so it went on softening whatever
-  // happened to be down there even once you had scrolled to the end. What was
-  // down there is the QR code, and a QR code with its bottom rows faded out is
-  // a QR code that does not scan. So the fade is only drawn while it is telling
-  // the truth: something is still hidden.
-  const innerRef = useRef(null);
+  const off = key => (editing && edit.hidden.has(key) ? ' idc-off' : '');
+
+  // Whether the counted line under the name has anything left on it.
+  const showAlbums = records != null && showing('albums');
+  const showSince = Boolean(since) && showing('since');
+
+  // Whether the soft bottom edge is telling the truth — see the note by the
+  // measurement below.
   const [more, setMore] = useState(false);
+  const innerRef = useRef(null);
   useEffect(() => {
     const el = innerRef.current;
     if (!el) return;
@@ -429,7 +426,7 @@ export default function IdentityCard({ stamps, authed = false }) {
     };
     // stamps and the bio arrive after the first paint and both change how tall
     // the column is, so the measurement has to be taken again when they land.
-  }, [stamps, blurb]);
+  }, [stamps, blurb, editing]);
 
   return (
     <section className="idc" aria-label="About this journal">
@@ -446,61 +443,47 @@ export default function IdentityCard({ stamps, authed = false }) {
           display: flex;
           flex-direction: column;
           /* No stock, no border, no shadow. The front of the cover is the
-             beacon on the page's own colour and this is the same page. */
+             beacon on the page's own colour, and this is the same page. */
           background: none;
-          /* The way back used to be a pill pinned to the bottom of this box,
-             which meant reserving a band for it so it never came down on top of
-             the code and took a bite out of a thing that has to be read whole.
-             It lives in the page's corner now, on both sides of the cover, and
-             the card gets that band back. */
           position: relative;
         }
         /* Everything inside scrolls, the column itself does not. On a phone the
            landing page is a fixed pair of snapped panes with no document scroll
            of its own, so anything taller than the pane has to carry its own
-           scroller or its bottom is simply unreachable. */
-        /* Block flow, not a flex column. As a flex column every child was a
-           flex item free to shrink, and on a phone — where this sits in a pane
-           of fixed height — they all did: the portrait lost its 3:4 shape and
-           squashed into a letterbox, and the two counts stretched apart from
-           their own labels. Nothing here needs flex; it is a stack of things
-           centred on a page. */
+           scroller or its bottom is unreachable. */
         .idc-inner {
           flex: 1;
           min-height: 0;
           overflow-y: auto;
           -webkit-overflow-scrolling: touch;
           text-align: center;
-          /* 24px of floor against a 20px fade, so at rest the fade lands in the
-             padding and is invisible, and only starts eating ink once there is
-             ink scrolling under it. */
-          padding: 2px 4px 24px;
+          padding: 0 4px 24px;
         }
-        /* Only while something is genuinely still below — see the note beside
-           the measurement in the component. */
+        /* Only while something is genuinely still below. The edge means "there
+           is more"; drawn when there is not, it fades the last line for no
+           reason — and the last line used to be a QR code. */
         .idc-inner--more {
           mask-image: linear-gradient(to bottom, #000 calc(100% - 20px), transparent);
           -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 20px), transparent);
         }
-        /* The fade is the affordance here; a 6px grey bar down the side of a
-           card is not. */
         .idc-inner { scrollbar-width: none; }
         .idc-inner::-webkit-scrollbar { display: none; }
 
-        /* ── Header ── the mark, on its own. The journal's name was set under
-           it in condensed caps and said the same thing twice: every copy of
-           this software is a listening journal, so printing the words is a
-           label on a label. The mark keeps the name in its aria-label, which
-           is where a reader who cannot see it still needs it.
-           The dot on the period is lit while something is playing — the same
-           fact the front of the cover carries, and the only thing on this side
-           that moves. */
-        .idc-mark { display: block; height: 46px; width: auto; margin: 4px auto 0; }
+        /* ── The head ── the mark in one corner and the way in at the other,
+           which is where a card keeps the things that are about the card
+           rather than on it. Nothing between them: the name is the first thing
+           you read and it wants the middle of the column, not a slot beside a
+           logo. */
+        .idc-head {
+          display: flex; align-items: center; justify-content: space-between;
+          gap: 12px; min-height: 30px; margin-bottom: 14px;
+        }
+        .idc-mark { display: block; height: 22px; width: auto; }
         .idc-mark path { fill: var(--ink); }
-        /* The dot on the period. globals.css defines these two classes inside
-           a max-width:768px block for the cover's own logo, so on a wide screen
-           the circle would fall back to an SVG default fill of black and vanish
-           in the dark. The card states them for itself. */
+        /* The dot on the period. globals.css states these two inside a
+           max-width:768px block for the cover's own logo, so on a wide screen
+           the circle would fall back to an SVG default of black and vanish in
+           the dark. The card states them for itself. */
         .idc-mark .hp-logo-mark-dot { fill: var(--ink); }
         .idc-mark .hp-logo-mark-dot--live {
           fill: var(--live);
@@ -513,249 +496,258 @@ export default function IdentityCard({ stamps, authed = false }) {
         @media (prefers-reduced-motion: reduce) {
           .idc-mark .hp-logo-mark-dot--live { animation: none; }
         }
-        /* ── Rules ── the dashed lines that divide a form up, drawn as a
-           background gradient rather than a dashed border: a CSS dashed border
-           picks its own dash length and picks wrong at this weight. */
-        .idc-rule {
-          width: 100%;
-          height: 1px;
-          margin: 20px 0;
-          background-image: linear-gradient(to right, var(--idc-rule) 0 4px, transparent 4px 9px);
-          background-size: 9px 1px;
-          background-repeat: repeat-x;
-        }
 
-        /* ── The slot ── centred and above its caption, rather than beside a
-           column of fields. This is the change that made the card fit a phone:
-           a photo and a form side by side needs width the screen hasn't got.
-           It holds two things and shows one — the portrait and the code for
-           the address — which is what paid for the photo being this size. */
+        .idc-tools { display: flex; align-items: center; gap: 2px; }
+        .idc-tool {
+          display: inline-flex; align-items: center; justify-content: center;
+          width: 30px; height: 30px; border-radius: 9px;
+          color: var(--ink-faint); background: transparent; border: 0;
+          cursor: pointer; transition: color 0.15s, background 0.15s;
+        }
+        .idc-tool:hover { color: var(--ink); background: var(--bg-warm); }
+        .idc-tool:disabled { opacity: 0.4; cursor: default; }
+        /* Saving is the one of these that commits something, so it carries
+           full ink where the others are quiet. */
+        .idc-tool--keep { color: var(--ink); }
+
+        /* ── The name ── the same face and size the beacon sets a track title
+           in, because the two sides of this cover are the same card: what is
+           playing on the front, who is playing it on the back. */
+        .idc-name {
+          font-family: var(--font-display);
+          font-weight: var(--font-display-weight);
+          font-size: 26px; line-height: 1.14; letter-spacing: -0.01em;
+          color: var(--ink);
+          margin: 0;
+        }
+        .idc-name-input {
+          width: 100%; border: 0; padding: 0; background: transparent;
+          font: inherit; letter-spacing: inherit; color: var(--ink);
+          text-align: center;
+        }
+        .idc-name-input:focus { outline: none; }
+        .idc-name-input::placeholder { color: var(--ink-faint); }
+
+        /* ── The counted line ── how many, and how long, on one line under the
+           name. Two facts that are only interesting next to each other, so
+           they are set as a sentence rather than as two rows of a form. */
+        .idc-meta {
+          font-size: 12px; line-height: 1.5; color: var(--ink-faint);
+          margin: 7px 0 0;
+          display: flex; align-items: center; justify-content: center;
+          gap: 7px; flex-wrap: wrap;
+        }
+        .idc-meta-part { display: inline-flex; align-items: center; gap: 3px; }
+        .idc-off { opacity: 0.45; text-decoration: line-through; }
+        .idc-eye {
+          display: inline-flex; align-items: center; justify-content: center;
+          width: 22px; height: 22px; border-radius: 6px;
+          color: var(--ink-faint); background: transparent; border: 0;
+          cursor: pointer; transition: color 0.15s, background 0.15s;
+        }
+        .idc-eye:hover { color: var(--ink); background: var(--bg-warm); }
+
+        /* ── The photograph ── the same box the beacon draws album art in, to
+           the pixel: 180 square, an 18px radius and that shadow. The front of
+           this cover shows a record at that size in that frame; the back shows
+           a person. Matching them is what makes the two sides read as one
+           object turned over rather than as two designs. */
         .idc-portrait {
           display: block;
-          width: 212px;
-          margin: 0 auto;
-          padding: 0;
-          /* Square, because the code is square. A portrait box at 3:4 meant the
-             code sat in the middle of it with a band of paper above and below,
-             and the box changed what it looked like depending on which side of
-             itself it was showing. One shape, two things in it. */
-          aspect-ratio: 1 / 1;
-          background: var(--bg-warm);
-          border: 1px solid var(--idc-rule);
-          overflow: hidden;
           position: relative;
+          width: 180px; height: 180px;
+          margin: 20px auto 0;
+          padding: 0;
+          border: 0;
+          border-radius: 18px;
+          overflow: hidden;
+          background: var(--bg-warm);
+          box-shadow: 0 18px 44px rgba(0,0,0,0.16);
         }
         .idc-portrait--turnable { cursor: pointer; }
-        .idc-portrait--turnable:focus-visible {
-          outline: 2px solid var(--ink-faint);
-          outline-offset: 3px;
-        }
+        .idc-portrait--turnable:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 3px; }
         .idc-portrait img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
         /* The two sides, stacked and cross-faded. Not a rotation: this box
            already lives inside the sheet that turns the whole cover over, and
-           nesting one 3D transform inside another is where browsers start
-           disagreeing with each other. */
+           nesting one 3D transform in another is where browsers disagree. */
         .idc-face-slot {
           position: absolute; inset: 0;
           display: flex; align-items: center; justify-content: center;
-          opacity: 0;
-          transition: opacity 0.26s ease;
-          pointer-events: none;
+          opacity: 0; transition: opacity 0.26s ease; pointer-events: none;
         }
         .idc-face-slot--on { opacity: 1; }
-        /* The code paints its own quiet zone, so it wants the whole width of
-           the box rather than padding around it, and the box behind it takes
-           the code's own paper colour so the two read as one plate. */
         .idc-face-slot--code { background: ${CODE_PAPER}; }
         .idc-face-slot .idc-qr { width: 100%; height: auto; display: block; }
 
         /* No portrait set. Registration corners rather than a grey box with a
-           person-shaped icon in it — this is a frame waiting for a photo and it
-           should look like one. */
+           person-shaped icon in it — a frame waiting for a photo should look
+           like one. */
         .idc-portrait-empty { position: absolute; inset: 0; }
         .idc-portrait-empty::before,
         .idc-portrait-empty::after {
           content: ''; position: absolute; width: 13px; height: 13px;
           border: 1px solid var(--idc-rule);
         }
-        .idc-portrait-empty::before { top: 8px; left: 8px; border-right: 0; border-bottom: 0; }
-        .idc-portrait-empty::after  { bottom: 8px; right: 8px; border-left: 0; border-top: 0; }
+        .idc-portrait-empty::before { top: 10px; left: 10px; border-right: 0; border-bottom: 0; }
+        .idc-portrait-empty::after  { bottom: 10px; right: 10px; border-left: 0; border-top: 0; }
 
-        /* The only sign that the box does anything. Quiet enough to read as a
-           mark printed in the corner of a card, loud enough that somebody
-           looking for something to press finds it. */
         .idc-portrait-badge {
-          position: absolute; right: 6px; bottom: 6px;
+          position: absolute; right: 7px; bottom: 7px;
           display: flex; align-items: center; justify-content: center;
-          width: 21px; height: 21px; border-radius: 6px;
+          width: 21px; height: 21px; border-radius: 7px;
           background: var(--bg);
           border: 1px solid var(--idc-rule);
           color: var(--ink-faint);
           transition: color 0.15s;
         }
         .idc-portrait--turnable:hover .idc-portrait-badge { color: var(--ink); }
+        .idc-portrait-badge--drop { right: auto; left: 7px; cursor: pointer; }
 
-        @media (prefers-reduced-motion: reduce) {
-          .idc-face-slot { transition: none; }
+        .idc-portrait-hit {
+          position: absolute; inset: 0;
+          display: flex; align-items: flex-end; justify-content: center;
+          padding-bottom: 10px;
+          cursor: pointer;
         }
-
-        /* ── The filled-in rows ── one grid rather than three, so every answer
-           starts at the same place down the card no matter how long its label
-           is. Left-ranged as a block and the block centred: a form reads down
-           its own left edge, and centring the rows individually would give it
-           three of them. */
-        .idc-fields {
-          display: grid;
-          grid-template-columns: auto 1fr;
-          column-gap: 12px;
-          row-gap: 11px;
-          align-items: baseline;
-          width: 100%;
-          max-width: 292px;
-          margin: 0 auto;
-          text-align: left;
-        }
-        /* Ranged right, so the column reads down its colons rather than down
-           the first letter of each label. The colons are what the eye follows
-           to the answers, and with the labels ranged left they sat at four
-           different places while the answers all started at one — which read
-           as the labels being ragged rather than as a form being aligned. */
-        .idc-field-label {
+        /* Hidden from sight but not from the keyboard. The hidden attribute
+           would take it out of the tab order and leave the box unreachable
+           without a mouse; this keeps it focusable and lets the label do the
+           rest. A backtick in this comment would end the stylesheet, which is
+           a thing this file has learned once already. */
+        .idc-file { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+        .idc-file:focus-visible + .idc-portrait-badge { outline: 2px solid var(--ink-faint); outline-offset: 2px; }
+        .idc-portrait-said {
           font-family: var(--font-label);
-          font-size: 9px; letter-spacing: 0.11em; text-transform: uppercase;
-          color: var(--ink-faint);
+          font-size: 8.5px; letter-spacing: 0.1em; text-transform: uppercase;
+          color: var(--ink-soft);
+          background: var(--bg);
+          border: 1px solid var(--idc-rule);
+          border-radius: 999px;
+          padding: 4px 10px;
+        }
+        .idc-portrait-hit:hover .idc-portrait-said { color: var(--ink); }
+
+        /* Once there is a picture the box is a thing you move rather than a
+           thing you press, so the label shrinks to its own pill and the rest
+           takes the drag. pointer-events has to come off the strip or it would
+           swallow the drag it is sitting on. */
+        .idc-portrait-hit--pill { inset: auto 0 10px 0; pointer-events: none; }
+        .idc-portrait-hit--pill .idc-portrait-said { pointer-events: auto; }
+        .idc-portrait--framing { cursor: grab; touch-action: none; }
+        .idc-portrait--framing:active { cursor: grabbing; }
+        .idc-portrait--framing img { user-select: none; -webkit-user-drag: none; }
+        /* One line, always. Wrapped it was a two-line placard across the top of
+           the photograph, which on a portrait is squarely over the face — and
+           seeing the face is the entire point of the control. */
+        .idc-portrait-hint {
+          position: absolute; top: 8px; left: 50%; transform: translateX(-50%);
+          font-family: var(--font-label);
+          font-size: 7.5px; letter-spacing: 0.1em; text-transform: uppercase;
           white-space: nowrap;
-          text-align: right;
-        }
-        /* The answer sits on its own rule, which is drawn whether or not there
-           is an answer on it yet. Dotted rather than solid, at the same rhythm
-           as the dividers between blocks. */
-        .idc-field-value {
-          margin: 0;
-          min-height: 15px;
-          padding-bottom: 4px;
-          font-family: var(--font-label);
-          font-size: 12.5px; letter-spacing: 0.02em; color: var(--ink);
-          word-break: break-word;
-          background-image: linear-gradient(to right, var(--idc-rule) 0 2px, transparent 2px 5px);
-          background-size: 5px 1px;
-          background-position: left bottom;
-          background-repeat: repeat-x;
+          color: var(--ink-soft);
+          background: var(--bg);
+          border: 1px solid var(--idc-rule);
+          border-radius: 999px;
+          padding: 3px 8px;
+          pointer-events: none;
         }
 
-        /* Left-ranged inside a centred block. Everything else on the card is
-           one or two words and centres happily; this is the one run of real
-           prose, and six centred lines is a ragged left edge to read down. */
+        /* ── The writing ── ranged left inside a centred block. Everything else
+           on the card is a phrase and centres happily; this is the one run of
+           real prose, and centred prose is a ragged left edge to read down. */
         .idc-bio {
-          font-size: 13px; line-height: 1.75; color: var(--ink-soft);
-          margin: 0 auto; max-width: 300px; text-align: left;
-          font-size: 12.5px; line-height: 1.62;
+          font-size: 13px; line-height: 1.7; color: var(--ink-soft);
+          margin: 20px auto 0; max-width: 300px; text-align: left;
         }
-
-        /* ── Doors ── the pages this card is the way to. /why only exists once
-           its owner has written it, which is why it is conditional. */
-        /* The owner's one extra line. Quiet enough to belong to the card
-           rather than to sit on top of it. */
-        .idc-edit { gap: 7px; padding: 8px 15px; font-size: 9px; letter-spacing: 0.11em; }
-        .idc-edit svg { color: var(--ink-faint); transition: color 0.15s; }
-        .idc-edit:hover svg { color: var(--ink); }
-        .idc-edit-actions { display: flex; gap: 7px; justify-content: center; flex-wrap: wrap; }
-        .idc-edit-actions .ln-pill:disabled { opacity: 0.5; cursor: default; }
-        .idc-trouble {
-          font-family: var(--font-label); font-size: 9px; letter-spacing: 0.08em;
-          color: var(--fav); margin: 9px 0 0;
-        }
-
-        /* Editing does not swap the card for a form. Nothing moves, nothing is
-           replaced, and the only thing this class does is stop the soft bottom
-           edge — that edge means "there is more below", and fading the row you
-           are typing into says something else. */
-        .idc-inner--editing {
-          mask-image: none;
-          -webkit-mask-image: none;
-        }
-
-        /* ── A field, dressed as the line it will become ──────────────────
-           Every value on this card already sits on a rule in mono at 12.5px.
-           An input that inherits all of that, with its own border and box
-           removed, is the same line with a caret in it — which is the whole
-           point: you should not be able to tell the card changed, only that
-           you can type. */
-        .idc-field-input {
-          width: 100%;
-          border: 0;
-          border-radius: 0;
-          padding: 0;
-          background: transparent;
-          font-family: inherit;
-          font-size: inherit;
-          letter-spacing: inherit;
-          color: var(--ink);
-        }
-        .idc-field-input:focus { outline: none; }
-        .idc-field-input::placeholder { color: var(--ink-faint); }
-        /* The one hint that a line is live: its rule firms up under the caret,
-           in the same place the dots already were. */
-        .idc-fields--editing .idc-field-value:focus-within,
-        .idc-links .idc-field-input:focus {
-          background-image: linear-gradient(to right, var(--ink-faint) 0 100%);
-          background-size: 100% 1px;
-        }
-        /* min-width:0 on both, or the input's own content sets the floor and
-           the row pushes out past the edge of the card — a flex item and a
-           grid track both default to being at least as wide as what is in
-           them, which for a text field is the whole line you typed. */
-        .idc-field-value { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
-        .idc-field-input { min-width: 0; }
-
-        /* Leaving a counted row off. It stays in place while you are editing,
-           struck through rather than removed, so the way back is where the way
-           out was. */
-        .idc-field-value--off { color: var(--ink-faint); text-decoration: line-through; }
-        .idc-field-eye {
-          margin-left: auto; flex-shrink: 0;
-          display: inline-flex; align-items: center; justify-content: center;
-          width: 24px; height: 24px; border-radius: 7px;
-          color: var(--ink-faint); background: transparent; border: 0;
-          cursor: pointer; transition: color 0.15s, background 0.15s;
-        }
-        .idc-field-eye:hover { color: var(--ink); background: var(--bg-warm); }
-
-        /* The bio, still the bio. Type, measure, leading and colour all come
-           from .idc-bio; this only removes the chrome a textarea arrives with
-           and lets it grow rather than scroll. */
         .idc-bio-input {
-          display: block;
-          width: 100%;
-          border: 0;
-          padding: 0;
-          background: transparent;
-          resize: none;
-          overflow: hidden;
-          font: inherit;
-          letter-spacing: inherit;
+          display: block; width: 100%;
+          border: 0; padding: 0; background: transparent;
+          resize: none; overflow: hidden;
+          font: inherit; letter-spacing: inherit; color: var(--ink-soft);
         }
         .idc-bio-input:focus { outline: none; }
         .idc-bio-input::placeholder { color: var(--ink-faint); }
 
-        /* The marks, opened out. Same icons in the same order in the same
-           place; each one just gets the line it stands for beside it. */
-        .idc-links { width: 100%; max-width: 292px; margin: 16px auto 0; text-align: left; }
+        /* What the journal actually listens to. Counted, never chosen. */
+        .idc-genres {
+          font-size: 12px; color: var(--ink-soft);
+          margin: 16px 0 0;
+          display: flex; align-items: center; justify-content: center; gap: 4px;
+        }
+
+        /* ── The ask ── the only forward-looking line on the card, and the last
+           one before the button for sending something. You read what they are
+           after, then you send it. That order is the whole feature, which is
+           why the genres sit above it rather than between it and the button. */
+        .idc-ask {
+          margin: 16px auto 0; max-width: 300px;
+          font-size: 13px; line-height: 1.6; color: var(--ink);
+          display: flex; align-items: baseline; gap: 7px;
+          text-align: left;
+        }
+        .idc-ask-label {
+          flex-shrink: 0;
+          font-family: var(--font-label);
+          font-size: 9px; letter-spacing: 0.11em; text-transform: uppercase;
+          color: var(--ink-faint);
+        }
+        .idc-ask-input {
+          flex: 1; min-width: 0;
+          border: 0; padding: 0 0 3px; background: transparent;
+          font: inherit; color: var(--ink);
+          border-bottom: 1px solid var(--idc-rule);
+        }
+        .idc-ask-input:focus { outline: none; border-bottom-color: var(--ink-faint); }
+        .idc-ask-input::placeholder { color: var(--ink-faint); }
+
+        /* The one control that is an action rather than a door, and the reason
+           the ask is written directly above it. Weighted by ink rather than by
+           fill, so it leads without inventing a second kind of button. */
+        .idc-send {
+          margin-top: 20px;
+          color: var(--ink);
+          border-color: var(--ink-faint);
+          padding: 10px 22px;
+          font-size: 9.5px;
+        }
+        .idc-send:hover { border-color: var(--ink); }
+
+        /* ── Below the line ── everywhere else the keeper can be found, and the
+           one page the card still carries. Quiet, and after the point. */
+        .idc-rule {
+          width: 100%; height: 1px; margin: 22px 0 16px;
+          background-image: linear-gradient(to right, var(--idc-rule) 0 4px, transparent 4px 9px);
+          background-size: 9px 1px; background-repeat: repeat-x;
+        }
+        .idc-doors { display: flex; flex-wrap: wrap; gap: 7px; justify-content: center; }
+        .idc-doors .ln-pill { padding: 7px 14px; font-size: 8.5px; letter-spacing: 0.1em; }
+        .idc-socials { display: flex; gap: 4px; justify-content: center; margin-top: 12px; }
+        .idc-social {
+          display: flex; align-items: center; justify-content: center;
+          width: 34px; height: 34px; border-radius: 10px;
+          color: var(--ink-faint);
+          transition: color 0.15s, background 0.15s;
+        }
+        .idc-social:hover { color: var(--ink); background: var(--bg-warm); }
+
+        /* ── The links, opened ── the same marks in the same place, each with
+           the address it stands for beside it. */
+        .idc-links { width: 100%; max-width: 300px; margin: 12px auto 0; text-align: left; }
         .idc-link-row {
           display: grid; grid-template-columns: 22px minmax(0, 1fr) 24px;
           gap: 8px; align-items: center;
         }
         .idc-link-row + .idc-link-row { margin-top: 10px; }
         .idc-link-mark { display: inline-flex; color: var(--ink-faint); }
-        .idc-link-row .idc-field-input {
-          font-family: var(--font-label); font-size: 11.5px;
-          padding-bottom: 4px;
-          background-image: linear-gradient(to right, var(--idc-rule) 0 2px, transparent 2px 5px);
-          background-size: 5px 1px;
-          background-position: left bottom;
-          background-repeat: repeat-x;
+        .idc-link-input {
+          min-width: 0; width: 100%;
+          border: 0; padding: 0 0 3px; background: transparent;
+          font-size: 12px; color: var(--ink); font-family: inherit;
+          border-bottom: 1px solid var(--idc-rule);
         }
+        .idc-link-input:focus { outline: none; border-bottom-color: var(--ink-faint); }
+        .idc-link-input::placeholder { color: var(--ink-faint); }
         .idc-link-drop, .idc-link-add {
           display: inline-flex; align-items: center; justify-content: center;
           height: 24px; border-radius: 7px;
@@ -770,185 +762,89 @@ export default function IdentityCard({ stamps, authed = false }) {
           letter-spacing: 0.11em; text-transform: uppercase;
         }
 
-        /* The photo box while it is a way to choose one. Same box, same size,
-           same place — only what pressing it does has changed. */
-        .idc-portrait-hit {
-          position: absolute; inset: 0;
-          display: flex; align-items: flex-end; justify-content: center;
-          padding-bottom: 10px;
-          cursor: pointer;
-        }
-        /* Hidden from sight but not from the keyboard. The hidden attribute
-           would take it out of the tab order and leave the box unreachable
-           without a mouse; this keeps it focusable and lets the label do the
-           rest. A backtick in here would end the stylesheet, which is a thing
-           this file has now learned once. */
-        .idc-file {
-          position: absolute; width: 1px; height: 1px;
-          opacity: 0; pointer-events: none;
-        }
-        .idc-file:focus-visible + .idc-portrait-badge {
-          outline: 2px solid var(--ink-faint); outline-offset: 2px;
-        }
-        /* What the box is offering, said once, at the bottom of it. Only while
-           editing, and only over a picture it will not obscure. */
-        .idc-portrait-said {
-          font-family: var(--font-label);
-          font-size: 8.5px; letter-spacing: 0.1em; text-transform: uppercase;
-          color: var(--ink-soft);
-          background: var(--bg);
-          border: 1px solid var(--idc-rule);
-          border-radius: 999px;
-          padding: 4px 10px;
-        }
-        .idc-portrait-hit:hover .idc-portrait-said { color: var(--ink); }
-
-        /* Once there is a picture, the box is a thing you move rather than a
-           thing you press: the label shrinks to the width of its own pill and
-           the rest of the box takes the drag. pointer-events on the strip has
-           to be off or it would swallow the drag it is sitting on top of. */
-        .idc-portrait-hit--pill {
-          inset: auto 0 10px 0;
-          pointer-events: none;
-        }
-        .idc-portrait-hit--pill .idc-portrait-said { pointer-events: auto; }
-
-        .idc-portrait--framing { cursor: grab; touch-action: none; }
-        .idc-portrait--framing:active { cursor: grabbing; }
-        /* No drag without a photograph, and no drag on a picture already small
-           enough that nothing is being cropped — the browser will not move it
-           and a grab cursor over something that cannot move is a lie. */
-        .idc-portrait--framing img { user-select: none; -webkit-user-drag: none; }
-        /* One line, always. Wrapped it was a two-line placard across the top of
-           the photograph, which on a portrait is squarely over the face — and
-           the whole point of this control is being able to see the face. */
-        .idc-portrait-hint {
-          position: absolute; top: 8px; left: 50%; transform: translateX(-50%);
-          font-family: var(--font-label);
-          font-size: 7.5px; letter-spacing: 0.1em; text-transform: uppercase;
-          white-space: nowrap;
-          color: var(--ink-soft);
-          background: var(--bg);
-          border: 1px solid var(--idc-rule);
-          border-radius: 999px;
-          padding: 3px 8px;
-          pointer-events: none;
-        }
-        .idc-portrait-badge--drop {
-          right: auto; left: 6px;
-          cursor: pointer;
-        }
-
-        /* The ask keeps the same grid as the rows above it, so a card reads
-           as one form rather than as two lists that happen to share a page. */
-        .idc-ask { margin-bottom: 15px; }
-
-        /* The one control on the card that is an action rather than a door,
-           and the only reason the ask is written directly above it. Weighted
-           by ink rather than by fill, so it leads without inventing a second
-           kind of button for the site to have to keep. */
-        .idc-send {
-          color: var(--ink);
-          border-color: var(--ink-faint);
-          padding: 9px 20px;
-          font-size: 9.5px;
-        }
-        .idc-send:hover { border-color: var(--ink); }
-
-        .idc-doors { display: flex; flex-wrap: wrap; gap: 7px; justify-content: center; }
-        .idc-doors .ln-pill { padding: 8px 15px; font-size: 9px; letter-spacing: 0.11em; }
-
-        /* ── Elsewhere ── wherever else the keeper is, as marks rather than as
-           written-out addresses. Absent entirely when they have listed none,
-           which is a supported answer and not a gap. */
-        .idc-socials { display: flex; gap: 4px; justify-content: center; margin-top: 16px; }
-        .idc-social {
-          display: flex; align-items: center; justify-content: center;
-          width: 34px; height: 34px; border-radius: 10px;
-          color: var(--ink-faint);
-          transition: color 0.15s, background 0.15s;
-        }
-        .idc-social:hover { color: var(--ink); background: var(--bg-warm); }
-
-        /* ── Signature ── the address, and only ever in the form you point a
-           phone at. It lives behind the portrait rather than at the foot of the
-           column, where it cost a rule and a hundred pixels of height that the
-           photo wanted. Nowhere on this card is it printed as text: a code is
-           a door, a URL is a door with the hinges written on it, and half the
-           copies of this software will be living at an address nobody chose.
-           It reaches anyone who cannot see the code through its aria-label. */
-        .idc-qr { display: block; margin: 0 auto; color: var(--ink); }
-
-        /* A phone gets one pane and no document scroll, so the column is
-           tuned to land inside one: same card, every measure a notch down. What
-           does not fit scrolls under the fade rather than being cut. */
-        /* A wide screen has the height to print the whole column without
-           scrolling it, and the width to set the bio a line or two shorter. */
-        @media (min-width: 769px) {
-          .idc { max-width: 376px; }
-          .idc-rule { margin: 12px 0; }
-          .idc-portrait { width: 244px; }
+        .idc-trouble {
+          font-family: var(--font-label); font-size: 9px; letter-spacing: 0.08em;
+          color: var(--fav); margin: 10px 0 0;
         }
 
         @media (max-width: 480px) {
-          .idc-mark { height: 36px; }
-          .idc-rule { margin: 10px 0; }
-          .idc-bio { font-size: 12px; line-height: 1.6; }
-          .idc-portrait { width: 204px; }
-          .idc-socials { margin-top: 10px; }
+          .idc-name { font-size: 24px; }
+          .idc-portrait { width: 168px; height: 168px; margin-top: 17px; }
+          .idc-bio { margin-top: 17px; font-size: 12.5px; }
         }
       `}</style>
 
-      <div ref={innerRef} className={'idc-inner' + (more ? ' idc-inner--more' : '') + (editing ? ' idc-inner--editing' : '')}>
-        {/* The site's own mark, with the live dot on its period — the same SVG
-            and the same class the cover uses, so the two sides of the page
-            report the same thing rather than each deciding for themselves. */}
-        <svg
-          viewBox={`${MARK_BOX.x} ${MARK_BOX.y} ${MARK_BOX.w} ${MARK_BOX.h}`}
-          className="idc-mark"
-          role="img"
-          aria-label={journal_name}
-        >
-          {MARK_GLYPHS.map(glyph => (
-            <path key={glyph.transform} d={glyph.d} transform={glyph.transform} />
-          ))}
-          <circle
-            cx={MARK_DOT.cx}
-            cy={MARK_DOT.cy}
-            r={MARK_DOT.r}
-            className={'hp-logo-mark-dot' + (isLive ? ' hp-logo-mark-dot--live' : '')}
-          />
-        </svg>
+      <div ref={innerRef} className={'idc-inner' + (more ? ' idc-inner--more' : '')}>
+        <div className="idc-head">
+          {/* The site's own mark, small and in the corner. The dot on its
+              period is lit while something is playing — the same fact the
+              front of the cover carries, and the only thing on this side
+              that moves. */}
+          <svg
+            viewBox={`${MARK_BOX.x} ${MARK_BOX.y} ${MARK_BOX.w} ${MARK_BOX.h}`}
+            className="idc-mark"
+            role="img"
+            aria-label={journal_name}
+          >
+            {MARK_GLYPHS.map(glyph => (
+              <path key={glyph.transform} d={glyph.d} transform={glyph.transform} />
+            ))}
+            <circle
+              cx={MARK_DOT.cx}
+              cy={MARK_DOT.cy}
+              r={MARK_DOT.r}
+              className={'hp-logo-mark-dot' + (isLive ? ' hp-logo-mark-dot--live' : '')}
+            />
+          </svg>
 
-        <div className="idc-rule" />
+          {/* Signed in, the card has this and nothing else it did not have
+              before. Signed out it is not in the page at all, and the writing
+              endpoints check the wristband regardless of what is drawn here. */}
+          {authed && (
+            <div className="idc-tools">
+              {editing ? (
+                <>
+                  <button
+                    type="button"
+                    className="idc-tool idc-tool--keep"
+                    onClick={edit.save}
+                    disabled={edit.saving || edit.busy}
+                    aria-label="Save this card"
+                    title="Save"
+                  >
+                    <Check size={16} weight="bold" aria-hidden="true" />
+                  </button>
+                  <button
+                    type="button"
+                    className="idc-tool"
+                    onClick={edit.cancel}
+                    disabled={edit.saving}
+                    aria-label="Stop editing without saving"
+                    title="Cancel"
+                  >
+                    <X size={16} weight="bold" aria-hidden="true" />
+                  </button>
+                </>
+              ) : (
+                <button
+                  type="button"
+                  className="idc-tool"
+                  onClick={edit.begin}
+                  aria-label="Edit this card"
+                  title="Edit this card"
+                >
+                  <PencilSimple size={15} weight="bold" aria-hidden="true" />
+                </button>
+              )}
+            </div>
+          )}
+        </div>
 
-        {slot}
-
-        {/* The keeper's name used to be captioned under the box. The ruled
-            rows below carry a Name line now, and a card that says who it
-            belongs to twice in three inches is a card with a printing fault.
-            The caption came first and the row is the better of the two — it
-            sits with Keeping since and Albums logged, which are the same kind
-            of fact about the same person. */}
-
-        <div className="idc-rule" />
-
-        {/* A form, filled in. The label sits outside the line and the answer
-            sits on it, so a value nobody has supplied yet leaves a ruled blank
-            rather than a missing row — which is the state every fresh copy of
-            this software opens in, and it should look deliberate. */}
-        {/* The same grid either way. Name is a line you write on, so editing
-            puts a caret on it rather than a form field over it — the input
-            inherits the row's type and the row's rule and is invisible until
-            you touch it. The two counted rows are never writable; while
-            editing they grow an eye instead, because a number you cannot take
-            off the card is a number that stops someone keeping one. */}
-        <dl className={'idc-fields' + (editing ? ' idc-fields--editing' : '')}>
-          <dt className="idc-field-label">Name:</dt>
-          <dd className="idc-field-value">
+        {(editing || keeper_name) && (
+          <h1 className="idc-name">
             {editing
               ? <input
-                  className="idc-field-input"
+                  className="idc-name-input"
                   type="text"
                   value={edit.name}
                   onChange={e => edit.setName(e.target.value)}
@@ -956,159 +852,85 @@ export default function IdentityCard({ stamps, authed = false }) {
                   aria-label="Name"
                 />
               : keeper_name}
-          </dd>
+          </h1>
+        )}
 
-          {(editing || !hiding.includes('since')) && (
-            <>
-              <dt className="idc-field-label">Keeping since:</dt>
-              <dd className={'idc-field-value' + (editing && edit.hidden.has('since') ? ' idc-field-value--off' : '')}>
-                {since}
-                {editing && (
-                  <button
-                    type="button"
-                    className="idc-field-eye"
-                    onClick={() => edit.toggleHidden('since')}
-                    aria-pressed={edit.hidden.has('since')}
-                    aria-label={edit.hidden.has('since') ? 'Show this row on the card' : 'Leave this row off the card'}
-                  >
-                    {edit.hidden.has('since')
-                      ? <EyeSlash size={13} weight="regular" aria-hidden="true" />
-                      : <Eye size={13} weight="regular" aria-hidden="true" />}
-                  </button>
-                )}
-              </dd>
-            </>
-          )}
+        {(showAlbums || showSince) && (
+          <p className="idc-meta">
+            {showAlbums && (
+              <span className={'idc-meta-part' + off('albums')}>
+                {records} albums logged
+                {eyeFor('albums')}
+              </span>
+            )}
+            {showAlbums && showSince && <span aria-hidden="true">·</span>}
+            {showSince && (
+              <span className={'idc-meta-part' + off('since')}>
+                Logging since {since}
+                {eyeFor('since')}
+              </span>
+            )}
+          </p>
+        )}
 
-          {(editing || !hiding.includes('albums')) && (
-            <>
-              <dt className="idc-field-label">Albums logged:</dt>
-              <dd className={'idc-field-value' + (editing && edit.hidden.has('albums') ? ' idc-field-value--off' : '')}>
-                {records == null ? null : records}
-                {editing && (
-                  <button
-                    type="button"
-                    className="idc-field-eye"
-                    onClick={() => edit.toggleHidden('albums')}
-                    aria-pressed={edit.hidden.has('albums')}
-                    aria-label={edit.hidden.has('albums') ? 'Show this row on the card' : 'Leave this row off the card'}
-                  >
-                    {edit.hidden.has('albums')
-                      ? <EyeSlash size={13} weight="regular" aria-hidden="true" />
-                      : <Eye size={13} weight="regular" aria-hidden="true" />}
-                  </button>
-                )}
-              </dd>
-            </>
-          )}
-        </dl>
+        {slot}
 
         {/* Same measure, same size, same leading, same colour. A textarea set
             in the paragraph's own type is the paragraph, with a caret in it. */}
         {editing ? (
-          <>
-            <div className="idc-rule" />
-            <textarea
-              className="idc-bio idc-bio-input"
-              value={edit.bio}
-              onChange={e => edit.setBio(e.target.value)}
-              onInput={grow}
-              ref={growOnMount}
-              placeholder="A line or two about whoever keeps this."
-              aria-label="Bio"
-            />
-          </>
+          <textarea
+            className="idc-bio idc-bio-input"
+            value={edit.bio}
+            onChange={e => edit.setBio(e.target.value)}
+            onInput={grow}
+            ref={growOnMount}
+            placeholder="A line or two about whoever keeps this."
+            aria-label="Bio"
+          />
         ) : blurb ? (
-          <>
-            <div className="idc-rule" />
-            <p className="idc-bio">{blurb}</p>
-          </>
+          <p className="idc-bio">{blurb}</p>
         ) : null}
+
+        {genres.length > 0 && showing('genres') && (
+          <p className={'idc-genres' + off('genres')}>
+            {genres.join(' · ')}
+            {eyeFor('genres')}
+          </p>
+        )}
+
+        {(editing || send_me) && (
+          <p className="idc-ask">
+            <span className="idc-ask-label">Send me</span>
+            {editing
+              ? <input
+                  className="idc-ask-input"
+                  type="text"
+                  value={edit.sendMe}
+                  onChange={e => edit.setSendMe(e.target.value)}
+                  /* The placeholder is the feature. Told what good looks like
+                     people write something worth reading; asked "what would
+                     you like?" they write nothing, or "anything". */
+                  placeholder="something loud, or anything with a saxophone in it"
+                  aria-label="Send me"
+                />
+              : <span>{send_me}</span>}
+          </p>
+        )}
+
+        <Link href="/submit" className="ln-pill idc-send" inert={editing ? true : undefined}>
+          Send an album
+        </Link>
 
         <div className="idc-rule" />
 
-        {/* ── The ask ──────────────────────────────────────────────────────
-            The only forward-looking thing on the card. Everything above it
-            says what somebody has already done; this says what they want
-            next, and it is the last line before the button for sending them
-            something — you read what they are after, then you send it. That
-            ordering is the whole feature: it turns a profile into a request,
-            and anything put between the two weakens it, which is why the
-            genres sit above the ask rather than under it.
-
-            Those genres are what the journal actually listens to, and nobody
-            chooses them. The two lines disagreeing is the interesting part. */}
-        {(editing || send_me || (genres.length > 0 && !hiding.includes('genres'))) && (
-          <>
-            <dl className={'idc-fields idc-ask' + (editing ? ' idc-fields--editing' : '')}>
-              {genres.length > 0 && (editing || !hiding.includes('genres')) && (
-                <>
-                  <dt className="idc-field-label">Top genres:</dt>
-                  <dd className={'idc-field-value' + (editing && edit.hidden.has('genres') ? ' idc-field-value--off' : '')}>
-                    {genres.join(' · ')}
-                    {editing && (
-                      <button
-                        type="button"
-                        className="idc-field-eye"
-                        onClick={() => edit.toggleHidden('genres')}
-                        aria-pressed={edit.hidden.has('genres')}
-                        aria-label={edit.hidden.has('genres') ? 'Show this row on the card' : 'Leave this row off the card'}
-                      >
-                        {edit.hidden.has('genres')
-                          ? <EyeSlash size={13} weight="regular" aria-hidden="true" />
-                          : <Eye size={13} weight="regular" aria-hidden="true" />}
-                      </button>
-                    )}
-                  </dd>
-                </>
-              )}
-              {(editing || send_me) && (
-                <>
-                  <dt className="idc-field-label">Send me:</dt>
-                  <dd className="idc-field-value">
-                    {editing
-                      ? <input
-                          className="idc-field-input"
-                          type="text"
-                          value={edit.sendMe}
-                          onChange={e => edit.setSendMe(e.target.value)}
-                          /* The placeholder is the feature. Told what good
-                             looks like, people write something worth reading;
-                             left to "what would you like?" they write nothing
-                             or they write "anything". */
-                          placeholder="something loud, or anything with a saxophone in it"
-                          aria-label="Send me"
-                        />
-                      : send_me}
-                  </dd>
-                </>
-              )}
-
-            </dl>
-
-            <Link
-              href="/submit"
-              className="ln-pill idc-send"
-              inert={editing ? true : undefined}
-            >
-              Send an album
-            </Link>
-
-            <div className="idc-rule" />
-          </>
-        )}
-
-        {/* Unchanged, and unclickable while editing: following one of these
-            mid-sentence would navigate away from an unsaved card. */}
+        {/* The note moved on to the download page and the key is going to sit
+            with the entries it explains, which leaves the rig — and that is
+            optional too: plenty of people listening on whatever they have do
+            not have a rig to describe. */}
         <div className="idc-doors" inert={editing ? true : undefined}>
-          {hasNote && <Link href="/why" className="ln-pill">The note</Link>}
           <Link href="/rig" className="ln-pill">The rig</Link>
-          <Link href="/key" className="ln-pill">The key</Link>
         </div>
 
-        {/* The same list, in the same place. A row of marks is not something
-            you can type into, so editing opens each one onto its own line —
-            still the marks, with the address they stand for beside them. */}
         {editing ? (
           <div className="idc-links">
             {edit.links.map((link, index) => {
@@ -1120,7 +942,7 @@ export default function IdentityCard({ stamps, authed = false }) {
                     <Icon size={17} weight="regular" />
                   </span>
                   <input
-                    className="idc-field-input"
+                    className="idc-link-input"
                     type="url"
                     inputMode="url"
                     value={link}
@@ -1161,31 +983,7 @@ export default function IdentityCard({ stamps, authed = false }) {
           </div>
         ) : null}
 
-        {/* The owner's one extra line, in one place whichever state it is in.
-            The cover has never had a way in on it — signed in it simply has a
-            line more than it did, and signed out none of this is in the page. */}
-        {authed && (
-          <>
-            <div className="idc-rule" />
-            {editing ? (
-              <div className="idc-edit-actions">
-                <button type="button" className="ln-pill" onClick={edit.save} disabled={edit.saving || edit.busy}>
-                  {edit.saving ? 'Saving…' : 'Save'}
-                </button>
-                <button type="button" className="ln-pill" onClick={edit.cancel} disabled={edit.saving}>
-                  Cancel
-                </button>
-              </div>
-            ) : (
-              <button type="button" className="ln-pill idc-edit" onClick={edit.begin}>
-                <PencilSimple size={12} weight="bold" aria-hidden="true" />
-                Edit this card
-              </button>
-            )}
-            {edit.trouble && <p className="idc-trouble">{edit.trouble}</p>}
-          </>
-        )}
-
+        {edit.trouble && <p className="idc-trouble">{edit.trouble}</p>}
       </div>
     </section>
   );
