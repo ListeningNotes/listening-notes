@@ -305,6 +305,9 @@ export default function IdentityCard({ stamps, authed = false }) {
   // The mark this journal listens through, or nothing if its keeper would
   // rather not say. See RIG_ICONS.
   const rig = rigIcon(rig_icon);
+  // What the editor is currently showing, which is the draft rather than what
+  // is saved — the row underneath has to change the moment a mark is pressed.
+  const chosenRig = rigIcon(edit.rig);
 
   const address = site_address ? site_address.replace(/^https?:\/\//, '') : null;
 
@@ -329,6 +332,10 @@ export default function IdentityCard({ stamps, authed = false }) {
   const innerRef = useRef(null);
   const liftRef = useRef(null);
   const [lift, setLift] = useState(null);
+  // Which mark is being chosen, if any: 'rig', or the index of a link. One at a
+  // time, so opening a second palette closes the first and the card never has
+  // two grids of icons on it at once.
+  const [choosing, setChoosing] = useState(null);
 
   function frameStart(event) {
     const img = event.currentTarget.querySelector('img');
@@ -681,10 +688,23 @@ export default function IdentityCard({ stamps, authed = false }) {
           color: var(--ink);
           margin: 0;
         }
+        /* ── Fields that are the same size as the writing they replace ────
+           globals.css forces every input on a phone to 16px, with !important,
+           to stop iOS zooming the page in on focus. That is the right rule and
+           it wrecked this card: the name dropped from 31px to 16 the moment you
+           pressed edit, the bio and the two lines jumped up to meet it, and
+           everything below reflowed. Which is the disorientation — not the
+           editing, the whole card resizing around it.
+           So the sizes are stated here, on both sides. Above 16px a field can
+           simply match its own text. At or below it cannot, because that is
+           where the zoom starts — so on a phone the writing comes up to 16
+           instead and the field stops moving. Desktop is untouched by the
+           global rule and keeps the smaller type the card was drawn with. */
         .idc-name-input {
           width: 100%; border: 0; padding: 0; background: transparent;
           font: inherit; letter-spacing: inherit; color: var(--ink);
           text-align: center;
+          font-size: 36px !important;
         }
         .idc-name-input:focus { outline: none; }
         .idc-name-input::placeholder { color: var(--ink-faint); }
@@ -916,30 +936,60 @@ export default function IdentityCard({ stamps, authed = false }) {
            the address it stands for beside it. */
         .idc-links { width: 100%; max-width: 300px; margin: 12px auto 0; text-align: left; }
         .idc-link-row {
-          display: grid; grid-template-columns: 22px minmax(0, 1fr) 24px;
+          display: grid; grid-template-columns: 26px minmax(0, 1fr) 24px;
           gap: 8px; align-items: center;
         }
         .idc-link-row + .idc-link-row { margin-top: 10px; }
-        /* The mark, and the picker sitting invisibly on top of it. */
+        /* The mark, which is also the way to change it. */
         .idc-link-mark {
-          position: relative;
           display: inline-flex; align-items: center; justify-content: center;
-          width: 22px; height: 22px;
+          width: 26px; height: 26px; border-radius: 8px;
           color: var(--ink-faint);
+          background: transparent; border: 1px solid transparent;
+          cursor: pointer;
+          transition: color 0.15s, background 0.15s, border-color 0.15s;
         }
-        .idc-mark-pick {
-          position: absolute; inset: -3px;
-          width: calc(100% + 6px); height: calc(100% + 6px);
-          opacity: 0; cursor: pointer;
-          appearance: none; -webkit-appearance: none;
-          border: 0; padding: 0; background: none;
-        }
-        .idc-link-mark:hover { color: var(--ink); }
-        /* :focus-within, not :has(). The build silently drops :has() rules, so
-           a focus ring written that way is a focus ring that never appears. */
-        .idc-link-mark:focus-within {
-          outline: 2px solid var(--ink-faint); outline-offset: 2px; border-radius: 6px;
+        .idc-link-mark:hover { color: var(--ink); background: var(--bg-warm); }
+        .idc-link-mark--on {
           color: var(--ink);
+          background: var(--bg-warm);
+          border-color: var(--idc-rule);
+        }
+
+        /* ── The marks themselves ── pictures, not a list of their names. A
+           dropdown asked you to read "Snapchat" to choose a picture of
+           Snapchat, which is the wrong way round: you already know the one you
+           want by sight. It opens in the flow underneath the row rather than
+           floating over it, because this card is a scroller and anything
+           floating in a scroller has to be told where to go when it scrolls. */
+        .idc-marks {
+          grid-column: 1 / -1;
+          display: grid;
+          grid-template-columns: repeat(auto-fill, minmax(34px, 1fr));
+          gap: 3px;
+          margin-top: 9px; padding: 8px;
+          border: 1px solid var(--idc-rule);
+          border-radius: 10px;
+          background: var(--bg-warm);
+        }
+        .idc-mark-opt {
+          display: inline-flex; align-items: center; justify-content: center;
+          height: 34px; border-radius: 8px;
+          color: var(--ink-faint);
+          background: transparent; border: 1px solid transparent;
+          cursor: pointer;
+          transition: color 0.15s, background 0.15s, border-color 0.15s;
+        }
+        .idc-mark-opt:hover { color: var(--ink); background: var(--bg); }
+        .idc-mark-opt--on {
+          color: var(--ink);
+          background: var(--bg);
+          border-color: var(--ink-faint);
+        }
+        /* The one option that is not a picture: let the address decide. */
+        .idc-mark-auto {
+          font-family: var(--font-label);
+          font-size: 11px; letter-spacing: 0.04em;
         }
 
         .idc-link-row--rig { margin-top: 14px; }
@@ -976,13 +1026,22 @@ export default function IdentityCard({ stamps, authed = false }) {
           color: var(--fav); margin: 10px 0 0;
         }
 
+        @media (max-width: 768px) {
+          /* The three editable runs of writing, at the size their fields are
+             pinned to, so nothing changes size or reflows when you start
+             typing in them. */
+          .idc-bio, .idc-bio-input { font-size: 16px; }
+          .idc-line, .idc-line-value, .idc-ask-input { font-size: 16px; }
+          .idc-name-input { font-size: 31px !important; }
+        }
+
         @media (max-width: 480px) {
           .idc-name { font-size: 31px; }
           /* The box does not shrink on a phone, because the beacon's does not.
              They are the same square seen from either side of the cover, and a
              square that changes size when you turn the card over is two
              squares. */
-          .idc-bio { margin-top: 17px; font-size: 12.5px; }
+          .idc-bio { margin-top: 17px; }
         }
       `}</style>
 
@@ -1179,26 +1238,19 @@ export default function IdentityCard({ stamps, authed = false }) {
               const Icon = known ? known.Icon : LinkSimple;
               return (
                 <div className="idc-link-row" key={index}>
-                  {/* The mark is the picker. A native select laid over the icon
-                      rather than a popover grid: it opens the platform's own
-                      wheel on a phone and its own menu on a desktop, both of
-                      which handle twenty options better than anything drawn
-                      here would, and it costs no scrolling inside a card that
-                      is already a scroller. */}
-                  <span className="idc-link-mark">
+                  {/* The mark opens the marks. A dropdown made you read a list
+                      of names to pick a picture, which is the wrong way round
+                      — you know the one you want by sight. */}
+                  <button
+                    type="button"
+                    className={'idc-link-mark' + (choosing === index ? ' idc-link-mark--on' : '')}
+                    onClick={() => setChoosing(choosing === index ? null : index)}
+                    aria-expanded={choosing === index}
+                    aria-label={`Choose a mark for link ${index + 1}`}
+                    title="Choose a mark"
+                  >
                     <Icon size={17} weight="regular" aria-hidden="true" />
-                    <select
-                      className="idc-mark-pick"
-                      value={link.icon || 'auto'}
-                      onChange={e => edit.setLinkIcon(index, e.target.value)}
-                      aria-label={`Mark for link ${index + 1}`}
-                      title="Choose a mark"
-                    >
-                      {LINK_ICONS.map(option => (
-                        <option key={option.name} value={option.name}>{option.label}</option>
-                      ))}
-                    </select>
-                  </span>
+                  </button>
                   <input
                     className="idc-link-input"
                     type="url"
@@ -1216,6 +1268,29 @@ export default function IdentityCard({ stamps, authed = false }) {
                   >
                     <X size={12} weight="bold" aria-hidden="true" />
                   </button>
+                  {choosing === index && (
+                    <div className="idc-marks" role="group" aria-label="Marks">
+                      {LINK_ICONS.map(option => {
+                        const Mark = option.Icon || GlobeSimple;
+                        const on = (link.icon || 'auto') === option.name;
+                        return (
+                          <button
+                            key={option.name}
+                            type="button"
+                            className={'idc-mark-opt' + (on ? ' idc-mark-opt--on' : '')}
+                            onClick={() => { edit.setLinkIcon(index, option.name); setChoosing(null); }}
+                            aria-pressed={on}
+                            aria-label={option.label}
+                            title={option.label}
+                          >
+                            {option.Icon
+                              ? <Mark size={17} weight="regular" aria-hidden="true" />
+                              : <span className="idc-mark-auto" aria-hidden="true">A</span>}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
                 </div>
               );
             })}
@@ -1223,25 +1298,43 @@ export default function IdentityCard({ stamps, authed = false }) {
                 is the same kind of thing: a mark on the row under the button,
                 standing for somewhere else to go. */}
             <div className="idc-link-row idc-link-row--rig">
-              <span className="idc-link-mark">
-                {rigIcon(edit.rig).Icon
-                  ? (() => { const R = rigIcon(edit.rig).Icon; return <R size={17} weight="regular" aria-hidden="true" />; })()
+              <button
+                type="button"
+                className={'idc-link-mark' + (choosing === 'rig' ? ' idc-link-mark--on' : '')}
+                onClick={() => setChoosing(choosing === 'rig' ? null : 'rig')}
+                aria-expanded={choosing === 'rig'}
+                aria-label="Choose a mark for your rig"
+                title="Choose a mark for your rig"
+              >
+                {chosenRig.Icon
+                  ? <chosenRig.Icon size={17} weight="regular" aria-hidden="true" />
                   : <X size={15} weight="bold" aria-hidden="true" />}
-                <select
-                  className="idc-mark-pick"
-                  value={edit.rig || DEFAULT_RIG_ICON}
-                  onChange={e => edit.setRig(e.target.value)}
-                  aria-label="Mark for the rig"
-                  title="Choose a mark for your rig"
-                >
-                  {RIG_ICONS.map(option => (
-                    <option key={option.name} value={option.name}>{option.label}</option>
-                  ))}
-                </select>
-              </span>
+              </button>
               <span className="idc-rig-said">
-                {rigIcon(edit.rig).Icon ? `The rig — ${rigIcon(edit.rig).label.toLowerCase()}` : 'No rig button'}
+                {chosenRig.Icon ? `The rig — ${chosenRig.label.toLowerCase()}` : 'No rig button'}
               </span>
+              {choosing === 'rig' && (
+                <div className="idc-marks" role="group" aria-label="Marks for the rig">
+                  {RIG_ICONS.map(option => {
+                    const on = (edit.rig || DEFAULT_RIG_ICON) === option.name;
+                    return (
+                      <button
+                        key={option.name}
+                        type="button"
+                        className={'idc-mark-opt' + (on ? ' idc-mark-opt--on' : '')}
+                        onClick={() => { edit.setRig(option.name); setChoosing(null); }}
+                        aria-pressed={on}
+                        aria-label={option.label}
+                        title={option.label}
+                      >
+                        {option.Icon
+                          ? <option.Icon size={17} weight="regular" aria-hidden="true" />
+                          : <X size={15} weight="bold" aria-hidden="true" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
             <button type="button" className="idc-link-add" onClick={edit.addLink}>
