@@ -24,11 +24,11 @@ import Link from 'next/link';
 import {
   DiscordLogo, FacebookLogo, GithubLogo, InstagramLogo,
   LinkSimple, LinkedinLogo, MediumLogo, QrCode, RedditLogo, SoundcloudLogo,
-  PencilSimple, SpotifyLogo, ThreadsLogo, TiktokLogo, TwitchLogo, User, XLogo,
-  YoutubeLogo,
+  Eye, EyeSlash, PencilSimple, Plus, SpotifyLogo, ThreadsLogo, TiktokLogo,
+  TwitchLogo, UploadSimple, User, X, XLogo, YoutubeLogo,
 } from '@phosphor-icons/react';
 import QRCode from 'qrcode';
-import IdentificationCardEditor from './IdentificationCardEditor';
+import { useIdentificationCardEditor } from './IdentificationCardEditor';
 import { useListeningBeacon } from '../../hooks/useListeningBeacon';
 import { useBookplate } from './Bookplate';
 
@@ -188,8 +188,9 @@ export default function IdentityCard({ stamps, authed = false }) {
   } = settings;
   const { isLive } = useListeningBeacon();
   // Only ever true for the person who keeps the journal, and only the visible
-  // half of that: the writing endpoint checks the wristband for itself.
-  const [editing, setEditing] = useState(false);
+  // half of that: the writing endpoints check the wristband for themselves.
+  const edit = useIdentificationCardEditor(settings);
+  const editing = edit.editing;
 
   const records = stamps?.records ?? null;
 
@@ -235,6 +236,107 @@ export default function IdentityCard({ stamps, authed = false }) {
   // that starts on its blank side for no reason.
   const canTurnSlot = Boolean(portrait_url && address);
   const [slotCode, setSlotCode] = useState(!portrait_url && Boolean(address));
+
+  // A textarea that grows instead of scrolling. Two lines of arithmetic, but
+  // they have to run on mount as well as on every keystroke, or a bio that is
+  // already three lines long opens showing one of them.
+  const grow = event => {
+    const el = event.currentTarget;
+    el.style.height = 'auto';
+    el.style.height = `${el.scrollHeight}px`;
+  };
+  const growOnMount = el => {
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = `${el.scrollHeight}px`;
+  };
+
+  // ── The slot ────────────────────────────────────────────────────────────
+  // Built here rather than inline, because inline it was an immediately-called
+  // function inside the JSX, and everything inside one of those counts as
+  // render.
+  //
+  // Editing shows the photo side and nothing else: the code is not a thing
+  // being changed, and a box that turns to a QR halfway through choosing a
+  // picture is a box arguing with you.
+  const showingCode = slotCode && !editing;
+  const shownPortrait = editing ? edit.portrait : portrait_url;
+  const slotFaces = (
+    <>
+      <span className={'idc-face-slot' + (showingCode ? '' : ' idc-face-slot--on')} aria-hidden={showingCode}>
+        {shownPortrait
+          ? <img src={shownPortrait} alt={keeper_name || 'The keeper'} />
+          : <span className="idc-portrait-empty" />}
+      </span>
+      {address && (
+        <span className={'idc-face-slot idc-face-slot--code' + (showingCode ? ' idc-face-slot--on' : '')} aria-hidden={!showingCode}>
+          <AddressCode text={`https://${address}`} />
+        </span>
+      )}
+    </>
+  );
+
+  let slot;
+  if (editing) {
+    // Same box, same size, same place. Only what pressing it does has changed.
+    //
+    // A label wrapping the file input, rather than a button reaching for one:
+    // clicking a label opens its own input with no script and nothing to hold
+    // a reference to, and the input stays in the tab order so the box is
+    // reachable from a keyboard. image/* is what makes an iPhone offer the
+    // camera and the photo library rather than a file browser — which is the
+    // whole point, a picture of yourself being on your phone and not at an
+    // address you can type.
+    slot = (
+      <div className="idc-portrait idc-portrait--turnable">
+        {slotFaces}
+        <label className="idc-portrait-hit">
+          <input
+            className="idc-file"
+            type="file"
+            accept="image/*"
+            onChange={edit.choosePhoto}
+            disabled={edit.busy}
+          />
+          <span className="idc-portrait-badge" aria-hidden="true">
+            <UploadSimple size={12} weight="bold" />
+          </span>
+          <span className="idc-portrait-said">
+            {edit.busy ? 'Working…' : edit.portrait ? 'Replace the photo' : 'Choose a photo'}
+          </span>
+        </label>
+        {edit.portrait && (
+          <button
+            type="button"
+            className="idc-portrait-badge idc-portrait-badge--drop"
+            onClick={edit.removePhoto}
+            disabled={edit.busy}
+            aria-label="Remove the photo"
+          >
+            <X size={12} weight="bold" aria-hidden="true" />
+          </button>
+        )}
+      </div>
+    );
+  } else if (!canTurnSlot) {
+    slot = <div className="idc-portrait">{slotFaces}</div>;
+  } else {
+    slot = (
+      <button
+        type="button"
+        className="idc-portrait idc-portrait--turnable"
+        onClick={() => setSlotCode(v => !v)}
+        aria-pressed={slotCode}
+        aria-label={slotCode ? 'Show the portrait' : 'Show the code for this address'}
+      >
+        {slotFaces}
+        <span className="idc-portrait-badge" aria-hidden="true">
+          {slotCode ? <User size={12} weight="bold" /> : <QrCode size={12} weight="bold" />}
+        </span>
+      </button>
+    );
+  }
+
 
   // Whether the column has anything left below the fold.
   //
@@ -492,25 +594,152 @@ export default function IdentityCard({ stamps, authed = false }) {
         .idc-edit { gap: 7px; padding: 8px 15px; font-size: 9px; letter-spacing: 0.11em; }
         .idc-edit svg { color: var(--ink-faint); transition: color 0.15s; }
         .idc-edit:hover svg { color: var(--ink); }
+        .idc-edit-actions { display: flex; gap: 7px; justify-content: center; flex-wrap: wrap; }
+        .idc-edit-actions .ln-pill:disabled { opacity: 0.5; cursor: default; }
+        .idc-trouble {
+          font-family: var(--font-label); font-size: 9px; letter-spacing: 0.08em;
+          color: var(--fav); margin: 9px 0 0;
+        }
 
-        /* The editor shares the column's box and its scroller, so switching
-           into it does not move the card or change how tall it is. It never
-           carries the soft bottom edge: that edge says "there is more below",
-           and a form with a faded Save button on it says something else. */
+        /* Editing does not swap the card for a form. Nothing moves, nothing is
+           replaced, and the only thing this class does is stop the soft bottom
+           edge — that edge means "there is more below", and fading the row you
+           are typing into says something else. */
         .idc-inner--editing {
-          display: block;
           mask-image: none;
           -webkit-mask-image: none;
         }
-        /* The box shrinks while the card is open. Full size it is the card's
-           subject; in the form it is a proof that the address you pasted is a
-           picture, and proving that does not take 200 pixels — the room goes to
-           the fields instead, which is what lands Save above the fold. */
-        .idc-inner--editing .idc-portrait { width: 98px; cursor: default; }
-        /* The form's own rhythm is tighter than the card's. A card is read and
-           wants air between its parts; a form is worked through and wants its
-           next field where the last one left off. */
-        .idc-inner--editing .idc-rule { margin: 12px 0; }
+
+        /* ── A field, dressed as the line it will become ──────────────────
+           Every value on this card already sits on a rule in mono at 12.5px.
+           An input that inherits all of that, with its own border and box
+           removed, is the same line with a caret in it — which is the whole
+           point: you should not be able to tell the card changed, only that
+           you can type. */
+        .idc-field-input {
+          width: 100%;
+          border: 0;
+          border-radius: 0;
+          padding: 0;
+          background: transparent;
+          font-family: inherit;
+          font-size: inherit;
+          letter-spacing: inherit;
+          color: var(--ink);
+        }
+        .idc-field-input:focus { outline: none; }
+        .idc-field-input::placeholder { color: var(--ink-faint); }
+        /* The one hint that a line is live: its rule firms up under the caret,
+           in the same place the dots already were. */
+        .idc-fields--editing .idc-field-value:focus-within,
+        .idc-links .idc-field-input:focus {
+          background-image: linear-gradient(to right, var(--ink-faint) 0 100%);
+          background-size: 100% 1px;
+        }
+        /* min-width:0 on both, or the input's own content sets the floor and
+           the row pushes out past the edge of the card — a flex item and a
+           grid track both default to being at least as wide as what is in
+           them, which for a text field is the whole line you typed. */
+        .idc-field-value { display: flex; align-items: baseline; gap: 8px; min-width: 0; }
+        .idc-field-input { min-width: 0; }
+
+        /* Leaving a counted row off. It stays in place while you are editing,
+           struck through rather than removed, so the way back is where the way
+           out was. */
+        .idc-field-value--off { color: var(--ink-faint); text-decoration: line-through; }
+        .idc-field-eye {
+          margin-left: auto; flex-shrink: 0;
+          display: inline-flex; align-items: center; justify-content: center;
+          width: 24px; height: 24px; border-radius: 7px;
+          color: var(--ink-faint); background: transparent; border: 0;
+          cursor: pointer; transition: color 0.15s, background 0.15s;
+        }
+        .idc-field-eye:hover { color: var(--ink); background: var(--bg-warm); }
+
+        /* The bio, still the bio. Type, measure, leading and colour all come
+           from .idc-bio; this only removes the chrome a textarea arrives with
+           and lets it grow rather than scroll. */
+        .idc-bio-input {
+          display: block;
+          width: 100%;
+          border: 0;
+          padding: 0;
+          background: transparent;
+          resize: none;
+          overflow: hidden;
+          font: inherit;
+          letter-spacing: inherit;
+        }
+        .idc-bio-input:focus { outline: none; }
+        .idc-bio-input::placeholder { color: var(--ink-faint); }
+
+        /* The marks, opened out. Same icons in the same order in the same
+           place; each one just gets the line it stands for beside it. */
+        .idc-links { width: 100%; max-width: 292px; margin: 16px auto 0; text-align: left; }
+        .idc-link-row {
+          display: grid; grid-template-columns: 22px minmax(0, 1fr) 24px;
+          gap: 8px; align-items: center;
+        }
+        .idc-link-row + .idc-link-row { margin-top: 10px; }
+        .idc-link-mark { display: inline-flex; color: var(--ink-faint); }
+        .idc-link-row .idc-field-input {
+          font-family: var(--font-label); font-size: 11.5px;
+          padding-bottom: 4px;
+          background-image: linear-gradient(to right, var(--idc-rule) 0 2px, transparent 2px 5px);
+          background-size: 5px 1px;
+          background-position: left bottom;
+          background-repeat: repeat-x;
+        }
+        .idc-link-drop, .idc-link-add {
+          display: inline-flex; align-items: center; justify-content: center;
+          height: 24px; border-radius: 7px;
+          color: var(--ink-faint); background: transparent; border: 0;
+          cursor: pointer; transition: color 0.15s, background 0.15s;
+        }
+        .idc-link-drop { width: 24px; }
+        .idc-link-drop:hover, .idc-link-add:hover { color: var(--ink); background: var(--bg-warm); }
+        .idc-link-add {
+          gap: 5px; padding: 0 9px; margin-top: 11px;
+          font-family: var(--font-label); font-size: 9px;
+          letter-spacing: 0.11em; text-transform: uppercase;
+        }
+
+        /* The photo box while it is a way to choose one. Same box, same size,
+           same place — only what pressing it does has changed. */
+        .idc-portrait-hit {
+          position: absolute; inset: 0;
+          display: flex; align-items: flex-end; justify-content: center;
+          padding-bottom: 10px;
+          cursor: pointer;
+        }
+        /* Hidden from sight but not from the keyboard. The hidden attribute
+           would take it out of the tab order and leave the box unreachable
+           without a mouse; this keeps it focusable and lets the label do the
+           rest. A backtick in here would end the stylesheet, which is a thing
+           this file has now learned once. */
+        .idc-file {
+          position: absolute; width: 1px; height: 1px;
+          opacity: 0; pointer-events: none;
+        }
+        .idc-file:focus-visible + .idc-portrait-badge {
+          outline: 2px solid var(--ink-faint); outline-offset: 2px;
+        }
+        /* What the box is offering, said once, at the bottom of it. Only while
+           editing, and only over a picture it will not obscure. */
+        .idc-portrait-said {
+          font-family: var(--font-label);
+          font-size: 8.5px; letter-spacing: 0.1em; text-transform: uppercase;
+          color: var(--ink-soft);
+          background: var(--bg);
+          border: 1px solid var(--idc-rule);
+          border-radius: 999px;
+          padding: 4px 10px;
+        }
+        .idc-portrait-hit:hover .idc-portrait-said { color: var(--ink); }
+        .idc-portrait-badge--drop {
+          right: auto; left: 6px;
+          cursor: pointer;
+        }
 
         .idc-doors { display: flex; flex-wrap: wrap; gap: 7px; justify-content: center; }
         .idc-doors .ln-pill { padding: 8px 15px; font-size: 9px; letter-spacing: 0.11em; }
@@ -556,14 +785,7 @@ export default function IdentityCard({ stamps, authed = false }) {
         }
       `}</style>
 
-      {editing ? (
-        <IdentificationCardEditor
-          settings={settings}
-          identify={identify}
-          onClose={() => setEditing(false)}
-        />
-      ) : (
-      <div ref={innerRef} className={'idc-inner' + (more ? ' idc-inner--more' : '')}>
+      <div ref={innerRef} className={'idc-inner' + (more ? ' idc-inner--more' : '') + (editing ? ' idc-inner--editing' : '')}>
         {/* The site's own mark, with the live dot on its period — the same SVG
             and the same class the cover uses, so the two sides of the page
             report the same thing rather than each deciding for themselves. */}
@@ -586,37 +808,7 @@ export default function IdentityCard({ stamps, authed = false }) {
 
         <div className="idc-rule" />
 
-        {(() => {
-          const faces = (
-            <>
-              <span className={'idc-face-slot' + (slotCode ? '' : ' idc-face-slot--on')} aria-hidden={slotCode}>
-                {portrait_url
-                  ? <img src={portrait_url} alt={keeper_name || 'The keeper'} />
-                  : <span className="idc-portrait-empty" />}
-              </span>
-              {address && (
-                <span className={'idc-face-slot idc-face-slot--code' + (slotCode ? ' idc-face-slot--on' : '')} aria-hidden={!slotCode}>
-                  <AddressCode text={`https://${address}`} />
-                </span>
-              )}
-            </>
-          );
-          if (!canTurnSlot) return <div className="idc-portrait">{faces}</div>;
-          return (
-            <button
-              type="button"
-              className="idc-portrait idc-portrait--turnable"
-              onClick={() => setSlotCode(v => !v)}
-              aria-pressed={slotCode}
-              aria-label={slotCode ? 'Show the portrait' : 'Show the code for this address'}
-            >
-              {faces}
-              <span className="idc-portrait-badge" aria-hidden="true">
-                {slotCode ? <User size={12} weight="bold" /> : <QrCode size={12} weight="bold" />}
-              </span>
-            </button>
-          );
-        })()}
+        {slot}
 
         {/* The keeper's name, whichever side of the box is showing. It used to
             swap to the address when the code came up, which put a URL on the
@@ -635,55 +827,144 @@ export default function IdentityCard({ stamps, authed = false }) {
             sits on it, so a value nobody has supplied yet leaves a ruled blank
             rather than a missing row — which is the state every fresh copy of
             this software opens in, and it should look deliberate. */}
-        <dl className="idc-fields">
+        {/* The same grid either way. Name is a line you write on, so editing
+            puts a caret on it rather than a form field over it — the input
+            inherits the row's type and the row's rule and is invisible until
+            you touch it. The two counted rows are never writable; while
+            editing they grow an eye instead, because a number you cannot take
+            off the card is a number that stops someone keeping one. */}
+        <dl className={'idc-fields' + (editing ? ' idc-fields--editing' : '')}>
           <dt className="idc-field-label">Name:</dt>
-          <dd className="idc-field-value">{keeper_name}</dd>
+          <dd className="idc-field-value">
+            {editing
+              ? <input
+                  className="idc-field-input"
+                  type="text"
+                  value={edit.name}
+                  onChange={e => edit.setName(e.target.value)}
+                  placeholder="Your name"
+                  aria-label="Name"
+                />
+              : keeper_name}
+          </dd>
 
-          {!hiding.includes('since') && (
+          {(editing || !hiding.includes('since')) && (
             <>
               <dt className="idc-field-label">Keeping since:</dt>
-              <dd className="idc-field-value">{since}</dd>
+              <dd className={'idc-field-value' + (editing && edit.hidden.has('since') ? ' idc-field-value--off' : '')}>
+                {since}
+                {editing && (
+                  <button
+                    type="button"
+                    className="idc-field-eye"
+                    onClick={() => edit.toggleHidden('since')}
+                    aria-pressed={edit.hidden.has('since')}
+                    aria-label={edit.hidden.has('since') ? 'Show this row on the card' : 'Leave this row off the card'}
+                  >
+                    {edit.hidden.has('since')
+                      ? <EyeSlash size={13} weight="regular" aria-hidden="true" />
+                      : <Eye size={13} weight="regular" aria-hidden="true" />}
+                  </button>
+                )}
+              </dd>
             </>
           )}
 
-          {!hiding.includes('albums') && (
+          {(editing || !hiding.includes('albums')) && (
             <>
               <dt className="idc-field-label">Albums logged:</dt>
-              <dd className="idc-field-value">{records == null ? null : records}</dd>
+              <dd className={'idc-field-value' + (editing && edit.hidden.has('albums') ? ' idc-field-value--off' : '')}>
+                {records == null ? null : records}
+                {editing && (
+                  <button
+                    type="button"
+                    className="idc-field-eye"
+                    onClick={() => edit.toggleHidden('albums')}
+                    aria-pressed={edit.hidden.has('albums')}
+                    aria-label={edit.hidden.has('albums') ? 'Show this row on the card' : 'Leave this row off the card'}
+                  >
+                    {edit.hidden.has('albums')
+                      ? <EyeSlash size={13} weight="regular" aria-hidden="true" />
+                      : <Eye size={13} weight="regular" aria-hidden="true" />}
+                  </button>
+                )}
+              </dd>
             </>
           )}
         </dl>
 
-        {blurb && (
+        {/* Same measure, same size, same leading, same colour. A textarea set
+            in the paragraph's own type is the paragraph, with a caret in it. */}
+        {editing ? (
+          <>
+            <div className="idc-rule" />
+            <textarea
+              className="idc-bio idc-bio-input"
+              value={edit.bio}
+              onChange={e => edit.setBio(e.target.value)}
+              onInput={grow}
+              ref={growOnMount}
+              placeholder="A line or two about whoever keeps this."
+              aria-label="Bio"
+            />
+          </>
+        ) : blurb ? (
           <>
             <div className="idc-rule" />
             <p className="idc-bio">{blurb}</p>
           </>
-        )}
+        ) : null}
 
         <div className="idc-rule" />
 
-        <div className="idc-doors">
+        {/* Unchanged, and unclickable while editing: following one of these
+            mid-sentence would navigate away from an unsaved card. */}
+        <div className="idc-doors" inert={editing ? true : undefined}>
           {hasNote && <Link href="/why" className="ln-pill">The note</Link>}
           <Link href="/rig" className="ln-pill">The rig</Link>
           <Link href="/key" className="ln-pill">The key</Link>
           <Link href="/submit" className="ln-pill">Send an album</Link>
         </div>
 
-        {authed && !editing && (
-          <>
-            <div className="idc-rule" />
-            {/* No pencil floating over the card. The cover has never had a way
-                in on it — signed in, it simply has one more line than it did,
-                and signed out this is not in the page at all. */}
-            <button type="button" className="ln-pill idc-edit" onClick={() => setEditing(true)}>
-              <PencilSimple size={12} weight="bold" aria-hidden="true" />
-              Edit this card
+        {/* The same list, in the same place. A row of marks is not something
+            you can type into, so editing opens each one onto its own line —
+            still the marks, with the address they stand for beside them. */}
+        {editing ? (
+          <div className="idc-links">
+            {edit.links.map((link, index) => {
+              const known = link.trim() ? identify(link.trim()) : null;
+              const Icon = known ? known.Icon : LinkSimple;
+              return (
+                <div className="idc-link-row" key={index}>
+                  <span className="idc-link-mark" aria-hidden="true">
+                    <Icon size={17} weight="regular" />
+                  </span>
+                  <input
+                    className="idc-field-input"
+                    type="url"
+                    inputMode="url"
+                    value={link}
+                    onChange={e => edit.setLink(index, e.target.value)}
+                    placeholder="https://…"
+                    aria-label={known ? known.label : `Link ${index + 1}`}
+                  />
+                  <button
+                    type="button"
+                    className="idc-link-drop"
+                    onClick={() => edit.dropLink(index)}
+                    aria-label={`Remove link ${index + 1}`}
+                  >
+                    <X size={12} weight="bold" aria-hidden="true" />
+                  </button>
+                </div>
+              );
+            })}
+            <button type="button" className="idc-link-add" onClick={edit.addLink}>
+              <Plus size={11} weight="bold" aria-hidden="true" />
+              Add a link
             </button>
-          </>
-        )}
-
-        {socials.length > 0 && (
+          </div>
+        ) : socials.length > 0 ? (
           <div className="idc-socials">
             {socials.map(({ href, label, Icon }) => (
               <a
@@ -698,10 +979,34 @@ export default function IdentityCard({ stamps, authed = false }) {
               </a>
             ))}
           </div>
+        ) : null}
+
+        {/* The owner's one extra line, in one place whichever state it is in.
+            The cover has never had a way in on it — signed in it simply has a
+            line more than it did, and signed out none of this is in the page. */}
+        {authed && (
+          <>
+            <div className="idc-rule" />
+            {editing ? (
+              <div className="idc-edit-actions">
+                <button type="button" className="ln-pill" onClick={edit.save} disabled={edit.saving || edit.busy}>
+                  {edit.saving ? 'Saving…' : 'Save'}
+                </button>
+                <button type="button" className="ln-pill" onClick={edit.cancel} disabled={edit.saving}>
+                  Cancel
+                </button>
+              </div>
+            ) : (
+              <button type="button" className="ln-pill idc-edit" onClick={edit.begin}>
+                <PencilSimple size={12} weight="bold" aria-hidden="true" />
+                Edit this card
+              </button>
+            )}
+            {edit.trouble && <p className="idc-trouble">{edit.trouble}</p>}
+          </>
         )}
 
       </div>
-      )}
     </section>
   );
 }
