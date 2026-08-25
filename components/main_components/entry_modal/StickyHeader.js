@@ -35,15 +35,14 @@ export default function StickyHeader({ entry, visible }) {
           Masterpiece
         </span>
       )}
-      <div style={{ width: 1, height: 16, background: 'var(--border)', flexShrink: 0 }} />
-      {entry?.relationship && (
-        <span style={{ fontFamily: fonts.mono, fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--ink-soft)' }}>
-          {entry.relationship}
-        </span>
-      )}
+      {/* The divider and the separator both used to be unconditional because a
+          relationship always followed them. With that gone, Submission is the
+          only thing left down here — so the rule appears only when there is
+          something for it to divide, and the middot that used to sit between
+          two labels goes with the label it separated. */}
       {isSubmission && (
         <>
-          <span style={{ color: 'var(--ink-faint)', fontFamily: fonts.mono, fontSize: 9 }}>·</span>
+          <div style={{ width: 1, height: 16, background: 'var(--border)', flexShrink: 0 }} />
           <span style={{ fontFamily: fonts.mono, fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--accent)' }}>Submission</span>
         </>
       )}

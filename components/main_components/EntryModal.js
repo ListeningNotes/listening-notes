@@ -281,16 +281,15 @@ export default function EntryModal({ slug, originRect, references = [], onClose 
                     )}
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontFamily: fonts.mono, fontSize: 11, letterSpacing: '0.1em', textTransform: 'uppercase' }}>
-                    {entry.relationship && <span style={{ color: 'var(--ink-soft)' }}>{entry.relationship}</span>}
-                    {isFavorite && (
-                      <>
-                        {entry.relationship && <span style={{ color: 'var(--ink-faint)' }}>·</span>}
-                        <span style={{ color: 'var(--accent)' }}>Favorite</span>
-                      </>
-                    )}
+                    {/* Relationship used to lead this row, so Favorite's
+                        separator was conditional on it and Submission's was
+                        not. With it gone the separator belongs to whatever
+                        actually precedes each label, or there is a middot
+                        floating at the start of the line. */}
+                    {isFavorite && <span style={{ color: 'var(--accent)' }}>Favorite</span>}
                     {isSubmission && (
                       <>
-                        <span style={{ color: 'var(--ink-faint)' }}>·</span>
+                        {isFavorite && <span style={{ color: 'var(--ink-faint)' }}>·</span>}
                         <span style={{ color: 'var(--accent)' }}>Submission</span>
                       </>
                     )}
