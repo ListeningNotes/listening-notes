@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { Broadcast, IdentificationCard } from '@phosphor-icons/react';
 import { useTheme } from '../components/main_components/Lightswitch';
-import { useListeningBeacon } from '../hooks/useListeningBeacon';
+import { foldKey, useListeningBeacon } from '../hooks/useListeningBeacon';
 import DotNav from '../components/main_components/DotNav';
 import SiteNav from '../components/main_components/SiteNav';
 import ListeningBeacon from '../components/main_components/ListeningBeacon';
@@ -50,7 +50,7 @@ function FlipButton({ flipped, onClick }) {
 
 export default function HomePage() {
   const { theme, toggle: toggleTheme } = useTheme();
-  const { isLive } = useListeningBeacon();
+  const { isLive, recentAlbums } = useListeningBeacon();
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
   // Whether the person looking at this is the person who writes it. Not a
@@ -209,6 +209,52 @@ export default function HomePage() {
     </div>
   );
 
+  // ── What came before ────────────────────────────────────────────────────
+  // The last three records, under the beacon. Records rather than tracks: this
+  // comes from Last.fm, which answers in tracks, and a record played through is
+  // a dozen tracks wearing the same cover — the old version of this asked for
+  // six and drew what came back, so an album on repeat printed itself three
+  // times and read as a bug. The hook folds them down to distinct albums.
+  //
+  // No heading over it. Where it sits and how small it is already say what it
+  // is, and a line of type saying "recently played" is exactly the weight this
+  // row is trying not to have.
+  //
+  // Dimmed, because these are the past and the beacon above them is the
+  // present. One tap opens the entry when the album is in the journal, which is
+  // what stops the row being decoration.
+  const recentRow = recentAlbums.length > 0 && (
+    <div className="hp-recent">
+      {recentAlbums.map(album => {
+        // Album and artist first, which is what the database files entries
+        // under. Failing that, the title alone — the same record reaches
+        // Last.fm credited more than one way, and a link that does not open
+        // is worse than a slightly looser match.
+        const entry = entries.find(e => e.album_key === album.key)
+          || entries.find(e => foldKey(e.album) === album.title);
+        const label = `${album.album} — ${album.artist}`;
+        // Last.fm's cover first, the journal's own second. Last.fm answers "no
+        // cover" for a surprising share of records, and for any of them already
+        // written up here there is a perfectly good sleeve sitting in the
+        // entry — a row of grey placeholders next to one real cover reads as
+        // broken, and the artwork was in hand the whole time.
+        const cover = album.art || entry?.album_art;
+        const art = cover
+          ? <img src={cover} alt="" />
+          : <span className="hp-recent-none" aria-hidden="true">♪</span>;
+        return entry ? (
+          <Link key={album.key} href={`/entries/${entry.slug}`} className="hp-recent-tile" title={label} aria-label={label}>
+            {art}
+          </Link>
+        ) : (
+          <span key={album.key} className="hp-recent-tile hp-recent-tile--plain" title={label} aria-label={label} role="img">
+            {art}
+          </span>
+        );
+      })}
+    </div>
+  );
+
   // The two ways on from the strip. They repeat the dot nav deliberately —
   // the dots live at the top of the screen and read as chrome, and by the
   // time you've come to the end of the recent listens you want something to
@@ -351,6 +397,22 @@ export default function HomePage() {
                utility icons this screen parks on its lower edge. */
             padding: max(14px, calc(env(safe-area-inset-top) + 4px)) 18px 96px;
           }
+          /* The front stops floating in the middle of the pane. It had a
+             hundred pixels of air above it and a hundred and twenty below,
+             while the card behind it was overrunning the screen — so the
+             beacon comes up to meet the card rather than the card going down
+             to meet the beacon, which is the side with room to give.
+             What is left underneath is not a hole: the recent records sit in
+             it, pushed to the bottom of the face by their own auto margin, so
+             the space distributes itself however tall the phone is. */
+          .hp-screen--one .idc-face--front { justify-content: flex-start; }
+          /* Directly under what is playing, not pushed to the floor. Pinned to
+             the bottom it left a two-hundred-pixel hole in the middle of the
+             screen, which is the thing this row exists to not be — and sitting
+             under the beacon is also what says what it is: this is what came
+             before that. */
+          .hp-screen--one .hp-recent { margin-top: 12px; }
+
           /* minmax(0, 1fr), not the default auto row: a grid row sized to its
              content treats height:100% on the child as a floor rather than a
              ceiling, so a card with more written on it than fits simply grew
@@ -387,6 +449,52 @@ export default function HomePage() {
            and not just a place to press — the corner is the only thing on
            screen that says which side of the cover you are looking at. */
         .hp-flip[aria-pressed='true'] { color: var(--ink); }
+
+        /* ── What came before ────────────────────────────────────────────
+           Three covers, small and dim, under the beacon. Small enough that the
+           hierarchy holds on its own: at 40px against a 180px hero nothing has
+           to be labelled to be understood as secondary, and dimmed on top of
+           that so they read as past rather than as three more of the same. */
+        .hp-recent {
+          display: flex;
+          gap: 10px;
+          justify-content: center;
+          opacity: 0.65;
+          transition: opacity 0.3s;
+        }
+        .hp-recent:hover { opacity: 0.9; }
+        .hp-recent-tile {
+          width: 40px; height: 40px;
+          border-radius: 8px;
+          overflow: hidden;
+          flex-shrink: 0;
+          background: var(--bg-warm);
+          box-shadow: 0 3px 10px rgba(0,0,0,0.12);
+          display: block;
+          /* Arriving, rather than appearing. Half a second and an ease, because
+             this only pays off for somebody who happens to be looking when a
+             record rolls off the end — it wants to read as a discovery, not as
+             an announcement. Nothing animates on the way out: the one leaving
+             is the smallest, furthest thing on the row, and holding a departing
+             tile in the DOM to fade it costs more than it is worth. */
+          animation: hp-recent-arrive 0.5s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+        }
+        .hp-recent-tile img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .hp-recent-none {
+          display: flex; align-items: center; justify-content: center;
+          width: 100%; height: 100%;
+          color: var(--ink-faint); font-size: 16px;
+        }
+        a.hp-recent-tile { transition: transform 0.2s; }
+        a.hp-recent-tile:hover { transform: translateY(-2px); }
+        @keyframes hp-recent-arrive {
+          from { opacity: 0; transform: translateX(-14px) scale(0.85); }
+          to   { opacity: 1; transform: none; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .hp-recent-tile { animation: none; }
+          a.hp-recent-tile:hover { transform: none; }
+        }
 
         @media (prefers-reduced-motion: reduce) {
           /* No turn, so nothing to wait half of — the faces swap on the spot. */
@@ -442,6 +550,7 @@ export default function HomePage() {
                 </div>
               </div>
               {writingLine}
+              {recentRow}
             </div>
             <div className="idc-face idc-face--back" inert={flipped ? undefined : true}>
               {cardFace()}
@@ -464,6 +573,7 @@ export default function HomePage() {
                   </div>
                 </div>
                 {writingLine}
+                {recentRow}
               </div>
               <div className="idc-face idc-face--back" inert={flipped ? undefined : true}>
                 {cardFace()}

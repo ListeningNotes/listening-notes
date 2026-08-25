@@ -2,7 +2,6 @@
 
 import { useEffect, useId, useRef, useState } from 'react';
 import { useListeningBeacon } from '../../hooks/useListeningBeacon';
-import { useBookplate } from './Bookplate';
 
 const MARQUEE_SPEED = 18;   // px/sec — slow, readable scroll pace
 const MARQUEE_GAP = 48;     // px between the trailing copy and the next lap's leading copy
@@ -83,60 +82,13 @@ export default function ListeningBeacon({ compact = false, statusAboveArt = fals
   const trackName = trackObj?.name || '—';
   const artistName = trackObj?.artist || '';
   const artUrl = trackObj?.image || '';
-  const [panelOpen, setPanelOpen] = useState(false);
-  const [recentStack, setRecentStack] = useState([]);
-  const prevTrack = useRef(null);
-  const prevArtRef = useRef('');
-  const { lastfm_user } = useBookplate();
 
-  // Pull recent tracks from last.fm and keep the last few past listens.
-  useEffect(() => {
-    // No account, nothing to pull — and no endless failing poll behind it.
-    // recentStack is already empty for the same reason.
-    if (!lastfm_user) return;
-    async function fetchRecent() {
-      try {
-        const res = await fetch(`https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${encodeURIComponent(lastfm_user)}&api_key=f022ca293645cd4cf2beeb3be7ae4b6f&limit=6&format=json`);
-        const data = await res.json();
-        const tracks = data?.recenttracks?.track || [];
-        const nowPlaying = tracks.find(t => t['@attr']?.nowplaying);
-        const past = tracks
-          .filter(t => !t['@attr']?.nowplaying)
-          .map(t => ({
-            track: t.name,
-            artist: t.artist['#text'],
-            art: t.image?.[3]?.['#text'] || t.image?.[2]?.['#text'] || '',
-          }))
-          .filter(t => !(nowPlaying && t.track === nowPlaying.name && t.artist === nowPlaying.artist['#text']));
-        setRecentStack(past.slice(0, 3));
-      } catch (e) {}
-    }
-    fetchRecent();
-    const interval = setInterval(fetchRecent, 30000);
-    return () => clearInterval(interval);
-  }, [lastfm_user]);
-
-  // When the current track changes, push the previous one onto the recent stack.
-  useEffect(() => {
-    if (!trackObj?.name) return;
-    const key = trackObj.name + '|||' + trackObj.artist;
-    if (key === prevTrack.current) return;
-    if (prevTrack.current) {
-      const [prevName, prevArtist] = prevTrack.current.split('|||');
-      const prevArt = prevArtRef.current;
-      setRecentStack(prev => {
-        const newEntry = { track: prevName, artist: prevArtist, art: prevArt };
-        const filtered = prev.filter(t => !(t.track === trackObj.name && t.artist === trackObj.artist));
-        return [newEntry, ...filtered].slice(0, 3);
-      });
-    } else {
-      setRecentStack(prev => prev.filter(t => !(t.track === trackObj.name && t.artist === trackObj.artist)));
-    }
-    prevTrack.current = key;
-    prevArtRef.current = artUrl;
-  }, [trackObj]);
-
-  const sizes = [0.82, 0.68, 0.56];
+  // The recent listens used to be gathered here, in a second poll of the same
+  // endpoint, and fanned out around the beacon when you pressed it. They are a
+  // row of their own now, below the beacon and always visible — see the note in
+  // hooks/useListeningBeacon.js, which derives them from the poll this already
+  // makes. Pressing the beacon no longer does anything, so it stopped being a
+  // button.
 
   const statusLine = (
     <div className="beacon-status">
@@ -169,26 +121,8 @@ export default function ListeningBeacon({ compact = false, statusAboveArt = fals
   }
 
   return (
-    <div className={'beacon-stage' + (panelOpen ? ' beacon-stage--open' : '')}>
-      {recentStack.slice(0, 3).map((item, i) => (
-        <div
-          key={i}
-          className="beacon-recent-tile"
-          style={{ '--scale': sizes[i], '--delay': ((i + 1) * 0.08) + 's' }}
-        >
-          {item.art && <img src={item.art} alt={item.track} className="beacon-recent-art" />}
-          <div className="beacon-recent-meta">
-            <div className="beacon-recent-track">{item.track}</div>
-            <div className="beacon-recent-artist">{item.artist}</div>
-          </div>
-        </div>
-      ))}
-      <button
-        className="beacon-card beacon-card--main"
-        onClick={() => setPanelOpen(v => !v)}
-        aria-expanded={panelOpen}
-        aria-label="Toggle recent listens"
-      >
+    <div className="beacon-stage">
+      <div className="beacon-card beacon-card--main">
         {statusAboveArt && statusLine}
         <div className={'beacon-art-wrap' + (isLive ? ' beacon-art-wrap--live' : '')}>
           {artUrl
@@ -206,7 +140,7 @@ export default function ListeningBeacon({ compact = false, statusAboveArt = fals
           />
           {artistName && <div className="beacon-artist">{artistName}</div>}
         </div>
-      </button>
+      </div>
     </div>
   );
 }
