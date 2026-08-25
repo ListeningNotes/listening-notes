@@ -489,11 +489,13 @@ export default function IdentityCard({ stamps }) {
         }
         .idc-social:hover { color: var(--ink); background: var(--bg-warm); }
 
-        /* ── Signature ── the address, and only in the form you point a phone
-           at. It lives behind the portrait rather than at the foot of the
+        /* ── Signature ── the address, and only ever in the form you point a
+           phone at. It lives behind the portrait rather than at the foot of the
            column, where it cost a rule and a hundred pixels of height that the
-           photo wanted. It carries the address in its aria-label for anyone not
-           looking at it. */
+           photo wanted. Nowhere on this card is it printed as text: a code is
+           a door, a URL is a door with the hinges written on it, and half the
+           copies of this software will be living at an address nobody chose.
+           It reaches anyone who cannot see the code through its aria-label. */
         .idc-qr { display: block; margin: 0 auto; color: var(--ink); }
 
         /* A phone gets one pane and no document scroll, so the column is
@@ -571,11 +573,16 @@ export default function IdentityCard({ stamps }) {
           );
         })()}
 
-        {/* The caption belongs to whichever side is showing: a face has a name
-            under it, a code has the address it points at. */}
-        {(slotCode ? address : keeper_name) && (
-          <p className="idc-keeper">{slotCode ? address : keeper_name}</p>
-        )}
+        {/* The keeper's name, whichever side of the box is showing. It used to
+            swap to the address when the code came up, which put a URL on the
+            card — and a URL is the thing the code exists to avoid printing.
+            This journal's happens to read nicely; a copy of this software
+            parked on a hosting subdomain does not, and a card should not look
+            worse because of where it is served from. The address still reaches
+            anyone who cannot see the code, in its label.
+            It is also one less thing moving: the caption holds its line
+            instead of being replaced every time the box is pressed. */}
+        {keeper_name && <p className="idc-keeper">{keeper_name}</p>}
 
         <div className="idc-rule" />
 
