@@ -184,6 +184,7 @@ export default function IdentityCard({ stamps, authed = false }) {
     about_intro,
     social_links,
     hidden_fields,
+    send_me,
     has_note: hasNote,
   } = settings;
   const { isLive } = useListeningBeacon();
@@ -199,6 +200,7 @@ export default function IdentityCard({ stamps, authed = false }) {
   // are or how few they have logged, and a number you cannot take off the card
   // is a number that stops people keeping one.
   const hiding = Array.isArray(hidden_fields) ? hidden_fields : [];
+  const genres = stamps?.genres ?? [];
 
   // Founded date if the keeper set one, otherwise the day the first record was
   // logged. The second is the more honest answer anyway: a listening journal
@@ -533,13 +535,6 @@ export default function IdentityCard({ stamps, authed = false }) {
           .idc-face-slot { transition: none; }
         }
 
-        .idc-keeper {
-          font-family: var(--font-label);
-          font-size: 12px; letter-spacing: 0.14em; text-transform: uppercase;
-          color: var(--ink);
-          margin: 12px 0 0;
-        }
-
         /* ── The filled-in rows ── one grid rather than three, so every answer
            starts at the same place down the card no matter how long its label
            is. Left-ranged as a block and the block centred: a form reads down
@@ -741,6 +736,22 @@ export default function IdentityCard({ stamps, authed = false }) {
           cursor: pointer;
         }
 
+        /* The ask keeps the same grid as the rows above it, so a card reads
+           as one form rather than as two lists that happen to share a page. */
+        .idc-ask { margin-bottom: 15px; }
+
+        /* The one control on the card that is an action rather than a door,
+           and the only reason the ask is written directly above it. Weighted
+           by ink rather than by fill, so it leads without inventing a second
+           kind of button for the site to have to keep. */
+        .idc-send {
+          color: var(--ink);
+          border-color: var(--ink-faint);
+          padding: 9px 20px;
+          font-size: 9.5px;
+        }
+        .idc-send:hover { border-color: var(--ink); }
+
         .idc-doors { display: flex; flex-wrap: wrap; gap: 7px; justify-content: center; }
         .idc-doors .ln-pill { padding: 8px 15px; font-size: 9px; letter-spacing: 0.11em; }
 
@@ -810,16 +821,12 @@ export default function IdentityCard({ stamps, authed = false }) {
 
         {slot}
 
-        {/* The keeper's name, whichever side of the box is showing. It used to
-            swap to the address when the code came up, which put a URL on the
-            card — and a URL is the thing the code exists to avoid printing.
-            This journal's happens to read nicely; a copy of this software
-            parked on a hosting subdomain does not, and a card should not look
-            worse because of where it is served from. The address still reaches
-            anyone who cannot see the code, in its label.
-            It is also one less thing moving: the caption holds its line
-            instead of being replaced every time the box is pressed. */}
-        {keeper_name && <p className="idc-keeper">{keeper_name}</p>}
+        {/* The keeper's name used to be captioned under the box. The ruled
+            rows below carry a Name line now, and a card that says who it
+            belongs to twice in three inches is a card with a printing fault.
+            The caption came first and the row is the better of the two — it
+            sits with Keeping since and Albums logged, which are the same kind
+            of fact about the same person. */}
 
         <div className="idc-rule" />
 
@@ -917,13 +924,83 @@ export default function IdentityCard({ stamps, authed = false }) {
 
         <div className="idc-rule" />
 
+        {/* ── The ask ──────────────────────────────────────────────────────
+            The only forward-looking thing on the card. Everything above it
+            says what somebody has already done; this says what they want
+            next, and it is the last line before the button for sending them
+            something — you read what they are after, then you send it. That
+            ordering is the whole feature: it turns a profile into a request,
+            and anything put between the two weakens it, which is why the
+            genres sit above the ask rather than under it.
+
+            Those genres are what the journal actually listens to, and nobody
+            chooses them. The two lines disagreeing is the interesting part. */}
+        {(editing || send_me || (genres.length > 0 && !hiding.includes('genres'))) && (
+          <>
+            <dl className={'idc-fields idc-ask' + (editing ? ' idc-fields--editing' : '')}>
+              {genres.length > 0 && (editing || !hiding.includes('genres')) && (
+                <>
+                  <dt className="idc-field-label">Top genres:</dt>
+                  <dd className={'idc-field-value' + (editing && edit.hidden.has('genres') ? ' idc-field-value--off' : '')}>
+                    {genres.join(' · ')}
+                    {editing && (
+                      <button
+                        type="button"
+                        className="idc-field-eye"
+                        onClick={() => edit.toggleHidden('genres')}
+                        aria-pressed={edit.hidden.has('genres')}
+                        aria-label={edit.hidden.has('genres') ? 'Show this row on the card' : 'Leave this row off the card'}
+                      >
+                        {edit.hidden.has('genres')
+                          ? <EyeSlash size={13} weight="regular" aria-hidden="true" />
+                          : <Eye size={13} weight="regular" aria-hidden="true" />}
+                      </button>
+                    )}
+                  </dd>
+                </>
+              )}
+              {(editing || send_me) && (
+                <>
+                  <dt className="idc-field-label">Send me:</dt>
+                  <dd className="idc-field-value">
+                    {editing
+                      ? <input
+                          className="idc-field-input"
+                          type="text"
+                          value={edit.sendMe}
+                          onChange={e => edit.setSendMe(e.target.value)}
+                          /* The placeholder is the feature. Told what good
+                             looks like, people write something worth reading;
+                             left to "what would you like?" they write nothing
+                             or they write "anything". */
+                          placeholder="something loud, or anything with a saxophone in it"
+                          aria-label="Send me"
+                        />
+                      : send_me}
+                  </dd>
+                </>
+              )}
+
+            </dl>
+
+            <Link
+              href="/submit"
+              className="ln-pill idc-send"
+              inert={editing ? true : undefined}
+            >
+              Send an album
+            </Link>
+
+            <div className="idc-rule" />
+          </>
+        )}
+
         {/* Unchanged, and unclickable while editing: following one of these
             mid-sentence would navigate away from an unsaved card. */}
         <div className="idc-doors" inert={editing ? true : undefined}>
           {hasNote && <Link href="/why" className="ln-pill">The note</Link>}
           <Link href="/rig" className="ln-pill">The rig</Link>
           <Link href="/key" className="ln-pill">The key</Link>
-          <Link href="/submit" className="ln-pill">Send an album</Link>
         </div>
 
         {/* The same list, in the same place. A row of marks is not something

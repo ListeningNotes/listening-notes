@@ -189,6 +189,13 @@ CREATE TABLE IF NOT EXISTS settings (
   -- but not everyone wants to publish how new they are or how few they have
   -- logged, so they can be left off. A list of keys: ["since", "albums"].
   hidden_fields jsonb,
+  -- The one forward-looking line on the card. Everything else on it says what
+  -- somebody has already done; this says what they want next, and it sits
+  -- directly above the button for sending them something — you read what they
+  -- are asking for, then you send it. Deliberately its own column and not part
+  -- of the bio: a bio is character and this is an instruction, and folded
+  -- together nobody writes the instruction.
+  send_me text,
   -- The portrait itself, when its keeper uploaded one rather than pointing at
   -- one. Base64 in a column and served back by /api/portrait, so that adding a
   -- picture from a phone needs no storage bucket, no third-party account and no
