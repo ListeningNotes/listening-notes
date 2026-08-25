@@ -65,6 +65,7 @@ CREATE TABLE IF NOT EXISTS drafts (
   elapsed integer DEFAULT 0,
   rating integer DEFAULT 0,
   masterpiece boolean DEFAULT false,
+  formative boolean DEFAULT false,
   favorite boolean DEFAULT false,
   notes text DEFAULT ''::text,
   tracks jsonb,
@@ -100,6 +101,11 @@ CREATE TABLE IF NOT EXISTS entries (
   created_at timestamp without time zone DEFAULT now(),
   slug text,
   masterpiece boolean DEFAULT false,
+  -- The third and last flag. Formative was a relationship — one of five things
+  -- a listen could be — which was the wrong shape for it: the others describe
+  -- an occasion, this describes a standing fact about the record. An album that
+  -- shaped how you listen goes on having done that on every later listen.
+  formative boolean DEFAULT false,
   track_notes text,
   tracks jsonb,
   genre text,

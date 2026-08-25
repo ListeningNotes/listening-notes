@@ -68,7 +68,7 @@ export async function pull_all_entries({ includeChain = false } = {}) {
 const PUBLIC_FIELDS = [
   'slug', 'album', 'artist', 'year', 'genre',
   'album_key', 'rating', 'rating_value', 'relationship', 'entry_type',
-  'favorite', 'masterpiece', 'horizon', 'album_art', 'created_at',
+  'favorite', 'masterpiece', 'formative', 'horizon', 'album_art', 'created_at',
 ];
 
 export async function pull_public_entries() {
@@ -204,7 +204,7 @@ async function next_free_slug(album) {
 export async function save_new_entry(body) {
   const {
     album, artist, year, genre = '', entry_type, relationship,
-    rating, favorite, masterpiece = false, background = '', notes,
+    rating, favorite, masterpiece = false, formative = false, background = '', notes,
     track_notes, tags = null, horizon, album_art, post_link, tracks = null,
     source_entry_id = null, received_from = null, received_date = null,
     user_id = null
@@ -215,12 +215,12 @@ export async function save_new_entry(body) {
   const result = await database`
     INSERT INTO entries (
       album, artist, year, genre, entry_type, relationship,
-      rating, favorite, masterpiece, background, notes, track_notes, tags,
+      rating, favorite, masterpiece, formative, background, notes, track_notes, tags,
       horizon, album_art, post_link, slug, tracks,
       source_entry_id, received_from, received_date, user_id
     ) VALUES (
       ${album}, ${artist}, ${year}, ${genre}, ${entry_type}, ${relationship},
-      ${rating}, ${favorite}, ${masterpiece}, ${background}, ${notes},
+      ${rating}, ${favorite}, ${masterpiece}, ${formative}, ${background}, ${notes},
       ${track_notes}, ${tags},
       ${horizon}, ${album_art}, ${post_link}, ${slug},
       ${tracks ? JSON.stringify(tracks) : null},
@@ -273,6 +273,7 @@ export async function update_entry(slug, fields) {
     UPDATE entries SET
       tracks = COALESCE(${fields.tracks ? JSON.stringify(fields.tracks) : null}::jsonb, tracks),
       masterpiece = COALESCE(${fields.masterpiece ?? null}, masterpiece),
+      formative = COALESCE(${fields.formative ?? null}, formative),
       album = COALESCE(${fields.album ?? null}, album),
       artist = COALESCE(${fields.artist ?? null}, artist),
       year = COALESCE(${fields.year ?? null}, year),
@@ -351,7 +352,7 @@ export async function save_draft(body) {
   const {
     album, artist, year = '', genre = '', entry_type = '', relationship = '',
     album_art = '', collection_id = '', step = 0, elapsed = 0,
-    rating = 0, masterpiece = false, favorite = false, notes = '', tracks = null,
+    rating = 0, masterpiece = false, favorite = false, formative = false, notes = '', tracks = null,
   } = body;
 
   if (!album) throw new Error('A draft needs an album');
@@ -359,12 +360,12 @@ export async function save_draft(body) {
   const result = await database`
     INSERT INTO drafts (
       lookup_key, album, artist, year, genre, entry_type, relationship,
-      album_art, collection_id, step, elapsed, rating, masterpiece,
+      album_art, collection_id, step, elapsed, rating, masterpiece, formative,
       favorite, notes, tracks
     ) VALUES (
       ${lookup_key(album, artist)}, ${album}, ${artist}, ${year}, ${genre},
       ${entry_type}, ${relationship}, ${album_art}, ${String(collection_id || '')},
-      ${step}, ${elapsed}, ${rating}, ${masterpiece}, ${favorite}, ${notes},
+      ${step}, ${elapsed}, ${rating}, ${masterpiece}, ${formative}, ${favorite}, ${notes},
       ${tracks ? JSON.stringify(tracks) : null}
     )
     ON CONFLICT (lookup_key) DO UPDATE SET
@@ -373,7 +374,8 @@ export async function save_draft(body) {
       relationship = EXCLUDED.relationship, album_art = EXCLUDED.album_art,
       collection_id = EXCLUDED.collection_id, step = EXCLUDED.step,
       elapsed = EXCLUDED.elapsed, rating = EXCLUDED.rating,
-      masterpiece = EXCLUDED.masterpiece, favorite = EXCLUDED.favorite,
+      masterpiece = EXCLUDED.masterpiece, formative = EXCLUDED.formative,
+      favorite = EXCLUDED.favorite,
       notes = EXCLUDED.notes, tracks = EXCLUDED.tracks, updated_at = NOW()
     RETURNING *
   `;
