@@ -90,7 +90,7 @@ export async function pull_all_entries({ includeChain = false } = {}) {
 // `track_notes` stay out; those are writing.
 const PUBLIC_FIELDS = [
   'slug', 'album', 'artist', 'year', 'genre',
-  'album_key', 'rating', 'rating_value', 'relationship', 'entry_type',
+  'album_key', 'rating', 'rating_value', 'entry_type',
   'favorite', 'masterpiece', 'formative', 'horizon', 'album_art', 'created_at',
   'listen_number', 'listen_total',
 ];

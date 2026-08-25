@@ -433,7 +433,6 @@ export default function FullPostPage({ entry, references = [] }) {
         )}
         <div className="ln-screen-one-chips">
           {listenLabel && <Chip>{listenLabel}</Chip>}
-          {entry.relationship && <Chip>{entry.relationship}</Chip>}
           {isSubmission && <Chip>Submission</Chip>}
           {(entry.favorite === true || entry.favorite === 'true') && <Chip tone="fav">Favorite</Chip>}
           {isMasterpiece && <Chip tone="mp">Masterpiece</Chip>}
@@ -489,8 +488,7 @@ export default function FullPostPage({ entry, references = [] }) {
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
                 {displayRating > 0 && <StarRating rating={displayRating} size={15} glow={isMasterpiece} style={{ verticalAlign: 'middle' }} />}
                 {listenLabel && <Chip>{listenLabel}</Chip>}
-                {entry.relationship && <Chip>{entry.relationship}</Chip>}
-                {isSubmission && <Chip>Submission</Chip>}
+                      {isSubmission && <Chip>Submission</Chip>}
                 {(entry.favorite === true || entry.favorite === 'true') && <Chip tone="fav">Favorite</Chip>}
               </div>
               <div style={{ fontFamily: fonts.mono, fontSize: '9px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--ink-faint)', marginTop: '12px' }}>

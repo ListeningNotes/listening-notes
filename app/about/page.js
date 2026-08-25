@@ -52,17 +52,6 @@ const STAR_ROWS = [
   { key: 'formative', formative: true },
 ];
 
-// Formative moved up to the marks — it is a flag on the record now, not an
-// occasion. First listen left entirely: nothing carries it any more, because a
-// listen number on the page says the same thing without a label. What remains
-// are the words entries still hold, kept because a reader looking at an older
-// one deserves to know what they meant.
-//
-// The shipped definition of first_listen stays in library/definitions.js. A
-// copy of this software may well want it, and dropping the key would take it
-// away from everyone to tidy one journal.
-const RELATIONSHIP_ROWS = ['revisit', 'study', 'submission'];
-
 export default function AboutPage() {
   const { about_intro, has_note: hasNote } = useBookplate();
 
@@ -374,19 +363,6 @@ export default function AboutPage() {
                 </div>
               </div>
 
-              <div className="ab-block">
-                <h2 className="ab-subhead">Relationship Notes</h2>
-                <div>
-                  {RELATIONSHIP_ROWS.map(key => (
-                    <div key={key} className="ab-row">
-                      <div className="ab-rel">
-                        <span className="ab-rel-term"><Chip>{definitions[key].label}</Chip></span>
-                        <p style={{ margin: 0 }}>{definitions[key].body}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
             </>
           )}
 

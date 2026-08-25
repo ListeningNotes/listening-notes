@@ -143,16 +143,13 @@ export default function AlbumPreview({ entry, scale = 1 }) {
               )}
             </div>
           )}
-          {/* How it was heard and where it came from, on one line: FIRST
-              LISTEN · SUBMISSION. Two facts of the same kind, so they read
-              as one line of provenance rather than two stacked labels. The
-              two fields can't collide — Submission was removed as a
-              relationship, so it only ever appears as a type. */}
-          {roomForDetail && (entry.relationship || entry.entry_type === 'Submission') && (
+          {/* This line used to pair a relationship with a type — FIRST LISTEN ·
+              SUBMISSION. The relationship half is gone, and only a submission
+              earns a word here anyway: everything else is the library by
+              definition, and saying so on every tile said nothing. */}
+          {roomForDetail && entry.entry_type === 'Submission' && (
             <div style={{ marginTop: px(3), fontFamily: fonts.mono, fontSize: px(7.5), letterSpacing: '0.08em', textTransform: 'uppercase', color: textFaint }}>
-              {/* Only a submission earns a word here — the rest is the library
-                  by definition, and saying so on every tile said nothing. */}
-              {[entry.relationship, entry.entry_type === 'Submission' ? 'Submission' : ''].filter(Boolean).join(' · ')}
+              Submission
             </div>
           )}
         </div>
