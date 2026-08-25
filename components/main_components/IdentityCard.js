@@ -24,9 +24,11 @@ import Link from 'next/link';
 import {
   DiscordLogo, FacebookLogo, GithubLogo, InstagramLogo,
   LinkSimple, LinkedinLogo, MediumLogo, QrCode, RedditLogo, SoundcloudLogo,
-  SpotifyLogo, ThreadsLogo, TiktokLogo, TwitchLogo, User, XLogo, YoutubeLogo,
+  PencilSimple, SpotifyLogo, ThreadsLogo, TiktokLogo, TwitchLogo, User, XLogo,
+  YoutubeLogo,
 } from '@phosphor-icons/react';
 import QRCode from 'qrcode';
+import IdentificationCardEditor from './IdentificationCardEditor';
 import { useListeningBeacon } from '../../hooks/useListeningBeacon';
 import { useBookplate } from './Bookplate';
 
@@ -126,7 +128,7 @@ const SERVICES = [
   [/(^|\.)medium\.com$/,      'Medium',     MediumLogo],
 ];
 
-function identify(url) {
+export function identify(url) {
   let host;
   try {
     host = new URL(/^https?:\/\//i.test(url) ? url : `https://${url}`).hostname.toLowerCase();
@@ -169,7 +171,8 @@ function AddressCode({ text }) {
   );
 }
 
-export default function IdentityCard({ stamps }) {
+export default function IdentityCard({ stamps, authed = false }) {
+  const settings = useBookplate();
   const {
     journal_name,
     keeper_name,
@@ -181,8 +184,11 @@ export default function IdentityCard({ stamps }) {
     about_intro,
     social_links,
     has_note: hasNote,
-  } = useBookplate();
+  } = settings;
   const { isLive } = useListeningBeacon();
+  // Only ever true for the person who keeps the journal, and only the visible
+  // half of that: the writing endpoint checks the wristband for itself.
+  const [editing, setEditing] = useState(false);
 
   const records = stamps?.records ?? null;
 
@@ -474,6 +480,27 @@ export default function IdentityCard({ stamps }) {
 
         /* ── Doors ── the pages this card is the way to. /why only exists once
            its owner has written it, which is why it is conditional. */
+        /* The owner's one extra line. Quiet enough to belong to the card
+           rather than to sit on top of it. */
+        .idc-edit { gap: 7px; padding: 8px 15px; font-size: 9px; letter-spacing: 0.11em; }
+        .idc-edit svg { color: var(--ink-faint); transition: color 0.15s; }
+        .idc-edit:hover svg { color: var(--ink); }
+
+        /* The editor shares the column's box and its scroller, so switching
+           into it does not move the card or change how tall it is. It never
+           carries the soft bottom edge: that edge says "there is more below",
+           and a form with a faded Save button on it says something else. */
+        .idc-inner--editing {
+          display: block;
+          mask-image: none;
+          -webkit-mask-image: none;
+        }
+        /* The box shrinks while the card is open. Full size it is the card's
+           subject; in the form it is a proof that the address you pasted is a
+           picture, and proving that does not take 200 pixels — the room goes to
+           the fields instead, which is what lands Save above the fold. */
+        .idc-inner--editing .idc-portrait { width: 116px; cursor: default; }
+
         .idc-doors { display: flex; flex-wrap: wrap; gap: 7px; justify-content: center; }
         .idc-doors .ln-pill { padding: 8px 15px; font-size: 9px; letter-spacing: 0.11em; }
 
@@ -518,6 +545,13 @@ export default function IdentityCard({ stamps }) {
         }
       `}</style>
 
+      {editing ? (
+        <IdentificationCardEditor
+          settings={settings}
+          identify={identify}
+          onClose={() => setEditing(false)}
+        />
+      ) : (
       <div ref={innerRef} className={'idc-inner' + (more ? ' idc-inner--more' : '')}>
         {/* The site's own mark, with the live dot on its period — the same SVG
             and the same class the cover uses, so the two sides of the page
@@ -617,6 +651,19 @@ export default function IdentityCard({ stamps }) {
           <Link href="/submit" className="ln-pill">Send an album</Link>
         </div>
 
+        {authed && !editing && (
+          <>
+            <div className="idc-rule" />
+            {/* No pencil floating over the card. The cover has never had a way
+                in on it — signed in, it simply has one more line than it did,
+                and signed out this is not in the page at all. */}
+            <button type="button" className="ln-pill idc-edit" onClick={() => setEditing(true)}>
+              <PencilSimple size={12} weight="bold" aria-hidden="true" />
+              Edit this card
+            </button>
+          </>
+        )}
+
         {socials.length > 0 && (
           <div className="idc-socials">
             {socials.map(({ href, label, Icon }) => (
@@ -635,7 +682,7 @@ export default function IdentityCard({ stamps }) {
         )}
 
       </div>
-
+      )}
     </section>
   );
 }
