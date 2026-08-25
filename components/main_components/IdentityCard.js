@@ -264,6 +264,7 @@ export default function IdentityCard({ stamps, authed = false }) {
     send_me,
     rig_icon,
     rig: rigRows,
+    portrait_code_url,
   } = settings;
   const { isLive } = useListeningBeacon();
 
@@ -418,8 +419,22 @@ export default function IdentityCard({ stamps, authed = false }) {
           : <span className="idc-portrait-empty" />}
       </span>
       {address && (
-        <span className={'idc-face-slot idc-face-slot--code' + (showingCode ? ' idc-face-slot--on' : '')} aria-hidden={!showingCode}>
-          <AddressCode text={`https://${address}`} />
+        <span
+          className={'idc-face-slot idc-face-slot--code'
+            + (portrait_code_url ? ' idc-face-slot--photo' : '')
+            + (showingCode ? ' idc-face-slot--on' : '')}
+          aria-hidden={!showingCode}
+        >
+          {/* The portrait made into the code, when there is one: the photograph
+              fills the dark modules and the page shows through the rest, so
+              there is no plate behind it and no frame around it — the ragged
+              silhouette is the picture. Rendered with hard pixels, because the
+              modules have to stay square at any size. Where no such picture
+              could be built, the plain code stands in: a worse picture and a
+              working one. */}
+          {portrait_code_url
+            ? <img className="idc-qr idc-qr--photo" src={portrait_code_url} alt={`Scannable code for ${address}`} />
+            : <AddressCode text={`https://${address}`} />}
         </span>
       )}
     </>
@@ -774,6 +789,16 @@ export default function IdentityCard({ stamps, authed = false }) {
         }
         .idc-face-slot--on { opacity: 1; }
         .idc-face-slot--code { background: ${CODE_PAPER}; }
+        /* No plate under the photograph version — the page is the background,
+           which is the whole point of the alpha. A class rather than :has(),
+           because the build drops :has() rules without saying so. */
+        .idc-face-slot--photo { background: none; }
+        .idc-qr--photo {
+          width: 100%; height: auto; display: block;
+          /* Hard module edges at every size. Without this the browser smooths a
+             41px picture up to 180 and the modules stop being squares. */
+          image-rendering: pixelated;
+        }
         .idc-face-slot .idc-qr { width: 100%; height: auto; display: block; }
 
         /* No portrait set. Registration corners rather than a grey box with a

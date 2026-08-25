@@ -42,6 +42,7 @@ const EMPTY = {
   send_me: null,
   // Where in the portrait to look. A CSS object-position, or null for centred.
   portrait_position: null,
+  portrait_code_url: null,
   // Which mark stands for the rig, and the rig itself. See schema.sql.
   rig_icon: null,
   rig: null,
@@ -60,6 +61,8 @@ const WRITABLE = [
   // The uploaded portrait. Written by /api/portrait rather than by a form, but
   // it goes through the same door as everything else in this table.
   'portrait_data', 'portrait_mime',
+  // The portrait rendered as the journal's code. See the column in schema.sql.
+  'portrait_code', 'portrait_code_url',
 ];
 
 // A form posts empty strings for fields left alone; the database should hold
@@ -121,6 +124,19 @@ export async function save_settings(fields) {
       else delete combined[key];
     }
     patch.definitions = Object.keys(combined).length ? JSON.stringify(combined) : null;
+  }
+
+  // The pointer and the bytes are one fact and cannot be allowed to disagree.
+  // Clearing the picture without clearing the path leaves a card confidently
+  // asking for an image that is not there — and because that path is served
+  // with a year of immutable caching, every browser that already had it goes on
+  // showing a portrait the journal no longer holds. It stayed invisible here
+  // for an hour for exactly that reason.
+  if ('portrait_data' in patch && !patch.portrait_data) {
+    const [row] = await database`SELECT portrait_url FROM settings WHERE id = 1`;
+    if ((row?.portrait_url || '').startsWith('/api/portrait')) patch.portrait_url = null;
+    patch.portrait_code = null;
+    patch.portrait_code_url = null;
   }
 
   // Upsert on the fixed id, so the first save creates the row and every save
