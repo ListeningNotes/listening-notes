@@ -263,6 +263,7 @@ export default function IdentityCard({ stamps, authed = false }) {
     hidden_fields,
     send_me,
     rig_icon,
+    rig: rigRows,
   } = settings;
   const { isLive } = useListeningBeacon();
 
@@ -308,6 +309,21 @@ export default function IdentityCard({ stamps, authed = false }) {
   // What the editor is currently showing, which is the draft rather than what
   // is saved — the row underneath has to change the moment a mark is pressed.
   const chosenRig = rigIcon(edit.rig);
+  // The setup itself. A sheet rather than a page: it is four short rows about
+  // the room you are already standing in, and sending somebody to another
+  // address to read four rows and then find their way back is a lot of
+  // ceremony for a list of equipment.
+  const rigList = (Array.isArray(rigRows) ? rigRows : []).filter(r => r?.name?.trim());
+  const [rigOpen, setRigOpen] = useState(false);
+
+  // Escape closes it, because anything that covers the page has to have a way
+  // out that is not hunting for the button that opened it.
+  useEffect(() => {
+    if (!rigOpen) return;
+    const onKey = event => { if (event.key === 'Escape') setRigOpen(false); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [rigOpen]);
 
   const address = site_address ? site_address.replace(/^https?:\/\//, '') : null;
 
@@ -596,6 +612,9 @@ export default function IdentityCard({ stamps, authed = false }) {
              beacon on the page's own colour, and this is the same page. */
           background: none;
           position: relative;
+          /* The rig sheet parks below the bottom edge until it is called for,
+             and this is what keeps it out of sight while it waits. */
+          overflow: hidden;
         }
         /* Everything inside scrolls, the column itself does not. On a phone the
            landing page is a fixed pair of snapped panes with no document scroll
@@ -993,6 +1012,16 @@ export default function IdentityCard({ stamps, authed = false }) {
         }
 
         .idc-link-row--rig { margin-top: 14px; }
+        .idc-gear { margin-top: 4px; }
+        .idc-gear-row {
+          display: grid; grid-template-columns: minmax(0, 1fr) 92px 24px;
+          gap: 8px; align-items: center;
+          margin-top: 10px;
+        }
+        .idc-gear-role {
+          font-family: var(--font-label);
+          font-size: 10px !important; letter-spacing: 0.08em; text-transform: uppercase;
+        }
         .idc-rig-said {
           font-family: var(--font-label);
           font-size: 9px; letter-spacing: 0.09em; text-transform: uppercase;
@@ -1019,6 +1048,70 @@ export default function IdentityCard({ stamps, authed = false }) {
           gap: 5px; padding: 0 9px; margin-top: 11px;
           font-family: var(--font-label); font-size: 9px;
           letter-spacing: 0.11em; text-transform: uppercase;
+        }
+
+        /* ── The rig sheet ───────────────────────────────────────────────── */
+        .idc-scrim {
+          position: absolute; inset: 0; z-index: 3;
+          border: 0; padding: 0;
+          background: color-mix(in srgb, var(--bg) 70%, transparent);
+          backdrop-filter: blur(2px);
+          -webkit-backdrop-filter: blur(2px);
+          opacity: 0; pointer-events: none;
+          transition: opacity 0.32s ease;
+          cursor: pointer;
+        }
+        .idc-scrim--on { opacity: 1; pointer-events: auto; }
+
+        .idc-sheet {
+          position: absolute; left: 0; right: 0; bottom: 0; z-index: 4;
+          display: flex; flex-direction: column; align-items: center;
+          padding: 12px 22px 22px;
+          background: var(--bg);
+          border-top: 1px solid var(--idc-rule);
+          border-radius: 18px 18px 0 0;
+          box-shadow: 0 -14px 40px rgba(0,0,0,0.14);
+          transform: translateY(101%);
+          transition: transform 0.42s cubic-bezier(0.22, 0.61, 0.36, 1);
+        }
+        .idc-sheet--up { transform: none; }
+        @media (prefers-reduced-motion: reduce) {
+          .idc-sheet { transition: none; }
+          .idc-scrim { transition: none; }
+        }
+        /* The handle every sheet on a phone has. It does not drag — it says
+           which edge this came from, which is the part that matters. */
+        .idc-sheet-grip {
+          width: 34px; height: 4px; border-radius: 999px;
+          background: var(--idc-rule);
+          margin-bottom: 16px;
+        }
+        .idc-sheet-title {
+          font-family: var(--font-label);
+          font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase;
+          color: var(--ink-faint);
+          margin: 0 0 14px;
+        }
+        .idc-sheet-list { width: 100%; max-width: 300px; margin: 0; }
+        /* The tracklist rhythm the rest of the site reads in: what the thing is
+           on the left, what it does on the right, one hairline under each. */
+        .idc-sheet-row {
+          display: flex; align-items: baseline; justify-content: space-between;
+          gap: 14px;
+          padding: 11px 0;
+          border-bottom: 1px solid var(--idc-rule);
+        }
+        .idc-sheet-row:last-child { border-bottom: 0; }
+        .idc-sheet-name { font-size: 13px; color: var(--ink); }
+        .idc-sheet-role {
+          margin: 0; flex-shrink: 0;
+          font-family: var(--font-label);
+          font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase;
+          color: var(--ink-faint);
+        }
+        .idc-sheet-shut {
+          margin-top: 18px;
+          padding: 9px 20px; font-size: 9px; letter-spacing: 0.11em;
         }
 
         .idc-trouble {
@@ -1223,10 +1316,17 @@ export default function IdentityCard({ stamps, authed = false }) {
             The rig wears whichever mark its keeper chose, or none at all. */}
         <div className="idc-row" inert={editing ? true : undefined}>
           <Link href="/submit" className="ln-pill idc-send">Send an album</Link>
-          {rig.Icon && (
-            <Link href="/rig" className="idc-mark-btn" aria-label={`The rig — ${rig.label.toLowerCase()}`} title="The rig">
+          {rig.Icon && rigList.length > 0 && (
+            <button
+              type="button"
+              className="idc-mark-btn"
+              onClick={() => setRigOpen(true)}
+              aria-expanded={rigOpen}
+              aria-label={`The rig — ${rig.label.toLowerCase()}`}
+              title="The rig"
+            >
               <rig.Icon size={19} weight="regular" aria-hidden="true" />
-            </Link>
+            </button>
           )}
           {!editing && socials.map(({ href, label, Icon }) => (
             <a
@@ -1353,11 +1453,89 @@ export default function IdentityCard({ stamps, authed = false }) {
               <Plus size={11} weight="bold" aria-hidden="true" />
               Add a link
             </button>
+
+            {/* What is in the sheet. Nothing about why it matters — that is
+                what the journal is for — just what each thing is and what it
+                does, which is the shape a tracklist reads in. */}
+            {chosenRig.Icon && (
+              <div className="idc-gear">
+                {edit.gear.map((item, index) => (
+                  <div className="idc-gear-row" key={index}>
+                    <input
+                      className="idc-link-input"
+                      type="text"
+                      value={item.name}
+                      onChange={e => edit.setGearField(index, 'name', e.target.value)}
+                      placeholder="Sennheiser HD 600"
+                      aria-label={`Equipment ${index + 1}`}
+                    />
+                    <input
+                      className="idc-link-input idc-gear-role"
+                      type="text"
+                      value={item.role}
+                      onChange={e => edit.setGearField(index, 'role', e.target.value)}
+                      placeholder="Headphones"
+                      aria-label={`What equipment ${index + 1} does`}
+                    />
+                    <button
+                      type="button"
+                      className="idc-link-drop"
+                      onClick={() => edit.dropGear(index)}
+                      aria-label={`Remove equipment ${index + 1}`}
+                    >
+                      <X size={12} weight="bold" aria-hidden="true" />
+                    </button>
+                  </div>
+                ))}
+                <button type="button" className="idc-link-add" onClick={edit.addGear}>
+                  <Plus size={11} weight="bold" aria-hidden="true" />
+                  Add a piece
+                </button>
+              </div>
+            )}
           </div>
         ) : null}
 
         {edit.trouble && <p className="idc-trouble">{edit.trouble}</p>}
       </div>
+
+      {/* ── The rig ──────────────────────────────────────────────────────────
+          Comes up from the bottom over the card rather than replacing it. It
+          used to be a page, and a page meant leaving the card, reading four
+          rows and finding your way back — plus several hundred words about why
+          any of it matters, which is one person's essay shipped inside
+          everybody's software. What survives is what each thing is and what it
+          does. */}
+      {rigList.length > 0 && (
+        <>
+          <button
+            type="button"
+            className={'idc-scrim' + (rigOpen ? ' idc-scrim--on' : '')}
+            onClick={() => setRigOpen(false)}
+            tabIndex={rigOpen ? 0 : -1}
+            aria-label="Close the rig"
+          />
+          <section
+            className={'idc-sheet' + (rigOpen ? ' idc-sheet--up' : '')}
+            aria-label="The listening setup"
+            inert={rigOpen ? undefined : true}
+          >
+            <span className="idc-sheet-grip" aria-hidden="true" />
+            <h2 className="idc-sheet-title">The rig</h2>
+            <dl className="idc-sheet-list">
+              {rigList.map((item, index) => (
+                <div className="idc-sheet-row" key={`${item.name}-${index}`}>
+                  <dt className="idc-sheet-name">{item.name}</dt>
+                  <dd className="idc-sheet-role">{item.role}</dd>
+                </div>
+              ))}
+            </dl>
+            <button type="button" className="ln-pill idc-sheet-shut" onClick={() => setRigOpen(false)}>
+              Close
+            </button>
+          </section>
+        </>
+      )}
     </section>
   );
 }

@@ -107,6 +107,8 @@ const BOOKPLATE_FIELDS = [
   'portrait_position',
   // One short word naming an icon.
   'rig_icon',
+  // A handful of short rows, and the card opens them without a fetch.
+  'rig',
 ];
 
 // Async because the journal's details are read here, once, and handed down —

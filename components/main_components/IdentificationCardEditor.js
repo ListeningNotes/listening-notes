@@ -126,6 +126,9 @@ export function useIdentificationCardEditor(settings) {
   // which means the hostname decides — see identify() in IdentityCard.
   const [links, setLinks] = useState([{ url: BLANK, icon: 'auto' }]);
   const [rig, setRig] = useState('');
+  // The setup, as rows. Blank rows are kept while typing and dropped on save,
+  // the same as the links.
+  const [gear, setGear] = useState([]);
   const [hidden, setHidden] = useState(() => new Set());
 
   // Opening takes a copy. Everything typed after this point is a draft, and
@@ -161,6 +164,10 @@ export function useIdentificationCardEditor(settings) {
     const unique = all.filter(l => !seen.has(l.url) && seen.add(l.url));
     setLinks(unique.length ? unique : [{ url: BLANK, icon: 'auto' }]);
     setRig(settings.rig_icon || '');
+    const rows = Array.isArray(settings.rig) ? settings.rig : [];
+    setGear(rows.length
+      ? rows.map(r => ({ name: r?.name || '', role: r?.role || '' }))
+      : [{ name: '', role: '' }]);
     setHidden(new Set(Array.isArray(settings.hidden_fields) ? settings.hidden_fields : []));
     setTrouble(null);
     holdZoom(true);
@@ -187,6 +194,14 @@ export function useIdentificationCardEditor(settings) {
   const addLink = useCallback(() => setLinks(rows => [...rows, { url: BLANK, icon: 'auto' }]), []);
   const dropLink = useCallback(index => {
     setLinks(rows => (rows.length === 1 ? [{ url: BLANK, icon: 'auto' }] : rows.filter((_, i) => i !== index)));
+  }, []);
+
+  const setGearField = useCallback((index, field, value) => {
+    setGear(rows => rows.map((row, i) => (i === index ? { ...row, [field]: value } : row)));
+  }, []);
+  const addGear = useCallback(() => setGear(rows => [...rows, { name: '', role: '' }]), []);
+  const dropGear = useCallback(index => {
+    setGear(rows => (rows.length === 1 ? [{ name: '', role: '' }] : rows.filter((_, i) => i !== index)));
   }, []);
 
   const toggleHidden = useCallback(key => {
@@ -250,6 +265,11 @@ export function useIdentificationCardEditor(settings) {
     const cleaned = links
       .map(l => ({ url: l.url.trim(), icon: l.icon || 'auto' }))
       .filter(l => l.url);
+    // A piece of equipment with no name is a blank row somebody started and
+    // left; a name with no role is still worth printing.
+    const gearClean = gear
+      .map(g => ({ name: g.name.trim(), role: g.role.trim() }))
+      .filter(g => g.name);
     try {
       const res = await fetch('/api/settings', {
         method: 'PATCH',
@@ -262,6 +282,7 @@ export function useIdentificationCardEditor(settings) {
           portrait_url: portrait.trim(),
           social_links: cleaned.length ? cleaned : null,
           rig_icon: rig,
+          rig: gearClean.length ? gearClean : null,
           hidden_fields: hidden.size ? [...hidden] : null,
           // Emptied on purpose. Every link lives in one list now; leaving this
           // filled would put Instagram on the card twice the moment someone
@@ -281,7 +302,7 @@ export function useIdentificationCardEditor(settings) {
       setTrouble(error.message);
     }
     setSaving(false);
-  }, [name, bio, sendMe, posX, posY, portrait, links, hidden, rig, router]);
+  }, [name, bio, sendMe, posX, posY, portrait, links, hidden, rig, gear, router]);
 
   return {
     editing, begin, cancel, save, saving, busy, trouble,
@@ -293,6 +314,7 @@ export function useIdentificationCardEditor(settings) {
     portrait,
     links, setLink, setLinkIcon, addLink, dropLink,
     rig, setRig,
+    gear, setGearField, addGear, dropGear,
     hidden, toggleHidden,
     choosePhoto, removePhoto,
   };

@@ -42,8 +42,9 @@ const EMPTY = {
   send_me: null,
   // Where in the portrait to look. A CSS object-position, or null for centred.
   portrait_position: null,
-  // Which mark stands for the rig. See the column note in schema.sql.
+  // Which mark stands for the rig, and the rig itself. See schema.sql.
   rig_icon: null,
+  rig: null,
   definitions: null,
 };
 
@@ -54,7 +55,8 @@ const WRITABLE = [
   'journal_name', 'keeper_name', 'bio', 'portrait_url',
   'instagram_url', 'lastfm_user', 'site_address',
   'founded_at', 'pinned_entry_id', 'about_intro', 'social_links',
-  'hidden_fields', 'send_me', 'portrait_position', 'rig_icon', 'definitions',
+  'hidden_fields', 'send_me', 'portrait_position', 'rig_icon', 'rig',
+  'definitions',
   // The uploaded portrait. Written by /api/portrait rather than by a form, but
   // it goes through the same door as everything else in this table.
   'portrait_data', 'portrait_mime',
@@ -92,7 +94,7 @@ export async function save_settings(fields) {
   // json refuses — "invalid input syntax for type json" — so the value is
   // serialised here rather than at every call site that might set it.
   // definitions goes through its own, more careful version of this below.
-  for (const key of ['social_links', 'hidden_fields']) {
+  for (const key of ['social_links', 'hidden_fields', 'rig']) {
     if (patch[key] != null && typeof patch[key] !== 'string') {
       patch[key] = JSON.stringify(patch[key]);
     }
