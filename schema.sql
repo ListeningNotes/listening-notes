@@ -170,6 +170,10 @@ CREATE TABLE IF NOT EXISTS settings (
   about_intro text,
   why_essay text,
   why_date date,
+  -- Only what the owner has rewritten. Anything untouched is absent and falls
+  -- back to the text shipped in library/definitions.js, so a copy that never
+  -- edits its definitions stores nothing at all.
+  definitions jsonb,
   updated_at timestamp without time zone DEFAULT now()
 );
 
