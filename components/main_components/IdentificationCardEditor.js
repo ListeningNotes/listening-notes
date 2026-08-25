@@ -89,6 +89,10 @@ export function useIdentificationCardEditor(settings) {
   const [name, setName] = useState('');
   const [bio, setBio] = useState('');
   const [sendMe, setSendMe] = useState('');
+  // Where in the picture to look, as two percentages. Held apart rather than
+  // as the CSS string so the drag can do arithmetic on it without parsing.
+  const [posX, setPosX] = useState(50);
+  const [posY, setPosY] = useState(50);
   const [portrait, setPortrait] = useState('');
   const [links, setLinks] = useState([BLANK]);
   const [hidden, setHidden] = useState(() => new Set());
@@ -109,6 +113,9 @@ export function useIdentificationCardEditor(settings) {
     // actually for.
     setBio(settings.bio || settings.about_intro || '');
     setSendMe(settings.send_me || '');
+    const [x, y] = String(settings.portrait_position || '50% 50%').split(/\s+/);
+    setPosX(Number.parseFloat(x) || 50);
+    setPosY(Number.parseFloat(y) || 50);
     setPortrait(settings.portrait_url || '');
     // instagram_url predates the list and is folded in here, so an owner sees
     // every link they have rather than every link but one. Saving writes the
@@ -160,6 +167,10 @@ export function useIdentificationCardEditor(settings) {
       const answer = await res.json();
       if (!res.ok) throw new Error(answer.error || 'That did not upload.');
       setPortrait(answer.portrait_url);
+      // A new picture starts centred. Carrying the last one's framing over
+      // would apply someone's careful crop of a different photograph.
+      setPosX(50);
+      setPosY(50);
     } catch (error) {
       setTrouble(error.message === 'unreadable'
         ? 'That file could not be read as a picture.'
@@ -195,6 +206,7 @@ export function useIdentificationCardEditor(settings) {
           keeper_name: name.trim(),
           bio: bio.trim(),
           send_me: sendMe.trim(),
+          portrait_position: portrait.trim() ? `${posX.toFixed(1)}% ${posY.toFixed(1)}%` : '',
           portrait_url: portrait.trim(),
           social_links: cleaned.length ? cleaned : null,
           hidden_fields: hidden.size ? [...hidden] : null,
@@ -215,13 +227,15 @@ export function useIdentificationCardEditor(settings) {
       setTrouble(error.message);
     }
     setSaving(false);
-  }, [name, bio, sendMe, portrait, links, hidden, router]);
+  }, [name, bio, sendMe, posX, posY, portrait, links, hidden, router]);
 
   return {
     editing, begin, cancel, save, saving, busy, trouble,
     name, setName,
     bio, setBio,
     sendMe, setSendMe,
+    posX, posY, setPosX, setPosY,
+    position: `${posX}% ${posY}%`,
     portrait,
     links, setLink, addLink, dropLink,
     hidden, toggleHidden,

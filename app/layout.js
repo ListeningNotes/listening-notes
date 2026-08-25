@@ -102,6 +102,9 @@ const BOOKPLATE_FIELDS = [
   // A sentence. It is the point of the card's lower half and the landing page
   // is where the card lives, so it travels with the rest of the short facts.
   'send_me',
+  // Two percentages. Without it the portrait is drawn centred, which for a
+  // photograph of a person is often a picture of their chin.
+  'portrait_position',
 ];
 
 // Async because the journal's details are read here, once, and handed down —
