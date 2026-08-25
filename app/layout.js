@@ -1,5 +1,5 @@
 import './globals.css';
-import { Nunito, DM_Mono } from 'next/font/google';
+import { Anton, Nunito, DM_Mono } from 'next/font/google';
 import { Lightswitch } from '../components/main_components/Lightswitch';
 import { Bookplate } from '../components/main_components/Bookplate';
 import { pull_settings } from '../library/settings_actions';
@@ -17,6 +17,21 @@ const dmMono = DM_Mono({
   subsets: ['latin'],
   weight: ['400', '500'],
   variable: '--font-dm-mono',
+});
+
+// The third face, and the only one with a single job: the headline on the back
+// of the card. An ID card is set in condensed poster caps — that is most of
+// what makes a rectangle read as a card rather than as a box with writing in
+// it — and neither Nunito nor DM Mono can be squeezed into that shape without
+// looking squeezed. One weight, because Anton only has one.
+//
+// Deliberately not a fourth body face. Nothing but .idc-headline is allowed to
+// name this variable; the two-font rule still holds for every word a reader
+// actually reads.
+const anton = Anton({
+  subsets: ['latin'],
+  weight: '400',
+  variable: '--font-anton',
 });
 
 export const metadata = {
@@ -75,12 +90,18 @@ export const dynamic = 'force-dynamic';
 // import arrives as a client reference, not a value. And this is where the
 // decision belongs anyway: what ships to every page is a layout question.
 //
-// Bulk text belongs to whoever renders it. /about fetches the definitions and
+// Bulk text belongs to whoever renders it. /key fetches the definitions and
 // /why reads its essay on the server; these are the short facts.
 const BOOKPLATE_FIELDS = [
   'journal_name', 'keeper_name', 'bio', 'portrait_url',
   'instagram_url', 'lastfm_user', 'site_address',
   'founded_at', 'pinned_entry_id',
+  // Two sentences saying what the journal is, and the one field on this list
+  // that had been written, stored, and never delivered: the old /about read it from
+  // this context without it ever having been put here, so the paragraph at the
+  // top of that page rendered as nothing for as long as the page existed. The
+  // back of the card prints it now.
+  'about_intro',
 ];
 
 // Async because the journal's details are read here, once, and handed down —
@@ -96,7 +117,7 @@ export default async function RootLayout({ children }) {
   // rating scales turned up in the HTML of every album page. An allow-list
   // makes the leak impossible rather than a thing to remember.
   //
-  // Bulk text belongs to whoever renders it. /about fetches the definitions,
+  // Bulk text belongs to whoever renders it. /key fetches the definitions,
   // /why reads the essay on the server, and this carries the short facts.
   const settings = Object.fromEntries(
     BOOKPLATE_FIELDS.filter(key => key in all).map(key => [key, all[key]])
@@ -104,7 +125,7 @@ export default async function RootLayout({ children }) {
   settings.has_note = Boolean(all.why_essay && all.why_essay.trim());
 
   return (
-    <html lang="en" suppressHydrationWarning className={`${nunito.variable} ${dmMono.variable}`}>
+    <html lang="en" suppressHydrationWarning className={`${nunito.variable} ${dmMono.variable} ${anton.variable}`}>
       <body>
         <script
           suppressHydrationWarning

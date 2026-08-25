@@ -28,6 +28,12 @@ const EMPTY = {
   site_address: null,
   founded_at: null,
   pinned_entry_id: null,
+  // The paragraph saying what the journal is. It has lived in the database
+  // since the settings table was built and never once reached a page, because
+  // it was left out of this list and out of the layout's — /about read it from
+  // a context nothing had put it into. The card carries it now, so it is worth
+  // the two lines it costs to actually deliver it.
+  about_intro: null,
   definitions: null,
 };
 
@@ -37,7 +43,7 @@ const EMPTY = {
 const WRITABLE = [
   'journal_name', 'keeper_name', 'bio', 'portrait_url',
   'instagram_url', 'lastfm_user', 'site_address',
-  'founded_at', 'pinned_entry_id', 'definitions',
+  'founded_at', 'pinned_entry_id', 'about_intro', 'definitions',
 ];
 
 // A form posts empty strings for fields left alone; the database should hold
