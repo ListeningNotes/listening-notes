@@ -351,7 +351,7 @@ export default function AboutPage() {
                           : row.favorite
                             ? <span className="ln-mark ln-mark--fav"><Heart size={15} weight="fill" /></span>
                             : row.formative
-                              ? <span className="ln-mark ln-mark--formative"><Fingerprint size={15} weight="fill" /></span>
+                              ? <span className="ln-mark ln-mark--formative"><Fingerprint size={15} weight="bold" /></span>
                               : <StarRating rating={row.rating} size={14} />}
                         {row.masterpiece
                           ? <span style={{ marginLeft: 'auto' }}><Chip tone="mp">{def.label}</Chip></span>
