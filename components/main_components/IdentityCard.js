@@ -612,9 +612,6 @@ export default function IdentityCard({ stamps, authed = false }) {
              beacon on the page's own colour, and this is the same page. */
           background: none;
           position: relative;
-          /* The rig sheet parks below the bottom edge until it is called for,
-             and this is what keeps it out of sight while it waits. */
-          overflow: hidden;
         }
         /* Everything inside scrolls, the column itself does not. On a phone the
            landing page is a fixed pair of snapped panes with no document scroll
@@ -1051,8 +1048,25 @@ export default function IdentityCard({ stamps, authed = false }) {
         }
 
         /* ── The rig sheet ───────────────────────────────────────────────── */
+        /* Fixed, not absolute. Absolute meant "the card", and the card is a
+           340px column in the middle of the screen — so the sheet came up
+           inside it with a strip of page showing either side, like a drawer
+           opening in the middle of a room. Fixed hands both of these to the
+           scene instead, which spans the pane, and they sit flush to its
+           edges. (The scene carries a perspective for the flip, which is what
+           makes it the containing block here rather than the viewport — and
+           also what lets these escape the card's own clipping.) */
+        /* --idc-gutter is the margin the pane holds the card off its edges by,
+           set by the phone layout and inherited down. Read with a fallback of
+           zero rather than declared here with one: declared, it would shadow
+           the value coming down from the pane and the sheet would go on
+           stopping short of the screen. */
         .idc-scrim {
-          position: absolute; inset: 0; z-index: 3;
+          position: fixed;
+          top: 0;
+          bottom: calc(-1 * var(--idc-floor, 0px));
+          left: calc(-1 * var(--idc-gutter, 0px)); right: calc(-1 * var(--idc-gutter, 0px));
+          z-index: 3;
           border: 0; padding: 0;
           background: color-mix(in srgb, var(--bg) 70%, transparent);
           backdrop-filter: blur(2px);
@@ -1072,13 +1086,29 @@ export default function IdentityCard({ stamps, authed = false }) {
         }
 
         .idc-sheet {
-          position: absolute; left: 0; right: 0; bottom: 0; z-index: 4;
+          position: fixed;
+          /* Down to the floor of the pane as well as out to its edges. The card
+             stops short of the bottom to leave room for the row of controls
+             underneath it, and a bottom sheet that stops where the card stops
+             is a sheet floating an inch above the bottom of the screen. */
+          bottom: calc(-1 * var(--idc-floor, 0px));
+          /* Out over the pane's gutter, so it meets the edges of the screen
+             rather than the edges of the card. Fixed is positioned against the
+             sheet that turns, which sits inside that gutter — so reaching flush
+             means reaching back out by exactly the amount the pane pulled in. */
+          left: calc(-1 * var(--idc-gutter, 0px)); right: calc(-1 * var(--idc-gutter, 0px));
+          z-index: 4;
           display: flex; flex-direction: column; align-items: center;
-          padding: 12px 22px 22px;
+          /* The extra floor goes back on as padding, so the writing sits where
+             it did and only the stock underneath it reaches further down. */
+          padding: 12px 22px calc(26px + var(--idc-floor, 0px));
           background: var(--bg);
           border-top: 1px solid var(--idc-rule);
           border-radius: 18px 18px 0 0;
           transform: translateY(101%);
+          /* Nothing clips it now that it is fixed, so being off the bottom is
+             not enough on its own to keep it out of the way. */
+          visibility: hidden;
           /* No shadow while it waits. Parked below the card it still cast one
              upward, and the card clips to its own box — so the shadow was
              inside the clip while the sheet was outside it, and the bottom
@@ -1087,11 +1117,17 @@ export default function IdentityCard({ stamps, authed = false }) {
           box-shadow: none;
           transition:
             transform 0.42s cubic-bezier(0.22, 0.61, 0.36, 1),
-            box-shadow 0.42s ease;
+            box-shadow 0.42s ease,
+            visibility 0s linear 0.42s;
         }
         .idc-sheet--up {
           transform: none;
+          visibility: visible;
           box-shadow: 0 -14px 40px rgba(0,0,0,0.14);
+          transition:
+            transform 0.42s cubic-bezier(0.22, 0.61, 0.36, 1),
+            box-shadow 0.42s ease,
+            visibility 0s;
         }
         @media (prefers-reduced-motion: reduce) {
           .idc-sheet { transition: none; }
@@ -1110,6 +1146,9 @@ export default function IdentityCard({ stamps, authed = false }) {
           color: var(--ink-faint);
           margin: 0 0 14px;
         }
+        /* The sheet runs edge to edge; what is written on it keeps the
+           column's measure, so the rows line up with the card above them
+           rather than stretching across a wide screen. */
         .idc-sheet-list { width: 100%; max-width: 300px; margin: 0; }
         /* The tracklist rhythm the rest of the site reads in: what the thing is
            on the left, what it does on the right, one hairline under each. */
@@ -1535,11 +1574,11 @@ export default function IdentityCard({ stamps, authed = false }) {
           />
           <section
             className={'idc-sheet' + (rigOpen ? ' idc-sheet--up' : '')}
-            aria-label="The listening setup"
+            aria-label="Listening rig"
             inert={rigOpen ? undefined : true}
           >
             <span className="idc-sheet-grip" aria-hidden="true" />
-            <h2 className="idc-sheet-title">The rig</h2>
+            <h2 className="idc-sheet-title">Listening rig</h2>
             <dl className="idc-sheet-list">
               {rigList.map((item, index) => (
                 <div className="idc-sheet-row" key={`${item.name}-${index}`}>
