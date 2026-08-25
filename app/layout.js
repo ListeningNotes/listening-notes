@@ -1,5 +1,5 @@
 import './globals.css';
-import { Anton, Nunito, DM_Mono } from 'next/font/google';
+import { Nunito, DM_Mono } from 'next/font/google';
 import { Lightswitch } from '../components/main_components/Lightswitch';
 import { Bookplate } from '../components/main_components/Bookplate';
 import { pull_settings } from '../library/settings_actions';
@@ -19,20 +19,12 @@ const dmMono = DM_Mono({
   variable: '--font-dm-mono',
 });
 
-// The third face, and the only one with a single job: the headline on the back
-// of the card. An ID card is set in condensed poster caps — that is most of
-// what makes a rectangle read as a card rather than as a box with writing in
-// it — and neither Nunito nor DM Mono can be squeezed into that shape without
-// looking squeezed. One weight, because Anton only has one.
-//
-// Deliberately not a fourth body face. Nothing but .idc-headline is allowed to
-// name this variable; the two-font rule still holds for every word a reader
-// actually reads.
-const anton = Anton({
-  subsets: ['latin'],
-  weight: '400',
-  variable: '--font-anton',
-});
+// Anton loaded here for a while, to set the headline on the back of the card in
+// condensed poster caps. That headline was the journal's own name, and the name
+// came off — every copy of this software is a listening journal, so printing
+// the words under the mark said the same thing twice. With nothing left for it
+// to set, a whole extra typeface was being fetched by every visitor to style no
+// words at all. Back to two faces.
 
 export const metadata = {
   title: 'Listening Notes',
@@ -128,7 +120,7 @@ export default async function RootLayout({ children }) {
   settings.has_note = Boolean(all.why_essay && all.why_essay.trim());
 
   return (
-    <html lang="en" suppressHydrationWarning className={`${nunito.variable} ${dmMono.variable} ${anton.variable}`}>
+    <html lang="en" suppressHydrationWarning className={`${nunito.variable} ${dmMono.variable}`}>
       <body>
         <script
           suppressHydrationWarning

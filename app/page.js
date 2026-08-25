@@ -297,8 +297,8 @@ export default function HomePage() {
              enough to stay on a 13-inch one — below that the card keeps its
              shape and the writing scrolls inside it, which is the right way
              round for an object that has a fixed size. */
-          .hp-desktop-layout .idc-scene { min-height: clamp(520px, calc(100vh - 110px), 860px); }
-          .hp-desktop-layout .idc { height: clamp(520px, calc(100vh - 110px), 860px); }
+          .hp-desktop-layout .idc-scene { min-height: clamp(520px, calc(100vh - 80px), 860px); }
+          .hp-desktop-layout .idc { height: clamp(520px, calc(100vh - 80px), 860px); }
         }
 
         /* On a phone the card fills screen one and scrolls inside itself. The
