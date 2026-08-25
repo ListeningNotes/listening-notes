@@ -451,8 +451,10 @@ export default function HomePage() {
         .hp-flip[aria-pressed='true'] { color: var(--ink); }
 
         /* ── What came before ────────────────────────────────────────────
-           Three covers, small and dim, under the beacon. Small enough that the
-           hierarchy holds on its own: at 40px against a 180px hero nothing has
+           Three covers, small and dim, under the beacon and above the owner's
+           own two lines — what has been listened to belongs with the listening,
+           not below the controls for writing about it. Small enough that the
+           hierarchy holds on its own: at 48px against a 180px hero nothing has
            to be labelled to be understood as secondary, and dimmed on top of
            that so they read as past rather than as three more of the same. */
         .hp-recent {
@@ -464,8 +466,8 @@ export default function HomePage() {
         }
         .hp-recent:hover { opacity: 0.9; }
         .hp-recent-tile {
-          width: 40px; height: 40px;
-          border-radius: 8px;
+          width: 48px; height: 48px;
+          border-radius: 10px;
           overflow: hidden;
           flex-shrink: 0;
           background: var(--bg-warm);
@@ -483,7 +485,7 @@ export default function HomePage() {
         .hp-recent-none {
           display: flex; align-items: center; justify-content: center;
           width: 100%; height: 100%;
-          color: var(--ink-faint); font-size: 16px;
+          color: var(--ink-faint); font-size: 18px;
         }
         a.hp-recent-tile { transition: transform 0.2s; }
         a.hp-recent-tile:hover { transform: translateY(-2px); }
@@ -549,8 +551,8 @@ export default function HomePage() {
                   <ListeningBeacon />
                 </div>
               </div>
-              {writingLine}
               {recentRow}
+              {writingLine}
             </div>
             <div className="idc-face idc-face--back" inert={flipped ? undefined : true}>
               {cardFace()}
@@ -572,8 +574,8 @@ export default function HomePage() {
                     <ListeningBeacon statusAboveArt />
                   </div>
                 </div>
-                {writingLine}
                 {recentRow}
+                {writingLine}
               </div>
               <div className="idc-face idc-face--back" inert={flipped ? undefined : true}>
                 {cardFace()}
