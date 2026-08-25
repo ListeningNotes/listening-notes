@@ -189,7 +189,10 @@ CREATE TABLE IF NOT EXISTS settings (
   -- but not everyone wants to publish how new they are or how few they have
   -- logged, so they can be left off. A list of keys: ["since", "albums"].
   hidden_fields jsonb,
-  -- The one forward-looking line on the card. Everything else on it says what
+  -- The one forward-looking line on the card. Printed as "Looking for"; the
+  -- column keeps the name the idea was born with, because the wording on the
+  -- card is a design decision that has already moved once and the concept it
+  -- stores has not. Everything else on it says what
   -- somebody has already done; this says what they want next, and it sits
   -- directly above the button for sending them something — you read what they
   -- are asking for, then you send it. Deliberately its own column and not part

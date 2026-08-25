@@ -766,7 +766,7 @@ export default function IdentityCard({ stamps, authed = false }) {
              Wide enough for the longer of the two labels to stay on one line —
              a two-line label beside a one-line answer reads as a wrapping
              accident, not as a heading. */
-          width: 76px;
+          width: 84px;
           white-space: nowrap;
           font-family: var(--font-label);
           font-size: 8.5px; letter-spacing: 0.1em; text-transform: uppercase;
@@ -997,7 +997,7 @@ export default function IdentityCard({ stamps, authed = false }) {
 
         {(editing || send_me) && (
           <p className="idc-line idc-ask">
-            <span className="idc-line-label">Send me</span>
+            <span className="idc-line-label">Looking for</span>
             {editing
               ? <input
                   className="idc-ask-input"
@@ -1008,7 +1008,7 @@ export default function IdentityCard({ stamps, authed = false }) {
                      people write something worth reading; asked "what would
                      you like?" they write nothing, or "anything". */
                   placeholder="something loud, or anything with a saxophone in it"
-                  aria-label="Send me"
+                  aria-label="Looking for"
                 />
               : <span className="idc-line-value">{send_me}</span>}
           </p>
