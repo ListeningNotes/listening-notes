@@ -176,6 +176,13 @@ CREATE TABLE IF NOT EXISTS settings (
   about_intro text,
   why_essay text,
   why_date date,
+  -- Wherever else this journal's keeper can be found. A list of plain URLs,
+  -- not a column per service: a column per service means the software decides
+  -- which services exist, and every copy that uses one nobody thought of has
+  -- to wait for a migration. The card picks each icon off the hostname and
+  -- falls back to a plain link mark for anything it doesn't recognise.
+  --   ["https://instagram.com/name", "https://reddit.com/u/name"]
+  social_links jsonb,
   -- Only what the owner has rewritten. Anything untouched is absent and falls
   -- back to the text shipped in library/definitions.js, so a copy that never
   -- edits its definitions stores nothing at all.

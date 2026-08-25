@@ -28,6 +28,7 @@ const EMPTY = {
   founded_at: null,
   pinned_entry_id: null,
   about_intro: null,
+  social_links: null,
   // Whether a long note exists, rather than the note itself. Anything put in
   // this context is serialised into the HTML of every page that renders — the
   // essay is 3.5KB of prose the archive has no use for. Pages that actually
