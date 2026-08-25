@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { FlipHorizontal } from '@phosphor-icons/react';
+import { Broadcast, IdentificationCard } from '@phosphor-icons/react';
 import { useTheme } from '../components/main_components/Lightswitch';
 import { useListeningBeacon } from '../hooks/useListeningBeacon';
 import DotNav from '../components/main_components/DotNav';
@@ -23,13 +23,27 @@ function ScrollButton({ onClick, direction = 'down' }) {
 
 // The one control that turns the cover over. Deliberately a single button and
 // not a pair of tabs: a card has two sides, and a thing with two sides is
-// turned, not selected from. Phosphor's flip mark rather than a hand-drawn
-// card, which at 13px read as a mushroom.
-function FlipButton({ onClick, children }) {
+// turned, not selected from.
+//
+// It sits in the corner the Instagram link used to occupy, which is the reason
+// that link could come off — the corner is where this page has always kept the
+// things that are about the page rather than in it. The glyph names the side
+// you are going to rather than the side you are on: a card while the beacon is
+// showing, a broadcast while the card is.
+function FlipButton({ flipped, onClick }) {
+  const label = flipped ? 'Back to the beacon' : 'About this journal';
   return (
-    <button type="button" className="ln-pill hp-flip" onClick={onClick}>
-      <FlipHorizontal size={14} weight="bold" aria-hidden="true" />
-      {children}
+    <button
+      type="button"
+      className="hp-icon-btn hp-flip"
+      onClick={onClick}
+      aria-pressed={flipped}
+      aria-label={label}
+      title={label}
+    >
+      {flipped
+        ? <Broadcast size={19} weight="regular" aria-hidden="true" />
+        : <IdentificationCard size={19} weight="regular" aria-hidden="true" />}
     </button>
   );
 }
@@ -211,9 +225,7 @@ export default function HomePage() {
   // screen. Both are in the DOM at all times — the desktop and mobile markup
   // are separate trees toggled by display — so this is written as a function
   // rather than an element to keep the two instances honestly separate.
-  const cardFace = () => (
-    <IdentityCard stamps={stamps} onFlipBack={() => setFlipped(false)} />
-  );
+  const cardFace = () => <IdentityCard stamps={stamps} />;
 
   return (
     <div className={'hp' + (flipped ? ' hp--flipped' : '')}>
@@ -346,9 +358,10 @@ export default function HomePage() {
           transition: opacity 0.32s ease, visibility 0s linear 0.32s;
         }
 
-        .hp-flip { gap: 8px; }
-        .hp-flip svg { color: var(--ink-faint); transition: color 0.15s; }
-        .hp-flip:hover svg { color: var(--ink); }
+        /* Filled while the card is showing, so the control reads as a state
+           and not just a place to press — the corner is the only thing on
+           screen that says which side of the cover you are looking at. */
+        .hp-flip[aria-pressed='true'] { color: var(--ink); }
 
         @media (prefers-reduced-motion: reduce) {
           .idc-flip { transition: none; }
@@ -373,8 +386,10 @@ export default function HomePage() {
       {/* Instagram used to sit here, and again in the row at the foot of the
           phone's first screen. It lives on the back of the card now, with every
           other place its keeper can be found — one row of marks in one place
-          beats the same link pinned to the corner of the cover as well. */}
+          beats the same link pinned to the corner of the cover as well. What
+          took its place is the way to that card. */}
       <div className="hp-corner">
+        <FlipButton flipped={flipped} onClick={() => setFlipped(v => !v)} />
         <button className="hp-icon-btn" onClick={toggleTheme} aria-label="Toggle theme">
           {theme === 'dark' ? (
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
@@ -400,7 +415,6 @@ export default function HomePage() {
                 </div>
               </div>
               {writingLine}
-              <FlipButton onClick={() => setFlipped(true)}>Turn the card</FlipButton>
             </div>
             <div className="idc-face idc-face--back" inert={flipped ? undefined : true}>
               {cardFace()}
@@ -423,7 +437,6 @@ export default function HomePage() {
                   </div>
                 </div>
                 {writingLine}
-                <FlipButton onClick={() => setFlipped(true)}>Turn the card</FlipButton>
               </div>
               <div className="idc-face idc-face--back" inert={flipped ? undefined : true}>
                 {cardFace()}
@@ -431,6 +444,7 @@ export default function HomePage() {
             </div>
           </div>
           <div className="hp-screen-one-controls">
+            <FlipButton flipped={flipped} onClick={() => setFlipped(v => !v)} />
             <ScrollButton onClick={scrollToScreenTwo} />
             <button className="hp-icon-btn" onClick={toggleTheme} aria-label="Toggle theme">
               {theme === 'dark' ? (
