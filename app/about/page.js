@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ArrowSquareOut, Heart, SketchLogo } from '@phosphor-icons/react';
 import { fonts } from '../../library/sitewide_visuals';
@@ -9,6 +9,7 @@ import SiteNav from '../../components/main_components/SiteNav';
 import Chip from '../../components/main_components/Slug_Page/Chip';
 import StarRating from '../../components/main_components/StarRating';
 import { useBookplate } from '../../components/main_components/Bookplate';
+import { DEFAULT_DEFINITIONS } from '../../library/definitions';
 
 const SECTIONS = [
   { id: 'about',  label: 'About'  },
@@ -29,33 +30,43 @@ const RIG = [
 // so this page reads as a legend for those pages rather than a description of
 // them. `note` is the short form that sits opposite, where a track row keeps
 // its stars.
-const STAR_NOTES = [
-  { rating: 5, note: '5.0', body: 'A full-body yes. An album or track that feels complete and emotionally alive. I return to it willingly and often. Nothing pulls me out of the experience; even its rough edges feel necessary. These are the tracks and albums that stay with me and sometimes shape how I listen to music altogether.' },
-  { rating: 4, note: '4.0', body: 'Strong, memorable, and successful. The core vision lands, even if there are a few moments that don’t fully click for me. I might not love every second, but the highs are real and meaningful. Albums and tracks at this level earn repeat listens and attention.' },
-  { rating: 3, note: '3.0', body: 'Interesting, but uneven. I appreciate the ideas more than the execution, or the experience more than the replay value. These albums or tracks might matter to me more conceptually or contextually, but don’t quite pull me in emotionally.' },
-  { rating: 2, note: '2.0', body: 'Respect more than attachment. I’m glad it exists and I’m glad I listened, but I don’t feel drawn back. Albums or tracks at this level might have some compelling moments, yet the immersion breaks too often. My attention drifts, the balance feels off, or the piece just doesn’t quite land for me.' },
-  { rating: 1, note: '1.0', body: 'Not for me. Either actively uncomfortable to listen to, or lacking the elements I need to stay engaged. Sometimes I hear intention, but the execution just doesn’t hold me. These ratings never mean “bad” — just disconnected from my listening habits.' },
-  { rating: 0.5, note: 'Half', body: 'Half-stars appear when I’m genuinely pulled in two directions — simply too strong to place lower, but not fully aligned enough to place higher. I’ve actively wrestled with these albums or tracks and ultimately decided to meet in the middle.' },
-  // No `rating` on either of these two: they draw their own mark rather than
-  // a row of stars, so a number here would be read by nothing and would only
-  // suggest they sit on the same scale as the rows above.
-  { masterpiece: true, body: 'Entire 5-star track list. Flawless.' },
-  // The one row here that isn't a rating, and the row that exists to say so.
-  // A heart and a score answer different questions, and the pair only makes
-  // sense once you know they can disagree.
-  { favorite: true, body: 'An overall favorite track outside the context of the album. Plenty of 5-star tracks may not be favorited and some favorited may sit lower than expected.' },
+// Structure only. What each row draws — a rating, a diamond, a heart — is a
+// property of the page; what it *says* belongs to whoever keeps the journal and
+// comes from their definitions. Shipped wording lives in library/definitions.js
+// and is editable from settings, so this page reads as a legend for the marks
+// rather than as one person's opinions compiled into everybody's software.
+const STAR_ROWS = [
+  { key: '5.0', rating: 5 },
+  { key: '4.0', rating: 4 },
+  { key: '3.0', rating: 3 },
+  { key: '2.0', rating: 2 },
+  { key: '1.0', rating: 1 },
+  { key: 'half', rating: 0.5 },
+  // Neither of these draws stars. A row of five in front of Masterpiece said
+  // "this is a score", and the diamond is exactly the thing that isn't one —
+  // same reason the heart leads the favourite row. A heart and a score answer
+  // different questions, and the pair only makes sense once you know they can
+  // disagree.
+  { key: 'masterpiece', masterpiece: true },
+  { key: 'favorite', favorite: true },
 ];
 
-const RELATIONSHIP_NOTES = [
-  { label: 'First listen', body: 'My first time listening to an album front to back with intention. I may already know a handful of tracks, but this is the first time I’m hearing the full album as a complete work.' },
-  { label: 'Revisit',      body: 'An album I’ve lived with before and am returning to with fresh attention, often in a new listening setup or emotional context.' },
-  { label: 'Formative',    body: 'An album that shaped my relationship with music or how I listen, regardless of when I first heard it. These tend to be albums I’ve spent a significant portion of my life with.' },
-  { label: 'Study',        body: 'A listen rooted in history, influence, or research. Usually the album matters culturally or technologically, even if it’s not built for repeat listening.' },
-  { label: 'Submission',   body: 'An album recommended to me by someone else and listened to as a response or exchange.' },
-];
+const RELATIONSHIP_ROWS = ['first_listen', 'revisit', 'formative', 'study', 'submission'];
 
 export default function AboutPage() {
   const { about_intro, has_note: hasNote } = useBookplate();
+
+  // Fetched here rather than carried in the Bookplate context: this is a couple
+  // of kilobytes of prose that only the Index tab renders, and anything put in
+  // that context is serialised into the HTML of every page on the site. The
+  // shipped text stands in until the request lands, so the tab is never empty.
+  const [definitions, setDefinitions] = useState(DEFAULT_DEFINITIONS);
+  useEffect(() => {
+    fetch('/api/settings')
+      .then(r => r.json())
+      .then(d => d?.settings?.definitions && setDefinitions(d.settings.definitions))
+      .catch(() => {});
+  }, []);
 
   // One section on screen at a time. This used to be all three stacked into a
   // single scroll with the marks jumping between them, which is the thing that
@@ -319,8 +330,10 @@ export default function AboutPage() {
               <div className="ab-block">
                 <h2 className="ab-subhead">Star Notes</h2>
                 <div>
-                  {STAR_NOTES.map(s => (
-                    <div key={s.favorite ? 'favorite' : s.masterpiece ? 'masterpiece' : s.note} className="ab-row">
+                  {STAR_ROWS.map(row => {
+                    const def = definitions[row.key];
+                    return (
+                    <div key={row.key} className="ab-row">
                       <div className="ab-row-head">
                         {/* The two mark rows lead with their own mark, not
                             with stars. A row of five in front of Masterpiece
@@ -329,31 +342,32 @@ export default function AboutPage() {
                             leads the favourite row. Both are the marks the
                             archive actually draws, so this reads as a legend
                             for them rather than a picture of one. */}
-                        {s.masterpiece
+                        {row.masterpiece
                           ? <span className="ln-mark ln-mark--mp"><SketchLogo size={15} weight="fill" /></span>
-                          : s.favorite
+                          : row.favorite
                             ? <span className="ln-mark ln-mark--fav"><Heart size={15} weight="fill" /></span>
-                            : <StarRating rating={s.rating} size={14} />}
-                        {s.masterpiece
-                          ? <span style={{ marginLeft: 'auto' }}><Chip tone="mp">Masterpiece</Chip></span>
-                          : s.favorite
-                            ? <span style={{ marginLeft: 'auto' }}><Chip tone="fav">Favorite</Chip></span>
-                            : <span className="ab-row-tail">{s.note}</span>}
+                            : <StarRating rating={row.rating} size={14} />}
+                        {row.masterpiece
+                          ? <span style={{ marginLeft: 'auto' }}><Chip tone="mp">{def.label}</Chip></span>
+                          : row.favorite
+                            ? <span style={{ marginLeft: 'auto' }}><Chip tone="fav">{def.label}</Chip></span>
+                            : <span className="ab-row-tail">{def.label}</span>}
                       </div>
-                      <p className="ab-row-body">{s.body}</p>
+                      <p className="ab-row-body">{def.body}</p>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
 
               <div className="ab-block">
                 <h2 className="ab-subhead">Relationship Notes</h2>
                 <div>
-                  {RELATIONSHIP_NOTES.map(r => (
-                    <div key={r.label} className="ab-row">
+                  {RELATIONSHIP_ROWS.map(key => (
+                    <div key={key} className="ab-row">
                       <div className="ab-rel">
-                        <span className="ab-rel-term"><Chip>{r.label}</Chip></span>
-                        <p style={{ margin: 0 }}>{r.body}</p>
+                        <span className="ab-rel-term"><Chip>{definitions[key].label}</Chip></span>
+                        <p style={{ margin: 0 }}>{definitions[key].body}</p>
                       </div>
                     </div>
                   ))}
