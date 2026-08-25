@@ -539,7 +539,12 @@ export default function IdentityCard({ stamps, authed = false }) {
           display: flex; align-items: center; justify-content: space-between;
           gap: 12px; min-height: 30px; margin-bottom: 14px;
         }
-        .idc-mark { display: block; height: 22px; width: auto; }
+        /* 28px, which is what .sitenav-logo-mark and .hp-logo-mark are set to
+           in globals.css. The mark is the one thing that appears on every
+           surface of this site, so it is the one thing that has to be the same
+           size on all of them — a card whose logo is a few pixels off reads as
+           a different product rather than as another page. */
+        .idc-mark { display: block; height: 28px; width: auto; }
         .idc-mark path { fill: var(--ink); }
         /* The dot on the period. globals.css states these two inside a
            max-width:768px block for the cover's own logo, so on a wide screen
