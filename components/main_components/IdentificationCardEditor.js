@@ -170,10 +170,14 @@ function overPage(picture, page) {
   return new ImageData(flat, span, span);
 }
 
-// Sample a loaded image down to one pixel per module, square-cropped from the
-// middle — the same crop the card shows, so the code and the photograph are
-// pictures of the same thing.
-function sampleToGrid(image, size) {
+// Sample a loaded image down to one pixel per module, square-cropped the same
+// way the card crops it — cover, at the focal point its owner dragged to. The
+// centre was easier and wrong: the card shows one part of a photograph and the
+// code would have been built out of another, so the two would have been
+// pictures of different things. It also decides which tones the code has to
+// work with, and a portrait framed on a face is a different set of tones from
+// the middle of the same frame.
+function sampleToGrid(image, size, posX = 50, posY = 50) {
   const w = image.naturalWidth || image.width;
   const h = image.naturalHeight || image.height;
   const side = Math.min(w, h);
@@ -181,7 +185,10 @@ function sampleToGrid(image, size) {
   canvas.width = size;
   canvas.height = size;
   const ctx = canvas.getContext('2d', { willReadFrequently: true });
-  ctx.drawImage(image, (w - side) / 2, (h - side) / 2, side, side, 0, 0, size, size);
+  // The arithmetic object-fit: cover does — the overflow times the position.
+  const left = (w - side) * (posX / 100);
+  const top = (h - side) * (posY / 100);
+  ctx.drawImage(image, left, top, side, side, 0, 0, size, size);
   const data = ctx.getImageData(0, 0, size, size).data;
   const rgb = new Uint8ClampedArray(size * size * 3);
   for (let i = 0; i < size * size; i++) {
@@ -200,7 +207,7 @@ function sampleToGrid(image, size) {
 // twenty at a time until it reads or until there is no more room to give. If
 // it never reads, this returns null and the card falls back to the plain code,
 // which is a worse picture and a working one.
-export async function buildPortraitCode(url, portraitSrc) {
+export async function buildPortraitCode(url, portraitSrc, position = '50% 50%') {
   if (!url || !portraitSrc) return null;
   try {
     const [{ default: jsQR }, QRCode] = await Promise.all([
@@ -220,7 +227,13 @@ export async function buildPortraitCode(url, portraitSrc) {
       errorCorrectionLevel: 'H',
       version: CODE_VERSION,
     });
-    const sample = sampleToGrid(image, modules.size);
+    const [px, py] = String(position).split(/\s+/);
+    const sample = sampleToGrid(
+      image,
+      modules.size,
+      Number.parseFloat(px) || 50,
+      Number.parseFloat(py) || 50,
+    );
 
     for (let floor = FLOOR_START; floor <= FLOOR_LIMIT; floor += FLOOR_STEP) {
       const picture = paintCode(modules, sample, floor);
@@ -431,11 +444,13 @@ export function useIdentificationCardEditor(settings) {
     // per floor until one reads — and neither of those two changes often.
     const address = (settings.site_address || '').replace(/^https?:\/\//, '');
     const url = address ? `https://${address}` : '';
-    const portraitMoved = portrait.trim() !== (settings.portrait_url || '');
+    const framing = `${posX.toFixed(1)}% ${posY.toFixed(1)}%`;
+    const portraitMoved = portrait.trim() !== (settings.portrait_url || '')
+      || framing !== (settings.portrait_position || '50.0% 50.0%');
     const addressMoved = url !== lastCodeUrl.current;
     let codePatch = {};
     if (portrait.trim() && url && (portraitMoved || addressMoved || !settings.portrait_code_url)) {
-      const built = await buildPortraitCode(url, portrait.trim());
+      const built = await buildPortraitCode(url, portrait.trim(), `${posX}% ${posY}%`);
       codePatch = built
         ? { portrait_code: built.data, portrait_code_url: `/api/portrait?of=code&v=${Date.now()}` }
         // Nothing in range carried it. Clear rather than keep a stale picture
