@@ -75,6 +75,15 @@ export async function save_settings(fields) {
   }
   if (Object.keys(patch).length === 0) return await pull_settings();
 
+  // jsonb columns have to arrive as text. The driver will happily take a JS
+  // array for a text column and turn it into a Postgres array literal, which
+  // json refuses — "invalid input syntax for type json" — so the value is
+  // serialised here rather than at every call site that might set it.
+  // definitions goes through its own, more careful version of this below.
+  if (patch.social_links != null && typeof patch.social_links !== 'string') {
+    patch.social_links = JSON.stringify(patch.social_links);
+  }
+
   // definitions is the one column edited a piece at a time. Writing it whole
   // would mean rewriting one rating's wording silently discarded every other
   // rewording the owner had done, so the incoming keys are folded over what is
