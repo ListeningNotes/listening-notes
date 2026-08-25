@@ -704,7 +704,6 @@ export default function IdentityCard({ stamps, authed = false }) {
           width: 100%; border: 0; padding: 0; background: transparent;
           font: inherit; letter-spacing: inherit; color: var(--ink);
           text-align: center;
-          font-size: 36px !important;
         }
         .idc-name-input:focus { outline: none; }
         .idc-name-input::placeholder { color: var(--ink-faint); }
@@ -839,6 +838,7 @@ export default function IdentityCard({ stamps, authed = false }) {
            real prose, and centred prose is a ragged left edge to read down. */
         .idc-bio {
           font-size: 13px; line-height: 1.7; color: var(--ink-soft);
+          /* Stated on the element the field inherits from, so the two agree. */
           margin: 20px auto 0; max-width: 300px; text-align: left;
         }
         .idc-bio-input {
@@ -1026,13 +1026,25 @@ export default function IdentityCard({ stamps, authed = false }) {
           color: var(--fav); margin: 10px 0 0;
         }
 
+        /* Every field takes the size of the writing it stands in for, on a
+           phone as well — globals.css pushes fields up to 16px there to stop
+           iOS zooming, and the editor holds the page still for the length of an
+           edit instead, so this card can keep its own type. See holdZoom in
+           IdentificationCardEditor.js. */
         @media (max-width: 768px) {
-          /* The three editable runs of writing, at the size their fields are
-             pinned to, so nothing changes size or reflows when you start
-             typing in them. */
-          .idc-bio, .idc-bio-input { font-size: 16px; }
-          .idc-line, .idc-line-value, .idc-ask-input { font-size: 16px; }
+          /* inherit works for the name and the ask, whose fields sit inside the
+             element that carries the size. It does not for the bio: there the
+             textarea *is* the .idc-bio element, so inherit reaches past it to
+             the column and picks up whatever that is — 24px, as it turned out.
+             Stated outright, all four. */
+          .idc-name-input { font-size: 36px !important; }
+          .idc-bio-input  { font-size: 13px !important; }
+          .idc-ask-input  { font-size: 13px !important; }
+          .idc-link-input { font-size: 12px !important; }
+        }
+        @media (max-width: 480px) {
           .idc-name-input { font-size: 31px !important; }
+          .idc-bio-input  { font-size: 12.5px !important; }
         }
 
         @media (max-width: 480px) {
@@ -1041,7 +1053,7 @@ export default function IdentityCard({ stamps, authed = false }) {
              They are the same square seen from either side of the cover, and a
              square that changes size when you turn the card over is two
              squares. */
-          .idc-bio { margin-top: 17px; }
+          .idc-bio { margin-top: 17px; font-size: 12.5px; }
         }
       `}</style>
 
