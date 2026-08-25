@@ -579,13 +579,18 @@ export default function IdentityCard({ stamps, authed = false }) {
            full ink where the others are quiet. */
         .idc-tool--keep { color: var(--ink); }
 
-        /* ── The name ── the same face and size the beacon sets a track title
-           in, because the two sides of this cover are the same card: what is
-           playing on the front, who is playing it on the back. */
+        /* ── The name ── the beacon's own title face, set a step above the
+           size it uses. They started matched, which was tidy and wrong: the
+           track title on the front is one of four things in a stack and this
+           is the first thing you read on a card that is about a person. It
+           should arrive before the photograph does.
+           Balanced wrapping, because a long name breaking one word onto a
+           second line is the worst of the available shapes. */
         .idc-name {
           font-family: var(--font-display);
           font-weight: var(--font-display-weight);
-          font-size: 26px; line-height: 1.14; letter-spacing: -0.01em;
+          font-size: 36px; line-height: 1.1; letter-spacing: -0.018em;
+          text-wrap: balance;
           color: var(--ink);
           margin: 0;
         }
@@ -837,7 +842,7 @@ export default function IdentityCard({ stamps, authed = false }) {
         }
 
         @media (max-width: 480px) {
-          .idc-name { font-size: 24px; }
+          .idc-name { font-size: 31px; }
           /* The box does not shrink on a phone, because the beacon's does not.
              They are the same square seen from either side of the cover, and a
              square that changes size when you turn the card over is two
