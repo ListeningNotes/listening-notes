@@ -99,6 +99,9 @@ const BOOKPLATE_FIELDS = [
   'social_links',
   // Two keys at most, and the card cannot decide what to draw without them.
   'hidden_fields',
+  // A sentence. It is the point of the card's lower half and the landing page
+  // is where the card lives, so it travels with the rest of the short facts.
+  'send_me',
 ];
 
 // Async because the journal's details are read here, once, and handed down —

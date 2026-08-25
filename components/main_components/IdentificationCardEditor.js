@@ -25,7 +25,7 @@ import { useRouter } from 'next/navigation';
 
 // The counted rows: hideable, never writable. A journal that can be told how
 // many records it has is a journal whose numbers mean nothing.
-export const HIDEABLE = ['since', 'albums'];
+export const HIDEABLE = ['since', 'albums', 'genres'];
 
 // How large a portrait is worth keeping. The card draws it at about 240px on
 // the widest screen it has, so 900 is already twice what any display needs and
@@ -88,6 +88,7 @@ export function useIdentificationCardEditor(settings) {
 
   const [name, setName] = useState('');
   const [bio, setBio] = useState('');
+  const [sendMe, setSendMe] = useState('');
   const [portrait, setPortrait] = useState('');
   const [links, setLinks] = useState([BLANK]);
   const [hidden, setHidden] = useState(() => new Set());
@@ -107,6 +108,7 @@ export function useIdentificationCardEditor(settings) {
     // reading it, and the first save moves it into the field the card is
     // actually for.
     setBio(settings.bio || settings.about_intro || '');
+    setSendMe(settings.send_me || '');
     setPortrait(settings.portrait_url || '');
     // instagram_url predates the list and is folded in here, so an owner sees
     // every link they have rather than every link but one. Saving writes the
@@ -192,6 +194,7 @@ export function useIdentificationCardEditor(settings) {
         body: JSON.stringify({
           keeper_name: name.trim(),
           bio: bio.trim(),
+          send_me: sendMe.trim(),
           portrait_url: portrait.trim(),
           social_links: cleaned.length ? cleaned : null,
           hidden_fields: hidden.size ? [...hidden] : null,
@@ -212,12 +215,13 @@ export function useIdentificationCardEditor(settings) {
       setTrouble(error.message);
     }
     setSaving(false);
-  }, [name, bio, portrait, links, hidden, router]);
+  }, [name, bio, sendMe, portrait, links, hidden, router]);
 
   return {
     editing, begin, cancel, save, saving, busy, trouble,
     name, setName,
     bio, setBio,
+    sendMe, setSendMe,
     portrait,
     links, setLink, addLink, dropLink,
     hidden, toggleHidden,
