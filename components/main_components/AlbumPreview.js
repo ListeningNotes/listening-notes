@@ -64,7 +64,7 @@ export function EntryMarks({ entry, size = 13 }) {
       )}
       {formative && (
         <span className="ln-mark ln-mark--formative" role="img" aria-label="Formative" title="Formative">
-          <Fingerprint size={size} weight="fill" />
+          <Fingerprint size={size} weight="bold" />
         </span>
       )}
     </div>
