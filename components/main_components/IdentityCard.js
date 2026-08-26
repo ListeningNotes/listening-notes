@@ -26,12 +26,14 @@ import {
   LinkSimple, LinkedinLogo, MediumLogo, QrCode, RedditLogo, SoundcloudLogo,
   CassetteTape, Check, DeviceMobileSpeaker, Equalizer, Eye, EyeSlash,
   GlobeSimple, Guitar, Headphones, MastodonLogo, PencilSimple, PinterestLogo,
-  Plus, Radio, SnapchatLogo, SpeakerHifi, SpotifyLogo, TelegramLogo,
+  Plus, Printer, Radio, SnapchatLogo, SpeakerHifi, SpotifyLogo, TelegramLogo,
   ThreadsLogo, TiktokLogo, TwitchLogo, UploadSimple, User, VinylRecord,
   WhatsappLogo, X, XLogo, YoutubeLogo,
 } from '@phosphor-icons/react';
 import QRCode from 'qrcode';
 import { useIdentificationCardEditor } from './IdentificationCardEditor';
+import SharePrinter from './SharePrinter';
+import { identityCardPlate, monthAndYear } from './IdentityCardPlate';
 import { useListeningBeacon } from '../../hooks/useListeningBeacon';
 import { useBookplate } from './Bookplate';
 
@@ -97,17 +99,10 @@ function buildCode(url) {
   return built;
 }
 
-// A month and a year, never a day. The card says how long the journal has been
-// kept, and a precise date invites arithmetic that isn't the point. UTC because
-// created_at is a naive column read through a driver that shifts it by the
-// reader's own offset — a month is coarse enough that no plausible offset can
-// move it, which is the whole reason to print one.
-function monthAndYear(value) {
-  if (!value) return null;
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return null;
-  return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', timeZone: 'UTC' });
-}
+// monthAndYear lives in IdentityCardPlate.js, which the printed card also
+// needs it for. One definition, and it sits with the file that this one
+// imports rather than the other way round — a card importing its own plate
+// and a plate importing its own card is a cycle.
 
 // Which mark to draw for a link, decided by where it points. The alternative
 // was a column per service, which makes this software the authority on which
@@ -247,7 +242,7 @@ function AddressCode({ text }) {
   );
 }
 
-export default function IdentityCard({ stamps, authed = false }) {
+export default function IdentityCard({ stamps, authed = false, entries = [] }) {
   const settings = useBookplate();
   const {
     journal_name,
@@ -327,6 +322,40 @@ export default function IdentityCard({ stamps, authed = false }) {
   }, [rigOpen]);
 
   const address = site_address ? site_address.replace(/^https?:\/\//, '') : null;
+
+  // ── The printer ─────────────────────────────────────────────────────────
+  // The card, as a picture that can leave. Owner-only: the export controls
+  // are not in the markup at all without a session, which is the rule the
+  // whole thing was specced under — an address travels freely, what is on a
+  // journal's card is its keeper's to hand out.
+  const [printing, setPrinting] = useState(false);
+
+  // Only the covers, and shuffled — the printer's backdrops are the dashboard
+  // screensavers running on this journal's own records, and the archive's own
+  // order would put the same three albums behind every print anybody makes.
+  // Shuffled HERE rather than inside the printer, so it happens once per set
+  // of entries: a wallpaper that reshuffles every time the card above it
+  // re-renders would strobe behind the preview.
+  const covers = useMemo(
+    () => (Array.isArray(entries) ? entries : [])
+      .filter(e => e.album_art)
+      .sort(() => Math.random() - 0.5),
+    [entries]);
+
+  // Everything the plate needs, worked out here because the card has already
+  // worked most of it out. The code arrives as its matrix rather than as an
+  // address to encode: it is the same picture the square is showing, and a
+  // print re-encoding its own URL is a second chance to disagree with itself.
+  const plate = useMemo(() => {
+    const built = address ? buildCode(`https://${address}`) : null;
+    return identityCardPlate({
+      settings,
+      stamps,
+      since,
+      address,
+      code: built && { ...built, quiet: CODE_QUIET, ink: CODE_INK, paper: CODE_PAPER },
+    });
+  }, [settings, stamps, since, address]);
 
   const canTurnSlot = Boolean(portrait_url && address);
   const [slotCode, setSlotCode] = useState(!portrait_url && Boolean(address));
@@ -1324,15 +1353,29 @@ export default function IdentityCard({ stamps, authed = false }) {
                   </button>
                 </>
               ) : (
-                <button
-                  type="button"
-                  className="idc-tool"
-                  onClick={edit.begin}
-                  aria-label="Edit this card"
-                  title="Edit this card"
-                >
-                  <PencilSimple size={15} weight="bold" aria-hidden="true" />
-                </button>
+                <>
+                  {/* Print it. Beside the pencil because they are the two
+                      things only the keeper can do to a card: change it, and
+                      make a copy of it that can leave. */}
+                  <button
+                    type="button"
+                    className="idc-tool"
+                    onClick={() => setPrinting(true)}
+                    aria-label="Print this card as a picture"
+                    title="Print this card"
+                  >
+                    <Printer size={16} weight="bold" aria-hidden="true" />
+                  </button>
+                  <button
+                    type="button"
+                    className="idc-tool"
+                    onClick={edit.begin}
+                    aria-label="Edit this card"
+                    title="Edit this card"
+                  >
+                    <PencilSimple size={15} weight="bold" aria-hidden="true" />
+                  </button>
+                </>
               )}
             </div>
           )}
@@ -1653,6 +1696,21 @@ export default function IdentityCard({ stamps, authed = false }) {
             </button>
           </section>
         </>
+      )}
+
+      {/* Portalled onto the body from inside here, so it escapes the sheet
+          that turns the cover over — see the note at the foot of
+          SharePrinter.js. Rendered only for the keeper, and only once it has
+          been asked for: an unopened printer is not a hidden panel waiting in
+          the markup, it is nothing at all. */}
+      {authed && printing && (
+        <SharePrinter
+          open
+          onClose={() => setPrinting(false)}
+          plate={plate}
+          albums={covers}
+          link={address ? `https://${address}` : null}
+        />
       )}
     </section>
   );

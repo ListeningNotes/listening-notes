@@ -1,13 +1,14 @@
 'use client';
 import { useEffect, useRef } from 'react';
 import { backgroundScale } from '../../../library/background_scale';
+import { loadCover } from './cover';
 
 const PADDLE_W  = 15;
 const PADDLE_H  = 200;
 const BALL_SIZE = 200;
 const SPEED     = 7;
 
-export default function Pong({ albums = [] }) {
+export default function Pong({ albums = [], frameWidth }) {
   const canvasRef = useRef(null);
 
   useEffect(() => {
@@ -17,16 +18,16 @@ export default function Pong({ albums = [] }) {
 
     let W, H, ball, left, right, ballImgIdx, raf;
 
-    const images = albums.map(a => {
-      const img = new Image();
-      img.src = a.album_art;
-      return img;
-    });
+    const images = albums.map(a => loadCover(a.album_art));
 
     function resize() {
       // Mobile draws into a larger coordinate space than it displays, so the
       // artwork keeps its desktop share of the screen. 1 on desktop.
-      const k = backgroundScale();
+      //
+      // frameWidth is how the share printer says "this is not the window" —
+      // a screensaver running inside a 1080-wide print has no business
+      // shrinking its covers because the phone holding it is 390 across.
+      const k = backgroundScale(frameWidth);
       W = canvas.width  = Math.round((canvas.parentElement?.clientWidth  || window.innerWidth) / k);
       H = canvas.height = Math.round((canvas.parentElement?.clientHeight || window.innerHeight) / k);
       init();
@@ -203,7 +204,7 @@ export default function Pong({ albums = [] }) {
     window.addEventListener('resize', resize);
     raf = requestAnimationFrame(tick);
     return () => { cancelAnimationFrame(raf); window.removeEventListener('resize', resize); };
-  }, [albums]);
+  }, [albums, frameWidth]);
 
   // width/height are what make the scaled coordinate space work: an
   // absolutely positioned canvas with only inset:0 keeps its intrinsic

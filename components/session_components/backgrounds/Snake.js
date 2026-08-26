@@ -1,11 +1,12 @@
 'use client';
 import { useEffect, useRef } from 'react';
 import { backgroundScale } from '../../../library/background_scale';
+import { loadCover } from './cover';
 
 const CELL  = 100;
 const SPEED = 250;
 
-export default function Snake({ albums = [] }) {
+export default function Snake({ albums = [], frameWidth }) {
   const canvasRef = useRef(null);
 
   useEffect(() => {
@@ -17,16 +18,16 @@ export default function Snake({ albums = [] }) {
     let positions = []; // [{x,y}] — positions[0] = head
     let arts      = []; // arts[i] = albumIdx for body segment at positions[i+1]
 
-    const images = albums.map(a => {
-      const img = new Image();
-      img.src = a.album_art;
-      return img;
-    });
+    const images = albums.map(a => loadCover(a.album_art));
 
     function resize() {
       // Mobile draws into a larger coordinate space than it displays, so the
       // artwork keeps its desktop share of the screen. 1 on desktop.
-      const k = backgroundScale();
+      //
+      // frameWidth is how the share printer says "this is not the window" —
+      // a screensaver running inside a 1080-wide print has no business
+      // shrinking its covers because the phone holding it is 390 across.
+      const k = backgroundScale(frameWidth);
       canvas.width  = Math.round((canvas.parentElement?.clientWidth  || window.innerWidth) / k);
       canvas.height = Math.round((canvas.parentElement?.clientHeight || window.innerHeight) / k);
       cols = Math.floor(canvas.width  / CELL);
@@ -259,7 +260,7 @@ export default function Snake({ albums = [] }) {
     window.addEventListener('resize', resize);
     interval = setInterval(tick, SPEED);
     return () => { clearInterval(interval); window.removeEventListener('resize', resize); };
-  }, [albums]);
+  }, [albums, frameWidth]);
 
   // width/height are what make the scaled coordinate space work: an
   // absolutely positioned canvas with only inset:0 keeps its intrinsic

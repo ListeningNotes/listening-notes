@@ -271,7 +271,10 @@ export default function HomePage() {
   // screen. Both are in the DOM at all times — the desktop and mobile markup
   // are separate trees toggled by display — so this is written as a function
   // rather than an element to keep the two instances honestly separate.
-  const cardFace = () => <IdentityCard stamps={stamps} authed={authed} />;
+  // entries goes down as well as into the strip: the card's printer draws its
+  // backdrops with the dashboard screensavers running on this journal's own
+  // covers, and the page has already fetched them.
+  const cardFace = () => <IdentityCard stamps={stamps} authed={authed} entries={entries} />;
 
   return (
     <div className={'hp' + (flipped ? ' hp--flipped' : '')}>
