@@ -1,5 +1,6 @@
 import { neon } from '@neondatabase/serverless';
 import { pull_entry_by_slug } from '@/library/database_actions';
+import { pull_settings, coverName } from '@/library/settings_actions';
 import PostClient from './FullPostPage';
 
 // This page kept its own connection and its own SELECT for a while, which meant
@@ -11,12 +12,19 @@ const sql = neon(process.env.DATABASE_URL);
 
 export async function generateMetadata({ params }) {
   const { slug } = await params;
-  const result = await sql`SELECT album, artist FROM entries WHERE slug = ${slug} LIMIT 1`;
+  const [result, settings] = await Promise.all([
+    sql`SELECT album, artist FROM entries WHERE slug = ${slug} LIMIT 1`,
+    pull_settings(),
+  ]);
 
   if (!result.length) return { title: 'Not Found' };
 
+  // The name after the pipe is the journal's, and the journal's name is its
+  // keeper's. It used to be this journal's, printed on the tab of every album
+  // page on every copy — the single most-shared URL in the whole site, since
+  // an entry link is what gets pasted into a message.
   const e = result[0];
-  return { title: `${e.album} — ${e.artist} | Listening Notes` };
+  return { title: `${e.album} — ${e.artist} | ${coverName(settings)}` };
 }
 export default async function PostPage({ params }) {
   const { slug } = await params;

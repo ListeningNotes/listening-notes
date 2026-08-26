@@ -218,3 +218,47 @@ SESSION_PASSWORD     the password typed into the dashboard gate
 - When writing Python scripts that contain JavaScript with backticks, write to a temp file first, never use heredoc
 - Always commit after something is working and tested
 - git restore filename will undo changes to a single file if something goes wrong. Think of it like a checkpoint.
+
+---
+
+## Licence
+
+Listening Notes is free software, released under the **GNU Affero General Public
+License, version 3**. The full text is in [LICENSE](LICENSE).
+
+    Copyright (C) 2026 Miyel Brown
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as published
+    by the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/>.
+
+**What this means in practice.** Anyone may run a copy, for anything, including
+a business — a bar playing records off its own copy owes nothing and asks
+nobody. Anyone may change it. The one condition is reciprocity: if you give
+your modified version to other people *or run it as a service they can reach
+over a network*, they are entitled to your source. That last clause is section
+13, and it is the whole reason this licence rather than the plain GPL — a
+journal is a website, so "distributing" it mostly means hosting it.
+
+The practical effect is that a closed commercial fork is not possible. A copy
+stays a copy.
+
+**Warranty.** There is none. The software is provided as-is; see sections 15
+through 17 of the licence. Nobody who runs a copy has any claim against whoever
+wrote it if it loses their writing, and that protection is the second reason
+this file exists.
+
+**The name is not the code.** The licence covers the software. It does not
+grant use of the Listening Notes name or mark to identify *your* journal — see
+the note on copies in the docs. Every copy is named by whoever keeps it. The
+mark travels with the software as a colophon, the way a press mark sits in the
+back of a book, and that is the only use it has in a copy.

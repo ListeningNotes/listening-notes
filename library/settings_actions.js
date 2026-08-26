@@ -16,10 +16,15 @@ import { DEFAULT_DEFINITIONS, mergeDefinitions } from './definitions.js';
 //
 // Blank rather than borrowed: a fresh copy shows no name, no portrait and no
 // social links until its owner supplies them, and never inherits this
-// journal's. The one exception is journal_name, which needs *something* on the
-// cover before the welcome screen has run.
+// journal's. Nothing here needs a stand-in value: the one string a nameless
+// copy has to show is its title, and coverName() below answers that without a
+// column having to hold a placeholder.
 const EMPTY = {
-  journal_name: 'A listening journal',
+  // Dead, and kept. A journal is called after whoever keeps it — see
+  // coverName() — so nothing reads this any more, but migrations here are
+  // additive and copies in the wild have the column. It stays null rather than
+  // holding a title, so it cannot quietly become a second name for anything.
+  journal_name: null,
   keeper_name: null,
   bio: null,
   portrait_url: null,
@@ -47,13 +52,23 @@ const EMPTY = {
   rig_icon: null,
   rig: null,
   definitions: null,
+  // Written once and then fixed for the life of the copy. See WRITE_ONCE.
+  serial: null,
+  // False until the welcome screen has run. Not null: "we have not asked yet"
+  // and "they answered no" are the same answer here, and false is the one a
+  // fresh copy needs before its database has a row in it at all.
+  setup_complete: false,
 };
 
 // Anything a caller sends that is not one of these is ignored. An allow-list
 // rather than trusting the request body, so a stray field cannot reach the
 // query — and so adding a setting is a deliberate act in this file.
 const WRITABLE = [
-  'journal_name', 'keeper_name', 'bio', 'portrait_url',
+  // journal_name is deliberately absent. The column is still there and still
+  // holds whatever anyone typed into it, but a journal is named after its
+  // keeper now, so letting a form go on writing this would be maintaining a
+  // second name that nothing ever reads.
+  'keeper_name', 'bio', 'portrait_url',
   'instagram_url', 'lastfm_user', 'site_address',
   'founded_at', 'pinned_entry_id', 'about_intro', 'social_links',
   'hidden_fields', 'send_me', 'portrait_position', 'rig_icon', 'rig',
@@ -63,11 +78,51 @@ const WRITABLE = [
   'portrait_data', 'portrait_mime',
   // The portrait rendered as the journal's code. See the column in schema.sql.
   'portrait_code', 'portrait_code_url',
+  // Set at setup and then frozen — see WRITE_ONCE. They are on this list
+  // because they have to be writable exactly once; the list below is what
+  // stops that becoming twice.
+  'serial', 'setup_complete',
 ];
+
+// Fields that may be written while they are empty and never again.
+//
+// A serial that can be edited is a serial number in the way a nickname is a
+// fingerprint — the whole value of it is that it did not change. Same for the
+// founding date: it is a claim about the past, and a journal whose start date
+// can be moved to last week is a journal whose age means nothing. Both are
+// printed on the card, which is exactly the kind of place a number gets read
+// as a fact rather than as a preference.
+//
+// Enforced here rather than by leaving them off WRITABLE, because they do have
+// to be written once and something has to be allowed to do it. Silently
+// dropped rather than raising: a form that posts every field it knows about
+// should not fail because one of them was already settled.
+//
+// setup_complete is not on this list on purpose. It is a latch, not a fact,
+// and someone re-running setup after a restore is a situation, not an attack.
+const WRITE_ONCE = ['serial', 'founded_at'];
 
 // A form posts empty strings for fields left alone; the database should hold
 // null. Otherwise "no Instagram" becomes an empty link rather than no link.
 const blankToNull = v => (typeof v === 'string' && v.trim() === '' ? null : v);
+
+// What this journal is called.
+//
+// It is called whoever keeps it. There used to be a journal_name column and a
+// separate name on the cover, which asked every owner to invent a title for
+// their own diary before they could write in it — two names for one thing, and
+// the second one always ended up being the first one again. The column stays
+// in the table because migrations here are additive and copies in the wild
+// have it, but nothing reads it any more.
+//
+// The fallback is deliberately generic and deliberately not this journal's
+// name: a copy whose owner has not introduced themselves yet is "a listening
+// journal", not somebody else's. It is the one string a fresh copy shows in a
+// browser tab, and it has to be true of every copy rather than of one.
+export function coverName(settings) {
+  const keeper = (settings?.keeper_name || '').trim();
+  return keeper || 'A listening journal';
+}
 
 export async function pull_settings() {
   try {
@@ -91,6 +146,23 @@ export async function save_settings(fields) {
     if (key in fields) patch[key] = blankToNull(fields[key]);
   }
   if (Object.keys(patch).length === 0) return await pull_settings();
+
+  // Anything already settled is quietly dropped before it can reach the query.
+  // One read, and only when the caller actually mentioned one of them, so an
+  // ordinary card save still costs what it did.
+  const onceKeys = WRITE_ONCE.filter(key => key in patch);
+  if (onceKeys.length) {
+    const [settled] = await database.query(
+      `SELECT ${onceKeys.map(k => `"${k}"`).join(', ')} FROM settings WHERE id = 1`
+    );
+    for (const key of onceKeys) {
+      if (settled && settled[key] != null) delete patch[key];
+    }
+    // Every field the caller sent was one it was not allowed to change. There
+    // is nothing left to write, and an INSERT with no columns is a syntax
+    // error rather than a no-op.
+    if (Object.keys(patch).length === 0) return await pull_settings();
+  }
 
   // jsonb columns have to arrive as text. The driver will happily take a JS
   // array for a text column and turn it into a Postgres array literal, which
@@ -146,11 +218,15 @@ export async function save_settings(fields) {
   const columns = Object.keys(patch);
   const values = columns.map(c => patch[c]);
 
+  // Column names are quoted. Every one of them comes off WRITABLE, so this is
+  // not about injection — it is that `serial` is also how this file's other
+  // tables spell "auto-incrementing integer", and an unquoted one in a column
+  // list is a coin toss on how the parser reads it.
   const [row] = await database.query(
-    `INSERT INTO settings (id, ${columns.join(', ')})
+    `INSERT INTO settings (id, ${columns.map(c => `"${c}"`).join(', ')})
      VALUES (1, ${columns.map((_, i) => `$${i + 1}`).join(', ')})
      ON CONFLICT (id) DO UPDATE SET
-       ${columns.map(c => `${c} = EXCLUDED.${c}`).join(', ')},
+       ${columns.map(c => `"${c}" = EXCLUDED."${c}"`).join(', ')},
        updated_at = now()
      RETURNING *`,
     values

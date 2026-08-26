@@ -9,6 +9,7 @@ import { fonts } from '../../library/sitewide_visuals';
 import PasswordGate from '../../components/session_components/PasswordGate';
 import { Headphones, Stack, Envelope, PaperPlane } from '@phosphor-icons/react';
 import backgrounds from '../../components/session_components/backgrounds';
+import { useBookplate } from '../../components/main_components/Bookplate';
 
 const cards = [
   { href: '/dashboard/echo',  label: 'Listen',  Icon: Headphones },
@@ -18,6 +19,7 @@ const cards = [
 ];
 
 export default function SessionHub() {
+  const { cover_name } = useBookplate();
   const [authed, setAuthed]   = useState(false);
   const [checking, setChecking] = useState(true);
   const [albums, setAlbums]   = useState([]);
@@ -91,7 +93,7 @@ export default function SessionHub() {
 
       {/* ── Logo ── */}
       <div className="hub-logo" style={{ zIndex: 2, whiteSpace: 'nowrap' }}>
-        <img src="/Logo.png" alt="Listening Notes" style={{ width: 'auto', display: 'block', margin: '0 auto 8px' }} />
+        <img src="/Logo.png" alt={cover_name} style={{ width: 'auto', display: 'block', margin: '0 auto 8px' }} />
         <div style={{ fontFamily: "'Syne', sans-serif", fontSize: 11, fontWeight: 500, letterSpacing: '0.22em', textTransform: 'uppercase', color: 'rgba(0,0,0,0.3)' }}>
           dashboard
         </div>

@@ -13,7 +13,7 @@
 
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { pull_settings } from '../../library/settings_actions';
+import { pull_settings, coverName } from '../../library/settings_actions';
 import DotNav from '../../components/main_components/DotNav';
 import SiteNav from '../../components/main_components/SiteNav';
 
@@ -31,13 +31,14 @@ function parse(essay) {
 }
 
 export async function generateMetadata() {
-  const { why_essay, journal_name } = await pull_settings();
-  if (!why_essay) return {};
-  return { title: `Why · ${journal_name}` };
+  const settings = await pull_settings();
+  if (!settings.why_essay) return {};
+  return { title: `Why · ${coverName(settings)}` };
 }
 
 export default async function WhyPage() {
-  const { why_essay, why_date, journal_name } = await pull_settings();
+  const settings = await pull_settings();
+  const { why_essay, why_date } = settings;
 
   // No note, no page. A copy that has not written one gets a 404 rather than
   // an empty article with a heading over nothing.
@@ -98,7 +99,7 @@ export default async function WhyPage() {
       <article className="why-wrap">
         <header className="why-head">
           {written && <div className="why-date">{written}</div>}
-          <h1 className="why-title">{journal_name}</h1>
+          <h1 className="why-title">{coverName(settings)}</h1>
         </header>
 
         {blocks.map((b, i) => b.type === 'heading'

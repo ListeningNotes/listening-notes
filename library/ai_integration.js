@@ -191,7 +191,7 @@ export async function format_post({ brief, notes, rating, masterpiece, favorite,
 export async function ask_echo({ message, brief, overallNotes, trackNotes, tracks }) {
   const client = get_client();
 
-  const system = `You are a music-knowledgeable listening companion embedded in a personal music journal called Listening Notes. You have two modes:
+  const system = `You are a music-knowledgeable listening companion embedded in a personal music journal. You have two modes:
 
 1. MUSIC KNOWLEDGE: Answer any question about music — instruments, production techniques, theory, history, gear, specific tracks, artists. Be specific and concrete.
 

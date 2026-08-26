@@ -10,8 +10,12 @@
 
 import { pull_public_entries } from '@/library/database_actions';
 import { entryTypeLabel } from '@/library/entry_formatter';
+import { pull_settings, coverName } from '@/library/settings_actions';
 
-const TITLE = 'Listening Notes';
+// The channel title is read per request, not written here. It was a constant,
+// which put the first journal's name at the top of every copy's feed — and a
+// feed title is stickier than a page title, because it is what a reader's app
+// files the subscription under and it keeps that name after the site changes.
 const DESCRIPTION = 'A listening journal.';
 
 // XML has five characters that cannot appear as themselves. Album titles are
@@ -27,7 +31,11 @@ function xml(value) {
 
 export async function GET(request) {
   const origin = new URL(request.url).origin;
-  const entries = await pull_public_entries();
+  const [entries, settings] = await Promise.all([
+    pull_public_entries(),
+    pull_settings(),
+  ]);
+  const title = coverName(settings);
 
   const items = entries.map(e => {
     const link = `${origin}/entries/${e.slug}`;
@@ -51,7 +59,7 @@ export async function GET(request) {
   const body = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>${xml(TITLE)}</title>
+    <title>${xml(title)}</title>
     <link>${xml(origin)}</link>
     <description>${xml(DESCRIPTION)}</description>
     <language>en</language>

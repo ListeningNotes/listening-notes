@@ -43,7 +43,7 @@ function SurpriseLink({ href, label }) {
 }
 
 export default function TopNav({ onToggleTheme, theme, hideBeacon = false }) {
-  const { instagram_url } = useBookplate();
+  const { cover_name } = useBookplate();
   const [menuOpen, setMenuOpen] = useState(false);
 
   const links = [
@@ -60,7 +60,7 @@ export default function TopNav({ onToggleTheme, theme, hideBeacon = false }) {
         <Link href="/" className="topnav-wordmark" style={{ display: 'flex', alignItems: 'center' }}>
           <img
             src="/Logo.png"
-            alt="Listening Notes"
+            alt={cover_name}
             style={{ height: '48px', width: 'auto', filter: theme === 'dark' ? 'invert(1)' : 'none', transition: 'filter 0.2s' }}
           />
         </Link>
@@ -72,13 +72,14 @@ export default function TopNav({ onToggleTheme, theme, hideBeacon = false }) {
         </div>
         <div className="topnav-right">
           {!hideBeacon && <NavBeacon />}
-          {/* Nothing at all when the journal has no Instagram — an empty
-              link is worse than no icon. */}
-          {instagram_url && (
-            <a href={instagram_url} target="_blank" rel="noopener noreferrer" className="topnav-icon-btn" aria-label="Instagram">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.5" fill="currentColor" stroke="none"/></svg>
-            </a>
-          )}
+          {/* An Instagram button used to sit here, drawn as Instagram and
+              labelled Instagram, fed by a column called instagram_url. Three
+              places where the software decided which service its owner was on.
+              It has gone the same way as the one on the homepage and for the
+              same reason: every place a keeper can be found is one row of
+              marks on the back of the card, each icon picked off its own
+              hostname, and the same link pinned to the corner of every page as
+              well was the copy of it, not the original. */}
           <button className="topnav-icon-btn" onClick={onToggleTheme} aria-label="Toggle theme">
             {theme === 'dark' ? (
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
