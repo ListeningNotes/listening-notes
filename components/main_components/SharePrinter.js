@@ -10,12 +10,25 @@
 // page is not one.
 //
 // The printer is the machine, not the picture. It knows about paper sizes,
-// about what can sit behind the ink, about day and night, and about the two
-// things a person actually does with a finished print: keep it or send it. It
-// knows nothing whatsoever about identity cards or albums. Those arrive as a
-// PLATE — an object that can load whatever art it needs and then draw itself
-// onto a canvas at whatever size the paper happens to be. Adding a printable
-// thing to this site is writing a plate, not touching this file.
+// about finished looks you can turn through, and about the two things a person
+// actually does with a print: keep it or send it. It knows nothing whatsoever
+// about identity cards or albums. Those arrive as a PLATE — an object that can
+// load whatever art it needs and then draw itself onto a canvas at whatever
+// size the paper happens to be. Adding a printable thing to this site is
+// writing a plate, not touching this file.
+//
+// ── Why you turn through prints instead of assembling one ─────────────────
+//
+// The first version had four rows of controls — size, backdrop, ink, and
+// whatever the plate wanted — and between them they made a hundred and twenty
+// combinations, nearly all of which nobody would ever choose. It was a control
+// panel, and it ate the bottom third of a phone.
+//
+// So the backdrop and the ink are welded together into VARIANTS: finished
+// looks with names, turned through one at a time. You swipe until you like one
+// and press Save. What is left underneath is the two things that are genuinely
+// a decision rather than a taste — how big the paper is, and which lines of
+// the thing you are willing to print.
 //
 // Why canvas rather than an image route on the server: the same reason
 // /dashboard/share gives. The site leans on blur and translucency, Satori
@@ -23,15 +36,15 @@
 // for free.
 //
 // Why the screensavers run live behind the preview rather than being
-// snapshotted into it: because then the preview IS the print. The wallpaper
-// is moving while you look at it, and Save takes the frame that is on screen
-// at the moment you press it — so choosing a backdrop and choosing a moment
-// are the same gesture, and nobody has to be told that the export will look
-// slightly different from the preview. It won't.
+// snapshotted into it: because then the preview IS the print. The wallpaper is
+// moving while you look at it, and Save takes the frame that is on screen at
+// the moment you press it — so choosing a look and choosing a moment are the
+// same gesture, and nobody has to be told the export will differ from the
+// preview. It won't.
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { Check, DownloadSimple, LinkSimple, ShareNetwork, X } from '@phosphor-icons/react';
+import { CaretLeft, CaretRight, Check, DownloadSimple, LinkSimple, ShareNetwork, X } from '@phosphor-icons/react';
 import Gallery from '../session_components/backgrounds/Gallery';
 import Pong from '../session_components/backgrounds/Pong';
 import Reel from '../session_components/backgrounds/Reel';
@@ -51,34 +64,36 @@ export const FRAMES = {
 };
 export const FRAME_ORDER = ['story', 'portrait', 'square', 'spread'];
 
-// ── What can sit behind the ink ────────────────────────────────────────────
-// The dashboard screensavers, running on the journal's own covers. They are
-// already the house wallpaper — the room you are in while you write — so a
-// print made on one is recognisably from here without a single new asset
-// file, and the covers on it are yours rather than a stock texture's.
-//
-// Only the canvas-drawn ones. Rain, DVD, Fizzy and SplitScreen are built out
-// of DOM elements, which a canvas cannot photograph without dragging in a
-// screenshot library; they are still perfectly good screensavers and they are
-// simply not printable. Six is more than the three or four this needed.
-//
-// Paper is first and is not a backdrop at all — it is the absence of one, the
-// page's own colour, and what the thing looks like on the site.
-export const BACKDROPS = [
-  { key: 'paper',     label: 'Paper',     Background: null },
-  { key: 'gallery',   label: 'Gallery',   Background: Gallery },
-  { key: 'vinyl',     label: 'Shelf',     Background: Vinyl },
-  { key: 'reel',      label: 'Reel',      Background: Reel },
-  { key: 'solitaire', label: 'Solitaire', Background: Solitaire },
-  { key: 'snake',     label: 'Snake',     Background: Snake },
-  { key: 'pong',      label: 'Pong',      Background: Pong },
-];
-
-// The page's own two colours, stated rather than read, because the print has
-// to be the same colour on a phone set to dark as on a laptop set to light —
-// the choice on screen is Day or Night, not whatever the viewer's system
-// happens to think. These are --bg from globals.css.
+// The page's own two colours, stated rather than read, because a print has to
+// be the same colour on a phone set to dark as on a laptop set to light. These
+// are --bg from globals.css.
 export const PAPER = { day: '#eef0ec', night: '#0e0e0e' };
+
+// ── The looks ──────────────────────────────────────────────────────────────
+// A backdrop and an ink, decided together and given a name. The backdrops are
+// the dashboard screensavers running on the journal's own covers — already the
+// house wallpaper, the room you are in while you write — so a print made on
+// one is recognisably from here without a single new asset file, and the
+// records on it are yours rather than a stock texture's.
+//
+// Only the canvas-drawn screensavers can be here. Rain, DVD, Fizzy and
+// SplitScreen are built out of DOM elements, which a canvas cannot photograph
+// without dragging in a screenshot library. They are still perfectly good
+// screensavers and they are simply not printable.
+//
+// Paper and Ink come first and are not backdrops at all — they are the absence
+// of one, the page's own colour, and what the thing looks like on the site.
+export const VARIANTS = [
+  { key: 'paper',      label: 'Paper',       Background: null,      dark: false },
+  { key: 'ink',        label: 'Ink',         Background: null,      dark: true  },
+  { key: 'shelf',      label: 'Shelf',       Background: Vinyl,     dark: false },
+  { key: 'shelf-late', label: 'Shelf, late', Background: Vinyl,     dark: true  },
+  { key: 'gallery',    label: 'Gallery',     Background: Gallery,   dark: false },
+  { key: 'reel',       label: 'Reel',        Background: Reel,      dark: true  },
+  { key: 'solitaire',  label: 'Solitaire',   Background: Solitaire, dark: false },
+  { key: 'snake',      label: 'Snake',       Background: Snake,     dark: true  },
+  { key: 'pong',       label: 'Pong',        Background: Pong,      dark: false },
+];
 
 // ── Canvas tools, for plates to draw with ──────────────────────────────────
 // Lifted wholesale from /dashboard/share, which worked all of this out for the
@@ -156,9 +171,10 @@ export function drawPath(ctx, d, x, y, size, viewBox, color) {
 // ── The Ln. mark ───────────────────────────────────────────────────────────
 // Loaded from the real asset rather than re-pasted as path data, so the mark
 // on a print is the same object as the mark on every page. public/logo.svg is
-// a 375-square with the mark inside it and its ink hardcoded, so three string
-// swaps make it usable: crop the viewBox down to the mark the way SiteNav does,
-// size it to the box we want, recolour it. A data URL does not taint a canvas.
+// a 375-square with the mark sitting inside it and its ink hardcoded, so three
+// string swaps make it usable: crop the viewBox down to the mark the way
+// SiteNav does, size it to the box we want, recolour it. A data URL does not
+// taint a canvas.
 //
 // The period is part of the artwork here, and on a print it is never lit. A
 // still picture of a beacon that happened to be playing is a lie by the time
@@ -203,18 +219,20 @@ export function loadPicture(src) {
   return attempt(true).catch(() => attempt(false)).catch(() => null);
 }
 
+// How far a finger has to travel across the paper before it counts as turning
+// to the next print rather than as a tap that missed.
+const TURN = 42;
+
 // ── The press ──────────────────────────────────────────────────────────────
 
 export default function SharePrinter({ open, onClose, plate, albums = [], link = null }) {
   const [frameKey, setFrameKey] = useState('story');
-  const [backdropKey, setBackdropKey] = useState('paper');
-  const [isDark, setIsDark] = useState(false);
-  // Whatever extra choices this plate wanted, keyed by choice — but only the
-  // ones that have actually been pressed. The answer handed to the plate is
-  // derived from those and the plate's own first option, rather than copied
-  // into state when the plate arrives: an effect doing the copying has to
-  // guess when NOT to, and would overwrite a choice every time the card
-  // underneath it re-rendered.
+  const [at, setAt] = useState(0);              // which look, by index
+  const [nudge, setNudge] = useState(0);        // -1 / 1, for the length of a turn
+  // Only the toggles that have actually been pressed. What the plate is told
+  // is derived from these and its own defaults rather than copied into state
+  // when the plate arrives: an effect doing the copying has to guess when NOT
+  // to, and would undo a choice every time the card underneath re-rendered.
   const [pressed, setPressed] = useState({});
   const [art, setArt] = useState(null);
   const [status, setStatus] = useState('');
@@ -225,22 +243,35 @@ export default function SharePrinter({ open, onClose, plate, albums = [], link =
   const backRef = useRef(null);
   const plateRef = useRef(null);
   const probeRef = useRef(null);
+  const grabbed = useRef(null);
 
   const frame = FRAMES[frameKey];
-  const backdrop = BACKDROPS.find(b => b.key === backdropKey) || BACKDROPS[0];
-  const choices = useMemo(() => plate?.choices || [], [plate]);
+  const look = VARIANTS[at];
+  const isDark = look.dark;
+  const toggles = useMemo(() => plate?.toggles || [], [plate]);
 
-  const picks = useMemo(() => {
+  const shown = useMemo(() => {
     const answer = {};
-    for (const c of choices) answer[c.key] = pressed[c.key] ?? c.options[0]?.value;
+    for (const t of toggles) answer[t.key] = pressed[t.key] ?? t.on ?? true;
     return answer;
-  }, [choices, pressed]);
+  }, [toggles, pressed]);
 
-  // Escape, and the page held still underneath. A sheet this tall over a
-  // scrolling page means two things scroll and only one of them was asked to.
+  const turn = useCallback(step => {
+    setAt(i => (i + step + VARIANTS.length) % VARIANTS.length);
+    setNudge(step);
+    setTimeout(() => setNudge(0), 190);
+  }, []);
+
+  // Escape closes, the arrows turn, and the page is held still underneath — a
+  // sheet this tall over a scrolling page means two things scroll and only one
+  // of them was asked to.
   useEffect(() => {
     if (!open) return;
-    const onKey = event => { if (event.key === 'Escape') onClose?.(); };
+    const onKey = event => {
+      if (event.key === 'Escape') onClose?.();
+      if (event.key === 'ArrowLeft') turn(-1);
+      if (event.key === 'ArrowRight') turn(1);
+    };
     window.addEventListener('keydown', onKey);
     const prev = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
@@ -248,7 +279,7 @@ export default function SharePrinter({ open, onClose, plate, albums = [], link =
       window.removeEventListener('keydown', onKey);
       document.body.style.overflow = prev;
     };
-  }, [open, onClose]);
+  }, [open, onClose, turn]);
 
   // How much of the paper fits in the space left over. Measured rather than
   // guessed at, because the space left over is a phone in one hand and half a
@@ -269,23 +300,22 @@ export default function SharePrinter({ open, onClose, plate, albums = [], link =
   }, [open, frame]);
 
   // The art the plate needs, fetched whenever the answer would be different.
+  //
+  // Deliberately not cleared while the next set loads: the photograph stays on
+  // the paper until the code is in hand, which is the right way round. The
+  // alternative is the print going blank for as long as a picture takes.
   useEffect(() => {
     if (!open || !plate?.load) return;
     let cancelled = false;
-    plate.load({ isDark, picks })
+    plate.load({ isDark, shown })
       .then(loaded => { if (!cancelled) { setArt(loaded); setStatus(''); } })
       // An empty set rather than nothing, so the printer stops saying it is
       // loading something that is never going to arrive.
       .catch(() => { if (!cancelled) { setArt({}); setStatus('Some of this would not load.'); } });
     return () => { cancelled = true; };
-  }, [open, plate, isDark, picks]);
+  }, [open, plate, isDark, shown]);
 
-  // Deliberately NOT cleared when the choices change. A press on Code leaves
-  // the photograph on the paper until the code is in hand — which is the
-  // right way round, because the alternative is the print going blank for as
-  // long as a picture takes to arrive.
-
-  // The ink. Redrawn on every change and then left alone — it is a still
+  // The ink. Redrawn on every change and then left alone: it is a still
   // picture over a moving one, so there is nothing here to animate.
   useEffect(() => {
     if (!open || !plate?.draw || !plateRef.current || !probeRef.current) return;
@@ -305,20 +335,34 @@ export default function SharePrinter({ open, onClose, plate, albums = [], link =
       ctx.clearRect(0, 0, frame.w, frame.h);
       plate.draw(ctx, frame, {
         art,
-        picks,
+        shown,
         isDark,
         families,
         // Whether anything is moving behind the ink. It decides whether the
-        // plate needs to lay a scrim before it writes: on paper the thing sits
-        // on the page exactly as it does on the site, and a panel drawn there
-        // would be a box around something that has never had one.
-        backdrop: backdrop.key === 'paper' ? null : backdrop.key,
+        // plate needs to lay a scrim before it writes: on plain paper the
+        // thing sits on the page exactly as it does on the site, and a panel
+        // drawn there would be a box around something that never had one.
+        backdrop: look.Background ? look.key : null,
         paper: isDark ? PAPER.night : PAPER.day,
       });
     });
 
     return () => { cancelled = true; };
-  }, [open, plate, frame, art, picks, isDark, backdrop]);
+  }, [open, plate, frame, art, shown, isDark, look]);
+
+  // ── Turning the paper ────────────────────────────────────────────────────
+  const grab = event => { grabbed.current = { x: event.clientX, y: event.clientY }; };
+  const release = event => {
+    const from = grabbed.current;
+    grabbed.current = null;
+    if (!from) return;
+    const dx = event.clientX - from.x;
+    // Only a sideways gesture counts. A drag that went further up than across
+    // was somebody scrolling, not somebody turning.
+    if (Math.abs(dx) > TURN && Math.abs(dx) > Math.abs(event.clientY - from.y)) {
+      turn(dx < 0 ? 1 : -1);
+    }
+  };
 
   // ── Off the press ────────────────────────────────────────────────────────
   // The paper colour, then whatever is moving on it, then the ink. Three
@@ -342,11 +386,11 @@ export default function SharePrinter({ open, onClose, plate, albums = [], link =
 
   // Flat colour and type wants PNG; a photograph of somebody's record shelf
   // wants JPEG and would be four megabytes as a PNG.
-  const filetype = backdrop.key === 'paper'
-    ? { mime: 'image/png', quality: undefined, ext: 'png' }
-    : { mime: 'image/jpeg', quality: 0.94, ext: 'jpg' };
+  const filetype = look.Background
+    ? { mime: 'image/jpeg', quality: 0.94, ext: 'jpg' }
+    : { mime: 'image/png', quality: undefined, ext: 'png' };
 
-  const fileName = `${plate?.fileName || 'print'}-${frame.label.replace(':', 'x')}.${filetype.ext}`;
+  const fileName = `${plate?.fileName || 'print'}-${look.key}-${frame.label.replace(':', 'x')}.${filetype.ext}`;
 
   const toBlob = useCallback(() => new Promise((resolve, reject) => {
     try {
@@ -373,10 +417,10 @@ export default function SharePrinter({ open, onClose, plate, albums = [], link =
   }, [toBlob, fileName]);
 
   // The one that matters on a phone: hand the finished picture straight to the
-  // share sheet, where Instagram and Messages are already waiting. Only offered
-  // where the browser will actually take a file — Safari and Chrome on a phone
-  // will, most desktops will not, and a Share button that silently does nothing
-  // is worse than no Share button.
+  // share sheet, where Instagram and Messages are already waiting. Only
+  // offered where the browser will actually take a file — phones will, most
+  // desktops will not, and a Send button that silently does nothing is worse
+  // than no Send button.
   const [canSendFile] = useState(() => {
     if (typeof navigator === 'undefined' || !navigator.canShare) return false;
     try {
@@ -434,7 +478,7 @@ export default function SharePrinter({ open, onClose, plate, albums = [], link =
         .shp-bar {
           position: relative; z-index: 1; flex-shrink: 0;
           display: flex; align-items: center; justify-content: space-between;
-          gap: 12px; padding: 14px 18px calc(6px);
+          gap: 12px; padding: 14px 18px 4px;
         }
         .shp-title {
           font-family: var(--font-label);
@@ -449,31 +493,74 @@ export default function SharePrinter({ open, onClose, plate, albums = [], link =
         }
         .shp-close:hover { color: var(--ink); background: var(--bg-warm); }
 
-        /* ── the paper ── everything left over after the bar and the controls,
-           with the print scaled to fit whatever that turned out to be. */
+        /* ── the paper ── everything left over after the bar, the name of the
+           look and the controls, with the print scaled to fit it. */
         .shp-view {
           position: relative; z-index: 1;
           flex: 1; min-height: 0;
           display: flex; align-items: center; justify-content: center;
-          padding: 8px 18px;
+          gap: 4px;
+          padding: 6px 10px;
         }
         .shp-paper {
           position: relative;
           overflow: hidden;
           border-radius: 10px;
           box-shadow: 0 18px 50px rgba(0,0,0,0.22);
+          /* The finger turns the page. Nothing in here scrolls sideways, so
+             there is no competing gesture to hand it back to. */
+          touch-action: pan-y;
+          cursor: grab;
+          transition: transform 0.19s cubic-bezier(0.3, 0.9, 0.3, 1);
         }
+        .shp-paper:active { cursor: grabbing; }
+        .shp-paper--left  { transform: translateX(-14px); }
+        .shp-paper--right { transform: translateX(14px); }
         .shp-stage { position: relative; transform-origin: top left; }
         .shp-back { position: absolute; inset: 0; overflow: hidden; }
         .shp-plate { position: absolute; inset: 0; width: 100%; height: 100%; }
 
-        /* ── the controls ── rows of pills, scrolling sideways rather than
-           wrapping. A wrapping row changes height when you pick something,
+        /* The two arrows. On a phone they are barely the point — the gesture
+           is — but a printer you can only work by swiping is a printer that
+           does not work with a mouse. */
+        .shp-arrow {
+          flex-shrink: 0;
+          display: inline-flex; align-items: center; justify-content: center;
+          width: 30px; height: 30px; border-radius: 999px;
+          border: 0; background: transparent; color: var(--ink-faint);
+          cursor: pointer; transition: color 0.15s, background 0.15s;
+        }
+        .shp-arrow:hover { color: var(--ink); background: var(--bg-warm); }
+        @media (max-width: 560px) { .shp-arrow { display: none; } }
+
+        /* ── which print you are on ── the name and a row of marks. Both are
+           the same control: a mark can be pressed to jump. */
+        .shp-turn {
+          flex-shrink: 0;
+          display: flex; flex-direction: column; align-items: center; gap: 7px;
+          padding: 2px 0 9px;
+        }
+        .shp-look {
+          font-family: var(--font-label);
+          font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase;
+          color: var(--ink-soft);
+        }
+        .shp-dots { display: flex; align-items: center; gap: 6px; }
+        .shp-dot {
+          width: 6px; height: 6px; padding: 0; border-radius: 999px;
+          border: 0; background: var(--ink-faint); opacity: 0.4;
+          cursor: pointer; transition: opacity 0.15s, transform 0.15s;
+        }
+        .shp-dot:hover { opacity: 0.75; }
+        .shp-dot--on { opacity: 1; background: var(--ink); transform: scale(1.3); }
+
+        /* ── the controls ── two rows, scrolling sideways rather than
+           wrapping. A wrapping row changes height when you press something,
            which moves the print you were looking at. */
         .shp-controls {
           position: relative; z-index: 1; flex-shrink: 0;
-          padding: 4px 0 calc(16px + env(safe-area-inset-bottom, 0px));
-          display: flex; flex-direction: column; gap: 9px;
+          padding: 0 0 calc(14px + env(safe-area-inset-bottom, 0px));
+          display: flex; flex-direction: column; gap: 8px;
         }
         .shp-set {
           display: flex; align-items: center; gap: 6px;
@@ -487,13 +574,13 @@ export default function SharePrinter({ open, onClose, plate, albums = [], link =
           font-family: var(--font-label);
           font-size: 8.5px; letter-spacing: 0.14em; text-transform: uppercase;
           color: var(--ink-faint);
-          width: 52px;
+          width: 40px;
         }
         .shp-chip {
           flex-shrink: 0;
           font-family: var(--font-label);
           font-size: 9.5px; letter-spacing: 0.1em; text-transform: uppercase;
-          padding: 8px 13px; border-radius: 999px;
+          padding: 7px 12px; border-radius: 999px;
           border: 1px solid var(--border);
           background: transparent; color: var(--ink-soft);
           cursor: pointer; white-space: nowrap;
@@ -507,14 +594,14 @@ export default function SharePrinter({ open, onClose, plate, albums = [], link =
         /* ── the two things you do with a print ── */
         .shp-acts {
           display: flex; align-items: center; gap: 8px;
-          padding: 5px 18px 0;
+          padding: 4px 18px 0;
         }
         .shp-act {
           display: inline-flex; align-items: center; justify-content: center; gap: 7px;
           flex: 1;
           font-family: var(--font-label);
           font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase;
-          padding: 13px 16px; border-radius: 999px;
+          padding: 12px 16px; border-radius: 999px;
           border: 1px solid var(--ink-faint); background: transparent; color: var(--ink);
           cursor: pointer; white-space: nowrap;
           transition: color 0.15s, border-color 0.15s, background 0.15s;
@@ -527,18 +614,20 @@ export default function SharePrinter({ open, onClose, plate, albums = [], link =
           font-family: var(--font-label);
           font-size: 9px; letter-spacing: 0.08em;
           color: var(--ink-faint);
-          min-height: 12px;
+          min-height: 11px;
           overflow-wrap: anywhere;
         }
 
         /* Wide enough for a room, and the printer stops being a full screen and
            becomes what it is: a press on a bench with its controls beside it. */
         @media (min-width: 900px) {
-          .shp { padding: 0; }
-          .shp-bar { padding: 18px 26px 8px; }
-          .shp-view { padding: 8px 26px 14px; }
+          .shp-bar { padding: 18px 26px 4px; }
+          .shp-view { padding: 6px 26px; }
           .shp-set, .shp-acts, .shp-said { padding-left: 26px; padding-right: 26px; }
           .shp-controls { max-width: 620px; width: 100%; align-self: center; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .shp-paper { transition: none; }
         }
       `}</style>
 
@@ -557,22 +646,47 @@ export default function SharePrinter({ open, onClose, plate, albums = [], link =
       </div>
 
       <div className="shp-view" ref={viewRef}>
-        <div className="shp-paper" style={{ width: frame.w * z, height: frame.h * z, background: isDark ? PAPER.night : PAPER.day }}>
-          <div
-            className="shp-stage"
-            style={{ width: frame.w, height: frame.h, transform: `scale(${z})` }}
-          >
+        <button type="button" className="shp-arrow" onClick={() => turn(-1)} aria-label="The print before this one">
+          <CaretLeft size={16} weight="bold" aria-hidden="true" />
+        </button>
+
+        <div
+          className={'shp-paper' + (nudge < 0 ? ' shp-paper--right' : nudge > 0 ? ' shp-paper--left' : '')}
+          style={{ width: frame.w * z, height: frame.h * z, background: isDark ? PAPER.night : PAPER.day }}
+          onPointerDown={grab}
+          onPointerUp={release}
+          onPointerCancel={() => { grabbed.current = null; }}
+        >
+          <div className="shp-stage" style={{ width: frame.w, height: frame.h, transform: `scale(${z})` }}>
             <div className="shp-back" ref={backRef}>
-              {backdrop.Background && (
-                <backdrop.Background
-                  key={backdrop.key + frame.key}
-                  albums={albums}
-                  frameWidth={frame.w}
-                />
+              {look.Background && (
+                <look.Background key={look.key + frame.key} albums={albums} frameWidth={frame.w} />
               )}
             </div>
             <canvas className="shp-plate" ref={plateRef} />
           </div>
+        </div>
+
+        <button type="button" className="shp-arrow" onClick={() => turn(1)} aria-label="The next print">
+          <CaretRight size={16} weight="bold" aria-hidden="true" />
+        </button>
+      </div>
+
+      <div className="shp-turn">
+        <span className="shp-look">{look.label}</span>
+        <div className="shp-dots" role="tablist" aria-label="Prints">
+          {VARIANTS.map((v, i) => (
+            <button
+              key={v.key}
+              type="button"
+              role="tab"
+              aria-selected={i === at}
+              aria-label={v.label}
+              title={v.label}
+              className={'shp-dot' + (i === at ? ' shp-dot--on' : '')}
+              onClick={() => setAt(i)}
+            />
+          ))}
         </div>
       </div>
 
@@ -592,41 +706,22 @@ export default function SharePrinter({ open, onClose, plate, albums = [], link =
           ))}
         </div>
 
-        <div className="shp-set">
-          <span className="shp-set-label">Behind</span>
-          {BACKDROPS.map(b => (
-            <button
-              key={b.key}
-              type="button"
-              className={'shp-chip' + (backdropKey === b.key ? ' shp-chip--on' : '')}
-              onClick={() => setBackdropKey(b.key)}
-            >
-              {b.label}
-            </button>
-          ))}
-        </div>
-
-        <div className="shp-set">
-          <span className="shp-set-label">Ink</span>
-          <button type="button" className={'shp-chip' + (!isDark ? ' shp-chip--on' : '')} onClick={() => setIsDark(false)}>Day</button>
-          <button type="button" className={'shp-chip' + (isDark ? ' shp-chip--on' : '')} onClick={() => setIsDark(true)}>Night</button>
-        </div>
-
-        {choices.map(choice => (
-          <div className="shp-set" key={choice.key}>
-            <span className="shp-set-label">{choice.label}</span>
-            {choice.options.map(option => (
+        {toggles.length > 0 && (
+          <div className="shp-set">
+            <span className="shp-set-label">Show</span>
+            {toggles.map(t => (
               <button
-                key={option.value}
+                key={t.key}
                 type="button"
-                className={'shp-chip' + (picks[choice.key] === option.value ? ' shp-chip--on' : '')}
-                onClick={() => setPressed(p => ({ ...p, [choice.key]: option.value }))}
+                aria-pressed={!!shown[t.key]}
+                className={'shp-chip' + (shown[t.key] ? ' shp-chip--on' : '')}
+                onClick={() => setPressed(p => ({ ...p, [t.key]: !shown[t.key] }))}
               >
-                {option.label}
+                {t.label}
               </button>
             ))}
           </div>
-        ))}
+        )}
 
         <div className="shp-acts">
           {canSendFile && (
