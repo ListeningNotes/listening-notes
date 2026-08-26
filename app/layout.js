@@ -19,6 +19,13 @@ const dmMono = DM_Mono({
   variable: '--font-dm-mono',
 });
 
+// Anton loaded here for a while, to set the headline on the back of the card in
+// condensed poster caps. That headline was the journal's own name, and the name
+// came off — every copy of this software is a listening journal, so printing
+// the words under the mark said the same thing twice. With nothing left for it
+// to set, a whole extra typeface was being fetched by every visitor to style no
+// words at all. Back to two faces.
+
 export const metadata = {
   title: 'Listening Notes',
   description: 'A listening journal.',
@@ -75,12 +82,35 @@ export const dynamic = 'force-dynamic';
 // import arrives as a client reference, not a value. And this is where the
 // decision belongs anyway: what ships to every page is a layout question.
 //
-// Bulk text belongs to whoever renders it. /about fetches the definitions and
+// Bulk text belongs to whoever renders it. /key fetches the definitions and
 // /why reads its essay on the server; these are the short facts.
 const BOOKPLATE_FIELDS = [
   'journal_name', 'keeper_name', 'bio', 'portrait_url',
   'instagram_url', 'lastfm_user', 'site_address',
   'founded_at', 'pinned_entry_id',
+  // Two sentences saying what the journal is, and the one field on this list
+  // that had been written, stored, and never delivered: the old /about read it from
+  // this context without it ever having been put here, so the paragraph at the
+  // top of that page rendered as nothing for as long as the page existed. The
+  // back of the card prints it now.
+  'about_intro',
+  // A handful of URLs. Short enough to ride along, and the back of the card
+  // is on the landing page, which every visitor lands on.
+  'social_links',
+  // Two keys at most, and the card cannot decide what to draw without them.
+  'hidden_fields',
+  // A sentence. It is the point of the card's lower half and the landing page
+  // is where the card lives, so it travels with the rest of the short facts.
+  'send_me',
+  // Two percentages. Without it the portrait is drawn centred, which for a
+  // photograph of a person is often a picture of their chin.
+  'portrait_position',
+  // A short path. The picture it points at is a blob and stays out of here.
+  'portrait_code_url',
+  // One short word naming an icon.
+  'rig_icon',
+  // A handful of short rows, and the card opens them without a fetch.
+  'rig',
 ];
 
 // Async because the journal's details are read here, once, and handed down —
@@ -96,7 +126,7 @@ export default async function RootLayout({ children }) {
   // rating scales turned up in the HTML of every album page. An allow-list
   // makes the leak impossible rather than a thing to remember.
   //
-  // Bulk text belongs to whoever renders it. /about fetches the definitions,
+  // Bulk text belongs to whoever renders it. /key fetches the definitions,
   // /why reads the essay on the server, and this carries the short facts.
   const settings = Object.fromEntries(
     BOOKPLATE_FIELDS.filter(key => key in all).map(key => [key, all[key]])

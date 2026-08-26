@@ -176,6 +176,68 @@ CREATE TABLE IF NOT EXISTS settings (
   about_intro text,
   why_essay text,
   why_date date,
+  -- Wherever else this journal's keeper can be found. A list of plain URLs,
+  -- not a column per service: a column per service means the software decides
+  -- which services exist, and every copy that uses one nobody thought of has
+  -- to wait for a migration. The card picks each icon off the hostname and
+  -- falls back to a plain link mark for anything it doesn't recognise.
+  --   ["https://instagram.com/name", "https://reddit.com/u/name"]
+  social_links jsonb,
+  -- Which of the card's counted rows its keeper would rather not show. They
+  -- are read off the entries and can never be typed over — a journal that can
+  -- be told how many records it has is a journal whose numbers mean nothing —
+  -- but not everyone wants to publish how new they are or how few they have
+  -- logged, so they can be left off. A list of keys: ["since", "albums"].
+  hidden_fields jsonb,
+  -- The one forward-looking line on the card. Printed as "Looking for"; the
+  -- column keeps the name the idea was born with, because the wording on the
+  -- card is a design decision that has already moved once and the concept it
+  -- stores has not. Everything else on it says what
+  -- somebody has already done; this says what they want next, and it sits
+  -- directly above the button for sending them something — you read what they
+  -- are asking for, then you send it. Deliberately its own column and not part
+  -- of the bio: a bio is character and this is an instruction, and folded
+  -- together nobody writes the instruction.
+  send_me text,
+  -- Where in the picture the face is. The card's slot is square and a
+  -- photograph almost never is, so something gets cropped off — and left to
+  -- the browser what gets cropped off is whatever is not in the middle, which
+  -- for a photograph of a person is often their head. Two percentages, stored
+  -- as a CSS object-position: "50% 32%".
+  portrait_position text,
+  -- Which mark stands for the way this journal listens. Everybody has a rig of
+  -- some kind and almost nobody has the same one, so the software offers a set
+  -- and the owner picks: headphones, speakers, a turntable, a radio, a phone.
+  -- One name out of a fixed list, or 'none' to leave the button off entirely —
+  -- plenty of people listening on whatever they have would rather not describe
+  -- it. See RIG_ICONS in components/main_components/IdentityCard.js.
+  rig_icon text,
+  -- The listening setup, as rows: [{ "name": "Sennheiser HD 600", "role":
+  -- "Headphones" }]. It used to be a page of its own with several hundred
+  -- words about why any of it matters, which is one person's essay shipped
+  -- inside everybody's software. What is worth saying is what the thing is and
+  -- what it does; the rest is the journal.
+  rig jsonb,
+  -- The portrait itself, when its keeper uploaded one rather than pointing at
+  -- one. Base64 in a column and served back by /api/portrait, so that adding a
+  -- picture from a phone needs no storage bucket, no third-party account and no
+  -- dependency — a copy of this software already has a database and that is all
+  -- this asks for. Downscaled in the browser before it is sent, so this holds
+  -- something like a hundred kilobytes rather than a camera's worth.
+  --
+  -- Deliberately never handed to the page: portrait_url carries the short path
+  -- and this carries the bytes, so a portrait does not end up inlined into the
+  -- HTML of every page on the site.
+  portrait_data text,
+  portrait_mime text,
+  -- The portrait, made into the journal's own QR code: the photograph fills the
+  -- dark modules and everything else is transparent, so the page shows through
+  -- and the silhouette of the code *is* the picture. Base64 PNG with alpha,
+  -- built in the browser when the photograph or the address changes — it is not
+  -- cheap enough to make per request, and it only changes when one of those two
+  -- does. portrait_code_url is the stamped path this is served back on.
+  portrait_code text,
+  portrait_code_url text,
   -- Only what the owner has rewritten. Anything untouched is absent and falls
   -- back to the text shipped in library/definitions.js, so a copy that never
   -- edits its definitions stores nothing at all.

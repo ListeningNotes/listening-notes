@@ -4,9 +4,14 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 // No Home here — the logo and the beacon (see SiteNav.js) already cover
-// getting back home, one 5-button row reads cleaner than six.
+// getting back home, one 4-button row reads cleaner than five.
+//
+// About used to lead this row and no longer exists as a destination. The cover
+// turns over now and the card on the back of it is the about page, which means
+// the way to it is the flip control on the landing page rather than a dot — a
+// dot pointing at a page that is really the other side of the page you are
+// already on would be describing the site wrong.
 const NAV = [
-  { href: '/about', label: 'About' },
   { href: '/archive', label: 'Archive' },
   { href: '/compare', label: 'Compare' },
   { href: '/submit', label: 'Submit' },

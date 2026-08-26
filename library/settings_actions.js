@@ -28,6 +28,24 @@ const EMPTY = {
   site_address: null,
   founded_at: null,
   pinned_entry_id: null,
+  // The paragraph saying what the journal is. It has lived in the database
+  // since the settings table was built and never once reached a page, because
+  // it was left out of this list and out of the layout's — /about read it from
+  // a context nothing had put it into. The card carries it now, so it is worth
+  // the two lines it costs to actually deliver it.
+  about_intro: null,
+  // A list of plain URLs, or null. See the note on the column in schema.sql.
+  social_links: null,
+  // Which counted rows to leave off the card. A list of keys, or null.
+  hidden_fields: null,
+  // What its keeper would like sent to them. See the column in schema.sql.
+  send_me: null,
+  // Where in the portrait to look. A CSS object-position, or null for centred.
+  portrait_position: null,
+  portrait_code_url: null,
+  // Which mark stands for the rig, and the rig itself. See schema.sql.
+  rig_icon: null,
+  rig: null,
   definitions: null,
 };
 
@@ -37,7 +55,14 @@ const EMPTY = {
 const WRITABLE = [
   'journal_name', 'keeper_name', 'bio', 'portrait_url',
   'instagram_url', 'lastfm_user', 'site_address',
-  'founded_at', 'pinned_entry_id', 'definitions',
+  'founded_at', 'pinned_entry_id', 'about_intro', 'social_links',
+  'hidden_fields', 'send_me', 'portrait_position', 'rig_icon', 'rig',
+  'definitions',
+  // The uploaded portrait. Written by /api/portrait rather than by a form, but
+  // it goes through the same door as everything else in this table.
+  'portrait_data', 'portrait_mime',
+  // The portrait rendered as the journal's code. See the column in schema.sql.
+  'portrait_code', 'portrait_code_url',
 ];
 
 // A form posts empty strings for fields left alone; the database should hold
@@ -67,6 +92,17 @@ export async function save_settings(fields) {
   }
   if (Object.keys(patch).length === 0) return await pull_settings();
 
+  // jsonb columns have to arrive as text. The driver will happily take a JS
+  // array for a text column and turn it into a Postgres array literal, which
+  // json refuses — "invalid input syntax for type json" — so the value is
+  // serialised here rather than at every call site that might set it.
+  // definitions goes through its own, more careful version of this below.
+  for (const key of ['social_links', 'hidden_fields', 'rig']) {
+    if (patch[key] != null && typeof patch[key] !== 'string') {
+      patch[key] = JSON.stringify(patch[key]);
+    }
+  }
+
   // definitions is the one column edited a piece at a time. Writing it whole
   // would mean rewriting one rating's wording silently discarded every other
   // rewording the owner had done, so the incoming keys are folded over what is
@@ -88,6 +124,19 @@ export async function save_settings(fields) {
       else delete combined[key];
     }
     patch.definitions = Object.keys(combined).length ? JSON.stringify(combined) : null;
+  }
+
+  // The pointer and the bytes are one fact and cannot be allowed to disagree.
+  // Clearing the picture without clearing the path leaves a card confidently
+  // asking for an image that is not there — and because that path is served
+  // with a year of immutable caching, every browser that already had it goes on
+  // showing a portrait the journal no longer holds. It stayed invisible here
+  // for an hour for exactly that reason.
+  if ('portrait_data' in patch && !patch.portrait_data) {
+    const [row] = await database`SELECT portrait_url FROM settings WHERE id = 1`;
+    if ((row?.portrait_url || '').startsWith('/api/portrait')) patch.portrait_url = null;
+    patch.portrait_code = null;
+    patch.portrait_code_url = null;
   }
 
   // Upsert on the fixed id, so the first save creates the row and every save
