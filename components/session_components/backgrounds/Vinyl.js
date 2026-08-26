@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useRef } from 'react';
 import { backgroundScale } from '../../../library/background_scale';
+import { loadCover } from './cover';
 
 const SPINE_W  = 32;
 const HOLD_MS  = 3500;
@@ -10,7 +11,7 @@ const easeOut  = t => 1 - Math.pow(1 - t, 3);
 const easeIn   = t => t * t * t;
 const easeInOut= t => t < 0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2,3)/2;
 
-export default function Vinyl({ albums = [] }) {
+export default function Vinyl({ albums = [], frameWidth }) {
   const canvasRef = useRef(null);
 
   useEffect(() => {
@@ -19,12 +20,7 @@ export default function Vinyl({ albums = [] }) {
     const ctx    = canvas.getContext('2d');
     let W, H, raf, spines, schedTimer;
 
-    const images = albums.map(a => {
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      img.src = a.album_art;
-      return img;
-    });
+    const images = albums.map(a => loadCover(a.album_art));
 
     function dominantColor(img) {
       try {
@@ -43,7 +39,11 @@ export default function Vinyl({ albums = [] }) {
     function resize() {
       // Mobile draws into a larger coordinate space than it displays, so the
       // artwork keeps its desktop share of the screen. 1 on desktop.
-      const k = backgroundScale();
+      //
+      // frameWidth is how the share printer says "this is not the window" —
+      // a screensaver running inside a 1080-wide print has no business
+      // shrinking its covers because the phone holding it is 390 across.
+      const k = backgroundScale(frameWidth);
       W = canvas.width  = Math.round((canvas.parentElement?.clientWidth  || window.innerWidth) / k);
       H = canvas.height = Math.round((canvas.parentElement?.clientHeight || window.innerHeight) / k);
       initSpines();
@@ -214,7 +214,7 @@ export default function Vinyl({ albums = [] }) {
       clearTimeout(schedTimer);
       window.removeEventListener('resize', resize);
     };
-  }, [albums]);
+  }, [albums, frameWidth]);
 
   // width/height are what make the scaled coordinate space work: an
   // absolutely positioned canvas with only inset:0 keeps its intrinsic

@@ -1,12 +1,13 @@
 'use client';
 import { useEffect, useRef } from 'react';
 import { backgroundScale } from '../../../library/background_scale';
+import { loadCover } from './cover';
 
 const CARD  = 220;
 const R     = 16;
 const COUNT = 10;
 
-export default function Reel({ albums = [] }) {
+export default function Reel({ albums = [], frameWidth }) {
   const canvasRef = useRef(null);
 
   useEffect(() => {
@@ -15,11 +16,7 @@ export default function Reel({ albums = [] }) {
     const ctx    = canvas.getContext('2d');
     let W, H, raf;
 
-    const images = albums.map(a => {
-      const img = new Image();
-      img.src = a.album_art;
-      return img;
-    });
+    const images = albums.map(a => loadCover(a.album_art));
 
     const slotAngle = (Math.PI * 2) / COUNT;
 
@@ -178,7 +175,11 @@ export default function Reel({ albums = [] }) {
     function resize() {
       // Mobile draws into a larger coordinate space than it displays, so the
       // artwork keeps its desktop share of the screen. 1 on desktop.
-      const k = backgroundScale();
+      //
+      // frameWidth is how the share printer says "this is not the window" —
+      // a screensaver running inside a 1080-wide print has no business
+      // shrinking its covers because the phone holding it is 390 across.
+      const k = backgroundScale(frameWidth);
       W = canvas.width  = Math.round((canvas.parentElement?.clientWidth  || window.innerWidth) / k);
       H = canvas.height = Math.round((canvas.parentElement?.clientHeight || window.innerHeight) / k);
     }
@@ -187,7 +188,7 @@ export default function Reel({ albums = [] }) {
     window.addEventListener('resize', resize);
     raf = requestAnimationFrame(loop);
     return () => { cancelAnimationFrame(raf); window.removeEventListener('resize', resize); };
-  }, [albums]);
+  }, [albums, frameWidth]);
 
   // width/height are what make the scaled coordinate space work: an
   // absolutely positioned canvas with only inset:0 keeps its intrinsic
