@@ -47,8 +47,6 @@ import { loadMark, loadPicture, MARK_ASPECT, drawTracked, ellipsize, wrapLines, 
 // leading on the card and change this, or the two drift apart.
 const COL = 340;        // .idc max-width
 const MEASURE = 300;    // .idc-line max-width
-const LABEL_COL = 84;   // .idc-line-label width
-const LABEL_GAP = 9;    // .idc-line gap
 const SLOT = 180;       // .idc-portrait — the beacon's album frame, to the pixel
 const SLOT_RADIUS = 18;
 
@@ -64,12 +62,6 @@ const NAME = 36, NAME_LEAD = 36 * 1.1;
 const META = 12, META_LEAD = 12 * 1.5;
 const LINE = 13, LINE_LEAD = 13 * 1.6;
 const LABEL = 8.5;
-
-// A label and the answer beside it are baseline-aligned on the card
-// (align-items: baseline). Canvas draws from the top of a line box, so the
-// smaller of the two has to be nudged down by the difference in their ascents.
-// Three quarters of the point size is close enough for two faces at 13 and 8.5.
-const ASCENT = 0.75;
 
 // The code's own file is 41 modules across and only 33 of those are code — the
 // rest is the quiet zone, which is empty and has to stay that way. Drawing it
@@ -129,7 +121,13 @@ const CODE_STOCK = '#f5f4ef';
 // thing it is standing on.
 const FILL_BARE = 0.82;
 const FILL_OVER = 0.72;
-const FILL_H = 0.80;
+// The height ceiling is what actually decides a square print, where the card
+// is taller than it is wide and the fit-to-paper correction sets the unit —
+// so this number is also, indirectly, how many pixels a module of the code
+// gets. 9:16 gives it about 17 and a 1:1 about 13; below ten the thing starts
+// falling apart under downscaling. 0.82 is where the square still has margin
+// worth the name and the code still has pixels worth reading.
+const FILL_H = 0.82;
 
 // The scrim, when there is something moving behind. Padding and radius in card
 // units like everything else.
@@ -158,7 +156,31 @@ export function monthAndYear(value) {
 // where gap is the air above it, h its own height, and x/y/w the box it has
 // been given. Everything is already multiplied by the unit.
 
-function textRow({ gap, lines, size, lead, colour, font, align, inset = 0 }) {
+// ── Centring a name that has been decorated ────────────────────────────────
+// Canvas centres a line on its measured width, which is correct and, for a
+// name like "· ᏆᏊ Miyel ᏊᏆ ·", not what anybody sees. The ornaments either
+// side of the letters are rarely the same width — one more mark on the left
+// than the right is enough — and the line then measures dead-centre while the
+// WORD, which is the only part being read, sits visibly off to one side.
+//
+// So the line is nudged by half the difference between what comes before the
+// first letter and what comes after the last, which lands the readable part on
+// the centre and lets the decoration hang where it falls. A name with no
+// ornaments has nothing before or after and does not move at all.
+function coreShift(ctx, text) {
+  const chars = [...String(text)];
+  const readable = ch => /[\p{L}\p{N}]/u.test(ch);
+  let first = 0;
+  while (first < chars.length && !readable(chars[first])) first++;
+  let last = chars.length - 1;
+  while (last >= 0 && !readable(chars[last])) last--;
+  if (first > last) return 0;   // nothing readable in it: leave it be
+  const before = ctx.measureText(chars.slice(0, first).join('')).width;
+  const after = ctx.measureText(chars.slice(last + 1).join('')).width;
+  return (after - before) / 2;
+}
+
+function textRow({ gap, lines, size, lead, colour, font, align, inset = 0, shift = 0 }) {
   return {
     gap,
     h: lines.length * lead,
@@ -171,7 +193,7 @@ function textRow({ gap, lines, size, lead, colour, font, align, inset = 0 }) {
       // upwards out of the space it was given. Half the difference puts it
       // back in the middle of it.
       const drop = (lead - size) / 2;
-      const at = align === 'center' ? x + w / 2 : x + inset;
+      const at = (align === 'center' ? x + w / 2 : x + inset) + shift;
       lines.forEach((line, i) => ctx.fillText(line, at, y + i * lead + drop));
       ctx.textAlign = 'left';
     },
@@ -299,11 +321,18 @@ export function identityCardPlate({ settings, stamps, since, address, code }) {
         // the name
         if (keeper_name) {
           ctx.font = `700 ${px(NAME)}px ${sans}`;
+          const nameLines = wrapLines(ctx, keeper_name, textW, 3);
           rows.push(textRow({
             gap: px(22),
-            lines: wrapLines(ctx, keeper_name, textW, 3),
+            lines: nameLines,
             size: px(NAME), lead: px(NAME_LEAD), colour: ink.ink,
             font: `700 ${px(NAME)}px ${sans}`, align, inset: 0,
+            // Only worth doing to a name that fits on one line — on two, the
+            // ornaments are no longer flanking anything and shifting a whole
+            // block by one line's decoration is just a wonky block.
+            shift: align === 'center' && nameLines.length === 1
+              ? coreShift(ctx, nameLines[0])
+              : 0,
           }));
         }
 
@@ -340,38 +369,49 @@ export function identityCardPlate({ settings, stamps, since, address, code }) {
           });
         }
 
-        // the two rows — a label in a fixed column and the answer beside it,
-        // so the pair reads as one small table rather than two stray lines.
+        // ── the last two rows ──────────────────────────────────────────
+        // On the card these are a small table: a fixed 84px label column with
+        // the answer beside it, so the two answers start at the same place and
+        // read as a pair rather than as two stray sentences. That is right on
+        // the card, where the bio above them is ranged left too and the whole
+        // lower half of the column shares an edge.
+        //
+        // On a print it was the only thing that was not centred, and with the
+        // bio gone it had nothing to share that edge with — so it dragged the
+        // bottom of an otherwise symmetrical flyer forty pixels to the left,
+        // which is exactly as obvious as it sounds.
+        //
+        // So the label goes over the answer instead of beside it. Caption and
+        // line, both centred, the pair still reading as a pair because the
+        // label is directly above what it names.
         const table = [];
         if (genres.length && on('genres')) table.push(['Top genres', genres.join(' · ')]);
         if (send_me && on('ask')) table.push(['Looking for', send_me]);
         table.forEach(([label, value], index) => {
-          ctx.font = `400 ${px(LINE)}px ${sans}`;
-          const valueW = measureW - px(LABEL_COL) - px(LABEL_GAP);
-          const lines = wrapLines(ctx, value, valueW, 0);
           rows.push({
-            // The first of them clears the square — less the quiet zone, for
-            // the reason above. The second only clears the first, and giving
-            // both the same air left the pair floating.
+            // The first of them clears the square — less whatever the quiet
+            // zone already contributed, for the reason above. The second only
+            // clears the first.
             gap: index === 0
               ? Math.max(px(4), px(22) - (px(SLOT) * ((showingCode ? CODE_BLEED : 1) - 1)) / 2)
-              : px(14),
-            h: lines.length * px(LINE_LEAD),
-            draw(c, x, y) {
-              const left = x + inset;
-              const drop = (px(LINE_LEAD) - px(LINE)) / 2;
+              : px(18),
+            h: px(LABEL) * 1.6,
+            draw(c, x, y, w) {
               c.textBaseline = 'top';
-              c.textAlign = 'left';
               c.font = `400 ${px(LABEL)}px ${mono}`;
               c.fillStyle = ink.faint;
-              drawTracked(c, label.toUpperCase(), left,
-                y + drop + (px(LINE) - px(LABEL)) * ASCENT, px(LABEL) * 0.1);
-              c.font = `400 ${px(LINE)}px ${sans}`;
-              c.fillStyle = ink.ink;
-              lines.forEach((line, i) =>
-                c.fillText(line, left + px(LABEL_COL) + px(LABEL_GAP), y + i * px(LINE_LEAD) + drop));
+              drawTracked(c, label.toUpperCase(),
+                align === 'center' ? x + w / 2 : x + inset, y, px(LABEL) * 0.1, align);
             },
           });
+
+          ctx.font = `400 ${px(LINE)}px ${sans}`;
+          rows.push(textRow({
+            gap: px(4),
+            lines: wrapLines(ctx, value, measureW, 0),
+            size: px(LINE), lead: px(LINE_LEAD), colour: ink.ink,
+            font: `400 ${px(LINE)}px ${sans}`, align, inset,
+          }));
         });
 
         // Opened out, the square is beside the writing rather than in it, so
