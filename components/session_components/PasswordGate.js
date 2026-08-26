@@ -1,10 +1,16 @@
 'use client';
 import { useState } from 'react';
 import { fonts } from '../../library/sitewide_visuals';
+import { useBookplate } from '../main_components/Bookplate';
 
 const border = '1px solid #e0dcd5';
 
 export default function PasswordGate({ onAuth }) {
+  // The journal's own name over the password box, rather than the name of the
+  // journal this software was written for. The owner is the only person who
+  // ever sees this screen, and seeing a stranger's name on the way into your
+  // own writing is the exact wrong first impression for a copy to make.
+  const { cover_name } = useBookplate();
   const [pw, setPw] = useState('');
   const [error, setError] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -35,7 +41,7 @@ export default function PasswordGate({ onAuth }) {
     <div style={{ minHeight: '100vh', background: '#f5f3ef', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, fontFamily: fonts.sans }}>
       <div style={{ background: '#fff', border, borderRadius: 20, padding: 48, width: '100%', maxWidth: 360, display: 'flex', flexDirection: 'column', gap: 20, boxShadow: '0 4px 32px rgba(0,0,0,0.08)' }}>
         <div>
-          <div style={{ fontFamily: fonts.sans, fontSize: 26, fontWeight: 900, color: '#1a1916', letterSpacing: '-0.02em' }}>Listening Notes</div>
+          <div style={{ fontFamily: fonts.sans, fontSize: 26, fontWeight: 900, color: '#1a1916', letterSpacing: '-0.02em' }}>{cover_name}</div>
           <div style={{ fontFamily: fonts.mono, fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#7a776f', marginTop: 4 }}>session access</div>
         </div>
         <input type="password" placeholder="password" value={pw}

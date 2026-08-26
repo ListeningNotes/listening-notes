@@ -10,6 +10,7 @@ import SiteNav from '../components/main_components/SiteNav';
 import ListeningBeacon from '../components/main_components/ListeningBeacon';
 import AlbumStrip from '../components/main_components/AlbumStrip';
 import IdentityCard from '../components/main_components/IdentityCard';
+import { useBookplate } from '../components/main_components/Bookplate';
 
 function ScrollButton({ onClick, direction = 'down' }) {
   return (
@@ -49,6 +50,11 @@ function FlipButton({ flipped, onClick }) {
 }
 
 export default function HomePage() {
+  // The mark stays in every copy — it is the press mark, not the journal's
+  // name. What the mark is *labelled* is the journal, and the journal is
+  // whoever keeps it, so a screen reader on somebody else's copy announces
+  // their name rather than this one's.
+  const { cover_name } = useBookplate();
   const { theme, toggle: toggleTheme } = useTheme();
   const { isLive, recentAlbums } = useListeningBeacon();
   const [entries, setEntries] = useState([]);
@@ -132,10 +138,10 @@ export default function HomePage() {
   }, []);
 
   const logo = (
-    <Link href="/" className="hp-logo" aria-label="Listening Notes">
+    <Link href="/" className="hp-logo" aria-label={cover_name}>
       <img
         src="/Logo.png"
-        alt="Listening Notes"
+        alt={cover_name}
         style={{ filter: theme === 'dark' ? 'invert(1)' : 'none' }}
       />
     </Link>
@@ -144,7 +150,7 @@ export default function HomePage() {
   // Experiment: same live-dot-on-the-period logo as screen two, but at
   // screen one's original 112px size, in place of the plain PNG logo.
   const screenOneLiveLogo = (
-    <Link href="/" className="hp-logo hp-logo--live" aria-label="Listening Notes">
+    <Link href="/" className="hp-logo hp-logo--live" aria-label={cover_name}>
       <svg viewBox="76 96 241 140" className="hp-logo-mark hp-logo-mark--large" xmlns="http://www.w3.org/2000/svg">
         <path
           transform="translate(73.734177, 220.794814)"

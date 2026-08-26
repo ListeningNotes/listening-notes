@@ -77,7 +77,12 @@ CREATE TABLE IF NOT EXISTS drafts (
 
 CREATE TABLE IF NOT EXISTS echo_memory (
   id serial NOT NULL,
-  user_id text DEFAULT 'miyel'::text,
+  -- 'owner' rather than a person's name. This defaulted to the name of whoever
+  -- wrote the first journal, which meant every copy of this software created a
+  -- row belonging to a stranger. Nothing reads this table yet — Echo keeps no
+  -- long-term memory at present — but a default is shipped code, and shipped
+  -- code should not carry somebody's name.
+  user_id text DEFAULT 'owner'::text,
   summary text,
   last_updated timestamp without time zone DEFAULT now(),
   CONSTRAINT echo_memory_pkey PRIMARY KEY (id)
@@ -242,8 +247,39 @@ CREATE TABLE IF NOT EXISTS settings (
   -- back to the text shipped in library/definitions.js, so a copy that never
   -- edits its definitions stores nothing at all.
   definitions jsonb,
+  -- This copy's own serial number, written once when it is first set up and
+  -- never again. Not an id — the row already has one of those, and it counts
+  -- from 1 in every database, so every copy in the world would claim to be
+  -- number one. This is the number printed on the card, and the point of it is
+  -- that it is *this* journal's and stays put: a card reissued after a portrait
+  -- change should be the same card. Quoted because `serial` means an
+  -- auto-incrementing integer everywhere else in this file and the quotes stop
+  -- a reader, and the parser, from having to guess which one is meant here.
+  "serial" text,
+  -- Whether the welcome screen has run. False on a database that has just been
+  -- built, which is how the site knows to ask who it belongs to rather than
+  -- rendering an unnamed journal at a stranger. Nothing else keys off it, and
+  -- it is deliberately not "has a keeper_name": someone is allowed to finish
+  -- setup and leave their name blank, and being asked again every load is not
+  -- the reward for that.
+  setup_complete boolean DEFAULT false,
   updated_at timestamp without time zone DEFAULT now()
 );
+
+-- ── Later columns ──────────────────────────────────────────────────────────
+-- CREATE TABLE IF NOT EXISTS builds a table that is missing and does nothing at
+-- all to one that already exists. So every column added to `settings` after the
+-- first copy went out has to be added twice: once above, for a database being
+-- built from nothing, and once here, for one that was built last month.
+--
+-- ADD COLUMN IF NOT EXISTS rather than a DO block that checks the catalogue —
+-- shorter, and it says the same thing. Re-running is a no-op either way.
+--
+-- Additive only. Nothing in this section may rename a column, change its type,
+-- or repurpose what one means: a copy in the wild belongs to somebody who
+-- cannot be reached, and a migration that fails is their journal not opening.
+ALTER TABLE settings ADD COLUMN IF NOT EXISTS "serial" text;
+ALTER TABLE settings ADD COLUMN IF NOT EXISTS setup_complete boolean DEFAULT false;
 
 -- Foreign keys, added once every table exists
 DO $$ BEGIN

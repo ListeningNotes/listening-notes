@@ -250,7 +250,7 @@ function AddressCode({ text }) {
 export default function IdentityCard({ stamps, authed = false }) {
   const settings = useBookplate();
   const {
-    journal_name,
+    cover_name,
     keeper_name,
     bio,
     portrait_url,
@@ -1282,7 +1282,7 @@ export default function IdentityCard({ stamps, authed = false }) {
             viewBox={`${MARK_BOX.x} ${MARK_BOX.y} ${MARK_BOX.w} ${MARK_BOX.h}`}
             className="idc-mark"
             role="img"
-            aria-label={journal_name}
+            aria-label={cover_name}
           >
             {MARK_GLYPHS.map(glyph => (
               <path key={glyph.transform} d={glyph.d} transform={glyph.transform} />

@@ -2,7 +2,7 @@ import './globals.css';
 import { Nunito, DM_Mono } from 'next/font/google';
 import { Lightswitch } from '../components/main_components/Lightswitch';
 import { Bookplate } from '../components/main_components/Bookplate';
-import { pull_settings } from '../library/settings_actions';
+import { pull_settings, coverName } from '../library/settings_actions';
 
 const nunito = Nunito({
   subsets: ['latin'],
@@ -26,28 +26,42 @@ const dmMono = DM_Mono({
 // to set, a whole extra typeface was being fetched by every visitor to style no
 // words at all. Back to two faces.
 
-export const metadata = {
-  title: 'Listening Notes',
-  description: 'A listening journal.',
-  // Puts <link rel="alternate" type="application/rss+xml"> in the head, so a
-  // reader handed nothing but the site address can still find the feed. This
-  // is what following looks like here: the subscription lives on the reader's
-  // side, and the journal never learns who is out there.
-  alternates: {
-    types: {
-      'application/rss+xml': '/feed.xml',
+// A function rather than a constant, because the title is the keeper's name and
+// that is in the database. It was hardcoded, which meant every copy of this
+// software opened a browser tab with the first journal's name in it — the tab,
+// the home-screen icon and the bookmark, all three of the places a site's name
+// is actually read.
+//
+// The layout is force-dynamic (see below), so this runs per request and the
+// name a copy shows is the name its owner typed, not the name it was built
+// with.
+export async function generateMetadata() {
+  const settings = await pull_settings();
+  const name = coverName(settings);
+
+  return {
+    title: name,
+    description: 'A listening journal.',
+    // Puts <link rel="alternate" type="application/rss+xml"> in the head, so a
+    // reader handed nothing but the site address can still find the feed. This
+    // is what following looks like here: the subscription lives on the reader's
+    // side, and the journal never learns who is out there.
+    alternates: {
+      types: {
+        'application/rss+xml': '/feed.xml',
+      },
     },
-  },
-  // Added to a home screen, the site opens without Safari's chrome. The
-  // translucent status bar lets the page run to the top of the screen; the
-  // mobile nav already pads itself off env(safe-area-inset-top), so nothing
-  // ends up under the clock. app/apple-icon.png is picked up automatically.
-  appleWebApp: {
-    capable: true,
-    title: 'Listening Notes',
-    statusBarStyle: 'black-translucent',
-  },
-};
+    // Added to a home screen, the site opens without Safari's chrome. The
+    // translucent status bar lets the page run to the top of the screen; the
+    // mobile nav already pads itself off env(safe-area-inset-top), so nothing
+    // ends up under the clock. app/apple-icon.png is picked up automatically.
+    appleWebApp: {
+      capable: true,
+      title: name,
+      statusBarStyle: 'black-translucent',
+    },
+  };
+}
 
 export const viewport = {
   width: 'device-width',
@@ -85,7 +99,10 @@ export const dynamic = 'force-dynamic';
 // Bulk text belongs to whoever renders it. /key fetches the definitions and
 // /why reads its essay on the server; these are the short facts.
 const BOOKPLATE_FIELDS = [
-  'journal_name', 'keeper_name', 'bio', 'portrait_url',
+  // journal_name is gone from this list. A journal is called after whoever
+  // keeps it, so keeper_name below is the name, and shipping a second one to
+  // every page was shipping a field nothing read.
+  'keeper_name', 'bio', 'portrait_url',
   'instagram_url', 'lastfm_user', 'site_address',
   'founded_at', 'pinned_entry_id',
   // Two sentences saying what the journal is, and the one field on this list
@@ -132,6 +149,13 @@ export default async function RootLayout({ children }) {
     BOOKPLATE_FIELDS.filter(key => key in all).map(key => [key, all[key]])
   );
   settings.has_note = Boolean(all.why_essay && all.why_essay.trim());
+  // The name, resolved once on the server and carried down rather than worked
+  // out again in each component that prints it. coverName lives beside the
+  // database read, and a client component that imported it would drag the
+  // Postgres driver into the browser bundle to answer a question about a
+  // string. So the server answers it here, and the nav, the gate and the
+  // wordmark just read it.
+  settings.cover_name = coverName(all);
 
   return (
     <html lang="en" suppressHydrationWarning className={`${nunito.variable} ${dmMono.variable}`}>

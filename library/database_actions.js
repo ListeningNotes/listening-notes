@@ -138,9 +138,19 @@ export async function pull_entry_by_slug(slug, { includeChain = false } = {}) {
 }
 
 // Everything here belongs to one person until there are accounts to tell them
-// apart. Resolved by handle rather than by a hardcoded id, so the row can be
-// renamed — or seeded fresh in another database — without touching this file.
-const SITE_OWNER_HANDLE = 'listening-notes';
+// apart — so "the owner" is simply the row that has been there longest.
+//
+// This used to look the owner up by a handle written into this file, and the
+// handle was the first journal's name. Which made it a piece of that journal's
+// identity doing structural work: a copy whose owner row was called anything
+// else found nobody, silently, and started filing its entries against no user
+// at all. Nothing in the software seeds that row either, so on a fresh copy
+// the name it was looking for was never going to be there.
+//
+// Ordering by id rather than matching a string means it finds whoever set the
+// copy up, whatever they called themselves. On a single-owner journal the two
+// are the same row; the difference is that this one is true everywhere.
+const OWNER_ROW = 'SELECT id FROM users ORDER BY id LIMIT 1';
 
 // ── Discovery chain ────────────────────────────────────────────────────
 // Where an album came from. source_entry_id points at the *sender's entry*,
@@ -253,7 +263,7 @@ export async function save_new_entry(body) {
       ${tracks ? JSON.stringify(tracks) : null},
       ${entryRef(source_entry_id)}, ${blankToNull(received_from)},
       ${blankToNull(received_date)},
-      COALESCE(${entryRef(user_id)}, (SELECT id FROM users WHERE handle = ${SITE_OWNER_HANDLE}))
+      COALESCE(${entryRef(user_id)}, (SELECT id FROM users ORDER BY id LIMIT 1))
     )
     RETURNING *
   `;

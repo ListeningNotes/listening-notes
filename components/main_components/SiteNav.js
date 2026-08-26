@@ -20,8 +20,10 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useTheme } from './Lightswitch';
 import { useListeningBeacon } from '../../hooks/useListeningBeacon';
 import ListeningBeacon from './ListeningBeacon';
+import { useBookplate } from './Bookplate';
 
 export default function SiteNav() {
+  const { cover_name } = useBookplate();
   const pathname = usePathname();
   const router = useRouter();
   const { theme, toggle } = useTheme();
@@ -57,7 +59,7 @@ export default function SiteNav() {
 
   return (
     <div className={'sitenav-row' + (scrolled ? ' sitenav-row--scrolled' : '')}>
-      <Link href="/" onClick={handleLogoClick} className="sitenav-logo" aria-label="Listening Notes">
+      <Link href="/" onClick={handleLogoClick} className="sitenav-logo" aria-label={cover_name}>
         <svg viewBox="76 96 241 140" className="sitenav-logo-mark" xmlns="http://www.w3.org/2000/svg">
           <path
             transform="translate(73.734177, 220.794814)"

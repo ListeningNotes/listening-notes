@@ -18,7 +18,12 @@ import { createContext, useContext } from 'react';
 // renders before the provider exists — a test, a stray import — should see an
 // unconfigured journal rather than undefined.
 const EMPTY = {
-  journal_name: 'A listening journal',
+  // What this journal is called, worked out on the server by coverName() and
+  // handed down. It is the keeper's name, or this generic stand-in when they
+  // have not given one — and the stand-in is the reason this is the one field
+  // here that is not null: every other blank means "draw nothing", while a
+  // site with no name at all in its tab is just broken.
+  cover_name: 'A listening journal',
   keeper_name: null,
   bio: null,
   portrait_url: null,
