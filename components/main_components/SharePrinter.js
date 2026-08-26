@@ -45,12 +45,6 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { CaretLeft, CaretRight, Check, DownloadSimple, LinkSimple, ShareNetwork, X } from '@phosphor-icons/react';
-import Gallery from '../session_components/backgrounds/Gallery';
-import Pong from '../session_components/backgrounds/Pong';
-import Reel from '../session_components/backgrounds/Reel';
-import Snake from '../session_components/backgrounds/Snake';
-import Solitaire from '../session_components/backgrounds/Solitaire';
-import Vinyl from '../session_components/backgrounds/Vinyl';
 
 // ── Paper ──────────────────────────────────────────────────────────────────
 // Four shapes, because four different places want a picture and they disagree
@@ -70,29 +64,30 @@ export const FRAME_ORDER = ['story', 'portrait', 'square', 'spread'];
 export const PAPER = { day: '#eef0ec', night: '#0e0e0e' };
 
 // ── The looks ──────────────────────────────────────────────────────────────
-// A backdrop and an ink, decided together and given a name. The backdrops are
-// the dashboard screensavers running on the journal's own covers — already the
-// house wallpaper, the room you are in while you write — so a print made on
-// one is recognisably from here without a single new asset file, and the
-// records on it are yours rather than a stock texture's.
+// A backdrop and an ink, decided together and given a name.
 //
-// Only the canvas-drawn screensavers can be here. Rain, DVD, Fizzy and
-// SplitScreen are built out of DOM elements, which a canvas cannot photograph
-// without dragging in a screenshot library. They are still perfectly good
-// screensavers and they are simply not printable.
+// ── On the wallpaper, which is not here yet ───────────────────────────────
 //
-// Paper and Ink come first and are not backdrops at all — they are the absence
-// of one, the page's own colour, and what the thing looks like on the site.
+// The first pass put the dashboard screensavers behind the print, and picked
+// them by what canvas could photograph rather than by what anybody likes. That
+// got the set exactly wrong: it led with Vinyl, which was not even wired into
+// the dashboard any more and has since been deleted, and it left OUT the ones
+// somebody would actually reach for — the albums floating up (Fizzy), the rain
+// of covers (Rain), the bouncing sleeve (DVD), the two scrolling rows
+// (SplitScreen). Those four are built out of DOM elements rather than a
+// canvas, which is why a canvas could not photograph them, which is a fact
+// about this implementation and not a reason to offer somebody Pong.
+//
+// So the wallpaper is parked and the card gets to be a card first. The machine
+// still takes a backdrop — the stage below still mounts one and the export
+// still composites it — so bringing them back is adding rows here and teaching
+// the four DOM ones to draw themselves onto a canvas. Nothing else changes.
+//
+// Paper and Ink are not backdrops at all: they are the absence of one, the
+// page's own colour, and what the card looks like on the site.
 export const VARIANTS = [
-  { key: 'paper',      label: 'Paper',       Background: null,      dark: false },
-  { key: 'ink',        label: 'Ink',         Background: null,      dark: true  },
-  { key: 'shelf',      label: 'Shelf',       Background: Vinyl,     dark: false },
-  { key: 'shelf-late', label: 'Shelf, late', Background: Vinyl,     dark: true  },
-  { key: 'gallery',    label: 'Gallery',     Background: Gallery,   dark: false },
-  { key: 'reel',       label: 'Reel',        Background: Reel,      dark: true  },
-  { key: 'solitaire',  label: 'Solitaire',   Background: Solitaire, dark: false },
-  { key: 'snake',      label: 'Snake',       Background: Snake,     dark: true  },
-  { key: 'pong',       label: 'Pong',        Background: Pong,      dark: false },
+  { key: 'paper', label: 'Paper', Background: null, dark: false },
+  { key: 'ink',   label: 'Ink',   Background: null, dark: true  },
 ];
 
 // ── Canvas tools, for plates to draw with ──────────────────────────────────
@@ -478,20 +473,13 @@ export default function SharePrinter({ open, onClose, plate, albums = [], link =
         .shp-bar {
           position: relative; z-index: 1; flex-shrink: 0;
           display: flex; align-items: center; justify-content: space-between;
-          gap: 12px; padding: 14px 18px 4px;
+          gap: 12px; padding: 14px 18px 2px;
         }
         .shp-title {
           font-family: var(--font-label);
           font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase;
           color: var(--ink-faint);
         }
-        .shp-close {
-          display: inline-flex; align-items: center; justify-content: center;
-          width: 32px; height: 32px; border-radius: 10px;
-          border: 0; background: transparent; color: var(--ink-faint);
-          cursor: pointer; transition: color 0.15s, background 0.15s;
-        }
-        .shp-close:hover { color: var(--ink); background: var(--bg-warm); }
 
         /* ── the paper ── everything left over after the bar, the name of the
            look and the controls, with the print scaled to fit it. */
@@ -640,9 +628,6 @@ export default function SharePrinter({ open, onClose, plate, albums = [], link =
 
       <div className="shp-bar">
         <span className="shp-title">{plate?.title || 'Print'}</span>
-        <button type="button" className="shp-close" onClick={onClose} aria-label="Close the printer">
-          <X size={16} weight="bold" aria-hidden="true" />
-        </button>
       </div>
 
       <div className="shp-view" ref={viewRef}>
@@ -724,6 +709,14 @@ export default function SharePrinter({ open, onClose, plate, albums = [], link =
         )}
 
         <div className="shp-acts">
+          {/* The way out, down here with the other two rather than pinned to
+              the far corner of the screen. A printer that fills a phone puts
+              its close button an inch further than a thumb reaches, and being
+              unable to leave a thing you opened by mistake is the worst
+              feeling a full-screen anything can give you. */}
+          <button type="button" className="shp-act shp-act--quiet" onClick={onClose} aria-label="Close the printer">
+            <X size={14} weight="bold" aria-hidden="true" />
+          </button>
           {canSendFile && (
             <button type="button" className="shp-act shp-act--go" onClick={send}>
               <ShareNetwork size={14} weight="bold" aria-hidden="true" />
