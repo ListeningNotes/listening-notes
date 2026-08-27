@@ -54,10 +54,36 @@ re-propose anything listed as ruled out.
 - [ ] **The feed as a network** — `/feed.xml` publishes, but nothing reads anyone else's. Two views, submissions first. A shelf, not a river.
 - [ ] **Relationship field removal** — every value has dissolved into something else. Legacy data stays; the picker goes.
 
+**SECURITY**
+- [ ] **Rotate `DATABASE_URL` and `SESSION_PASSWORD` into Vercel Secrets.**
+  Vercel currently holds both as plain config values, which means anyone with
+  dashboard access can read them.
+
+  1. Neon → reset password
+  2. Copy the new connection string
+  3. Vercel → edit the variable, paste, **mark as Secret**
+  4. Update local `.env.local` (from a terminal — VS Code will not save it)
+  5. Redeploy
+  6. Confirm entries still load
+
+  **A daylight task.** A wrong edit takes the live site down: with a bad
+  connection string the site cannot reach its database, and every page that
+  reads entries fails at once. Rollback is Vercel → Deployments → last good
+  deploy → Promote to Production, but that restores the old *code*, not the old
+  variable — the variable has to be fixed by hand.
+
+  Note on `SESSION_SECRET`: rotating it signs you out and you will have to log
+  in again. **That is expected, not a bug** — it signs the login cookie, so a
+  new secret retires every cookie issued under the old one. Worth knowing in
+  advance, because it looks exactly like being locked out. This softens the
+  "never change after launch" line in `.env.example` and the README: the real
+  cost is typing the password once.
+
+- [ ] Upvote abuse prevention (IP or cookie check)
+
 **BUGS**
 - [ ] **Slug fix** — `create_slug` collapses spaces to hyphens and then calls `.trim()`, which only strips whitespace. A title that starts or ends with punctuation keeps a stray hyphen: `— Blue` becomes `-blue`. Numbering for repeat listens is handled separately in `database_actions.js` and is fine.
 - [ ] `created_at` is a naive UTC column and the driver shifts it by the reader's local offset. Never compare it to `Date.now()`.
-- [ ] Upvote abuse prevention (IP or cookie check)
 
 **DEV**
 - [ ] Bare apex `listeningnotes.blog` still can't reach Vercel — Tumblr refused to point their domain externally, so registration is moving to Vercel. `www` works today.
