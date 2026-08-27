@@ -44,7 +44,6 @@ re-propose anything listed as ruled out.
 - [ ] **Migration runner** — nothing executes `schema.sql`. A fresh copy has no tables and no way to make them without opening Neon's SQL editor by hand. `schema.sql` has also never actually been run against an empty database; every statement is guarded, but "reads correctly" and "builds a working journal from nothing" are different claims and only the first is checked.
 - [ ] **Welcome screen** — first run should ask who this copy belongs to and write the owner row plus the settings row. `setup_complete` exists as a column and nothing sets it. Until this lands, `keeper_name`, `founded_at` and `serial` can only be set in the database.
 - [ ] **Deploy button** — the README has one, but it lands on a copy with no schema. Blocked on the migration runner.
-- [ ] **Last.fm key to env** — `LASTFM_KEY` is in `.env.example` but is not read. The key is hardcoded in `hooks/useListeningBeacon.js` and `components/main_components/NavBeacon.js`, so every copy in the world shares one rate limit.
 - [ ] **`/api/export`** — a copy should be able to hand its owner their own data back.
 
 **STRUCTURE** — see DECISIONS.md before starting any of these
@@ -161,6 +160,12 @@ current.
 ---
 
 ## Complete
+
+**2026-08-27 session — Last.fm key to env, and one poll instead of six**
+- [x] **`LASTFM_KEY` moved to the environment** and read only on the server, by the new `/api/public/beacon`. The key was hardcoded in two files, so every copy of this software queried Last.fm as the same application and shared one rate limit.
+- [x] **Polling deduplicated** — `useListeningBeacon` is called by five components and each used to run its own 15-second timer; four mount on the landing page together, so one visitor made ~16 requests a minute, plus a sixth timer inside NavBeacon. One shared poll now, via `useSyncExternalStore`, started on the first subscriber and stopped on the last.
+- [x] **Upstream answer cached 10s** on the server, so a hundred readers cost one Last.fm request rather than sixteen hundred.
+- [x] NavBeacon's separate "recently played" fetch removed — it comes off the same poll.
 
 **2026-08-27 session — documentation restructure**
 - [x] `DECISIONS.md` added and tracked — what is settled, and why
