@@ -3,36 +3,16 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import { useListeningBeacon } from '../../hooks/useListeningBeacon';
-import { useBookplate } from './Bookplate';
 
 export default function NavBeacon() {
-  const { track, isLive } = useListeningBeacon();
+  // The dropdown's "recently played" used to be fetched here, on a thirty
+  // second timer of its own, from the same Last.fm account the beacon above it
+  // was already polling every fifteen — the same answer twice, over two
+  // timers, against a key every copy of this software shared. It comes off the
+  // one poll now. See the note in hooks/useListeningBeacon.js.
+  const { track, isLive, recentTracks } = useListeningBeacon();
   const [open, setOpen] = useState(false);
-  const [recents, setRecents] = useState([]);
   const ref = useRef(null);
-  const { lastfm_user } = useBookplate();
-
-  useEffect(() => {
-    // A journal with no Last.fm account has no recent tracks to show, and
-    // polling with an empty user just collects errors every thirty seconds.
-    // recents is already [] — nothing ever filled it.
-    if (!lastfm_user) return;
-    async function fetchRecents() {
-      try {
-        const res = await fetch(`https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks&user=${encodeURIComponent(lastfm_user)}&api_key=f022ca293645cd4cf2beeb3be7ae4b6f&limit=5&format=json`);
-        const data = await res.json();
-        const all = data?.recenttracks?.track || [];
-        setRecents(all.filter(t => !t['@attr']?.nowplaying).slice(0, 3).map(t => ({
-          name: t.name,
-          artist: t.artist['#text'],
-          art: t.image?.[2]?.['#text'] || ''
-        })));
-      } catch {}
-    }
-    fetchRecents();
-    const iv = setInterval(fetchRecents, 30000);
-    return () => clearInterval(iv);
-  }, [lastfm_user]);
 
   useEffect(() => {
     function handleClick(e) {
@@ -89,10 +69,10 @@ export default function NavBeacon() {
           )}
           <div style={{ fontFamily: 'var(--font-nunito), sans-serif', fontWeight: 900, fontSize: '15px', color: 'var(--text)', lineHeight: 1.2, marginBottom: '3px' }}>{trackName}</div>
           <div style={{ fontFamily: 'var(--font-nunito), sans-serif', fontSize: '10px', color: 'var(--text-muted)', letterSpacing: '0.06em', marginBottom: '14px' }}>{artistName}</div>
-          {recents.length > 0 && (
+          {recentTracks.length > 0 && (
             <>
               <div style={{ fontFamily: 'var(--font-mono)', fontSize: '9px', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--text-muted)', marginBottom: '10px', paddingTop: '12px', borderTop: '1px solid var(--border)' }}>Recently played</div>
-              {recents.map((r, i) => (
+              {recentTracks.map((r, i) => (
                 <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
                   <div style={{ width: '30px', height: '30px', borderRadius: '5px', overflow: 'hidden', background: 'var(--bg2)', flexShrink: 0 }}>
                     {r.art && <img src={r.art} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />}
