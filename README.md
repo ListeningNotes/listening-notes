@@ -224,7 +224,14 @@ SESSION_PASSWORD     the password typed into the dashboard gate
 ## Licence
 
 Listening Notes is free software, released under the **GNU Affero General Public
-License, version 3**. The full text is in [LICENSE](LICENSE).
+License, version 3 or later**. The full text is in [LICENSE](LICENSE), and every
+source file carries an `SPDX-License-Identifier: AGPL-3.0-or-later` line at the
+top so that a file copied out of this repo still says what it is.
+
+The notice below is the one the licence's own "How to Apply These Terms"
+appendix asks to be attached to the program. Putting it in a README is
+convention rather than what the appendix says — the appendix asks for it at the
+start of each source file, which is what the SPDX line stands in for here.
 
     Copyright (C) 2026 Miyel Brown
 
@@ -256,6 +263,13 @@ stays a copy.
 through 17 of the licence. Nobody who runs a copy has any claim against whoever
 wrote it if it loses their writing, and that protection is the second reason
 this file exists.
+
+**Contributing.** See [CONTRIBUTING.md](CONTRIBUTING.md). Changes are signed off
+under the [Developer Certificate of Origin](DCO) — one `git commit -s` per
+commit. This matters more than it looks: a contributor owns the copyright in
+their own lines, so from the first merged change onward the licence can no
+longer be changed by one person deciding to change it. The sign-off records the
+chain while it is still cheap to record.
 
 **The name is not the code.** The licence covers the software. It does not
 grant use of the Listening Notes name or mark to identify *your* journal — see

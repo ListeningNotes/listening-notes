@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // The web app manifest. Next serves this at /manifest.webmanifest and links it
 // from every page on its own — there is no <link> to add anywhere.
 //
@@ -7,7 +8,7 @@
 // the splash screen while the site boots should match the icon you tapped,
 // not whichever theme the reader last chose.
 
-import { pull_settings, coverName } from '../library/settings_actions';
+import { pull_settings, titleName } from '../library/settings_actions';
 
 // manifest.js is a route handler, and Next caches route handlers at build time
 // unless told otherwise. Without this the name below is read once, while the
@@ -19,7 +20,10 @@ import { pull_settings, coverName } from '../library/settings_actions';
 export const dynamic = 'force-dynamic';
 
 export default async function manifest() {
-  const name = coverName(await pull_settings());
+  // A home-screen label is the machine-read case at its most unforgiving:
+  // it is truncated, it is spoken aloud by VoiceOver, and it cannot be seen
+  // being wrong until the app is already installed. Plain name, always.
+  const name = titleName(await pull_settings());
 
   return {
     // Both names are the journal's, which is its keeper's. These were the

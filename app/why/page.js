@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // app/why/page.js
 // The long note behind the journal.
 //
@@ -13,7 +14,7 @@
 
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { pull_settings, coverName } from '../../library/settings_actions';
+import { pull_settings, coverName, titleName } from '../../library/settings_actions';
 import DotNav from '../../components/main_components/DotNav';
 import SiteNav from '../../components/main_components/SiteNav';
 
@@ -33,7 +34,9 @@ function parse(essay) {
 export async function generateMetadata() {
   const settings = await pull_settings();
   if (!settings.why_essay) return {};
-  return { title: `Why · ${coverName(settings)}` };
+  // The tab, so the plain name. The heading on the page itself uses
+  // coverName below, because that one is read by a person.
+  return { title: `Why · ${titleName(settings)}` };
 }
 
 export default async function WhyPage() {
