@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // library/pulse_stats.js
 // Computes the homepage "Pulse" dashboard stats from the entries list.
 // Pure functions — no DB or network. Feed it the same entries array the

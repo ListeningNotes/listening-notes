@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 'use client';
 import { useState } from 'react';
 import { Heart, SketchLogo } from '@phosphor-icons/react';

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // components/main_components/GridDensity.js
 // The three-step "how big are the albums" control on the archive page —
 // the same idea as pinching in and out of the iPhone Photos grid, but as

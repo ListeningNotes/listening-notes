@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // hooks/useListeningBeacon.js
 // Custom React hook that polls the Last.fm API to get the current listening status.
 // Used by the ListeningBeacon on the homepage and the NavBeacon on entry pages.

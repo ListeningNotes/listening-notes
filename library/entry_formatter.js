@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 export function parseRating(rating) {
   if (!rating) return 0;
   const n = parseFloat(rating);

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Apple serves album art two ways, and entries in the database carry both:
 //
 //   raw origin   https://a1.mzstatic.com/r40/<path>

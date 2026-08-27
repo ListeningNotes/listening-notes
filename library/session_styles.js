@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // Shared style utilities for the session UI.
 // Import these instead of redefining tx/bdr/lbl in every session component.
 

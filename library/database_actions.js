@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 import database from './database_connection.js';
 import { create_slug } from './slug_generator.js';
 import { serializeTracks } from './entry_formatter.js';

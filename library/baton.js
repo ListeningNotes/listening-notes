@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // library/baton.js
 // Carries an in-flight research call across the jump from the album picker to
 // the session page. The picker starts the request the moment you choose an

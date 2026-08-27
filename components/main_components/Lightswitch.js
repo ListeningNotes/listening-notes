@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // components/ThemeProvider.js
 // Manages the light/dark theme for the entire site.
 // Wraps the app in a React context so any component can read or toggle the theme.

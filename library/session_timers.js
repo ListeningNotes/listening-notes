@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 export function TrackLength(seconds) {
   if (!seconds) return '';
   const m = Math.floor(seconds / 60);

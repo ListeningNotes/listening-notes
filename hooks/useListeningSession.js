@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import { fetchTracklist, fetchAlbumArtUrl } from '../library/music_data_api';

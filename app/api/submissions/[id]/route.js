@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 import { update_submission_status } from '@/library/submission_actions';
 import { requireWristband } from '@/library/wristband';
 

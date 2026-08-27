@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 import Anthropic from '@anthropic-ai/sdk';
 import { requireWristband } from '@/library/wristband';
 

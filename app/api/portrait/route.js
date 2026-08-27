@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // app/api/portrait/route.js
 // The keeper's picture: in, out, and away again.
 //

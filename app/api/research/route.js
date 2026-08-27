@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 import { research_album_live } from '@/library/ai_integration';
 import { pull_briefing, save_briefing } from '@/library/database_actions';
 import { requireWristband } from '@/library/wristband';
