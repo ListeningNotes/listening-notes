@@ -1,10 +1,54 @@
 # Listening Notes
 
-A personal music journal. You listen, you write, it lives on the web.
-Built to eventually become a place where other people can do the same thing.
+A personal music journal. You listen to a record, you write about it, and it
+lives at your own address on the web.
 
-**Website:** listeningnotes.blog
-**Built with:** Next.js, Neon Postgres, Claude AI
+You run your own copy. There is no account here, no subscription, and nothing
+of yours is stored on anybody else's server — the journal is yours, the
+database is yours, and it is named after you rather than after this software.
+
+**Built with:** Next.js, Neon Postgres, Claude AI (optional)
+**Licence:** [AGPL-3.0-or-later](LICENSE) — free to run, including for a business
+
+---
+
+## Run your own copy
+
+**What you need.** Three free accounts, none of which need a card:
+
+| | |
+|---|---|
+| [GitHub](https://github.com) | Holds your copy of the code |
+| [Vercel](https://vercel.com) | Runs the site |
+| [Neon](https://neon.tech) | The Postgres database your writing lives in |
+
+Optionally, an [Anthropic API key](https://console.anthropic.com) if you want
+the album research and the listening companion. You pay your own usage; without
+it the journal works and those features are simply absent.
+
+**Deploy.**
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FListeningNotes%2Flistening-notes&env=DATABASE_URL,SESSION_SECRET,SESSION_PASSWORD&envDescription=Required%20variables%20%E2%80%94%20see%20.env.example&envLink=https%3A%2F%2Fgithub.com%2FListeningNotes%2Flistening-notes%2Fblob%2Fmain%2F.env.example)
+
+**First run.**
+
+1. Create a Neon project. Copy its connection string.
+2. **Build the tables.** Open Neon's SQL editor, paste in the whole of
+   [`schema.sql`](schema.sql), and run it. It is safe to run more than once.
+3. Set the environment variables — see [`.env.example`](.env.example) for the
+   list and what each one is for. `SESSION_PASSWORD` is what you will type to
+   reach the writing side of your own journal.
+4. Deploy, open the site, and go to `/dashboard`.
+
+> **Step 2 is manual for now.** Nothing runs `schema.sql` for you yet, and
+> there is no welcome screen — so a fresh copy also has no owner row and no
+> settings until you write in it. Both are on the Pending list in
+> [NOTES.md](NOTES.md). Until they land, expect to open a SQL editor once.
+
+**Naming your copy.** Every copy is named after whoever keeps it, so yours is
+not called Listening Notes and should not be. The name comes from `keeper_name`
+in the `settings` table; the mark stays as a colophon, the way a press mark sits
+in the back of a book.
 
 ---
 
@@ -24,7 +68,15 @@ Think of it like a house.
 **Public side** — what anyone visiting the site can see:
 - The homepage with the listening beacon and album strip
 - Individual entry pages where people can read your notes and leave comments
-- An archive, about page, submit page, compare page
+- `/archive` — every entry, searchable and filterable
+- `/key` — what the stars and the three marks mean
+- `/submit` — send the keeper an album
+- `/compare` — read another journal's feed and compare taste
+- `/shuffle` — redirect to a random entry
+
+There is no `/about` route. The identity card on the landing page *is* the
+about page; `/about` and `/rig` stay only as redirects, so old links land
+somewhere.
 
 **Private side** — only you can access this (password protected, never linked publicly):
 - `/dashboard` — the hub with four buttons: Listen, Entries, Inbox, Share
@@ -101,7 +153,7 @@ The furniture — visual pieces
         TrackNotes.js          Step 1 — expandable track list with per-track notes
         AlbumNotes.js          Step 2 — star rating, Masterpiece/Favorite, free-text notes
         ReflectChat.js         Step 3 — Echo reflection chat with quick prompts
-        TagsEditor.js          Step 4 — add and remove tags
+        ScoreScreen.js         Step 4 — the score, once the notes are in
         SessionPreview.js      Step 5 — formatted preview with save button
       backgrounds/             9 animated canvas scenes for the dashboard hub
         Rain.js / DVD.js / Gallery.js / Fizzy.js / SplitScreen.js
@@ -113,9 +165,19 @@ The rooms — full pages assembled from furniture
     page.js                    Homepage
     layout.js                  Wraps every page (fonts, theme)
     globals.css                All the styling
+    manifest.js                PWA manifest — force-dynamic, so the name is not baked in
+    feed.xml/route.js          The journal as an RSS feed
     entries/[slug]/
       page.js                  Loads the entry, hands it to FullPostPage
       FullPostPage.js          The full public entry page with comments
+    archive/page.js            Every entry — search, sort, filters
+    key/page.js                What the stars and the three marks mean
+    submit/page.js             Send the keeper an album
+    compare/page.js            Read another journal's feed, compare taste
+    shuffle/page.js            Redirect to a random entry
+    why/page.js                The keeper's long note. 404s when unwritten
+    about/page.js              Redirect to / — the identity card is the about page
+    rig/page.js                Redirect to / — the rig lives on the card
     dashboard/
       page.js                  Hub — 4 buttons (Listen, Entries, Inbox, Share)
       echo/
@@ -123,8 +185,8 @@ The rooms — full pages assembled from furniture
         session/page.js        The note-taking session — 6-step flow, sidebar, frosted panel
       entries/page.js          Private entry management (edit, delete)
       submissions/page.js      Submission inbox (pending / reviewed / dismissed)
-      inbox/page.js            Placeholder — not yet built
-      share/page.js            Placeholder — Reddit/Instagram to-do list
+      inbox/page.js            Comments and submissions in one place
+      share/page.js            Album exporter — slides for sharing an entry
 
 ---
 
@@ -176,38 +238,71 @@ The rooms — full pages assembled from furniture
 
 ## Colors and Fonts
 
-All of these live in library/sitewide_visuals.js. Change them once, they update everywhere.
+Two files, and they are the source — no list is kept here, because the list
+that used to be here spent months claiming the accent was green and the
+headings were set in a serif, and neither had been true for a long time.
 
-background    #0e0e0e   The main page background
-panel         #161616   Cards and panels that sit on top of the background
-text          #e8e4dc   All regular text
-accent        #c8d47a   The green highlight color
-border        #2a2a2a   All borders and dividers
-gold          #E8B84B   Star ratings
-secondary_text #555     Muted, less important text
+- **`library/sitewide_visuals.js`** — `colors_light` and `colors_dark`, plus
+  the `fonts` object. Both themes are defined in full, side by side.
+- **`app/globals.css`** — the same palette as custom properties (`--bg`,
+  `--ink`, `--accent`, `--panel`), which is what most components actually read.
 
-serif   DM Serif Display   Headings and titles
-mono    DM Mono            Labels, tags, all the small UI text
-sans    DM Sans            Body text, paragraphs
+Change a value in both and it updates everywhere.
+
+**Two typefaces, deliberately.** Nunito does the body text *and* the titles —
+titles are Nunito bold via `--font-display`, not a display face — and DM Mono
+sets labels and small caps. A serif was the title face for a while and was
+removed; do not reintroduce one.
 
 ---
 
 ## The Database
 
-One database (Neon Postgres). One main table called entries.
+One database (Neon Postgres). [`schema.sql`](schema.sql) is the whole of it and
+is generated from a live catalogue, so it describes what actually exists rather
+than what anyone remembers building.
 
-Each entry has: album name, artist, year, type, relationship, rating, favorite flag, masterpiece flag, background text, notes, tags, horizon bar data, album art URL, slug, and the date it was created.
+| Table | What it holds |
+|---|---|
+| `entries` | The journal. One row per listen — an album listened to twice is two entries, never an overwrite. |
+| `settings` | Everything that makes a copy someone's own: the keeper, the portrait, the links, the rig. Exactly one row, forced by a check on `id`. |
+| `users` | The owner. One row, written at setup. |
+| `comments` | Replies on entries and on individual tracks, with a moderation queue. |
+| `submissions` | Albums other people have sent you. |
+| `drafts` | A listening session in progress, so closing the tab does not lose it. |
+| `briefings` | Cached album research, keyed by album, so the same record is not paid for twice. |
+| `conversations` | Session chat history with the listening companion. |
+| `echo_memory` | Long-term companion memory. Defined, not yet used by anything. |
+
+Two columns on `entries` are computed by Postgres and cannot be written to:
+`rating_value` (the numeric score, so sorting works) and `album_key` (a
+normalised album+artist string, which is how two journals recognise the same
+record through different punctuation).
+
+**Migrations are additive only** — add columns and tables, never rename or drop
+one. Copies of this software are databases on machines nobody here can reach,
+and a migration that fails is somebody's journal that stops opening.
 
 ---
 
 ## Secret Keys
 
-These are stored in a file called .env.local which is never shared or uploaded.
+**[`.env.example`](.env.example) is the list**, with what each variable is for
+and where to get it. Copy it to `.env.local` and fill it in; `.env.local` is
+gitignored and never leaves your machine. On Vercel the same values go in
+Project → Settings → Environment Variables.
 
-DATABASE_URL         the address of the database
-ANTHROPIC_API_KEY    the key that lets the site talk to Claude
-SESSION_SECRET       the signing key for the JWT auth cookie (never change after launch)
-SESSION_PASSWORD     the password typed into the dashboard gate
+It is deliberately the only place these are written down. A second copy of the
+list in this file is a second copy to keep current, and the one that went stale
+first was this one.
+
+Two worth knowing without opening the file:
+
+- `SESSION_SECRET` — **never change it after launch.** It signs the login
+  cookie, so changing it signs you out of your own journal everywhere.
+- `ANTHROPIC_API_KEY` — bills to your Console **API credit balance**, which is
+  a separate pool from a Claude.ai subscription. See the gotchas in
+  [NOTES.md](NOTES.md).
 
 ---
 
