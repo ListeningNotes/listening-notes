@@ -131,6 +131,23 @@ fixed elements. Watch for it on the archive.
 case works locally and fails the Vercel build. When a build dies on "Module not
 found", check the case against `git ls-files`.
 
+**The old Last.fm key is in public git history, and that is fine.** It was
+hardcoded in the source from 2026-05-15 until 2026-08-27, and the repo is
+public, so it is in history permanently. It has been rotated, so the exposed
+one is inert — and it was read-only anyway, reading nothing but public scrobble
+data. Not worth rewriting history over: that breaks every existing clone in
+order to retire a key nobody can use. Do not be alarmed by it again.
+
+**Secrets have only ever lived in `.env.local`, which is the whole reason the
+audit came back clean.** All 370 commits were searched for each value on
+2026-08-27: `DATABASE_URL`, `ANTHROPIC_API_KEY`, `SESSION_SECRET` and
+`SESSION_PASSWORD` appear in no commit, on no branch, ever. A pattern sweep for
+Anthropic keys, Postgres credentials, GitHub tokens, AWS keys and JWTs came
+back empty too. **Keep it that way** — the migration runner and the welcome
+screen are the next things that will want to write configuration somewhere, and
+a real secret belongs in the environment, never in the settings table and never
+in a file that gets committed. `.env.example` holds names and never values.
+
 **`localhost` writes to the production database.** There is no separate dev
 database. A destructive query typed here is typed there.
 
@@ -160,6 +177,11 @@ current.
 ---
 
 ## Complete
+
+**2026-08-27 session — merged and shipped**
+- [x] Everything below merged to `main` and deployed. Verified live: tab title, PWA manifest and RSS channel all read `Miyel · Listening Notes`; the beacon returns tracks, so `LASTFM_KEY` is set in Vercel; zero direct Last.fm calls from the page and no old key in the shipped HTML.
+- [x] **Last.fm key rotated.** The old one stays in public history and is inert — see Gotchas.
+- [x] **Secret audit** — all 370 commits searched; no env file was ever committed and no secret value appears anywhere in history.
 
 **2026-08-27 session — Last.fm key to env, and one poll instead of six**
 - [x] **`LASTFM_KEY` moved to the environment** and read only on the server, by the new `/api/public/beacon`. The key was hardcoded in two files, so every copy of this software queried Last.fm as the same application and shared one rate limit.
