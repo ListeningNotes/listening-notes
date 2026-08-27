@@ -1,3 +1,4 @@
+// Copyright (C) 2026 Miyel Brown
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // app/entries/[slug]/PostClient.js
 // The interactive UI for a single entry page.

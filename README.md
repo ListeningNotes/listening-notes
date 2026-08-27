@@ -225,8 +225,16 @@ SESSION_PASSWORD     the password typed into the dashboard gate
 
 Listening Notes is free software, released under the **GNU Affero General Public
 License, version 3 or later**. The full text is in [LICENSE](LICENSE), and every
-source file carries an `SPDX-License-Identifier: AGPL-3.0-or-later` line at the
-top so that a file copied out of this repo still says what it is.
+source file opens with two lines:
+
+```js
+// Copyright (C) 2026 Miyel Brown
+// SPDX-License-Identifier: AGPL-3.0-or-later
+```
+
+Who holds the copyright, and what the licence is. Both, because a file copied
+out of this repo has to still say both — the SPDX line alone would say what
+somebody may do with it and not who they would be doing it to.
 
 The notice below is the one the licence's own "How to Apply These Terms"
 appendix asks to be attached to the program. Putting it in a README is

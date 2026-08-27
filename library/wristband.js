@@ -1,3 +1,4 @@
+// Copyright (C) 2026 Miyel Brown
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // library/wristband.js
 // Issues and verifies "wristbands" (signed JWTs) that let the user into

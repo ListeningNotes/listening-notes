@@ -1,3 +1,4 @@
+// Copyright (C) 2026 Miyel Brown
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // app/api/auth/check/route.js
 // Peeks at the wristband. Used by writing pages on mount to ask "am I still

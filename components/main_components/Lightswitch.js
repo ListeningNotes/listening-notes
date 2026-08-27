@@ -1,3 +1,4 @@
+// Copyright (C) 2026 Miyel Brown
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // components/ThemeProvider.js
 // Manages the light/dark theme for the entire site.

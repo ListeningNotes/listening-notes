@@ -1,3 +1,4 @@
+// Copyright (C) 2026 Miyel Brown
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // library/definitions.js
 // What the marks mean, in words that install.

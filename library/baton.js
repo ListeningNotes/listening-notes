@@ -1,3 +1,4 @@
+// Copyright (C) 2026 Miyel Brown
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // library/baton.js
 // Carries an in-flight research call across the jump from the album picker to

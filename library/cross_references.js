@@ -1,3 +1,4 @@
+// Copyright (C) 2026 Miyel Brown
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // library/cross_references.js
 // Turns a mention of something already in the archive into a link to it.

@@ -1,3 +1,4 @@
+// Copyright (C) 2026 Miyel Brown
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // components/main_components/FlipTile.js
 // An album tile on the archive grid. Two behaviours, chosen by the page:

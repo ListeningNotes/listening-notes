@@ -1,3 +1,4 @@
+// Copyright (C) 2026 Miyel Brown
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { neon } from '@neondatabase/serverless';
 import { pull_entry_by_slug } from '@/library/database_actions';

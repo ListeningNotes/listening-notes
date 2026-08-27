@@ -1,3 +1,4 @@
+// Copyright (C) 2026 Miyel Brown
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { pull_all_entries, save_new_entry } from '@/library/database_actions';
 import { checkWristband, requireWristband } from '@/library/wristband';
