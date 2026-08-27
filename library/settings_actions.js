@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 import database from './database_connection.js';
 import { DEFAULT_DEFINITIONS, mergeDefinitions } from './definitions.js';
 
@@ -52,6 +53,8 @@ const EMPTY = {
   rig_icon: null,
   rig: null,
   definitions: null,
+  // The ornamented name, or null to use the plain one. See coverName().
+  display_name: null,
   // Written once and then fixed for the life of the copy. See WRITE_ONCE.
   serial: null,
   // False until the welcome screen has run. Not null: "we have not asked yet"
@@ -68,7 +71,7 @@ const WRITABLE = [
   // holds whatever anyone typed into it, but a journal is named after its
   // keeper now, so letting a form go on writing this would be maintaining a
   // second name that nothing ever reads.
-  'keeper_name', 'bio', 'portrait_url',
+  'keeper_name', 'display_name', 'bio', 'portrait_url',
   'instagram_url', 'lastfm_user', 'site_address',
   'founded_at', 'pinned_entry_id', 'about_intro', 'social_links',
   'hidden_fields', 'send_me', 'portrait_position', 'rig_icon', 'rig',
@@ -120,8 +123,42 @@ const blankToNull = v => (typeof v === 'string' && v.trim() === '' ? null : v);
 // journal", not somebody else's. It is the one string a fresh copy shows in a
 // browser tab, and it has to be true of every copy rather than of one.
 export function coverName(settings) {
+  // The ornamented name wins where a person is reading. keeper_name is the
+  // fallback rather than the other way round: display_name is null on almost
+  // every copy, and null means "I did not want a second one of these".
+  const shown = (settings?.display_name || '').trim();
   const keeper = (settings?.keeper_name || '').trim();
-  return keeper || 'A listening journal';
+  return shown || keeper || 'A listening journal';
+}
+
+// The name of the software, as opposed to the name of any journal kept in it.
+//
+// Deliberately a constant and deliberately not a setting. Every other place
+// this string used to appear was a bug — a copy wearing the first journal's
+// name — and all of those are gone. This one is the opposite: it is the press
+// mark, and it is supposed to be the same in every copy. A journal called
+// after its keeper, followed by the name of the thing it was made with.
+const SOFTWARE_NAME = 'Listening Notes';
+
+// What this journal is called where a machine is doing the reading.
+//
+// The browser tab, the home-screen label, the feed's channel title, the title
+// on a shared link. All of them are read by something that files, truncates or
+// speaks the string rather than looking at it, and none of them cope with a
+// name written in combining characters and box-drawing — which is exactly what
+// somebody's own name on their own card is allowed to be. So this takes the
+// plain keeper_name and never the ornamented display_name.
+//
+// The format is the same in every copy, with no special case for the one this
+// software was written in. A journal is its keeper's; the software is the
+// software; the separator is the whole distinction, and printing both is what
+// lets a stranger tell a copy from a counterfeit without being told the rule.
+export function titleName(settings) {
+  const keeper = (settings?.keeper_name || '').trim();
+  // A copy nobody has introduced yet still needs both halves. Falling back to
+  // the software's name alone would have every unconfigured copy claiming to
+  // *be* Listening Notes, which is the one thing the naming is meant to stop.
+  return `${keeper || 'A listening journal'} \u00b7 ${SOFTWARE_NAME}`;
 }
 
 export async function pull_settings() {

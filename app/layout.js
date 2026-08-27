@@ -1,8 +1,9 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 import './globals.css';
 import { Nunito, DM_Mono } from 'next/font/google';
 import { Lightswitch } from '../components/main_components/Lightswitch';
 import { Bookplate } from '../components/main_components/Bookplate';
-import { pull_settings, coverName } from '../library/settings_actions';
+import { pull_settings, coverName, titleName } from '../library/settings_actions';
 
 const nunito = Nunito({
   subsets: ['latin'],
@@ -37,7 +38,11 @@ const dmMono = DM_Mono({
 // with.
 export async function generateMetadata() {
   const settings = await pull_settings();
-  const name = coverName(settings);
+  // titleName, not coverName. Everything in this function is read by a machine
+  // — a browser tab, a home-screen label, a link preview on somebody else's
+  // app — and those get the plain name plus the software's, never the
+  // ornamented one a person put on their card.
+  const name = titleName(settings);
 
   return {
     title: name,
@@ -59,6 +64,15 @@ export async function generateMetadata() {
       capable: true,
       title: name,
       statusBarStyle: 'black-translucent',
+    },
+    // What a link to this journal looks like when it is pasted somewhere else.
+    // Same name, for the same reason: the reader is a preview card in an app
+    // that did not ask what the characters were for.
+    openGraph: {
+      title: name,
+      siteName: name,
+      description: 'A listening journal.',
+      type: 'website',
     },
   };
 }
@@ -102,7 +116,13 @@ const BOOKPLATE_FIELDS = [
   // journal_name is gone from this list. A journal is called after whoever
   // keeps it, so keeper_name below is the name, and shipping a second one to
   // every page was shipping a field nothing read.
-  'keeper_name', 'bio', 'portrait_url',
+  'keeper_name',
+  // The ornamented name itself, not just the resolved cover_name above. The
+  // card only needs the resolved one to draw, but the editor needs to know
+  // which of the two columns it is editing before it can save to the right
+  // one. A short string, and the card is on the landing page.
+  'display_name',
+  'bio', 'portrait_url',
   'instagram_url', 'lastfm_user', 'site_address',
   'founded_at', 'pinned_entry_id',
   // Two sentences saying what the journal is, and the one field on this list

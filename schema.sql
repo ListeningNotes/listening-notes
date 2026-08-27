@@ -1,3 +1,4 @@
+-- SPDX-License-Identifier: AGPL-3.0-or-later
 -- Listening Notes — database setup
 --
 -- The site runs this against its own database the first time it starts, before
@@ -247,6 +248,22 @@ CREATE TABLE IF NOT EXISTS settings (
   -- back to the text shipped in library/definitions.js, so a copy that never
   -- edits its definitions stores nothing at all.
   definitions jsonb,
+  -- The name as its keeper writes it, decoration and all.
+  --
+  -- keeper_name is the plain one: it is what a machine reads, so it goes in the
+  -- browser tab, the home-screen label, the feed and anything an external app
+  -- files this journal under. This is what a person reads, on the card and in
+  -- the About pane, and it is allowed to be ornamented — kaomoji, spacing,
+  -- whatever somebody actually calls themselves.
+  --
+  -- Two columns rather than one because they are read by two different kinds
+  -- of reader and only one of them can cope. A feed reader filing a
+  -- subscription under a name full of combining characters, or a phone
+  -- truncating one under a home-screen icon, is not a styling problem.
+  --
+  -- Nullable, and null is the ordinary state: leave it empty and the plain
+  -- name is used everywhere, which is what most people will want.
+  display_name text,
   -- This copy's own serial number, written once when it is first set up and
   -- never again. Not an id — the row already has one of those, and it counts
   -- from 1 in every database, so every copy in the world would claim to be
@@ -278,6 +295,7 @@ CREATE TABLE IF NOT EXISTS settings (
 -- Additive only. Nothing in this section may rename a column, change its type,
 -- or repurpose what one means: a copy in the wild belongs to somebody who
 -- cannot be reached, and a migration that fails is their journal not opening.
+ALTER TABLE settings ADD COLUMN IF NOT EXISTS display_name text;
 ALTER TABLE settings ADD COLUMN IF NOT EXISTS "serial" text;
 ALTER TABLE settings ADD COLUMN IF NOT EXISTS setup_complete boolean DEFAULT false;
 

@@ -1,6 +1,7 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 import { neon } from '@neondatabase/serverless';
 import { pull_entry_by_slug } from '@/library/database_actions';
-import { pull_settings, coverName } from '@/library/settings_actions';
+import { pull_settings, titleName } from '@/library/settings_actions';
 import PostClient from './FullPostPage';
 
 // This page kept its own connection and its own SELECT for a while, which meant
@@ -24,7 +25,7 @@ export async function generateMetadata({ params }) {
   // page on every copy — the single most-shared URL in the whole site, since
   // an entry link is what gets pasted into a message.
   const e = result[0];
-  return { title: `${e.album} — ${e.artist} | ${coverName(settings)}` };
+  return { title: `${e.album} — ${e.artist} | ${titleName(settings)}` };
 }
 export default async function PostPage({ params }) {
   const { slug } = await params;

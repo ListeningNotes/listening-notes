@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 'use client';
 
 // components/main_components/IdentityCard.js
@@ -1340,7 +1341,11 @@ export default function IdentityCard({ stamps, authed = false }) {
 
         <div className="idc-lift" aria-hidden="true" ref={liftRef} />
 
-        {(editing || keeper_name) && (
+        {/* cover_name, not keeper_name: this is the one place a person is
+            reading the name, so it is allowed to be the ornamented one. The
+            input beside it still edits keeper_name — see the note in
+            IdentificationCardEditor. */}
+        {(editing || cover_name) && (
           <h1 className="idc-name">
             {editing
               ? <input
@@ -1351,7 +1356,7 @@ export default function IdentityCard({ stamps, authed = false }) {
                   placeholder="Your name"
                   aria-label="Name"
                 />
-              : keeper_name}
+              : cover_name}
           </h1>
         )}
 

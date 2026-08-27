@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 'use client';
 
 // components/main_components/IdentificationCardEditor.js
@@ -411,7 +412,12 @@ export function useIdentificationCardEditor(settings) {
   // Cancel is simply never committing it — no undo stack, no diffing, and the
   // card behind the fields is still showing what a visitor currently sees.
   const begin = useCallback(() => {
-    setName(settings.keeper_name || '');
+    // Same rule as the paragraph below: seed from whatever the card is
+    // showing, not from whichever column it came out of. The card prints
+    // display_name when there is one, so opening the editor on keeper_name
+    // would show a name the visitor cannot see, and saving would change a
+    // name that is not the one on screen.
+    setName(settings.display_name || settings.keeper_name || '');
     // Whatever the card is showing, not whatever column it came out of. The
     // paragraph falls back to about_intro when bio is empty, so seeding from
     // bio alone opened the editor on a blank field under a card that plainly
@@ -575,7 +581,19 @@ export function useIdentificationCardEditor(settings) {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          keeper_name: name.trim(),
+          // Written back to the column it was read from. keeper_name is the
+          // plain name a machine reads — the tab, the home-screen label, the
+          // feed — and once somebody has an ornamented display_name, this
+          // field is editing that one, so overwriting keeper_name here would
+          // quietly put kaomoji into a feed reader's subscription list.
+          //
+          // Which leaves keeper_name editable only where it is first set. That
+          // is the same shape as founded_at and serial, and it wants the same
+          // thing the rest of them want: the welcome screen, which does not
+          // exist yet.
+          ...(settings.display_name
+            ? { display_name: name.trim() }
+            : { keeper_name: name.trim() }),
           bio: bio.trim(),
           send_me: sendMe.trim(),
           portrait_position: portrait.trim() ? `${posX.toFixed(1)}% ${posY.toFixed(1)}%` : '',

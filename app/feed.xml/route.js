@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // The journal as a feed, for people rather than for other journals.
 //
 // This is what following looks like without followers: someone subscribes in
@@ -10,7 +11,7 @@
 
 import { pull_public_entries } from '@/library/database_actions';
 import { entryTypeLabel } from '@/library/entry_formatter';
-import { pull_settings, coverName } from '@/library/settings_actions';
+import { pull_settings, titleName } from '@/library/settings_actions';
 
 // The channel title is read per request, not written here. It was a constant,
 // which put the first journal's name at the top of every copy's feed — and a
@@ -35,7 +36,9 @@ export async function GET(request) {
     pull_public_entries(),
     pull_settings(),
   ]);
-  const title = coverName(settings);
+  // A feed reader files the subscription under this and shows it in a list
+  // for years. Plain name.
+  const title = titleName(settings);
 
   const items = entries.map(e => {
     const link = `${origin}/entries/${e.slug}`;

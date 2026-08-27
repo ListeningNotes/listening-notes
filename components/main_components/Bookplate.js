@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // components/main_components/Bookplate.js
 // The label pasted inside the front of a book saying whose it is.
 //
@@ -25,6 +26,9 @@ const EMPTY = {
   // site with no name at all in its tab is just broken.
   cover_name: 'A listening journal',
   keeper_name: null,
+  // The ornamented name, or null when the plain one is the only one. Read by
+  // the card's editor to decide which column a name edit belongs in.
+  display_name: null,
   bio: null,
   portrait_url: null,
   instagram_url: null,
