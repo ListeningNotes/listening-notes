@@ -1,3 +1,4 @@
+// Copyright (C) 2026 Miyel Brown
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import './globals.css';
 import { Nunito, DM_Mono } from 'next/font/google';

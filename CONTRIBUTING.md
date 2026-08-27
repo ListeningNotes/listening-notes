@@ -37,8 +37,24 @@ thing on this page and by far the most expensive one to retrofit.
 ## The licence
 
 This project is [AGPL-3.0-or-later](LICENSE). Contributions come in under the
-same terms. Every source file carries an `SPDX-License-Identifier` line at the
-top; keep it there on files you add.
+same terms. Every source file opens with a copyright line and an
+`SPDX-License-Identifier` line — keep both, and keep them at the top.
+
+On a file you create, **put your own name on the copyright line**, not the
+existing one:
+
+```js
+// Copyright (C) 2026 Your Name
+// SPDX-License-Identifier: AGPL-3.0-or-later
+```
+
+That is not a formality. Signing off under the DCO certifies you have the right
+to submit your work under this licence; it does not hand your copyright to
+anybody, and it is not meant to. You keep it. The line should say so.
+
+For edits to a file someone else started, leave the existing line alone — git
+records who wrote what, and a header that grows a name per contributor stops
+being read by anyone.
 
 ## Changes to the database
 

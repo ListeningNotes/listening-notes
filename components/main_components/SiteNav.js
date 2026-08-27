@@ -1,3 +1,4 @@
+// Copyright (C) 2026 Miyel Brown
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // components/main_components/SiteNav.js
 // The sitewide nav row: logo (doubling as the live indicator) on the left,

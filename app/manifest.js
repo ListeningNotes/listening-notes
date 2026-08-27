@@ -1,3 +1,4 @@
+// Copyright (C) 2026 Miyel Brown
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // The web app manifest. Next serves this at /manifest.webmanifest and links it
 // from every page on its own — there is no <link> to add anywhere.
