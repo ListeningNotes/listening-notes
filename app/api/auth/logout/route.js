@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // app/api/auth/logout/route.js
 // Cuts the wristband off. The cookie is overwritten with an empty value
 // and maxAge=0, which tells the browser to delete it immediately.

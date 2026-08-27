@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 import database from './database_connection.js';
 
 // `own_ids` are comment ids the caller has proved they wrote, by sending back

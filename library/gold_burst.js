@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // The gold sparkle burst. Was duplicated verbatim in DotNav and TopNav; it now
 // lives here so marking a Masterpiece in a session fires the same effect the
 // rest of the site uses, rather than reading as a form checkbox.

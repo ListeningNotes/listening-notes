@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 import { upvote_comment } from '@/library/comment_actions';
 
 export async function POST(request) {

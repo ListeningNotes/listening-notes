@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // The dashboard screensavers are drawn at desktop proportions: a 250px album
 // card on a 1440px screen is a detail drifting behind the hub. The same 250px
 // on a 375px phone is two thirds of the width — it stops reading as a

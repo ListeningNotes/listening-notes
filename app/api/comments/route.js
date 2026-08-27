@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 import { nest_comments, save_comment } from '@/library/comment_actions';
 import { issue_receipt } from '@/library/wristband';
 

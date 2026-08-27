@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // app/dashboard/entries/page.js
 // Your private CMS — view, edit, and delete all entries in the database.
 // Password protected, same gate as the main session tool.

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 'use client';
 import { useEffect, useRef } from 'react';
 import { fonts } from '../../../library/sitewide_visuals';

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // app/api/auth/check/route.js
 // Peeks at the wristband. Used by writing pages on mount to ask "am I still
 // wearing a valid one?" before deciding whether to show the password gate.

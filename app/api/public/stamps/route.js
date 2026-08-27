@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // app/api/public/stamps/route.js
 // What the journal has collected, counted.
 //

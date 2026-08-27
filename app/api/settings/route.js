@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // The journal's own details.
 //
 // GET is public because everything in here is: the name on the cover, the

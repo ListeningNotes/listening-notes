@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 import { redirect } from 'next/navigation';
 import { pull_all_entries } from '@/library/database_actions';
 

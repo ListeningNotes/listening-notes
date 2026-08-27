@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // components/main_components/AlbumPreview.js
 // The metadata card shown on the back of an archive tile once it's flipped
 // (see FlipTile.js). The tile's own album art sits blurred behind it — this

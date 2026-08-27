@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // app/entries/[slug]/PostClient.js
 // The interactive UI for a single entry page.
 // This is a CLIENT component — it runs in the browser and handles all interactivity:

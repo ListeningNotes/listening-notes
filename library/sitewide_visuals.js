@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 export const colors_light = {
   background:     '#f5f3ee',
   background_warm:'#efebe2',

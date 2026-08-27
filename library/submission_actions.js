@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 import database from './database_connection.js';
 
 export async function save_submission({ album, artist, year, note, submitter_name, submitter_email }) {

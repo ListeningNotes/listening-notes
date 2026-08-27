@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // How much is waiting for you — the number on the cover's Messages line.
 //
 // Two things arrive without you asking: someone recommends an album through

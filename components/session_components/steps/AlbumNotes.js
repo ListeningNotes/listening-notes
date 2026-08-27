@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 'use client';
 import { fonts } from '../../../library/sitewide_visuals';
 import { tx, bdr, lbl } from '../../../library/session_styles';

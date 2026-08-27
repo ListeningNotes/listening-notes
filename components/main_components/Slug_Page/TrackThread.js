@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 'use client';
 import { Heart } from '@phosphor-icons/react';
 import { fonts } from '../../../library/sitewide_visuals';

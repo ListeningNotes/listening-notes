@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // components/EntryModal.js
 // The overlay modal that opens when you click an entry tile on the archive
 // page. Shows the full entry — art, metadata, background, notes, horizon bar.

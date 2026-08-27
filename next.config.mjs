@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Lets the dev server's hot-reload connection work when opened from a phone

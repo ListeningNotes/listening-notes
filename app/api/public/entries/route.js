@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // The public feed, in the form another journal reads.
 //
 // Every copy of Listening Notes serves this at the same path, which is what

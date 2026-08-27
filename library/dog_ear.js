@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // library/dog_ear.js
 // The fold a reader leaves in their own copy — how far into the archive they
 // had got the last time they were here. Everything posted past the fold is

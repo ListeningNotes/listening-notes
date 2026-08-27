@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: AGPL-3.0-or-later
 // library/wristband.js
 // Issues and verifies "wristbands" (signed JWTs) that let the user into
 // protected areas of the site. The wax seal is made from SESSION_SECRET —
