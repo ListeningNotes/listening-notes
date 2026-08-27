@@ -201,6 +201,19 @@ can't become a scroll.
 **`received_from` published per entry**, with a per-entry toggle for private
 sends. Public credit is the default; quiet is a choice.
 
+**Each copy brings its own Last.fm key, read server-side.** `LASTFM_KEY` in
+the environment, never `NEXT_PUBLIC_` — the key identifies the *application*,
+not the listener, so a hardcoded one means every copy shares a single rate
+limit and a busy journal throttles a stranger's. The browser talks to
+`/api/public/beacon` instead of to Last.fm. The listener's username stays in
+the settings table, because that is the owner's choice rather than a secret.
+
+**One beacon poll per page, shared, not one per component.** The hook is used
+by five components and four mount on the landing page together; a timer inside
+the hook meant a visitor sitting still made ~16 requests a minute. The timer
+lives in the module with components subscribed to it. The server caches the
+upstream answer for ten seconds, so readers cost one request, not one each.
+
 **No banner or message system pushed into copies.** That would require every
 copy to phone home, producing a log of who is running one. Updates surface by
 checking public GitHub releases instead.
