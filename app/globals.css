@@ -2647,17 +2647,21 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
    mistake rather than as a colophon. The head keeps its height and its tools:
    only the logo goes, and the row is pushed right so the owner's edit controls
    stay in the corner they have always been in. */
-/* Corner furniture, out of the flow. The head is the owner's edit controls and
-   nothing else now, and left as a row in the column it put 44px of air between
-   the crown and the portrait — which is 44px of drift against the album art on
-   the pane beside it. */
+/* The owner's controls, pinned to the window opposite the lights rather than
+   to the corner of the card. Two controls that belong to the page rather than
+   to anything on it, one at each end of the same line — and the pencil stops
+   travelling up the screen with the card as the pane scrolls.
+   Fixed, so it also stops taking a row in the card's column: left in the flow
+   it put 44px of air between the crown and the portrait, which is 44px of
+   drift against the album art on the pane beside it. */
 .ab-card .idc-head {
-  position: absolute;
-  top: 0;
-  right: 0;
+  position: fixed;
+  top: max(12px, calc(env(safe-area-inset-top) - 12px));
+  left: 16px;
+  right: auto;
   min-height: 0;
   margin: 0;
-  z-index: 2;
+  z-index: 97;
 }
 .ab-card .idc-mark { display: none; }
 /* The portrait's own margin becomes the shared offset, so the two squares
@@ -2745,6 +2749,18 @@ a.ab-rig-name:hover { text-decoration: underline; }
   text-transform: uppercase;
   color: var(--ink-faint);
 }
+/* Where else this person can be found, at the foot of the reading rather than
+   in the row beside "Send an album" — having read about somebody, you might
+   want to go and find them. Three at most; see LINK_LIMIT in About.js. */
+.ab-links { display: flex; gap: 18px; align-items: center; }
+.ab-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink-faint);
+  transition: color 0.18s ease;
+}
+.ab-link:hover { color: var(--ink); }
 .ab-doors { display: flex; gap: 8px; flex-wrap: wrap; }
 /* The smallest type on the site, at the foot of the pane nobody reaches by
    accident. AGPL §13, satisfied once, quietly. */

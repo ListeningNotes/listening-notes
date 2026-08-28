@@ -380,6 +380,13 @@ export async function buildPortraitCode(url, portraitSrc, position = '50% 50%') 
 // A blank row to type into. Never saved — see save().
 const BLANK = '';
 
+// Three at most, and the cap is the design rather than a guard. Somewhere to be
+// found is not somewhere to list every account anybody has ever opened: a row
+// of three marks reads at a glance and a row of nine reads as a footer. The
+// About pane slices to the same number, so a list already longer than this —
+// written before the cap — still prints three.
+export const LINK_LIMIT = 3;
+
 export function useIdentificationCardEditor(settings) {
   const router = useRouter();
   const [editing, setEditing] = useState(false);
@@ -463,7 +470,10 @@ export function useIdentificationCardEditor(settings) {
   const setLinkIcon = useCallback((index, icon) => {
     setLinks(rows => rows.map((row, i) => (i === index ? { ...row, icon } : row)));
   }, []);
-  const addLink = useCallback(() => setLinks(rows => [...rows, { url: BLANK, icon: 'auto' }]), []);
+  const addLink = useCallback(
+    () => setLinks(rows => (rows.length >= LINK_LIMIT ? rows : [...rows, { url: BLANK, icon: 'auto' }])),
+    [],
+  );
   const dropLink = useCallback(index => {
     setLinks(rows => (rows.length === 1 ? [{ url: BLANK, icon: 'auto' }] : rows.filter((_, i) => i !== index)));
   }, []);
@@ -619,7 +629,7 @@ export function useIdentificationCardEditor(settings) {
     posX, posY, setPosX, setPosY,
     position: `${posX}% ${posY}%`,
     portrait,
-    links, setLink, setLinkIcon, addLink, dropLink,
+    links, setLink, setLinkIcon, addLink, dropLink, atLinkLimit: links.length >= LINK_LIMIT,
     rig, setRig,
     gear, setGearField, addGear, dropGear,
     hidden, toggleHidden,

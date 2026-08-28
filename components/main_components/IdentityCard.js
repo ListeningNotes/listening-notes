@@ -256,14 +256,11 @@ export default function IdentityCard({ stamps, authed = false }) {
     keeper_name,
     portrait_url,
     portrait_position,
-    instagram_url,
     site_address,
     founded_at,
-    social_links,
     hidden_fields,
     send_me,
     rig_icon,
-    rig: rigRows,
     portrait_code_url,
   } = settings;
   const { isLive } = useListeningBeacon();
@@ -289,40 +286,12 @@ export default function IdentityCard({ stamps, authed = false }) {
   const since = monthAndYear(founded_at) || monthAndYear(stamps?.first_listen);
 
 
-  // instagram_url predates this list and is folded in rather than made to move.
-  // De-duplicated on the href, so an owner who has it in both places gets one.
-  const socials = useMemo(() => {
-    const stored = Array.isArray(social_links) ? social_links.map(readLink) : [];
-    const raw = instagram_url ? [{ url: instagram_url, icon: 'auto' }, ...stored] : stored;
-    const seen = new Set();
-    return raw
-      .filter(l => l.url.trim())
-      .map(l => identify(l.url, l.icon))
-      .filter(Boolean)
-      .filter(l => !seen.has(l.href) && seen.add(l.href));
-  }, [instagram_url, social_links]);
-
-  // The mark this journal listens through, or nothing if its keeper would
-  // rather not say. See RIG_ICONS.
-  const rig = rigIcon(rig_icon);
   // What the editor is currently showing, which is the draft rather than what
   // is saved — the row underneath has to change the moment a mark is pressed.
   const chosenRig = rigIcon(edit.rig);
-  // The setup itself. A sheet rather than a page: it is four short rows about
-  // the room you are already standing in, and sending somebody to another
-  // address to read four rows and then find their way back is a lot of
-  // ceremony for a list of equipment.
-  const rigList = (Array.isArray(rigRows) ? rigRows : []).filter(r => r?.name?.trim());
-  const [rigOpen, setRigOpen] = useState(false);
 
   // Escape closes it, because anything that covers the page has to have a way
   // out that is not hunting for the button that opened it.
-  useEffect(() => {
-    if (!rigOpen) return;
-    const onKey = event => { if (event.key === 'Escape') setRigOpen(false); };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [rigOpen]);
 
   const address = site_address ? site_address.replace(/^https?:\/\//, '') : null;
 
@@ -1018,130 +987,6 @@ export default function IdentityCard({ stamps, authed = false }) {
           letter-spacing: 0.11em; text-transform: uppercase;
         }
 
-        /* ── The rig sheet ───────────────────────────────────────────────── */
-        /* Fixed, not absolute. Absolute meant "the card", and the card is a
-           340px column in the middle of the screen — so the sheet came up
-           inside it with a strip of page showing either side, like a drawer
-           opening in the middle of a room. Fixed hands both of these to the
-           scene instead, which spans the pane, and they sit flush to its
-           edges. (The scene carries a perspective for the flip, which is what
-           makes it the containing block here rather than the viewport — and
-           also what lets these escape the card's own clipping.) */
-        /* --idc-gutter is the margin the pane holds the card off its edges by,
-           set by the phone layout and inherited down. Read with a fallback of
-           zero rather than declared here with one: declared, it would shadow
-           the value coming down from the pane and the sheet would go on
-           stopping short of the screen. */
-        .idc-scrim {
-          position: fixed;
-          top: 0;
-          bottom: calc(-1 * var(--idc-floor, 0px));
-          left: calc(-1 * var(--idc-gutter, 0px)); right: calc(-1 * var(--idc-gutter, 0px));
-          z-index: 3;
-          border: 0; padding: 0;
-          background: color-mix(in srgb, var(--bg) 70%, transparent);
-          backdrop-filter: blur(2px);
-          -webkit-backdrop-filter: blur(2px);
-          opacity: 0; pointer-events: none;
-          /* And taken out of the compositing entirely between uses. A
-             backdrop-filter left on an invisible element is a blur the browser
-             may still decide to do work for. */
-          visibility: hidden;
-          transition: opacity 0.32s ease, visibility 0s linear 0.32s;
-          cursor: pointer;
-        }
-        .idc-scrim--on {
-          opacity: 1; pointer-events: auto;
-          visibility: visible;
-          transition: opacity 0.32s ease, visibility 0s;
-        }
-
-        .idc-sheet {
-          position: fixed;
-          /* Down to the floor of the pane as well as out to its edges. The card
-             stops short of the bottom to leave room for the row of controls
-             underneath it, and a bottom sheet that stops where the card stops
-             is a sheet floating an inch above the bottom of the screen. */
-          bottom: calc(-1 * var(--idc-floor, 0px));
-          /* Out over the pane's gutter, so it meets the edges of the screen
-             rather than the edges of the card. Fixed is positioned against the
-             sheet that turns, which sits inside that gutter — so reaching flush
-             means reaching back out by exactly the amount the pane pulled in. */
-          left: calc(-1 * var(--idc-gutter, 0px)); right: calc(-1 * var(--idc-gutter, 0px));
-          z-index: 4;
-          display: flex; flex-direction: column; align-items: center;
-          /* The extra floor goes back on as padding, so the writing sits where
-             it did and only the stock underneath it reaches further down. */
-          padding: 12px 22px calc(26px + var(--idc-floor, 0px));
-          background: var(--bg);
-          border-top: 1px solid var(--idc-rule);
-          border-radius: 18px 18px 0 0;
-          transform: translateY(101%);
-          /* Nothing clips it now that it is fixed, so being off the bottom is
-             not enough on its own to keep it out of the way. */
-          visibility: hidden;
-          /* No shadow while it waits. Parked below the card it still cast one
-             upward, and the card clips to its own box — so the shadow was
-             inside the clip while the sheet was outside it, and the bottom
-             forty pixels of the card carried a grey band belonging to
-             something nobody could see. It arrives with the sheet instead. */
-          box-shadow: none;
-          transition:
-            transform 0.42s cubic-bezier(0.22, 0.61, 0.36, 1),
-            box-shadow 0.42s ease,
-            visibility 0s linear 0.42s;
-        }
-        .idc-sheet--up {
-          transform: none;
-          visibility: visible;
-          box-shadow: 0 -14px 40px rgba(0,0,0,0.14);
-          transition:
-            transform 0.42s cubic-bezier(0.22, 0.61, 0.36, 1),
-            box-shadow 0.42s ease,
-            visibility 0s;
-        }
-        @media (prefers-reduced-motion: reduce) {
-          .idc-sheet { transition: none; }
-          .idc-scrim { transition: none; }
-        }
-        /* The handle every sheet on a phone has. It does not drag — it says
-           which edge this came from, which is the part that matters. */
-        .idc-sheet-grip {
-          width: 34px; height: 4px; border-radius: 999px;
-          background: var(--idc-rule);
-          margin-bottom: 16px;
-        }
-        .idc-sheet-title {
-          font-family: var(--font-label);
-          font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase;
-          color: var(--ink-faint);
-          margin: 0 0 14px;
-        }
-        /* The sheet runs edge to edge; what is written on it keeps the
-           column's measure, so the rows line up with the card above them
-           rather than stretching across a wide screen. */
-        .idc-sheet-list { width: 100%; max-width: 300px; margin: 0; }
-        /* The tracklist rhythm the rest of the site reads in: what the thing is
-           on the left, what it does on the right, one hairline under each. */
-        .idc-sheet-row {
-          display: flex; align-items: baseline; justify-content: space-between;
-          gap: 14px;
-          padding: 11px 0;
-          border-bottom: 1px solid var(--idc-rule);
-        }
-        .idc-sheet-row:last-child { border-bottom: 0; }
-        .idc-sheet-name { font-size: 13px; color: var(--ink); }
-        .idc-sheet-role {
-          margin: 0; flex-shrink: 0;
-          font-family: var(--font-label);
-          font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase;
-          color: var(--ink-faint);
-        }
-        .idc-sheet-shut {
-          margin-top: 18px;
-          padding: 9px 20px; font-size: 9px; letter-spacing: 0.11em;
-        }
-
         .idc-trouble {
           font-family: var(--font-label); font-size: 9px; letter-spacing: 0.08em;
           color: var(--fav); margin: 10px 0 0;
@@ -1324,42 +1169,16 @@ export default function IdentityCard({ stamps, authed = false }) {
           </p>
         )}
 
-        {/* ── One row ──────────────────────────────────────────────────────
-            The thing to do, and every other door on the card as a mark beside
-            it. This was three stacked bands — the button, then a rule and the
-            rig, then the links — for four controls that between them are one
-            action and a handful of addresses. Stacked they read as three
-            sections; in a line they read as a row of buttons, which is what
-            they are, and the card gets a hundred pixels back.
-
-            The rig wears whichever mark its keeper chose, or none at all. */}
+        {/* ── The one thing to do ──────────────────────────────────────────
+            The rig's mark and the keeper's links used to stand in a row beside
+            this button. Both have somewhere better to be: the rig is a section
+            of the About pane a screen below, and the links sit at the foot of
+            that same reading, where somebody who has just read about a person
+            might want to go and find them. What is left here is the single
+            action the card is for, which is why it can have the row to
+            itself. */}
         <div className="idc-row" inert={editing ? true : undefined}>
           <Link href="/submit" className="ln-pill idc-send">Send an album</Link>
-          {rig.Icon && rigList.length > 0 && (
-            <button
-              type="button"
-              className="idc-mark-btn"
-              onClick={() => setRigOpen(true)}
-              aria-expanded={rigOpen}
-              aria-label={`The rig — ${rig.label.toLowerCase()}`}
-              title="The rig"
-            >
-              <rig.Icon size={19} weight="regular" aria-hidden="true" />
-            </button>
-          )}
-          {!editing && socials.map(({ href, label, Icon }) => (
-            <a
-              key={href}
-              href={href}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="idc-mark-btn"
-              aria-label={label}
-              title={label}
-            >
-              <Icon size={19} weight="regular" aria-hidden="true" />
-            </a>
-          ))}
         </div>
 
         {editing ? (
@@ -1468,10 +1287,15 @@ export default function IdentityCard({ stamps, authed = false }) {
               )}
             </div>
 
+            {/* Gone at the cap rather than disabled. A dead button is a
+                control you have to press to be told no; its absence is the
+                same answer without the press. */}
+            {!edit.atLinkLimit && (
             <button type="button" className="idc-link-add" onClick={edit.addLink}>
               <Plus size={11} weight="bold" aria-hidden="true" />
               Add a link
             </button>
+            )}
 
             {/* What is in the sheet. Nothing about why it matters — that is
                 what the journal is for — just what each thing is and what it
@@ -1518,43 +1342,10 @@ export default function IdentityCard({ stamps, authed = false }) {
         {edit.trouble && <p className="idc-trouble">{edit.trouble}</p>}
       </div>
 
-      {/* ── The rig ──────────────────────────────────────────────────────────
-          Comes up from the bottom over the card rather than replacing it. It
-          used to be a page, and a page meant leaving the card, reading four
-          rows and finding your way back — plus several hundred words about why
-          any of it matters, which is one person's essay shipped inside
-          everybody's software. What survives is what each thing is and what it
-          does. */}
-      {rigList.length > 0 && (
-        <>
-          <button
-            type="button"
-            className={'idc-scrim' + (rigOpen ? ' idc-scrim--on' : '')}
-            onClick={() => setRigOpen(false)}
-            tabIndex={rigOpen ? 0 : -1}
-            aria-label="Close the rig"
-          />
-          <section
-            className={'idc-sheet' + (rigOpen ? ' idc-sheet--up' : '')}
-            aria-label="Listening rig"
-            inert={rigOpen ? undefined : true}
-          >
-            <span className="idc-sheet-grip" aria-hidden="true" />
-            <h2 className="idc-sheet-title">Listening rig</h2>
-            <dl className="idc-sheet-list">
-              {rigList.map((item, index) => (
-                <div className="idc-sheet-row" key={`${item.name}-${index}`}>
-                  <dt className="idc-sheet-name">{item.name}</dt>
-                  <dd className="idc-sheet-role">{item.role}</dd>
-                </div>
-              ))}
-            </dl>
-            <button type="button" className="ln-pill idc-sheet-shut" onClick={() => setRigOpen(false)}>
-              Close
-            </button>
-          </section>
-        </>
-      )}
+      {/* The rig used to come up from the bottom over this card, and does not
+          any more: it is a section of the About pane a screen below, under its
+          own heading, in the reading. A drawer over a card is what you build
+          when the only surface you have is the card. */}
     </section>
   );
 }
