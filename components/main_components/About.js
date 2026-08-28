@@ -28,9 +28,15 @@
 
 'use client';
 import Link from 'next/link';
+import { useMemo } from 'react';
 import { ArrowSquareOut } from '@phosphor-icons/react';
-import IdentityCard, { rigIcon } from './IdentityCard';
+import IdentityCard, { identify, readLink, rigIcon } from './IdentityCard';
 import { useBookplate } from './Bookplate';
+
+// Three, and the cap is the point. Somewhere to be found is not somewhere to
+// list every account anybody has ever opened — a row of three marks reads at a
+// glance and a row of nine reads as a footer.
+const LINK_LIMIT = 3;
 
 // Where this copy's source lives. AGPL §13 is satisfied by offering the source
 // of *the running program*, which for a modified copy is that copy's own
@@ -65,7 +71,7 @@ function blocks(text) {
 }
 
 export default function About({ stamps, authed = false, note = '' }) {
-  const { about_intro, rig: rigRows, rig_icon } = useBookplate();
+  const { about_intro, rig: rigRows, rig_icon, social_links, instagram_url } = useBookplate();
 
   // The lede and the essay, in that order and set identically — this is one
   // piece of writing that happens to live in two columns, and a reader should
@@ -82,6 +88,25 @@ export default function About({ stamps, authed = false, note = '' }) {
   const rigList = (Array.isArray(rigRows) ? rigRows : []).filter(r => r?.name?.trim());
   const rig = rigIcon(rig_icon);
   const RigMark = rig?.Icon;
+
+  // Where else this person can be found. They used to be marks in the row
+  // beside "Send an album" on the card, which put "here is somebody's Instagram"
+  // next to the one thing the card is actually for. At the foot of the reading
+  // they answer the question the reading has just raised: having read about
+  // somebody, you might want to go and find them.
+  //
+  // instagram_url predates the list and is folded in rather than made to move,
+  // de-duplicated on the href so an owner who has it in both places gets one.
+  const socials = useMemo(() => {
+    const stored = Array.isArray(social_links) ? social_links.map(readLink) : [];
+    const raw = instagram_url ? [{ url: instagram_url, icon: 'auto' }, ...stored] : stored;
+    const seen = new Set();
+    return raw
+      .filter(l => l.url?.trim())
+      .map(l => identify(l.url.trim(), l.icon))
+      .filter(l => l && !seen.has(l.href) && seen.add(l.href))
+      .slice(0, LINK_LIMIT);
+  }, [social_links, instagram_url]);
 
   // One door out of this pane. The note used to be the other, and is not any
   // more — it is the pane. What is left is the key, which stays a route
@@ -153,6 +178,24 @@ export default function About({ stamps, authed = false, note = '' }) {
               ))}
             </div>
           </section>
+        )}
+
+        {socials.length > 0 && (
+          <div className="ab-links">
+            {socials.map(({ href, label, Icon }) => (
+              <a
+                key={href}
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="ab-link"
+                aria-label={label}
+                title={label}
+              >
+                <Icon size={20} weight="regular" aria-hidden="true" />
+              </a>
+            ))}
+          </div>
         )}
 
         {doors}
