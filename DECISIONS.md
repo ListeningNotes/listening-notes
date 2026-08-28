@@ -141,11 +141,24 @@ draft, the value is somebody's writing, and a column dropped to tidy up is the
 exact move DECISIONS already warns about. Revisit it at the welcome screen,
 where it is either given a job or given up.
 
-**The long note is the About pane, not a page behind it.** `why_essay` prints
-under the card rather than sitting at `/why` behind a pill. An about page whose
-about is four lines and a button to read the about is a summary of itself. It
-still comes off the settings row, so a fresh copy has no note and the pane is
-exactly the card.
+**The long note is at `/get`, and `/why` is retired.** Reversed the same day it
+was decided, and the reason is worth keeping: the essay was first pulled onto
+the About pane, on the argument that an about page whose about is four lines
+and a button to read the about is a summary of itself. That is still true — but
+the essay was answering a different question than the pane asks. "Why does
+somebody keep a listening journal" is the answer to *how did you get this*, and
+that question is asked at `/get`, which is where every copy's pitch pane sends
+people. So the pane carries a short paragraph and the essay is the top of the
+page a stranger lands on.
+
+**`/get` is not linked from the About pane.** It does not exist on a copy that
+has not written one, so a pill pointing at the path would be a dead link on
+everybody else's journal. The pitch pane is where that address is reached, and
+it reaches the canonical instance by its full address rather than by a path.
+
+**`/get` owes a stranger two things and currently gives one.** The essay is the
+why; what the software is, that it is free, and how to install a copy is not
+written yet. Recorded as a known hole rather than discovered as one.
 
 **No mark in the corner.** The crown at the head of every pane is the mark; a
 small one in the bar is a second one whether or not the two are ever on screen
@@ -186,9 +199,9 @@ in the one place a curious person looks.
 Decorative Unicode gets mangled in PWA labels, RSS readers, and link previews.
 One name for machines, one for looks.
 
-**`/get`, `/why`, `/specs` don't ship.** Drawer rule: blank on a fresh copy
-means the page and its link don't render. These are Miyel's pages on Miyel's
-copy.
+**`/get` and `/specs` don't ship.** Drawer rule: blank on a fresh copy means
+the page and its link don't render. These are Miyel's pages on Miyel's copy.
+(`/why` was the third of these and is now a forwarding address to `/get`.)
 
 **The pitch pane ships on every copy.** Logged out, right swipe: three
 sentences and a button to listeningnotes.blog/get. This is the growth

@@ -14,17 +14,18 @@
 // you had to choose which of the two the page was for. Down the pane, the
 // glance comes first and the sit-down is there for whoever wants it.
 //
-// The writing under the card is the whole of it, not a preview with a link to
-// the rest. The long note used to be its own page behind a pill, which made
-// the about page a summary of an about page — you read four lines and then
-// pressed something to read the writing. Both columns print here now, the lede
-// first, set identically, and a reader cannot tell where one ends.
+// The writing here is the short version. The long essay lived on this pane for
+// a while and has gone to /get, which is the address every copy's pitch pane
+// points at — the story of why somebody started keeping a listening journal is
+// the answer to "how did you get this", and it was doing that job from the
+// wrong page. What is left is a paragraph: who this is, in the space where a
+// reader is still deciding whether to keep reading.
 //
 // Nothing here is in this file. Every word comes off the settings row, so a
-// journal installed this morning has no paragraph, no note and no rig, and the
-// pane is exactly the card and nothing else — and because HomeNav decides
-// whether to draw a down caret by measuring the pane rather than by being
-// told, that copy also gets no arrow pointing at nothing.
+// journal installed this morning has no paragraph and no rig, and the pane is
+// exactly the card and nothing else — and because HomeNav decides whether to
+// draw a down caret by measuring the pane rather than by being told, that copy
+// also gets no arrow pointing at nothing.
 
 'use client';
 import Link from 'next/link';
@@ -53,10 +54,9 @@ const SOURCE_URL =
 
 // The one convention the stored prose uses, and no more: a blank line
 // separates blocks, and a line starting with "## " is a heading. Enough
-// structure for an essay, little enough that the owner is editing prose in a
-// box rather than markup. The same parser /why has used since it was written —
-// the writing moved, so the reading of it has to move identically or the same
-// text renders two different ways on two pages.
+// structure for prose, little enough that the owner is editing writing in a
+// box rather than markup. The same parser /get uses, so a paragraph reads the
+// same wherever it is printed.
 //
 // A single newline inside a block is somebody's line wrap and not a new
 // thought, so it is left alone.
@@ -70,19 +70,13 @@ function blocks(text) {
       : { type: 'paragraph', text: block });
 }
 
-export default function About({ stamps, authed = false, note = '' }) {
+export default function About({ stamps, authed = false }) {
   const { about_intro, rig: rigRows, rig_icon, social_links, instagram_url } = useBookplate();
 
-  // The lede and the essay, in that order and set identically — this is one
-  // piece of writing that happens to live in two columns, and a reader should
-  // not be able to tell where one ends and the other begins.
-  //
-  // has_note is not consulted any more. It existed to decide whether to draw a
-  // link to a page that might not exist; the writing is on this pane now, and
-  // an empty column simply renders no blocks. A fresh copy has neither, so the
-  // pane is exactly the card — which is also what stops HomeNav drawing a down
-  // caret at it.
-  const prose = [...blocks(about_intro), ...blocks(note)];
+  // One column, not two. why_essay used to be concatenated on after this and
+  // is at /get now. Blank renders nothing, which is what keeps a fresh copy's
+  // pane down to the card alone.
+  const prose = blocks(about_intro);
   // Same filter the card applies, for the same reason: a row with no name is a
   // row somebody started and abandoned in the editor, and it should not print.
   const rigList = (Array.isArray(rigRows) ? rigRows : []).filter(r => r?.name?.trim());
@@ -108,11 +102,15 @@ export default function About({ stamps, authed = false, note = '' }) {
       .slice(0, LINK_LIMIT);
   }, [social_links, instagram_url]);
 
-  // One door out of this pane. The note used to be the other, and is not any
-  // more — it is the pane. What is left is the key, which stays a route
-  // because it is arrived at from elsewhere: it is the legend for every mark
-  // in the journal, and a reader looking up what a diamond means has come from
-  // an entry, not from here.
+  // One door out of this pane, and deliberately not two. The essay at /get is
+  // not linked from here: /get does not exist on a copy that has not written
+  // one, so a pill pointing at it would be a dead link on everybody else's
+  // journal. The pitch pane is where that address is reached, and it reaches
+  // the canonical one by its full address rather than by a path.
+  //
+  // The key stays a route because it is arrived at from elsewhere: it is the
+  // legend for every mark in the journal, and a reader looking up what a
+  // diamond means has come from an entry, not from here.
   const doors = (
     <div className="ab-doors">
       <Link href="/key" className="ln-pill">The key</Link>

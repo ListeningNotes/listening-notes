@@ -165,11 +165,16 @@ export default async function RootLayout({ children }) {
   // makes the leak impossible rather than a thing to remember.
   //
   // Bulk text belongs to whoever renders it. /key fetches the definitions,
-  // /why reads the essay on the server, and this carries the short facts.
+  // /get reads the essay on the server, and this carries the short facts.
   const settings = Object.fromEntries(
     BOOKPLATE_FIELDS.filter(key => key in all).map(key => [key, all[key]])
   );
-  settings.has_note = Boolean(all.why_essay && all.why_essay.trim());
+  // has_note used to ride along here — a boolean saying an essay existed, so
+  // the about page could decide whether to draw a link to it without carrying
+  // 3.5KB of prose into every page on the site. Nothing links to the essay any
+  // more: it is at /get, which every copy's pitch pane reaches by its full
+  // address rather than by a path. Derived rather than stored, so it costs
+  // nothing to bring back if something wants to ask again.
   // The name, resolved once on the server and carried down rather than worked
   // out again in each component that prints it. coverName lives beside the
   // database read, and a client component that imported it would drag the

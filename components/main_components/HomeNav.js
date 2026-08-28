@@ -83,7 +83,7 @@ function ease() {
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
 }
 
-export default function HomeNav({ note = '' }) {
+export default function HomeNav() {
   const { cover_name } = useBookplate();
   const { theme, toggle: toggleTheme } = useTheme();
   const { isLive, recentAlbums } = useListeningBeacon();
@@ -402,7 +402,7 @@ export default function HomeNav({ note = '' }) {
       <div className="hn-rail" ref={railRef}>
         <section className="hn-pane" ref={paneRefs[0]} aria-label="About this journal">
           {crown}
-          <About stamps={stamps} authed={authed} note={note} />
+          <About stamps={stamps} authed={authed} />
         </section>
 
         <section className="hn-pane hn-pane--home" ref={paneRefs[1]} aria-label="Now listening">
