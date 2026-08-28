@@ -388,7 +388,6 @@ export function useIdentificationCardEditor(settings) {
   const [trouble, setTrouble] = useState(null);
 
   const [name, setName] = useState('');
-  const [bio, setBio] = useState('');
   const [sendMe, setSendMe] = useState('');
   // Where in the picture to look, as two percentages. Held apart rather than
   // as the CSS string so the drag can do arithmetic on it without parsing.
@@ -419,14 +418,6 @@ export function useIdentificationCardEditor(settings) {
     // would show a name the visitor cannot see, and saving would change a
     // name that is not the one on screen.
     setName(settings.display_name || settings.keeper_name || '');
-    // bio, and only bio. This used to fall back to about_intro to match a card
-    // that fell back the same way — and to migrate the one column into the
-    // other on first save, on the reasoning that the card was the last thing
-    // reading it. Both stopped being true: about_intro is the lede of the
-    // about pane, printed under this card rather than on it, and seeding from
-    // it here would pull a paragraph the card does not show into the field the
-    // card does, and then save two copies of it.
-    setBio(settings.bio || '');
     setSendMe(settings.send_me || '');
     const [x, y] = String(settings.portrait_position || '50% 50%').split(/\s+/);
     setPosX(Number.parseFloat(x) || 50);
@@ -593,7 +584,6 @@ export function useIdentificationCardEditor(settings) {
           ...(settings.display_name
             ? { display_name: name.trim() }
             : { keeper_name: name.trim() }),
-          bio: bio.trim(),
           send_me: sendMe.trim(),
           portrait_position: portrait.trim() ? `${posX.toFixed(1)}% ${posY.toFixed(1)}%` : '',
           portrait_url: portrait.trim(),
@@ -620,12 +610,11 @@ export function useIdentificationCardEditor(settings) {
       setTrouble(error.message);
     }
     setSaving(false);
-  }, [name, bio, sendMe, posX, posY, portrait, links, hidden, rig, gear, settings, router]);
+  }, [name, sendMe, posX, posY, portrait, links, hidden, rig, gear, settings, router]);
 
   return {
     editing, begin, cancel, save, saving, busy, trouble,
     name, setName,
-    bio, setBio,
     sendMe, setSendMe,
     posX, posY, setPosX, setPosY,
     position: `${posX}% ${posY}%`,

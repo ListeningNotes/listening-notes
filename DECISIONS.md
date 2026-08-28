@@ -123,6 +123,24 @@ each other, which was right while the card was the whole about page and wrong
 the moment there was somewhere longer to write — a card that borrowed the long
 paragraph would print a page of prose on a card.
 
+**The card is a glance; the reading is below it.** No prose on the card at all
+— a face, a name, four facts and the ways to reach somebody. The bio came off
+because it was a paragraph about the keeper printed two hundred pixels above a
+longer, better paragraph about the keeper: with the about writing running
+directly under the card, the card was introducing what the next screen was
+about to say, in the same person's words, twice.
+
+**The four facts are one table.** Albums logged, logging since, top genres,
+looking for — same label-and-answer shape for all four. The first two used to
+be a small centred sentence set differently from the second two, which made
+four facts about one person read as two kinds of thing.
+
+**`settings.bio` keeps its data and loses its reader.** Nothing renders it and
+the card editor no longer writes it. The column stays: the schema is still a
+draft, the value is somebody's writing, and a column dropped to tidy up is the
+exact move DECISIONS already warns about. Revisit it at the welcome screen,
+where it is either given a job or given up.
+
 **The long note is the About pane, not a page behind it.** `why_essay` prints
 under the card rather than sitting at `/why` behind a pill. An about page whose
 about is four lines and a button to read the about is a summary of itself. It

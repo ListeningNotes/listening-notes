@@ -254,7 +254,6 @@ export default function IdentityCard({ stamps, authed = false }) {
   const {
     cover_name,
     keeper_name,
-    bio,
     portrait_url,
     portrait_position,
     instagram_url,
@@ -289,13 +288,6 @@ export default function IdentityCard({ stamps, authed = false }) {
   // starts when someone writes in it, not when the database row was created.
   const since = monthAndYear(founded_at) || monthAndYear(stamps?.first_listen);
 
-  // The keeper's own line, and only that. It used to fall back to about_intro,
-  // which was right while the card was the whole about page and wrong the
-  // moment there was somewhere longer to write: about_intro prints on the pane
-  // directly below this card now, and a card that borrowed it would print the
-  // same paragraph twice — or, once somebody writes a proper page of it, print
-  // a page of prose on a card.
-  const blurb = bio;
 
   // instagram_url predates this list and is folded in rather than made to move.
   // De-duplicated on the href, so an owner who has it in both places gets one.
@@ -383,19 +375,6 @@ export default function IdentityCard({ stamps, authed = false }) {
   function frameEnd() {
     dragFrom.current = null;
   }
-
-  // A textarea that grows instead of scrolling. It has to run on mount as well
-  // as on every keystroke, or a bio already three lines long opens showing one.
-  const grow = event => {
-    const el = event.currentTarget;
-    el.style.height = 'auto';
-    el.style.height = `${el.scrollHeight}px`;
-  };
-  const growOnMount = el => {
-    if (!el) return;
-    el.style.height = 'auto';
-    el.style.height = `${el.scrollHeight}px`;
-  };
 
   // ── The slot ────────────────────────────────────────────────────────────
   // Built here rather than inline, because inline it was an immediately-called
@@ -565,9 +544,9 @@ export default function IdentityCard({ stamps, authed = false }) {
       el.removeEventListener('scroll', check);
       observer.disconnect();
     };
-    // stamps and the bio arrive after the first paint and both change how tall
-    // the column is, so the measurement has to be taken again when they land.
-  }, [stamps, blurb, editing]);
+    // The counted rows arrive after the first paint and change how tall the
+    // column is, so the measurement has to be taken again when they land.
+  }, [stamps, records, since, editing]);
 
   return (
     <section className="idc" aria-label="About this journal">
@@ -703,16 +682,6 @@ export default function IdentityCard({ stamps, authed = false }) {
         .idc-name-input:focus { outline: none; }
         .idc-name-input::placeholder { color: var(--ink-faint); }
 
-        /* ── The counted line ── how many, and how long, on one line under the
-           name. Two facts that are only interesting next to each other, so
-           they are set as a sentence rather than as two rows of a form. */
-        .idc-meta {
-          font-size: 12px; line-height: 1.5; color: var(--ink-faint);
-          margin: 7px 0 0;
-          display: flex; align-items: center; justify-content: center;
-          gap: 7px; flex-wrap: wrap;
-        }
-        .idc-meta-part { display: inline-flex; align-items: center; gap: 3px; }
         .idc-off { opacity: 0.45; text-decoration: line-through; }
         .idc-eye {
           display: inline-flex; align-items: center; justify-content: center;
@@ -867,23 +836,6 @@ export default function IdentityCard({ stamps, authed = false }) {
           padding: 3px 8px;
           pointer-events: none;
         }
-
-        /* ── The writing ── ranged left inside a centred block. Everything else
-           on the card is a phrase and centres happily; this is the one run of
-           real prose, and centred prose is a ragged left edge to read down. */
-        .idc-bio {
-          font-size: 13px; line-height: 1.7; color: var(--ink-soft);
-          /* Stated on the element the field inherits from, so the two agree. */
-          margin: 20px auto 0; max-width: 300px; text-align: left;
-        }
-        .idc-bio-input {
-          display: block; width: 100%;
-          border: 0; padding: 0; background: transparent;
-          resize: none; overflow: hidden;
-          font: inherit; letter-spacing: inherit; color: var(--ink-soft);
-        }
-        .idc-bio-input:focus { outline: none; }
-        .idc-bio-input::placeholder { color: var(--ink-faint); }
 
         /* ── The two lines above the button ──────────────────────────────
            What the journal actually listens to, counted and never chosen, and
@@ -1201,28 +1153,20 @@ export default function IdentityCard({ stamps, authed = false }) {
            edit instead, so this card can keep its own type. See holdZoom in
            IdentificationCardEditor.js. */
         @media (max-width: 768px) {
-          /* inherit works for the name and the ask, whose fields sit inside the
-             element that carries the size. It does not for the bio: there the
-             textarea *is* the .idc-bio element, so inherit reaches past it to
-             the column and picks up whatever that is — 24px, as it turned out.
-             Stated outright, all four. */
+          /* inherit works for these, whose fields sit inside the element that
+             carries the size. Stated outright anyway, because the one field
+             where inherit did not work — the bio's textarea, which *was* the
+             element carrying the size — is the reason this block exists. */
           .idc-name-input { font-size: 36px !important; }
-          .idc-bio-input  { font-size: 13px !important; }
           .idc-ask-input  { font-size: 13px !important; }
           .idc-link-input { font-size: 12px !important; }
         }
         @media (max-width: 480px) {
           .idc-name-input { font-size: 31px !important; }
-          .idc-bio-input  { font-size: 12.5px !important; }
         }
 
         @media (max-width: 480px) {
           .idc-name { font-size: 31px; }
-          /* The box does not shrink on a phone, because the beacon's does not.
-             They are the same square seen from either side of the cover, and a
-             square that changes size when you turn the card over is two
-             squares. */
-          .idc-bio { margin-top: 17px; font-size: 12.5px; }
         }
       `}</style>
 
@@ -1316,40 +1260,37 @@ export default function IdentityCard({ stamps, authed = false }) {
           </h1>
         )}
 
-        {(showAlbums || showSince) && (
-          <p className="idc-meta">
-            {showAlbums && (
-              <span className={'idc-meta-part' + off('albums')}>
-                {records} albums logged
-                {eyeFor('albums')}
-              </span>
-            )}
-            {showAlbums && showSince && <span aria-hidden="true">·</span>}
-            {showSince && (
-              <span className={'idc-meta-part' + off('since')}>
-                Logging since {since}
-                {eyeFor('since')}
-              </span>
-            )}
+        {/* The four facts, in one table. These two used to be a single small
+            centred line under the name — "39 albums logged · Logging since
+            March 2026" — set differently from the genres and the ask
+            underneath them, which made four facts about one person read as two
+            kinds of thing. They are the same kind of thing: a label and an
+            answer. Now they are laid out like it, and the card is a glance at
+            somebody before the reading starts below it. */}
+        {showAlbums && (
+          <p className={'idc-line' + off('albums')}>
+            <span className="idc-line-label">Albums logged</span>
+            <span className="idc-line-value">{records}</span>
+            {eyeFor('albums')}
+          </p>
+        )}
+
+        {showSince && (
+          <p className={'idc-line' + off('since')}>
+            <span className="idc-line-label">Logging since</span>
+            <span className="idc-line-value">{since}</span>
+            {eyeFor('since')}
           </p>
         )}
 
 
-        {/* Same measure, same size, same leading, same colour. A textarea set
-            in the paragraph's own type is the paragraph, with a caret in it. */}
-        {editing ? (
-          <textarea
-            className="idc-bio idc-bio-input"
-            value={edit.bio}
-            onChange={e => edit.setBio(e.target.value)}
-            onInput={grow}
-            ref={growOnMount}
-            placeholder="A line or two about whoever keeps this."
-            aria-label="Bio"
-          />
-        ) : blurb ? (
-          <p className="idc-bio">{blurb}</p>
-        ) : null}
+        {/* The bio used to sit here and does not any more. It was a paragraph
+            about the keeper printed two hundred pixels above a longer, better
+            paragraph about the keeper — the about writing runs directly under
+            this card now, so the card was introducing what the next screen was
+            about to say, in the keeper's own words, twice.
+            What is left is a glance: a face, a name, four facts and the ways
+            to reach them. The reading is below. */}
 
         {/* Labelled, and shaped like the ask directly under it. Unlabelled it
             was three words floating between the bio and the request with
