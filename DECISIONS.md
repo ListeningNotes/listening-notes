@@ -201,7 +201,17 @@ One name for machines, one for looks.
 
 **`/get` and `/specs` don't ship.** Drawer rule: blank on a fresh copy means
 the page and its link don't render. These are Miyel's pages on Miyel's copy.
-(`/why` was the third of these and is now a forwarding address to `/get`.)
+(`/why` was the third of these; it is deleted, not forwarded — see below.)
+
+**A retired route only earns a forwarding stub if somebody has the URL.**
+`/why` was deleted outright rather than redirected to `/get`. It had lived for
+three days, behind a pill on a card, on a site nobody else has a copy of — so
+the bookmarks it was protecting do not exist. And a stub is not free: it is a
+route that ships to every install, whose whole job is to redirect from an
+address that never existed on their journal.
+`/about` and `/rig` are still stubs and were right to be — `/about` was in the
+dot row on every page for months. `/rig` is the borderline one and should be
+asked the same question.
 
 **The pitch pane ships on every copy.** Logged out, right swipe: three
 sentences and a button to listeningnotes.blog/get. This is the growth

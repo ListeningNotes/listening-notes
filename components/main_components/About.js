@@ -30,7 +30,7 @@
 'use client';
 import Link from 'next/link';
 import { useMemo } from 'react';
-import { ArrowSquareOut } from '@phosphor-icons/react';
+import { ArrowSquareOut, LinkSimple } from '@phosphor-icons/react';
 import IdentityCard, { identify, readLink, rigIcon } from './IdentityCard';
 import { useBookplate } from './Bookplate';
 
@@ -123,13 +123,13 @@ export default function About({ stamps, authed = false }) {
         <IdentityCard stamps={stamps} authed={authed} />
       </div>
 
-      {/* A snap point, but a soft one. The top of this block is where the card
-          ends and the reading starts, and that boundary is worth settling
-          onto — it is the thing the old two-screen cover did that made it feel
-          like pages rather than one long column. Soft because the writing
-          below it is prose: proximity snapping (see .hn-pane in globals.css)
-          catches you at the boundary and then leaves you alone, where
-          mandatory would drag you back to it mid-paragraph. */}
+      {/* Where the card ends and the reading starts. This boundary was a snap
+          point for a day — proximity snapping, to catch a reader settling onto
+          it — and it came out because what it actually did was argue with the
+          thumb, pulling back toward a line somebody had deliberately gone
+          past. The entrance to a pane's lower half wants designing properly;
+          until it is, this is just where one thing stops and the next
+          begins. */}
       <div className="ab-below">
         {prose.length > 0 && (
           <section className="ab-block">
@@ -179,21 +179,32 @@ export default function About({ stamps, authed = false }) {
         )}
 
         {socials.length > 0 && (
-          <div className="ab-links">
-            {socials.map(({ href, label, Icon }) => (
-              <a
-                key={href}
-                href={href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="ab-link"
-                aria-label={label}
-                title={label}
-              >
-                <Icon size={20} weight="regular" aria-hidden="true" />
-              </a>
-            ))}
-          </div>
+          <section className="ab-block">
+            {/* Headed like the rig above it, because it is the same kind of
+                thing: a short list of facts about somebody, at the end of the
+                writing about them. Unheaded it was a row of marks floating
+                between the rig and the pills with nothing saying what they
+                were. */}
+            <h2 className="ab-subhead">
+              <LinkSimple size={15} weight="regular" aria-hidden="true" />
+              Elsewhere
+            </h2>
+            <div className="ab-links">
+              {socials.map(({ href, label, Icon }) => (
+                <a
+                  key={href}
+                  href={href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="ab-link"
+                  aria-label={label}
+                  title={label}
+                >
+                  <Icon size={20} weight="regular" aria-hidden="true" />
+                </a>
+              ))}
+            </div>
+          </section>
         )}
 
         {doors}
