@@ -24,6 +24,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { BIO_LIMIT, readBioAnswers } from '../../library/bioprompt';
 
 // The counted rows: hideable, never writable. A journal that can be told how
 // many records it has is a journal whose numbers mean nothing.
@@ -387,6 +388,11 @@ const BLANK = '';
 // written before the cap — still prints three.
 export const LINK_LIMIT = 3;
 
+// Three empty openings, unchosen and unanswered.
+function blankBio() {
+  return Array.from({ length: BIO_LIMIT }, () => ({ key: '', answer: '' }));
+}
+
 export function useIdentificationCardEditor(settings) {
   const router = useRouter();
   const [editing, setEditing] = useState(false);
@@ -395,7 +401,6 @@ export function useIdentificationCardEditor(settings) {
   const [trouble, setTrouble] = useState(null);
 
   const [name, setName] = useState('');
-  const [sendMe, setSendMe] = useState('');
   // Where in the picture to look, as two percentages. Held apart rather than
   // as the CSS string so the drag can do arithmetic on it without parsing.
   const [posX, setPosX] = useState(50);
@@ -404,6 +409,10 @@ export function useIdentificationCardEditor(settings) {
   // Each link is an address and the mark it wears. The mark is usually 'auto',
   // which means the hostname decides — see identify() in IdentityCard.
   const [links, setLinks] = useState([{ url: BLANK, icon: 'auto' }]);
+  // Three slots, always three, whether or not they are filled. A list that
+  // grows as you answer makes "how many am I supposed to write" a question the
+  // interface asks instead of answers; three empty lines say it outright.
+  const [bio, setBio] = useState(() => blankBio());
   const [rig, setRig] = useState('');
   // The setup, as rows. Blank rows are kept while typing and dropped on save,
   // the same as the links.
@@ -425,7 +434,6 @@ export function useIdentificationCardEditor(settings) {
     // would show a name the visitor cannot see, and saving would change a
     // name that is not the one on screen.
     setName(settings.display_name || settings.keeper_name || '');
-    setSendMe(settings.send_me || '');
     const [x, y] = String(settings.portrait_position || '50% 50%').split(/\s+/);
     setPosX(Number.parseFloat(x) || 50);
     setPosY(Number.parseFloat(y) || 50);
@@ -442,6 +450,11 @@ export function useIdentificationCardEditor(settings) {
     const seen = new Set();
     const unique = all.filter(l => !seen.has(l.url) && seen.add(l.url));
     setLinks(unique.length ? unique : [{ url: BLANK, icon: 'auto' }]);
+    // Whatever is stored, padded back out to three. A keeper who answered one
+    // opening and comes back to add another should find two empty lines
+    // waiting rather than a button to make one.
+    const answered = readBioAnswers(settings.bioanswers).map(row => ({ key: row.key, answer: row.answer }));
+    setBio([...answered, ...blankBio()].slice(0, BIO_LIMIT));
     setRig(settings.rig_icon || '');
     const rows = Array.isArray(settings.rig) ? settings.rig : [];
     setGear(rows.length
@@ -470,6 +483,21 @@ export function useIdentificationCardEditor(settings) {
   const setLinkIcon = useCallback((index, icon) => {
     setLinks(rows => rows.map((row, i) => (i === index ? { ...row, icon } : row)));
   }, []);
+  // One opening cannot be chosen twice, so picking one that is already in
+  // another slot swaps the two rather than refusing. Refusing would mean
+  // clearing the other slot first to make a move the keeper has already
+  // described.
+  const setBioKey = useCallback((index, key) => {
+    setBio(rows => rows.map((row, i) => {
+      if (i === index) return { ...row, key };
+      if (key && row.key === key) return { ...row, key: rows[index].key };
+      return row;
+    }));
+  }, []);
+  const setBioAnswer = useCallback((index, answer) => {
+    setBio(rows => rows.map((row, i) => (i === index ? { ...row, answer } : row)));
+  }, []);
+
   const addLink = useCallback(
     () => setLinks(rows => (rows.length >= LINK_LIMIT ? rows : [...rows, { url: BLANK, icon: 'auto' }])),
     [],
@@ -576,6 +604,9 @@ export function useIdentificationCardEditor(settings) {
     const gearClean = gear
       .map(g => ({ name: g.name.trim(), role: g.role.trim() }))
       .filter(g => g.name);
+    const bioClean = bio
+      .map(row => ({ key: row.key, answer: (row.answer || '').trim() }))
+      .filter(row => row.key && row.answer);
     try {
       const res = await fetch('/api/settings', {
         method: 'PATCH',
@@ -594,12 +625,15 @@ export function useIdentificationCardEditor(settings) {
           ...(settings.display_name
             ? { display_name: name.trim() }
             : { keeper_name: name.trim() }),
-          send_me: sendMe.trim(),
           portrait_position: portrait.trim() ? `${posX.toFixed(1)}% ${posY.toFixed(1)}%` : '',
           portrait_url: portrait.trim(),
           social_links: cleaned.length ? cleaned : null,
           rig_icon: rig,
           rig: gearClean.length ? gearClean : null,
+          // Only slots that got both halves. An opening chosen and left
+          // unanswered is a slot somebody opened and thought better of, and it
+          // would print as a question with nothing after the dash.
+          bioanswers: bioClean.length ? bioClean : null,
           ...codePatch,
           hidden_fields: hidden.size ? [...hidden] : null,
           // Emptied on purpose. Every link lives in one list now; leaving this
@@ -620,16 +654,16 @@ export function useIdentificationCardEditor(settings) {
       setTrouble(error.message);
     }
     setSaving(false);
-  }, [name, sendMe, posX, posY, portrait, links, hidden, rig, gear, settings, router]);
+  }, [name, bio, posX, posY, portrait, links, hidden, rig, gear, settings, router]);
 
   return {
     editing, begin, cancel, save, saving, busy, trouble,
     name, setName,
-    sendMe, setSendMe,
-    posX, posY, setPosX, setPosY,
+        posX, posY, setPosX, setPosY,
     position: `${posX}% ${posY}%`,
     portrait,
     links, setLink, setLinkIcon, addLink, dropLink, atLinkLimit: links.length >= LINK_LIMIT,
+    bio, setBioKey, setBioAnswer,
     rig, setRig,
     gear, setGearField, addGear, dropGear,
     hidden, toggleHidden,

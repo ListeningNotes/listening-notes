@@ -23,55 +23,48 @@
 // see the note there, because that line is a licence obligation and not
 // decoration.
 //
-// The writing here is the short version. The long essay lived on this pane for
-// a while and has gone to /get, which is the address every copy's pitch pane
-// points at — the story of why somebody started keeping a listening journal is
-// the answer to "how did you get this", and it was doing that job from the
-// wrong page. What is left is a paragraph: who this is, in the space where a
-// reader is still deciding whether to keep reading.
+// The writing here is three finished sentences rather than a paragraph. The
+// long essay went to /get, which is the address every copy's pitch pane points
+// at, and the free-text bio went with it: a blank box asking somebody to
+// describe themselves gets a paragraph about the project, where an opening
+// like "I can never skip —" gets two words worth reading. See
+// library/bioprompt.js for the nine and why they are fixed.
 //
-// Nothing here is in this file. Every word comes off the settings row, so a
-// journal installed this morning has no paragraph and no rig, and the pane is
-// exactly the card and nothing else — and because HomeNav decides whether to
-// draw a down caret by measuring the pane rather than by being told, that copy
-// also gets no arrow pointing at nothing.
+// Nothing anybody reads here is in this file. The prompts ship in code and the
+// answers come off the settings row, so a journal installed this morning has
+// no answers and no rig, and the pane is exactly the card and nothing else —
+// and because HomeNav decides whether to draw a down caret by measuring the
+// pane rather than by being told, that copy also gets no arrow pointing at
+// nothing.
 
 'use client';
 import { useMemo } from 'react';
 import { ArrowSquareOut, LinkSimple } from '@phosphor-icons/react';
 import IdentityCard, { identify, readLink, rigIcon } from './IdentityCard';
+import { useIdentificationCardEditor } from './IdentificationCardEditor';
 import { useBookplate } from './Bookplate';
+import { BIO_PROMPTS, CARD_PROMPT, readBioAnswers } from '../../library/bioprompt';
 
 // Three, and the cap is the point. Somewhere to be found is not somewhere to
 // list every account anybody has ever opened — a row of three marks reads at a
 // glance and a row of nine reads as a footer.
 const LINK_LIMIT = 3;
 
-// The one convention the stored prose uses, and no more: a blank line
-// separates blocks, and a line starting with "## " is a heading. Enough
-// structure for prose, little enough that the owner is editing writing in a
-// box rather than markup. The same parser /get uses, so a paragraph reads the
-// same wherever it is printed.
-//
-// A single newline inside a block is somebody's line wrap and not a new
-// thought, so it is left alone.
-function blocks(text) {
-  return String(text || '')
-    .split(/\n\s*\n/)
-    .map(block => block.trim())
-    .filter(Boolean)
-    .map(block => block.startsWith('## ')
-      ? { type: 'heading', text: block.slice(3).trim() }
-      : { type: 'paragraph', text: block });
-}
-
 export default function About({ stamps, authed = false }) {
-  const { about_intro, rig: rigRows, rig_icon, social_links, instagram_url } = useBookplate();
+  const settings = useBookplate();
+  const { bioanswers, rig: rigRows, rig_icon, social_links, instagram_url } = settings;
 
-  // One column, not two. why_essay used to be concatenated on after this and
-  // is at /get now. Blank renders nothing, which is what keeps a fresh copy's
-  // pane down to the card alone.
-  const prose = blocks(about_intro);
+  // One edit session for the pane, owned here and handed to the card. The card
+  // used to make its own, which was fine while everything editable was printed
+  // on it; the prompts print below it now, and two instances of the hook would
+  // be two drafts of the same page with one save button between them.
+  const edit = useIdentificationCardEditor(settings);
+
+  // Three finished openings, which is what a bio is here. The one the card may
+  // print is dropped from this list rather than repeated — it sits above the
+  // Send button a screen up, and the same sentence twice on one pane reads as
+  // a mistake rather than as emphasis.
+  const answered = readBioAnswers(bioanswers).filter(row => row.key !== CARD_PROMPT);
   // Same filter the card applies, for the same reason: a row with no name is a
   // row somebody started and abandoned in the editor, and it should not print.
   const rigList = (Array.isArray(rigRows) ? rigRows : []).filter(r => r?.name?.trim());
@@ -100,7 +93,7 @@ export default function About({ stamps, authed = false }) {
   return (
     <div className="ab-pane">
       <div className="ab-card">
-        <IdentityCard stamps={stamps} authed={authed} />
+        <IdentityCard stamps={stamps} authed={authed} edit={edit} />
       </div>
 
       {/* Where the card ends and the reading starts. This boundary was a snap
@@ -111,16 +104,67 @@ export default function About({ stamps, authed = false }) {
           until it is, this is just where one thing stops and the next
           begins. */}
       <div className="ab-below">
-        {prose.length > 0 && (
-          <section className="ab-block">
-            <div className="ab-prose">
-              {prose.map((block, i) => block.type === 'heading'
-                ? <h2 key={i} className="ab-prose-head">{block.text}</h2>
-                : <p key={i}>{block.text}</p>
-              )}
-            </div>
+        {/* The prompts. Prompt and answer on one line, because they are one
+            sentence: "I can never skip — Voodoo, side two" is a thought, and
+            the same words as a label over a value are two things stacked. The
+            opening carries its own em dash for the same reason — it is grammar
+            rather than layout. */}
+        {edit.editing ? (
+          <section className="ab-block ab-block--prompts">
+            {/* Three slots, always three. A list that grows as you answer makes
+                "how many am I supposed to write" a question the interface asks
+                instead of answers.
+
+                A native select, not a grid of choices: nine full sentences do
+                not fit as marks, and on a phone the system picker is a better
+                list than anything drawn here. Openings already taken elsewhere
+                are still offered — picking one swaps the two rather than
+                refusing, so nothing has to be cleared to make a move somebody
+                has already decided on. */}
+            {edit.bio.map((row, index) => (
+              <div className="ab-prompt-edit" key={index}>
+                <select
+                  className="ab-prompt-pick"
+                  value={row.key}
+                  onChange={e => edit.setBioKey(index, e.target.value)}
+                  aria-label={`Opening ${index + 1}`}
+                >
+                  <option value="">Choose an opening…</option>
+                  {BIO_PROMPTS.map(prompt => (
+                    <option key={prompt.key} value={prompt.key}>{prompt.text}</option>
+                  ))}
+                </select>
+                <input
+                  className="ab-prompt-input"
+                  type="text"
+                  value={row.answer}
+                  onChange={e => edit.setBioAnswer(index, e.target.value)}
+                  placeholder={row.key ? 'Finish the sentence' : ''}
+                  disabled={!row.key}
+                  aria-label={`Answer ${index + 1}`}
+                />
+              </div>
+            ))}
+          </section>
+        ) : answered.length > 0 && (
+          <section className="ab-block ab-block--prompts">
+            {answered.map(row => (
+              <p className="ab-prompt" key={row.key}>
+                <span className="ab-prompt-ask">{row.text}</span>{' '}
+                <span className="ab-prompt-said">{row.answer}</span>
+              </p>
+            ))}
           </section>
         )}
+
+        {/* The free-text bio used to print here and does not. A blank box is a
+            hard question badly phrased: asked to describe yourself you write a
+            paragraph about the project, asked what you can never skip you
+            write two words worth reading. The column still holds whatever was
+            written in it — see about_intro in app/layout.js — and an optional
+            free-text field alongside the prompts is a later decision, because
+            it is much easier to add one than to take one away once people have
+            filled it in. */}
 
         {rigList.length > 0 && (
           <section className="ab-block">

@@ -55,6 +55,7 @@ const EMPTY = {
   // Which mark stands for the rig, and the rig itself. See schema.sql.
   rig_icon: null,
   rig: null,
+  bioanswers: null,
   definitions: null,
   // The ornamented name, or null to use the plain one. See coverName().
   display_name: null,
@@ -78,6 +79,7 @@ const WRITABLE = [
   'instagram_url', 'lastfm_user', 'site_address',
   'founded_at', 'pinned_entry_id', 'about_intro', 'social_links',
   'hidden_fields', 'send_me', 'portrait_position', 'rig_icon', 'rig',
+  'bioanswers',
   'definitions',
   // The uploaded portrait. Written by /api/portrait rather than by a form, but
   // it goes through the same door as everything else in this table.
@@ -210,7 +212,7 @@ export async function save_settings(fields) {
   // json refuses — "invalid input syntax for type json" — so the value is
   // serialised here rather than at every call site that might set it.
   // definitions goes through its own, more careful version of this below.
-  for (const key of ['social_links', 'hidden_fields', 'rig']) {
+  for (const key of ['social_links', 'hidden_fields', 'rig', 'bioanswers']) {
     if (patch[key] != null && typeof patch[key] !== 'string') {
       patch[key] = JSON.stringify(patch[key]);
     }

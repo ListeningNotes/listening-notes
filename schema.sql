@@ -230,6 +230,20 @@ CREATE TABLE IF NOT EXISTS settings (
   -- inside everybody's software. What is worth saying is what the thing is and
   -- what it does; the rest is the journal.
   rig jsonb,
+  -- Three openings, finished. A keeper picks three of the nine that ship in
+  -- library/bioprompt.js and answers each in a line, and this is where the
+  -- answers go: [{ "key": "never-skip", "answer": "Voodoo, side two" }].
+  --
+  -- The key, never the sentence. The wording of a prompt is going to be
+  -- revised and revising it must not orphan what somebody wrote — so the text
+  -- lives in code, this holds only which opening and what was said, and a key
+  -- that no longer matches a live prompt is dropped on render.
+  --
+  -- Replaced a free-text bio, which is still `bio` and still holds whatever
+  -- anybody wrote in it. Asked to describe yourself in a box you write a
+  -- paragraph about the project; asked what you can never skip you write two
+  -- words worth reading.
+  bioanswers jsonb,
   -- The portrait itself, when its keeper uploaded one rather than pointing at
   -- one. Base64 in a column and served back by /api/portrait, so that adding a
   -- picture from a phone needs no storage bucket, no third-party account and no
@@ -311,6 +325,7 @@ CREATE TABLE IF NOT EXISTS settings (
 ALTER TABLE settings ADD COLUMN IF NOT EXISTS display_name text;
 ALTER TABLE settings ADD COLUMN IF NOT EXISTS "serial" text;
 ALTER TABLE settings ADD COLUMN IF NOT EXISTS setup_complete boolean DEFAULT false;
+ALTER TABLE settings ADD COLUMN IF NOT EXISTS bioanswers jsonb;
 
 -- Foreign keys, added once every table exists
 DO $$ BEGIN
