@@ -19,12 +19,35 @@
 // The pane deliberately does not scroll. The three sentences are the whole
 // pitch and there is no more of it — HomeNav measures the pane rather than
 // being told, so no down caret is drawn and nothing promises a second screen
-// that is not there. What sits at the foot instead is the source line, which
-// is the same question this pane is already answering.
+// that is not there.
+//
+// ── The source line ─────────────────────────────────────────────────────────
+// It sat at the foot of the About pane and belongs here instead: that pane is
+// the public page about a person and this is the public page about the
+// software, and an offer of source is about the software.
+//
+// It has to stay on a *public* pane, though, and that is not a preference.
+// AGPL §13 obliges a copy modified and run over a network to offer its source
+// to the people using it — visitors, not the owner. Behind the wristband, on a
+// settings page only its keeper can reach, the offer is not made to anyone it
+// is owed to. So it lives here, in the smallest type on the site, on the one
+// pane a stranger arrives at asking what this software is.
 
 'use client';
 
 const HOME = 'https://www.listeningnotes.blog/get';
+
+// Where this copy's source lives. §13 asks for the source of *the running
+// program*, which for a modified copy is that copy's own repository and not
+// this one — so an owner who has changed anything points this at their fork.
+// Defaulted to upstream, because the honest answer for an unmodified copy is
+// upstream and nobody should have to think about compliance to install a
+// journal.
+//
+// TODO: this wants a settings column so it can be changed without a redeploy.
+// An environment variable is the smaller half of the job and ships today.
+const SOURCE_URL =
+  process.env.NEXT_PUBLIC_SOURCE_URL || 'https://github.com/miyelbrown/listening-notes';
 
 export default function Pitch() {
   return (
@@ -45,6 +68,12 @@ export default function Pitch() {
 
         <a className="ln-pill pt-cta" href={HOME} target="_blank" rel="noopener noreferrer">
           Get Listening Notes
+        </a>
+
+        {/* No version number: a version is a thing to keep current, and a line
+            that goes stale is worse than a line that is simply true. */}
+        <a className="pt-source" href={SOURCE_URL} target="_blank" rel="noopener noreferrer">
+          Source
         </a>
       </div>
     </div>
