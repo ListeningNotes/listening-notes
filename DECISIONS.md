@@ -174,6 +174,24 @@ strip on every page pointing at places already reachable from where you were.
 Removing it also gave back the 56px every page reserved to clear it — the nav
 band went from 136 to 80.
 
+**Sideways is a decision made at the top of a pane.** The two side controls go
+away as soon as a pane is scrolled at all: once you are down in the wall, or
+down in the reading, the only thing worth offering is more of what you are
+already in, and three marks parked over somebody's album art are the row
+covering the thing they came to look at. The swipe itself is untouched — hiding
+a control is a hint, while disabling a gesture halfway down a page is the thing
+that would actually read as broken.
+
+**Fifty covers to a page.** Past that you are scrolling rather than looking, and
+the sort you chose stops meaning anything because you never reach the other end
+of it. Counted on the filtered set, not the archive, so searching one artist
+inside three hundred records gives you their four on one page.
+
+**Nothing sits at the foot of the wall.** Compare, Submit and Surprise were put
+there when the dot row went and taken off again: the foot of the archive is
+where somebody has finished looking, and three links to elsewhere is the site
+asking them to leave.
+
 **The wall's controls sit at the bottom on a phone.** Where the thumb is. At
 the top they were furthest from the hand and took the first hundred pixels of
 the wall, which on a phone is most of a row of covers: the records get the top

@@ -2513,9 +2513,10 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   --arc-nav-bottom: calc(env(safe-area-inset-top) + 44px);
   padding: 0 0 max(28px, env(safe-area-inset-bottom));
 }
-/* The wall pays the pane's gutter; the filter bar carries its own padding. */
-.hn-under .arc-grid,
-.hn-under .hp-strip-actions { padding-left: var(--hn-gutter); padding-right: var(--hn-gutter); }
+/* The wall pays no gutter of its own here. It had one — the pane's 34px, on
+   top of the 24 the wall already carries — and 58px of margin down each side of
+   a phone is a whole column of covers given away to nothing. The wall's own
+   padding is the only padding. */
 
 
 /* Restated from the dead .hp-mobile-screens block — same values, new scope. */
