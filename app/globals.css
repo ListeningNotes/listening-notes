@@ -2457,7 +2457,11 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
      everything under it down too, instead of splitting the difference. */
   align-items: flex-end;
   justify-content: center;
-  padding: env(safe-area-inset-top) 16px 26px;
+  /* The bottom padding is the air under the mark, and half of the gap down to
+     the square — --hn-square-top is the other half. Narrowing it walks the
+     mark *down* toward the photograph rather than pulling the photograph up
+     to it, which is what keeps everything below where it was put. */
+  padding: env(safe-area-inset-top) 16px 8px;
   scroll-snap-align: start;
 }
 .hn-crown-mark { display: block; line-height: 0; }
