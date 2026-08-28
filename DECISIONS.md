@@ -168,6 +168,10 @@ they are pointing at. No label — art under a name says what it is.
 pinned entry clears the pin rather than breaking the card, and null renders
 nothing.
 
+**No fourth metric on the card.** *Most played* was proposed to balance three
+counts with one line about taste, and turned down: the card is a glance and
+four rows is already the most a glance holds. Ruled out rather than parked.
+
 **Its picker is search, not a grid.** At 39 entries a grid works and at 300 it
 is a wall, and somebody pinning a record already knows which one. It reuses the
 journal wall being extracted from `archive/page.js`, in a sheet, with
