@@ -123,6 +123,23 @@ each other, which was right while the card was the whole about page and wrong
 the moment there was somewhere longer to write — a card that borrowed the long
 paragraph would print a page of prose on a card.
 
+**The long note is the About pane, not a page behind it.** `why_essay` prints
+under the card rather than sitting at `/why` behind a pill. An about page whose
+about is four lines and a button to read the about is a summary of itself. It
+still comes off the settings row, so a fresh copy has no note and the pane is
+exactly the card.
+
+**No mark in the corner.** The crown at the head of every pane is the mark; a
+small one in the bar is a second one whether or not the two are ever on screen
+at once. The band behind that row stays, because it is what stops the wall of
+covers scrolling through the theme toggle.
+
+**Each caret carries a mark for what is that way** — a card left, a book down,
+a cog right for the owner and an `i` for a visitor. The caret is the verb and
+the mark is the noun: a chevron alone says something is over there, which is
+enough to make somebody swipe once and not enough to say whether it was worth
+it.
+
 **The rig ships as rows and nothing else.** The specs come out of their drawer
 and onto the About pane, because a drawer is what you build when there is
 nowhere to put something and the pane is somewhere. The several hundred words

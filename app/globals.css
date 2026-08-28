@@ -2322,8 +2322,15 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
      square in the same frame, and the whole point of a fixed crown is that
      they land on the same line — which they only do while they are both
      offset from it by the same amount. This is the constant that replaced the
-     measured lift the card used to carry. */
-  --hn-square-top: 20px;
+     measured lift the card used to carry.
+     Scaled rather than fixed, because the slack it is spending is the height
+     of the phone — a taller screen has more of it to give than a short one.
+     Held low on purpose, though, and the reason is worth writing down: the
+     ceiling is not taste, it is the card. It stands 580px of the 660 a 375x812
+     phone has under the crown, so there are about twenty pixels to spend
+     before its last row runs into the down caret. Pushing the square further
+     down needs the card to be shorter first — see NOTES. */
+  --hn-square-top: clamp(20px, 2.5dvh, 40px);
   position: relative;
   width: 100%;
   height: 100dvh;
@@ -2343,21 +2350,17 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   z-index: 95;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  /* One control, on the right. The mark that used to sit opposite it is gone:
+     the crown at the head of every pane already is the mark, and a small copy
+     in the corner is a second one whether or not the two are ever on screen
+     together. */
+  justify-content: flex-end;
   padding: max(12px, calc(env(safe-area-inset-top) - 12px)) 16px 8px;
   pointer-events: none;
 }
 .hn-bar > * { pointer-events: auto; }
 
-/* The small mark waits until the big one has left. At the top of any pane the
-   crown is the mark and the bar carries only the lights; scroll down, the
-   crown goes with the page, and this fades in behind the band that arrives at
-   the same moment. One mark on screen at a time, always. */
-.hn-mark {
-  opacity: 0;
-  transition: opacity 0.22s ease;
-}
-.hn-bar--scrolled .hn-mark { opacity: 1; }
+
 
 /* The band that stops a scrolled pane running through the mark. Same shape as
    .sitenav-row::before, and here for the same reason: this row is fixed with
@@ -2384,9 +2387,6 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 }
 .hn-bar--scrolled::before { opacity: 1; }
 
-.hn-mark { display: block; line-height: 0; }
-.hn-mark-svg { height: 26px; width: auto; display: block; }
-.hn-mark-svg path { fill: var(--ink); }
 .hn-mark-dot { fill: var(--ink); }
 /* The live indicator, and the only green on the site. Same keyframe the old
    cover used — the mark is on every pane now, so the one thing always on
@@ -2537,10 +2537,13 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   position: fixed;
   z-index: 96;
   width: 40px;
-  height: 40px;
   display: flex;
+  /* A column, so the mark for what is that way sits over the chevron that
+     goes there. No fixed height: the box is however tall the pair is. */
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  gap: 1px;
   padding: 0;
   border: none;
   background: none;
@@ -2549,17 +2552,21 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   touch-action: manipulation;
   transition: opacity 0.25s ease, color 0.2s ease;
 }
+/* Quieter than the chevron. The caret is the control and this is the label on
+   it, and a label that competes with its own button reads as two controls. */
+.edge-caret-mark { opacity: 0.55; }
 .edge-caret:hover { color: var(--ink-soft); }
+.edge-caret:hover .edge-caret-mark { opacity: 0.9; }
 .edge-caret:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 3px; }
 .edge-caret--left {
   left: max(0px, env(safe-area-inset-left));
   top: 50%;
-  margin-top: -20px;
+  transform: translateY(-50%);
 }
 .edge-caret--right {
   right: max(0px, env(safe-area-inset-right));
   top: 50%;
-  margin-top: -20px;
+  transform: translateY(-50%);
 }
 /* Centred with a margin rather than a transform, because the bob keyframe
    below owns transform and would throw away a translateX(-50%). */
@@ -2659,13 +2666,25 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   color: var(--ink-soft);
   margin: 0;
 }
-.ab-prose { display: flex; flex-direction: column; gap: 14px; }
+/* The measure and rhythm /why sets the same writing in. It is one essay; it
+   should not change typeface or leading on the way to a different page. */
+.ab-prose { display: flex; flex-direction: column; gap: 0; }
+.ab-prose-head {
+  font-family: var(--font-display);
+  font-weight: var(--font-display-weight);
+  font-size: 19px;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+  margin: 34px 0 12px;
+}
+.ab-prose-head:first-child { margin-top: 0; }
 .ab-prose p {
-  margin: 0;
-  font-size: 0.95rem;
-  line-height: 1.7;
+  margin: 0 0 20px;
+  font-size: 15px;
+  line-height: 1.85;
   color: var(--ink-soft);
 }
+.ab-prose p:last-child { margin-bottom: 0; }
 .ab-rig { display: flex; flex-direction: column; }
 /* Rows, the same shape as a tracklist: the thing's name reads left and what it
    is reads right. */
