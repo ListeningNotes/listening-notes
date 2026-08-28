@@ -2701,26 +2701,68 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   color: var(--ink-soft);
   margin: 0;
 }
-/* The measure and rhythm /get sets its prose in. The two pages carry different
-   writing now, but they are the same person's voice and should not change
-   typeface or leading between them. */
-.ab-prose { display: flex; flex-direction: column; gap: 0; }
-.ab-prose-head {
-  font-family: var(--font-display);
-  font-weight: var(--font-display-weight);
-  font-size: 19px;
-  letter-spacing: -0.01em;
-  color: var(--ink);
-  margin: 34px 0 12px;
-}
-.ab-prose-head:first-child { margin-top: 0; }
-.ab-prose p {
-  margin: 0 0 20px;
+/* ── The prompts ────────────────────────────────────────────────────────────
+   An opening and its answer on one line, because they are one sentence. The
+   opening is quiet and the answer carries the ink: the interesting half is
+   what somebody said, and a prompt set at the same weight as its answer reads
+   as a form rather than as a person talking. */
+.ab-block--prompts { gap: 0; }
+.ab-prompt {
+  margin: 0;
+  padding: 13px 0;
+  border-bottom: 1px solid var(--border);
   font-size: 15px;
-  line-height: 1.85;
-  color: var(--ink-soft);
+  line-height: 1.6;
+  /* balance, so a two-line answer breaks somewhere sensible rather than
+     leaving one word under the opening. */
+  text-wrap: pretty;
 }
-.ab-prose p:last-child { margin-bottom: 0; }
+.ab-prompt:last-child { border-bottom: none; }
+.ab-prompt-ask { color: var(--ink-faint); }
+.ab-prompt-said { color: var(--ink); }
+
+/* ── Answering them ─────────────────────────────────────────────────────────
+   The opening on its own line above the answer while editing, rather than
+   inline as it prints. Inline, the select and the input are two controls
+   sharing a line and neither has room; stacked, each is the width of the pane
+   and the pair still reads top to bottom in the order the sentence does. */
+.ab-prompt-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 13px 0;
+  border-bottom: 1px solid var(--border);
+}
+.ab-prompt-edit:last-child { border-bottom: none; }
+.ab-prompt-pick {
+  width: 100%;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  font-family: inherit;
+  font-size: 13px;
+  color: var(--ink-faint);
+  /* The system picker draws the list; this is only the closed state, and a
+     native control with its own chrome would be the only bevelled thing on
+     the page. */
+  appearance: none;
+  -webkit-appearance: none;
+}
+.ab-prompt-pick:focus { outline: none; color: var(--ink-soft); }
+.ab-prompt-input {
+  width: 100%;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  padding: 0 0 4px;
+  background: transparent;
+  font-family: inherit;
+  font-size: 15px;
+  color: var(--ink);
+}
+.ab-prompt-input:focus { outline: none; border-bottom-color: var(--ink-faint); }
+.ab-prompt-input::placeholder { color: var(--ink-faint); }
+/* An answer with no opening chosen is a line nobody asked for. */
+.ab-prompt-input:disabled { border-bottom-color: transparent; }
 .ab-rig { display: flex; flex-direction: column; }
 /* Rows, the same shape as a tracklist: the thing's name reads left and what it
    is reads right. */

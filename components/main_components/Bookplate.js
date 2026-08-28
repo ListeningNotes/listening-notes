@@ -45,6 +45,10 @@ const EMPTY = {
   portrait_code_url: null,
   rig_icon: null,
   rig: null,
+  // Three finished openings; see library/bioprompt.js. Short by design —
+  // three one-line answers, which is a few hundred bytes and belongs in the
+  // context the way the rig rows do.
+  bioanswers: null,
 };
 
 const BookplateContext = createContext(EMPTY);

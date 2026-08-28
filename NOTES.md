@@ -40,6 +40,20 @@ re-propose anything listed as ruled out.
 
 ## Pending
 
+**DO THIS FIRST — the prompts column is not on the live database**
+
+`schema.sql` has it, nothing runs `schema.sql`, and the card's save writes it.
+Until this statement has been run, pressing save on the card fails:
+
+```sql
+ALTER TABLE settings ADD COLUMN IF NOT EXISTS bioanswers jsonb;
+```
+
+Reads are safe either way — `pull_settings` does `SELECT *` and a missing
+column just comes back as null — so the site renders fine right now. It is
+only the write that breaks. Run it in Neon's SQL editor. Take a backup first
+(`npm run backup`); this is the production database and there is no other one.
+
 **SHIPPING A COPY** — the gap between "it runs here" and "someone else can run it"
 - [ ] **Migration runner** — nothing executes `schema.sql`. A fresh copy has no tables and no way to make them without opening Neon's SQL editor by hand. `schema.sql` has also never actually been run against an empty database; every statement is guarded, but "reads correctly" and "builds a working journal from nothing" are different claims and only the first is checked.
 - [ ] **Welcome screen** — first run should ask who this copy belongs to and write the owner row plus the settings row. `setup_complete` exists as a column and nothing sets it. Until this lands, `keeper_name`, `founded_at` and `serial` can only be set in the database.

@@ -33,9 +33,9 @@ import {
   WhatsappLogo, X, XLogo, YoutubeLogo,
 } from '@phosphor-icons/react';
 import QRCode from 'qrcode';
-import { useIdentificationCardEditor } from './IdentificationCardEditor';
 import { useListeningBeacon } from '../../hooks/useListeningBeacon';
 import { useBookplate } from './Bookplate';
+import { CARD_PROMPT, readBioAnswers } from '../../library/bioprompt';
 
 // ── The Ln. mark ──────────────────────────────────────────────────────────
 // It sits at the top of the column, and it is the only mark on this side of the
@@ -249,7 +249,10 @@ function AddressCode({ text }) {
   );
 }
 
-export default function IdentityCard({ stamps, authed = false }) {
+// `edit` is handed in rather than made here. The prompts print on the About
+// pane below this card and are edited there, and one edit session cannot be
+// two instances of the hook — so the pane owns it and the card is given it.
+export default function IdentityCard({ stamps, authed = false, edit }) {
   const settings = useBookplate();
   const {
     cover_name,
@@ -259,7 +262,7 @@ export default function IdentityCard({ stamps, authed = false }) {
     site_address,
     founded_at,
     hidden_fields,
-    send_me,
+    bioanswers,
     rig_icon,
     portrait_code_url,
   } = settings;
@@ -267,7 +270,6 @@ export default function IdentityCard({ stamps, authed = false }) {
 
   // Only ever true for the person who keeps the journal, and only the visible
   // half of that: the writing endpoints check the wristband for themselves.
-  const edit = useIdentificationCardEditor(settings);
   const editing = edit.editing;
 
   const records = stamps?.records ?? null;
@@ -284,6 +286,9 @@ export default function IdentityCard({ stamps, authed = false }) {
   // logged. The second is the more honest answer anyway: a listening journal
   // starts when someone writes in it, not when the database row was created.
   const since = monthAndYear(founded_at) || monthAndYear(stamps?.first_listen);
+
+  // The one prompt this card may print, if its keeper answered it.
+  const cardAsk = readBioAnswers(bioanswers).find(row => row.key === CARD_PROMPT) || null;
 
 
   // What the editor is currently showing, which is the draft rather than what
@@ -841,14 +846,16 @@ export default function IdentityCard({ stamps, authed = false }) {
            The labels beside them are already doing the quietening; the answers
            are the content and they weigh the same. */
         .idc-line-value { min-width: 0; color: var(--ink); }
-        .idc-ask-input {
-          flex: 1; min-width: 0;
-          border: 0; padding: 0 0 3px; background: transparent;
-          font: inherit; color: var(--ink);
-          border-bottom: 1px solid var(--idc-rule);
+        /* Not a row of the table above it. The four counted facts are labels
+           and values; this is a sentence, and a sentence indented into a value
+           column reads as a fifth fact that lost its label. Centred and full
+           width, directly over the button it explains. */
+        .idc-ask {
+          margin: 22px auto 0; max-width: 300px;
+          font-size: 14px; line-height: 1.55; color: var(--ink);
+          text-wrap: pretty;
         }
-        .idc-ask-input:focus { outline: none; border-bottom-color: var(--ink-faint); }
-        .idc-ask-input::placeholder { color: var(--ink-faint); }
+        .idc-ask-said { color: var(--ink-faint); }
 
         /* The one control that is an action rather than a door, and the reason
            the ask is written directly above it. Weighted by ink rather than by
@@ -1003,7 +1010,6 @@ export default function IdentityCard({ stamps, authed = false }) {
              where inherit did not work — the bio's textarea, which *was* the
              element carrying the size — is the reason this block exists. */
           .idc-name-input { font-size: 36px !important; }
-          .idc-ask-input  { font-size: 13px !important; }
           .idc-link-input { font-size: 12px !important; }
         }
         @media (max-width: 480px) {
@@ -1150,22 +1156,20 @@ export default function IdentityCard({ stamps, authed = false }) {
           </p>
         )}
 
-        {(editing || send_me) && (
-          <p className="idc-line idc-ask">
-            <span className="idc-line-label">Looking for</span>
-            {editing
-              ? <input
-                  className="idc-ask-input"
-                  type="text"
-                  value={edit.sendMe}
-                  onChange={e => edit.setSendMe(e.target.value)}
-                  /* The placeholder is the feature. Told what good looks like
-                     people write something worth reading; asked "what would
-                     you like?" they write nothing, or "anything". */
-                  placeholder="something loud, or anything with a saxophone in it"
-                  aria-label="Looking for"
-                />
-              : <span className="idc-line-value">{send_me}</span>}
+        {/* ── The one opening the card prints ──────────────────────────────
+            "Looking for" used to be a labelled field here, and it is a prompt
+            now like the others — the difference is that this one is addressed
+            to the reader rather than about the keeper, and it is the reason
+            the button underneath it exists: you read what somebody is asking
+            for, then you send it. So of the nine it is the one promoted onto
+            the card, and only if its keeper chose it.
+
+            The pane below drops this row from its own list rather than
+            printing it twice. */}
+        {cardAsk && (
+          <p className="idc-ask">
+            <span className="idc-ask-said">{cardAsk.text}</span>{' '}
+            {cardAsk.answer}
           </p>
         )}
 

@@ -123,6 +123,40 @@ each other, which was right while the card was the whole about page and wrong
 the moment there was somewhere longer to write — a card that borrowed the long
 paragraph would print a page of prose on a card.
 
+**Prompts replace the free-text bio.** Nine openings ship in
+`library/bioprompt.js`, a keeper answers three in one line each, and the answer
+completes the sentence on the same line — `I can never skip — Voodoo, side
+two`. A blank box is a hard question badly phrased: asked to describe yourself
+you write a paragraph about the project; asked what you can never skip you
+write two words worth reading.
+
+**The nine are fixed and every copy ships the same nine.** A keeper who could
+write their own prompts would be back at the blank box one level up, and a
+fixed set is what lets two journals answering the same opening be read against
+each other.
+
+**Stored as key and answer, never as the sentence.** The wording will be
+revised and revising it must not orphan what somebody wrote. A key with no live
+prompt is dropped on render, so retiring a prompt is safe and renaming one is a
+migration.
+
+**Looking for is cut**, replaced by the prompt *If you're sending me something,
+make it —*. Same information as a finished sentence rather than a labelled
+field. It is the one of the nine that can be promoted onto the card, because it
+is the only one addressed to the reader rather than about the keeper, and it is
+the reason the Send button under it exists. The pane drops it from its own list
+rather than printing it twice. `send_me` keeps its old value and stops being
+read.
+
+**Top genres stays computed.** Not replaced by a self-reported prompt.
+Computed says what somebody actually listens to and a prompt says what they
+would claim; the gap between the two is the interesting part, and a
+self-reported genre list would be the most generic thing on the page.
+
+**A free-text bio may come back as an optional field alongside the prompts, and
+that is deliberately the later decision.** It is much easier to add one than to
+take one away once people have filled it in.
+
 **The card is a glance; the reading is below it.** No prose on the card at all
 — a face, a name, four facts and the ways to reach somebody. The bio came off
 because it was a paragraph about the keeper printed two hundred pixels above a
