@@ -62,18 +62,16 @@ only the write that breaks. Run it in Neon's SQL editor. Take a backup first
 
 **STRUCTURE** — see DECISIONS.md before starting any of these
 
-The cross itself is built and on the branch `cross-nav`. What is left of it:
+The cross is built and merged. What is left of it:
 
 - [ ] **`usePlaceKeeper`** — pane index and per-pane scroll offset, kept across a route change. Swiping between panes already remembers itself (they stay mounted); going out to an entry and back does not, because browsers do not restore nested scroll containers.
 - [ ] **`useShake` + `firework()`** — shake the phone, a firework goes up, then `/shuffle`. The Surprise pill stays where it is.
-- [ ] **Re-home DotNav's four destinations.** Archive becomes the centre pane's lower half, Compare and Surprise are pills at the foot of the journal, Submit is a visitor door. The dot row has nothing left to point at once Journal lands.
 - [ ] **Delete the dead `.hp-*` homepage CSS.** `.hp-mobile-screens`, `.hp-screen--one`, `.hp-screen--two` and everything under them — nothing renders those class names any more. Four rules inside them did real work and are already restated against `.hn`; the rest is roughly 300 lines that can go. Left in place deliberately so the restructure could be reviewed without a find-and-replace on the beacon.
 - [ ] **A QR on the pitch pane.** DECISIONS already settles that the right pane produces a fixed code to `/get`, the same on every copy. Not built, and the "logo made of the QR" idea is unresolved.
 - [ ] **`settings.bio` now has no reader and no writer.** Deliberate — see DECISIONS. The value is still in the database. Decide at the welcome screen whether the column gets a job or gets dropped, while the schema is still a draft.
 - [ ] **`/rig` is still a forwarding stub**, and by the same argument that deleted `/why` it may not have earned one: three days live, linked from a card, on a site nobody else runs. `/about` genuinely did earn its stub. Worth one decision rather than two defaults.
 - [ ] **Compare wants two homes** — one on an individual album, for comparing that record against another, and one on the About pane for comparing the collection overall. It is reachable from neither today; the route works if you type it.
 - [ ] **Surprise (`/shuffle`) has no way in.** Work in progress by decision — the shake is the intended gesture and is not built. See DECISIONS.
-- [x] Submit is reachable — "Send an album" on the card points at it, which is the right door for a visitor to find it behind.
 - [ ] **Pinned album on the card** — the render half can ship on its own; the picker is blocked on Journal. See DECISIONS. The column and its foreign key already exist.
 - [ ] **`/get` is half a page.** It renders the essay and nothing else. The other half of what that address owes a stranger — what the software is, that it is free, and the way to install a copy — is unwritten, so somebody arriving from another copy's pitch pane reads the why and finds no door. Its tab still reads `Why · …` too.
 - [ ] **Source link wants a settings column.** It ships today as `NEXT_PUBLIC_SOURCE_URL` defaulting to upstream, which is the smaller half of the job — a modified copy owes *its own* source and should not need a redeploy to say so.
@@ -318,6 +316,26 @@ current.
 ---
 
 ## Complete
+
+**2026-08-28 — the cross, merged to main**
+
+Twenty commits. The homepage is three panes on a rail: the card and the writing
+on the left, the beacon with the whole archive under it in the centre, the desk
+or the pitch on the right.
+
+- [x] **`HomeNav`, `EdgeCaret`, `About`, `Dashboard`, `Pitch`, `Journal`** — six new components, and one homepage instead of two markup trees.
+- [x] **The card flip is gone**, as DECISIONS had said it should be, and with it the measured photo-lift, the rig drawer, and both duplicate homepage trees.
+- [x] **Prompts replace the free-text bio** — nine openings in `library/bioprompt.js`, three answered, stored as key and answer in `settings.bioanswers`. **That column had to be added to the live database by hand; it is done.**
+- [x] **The dot row is deleted** and the nav band it needed came down from 136px to 80.
+- [x] **The long essay moved to `/get`** and `/why` was deleted rather than forwarded.
+- [x] **`/archive` is 38 lines** and mounts the same wall the centre pane does.
+- [x] Verified before merging: production build clean, every public route 200 including the redirects and an entry page, lint unchanged from where it started at 47 problems / 9 errors.
+
+**Not exercised anywhere in this work:** the card's edit mode. It only renders
+behind a wristband and the dev browser has none, so the prompt chooser, the
+link rows, the rig rows and the save button were checked by measuring computed
+styles and never by pressing them. That is the first thing to try on the live
+site.
 
 **2026-08-28 — Journal**
 - [x] **`components/main_components/Journal.js`** — the whole of the old `app/archive/page.js` minus the page. Search, filters, sort, density, grid, modal and phone sheet, mounted by the centre pane of the cross *and* by `/archive`.
