@@ -296,6 +296,48 @@ installing from it does.
 
 ---
 
+## Keeping a copy of your journal
+
+Two ways, because they answer different questions.
+
+**A button — `/api/export`.** Signed in on the writing side, this downloads
+your whole journal as one JSON file: every entry, every note, the settings, the
+comments. No setup, nothing to configure, works on any copy of this software.
+It is owner-only — it hands over unpublished drafts, comments still in
+moderation, and the email addresses people left with submissions.
+
+**A schedule, if you want one.** The repo ships two scripts:
+
+```bash
+npm run backup
+```
+
+Writes every table to `~/listening-notes-backups/<timestamp>/` with a copy of
+`schema.sql` beside it, keeps the last 30 and prunes the rest. Set `BACKUP_DIR`
+to put them somewhere synced — an iCloud Drive folder means they no longer live
+on one machine.
+
+```bash
+npm run restore -- ~/listening-notes-backups/2026-08-27-2212
+```
+
+Prints what it would do and changes nothing. Add `--yes` to actually restore,
+which **empties every table first** — it is a restore, not a merge. It reads a
+downloaded export file just as happily as a backup folder.
+
+Practise on a Neon branch before you ever need it for real. Branches are free
+and instant, and a restore you have never run is a hope rather than a plan:
+
+```bash
+DATABASE_URL='postgres://...branch...' npm run restore -- <backup> --yes
+```
+
+> **Neon's own history is short** — six hours on the free plan. That covers the
+> mistake you notice straight away and nothing else. Take your own snapshot
+> before you touch the schema.
+
+---
+
 ## Secret Keys
 
 **[`.env.example`](.env.example) is the list**, with what each variable is for
