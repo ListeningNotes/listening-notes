@@ -46,7 +46,7 @@
 'use client';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { IdentificationCard, BookOpen, Gear, Info } from '@phosphor-icons/react';
+import { IdentificationCard, BookOpen, Broadcast, Gear, Info } from '@phosphor-icons/react';
 import { useTheme } from './Lightswitch';
 import { foldKey, useListeningBeacon } from '../../hooks/useListeningBeacon';
 import { useBookplate } from './Bookplate';
@@ -60,6 +60,19 @@ import Pitch from './Pitch';
 // Left, centre, right. Centre is the one you land on, which is why it is not
 // index 0 — the rail is scrolled to it on mount before the first paint.
 const HOME = 1;
+
+// What each pane is, as a mark and as a sentence. The controls at the foot of
+// the cross read out of this rather than out of their own direction, because
+// the useful thing to say is where a press lands and not which way it goes.
+// Pressing right from the card returns to the beacon; a cog over that arrow
+// would be describing a pane one further along that the press does not reach.
+function paneMarks(authed) {
+  return [
+    { Icon: IdentificationCard, label: 'About this journal' },
+    { Icon: Broadcast, label: 'Now listening' },
+    { Icon: authed ? Gear : Info, label: authed ? 'Your desk' : 'About this software' },
+  ];
+}
 
 // Smooth, unless the reader has asked for less. A page that slides sideways
 // under someone who has turned motion off is the one place on this site where
@@ -146,10 +159,25 @@ export default function HomeNav({ note = '' }) {
   const paneRefs = [useRef(null), useRef(null), useRef(null)];
 
   const [pane, setPane] = useState(HOME);
+  // Whether anything is moving right now. The controls sit over the page
+  // rather than beside it, so while a wall of covers is going past underneath
+  // they are three marks on top of somebody's album art. They fade out on the
+  // first scroll event and come back a beat after the last one, which is the
+  // moment a reader stops and might want them.
+  const [busy, setBusy] = useState(false);
+  const settle = useRef(null);
   // Whether each pane has anything below its first screen, and whether you are
   // already down there. Both are measured, never declared.
   const [deep, setDeep] = useState([false, false, false]);
   const [down, setDown] = useState([false, false, false]);
+
+  // Called by every scroller on the page, horizontal and vertical alike.
+  const stir = useCallback(() => {
+    setBusy(true);
+    clearTimeout(settle.current);
+    settle.current = setTimeout(() => setBusy(false), 620);
+  }, []);
+  useEffect(() => () => clearTimeout(settle.current), []);
 
   // ── Landing on the centre ─────────────────────────────────────────────────
   // Before paint, not after. A rail starts at scrollLeft 0, which is the About
@@ -171,10 +199,11 @@ export default function HomeNav({ note = '' }) {
     const onScroll = () => {
       const width = el.clientWidth || 1;
       setPane(Math.round(el.scrollLeft / width));
+      stir();
     };
     el.addEventListener('scroll', onScroll, { passive: true });
     return () => el.removeEventListener('scroll', onScroll);
-  }, []);
+  }, [stir]);
 
   // ── Measuring depth ───────────────────────────────────────────────────────
   // A pane is deep when its scroller overflows. Re-measured whenever the thing
@@ -216,6 +245,7 @@ export default function HomeNav({ note = '' }) {
       const el = ref.current;
       if (!el) return null;
       const onScroll = () => {
+        stir();
         const moved = el.scrollTop > 8;
         setDown(prev => {
           if (prev[i] === moved) return prev;
@@ -229,7 +259,7 @@ export default function HomeNav({ note = '' }) {
     });
     return () => cleanups.forEach(fn => fn && fn());
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [stir]);
 
   function goTo(index) {
     const el = railRef.current;
@@ -363,6 +393,8 @@ export default function HomeNav({ note = '' }) {
     <AlbumStrip entries={entries} variant="grid" />
   );
 
+  const marks = paneMarks(authed);
+
   return (
     <div className="hn">
       {header}
@@ -403,38 +435,46 @@ export default function HomeNav({ note = '' }) {
         </section>
       </div>
 
-      {/* Pinned to the window rather than to a pane, so they hold still while
-          the panes move under them. Faded out at the ends of the rail: a caret
-          pointing at nothing is worse than no caret. */}
-      <EdgeCaret
-        direction="left"
-        onClick={() => goTo(pane - 1)}
-        label="About this journal"
-        icon={IdentificationCard}
-        hidden={pane <= 0}
-      />
-      {/* A cog for the owner's desk, and plainly not a cog for a stranger —
-          nobody swipes toward settings to find out what a thing is. */}
-      <EdgeCaret
-        direction="right"
-        onClick={() => goTo(pane + 1)}
-        label={authed ? 'Your desk' : 'About this software'}
-        icon={authed ? Gear : Info}
-        hidden={pane >= 2}
-      />
+      {/* ── The row along the bottom ────────────────────────────────────
+          All three together rather than one on each edge. Pinned to the edges
+          they were three separate marks in three corners of somebody's
+          photograph; in a row they read as one control, and the middle of the
+          bottom edge is the one part of a phone screen that is reliably empty
+          and reliably reachable.
 
-      {/* One per pane, drawn only where there is something below and only
-          while you are still at the top of it. */}
-      {[0, 1, 2].map(i => (
+          Each mark names the pane it lands on, which is why the left and right
+          ones change as you move: from the card, right is the beacon.
+
+          The whole row fades while anything is scrolling. It sits over the
+          page rather than beside it, and a wall of album art going past under
+          three static glyphs is the row covering the thing you came to look
+          at. It comes back a beat after you stop. */}
+      <div className={'hn-controls' + (busy ? ' hn-controls--busy' : '')}>
         <EdgeCaret
-          key={i}
-          direction="down"
-          onClick={() => goDown(i)}
-          label="More on this page"
-          icon={BookOpen}
-          hidden={!deep[i] || down[i] || pane !== i}
+          direction="left"
+          onClick={() => goTo(pane - 1)}
+          /* At the left end there is no pane to name. The control is hidden
+             and inert there, but a button whose only label is the word "null"
+             is still a button a screen reader could find. */
+          label={marks[pane - 1]?.label || 'Back'}
+          icon={marks[pane - 1]?.Icon}
+          hidden={pane <= 0}
         />
-      ))}
+        <EdgeCaret
+          direction="down"
+          onClick={() => goDown(pane)}
+          label="Read on"
+          icon={BookOpen}
+          hidden={!deep[pane] || down[pane]}
+        />
+        <EdgeCaret
+          direction="right"
+          onClick={() => goTo(pane + 1)}
+          label={marks[pane + 1]?.label || 'Onward'}
+          icon={marks[pane + 1]?.Icon}
+          hidden={pane >= 2}
+        />
+      </div>
     </div>
   );
 }

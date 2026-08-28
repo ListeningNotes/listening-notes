@@ -2427,14 +2427,14 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   scroll-snap-align: start;
   scroll-snap-stop: always;
   overflow-y: auto;
-  /* proximity, not mandatory. mandatory is what made the old two screens feel
-     like two pages you could not stop between, and it only works while a pane
-     is exactly two screens tall. The centre pane is three and a bit — a whole
-     archive under the beacon — and mandatory would pull a reader back to a
-     screen edge every time they stopped halfway down the wall. proximity keeps
-     the settle at the top boundary, where the feeling was, and lets the covers
-     scroll free below it. */
-  scroll-snap-type: y proximity;
+  /* No vertical snap. There was proximity snapping here, meant to catch the
+     reader at the line where a pane's first screen ends and whatever it keeps
+     below begins — and what it produced was a scroll that argued with the
+     thumb, pulling back toward a boundary somebody had deliberately gone past.
+     The entrance to the journal wants designing as a thing in its own right;
+     until it is, a pane scrolls the way a page scrolls.
+     The rail still snaps. That is the other axis and a different argument:
+     there are exactly three panes and you are always on one of them. */
   overscroll-behavior-y: contain;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
@@ -2462,7 +2462,6 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
      mark *down* toward the photograph rather than pulling the photograph up
      to it, which is what keeps everything below where it was put. */
   padding: env(safe-area-inset-top) 16px 8px;
-  scroll-snap-align: start;
 }
 .hn-crown-mark { display: block; line-height: 0; }
 /* 82px, not 112. This SVG is cropped tight to the glyphs while the PNG it
@@ -2492,7 +2491,6 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 /* Everything under it. Not a snap point: a snap here would mean wanting three
    more lines of the wall got you a whole page of it instead. */
 .hn-under {
-  scroll-snap-align: start;
   min-height: 100dvh;
   box-sizing: border-box;
   display: flex;
@@ -2543,21 +2541,49 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 }
 .hn-under .hp-strip-actions { padding: 20px 0 8px; }
 
-/* ── The carets ─────────────────────────────────────────────────────────────
-   Pinned to the window so they hold still while the panes move under them.
-   Faded rather than unmounted: a control that vanishes as you swipe pulls the
-   eye to the edge of the screen every time the pane changes. */
-.edge-caret {
+/* ── The row along the bottom ───────────────────────────────────────────────
+   Three controls together rather than one on each edge of the window. On the
+   edges they were three marks scattered over somebody's photograph; in a row
+   they read as one control, and the middle of the bottom edge is the part of a
+   phone screen that is reliably empty and reliably reachable by a thumb.
+
+   Fixed to the window, not to a pane, so they hold still while the panes move
+   under them. */
+.hn-controls {
   position: fixed;
+  left: 0;
+  right: 0;
+  bottom: max(14px, env(safe-area-inset-bottom));
   z-index: 96;
-  width: 40px;
   display: flex;
-  /* A column, so the mark for what is that way sits over the chevron that
-     goes there. No fixed height: the box is however tall the pair is. */
+  align-items: flex-end;
+  justify-content: center;
+  gap: 30px;
+  /* The row is a transparent strip across the whole window; only the controls
+     in it take a press, or it would swallow every tap along the bottom edge. */
+  pointer-events: none;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+.hn-controls > * { pointer-events: auto; }
+/* Out of the way while anything is moving. These sit over the page rather than
+   beside it, and a wall of album art going past under three static glyphs is
+   the row covering the thing somebody came to look at. Sunk slightly as well
+   as faded, so it reads as getting out of the way rather than blinking. */
+.hn-controls--busy {
+  opacity: 0;
+  transform: translateY(8px);
+  pointer-events: none;
+}
+
+.edge-caret {
+  width: 44px;
+  display: flex;
+  /* A column: the mark for where you would land, and the arrow for which way
+     that is underneath it. */
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 1px;
+  gap: 2px;
   padding: 0;
   border: none;
   background: none;
@@ -2566,36 +2592,28 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   touch-action: manipulation;
   transition: opacity 0.25s ease, color 0.2s ease;
 }
-/* Quieter than the chevron. The caret is the control and this is the label on
-   it, and a label that competes with its own button reads as two controls. */
-.edge-caret-mark { opacity: 0.55; }
+/* The mark speaks and the arrow only points, so the mark carries the ink and
+   the arrow is a hint under it. */
+.edge-caret-mark { opacity: 0.75; }
+.edge-caret-arrow { opacity: 0.4; }
 .edge-caret:hover { color: var(--ink-soft); }
-.edge-caret:hover .edge-caret-mark { opacity: 0.9; }
-.edge-caret:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 3px; }
-.edge-caret--left {
-  left: max(0px, env(safe-area-inset-left));
-  top: 50%;
-  transform: translateY(-50%);
-}
-.edge-caret--right {
-  right: max(0px, env(safe-area-inset-right));
-  top: 50%;
-  transform: translateY(-50%);
-}
-/* Centred with a margin rather than a transform, because the bob keyframe
-   below owns transform and would throw away a translateX(-50%). */
-.edge-caret--down {
-  left: 50%;
-  margin-left: -20px;
-  bottom: max(16px, env(safe-area-inset-bottom));
-  animation: hp-scroll-btn-bob 2.2s ease-in-out infinite;
-}
+.edge-caret:hover .edge-caret-mark { opacity: 1; }
+.edge-caret:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 4px; }
+/* Faded in place, keeping its slot. Removing it would slide the other two
+   across to re-centre, moving the control somebody was reaching for. */
 .edge-caret--away {
   opacity: 0;
   pointer-events: none;
 }
+/* Only the middle one bobs, and only because down is the direction nobody
+   thinks to try on a page that already moves sideways. */
+.edge-caret--down {
+  animation: hp-scroll-btn-bob 2.4s ease-in-out infinite;
+}
 @media (prefers-reduced-motion: reduce) {
   .edge-caret--down { animation: none; }
+  .hn-controls { transition: opacity 0.3s ease; }
+  .hn-controls--busy { transform: none; }
 }
 
 /* ── Left: About ────────────────────────────────────────────────────────── */
@@ -2656,7 +2674,6 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 }
 
 .ab-below {
-  scroll-snap-align: start;
   display: flex;
   flex-direction: column;
   gap: 30px;
@@ -2946,6 +2963,6 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
      is what keeps the portrait and the album art on the same line — take the
      box away and the columns stop agreeing about where a square starts. */
   .hn-pane:not(.hn-pane--home) .hn-crown { visibility: hidden; }
-  .edge-caret { display: none; }
+  .hn-controls { display: none; }
   .hn-under .hp-strip-track--grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }

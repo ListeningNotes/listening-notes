@@ -1,29 +1,27 @@
 // Copyright (C) 2026 Miyel Brown
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // components/main_components/EdgeCaret.js
-// The one control that says the cross has more than one pane.
+// One control in the row along the bottom of the cross: a mark for where you
+// would land, and a small chevron under it for which way that is.
 //
 // A swipe is invisible. Nothing on a still screen tells you that the page
 // continues to the left and to the right, and a navigation nobody discovers is
 // a navigation that does not exist — so each direction that has something in
-// it gets a caret pinned to that edge. Press it or swipe past it; both land in
-// the same place, and the press is the one that teaches the swipe.
+// it gets a control. Press it or swipe past it; both land in the same place,
+// and the press is the one that teaches the swipe.
+//
+// The mark speaks and the chevron only points. That is why one is twice the
+// size of the other: a chevron says something is over there, which is enough
+// to make somebody swipe once and not enough to say whether it was worth it.
+// The mark answers that, and it names the *destination* rather than the
+// direction — pressing right from the card goes back to the beacon, so what
+// sits above that chevron is the beacon's own mark, not the desk's. See
+// HomeNav, which works out which mark belongs over which arrow.
 //
 // Three positions out of one component rather than three components: they are
 // the same object doing the same job on a different axis, and written twice
 // they drift — which is exactly how the site ended up with two nav rows that
 // had to be merged back into SiteNav.
-//
-// The down caret is not a duplicate of the other two. Left and right say
-// "there is another pane"; down says "this pane keeps going", which is the
-// same sentence about a different axis and reads correctly as the same mark.
-//
-// Above each caret sits a mark for what is that way — a card, a book, a cog.
-// The caret is the verb and the mark is the noun: on its own a chevron says
-// only that something is over there, which is enough to make somebody swipe
-// once and not enough to tell them whether it was worth it. Stacked, the pair
-// answers both questions in the width of a thumbnail, which is all the room an
-// edge control has.
 
 'use client';
 import { CaretLeft, CaretRight, CaretDown } from '@phosphor-icons/react';
@@ -41,10 +39,11 @@ export default function EdgeCaret({ direction, onClick, label, icon: Mark, hidde
   return (
     <button
       type="button"
-      // aria-hidden rather than unmounting: a caret that appears and
-      // disappears as you swipe pulls the eye to the edge of the screen every
-      // time the pane changes. It fades instead, and inert keeps the faded one
-      // off the tab order so nobody lands on a control they cannot see.
+      // Faded in place rather than unmounted. The row would otherwise reflow
+      // every time a pane changed — the remaining controls sliding across to
+      // re-centre themselves, so the thing you were about to press moves out
+      // from under your thumb. The dot row learned this the hard way; see the
+      // note at the top of DotNav.js.
       className={'edge-caret edge-caret--' + direction + (hidden ? ' edge-caret--away' : '')}
       onClick={onClick}
       aria-label={label}
@@ -52,8 +51,8 @@ export default function EdgeCaret({ direction, onClick, label, icon: Mark, hidde
       inert={hidden ? true : undefined}
       tabIndex={hidden ? -1 : undefined}
     >
-      {Mark && <Mark size={17} weight="regular" aria-hidden="true" className="edge-caret-mark" />}
-      <Glyph size={22} weight="regular" aria-hidden="true" />
+      {Mark && <Mark size={21} weight="regular" aria-hidden="true" className="edge-caret-mark" />}
+      <Glyph size={11} weight="bold" aria-hidden="true" className="edge-caret-arrow" />
     </button>
   );
 }
