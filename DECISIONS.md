@@ -168,6 +168,27 @@ they are pointing at. No label — art under a name says what it is.
 pinned entry clears the pin rather than breaking the card, and null renders
 nothing.
 
+**The dot row is gone.** Archive, Compare, Submit and Surprise all have their
+own routes and all sit at the foot of the wall now, so the row was a fixed
+strip on every page pointing at places already reachable from where you were.
+Removing it also gave back the 56px every page reserved to clear it — the nav
+band went from 136 to 80.
+
+**The wall's controls sit at the bottom on a phone.** Where the thumb is. At
+the top they were furthest from the hand and took the first hundred pixels of
+the wall, which on a phone is most of a row of covers: the records get the top
+of the screen and the controls go where you can reach them. Sticky, never
+fixed — the wall is mounted inside a pane of the cross, and a fixed bar would
+float over the card and the desk when you swiped away from it.
+
+**The beacon stops captioning itself.** "Now listening" and "Not listening"
+said what the screen already shows: a record with a title and an artist under
+it, on a page whose mark carries a lit dot while something plays. The idle
+state still greys the art and prints "last played" across it, which is the same
+fact told by the thing it is about — and that label is no longer green, which
+was the retired accent and, worse, the one colour on the site that means
+something *is* playing.
+
 **No fourth metric on the card.** *Most played* was proposed to balance three
 counts with one line about taste, and turned down: the card is a glance and
 four rows is already the most a glance holds. Ruled out rather than parked.

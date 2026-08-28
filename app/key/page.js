@@ -22,7 +22,6 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Fingerprint, Heart, SketchLogo } from '@phosphor-icons/react';
 import { fonts } from '../../library/sitewide_visuals';
-import DotNav from '../../components/main_components/DotNav';
 import SiteNav from '../../components/main_components/SiteNav';
 import Chip from '../../components/main_components/Slug_Page/Chip';
 import StarRating from '../../components/main_components/StarRating';
@@ -63,7 +62,7 @@ export default function KeyPage() {
       {/* Same sheet /rig uses. React hoists it once by href, so whichever of the
           two pages loads first is the one that pays for it. */}
       <style href="ln-paper-page" precedence="default">{`
-        .pp-page { --pp-nav-bottom: calc(136px + var(--safe-top)); padding-top: var(--pp-nav-bottom); }
+        .pp-page { --pp-nav-bottom: calc(80px + var(--safe-top)); padding-top: var(--pp-nav-bottom); }
         .pp-main { max-width: 860px; margin: 0 auto; padding: 46px 48px 100px; }
         .pp-title {
           font-family: var(--font-display); font-weight: var(--font-display-weight);
@@ -114,7 +113,6 @@ export default function KeyPage() {
       `}</style>
 
       <SiteNav />
-      <DotNav />
 
       <main className="pp-main">
         <h1 className="pp-title">The key</h1>

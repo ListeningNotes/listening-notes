@@ -27,7 +27,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { pull_settings, coverName, titleName } from '../../library/settings_actions';
-import DotNav from '../../components/main_components/DotNav';
 import SiteNav from '../../components/main_components/SiteNav';
 
 // The stored text uses one convention and no more: a line starting with "## "
@@ -71,7 +70,7 @@ export default async function GetPage() {
            this is the same writing, one page further along, and it should not
            suddenly change typeface or line height on the way there. */
         .why-wrap {
-          --why-nav-bottom: calc(136px + var(--safe-top));
+          --why-nav-bottom: calc(80px + var(--safe-top));
           max-width: 860px; margin: 0 auto;
           padding: calc(var(--why-nav-bottom) + 44px) 48px 120px;
         }
@@ -109,7 +108,6 @@ export default async function GetPage() {
       `}</style>
 
       <SiteNav />
-      <DotNav />
 
       <article className="why-wrap">
         <header className="why-head">

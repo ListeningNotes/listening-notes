@@ -13,7 +13,6 @@ import { fonts } from '../../../library/sitewide_visuals';
 import { parseHorizon, entryTracks, splitNotes, entryTypeLabel } from '../../../library/entry_formatter';
 import { kept_receipts } from '../../../library/receipts';
 import { buildReferenceIndex, createReferenceLinker } from '../../../library/cross_references';
-import DotNav from '../../../components/main_components/DotNav';
 import SiteNav from '../../../components/main_components/SiteNav';
 import HorizonBar from '../../../components/main_components/Slug_Page/HorizonBar';
 import TrackThread from '../../../components/main_components/Slug_Page/TrackThread';
@@ -409,7 +408,6 @@ export default function FullPostPage({ entry, references = [] }) {
 
       {/* ── NAV ── shared site nav (logo + dot nav), identical to every other public page */}
       <SiteNav />
-      <DotNav />
 
       {/* On phones this is the scroll container the two screens snap inside —
           the same arrangement as .hp-mobile-screens on the homepage. On

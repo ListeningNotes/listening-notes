@@ -5,7 +5,6 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { fonts } from '../../library/sitewide_visuals';
-import DotNav from '../../components/main_components/DotNav';
 import SiteNav from '../../components/main_components/SiteNav';
 
 export default function SubmitPage() {
@@ -58,10 +57,10 @@ export default function SubmitPage() {
   return (
     <div className="sb-page" style={{ minHeight: '100vh', background: 'var(--bg)', color: 'var(--ink)', fontFamily: fonts.sans }}>
       <style>{`
-        /* Same 136px the nav ends on everywhere else — this page used to clear
+        /* Same 80px the nav ends on everywhere else — this page used to clear
            it with a hand-picked 168px of padding, which is the same number
            arrived at by eye. */
-        .sb-page { --sb-nav-bottom: calc(136px + var(--safe-top)); }
+        .sb-page { --sb-nav-bottom: calc(80px + var(--safe-top)); }
 
         /* Opens the way an entry does: title, a line under it in the label
            face, then the qualifiers. */
@@ -164,7 +163,6 @@ export default function SubmitPage() {
       `}</style>
 
       <SiteNav />
-      <DotNav />
 
       <header className="sb-hero">
         <h1>Submit an Album</h1>

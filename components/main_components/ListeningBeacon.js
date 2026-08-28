@@ -92,12 +92,16 @@ export default function ListeningBeacon({ compact = false, statusAboveArt = fals
   // makes. Pressing the beacon no longer does anything, so it stopped being a
   // button.
 
-  const statusLine = (
-    <div className="beacon-status">
-      <span className={'beacon-dot' + (isLive ? ' beacon-dot--live' : '')} />
-      <span className="beacon-status-text">{isLive ? 'Now listening' : 'Not listening'}</span>
-    </div>
-  );
+  // "Now listening" and "Not listening" used to be written out above the art.
+  // They said what the page already shows: a record with a title and an artist
+  // under it, on a page whose mark carries a lit dot while something is
+  // playing. Two words of label over an image that is the whole point of the
+  // screen was spacing spent on a caption.
+  //
+  // The distinction they carried is not lost — the idle state greys the art
+  // and prints "last played" across it, which is the same fact told by the
+  // thing it is about.
+  const statusLine = null;
 
   if (compact) {
     return (
