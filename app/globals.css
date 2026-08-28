@@ -2701,8 +2701,9 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   color: var(--ink-soft);
   margin: 0;
 }
-/* The measure and rhythm /why sets the same writing in. It is one essay; it
-   should not change typeface or leading on the way to a different page. */
+/* The measure and rhythm /get sets its prose in. The two pages carry different
+   writing now, but they are the same person's voice and should not change
+   typeface or leading between them. */
 .ab-prose { display: flex; flex-direction: column; gap: 0; }
 .ab-prose-head {
   font-family: var(--font-display);
@@ -2752,7 +2753,10 @@ a.ab-rig-name:hover { text-decoration: underline; }
 /* Where else this person can be found, at the foot of the reading rather than
    in the row beside "Send an album" — having read about somebody, you might
    want to go and find them. Three at most; see LINK_LIMIT in About.js. */
-.ab-links { display: flex; gap: 18px; align-items: center; }
+/* Centred under a centred heading. The rig's rows fill the measure so a
+   centred heading sits over a full-width list; one or two marks ranged left
+   under the same heading just looked dropped. */
+.ab-links { display: flex; gap: 20px; align-items: center; justify-content: center; }
 .ab-link {
   display: inline-flex;
   align-items: center;

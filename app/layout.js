@@ -112,7 +112,7 @@ export const dynamic = 'force-dynamic';
 // decision belongs anyway: what ships to every page is a layout question.
 //
 // Bulk text belongs to whoever renders it. /key fetches the definitions and
-// /why reads its essay on the server; these are the short facts.
+// /get reads its essay on the server; these are the short facts.
 const BOOKPLATE_FIELDS = [
   // journal_name is gone from this list. A journal is called after whoever
   // keeps it, so keeper_name below is the name, and shipping a second one to
