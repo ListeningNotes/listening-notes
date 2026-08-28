@@ -198,6 +198,25 @@ has room for art and metadata together.
 
 ## The network
 
+**Backups are two features, not one.** Neon keeps six hours of history on
+this plan, which covers the mistake you notice immediately and nothing else.
+Past that: the owner's own copy gets a scheduled local backup writing to a
+folder (`scripts/backup.mjs`, a daily LaunchAgent, thirty kept); every copy
+including that one gets `/api/export`, a button that downloads the whole
+journal as one file.
+
+They cannot be the same feature. A schedule needs somewhere to write and
+something always running, and neither can be handed to somebody running their
+own copy — offering them storage on a machine they do not own is a hosting
+business, which is ruled out. A button needs nothing: no configuration, no
+service, no daemon. So the automatic version never ships and the manual one
+always does.
+
+**One format, both paths.** `scripts/restore.mjs` reads either the folder the
+schedule writes or the single file the button downloads. The moment somebody
+needs a restore is the worst possible moment to learn their backup is the wrong
+sort.
+
 **The feed is pull-based.** Every copy publishes `/feed.xml`; each copy goes
 and checks. Nobody learns they were read, no server, no subscriptions.
 
