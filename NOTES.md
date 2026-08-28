@@ -47,9 +47,17 @@ re-propose anything listed as ruled out.
 - [ ] **`/api/export`** — a copy should be able to hand its owner their own data back.
 
 **STRUCTURE** — see DECISIONS.md before starting any of these
-- [ ] **Cross navigation** — beacon is home; down to the journal, left to About, right to actions or the pitch pane. Replaces the card flip, which is dead.
-- [ ] **Source link** — one faint line at the foot of the About pane. Satisfies AGPL §13 for modified copies. Must be a config value defaulting to upstream, because a modified copy owes *its own* source, not this repo's.
-- [ ] **Pitch pane** — logged out, right swipe: three sentences and a button to `/get`. Ships on every copy.
+
+The cross itself is built and on the branch `cross-nav`. What is left of it:
+
+- [ ] **Journal** — the wall of covers extracted out of `app/archive/page.js` into one component, mounted by the centre pane *and* by `/archive`. The centre pane still shows the old 8-tile strip until this lands.
+- [ ] **`usePlaceKeeper`** — pane index and per-pane scroll offset, kept across a route change. Swiping between panes already remembers itself (they stay mounted); going out to an entry and back does not, because browsers do not restore nested scroll containers.
+- [ ] **`useShake` + `firework()`** — shake the phone, a firework goes up, then `/shuffle`. The Surprise pill stays where it is.
+- [ ] **Re-home DotNav's four destinations.** Archive becomes the centre pane's lower half, Compare and Surprise are pills at the foot of the journal, Submit is a visitor door. The dot row has nothing left to point at once Journal lands.
+- [ ] **`/get` does not exist.** The pitch pane's button points at it. Fine while nobody else has a copy; not fine at the first install.
+- [ ] **Delete the dead `.hp-*` homepage CSS.** `.hp-mobile-screens`, `.hp-screen--one`, `.hp-screen--two` and everything under them — nothing renders those class names any more. Four rules inside them did real work and are already restated against `.hn`; the rest is roughly 300 lines that can go. Left in place deliberately so the restructure could be reviewed without a find-and-replace on the beacon.
+- [ ] **A QR on the pitch pane.** DECISIONS already settles that the right pane produces a fixed code to `/get`, the same on every copy. Not built, and the "logo made of the QR" idea is unresolved.
+- [ ] **Source link wants a settings column.** It ships today as `NEXT_PUBLIC_SOURCE_URL` defaulting to upstream, which is the smaller half of the job — a modified copy owes *its own* source and should not need a redeploy to say so.
 - [ ] **Listen numbering** — an album has many listens, numbered, computed from `album_key` and never chosen.
 - [ ] **The feed as a network** — `/feed.xml` publishes, but nothing reads anyone else's. Two views, submissions first. A shelf, not a river.
 - [ ] **Relationship field removal** — every value has dissolved into something else. Legacy data stays; the picker goes.
@@ -189,7 +197,22 @@ Scope the style another way.
 `rm -rf .next`, then start it again. Restarting alone does nothing.
 
 **`perspective` promotes tiles into their own layers**, which then paint over
-fixed elements. Watch for it on the archive.
+fixed elements. Watch for it on the archive. The band behind a fixed top row
+(`.sitenav-row::before`, `.hn-bar::before`) needs `transform: translateZ(0)` of
+its own or the tiles paint straight over it, whatever its z-index says.
+
+**A caret pinned to the window will land in the middle of a sentence.** Pane
+content pays `--hn-gutter` for exactly this reason. It is not obvious until you
+read a paragraph with a chevron sitting in it.
+
+**Nested scroll containers are not restored by the browser.** The panes keep
+their own scroll while they stay mounted, which is why swiping away and back
+remembers your place for free — and why leaving for an entry and coming back
+will not, until `usePlaceKeeper` exists.
+
+**`overscroll-behavior-x: contain` is load-bearing on the rail.** Without it a
+swipe that reaches the left end keeps going into Safari's back gesture, so
+reaching for the card takes you off the site.
 
 **Linux is case-sensitive and macOS is not.** An import path with the wrong
 case works locally and fails the Vercel build. When a build dies on "Module not
@@ -271,6 +294,20 @@ current.
 ---
 
 ## Complete
+
+**2026-08-27 session — the cross**
+- [x] **`HomeNav`** — three panes on one horizontal rail, landing on centre before first paint, three columns above 769px. One structure; the desktop tree and the phone tree of snapped screens are both gone.
+- [x] **The card flip is gone**, as DECISIONS said it should be. Left *is* the about page.
+- [x] **`EdgeCaret`** — left, right and down out of one component. The down caret is drawn by measuring the pane, so a blank copy gets no arrow pointing at nothing.
+- [x] **`About`** — the card, then `about_intro`, then the rig rows inline, then the note and the key, then the source line.
+- [x] **`Dashboard` / `Pitch`** — the right pane both ways, chosen by the wristband.
+- [x] **The crown** — the mark large and centred at the head of every pane, so the portrait and the album art land on the same line. Verified to the pixel at 375 wide: both at y=172.
+- [x] **The card's measured photo-lift deleted** — a ResizeObserver, a spacer and forty lines of arithmetic, dead since `.idc-scene` stopped existing with the flip, and made unnecessary by a fixed crown.
+- [x] **The card reordered** — photograph first, name and counted line under it, head moved out of the flow into the corner.
+- [x] Verified: production build clean, no new lint errors, every pane renders, both squares aligned, the wall scrolls under a fading band rather than through the mark.
+
+**Not exercised:** no caret press and no real swipe were ever driven from here — the browser tool's click timed out on every attempt while the page stayed responsive. Rendering and scroll positions were verified programmatically. Try the gesture on a real phone before merging.
+
 
 **2026-08-27 session — backups, properly**
 - [x] **`scripts/backup.mjs`** — every table to `<BACKUP_DIR>/<timestamp>/`, with `schema.sql` copied in and a manifest. Keeps 30, prunes the rest, exits non-zero if a table fails so a silent half-backup can't pass as a good one. `npm run backup`.
