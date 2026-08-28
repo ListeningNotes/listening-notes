@@ -2309,14 +2309,18 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
      sentence and neither is legible. Everything a pane draws in a full-width
      column pays this. */
   --hn-gutter: 34px;
-  /* How much of every pane the mark takes off the top. It is a constant on
-     purpose: the crown is the same height on all three panes, so the square
-     directly under it — a portrait on the left, an album on the centre —
-     lands on the same line whichever pane you are looking at, and swiping
-     reads as one object turning rather than three pages going past. Every
-     landing screen subtracts this from its own height so that crown plus
-     landing still comes to exactly one screen. */
-  --hn-crown: 152px;
+  /* How much of every pane the mark takes off the top, and therefore how far
+     down the window the mark itself sits — the crown holds it against its own
+     bottom edge, so raising this walks the logo down the screen and everything
+     under it follows.
+     The same on all three panes, always, which is the point: the square below
+     it — a portrait on the left, an album on the centre — lands on the same
+     line whichever pane you are looking at, and swiping reads as one object
+     turning rather than three pages going past. Every landing screen subtracts
+     it so that crown plus landing still comes to one screen.
+     Scaled to the window rather than fixed, because a tall phone can carry the
+     mark further down than a short one and a short one has none to spare. */
+  --hn-crown: clamp(140px, 24dvh, 210px);
   /* The air between the mark and the square under it. One number for both
      panes: the card's portrait and the beacon's album art are the same 180px
      square in the same frame, and the whole point of a fixed crown is that
@@ -2324,15 +2328,14 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
      offset from it by the same amount. This is the constant that replaced the
      measured lift the card used to carry.
      Half the slack, rather than a fixed number or a flat fraction of the
-     screen. What is being spent here is whatever the taller pane has left over
-     once the crown, the card and the down caret have taken theirs — roughly
-     720px between them on the card's side — and halving it puts the same air
-     above the square as below. A flat dvh fraction cannot do that: it hands a
-     short phone an offset it does not have the room for, and the card's last
-     row ends up under the caret.
-     It went from 20px to this when the bio came off the card, which is the
-     whole reason there is anything to halve. */
-  --hn-square-top: clamp(20px, calc((100dvh - 720px) / 2), 80px);
+     screen. What is spent here is whatever is left once the crown, the card
+     and the down caret have taken theirs — 568px for the last two — and
+     halving it puts the same air above the square as below. A flat dvh
+     fraction cannot do that: it hands a short phone an offset it does not have
+     the room for, and the card's last row ends up under the caret.
+     It reads the crown rather than assuming it, so walking the mark down the
+     screen spends the slack once instead of twice. */
+  --hn-square-top: clamp(16px, calc((100dvh - var(--hn-crown) - 568px) / 2), 80px);
   position: relative;
   width: 100%;
   height: 100dvh;
@@ -2441,15 +2444,20 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 /* ── The crown ──────────────────────────────────────────────────────────────
    The mark, large and centred, at the top of every pane — the treatment the
    old cover gave it on its one first screen, applied to all three. Its total
-   height is --hn-crown and the panes are built around that number, so this
-   box's padding and the token have to agree: 44 top + 82 mark + 26 bottom. */
+   height is --hn-crown and every landing screen is built around that number.
+   The mark sits 26px off the bottom of it, so the token alone decides how far
+   down the window the whole pane begins. */
 .hn-crown {
   height: var(--hn-crown);
   box-sizing: border-box;
   display: flex;
-  align-items: center;
+  /* Held against the bottom of its own box rather than centred in it. That is
+     what makes --hn-crown a single control for the whole landing screen:
+     raising it walks the mark down the window by the full amount, and pushes
+     everything under it down too, instead of splitting the difference. */
+  align-items: flex-end;
   justify-content: center;
-  padding: calc(env(safe-area-inset-top) + 44px) 16px 26px;
+  padding: env(safe-area-inset-top) 16px 26px;
   scroll-snap-align: start;
 }
 .hn-crown-mark { display: block; line-height: 0; }
