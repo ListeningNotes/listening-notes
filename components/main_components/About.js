@@ -187,7 +187,7 @@ export default function About({ stamps, authed = false }) {
                 were. */}
             <h2 className="ab-subhead">
               <LinkSimple size={15} weight="regular" aria-hidden="true" />
-              Elsewhere
+              Find me
             </h2>
             <div className="ab-links">
               {socials.map(({ href, label, Icon }) => (
