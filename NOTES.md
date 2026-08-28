@@ -40,6 +40,20 @@ re-propose anything listed as ruled out.
 
 ## Pending
 
+**DO THIS FIRST — the prompts column is not on the live database**
+
+`schema.sql` has it, nothing runs `schema.sql`, and the card's save writes it.
+Until this statement has been run, pressing save on the card fails:
+
+```sql
+ALTER TABLE settings ADD COLUMN IF NOT EXISTS bioanswers jsonb;
+```
+
+Reads are safe either way — `pull_settings` does `SELECT *` and a missing
+column just comes back as null — so the site renders fine right now. It is
+only the write that breaks. Run it in Neon's SQL editor. Take a backup first
+(`npm run backup`); this is the production database and there is no other one.
+
 **SHIPPING A COPY** — the gap between "it runs here" and "someone else can run it"
 - [ ] **Migration runner** — nothing executes `schema.sql`. A fresh copy has no tables and no way to make them without opening Neon's SQL editor by hand. `schema.sql` has also never actually been run against an empty database; every statement is guarded, but "reads correctly" and "builds a working journal from nothing" are different claims and only the first is checked.
 - [ ] **Welcome screen** — first run should ask who this copy belongs to and write the owner row plus the settings row. `setup_complete` exists as a column and nothing sets it. Until this lands, `keeper_name`, `founded_at` and `serial` can only be set in the database.
@@ -47,9 +61,20 @@ re-propose anything listed as ruled out.
 - [ ] **`/api/export`** — a copy should be able to hand its owner their own data back.
 
 **STRUCTURE** — see DECISIONS.md before starting any of these
-- [ ] **Cross navigation** — beacon is home; down to the journal, left to About, right to actions or the pitch pane. Replaces the card flip, which is dead.
-- [ ] **Source link** — one faint line at the foot of the About pane. Satisfies AGPL §13 for modified copies. Must be a config value defaulting to upstream, because a modified copy owes *its own* source, not this repo's.
-- [ ] **Pitch pane** — logged out, right swipe: three sentences and a button to `/get`. Ships on every copy.
+
+The cross is built and merged. What is left of it:
+
+- [ ] **`usePlaceKeeper`** — pane index and per-pane scroll offset, kept across a route change. Swiping between panes already remembers itself (they stay mounted); going out to an entry and back does not, because browsers do not restore nested scroll containers.
+- [ ] **`useShake` + `firework()`** — shake the phone, a firework goes up, then `/shuffle`. The Surprise pill stays where it is.
+- [ ] **Delete the dead `.hp-*` homepage CSS.** `.hp-mobile-screens`, `.hp-screen--one`, `.hp-screen--two` and everything under them — nothing renders those class names any more. Four rules inside them did real work and are already restated against `.hn`; the rest is roughly 300 lines that can go. Left in place deliberately so the restructure could be reviewed without a find-and-replace on the beacon.
+- [ ] **A QR on the pitch pane.** DECISIONS already settles that the right pane produces a fixed code to `/get`, the same on every copy. Not built, and the "logo made of the QR" idea is unresolved.
+- [ ] **`settings.bio` now has no reader and no writer.** Deliberate — see DECISIONS. The value is still in the database. Decide at the welcome screen whether the column gets a job or gets dropped, while the schema is still a draft.
+- [ ] **`/rig` is still a forwarding stub**, and by the same argument that deleted `/why` it may not have earned one: three days live, linked from a card, on a site nobody else runs. `/about` genuinely did earn its stub. Worth one decision rather than two defaults.
+- [ ] **Compare wants two homes** — one on an individual album, for comparing that record against another, and one on the About pane for comparing the collection overall. It is reachable from neither today; the route works if you type it.
+- [ ] **Surprise (`/shuffle`) has no way in.** Work in progress by decision — the shake is the intended gesture and is not built. See DECISIONS.
+- [ ] **Pinned album on the card** — the render half can ship on its own; the picker is blocked on Journal. See DECISIONS. The column and its foreign key already exist.
+- [ ] **`/get` is half a page.** It renders the essay and nothing else. The other half of what that address owes a stranger — what the software is, that it is free, and the way to install a copy — is unwritten, so somebody arriving from another copy's pitch pane reads the why and finds no door. Its tab still reads `Why · …` too.
+- [ ] **Source link wants a settings column.** It ships today as `NEXT_PUBLIC_SOURCE_URL` defaulting to upstream, which is the smaller half of the job — a modified copy owes *its own* source and should not need a redeploy to say so.
 - [ ] **Listen numbering** — an album has many listens, numbered, computed from `album_key` and never chosen.
 - [ ] **The feed as a network** — `/feed.xml` publishes, but nothing reads anyone else's. Two views, submissions first. A shelf, not a river.
 - [ ] **Relationship field removal** — every value has dissolved into something else. Legacy data stays; the picker goes.
@@ -189,7 +214,27 @@ Scope the style another way.
 `rm -rf .next`, then start it again. Restarting alone does nothing.
 
 **`perspective` promotes tiles into their own layers**, which then paint over
-fixed elements. Watch for it on the archive.
+fixed elements. Watch for it on the archive. The band behind a fixed top row
+(`.sitenav-row::before`, `.hn-bar::before`) needs `transform: translateZ(0)` of
+its own or the tiles paint straight over it, whatever its z-index says.
+
+**A caret pinned to the window will land in the middle of a sentence.** Pane
+content pays `--hn-gutter` for exactly this reason. It is not obvious until you
+read a paragraph with a chevron sitting in it.
+
+**Nested scroll containers are not restored by the browser.** The panes keep
+their own scroll while they stay mounted, which is why swiping away and back
+remembers your place for free — and why leaving for an entry and coming back
+will not, until `usePlaceKeeper` exists.
+
+**A screenshot can beat React's commit.** Driving a scroll from the console and
+grabbing the frame in the same batch shows the old state — the carets look
+stuck and the band looks missing. Read `className` off the live DOM before
+believing a screenshot about anything that state controls.
+
+**`overscroll-behavior-x: contain` is load-bearing on the rail.** Without it a
+swipe that reaches the left end keeps going into Safari's back gesture, so
+reaching for the card takes you off the site.
 
 **Linux is case-sensitive and macOS is not.** An import path with the wrong
 case works locally and fails the Vercel build. When a build dies on "Module not
@@ -271,6 +316,48 @@ current.
 ---
 
 ## Complete
+
+**2026-08-28 — the cross, merged to main**
+
+Twenty commits. The homepage is three panes on a rail: the card and the writing
+on the left, the beacon with the whole archive under it in the centre, the desk
+or the pitch on the right.
+
+- [x] **`HomeNav`, `EdgeCaret`, `About`, `Dashboard`, `Pitch`, `Journal`** — six new components, and one homepage instead of two markup trees.
+- [x] **The card flip is gone**, as DECISIONS had said it should be, and with it the measured photo-lift, the rig drawer, and both duplicate homepage trees.
+- [x] **Prompts replace the free-text bio** — nine openings in `library/bioprompt.js`, three answered, stored as key and answer in `settings.bioanswers`. **That column had to be added to the live database by hand; it is done.**
+- [x] **The dot row is deleted** and the nav band it needed came down from 136px to 80.
+- [x] **The long essay moved to `/get`** and `/why` was deleted rather than forwarded.
+- [x] **`/archive` is 38 lines** and mounts the same wall the centre pane does.
+- [x] Verified before merging: production build clean, every public route 200 including the redirects and an entry page, lint unchanged from where it started at 47 problems / 9 errors.
+
+**Not exercised anywhere in this work:** the card's edit mode. It only renders
+behind a wristband and the dev browser has none, so the prompt chooser, the
+link rows, the rig rows and the save button were checked by measuring computed
+styles and never by pressing them. That is the first thing to try on the live
+site.
+
+**2026-08-28 — Journal**
+- [x] **`components/main_components/Journal.js`** — the whole of the old `app/archive/page.js` minus the page. Search, filters, sort, density, grid, modal and phone sheet, mounted by the centre pane of the cross *and* by `/archive`.
+- [x] **The route is 38 lines.** It carries the nav, the dot row, the offset that clears them, and the way home.
+- [x] **The scroller is a prop.** The one real difference between the two mounts: on the route the document scrolls, in the cross a pane does. Three things cared — the filter bar sticks to it, the desktop popover closes on it, and the phone sheet has to lock it — so it is handed in rather than assumed, defaulting to the window.
+- [x] **The wall is handed the entries the cross already fetched**, so the homepage does not ask `/api/entries` twice.
+- [x] Compare, Submit and Surprise are pills at the foot of the wall — what is left of the dot row's destinations. Surprise keeps its gold burst.
+- [x] Verified: `/` and `/archive` both 200 and both draw 39 tiles; sticky bar at 136px on the route and 44px in the pane; repo-wide lint unchanged at 47 problems / 9 errors (the six in Journal moved with the code from `archive/page.js`).
+
+**2026-08-27 session — the cross**
+- [x] **`HomeNav`** — three panes on one horizontal rail, landing on centre before first paint, three columns above 769px. One structure; the desktop tree and the phone tree of snapped screens are both gone.
+- [x] **The card flip is gone**, as DECISIONS said it should be. Left *is* the about page.
+- [x] **`EdgeCaret`** — left, right and down out of one component. The down caret is drawn by measuring the pane, so a blank copy gets no arrow pointing at nothing.
+- [x] **`About`** — the card, then `about_intro`, then the rig rows inline, then the note and the key, then the source line.
+- [x] **`Dashboard` / `Pitch`** — the right pane both ways, chosen by the wristband.
+- [x] **The crown** — the mark large and centred at the head of every pane, so the portrait and the album art land on the same line. Verified to the pixel at 375 wide: both at y=172.
+- [x] **The card's measured photo-lift deleted** — a ResizeObserver, a spacer and forty lines of arithmetic, dead since `.idc-scene` stopped existing with the flip, and made unnecessary by a fixed crown.
+- [x] **The card reordered** — photograph first, name and counted line under it, head moved out of the flow into the corner.
+- [x] Verified: production build clean, no new lint errors, every pane renders, both squares aligned, the wall scrolls under a fading band rather than through the mark.
+
+**Not exercised:** no caret press and no real swipe were ever driven from here — the browser tool's click timed out on every attempt while the page stayed responsive. Rendering and scroll positions were verified programmatically. Try the gesture on a real phone before merging.
+
 
 **2026-08-27 session — backups, properly**
 - [x] **`scripts/backup.mjs`** — every table to `<BACKUP_DIR>/<timestamp>/`, with `schema.sql` copied in and a manifest. Keeps 30, prunes the rest, exits non-zero if a table fails so a silent half-backup can't pass as a good one. `npm run backup`.

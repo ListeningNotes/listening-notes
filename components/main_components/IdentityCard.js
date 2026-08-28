@@ -33,9 +33,9 @@ import {
   WhatsappLogo, X, XLogo, YoutubeLogo,
 } from '@phosphor-icons/react';
 import QRCode from 'qrcode';
-import { useIdentificationCardEditor } from './IdentificationCardEditor';
 import { useListeningBeacon } from '../../hooks/useListeningBeacon';
 import { useBookplate } from './Bookplate';
+import { CARD_PROMPT, readBioAnswers } from '../../library/bioprompt';
 
 // ── The Ln. mark ──────────────────────────────────────────────────────────
 // It sits at the top of the column, and it is the only mark on this side of the
@@ -249,30 +249,27 @@ function AddressCode({ text }) {
   );
 }
 
-export default function IdentityCard({ stamps, authed = false }) {
+// `edit` is handed in rather than made here. The prompts print on the About
+// pane below this card and are edited there, and one edit session cannot be
+// two instances of the hook — so the pane owns it and the card is given it.
+export default function IdentityCard({ stamps, authed = false, edit }) {
   const settings = useBookplate();
   const {
     cover_name,
     keeper_name,
-    bio,
     portrait_url,
     portrait_position,
-    instagram_url,
     site_address,
     founded_at,
-    about_intro,
-    social_links,
     hidden_fields,
-    send_me,
+    bioanswers,
     rig_icon,
-    rig: rigRows,
     portrait_code_url,
   } = settings;
   const { isLive } = useListeningBeacon();
 
   // Only ever true for the person who keeps the journal, and only the visible
   // half of that: the writing endpoints check the wristband for themselves.
-  const edit = useIdentificationCardEditor(settings);
   const editing = edit.editing;
 
   const records = stamps?.records ?? null;
@@ -290,43 +287,14 @@ export default function IdentityCard({ stamps, authed = false }) {
   // starts when someone writes in it, not when the database row was created.
   const since = monthAndYear(founded_at) || monthAndYear(stamps?.first_listen);
 
-  // The keeper's own line if they have written one, otherwise the journal's.
-  const blurb = bio || about_intro;
+  // The one prompt this card may print, if its keeper answered it.
+  const cardAsk = readBioAnswers(bioanswers).find(row => row.key === CARD_PROMPT) || null;
 
-  // instagram_url predates this list and is folded in rather than made to move.
-  // De-duplicated on the href, so an owner who has it in both places gets one.
-  const socials = useMemo(() => {
-    const stored = Array.isArray(social_links) ? social_links.map(readLink) : [];
-    const raw = instagram_url ? [{ url: instagram_url, icon: 'auto' }, ...stored] : stored;
-    const seen = new Set();
-    return raw
-      .filter(l => l.url.trim())
-      .map(l => identify(l.url, l.icon))
-      .filter(Boolean)
-      .filter(l => !seen.has(l.href) && seen.add(l.href));
-  }, [instagram_url, social_links]);
 
-  // The mark this journal listens through, or nothing if its keeper would
-  // rather not say. See RIG_ICONS.
-  const rig = rigIcon(rig_icon);
   // What the editor is currently showing, which is the draft rather than what
-  // is saved — the row underneath has to change the moment a mark is pressed.
-  const chosenRig = rigIcon(edit.rig);
-  // The setup itself. A sheet rather than a page: it is four short rows about
-  // the room you are already standing in, and sending somebody to another
-  // address to read four rows and then find their way back is a lot of
-  // ceremony for a list of equipment.
-  const rigList = (Array.isArray(rigRows) ? rigRows : []).filter(r => r?.name?.trim());
-  const [rigOpen, setRigOpen] = useState(false);
 
   // Escape closes it, because anything that covers the page has to have a way
   // out that is not hunting for the button that opened it.
-  useEffect(() => {
-    if (!rigOpen) return;
-    const onKey = event => { if (event.key === 'Escape') setRigOpen(false); };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [rigOpen]);
 
   const address = site_address ? site_address.replace(/^https?:\/\//, '') : null;
 
@@ -344,17 +312,9 @@ export default function IdentityCard({ stamps, authed = false }) {
   // leaves. So a drag of forty pixels is worth forty pixels of overflow, and at
   // the ends the picture stops instead of sliding on under a finger.
   const dragFrom = useRef(null);
-  // Declared up here rather than beside the effect that fills them: the slot is
-  // built further down this function and hands photoRef to whichever of its
-  // three shapes it returns, so the binding has to exist by then.
-  const photoRef = useRef(null);
   const innerRef = useRef(null);
-  const liftRef = useRef(null);
-  const [lift, setLift] = useState(null);
   // Which mark is being chosen, if any: 'rig', or the index of a link. One at a
   // time, so opening a second palette closes the first and the card never has
-  // two grids of icons on it at once.
-  const [choosing, setChoosing] = useState(null);
 
   function frameStart(event) {
     const img = event.currentTarget.querySelector('img');
@@ -385,19 +345,6 @@ export default function IdentityCard({ stamps, authed = false }) {
   function frameEnd() {
     dragFrom.current = null;
   }
-
-  // A textarea that grows instead of scrolling. It has to run on mount as well
-  // as on every keystroke, or a bio already three lines long opens showing one.
-  const grow = event => {
-    const el = event.currentTarget;
-    el.style.height = 'auto';
-    el.style.height = `${el.scrollHeight}px`;
-  };
-  const growOnMount = el => {
-    if (!el) return;
-    el.style.height = 'auto';
-    el.style.height = `${el.scrollHeight}px`;
-  };
 
   // ── The slot ────────────────────────────────────────────────────────────
   // Built here rather than inline, because inline it was an immediately-called
@@ -464,7 +411,6 @@ export default function IdentityCard({ stamps, authed = false }) {
     // phone, not at an address you can type.
     slot = (
       <div
-        ref={photoRef}
         className={'idc-portrait idc-portrait--turnable' + (framing ? ' idc-portrait--framing' : '')}
         onPointerDown={framing ? frameStart : undefined}
         onPointerMove={framing ? frameMove : undefined}
@@ -504,12 +450,11 @@ export default function IdentityCard({ stamps, authed = false }) {
       </div>
     );
   } else if (!canTurnSlot) {
-    slot = <div ref={photoRef} className={'idc-portrait' + (bareSlot ? ' idc-portrait--bare' : '')}>{slotFaces}</div>;
+    slot = <div className={'idc-portrait' + (bareSlot ? ' idc-portrait--bare' : '')}>{slotFaces}</div>;
   } else {
     slot = (
       <button
         type="button"
-        ref={photoRef}
         className={'idc-portrait idc-portrait--turnable' + (bareSlot ? ' idc-portrait--bare' : '')}
         onClick={() => setSlotCode(v => !v)}
         aria-pressed={slotCode}
@@ -545,58 +490,14 @@ export default function IdentityCard({ stamps, authed = false }) {
   const showAlbums = records != null && showing('albums');
   const showSince = Boolean(since) && showing('since');
 
-  // ── Lining the photograph up with the beacon ────────────────────────────
-  // The two sides of this cover show the same square in the same frame: a
-  // record on the front, a person on the back. Which only reads as one object
-  // being turned over if the square does not jump when it turns — and left to
-  // flow, the card's is a hundred and forty pixels higher up the pane than the
-  // beacon's, because the two columns have different things stacked above them.
-  //
-  // It cannot be a constant. The front face is centred in the pane, so where
-  // its art lands depends on how tall the pane is; and the card's own header
-  // grows and shrinks with whether there is a name on it. So the gap is
-  // measured — both boxes against the scene that holds them both, which is
-  // stable while the card scrolls — and the difference is handed back as the
-  // photograph's top margin.
-  //
-  // A hidden face still has layout, so this works whichever way up the cover
-  // currently is.
-  useEffect(() => {
-    const photo = photoRef.current;
-    const inner = innerRef.current;
-    const scene = inner?.closest('.idc-scene');
-    const art = scene?.querySelector('.beacon-art-wrap');
-    if (!photo || !inner || !art) return;
-
-    const measure = () => {
-      const sceneTop = scene.getBoundingClientRect().top;
-      const innerTop = inner.getBoundingClientRect().top - sceneTop;
-      const artTop = art.getBoundingClientRect().top - sceneTop;
-      // What is on the card right now, read off the card. Keeping the last
-      // value in a ref instead looked equivalent and was not: the ref is
-      // written the moment a new lift is worked out, the spacer only when React
-      // commits it, and a measurement taken between the two subtracts a lift
-      // that is not there yet. It settled sixty pixels short every time.
-      const applied = liftRef.current?.getBoundingClientRect().height ?? 0;
-      // Where the photograph would sit with no lift on it at all.
-      const resting =
-        photo.getBoundingClientRect().top - sceneTop - innerTop + inner.scrollTop - applied;
-      const next = Math.max(0, Math.round(artTop - innerTop - resting));
-      if (Math.abs(next - applied) < 1) return;
-      setLift(next);
-    };
-
-    measure();
-    const observer = new ResizeObserver(measure);
-    observer.observe(scene);
-    observer.observe(inner);
-    window.addEventListener('resize', measure);
-    return () => {
-      observer.disconnect();
-      window.removeEventListener('resize', measure);
-    };
-    // Everything that changes how tall the column above the photograph is.
-  }, [editing, keeper_name, records, since, stamps]);
+  // The photograph used to be lifted down the column by a measured spacer, to
+  // land on exactly the same line as the beacon's album art on the other face
+  // of the cover. There is no other face — the flip is gone — and the two
+  // squares line up now by construction rather than by arithmetic: every pane
+  // of the cross opens with the same mark at the same height, and the square
+  // is the first thing under it. So the measurement, its ResizeObserver and
+  // the spacer it fed all came out. See HomeNav.js for the crown that replaced
+  // them.
 
   // Whether the soft bottom edge is telling the truth — see the note by the
   // measurement below.
@@ -613,9 +514,9 @@ export default function IdentityCard({ stamps, authed = false }) {
       el.removeEventListener('scroll', check);
       observer.disconnect();
     };
-    // stamps and the bio arrive after the first paint and both change how tall
-    // the column is, so the measurement has to be taken again when they land.
-  }, [stamps, blurb, editing]);
+    // The counted rows arrive after the first paint and change how tall the
+    // column is, so the measurement has to be taken again when they land.
+  }, [stamps, records, since, editing]);
 
   return (
     <section className="idc" aria-label="About this journal">
@@ -697,8 +598,6 @@ export default function IdentityCard({ stamps, authed = false }) {
            middle of a block of writing, and here it is the card's contents
            simply starting further down the page. The header is corner
            furniture; space under it reads as air. */
-        .idc-lift { height: var(--idc-photo-lift, 0px); flex-shrink: 0; }
-
         .idc-tools { display: flex; align-items: center; gap: 2px; }
         .idc-tool {
           display: inline-flex; align-items: center; justify-content: center;
@@ -725,7 +624,13 @@ export default function IdentityCard({ stamps, authed = false }) {
           font-size: 36px; line-height: 1.1; letter-spacing: -0.018em;
           text-wrap: balance;
           color: var(--ink);
-          margin: 0;
+          /* The name used to lead the column and needed nothing above it. It
+             reads under the photograph now — the mark took the top of the pane
+             — and a name set flush against the bottom edge of a picture of the
+             person it names looks like a caption that slipped. An ornamented
+             name makes it worse: the decorative glyphs reach above the cap
+             height and touch the frame. */
+          margin: 20px 0 0;
         }
         /* ── Fields that are the same size as the writing they replace ────
            globals.css forces every input on a phone to 16px, with !important,
@@ -747,16 +652,6 @@ export default function IdentityCard({ stamps, authed = false }) {
         .idc-name-input:focus { outline: none; }
         .idc-name-input::placeholder { color: var(--ink-faint); }
 
-        /* ── The counted line ── how many, and how long, on one line under the
-           name. Two facts that are only interesting next to each other, so
-           they are set as a sentence rather than as two rows of a form. */
-        .idc-meta {
-          font-size: 12px; line-height: 1.5; color: var(--ink-faint);
-          margin: 7px 0 0;
-          display: flex; align-items: center; justify-content: center;
-          gap: 7px; flex-wrap: wrap;
-        }
-        .idc-meta-part { display: inline-flex; align-items: center; gap: 3px; }
         .idc-off { opacity: 0.45; text-decoration: line-through; }
         .idc-eye {
           display: inline-flex; align-items: center; justify-content: center;
@@ -810,7 +705,7 @@ export default function IdentityCard({ stamps, authed = false }) {
         /* The mark that turns it back, kept legible against whatever the code
            happens to be over — there is no plate under it any more to sit on. */
         .idc-portrait--bare .idc-portrait-badge {
-          right: -6px; bottom: -6px;
+          left: -6px; bottom: -6px;
           background: var(--bg);
         }
         /* Sized so the code itself fills the photograph's square, not so the
@@ -851,8 +746,12 @@ export default function IdentityCard({ stamps, authed = false }) {
         .idc-portrait-empty::before { top: 10px; left: 10px; border-right: 0; border-bottom: 0; }
         .idc-portrait-empty::after  { bottom: 10px; right: 10px; border-left: 0; border-top: 0; }
 
+        /* Bottom-left. It sat bottom-right, which on a portrait is usually
+           somebody's shoulder and often their chin — the eye goes to a face
+           and the chip was landing on it. The left corner of a photograph of a
+           person is nearly always the quietest part of the frame. */
         .idc-portrait-badge {
-          position: absolute; right: 7px; bottom: 7px;
+          position: absolute; left: 7px; bottom: 7px;
           display: flex; align-items: center; justify-content: center;
           width: 21px; height: 21px; border-radius: 7px;
           background: var(--bg);
@@ -861,7 +760,7 @@ export default function IdentityCard({ stamps, authed = false }) {
           transition: color 0.15s;
         }
         .idc-portrait--turnable:hover .idc-portrait-badge { color: var(--ink); }
-        .idc-portrait-badge--drop { right: auto; left: 7px; cursor: pointer; }
+        .idc-portrait-badge--drop { left: auto; right: 7px; cursor: pointer; }
 
         .idc-portrait-hit {
           position: absolute; inset: 0;
@@ -912,23 +811,6 @@ export default function IdentityCard({ stamps, authed = false }) {
           pointer-events: none;
         }
 
-        /* ── The writing ── ranged left inside a centred block. Everything else
-           on the card is a phrase and centres happily; this is the one run of
-           real prose, and centred prose is a ragged left edge to read down. */
-        .idc-bio {
-          font-size: 13px; line-height: 1.7; color: var(--ink-soft);
-          /* Stated on the element the field inherits from, so the two agree. */
-          margin: 20px auto 0; max-width: 300px; text-align: left;
-        }
-        .idc-bio-input {
-          display: block; width: 100%;
-          border: 0; padding: 0; background: transparent;
-          resize: none; overflow: hidden;
-          font: inherit; letter-spacing: inherit; color: var(--ink-soft);
-        }
-        .idc-bio-input:focus { outline: none; }
-        .idc-bio-input::placeholder { color: var(--ink-faint); }
-
         /* ── The two lines above the button ──────────────────────────────
            What the journal actually listens to, counted and never chosen, and
            what its keeper is asking to be sent. They are only interesting next
@@ -964,14 +846,16 @@ export default function IdentityCard({ stamps, authed = false }) {
            The labels beside them are already doing the quietening; the answers
            are the content and they weigh the same. */
         .idc-line-value { min-width: 0; color: var(--ink); }
-        .idc-ask-input {
-          flex: 1; min-width: 0;
-          border: 0; padding: 0 0 3px; background: transparent;
-          font: inherit; color: var(--ink);
-          border-bottom: 1px solid var(--idc-rule);
+        /* Not a row of the table above it. The four counted facts are labels
+           and values; this is a sentence, and a sentence indented into a value
+           column reads as a fifth fact that lost its label. Centred and full
+           width, directly over the button it explains. */
+        .idc-ask {
+          margin: 16px auto 0; max-width: 300px;
+          font-size: 14px; line-height: 1.55; color: var(--ink);
+          text-wrap: pretty;
         }
-        .idc-ask-input:focus { outline: none; border-bottom-color: var(--ink-faint); }
-        .idc-ask-input::placeholder { color: var(--ink-faint); }
+        .idc-ask-said { color: var(--ink-faint); }
 
         /* The one control that is an action rather than a door, and the reason
            the ask is written directly above it. Weighted by ink rather than by
@@ -993,10 +877,15 @@ export default function IdentityCard({ stamps, authed = false }) {
           background-size: 9px 1px; background-repeat: repeat-x;
         }
         /* One line: the action, then every other door as a mark beside it. */
+        /* Closer to the block above it than it was. The row used to carry the
+           rig and the links as well and needed the air to read as its own
+           band; it is one button now, and twenty-two pixels under a table of
+           four short rows was reading as a gap where something had been
+           removed — which it was. */
         .idc-row {
           display: flex; align-items: center; justify-content: center;
           gap: 6px; flex-wrap: wrap;
-          margin-top: 22px;
+          margin-top: 14px;
         }
         .idc-mark-btn {
           display: inline-flex; align-items: center; justify-content: center;
@@ -1110,130 +999,6 @@ export default function IdentityCard({ stamps, authed = false }) {
           letter-spacing: 0.11em; text-transform: uppercase;
         }
 
-        /* ── The rig sheet ───────────────────────────────────────────────── */
-        /* Fixed, not absolute. Absolute meant "the card", and the card is a
-           340px column in the middle of the screen — so the sheet came up
-           inside it with a strip of page showing either side, like a drawer
-           opening in the middle of a room. Fixed hands both of these to the
-           scene instead, which spans the pane, and they sit flush to its
-           edges. (The scene carries a perspective for the flip, which is what
-           makes it the containing block here rather than the viewport — and
-           also what lets these escape the card's own clipping.) */
-        /* --idc-gutter is the margin the pane holds the card off its edges by,
-           set by the phone layout and inherited down. Read with a fallback of
-           zero rather than declared here with one: declared, it would shadow
-           the value coming down from the pane and the sheet would go on
-           stopping short of the screen. */
-        .idc-scrim {
-          position: fixed;
-          top: 0;
-          bottom: calc(-1 * var(--idc-floor, 0px));
-          left: calc(-1 * var(--idc-gutter, 0px)); right: calc(-1 * var(--idc-gutter, 0px));
-          z-index: 3;
-          border: 0; padding: 0;
-          background: color-mix(in srgb, var(--bg) 70%, transparent);
-          backdrop-filter: blur(2px);
-          -webkit-backdrop-filter: blur(2px);
-          opacity: 0; pointer-events: none;
-          /* And taken out of the compositing entirely between uses. A
-             backdrop-filter left on an invisible element is a blur the browser
-             may still decide to do work for. */
-          visibility: hidden;
-          transition: opacity 0.32s ease, visibility 0s linear 0.32s;
-          cursor: pointer;
-        }
-        .idc-scrim--on {
-          opacity: 1; pointer-events: auto;
-          visibility: visible;
-          transition: opacity 0.32s ease, visibility 0s;
-        }
-
-        .idc-sheet {
-          position: fixed;
-          /* Down to the floor of the pane as well as out to its edges. The card
-             stops short of the bottom to leave room for the row of controls
-             underneath it, and a bottom sheet that stops where the card stops
-             is a sheet floating an inch above the bottom of the screen. */
-          bottom: calc(-1 * var(--idc-floor, 0px));
-          /* Out over the pane's gutter, so it meets the edges of the screen
-             rather than the edges of the card. Fixed is positioned against the
-             sheet that turns, which sits inside that gutter — so reaching flush
-             means reaching back out by exactly the amount the pane pulled in. */
-          left: calc(-1 * var(--idc-gutter, 0px)); right: calc(-1 * var(--idc-gutter, 0px));
-          z-index: 4;
-          display: flex; flex-direction: column; align-items: center;
-          /* The extra floor goes back on as padding, so the writing sits where
-             it did and only the stock underneath it reaches further down. */
-          padding: 12px 22px calc(26px + var(--idc-floor, 0px));
-          background: var(--bg);
-          border-top: 1px solid var(--idc-rule);
-          border-radius: 18px 18px 0 0;
-          transform: translateY(101%);
-          /* Nothing clips it now that it is fixed, so being off the bottom is
-             not enough on its own to keep it out of the way. */
-          visibility: hidden;
-          /* No shadow while it waits. Parked below the card it still cast one
-             upward, and the card clips to its own box — so the shadow was
-             inside the clip while the sheet was outside it, and the bottom
-             forty pixels of the card carried a grey band belonging to
-             something nobody could see. It arrives with the sheet instead. */
-          box-shadow: none;
-          transition:
-            transform 0.42s cubic-bezier(0.22, 0.61, 0.36, 1),
-            box-shadow 0.42s ease,
-            visibility 0s linear 0.42s;
-        }
-        .idc-sheet--up {
-          transform: none;
-          visibility: visible;
-          box-shadow: 0 -14px 40px rgba(0,0,0,0.14);
-          transition:
-            transform 0.42s cubic-bezier(0.22, 0.61, 0.36, 1),
-            box-shadow 0.42s ease,
-            visibility 0s;
-        }
-        @media (prefers-reduced-motion: reduce) {
-          .idc-sheet { transition: none; }
-          .idc-scrim { transition: none; }
-        }
-        /* The handle every sheet on a phone has. It does not drag — it says
-           which edge this came from, which is the part that matters. */
-        .idc-sheet-grip {
-          width: 34px; height: 4px; border-radius: 999px;
-          background: var(--idc-rule);
-          margin-bottom: 16px;
-        }
-        .idc-sheet-title {
-          font-family: var(--font-label);
-          font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase;
-          color: var(--ink-faint);
-          margin: 0 0 14px;
-        }
-        /* The sheet runs edge to edge; what is written on it keeps the
-           column's measure, so the rows line up with the card above them
-           rather than stretching across a wide screen. */
-        .idc-sheet-list { width: 100%; max-width: 300px; margin: 0; }
-        /* The tracklist rhythm the rest of the site reads in: what the thing is
-           on the left, what it does on the right, one hairline under each. */
-        .idc-sheet-row {
-          display: flex; align-items: baseline; justify-content: space-between;
-          gap: 14px;
-          padding: 11px 0;
-          border-bottom: 1px solid var(--idc-rule);
-        }
-        .idc-sheet-row:last-child { border-bottom: 0; }
-        .idc-sheet-name { font-size: 13px; color: var(--ink); }
-        .idc-sheet-role {
-          margin: 0; flex-shrink: 0;
-          font-family: var(--font-label);
-          font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase;
-          color: var(--ink-faint);
-        }
-        .idc-sheet-shut {
-          margin-top: 18px;
-          padding: 9px 20px; font-size: 9px; letter-spacing: 0.11em;
-        }
-
         .idc-trouble {
           font-family: var(--font-label); font-size: 9px; letter-spacing: 0.08em;
           color: var(--fav); margin: 10px 0 0;
@@ -1245,35 +1010,25 @@ export default function IdentityCard({ stamps, authed = false }) {
            edit instead, so this card can keep its own type. See holdZoom in
            IdentificationCardEditor.js. */
         @media (max-width: 768px) {
-          /* inherit works for the name and the ask, whose fields sit inside the
-             element that carries the size. It does not for the bio: there the
-             textarea *is* the .idc-bio element, so inherit reaches past it to
-             the column and picks up whatever that is — 24px, as it turned out.
-             Stated outright, all four. */
+          /* inherit works for these, whose fields sit inside the element that
+             carries the size. Stated outright anyway, because the one field
+             where inherit did not work — the bio's textarea, which *was* the
+             element carrying the size — is the reason this block exists. */
           .idc-name-input { font-size: 36px !important; }
-          .idc-bio-input  { font-size: 13px !important; }
-          .idc-ask-input  { font-size: 13px !important; }
           .idc-link-input { font-size: 12px !important; }
         }
         @media (max-width: 480px) {
           .idc-name-input { font-size: 31px !important; }
-          .idc-bio-input  { font-size: 12.5px !important; }
         }
 
         @media (max-width: 480px) {
           .idc-name { font-size: 31px; }
-          /* The box does not shrink on a phone, because the beacon's does not.
-             They are the same square seen from either side of the cover, and a
-             square that changes size when you turn the card over is two
-             squares. */
-          .idc-bio { margin-top: 17px; font-size: 12.5px; }
         }
       `}</style>
 
       <div
         ref={innerRef}
         className={'idc-inner' + (more ? ' idc-inner--more' : '')}
-        style={lift == null ? undefined : { '--idc-photo-lift': `${lift}px` }}
       >
         <div className="idc-head">
           {/* The site's own mark, small and in the corner. The dot on its
@@ -1340,7 +1095,7 @@ export default function IdentityCard({ stamps, authed = false }) {
           )}
         </div>
 
-        <div className="idc-lift" aria-hidden="true" ref={liftRef} />
+        {slot}
 
         {/* cover_name, not keeper_name: this is the one place a person is
             reading the name, so it is allowed to be the ornamented one. The
@@ -1361,41 +1116,37 @@ export default function IdentityCard({ stamps, authed = false }) {
           </h1>
         )}
 
-        {(showAlbums || showSince) && (
-          <p className="idc-meta">
-            {showAlbums && (
-              <span className={'idc-meta-part' + off('albums')}>
-                {records} albums logged
-                {eyeFor('albums')}
-              </span>
-            )}
-            {showAlbums && showSince && <span aria-hidden="true">·</span>}
-            {showSince && (
-              <span className={'idc-meta-part' + off('since')}>
-                Logging since {since}
-                {eyeFor('since')}
-              </span>
-            )}
+        {/* The four facts, in one table. These two used to be a single small
+            centred line under the name — "39 albums logged · Logging since
+            March 2026" — set differently from the genres and the ask
+            underneath them, which made four facts about one person read as two
+            kinds of thing. They are the same kind of thing: a label and an
+            answer. Now they are laid out like it, and the card is a glance at
+            somebody before the reading starts below it. */}
+        {showAlbums && (
+          <p className={'idc-line' + off('albums')}>
+            <span className="idc-line-label">Albums logged</span>
+            <span className="idc-line-value">{records}</span>
+            {eyeFor('albums')}
           </p>
         )}
 
-        {slot}
+        {showSince && (
+          <p className={'idc-line' + off('since')}>
+            <span className="idc-line-label">Logging since</span>
+            <span className="idc-line-value">{since}</span>
+            {eyeFor('since')}
+          </p>
+        )}
 
-        {/* Same measure, same size, same leading, same colour. A textarea set
-            in the paragraph's own type is the paragraph, with a caret in it. */}
-        {editing ? (
-          <textarea
-            className="idc-bio idc-bio-input"
-            value={edit.bio}
-            onChange={e => edit.setBio(e.target.value)}
-            onInput={grow}
-            ref={growOnMount}
-            placeholder="A line or two about whoever keeps this."
-            aria-label="Bio"
-          />
-        ) : blurb ? (
-          <p className="idc-bio">{blurb}</p>
-        ) : null}
+
+        {/* The bio used to sit here and does not any more. It was a paragraph
+            about the keeper printed two hundred pixels above a longer, better
+            paragraph about the keeper — the about writing runs directly under
+            this card now, so the card was introducing what the next screen was
+            about to say, in the keeper's own words, twice.
+            What is left is a glance: a face, a name, four facts and the ways
+            to reach them. The reading is below. */}
 
         {/* Labelled, and shaped like the ask directly under it. Unlabelled it
             was three words floating between the bio and the request with
@@ -1410,256 +1161,47 @@ export default function IdentityCard({ stamps, authed = false }) {
           </p>
         )}
 
-        {(editing || send_me) && (
-          <p className="idc-line idc-ask">
-            <span className="idc-line-label">Looking for</span>
-            {editing
-              ? <input
-                  className="idc-ask-input"
-                  type="text"
-                  value={edit.sendMe}
-                  onChange={e => edit.setSendMe(e.target.value)}
-                  /* The placeholder is the feature. Told what good looks like
-                     people write something worth reading; asked "what would
-                     you like?" they write nothing, or "anything". */
-                  placeholder="something loud, or anything with a saxophone in it"
-                  aria-label="Looking for"
-                />
-              : <span className="idc-line-value">{send_me}</span>}
+        {/* ── The one opening the card prints ──────────────────────────────
+            "Looking for" used to be a labelled field here, and it is a prompt
+            now like the others — the difference is that this one is addressed
+            to the reader rather than about the keeper, and it is the reason
+            the button underneath it exists: you read what somebody is asking
+            for, then you send it. So of the nine it is the one promoted onto
+            the card, and only if its keeper chose it.
+
+            The pane below drops this row from its own list rather than
+            printing it twice. */}
+        {cardAsk && (
+          <p className="idc-ask">
+            <span className="idc-ask-said">{cardAsk.text}</span>{' '}
+            {cardAsk.answer}
           </p>
         )}
 
-        {/* ── One row ──────────────────────────────────────────────────────
-            The thing to do, and every other door on the card as a mark beside
-            it. This was three stacked bands — the button, then a rule and the
-            rig, then the links — for four controls that between them are one
-            action and a handful of addresses. Stacked they read as three
-            sections; in a line they read as a row of buttons, which is what
-            they are, and the card gets a hundred pixels back.
-
-            The rig wears whichever mark its keeper chose, or none at all. */}
+        {/* ── The one thing to do ──────────────────────────────────────────
+            The rig's mark and the keeper's links used to stand in a row beside
+            this button. Both have somewhere better to be: the rig is a section
+            of the About pane a screen below, and the links sit at the foot of
+            that same reading, where somebody who has just read about a person
+            might want to go and find them. What is left here is the single
+            action the card is for, which is why it can have the row to
+            itself. */}
         <div className="idc-row" inert={editing ? true : undefined}>
           <Link href="/submit" className="ln-pill idc-send">Send an album</Link>
-          {rig.Icon && rigList.length > 0 && (
-            <button
-              type="button"
-              className="idc-mark-btn"
-              onClick={() => setRigOpen(true)}
-              aria-expanded={rigOpen}
-              aria-label={`The rig — ${rig.label.toLowerCase()}`}
-              title="The rig"
-            >
-              <rig.Icon size={19} weight="regular" aria-hidden="true" />
-            </button>
-          )}
-          {!editing && socials.map(({ href, label, Icon }) => (
-            <a
-              key={href}
-              href={href}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="idc-mark-btn"
-              aria-label={label}
-              title={label}
-            >
-              <Icon size={19} weight="regular" aria-hidden="true" />
-            </a>
-          ))}
         </div>
 
-        {editing ? (
-          <div className="idc-links">
-            {edit.links.map((link, index) => {
-              const known = link.url.trim() ? identify(link.url.trim(), link.icon) : null;
-              const Icon = known ? known.Icon : LinkSimple;
-              return (
-                <div className="idc-link-row" key={index}>
-                  {/* The mark opens the marks. A dropdown made you read a list
-                      of names to pick a picture, which is the wrong way round
-                      — you know the one you want by sight. */}
-                  <button
-                    type="button"
-                    className={'idc-link-mark' + (choosing === index ? ' idc-link-mark--on' : '')}
-                    onClick={() => setChoosing(choosing === index ? null : index)}
-                    aria-expanded={choosing === index}
-                    aria-label={`Choose a mark for link ${index + 1}`}
-                    title="Choose a mark"
-                  >
-                    <Icon size={17} weight="regular" aria-hidden="true" />
-                  </button>
-                  <input
-                    className="idc-link-input"
-                    type="url"
-                    inputMode="url"
-                    value={link.url}
-                    onChange={e => edit.setLink(index, e.target.value)}
-                    placeholder="https://…"
-                    aria-label={known ? known.label : `Link ${index + 1}`}
-                  />
-                  <button
-                    type="button"
-                    className="idc-link-drop"
-                    onClick={() => edit.dropLink(index)}
-                    aria-label={`Remove link ${index + 1}`}
-                  >
-                    <X size={12} weight="bold" aria-hidden="true" />
-                  </button>
-                  {choosing === index && (
-                    <div className="idc-marks" role="group" aria-label="Marks">
-                      {LINK_ICONS.map(option => {
-                        const Mark = option.Icon || GlobeSimple;
-                        const on = (link.icon || 'auto') === option.name;
-                        return (
-                          <button
-                            key={option.name}
-                            type="button"
-                            className={'idc-mark-opt' + (on ? ' idc-mark-opt--on' : '')}
-                            onClick={() => { edit.setLinkIcon(index, option.name); setChoosing(null); }}
-                            aria-pressed={on}
-                            aria-label={option.label}
-                            title={option.label}
-                          >
-                            {option.Icon
-                              ? <Mark size={17} weight="regular" aria-hidden="true" />
-                              : <span className="idc-mark-auto" aria-hidden="true">A</span>}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-            {/* The rig, chosen the same way. It sits with the links because it
-                is the same kind of thing: a mark on the row under the button,
-                standing for somewhere else to go. */}
-            <div className="idc-link-row idc-link-row--rig">
-              <button
-                type="button"
-                className={'idc-link-mark' + (choosing === 'rig' ? ' idc-link-mark--on' : '')}
-                onClick={() => setChoosing(choosing === 'rig' ? null : 'rig')}
-                aria-expanded={choosing === 'rig'}
-                aria-label="Choose a mark for your rig"
-                title="Choose a mark for your rig"
-              >
-                {chosenRig.Icon
-                  ? <chosenRig.Icon size={17} weight="regular" aria-hidden="true" />
-                  : <X size={15} weight="bold" aria-hidden="true" />}
-              </button>
-              <span className="idc-rig-said">
-                {chosenRig.Icon ? `The rig — ${chosenRig.label.toLowerCase()}` : 'No rig button'}
-              </span>
-              {choosing === 'rig' && (
-                <div className="idc-marks" role="group" aria-label="Marks for the rig">
-                  {RIG_ICONS.map(option => {
-                    const on = (edit.rig || DEFAULT_RIG_ICON) === option.name;
-                    return (
-                      <button
-                        key={option.name}
-                        type="button"
-                        className={'idc-mark-opt' + (on ? ' idc-mark-opt--on' : '')}
-                        onClick={() => { edit.setRig(option.name); setChoosing(null); }}
-                        aria-pressed={on}
-                        aria-label={option.label}
-                        title={option.label}
-                      >
-                        {option.Icon
-                          ? <option.Icon size={17} weight="regular" aria-hidden="true" />
-                          : <X size={15} weight="bold" aria-hidden="true" />}
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-
-            <button type="button" className="idc-link-add" onClick={edit.addLink}>
-              <Plus size={11} weight="bold" aria-hidden="true" />
-              Add a link
-            </button>
-
-            {/* What is in the sheet. Nothing about why it matters — that is
-                what the journal is for — just what each thing is and what it
-                does, which is the shape a tracklist reads in. */}
-            {chosenRig.Icon && (
-              <div className="idc-gear">
-                {edit.gear.map((item, index) => (
-                  <div className="idc-gear-row" key={index}>
-                    <input
-                      className="idc-link-input"
-                      type="text"
-                      value={item.name}
-                      onChange={e => edit.setGearField(index, 'name', e.target.value)}
-                      placeholder="Sennheiser HD 600"
-                      aria-label={`Equipment ${index + 1}`}
-                    />
-                    <input
-                      className="idc-link-input idc-gear-role"
-                      type="text"
-                      value={item.role}
-                      onChange={e => edit.setGearField(index, 'role', e.target.value)}
-                      placeholder="Headphones"
-                      aria-label={`What equipment ${index + 1} does`}
-                    />
-                    <button
-                      type="button"
-                      className="idc-link-drop"
-                      onClick={() => edit.dropGear(index)}
-                      aria-label={`Remove equipment ${index + 1}`}
-                    >
-                      <X size={12} weight="bold" aria-hidden="true" />
-                    </button>
-                  </div>
-                ))}
-                <button type="button" className="idc-link-add" onClick={edit.addGear}>
-                  <Plus size={11} weight="bold" aria-hidden="true" />
-                  Add a piece
-                </button>
-              </div>
-            )}
-          </div>
-        ) : null}
-
+        {/* The link rows and the rig rows used to be here, under the button,
+            while the card was the only surface an owner could edit. They are
+            edited on the pane below now, inside the sections they actually
+            print in — a field for something you cannot see while you type into
+            it is a field you fill in blind. See About.js. */}
         {edit.trouble && <p className="idc-trouble">{edit.trouble}</p>}
       </div>
 
-      {/* ── The rig ──────────────────────────────────────────────────────────
-          Comes up from the bottom over the card rather than replacing it. It
-          used to be a page, and a page meant leaving the card, reading four
-          rows and finding your way back — plus several hundred words about why
-          any of it matters, which is one person's essay shipped inside
-          everybody's software. What survives is what each thing is and what it
-          does. */}
-      {rigList.length > 0 && (
-        <>
-          <button
-            type="button"
-            className={'idc-scrim' + (rigOpen ? ' idc-scrim--on' : '')}
-            onClick={() => setRigOpen(false)}
-            tabIndex={rigOpen ? 0 : -1}
-            aria-label="Close the rig"
-          />
-          <section
-            className={'idc-sheet' + (rigOpen ? ' idc-sheet--up' : '')}
-            aria-label="Listening rig"
-            inert={rigOpen ? undefined : true}
-          >
-            <span className="idc-sheet-grip" aria-hidden="true" />
-            <h2 className="idc-sheet-title">Listening rig</h2>
-            <dl className="idc-sheet-list">
-              {rigList.map((item, index) => (
-                <div className="idc-sheet-row" key={`${item.name}-${index}`}>
-                  <dt className="idc-sheet-name">{item.name}</dt>
-                  <dd className="idc-sheet-role">{item.role}</dd>
-                </div>
-              ))}
-            </dl>
-            <button type="button" className="ln-pill idc-sheet-shut" onClick={() => setRigOpen(false)}>
-              Close
-            </button>
-          </section>
-        </>
-      )}
+      {/* The rig used to come up from the bottom over this card, and does not
+          any more: it is a section of the About pane a screen below, under its
+          own heading, in the reading. A drawer over a card is what you build
+          when the only surface you have is the card. */}
     </section>
   );
 }

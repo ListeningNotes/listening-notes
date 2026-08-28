@@ -3,22 +3,24 @@
 // components/main_components/SiteNav.js
 // The sitewide nav row: logo (doubling as the live indicator) on the left,
 // a caret + the compact "now listening" beacon in the center, and the
-// day/night toggle on the right — the exact same row used on the homepage's
-// screen two and on every other page (DotNav renders separately beneath it,
-// unchanged). Previously these were two different implementations that
-// drifted apart; this is the one shared version.
+// day/night toggle on the right — the same row on every page but the
+// homepage (DotNav renders separately beneath it, unchanged). Previously
+// these were two different implementations that drifted apart; this is the
+// one shared version.
 //
-// The center slot is the way back to screen one (the big "now listening"
-// screen) from anywhere on the site: on the homepage that's an in-page
-// scroll, from any other page it's a normal navigation to "/", which lands
-// on screen one by default. The logo instead goes to screen two — flagged
-// via sessionStorage since a full page navigation can't carry it as
-// component state (see app/page.js for the other half).
+// Both the mark and the centre slot go home, which is the cross, which opens
+// on the centre pane. They used to go to two different places — the mark to
+// the old screen two, the beacon to screen one — and steering between them
+// needed a sessionStorage flag because a full page navigation cannot carry
+// component state. There is one home now, so there is nothing to steer.
+//
+// This row does not render on the homepage at all: the cross carries its own
+// bar (see HomeNav.js), because a fixed row belonging to no pane cannot be one
+// of the panes' children.
 
 'use client';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter, usePathname } from 'next/navigation';
 import { useTheme } from './Lightswitch';
 import { useListeningBeacon } from '../../hooks/useListeningBeacon';
 import ListeningBeacon from './ListeningBeacon';
@@ -26,11 +28,8 @@ import { useBookplate } from './Bookplate';
 
 export default function SiteNav() {
   const { cover_name } = useBookplate();
-  const pathname = usePathname();
-  const router = useRouter();
   const { theme, toggle } = useTheme();
   const { isLive } = useListeningBeacon();
-  const isHome = pathname === '/';
 
   // This row and the dot-nav beneath it are fixed with no background of their
   // own, so page text scrolled straight through the logo, the toggle and the
@@ -45,23 +44,16 @@ export default function SiteNav() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  function handleLogoClick(e) {
-    if (isHome) return;
-    e.preventDefault();
-    sessionStorage.setItem('ln-goto', 'screen-two');
-    router.push('/');
-  }
-
-  function handleBeaconClick(e) {
-    if (isHome) {
-      e.preventDefault();
-      document.getElementById('hp-screen-one')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-  }
+  // Both of these used to steer the old two-screen cover: the logo flagged
+  // sessionStorage so a navigation home landed on screen two, and the beacon
+  // scrolled to screen one. Neither screen exists — home is the cross now, and
+  // it always opens on the centre pane, which is what both of these were
+  // reaching for. So both are plain links again and the flag is gone with the
+  // markup that read it.
 
   return (
     <div className={'sitenav-row' + (scrolled ? ' sitenav-row--scrolled' : '')}>
-      <Link href="/" onClick={handleLogoClick} className="sitenav-logo" aria-label={cover_name}>
+      <Link href="/" className="sitenav-logo" aria-label={cover_name}>
         <svg viewBox="76 96 241 140" className="sitenav-logo-mark" xmlns="http://www.w3.org/2000/svg">
           <path
             transform="translate(73.734177, 220.794814)"
@@ -80,7 +72,7 @@ export default function SiteNav() {
         </svg>
       </Link>
 
-      <Link href="/" onClick={handleBeaconClick} className="sitenav-beacon-slot" aria-label="Now listening">
+      <Link href="/" className="sitenav-beacon-slot" aria-label="Now listening">
         {isLive && (
           <div className="sitenav-beacon">
             <ListeningBeacon compact />

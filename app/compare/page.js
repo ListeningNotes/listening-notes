@@ -22,7 +22,6 @@
 import { useCallback, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { fonts } from '../../library/sitewide_visuals';
-import DotNav from '../../components/main_components/DotNav';
 import SiteNav from '../../components/main_components/SiteNav';
 
 // How far two ratings can sit apart and still count as agreement. Half a star
@@ -117,14 +116,13 @@ export default function ComparePage() {
   return (
     <div style={{ background: 'var(--bg)', minHeight: '100vh', color: 'var(--ink)', fontFamily: fonts.sans }}>
       <SiteNav />
-      <DotNav />
 
       <style>{`
-        /* The nav is fixed and ends on 136px everywhere; About and Submit
+        /* The nav is fixed and ends on 80px everywhere; About and Submit
            both clear it by the same 44px, so this page keeps their rhythm
            rather than inventing a number by eye. */
         .cmp-wrap {
-          --cmp-nav-bottom: calc(136px + var(--safe-top));
+          --cmp-nav-bottom: calc(80px + var(--safe-top));
           max-width: 860px; margin: 0 auto;
           padding: calc(var(--cmp-nav-bottom) + 44px) 48px 120px;
         }

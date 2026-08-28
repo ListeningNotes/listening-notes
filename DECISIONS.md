@@ -74,6 +74,229 @@ colophon.
 **Cross navigation.** Beacon is home. Down → journal (only from the beacon).
 Left → About. Right → actions when logged in, pitch pane when logged out.
 
+**The cross is one route, not three.** A swipe that triggered a navigation
+would unmount the pane being left, throw away its scroll position and re-fetch
+it on the way back. Everything the gesture depends on — that it is continuous,
+reversible, and returns you where you were — needs all three panes mounted at
+once. So home is a horizontal scroll container and the browser does the
+physics. Entries stay real routes: an entry has an address you can send
+somebody and a pane does not.
+
+**Panes are named after the routes they absorb**, and those routes mount the
+same component the pane does. `/archive` → Journal, `/about` → About,
+`/dashboard` → Dashboard. One description of each thing, two places it can be
+reached, and no duplication to keep in step.
+
+**Edge carets, not a dot indicator.** A swipe is invisible; nobody opens a page
+knowing there is more of it sideways. A caret pinned to an edge says there is
+something that way in a way three dots never do, and pressing it does what
+swiping does — which is how the swipe gets learned. It is also the fallback if
+the gesture feels wrong on a given device.
+
+**The down caret is drawn by measuring the pane, never by being told.** A pane
+is deep when its scroller overflows. That is what makes a fresh copy right for
+free — an install with no about paragraph and no rig has nothing under the
+card, so nothing points down at it — and it is why the pitch pane's missing
+bottom edge needs no special case.
+
+**Vertical snapping is `proximity`, not `mandatory`.** Mandatory is what made
+the old two screens feel like two pages you could not stop between, and it only
+works while a pane is exactly two screens tall. The centre pane is three and a
+bit — a whole archive under the beacon — and mandatory would drag a reader back
+to a screen edge every time they stopped halfway down the wall. Proximity keeps
+the settle at the card-to-writing boundary, which is where the feeling was.
+
+**The mark is large and centred at the top of every pane.** One height, so the
+square directly under it — a portrait on the left, an album on the centre —
+lands on the same line whichever pane you are on. That is what makes the swipe
+read as one object turning. It also replaced the card's measured photo-lift
+with two constants: arithmetic that has become a constant should be a constant.
+On desktop the outer two crowns are hidden but not removed — the box has to
+stay or the columns stop agreeing where a square starts.
+
+**Desktop is the same three components as three columns.** Not a second layout.
+The site already carried two separate homepage markup trees that had drifted
+apart; a third would have been the same mistake twice.
+
+**`bio` is the card, `about_intro` is the pane.** They used to fall back into
+each other, which was right while the card was the whole about page and wrong
+the moment there was somewhere longer to write — a card that borrowed the long
+paragraph would print a page of prose on a card.
+
+**Prompts replace the free-text bio.** Nine openings ship in
+`library/bioprompt.js`, a keeper answers three in one line each, and the answer
+completes the sentence on the same line — `I can never skip — Voodoo, side
+two`. A blank box is a hard question badly phrased: asked to describe yourself
+you write a paragraph about the project; asked what you can never skip you
+write two words worth reading.
+
+**The nine are fixed and every copy ships the same nine.** A keeper who could
+write their own prompts would be back at the blank box one level up, and a
+fixed set is what lets two journals answering the same opening be read against
+each other.
+
+**Stored as key and answer, never as the sentence.** The wording will be
+revised and revising it must not orphan what somebody wrote. A key with no live
+prompt is dropped on render, so retiring a prompt is safe and renaming one is a
+migration.
+
+**Looking for is cut**, replaced by the prompt *If you're sending me something,
+make it —*. Same information as a finished sentence rather than a labelled
+field. It is the one of the nine that can be promoted onto the card, because it
+is the only one addressed to the reader rather than about the keeper, and it is
+the reason the Send button under it exists. The pane drops it from its own list
+rather than printing it twice. `send_me` keeps its old value and stops being
+read.
+
+**Top genres stays computed.** Not replaced by a self-reported prompt.
+Computed says what somebody actually listens to and a prompt says what they
+would claim; the gap between the two is the interesting part, and a
+self-reported genre list would be the most generic thing on the page.
+
+**A free-text bio may come back as an optional field alongside the prompts, and
+that is deliberately the later decision.** It is much easier to add one than to
+take one away once people have filled it in.
+
+**A pinned album goes on the card.** One entry from the owner's own journal,
+shown as art, tapping through to that entry. Not a favourite field and not an
+open search — it points at something that already exists. It is the only image
+on the card besides the portrait and the thing that stops the card reading as
+all type and numbers. Below the name and metrics, above Send an Album, and
+smaller than the portrait: the person is the subject and the record is what
+they are pointing at. No label — art under a name says what it is.
+`pinned_entry_id` already exists with `ON DELETE SET NULL`, so deleting a
+pinned entry clears the pin rather than breaking the card, and null renders
+nothing.
+
+**The dot row is gone.** Archive, Compare, Submit and Surprise all have their
+own routes and all sit at the foot of the wall now, so the row was a fixed
+strip on every page pointing at places already reachable from where you were.
+Removing it also gave back the 56px every page reserved to clear it — the nav
+band went from 136 to 80.
+
+**Tapping the top of a scrolled pane returns to the top of it.** Which on the
+centre pane is the beacon and on the left is the card — each pane's own cover.
+The band across the top is the target and it is invisible on purpose: the band
+already appears when a pane is scrolled, so the affordance is the band, and
+drawing something in it would be labelling a gesture the phone taught its owner
+years ago. It exists only while a pane is scrolled, because at the top there is
+nothing to go back to and a dead tap zone across the cover is worse than none.
+
+**The wall's bar sits on the floor, edge to edge.** It hovered 68px up to clear
+the row of carets — and those are hidden for as long as a pane is scrolled,
+which is the only time the bar is on screen, so there was never anything under
+it to clear. Rounded corners and side margins made it a pill floating over the
+covers; square along the bottom and full width, it is the edge of the wall.
+
+**Sideways is a decision made at the top of a pane.** The two side controls go
+away as soon as a pane is scrolled at all: once you are down in the wall, or
+down in the reading, the only thing worth offering is more of what you are
+already in, and three marks parked over somebody's album art are the row
+covering the thing they came to look at. The swipe itself is untouched — hiding
+a control is a hint, while disabling a gesture halfway down a page is the thing
+that would actually read as broken.
+
+**Fifty covers to a page.** Past that you are scrolling rather than looking, and
+the sort you chose stops meaning anything because you never reach the other end
+of it. Counted on the filtered set, not the archive, so searching one artist
+inside three hundred records gives you their four on one page.
+
+**Nothing sits at the foot of the wall.** Compare, Submit and Surprise were put
+there when the dot row went and taken off again: the foot of the archive is
+where somebody has finished looking, and three links to elsewhere is the site
+asking them to leave.
+
+**The wall's controls sit at the bottom on a phone.** Where the thumb is. At
+the top they were furthest from the hand and took the first hundred pixels of
+the wall, which on a phone is most of a row of covers: the records get the top
+of the screen and the controls go where you can reach them. Sticky, never
+fixed — the wall is mounted inside a pane of the cross, and a fixed bar would
+float over the card and the desk when you swiped away from it.
+
+**The beacon stops captioning itself.** "Now listening" and "Not listening"
+said what the screen already shows: a record with a title and an artist under
+it, on a page whose mark carries a lit dot while something plays. The idle
+state still greys the art and prints "last played" across it, which is the same
+fact told by the thing it is about — and that label is no longer green, which
+was the retired accent and, worse, the one colour on the site that means
+something *is* playing.
+
+**No fourth metric on the card.** *Most played* was proposed to balance three
+counts with one line about taste, and turned down: the card is a glance and
+four rows is already the most a glance holds. Ruled out rather than parked.
+
+**Its picker is search, not a grid.** At 39 entries a grid works and at 300 it
+is a wall, and somebody pinning a record already knows which one. It reuses the
+journal wall being extracted from `archive/page.js`, in a sheet, with
+tap-to-select instead of tap-to-open — which is why it is sequenced after
+Journal rather than before it.
+
+**Everything editable is edited where it prints.** The link rows and the rig
+rows were fields on the card for things that appear a screen below it, which is
+filling in a form blind. They moved down into the sections they belong to when
+the pane got long enough to have sections.
+
+**The card is a glance; the reading is below it.** No prose on the card at all
+— a face, a name, four facts and the ways to reach somebody. The bio came off
+because it was a paragraph about the keeper printed two hundred pixels above a
+longer, better paragraph about the keeper: with the about writing running
+directly under the card, the card was introducing what the next screen was
+about to say, in the same person's words, twice.
+
+**The four facts are one table.** Albums logged, logging since, top genres,
+looking for — same label-and-answer shape for all four. The first two used to
+be a small centred sentence set differently from the second two, which made
+four facts about one person read as two kinds of thing.
+
+**`settings.bio` keeps its data and loses its reader.** Nothing renders it and
+the card editor no longer writes it. The column stays: the schema is still a
+draft, the value is somebody's writing, and a column dropped to tidy up is the
+exact move DECISIONS already warns about. Revisit it at the welcome screen,
+where it is either given a job or given up.
+
+**The long note is at `/get`, and `/why` is retired.** Reversed the same day it
+was decided, and the reason is worth keeping: the essay was first pulled onto
+the About pane, on the argument that an about page whose about is four lines
+and a button to read the about is a summary of itself. That is still true — but
+the essay was answering a different question than the pane asks. "Why does
+somebody keep a listening journal" is the answer to *how did you get this*, and
+that question is asked at `/get`, which is where every copy's pitch pane sends
+people. So the pane carries a short paragraph and the essay is the top of the
+page a stranger lands on.
+
+**`/get` is not linked from the About pane.** It does not exist on a copy that
+has not written one, so a pill pointing at the path would be a dead link on
+everybody else's journal. The pitch pane is where that address is reached, and
+it reaches the canonical instance by its full address rather than by a path.
+
+**`/get` owes a stranger two things and currently gives one.** The essay is the
+why; what the software is, that it is free, and how to install a copy is not
+written yet. Recorded as a known hole rather than discovered as one.
+
+**No mark in the corner.** The crown at the head of every pane is the mark; a
+small one in the bar is a second one whether or not the two are ever on screen
+at once. The band behind that row stays, because it is what stops the wall of
+covers scrolling through the theme toggle.
+
+**Each caret carries a mark for what is that way** — a card left, a book down,
+a cog right for the owner and an `i` for a visitor. The caret is the verb and
+the mark is the noun: a chevron alone says something is over there, which is
+enough to make somebody swipe once and not enough to say whether it was worth
+it.
+
+**The rig ships as rows and nothing else.** The specs come out of their drawer
+and onto the About pane, because a drawer is what you build when there is
+nowhere to put something and the pane is somewhere. The several hundred words
+about why any of it matters stay out permanently — not parked, not waiting on a
+column. What is worth saying is what the thing is and what it does; the rest is
+the journal, and hardcoded it would be one person's essay shipped inside
+everybody's software.
+
+**Surprise keeps its pill and gains a shake.** The pill at the foot of the
+journal is how anybody finds it; shaking the phone is for whoever already has.
+The shake fires a firework off the existing gold burst and then goes to
+`/shuffle`. Both, not either — a gesture nobody discovers is not a feature.
+
 **The card flip is dead.** Left *is* the About page. Having both means the card
 exists in two places and neither is canonical.
 
@@ -89,9 +312,19 @@ in the one place a curious person looks.
 Decorative Unicode gets mangled in PWA labels, RSS readers, and link previews.
 One name for machines, one for looks.
 
-**`/get`, `/why`, `/specs` don't ship.** Drawer rule: blank on a fresh copy
-means the page and its link don't render. These are Miyel's pages on Miyel's
-copy.
+**`/get` and `/specs` don't ship.** Drawer rule: blank on a fresh copy means
+the page and its link don't render. These are Miyel's pages on Miyel's copy.
+(`/why` was the third of these; it is deleted, not forwarded — see below.)
+
+**A retired route only earns a forwarding stub if somebody has the URL.**
+`/why` was deleted outright rather than redirected to `/get`. It had lived for
+three days, behind a pill on a card, on a site nobody else has a copy of — so
+the bookmarks it was protecting do not exist. And a stub is not free: it is a
+route that ships to every install, whose whole job is to redirect from an
+address that never existed on their journal.
+`/about` and `/rig` are still stubs and were right to be — `/about` was in the
+dot row on every page for months. `/rig` is the borderline one and should be
+asked the same question.
 
 **The pitch pane ships on every copy.** Logged out, right swipe: three
 sentences and a button to listeningnotes.blog/get. This is the growth
