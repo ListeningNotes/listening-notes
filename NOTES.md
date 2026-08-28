@@ -54,6 +54,32 @@ re-propose anything listed as ruled out.
 - [ ] **The feed as a network** — `/feed.xml` publishes, but nothing reads anyone else's. Two views, submissions first. A shelf, not a river.
 - [ ] **Relationship field removal** — every value has dissolved into something else. Legacy data stays; the picker goes.
 
+**SCHEMA — the draft window is still open**
+
+Additive-only migrations start the day somebody else is running a copy. Nobody
+is yet, so the schema is still a draft and cleanup is free: a column dropped
+today costs nothing, and the same column dropped after Junior installs is a
+migration that can break his journal.
+
+Worth deciding before the first install, while it is still cheap:
+
+- [ ] `settings.journal_name` — dead. Nothing reads it; `coverName()` answers
+      the question now. Holds `Listening Notes` on the live database.
+- [ ] `settings.instagram_url` — legacy. Every link lives in `social_links`,
+      and the card editor already blanks this on every save.
+- [ ] `entries.relationship` — DECISIONS.md records the field as removed and
+      the picker gone, but the column and its legacy values remain.
+- [ ] `entries.tags` — replaced by `genre` plus archive search. Still accepted
+      by the insert in `database_actions.js`, but the only thing that reads it
+      is `PulseCard`, which is unhooked from the homepage. Kept on purpose once;
+      worth confirming that still holds.
+- [ ] `echo_memory` and `conversations` — **zero code references between them.**
+      Two tables every fresh copy builds and nothing ever touches.
+
+None of these are urgent and none are obviously wrong to keep. The point is
+that "keep it" should be a decision made while it is reversible, rather than
+the default that arrives by missing the deadline.
+
 **SECURITY**
 - [ ] **Rotate `DATABASE_URL` and `SESSION_PASSWORD` into Vercel Secrets.**
   Vercel currently holds both as plain config values, which means anyone with
@@ -75,9 +101,9 @@ re-propose anything listed as ruled out.
   Note on `SESSION_SECRET`: rotating it signs you out and you will have to log
   in again. **That is expected, not a bug** — it signs the login cookie, so a
   new secret retires every cookie issued under the old one. Worth knowing in
-  advance, because it looks exactly like being locked out. This softens the
-  "never change after launch" line in `.env.example` and the README: the real
-  cost is typing the password once.
+  advance, because it looks exactly like being locked out. `.env.example` and
+  the README used to call this a thing never to do after launch; they now say
+  what it actually costs, which is typing the password once.
 
 - [ ] Upvote abuse prevention (IP or cookie check)
 

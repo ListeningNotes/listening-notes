@@ -293,9 +293,16 @@ CREATE TABLE IF NOT EXISTS settings (
 -- ADD COLUMN IF NOT EXISTS rather than a DO block that checks the catalogue —
 -- shorter, and it says the same thing. Re-running is a no-op either way.
 --
--- Additive only. Nothing in this section may rename a column, change its type,
--- or repurpose what one means: a copy in the wild belongs to somebody who
--- cannot be reached, and a migration that fails is their journal not opening.
+-- Additive only, once anyone else is running a copy. Nothing in this section
+-- may then rename a column, change its type, or repurpose what one means: a
+-- copy in the wild belongs to somebody who cannot be reached, and a migration
+-- that fails is their journal not opening.
+--
+-- The rule has a start date rather than being eternal, and the date is the
+-- first install that is not the author's own. Until then this file describes
+-- one database, owned by the person editing it, and cleaning it up costs
+-- nothing. Publishing the repo did not start the clock; somebody installing
+-- from it does.
 ALTER TABLE settings ADD COLUMN IF NOT EXISTS display_name text;
 ALTER TABLE settings ADD COLUMN IF NOT EXISTS "serial" text;
 ALTER TABLE settings ADD COLUMN IF NOT EXISTS setup_complete boolean DEFAULT false;

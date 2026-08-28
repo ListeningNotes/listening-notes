@@ -144,8 +144,17 @@ rater and a harsh rater with identical taste should score as identical.
 editable. Changing a rating on an older entry prompts once: opinion changed, or
 fixing a mistake?
 
-**Additive schema only.** Add columns forever, never rename or drop. Copies in
-the wild have to survive migrations.
+**Additive schema only — starting at the first install that is not ours.** Add columns forever,
+never rename or drop. Copies in the wild have to survive migrations, and a
+migration that fails is somebody's journal that stops opening.
+
+**Before any copy exists, the database is a draft.** Dropping a dead column,
+renaming a bad one, deleting a table nothing uses — all fine, and worth doing
+while it is still free. The rule protects databases on machines nobody here can
+reach; until Junior installs one there are none, and paying the cost of a rule
+whose reason has not arrived yet is how a schema accumulates columns nobody
+wanted to keep. Publishing the repo does not end the draft — somebody
+installing from it does.
 
 ---
 

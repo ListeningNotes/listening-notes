@@ -61,6 +61,10 @@ being read by anyone.
 Migrations are **additive only**. Add columns and tables; never rename a
 column, change its type, or repurpose what one means.
 
+(The rule starts the day somebody else is running a copy, not the day this repo
+went public. Until then the schema is a draft owned by one person and cleanup
+costs nothing. NOTES.md records which side of that line the project is on.)
+
 The reason is not tidiness. People run their own copies of this software, and
 those databases hold somebody's writing on a machine nobody here can reach. A
 migration that fails is not a failed build — it is a journal that stops
