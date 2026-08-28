@@ -174,6 +174,20 @@ strip on every page pointing at places already reachable from where you were.
 Removing it also gave back the 56px every page reserved to clear it — the nav
 band went from 136 to 80.
 
+**Tapping the top of a scrolled pane returns to the top of it.** Which on the
+centre pane is the beacon and on the left is the card — each pane's own cover.
+The band across the top is the target and it is invisible on purpose: the band
+already appears when a pane is scrolled, so the affordance is the band, and
+drawing something in it would be labelling a gesture the phone taught its owner
+years ago. It exists only while a pane is scrolled, because at the top there is
+nothing to go back to and a dead tap zone across the cover is worse than none.
+
+**The wall's bar sits on the floor, edge to edge.** It hovered 68px up to clear
+the row of carets — and those are hidden for as long as a pane is scrolled,
+which is the only time the bar is on screen, so there was never anything under
+it to clear. Rounded corners and side margins made it a pill floating over the
+covers; square along the bottom and full width, it is the edge of the wall.
+
 **Sideways is a decision made at the top of a pane.** The two side controls go
 away as soon as a pane is scrolled at all: once you are down in the wall, or
 down in the reading, the only thing worth offering is more of what you are

@@ -436,11 +436,13 @@ export default function Journal({ entries: given, loading: givenLoading, scrolle
         @media (max-width: 768px) {
           .arc-bar-wrap {
             top: auto;
-            /* Clears whatever else is parked on the bottom edge. The cross
-               sets this to sit above its row of carets; a page leaves it
-               alone and the bar sits on the safe edge itself. */
-            bottom: var(--arc-bar-bottom, max(14px, env(safe-area-inset-bottom)));
-            padding: 10px 20px 0;
+            /* On the bottom edge, not hovering above it. It sat 68px up to
+               clear the cross's row of carets — and the carets are hidden for
+               as long as a pane is scrolled, which is the only time this bar is
+               on screen at all, so there was never anything under it to clear.
+               A bar with a strip of page showing beneath reads as a thing
+               floating over the wall rather than the edge of the wall. */
+            bottom: 0;
           }
         }
         .arc-bar {
@@ -638,8 +640,17 @@ export default function Journal({ entries: given, loading: givenLoading, scrolle
 
         @media (max-width: 768px) {
           .arc-page { padding-top: calc(var(--arc-nav-bottom) + 10px); }
-          .arc-bar-wrap { padding: 0 14px 8px; }
-          .arc-bar { gap: 6px; padding: 6px 8px; }
+          /* Edge to edge and on the floor. This block is further down the
+             sheet than the one that first puts the bar on the bottom, so the
+             padding has to be settled here or the 14px side inset above wins
+             and the bar goes back to being a pill hovering over the covers. */
+          .arc-bar-wrap { padding: 10px 0 0; }
+          .arc-bar {
+            gap: 6px;
+            border-radius: 14px 14px 0 0;
+            border-bottom: none;
+            padding: 6px 12px calc(6px + env(safe-area-inset-bottom));
+          }
           /* 16px keeps iOS from zooming the page when the field takes focus. */
           .arc-search input { font-size: 16px; padding: 6px 10px 6px 28px; }
           .arc-search { flex: 1 1 auto; }

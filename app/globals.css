@@ -2375,6 +2375,24 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 }
 .hn-bar > * { pointer-events: auto; }
 
+/* The strip you tap to go back to the top of a pane. Invisible on purpose:
+   the band behind this row already appears when a pane is scrolled, so the
+   affordance is the band, and drawing a second thing in it would be labelling
+   a gesture the phone taught its owner years ago.
+   It fills the row and leaves the lights alone at the end of it. Present only
+   while a pane is scrolled — at the top there is nothing to go back to, and a
+   dead tap zone across the cover is worse than no tap zone. */
+.hn-totop {
+  flex: 1;
+  align-self: stretch;
+  min-height: 40px;
+  margin: -8px 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
 
 
 /* The band that stops a scrolled pane running through the mark. Same shape as
@@ -2505,11 +2523,10 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  /* Where the wall's controls sit. On a phone the bar is on the bottom edge,
-     and it has to clear the row of carets parked there — the caret row is
-     about 40 tall on a 14px inset, so this lifts the bar clear of it. The top
-     value is what desktop still uses, where the bar stays at the top. */
-  --arc-bar-bottom: calc(max(14px, env(safe-area-inset-bottom)) + 54px);
+  /* What desktop uses, where the wall's bar stays at the top. On a phone the
+     bar sits on the bottom edge and needs nothing from here — the row of
+     carets that this used to lift it over is hidden for as long as a pane is
+     scrolled, which is the only time the bar is on screen. */
   --arc-nav-bottom: calc(env(safe-area-inset-top) + 44px);
   padding: 0 0 max(28px, env(safe-area-inset-bottom));
 }
