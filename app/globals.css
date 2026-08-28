@@ -2284,3 +2284,546 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
      shouldn't eat the click or the hover. */
   pointer-events: none;
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   THE CROSS
+   ─────────────────────────────────────────────────────────────────────────
+   Three panes side by side, each scrolling on its own. See HomeNav.js for
+   why it is a rail and not three routes.
+
+   On a phone the rail is a horizontal scroll-snap container and you swipe.
+   Above 769px it becomes three columns, all visible, no gesture — the same
+   components saying the same thing out loud.
+
+   The old .hp-mobile-screens / .hp-screen--one / .hp-screen--two rules above
+   are dead: nothing renders those class names any more. Four of them did real
+   work and are restated here against .hn, which is why they are not simply
+   deleted in place — the beacon's height, its status dot, the panel reset on
+   .hp-dashboard, and the two-column grid the wall is drawn in.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.hn {
+  /* How far pane content keeps away from the left and right edges. The carets
+     are 40px boxes pinned to those edges, and text that runs under one is the
+     first thing that reads as broken — the glyph lands in the middle of a
+     sentence and neither is legible. Everything a pane draws in a full-width
+     column pays this. */
+  --hn-gutter: 34px;
+  position: relative;
+  width: 100%;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+/* ── The one row over all three panes ───────────────────────────────────────
+   Fixed to the window, not to a pane, so it holds still while they move. The
+   row itself takes no clicks — it is a transparent strip across the top of a
+   scrolling page, and a strip that swallowed taps would kill the swipe along
+   its whole width. Its two children take theirs back. */
+.hn-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 95;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: max(12px, calc(env(safe-area-inset-top) - 12px)) 16px 8px;
+  pointer-events: none;
+}
+.hn-bar > * { pointer-events: auto; }
+
+/* The band that stops a scrolled pane running through the mark. Same shape as
+   .sitenav-row::before, and here for the same reason: this row is fixed with
+   no background of its own, so the wall of covers scrolled straight through
+   the logo. It only fades in once the pane under it has actually moved, so the
+   landing screen of every pane still runs clean to the top of the window.
+   translateZ(0) is not decoration — the archive tiles carry a perspective and
+   are therefore on their own compositing layers, which paint over an
+   unpromoted band no matter what its z-index says. */
+.hn-bar::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 140px;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.22s ease;
+  background: linear-gradient(to bottom, var(--bg) 0%, var(--bg) 78%, transparent 100%);
+  transform: translateZ(0);
+  will-change: opacity;
+}
+.hn-bar--scrolled::before { opacity: 1; }
+
+.hn-mark { display: block; line-height: 0; }
+.hn-mark-svg { height: 26px; width: auto; display: block; }
+.hn-mark-svg path { fill: var(--ink); }
+.hn-mark-dot { fill: var(--ink); }
+/* The live indicator, and the only green on the site. Same keyframe the old
+   cover used — the mark is on every pane now, so the one thing always on
+   screen is also the one thing that has to say whether anything is playing. */
+.hn-mark-dot--live {
+  fill: #7cff9b;
+  animation: hp-logo-dot-pulse 2.5s ease-in-out infinite;
+}
+.hn-lights { color: var(--ink-faint); }
+.hn-lights:hover { color: var(--ink-soft); }
+
+/* ── The rail ───────────────────────────────────────────────────────────────
+   overscroll-behavior-x: contain is not a nicety. Without it, a swipe that
+   reaches the left end of the rail keeps going into Safari's own back gesture,
+   and trying to reach the card takes you off the site. */
+.hn-rail {
+  display: flex;
+  width: 100%;
+  height: 100dvh;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.hn-rail::-webkit-scrollbar { display: none; }
+
+.hn-pane {
+  flex: 0 0 100%;
+  width: 100%;
+  height: 100dvh;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.hn-pane::-webkit-scrollbar { display: none; }
+
+/* The centre pane's first screen. min-height rather than height, so a short
+   phone gets a screen that fits and a long one gets a screen that fills. */
+.hn-screen {
+  min-height: 100dvh;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  padding: calc(env(safe-area-inset-top) + 62px) var(--hn-gutter) 92px;
+}
+
+/* Everything under it. Not a snap point: a snap here would mean wanting three
+   more lines of the wall got you a whole page of it instead. */
+.hn-under {
+  min-height: 100dvh;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: calc(env(safe-area-inset-top) + 54px) var(--hn-gutter) max(28px, env(safe-area-inset-bottom));
+}
+.hn-under-title {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+/* Restated from the dead .hp-mobile-screens block — same values, new scope. */
+.hn .beacon-stage { height: 320px; }
+.hn-screen .beacon-status .beacon-dot { display: none; }
+.hn .hp-dashboard {
+  background: none;
+  border: none;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  padding: 0;
+}
+.hn-under .hp-strip--grid { width: 100%; }
+.hn-under .hp-strip-track--grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  width: 100%;
+  padding: 0;
+}
+.hn-under .strip-tile--grid {
+  width: 100%;
+  height: auto;
+  min-width: 0;
+  aspect-ratio: 1 / 1;
+  border-radius: 24px;
+  transform: translateZ(0);
+  opacity: 1;
+}
+.hn-under .hp-strip-actions { padding: 20px 0 8px; }
+
+/* ── The carets ─────────────────────────────────────────────────────────────
+   Pinned to the window so they hold still while the panes move under them.
+   Faded rather than unmounted: a control that vanishes as you swipe pulls the
+   eye to the edge of the screen every time the pane changes. */
+.edge-caret {
+  position: fixed;
+  z-index: 96;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--ink-faint);
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: opacity 0.25s ease, color 0.2s ease;
+}
+.edge-caret:hover { color: var(--ink-soft); }
+.edge-caret:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 3px; }
+.edge-caret--left {
+  left: max(0px, env(safe-area-inset-left));
+  top: 50%;
+  margin-top: -20px;
+}
+.edge-caret--right {
+  right: max(0px, env(safe-area-inset-right));
+  top: 50%;
+  margin-top: -20px;
+}
+/* Centred with a margin rather than a transform, because the bob keyframe
+   below owns transform and would throw away a translateX(-50%). */
+.edge-caret--down {
+  left: 50%;
+  margin-left: -20px;
+  bottom: max(16px, env(safe-area-inset-bottom));
+  animation: hp-scroll-btn-bob 2.2s ease-in-out infinite;
+}
+.edge-caret--away {
+  opacity: 0;
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .edge-caret--down { animation: none; }
+}
+
+/* ── Left: About ────────────────────────────────────────────────────────── */
+.ab-pane { display: flex; flex-direction: column; }
+.ab-card {
+  min-height: 100dvh;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: calc(env(safe-area-inset-top) + 62px) 16px 84px;
+}
+/* The card stops carrying its own scrollbar. It had one because it used to be
+   a fixed-size object on a pane that did not scroll; the pane scrolls now, and
+   a scroller inside a scroller means dragging over the card cannot move the
+   page under it. */
+.ab-card .idc {
+  height: auto;
+  max-height: none;
+  /* 340 elsewhere. Twenty pixels narrower is not a change anybody reads as a
+     change, and it is what puts clear air between the card's edge and the
+     caret sitting on the edge of the window. */
+  max-width: 320px;
+}
+/* The mark, once. The bar across the top of the cross carries it on every
+   pane now, and a card printed with the same mark 130px below it reads as a
+   mistake rather than as a colophon. The head keeps its height and its tools:
+   only the logo goes, and the row is pushed right so the owner's edit controls
+   stay in the corner they have always been in. */
+.ab-card .idc-head { justify-content: flex-end; }
+.ab-card .idc-mark { display: none; }
+.ab-card .idc-inner {
+  flex: none;
+  min-height: 0;
+  overflow: visible;
+}
+.ab-card .idc-inner--more {
+  mask-image: none;
+  -webkit-mask-image: none;
+}
+
+.ab-below {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 8px var(--hn-gutter) max(40px, env(safe-area-inset-bottom));
+  box-sizing: border-box;
+}
+.ab-block { display: flex; flex-direction: column; gap: 12px; }
+.ab-subhead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-label);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin: 0;
+}
+.ab-prose { display: flex; flex-direction: column; gap: 14px; }
+.ab-prose p {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.7;
+  color: var(--ink-soft);
+}
+.ab-rig { display: flex; flex-direction: column; }
+/* Rows, the same shape as a tracklist: the thing's name reads left and what it
+   is reads right. */
+.ab-rig-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--border);
+}
+.ab-rig-row:last-child { border-bottom: none; }
+.ab-rig-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--ink);
+  font-size: 0.95rem;
+  text-decoration: none;
+}
+a.ab-rig-name:hover { text-decoration: underline; }
+.ab-rig-role {
+  flex-shrink: 0;
+  font-family: var(--font-label);
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.ab-doors { display: flex; gap: 8px; flex-wrap: wrap; }
+/* The smallest type on the site, at the foot of the pane nobody reaches by
+   accident. AGPL §13, satisfied once, quietly. */
+.ab-source {
+  align-self: flex-start;
+  font-family: var(--font-label);
+  font-size: 0.62rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  text-decoration: none;
+  opacity: 0.7;
+}
+.ab-source:hover { opacity: 1; text-decoration: underline; }
+
+/* ── Right, logged out: Pitch ───────────────────────────────────────────── */
+.pt-pane {
+  min-height: 100dvh;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: calc(env(safe-area-inset-top) + 62px) var(--hn-gutter) 84px;
+}
+.pt-body {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+  max-width: 360px;
+}
+.pt-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: var(--font-display-weight);
+  font-size: 1.6rem;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+.pt-prose { display: flex; flex-direction: column; gap: 12px; }
+.pt-prose p {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.65;
+  color: var(--ink-soft);
+}
+.pt-cta { align-self: flex-start; margin-top: 4px; }
+
+/* ── Right, logged in: Dashboard ────────────────────────────────────────── */
+.db-pane {
+  min-height: 100dvh;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: calc(env(safe-area-inset-top) + 62px) var(--hn-gutter) 84px;
+}
+.db-body {
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+  width: 100%;
+  max-width: 380px;
+}
+/* The one big thing on the pane. What you came to do is listen. */
+.db-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 40px 20px;
+  border: 1px solid var(--border);
+  border-radius: 26px;
+  background: var(--panel);
+  color: var(--ink);
+  text-decoration: none;
+  transition: border-color 0.18s ease, transform 0.18s ease;
+}
+.db-hero:hover { border-color: var(--ink-faint); transform: translateY(-2px); }
+.db-hero-label {
+  font-family: var(--font-label);
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+.db-doors { display: flex; flex-direction: column; }
+.db-door {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 15px 4px;
+  border-bottom: 1px solid var(--border);
+  color: var(--ink);
+  text-decoration: none;
+}
+.db-door:last-child { border-bottom: none; }
+.db-door-mark { flex-shrink: 0; color: var(--ink-faint); }
+.db-door-text { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.db-door-label {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.95rem;
+}
+.db-door-note {
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: var(--ink-faint);
+}
+/* The one count on the site, and the same red the favourite heart uses. */
+.db-count {
+  margin-left: 8px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--fav);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-label);
+  font-size: 9px;
+}
+
+/* ── The cover's own two rows, moved off the deleted page-level stylesheet ── */
+.hp-write {
+  display: inline-flex;
+  align-items: center;
+  padding: 9px 20px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  text-decoration: none;
+  background: transparent;
+  transition: color 0.15s, border-color 0.15s;
+}
+.hp-write:hover { color: var(--ink); border-color: var(--ink-faint); }
+.hp-write:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 3px; }
+.hp-write-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+.hp-write-count {
+  margin-left: 7px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--fav);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9px;
+  letter-spacing: 0;
+}
+
+/* What came before — three covers, small and dim, under the beacon. */
+.hp-recent {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  opacity: 0.65;
+  transition: opacity 0.3s;
+}
+.hp-recent:hover { opacity: 0.9; }
+.hp-recent-tile {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: var(--bg-warm);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
+  display: block;
+  animation: hp-recent-arrive 0.5s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+.hp-recent-tile img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.hp-recent-none {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  color: var(--ink-faint);
+  font-size: 18px;
+}
+a.hp-recent-tile { transition: transform 0.2s; }
+a.hp-recent-tile:hover { transform: translateY(-2px); }
+@keyframes hp-recent-arrive {
+  from { opacity: 0; transform: translateX(-14px) scale(0.85); }
+  to   { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hp-recent-tile { animation: none; }
+  a.hp-recent-tile:hover { transform: none; }
+}
+
+/* ── Desktop: the same three, said out loud ─────────────────────────────────
+   No gesture, no carets, nothing hidden. Each column keeps its own scroll,
+   which is what makes this the same structure rather than a second layout. */
+@media (min-width: 769px) {
+  .hn-rail {
+    display: grid;
+    grid-template-columns: 1fr 1.3fr 1fr;
+    overflow-x: hidden;
+  }
+  .hn-pane { width: auto; }
+  .hn-pane + .hn-pane { border-left: 1px solid var(--border); }
+  .edge-caret { display: none; }
+  .hn-screen { padding-top: calc(env(safe-area-inset-top) + 72px); }
+  .hn-under .hp-strip-track--grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
