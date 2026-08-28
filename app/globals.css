@@ -2309,6 +2309,21 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
      sentence and neither is legible. Everything a pane draws in a full-width
      column pays this. */
   --hn-gutter: 34px;
+  /* How much of every pane the mark takes off the top. It is a constant on
+     purpose: the crown is the same height on all three panes, so the square
+     directly under it — a portrait on the left, an album on the centre —
+     lands on the same line whichever pane you are looking at, and swiping
+     reads as one object turning rather than three pages going past. Every
+     landing screen subtracts this from its own height so that crown plus
+     landing still comes to exactly one screen. */
+  --hn-crown: 152px;
+  /* The air between the mark and the square under it. One number for both
+     panes: the card's portrait and the beacon's album art are the same 180px
+     square in the same frame, and the whole point of a fixed crown is that
+     they land on the same line — which they only do while they are both
+     offset from it by the same amount. This is the constant that replaced the
+     measured lift the card used to carry. */
+  --hn-square-top: 20px;
   position: relative;
   width: 100%;
   height: 100dvh;
@@ -2333,6 +2348,16 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   pointer-events: none;
 }
 .hn-bar > * { pointer-events: auto; }
+
+/* The small mark waits until the big one has left. At the top of any pane the
+   crown is the mark and the bar carries only the lights; scroll down, the
+   crown goes with the page, and this fades in behind the band that arrives at
+   the same moment. One mark on screen at a time, always. */
+.hn-mark {
+  opacity: 0;
+  transition: opacity 0.22s ease;
+}
+.hn-bar--scrolled .hn-mark { opacity: 1; }
 
 /* The band that stops a scrolled pane running through the mark. Same shape as
    .sitenav-row::before, and here for the same reason: this row is fixed with
@@ -2397,28 +2422,63 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   scroll-snap-align: start;
   scroll-snap-stop: always;
   overflow-y: auto;
+  /* proximity, not mandatory. mandatory is what made the old two screens feel
+     like two pages you could not stop between, and it only works while a pane
+     is exactly two screens tall. The centre pane is three and a bit — a whole
+     archive under the beacon — and mandatory would pull a reader back to a
+     screen edge every time they stopped halfway down the wall. proximity keeps
+     the settle at the top boundary, where the feeling was, and lets the covers
+     scroll free below it. */
+  scroll-snap-type: y proximity;
   overscroll-behavior-y: contain;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
 }
 .hn-pane::-webkit-scrollbar { display: none; }
 
+/* ── The crown ──────────────────────────────────────────────────────────────
+   The mark, large and centred, at the top of every pane — the treatment the
+   old cover gave it on its one first screen, applied to all three. Its total
+   height is --hn-crown and the panes are built around that number, so this
+   box's padding and the token have to agree: 44 top + 82 mark + 26 bottom. */
+.hn-crown {
+  height: var(--hn-crown);
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: calc(env(safe-area-inset-top) + 44px) 16px 26px;
+  scroll-snap-align: start;
+}
+.hn-crown-mark { display: block; line-height: 0; }
+/* 82px, not 112. This SVG is cropped tight to the glyphs while the PNG it
+   replaced carried transparent margin, so the same box height rendered
+   smaller letters — 82 here measures out to the letter height the old logo
+   drew at 112, matched by measurement rather than by eye. */
+.hn-crown-svg { height: 82px; width: auto; display: block; }
+.hn-crown-svg path { fill: var(--ink); }
+
 /* The centre pane's first screen. min-height rather than height, so a short
    phone gets a screen that fits and a long one gets a screen that fills. */
 .hn-screen {
-  min-height: 100dvh;
+  min-height: calc(100dvh - var(--hn-crown));
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  /* flex-start, not centre — the album art has to start where the portrait
+     starts on the pane beside it, and centred it floated 70px lower on a tall
+     phone and less on a short one. What is left underneath is not a hole: the
+     recent records sit in it and the down caret sits below them. */
+  justify-content: flex-start;
   gap: 20px;
-  padding: calc(env(safe-area-inset-top) + 62px) var(--hn-gutter) 92px;
+  padding: var(--hn-square-top) var(--hn-gutter) 92px;
 }
 
 /* Everything under it. Not a snap point: a snap here would mean wanting three
    more lines of the wall got you a whole page of it instead. */
 .hn-under {
+  scroll-snap-align: start;
   min-height: 100dvh;
   box-sizing: border-box;
   display: flex;
@@ -2445,6 +2505,10 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   backdrop-filter: none;
   -webkit-backdrop-filter: none;
   padding: 0;
+  /* Six pixels, which is what the album art was landing below the portrait on
+     the pane beside it. A panel with a margin is a panel; this is not one any
+     more, so the margin goes with the border and the backdrop. */
+  margin-top: 0;
 }
 .hn-under .hp-strip--grid { width: 100%; }
 .hn-under .hp-strip-track--grid {
@@ -2516,12 +2580,16 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 /* ── Left: About ────────────────────────────────────────────────────────── */
 .ab-pane { display: flex; flex-direction: column; }
 .ab-card {
-  min-height: 100dvh;
+  min-height: calc(100dvh - var(--hn-crown));
   box-sizing: border-box;
   display: flex;
-  align-items: center;
+  /* flex-start, not centre. The card leads with the portrait now, and the
+     portrait has to sit directly under the crown to land on the same line as
+     the beacon's album art one pane over. Centred, it drifted by however much
+     shorter than a screen the card happened to be. */
+  align-items: flex-start;
   justify-content: center;
-  padding: calc(env(safe-area-inset-top) + 62px) 16px 84px;
+  padding: 0 16px 84px;
 }
 /* The card stops carrying its own scrollbar. It had one because it used to be
    a fixed-size object on a pane that did not scroll; the pane scrolls now, and
@@ -2540,8 +2608,22 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
    mistake rather than as a colophon. The head keeps its height and its tools:
    only the logo goes, and the row is pushed right so the owner's edit controls
    stay in the corner they have always been in. */
-.ab-card .idc-head { justify-content: flex-end; }
+/* Corner furniture, out of the flow. The head is the owner's edit controls and
+   nothing else now, and left as a row in the column it put 44px of air between
+   the crown and the portrait — which is 44px of drift against the album art on
+   the pane beside it. */
+.ab-card .idc-head {
+  position: absolute;
+  top: 0;
+  right: 0;
+  min-height: 0;
+  margin: 0;
+  z-index: 2;
+}
 .ab-card .idc-mark { display: none; }
+/* The portrait's own margin becomes the shared offset, so the two squares
+   cannot drift apart by somebody editing one of them. */
+.ab-card .idc-portrait { margin-top: var(--hn-square-top); }
 .ab-card .idc-inner {
   flex: none;
   min-height: 0;
@@ -2553,6 +2635,7 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 }
 
 .ab-below {
+  scroll-snap-align: start;
   display: flex;
   flex-direction: column;
   gap: 30px;
@@ -2566,6 +2649,7 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 .ab-subhead {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
   font-family: var(--font-label);
   font-size: 0.7rem;
@@ -2628,12 +2712,12 @@ a.ab-rig-name:hover { text-decoration: underline; }
 
 /* ── Right, logged out: Pitch ───────────────────────────────────────────── */
 .pt-pane {
-  min-height: 100dvh;
+  min-height: calc(100dvh - var(--hn-crown));
   box-sizing: border-box;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: calc(env(safe-area-inset-top) + 62px) var(--hn-gutter) 84px;
+  padding: 0 var(--hn-gutter) 84px;
 }
 .pt-body {
   display: flex;
@@ -2661,12 +2745,12 @@ a.ab-rig-name:hover { text-decoration: underline; }
 
 /* ── Right, logged in: Dashboard ────────────────────────────────────────── */
 .db-pane {
-  min-height: 100dvh;
+  min-height: calc(100dvh - var(--hn-crown));
   box-sizing: border-box;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: calc(env(safe-area-inset-top) + 62px) var(--hn-gutter) 84px;
+  padding: 0 var(--hn-gutter) 84px;
 }
 .db-body {
   display: flex;
@@ -2823,7 +2907,12 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   }
   .hn-pane { width: auto; }
   .hn-pane + .hn-pane { border-left: 1px solid var(--border); }
+  /* One mark, three columns. On a phone you only ever see one pane, so a crown
+     on each is one crown; side by side they are three copies of the same logo
+     across the top of one page. Hidden rather than removed, because the height
+     is what keeps the portrait and the album art on the same line — take the
+     box away and the columns stop agreeing about where a square starts. */
+  .hn-pane:not(.hn-pane--home) .hn-crown { visibility: hidden; }
   .edge-caret { display: none; }
-  .hn-screen { padding-top: calc(env(safe-area-inset-top) + 72px); }
   .hn-under .hp-strip-track--grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }

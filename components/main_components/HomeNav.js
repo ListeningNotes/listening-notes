@@ -131,10 +131,12 @@ export default function HomeNav({ entries = [], loading = false, stamps, authed 
     paneRefs.forEach(ref => {
       if (ref.current) {
         observer.observe(ref.current);
-        // The scroller and its content both matter: the scroller changes with
-        // the window, the content changes with the data, and observing only
-        // the first misses every case that actually moves the caret.
-        if (ref.current.firstElementChild) observer.observe(ref.current.firstElementChild);
+        // The scroller and everything in it. The scroller changes with the
+        // window and its contents change with the data, so watching only one
+        // of the two misses half the cases that move the caret — and watching
+        // only the first child now watches the crown, which is a fixed height
+        // and never moves anything.
+        for (const child of ref.current.children) observer.observe(child);
       }
     });
     return () => observer.disconnect();
@@ -216,6 +218,47 @@ export default function HomeNav({ entries = [], loading = false, stamps, authed 
     </div>
   );
 
+  // ── The crown ─────────────────────────────────────────────────────────────
+  // The mark, large and centred, at the top of every pane. It is the same
+  // treatment the old cover gave it on its first screen, applied three times
+  // instead of once — which is what makes the swipe read as one object turning
+  // rather than three pages being flicked past. The mark holds still at the
+  // top of the window and the square directly under it holds still too: a
+  // portrait on the left, an album on the centre. Only what is under those two
+  // changes as you move.
+  //
+  // It is also what retired the card's measured photo-lift. That code existed
+  // to drop the portrait down the column until it landed on the same line as
+  // the beacon's art on the other face of the cover; with a crown of fixed
+  // height above both squares they line up by construction, and arithmetic
+  // that has become a constant should be a constant.
+  //
+  // Written once and rendered three times rather than passed into each pane:
+  // it belongs to the cross, not to About, Dashboard or Pitch, none of which
+  // should have to know they are sitting in one.
+  const crown = (
+    <div className="hn-crown">
+      <Link href="/" className="hn-crown-mark" aria-label={cover_name} onClick={e => { e.preventDefault(); goTo(HOME); }}>
+        <svg viewBox="76 96 241 140" className="hn-crown-svg" xmlns="http://www.w3.org/2000/svg">
+          <path
+            transform="translate(73.734177, 220.794814)"
+            d="M 44.65625 0 C 37.46875 0 31.160156 -1.601562 25.734375 -4.8125 C 20.304688 -8.019531 16.097656 -12.28125 13.109375 -17.59375 C 10.128906 -22.90625 8.640625 -28.773438 8.640625 -35.203125 L 8.640625 -116.21875 L 36.53125 -116.21875 L 36.53125 -33.203125 C 36.53125 -30.546875 37.46875 -28.222656 39.34375 -26.234375 C 41.226562 -24.242188 43.550781 -23.25 46.3125 -23.25 L 77.03125 -23.25 L 77.03125 0 Z M 44.65625 0 "
+          />
+          <path
+            transform="translate(153.915942, 220.794814)"
+            d="M 91.96875 2 C 85 2 78.742188 0.476562 73.203125 -2.5625 C 67.671875 -5.613281 63.300781 -9.847656 60.09375 -15.265625 C 56.882812 -20.691406 55.28125 -26.835938 55.28125 -33.703125 L 55.28125 -84.5 C 55.28125 -86.269531 54.835938 -87.875 53.953125 -89.3125 C 53.066406 -90.75 51.90625 -91.910156 50.46875 -92.796875 C 49.03125 -93.679688 47.425781 -94.125 45.65625 -94.125 C 43.882812 -94.125 42.28125 -93.679688 40.84375 -92.796875 C 39.40625 -91.910156 38.269531 -90.75 37.4375 -89.3125 C 36.601562 -87.875 36.1875 -86.269531 36.1875 -84.5 L 36.1875 0 L 8.96875 0 L 8.96875 -82.515625 C 8.96875 -89.484375 10.539062 -95.625 13.6875 -100.9375 C 16.84375 -106.25 21.21875 -110.453125 26.8125 -113.546875 C 32.40625 -116.648438 38.6875 -118.203125 45.65625 -118.203125 C 52.738281 -118.203125 59.046875 -116.648438 64.578125 -113.546875 C 70.109375 -110.453125 74.476562 -106.25 77.6875 -100.9375 C 80.90625 -95.625 82.515625 -89.484375 82.515625 -82.515625 L 82.515625 -31.703125 C 82.515625 -29.929688 82.957031 -28.300781 83.84375 -26.8125 C 84.726562 -25.320312 85.859375 -24.160156 87.234375 -23.328125 C 88.617188 -22.492188 90.144531 -22.078125 91.8125 -22.078125 C 93.582031 -22.078125 95.210938 -22.492188 96.703125 -23.328125 C 98.203125 -24.160156 99.394531 -25.320312 100.28125 -26.8125 C 101.164062 -28.300781 101.609375 -29.929688 101.609375 -31.703125 L 101.609375 -116.21875 L 128.65625 -116.21875 L 128.65625 -33.703125 C 128.65625 -26.835938 127.050781 -20.691406 123.84375 -15.265625 C 120.632812 -9.847656 116.265625 -5.613281 110.734375 -2.5625 C 105.203125 0.476562 98.945312 2 91.96875 2 Z M 91.96875 2 "
+          />
+          <circle
+            cx="297.0547"
+            cy="216.71875"
+            r="14.1328"
+            className={'hn-mark-dot' + (isLive ? ' hn-mark-dot--live' : '')}
+          />
+        </svg>
+      </Link>
+    </div>
+  );
+
   // ── What came before ──────────────────────────────────────────────────────
   // The last three records, under the beacon. Unchanged from the cover it came
   // off — records rather than tracks, dimmed because they are the past, and one
@@ -278,14 +321,16 @@ export default function HomeNav({ entries = [], loading = false, stamps, authed 
 
       <div className="hn-rail" ref={railRef}>
         <section className="hn-pane" ref={paneRefs[0]} aria-label="About this journal">
+          {crown}
           <About stamps={stamps} authed={authed} />
         </section>
 
         <section className="hn-pane hn-pane--home" ref={paneRefs[1]} aria-label="Now listening">
+          {crown}
           <div className="hn-screen">
             <div className="hp-dashboard">
               <div className="hp-dash-cell hp-dash-beacon">
-                <ListeningBeacon statusAboveArt />
+                <ListeningBeacon />
               </div>
             </div>
             {recentRow}
@@ -305,6 +350,7 @@ export default function HomeNav({ entries = [], loading = false, stamps, authed 
         </section>
 
         <section className="hn-pane" ref={paneRefs[2]} aria-label={authed ? 'Your desk' : 'About this software'}>
+          {crown}
           {authed ? <Dashboard waiting={waiting} /> : <Pitch />}
         </section>
       </div>

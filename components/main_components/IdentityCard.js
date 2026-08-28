@@ -260,7 +260,6 @@ export default function IdentityCard({ stamps, authed = false }) {
     instagram_url,
     site_address,
     founded_at,
-    about_intro,
     social_links,
     hidden_fields,
     send_me,
@@ -290,8 +289,13 @@ export default function IdentityCard({ stamps, authed = false }) {
   // starts when someone writes in it, not when the database row was created.
   const since = monthAndYear(founded_at) || monthAndYear(stamps?.first_listen);
 
-  // The keeper's own line if they have written one, otherwise the journal's.
-  const blurb = bio || about_intro;
+  // The keeper's own line, and only that. It used to fall back to about_intro,
+  // which was right while the card was the whole about page and wrong the
+  // moment there was somewhere longer to write: about_intro prints on the pane
+  // directly below this card now, and a card that borrowed it would print the
+  // same paragraph twice — or, once somebody writes a proper page of it, print
+  // a page of prose on a card.
+  const blurb = bio;
 
   // instagram_url predates this list and is folded in rather than made to move.
   // De-duplicated on the href, so an owner who has it in both places gets one.
@@ -344,13 +348,7 @@ export default function IdentityCard({ stamps, authed = false }) {
   // leaves. So a drag of forty pixels is worth forty pixels of overflow, and at
   // the ends the picture stops instead of sliding on under a finger.
   const dragFrom = useRef(null);
-  // Declared up here rather than beside the effect that fills them: the slot is
-  // built further down this function and hands photoRef to whichever of its
-  // three shapes it returns, so the binding has to exist by then.
-  const photoRef = useRef(null);
   const innerRef = useRef(null);
-  const liftRef = useRef(null);
-  const [lift, setLift] = useState(null);
   // Which mark is being chosen, if any: 'rig', or the index of a link. One at a
   // time, so opening a second palette closes the first and the card never has
   // two grids of icons on it at once.
@@ -464,7 +462,6 @@ export default function IdentityCard({ stamps, authed = false }) {
     // phone, not at an address you can type.
     slot = (
       <div
-        ref={photoRef}
         className={'idc-portrait idc-portrait--turnable' + (framing ? ' idc-portrait--framing' : '')}
         onPointerDown={framing ? frameStart : undefined}
         onPointerMove={framing ? frameMove : undefined}
@@ -504,12 +501,11 @@ export default function IdentityCard({ stamps, authed = false }) {
       </div>
     );
   } else if (!canTurnSlot) {
-    slot = <div ref={photoRef} className={'idc-portrait' + (bareSlot ? ' idc-portrait--bare' : '')}>{slotFaces}</div>;
+    slot = <div className={'idc-portrait' + (bareSlot ? ' idc-portrait--bare' : '')}>{slotFaces}</div>;
   } else {
     slot = (
       <button
         type="button"
-        ref={photoRef}
         className={'idc-portrait idc-portrait--turnable' + (bareSlot ? ' idc-portrait--bare' : '')}
         onClick={() => setSlotCode(v => !v)}
         aria-pressed={slotCode}
@@ -545,58 +541,14 @@ export default function IdentityCard({ stamps, authed = false }) {
   const showAlbums = records != null && showing('albums');
   const showSince = Boolean(since) && showing('since');
 
-  // ── Lining the photograph up with the beacon ────────────────────────────
-  // The two sides of this cover show the same square in the same frame: a
-  // record on the front, a person on the back. Which only reads as one object
-  // being turned over if the square does not jump when it turns — and left to
-  // flow, the card's is a hundred and forty pixels higher up the pane than the
-  // beacon's, because the two columns have different things stacked above them.
-  //
-  // It cannot be a constant. The front face is centred in the pane, so where
-  // its art lands depends on how tall the pane is; and the card's own header
-  // grows and shrinks with whether there is a name on it. So the gap is
-  // measured — both boxes against the scene that holds them both, which is
-  // stable while the card scrolls — and the difference is handed back as the
-  // photograph's top margin.
-  //
-  // A hidden face still has layout, so this works whichever way up the cover
-  // currently is.
-  useEffect(() => {
-    const photo = photoRef.current;
-    const inner = innerRef.current;
-    const scene = inner?.closest('.idc-scene');
-    const art = scene?.querySelector('.beacon-art-wrap');
-    if (!photo || !inner || !art) return;
-
-    const measure = () => {
-      const sceneTop = scene.getBoundingClientRect().top;
-      const innerTop = inner.getBoundingClientRect().top - sceneTop;
-      const artTop = art.getBoundingClientRect().top - sceneTop;
-      // What is on the card right now, read off the card. Keeping the last
-      // value in a ref instead looked equivalent and was not: the ref is
-      // written the moment a new lift is worked out, the spacer only when React
-      // commits it, and a measurement taken between the two subtracts a lift
-      // that is not there yet. It settled sixty pixels short every time.
-      const applied = liftRef.current?.getBoundingClientRect().height ?? 0;
-      // Where the photograph would sit with no lift on it at all.
-      const resting =
-        photo.getBoundingClientRect().top - sceneTop - innerTop + inner.scrollTop - applied;
-      const next = Math.max(0, Math.round(artTop - innerTop - resting));
-      if (Math.abs(next - applied) < 1) return;
-      setLift(next);
-    };
-
-    measure();
-    const observer = new ResizeObserver(measure);
-    observer.observe(scene);
-    observer.observe(inner);
-    window.addEventListener('resize', measure);
-    return () => {
-      observer.disconnect();
-      window.removeEventListener('resize', measure);
-    };
-    // Everything that changes how tall the column above the photograph is.
-  }, [editing, keeper_name, records, since, stamps]);
+  // The photograph used to be lifted down the column by a measured spacer, to
+  // land on exactly the same line as the beacon's album art on the other face
+  // of the cover. There is no other face — the flip is gone — and the two
+  // squares line up now by construction rather than by arithmetic: every pane
+  // of the cross opens with the same mark at the same height, and the square
+  // is the first thing under it. So the measurement, its ResizeObserver and
+  // the spacer it fed all came out. See HomeNav.js for the crown that replaced
+  // them.
 
   // Whether the soft bottom edge is telling the truth — see the note by the
   // measurement below.
@@ -697,8 +649,6 @@ export default function IdentityCard({ stamps, authed = false }) {
            middle of a block of writing, and here it is the card's contents
            simply starting further down the page. The header is corner
            furniture; space under it reads as air. */
-        .idc-lift { height: var(--idc-photo-lift, 0px); flex-shrink: 0; }
-
         .idc-tools { display: flex; align-items: center; gap: 2px; }
         .idc-tool {
           display: inline-flex; align-items: center; justify-content: center;
@@ -725,7 +675,13 @@ export default function IdentityCard({ stamps, authed = false }) {
           font-size: 36px; line-height: 1.1; letter-spacing: -0.018em;
           text-wrap: balance;
           color: var(--ink);
-          margin: 0;
+          /* The name used to lead the column and needed nothing above it. It
+             reads under the photograph now — the mark took the top of the pane
+             — and a name set flush against the bottom edge of a picture of the
+             person it names looks like a caption that slipped. An ornamented
+             name makes it worse: the decorative glyphs reach above the cap
+             height and touch the frame. */
+          margin: 20px 0 0;
         }
         /* ── Fields that are the same size as the writing they replace ────
            globals.css forces every input on a phone to 16px, with !important,
@@ -1273,7 +1229,6 @@ export default function IdentityCard({ stamps, authed = false }) {
       <div
         ref={innerRef}
         className={'idc-inner' + (more ? ' idc-inner--more' : '')}
-        style={lift == null ? undefined : { '--idc-photo-lift': `${lift}px` }}
       >
         <div className="idc-head">
           {/* The site's own mark, small and in the corner. The dot on its
@@ -1340,7 +1295,7 @@ export default function IdentityCard({ stamps, authed = false }) {
           )}
         </div>
 
-        <div className="idc-lift" aria-hidden="true" ref={liftRef} />
+        {slot}
 
         {/* cover_name, not keeper_name: this is the one place a person is
             reading the name, so it is allowed to be the ornamented one. The
@@ -1379,7 +1334,6 @@ export default function IdentityCard({ stamps, authed = false }) {
           </p>
         )}
 
-        {slot}
 
         {/* Same measure, same size, same leading, same colour. A textarea set
             in the paragraph's own type is the paragraph, with a caret in it. */}

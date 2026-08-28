@@ -77,11 +77,13 @@ export default function About({ stamps, authed = false }) {
         <IdentityCard stamps={stamps} authed={authed} />
       </div>
 
-      {/* One scroll, not a second pane. The card above is a fixed-size object
-          and this is however long the writing is, which is why they are
-          stacked rather than snapped: a snap point here would mean the prose
-          started at the top of a screen every time and a reader who wanted
-          three more lines got a whole page instead. */}
+      {/* A snap point, but a soft one. The top of this block is where the card
+          ends and the reading starts, and that boundary is worth settling
+          onto — it is the thing the old two-screen cover did that made it feel
+          like pages rather than one long column. Soft because the writing
+          below it is prose: proximity snapping (see .hn-pane in globals.css)
+          catches you at the boundary and then leaves you alone, where
+          mandatory would drag you back to it mid-paragraph. */}
       <div className="ab-below">
         {prose.length > 0 && (
           <section className="ab-block">
@@ -97,10 +99,17 @@ export default function About({ stamps, authed = false }) {
                 drawer, which was the right answer while the card was the whole
                 page and the wrong one the moment the page could scroll. A
                 drawer is what you build when there is nowhere to put
-                something. There is somewhere now. */}
+                something. There is somewhere now.
+
+                The rows and nothing else. There were once several hundred
+                words under these about why any of it matters, and they are
+                staying out: what is worth saying here is what the thing is
+                and what it does, and the rest is the journal. Hardcoded they
+                would also be one person's essay shipped inside everybody's
+                copy — see the note on the rig column in schema.sql. */}
             <h2 className="ab-subhead">
               {RigMark && <RigMark size={15} weight="regular" aria-hidden="true" />}
-              The rig
+              Rig setup
             </h2>
             <div className="ab-rig">
               {rigList.map((item, i) => (
