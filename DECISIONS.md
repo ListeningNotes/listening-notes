@@ -74,6 +74,68 @@ colophon.
 **Cross navigation.** Beacon is home. Down → journal (only from the beacon).
 Left → About. Right → actions when logged in, pitch pane when logged out.
 
+**The cross is one route, not three.** A swipe that triggered a navigation
+would unmount the pane being left, throw away its scroll position and re-fetch
+it on the way back. Everything the gesture depends on — that it is continuous,
+reversible, and returns you where you were — needs all three panes mounted at
+once. So home is a horizontal scroll container and the browser does the
+physics. Entries stay real routes: an entry has an address you can send
+somebody and a pane does not.
+
+**Panes are named after the routes they absorb**, and those routes mount the
+same component the pane does. `/archive` → Journal, `/about` → About,
+`/dashboard` → Dashboard. One description of each thing, two places it can be
+reached, and no duplication to keep in step.
+
+**Edge carets, not a dot indicator.** A swipe is invisible; nobody opens a page
+knowing there is more of it sideways. A caret pinned to an edge says there is
+something that way in a way three dots never do, and pressing it does what
+swiping does — which is how the swipe gets learned. It is also the fallback if
+the gesture feels wrong on a given device.
+
+**The down caret is drawn by measuring the pane, never by being told.** A pane
+is deep when its scroller overflows. That is what makes a fresh copy right for
+free — an install with no about paragraph and no rig has nothing under the
+card, so nothing points down at it — and it is why the pitch pane's missing
+bottom edge needs no special case.
+
+**Vertical snapping is `proximity`, not `mandatory`.** Mandatory is what made
+the old two screens feel like two pages you could not stop between, and it only
+works while a pane is exactly two screens tall. The centre pane is three and a
+bit — a whole archive under the beacon — and mandatory would drag a reader back
+to a screen edge every time they stopped halfway down the wall. Proximity keeps
+the settle at the card-to-writing boundary, which is where the feeling was.
+
+**The mark is large and centred at the top of every pane.** One height, so the
+square directly under it — a portrait on the left, an album on the centre —
+lands on the same line whichever pane you are on. That is what makes the swipe
+read as one object turning. It also replaced the card's measured photo-lift
+with two constants: arithmetic that has become a constant should be a constant.
+On desktop the outer two crowns are hidden but not removed — the box has to
+stay or the columns stop agreeing where a square starts.
+
+**Desktop is the same three components as three columns.** Not a second layout.
+The site already carried two separate homepage markup trees that had drifted
+apart; a third would have been the same mistake twice.
+
+**`bio` is the card, `about_intro` is the pane.** They used to fall back into
+each other, which was right while the card was the whole about page and wrong
+the moment there was somewhere longer to write — a card that borrowed the long
+paragraph would print a page of prose on a card.
+
+**The rig ships as rows and nothing else.** The specs come out of their drawer
+and onto the About pane, because a drawer is what you build when there is
+nowhere to put something and the pane is somewhere. The several hundred words
+about why any of it matters stay out permanently — not parked, not waiting on a
+column. What is worth saying is what the thing is and what it does; the rest is
+the journal, and hardcoded it would be one person's essay shipped inside
+everybody's software.
+
+**Surprise keeps its pill and gains a shake.** The pill at the foot of the
+journal is how anybody finds it; shaking the phone is for whoever already has.
+The shake fires a firework off the existing gold burst and then goes to
+`/shuffle`. Both, not either — a gesture nobody discovers is not a feature.
+
 **The card flip is dead.** Left *is* the About page. Having both means the card
 exists in two places and neither is canonical.
 
