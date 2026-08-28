@@ -2734,21 +2734,85 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   border-bottom: 1px solid var(--border);
 }
 .ab-prompt-edit:last-child { border-bottom: none; }
+/* The opening, as a control. Not a native select: the system draws its own
+   grey bevelled box, and on a site made of rules and type it is the only thing
+   on the page with chrome. This is the card's mark chooser said in words —
+   press the line, the list opens under it, press a line to take it. */
 .ab-prompt-pick {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   width: 100%;
-  border: 0;
   padding: 0;
+  border: 0;
   background: transparent;
   font-family: inherit;
   font-size: 13px;
+  line-height: 1.5;
+  text-align: left;
   color: var(--ink-faint);
-  /* The system picker draws the list; this is only the closed state, and a
-     native control with its own chrome would be the only bevelled thing on
-     the page. */
-  appearance: none;
-  -webkit-appearance: none;
+  cursor: pointer;
+  transition: color 0.15s ease;
 }
-.ab-prompt-pick:focus { outline: none; color: var(--ink-soft); }
+.ab-prompt-pick > span { flex: 1; min-width: 0; }
+.ab-prompt-pick svg { flex-shrink: 0; opacity: 0.5; transition: transform 0.2s ease; }
+.ab-prompt-pick:hover, .ab-prompt-pick--on { color: var(--ink-soft); }
+.ab-prompt-pick--on svg { transform: rotate(180deg); opacity: 0.9; }
+.ab-prompt-pick:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 4px; }
+/* An empty slot says so in the same weight as an answered one says its
+   opening, so three slots read as three lines rather than as one filled row
+   and two gaps. */
+.ab-prompt-none { color: var(--ink-faint); font-style: italic; }
+
+/* The list. Same stock as the card's mark chooser — a warm panel, a hairline
+   rule, ten pixels of radius — because it is the same gesture in a different
+   shape and two chooser styles on one page is two answers to one question. */
+.ab-prompt-menu {
+  display: flex;
+  flex-direction: column;
+  margin-top: 8px;
+  padding: 6px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg-warm);
+}
+.ab-prompt-opt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 9px 10px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: transparent;
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 1.45;
+  text-align: left;
+  color: var(--ink-soft);
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+}
+.ab-prompt-opt > span:first-child { flex: 1; min-width: 0; }
+.ab-prompt-opt:hover { color: var(--ink); background: var(--bg); }
+.ab-prompt-opt--on {
+  color: var(--ink);
+  background: var(--bg);
+  border-color: var(--ink-faint);
+}
+.ab-prompt-opt--taken { color: var(--ink-faint); }
+/* Marked rather than disabled: taking one that is already in another slot
+   swaps the two, which is a move somebody is allowed to make and should be
+   told about first. */
+.ab-prompt-taken {
+  flex-shrink: 0;
+  font-family: var(--font-label);
+  font-size: 8px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+
 .ab-prompt-input {
   width: 100%;
   border: 0;
@@ -2763,6 +2827,16 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 .ab-prompt-input::placeholder { color: var(--ink-faint); }
 /* An answer with no opening chosen is a line nobody asked for. */
 .ab-prompt-input:disabled { border-bottom-color: transparent; }
+/* globals.css pushes every field on a phone to 16px with !important, to stop
+   iOS zooming the page in on focus. That is the right rule everywhere it is
+   not being fought — and here it is: the answer would set a pixel larger than
+   the line it becomes the moment you save, so the sentence changes size when
+   you stop typing it. The editor holds the page still for the length of an
+   edit instead (see holdZoom in IdentificationCardEditor.js), which is what
+   lets this keep its own type — the same trade the card's own fields make. */
+@media (max-width: 768px) {
+  .ab-prompt-input { font-size: 15px !important; }
+}
 .ab-rig { display: flex; flex-direction: column; }
 /* Rows, the same shape as a tracklist: the thing's name reads left and what it
    is reads right. */

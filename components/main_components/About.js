@@ -38,8 +38,8 @@
 // nothing.
 
 'use client';
-import { useMemo } from 'react';
-import { ArrowSquareOut, LinkSimple } from '@phosphor-icons/react';
+import { useEffect, useMemo, useState } from 'react';
+import { ArrowSquareOut, CaretDown, Check, LinkSimple } from '@phosphor-icons/react';
 import IdentityCard, { identify, readLink, rigIcon } from './IdentityCard';
 import { useIdentificationCardEditor } from './IdentificationCardEditor';
 import { useBookplate } from './Bookplate';
@@ -59,6 +59,25 @@ export default function About({ stamps, authed = false }) {
   // on it; the prompts print below it now, and two instances of the hook would
   // be two drafts of the same page with one save button between them.
   const edit = useIdentificationCardEditor(settings);
+
+  // Which slot has its list of openings open, if any. One at a time, the same
+  // way the card's mark chooser works — two lists of nine sentences open at
+  // once is most of the pane.
+  const [picking, setPicking] = useState(null);
+  // Escape closes it, because anything that opens over the page has to have a
+  // way out that is not aiming at a particular pixel. Leaving edit mode closes
+  // it too: the list belongs to an edit, not to the pane.
+  useEffect(() => {
+    if (picking === null) return;
+    const onKey = event => { if (event.key === 'Escape') setPicking(null); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [picking]);
+  // Derived rather than reset in an effect: the list only means anything
+  // inside an edit, so it is read through that instead of being cleared when
+  // the edit ends. An effect that only calls setState is a render asking to
+  // happen twice.
+  const openSlot = edit.editing ? picking : null;
 
   // Three finished openings, which is what a bio is here. The one the card may
   // print is dropped from this list rather than repeated — it sits above the
@@ -121,30 +140,68 @@ export default function About({ stamps, authed = false }) {
                 are still offered — picking one swaps the two rather than
                 refusing, so nothing has to be cleared to make a move somebody
                 has already decided on. */}
-            {edit.bio.map((row, index) => (
-              <div className="ab-prompt-edit" key={index}>
-                <select
-                  className="ab-prompt-pick"
-                  value={row.key}
-                  onChange={e => edit.setBioKey(index, e.target.value)}
-                  aria-label={`Opening ${index + 1}`}
-                >
-                  <option value="">Choose an opening…</option>
-                  {BIO_PROMPTS.map(prompt => (
-                    <option key={prompt.key} value={prompt.key}>{prompt.text}</option>
-                  ))}
-                </select>
-                <input
-                  className="ab-prompt-input"
-                  type="text"
-                  value={row.answer}
-                  onChange={e => edit.setBioAnswer(index, e.target.value)}
-                  placeholder={row.key ? 'Finish the sentence' : ''}
-                  disabled={!row.key}
-                  aria-label={`Answer ${index + 1}`}
-                />
-              </div>
-            ))}
+            {edit.bio.map((row, index) => {
+              const chosen = BIO_PROMPTS.find(p => p.key === row.key) || null;
+              const open = openSlot === index;
+              return (
+                <div className="ab-prompt-edit" key={index}>
+                  {/* The opening, as the thing you press to change it. A native
+                      select would draw the system's own grey control, which is
+                      the only bevelled thing on a site made of rules and type —
+                      so this is the card's mark chooser in words: press the
+                      line, the list opens under it, press a line to take it. */}
+                  <button
+                    type="button"
+                    className={'ab-prompt-pick' + (open ? ' ab-prompt-pick--on' : '')}
+                    onClick={() => setPicking(open ? null : index)}
+                    aria-expanded={open}
+                    aria-label={`Opening ${index + 1}`}
+                  >
+                    <span className={chosen ? 'ab-prompt-ask' : 'ab-prompt-none'}>
+                      {chosen ? chosen.text : 'Choose an opening'}
+                    </span>
+                    <CaretDown size={11} weight="bold" aria-hidden="true" />
+                  </button>
+
+                  {open && (
+                    <div className="ab-prompt-menu" role="group" aria-label="Openings">
+                      {BIO_PROMPTS.map(prompt => {
+                        const on = prompt.key === row.key;
+                        // Openings already used in another slot stay on the
+                        // list. Picking one swaps the two rather than refusing,
+                        // so nothing has to be cleared to make a move somebody
+                        // has already decided on — but it is marked, because a
+                        // swap you did not expect reads as a bug.
+                        const elsewhere = !on && edit.bio.some((r, i) => i !== index && r.key === prompt.key);
+                        return (
+                          <button
+                            key={prompt.key}
+                            type="button"
+                            className={'ab-prompt-opt' + (on ? ' ab-prompt-opt--on' : '') + (elsewhere ? ' ab-prompt-opt--taken' : '')}
+                            onClick={() => { edit.setBioKey(index, prompt.key); setPicking(null); }}
+                            aria-pressed={on}
+                          >
+                            <span>{prompt.text}</span>
+                            {on && <Check size={12} weight="bold" aria-hidden="true" />}
+                            {elsewhere && <span className="ab-prompt-taken" aria-hidden="true">in use</span>}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  <input
+                    className="ab-prompt-input"
+                    type="text"
+                    value={row.answer}
+                    onChange={e => edit.setBioAnswer(index, e.target.value)}
+                    placeholder={row.key ? 'Finish the sentence' : ''}
+                    disabled={!row.key}
+                    aria-label={chosen ? chosen.text : `Answer ${index + 1}`}
+                  />
+                </div>
+              );
+            })}
           </section>
         ) : answered.length > 0 && (
           <section className="ab-block ab-block--prompts">
