@@ -312,13 +312,19 @@ moderation, and the email addresses people left with submissions.
 npm run backup
 ```
 
-Writes every table to `~/listening-notes-backups/<timestamp>/` with a copy of
-`schema.sql` beside it, keeps the last 30 and prunes the rest. Set `BACKUP_DIR`
-to put them somewhere synced — an iCloud Drive folder means they no longer live
-on one machine.
+Writes every table to `$BACKUP_DIR/<timestamp>/` with a copy of `schema.sql`
+beside it, keeps the last 30 and prunes the rest. `BACKUP_DIR` defaults to
+`~/listening-notes-backups`; point it at a synced folder — an iCloud Drive
+directory, say — and your backups stop living on the same machine as the thing
+they protect. See [`.env.example`](.env.example).
+
+To run it nightly, put it behind whatever your system uses for scheduled jobs:
+a `launchd` agent on macOS, a cron entry or systemd timer on Linux. Be aware
+that a laptop asleep at the scheduled hour runs the job on its next wake, so
+"nightly" really means "once per day the machine is awake."
 
 ```bash
-npm run restore -- ~/listening-notes-backups/2026-08-27-2212
+npm run restore -- <path-to-a-backup>
 ```
 
 Prints what it would do and changes nothing. Add `--yes` to actually restore,

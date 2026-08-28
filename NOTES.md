@@ -212,12 +212,35 @@ screen are the next things that will want to write configuration somewhere, and
 a real secret belongs in the environment, never in the settings table and never
 in a file that gets committed. `.env.example` holds names and never values.
 
-**There is no automatic backup, and `pg_dump` is not installed here.** No
-Homebrew, no Postgres.app, nothing to run it with. The stopgap taken on
-2026-08-27 is a JSON dump of every table in
-`~/listening-notes-backups/<timestamp>/`, with `schema.sql` copied in beside
-it — reconstructable, but not a real dump: no DDL fidelity, no exact types, no
-one-command restore. See the Pending item.
+**`pg_dump` is not installed and cannot easily be** — no Homebrew, no
+Postgres.app, nothing to run it with. Don't plan around one. What exists
+instead is `npm run backup` / `npm run restore`; see the README.
+
+**Neon keeps six hours of history on this plan.** That covers the mistake you
+notice immediately and nothing else. It is not the safety net — the nightly
+snapshots are. Take one by hand before touching the schema.
+
+**The neon driver refuses a plain string.** `sql('SELECT ...')` throws — it
+only takes a tagged template, and a table name cannot be a bound parameter
+anyway. Dynamic SQL has to go through `sql.query('SELECT ...', [params])`. This
+cost a backup run that wrote nine empty files and reported success, which is
+worse than no backup at all.
+
+**The LaunchAgent holds an absolute path to `node`, and nvm moves it.** The
+plist points at `~/.nvm/versions/node/v24.14.0/bin/node`. Upgrade node and that
+path stops existing, the nightly backup silently stops running, and nothing
+says so. Re-point the plist after any node upgrade — this is exactly the silent
+failure the stale badge in Pending is meant to catch.
+
+**`.gitignore` has `.env*`, which swallows `.env.example` too.** It needs the
+explicit `!.env.example` line below it, or the one file that is meant to be
+committed silently is not.
+
+**`CREATE TABLE IF NOT EXISTS` does nothing to a table that already exists.**
+So a column added to `settings` has to be added twice in `schema.sql`: once in
+the CREATE for a database being built from nothing, and once as
+`ALTER TABLE ... ADD COLUMN IF NOT EXISTS` for one built last month. Miss the
+second and the column exists only on fresh copies.
 
 **`localhost` writes to the production database.** There is no separate dev
 database. A destructive query typed here is typed there.
