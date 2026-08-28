@@ -244,7 +244,7 @@ export async function save_new_entry(body) {
   const {
     album, artist, year, genre = '', entry_type, relationship,
     rating, favorite, masterpiece = false, formative = false, background = '', notes,
-    track_notes, tags = null, horizon, album_art, post_link, tracks = null,
+    track_notes, horizon, album_art, post_link, tracks = null,
     source_entry_id = null, received_from = null, received_date = null,
     user_id = null
   } = body;
@@ -254,13 +254,13 @@ export async function save_new_entry(body) {
   const result = await database`
     INSERT INTO entries (
       album, artist, year, genre, entry_type, relationship,
-      rating, favorite, masterpiece, formative, background, notes, track_notes, tags,
+      rating, favorite, masterpiece, formative, background, notes, track_notes,
       horizon, album_art, post_link, slug, tracks,
       source_entry_id, received_from, received_date, user_id
     ) VALUES (
       ${album}, ${artist}, ${year}, ${genre}, ${entry_type}, ${relationship},
       ${rating}, ${favorite}, ${masterpiece}, ${formative}, ${background}, ${notes},
-      ${track_notes}, ${tags},
+      ${track_notes},
       ${horizon}, ${album_art}, ${post_link}, ${slug},
       ${tracks ? JSON.stringify(tracks) : null},
       ${entryRef(source_entry_id)}, ${blankToNull(received_from)},
@@ -277,10 +277,6 @@ export async function save_new_entry(body) {
 // write them. They are deliberately absent from the SET list below and from
 // the INSERT above; adding either is an error, not a convenience.
 export async function update_entry(slug, fields) {
-  if (fields.tags && typeof fields.tags === 'string') {
-    fields.tags = fields.tags.split(',').map(t => t.trim()).filter(Boolean);
-  }
-
   // The chain fields can't ride the COALESCE block below, because COALESCE
   // reads null as "leave it alone" and these three need to be clearable —
   // "actually this was my own find" is a real edit, and an entry that can be
@@ -324,7 +320,6 @@ export async function update_entry(slug, fields) {
       background = COALESCE(${fields.background ?? null}, background),
       notes = COALESCE(${fields.notes ?? null}, notes),
       track_notes = COALESCE(${fields.track_notes ?? null}, track_notes),
-      tags = COALESCE(${fields.tags ?? null}, tags),
       horizon = COALESCE(${fields.horizon ?? null}, horizon),
       album_art = COALESCE(${fields.album_art ?? null}, album_art),
       post_link = COALESCE(${fields.post_link ?? null}, post_link),
