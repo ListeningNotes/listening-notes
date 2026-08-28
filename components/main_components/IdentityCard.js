@@ -292,8 +292,6 @@ export default function IdentityCard({ stamps, authed = false, edit }) {
 
 
   // What the editor is currently showing, which is the draft rather than what
-  // is saved — the row underneath has to change the moment a mark is pressed.
-  const chosenRig = rigIcon(edit.rig);
 
   // Escape closes it, because anything that covers the page has to have a way
   // out that is not hunting for the button that opened it.
@@ -317,8 +315,6 @@ export default function IdentityCard({ stamps, authed = false, edit }) {
   const innerRef = useRef(null);
   // Which mark is being chosen, if any: 'rig', or the index of a link. One at a
   // time, so opening a second palette closes the first and the card never has
-  // two grids of icons on it at once.
-  const [choosing, setChoosing] = useState(null);
 
   function frameStart(event) {
     const img = event.currentTarget.querySelector('img');
@@ -709,7 +705,7 @@ export default function IdentityCard({ stamps, authed = false, edit }) {
         /* The mark that turns it back, kept legible against whatever the code
            happens to be over — there is no plate under it any more to sit on. */
         .idc-portrait--bare .idc-portrait-badge {
-          right: -6px; bottom: -6px;
+          left: -6px; bottom: -6px;
           background: var(--bg);
         }
         /* Sized so the code itself fills the photograph's square, not so the
@@ -750,8 +746,12 @@ export default function IdentityCard({ stamps, authed = false, edit }) {
         .idc-portrait-empty::before { top: 10px; left: 10px; border-right: 0; border-bottom: 0; }
         .idc-portrait-empty::after  { bottom: 10px; right: 10px; border-left: 0; border-top: 0; }
 
+        /* Bottom-left. It sat bottom-right, which on a portrait is usually
+           somebody's shoulder and often their chin — the eye goes to a face
+           and the chip was landing on it. The left corner of a photograph of a
+           person is nearly always the quietest part of the frame. */
         .idc-portrait-badge {
-          position: absolute; right: 7px; bottom: 7px;
+          position: absolute; left: 7px; bottom: 7px;
           display: flex; align-items: center; justify-content: center;
           width: 21px; height: 21px; border-radius: 7px;
           background: var(--bg);
@@ -760,7 +760,7 @@ export default function IdentityCard({ stamps, authed = false, edit }) {
           transition: color 0.15s;
         }
         .idc-portrait--turnable:hover .idc-portrait-badge { color: var(--ink); }
-        .idc-portrait-badge--drop { right: auto; left: 7px; cursor: pointer; }
+        .idc-portrait-badge--drop { left: auto; right: 7px; cursor: pointer; }
 
         .idc-portrait-hit {
           position: absolute; inset: 0;
@@ -851,7 +851,7 @@ export default function IdentityCard({ stamps, authed = false, edit }) {
            column reads as a fifth fact that lost its label. Centred and full
            width, directly over the button it explains. */
         .idc-ask {
-          margin: 22px auto 0; max-width: 300px;
+          margin: 16px auto 0; max-width: 300px;
           font-size: 14px; line-height: 1.55; color: var(--ink);
           text-wrap: pretty;
         }
@@ -877,10 +877,15 @@ export default function IdentityCard({ stamps, authed = false, edit }) {
           background-size: 9px 1px; background-repeat: repeat-x;
         }
         /* One line: the action, then every other door as a mark beside it. */
+        /* Closer to the block above it than it was. The row used to carry the
+           rig and the links as well and needed the air to read as its own
+           band; it is one button now, and twenty-two pixels under a table of
+           four short rows was reading as a gap where something had been
+           removed — which it was. */
         .idc-row {
           display: flex; align-items: center; justify-content: center;
           gap: 6px; flex-wrap: wrap;
-          margin-top: 22px;
+          margin-top: 14px;
         }
         .idc-mark-btn {
           display: inline-flex; align-items: center; justify-content: center;
@@ -1185,164 +1190,11 @@ export default function IdentityCard({ stamps, authed = false, edit }) {
           <Link href="/submit" className="ln-pill idc-send">Send an album</Link>
         </div>
 
-        {editing ? (
-          <div className="idc-links">
-            {edit.links.map((link, index) => {
-              const known = link.url.trim() ? identify(link.url.trim(), link.icon) : null;
-              const Icon = known ? known.Icon : LinkSimple;
-              return (
-                <div className="idc-link-row" key={index}>
-                  {/* The mark opens the marks. A dropdown made you read a list
-                      of names to pick a picture, which is the wrong way round
-                      — you know the one you want by sight. */}
-                  <button
-                    type="button"
-                    className={'idc-link-mark' + (choosing === index ? ' idc-link-mark--on' : '')}
-                    onClick={() => setChoosing(choosing === index ? null : index)}
-                    aria-expanded={choosing === index}
-                    aria-label={`Choose a mark for link ${index + 1}`}
-                    title="Choose a mark"
-                  >
-                    <Icon size={17} weight="regular" aria-hidden="true" />
-                  </button>
-                  <input
-                    className="idc-link-input"
-                    type="url"
-                    inputMode="url"
-                    value={link.url}
-                    onChange={e => edit.setLink(index, e.target.value)}
-                    placeholder="https://…"
-                    aria-label={known ? known.label : `Link ${index + 1}`}
-                  />
-                  <button
-                    type="button"
-                    className="idc-link-drop"
-                    onClick={() => edit.dropLink(index)}
-                    aria-label={`Remove link ${index + 1}`}
-                  >
-                    <X size={12} weight="bold" aria-hidden="true" />
-                  </button>
-                  {choosing === index && (
-                    <div className="idc-marks" role="group" aria-label="Marks">
-                      {LINK_ICONS.map(option => {
-                        const Mark = option.Icon || GlobeSimple;
-                        const on = (link.icon || 'auto') === option.name;
-                        return (
-                          <button
-                            key={option.name}
-                            type="button"
-                            className={'idc-mark-opt' + (on ? ' idc-mark-opt--on' : '')}
-                            onClick={() => { edit.setLinkIcon(index, option.name); setChoosing(null); }}
-                            aria-pressed={on}
-                            aria-label={option.label}
-                            title={option.label}
-                          >
-                            {option.Icon
-                              ? <Mark size={17} weight="regular" aria-hidden="true" />
-                              : <span className="idc-mark-auto" aria-hidden="true">A</span>}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-            {/* The rig, chosen the same way. It sits with the links because it
-                is the same kind of thing: a mark on the row under the button,
-                standing for somewhere else to go. */}
-            <div className="idc-link-row idc-link-row--rig">
-              <button
-                type="button"
-                className={'idc-link-mark' + (choosing === 'rig' ? ' idc-link-mark--on' : '')}
-                onClick={() => setChoosing(choosing === 'rig' ? null : 'rig')}
-                aria-expanded={choosing === 'rig'}
-                aria-label="Choose a mark for your rig"
-                title="Choose a mark for your rig"
-              >
-                {chosenRig.Icon
-                  ? <chosenRig.Icon size={17} weight="regular" aria-hidden="true" />
-                  : <X size={15} weight="bold" aria-hidden="true" />}
-              </button>
-              <span className="idc-rig-said">
-                {chosenRig.Icon ? `The rig — ${chosenRig.label.toLowerCase()}` : 'No rig button'}
-              </span>
-              {choosing === 'rig' && (
-                <div className="idc-marks" role="group" aria-label="Marks for the rig">
-                  {RIG_ICONS.map(option => {
-                    const on = (edit.rig || DEFAULT_RIG_ICON) === option.name;
-                    return (
-                      <button
-                        key={option.name}
-                        type="button"
-                        className={'idc-mark-opt' + (on ? ' idc-mark-opt--on' : '')}
-                        onClick={() => { edit.setRig(option.name); setChoosing(null); }}
-                        aria-pressed={on}
-                        aria-label={option.label}
-                        title={option.label}
-                      >
-                        {option.Icon
-                          ? <option.Icon size={17} weight="regular" aria-hidden="true" />
-                          : <X size={15} weight="bold" aria-hidden="true" />}
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-
-            {/* Gone at the cap rather than disabled. A dead button is a
-                control you have to press to be told no; its absence is the
-                same answer without the press. */}
-            {!edit.atLinkLimit && (
-            <button type="button" className="idc-link-add" onClick={edit.addLink}>
-              <Plus size={11} weight="bold" aria-hidden="true" />
-              Add a link
-            </button>
-            )}
-
-            {/* What is in the sheet. Nothing about why it matters — that is
-                what the journal is for — just what each thing is and what it
-                does, which is the shape a tracklist reads in. */}
-            {chosenRig.Icon && (
-              <div className="idc-gear">
-                {edit.gear.map((item, index) => (
-                  <div className="idc-gear-row" key={index}>
-                    <input
-                      className="idc-link-input"
-                      type="text"
-                      value={item.name}
-                      onChange={e => edit.setGearField(index, 'name', e.target.value)}
-                      placeholder="Sennheiser HD 600"
-                      aria-label={`Equipment ${index + 1}`}
-                    />
-                    <input
-                      className="idc-link-input idc-gear-role"
-                      type="text"
-                      value={item.role}
-                      onChange={e => edit.setGearField(index, 'role', e.target.value)}
-                      placeholder="Headphones"
-                      aria-label={`What equipment ${index + 1} does`}
-                    />
-                    <button
-                      type="button"
-                      className="idc-link-drop"
-                      onClick={() => edit.dropGear(index)}
-                      aria-label={`Remove equipment ${index + 1}`}
-                    >
-                      <X size={12} weight="bold" aria-hidden="true" />
-                    </button>
-                  </div>
-                ))}
-                <button type="button" className="idc-link-add" onClick={edit.addGear}>
-                  <Plus size={11} weight="bold" aria-hidden="true" />
-                  Add a piece
-                </button>
-              </div>
-            )}
-          </div>
-        ) : null}
-
+        {/* The link rows and the rig rows used to be here, under the button,
+            while the card was the only surface an owner could edit. They are
+            edited on the pane below now, inside the sections they actually
+            print in — a field for something you cannot see while you type into
+            it is a field you fill in blind. See About.js. */}
         {edit.trouble && <p className="idc-trouble">{edit.trouble}</p>}
       </div>
 

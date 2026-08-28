@@ -39,8 +39,10 @@
 
 'use client';
 import { useEffect, useMemo, useState } from 'react';
-import { ArrowSquareOut, CaretDown, Check, LinkSimple } from '@phosphor-icons/react';
-import IdentityCard, { identify, readLink, rigIcon } from './IdentityCard';
+import { ArrowSquareOut, CaretDown, Check, GlobeSimple, LinkSimple, Plus, X } from '@phosphor-icons/react';
+import IdentityCard, {
+  DEFAULT_RIG_ICON, LINK_ICONS, RIG_ICONS, identify, readLink, rigIcon,
+} from './IdentityCard';
 import { useIdentificationCardEditor } from './IdentificationCardEditor';
 import { useBookplate } from './Bookplate';
 import { BIO_PROMPTS, CARD_PROMPT, readBioAnswers } from '../../library/bioprompt';
@@ -64,6 +66,26 @@ export default function About({ stamps, authed = false }) {
   // way the card's mark chooser works — two lists of nine sentences open at
   // once is most of the pane.
   const [picking, setPicking] = useState(null);
+  // Which mark palette is open, if any: 'rig', or the index of a link. One at
+  // a time, so opening a second closes the first and the pane never has two
+  // grids of icons on it at once. This lived on the card while the card was
+  // the only surface an owner could edit; the rows it belongs to print here.
+  const [choosing, setChoosing] = useState(null);
+  // What the editor is currently showing for the rig, which is the draft
+  // rather than what is saved — the heading below has to change the moment a
+  // mark is pressed.
+  const chosenRig = rigIcon(edit.rig);
+
+  // An answer that grows instead of scrolling. It has to run on mount as well
+  // as on every keystroke, or an answer already two lines long opens showing
+  // one — and one line is exactly the wrong impression to give, since the
+  // whole point of a finished sentence is that it can be as long as it needs
+  // to be and no longer.
+  const grow = el => {
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = `${el.scrollHeight}px`;
+  };
   // Escape closes it, because anything that opens over the page has to have a
   // way out that is not aiming at a particular pixel. Leaving edit mode closes
   // it too: the list belongs to an edit, not to the pane.
@@ -88,7 +110,10 @@ export default function About({ stamps, authed = false }) {
   // row somebody started and abandoned in the editor, and it should not print.
   const rigList = (Array.isArray(rigRows) ? rigRows : []).filter(r => r?.name?.trim());
   const rig = rigIcon(rig_icon);
-  const RigMark = rig?.Icon;
+  // What the heading wears: the saved mark normally, the draft one while
+  // editing, so pressing a new mark changes the heading under your thumb
+  // rather than after a save.
+  const RigMark = edit.editing ? chosenRig.Icon : rig?.Icon;
 
   // Where else this person can be found. They used to be marks in the row
   // beside "Send an album" on the card, which put "here is somebody's Instagram"
@@ -158,7 +183,7 @@ export default function About({ stamps, authed = false }) {
                     aria-label={`Opening ${index + 1}`}
                   >
                     <span className={chosen ? 'ab-prompt-ask' : 'ab-prompt-none'}>
-                      {chosen ? chosen.text : 'Choose an opening'}
+                      {chosen ? chosen.text : 'Choose a prompt'}
                     </span>
                     <CaretDown size={11} weight="bold" aria-hidden="true" />
                   </button>
@@ -190,11 +215,20 @@ export default function About({ stamps, authed = false }) {
                     </div>
                   )}
 
-                  <input
+                  {/* A textarea, not an input, and only because of how it
+                      grows: the answer prints as a wrapped line and it should
+                      be written as one. A single-line field scrolls sideways
+                      under the caret, which hides the beginning of the
+                      sentence you are trying to finish. Return does nothing —
+                      see onKeyDown — because this is one sentence and a line
+                      break in it would print as a space anyway. */}
+                  <textarea
                     className="ab-prompt-input"
-                    type="text"
+                    rows={1}
                     value={row.answer}
-                    onChange={e => edit.setBioAnswer(index, e.target.value)}
+                    onChange={e => { edit.setBioAnswer(index, e.target.value); grow(e.currentTarget); }}
+                    onKeyDown={e => { if (e.key === 'Enter') e.preventDefault(); }}
+                    ref={grow}
                     placeholder={row.key ? 'Finish the sentence' : ''}
                     disabled={!row.key}
                     aria-label={chosen ? chosen.text : `Answer ${index + 1}`}
@@ -223,7 +257,7 @@ export default function About({ stamps, authed = false }) {
             it is much easier to add one than to take one away once people have
             filled it in. */}
 
-        {rigList.length > 0 && (
+        {(rigList.length > 0 || edit.editing) && (
           <section className="ab-block">
             {/* The rig used to come up from the bottom of the card in a
                 drawer, which was the right answer while the card was the whole
@@ -241,6 +275,92 @@ export default function About({ stamps, authed = false }) {
               {RigMark && <RigMark size={15} weight="regular" aria-hidden="true" />}
               Rig setup
             </h2>
+            {edit.editing ? (
+              <div className="idc-links">
+                {/* The rig, chosen the same way. It sits with the links because it
+                    is the same kind of thing: a mark on the row under the button,
+                    standing for somewhere else to go. */}
+                <div className="idc-link-row idc-link-row--rig">
+                  <button
+                    type="button"
+                    className={'idc-link-mark' + (choosing === 'rig' ? ' idc-link-mark--on' : '')}
+                    onClick={() => setChoosing(choosing === 'rig' ? null : 'rig')}
+                    aria-expanded={choosing === 'rig'}
+                    aria-label="Choose a mark for your rig"
+                    title="Choose a mark for your rig"
+                  >
+                    {chosenRig.Icon
+                      ? <chosenRig.Icon size={17} weight="regular" aria-hidden="true" />
+                      : <X size={15} weight="bold" aria-hidden="true" />}
+                  </button>
+                  <span className="idc-rig-said">
+                    {chosenRig.Icon ? `The rig — ${chosenRig.label.toLowerCase()}` : 'No rig button'}
+                  </span>
+                  {choosing === 'rig' && (
+                    <div className="idc-marks" role="group" aria-label="Marks for the rig">
+                      {RIG_ICONS.map(option => {
+                        const on = (edit.rig || DEFAULT_RIG_ICON) === option.name;
+                        return (
+                          <button
+                            key={option.name}
+                            type="button"
+                            className={'idc-mark-opt' + (on ? ' idc-mark-opt--on' : '')}
+                            onClick={() => { edit.setRig(option.name); setChoosing(null); }}
+                            aria-pressed={on}
+                            aria-label={option.label}
+                            title={option.label}
+                          >
+                            {option.Icon
+                              ? <option.Icon size={17} weight="regular" aria-hidden="true" />
+                              : <X size={15} weight="bold" aria-hidden="true" />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                {/* What is in the sheet. Nothing about why it matters — that is
+                    what the journal is for — just what each thing is and what it
+                    does, which is the shape a tracklist reads in. */}
+                {chosenRig.Icon && (
+                  <div className="idc-gear">
+                    {edit.gear.map((item, index) => (
+                      <div className="idc-gear-row" key={index}>
+                        <input
+                          className="idc-link-input"
+                          type="text"
+                          value={item.name}
+                          onChange={e => edit.setGearField(index, 'name', e.target.value)}
+                          placeholder="Sennheiser HD 600"
+                          aria-label={`Equipment ${index + 1}`}
+                        />
+                        <input
+                          className="idc-link-input idc-gear-role"
+                          type="text"
+                          value={item.role}
+                          onChange={e => edit.setGearField(index, 'role', e.target.value)}
+                          placeholder="Headphones"
+                          aria-label={`What equipment ${index + 1} does`}
+                        />
+                        <button
+                          type="button"
+                          className="idc-link-drop"
+                          onClick={() => edit.dropGear(index)}
+                          aria-label={`Remove equipment ${index + 1}`}
+                        >
+                          <X size={12} weight="bold" aria-hidden="true" />
+                        </button>
+                      </div>
+                    ))}
+                    <button type="button" className="idc-link-add" onClick={edit.addGear}>
+                      <Plus size={11} weight="bold" aria-hidden="true" />
+                      Add a piece
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
             <div className="ab-rig">
               {rigList.map((item, i) => (
                 <div className="ab-rig-row" key={item.name + i}>
@@ -256,10 +376,11 @@ export default function About({ stamps, authed = false }) {
                 </div>
               ))}
             </div>
+            )}
           </section>
         )}
 
-        {socials.length > 0 && (
+        {(socials.length > 0 || edit.editing) && (
           <section className="ab-block">
             {/* Headed like the rig above it, because it is the same kind of
                 thing: a short list of facts about somebody, at the end of the
@@ -270,6 +391,81 @@ export default function About({ stamps, authed = false }) {
               <LinkSimple size={15} weight="regular" aria-hidden="true" />
               Find me
             </h2>
+            {edit.editing ? (
+              <div className="idc-links">
+                {edit.links.map((link, index) => {
+                  const known = link.url.trim() ? identify(link.url.trim(), link.icon) : null;
+                  const Icon = known ? known.Icon : LinkSimple;
+                  return (
+                    <div className="idc-link-row" key={index}>
+                      {/* The mark opens the marks. A dropdown made you read a list
+                          of names to pick a picture, which is the wrong way round
+                          — you know the one you want by sight. */}
+                      <button
+                        type="button"
+                        className={'idc-link-mark' + (choosing === index ? ' idc-link-mark--on' : '')}
+                        onClick={() => setChoosing(choosing === index ? null : index)}
+                        aria-expanded={choosing === index}
+                        aria-label={`Choose a mark for link ${index + 1}`}
+                        title="Choose a mark"
+                      >
+                        <Icon size={17} weight="regular" aria-hidden="true" />
+                      </button>
+                      <input
+                        className="idc-link-input"
+                        type="url"
+                        inputMode="url"
+                        value={link.url}
+                        onChange={e => edit.setLink(index, e.target.value)}
+                        placeholder="https://…"
+                        aria-label={known ? known.label : `Link ${index + 1}`}
+                      />
+                      <button
+                        type="button"
+                        className="idc-link-drop"
+                        onClick={() => edit.dropLink(index)}
+                        aria-label={`Remove link ${index + 1}`}
+                      >
+                        <X size={12} weight="bold" aria-hidden="true" />
+                      </button>
+                      {choosing === index && (
+                        <div className="idc-marks" role="group" aria-label="Marks">
+                          {LINK_ICONS.map(option => {
+                            const Mark = option.Icon || GlobeSimple;
+                            const on = (link.icon || 'auto') === option.name;
+                            return (
+                              <button
+                                key={option.name}
+                                type="button"
+                                className={'idc-mark-opt' + (on ? ' idc-mark-opt--on' : '')}
+                                onClick={() => { edit.setLinkIcon(index, option.name); setChoosing(null); }}
+                                aria-pressed={on}
+                                aria-label={option.label}
+                                title={option.label}
+                              >
+                                {option.Icon
+                                  ? <Mark size={17} weight="regular" aria-hidden="true" />
+                                  : <span className="idc-mark-auto" aria-hidden="true">A</span>}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+                {/* Gone at the cap rather than disabled. A dead button is a
+                    control you have to press to be told no; its absence is the
+                    same answer without the press. */}
+                {!edit.atLinkLimit && (
+                <button type="button" className="idc-link-add" onClick={edit.addLink}>
+                  <Plus size={11} weight="bold" aria-hidden="true" />
+                  Add a link
+                </button>
+                )}
+
+              </div>
+            ) : (
             <div className="ab-links">
               {socials.map(({ href, label, Icon }) => (
                 <a
@@ -285,6 +481,7 @@ export default function About({ stamps, authed = false }) {
                 </a>
               ))}
             </div>
+            )}
           </section>
         )}
 

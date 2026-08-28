@@ -51,8 +51,12 @@ export default function EdgeCaret({ direction, onClick, label, icon: Mark, hidde
       inert={hidden ? true : undefined}
       tabIndex={hidden ? -1 : undefined}
     >
+      {/* The left-hand control leads with its arrow and the other two follow
+          with theirs, which is the whole of the direction logic — the rest is
+          flex-direction, in the stylesheet. */}
+      {direction === 'left' && <Glyph size={11} weight="bold" aria-hidden="true" className="edge-caret-arrow" />}
       {Mark && <Mark size={21} weight="regular" aria-hidden="true" className="edge-caret-mark" />}
-      <Glyph size={11} weight="bold" aria-hidden="true" className="edge-caret-arrow" />
+      {direction !== 'left' && <Glyph size={11} weight="bold" aria-hidden="true" className="edge-caret-arrow" />}
     </button>
   );
 }

@@ -2576,14 +2576,10 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 }
 
 .edge-caret {
-  width: 44px;
   display: flex;
-  /* A column: the mark for where you would land, and the arrow for which way
-     that is underneath it. */
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 2px;
+  gap: 5px;
   padding: 0;
   border: none;
   background: none;
@@ -2605,9 +2601,14 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   opacity: 0;
   pointer-events: none;
 }
-/* Only the middle one bobs, and only because down is the direction nobody
+/* Down keeps its arrow underneath its mark rather than beside it. It is the
+   one direction the page itself moves in, and a chevron next to the book would
+   read as a fourth pane somewhere off to the right.
+   It is also the only one that bobs, because down is the direction nobody
    thinks to try on a page that already moves sideways. */
 .edge-caret--down {
+  flex-direction: column;
+  gap: 2px;
   animation: hp-scroll-btn-bob 2.4s ease-in-out infinite;
 }
 @media (prefers-reduced-motion: reduce) {
@@ -2676,6 +2677,18 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   mask-image: none;
   -webkit-mask-image: none;
 }
+
+/* The link and rig editors moved down here from the card and kept their
+   classes, which are styled in IdentityCard's own stylesheet — hoisted to the
+   head, so they still apply. What did not follow them is --idc-rule, which is
+   declared on .idc: the fields use it for their underline, and outside the
+   card it resolved to nothing. Restated here rather than migrated, because the
+   rules belong to the card's design and this is only where two of them are
+   currently standing. */
+.ab-below { --idc-rule: color-mix(in srgb, var(--ink) 15%, transparent); }
+/* Full measure, not the card's 300px column: down here they have the width of
+   the reading and a 300px island centred in it reads as a leftover. */
+.ab-below .idc-links { max-width: none; margin: 0; }
 
 .ab-below {
   display: flex;
@@ -2814,6 +2827,7 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 }
 
 .ab-prompt-input {
+  display: block;
   width: 100%;
   border: 0;
   border-bottom: 1px solid var(--border);
@@ -2821,7 +2835,14 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   background: transparent;
   font-family: inherit;
   font-size: 15px;
+  /* The leading the answer prints at, so the box is the shape of the sentence
+     rather than the shape of a form field. */
+  line-height: 1.6;
   color: var(--ink);
+  /* It grows in script instead — see grow() in About.js. resize would put a
+     drag handle in the corner of a sentence. */
+  resize: none;
+  overflow: hidden;
 }
 .ab-prompt-input:focus { outline: none; border-bottom-color: var(--ink-faint); }
 .ab-prompt-input::placeholder { color: var(--ink-faint); }
