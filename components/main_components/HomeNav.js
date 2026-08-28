@@ -53,7 +53,6 @@ import { useBookplate } from './Bookplate';
 import ListeningBeacon from './ListeningBeacon';
 import Journal from './Journal';
 import EdgeCaret from './EdgeCaret';
-import { goldBurst } from '../../library/gold_burst';
 import About from './About';
 import Dashboard from './Dashboard';
 import Pitch from './Pitch';
@@ -378,27 +377,12 @@ export default function HomeNav() {
     </div>
   );
 
-  // Everything below the beacon, and the three ways on from it. The wall is
-  // the archive itself now rather than eight covers and a link to the archive
-  // — same component /archive mounts, handed the entries this page has already
-  // fetched so the list is not asked for twice.
-  //
-  // The pills are what is left of the dot row. Compare and Surprise had no
-  // home once the dots stopped pointing at the archive, and the foot of the
-  // wall is where you are when you have finished looking and want something to
-  // do; Submit is the one door on the row that is for a visitor rather than
-  // for the keeper.
-  const wallFoot = (
-    <div className="hp-strip-actions">
-      <Link href="/compare" className="ln-pill">Compare</Link>
-      <Link href="/submit" className="ln-pill">Submit an album</Link>
-      {/* The one nav item that is not navigation, and the only thing on the
-          site that plays. Kept as a press rather than made a gesture: a shake
-          nobody discovers is not a feature, and the burst is most of the
-          reason to press it. */}
-      <Link href="/shuffle" className="ln-pill" onClick={goldBurst}>Surprise</Link>
-    </div>
-  );
+  // Compare, Submit and Surprise sat at the foot of the wall for a day, as the
+  // last of the dot row's destinations looking for a home. They are off it: the
+  // foot of the archive is where somebody has finished looking, and three links
+  // to elsewhere is the site asking them to leave. Each still has its own
+  // address and nothing in the interface currently points at any of them — see
+  // NOTES, which is where that is written down rather than solved.
 
   const marks = paneMarks(authed);
 
@@ -428,7 +412,6 @@ export default function HomeNav() {
               entries={entries}
               loading={loading}
               scroller={paneRefs[1]}
-              foot={wallFoot}
             />
           </div>
         </section>
@@ -449,10 +432,16 @@ export default function HomeNav() {
           Each mark names the pane it lands on, which is why the left and right
           ones change as you move: from the card, right is the beacon.
 
-          The whole row fades while anything is scrolling. It sits over the
-          page rather than beside it, and a wall of album art going past under
-          three static glyphs is the row covering the thing you came to look
-          at. It comes back a beat after you stop. */}
+          The whole row fades while anything is scrolling, and the two side
+          controls stay away for as long as a pane is scrolled at all. Sideways
+          is a decision you make at the top of a pane: once you are down in the
+          wall, or down in the reading, the only thing worth offering is more of
+          what you are already in, and three marks parked over somebody's album
+          art are the row covering the thing you came to look at.
+
+          The swipe itself is untouched. Hiding a control is a hint; disabling
+          a gesture halfway down a page is the thing that would actually read as
+          broken. */}
       <div className={'hn-controls' + (busy ? ' hn-controls--busy' : '')}>
         <EdgeCaret
           direction="left"
@@ -462,7 +451,7 @@ export default function HomeNav() {
              is still a button a screen reader could find. */
           label={marks[pane - 1]?.label || 'Back'}
           icon={marks[pane - 1]?.Icon}
-          hidden={pane <= 0}
+          hidden={pane <= 0 || down[pane]}
         />
         <EdgeCaret
           direction="down"
@@ -476,7 +465,7 @@ export default function HomeNav() {
           onClick={() => goTo(pane + 1)}
           label={marks[pane + 1]?.label || 'Onward'}
           icon={marks[pane + 1]?.Icon}
-          hidden={pane >= 2}
+          hidden={pane >= 2 || down[pane]}
         />
       </div>
     </div>

@@ -72,6 +72,15 @@ const releaseYear = entry => {
 // number as the sitewide mobile breakpoint in globals.css.
 const FLIP_BELOW = 768;
 
+// How many covers before the wall is broken into pages. Fifty is a wall you can
+// still scan and roughly two screens of the widest tiles; past that you are
+// scrolling rather than looking, and the sort you chose stops meaning anything
+// because you never reach the other end of it.
+//
+// It is a count of the *filtered* set, not of the archive — searching for one
+// artist inside three hundred records should give you their four, on one page.
+const PER_PAGE = 50;
+
 // entries and loading are optional. The cross already asks /api/entries for its
 // recent row and its counts, so on the homepage the wall is handed what has
 // already arrived rather than fetching the same list a second time; at
@@ -121,6 +130,10 @@ export default function Journal({ entries: given, loading: givenLoading, scrolle
   const [drag, setDrag] = useState(0);
   const [settling, setSettling] = useState(false);
 
+  // Which page of the wall. Reset by anything that changes what the wall holds
+  // — landing on page four of a search that only has one page is a blank grid
+  // and no explanation.
+  const [page, setPage] = useState(0);
   const [density, setDensity] = useState(DEFAULT_DENSITY);
   // Rendered on the server with no idea which it is; resolved on mount,
   // which lands well before the entries fetch does, so nothing ever shows
@@ -293,6 +306,13 @@ export default function Journal({ entries: given, loading: givenLoading, scrolle
       });
   }, [entries, search, sortBy, sortDir, genre, favoritesOnly, masterpiecesOnly, yearActive, yearRange]);
 
+  const pages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
+  // Clamped rather than reset in an effect: if the filters shrink the results
+  // under your feet, the page you are on may no longer exist, and the honest
+  // answer is the last one that does.
+  const current = Math.min(page, pages - 1);
+  const shown = pages > 1 ? filtered.slice(current * PER_PAGE, (current + 1) * PER_PAGE) : filtered;
+
   const activeSort = SORTS.find(s => s.value === sortBy) ?? SORTS[0];
 
   // Picking the field you're already on turns it around; picking a new one
@@ -306,7 +326,15 @@ export default function Journal({ entries: given, loading: givenLoading, scrolle
     setSortDir(SORTS.find(s => s.value === value)?.defaultDir ?? 'desc');
   }
 
+  function toPage(next) {
+    setPage(next);
+    const port = scroller?.current;
+    if (port) port.scrollTo({ top: 0, behavior: 'auto' });
+    else window.scrollTo({ top: 0, behavior: 'auto' });
+  }
+
   function clearFilters() {
+    setPage(0);
     setSearch(''); setGenre(''); setGenresOpen(false);
     setFavoritesOnly(false); setMasterpiecesOnly(false);
     setSortBy('posted'); setSortDir('desc');
@@ -574,7 +602,27 @@ export default function Journal({ entries: given, loading: givenLoading, scrolle
            — main collapsed to the width of its own content and drew the whole
            archive down a narrow channel in the middle of the page. */
         .arc-main { width: 100%; box-sizing: border-box; padding: 4px 24px 120px; }
-        @media (max-width: 768px) { .arc-main { padding-top: 0; padding-bottom: 132px; } }
+        /* 14, not 24. On a phone every pixel down the side is a pixel off the
+           covers, and the tiles are the page — the bar below already sits on
+           the same 14. */
+        @media (max-width: 768px) { .arc-main { padding: 0 14px 132px; } }
+        .arc-pages {
+          display: flex; align-items: center; justify-content: center; gap: 14px;
+          margin-top: 34px;
+        }
+        .arc-page-step {
+          display: inline-flex; align-items: center; justify-content: center;
+          width: 34px; height: 34px; border-radius: 10px;
+          border: 1px solid var(--border); background: transparent;
+          color: var(--ink-soft); cursor: pointer;
+          transition: color 0.15s, border-color 0.15s;
+        }
+        .arc-page-step:hover:not(:disabled) { color: var(--ink); border-color: var(--ink-faint); }
+        .arc-page-step:disabled { opacity: 0.3; cursor: default; }
+        .arc-page-count {
+          font-family: var(--font-label); font-size: 10px;
+          letter-spacing: 0.14em; color: var(--ink-faint);
+        }
         .arc-grid { display: grid; gap: 14px; }
         .arc-grid[data-density="large"]  { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); }
         .arc-grid[data-density="medium"] { grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); }
@@ -660,7 +708,7 @@ export default function Journal({ entries: given, loading: givenLoading, scrolle
           <div className="arc-empty">No entries match these filters.</div>
         ) : (
           <div className="arc-grid" data-density={density}>
-            {filtered.map(e => (
+            {shown.map(e => (
               <FlipTile
                 key={e.slug}
                 entry={e}
@@ -674,6 +722,33 @@ export default function Journal({ entries: given, loading: givenLoading, scrolle
         )}
 
         {foot}
+        {/* Only when there is more than one. A pager under a single page is a
+            control that says the collection is bigger than it is. */}
+        {pages > 1 && (
+          <nav className="arc-pages" aria-label="Pages">
+            <button
+              type="button"
+              className="arc-page-step"
+              onClick={() => toPage(current - 1)}
+              disabled={current === 0}
+              aria-label="Previous page"
+            >
+              ←
+            </button>
+            <span className="arc-page-count">
+              {current + 1} / {pages}
+            </span>
+            <button
+              type="button"
+              className="arc-page-step"
+              onClick={() => toPage(current + 1)}
+              disabled={current >= pages - 1}
+              aria-label="Next page"
+            >
+              →
+            </button>
+          </nav>
+        )}
       </main>
       <div className="arc-bar-wrap">
         <div className={'arc-bar' + (searchOpen ? ' arc-bar--searching' : '')}>
