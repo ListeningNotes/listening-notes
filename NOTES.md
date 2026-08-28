@@ -69,16 +69,38 @@ Worth deciding before the first install, while it is still cheap:
       and the card editor already blanks this on every save.
 - [ ] `entries.relationship` — DECISIONS.md records the field as removed and
       the picker gone, but the column and its legacy values remain.
-- [ ] `entries.tags` — replaced by `genre` plus archive search. Still accepted
-      by the insert in `database_actions.js` and now read by **nothing at all**:
-      its last reader was `PulseCard`, deleted 2026-08-27. Kept on purpose once;
-      worth confirming that still holds.
+- **`entries.tags` — DO NOT DROP. Taken off this list 2026-08-27.** It is read
+      by nothing, and that is not the same as unwanted: **37 of the 39 entries
+      carry hand-written tags**, and they are not duplicates of `genre` —
+      `['el huervo', 'the meaning of 8', 'three-act structure', 'revist',
+      'atmospheric and dark']` is somebody's own indexing, typo included.
+      Dropping the column destroys writing that exists nowhere else. It was
+      listed here on the strength of a grep for readers, which was the wrong
+      test: *unread* is not *unused* when the column holds data.
+
+      (For the record, the two reasons it looked live are both wrong — the
+      archive filter reads `e.genre` and the card's Top genres reads the
+      `genre` column. Neither touches tags. The column is worth keeping anyway.)
 - [ ] `echo_memory` and `conversations` — **zero code references between them.**
       Two tables every fresh copy builds and nothing ever touches.
 
 None of these are urgent and none are obviously wrong to keep. The point is
 that "keep it" should be a decision made while it is reversible, rather than
 the default that arrives by missing the deadline.
+
+**BACKUPS — none exist yet**
+- [ ] **Set up a real backup before touching the schema again.** Neon has
+      point-in-time restore and instant branches; a branch taken from the
+      console before any migration is the ten-second version of this and is
+      what should happen every time. Worth confirming what the retention
+      window is on the current Neon plan, because that is the actual safety
+      net and nobody has checked it.
+- [ ] **Install `libpq` for a genuine `pg_dump`** — the JSON dump is a
+      stopgap, not a restore path. Nothing on this machine can produce a real
+      dump today.
+- [ ] The JSON dump was written by a throwaway script that was deleted after
+      running. If it is worth having again, it is worth being a file with a
+      name rather than something retyped each time.
 
 **SECURITY**
 - [ ] **Rotate `DATABASE_URL` and `SESSION_PASSWORD` into Vercel Secrets.**
@@ -199,6 +221,13 @@ back empty too. **Keep it that way** — the migration runner and the welcome
 screen are the next things that will want to write configuration somewhere, and
 a real secret belongs in the environment, never in the settings table and never
 in a file that gets committed. `.env.example` holds names and never values.
+
+**There is no automatic backup, and `pg_dump` is not installed here.** No
+Homebrew, no Postgres.app, nothing to run it with. The stopgap taken on
+2026-08-27 is a JSON dump of every table in
+`~/listening-notes-backups/<timestamp>/`, with `schema.sql` copied in beside
+it — reconstructable, but not a real dump: no DDL fidelity, no exact types, no
+one-command restore. See the Pending item.
 
 **`localhost` writes to the production database.** There is no separate dev
 database. A destructive query typed here is typed there.
