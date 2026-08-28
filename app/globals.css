@@ -1650,7 +1650,11 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   display: flex;
   align-items: center;
   justify-content: center;
-  color: rgba(124,255,155,0.85);
+  /* Not green. That was the LED blue-white era's accent, kept alive here long
+     after the accent moved on — and green is the one colour on this site that
+     means "playing", which is precisely what this label is there to say is not
+     happening. Written on the scrim in the scrim's own colour instead. */
+  color: rgba(255,255,255,0.82);
   font-family: var(--font-nunito), sans-serif;
   font-size: 0.65rem;
   letter-spacing: 0.18em;
@@ -2501,10 +2505,11 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  /* The filter bar sticks to the top of whatever scrolls, and reads how far
-     down that is from this. On the route it is the height of the fixed nav; in
-     the pane there is no nav, only the band behind the theme toggle, so it is
-     just enough to clear that. Journal states the same rule for both. */
+  /* Where the wall's controls sit. On a phone the bar is on the bottom edge,
+     and it has to clear the row of carets parked there — the caret row is
+     about 40 tall on a 14px inset, so this lifts the bar clear of it. The top
+     value is what desktop still uses, where the bar stays at the top. */
+  --arc-bar-bottom: calc(max(14px, env(safe-area-inset-bottom)) + 54px);
   --arc-nav-bottom: calc(env(safe-area-inset-top) + 44px);
   padding: 0 0 max(28px, env(safe-area-inset-bottom));
 }

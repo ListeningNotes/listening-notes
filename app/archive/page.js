@@ -17,7 +17,6 @@
 
 import Link from 'next/link';
 import { fonts } from '../../library/sitewide_visuals';
-import DotNav from '../../components/main_components/DotNav';
 import SiteNav from '../../components/main_components/SiteNav';
 import Journal from '../../components/main_components/Journal';
 
@@ -25,7 +24,6 @@ export default function ArchivePage() {
   return (
     <div className="arc-page" style={{ background: 'var(--bg)', minHeight: '100vh', color: 'var(--ink)', fontFamily: fonts.sans }}>
       <SiteNav />
-      <DotNav />
       <Journal
         foot={
           <div style={{ marginTop: 80, paddingTop: 32, borderTop: '1px solid var(--border)', textAlign: 'center' }}>

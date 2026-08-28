@@ -370,13 +370,51 @@ export default function Journal({ entries: given, loading: givenLoading, scrolle
   return (
     <>
       <style>{`
-        /* The fixed nav (SiteNav + the labelled dot row beneath it) ends at
-           136px on every breakpoint. The page starts just below that, and
+        /* The fixed nav ends at 80px on every breakpoint — it was 136 while a
+           labelled dot row hung under it. The page starts just below, and
            the filter bar parks there once you scroll — there's no separate
            page title anymore, so the grid is the first thing you see. */
-        .arc-page { --arc-nav-bottom: calc(136px + var(--safe-top)); padding-top: calc(var(--arc-nav-bottom) + 16px); }
+        /* 80, not 136. That number covered the nav row and the dot row under
+           it; the dots are gone, so the rest was a band of nothing at the top
+           of every page. */
+        .arc-page {
+          --arc-nav-bottom: calc(80px + var(--safe-top));
+          padding-top: calc(var(--arc-nav-bottom) + 16px);
+          /* A column, so the bar can be ordered back above the wall on a wide
+             screen while sitting after it in the markup. See the note by
+             .arc-bar-wrap. */
+          display: flex;
+          flex-direction: column;
+        }
 
         .arc-bar-wrap { position: sticky; top: var(--arc-nav-bottom); z-index: 101; padding: 0 24px 10px; }
+
+        /* ── On a phone the bar goes to the bottom ────────────────────────
+           Where the thumb is. At the top it is furthest from the hand and it
+           takes the first hundred pixels of the wall, which on a screen this
+           size is most of a row of covers — the records should have the top of
+           the screen and the controls should be where you can reach them.
+
+           Sticky rather than fixed, and that is not a preference either: this
+           wall is mounted inside a pane of the cross, and a fixed bar would
+           float over the card and the desk when you swiped away from it. A
+           sticky one travels with the pane it belongs to.
+
+           It sticks bottom while being the first child of a very tall column,
+           which pins it to the bottom edge for the whole scroll — the natural
+           position it can never fall below is off the top, so it never
+           unsticks. */
+        @media (min-width: 769px) { .arc-bar-wrap { order: -1; } }
+        @media (max-width: 768px) {
+          .arc-bar-wrap {
+            top: auto;
+            /* Clears whatever else is parked on the bottom edge. The cross
+               sets this to sit above its row of carets; a page leaves it
+               alone and the bar sits on the safe edge itself. */
+            bottom: var(--arc-bar-bottom, max(14px, env(safe-area-inset-bottom)));
+            padding: 10px 20px 0;
+          }
+        }
         .arc-bar {
           max-width: 1100px; margin: 0 auto;
           display: flex; align-items: center; gap: 8px;
@@ -530,6 +568,13 @@ export default function Journal({ entries: given, loading: givenLoading, scrolle
         /* ── The grid. Density is set on the container, so every tile's size
            comes from one attribute rather than being threaded through each
            tile's styles. ── */
+        /* width and box-sizing are not decoration. Both things that mount this
+           wall are flex columns now, and an auto left-and-right margin on a
+           flex item turns off the stretch that was giving it the full measure
+           — main collapsed to the width of its own content and drew the whole
+           archive down a narrow channel in the middle of the page. */
+        .arc-main { width: 100%; box-sizing: border-box; padding: 4px 24px 120px; }
+        @media (max-width: 768px) { .arc-main { padding-top: 0; padding-bottom: 132px; } }
         .arc-grid { display: grid; gap: 14px; }
         .arc-grid[data-density="large"]  { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); }
         .arc-grid[data-density="medium"] { grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); }
@@ -602,6 +647,34 @@ export default function Journal({ entries: given, loading: givenLoading, scrolle
         }
       `}</style>
 
+      {/* The floor clears the bar now that the bar is on it. 120px was the
+          old bottom margin and happens to be about right for a bar plus a row
+          of carets, so on a phone it is left alone and the top comes off
+          instead — the wall starts where the pane starts. */}
+      <main className="arc-main" style={{ maxWidth: 1100, margin: '0 auto' }}>
+        {loading ? (
+          <div className="arc-grid" data-density={density}>
+            {[...Array(18)].map((_, i) => <div key={i} className="arc-skel" style={{ animationDelay: (i * 0.04) + 's' }} />)}
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className="arc-empty">No entries match these filters.</div>
+        ) : (
+          <div className="arc-grid" data-density={density}>
+            {filtered.map(e => (
+              <FlipTile
+                key={e.slug}
+                entry={e}
+                mode={isPhone ? 'flip' : 'modal'}
+                density={density}
+                flipped={flippedSlug === e.slug}
+                onSelect={() => handleTile(e.slug)}
+              />
+            ))}
+          </div>
+        )}
+
+        {foot}
+      </main>
       <div className="arc-bar-wrap">
         <div className={'arc-bar' + (searchOpen ? ' arc-bar--searching' : '')}>
           <label className="arc-search">
@@ -795,30 +868,6 @@ export default function Journal({ entries: given, loading: givenLoading, scrolle
         </>
       )}
 
-      <main style={{ maxWidth: 1100, margin: '0 auto', padding: '4px 24px 120px' }}>
-        {loading ? (
-          <div className="arc-grid" data-density={density}>
-            {[...Array(18)].map((_, i) => <div key={i} className="arc-skel" style={{ animationDelay: (i * 0.04) + 's' }} />)}
-          </div>
-        ) : filtered.length === 0 ? (
-          <div className="arc-empty">No entries match these filters.</div>
-        ) : (
-          <div className="arc-grid" data-density={density}>
-            {filtered.map(e => (
-              <FlipTile
-                key={e.slug}
-                entry={e}
-                mode={isPhone ? 'flip' : 'modal'}
-                density={density}
-                flipped={flippedSlug === e.slug}
-                onSelect={() => handleTile(e.slug)}
-              />
-            ))}
-          </div>
-        )}
-
-        {foot}
-      </main>
 
       {modalSlug && !isPhone && <EntryModal slug={modalSlug} references={entries} onClose={() => setModalSlug(null)} />}
     </>
