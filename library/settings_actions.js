@@ -22,10 +22,12 @@ import { DEFAULT_DEFINITIONS, mergeDefinitions } from './definitions.js';
 // copy has to show is its title, and coverName() below answers that without a
 // column having to hold a placeholder.
 const EMPTY = {
-  // Dead, and kept. A journal is called after whoever keeps it — see
-  // coverName() — so nothing reads this any more, but migrations here are
-  // additive and copies in the wild have the column. It stays null rather than
-  // holding a title, so it cannot quietly become a second name for anything.
+  // Dead, and kept for now. A journal is called after whoever keeps it — see
+  // coverName() — so nothing reads this any more. It is still here because
+  // dropping a column is a decision rather than a tidy-up, not because it
+  // cannot be dropped: nobody outside this repo is running a copy yet, so the
+  // schema is still a draft. See the cleanup note in NOTES.md. It stays null
+  // rather than holding a title, so it cannot quietly become a second name.
   journal_name: null,
   keeper_name: null,
   bio: null,
@@ -115,9 +117,10 @@ const blankToNull = v => (typeof v === 'string' && v.trim() === '' ? null : v);
 // It is called whoever keeps it. There used to be a journal_name column and a
 // separate name on the cover, which asked every owner to invent a title for
 // their own diary before they could write in it — two names for one thing, and
-// the second one always ended up being the first one again. The column stays
-// in the table because migrations here are additive and copies in the wild
-// have it, but nothing reads it any more.
+// the second one always ended up being the first one again. The column is
+// still in the table and nothing reads it; whether it gets dropped is an open
+// question in NOTES.md, and the answer is only free while the schema is still
+// a draft — that is, until somebody else installs a copy.
 //
 // The fallback is deliberately generic and deliberately not this journal's
 // name: a copy whose owner has not introduced themselves yet is "a listening

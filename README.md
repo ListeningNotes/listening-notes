@@ -279,9 +279,14 @@ Two columns on `entries` are computed by Postgres and cannot be written to:
 normalised album+artist string, which is how two journals recognise the same
 record through different punctuation).
 
-**Migrations are additive only** — add columns and tables, never rename or drop
-one. Copies of this software are databases on machines nobody here can reach,
-and a migration that fails is somebody's journal that stops opening.
+**Migrations are additive only, once anyone else is running a copy** — add
+columns and tables, never rename or drop one. Copies of this software are
+databases on machines nobody here can reach, and a migration that fails is
+somebody's journal that stops opening.
+
+Until that first install, the database is a draft owned by one person and
+cleanup is fine. The repo being public does not start the clock; somebody
+installing from it does.
 
 ---
 
@@ -298,8 +303,10 @@ first was this one.
 
 Two worth knowing without opening the file:
 
-- `SESSION_SECRET` — **never change it after launch.** It signs the login
-  cookie, so changing it signs you out of your own journal everywhere.
+- `SESSION_SECRET` — it signs the login cookie, so changing it signs you out of
+  your own journal on every device and you log in again with the same password.
+  Disruptive, not dangerous. Don't rotate it casually; do rotate it if you think
+  it leaked.
 - `ANTHROPIC_API_KEY` — bills to your Console **API credit balance**, which is
   a separate pool from a Claude.ai subscription. See the gotchas in
   [NOTES.md](NOTES.md).
