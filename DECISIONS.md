@@ -157,6 +157,28 @@ self-reported genre list would be the most generic thing on the page.
 that is deliberately the later decision.** It is much easier to add one than to
 take one away once people have filled it in.
 
+**A pinned album goes on the card.** One entry from the owner's own journal,
+shown as art, tapping through to that entry. Not a favourite field and not an
+open search — it points at something that already exists. It is the only image
+on the card besides the portrait and the thing that stops the card reading as
+all type and numbers. Below the name and metrics, above Send an Album, and
+smaller than the portrait: the person is the subject and the record is what
+they are pointing at. No label — art under a name says what it is.
+`pinned_entry_id` already exists with `ON DELETE SET NULL`, so deleting a
+pinned entry clears the pin rather than breaking the card, and null renders
+nothing.
+
+**Its picker is search, not a grid.** At 39 entries a grid works and at 300 it
+is a wall, and somebody pinning a record already knows which one. It reuses the
+journal wall being extracted from `archive/page.js`, in a sheet, with
+tap-to-select instead of tap-to-open — which is why it is sequenced after
+Journal rather than before it.
+
+**Everything editable is edited where it prints.** The link rows and the rig
+rows were fields on the card for things that appear a screen below it, which is
+filling in a form blind. They moved down into the sections they belong to when
+the pane got long enough to have sections.
+
 **The card is a glance; the reading is below it.** No prose on the card at all
 — a face, a name, four facts and the ways to reach somebody. The bio came off
 because it was a paragraph about the keeper printed two hundred pixels above a
