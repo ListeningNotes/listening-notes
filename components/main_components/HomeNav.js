@@ -51,8 +51,9 @@ import { useTheme } from './Lightswitch';
 import { foldKey, useListeningBeacon } from '../../hooks/useListeningBeacon';
 import { useBookplate } from './Bookplate';
 import ListeningBeacon from './ListeningBeacon';
-import AlbumStrip from './AlbumStrip';
+import Journal from './Journal';
 import EdgeCaret from './EdgeCaret';
+import { goldBurst } from '../../library/gold_burst';
 import About from './About';
 import Dashboard from './Dashboard';
 import Pitch from './Pitch';
@@ -377,20 +378,26 @@ export default function HomeNav() {
     </div>
   );
 
-  // The wall, still the old strip. Step two of the cross replaces this with
-  // Journal — the real archive, search and all — mounted here and at /archive
-  // off one component. Until then the centre pane keeps what it had, so the
-  // restructure can be looked at without the wall changing underneath it.
-  const wall = loading ? (
-    <div className="hp-strip hp-strip--grid">
-      <div className="hp-strip-track hp-strip-track--grid">
-        {Array.from({ length: 6 }).map((_, i) => (
-          <div key={i} className="strip-tile strip-tile--skeleton strip-tile--grid" />
-        ))}
-      </div>
+  // Everything below the beacon, and the three ways on from it. The wall is
+  // the archive itself now rather than eight covers and a link to the archive
+  // — same component /archive mounts, handed the entries this page has already
+  // fetched so the list is not asked for twice.
+  //
+  // The pills are what is left of the dot row. Compare and Surprise had no
+  // home once the dots stopped pointing at the archive, and the foot of the
+  // wall is where you are when you have finished looking and want something to
+  // do; Submit is the one door on the row that is for a visitor rather than
+  // for the keeper.
+  const wallFoot = (
+    <div className="hp-strip-actions">
+      <Link href="/compare" className="ln-pill">Compare</Link>
+      <Link href="/submit" className="ln-pill">Submit an album</Link>
+      {/* The one nav item that is not navigation, and the only thing on the
+          site that plays. Kept as a press rather than made a gesture: a shake
+          nobody discovers is not a feature, and the burst is most of the
+          reason to press it. */}
+      <Link href="/shuffle" className="ln-pill" onClick={goldBurst}>Surprise</Link>
     </div>
-  ) : (
-    <AlbumStrip entries={entries} variant="grid" />
   );
 
   const marks = paneMarks(authed);
@@ -417,15 +424,12 @@ export default function HomeNav() {
             {writingLine}
           </div>
           <div className="hn-under">
-            <div className="hn-under-title">The journal</div>
-            {wall}
-            {!loading && entries.length > 0 && (
-              <div className="hp-strip-actions">
-                <Link href="/archive" className="ln-pill">See full archive</Link>
-                <Link href="/compare" className="ln-pill">Compare</Link>
-                <Link href="/submit" className="ln-pill">Submit an album</Link>
-              </div>
-            )}
+            <Journal
+              entries={entries}
+              loading={loading}
+              scroller={paneRefs[1]}
+              foot={wallFoot}
+            />
           </div>
         </section>
 

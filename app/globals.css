@@ -2285,6 +2285,12 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   pointer-events: none;
 }
 
+/* Held still while something covers it. Put on whichever element actually
+   scrolls — the body on a page, a pane in the cross — for as long as a sheet
+   is over it, so the thing underneath does not slide away under the finger
+   dragging the sheet. See Journal.js. */
+.ln-locked { overflow: hidden !important; }
+
 /* ══════════════════════════════════════════════════════════════════════════
    THE CROSS
    ─────────────────────────────────────────────────────────────────────────
@@ -2495,17 +2501,17 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
-  gap: 14px;
-  padding: calc(env(safe-area-inset-top) + 54px) var(--hn-gutter) max(28px, env(safe-area-inset-bottom));
+  /* The filter bar sticks to the top of whatever scrolls, and reads how far
+     down that is from this. On the route it is the height of the fixed nav; in
+     the pane there is no nav, only the band behind the theme toggle, so it is
+     just enough to clear that. Journal states the same rule for both. */
+  --arc-nav-bottom: calc(env(safe-area-inset-top) + 44px);
+  padding: 0 0 max(28px, env(safe-area-inset-bottom));
 }
-.hn-under-title {
-  font-family: var(--font-mono);
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--ink-soft);
-}
+/* The wall pays the pane's gutter; the filter bar carries its own padding. */
+.hn-under .arc-grid,
+.hn-under .hp-strip-actions { padding-left: var(--hn-gutter); padding-right: var(--hn-gutter); }
+
 
 /* Restated from the dead .hp-mobile-screens block — same values, new scope. */
 .hn .beacon-stage { height: 320px; }

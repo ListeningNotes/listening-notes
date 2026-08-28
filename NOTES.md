@@ -64,7 +64,6 @@ only the write that breaks. Run it in Neon's SQL editor. Take a backup first
 
 The cross itself is built and on the branch `cross-nav`. What is left of it:
 
-- [ ] **Journal** — the wall of covers extracted out of `app/archive/page.js` into one component, mounted by the centre pane *and* by `/archive`. The centre pane still shows the old 8-tile strip until this lands.
 - [ ] **`usePlaceKeeper`** — pane index and per-pane scroll offset, kept across a route change. Swiping between panes already remembers itself (they stay mounted); going out to an entry and back does not, because browsers do not restore nested scroll containers.
 - [ ] **`useShake` + `firework()`** — shake the phone, a firework goes up, then `/shuffle`. The Surprise pill stays where it is.
 - [ ] **Re-home DotNav's four destinations.** Archive becomes the centre pane's lower half, Compare and Surprise are pills at the foot of the journal, Submit is a visitor door. The dot row has nothing left to point at once Journal lands.
@@ -73,7 +72,6 @@ The cross itself is built and on the branch `cross-nav`. What is left of it:
 - [ ] **`settings.bio` now has no reader and no writer.** Deliberate — see DECISIONS. The value is still in the database. Decide at the welcome screen whether the column gets a job or gets dropped, while the schema is still a draft.
 - [ ] **`/rig` is still a forwarding stub**, and by the same argument that deleted `/why` it may not have earned one: three days live, linked from a card, on a site nobody else runs. `/about` genuinely did earn its stub. Worth one decision rather than two defaults.
 - [ ] **Pinned album on the card** — the render half can ship on its own; the picker is blocked on Journal. See DECISIONS. The column and its foreign key already exist.
-- [ ] **A fourth metric, Most played** — proposed, not decided. Everything on the card is a count; one line about taste rather than volume would balance it. Computed, never entered.
 - [ ] **`/get` is half a page.** It renders the essay and nothing else. The other half of what that address owes a stranger — what the software is, that it is free, and the way to install a copy — is unwritten, so somebody arriving from another copy's pitch pane reads the why and finds no door. Its tab still reads `Why · …` too.
 - [ ] **Source link wants a settings column.** It ships today as `NEXT_PUBLIC_SOURCE_URL` defaulting to upstream, which is the smaller half of the job — a modified copy owes *its own* source and should not need a redeploy to say so.
 - [ ] **Listen numbering** — an album has many listens, numbered, computed from `album_key` and never chosen.
@@ -317,6 +315,14 @@ current.
 ---
 
 ## Complete
+
+**2026-08-28 — Journal**
+- [x] **`components/main_components/Journal.js`** — the whole of the old `app/archive/page.js` minus the page. Search, filters, sort, density, grid, modal and phone sheet, mounted by the centre pane of the cross *and* by `/archive`.
+- [x] **The route is 38 lines.** It carries the nav, the dot row, the offset that clears them, and the way home.
+- [x] **The scroller is a prop.** The one real difference between the two mounts: on the route the document scrolls, in the cross a pane does. Three things cared — the filter bar sticks to it, the desktop popover closes on it, and the phone sheet has to lock it — so it is handed in rather than assumed, defaulting to the window.
+- [x] **The wall is handed the entries the cross already fetched**, so the homepage does not ask `/api/entries` twice.
+- [x] Compare, Submit and Surprise are pills at the foot of the wall — what is left of the dot row's destinations. Surprise keeps its gold burst.
+- [x] Verified: `/` and `/archive` both 200 and both draw 39 tiles; sticky bar at 136px on the route and 44px in the pane; repo-wide lint unchanged at 47 problems / 9 errors (the six in Journal moved with the code from `archive/page.js`).
 
 **2026-08-27 session — the cross**
 - [x] **`HomeNav`** — three panes on one horizontal rail, landing on centre before first paint, three columns above 769px. One structure; the desktop tree and the phone tree of snapped screens are both gone.
