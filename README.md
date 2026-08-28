@@ -123,26 +123,32 @@ The furniture — visual pieces
   components/
     EchoNetwork.js             Canvas animation — floating nodes that become album art
     EchoOrb.js                 Compact orb, pulsing mood indicator during a session
-    EchoChat.js                Floating chat panel for talking to Echo mid-session
     main_components/           Everything on the public side
-      TopNav.js                The navigation bar
+      SiteNav.js               The navigation row — logo, links, live dot
+      DotNav.js                The dot row of section links
       ListeningBeacon.js       The big beacon section on the homepage
       AlbumStrip.js            The scrolling row of albums
-      NavBeacon.js             The small beacon on non-homepage pages
+      AlbumPreview.js          A single album tile in the strip
+      IdentityCard.js          The identity card — this is the About page
+      IdentificationCardEditor.js  Editing the card in place
+      FlipTile.js              The two-faced tile the cover turns over on
+      Bookplate.js             Context holding the journal's own details
       EntryModal.js            The popup when you click an album
       StarRating.js            The star display (read only)
+      HorizonChart.js          The listening-shape bar chart
+      GridDensity.js           Archive tile sizing
       Lightswitch.js           Manages light and dark mode
       entry_modal/
         HorizonGenerator.js    The bar chart inside the modal
         StickyHeader.js        The compact info bar that appears when you scroll
       Slug_Page/
         CommentThread.js       A single comment and its replies
+        CommentBubble.js       One comment, drawn
         NewCommentForm.js      The form to leave a comment
         TrackThread.js         A track row that expands to show notes and comments
         HorizonBar.js          The bar chart on the full entry page
         MetadataLabel.js       The small uppercase section labels
-        MetadataLabelInline.js Same label but sits inline without a border
-        Chip.js                The small pill tags (First Listen, Favorite, etc)
+        Chip.js                The small pill tags (Favorite, Masterpiece, etc)
     session_components/        Everything in the private dashboard
       PasswordGate.js          The password screen
       SessionButton.js         Frosted pill button used throughout the session panel
@@ -200,7 +206,7 @@ The rooms — full pages assembled from furniture
 | How Claude formats your notes | library/ai_integration.js, format_post |
 | How Echo talks to you | library/ai_integration.js, ask_echo |
 | The loading screen phrases | library/session_timers.js, LOADING_PHRASES |
-| The navigation links | components/main_components/TopNav.js |
+| The navigation links | components/main_components/SiteNav.js and DotNav.js |
 | The homepage listening beacon | components/main_components/ListeningBeacon.js |
 | The scrolling album strip | components/main_components/AlbumStrip.js |
 | The modal that pops up when you click an album | components/main_components/EntryModal.js |

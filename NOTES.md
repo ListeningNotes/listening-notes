@@ -70,8 +70,8 @@ Worth deciding before the first install, while it is still cheap:
 - [ ] `entries.relationship` — DECISIONS.md records the field as removed and
       the picker gone, but the column and its legacy values remain.
 - [ ] `entries.tags` — replaced by `genre` plus archive search. Still accepted
-      by the insert in `database_actions.js`, but the only thing that reads it
-      is `PulseCard`, which is unhooked from the homepage. Kept on purpose once;
+      by the insert in `database_actions.js` and now read by **nothing at all**:
+      its last reader was `PulseCard`, deleted 2026-08-27. Kept on purpose once;
       worth confirming that still holds.
 - [ ] `echo_memory` and `conversations` — **zero code references between them.**
       Two tables every fresh copy builds and nothing ever touches.
@@ -229,6 +229,15 @@ current.
 ---
 
 ## Complete
+
+**2026-08-27 session — dead code removed**
+- [x] **1,132 lines of unreachable components deleted**, each verified by grep as having zero importers: `PulsePanel`, `PulseCard`, `EchoPaint`, `EchoPuzzle`, the `Vinyl` background (never in the backgrounds index), `MetadataLabelInline`, and `library/pulse_stats.js` (orphaned by the two Pulse deletions).
+- [x] **`TopNav` and `NavBeacon` deleted.** `TopNav` was replaced by `DotNav`/`SiteNav` and nothing imported it; `NavBeacon` was imported only by `TopNav`, so it was dead transitively. Neither had rendered for some time.
+- [x] **176 lines of `.topnav-*` CSS removed** from `globals.css` — dead once the component was. `.beacon-*` was checked first and kept: it belongs to `ListeningBeacon`, not the deleted nav.
+- [x] **`dotenv` and `pg` removed** from dependencies. Neither appeared in any source file or npm script; the driver is `@neondatabase/serverless`.
+- [x] **`/dashboard/bg-test` and `/dashboard/echo/loading-test` deleted** — scratch harnesses that shipped in every build.
+- [x] README's component tree corrected — it still listed `EchoChat` (long gone), `TopNav`, `NavBeacon` and `MetadataLabelInline`, and omitted `SiteNav`, `DotNav`, `IdentityCard`, `Bookplate` and `FlipTile`.
+- [x] Verified after: every public page 200, homepage and archive render unchanged, 39 albums load, zero console errors.
 
 **2026-08-27 session — merged and shipped**
 - [x] Everything below merged to `main` and deployed. Verified live: tab title, PWA manifest and RSS channel all read `Miyel · Listening Notes`; the beacon returns tracks, so `LASTFM_KEY` is set in Vercel; zero direct Last.fm calls from the page and no old key in the shipped HTML.
