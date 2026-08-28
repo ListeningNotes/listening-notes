@@ -76,6 +76,22 @@ None of these are urgent and none are obviously wrong to keep. The point is
 that "keep it" should be a decision made while it is reversible, rather than
 the default that arrives by missing the deadline.
 
+**BACKUPS**
+- [ ] **A stale-backup badge on the writing side.** Not urgent, and not
+      optional either: **the failure mode is silent.** iCloud signed out, a
+      full drive, a laptop shut for a fortnight, a `node` that moved after an
+      nvm upgrade — every one of those leaves the backup quietly not happening
+      while everything on screen looks exactly as it did. Nobody discovers it
+      until the day they need a restore, which is the one day the answer has to
+      already be yes. A line somewhere on the writing side reading *last backup
+      3 days ago*, going amber past a week, turns believing you are covered
+      into being covered. Read it from the newest directory name under
+      `BACKUP_DIR`; no new state to keep.
+- [ ] Nothing checks that iCloud actually *uploaded*. The local write succeeds
+      either way, so the log always says success. Glance at the folder in
+      Finder occasionally — a cloud icon beside a snapshot means it has not
+      gone up yet.
+
 **SECURITY**
 - [ ] **Rotate `DATABASE_URL` and `SESSION_PASSWORD` into Vercel Secrets.**
   Vercel currently holds both as plain config values, which means anyone with
@@ -244,7 +260,8 @@ current.
 
 **Known gaps, on purpose:**
 - The LaunchAgent does not run while the laptop is closed. launchd fires it on the next wake, so "daily" means "once per day the laptop is opened." A week away is a week without a snapshot — run `npm run backup` before going.
-- Nothing warns when the newest backup is stale. A badge on the writing side would be the obvious place if it ever matters.
+- **Backups live in iCloud Drive** as of 2026-08-27 — `BACKUP_DIR` points at `~/Library/Mobile Documents/com~apple~CloudDocs/listening-notes-backups`, set in the plist for the scheduled run and in `.env.local` for manual ones. Four existing snapshots were moved across and verified byte-for-byte first. They no longer live only on this laptop.
+- Nothing warns when the newest backup is stale — now its own Pending item, because the failure mode is silent.
 - Neon's own history is **6 hours** on this plan. It is not the safety net; these are.
 
 **2026-08-27 session — entries.tags dropped**
