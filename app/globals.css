@@ -2766,19 +2766,8 @@ a.ab-rig-name:hover { text-decoration: underline; }
 }
 .ab-link:hover { color: var(--ink); }
 .ab-doors { display: flex; gap: 8px; flex-wrap: wrap; }
-/* The smallest type on the site, at the foot of the pane nobody reaches by
-   accident. AGPL §13, satisfied once, quietly. */
-.ab-source {
-  align-self: flex-start;
-  font-family: var(--font-label);
-  font-size: 0.62rem;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--ink-faint);
-  text-decoration: none;
-  opacity: 0.7;
-}
-.ab-source:hover { opacity: 1; text-decoration: underline; }
+/* Moved to the pitch pane — see .pt-source, and the note in Pitch.js about why
+   it has to sit on a public pane rather than behind the wristband. */
 
 /* ── Right, logged out: Pitch ───────────────────────────────────────────── */
 .pt-pane {
@@ -2812,6 +2801,19 @@ a.ab-rig-name:hover { text-decoration: underline; }
   color: var(--ink-soft);
 }
 .pt-cta { align-self: flex-start; margin-top: 4px; }
+/* The smallest type on the site. AGPL §13, satisfied once, quietly. */
+.pt-source {
+  align-self: flex-start;
+  margin-top: 10px;
+  font-family: var(--font-label);
+  font-size: 0.62rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  text-decoration: none;
+  opacity: 0.7;
+}
+.pt-source:hover { opacity: 1; text-decoration: underline; }
 
 /* ── Right, logged in: Dashboard ────────────────────────────────────────── */
 .db-pane {

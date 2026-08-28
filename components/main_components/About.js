@@ -14,6 +14,15 @@
 // you had to choose which of the two the page was for. Down the pane, the
 // glance comes first and the sit-down is there for whoever wants it.
 //
+// Two things left this pane and are worth knowing where they went. The key —
+// the legend for every mark in the journal — belongs on the entries where
+// those marks are actually printed, so a reader meets a definition at the
+// moment they meet the thing it defines rather than by remembering there is a
+// page about it. And the source line moved to the pitch pane, which is the
+// public page about the software rather than the public page about a person;
+// see the note there, because that line is a licence obligation and not
+// decoration.
+//
 // The writing here is the short version. The long essay lived on this pane for
 // a while and has gone to /get, which is the address every copy's pitch pane
 // points at — the story of why somebody started keeping a listening journal is
@@ -28,7 +37,6 @@
 // also gets no arrow pointing at nothing.
 
 'use client';
-import Link from 'next/link';
 import { useMemo } from 'react';
 import { ArrowSquareOut, LinkSimple } from '@phosphor-icons/react';
 import IdentityCard, { identify, readLink, rigIcon } from './IdentityCard';
@@ -38,19 +46,6 @@ import { useBookplate } from './Bookplate';
 // list every account anybody has ever opened — a row of three marks reads at a
 // glance and a row of nine reads as a footer.
 const LINK_LIMIT = 3;
-
-// Where this copy's source lives. AGPL §13 is satisfied by offering the source
-// of *the running program*, which for a modified copy is that copy's own
-// repository and not this one — so an owner who has changed anything points
-// this at their fork. Defaulted to upstream, because the honest answer for an
-// unmodified copy is upstream and nobody should have to think about compliance
-// to install a journal.
-//
-// TODO: this belongs in settings alongside about_intro, so it can be changed
-// without a redeploy. An environment variable is the smaller half of the job
-// and ships today; the column is a separate decision.
-const SOURCE_URL =
-  process.env.NEXT_PUBLIC_SOURCE_URL || 'https://github.com/miyelbrown/listening-notes';
 
 // The one convention the stored prose uses, and no more: a blank line
 // separates blocks, and a line starting with "## " is a heading. Enough
@@ -101,21 +96,6 @@ export default function About({ stamps, authed = false }) {
       .filter(l => l && !seen.has(l.href) && seen.add(l.href))
       .slice(0, LINK_LIMIT);
   }, [social_links, instagram_url]);
-
-  // One door out of this pane, and deliberately not two. The essay at /get is
-  // not linked from here: /get does not exist on a copy that has not written
-  // one, so a pill pointing at it would be a dead link on everybody else's
-  // journal. The pitch pane is where that address is reached, and it reaches
-  // the canonical one by its full address rather than by a path.
-  //
-  // The key stays a route because it is arrived at from elsewhere: it is the
-  // legend for every mark in the journal, and a reader looking up what a
-  // diamond means has come from an entry, not from here.
-  const doors = (
-    <div className="ab-doors">
-      <Link href="/key" className="ln-pill">The key</Link>
-    </div>
-  );
 
   return (
     <div className="ab-pane">
@@ -207,18 +187,6 @@ export default function About({ stamps, authed = false }) {
           </section>
         )}
 
-        {doors}
-
-        {/* The smallest type on the site, at the foot of the pane nobody
-            scrolls to by accident. AGPL §13 asks that anyone using the program
-            over a network be offered its source; this is that offer, made once,
-            in the one place on a journal where somebody wondering what the
-            software is would think to look. No version number: a version is a
-            thing to keep current, and a line that goes stale is worse than a
-            line that is simply true. */}
-        <a className="ab-source" href={SOURCE_URL} target="_blank" rel="noopener noreferrer">
-          Source
-        </a>
       </div>
     </div>
   );
