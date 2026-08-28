@@ -267,6 +267,19 @@ export default function HomeNav() {
     el.scrollTo({ left: index * el.clientWidth, behavior: ease() });
   }
 
+  // Back to the top of whichever pane you are in. The band across the top of a
+  // scrolled pane is the tap target, which is the one gesture a phone already
+  // teaches — the status bar has meant "back to the top" for fifteen years, and
+  // this is the strip directly under it.
+  //
+  // Only while the pane is scrolled: at the top there is nothing to go back to,
+  // and a dead tap zone across the cover is worse than no tap zone.
+  function goUp(index) {
+    const el = paneRefs[index].current;
+    if (!el) return;
+    el.scrollTo({ top: 0, behavior: ease() });
+  }
+
   function goDown(index) {
     const el = paneRefs[index].current;
     if (!el) return;
@@ -286,6 +299,14 @@ export default function HomeNav() {
   // during a swipe.
   const header = (
     <div className={'hn-bar' + (down[pane] ? ' hn-bar--scrolled' : '')}>
+      {down[pane] && (
+        <button
+          type="button"
+          className="hn-totop"
+          onClick={() => goUp(pane)}
+          aria-label="Back to the top"
+        />
+      )}
       <button className="hp-icon-btn hn-lights" onClick={toggleTheme} aria-label="Toggle theme">
         {theme === 'dark' ? (
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
