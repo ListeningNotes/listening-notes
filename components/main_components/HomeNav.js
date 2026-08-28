@@ -46,6 +46,7 @@
 'use client';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import Link from 'next/link';
+import { IdentificationCard, BookOpen, Gear, Info } from '@phosphor-icons/react';
 import { useTheme } from './Lightswitch';
 import { foldKey, useListeningBeacon } from '../../hooks/useListeningBeacon';
 import { useBookplate } from './Bookplate';
@@ -69,10 +70,74 @@ function ease() {
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
 }
 
-export default function HomeNav({ entries = [], loading = false, stamps, authed = false, waiting }) {
+export default function HomeNav({ note = '' }) {
   const { cover_name } = useBookplate();
   const { theme, toggle: toggleTheme } = useTheme();
   const { isLive, recentAlbums } = useListeningBeacon();
+
+  // ── What the cross asks for ───────────────────────────────────────────────
+  // Four requests, made once here rather than three times in three panes.
+  // Three of the four are read by more than one of them: the entries by the
+  // wall and by the recent row, the stamps by the card, the wristband by every
+  // pane that has an owner's half. The note is not among them — it is prose,
+  // and it is already in the HTML by the time this runs (see app/page.js).
+  const [entries, setEntries] = useState([]);
+  const [loading, setLoading] = useState(true);
+  // Whether the person looking at this is the person who writes it. Not a
+  // permission check — the writing side guards itself — just what decides
+  // which of the two right-hand panes is drawn.
+  const [authed, setAuthed] = useState(false);
+  // How many submissions and comments are sitting unread. Null until asked, so
+  // the line can hold its place without flashing a zero on the way.
+  const [waiting, setWaiting] = useState(null);
+  // The counts printed on the card. Null until they land, so it holds the
+  // shape of its number rows rather than flashing zeros into them.
+  const [stamps, setStamps] = useState(null);
+
+  useEffect(() => {
+    fetch('/api/entries')
+      .then(r => r.json())
+      .then(data => {
+        const list = Array.isArray(data) ? data : (data.entries || []);
+        setEntries(list);
+        setLoading(false);
+      })
+      .catch(() => setLoading(false));
+  }, []);
+
+  // Fetched on mount rather than on first swipe: it is a few hundred bytes,
+  // and a card that assembles itself while you are looking at it is a worse
+  // card than one that was already printed. A failure leaves stamps null and
+  // the card prints blank rules.
+  useEffect(() => {
+    fetch('/api/public/stamps')
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => d && setStamps(d))
+      .catch(() => {});
+  }, []);
+
+  // Asking here rather than only on the writing pages does two jobs. It decides
+  // whether the right pane is the desk or the pitch — and because
+  // /api/auth/check renews an ageing wristband, simply opening the journal
+  // keeps the key alive. On a home screen, where there is no address bar to
+  // sign in from, that is what stops the door quietly locking itself.
+  useEffect(() => {
+    fetch('/api/auth/check')
+      .then(r => r.json())
+      .then(d => {
+        setAuthed(!!d.authed);
+        // Only asked once the wristband is confirmed — the endpoint answers
+        // 401 to anyone else, and a failed request on every public visit is
+        // noise in the log for no reason.
+        if (d.authed) {
+          fetch('/api/waiting')
+            .then(r => (r.ok ? r.json() : null))
+            .then(w => w && setWaiting(w))
+            .catch(() => {});
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   const railRef = useRef(null);
   // One ref per pane's own vertical scroller. Written as three rather than an
@@ -179,35 +244,18 @@ export default function HomeNav({ entries = [], loading = false, stamps, authed 
   }
 
   // ── The one row that sits over all three panes ────────────────────────────
-  // The mark, and the way to turn the lights on and off. Fixed above the rail
-  // rather than repeated inside each pane: it does not belong to any of them,
-  // and three copies of it would slide past each other during a swipe.
+  // The lights, and nothing else. There was a small mark in the corner here
+  // too, fading in as the crown scrolled away, and one mark on screen at a time
+  // was the argument for it — but the honest count is that the crown already
+  // is the mark, on every pane, and a second one in the corner is a second one
+  // whether or not the two are ever visible together. The band behind this row
+  // stays: it is what stops the wall of covers scrolling through the toggle.
   //
-  // The mark is the live indicator. The dot on the period is the same green
-  // that means "playing" everywhere else on the site, which means the one thing
-  // present on every screen is also the one thing that has to be present on
-  // every screen.
+  // Fixed above the rail rather than repeated inside each pane: it does not
+  // belong to any of them, and three copies of it would slide past each other
+  // during a swipe.
   const header = (
     <div className={'hn-bar' + (down[pane] ? ' hn-bar--scrolled' : '')}>
-      <Link href="/" className="hn-mark" aria-label={cover_name} onClick={e => { e.preventDefault(); goTo(HOME); }}>
-        <svg viewBox="76 96 241 140" className="hn-mark-svg" xmlns="http://www.w3.org/2000/svg">
-          <path
-            transform="translate(73.734177, 220.794814)"
-            d="M 44.65625 0 C 37.46875 0 31.160156 -1.601562 25.734375 -4.8125 C 20.304688 -8.019531 16.097656 -12.28125 13.109375 -17.59375 C 10.128906 -22.90625 8.640625 -28.773438 8.640625 -35.203125 L 8.640625 -116.21875 L 36.53125 -116.21875 L 36.53125 -33.203125 C 36.53125 -30.546875 37.46875 -28.222656 39.34375 -26.234375 C 41.226562 -24.242188 43.550781 -23.25 46.3125 -23.25 L 77.03125 -23.25 L 77.03125 0 Z M 44.65625 0 "
-          />
-          <path
-            transform="translate(153.915942, 220.794814)"
-            d="M 91.96875 2 C 85 2 78.742188 0.476562 73.203125 -2.5625 C 67.671875 -5.613281 63.300781 -9.847656 60.09375 -15.265625 C 56.882812 -20.691406 55.28125 -26.835938 55.28125 -33.703125 L 55.28125 -84.5 C 55.28125 -86.269531 54.835938 -87.875 53.953125 -89.3125 C 53.066406 -90.75 51.90625 -91.910156 50.46875 -92.796875 C 49.03125 -93.679688 47.425781 -94.125 45.65625 -94.125 C 43.882812 -94.125 42.28125 -93.679688 40.84375 -92.796875 C 39.40625 -91.910156 38.269531 -90.75 37.4375 -89.3125 C 36.601562 -87.875 36.1875 -86.269531 36.1875 -84.5 L 36.1875 0 L 8.96875 0 L 8.96875 -82.515625 C 8.96875 -89.484375 10.539062 -95.625 13.6875 -100.9375 C 16.84375 -106.25 21.21875 -110.453125 26.8125 -113.546875 C 32.40625 -116.648438 38.6875 -118.203125 45.65625 -118.203125 C 52.738281 -118.203125 59.046875 -116.648438 64.578125 -113.546875 C 70.109375 -110.453125 74.476562 -106.25 77.6875 -100.9375 C 80.90625 -95.625 82.515625 -89.484375 82.515625 -82.515625 L 82.515625 -31.703125 C 82.515625 -29.929688 82.957031 -28.300781 83.84375 -26.8125 C 84.726562 -25.320312 85.859375 -24.160156 87.234375 -23.328125 C 88.617188 -22.492188 90.144531 -22.078125 91.8125 -22.078125 C 93.582031 -22.078125 95.210938 -22.492188 96.703125 -23.328125 C 98.203125 -24.160156 99.394531 -25.320312 100.28125 -26.8125 C 101.164062 -28.300781 101.609375 -29.929688 101.609375 -31.703125 L 101.609375 -116.21875 L 128.65625 -116.21875 L 128.65625 -33.703125 C 128.65625 -26.835938 127.050781 -20.691406 123.84375 -15.265625 C 120.632812 -9.847656 116.265625 -5.613281 110.734375 -2.5625 C 105.203125 0.476562 98.945312 2 91.96875 2 Z M 91.96875 2 "
-          />
-          <circle
-            cx="297.0547"
-            cy="216.71875"
-            r="14.1328"
-            className={'hn-mark-dot' + (isLive ? ' hn-mark-dot--live' : '')}
-          />
-        </svg>
-      </Link>
-
       <button className="hp-icon-btn hn-lights" onClick={toggleTheme} aria-label="Toggle theme">
         {theme === 'dark' ? (
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
@@ -322,7 +370,7 @@ export default function HomeNav({ entries = [], loading = false, stamps, authed 
       <div className="hn-rail" ref={railRef}>
         <section className="hn-pane" ref={paneRefs[0]} aria-label="About this journal">
           {crown}
-          <About stamps={stamps} authed={authed} />
+          <About stamps={stamps} authed={authed} note={note} />
         </section>
 
         <section className="hn-pane hn-pane--home" ref={paneRefs[1]} aria-label="Now listening">
@@ -362,12 +410,16 @@ export default function HomeNav({ entries = [], loading = false, stamps, authed 
         direction="left"
         onClick={() => goTo(pane - 1)}
         label="About this journal"
+        icon={IdentificationCard}
         hidden={pane <= 0}
       />
+      {/* A cog for the owner's desk, and plainly not a cog for a stranger —
+          nobody swipes toward settings to find out what a thing is. */}
       <EdgeCaret
         direction="right"
         onClick={() => goTo(pane + 1)}
         label={authed ? 'Your desk' : 'About this software'}
+        icon={authed ? Gear : Info}
         hidden={pane >= 2}
       />
 
@@ -379,6 +431,7 @@ export default function HomeNav({ entries = [], loading = false, stamps, authed 
           direction="down"
           onClick={() => goDown(i)}
           label="More on this page"
+          icon={BookOpen}
           hidden={!deep[i] || down[i] || pane !== i}
         />
       ))}

@@ -57,6 +57,8 @@ The cross itself is built and on the branch `cross-nav`. What is left of it:
 - [ ] **`/get` does not exist.** The pitch pane's button points at it. Fine while nobody else has a copy; not fine at the first install.
 - [ ] **Delete the dead `.hp-*` homepage CSS.** `.hp-mobile-screens`, `.hp-screen--one`, `.hp-screen--two` and everything under them — nothing renders those class names any more. Four rules inside them did real work and are already restated against `.hn`; the rest is roughly 300 lines that can go. Left in place deliberately so the restructure could be reviewed without a find-and-replace on the beacon.
 - [ ] **A QR on the pitch pane.** DECISIONS already settles that the right pane produces a fixed code to `/get`, the same on every copy. Not built, and the "logo made of the QR" idea is unresolved.
+- [ ] **The card is 580px of the 660 a phone has under the crown**, which is why the photograph cannot be pushed further down the About landing screen: at 20px of offset its last row already clears the down caret by four pixels. The card has to get shorter first, and the obvious 150px is the bio — the card's bio and the first paragraph of the About text 200px below it are near-identical sentences. Blanking one of the two columns is a call for Miyel, not a code change.
+- [ ] **`/why` and the About pane now print the same essay.** The note moved onto the pane; the route still renders it at its own address, which is two addresses for one text. Either is defensible — a shareable link to the essay, or the same "one canonical place" rule that killed the flip — but it should be decided rather than left.
 - [ ] **Source link wants a settings column.** It ships today as `NEXT_PUBLIC_SOURCE_URL` defaulting to upstream, which is the smaller half of the job — a modified copy owes *its own* source and should not need a redeploy to say so.
 - [ ] **Listen numbering** — an album has many listens, numbered, computed from `album_key` and never chosen.
 - [ ] **The feed as a network** — `/feed.xml` publishes, but nothing reads anyone else's. Two views, submissions first. A shelf, not a river.
@@ -209,6 +211,11 @@ read a paragraph with a chevron sitting in it.
 their own scroll while they stay mounted, which is why swiping away and back
 remembers your place for free — and why leaving for an entry and coming back
 will not, until `usePlaceKeeper` exists.
+
+**A screenshot can beat React's commit.** Driving a scroll from the console and
+grabbing the frame in the same batch shows the old state — the carets look
+stuck and the band looks missing. Read `className` off the live DOM before
+believing a screenshot about anything that state controls.
 
 **`overscroll-behavior-x: contain` is load-bearing on the rail.** Without it a
 swipe that reaches the left end keeps going into Safari's back gesture, so

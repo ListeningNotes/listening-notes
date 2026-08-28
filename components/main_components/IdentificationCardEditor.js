@@ -419,16 +419,14 @@ export function useIdentificationCardEditor(settings) {
     // would show a name the visitor cannot see, and saving would change a
     // name that is not the one on screen.
     setName(settings.display_name || settings.keeper_name || '');
-    // Whatever the card is showing, not whatever column it came out of. The
-    // paragraph falls back to about_intro when bio is empty, so seeding from
-    // bio alone opened the editor on a blank field under a card that plainly
-    // had writing on it — and saving would then have wiped the writing.
-    //
-    // It settles the two columns as a side effect: about_intro was the lede of
-    // an about page that no longer exists, this card is the only thing left
-    // reading it, and the first save moves it into the field the card is
-    // actually for.
-    setBio(settings.bio || settings.about_intro || '');
+    // bio, and only bio. This used to fall back to about_intro to match a card
+    // that fell back the same way — and to migrate the one column into the
+    // other on first save, on the reasoning that the card was the last thing
+    // reading it. Both stopped being true: about_intro is the lede of the
+    // about pane, printed under this card rather than on it, and seeding from
+    // it here would pull a paragraph the card does not show into the field the
+    // card does, and then save two copies of it.
+    setBio(settings.bio || '');
     setSendMe(settings.send_me || '');
     const [x, y] = String(settings.portrait_position || '50% 50%').split(/\s+/);
     setPosX(Number.parseFloat(x) || 50);

@@ -17,6 +17,13 @@
 // The down caret is not a duplicate of the other two. Left and right say
 // "there is another pane"; down says "this pane keeps going", which is the
 // same sentence about a different axis and reads correctly as the same mark.
+//
+// Above each caret sits a mark for what is that way — a card, a book, a cog.
+// The caret is the verb and the mark is the noun: on its own a chevron says
+// only that something is over there, which is enough to make somebody swipe
+// once and not enough to tell them whether it was worth it. Stacked, the pair
+// answers both questions in the width of a thumbnail, which is all the room an
+// edge control has.
 
 'use client';
 import { CaretLeft, CaretRight, CaretDown } from '@phosphor-icons/react';
@@ -27,7 +34,7 @@ const GLYPH = {
   down: CaretDown,
 };
 
-export default function EdgeCaret({ direction, onClick, label, hidden = false }) {
+export default function EdgeCaret({ direction, onClick, label, icon: Mark, hidden = false }) {
   const Glyph = GLYPH[direction];
   if (!Glyph) return null;
 
@@ -45,6 +52,7 @@ export default function EdgeCaret({ direction, onClick, label, hidden = false })
       inert={hidden ? true : undefined}
       tabIndex={hidden ? -1 : undefined}
     >
+      {Mark && <Mark size={17} weight="regular" aria-hidden="true" className="edge-caret-mark" />}
       <Glyph size={22} weight="regular" aria-hidden="true" />
     </button>
   );
