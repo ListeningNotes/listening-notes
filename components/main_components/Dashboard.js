@@ -1,0 +1,74 @@
+// Copyright (C) 2026 Miyel Brown
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// components/main_components/Dashboard.js
+// The right pane of the cross, seen only by whoever keeps the journal.
+//
+// The same four doors as /dashboard, laid out as a pane rather than as a grid
+// of app icons on a screensaver. The route stays — it is what a bookmark and a
+// home-screen icon point at — and mounts this, the same way /archive mounts
+// Journal. One description of the desk, two places it can be reached.
+//
+// One of the four leads and the other three are a list. Starting a listen is
+// the only thing here that makes something which does not exist yet; the rest
+// act on things that already do, and a row of four identical squares said they
+// were four equal choices when they never have been. What you came to do is
+// listen.
+//
+// There is no login control anywhere on this site and none here either. A
+// journal does not ask who you are — signed in, the cross simply has a pane it
+// did not have before. Signed out this file never renders and Pitch takes the
+// pane, so a visitor never sees a door they cannot open.
+
+'use client';
+import Link from 'next/link';
+import { Headphones, Stack, Envelope, PaperPlane } from '@phosphor-icons/react';
+
+// Everything but the first. Order is how often you would want it, which is not
+// the order they were built in: messages are what you open the journal to
+// check, entries are what you open it to fix, and share is what you open it to
+// do once and then not again for a month.
+const DOORS = [
+  { href: '/dashboard/inbox',   label: 'Inbox',   note: 'Submissions and comments waiting on you', Icon: Envelope, counted: true },
+  { href: '/dashboard/entries', label: 'Entries', note: 'Everything written, and the way to edit it', Icon: Stack },
+  { href: '/dashboard/share',   label: 'Share',   note: 'Print a card, or the code to /get', Icon: PaperPlane },
+];
+
+export default function Dashboard({ waiting }) {
+  return (
+    <div className="db-pane">
+      <div className="db-body">
+        {/* The one big thing on the pane. It is a link and not a button
+            because it goes somewhere — the listening flow is its own route
+            with its own background, and pretending otherwise with a button
+            would only mean a navigation that looked like it failed. */}
+        <Link href="/dashboard/echo" className="db-hero">
+          <Headphones size={34} weight="regular" aria-hidden="true" />
+          <span className="db-hero-label">Start a listen</span>
+        </Link>
+
+        <div className="db-doors">
+          {DOORS.map(({ href, label, note, Icon, counted }) => (
+            <Link key={href} href={href} className="db-door">
+              <Icon size={20} weight="regular" aria-hidden="true" className="db-door-mark" />
+              <span className="db-door-text">
+                <span className="db-door-label">
+                  {label}
+                  {/* The one count on the whole site, and it earns its place
+                      by being the only thing you need to see without going to
+                      look. Everything else here is a door you open when you
+                      have decided to; this is the one that has to be able to
+                      tell you there is a reason to. Null until asked, so the
+                      row never flashes a zero on the way to a number. */}
+                  {counted && waiting?.total > 0 && (
+                    <span className="db-count">{waiting.total}</span>
+                  )}
+                </span>
+                <span className="db-door-note">{note}</span>
+              </span>
+            </Link>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}

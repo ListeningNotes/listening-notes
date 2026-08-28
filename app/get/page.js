@@ -1,13 +1,24 @@
 // Copyright (C) 2026 Miyel Brown
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// app/why/page.js
-// The long note behind the journal.
+// app/get/page.js
+// Why this exists, and — eventually — how to get one.
 //
-// This page belongs to whoever keeps the journal, and its words live in the
-// settings drawer rather than in this file. That is the whole point: a copy of
-// this software ships with the page but not the essay, so a new journal has no
-// note until its owner writes one — and until then the page does not exist and
-// nothing links to it.
+// This was /why, the long note behind the journal, reachable from a pill on
+// the about page. It is /get now because that is the address the pitch pane
+// sends people to from every copy of this software: somebody asks how you got
+// this, the owner swipes right and hands over the phone, and this is where
+// they land. The story of why a person started keeping a listening journal is
+// a better answer to that question than a feature list.
+//
+// UNFINISHED, on purpose and worth knowing: this page is currently only the
+// essay. The other half of what /get owes a stranger — what the software is,
+// that it is free, and the way to install a copy — is not written yet. Until
+// it is, somebody arriving here reads the why and finds no door.
+//
+// The words live in the settings drawer rather than in this file, which is
+// what keeps the drawer rule: a copy of this software ships with the page and
+// without the writing, so a fresh journal 404s here rather than serving
+// somebody else's essay under its own address.
 //
 // A server component, so the text is in the HTML rather than arriving after a
 // fetch. It is prose; it should be readable before JavaScript runs and findable
@@ -16,7 +27,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { pull_settings, coverName, titleName } from '../../library/settings_actions';
-import DotNav from '../../components/main_components/DotNav';
 import SiteNav from '../../components/main_components/SiteNav';
 
 // The stored text uses one convention and no more: a line starting with "## "
@@ -40,7 +50,7 @@ export async function generateMetadata() {
   return { title: `Why · ${titleName(settings)}` };
 }
 
-export default async function WhyPage() {
+export default async function GetPage() {
   const settings = await pull_settings();
   const { why_essay, why_date } = settings;
 
@@ -60,7 +70,7 @@ export default async function WhyPage() {
            this is the same writing, one page further along, and it should not
            suddenly change typeface or line height on the way there. */
         .why-wrap {
-          --why-nav-bottom: calc(136px + var(--safe-top));
+          --why-nav-bottom: calc(80px + var(--safe-top));
           max-width: 860px; margin: 0 auto;
           padding: calc(var(--why-nav-bottom) + 44px) 48px 120px;
         }
@@ -98,7 +108,6 @@ export default async function WhyPage() {
       `}</style>
 
       <SiteNav />
-      <DotNav />
 
       <article className="why-wrap">
         <header className="why-head">
@@ -111,10 +120,11 @@ export default async function WhyPage() {
           : <p key={i} className="why-para">{b.text}</p>
         )}
 
-        {/* The way back is the card, because the card is what sent you here.
-            /about was the answer while there was an about page to go back to. */}
+        {/* The way back is the journal itself — for a stranger who arrived
+            from somebody else's copy, that is the first look they get at what
+            the writing here is actually for. */}
         <div className="why-foot">
-          <Link href="/" className="ln-pill">← The card</Link>
+          <Link href="/" className="ln-pill">← The journal</Link>
         </div>
       </article>
     </div>

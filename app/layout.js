@@ -112,7 +112,7 @@ export const dynamic = 'force-dynamic';
 // decision belongs anyway: what ships to every page is a layout question.
 //
 // Bulk text belongs to whoever renders it. /key fetches the definitions and
-// /why reads its essay on the server; these are the short facts.
+// /get reads its essay on the server; these are the short facts.
 const BOOKPLATE_FIELDS = [
   // journal_name is gone from this list. A journal is called after whoever
   // keeps it, so keeper_name below is the name, and shipping a second one to
@@ -126,20 +126,24 @@ const BOOKPLATE_FIELDS = [
   'bio', 'portrait_url',
   'instagram_url', 'lastfm_user', 'site_address',
   'founded_at', 'pinned_entry_id',
-  // Two sentences saying what the journal is, and the one field on this list
-  // that had been written, stored, and never delivered: the old /about read it from
-  // this context without it ever having been put here, so the paragraph at the
-  // top of that page rendered as nothing for as long as the page existed. The
-  // back of the card prints it now.
+  // Nothing renders this any more — the free-text bio came off the about pane
+  // in favour of the prompts. Kept on the list and in the column: it is
+  // somebody's writing, there is no editor to put it back with, and a field
+  // that costs a few hundred bytes is not worth losing writing over.
   'about_intro',
   // A handful of URLs. Short enough to ride along, and the back of the card
   // is on the landing page, which every visitor lands on.
   'social_links',
   // Two keys at most, and the card cannot decide what to draw without them.
   'hidden_fields',
-  // A sentence. It is the point of the card's lower half and the landing page
-  // is where the card lives, so it travels with the rest of the short facts.
-  'send_me',
+  // Three finished openings, one line each. A few hundred bytes, and the pane
+  // that prints them is the landing page.
+  //
+  // send_me came off this list when they arrived: "Looking for" was a labelled
+  // field saying what the prompt "If you're sending me something, make it —"
+  // says as a finished sentence, and the column is left holding its old value
+  // rather than shipped to every page for nothing to read.
+  'bioanswers',
   // Two percentages. Without it the portrait is drawn centred, which for a
   // photograph of a person is often a picture of their chin.
   'portrait_position',
@@ -165,11 +169,16 @@ export default async function RootLayout({ children }) {
   // makes the leak impossible rather than a thing to remember.
   //
   // Bulk text belongs to whoever renders it. /key fetches the definitions,
-  // /why reads the essay on the server, and this carries the short facts.
+  // /get reads the essay on the server, and this carries the short facts.
   const settings = Object.fromEntries(
     BOOKPLATE_FIELDS.filter(key => key in all).map(key => [key, all[key]])
   );
-  settings.has_note = Boolean(all.why_essay && all.why_essay.trim());
+  // has_note used to ride along here — a boolean saying an essay existed, so
+  // the about page could decide whether to draw a link to it without carrying
+  // 3.5KB of prose into every page on the site. Nothing links to the essay any
+  // more: it is at /get, which every copy's pitch pane reaches by its full
+  // address rather than by a path. Derived rather than stored, so it costs
+  // nothing to bring back if something wants to ask again.
   // The name, resolved once on the server and carried down rather than worked
   // out again in each component that prints it. coverName lives beside the
   // database read, and a client component that imported it would drag the
