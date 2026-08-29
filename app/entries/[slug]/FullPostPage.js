@@ -98,36 +98,23 @@ export default function FullPostPage({ entry, references = [] }) {
   // fill in blind.
   const edit = useEntryEditor(entry);
 
-  const editControls = authed && (
-    edit.editing ? (
-      <>
-        <button
-          type="button"
-          className="ln-pin ln-pin--on"
-          onClick={edit.save}
-          disabled={edit.saving}
-        >
-          <Check size={13} weight="bold" aria-hidden="true" />
-          <span>{edit.saving ? 'Saving' : 'Save'}</span>
-        </button>
-        <button type="button" className="ln-pin" onClick={edit.cancel} disabled={edit.saving}>
-          <X size={13} weight="bold" aria-hidden="true" />
-          <span>Cancel</span>
-        </button>
-      </>
-    ) : (
-      <button type="button" className="ln-pin" onClick={edit.begin}>
-        <PencilSimple size={13} weight="regular" aria-hidden="true" />
-        <span>Edit</span>
-      </button>
-    )
+  // Only the way in. Save and Cancel used to sit here too, and then again in
+  // the bar at the foot of the page — the same pair twice on one screen, and
+  // the one that matters is the one that follows you down to the note you are
+  // actually fixing. This is the button that opens a correction; the bar is
+  // what closes it.
+  const editControls = authed && !edit.editing && (
+    <button type="button" className="ln-pin" onClick={edit.begin}>
+      <PencilSimple size={13} weight="regular" aria-hidden="true" />
+      <span>Edit</span>
+    </button>
   );
 
   // ── The fields at the head of the entry ───────────────────────────────────
   // Album, artist, year, genre, the score and the three flags. They print in
   // two places — the phone's first screen and the desktop hero — so like the
-  // pin and the edit controls they are written once here and mounted in both,
-  // rather than kept as two copies to drift apart.
+  // pin they are written once here and mounted in both, rather than kept as
+  // two copies to drift apart.
   const titleField = (
     <input
       className="ln-field ln-field--title"
@@ -158,10 +145,6 @@ export default function FullPostPage({ entry, references = [] }) {
     </span>
   );
 
-  // The flags are the chips they replace, pressed rather than read. A chip
-  // that is off is the same chip with its ink taken out, so the row does not
-  // change shape when a flag is turned on — and what a visitor sees is exactly
-  // the subset that is lit.
   const flagFields = (
     <span className="ln-flags">
       {/* One thing per line rather than five wrapping into each other: the
