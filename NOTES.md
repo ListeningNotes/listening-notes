@@ -64,8 +64,9 @@ only the write that breaks. Run it in Neon's SQL editor. Take a backup first
 
 The cross is built and merged. What is left of it:
 
-- [ ] **`usePlaceKeeper`** — pane index and per-pane scroll offset, kept across a route change. Swiping between panes already remembers itself (they stay mounted); going out to an entry and back does not, because browsers do not restore nested scroll containers.
+- [x] **`usePlaceKeeper` is not needed and will not be built.** It was going to remember the pane index and the per-pane scroll offset across a route change, because browsers do not restore nested scroll containers. Going out to an entry and back is the only thing that lost them, and an entry is a layer now — the cross never unmounts, so both survive on their own. Verified: pane scroll 991 before and after, and the rail still on the beacon pane.
 - [ ] **`useShake` + `firework()`** — shake the phone, a firework goes up, then `/shuffle`. The Surprise pill stays where it is.
+- [ ] **`AlbumPreview.js` has no reader.** 175 lines, and the only thing that mounted it was the tile flip. The share printer redraws the same card independently rather than importing it, so nothing broke when the flip went. Its `.ln-marks` CSS is dead with it. Left on disk rather than deleted in passing — it is a designed piece and the deletion is somebody's call, not a side effect.
 - [ ] **A CSS cleanup pass, once the cross has shipped and settled.** Not a rewrite — one section at a time: delete, look at the site, commit. The reason to wait is that each of these removals makes the next lot of dead rules obvious, and doing it all at once means not knowing which deletion broke what.
 
       What is already known to be dead or nearly dead:
@@ -256,6 +257,14 @@ already written down in DECISIONS and is repeated here because the guardrail
 existed and got walked past once anyway. `git rm` on a file is recoverable from
 history; `DROP COLUMN` is not recoverable from anything but a backup. Read the
 values before deciding, and take a backup either way.
+
+**`scroll-behavior: smooth` makes scroll tests lie.** It is set on `<html>`
+sitewide, and it applies to `element.scrollTop = n` as well as to
+`scrollIntoView` — so setting a scroll position and reading it back gets a
+number from somewhere in the middle of an animation. Three runs of a
+scroll-preservation test read 4, 37 and 48 out of a requested 1600 and looked
+like a broken feature. `window.scrollTo({top, behavior: 'instant'})` overrides
+it and is what a test should use.
 
 **Touching rectangles count as intersecting.** A pane parked by scroll snapping
 sits exactly edge to edge — `left: -444, right: 0` against a viewport starting

@@ -533,6 +533,34 @@ fourth tool appears the pencil becomes a menu and nothing else moves.
 **Admin controls do not sit in the reading flow.** The Edit and Pin bubbles
 come out of the chip row under the rating; that row is for the reader.
 
+**An entry is a layer over the journal, not a fourth pane, 2026-08-29.**
+Tapping a cover slides the entry in over the wall and dismissing slides it
+back. It comes from the right because that is where things arrive from, not
+because right means entry.
+
+Left and right meaning different things depending on which row you are in —
+the desk upstairs, an entry downstairs — is **ruled out**. That is a mode, and
+modes are what make gesture navigation unlearnable. Three directions, one
+meaning each; a dimension that depends on invisible state undoes the legibility
+the cross was built for.
+
+**The URL stays real either way, and that is not negotiable.** Built with
+intercepting routes rather than a modal component: tap from the journal and the
+entry opens as a layer; open the same address from a QR, a shared link, a feed
+item or an OG preview and you get the standalone page, server-rendered. One
+address, two presentations.
+
+It also solves the back-behaviour problem for free. The journal never unmounts,
+so its scroll position survives with nothing having to remember it — including
+the cross's nested pane scroller, which browsers do not restore and which
+`usePlaceKeeper` was on the list to fix by hand.
+
+**The tile flip is gone with it.** A phone tile used to turn over to a metadata
+card, and a desktop tile opened a modal; both were ways to learn more about a
+record without leaving the wall, and the layer does that better than either. A
+card standing in for the entry has nothing left to do when the entry itself is
+one tap away and slides back off.
+
 ---
 
 ## The journal

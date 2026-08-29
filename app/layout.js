@@ -157,7 +157,12 @@ const BOOKPLATE_FIELDS = [
 
 // Async because the journal's details are read here, once, and handed down —
 // see components/main_components/Bookplate.js.
-export default async function RootLayout({ children }) {
+// `layer` is the @layer parallel slot — an entry drawn over whatever children
+// is showing. It is null on every page but an intercepted entry, and it has to
+// be taken here rather than anywhere lower because the journal is mounted in
+// two places, the cross's centre pane and /archive, and a layer that only
+// worked from one of them would be a layer that worked by accident.
+export default async function RootLayout({ children, layer }) {
   const all = await pull_settings();
 
   // Named keys only, rather than spreading what is left after removing the
@@ -199,6 +204,7 @@ export default async function RootLayout({ children }) {
         <Bookplate settings={settings}>
           <Lightswitch>
             {children}
+            {layer}
           </Lightswitch>
         </Bookplate>
       </body>
