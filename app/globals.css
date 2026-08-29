@@ -2387,6 +2387,16 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 .ln-chain-row .ln-field { flex: 1; min-width: 0; font-size: 13px; }
 .ln-chain-row select.ln-field { appearance: none; -webkit-appearance: none; }
 .ln-chain-row select.ln-field:disabled { color: var(--ink-faint); }
+/* Once lineage points somewhere it is a fact rather than a field, so it stops
+   looking like one — no rule under it, nothing to press. */
+.ln-chain-fixed { flex: 1; min-width: 0; font-size: 13px; color: var(--ink); }
+.ln-chain-locked {
+  font-family: var(--font-label);
+  font-size: 8.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
 
 /* ── Deleting an entry ──────────────────────────────────────────────────────
    At the very foot of the page, and only while a correction is open. Not in

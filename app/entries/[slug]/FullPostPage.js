@@ -873,24 +873,41 @@ export default function FullPostPage({ entry, references = [] }) {
                 onChange={e => edit.set('received_date', e.target.value)}
               />
             </label>
-            <label className="ln-chain-row">
-              <span className="ln-chain-label">Their entry</span>
-              <select
-                className="ln-field"
-                value={edit.draft.source_entry_id ?? ''}
-                onChange={e => edit.set('source_entry_id', e.target.value)}
-                disabled={edit.kin.length === 0}
-              >
-                <option value="">
-                  {edit.kin.length === 0 ? 'No other entry for this album' : 'None — this is the origin'}
-                </option>
-                {edit.kin.map(k => (
-                  <option key={k.id} value={k.id}>
-                    {k.album} · listen {k.listen_number}
+            {/* Written once. Where an entry sits in the tree is not an
+                opinion — either their entry led to yours or it did not — so it
+                can be set while it is empty and never again. Once it points
+                somewhere the picker is gone and the line simply says where.
+                See the note in update_entry, which enforces the same thing
+                where it cannot be got around. */}
+            {edit.draft.source_entry_id ? (
+              <div className="ln-chain-row">
+                <span className="ln-chain-label">Their entry</span>
+                <span className="ln-chain-fixed">
+                  {edit.kin.find(k => String(k.id) === String(edit.draft.source_entry_id))?.album
+                    ?? 'Another entry for this album'}
+                  <span className="ln-chain-locked"> · set once, not editable</span>
+                </span>
+              </div>
+            ) : (
+              <label className="ln-chain-row">
+                <span className="ln-chain-label">Their entry</span>
+                <select
+                  className="ln-field"
+                  value={edit.draft.source_entry_id ?? ''}
+                  onChange={e => edit.set('source_entry_id', e.target.value)}
+                  disabled={edit.kin.length === 0}
+                >
+                  <option value="">
+                    {edit.kin.length === 0 ? 'No other entry for this album' : 'None — this is the origin'}
                   </option>
-                ))}
-              </select>
-            </label>
+                  {edit.kin.map(k => (
+                    <option key={k.id} value={k.id}>
+                      {k.album} · listen {k.listen_number}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
           </div>
         )}
 
