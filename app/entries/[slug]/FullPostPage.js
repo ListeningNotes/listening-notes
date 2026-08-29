@@ -12,6 +12,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Check, PencilSimple, PushPin, PushPinSlash, X } from '@phosphor-icons/react';
 import { fonts } from '../../../library/sitewide_visuals';
+import { sizedAlbumArt, fetchAlbumArtUrl } from '../../../library/music_data_api';
 import { parseHorizon, entryTracks, splitNotes, entryTypeLabel, parseRating } from '../../../library/entry_formatter';
 import { kept_receipts } from '../../../library/receipts';
 import { buildReferenceIndex, createReferenceLinker } from '../../../library/cross_references';
@@ -31,6 +32,15 @@ import { useBookplate } from '../../../components/main_components/Bookplate';
 // The pair of actions that close the entry out used to share a local style
 // object; it's .ln-pill in globals.css now, so the same button reads the
 // same way at the foot of every page on the site.
+
+// The hero's thumbnail, sized here rather than inline because the element it
+// sizes changes tag while a correction is open — a picture when there is
+// nothing to do to it, a button when there is — and the two have to come out
+// exactly the same size or the hero row moves when you press Edit.
+const HERO_COVER = {
+  width: '110px', height: '110px', borderRadius: '12px', overflow: 'hidden', flexShrink: 0,
+  boxShadow: 'var(--shadow-lift)', border: '1px solid var(--panel-border)',
+};
 
 export default function FullPostPage({ entry, references = [] }) {
   // ── The pin ───────────────────────────────────────────────────────────────
@@ -97,6 +107,93 @@ export default function FullPostPage({ entry, references = [] }) {
   // a field for something you cannot see while you type into it is a field you
   // fill in blind.
   const edit = useEntryEditor(entry);
+
+  // ── The cover ─────────────────────────────────────────────────────────────
+  // Whether the address under the art is showing. The art is the button: press
+  // it while a correction is open and it becomes the field for its own
+  // address, which is the rule the whole editor follows — you press the thing
+  // you are changing, and there is nowhere else to go and look for it.
+  //
+  // Closed again whenever the correction closes, so it is never found already
+  // open by somebody who came back to fix a typo.
+  const [coverOpen, setCoverOpen] = useState(false);
+  const [finding, setFinding] = useState(false);
+  const [coverNote, setCoverNote] = useState('');
+  useEffect(() => { if (!edit.editing) { setCoverOpen(false); setCoverNote(''); } }, [edit.editing]);
+
+  // Asking Apple again, which is what a wrong cover almost always wants. The
+  // art arrives from a search on album and artist, so a cover that is wrong is
+  // nearly always a search that matched the wrong record — and by the time
+  // somebody is in here the album and artist have usually just been corrected,
+  // which is exactly what makes the second ask land where the first did not.
+  async function findCover() {
+    if (finding) return;
+    setFinding(true);
+    setCoverNote('');
+    try {
+      const found = await fetchAlbumArtUrl(edit.draft.album, edit.draft.artist, edit.draft.year);
+      if (found) edit.set('album_art', found);
+      else setCoverNote('Apple has nothing under that album and artist.');
+    } finally {
+      setFinding(false);
+    }
+  }
+
+  // What the page draws. album_art holds the master, which is up to 3000px
+  // square, and the largest this is ever printed is 110 — so the draft is
+  // sized on the way to the screen for the same reason the served copy is.
+  const coverSrc = edit.editing
+    ? (edit.draft.album_art ? sizedAlbumArt(edit.draft.album_art, 900) : '')
+    : entry.album_art;
+
+  const coverField = edit.editing && coverOpen && (
+    <div className="ln-cover-swap">
+      <input
+        className="ln-field ln-cover-url"
+        value={edit.draft.album_art}
+        onChange={e => edit.set('album_art', e.target.value)}
+        placeholder="Image address"
+        aria-label="Album art address"
+        spellCheck={false}
+      />
+      <span className="ln-flags-row">
+        <button type="button" className="ln-flag" onClick={findCover} disabled={finding}>
+          {finding ? 'Looking' : 'Find it again'}
+        </button>
+        {edit.draft.album_art && (
+          <button type="button" className="ln-flag" onClick={() => edit.set('album_art', '')}>Clear</button>
+        )}
+        <button type="button" className="ln-flag" onClick={() => setCoverOpen(false)}>Done</button>
+      </span>
+      {coverNote && <p className="ln-cover-note">{coverNote}</p>}
+    </div>
+  );
+
+  // ── Which shelf it came off ───────────────────────────────────────────────
+  // Whether this is something from the library or something somebody sent.
+  // It is the Submission chip, set rather than read, and it was one of the two
+  // things /dashboard/entries could do that this page could not.
+  //
+  // The other legacy field on that form was `relationship` — First Listen,
+  // Revisit, Study. It is not here and does not come back: DECISIONS retired
+  // it, every value having dissolved into something that says it better (a
+  // revisit is the listen number, a submission is `received_from`, formative
+  // is a flag). Old rows keep their values as legacy data. Retiring that route
+  // is what finally takes the last picker off the site.
+  const typeField = (
+    <span className="ln-flags-row">
+      <select
+        className="ln-select"
+        value={edit.draft.entry_type}
+        onChange={e => edit.set('entry_type', e.target.value)}
+        aria-label="Which shelf this came off"
+      >
+        <option value="">Shelf —</option>
+        <option value="Personal Library">Library</option>
+        <option value="Submission">Submission</option>
+      </select>
+    </span>
+  );
 
   // Only the way in. Save and Cancel used to sit here too, and then again in
   // the bar at the foot of the page — the same pair twice on one screen, and
@@ -181,6 +278,7 @@ export default function FullPostPage({ entry, references = [] }) {
         </button>
       ))}
       </span>
+      {typeField}
     </span>
   );
 
@@ -409,6 +507,7 @@ export default function FullPostPage({ entry, references = [] }) {
         .ln-hero-pad    { position: absolute; bottom: 0; left: 0; right: 0; padding: 0 48px 36px; }
         .ln-hero-row    { display: flex; align-items: flex-end; gap: 24px; }
         .ln-content     { padding: 48px 48px 100px; }
+        .ln-cover-hero  { max-width: 860px; margin: 0 auto; padding: 16px 48px 0; }
         .ln-screen-one  { display: none; }
         /* How much of the top the header occupies on screen two. The dot nav
            is hidden by then, so this only has to clear the logo row (which
@@ -419,7 +518,7 @@ export default function FullPostPage({ entry, references = [] }) {
         @media (max-width: 768px) {
           /* ── SCREEN ONE ── a full viewport of album: art on top, everything
              we know about it centred underneath, and a cue to scroll on. */
-          .ln-hero { display: none; }
+          .ln-hero, .ln-cover-hero { display: none; }
 
           /* The two screens snap inside their own container rather than the
              document. This is the whole trick, and it is why the homepage
@@ -635,11 +734,23 @@ export default function FullPostPage({ entry, references = [] }) {
           title, artist, year, rating and qualifiers centred beneath it. The
           desktop hero below is the same information in a different shape. */}
       <section className="ln-screen-one">
-        {entry.album_art && (
+        {edit.editing ? (
+          <button
+            type="button"
+            className="ln-screen-one-art ln-cover ln-cover--live"
+            onClick={() => setCoverOpen(o => !o)}
+            aria-expanded={coverOpen}
+            aria-label="Replace the cover"
+          >
+            {coverSrc && <img src={coverSrc} alt="" />}
+            <span className="ln-cover-hint">{coverSrc ? 'Replace' : 'Add a cover'}</span>
+          </button>
+        ) : entry.album_art && (
           <div className="ln-screen-one-art">
             <img src={entry.album_art} alt={entry.album} />
           </div>
         )}
+        {coverField}
         {edit.editing
           ? <div className="ln-screen-one-title" style={{ fontSize: titleSize }}>{titleField}</div>
           : <h1 className="ln-screen-one-title" style={{ fontSize: titleSize }}>{entry.album}</h1>}
@@ -684,21 +795,29 @@ export default function FullPostPage({ entry, references = [] }) {
           clear SiteNav + DotNav), and content-sized on phones, where the
           block stacks and would otherwise run up behind the nav. */}
       <div className="ln-hero">
-        {entry.album_art && (
-          <div style={{ position: 'absolute', inset: '-40px', backgroundImage: 'url(' + entry.album_art + ')', backgroundSize: 'cover', backgroundPosition: 'center', filter: 'blur(50px) saturate(1.3) brightness(1.05)', transform: 'scale(1.2)' }} />
+        {coverSrc && (
+          <div style={{ position: 'absolute', inset: '-40px', backgroundImage: 'url(' + coverSrc + ')', backgroundSize: 'cover', backgroundPosition: 'center', filter: 'blur(50px) saturate(1.3) brightness(1.05)', transform: 'scale(1.2)' }} />
         )}
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, var(--bg) 20%, transparent 100%)' }} />
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, var(--bg) 0%, transparent 38%)' }} />
 
         <div className="ln-hero-pad" style={{ maxWidth: '860px', margin: '0 auto' }}>
           <div className="ln-hero-row">
-            {entry.album_art && (
-              <div style={{
-                width: '110px', height: '110px', borderRadius: '12px', overflow: 'hidden', flexShrink: 0,
-                boxShadow: 'var(--shadow-lift)',
-                border: '1px solid var(--panel-border)',
-              }}>
-                <img src={entry.album_art} alt={entry.album} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+            {edit.editing ? (
+              <button
+                type="button"
+                className="ln-cover ln-cover--live"
+                style={HERO_COVER}
+                onClick={() => setCoverOpen(o => !o)}
+                aria-expanded={coverOpen}
+                aria-label="Replace the cover"
+              >
+                {coverSrc && <img src={coverSrc} alt="" />}
+                <span className="ln-cover-hint">{coverSrc ? 'Replace' : 'Add'}</span>
+              </button>
+            ) : entry.album_art && (
+              <div className="ln-cover" style={HERO_COVER}>
+                <img src={entry.album_art} alt={entry.album} />
               </div>
             )}
             <div style={{ flex: 1, paddingBottom: '4px' }}>
@@ -726,6 +845,12 @@ export default function FullPostPage({ entry, references = [] }) {
           </div>
         </div>
       </div>
+      {/* Under the hero rather than inside it. .ln-hero is a fixed 390px with
+          its content anchored to the bottom, so a panel added in there grows
+          upward and pushes the album title up behind the header — which is
+          exactly what it did. Phones use the copy on screen one; this one is
+          hidden there, or both would show. */}
+      <div className="ln-cover-hero">{coverField}</div>
 
       {/* ── SCREEN TWO ── on phones this is the second snap screen: the header
           stays put at the top while everything below scrolls inside it, the

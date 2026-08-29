@@ -21,15 +21,21 @@
 
 'use client';
 import Link from 'next/link';
-import { Headphones, Stack, Envelope, PaperPlane } from '@phosphor-icons/react';
+import { Headphones, Envelope, PaperPlane } from '@phosphor-icons/react';
 
 // Everything but the first. Order is how often you would want it, which is not
 // the order they were built in: messages are what you open the journal to
-// check, entries are what you open it to fix, and share is what you open it to
-// do once and then not again for a month.
+// check, and share is what you open it to do once and then not again for a
+// month.
+//
+// There was a third — Entries, a table of everything with an edit form behind
+// each row. It is gone, and so is the door: correcting an entry happens on the
+// entry now, which means the way to reach the form is to be reading the thing
+// it corrects. A list of all your writing already exists and is called the
+// journal; a second one that only its owner could see was a CMS grown beside a
+// site that did not need one.
 const DOORS = [
   { href: '/dashboard/inbox',   label: 'Inbox',   note: 'Submissions and comments waiting on you', Icon: Envelope, counted: true },
-  { href: '/dashboard/entries', label: 'Entries', note: 'Everything written, and the way to edit it', Icon: Stack },
   { href: '/dashboard/share',   label: 'Share',   note: 'Print a card, or the code to /get', Icon: PaperPlane },
 ];
 

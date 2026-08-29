@@ -9,13 +9,15 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { fonts } from '../../library/sitewide_visuals';
 import PasswordGate from '../../components/session_components/PasswordGate';
-import { Headphones, Stack, Envelope, PaperPlane } from '@phosphor-icons/react';
+import { Headphones, Envelope, PaperPlane } from '@phosphor-icons/react';
 import backgrounds from '../../components/session_components/backgrounds';
 import { useBookplate } from '../../components/main_components/Bookplate';
 
+// Entries used to sit second. Editing lives on the entry itself now, so the
+// table behind that card is gone and the card with it — see the note on DOORS
+// in components/main_components/Dashboard.js.
 const cards = [
   { href: '/dashboard/echo',  label: 'Listen',  Icon: Headphones },
-  { href: '/dashboard/entries', label: 'Entries', Icon: Stack },
   { href: '/dashboard/inbox',   label: 'Inbox',   Icon: Envelope },
   { href: '/dashboard/share',   label: 'Share',   Icon: PaperPlane },
 ];

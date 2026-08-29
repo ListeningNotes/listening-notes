@@ -2353,6 +2353,83 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 .ln-flag:hover { color: var(--ink); border-color: var(--ink-faint); }
 .ln-flag--on { color: var(--bg); background: var(--ink); border-color: var(--ink); }
 
+/* Entry type and what kind of listen it was. Filing rather than writing, so
+   they are set in the same face as the chips they stand in for and sit on the
+   same row — a select that looked like a form control would be the only thing
+   on this page that did. */
+.ln-select {
+  appearance: none;
+  -webkit-appearance: none;
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: transparent;
+  font-family: var(--font-label);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink);
+  cursor: pointer;
+}
+.ln-select:hover { border-color: var(--ink-faint); }
+
+/* ── Replacing the cover ────────────────────────────────────────────────────
+   The art is the control. Press it while a correction is open and the address
+   under it opens — same rule as everything else in this editor, where the
+   field is drawn in the place of the thing it changes rather than in a form
+   somewhere else.
+
+   Only while a correction is open. Outside one the cover is a picture and
+   nothing happens when a reader touches it, which is also what leaves the
+   press free for the tap-to-QR idea that is parked. */
+.ln-cover { position: relative; padding: 0; background: transparent; }
+.ln-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* Dashed, and only here: it is the one border on the page that means
+   "this is not finished with", which is the whole of what edit mode is. */
+.ln-cover--live { cursor: pointer; border: 1px dashed var(--ink-faint); }
+.ln-cover-hint {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  padding: 5px 0;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-family: var(--font-label);
+  font-size: 8.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-align: center;
+}
+.ln-cover-swap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  /* Pixels, not ems. The hero inherits a 24px font size, so 26em resolved to
+     624 — a line of machine text stretched the width of the writing. */
+  max-width: 420px;
+  margin: 0 auto;
+}
+/* The label face, not the body one. An address is a machine's line and reads
+   as one, and set in the page's own type it would sit there looking like a
+   sentence somebody wrote. */
+.ln-cover-url {
+  width: 100%;
+  font-family: var(--font-label);
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  text-align: center;
+}
+.ln-cover-note {
+  margin: 0;
+  font-family: var(--font-label);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  text-align: center;
+}
+
 /* ── Where an entry came from ───────────────────────────────────────────────
    The private half, shown only while its keeper is correcting the entry. It is
    labelled as private on the page rather than only in the code, because the
