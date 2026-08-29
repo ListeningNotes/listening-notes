@@ -2353,6 +2353,58 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 .ln-flag:hover { color: var(--ink); border-color: var(--ink-faint); }
 .ln-flag--on { color: var(--bg); background: var(--ink); border-color: var(--ink); }
 
+/* ── Deleting an entry ──────────────────────────────────────────────────────
+   At the very foot of the page, and only while a correction is open. Not in
+   the bar beside Save: they are not the same weight, and a destructive control
+   next to the one pressed every time is one that gets pressed by accident.
+   The first press opens the warning in place rather than a dialog. A dialog is
+   dismissed by reflex; this has to be read to be got past. */
+.ln-danger {
+  margin-top: 56px;
+  padding-top: 28px;
+  border-top: 1px solid var(--border);
+}
+.ln-danger-open {
+  display: inline-flex;
+  padding: 7px 14px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: transparent;
+  font-family: var(--font-label);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+.ln-danger-open:hover { color: var(--fav); border-color: var(--fav); }
+.ln-danger-ask { display: flex; flex-direction: column; gap: 12px; }
+.ln-danger-warn {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--ink-soft);
+  max-width: 46em;
+}
+.ln-danger-warn strong { color: var(--ink); }
+.ln-danger-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+/* The only filled red thing on the site. It is the one action here that cannot
+   be taken back, and it should not look like anything else. */
+.ln-danger-go {
+  padding: 9px 18px;
+  border: 1px solid var(--fav);
+  border-radius: 999px;
+  background: var(--fav);
+  font-family: var(--font-label);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #fff;
+  cursor: pointer;
+}
+.ln-danger-go:disabled { opacity: 0.6; cursor: default; }
+
 /* ── The bar that says a correction is open ─────────────────────────────────
    The controls that started it live at the top of the entry, which is a screen
    and a half away by the time somebody is fixing a note on track nine. This

@@ -61,6 +61,12 @@ export function useEntryEditor(entry) {
   const [saving, setSaving] = useState(false);
   const [trouble, setTrouble] = useState(null);
   const [draft, setDraft] = useState(() => draftFrom(entry));
+  // Whether the delete has been asked for once. It is not a modal and not a
+  // browser confirm: the first press opens the warning in place, under the
+  // button, and the second one does it. A dialog would be dismissed by
+  // reflex — this has to be read to be got past.
+  const [asking, setAsking] = useState(false);
+  const [removing, setRemoving] = useState(false);
 
   // Seeded on open rather than held permanently, so a draft abandoned an hour
   // ago is not what the fields come back showing.
@@ -72,8 +78,31 @@ export function useEntryEditor(entry) {
 
   const cancel = useCallback(() => {
     setEditing(false);
+    setAsking(false);
     setTrouble(null);
   }, []);
+
+  const ask = useCallback(() => setAsking(true), []);
+  const unask = useCallback(() => setAsking(false), []);
+
+  // There is no undo. delete_entry is a hard DELETE, and the only copies are
+  // the nightly backup and whatever Neon's six hours still hold — so the
+  // warning that stands in front of this says exactly that, and says what else
+  // goes with it.
+  const remove = useCallback(async () => {
+    setRemoving(true);
+    setTrouble(null);
+    try {
+      const res = await fetch(`/api/entries/${entry.slug}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (!res.ok || data.error) throw new Error(data.error || 'That didn’t delete. Try again.');
+      // Home rather than back: back is this entry, and it is gone.
+      router.push('/');
+    } catch (err) {
+      setTrouble(err.message);
+      setRemoving(false);
+    }
+  }, [entry.slug, router]);
 
   const set = useCallback((key, value) => {
     setDraft(d => ({ ...d, [key]: value }));
@@ -109,5 +138,8 @@ export function useEntryEditor(entry) {
     }
   }, [draft, entry.slug, router]);
 
-  return { editing, saving, trouble, draft, begin, cancel, set, setTrack, save };
+  return {
+    editing, saving, trouble, draft, begin, cancel, set, setTrack, save,
+    asking, ask, unask, removing, remove,
+  };
 }

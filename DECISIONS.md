@@ -283,9 +283,24 @@ column. The point is not an audit trail; it is that a journal nobody can
 silently rewrite is worth more than one where every entry might have been.
 
 **Delete lives at the foot of an entry's edit mode**, behind a second
-confirmation and a warning that says what it is. It is a hard `DELETE FROM
-entries` — see NOTES for what it leaves behind, because "permanent" is not the
-whole of it.
+confirmation and a warning that says what it is. Not in the bar beside Save:
+they are not the same weight, and a destructive control next to the one pressed
+every time is one that gets pressed by accident. The first press opens the
+warning in place rather than a dialog — a dialog is dismissed by reflex, and
+this has to be read to be got past.
+
+**The delete cleans up after itself rather than warning about the mess.** Only
+one of the three things referring to an entry is a foreign key:
+`settings.pinned_entry_id` clears itself, while `comments.entry_slug` is plain
+text and `entries.source_entry_id` has an index and no key. So the delete
+removes the entry's comments and clears the chain links pointing at it before
+removing the row. The alternative was a warning long enough to explain the mess
+it was about to leave, which is a worse answer than not leaving one.
+
+What the warning still says, because these are true and unfixable: it is
+permanent, the only copies are the nightly backup and Neon's six hours, the
+comments go with it, and an album received from this one keeps its entry and
+loses that link.
 
 **Everything editable is edited where it prints.** The link rows and the rig
 rows were fields on the card for things that appear a screen below it, which is
