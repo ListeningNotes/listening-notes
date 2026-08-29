@@ -27,7 +27,7 @@ import {
   DiscordLogo, FacebookLogo, GithubLogo, InstagramLogo,
   LinkSimple, LinkedinLogo, MediumLogo, QrCode, RedditLogo, SoundcloudLogo,
   CassetteTape, Check, DeviceMobileSpeaker, Equalizer, Eye, EyeSlash,
-  GlobeSimple, Guitar, Headphones, MastodonLogo, PencilSimple, PinterestLogo,
+  GlobeSimple, Guitar, Headphones, MastodonLogo, Pencil, PinterestLogo,
   Plus, Radio, SnapchatLogo, SpeakerHifi, SpotifyLogo, TelegramLogo,
   ThreadsLogo, TiktokLogo, TwitchLogo, UploadSimple, User, VinylRecord,
   WhatsappLogo, X, XLogo, YoutubeLogo,
@@ -1125,7 +1125,7 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
                   aria-label="Edit this card"
                   title="Edit this card"
                 >
-                  <PencilSimple size={15} weight="bold" aria-hidden="true" />
+                  <Pencil size={16} weight="bold" aria-hidden="true" />
                 </button>
               )}
             </div>

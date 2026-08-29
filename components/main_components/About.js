@@ -38,7 +38,7 @@
 // nothing.
 
 'use client';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowSquareOut, CaretDown, Check, GlobeSimple, LinkSimple, MagnifyingGlass, Plus, X } from '@phosphor-icons/react';
 import IdentityCard, {
   DEFAULT_RIG_ICON, LINK_ICONS, RIG_ICONS, identify, readLink, rigIcon,
@@ -177,6 +177,39 @@ export default function About({ stamps, authed = false, pinned = null, entries =
   // render asking to happen again, and React now says so out loud.
   const pinSheetOpen = edit.editing && pinOpen;
 
+  // ── The sheet and the keyboard ────────────────────────────────────────────
+  // A fixed panel anchored to the bottom of the screen is anchored to the
+  // *layout* viewport, and an iOS keyboard does not change that — it slides up
+  // over it. The sheet went behind the keyboard, Safari scrolled the page to
+  // chase the field, and the whole thing ended up above the top of the screen
+  // with its search box off-screen and its list running through the clock.
+  //
+  // visualViewport is the part actually being looked at. This measures how much
+  // of the bottom is covered and lifts the sheet by exactly that, and caps its
+  // height to the room that is left. Written straight onto the element rather
+  // than into state: it fires on every frame of the keyboard animation, and a
+  // re-render per frame to move one box is a re-render of the whole pane.
+  const sheetRef = useRef(null);
+  useEffect(() => {
+    if (!pinSheetOpen) return undefined;
+    const seen = window.visualViewport;
+    if (!seen) return undefined;
+    const place = () => {
+      const el = sheetRef.current;
+      if (!el) return;
+      const covered = Math.max(0, window.innerHeight - seen.height - seen.offsetTop);
+      el.style.setProperty('--ab-pin-lift', `${covered}px`);
+      el.style.setProperty('--ab-pin-room', `${Math.round(seen.height)}px`);
+    };
+    place();
+    seen.addEventListener('resize', place);
+    seen.addEventListener('scroll', place);
+    return () => {
+      seen.removeEventListener('resize', place);
+      seen.removeEventListener('scroll', place);
+    };
+  }, [pinSheetOpen]);
+
   function choosePin(id) {
     edit.setPin(id);
     setPinOpen(false);
@@ -209,7 +242,7 @@ export default function About({ stamps, authed = false, pinned = null, entries =
       {pinSheetOpen && (
         <>
           <div className="ab-pin-scrim" onClick={() => setPinOpen(false)} />
-          <div className="ab-pin-sheet" role="dialog" aria-label="Choose a pinned album">
+          <div className="ab-pin-sheet" ref={sheetRef} role="dialog" aria-label="Choose a pinned album">
             <div className="ab-pin-search">
               <MagnifyingGlass size={14} weight="bold" aria-hidden="true" />
               <input
@@ -218,7 +251,6 @@ export default function About({ stamps, authed = false, pinned = null, entries =
                 onChange={e => setPinQuery(e.target.value)}
                 placeholder="Search your albums"
                 aria-label="Search your albums"
-                autoFocus
               />
             </div>
 

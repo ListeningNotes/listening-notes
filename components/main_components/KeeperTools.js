@@ -29,7 +29,7 @@
 
 'use client';
 import Link from 'next/link';
-import { PencilSimple, Printer } from '@phosphor-icons/react';
+import { Pencil, Printer } from '@phosphor-icons/react';
 
 export default function KeeperTools({ onEdit, slug }) {
   return (
@@ -41,7 +41,7 @@ export default function KeeperTools({ onEdit, slug }) {
         aria-label="Correct this entry"
         title="Correct this entry"
       >
-        <PencilSimple size={16} weight="bold" aria-hidden="true" />
+        <Pencil size={16} weight="bold" aria-hidden="true" />
       </button>
 
       {/* The slug travels so the printer opens on this record rather than on
