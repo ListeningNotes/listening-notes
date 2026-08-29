@@ -2126,31 +2126,6 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   }
 }
 
-/* ── The cross's edges ─────────────────────────────────────────────────────
-   Where a sideways move starts, now that the body of a pane is vertical-only.
-   Invisible, full height, a thumb's width, one down each side.
-
-   touch-action: none, so inside them the browser does not pan on either axis
-   and the gesture can only be this one. Same idea as the layer's back-pull,
-   and the same reason: the fights have all been about two axes arguing over
-   one gesture, and the only thing that has reliably ended one is taking the
-   argument away rather than trying to win it.
-
-   Hidden downstairs. A pane's lower half is somewhere you went deliberately,
-   and sliding sideways out of it lands you in an unrelated pane at an
-   unrelated scroll position. */
-.hn-edge {
-  position: fixed;
-  top: 0;
-  bottom: 0;
-  width: 36px;
-  z-index: 94;
-  touch-action: none;
-}
-.hn-edge--left { left: 0; }
-.hn-edge--right { right: 0; }
-.hn-edge--away { display: none; }
-
 /* The strip the back-pull starts in. Invisible, full height, a thumb's width,
    pinned to the left edge — the same place and the same idea as the system
    gesture it borrows from.
@@ -2964,36 +2939,27 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   scrollbar-width: none;
 }
 .hn-rail::-webkit-scrollbar { display: none; }
-/* The rail is never locked any more, and the lock is worth a note because it
-   caused the thing it was meant to prevent.
+/* Downstairs, the cross holds still sideways. The panes' own vertical
+   scrolling passes through untouched — that is a different element.
 
-   It toggled overflow-x on the rail whenever a pane scrolled past eight
-   pixels — which is a change to a scroll container's own overflow, made in the
-   middle of a scroll, every single time you crossed that line near the top of
-   a pane. The scroll stopped dead. main scrolled smoothly and this did not,
-   and the difference was entirely this rule.
+   overflow-x, and touch-action only as a hint alongside it. touch-action was
+   the whole of it for a day and did nothing on a real iPhone: the property is
+   honoured for what a touch does to *descendants*, and Safari goes on panning
+   a scroll container in its own axis regardless. Taking the overflow away is
+   what actually stops it.
 
-   Nothing replaces it because nothing has to: a gesture that starts on a pane
-   can only pan vertically now (see .hn-pane below), so there is no sideways
-   swipe to block downstairs. It was never the rail that needed holding still,
-   it was the question of which axis a gesture belonged to. */
+   The reason to avoid overflow-x was that it would reset scrollLeft and slide
+   the cross home every time you went downstairs. Measured, and it does not —
+   scrollLeft survives the change in both directions. */
+.hn-rail--held {
+  overflow-x: hidden;
+  touch-action: pan-y;
+}
 
 .hn-pane {
   flex: 0 0 100%;
   width: 100%;
   height: 100dvh;
-  /* A gesture that starts on a pane is vertical, full stop. This is the
-     ancestor case, which is the one touch-action is actually honoured for —
-     the restriction is computed from whatever is under the finger upward, so a
-     pane declaring pan-y means the rail above it never sees the gesture at
-     all. (The case it does *not* work for is stopping a scroll container in
-     its own axis, which is what the deleted rule above learned the hard way.)
-
-     Sideways lives in the strips at the edges instead. That is a real trade —
-     you can no longer swipe panes from the middle of the screen — and it is
-     the only arrangement where the two axes never have to negotiate, which is
-     what has been breaking the scroll every time it is asked to. */
-  touch-action: pan-y;
   scroll-snap-align: start;
   scroll-snap-stop: always;
   overflow-y: auto;
