@@ -246,6 +246,9 @@ export default function FullPostPage({ entry, references = [] }) {
   // handed the bucket back — until now nothing on the page ever asked for it,
   // so there was no way to leave one and nothing would have shown it.
   const albumComments = commentsByTrack['-1'] || [];
+  // Everything anybody has said on this entry, for the delete warning to be
+  // able to say how much of it goes.
+  const commentCount = Object.values(commentsByTrack).reduce((n, list) => n + list.length, 0);
 
   // Load the thread for this entry. Posts rather than gets, and sends along
   // whatever receipts this browser is holding: the reply carries the approved
@@ -817,6 +820,11 @@ export default function FullPostPage({ entry, references = [] }) {
         {/* All Entries leads: its arrow points back the way you came, and the
             up arrow reads better second. */}
         <div style={{ borderTop: '1px solid var(--border)', paddingTop: '28px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+          {/* The way out of the entry, and — while a correction is open — the
+              way to end it. Delete sits at the very foot rather than in the bar
+              with Save: they are not the same weight, and a destructive control
+              beside the one you press every time is a control you will
+              eventually press by accident. */}
           <Link href="/" className="ln-pill">← All entries</Link>
           <button
             onClick={() => {
@@ -837,6 +845,47 @@ export default function FullPostPage({ entry, references = [] }) {
             ↑ Back to top
           </button>
         </div>
+
+        {edit.editing && (
+          <div className="ln-danger">
+            {!edit.asking ? (
+              <button type="button" className="ln-danger-open" onClick={edit.ask}>
+                Delete this entry
+              </button>
+            ) : (
+              <div className="ln-danger-ask">
+                <p className="ln-danger-warn">
+                  This deletes <strong>{entry.album}</strong> permanently. There is no undo —
+                  the only copies are the nightly backup and the last six hours of database
+                  history.
+                </p>
+                <p className="ln-danger-warn">
+                  {/* Every comment on the entry, album and tracks together —
+                      commentsByTrack already holds the album's under -1, so
+                      counting those separately counts them twice. */}
+                  {commentCount > 0 && (
+                    <>Its {commentCount} {commentCount === 1 ? 'comment goes' : 'comments go'} with it. </>
+                  )}
+                  Any album you logged as received from this one keeps its entry and loses
+                  that link.
+                </p>
+                <div className="ln-danger-row">
+                  <button
+                    type="button"
+                    className="ln-danger-go"
+                    onClick={edit.remove}
+                    disabled={edit.removing}
+                  >
+                    {edit.removing ? 'Deleting…' : 'Delete permanently'}
+                  </button>
+                  <button type="button" className="ln-pill" onClick={edit.unask} disabled={edit.removing}>
+                    Keep it
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
       </div>
 

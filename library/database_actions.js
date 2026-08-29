@@ -370,9 +370,38 @@ export async function update_entry(slug, fields) {
   return result[0] || null;
 }
 
+// Deleting an entry, and everything that pointed at it.
+//
+// A bare DELETE FROM entries is not enough, and the reason is that only one of
+// the three things referring to an entry is a foreign key. settings.pinned_entry_id
+// carries ON DELETE SET NULL and clears itself. The other two do not:
+//
+//   comments.entry_slug is a plain text column, so an entry's comments survive
+//   it — sitting in the table forever, unreachable, and turning up years later
+//   in a backup attached to a record nobody can find.
+//
+//   entries.source_entry_id has an index and no key, so an album that somebody
+//   else's entry was received *from* leaves that entry pointing at a row that
+//   is not there, which quietly breaks the discovery chain rather than ending
+//   it.
+//
+// So this clears both first. The alternative was a warning long enough to
+// explain the mess it was about to leave, which is a worse answer than not
+// leaving one.
 export async function delete_entry(slug) {
-  await database`DELETE FROM entries WHERE slug = ${slug}`;
-  return { deleted: true };
+  const [row] = await database`SELECT id FROM entries WHERE slug = ${slug} LIMIT 1`;
+  if (!row) return { deleted: false };
+
+  const comments = await database`DELETE FROM comments WHERE entry_slug = ${slug} RETURNING id`;
+  // The chain ends here rather than dangling: an album received from this one
+  // keeps its entry and loses its source, which is what "I no longer know where
+  // this came from" actually looks like.
+  const unlinked = await database`
+    UPDATE entries SET source_entry_id = NULL WHERE source_entry_id = ${row.id} RETURNING id
+  `;
+  await database`DELETE FROM entries WHERE id = ${row.id}`;
+
+  return { deleted: true, comments: comments.length, unlinked: unlinked.length };
 }
 
 // ── Briefings ──────────────────────────────────────────────────────────
