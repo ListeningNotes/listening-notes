@@ -62,6 +62,10 @@ export function entryTracks(entry) {
       stars: t.rating,          // real number — half ratings survive here
       note: t.note || '',
       favorite: !!t.favorite,   // starred song, separate from the rating
+      // When this one track's note was last rewritten. Carried through because
+      // the stamp prints under the note it belongs to, and a display shape
+      // that dropped it meant the stamp could never appear at all.
+      edited: t.edited || null,
     }));
   }
   return parseTracksFromNotes(entry?.track_notes || entry?.notes);

@@ -2353,6 +2353,68 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 .ln-flag:hover { color: var(--ink); border-color: var(--ink-faint); }
 .ln-flag--on { color: var(--bg); background: var(--ink); border-color: var(--ink); }
 
+/* ── The bar that says a correction is open ─────────────────────────────────
+   The controls that started it live at the top of the entry, which is a screen
+   and a half away by the time somebody is fixing a note on track nine. This
+   follows them down, and once the hero has scrolled off it is the only thing
+   on the page saying they are editing at all. */
+.ln-editing-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 140;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+  /* The page's own colour, not the frosted panel the rest of the site uses.
+     A translucent bar works over album art and fails over prose: the words it
+     sits on read straight through it, and the one control that has to be
+     unmistakable ends up the least legible thing on screen. */
+  background: var(--bg);
+  border-top: 1px solid var(--border);
+}
+/* Room for it, on the element that actually scrolls. .ln-screen-two holds an
+   inner scroller, so padding on the outer box is padding the content slides
+   straight past — the last track's note went on being written underneath the
+   bar that saves it. */
+.ln-editing .ln-screen-two-scroll { padding-bottom: 96px; }
+.ln-editing-label {
+  font-family: var(--font-label);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-right: 4px;
+}
+.ln-trouble {
+  position: fixed;
+  left: 16px; right: 16px; bottom: 76px;
+  z-index: 141;
+  margin: 0;
+  text-align: center;
+  font-family: var(--font-label);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--fav);
+}
+
+/* A track's own row while it is being corrected: the title becomes a field in
+   the title's place, and the heart is always drawn so it can be pressed. Read
+   rather than edited, an empty heart on every track would be a column of
+   controls nobody asked for — so it only appears filled. */
+.ln-track-field { flex: 1; min-width: 0; font-size: 13px; }
+.ln-track-heart {
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 0; border: 0; background: none;
+  color: var(--ink-faint); cursor: pointer;
+  transition: color 0.15s;
+}
+.ln-track-heart:hover { color: var(--fav); }
+.ln-track-heart--on { color: var(--fav); }
+
 /* A note being written, in the place the note is read. Set in the type the
    note prints in, so the field is the paragraph with a caret in it rather than
    a form control standing where a paragraph was — the rule underneath is the
