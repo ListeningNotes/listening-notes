@@ -24,7 +24,8 @@
 'use client';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { X } from '@phosphor-icons/react';
+import { BookOpen } from '@phosphor-icons/react';
+import EdgeCaret from './EdgeCaret';
 
 // How far right you have to drag before letting go dismisses rather than
 // springs back. A quarter of the screen: far enough that a hesitant thumb does
@@ -123,14 +124,25 @@ export default function LayerEntry({ children }) {
       aria-modal="true"
       aria-label="Entry"
     >
-      {/* Top right, where the moon is on every other screen — this is the one
-          control that belongs to the layer rather than to the entry on it, so
-          it sits outside the entry's own header rather than in it. */}
-      <button type="button" className="lay-shut" onClick={goBack} aria-label="Back to the journal">
-        <X size={16} weight="bold" aria-hidden="true" />
-      </button>
-
       {children}
+
+      {/* The way back, in the row the cross keeps its controls in — bottom
+          centre, same offset, same object. It was a cross in the top right
+          corner for an afternoon, which was wrong twice over: nothing else on
+          this site asks for that corner, and the corner it was in belongs to
+          the lights.
+
+          The mark is the journal's, because a caret names where you land
+          rather than which way you are going — the same rule the cross's own
+          carets follow. */}
+      <div className="lay-controls">
+        <EdgeCaret
+          direction="left"
+          onClick={goBack}
+          label="Back to the journal"
+          icon={BookOpen}
+        />
+      </div>
     </div>
   );
 }
