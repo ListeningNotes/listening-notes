@@ -64,8 +64,9 @@ only the write that breaks. Run it in Neon's SQL editor. Take a backup first
 
 The cross is built and merged. What is left of it:
 
-- [ ] **`usePlaceKeeper`** — pane index and per-pane scroll offset, kept across a route change. Swiping between panes already remembers itself (they stay mounted); going out to an entry and back does not, because browsers do not restore nested scroll containers.
+- [x] **`usePlaceKeeper` is not needed and will not be built.** It was going to remember the pane index and the per-pane scroll offset across a route change, because browsers do not restore nested scroll containers. Going out to an entry and back is the only thing that lost them, and an entry is a layer now — the cross never unmounts, so both survive on their own. Verified: pane scroll 991 before and after, and the rail still on the beacon pane.
 - [ ] **`useShake` + `firework()`** — shake the phone, a firework goes up, then `/shuffle`. The Surprise pill stays where it is.
+- [ ] **`AlbumPreview.js` has no reader.** 175 lines, and the only thing that mounted it was the tile flip. The share printer redraws the same card independently rather than importing it, so nothing broke when the flip went. Its `.ln-marks` CSS is dead with it. Left on disk rather than deleted in passing — it is a designed piece and the deletion is somebody's call, not a side effect.
 - [ ] **A CSS cleanup pass, once the cross has shipped and settled.** Not a rewrite — one section at a time: delete, look at the site, commit. The reason to wait is that each of these removals makes the next lot of dead rules obvious, and doing it all at once means not knowing which deletion broke what.
 
       What is already known to be dead or nearly dead:
@@ -79,6 +80,26 @@ The cross is built and merged. What is left of it:
 - [ ] **Compare wants two homes** — one on an individual album, for comparing that record against another, and one on the About pane for comparing the collection overall. It is reachable from neither today; the route works if you type it.
 - [ ] **Surprise (`/shuffle`) has no way in.** Work in progress by decision — the shake is the intended gesture and is not built. See DECISIONS.
 
+**THE CROSS'S TWO OPEN PROBLEMS** — attempted 2026-08-29 and reverted whole
+
+Both are real and neither is built. Read the ruled-out list in DECISIONS before
+starting: three approaches were tried in one session and every one of them left
+the cross worse than not touching it.
+
+- [ ] **Down should feel like arriving, not scrolling.** The album page has the
+      shape — a card that holds still, then a screen of writing that scrolls
+      inside itself — and Beacon and About are one long scroll instead. The
+      structure was built and reverted: it is right, and it cannot go on top of
+      the gesture problem below. Do that one first.
+- [ ] **You should not slide sideways out of a pane's lower half.** The carets
+      already hide down there; the swipe does not.
+
+The thing under both: a pane is a vertical scroller inside a horizontally
+snapping rail, so every gesture is negotiated between two axes. `main`'s
+behaviour is the baseline to beat — it scrolls smoothly and it sticks slightly
+at the top of a pane. Anything that scrolls worse than that is worse, however
+much else it fixes.
+
 **PARKED** — decided, deliberately not being built yet
 
 - [ ] **Tap-to-QR on album art.** Tapping the art swaps it for a QR of that entry's URL and silently copies the link. It needs a brief "link copied" line: a clipboard write with no feedback reads as broken.
@@ -87,6 +108,19 @@ The cross is built and merged. What is left of it:
       - Build on tap, not on mount.
       - Cache the winning QR version and tonal band on the entry, so later builds skip decoding entirely.
       - Do it server-side. iTunes sends no CORS headers, so a browser canvas cannot read album art pixels at all.
+
+**STILL WANTED ON THE CROSS** — asked for 2026-08-29, not started
+
+- [ ] **A roof on the journal.** The same header the album page has — mark
+      centred, one control each side — instead of the band that fades out at
+      the top, which is disliked. The mark doubles as back-to-top. The printer
+      goes on the right, for sharing the journal at large rather than one
+      album; it can point at /dashboard/share until there is something better
+      behind it.
+- [ ] **The bottom row as one nav bar on every screen.** The entry's back
+      control should sit where the beacon's carets sit, with whichever
+      direction is irrelevant turned off, so the row means the same thing
+      wherever you are.
 
 **THE HEADER** — briefed 2026-08-28, mostly built on branch `one-header`. See DECISIONS for the shape.
 
@@ -257,6 +291,56 @@ existed and got walked past once anyway. `git rm` on a file is recoverable from
 history; `DROP COLUMN` is not recoverable from anything but a backup. Read the
 values before deciding, and take a backup either way.
 
+**Changing a scroller's overflow in the middle of a scroll stops the scroll.**
+A class that toggled `overflow-x` on the cross's rail whenever a pane passed
+eight pixels meant that overflow flipped every time you crossed that line near
+the top of a pane — and the vertical scroll died each time. It looked like a
+snap problem and it was a layout-state problem. If a fix has to change a scroll
+container's own properties while it is being used, it is the wrong fix.
+
+**A hand-rolled drag loses to native scrolling, every time.** An edge-strip
+gesture that set `scrollLeft` frame by frame — with the snap switched off for
+the duration, which is the correct technique — still read as glitchy beside the
+browser's own momentum and snapping. Reimplementing scroll physics is a last
+resort, not a tool to reach for when a CSS answer is proving awkward.
+
+**`overflow: hidden` still creates a scroll container.** It takes the scrollbar
+away and stops the user scrolling it; it does not take the element out of the
+scroll chain. So a box wrapped around a scrolling layout, set to `hidden` and
+carrying `overscroll-behavior: contain`, still catches every gesture that
+reaches the end of an inner scroller and refuses to pass it on — the scroll
+dies there. Half the symptom disappears (the second scrollbar) and the worse
+half stays (the freeze), which makes it look like the fix worked and the
+problem was something else.
+
+`overflow: visible` is the only value that means "not a scroll container".
+Cost an entire wrong fix on the entry layer.
+
+**`touch-action: pan-y` does not arbitrate a diagonal gesture — it runs both
+halves of it.** It was meant to settle who owns a swipe: vertical to the
+browser, horizontal to the drag handler. What it actually means is that the
+browser will start panning on the *vertical component* of any gesture, at once,
+while the handler is still watching the horizontal one. So a back-swipe that
+drifts slightly downward scrolls the page **and** drags the layer. On the entry
+layer that landed you in the notes instead of back on the journal, and being
+stricter about what counted as horizontal only traded it for swipes that did
+nothing.
+
+There is no ratio that fixes this, because the browser has already acted before
+the ratio is known. The fix is to remove the ambiguity somewhere small:
+`touch-action: none` on a narrow edge strip, with the gesture only recognised
+there. Inside the strip the browser does not pan at all, so the gesture can only
+be the one thing; outside it scrolling is untouched. That is also what iOS does
+with its own back gesture, so it is the gesture people already reach for.
+
+**`scroll-behavior: smooth` makes scroll tests lie.** It is set on `<html>`
+sitewide, and it applies to `element.scrollTop = n` as well as to
+`scrollIntoView` — so setting a scroll position and reading it back gets a
+number from somewhere in the middle of an animation. Three runs of a
+scroll-preservation test read 4, 37 and 48 out of a requested 1600 and looked
+like a broken feature. `window.scrollTo({top, behavior: 'instant'})` overrides
+it and is what a test should use.
+
 **Touching rectangles count as intersecting.** A pane parked by scroll snapping
 sits exactly edge to edge — `left: -444, right: 0` against a viewport starting
 at 0 — and an IntersectionObserver reports that as `isIntersecting: true` with
@@ -396,6 +480,37 @@ current.
 ---
 
 ## Complete
+
+**2026-08-29 — an entry is a layer over the journal**
+
+Tapping a cover slides the entry in over the wall; dismissing slides it back.
+Built with an intercepting route, so the URL is real either way — tap from the
+journal and it opens as a layer, open the same address from a QR or a shared
+link and you get the standalone page, server-rendered.
+
+- [x] **`app/@layer/(.)entries/[slug]`** — a parallel slot intercepting the real
+      entry route, plus `default.js` returning null for every other page.
+- [x] **`LayerEntry`** — the sliding surface, 460ms on a decelerating curve, with
+      the back-pull in a 36px edge strip. No close button; see DECISIONS.
+- [x] **The open is seamless.** `library/handoff.js` carries what the journal
+      already knew — cover, title, artist, year, rating, flags, shelf, listen
+      number, date — and `LayerWaiting` draws the whole first screen from it.
+      Measured: cover on screen 69ms after the tap on a warm route, and the
+      grey skeleton never shown. artShift 0 and titleShift 0 across the swap.
+- [x] **`EntryModal` and `FlipTile` deleted**, with the two `entry_modal`
+      pieces. A tile is `AlbumTile`, a cover and a link, and one tap.
+- [x] **`usePlaceKeeper` struck off rather than built** — the journal never
+      unmounts now, so pane index and scroll survive on their own. Verified:
+      pane scroll 991 before and after, rail still on the beacon pane.
+- [x] **The two-screen CSS moved from FullPostPage's `<style>` block into
+      globals.css.** A stylesheet that only exists once its own component has
+      rendered is no use to the thing standing in for that component — that was
+      the 270px jump. It is also the groundwork the panes will need.
+
+**The cross was attempted and reverted whole.** HomeNav.js and About.js are
+byte-identical to what they were. See the two open problems above and the
+ruled-out list in DECISIONS.
+
 
 **2026-08-28 — entry editing, finished, and the CMS retired**
 

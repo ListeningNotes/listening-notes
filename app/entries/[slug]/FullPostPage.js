@@ -8,14 +8,17 @@
 
 'use client';
 import { useState, useEffect, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Check, X } from '@phosphor-icons/react';
+import { CaretUp, Check, X } from '@phosphor-icons/react';
+import { BookOpen } from '@phosphor-icons/react';
 import { fonts } from '../../../library/sitewide_visuals';
 import { sizedAlbumArt, fetchAlbumArtUrl } from '../../../library/music_data_api';
 import { parseHorizon, entryTracks, splitNotes, entryTypeLabel, parseRating } from '../../../library/entry_formatter';
 import { kept_receipts } from '../../../library/receipts';
 import { buildReferenceIndex, createReferenceLinker } from '../../../library/cross_references';
 import SiteNav from '../../../components/main_components/SiteNav';
+import EdgeCaret from '../../../components/main_components/EdgeCaret';
 import KeeperTools from '../../../components/main_components/KeeperTools';
 import HorizonBar from '../../../components/main_components/Slug_Page/HorizonBar';
 import TrackThread from '../../../components/main_components/Slug_Page/TrackThread';
@@ -53,7 +56,12 @@ const HERO_COVER = {
 // So it is chosen from the card, through a search over the journal. From an
 // entry there is now no "pin this one": you go to the card and look it up.
 // More steps for the rarer action, which is the right way round.
-export default function FullPostPage({ entry, references = [], authed = false }) {
+// `layered` is true when this is drawn on the layer over the journal rather
+// than as its own page. The only thing it changes is what the way out does:
+// on the layer the journal is one step back through history and still holding
+// its scroll position, and on its own page there is no history to go back to.
+export default function FullPostPage({ entry, references = [], authed = false, layered = false }) {
+  const router = useRouter();
   // ── Correcting what is written ────────────────────────────────────────────
   // The fields are drawn where the writing is, not in a form somewhere else:
   // the album note becomes a textarea in the album note's place, and a track's
@@ -466,7 +474,6 @@ export default function FullPostPage({ entry, references = [], authed = false })
         .ln-hero-row    { display: flex; align-items: flex-end; gap: 24px; }
         .ln-content     { padding: 48px 48px 100px; }
         .ln-cover-hero  { max-width: 860px; margin: 0 auto; padding: 16px 48px 0; }
-        .ln-screen-one  { display: none; }
         /* How much of the top the header occupies on screen two. The dot nav
            is hidden by then, so this only has to clear the logo row (which
            ends at 58px) — not the 150px the labelled dots needed. The band
@@ -485,81 +492,12 @@ export default function FullPostPage({ entry, references = [], authed = false })
              exactly one viewport tall, and a mandatory snap over
              viewport-sized areas can commit hard without ever trapping the
              reading. scroll-snap-stop stops a fast flick skipping past. */
-          .ln-screens {
-            height: 100dvh;
-            overflow-y: auto;
-            scroll-snap-type: y mandatory;
-            -webkit-overflow-scrolling: touch;
-            touch-action: pan-y;
-            overscroll-behavior-y: none;
-          }
-          .ln-screen-one,
           .ln-screen-two {
             height: 100dvh;
             scroll-snap-align: start;
             scroll-snap-stop: always;
           }
 
-          .ln-screen-one {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-            min-height: 100dvh;
-            box-sizing: border-box;
-            /* clears the fixed logo row and the dot labels beneath it */
-            padding: 172px 24px 0;
-            gap: 16px;
-          }
-          .ln-screen-one-art {
-            /* Sized off viewport HEIGHT as well as width. A width-only size
-               overflowed once Safari's chrome was showing — the chips and the
-               scroll cue ended up under the address bar — and a long title
-               pushed it further still. Squaring to the smaller of the two
-               shrinks the art on a short screen instead of losing the bottom
-               of the page, and flex-shrink lets it give up more if it has to. */
-            height: min(40dvh, 78vw);
-            width: auto;
-            aspect-ratio: 1 / 1;
-            flex-shrink: 1;
-            min-height: 0;
-            border-radius: 16px;
-            overflow: hidden;
-            border: 1px solid var(--panel-border);
-            box-shadow: var(--shadow-lift);
-          }
-          .ln-screen-one-art img {
-            width: 100%; height: 100%; object-fit: cover; display: block;
-          }
-          .ln-screen-one-title {
-            font-family: var(--font-display);
-            font-size: clamp(1.6rem, 6.6vw, 2.1rem);
-            font-weight: var(--font-display-weight);
-            /* 1.1 packed the two rows so tightly that overflow:hidden sliced
-               the bottom off the second one — parentheses and descenders sit
-               below the line box at this size, and "TV Animation BLEACH
-               (Original Soundtrack 3)" lost the underside of its brackets.
-               The extra leading plus a little padding gives them somewhere to
-               go without letting a third row through. */
-            line-height: 1.22;
-            padding-bottom: 0.1em;
-            color: var(--ink);
-            /* Two rows at most. "Salvation Laughs in the Face of a Grieving
-               Mother" ran to three at full size and shoved the rating, the
-               chips and the scroll cue off the bottom of the screen. */
-            display: -webkit-box;
-            -webkit-box-orient: vertical;
-            -webkit-line-clamp: 2;
-            overflow: hidden;
-          }
-          .ln-screen-one-artist {
-            font-family: var(--font-label);
-            font-size: 11px;
-            letter-spacing: 0.14em;
-            text-transform: uppercase;
-            color: var(--ink-soft);
-            margin-top: -8px;
-          }
           .ln-screen-one-chips {
             display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
           }
@@ -893,15 +831,28 @@ export default function FullPostPage({ entry, references = [], authed = false })
 
         {/* Footer — the two ways out, as a matching pair. The posted date used
             to sit here; it lives up in the album's metadata now. */}
-        {/* All Entries leads: its arrow points back the way you came, and the
-            up arrow reads better second. */}
+        {/* The way back leads, and the way up follows. It was a pair of
+            worded pills — "← All entries" and "↑ Back to top" — and the first
+            of them had stopped leading anywhere: the journal is where you came
+            from now, not a separate page you go to.
+
+            So it is the same control the rest of the site uses for this, the
+            mark of where you land over the arrow for which way that is. It can
+            sit here without crowding anything because it only exists at the
+            very bottom of the reading, which is the one place nothing else
+            wants. */}
         <div style={{ borderTop: '1px solid var(--border)', paddingTop: '28px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
           {/* The way out of the entry, and — while a correction is open — the
               way to end it. Delete sits at the very foot rather than in the bar
               with Save: they are not the same weight, and a destructive control
               beside the one you press every time is a control you will
               eventually press by accident. */}
-          <Link href="/" className="ln-pill">← All entries</Link>
+          <EdgeCaret
+            direction="left"
+            onClick={() => (layered ? router.back() : router.push('/archive'))}
+            label="Back to the journal"
+            icon={BookOpen}
+          />
           <button
             onClick={() => {
               const screens = document.querySelector('.ln-screens');
@@ -916,9 +867,15 @@ export default function FullPostPage({ entry, references = [], authed = false })
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }
             }}
-            className="ln-pill"
+            className="ln-totop"
+            aria-label="Back to the top"
+            title="Back to the top"
           >
-            ↑ Back to top
+            {/* An arrow and nothing else. Every other control in this family
+                carries a mark for where it lands, and this one lands where you
+                already are — the top of the thing you are reading. There is no
+                second place to name. */}
+            <CaretUp size={14} weight="bold" aria-hidden="true" />
           </button>
         </div>
 
