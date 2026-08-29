@@ -2939,22 +2939,18 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   scrollbar-width: none;
 }
 .hn-rail::-webkit-scrollbar { display: none; }
-/* Downstairs, the cross holds still sideways. The panes' own vertical
-   scrolling passes through untouched — that is a different element.
+/* There is no rail lock, and there was one for a few hours. It toggled
+   overflow-x on the rail whenever a pane passed eight pixels of scroll — a
+   change to a scroll container's own overflow, made in the middle of a scroll,
+   every time you crossed that line near the top of a pane. It stopped the
+   scroll dead, and it is why this branch scrolled worse than main did.
 
-   overflow-x, and touch-action only as a hint alongside it. touch-action was
-   the whole of it for a day and did nothing on a real iPhone: the property is
-   honoured for what a touch does to *descendants*, and Safari goes on panning
-   a scroll container in its own axis regardless. Taking the overflow away is
-   what actually stops it.
-
-   The reason to avoid overflow-x was that it would reset scrollLeft and slide
-   the cross home every time you went downstairs. Measured, and it does not —
-   scrollLeft survives the change in both directions. */
-.hn-rail--held {
-  overflow-x: hidden;
-  touch-action: pan-y;
-}
+   The thing it was for — not sliding sideways out of a pane's lower half —
+   is real and still unsolved. Three attempts at it all made the cross worse
+   than leaving it alone: touch-action on the rail (ignored by Safari for a
+   container's own axis), overflow-x (this), and a hand-rolled drag in edge
+   strips (worse than the browser's own scrolling, which is the usual result
+   of reimplementing momentum). It wants designing rather than patching. */
 
 .hn-pane {
   flex: 0 0 100%;
