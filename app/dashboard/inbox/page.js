@@ -14,7 +14,8 @@ const SERIF = "var(--font-nunito), sans-serif";
 const SANS  = "'DM Sans', system-ui, sans-serif";
 
 const INK = '#1a1916';
-// See the note in /dashboard/entries: INK is text, SOLID is button fill.
+// INK is text and stays near-black for legibility; SOLID is the button fill,
+// a softer warm grey, because a button-sized slab of INK reads as harsh.
 const SOLID = '#4a4643';
 const FOLDER_BG = 'rgba(255,255,255,0.8)';
 const label = { fontFamily: MONO, fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(26,25,22,0.45)' };

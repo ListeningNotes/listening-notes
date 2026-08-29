@@ -72,21 +72,29 @@ The cross is built and merged. What is left of it:
 - [ ] **`/rig` is still a forwarding stub**, and by the same argument that deleted `/why` it may not have earned one: three days live, linked from a card, on a site nobody else runs. `/about` genuinely did earn its stub. Worth one decision rather than two defaults.
 - [ ] **Compare wants two homes** — one on an individual album, for comparing that record against another, and one on the About pane for comparing the collection overall. It is reachable from neither today; the route works if you type it.
 - [ ] **Surprise (`/shuffle`) has no way in.** Work in progress by decision — the shake is the intended gesture and is not built. See DECISIONS.
-- [ ] **Entry editing, continued.** The writing is done — `hooks/useEntryEditor.js`, with the album note and every track note editable in place. What is left:
-  - [ ] The header fields: album, artist, year, genre, rating, and the three flags. They print in two places (the phone hero and the desktop hero), so the fields do too.
-  - [x] Delete, at the foot of edit mode, behind a second confirmation, with the cleanup. **Never actually run** — the only honest test destroys a real entry. Take a backup first if you want it proven.
-  - [x] The discovery-chain fields, fetched on open from `GET /api/entries/[slug]`, which already included the chain for a caller with a wristband. The source picker offers only other entries for the same album, which is the invariant said twice — once in the UI and once in `update_entry`.
-  - [ ] **Two things the dashboard can still do that the entry cannot**, and the reason it has not been retired yet: change the album art, and change the entry type. Both are carried through a save unchanged, so nothing is lost by editing on the entry — there is simply no field for them.
-  - [ ] Retire `/dashboard/entries` once the three above are in — nothing else calls the delete route.
-**DO THIS BEFORE EDITING AN ENTRY — the column is not on the live database:**
 
-```sql
-ALTER TABLE entries ADD COLUMN IF NOT EXISTS edited_at timestamp without time zone;
-```
+**THE HEADER** — briefed 2026-08-28, not started. See DECISIONS for the shape.
 
-Reads are safe without it; the stamps simply never show. It is the write that
-fails, and the write is every entry edit — so the existing CMS breaks until
-this is run. Take a backup first (`npm run backup`).
+- [ ] **One header everywhere**: mark centred, one control each side, the same
+      arrangement the About card uses. Today the header changes shape between
+      the panes and an entry, and every screen should read the same.
+- [ ] **`NavBeacon` goes** from every page but the beacon pane. It is a status
+      bar for something the visitor has already been told, it competes with the
+      writing, and it is part of why five components poll Last.fm
+      independently — the dev log shows a beacon request roughly every second
+      and a half, and input on the entry page times out while they land.
+- [ ] **Owner tools, top left, server-checked**: pencil to the editor, printer
+      to the export flow. Not hidden with CSS — the entry page currently asks
+      the browser whether you are signed in and hides what it finds, which
+      means the buttons are in the HTML either way. No `DotsThree`; if a fourth
+      tool appears the pencil becomes a menu and nothing else moves.
+- [ ] **The Edit and Pin bubbles come out of the chip row.** Admin controls
+      should not sit in the reading flow.
+- [ ] **The pin moves to the card**, with a search over the owner's own entries
+      in a bottom sheet, and the entry editor loses its pin entirely. See
+      DECISIONS for the trade this accepts.
+- [ ] **Copy link / QR at the foot of an entry**, for anyone — the other half
+      of the split that puts the printer in the header.
 
 Per-track stamps need no column: they ride inside the `tracks` jsonb, which
 already exists.
@@ -334,6 +342,40 @@ current.
 ---
 
 ## Complete
+
+**2026-08-28 — entry editing, finished, and the CMS retired**
+
+Editing an entry now happens on the entry. `/dashboard/entries` is deleted —
+468 lines and the last CMS-shaped thing on the site.
+
+- [x] **The header fields**: album, artist, year, genre, rating and the three
+      flags, each drawn in the place of the line it replaces, in both mounts.
+- [x] **Press the cover to replace it.** While a correction is open the art is
+      a button; pressing it opens the address underneath, with **Find it
+      again** (asks Apple with whatever album and artist are in the draft),
+      **Clear**, and **Done**. The draft's art is what the page draws, so a
+      replacement is visible — including in the blurred wash behind the hero —
+      before anything is saved.
+- [x] **Which shelf it came off**: Library or Submission, as a select on the
+      flags row. The other legacy field on the old form, `relationship`, is
+      deliberately not here — DECISIONS retired it, and deleting that route is
+      what finally took the last picker off the site.
+- [x] **`/dashboard/entries` deleted**, and its door removed from both the hub
+      and the desk pane. `SessionPreview`'s "Edit in entries" link went with
+      it; "View the post →" already went where editing now lives.
+- [x] Delete, at the foot of edit mode, behind a second confirmation, with the
+      cleanup. **Still never actually run** — the only honest test destroys a
+      real entry.
+- [x] The discovery-chain fields, with lineage written once.
+
+**Verified on the running page, not just in a build:** both mounts render the
+fields; the Apple lookup returned the identical URL already stored; a save
+round-tripped without flattening `album_art_source` — the 3000px master is
+still the master and the served copy is still sized; `edited_at` stayed null on
+a metadata-only save, which is the stamp rule working. Build clean, lint
+unchanged apart from two more `<img>` warnings on the entry page, which is the
+same warning twice more because each cover now has a reading branch and an
+editing branch.
 
 **2026-08-28 — the pinned album**
 - [x] **A pin in the chip row of every entry**, owner only, reading `Pin` or `Pinned`. Writes `settings.pinned_entry_id`, which was already a writable column with a foreign key — no schema change, nothing to run.

@@ -34,14 +34,15 @@ import { useBookplate } from '../../../components/main_components/Bookplate';
 import backgrounds from '../../../components/session_components/backgrounds';
 
 // The dashboard's shared chrome: one of the album screensavers running behind
-// a frosted panel. Same constants as /dashboard/entries and /dashboard/inbox
-// so the three pages read as one room. DM Sans is named on those two but was
-// never loaded — the site runs on Nunito and DM Mono — so the body face here
-// is Nunito, which is what the type system says it should have been.
+// a frosted panel. Same constants as /dashboard/inbox so the two pages read as
+// one room. DM Sans is named on that one but was never loaded — the site runs
+// on Nunito and DM Mono — so the body face here is Nunito, which is what the
+// type system says it should have been.
 const WALL = '#eef0ec';
 const PANEL_BG = 'rgba(255,255,255,0.8)';
 const INK = '#1a1916';
-// See the note in /dashboard/entries: INK is text, SOLID is button fill.
+// INK is text and stays near-black for legibility; SOLID is the button fill,
+// a softer warm grey, because a button-sized slab of INK reads as harsh.
 const SOLID = '#4a4643';
 const MONO = "'DM Mono', 'Courier New', monospace";
 const HAIR = '1px solid rgba(26,25,22,0.08)';
