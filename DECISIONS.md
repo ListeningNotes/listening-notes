@@ -263,6 +263,30 @@ not survive seeing it.
 reason; the card is the counted facts and the records now, and all three
 prompts sit together on the screen below, which is what that pane is for.
 
+**An entry is edited on the entry.** The CMS list at `/dashboard/entries` was
+built when there was nowhere else to do it, and it is the same shape the card
+had before this session: a form for something you cannot see while you type
+into it. Finding one among many is what the archive's search already does, so
+the list is not earning its place either.
+
+**Editing is for typos, second thoughts soon after, and genuine mistakes — not
+for revising a listen.** A relisten is a new entry; the journal is a record of
+encounters and rewriting an old one would be falsifying the encounter rather
+than adding to it. That is what makes the next decision cheap: if editing is
+only ever small, a mark saying it happened costs nothing and settles the
+question of whether the record can be trusted.
+
+**A changed note says so.** Editing an album note or a track note stamps
+"Edited on {date}", shown with the entry. Never written down until now, and
+never built — `entries` has `created_at` and no `updated_at`, so this needs a
+column. The point is not an audit trail; it is that a journal nobody can
+silently rewrite is worth more than one where every entry might have been.
+
+**Delete lives at the foot of an entry's edit mode**, behind a second
+confirmation and a warning that says what it is. It is a hard `DELETE FROM
+entries` — see NOTES for what it leaves behind, because "permanent" is not the
+whole of it.
+
 **Everything editable is edited where it prints.** The link rows and the rig
 rows were fields on the card for things that appear a screen below it, which is
 filling in a form blind. They moved down into the sections they belong to when
