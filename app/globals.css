@@ -2042,6 +2042,47 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
    36px: Apple's own edge gesture is about this wide, it is comfortably inside
    the thumb's arc on the side people hold, and it is narrow enough that
    nothing on the entry is hard to reach past it. */
+/* What stands in for the entry while it is being read. Shaped like the first
+   screen it becomes, so the swap is a picture arriving in a frame rather than
+   the page changing shape. The numbers are .ln-screen-one's numbers. */
+.lay-wait {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100dvh;
+  box-sizing: border-box;
+  padding: 172px 24px 0;
+  gap: 16px;
+}
+.lay-wait-art {
+  height: min(40dvh, 78vw);
+  width: auto;
+  aspect-ratio: 1 / 1;
+  flex-shrink: 1;
+  min-height: 0;
+  border-radius: 16px;
+  background: var(--bg-warm);
+}
+.lay-wait-line {
+  height: 1em;
+  border-radius: 6px;
+  background: var(--bg-warm);
+}
+.lay-wait-line--title { width: min(62%, 300px); height: 1.9rem; margin-top: 6px; }
+.lay-wait-line--byline { width: min(38%, 190px); height: 0.9rem; }
+/* Breathing rather than sweeping. A shimmer that travels reads as a progress
+   bar and invites you to watch it; this just says the page is alive. */
+.lay-wait-art,
+.lay-wait-line { animation: layWait 1.6s ease-in-out infinite; }
+@keyframes layWait {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.55; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lay-wait-art,
+  .lay-wait-line { animation: none; }
+}
+
 .lay-edge {
   position: absolute;
   top: 0;
@@ -2775,6 +2816,10 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   scrollbar-width: none;
 }
 .hn-rail::-webkit-scrollbar { display: none; }
+/* Downstairs, the cross holds still sideways. See the note in HomeNav: the
+   panes' own vertical scrolling still passes through, and the rail keeps its
+   scroll position, which taking the overflow away would have reset. */
+.hn-rail--held { touch-action: pan-y; }
 
 .hn-pane {
   flex: 0 0 100%;
