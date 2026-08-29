@@ -134,18 +134,35 @@ export default function FullPostPage({ entry, references = [], authed = false })
   // revisit is the listen number, a submission is `received_from`, formative
   // is a flag). Old rows keep their values as legacy data. Retiring that route
   // is what finally takes the last picker off the site.
+  //
+  // Two pills rather than a dropdown, and the reason is not taste. Every input,
+  // textarea and select on this site is forced to 16px on a phone, because iOS
+  // zooms the whole page in when you focus anything smaller — so a select here
+  // came out half again the size of the Favorite and Masterpiece chips sitting
+  // beside it, in a different colour, in a row that is otherwise one object
+  // repeated. A field with two possible answers was never a dropdown anyway.
+  //
+  // Pressing the one that is already on turns it off, because "neither" is a
+  // real answer: an entry from before the column existed has no shelf, and
+  // being unable to put it back would make this a one-way door.
+  const SHELVES = [
+    { value: 'Personal Library', label: 'Library' },
+    { value: 'Submission', label: 'Submission' },
+  ];
+
   const typeField = (
     <span className="ln-flags-row">
-      <select
-        className="ln-select"
-        value={edit.draft.entry_type}
-        onChange={e => edit.set('entry_type', e.target.value)}
-        aria-label="Which shelf this came off"
-      >
-        <option value="">Shelf —</option>
-        <option value="Personal Library">Library</option>
-        <option value="Submission">Submission</option>
-      </select>
+      {SHELVES.map(shelf => (
+        <button
+          key={shelf.value}
+          type="button"
+          className={'ln-flag' + (edit.draft.entry_type === shelf.value ? ' ln-flag--on' : '')}
+          onClick={() => edit.set('entry_type', edit.draft.entry_type === shelf.value ? '' : shelf.value)}
+          aria-pressed={edit.draft.entry_type === shelf.value}
+        >
+          {shelf.label}
+        </button>
+      ))}
     </span>
   );
 

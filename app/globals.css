@@ -2247,26 +2247,6 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 .ln-flag:hover { color: var(--ink); border-color: var(--ink-faint); }
 .ln-flag--on { color: var(--bg); background: var(--ink); border-color: var(--ink); }
 
-/* Entry type and what kind of listen it was. Filing rather than writing, so
-   they are set in the same face as the chips they stand in for and sit on the
-   same row — a select that looked like a form control would be the only thing
-   on this page that did. */
-.ln-select {
-  appearance: none;
-  -webkit-appearance: none;
-  padding: 4px 10px;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  background: transparent;
-  font-family: var(--font-label);
-  font-size: 9px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--ink);
-  cursor: pointer;
-}
-.ln-select:hover { border-color: var(--ink-faint); }
-
 /* ── Replacing the cover ────────────────────────────────────────────────────
    The art is the control. Press it while a correction is open and the address
    under it opens — same rule as everything else in this editor, where the
@@ -3021,9 +3001,14 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   /* A panel in the middle is a desktop idiom; on a phone it wants to be under
      the thumb. */
   .ab-pin-sheet {
-    top: auto; bottom: 0; left: 0; right: 0;
+    top: auto; left: 0; right: 0;
     transform: none; width: auto;
-    max-height: 82vh;
+    /* Both of these are written by About.js from visualViewport while the
+       sheet is open — how much of the bottom the keyboard is covering, and how
+       much screen is left above it. The fallbacks are the no-keyboard case and
+       are what a browser without visualViewport gets. */
+    bottom: var(--ab-pin-lift, 0px);
+    max-height: calc(min(var(--ab-pin-room, 100dvh), 100dvh) - 72px);
     border-radius: 20px 20px 0 0; border-bottom: none;
     padding: 16px 20px calc(16px + env(safe-area-inset-bottom));
     animation: abPinSlide 0.22s ease;
