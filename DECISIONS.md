@@ -297,10 +297,13 @@ removes the entry's comments and clears the chain links pointing at it before
 removing the row. The alternative was a warning long enough to explain the mess
 it was about to leave, which is a worse answer than not leaving one.
 
-What the warning still says, because these are true and unfixable: it is
-permanent, the only copies are the nightly backup and Neon's six hours, the
-comments go with it, and an album received from this one keeps its entry and
-loses that link.
+**The warning is two sentences: it deletes this album permanently, and it can
+only be undone by restoring a backed up copy.** It said four. The other two were true
+of the database rather than of anything a reader would recognise — what happens
+to comment rows, and what a broken source link means — and nobody should have
+to understand the schema to be warned about losing an album. Both are handled
+by the delete itself now, which is a better place for a consequence than a
+paragraph.
 
 **Everything editable is edited where it prints.** The link rows and the rig
 rows were fields on the card for things that appear a screen below it, which is
