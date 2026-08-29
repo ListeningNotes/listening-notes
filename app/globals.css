@@ -1955,40 +1955,287 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 .beacon-recent-tile:nth-child(2) { opacity: 0.46; filter: saturate(0.48); transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease, filter 0.4s ease; }
 .beacon-recent-tile:nth-child(3) { opacity: 0.32; filter: saturate(0.32); transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease, filter 0.4s ease; }
 
-/* ── FlipTile — the archive grid's album tile ──────────────────────────────
-   Two behaviours in one component (see FlipTile.js): on desktop it's a
-   still tile with a hover wash that opens EntryModal, on a phone it turns
-   over to its metadata card.
+/* Wide screens read the hero instead; this shape is the phone's. It sits out
+   here with the rest of them so that the layer's stand-in obeys it too — left
+   in the entry page's own stylesheet, a fallback on a wide window drew a full
+   phone screen nobody asked for. */
+.ln-screen-one { display: none; }
 
-   Only .ft-inner rotates, and each face carries its own border-radius +
-   overflow. Putting the clipping on the rotating box instead is what tears
-   the rounded corners off in iOS Safari — the same class of bug the
-   .strip-tile notes above describe. */
+/* ── The card, and the screen under it ─────────────────────────────────────
+   The two-screen shape an entry is read in on a phone: a screen of album that
+   holds still, and a screen of writing below it that scrolls inside itself.
+
+   These lived in a <style> block inside FullPostPage, which was fine while
+   that component was the only thing that drew them. It is not any more: the
+   layer shows this same first screen, with the cover the journal already had,
+   for the few hundred milliseconds before the entry itself arrives — and a
+   stylesheet that only exists once its own component has rendered is no use to
+   the thing standing in for that component. The fallback drew unstyled boxes
+   and the page jumped 270px when the real one replaced them.
+
+   So they live here, where the rest of the .ln-* family already lives. See
+   LayerWaiting, which is the other thing that draws them. */
+@media (max-width: 768px) {
+.ln-screens {
+  height: 100dvh;
+  overflow-y: auto;
+  scroll-snap-type: y mandatory;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  overscroll-behavior-y: none;
+}
+.ln-screen-one {
+  height: 100dvh;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+
+.ln-screen-one {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  min-height: 100dvh;
+  box-sizing: border-box;
+  /* clears the fixed logo row and the dot labels beneath it */
+  padding: 172px 24px 0;
+  gap: 16px;
+}
+.ln-screen-one-art {
+  /* Sized off viewport HEIGHT as well as width. A width-only size
+     overflowed once Safari's chrome was showing — the chips and the
+     scroll cue ended up under the address bar — and a long title
+     pushed it further still. Squaring to the smaller of the two
+     shrinks the art on a short screen instead of losing the bottom
+     of the page, and flex-shrink lets it give up more if it has to. */
+  height: min(40dvh, 78vw);
+  width: auto;
+  aspect-ratio: 1 / 1;
+  flex-shrink: 1;
+  min-height: 0;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid var(--panel-border);
+  box-shadow: var(--shadow-lift);
+}
+.ln-screen-one-art img {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+}
+.ln-screen-one-title {
+  font-family: var(--font-display);
+  font-size: clamp(1.6rem, 6.6vw, 2.1rem);
+  font-weight: var(--font-display-weight);
+  /* 1.1 packed the two rows so tightly that overflow:hidden sliced
+     the bottom off the second one — parentheses and descenders sit
+     below the line box at this size, and "TV Animation BLEACH
+     (Original Soundtrack 3)" lost the underside of its brackets.
+     The extra leading plus a little padding gives them somewhere to
+     go without letting a third row through. */
+  line-height: 1.22;
+  padding-bottom: 0.1em;
+  color: var(--ink);
+  /* Two rows at most. "Salvation Laughs in the Face of a Grieving
+     Mother" ran to three at full size and shoved the rating, the
+     chips and the scroll cue off the bottom of the screen. */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+.ln-screen-one-artist {
+  font-family: var(--font-label);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin-top: -8px;
+}
+}
+
+/* ── The layer ─────────────────────────────────────────────────────────────
+   An entry over the journal. Fixed and opaque and the full screen, because it
+   is not a card floating on the wall — it is the record, and the wall is
+   simply still there underneath, holding its place.
+
+   It slides in from the right because that is where things arrive from, not
+   because right means entry. The cross has three directions with one meaning
+   each; a fourth that depended on which row you were in would be a mode. */
+.lay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: var(--bg);
+  /* On a wide screen the entry flows down the document, so this is what
+     scrolls it. On a phone it must not be: see the note below, which is the
+     whole of why the scrolling felt broken. */
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  /* Vertical panning belongs to the browser, horizontal to the swipe handler
+     in LayerEntry. Saying so removes the decision the browser would otherwise
+     have to make at the start of every gesture — and that decision, made while
+     a JS handler is also watching, is the other half of why a swipe had to be
+     made twice. */
+  touch-action: pan-y;
+  /* Slow, and slowing down as it lands. This is a page being pulled off a
+     shelf rather than a panel being snapped into place — the first version was
+     260ms on a sharp curve and read as a state change. */
+  animation: layIn 0.46s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+@keyframes layIn {
+  from { transform: translateX(100%); }
+  to   { transform: none; }
+}
+/* While a finger has hold of it the transform is written inline, frame by
+   frame, so it tracks 1:1 rather than easing along behind. */
+.lay--dragging { animation: none; }
+/* And when the finger lets go, it either springs back or finishes leaving.
+   Matched to the way in, so the page does not arrive gently and then snap. */
+.lay--settling { animation: none; transition: transform 0.32s cubic-bezier(0.22, 0.61, 0.36, 1); }
+
+@media (prefers-reduced-motion: reduce) {
+  .lay { animation: none; }
+  .lay--settling { transition: none; }
+}
+
+/* ── Why this must not be a scroll container on a phone ────────────────────
+   The entry's phone layout is already two scroll containers deep: .ln-screens
+   holds the two snap screens, and .ln-screen-two-scroll holds the notes inside
+   the second one. A scrolling box around both makes three, and the third one
+   breaks the other two.
+
+   It never scrolls — its content is exactly one viewport tall — but a scroll
+   container that cannot move is worse than one that can. It draws its own
+   scrollbar, which is the second bar overlapping the first. And it sits in the
+   scroll chain carrying overscroll-behavior: contain, so every gesture that
+   reaches the end of an inner scroller is handed out to a box that cannot take
+   it and is then refused passage: the scroll dies there. That is the freeze on
+   the second screen, and it is why a swipe had to be made twice — the first
+   one was absorbed at this boundary and sprang back.
+
+   `overflow: hidden` is NOT the fix and was tried first. Hidden still creates
+   a scroll container; it only takes the scrollbar away, so the chain still
+   ended here and only the visible half of the symptom went. It has to be
+   `visible` — genuinely not a scroll container — and then the layer is just a
+   box and .ln-screens does the scrolling it was written to do. Nothing
+   overflows it, because screen one and screen two are each exactly one
+   viewport tall. */
+@media (max-width: 768px) {
+  .lay {
+    overflow: visible;
+    overscroll-behavior: auto;
+  }
+}
+
+/* The strip the back-pull starts in. Invisible, full height, a thumb's width,
+   pinned to the left edge — the same place and the same idea as the system
+   gesture it borrows from.
+
+   touch-action: none is the whole point of it. Everywhere else on the layer
+   the browser owns vertical panning, which is what let a slightly-diagonal
+   back-swipe scroll the page down while the swipe handler was still deciding.
+   In here the browser does not pan at all, so a gesture that starts on this
+   strip can only be one thing.
+
+   36px: Apple's own edge gesture is about this wide, it is comfortably inside
+   the thumb's arc on the side people hold, and it is narrow enough that
+   nothing on the entry is hard to reach past it. */
+/* What stands in for the entry while it is being read. Shaped like the first
+   screen it becomes, so the swap is a picture arriving in a frame rather than
+   the page changing shape. The numbers are .ln-screen-one's numbers. */
+.lay-wait {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 100dvh;
+  box-sizing: border-box;
+  padding: 172px 24px 0;
+  gap: 16px;
+}
+/* --border, not --bg-warm. Warm is #efebe2 against a #eef0ec page: four
+   points apart, which on a phone in daylight is nothing at all, and the layer
+   read as having arrived empty. This is ink at eight percent — quiet, but
+   unmistakably something. */
+.lay-wait-art {
+  height: min(40dvh, 78vw);
+  width: auto;
+  aspect-ratio: 1 / 1;
+  flex-shrink: 1;
+  min-height: 0;
+  border-radius: 16px;
+  background: var(--border);
+}
+.lay-wait-line {
+  height: 1em;
+  border-radius: 6px;
+  background: var(--border);
+}
+.lay-wait-line--title { width: min(62%, 300px); height: 1.9rem; margin-top: 6px; }
+.lay-wait-line--byline { width: min(38%, 190px); height: 0.9rem; }
+/* Breathing rather than sweeping. A shimmer that travels reads as a progress
+   bar and invites you to watch it; this just says the page is alive. */
+.lay-wait-art,
+.lay-wait-line { animation: layWait 1.6s ease-in-out infinite; }
+/* A wider swing than the first version's, for the same reason the fill got
+   darker: the point of it is to be seen. */
+@keyframes layWait {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.35; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lay-wait-art,
+  .lay-wait-line { animation: none; }
+}
+
+/* The way back to the top of a piece of reading. Sized and coloured like the
+   arrow half of an EdgeCaret, because that is what it is — the same family
+   with nothing over it, since the place it lands is the place you are. */
+.ln-totop {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 0;
+  border-radius: 9px;
+  background: none;
+  color: var(--ink-faint);
+  opacity: 0.6;
+  cursor: pointer;
+  transition: color 0.2s ease, opacity 0.2s ease;
+}
+.ln-totop:hover { color: var(--ink); opacity: 1; }
+
+.lay-edge {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 36px;
+  z-index: 205;
+  touch-action: none;
+}
+
+/* ── AlbumTile — the journal wall's album ──────────────────────────────────
+   A cover and a link to the record it is of. It used to be FlipTile, which
+   turned over on a phone to show a metadata card and opened a modal on a
+   desktop; both were ways of finding out more about a record without leaving
+   the wall, and the layer does that better than either — see app/@layer.
+
+   The `perspective` that made the turn possible is gone with it, and that is
+   worth a line of its own: perspective promotes every tile it is set on into
+   its own compositing layer, and those layers painted straight over the fixed
+   nav's backdrop. Album art scrolling through the logo was this property. */
 .ft {
   position: relative;
+  display: block;
   aspect-ratio: 1 / 1;
-  perspective: 900px;
   cursor: pointer;
+  text-decoration: none;
+  color: inherit;
   -webkit-tap-highlight-color: transparent;
 }
-.ft-inner {
-  position: absolute;
-  inset: 0;
-  transform-style: preserve-3d;
-  /* Slow enough to read as a card being turned over rather than a state
-     swap — the turn is most of what sells this, so it gets the time. */
-  transition: transform 0.72s cubic-bezier(0.4, 0, 0.2, 1);
-}
-/* will-change ONLY on the card that's actually turned over, never on the
-   whole grid. Blanket will-change put all 34 tiles on their own compositing
-   layers, and those layers painted straight over the fixed nav's backdrop —
-   album art scrolled through the logo and the dot labels. One card at a
-   time is also the state that needs it: face-up there's no 3D transform to
-   tear, face-down there is (see the .strip-tile notes above). */
-.ft--flipped .ft-inner {
-  transform: rotateY(180deg);
-  will-change: transform;
-}
+.ft-inner { position: absolute; inset: 0; }
 
 .ft-face {
   position: absolute;
@@ -1996,19 +2243,9 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   border-radius: 10px;
   overflow: hidden;
   background: var(--bg-warm);
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
 }
-.ft-face--back { transform: rotateY(180deg); }
 
 .ft-art { width: 100%; height: 100%; object-fit: cover; display: block; }
-/* The back face keeps the album's own art behind the metadata, blurred, so
-   the card still belongs to the record it came from — and mirrored on the
-   same axis the card turns on, the way the back of a real card would be.
-   The negative X scale is what makes the turn read as one object rotating
-   rather than two images cross-fading. The metadata on top is a separate
-   element, so it stays the right way round. */
-.ft-art--blurred { filter: blur(7px); transform: scale(-1.12, 1.12); }
 
 .ft-placeholder {
   width: 100%; height: 100%;
@@ -2019,9 +2256,9 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   color: var(--ink-faint);
 }
 
-/* Lift only where there's a pointer to hover with — on a phone the tile's
-   job is to turn over, and a hover state left stuck on after a tap looks
-   like the tile is still selected. */
+/* Lift only where there is a pointer to hover with. On a phone a hover state
+   left stuck on after a tap looks like the tile is still selected — and the
+   wash says which record this is, which is a question only a cursor asks. */
 @media (hover: hover) {
   .ft { transition: transform 0.18s ease, box-shadow 0.18s ease; }
   .ft:hover { transform: translateY(-3px); box-shadow: var(--shadow-lift); }
@@ -2702,6 +2939,18 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   scrollbar-width: none;
 }
 .hn-rail::-webkit-scrollbar { display: none; }
+/* There is no rail lock, and there was one for a few hours. It toggled
+   overflow-x on the rail whenever a pane passed eight pixels of scroll — a
+   change to a scroll container's own overflow, made in the middle of a scroll,
+   every time you crossed that line near the top of a pane. It stopped the
+   scroll dead, and it is why this branch scrolled worse than main did.
+
+   The thing it was for — not sliding sideways out of a pane's lower half —
+   is real and still unsolved. Three attempts at it all made the cross worse
+   than leaving it alone: touch-action on the rail (ignored by Safari for a
+   container's own axis), overflow-x (this), and a hand-rolled drag in edge
+   strips (worse than the browser's own scrolling, which is the usual result
+   of reimplementing momentum). It wants designing rather than patching. */
 
 .hn-pane {
   flex: 0 0 100%;

@@ -29,8 +29,7 @@
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { parseRating } from '../../library/entry_formatter';
-import EntryModal from './EntryModal';
-import FlipTile from './FlipTile';
+import AlbumTile from './AlbumTile';
 import GridDensity, { DEFAULT_DENSITY, readStoredDensity, storeDensity } from './GridDensity';
 
 // Beyonce should find Beyoncé, and Bjork should find Bjork. Accents are a
@@ -91,8 +90,12 @@ export default function Journal({ entries: given, loading: givenLoading, scrolle
   const supplied = Array.isArray(given);
   const entries = supplied ? given : ownEntries;
   const loading = supplied ? Boolean(givenLoading) : ownLoading;
-  const [modalSlug, setModalSlug] = useState(null);
-  const [flippedSlug, setFlippedSlug] = useState(null);
+  // Neither a flipped tile nor an open modal is state this holds any more.
+  // A cover is a link to its entry, and the entry arrives as a layer over this
+  // grid — see app/@layer. What used to live here was two different answers to
+  // one question: on a phone the tile flipped to a metadata card, and on a
+  // desktop it opened EntryModal, a second copy of the entry's layout drawn
+  // over the top with the URL pushed in by hand.
 
   const [search, setSearch] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);
@@ -156,11 +159,6 @@ export default function Journal({ entries: given, loading: givenLoading, scrolle
       .then(d => { setOwnEntries(d.entries || []); setOwnLoading(false); })
       .catch(() => setOwnLoading(false));
   }, [supplied]);
-
-  // Turning every card face-up on a layout change: a card mid-flip while
-  // the grid resizes around it reads as a glitch, and a filter change can
-  // pull the flipped album out of the results entirely.
-  useEffect(() => { setFlippedSlug(null); }, [density, isPhone]);
 
   const changeDensity = useCallback(value => {
     setDensity(value);
@@ -389,11 +387,6 @@ export default function Journal({ entries: given, loading: givenLoading, scrolle
   useEffect(() => {
     if (!filtersOpen) { setDrag(0); setSettling(false); dragFromRef.current = null; }
   }, [filtersOpen]);
-
-  function handleTile(slug) {
-    if (isPhone) setFlippedSlug(prev => (prev === slug ? null : slug));
-    else setModalSlug(slug);
-  }
 
   return (
     <>
@@ -720,14 +713,7 @@ export default function Journal({ entries: given, loading: givenLoading, scrolle
         ) : (
           <div className="arc-grid" data-density={density}>
             {shown.map(e => (
-              <FlipTile
-                key={e.slug}
-                entry={e}
-                mode={isPhone ? 'flip' : 'modal'}
-                density={density}
-                flipped={flippedSlug === e.slug}
-                onSelect={() => handleTile(e.slug)}
-              />
+              <AlbumTile key={e.slug} entry={e} density={density} />
             ))}
           </div>
         )}
@@ -953,9 +939,6 @@ export default function Journal({ entries: given, loading: givenLoading, scrolle
           </div>
         </>
       )}
-
-
-      {modalSlug && !isPhone && <EntryModal slug={modalSlug} references={entries} onClose={() => setModalSlug(null)} />}
     </>
   );
 }
