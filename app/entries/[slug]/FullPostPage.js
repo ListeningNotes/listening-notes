@@ -246,9 +246,6 @@ export default function FullPostPage({ entry, references = [] }) {
   // handed the bucket back — until now nothing on the page ever asked for it,
   // so there was no way to leave one and nothing would have shown it.
   const albumComments = commentsByTrack['-1'] || [];
-  // Everything anybody has said on this entry, for the delete warning to be
-  // able to say how much of it goes.
-  const commentCount = Object.values(commentsByTrack).reduce((n, list) => n + list.length, 0);
 
   // Load the thread for this entry. Posts rather than gets, and sends along
   // whatever receipts this browser is holding: the reply carries the approved
@@ -854,20 +851,16 @@ export default function FullPostPage({ entry, references = [] }) {
               </button>
             ) : (
               <div className="ln-danger-ask">
+                {/* Two sentences. It said four, and the other two were true
+                    of the database rather than of anything a reader would
+                    recognise — what happens to comment rows, and what a broken
+                    source link means. Nobody should have to understand the
+                    schema to be warned about losing an album.
+                    Both of those are handled by delete_entry now anyway, which
+                    is the better place for a consequence than a paragraph. */}
                 <p className="ln-danger-warn">
-                  This deletes <strong>{entry.album}</strong> permanently. There is no undo —
-                  the only copies are the nightly backup and the last six hours of database
-                  history.
-                </p>
-                <p className="ln-danger-warn">
-                  {/* Every comment on the entry, album and tracks together —
-                      commentsByTrack already holds the album's under -1, so
-                      counting those separately counts them twice. */}
-                  {commentCount > 0 && (
-                    <>Its {commentCount} {commentCount === 1 ? 'comment goes' : 'comments go'} with it. </>
-                  )}
-                  Any album you logged as received from this one keeps its entry and loses
-                  that link.
+                  This deletes <strong>{entry.album}</strong> permanently. It can only be
+                  undone by restoring a backed up copy.
                 </p>
                 <div className="ln-danger-row">
                   <button
