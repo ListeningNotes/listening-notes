@@ -66,14 +66,29 @@ The cross is built and merged. What is left of it:
 
 - [ ] **`usePlaceKeeper`** — pane index and per-pane scroll offset, kept across a route change. Swiping between panes already remembers itself (they stay mounted); going out to an entry and back does not, because browsers do not restore nested scroll containers.
 - [ ] **`useShake` + `firework()`** — shake the phone, a firework goes up, then `/shuffle`. The Surprise pill stays where it is.
-- [ ] **Delete the dead `.hp-*` homepage CSS.** `.hp-mobile-screens`, `.hp-screen--one`, `.hp-screen--two` and everything under them — nothing renders those class names any more. Four rules inside them did real work and are already restated against `.hn`; the rest is roughly 300 lines that can go. Left in place deliberately so the restructure could be reviewed without a find-and-replace on the beacon.
+- [ ] **A CSS cleanup pass, once the cross has shipped and settled.** Not a rewrite — one section at a time: delete, look at the site, commit. The reason to wait is that each of these removals makes the next lot of dead rules obvious, and doing it all at once means not knowing which deletion broke what.
+
+      What is already known to be dead or nearly dead:
+      - `.hp-mobile-screens`, `.hp-screen--one`, `.hp-screen--two` and everything under them — roughly 300 lines, nothing renders those names. Four rules inside them did real work and are already restated against `.hn`.
+      - Whatever the card flip left behind.
+      - Whatever the two duplicate homepage trees left behind.
+      - The mini beacon's remains are already gone, taken out with it on 2026-08-29 — `.beacon-mini-*`, `.marquee-*` and `.beacon-track-clip`, about seventy lines.
 - [ ] **A QR on the pitch pane.** DECISIONS already settles that the right pane produces a fixed code to `/get`, the same on every copy. Not built, and the "logo made of the QR" idea is unresolved.
 - [ ] **`settings.bio` now has no reader and no writer.** Deliberate — see DECISIONS. The value is still in the database. Decide at the welcome screen whether the column gets a job or gets dropped, while the schema is still a draft.
 - [ ] **`/rig` is still a forwarding stub**, and by the same argument that deleted `/why` it may not have earned one: three days live, linked from a card, on a site nobody else runs. `/about` genuinely did earn its stub. Worth one decision rather than two defaults.
 - [ ] **Compare wants two homes** — one on an individual album, for comparing that record against another, and one on the About pane for comparing the collection overall. It is reachable from neither today; the route works if you type it.
 - [ ] **Surprise (`/shuffle`) has no way in.** Work in progress by decision — the shake is the intended gesture and is not built. See DECISIONS.
 
-**THE HEADER** — briefed 2026-08-28, not started. See DECISIONS for the shape.
+**PARKED** — decided, deliberately not being built yet
+
+- [ ] **Tap-to-QR on album art.** Tapping the art swaps it for a QR of that entry's URL and silently copies the link. It needs a brief "link copied" line: a clipboard write with no feedback reads as broken.
+
+      The previous attempt worked and was sluggish, because verification ran on mount. Three things fix it when it comes back:
+      - Build on tap, not on mount.
+      - Cache the winning QR version and tonal band on the entry, so later builds skip decoding entirely.
+      - Do it server-side. iTunes sends no CORS headers, so a browser canvas cannot read album art pixels at all.
+
+**THE HEADER** — briefed 2026-08-28, mostly built on branch `one-header`. See DECISIONS for the shape.
 
 - [ ] **One header everywhere**: mark centred, one control each side, the same
       arrangement the About card uses. Today the header changes shape between
@@ -224,6 +239,23 @@ Project → Settings → Environment Variables.
 
 Things that cost real time. Each one is here because it was not obvious and
 will not be obvious again in six months.
+
+**CSS is not "last rule wins."** Specificity decides first and source order
+only breaks ties — `.card` beats `div`, `#hero` beats `.card`, and an inline
+style beats both. This is why deleting a rule sometimes changes something
+nowhere near it: the rule was not winning on order, and taking it away promoted
+a different one.
+
+Three signs a stylesheet wants a pass, all of them the same sign: reaching for
+`!important`, writing a more specific selector to beat one written last month,
+or being afraid to delete a rule because you cannot tell what it holds up.
+
+**Grep is the wrong test for whether a database column is in use.** A column
+can hold real data that nothing currently reads — unread is not unused. This is
+already written down in DECISIONS and is repeated here because the guardrail
+existed and got walked past once anyway. `git rm` on a file is recoverable from
+history; `DROP COLUMN` is not recoverable from anything but a backup. Read the
+values before deciding, and take a backup either way.
 
 **Touching rectangles count as intersecting.** A pane parked by scroll snapping
 sits exactly edge to edge — `left: -444, right: 0` against a viewport starting
