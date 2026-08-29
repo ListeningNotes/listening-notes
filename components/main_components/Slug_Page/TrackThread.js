@@ -10,7 +10,7 @@ import { editStamp } from '../../../library/entry_formatter';
 // `note` is the track's own note with any cross-references already turned
 // into links — see FullPostPage for why the linking happens up there and not
 // here. Falls back to the plain text so the component still stands alone.
-export default function TrackThread({ track, note, trackIndex, slug, commentsByTrack, onRefresh }) {
+export default function TrackThread({ track, note, trackIndex, slug, commentsByTrack, onRefresh, editing = false, onNote }) {
   // Under this track's note, if this track's note has been rewritten. Stored
   // on the track itself rather than on the entry — see the stamps in
   // update_entry — so a typo fixed in track two marks track two and says
@@ -38,10 +38,23 @@ export default function TrackThread({ track, note, trackIndex, slug, commentsByT
       {/* The note carries no border of its own — the row's own bottom border
           already closes the track off, and having both drew two lines a few
           pixels apart. */}
-      {track.note && (
+      {/* While editing, every track gets a field whether or not it had a note:
+          a track you never wrote about is exactly the one you might want to,
+          and a row with nothing to type into is a row that says you cannot. */}
+      {editing ? (
+        <textarea
+          className="ln-write ln-write--track"
+          value={track.note || ''}
+          onChange={e => onNote?.(e.target.value)}
+          onInput={e => { e.currentTarget.style.height = 'auto'; e.currentTarget.style.height = `${e.currentTarget.scrollHeight}px`; }}
+          ref={el => { if (el) { el.style.height = 'auto'; el.style.height = `${el.scrollHeight}px`; } }}
+          placeholder="Nothing yet"
+          aria-label={`Note on ${track.title}`}
+        />
+      ) : track.note ? (
         <p style={{ fontSize: '13px', lineHeight: 1.8, color: 'var(--ink-soft)', marginBottom: '6px', whiteSpace: 'pre-wrap' }}>{note ?? track.note}</p>
-      )}
-      {edited && <p className="ln-edited">Edited {edited}</p>}
+      ) : null}
+      {edited && !editing && <p className="ln-edited">Edited {edited}</p>}
 
       {/* The way in, at the end of the note you've just read. Lives in
           CommentBubble now, which the album notes share — see the note at the

@@ -72,7 +72,11 @@ The cross is built and merged. What is left of it:
 - [ ] **`/rig` is still a forwarding stub**, and by the same argument that deleted `/why` it may not have earned one: three days live, linked from a card, on a site nobody else runs. `/about` genuinely did earn its stub. Worth one decision rather than two defaults.
 - [ ] **Compare wants two homes** — one on an individual album, for comparing that record against another, and one on the About pane for comparing the collection overall. It is reachable from neither today; the route works if you type it.
 - [ ] **Surprise (`/shuffle`) has no way in.** Work in progress by decision — the shake is the intended gesture and is not built. See DECISIONS.
-- [ ] **Move entry editing onto the entry**, and retire `/dashboard/entries`. See DECISIONS. Three parts worth knowing before starting: the per-track ratings and notes are most of the modal and want to be inline on the tracklist the page already draws; the discovery-chain fields (`source_entry_id`, `received_from`, `received_date`) are private and must render only behind the wristband; and delete has to come with it, since nothing else calls it.
+- [ ] **Entry editing, continued.** The writing is done — `hooks/useEntryEditor.js`, with the album note and every track note editable in place. What is left:
+  - [ ] The header fields: album, artist, year, genre, rating, and the three flags. They print in two places (the phone hero and the desktop hero), so the fields do too.
+  - [ ] Delete, at the foot of edit mode, behind a second confirmation — and the cleanup, since a bare `DELETE` orphans comments and breaks chains. See the entry below.
+  - [ ] The discovery-chain fields. `pull_entry_by_slug` strips them before the page sees them, so they cannot be seeded from the entry it was handed; they need an owner-only read first, and until then they stay in the dashboard.
+  - [ ] Retire `/dashboard/entries` once the three above are in — nothing else calls the delete route.
 **DO THIS BEFORE EDITING AN ENTRY — the column is not on the live database:**
 
 ```sql

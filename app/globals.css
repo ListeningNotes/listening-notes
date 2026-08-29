@@ -2303,6 +2303,33 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   pointer-events: none;
 }
 
+/* A note being written, in the place the note is read. Set in the type the
+   note prints in, so the field is the paragraph with a caret in it rather than
+   a form control standing where a paragraph was — the rule underneath is the
+   only thing that says it can be typed into.
+   It grows in script (see grow() in FullPostPage.js); resize would put a drag
+   handle in the corner of somebody's writing. */
+.ln-write {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  padding: 0 0 8px;
+  margin-bottom: 6px;
+  background: transparent;
+  font-family: inherit;
+  font-size: 15px;
+  line-height: 1.95;
+  color: var(--ink);
+  resize: none;
+  overflow: hidden;
+}
+.ln-write:focus { outline: none; border-bottom-color: var(--ink-faint); }
+.ln-write::placeholder { color: var(--ink-faint); }
+/* A track's note is set smaller than the album's, and its field follows. */
+.ln-write--track { font-size: 13px; line-height: 1.8; color: var(--ink-soft); }
+
 /* An edit stamp, printed under the piece of writing it belongs to — a track's
    note, or the album note. Never at the top of an entry: one date on a post
    says only that something moved, where a date under track two says what. It
