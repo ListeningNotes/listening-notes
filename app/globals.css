@@ -2933,24 +2933,7 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   height: 100dvh;
   overflow-x: auto;
   overflow-y: hidden;
-  /* proximity, not mandatory. Mandatory means the rail must always come to
-     rest on a pane, so it commits to the horizontal axis the moment a gesture
-     looks even slightly sideways — and a swipe up from the top of a pane
-     nearly always does. It engaged, found it could not move (it was already on
-     a snap point, and overscroll-behavior-x contains it), sprang back, and
-     spent the gesture. That is the scroll that sticks at the top of a pane and
-     then works on the second try.
- 
-     Proximity only snaps when the rail is already near a pane's edge, so a
-     vertical gesture is left alone. The cross still lands cleanly on a pane
-     when you actually swipe sideways, because a real sideways swipe ends near
-     one.
- 
-     If this is not enough, the next step is the layer's answer — edge strips
-     with touch-action: none, and the pane body vertical-only. That removes the
-     ambiguity rather than reducing it, at the cost of swiping from the middle
-     of the screen. */
-  scroll-snap-type: x proximity;
+  scroll-snap-type: x mandatory;
   overscroll-behavior-x: contain;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
@@ -3043,46 +3026,6 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 
 /* Everything under it. Not a snap point: a snap here would mean wanting three
    more lines of the wall got you a whole page of it instead. */
-/* ── A pane is two screens ─────────────────────────────────────────────────
-   The card, and the screen under it. Same shape as an entry — see
-   .ln-screens — and for the same reason: a pane that is one long scroll has
-   no boundary for a snap to catch, so going down reads as scrolling rather
-   than as arriving somewhere.
-
-   proximity rather than mandatory, on the same argument as the rail above it.
-   Mandatory would commit to the vertical axis the moment a gesture looked
-   slightly upward, which is the fight this is meant to end rather than move.
-   Both halves are exactly one viewport tall, so proximity has an unambiguous
-   thing to land on either way. */
-.hn-pane {
-  scroll-snap-type: y proximity;
-}
-.hn-top,
-.hn-under {
-  height: 100dvh;
-  scroll-snap-align: start;
-  scroll-snap-stop: always;
-}
-.hn-top {
-  box-sizing: border-box;
-  display: flex;
-  flex-direction: column;
-}
-/* The reading scrolls in here rather than moving the pane, which is what keeps
-   both screens exactly one viewport tall however long the wall runs. Without
-   it the pane would be as tall as the journal and the snap would have a
-   thousand pixels of nothing to choose between. */
-.hn-under-scroll {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  /* auto, not contain. Containing it is what makes the card unreachable: at
-     the top of the wall, refusing to hand the scroll back means pulling down
-     does nothing at all. Letting it chain is what carries you back up. */
-  overscroll-behavior-y: auto;
-}
-
 .hn-under {
   min-height: 100dvh;
   box-sizing: border-box;
