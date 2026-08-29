@@ -411,20 +411,7 @@ export default function HomeNav() {
     <div className="hn">
       {header}
 
-      {/* Once you are downstairs the rail stops taking sideways gestures.
-           The carets already hid themselves down there, on the argument that a
-           control pointing at a pane you cannot see is noise — but hiding the
-           sign while leaving the door open is the worse half of the deal, and
-           swiping between panes from halfway down somebody's writing lands you
-           in an unrelated pane at an unrelated scroll position with no memory
-           of how you got there.
- 
-           Blocked with touch-action rather than by taking the overflow away:
-           overflow-x: hidden on a scrolled container snaps it back to zero, so
-           going down a pane would slide the cross back to the card. This lets
-           vertical through and refuses horizontal, and the rail keeps its
-           place. */}
-      <div className={'hn-rail' + (down[pane] ? ' hn-rail--held' : '')} ref={railRef}>
+      <div className="hn-rail" ref={railRef}>
         <section className="hn-pane" ref={paneRefs[0]} aria-label="About this journal">
           {crown}
           <About stamps={stamps} authed={authed} pinned={pinned} entries={entries} />
