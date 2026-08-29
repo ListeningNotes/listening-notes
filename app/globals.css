@@ -2353,6 +2353,41 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 .ln-flag:hover { color: var(--ink); border-color: var(--ink-faint); }
 .ln-flag--on { color: var(--bg); background: var(--ink); border-color: var(--ink); }
 
+/* ── Where an entry came from ───────────────────────────────────────────────
+   The private half, shown only while its keeper is correcting the entry. It is
+   labelled as private on the page rather than only in the code, because the
+   one thing somebody needs to know before typing a friend's name into a
+   journal is who else will see it. */
+.ln-chain {
+  margin-top: 48px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 34em;
+}
+.ln-chain-head {
+  margin: 0;
+  font-family: var(--font-label);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.ln-chain-row { display: flex; align-items: baseline; gap: 12px; }
+.ln-chain-label {
+  flex: 0 0 84px;
+  font-family: var(--font-label);
+  font-size: 8.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.ln-chain-row .ln-field { flex: 1; min-width: 0; font-size: 13px; }
+.ln-chain-row select.ln-field { appearance: none; -webkit-appearance: none; }
+.ln-chain-row select.ln-field:disabled { color: var(--ink-faint); }
+
 /* ── Deleting an entry ──────────────────────────────────────────────────────
    At the very foot of the page, and only while a correction is open. Not in
    the bar beside Save: they are not the same weight, and a destructive control
