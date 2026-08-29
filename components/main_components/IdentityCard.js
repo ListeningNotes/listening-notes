@@ -251,7 +251,7 @@ function AddressCode({ text }) {
 // `edit` is handed in rather than made here. The prompts print on the About
 // pane below this card and are edited there, and one edit session cannot be
 // two instances of the hook — so the pane owns it and the card is given it.
-export default function IdentityCard({ stamps, authed = false, edit, pinned = null }) {
+export default function IdentityCard({ stamps, authed = false, edit, pinned = null, onPickPin }) {
   const settings = useBookplate();
   const {
     cover_name,
@@ -884,6 +884,14 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
         @media (prefers-reduced-motion: reduce) {
           .idc-pin:hover .idc-pin-art { transform: none; }
         }
+        /* The same row as a button. A button carries its own padding, border,
+           background and text alignment, and left alone it would sit a few
+           pixels off the link it replaces — which is a row that moves when you
+           press Edit. */
+        .idc-pin--pick {
+          padding: 0; border: 0; background: transparent;
+          text-align: left; font: inherit; cursor: pointer;
+        }
 
 
         /* The one control that is an action rather than a door, and the reason
@@ -1198,26 +1206,49 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
             One, and the shape is the rule rather than a check: pinned_entry_id
             is a single column, so pinning a second unpins the first, and its
             foreign key clears the pin if the entry is ever deleted.
-            Chosen on the entry itself and never here; see the pin in
-            app/entries/[slug]/FullPostPage.js. */}
-        {pinned && (
+            Chosen here, from the card's own editor, because pinned_entry_id
+            is a settings column like every other field on this card. It was
+            pinned from the entry for one afternoon, on the argument that you
+            recognise a record where you would have to remember it — true, and
+            not worth an admin button sitting in the middle of the reading.
+
+            While a correction is open the row is a button rather than a link:
+            the same art and the same two lines, but pressing it opens the
+            search instead of going to the album. And it prints even when
+            nothing is pinned, which it does not otherwise — an empty row is
+            how an owner finds out the card can hold one at all. */}
+        {(pinned || editing) && (
           <p className="idc-line idc-pin-row">
             <span className="idc-line-label">Pinned album</span>
-            <Link
-              href={`/entries/${pinned.slug}`}
-              className="idc-pin"
-              aria-label={`${pinned.album} — ${pinned.artist}`}
-            >
-              <span className="idc-pin-art">
-                {pinned.album_art
-                  ? <img src={pinned.album_art} alt="" />
-                  : <span className="idc-pin-none" aria-hidden="true">♪</span>}
-              </span>
-              <span className="idc-pin-said">
-                <span className="idc-pin-album">{pinned.album}</span>
-                <span className="idc-pin-artist">{pinned.artist}</span>
-              </span>
-            </Link>
+            {editing ? (
+              <button type="button" className="idc-pin idc-pin--pick" onClick={onPickPin}>
+                <span className="idc-pin-art">
+                  {pinned?.album_art
+                    ? <img src={pinned.album_art} alt="" />
+                    : <span className="idc-pin-none" aria-hidden="true">♪</span>}
+                </span>
+                <span className="idc-pin-said">
+                  <span className="idc-pin-album">{pinned ? pinned.album : 'Choose a record'}</span>
+                  <span className="idc-pin-artist">{pinned ? pinned.artist : 'Nothing pinned'}</span>
+                </span>
+              </button>
+            ) : (
+              <Link
+                href={`/entries/${pinned.slug}`}
+                className="idc-pin"
+                aria-label={`${pinned.album} — ${pinned.artist}`}
+              >
+                <span className="idc-pin-art">
+                  {pinned.album_art
+                    ? <img src={pinned.album_art} alt="" />
+                    : <span className="idc-pin-none" aria-hidden="true">♪</span>}
+                </span>
+                <span className="idc-pin-said">
+                  <span className="idc-pin-album">{pinned.album}</span>
+                  <span className="idc-pin-artist">{pinned.artist}</span>
+                </span>
+              </Link>
+            )}
           </p>
         )}
 
