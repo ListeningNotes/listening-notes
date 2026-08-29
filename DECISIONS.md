@@ -533,6 +533,38 @@ fourth tool appears the pencil becomes a menu and nothing else moves.
 **Admin controls do not sit in the reading flow.** The Edit and Pin bubbles
 come out of the chip row under the rating; that row is for the reader.
 
+**The cross's gesture problem is unsolved, and three things are ruled out,
+2026-08-29.** Two things are wanted and neither is built: going down a pane
+should feel like arriving somewhere rather than scrolling, and you should not
+be able to slide sideways out of a pane's lower half. The pane is a vertical
+scroller inside a horizontal snapping rail, so every gesture is negotiated
+between two axes, and that is what has to be designed around.
+
+Do not try these again:
+
+- **`touch-action` on the rail.** Ignored by Safari for a scroll container's
+  own axis — the property governs what a touch does to *descendants*. It
+  measured as applied and did nothing at all.
+- **`overflow-x: hidden` on the rail while a pane is scrolled.** It does stop
+  the sideways swipe, and it stops the vertical scroll dead as well: toggling a
+  scroller's overflow in the middle of a scroll, every time a pane crosses the
+  threshold, is the stutter. `main` scrolled smoothly and the branch carrying
+  this did not.
+- **A hand-rolled horizontal drag in edge strips.** Reimplementing momentum and
+  snapping by hand loses to the browser doing both natively. It read as glitchy
+  next to what it replaced.
+
+**And `scroll-snap-type: x mandatory` on the rail is load-bearing.** Softening
+it to `proximity` does reduce the fight, and the cross stops landing on a pane
+at all — proximity only snaps when you are already near a snap point, which a
+full-width swipe often is not.
+
+**A two-screen pane needs the axis problem solved first.** Building the
+card-then-down structure on top of the unresolved negotiation added a vertical
+snap inside a horizontal one, with a third scroller under it, and the result
+would not go down or come back up. The structure is right; it was built on the
+wrong foundation.
+
 **An entry is a layer over the journal, not a fourth pane, 2026-08-29.**
 Tapping a cover slides the entry in over the wall and dismissing slides it
 back. It comes from the right because that is where things arrive from, not
@@ -560,6 +592,34 @@ card, and a desktop tile opened a modal; both were ways to learn more about a
 record without leaving the wall, and the layer does that better than either. A
 card standing in for the entry has nothing left to do when the entry itself is
 one tap away and slides back off.
+
+**The layer opens with the record already on it — there is nothing to load.**
+The journal has every entry in memory before you tap, because it loaded them to
+draw the wall. So the tile hands the cover, the title, the artist, the rating,
+the flags and the date across on its way out (`library/handoff.js`) and the
+layer draws the whole first screen from that, in the exact place the real one
+draws it. Only the writing is waited for, and it lands on the screen below the
+one you are looking at.
+
+The grey skeleton is still right for every other way of arriving — a link in
+somebody's notes, a QR, the back button landing somewhere new. Nothing was
+handed over then, and inventing a cover would be worse than admitting the wait.
+
+**The layer has no close button.** It had a cross in the top right corner,
+which took the lights' place on the one screen already departing from the
+header rule; then an EdgeCaret in the row along the bottom, which sat on top of
+the entry's own scroll cue. Two controls arguing over forty pixels is worse
+than none. What is left is the swipe, which is what people reach for, plus
+Escape and the browser's own back button.
+
+**The back-pull starts at a 36px strip on the left edge**, carrying
+`touch-action: none`, rather than reading the whole surface. Anywhere else on
+the layer the browser owns vertical panning, and on a swipe that is mostly
+sideways but slightly down it starts scrolling on the vertical component while
+the handler is still deciding about the horizontal one — so a back-swipe took
+you down into the notes. No ratio fixes that, because the browser has already
+acted before the ratio is known. The strip removes the ambiguity instead of
+arbitrating it, and it is what iOS does with its own back gesture.
 
 ---
 
