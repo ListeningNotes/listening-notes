@@ -225,6 +225,22 @@ Project → Settings → Environment Variables.
 Things that cost real time. Each one is here because it was not obvious and
 will not be obvious again in six months.
 
+**Touching rectangles count as intersecting.** A pane parked by scroll snapping
+sits exactly edge to edge — `left: -444, right: 0` against a viewport starting
+at 0 — and an IntersectionObserver reports that as `isIntersecting: true` with
+`intersectionRatio: 0`. It reports the same booleans on screen and off, so
+`threshold: 0` sees no crossing and the callback fires **once, on open, and
+never again**. Use a small positive threshold (`0.02`) so there is a real
+crossing to notice. Cost two wrong fixes in About.js, and it would have worked
+by accident on any layout that did not land on a whole pixel.
+
+**A hidden page does not run IntersectionObserver.** The Browser pane in this
+setup reports `document.visibilityState === 'hidden'` most of the time, and
+Chrome delivers no intersection callbacks to a hidden page — so an observer
+test that is really working comes back looking broken. Take a `screenshot`
+between the steps of the script: it forces a frame, and the callbacks land.
+Check `document.visibilityState` in the result before believing a negative.
+
 **Anthropic billing is two separate banks.** `ANTHROPIC_API_KEY` draws on the
 **Developer/API credit balance** in the Claude Console, which is a *different
 pool* from the Claude.ai subscription's "usage credits" — same account, two
