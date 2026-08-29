@@ -139,11 +139,14 @@ export default function ListeningBeacon({ compact = false, statusAboveArt = fals
         </div>
         <div className="beacon-meta">
           {!statusAboveArt && statusLine}
-          <MarqueeTitle
-            text={trackName || '—'}
-            clipClassName="beacon-track-clip"
-            textClassName="beacon-track"
-          />
+          {/* Two lines, not a marquee. The marquee is the right answer in the
+              nav row, where the slot is a couple of hundred pixels wide and
+              there is nowhere for a long title to go — but here the title has
+              a whole screen under it and the page can simply be as tall as the
+              name is. A title that scrolls has to be waited for; one that
+              wraps is read. Past two lines it still ellipsises, because a
+              four-line song title would push the album art off the screen. */}
+          <div className="beacon-track beacon-track--wrap">{trackName || '—'}</div>
           {artistName && <div className="beacon-artist">{artistName}</div>}
         </div>
       </div>
