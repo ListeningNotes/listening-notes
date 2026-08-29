@@ -225,11 +225,17 @@ something *is* playing.
 counts with one line about taste, and turned down: the card is a glance and
 four rows is already the most a glance holds. Ruled out rather than parked.
 
-**Its picker is search, not a grid.** At 39 entries a grid works and at 300 it
-is a wall, and somebody pinning a record already knows which one. It reuses the
-journal wall being extracted from `archive/page.js`, in a sheet, with
-tap-to-select instead of tap-to-open — which is why it is sequenced after
-Journal rather than before it.
+**It is pinned from the record, not picked from the card.** The search sheet
+was the original plan and was dropped: by the time you are looking at your own
+card you have to *remember* which album you wanted, where on the record itself
+you *recognise* it. So the control is a pin in the chip row of an entry, owner
+only, and there is no picker at all — which is also less machinery than the
+sheet would have been.
+
+Exactly one, structurally. It is a single column on the settings row, so
+pinning a second record unpins the first without anything having to check, and
+the foreign key's ON DELETE SET NULL means deleting a pinned entry clears the
+pin rather than leaving the card pointing at nothing.
 
 **Everything editable is edited where it prints.** The link rows and the rig
 rows were fields on the card for things that appear a screen below it, which is

@@ -2289,6 +2289,40 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   pointer-events: none;
 }
 
+/* ── The pin ────────────────────────────────────────────────────────────────
+   On an entry, for its owner: this is the record the About card shows. Shaped
+   like the chips it stands beside rather than like a button, because it is a
+   statement about the entry in a row of statements about the entry — and
+   because a filled button next to three quiet chips would read as the most
+   important thing on a page about an album.
+   Pressed, it fills. That is the whole state: an outline is "could be", solid
+   is "is". */
+.ln-pin {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: transparent;
+  font-family: var(--font-label);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.ln-pin:hover:not(:disabled) { color: var(--ink); border-color: var(--ink-faint); }
+.ln-pin--on {
+  color: var(--bg);
+  background: var(--ink);
+  border-color: var(--ink);
+}
+.ln-pin--on:hover:not(:disabled) { color: var(--bg); border-color: var(--ink); }
+.ln-pin:disabled { opacity: 0.5; cursor: default; }
+.ln-pin:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 3px; }
+
 /* Held still while something covers it. Put on whichever element actually
    scrolls — the body on a page, a pane in the cross — for as long as a sheet
    is over it, so the thing underneath does not slide away under the finger

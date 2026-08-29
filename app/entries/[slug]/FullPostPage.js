@@ -9,6 +9,8 @@
 'use client';
 import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { PushPin, PushPinSlash } from '@phosphor-icons/react';
 import { fonts } from '../../../library/sitewide_visuals';
 import { parseHorizon, entryTracks, splitNotes, entryTypeLabel } from '../../../library/entry_formatter';
 import { kept_receipts } from '../../../library/receipts';
@@ -20,6 +22,7 @@ import CommentBubble from '../../../components/main_components/Slug_Page/Comment
 import MetadataLabel from '../../../components/main_components/Slug_Page/MetadataLabel';
 import Chip from '../../../components/main_components/Slug_Page/Chip';
 import StarRating from '../../../components/main_components/StarRating';
+import { useBookplate } from '../../../components/main_components/Bookplate';
 
 
 // The pair of actions that close the entry out used to share a local style
@@ -27,6 +30,78 @@ import StarRating from '../../../components/main_components/StarRating';
 // same way at the foot of every page on the site.
 
 export default function FullPostPage({ entry, references = [] }) {
+  // ── The pin ───────────────────────────────────────────────────────────────
+  // One record from the journal is shown as art on the About card, and this is
+  // where it gets chosen: on the record itself, at the moment somebody is
+  // looking at it and thinks *that one*. The alternative was a search sheet
+  // opened from the card, which is more machinery for a worse moment — by the
+  // time you are looking at your own card you have to remember what you wanted
+  // rather than recognise it.
+  //
+  // Exactly one, structurally: it is a single column on the settings row, so
+  // pinning a second record unpins the first without anything having to check.
+  // The column is a foreign key with ON DELETE SET NULL, so deleting a pinned
+  // entry clears the pin instead of leaving the card pointing at nothing.
+  const router = useRouter();
+  const { pinned_entry_id } = useBookplate();
+  const [authed, setAuthed] = useState(false);
+  // What the button should say right now, which is not always what the context
+  // says: the context is server state and only catches up on a refresh, so a
+  // press updates this immediately and the refresh confirms it.
+  const [pinnedHere, setPinnedHere] = useState(null);
+  const [pinning, setPinning] = useState(false);
+  const isPinned = pinnedHere === null ? pinned_entry_id === entry.id : pinnedHere;
+
+  useEffect(() => {
+    fetch('/api/auth/check')
+      .then(r => r.json())
+      .then(d => setAuthed(!!d.authed))
+      .catch(() => {});
+  }, []);
+
+  async function togglePin() {
+    if (pinning) return;
+    const next = !isPinned;
+    setPinning(true);
+    // Moved before the request rather than after it. This is one integer and
+    // the answer is never in doubt; waiting for a round trip to redraw a pin
+    // makes a press feel like it did not land.
+    setPinnedHere(next);
+    try {
+      const res = await fetch('/api/settings', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pinned_entry_id: next ? entry.id : null }),
+      });
+      if (!res.ok) throw new Error('save failed');
+      // The card reads pinned_entry_id off the root layout, which is a server
+      // component — so the way to make the card agree with this page is to ask
+      // the server to render again.
+      router.refresh();
+    } catch {
+      setPinnedHere(!next);
+    } finally {
+      setPinning(false);
+    }
+  }
+
+  const pinButton = authed && (
+    <button
+      type="button"
+      className={'ln-pin' + (isPinned ? ' ln-pin--on' : '')}
+      onClick={togglePin}
+      disabled={pinning}
+      aria-pressed={isPinned}
+      aria-label={isPinned ? 'Unpin this from the card' : 'Pin this to the card'}
+      title={isPinned ? 'Pinned to your card' : 'Pin to your card'}
+    >
+      {isPinned
+        ? <PushPin size={13} weight="fill" aria-hidden="true" />
+        : <PushPinSlash size={13} weight="regular" aria-hidden="true" />}
+      <span>{isPinned ? 'Pinned' : 'Pin'}</span>
+    </button>
+  );
+
   const [commentsByTrack, setCommentsByTrack] = useState({});
   const [commentsLoaded, setCommentsLoaded] = useState(false);
 
@@ -432,6 +507,7 @@ export default function FullPostPage({ entry, references = [] }) {
           <StarRating rating={displayRating} size={24} glow={isMasterpiece} animate burst={isMasterpiece} />
         )}
         <div className="ln-screen-one-chips">
+          {pinButton}
           {listenLabel && <Chip>{listenLabel}</Chip>}
           {isSubmission && <Chip>Submission</Chip>}
           {(entry.favorite === true || entry.favorite === 'true') && <Chip tone="fav">Favorite</Chip>}
@@ -487,6 +563,7 @@ export default function FullPostPage({ entry, references = [] }) {
               </div>
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
                 {displayRating > 0 && <StarRating rating={displayRating} size={15} glow={isMasterpiece} style={{ verticalAlign: 'middle' }} />}
+                {pinButton}
                 {listenLabel && <Chip>{listenLabel}</Chip>}
                       {isSubmission && <Chip>Submission</Chip>}
                 {(entry.favorite === true || entry.favorite === 'true') && <Chip tone="fav">Favorite</Chip>}
