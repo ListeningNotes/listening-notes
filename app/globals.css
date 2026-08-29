@@ -2303,6 +2303,21 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   pointer-events: none;
 }
 
+/* An edit stamp, printed under the piece of writing it belongs to — a track's
+   note, or the album note. Never at the top of an entry: one date on a post
+   says only that something moved, where a date under track two says what. It
+   is also what stops this being a quiet rewrite tool, since an entry carrying
+   five of these looks different from one carrying a single typo fix.
+   Small and faint on purpose. It is a disclosure, not a headline. */
+.ln-edited {
+  margin: 0 0 6px;
+  font-family: var(--font-label);
+  font-size: 8.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
 /* ── The pin ────────────────────────────────────────────────────────────────
    On an entry, for its owner: this is the record the About card shows. Shaped
    like the chips it stands beside rather than like a button, because it is a

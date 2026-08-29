@@ -79,9 +79,12 @@ The cross is built and merged. What is left of it:
 ALTER TABLE entries ADD COLUMN IF NOT EXISTS edited_at timestamp without time zone;
 ```
 
-Reads are safe without it; the stamp simply never shows. It is the write that
+Reads are safe without it; the stamps simply never show. It is the write that
 fails, and the write is every entry edit — so the existing CMS breaks until
 this is run. Take a backup first (`npm run backup`).
+
+Per-track stamps need no column: they ride inside the `tracks` jsonb, which
+already exists.
 - [ ] **What a delete actually does, before writing the warning.** `delete_entry` is a hard `DELETE FROM entries WHERE slug = …` — no soft delete, no undo beyond the nightly backup and Neon's six hours. And "permanent" understates it: `comments.entry_slug` is plain text with no foreign key, so an entry's comments stay in the table forever, orphaned and unreachable; `entries.source_entry_id` has an index but no key either, so deleting an album somebody else's entry was received from silently breaks that chain. Only `settings.pinned_entry_id` cleans itself up, because it is the one with `ON DELETE SET NULL`. Either the warning says all of this or the delete tidies up after itself first.
 - [ ] **`/get` is half a page.** It renders the essay and nothing else. The other half of what that address owes a stranger — what the software is, that it is free, and the way to install a copy — is unwritten, so somebody arriving from another copy's pitch pane reads the why and finds no door. Its tab still reads `Why · …` too.
 - [ ] **Source link wants a settings column.** It ships today as `NEXT_PUBLIC_SOURCE_URL` defaulting to upstream, which is the smaller half of the job — a modified copy owes *its own* source and should not need a redeploy to say so.

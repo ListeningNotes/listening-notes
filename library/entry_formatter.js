@@ -86,6 +86,17 @@ export function serializeTracks(tracks) {
   return { track_notes, horizon: buildHorizon(list, ratings) };
 }
 
+// How an edit stamp reads: "Aug 28, 2026". Short, because it prints inline
+// under a paragraph rather than as a labelled field — and with the year,
+// because an entry edited two years after it was written is exactly the case
+// the stamp exists for and "Aug 28" would hide it.
+export function editStamp(value) {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+}
+
 export function splitNotes(notesText) {
   if (!notesText) return { albumNotes: '', trackNotes: '' };
   const clean = notesText.replace(/\*?\*?Album Notes\*?\*?/g, '').replace(/\*\*/g, '').trim();

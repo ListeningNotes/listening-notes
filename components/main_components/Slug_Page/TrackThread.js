@@ -5,11 +5,17 @@ import { Heart } from '@phosphor-icons/react';
 import { fonts } from '../../../library/sitewide_visuals';
 import StarRating from '../StarRating';
 import CommentBubble from './CommentBubble';
+import { editStamp } from '../../../library/entry_formatter';
 
 // `note` is the track's own note with any cross-references already turned
 // into links — see FullPostPage for why the linking happens up there and not
 // here. Falls back to the plain text so the component still stands alone.
 export default function TrackThread({ track, note, trackIndex, slug, commentsByTrack, onRefresh }) {
+  // Under this track's note, if this track's note has been rewritten. Stored
+  // on the track itself rather than on the entry — see the stamps in
+  // update_entry — so a typo fixed in track two marks track two and says
+  // nothing about the other eleven.
+  const edited = editStamp(track.edited);
   const trackComments = commentsByTrack[String(trackIndex)] || [];
 
   return (
@@ -35,6 +41,7 @@ export default function TrackThread({ track, note, trackIndex, slug, commentsByT
       {track.note && (
         <p style={{ fontSize: '13px', lineHeight: 1.8, color: 'var(--ink-soft)', marginBottom: '6px', whiteSpace: 'pre-wrap' }}>{note ?? track.note}</p>
       )}
+      {edited && <p className="ln-edited">Edited {edited}</p>}
 
       {/* The way in, at the end of the note you've just read. Lives in
           CommentBubble now, which the album notes share — see the note at the

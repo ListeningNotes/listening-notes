@@ -288,12 +288,49 @@ export async function update_entry(slug, fields) {
   const set_date = touched('received_date');
   const source_entry_id = set_source ? entryRef(fields.source_entry_id) : null;
 
+  // The row as it stands, fetched once and used twice: to check the chain for
+  // cycles, and to work out which pieces of writing actually changed. The stamps
+  // cannot be done in SQL the way an entry-wide one could — a per-track answer
+  // needs the old and the new tracklists side by side in the same loop.
+  const [current] = await database`SELECT id, notes, tracks FROM entries WHERE slug = ${slug} LIMIT 1`;
+
   if (set_source && source_entry_id) {
-    const row = await database`SELECT id FROM entries WHERE slug = ${slug} LIMIT 1`;
-    if (await wouldFormCycle(row[0]?.id, source_entry_id)) {
+    if (await wouldFormCycle(current?.id, source_entry_id)) {
       throw new Error('That would send this album back up its own chain.');
     }
   }
+
+  // ── Edit stamps ─────────────────────────────────────────────────────────
+  // A stamp goes next to the thing that changed, not at the top of the entry.
+  // One date on a post says only that something moved; a date under track two
+  // says what. It is also what keeps this from becoming a quiet rewrite tool —
+  // an entry carrying five track stamps looks different from one carrying a
+  // single typo fix, and that visible difference is the honesty.
+  //
+  // Notes only. Correcting a year or toggling a favourite is filing rather
+  // than rewriting, and a stamp that moved for either would stop meaning
+  // anything.
+  const stampedAt = new Date().toISOString();
+
+  if (Array.isArray(fields.tracks)) {
+    const before = Array.isArray(current?.tracks) ? current.tracks : [];
+    fields.tracks = fields.tracks.map((track, index) => {
+      // By number where there is one, by position otherwise: a tracklist can
+      // be re-ordered, and matching on position alone would read every track
+      // after the moved one as rewritten.
+      const was = before.find(t => t.number != null && t.number === track.number) ?? before[index];
+      const changed = was && (track.note || '') !== (was.note || '');
+      // A track with no previous version is new writing rather than an edit —
+      // filling in a tracklist later is not revising it.
+      const edited = changed ? stampedAt : (was?.edited ?? track.edited ?? null);
+      return edited ? { ...track, edited } : { ...track };
+    });
+  }
+
+  // The album note's own stamp. Its column is the entry's, because the album
+  // note is the one piece of writing the entry itself owns.
+  const noteChanged =
+    fields.notes != null && (fields.notes || '') !== (current?.notes || '');
 
   // Editing tracks re-derives both text shapes from them here rather than in the
   // caller, so there's no way to update the track list and leave the prose
@@ -323,19 +360,7 @@ export async function update_entry(slug, fields) {
       horizon = COALESCE(${fields.horizon ?? null}, horizon),
       album_art = COALESCE(${fields.album_art ?? null}, album_art),
       post_link = COALESCE(${fields.post_link ?? null}, post_link),
-      -- Stamped only when the writing actually changed, and compared against
-      -- the row's own current values inside the same statement — which is the
-      -- only place both the old and the new are in hand at once. Correcting a
-      -- year or toggling a favourite leaves this alone: those are filing, not
-      -- rewriting, and a stamp that moved for either would stop meaning
-      -- anything. Comparing tracks covers track_notes and horizon too, since
-      -- both are derived from it a few lines above.
-      edited_at = CASE
-        WHEN (${fields.notes ?? null}::text IS NOT NULL
-              AND ${fields.notes ?? null}::text IS DISTINCT FROM notes)
-          OR (${fields.tracks ? JSON.stringify(fields.tracks) : null}::jsonb IS NOT NULL
-              AND ${fields.tracks ? JSON.stringify(fields.tracks) : null}::jsonb IS DISTINCT FROM tracks)
-        THEN NOW() ELSE edited_at END,
+      edited_at = CASE WHEN ${noteChanged} THEN ${stampedAt}::timestamp ELSE edited_at END,
       source_entry_id = CASE WHEN ${set_source} THEN ${source_entry_id}::int ELSE source_entry_id END,
       received_from = CASE WHEN ${set_from} THEN ${set_from ? blankToNull(fields.received_from) : null}::text ELSE received_from END,
       received_date = CASE WHEN ${set_date} THEN ${set_date ? blankToNull(fields.received_date) : null}::date ELSE received_date END

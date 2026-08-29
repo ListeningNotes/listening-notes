@@ -22,6 +22,7 @@ import CommentBubble from '../../../components/main_components/Slug_Page/Comment
 import MetadataLabel from '../../../components/main_components/Slug_Page/MetadataLabel';
 import Chip from '../../../components/main_components/Slug_Page/Chip';
 import StarRating from '../../../components/main_components/StarRating';
+import { editStamp } from '../../../library/entry_formatter';
 import { useBookplate } from '../../../components/main_components/Bookplate';
 
 
@@ -208,18 +209,14 @@ export default function FullPostPage({ entry, references = [] }) {
   // album's own year — a second bare date there would just read as a second
   // release year.
   const postedOn = new Date(entry.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-  // Only if the writing has actually been changed since it was posted. The
-  // column is null until update_entry sees a note or a tracklist genuinely
-  // differ, so an entry written once and never touched says nothing rather
-  // than claiming it was edited on the day it went up.
+  // A stamp sits next to the thing that changed, never at the top of the page.
+  // One date on a post says only that something moved; a date under a track's
+  // note says what — and an entry carrying five of them looks different from
+  // one carrying a single typo fix, which is the difference that keeps this
+  // from being a quiet rewrite tool.
   //
-  // It sits beside the posted date rather than under the note it refers to,
-  // because it belongs to the entry rather than to a paragraph — and a reader
-  // deciding how much to trust what they are about to read should be told
-  // before they read it, not after.
-  const editedOn = entry.edited_at
-    ? new Date(entry.edited_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
-    : null;
+  // Short, because it prints inline under prose rather than as a field.
+  const editedOn = entry.edited_at ? editStamp(entry.edited_at) : null;
 
   const allTracksFive = parsedTracks.length > 0 && parsedTracks.every(t => t.stars === 5);
   const isMasterpiece = allTracksFive || entry.rating === 'Masterpiece';
@@ -529,7 +526,6 @@ export default function FullPostPage({ entry, references = [] }) {
         </div>
         <div style={{ fontFamily: fonts.mono, fontSize: '9px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--ink-faint)' }}>
           Posted {postedOn}
-          {editedOn && <> · Edited {editedOn}</>}
         </div>
         <div
           className="ln-scroll-cue"
@@ -585,7 +581,6 @@ export default function FullPostPage({ entry, references = [] }) {
               </div>
               <div style={{ fontFamily: fonts.mono, fontSize: '9px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--ink-faint)', marginTop: '12px' }}>
                 Posted {postedOn}
-                {editedOn && <> · Edited {editedOn}</>}
               </div>
             </div>
           </div>
@@ -612,6 +607,7 @@ export default function FullPostPage({ entry, references = [] }) {
             {/* 6px, the same gap a track note leaves under itself before its
                 own bubble. */}
             <div style={{ lineHeight: 1.95, fontSize: '15px', whiteSpace: 'pre-wrap', color: 'var(--ink)', marginBottom: '6px' }}>{linkedAlbumNotes}</div>
+            {editedOn && <p className="ln-edited">Edited {editedOn}</p>}
             <CommentBubble
               slug={entry.slug}
               trackIndex={-1}
