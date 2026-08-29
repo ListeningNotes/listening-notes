@@ -386,17 +386,11 @@ export default function HomeNav() {
     </div>
   );
 
-  // The writing entrance, kept exactly as it was on the cover. Signed out it
-  // renders nothing at all, so a visitor sees a pane with no seam in it.
-  const writingLine = authed && (
-    <div className="hp-write-row">
-      <Link href="/dashboard/echo" className="hp-write">+ Start a listen</Link>
-      <Link href="/dashboard/inbox" className="hp-write">
-        Messages
-        {waiting?.total > 0 && <span className="hp-write-count">{waiting.total}</span>}
-      </Link>
-    </div>
-  );
+  // "+ Start a listen" and "Messages" used to sit under the beacon, from when
+  // the cover was the only screen an owner had and the writing had to be
+  // reachable from it. The desk is one swipe right and carries both, with the
+  // same unread count on the same door — so this was the same two controls
+  // twice, a hundred pixels apart, on a screen whose whole job is one record.
 
   // Compare, Submit and Surprise sat at the foot of the wall for a day, as the
   // last of the dot row's destinations looking for a home. They are off it: the
@@ -432,7 +426,6 @@ export default function HomeNav() {
               </div>
             </div>
             {recentRow}
-            {writingLine}
           </div>
           <div className="hn-under">
             <Journal
