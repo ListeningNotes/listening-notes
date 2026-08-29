@@ -1968,9 +1968,15 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   inset: 0;
   z-index: 200;
   background: var(--bg);
+  /* On a wide screen the entry flows down the document, so this is what
+     scrolls it. On a phone it must not be: see the note below, which is the
+     whole of why the scrolling felt broken. */
   overflow-y: auto;
   overscroll-behavior: contain;
-  animation: layIn 0.26s cubic-bezier(0.32, 0.72, 0, 1);
+  /* Slow, and slowing down as it lands. This is a page being pulled off a
+     shelf rather than a panel being snapped into place — the first version was
+     260ms on a sharp curve and read as a state change. */
+  animation: layIn 0.46s cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 @keyframes layIn {
   from { transform: translateX(100%); }
@@ -1979,36 +1985,61 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 /* While a finger has hold of it the transform is written inline, frame by
    frame, so it tracks 1:1 rather than easing along behind. */
 .lay--dragging { animation: none; }
-/* And when the finger lets go, it either springs back or finishes leaving. */
-.lay--settling { animation: none; transition: transform 0.18s ease-out; }
+/* And when the finger lets go, it either springs back or finishes leaving.
+   Matched to the way in, so the page does not arrive gently and then snap. */
+.lay--settling { animation: none; transition: transform 0.32s cubic-bezier(0.22, 0.61, 0.36, 1); }
 
 @media (prefers-reduced-motion: reduce) {
   .lay { animation: none; }
   .lay--settling { transition: none; }
 }
 
-/* Top right, in the moon's place — not beside it. The header rule is one
-   control each side of the mark, and a layer that added a third would break
-   the rule on the one screen that is already a departure from it.
+/* ── Why this must not scroll on a phone ───────────────────────────────────
+   The entry's phone layout is already two scroll containers deep: .ln-screens
+   holds the two snap screens, and .ln-screen-two-scroll holds the notes inside
+   the second one. Adding a scrolling box around both made three.
 
-   So on this surface the right-hand control means "get out", which is also the
-   direction the layer leaves in. The lights are one swipe away on every other
-   screen and this is a surface you are passing through; hiding the toggle here
-   costs nothing, where a close control you had to hunt for would cost the way
-   out. Hidden with CSS, which is fine because this is presentation — unlike
-   the owner's tools, where hiding was the wrong tool for the job. */
-.lay .sitenav-theme-btn { display: none; }
-.lay-shut {
-  position: fixed;
-  top: calc(22px + var(--safe-top));
-  right: 28px;
-  z-index: 210;
-  display: inline-flex; align-items: center; justify-content: center;
-  width: 30px; height: 30px; border-radius: 9px;
-  color: var(--ink-faint); background: transparent; border: 0;
-  cursor: pointer; transition: color 0.15s, background 0.15s;
+   The outer one never actually scrolled — its content is exactly one viewport
+   tall — but being a scroll container at all was enough to do two things. It
+   drew its own scrollbar, which is the second one overlapping the first. And
+   it joined the scroll chain, so every time the inner scrollers reached an end
+   the browser handed the gesture outward to a box that could not move and then
+   stopped it dead, which is the hitch when scrolling back up out of the notes
+   and into the card.
+
+   So on a phone the layer is a plain box and .ln-screens does the scrolling,
+   which is what it was written to do. */
+@media (max-width: 768px) {
+  .lay { overflow: hidden; }
 }
-.lay-shut:hover { color: var(--ink); background: var(--bg-warm); }
+
+/* The way out sits in the row the cross keeps its controls in, and the numbers
+   are .hn-controls' numbers rather than numbers that look like them — same
+   offset from the bottom, same transparent strip that only its own contents
+   can be pressed through.
+
+   It was a cross in the top right corner first. Two things were wrong with
+   that: nothing else on this site asks for that corner, and the corner it took
+   was the lights'. The header keeps its one control each side, the moon
+   included, and the layer's own control is somewhere a thumb already goes. */
+.lay-controls {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: max(14px, env(safe-area-inset-bottom));
+  z-index: 210;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  pointer-events: none;
+}
+.lay-controls > * { pointer-events: auto; }
+
+/* The entry's own scroll cue hangs at the foot of its first screen, which is
+   exactly where the row above now sits — the two were drawn on top of each
+   other, twenty pixels of overlap. Only inside the layer, because on the
+   standalone page there is no row for it to clear. */
+.lay .ln-scroll-cue { margin-bottom: 46px; }
 
 /* ── AlbumTile — the journal wall's album ──────────────────────────────────
    A cover and a link to the record it is of. It used to be FlipTile, which
