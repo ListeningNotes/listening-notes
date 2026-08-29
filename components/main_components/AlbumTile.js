@@ -26,6 +26,7 @@
 
 'use client';
 import Link from 'next/link';
+import { handOff } from '../../library/handoff';
 
 export default function AlbumTile({ entry }) {
   return (
@@ -34,6 +35,11 @@ export default function AlbumTile({ entry }) {
       className="ft"
       aria-label={entry.album + (entry.artist ? ' by ' + entry.artist : '')}
       data-tile-slug={entry.slug}
+      /* On the way past, this leaves the cover and the two lines under it
+         where the layer can pick them up — see library/handoff.js. The entry
+         still has to be read from the database; this is only so the layer has
+         something true to draw while that happens, instead of a grey square. */
+      onClick={() => handOff(entry)}
     >
       <div className="ft-inner">
         {/* Nothing sits on top of the art at rest — the wall is just the album
