@@ -74,7 +74,7 @@ async function Entry({ slug }) {
   const references = await sql`SELECT album, artist, slug FROM entries`;
   const authed = await wristbandOnHand();
 
-  return <PostClient entry={entry} references={references} authed={authed} />;
+  return <PostClient entry={entry} references={references} authed={authed} layered />;
 }
 
 export default function EntryOverTheJournal({ params }) {
