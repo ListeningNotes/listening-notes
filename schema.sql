@@ -180,6 +180,14 @@ CREATE TABLE IF NOT EXISTS settings (
   lastfm_user text,
   site_address text,
   founded_at date,
+  -- The one record from this journal shown as art on the About card. One, and
+  -- the shape is the rule: a single column cannot hold two, so pinning a
+  -- second unpins the first without anything having to check. The foreign key
+  -- below carries ON DELETE SET NULL, so deleting a pinned entry clears the
+  -- pin rather than leaving the card pointing at nothing.
+  --
+  -- A list of three lived here for an afternoon and was taken back out. Three
+  -- needed jsonb, and jsonb meant losing the key and the guarantee with it.
   pinned_entry_id integer,
   -- The paragraph at the top of /about, and the long note behind it. Both
   -- live here rather than in the page for the same reason the name does: a
@@ -244,20 +252,6 @@ CREATE TABLE IF NOT EXISTS settings (
   -- paragraph about the project; asked what you can never skip you write two
   -- words worth reading.
   bioanswers jsonb,
-  -- Up to three records from this journal, shown as art on the About card.
-  -- A list of entry ids in the order they were pinned: [12, 40, 7].
-  --
-  -- pinned_entry_id above held exactly one and held it with a foreign key,
-  -- which made "exactly one" structural and made three impossible. This is the
-  -- same shape as rig and social_links instead, and pays the same price: no
-  -- foreign key, so a deleted entry leaves its id behind. Harmless — the card
-  -- looks entries up by id and a miss simply draws nothing, which is the same
-  -- self-healing readBioAnswers does for a retired prompt.
-  --
-  -- The old column keeps its value and stops being written. Anything still
-  -- holding one and nothing here is read as a list of one, so a pin made
-  -- before this column existed survives without a migration.
-  pinned_entries jsonb,
   -- The portrait itself, when its keeper uploaded one rather than pointing at
   -- one. Base64 in a column and served back by /api/portrait, so that adding a
   -- picture from a phone needs no storage bucket, no third-party account and no
@@ -340,7 +334,6 @@ ALTER TABLE settings ADD COLUMN IF NOT EXISTS display_name text;
 ALTER TABLE settings ADD COLUMN IF NOT EXISTS "serial" text;
 ALTER TABLE settings ADD COLUMN IF NOT EXISTS setup_complete boolean DEFAULT false;
 ALTER TABLE settings ADD COLUMN IF NOT EXISTS bioanswers jsonb;
-ALTER TABLE settings ADD COLUMN IF NOT EXISTS pinned_entries jsonb;
 
 -- Foreign keys, added once every table exists
 DO $$ BEGIN

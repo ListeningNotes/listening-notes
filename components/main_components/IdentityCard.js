@@ -98,27 +98,6 @@ function buildCode(url) {
   return built;
 }
 
-// ── The pinned records ────────────────────────────────────────────────────
-// Three at most. Three is a shelf; one is a favourite and nine is the archive
-// again, and the card has room for a row of three at the size the beacon draws
-// its recent listens at.
-export const PIN_LIMIT = 3;
-
-// Named for readLink and readBioAnswers above, which do the same job: take what
-// a jsonb column happens to hold and hand back something a page can draw
-// without checking anything.
-//
-// The fallback is the migration. pinned_entry_id held exactly one before this
-// list existed, so a journal with a pin made yesterday and nothing in the new
-// column is read as a list of one — nobody moves anything by hand, and the
-// moment the list is written the old column stops mattering.
-export function readPins({ pinned_entries, pinned_entry_id }) {
-  const list = Array.isArray(pinned_entries)
-    ? pinned_entries
-    : (Number.isInteger(pinned_entry_id) ? [pinned_entry_id] : []);
-  return list.filter(id => Number.isInteger(id)).slice(0, PIN_LIMIT);
-}
-
 // A month and a year, never a day. The card says how long the journal has been
 // kept, and a precise date invites arithmetic that isn't the point. UTC because
 // created_at is a naive column read through a driver that shifts it by the
@@ -272,7 +251,7 @@ function AddressCode({ text }) {
 // `edit` is handed in rather than made here. The prompts print on the About
 // pane below this card and are edited there, and one edit session cannot be
 // two instances of the hook — so the pane owns it and the card is given it.
-export default function IdentityCard({ stamps, authed = false, edit, pinned = [] }) {
+export default function IdentityCard({ stamps, authed = false, edit, pinned = null }) {
   const settings = useBookplate();
   const {
     cover_name,
@@ -863,14 +842,19 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = []
            The labels beside them are already doing the quietening; the answers
            are the content and they weigh the same. */
         .idc-line-value { min-width: 0; color: var(--ink); }
-        /* ── The pinned records ──
+        /* ── The pinned record ──
            Forty-eight square with a ten-pixel radius, which is what the beacon
            draws its recent listens at — same object, same job, so the same
-           frame. Not dimmed the way that row is, though: those are the past,
-           and these are a choice. */
-        .idc-pins-row { align-items: center; }
-        .idc-pins { display: flex; gap: 10px; min-width: 0; }
-        .idc-pin-tile {
+           frame. The name reads to its right rather than under it, because the
+           row it sits in is a table of labels and answers and this is one
+           answer: a cover and what it is. */
+        .idc-pin-row { align-items: center; }
+        .idc-pin {
+          display: flex; align-items: center; gap: 10px;
+          min-width: 0; flex: 1;
+          color: var(--ink); text-decoration: none;
+        }
+        .idc-pin-art {
           display: block;
           width: 48px; height: 48px;
           flex-shrink: 0;
@@ -880,15 +864,25 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = []
           box-shadow: 0 3px 10px rgba(0,0,0,0.12);
           transition: transform 0.2s ease;
         }
-        .idc-pin-tile:hover { transform: translateY(-2px); }
-        .idc-pin-tile img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .idc-pin:hover .idc-pin-art { transform: translateY(-2px); }
+        .idc-pin-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
         .idc-pin-none {
           display: flex; align-items: center; justify-content: center;
           width: 100%; height: 100%;
           color: var(--ink-faint); font-size: 18px;
         }
+        /* min-width: 0 on both, or a long album name refuses to ellipsis and
+           pushes the row past the edge of the card instead. */
+        .idc-pin-said { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+        .idc-pin-album,
+        .idc-pin-artist {
+          overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+        }
+        .idc-pin-album { font-size: 13px; line-height: 1.3; }
+        .idc-pin-artist { font-size: 11px; line-height: 1.3; color: var(--ink-faint); }
+        .idc-pin:hover .idc-pin-album { text-decoration: underline; }
         @media (prefers-reduced-motion: reduce) {
-          .idc-pin-tile:hover { transform: none; }
+          .idc-pin:hover .idc-pin-art { transform: none; }
         }
 
 
@@ -1196,36 +1190,34 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = []
           </p>
         )}
 
-        {/* ── The pinned records ──────────────────────────────────────────
-            Up to three albums from the journal, as art. They are the only
-            images on this card besides the portrait and the reason it does not
-            read as all type and numbers — a face, three counted facts, and the
-            records somebody is holding up.
-            Drawn at the size and in the frame the beacon gives its recent
-            listens, because they are the same object doing the same job: a
-            small cover you can press. Labelled, unlike that row, because this
-            one is a claim rather than a log — these were chosen.
-            Chosen on the entries themselves and never here; see the pin in
-            app/entries/[slug]/FullPostPage.js. An empty list draws nothing,
-            which is also what a deleted entry leaves behind. */}
-        {pinned.length > 0 && (
-          <p className="idc-line idc-pins-row">
-            <span className="idc-line-label">Pinned albums</span>
-            <span className="idc-pins">
-              {pinned.map(record => (
-                <Link
-                  key={record.slug}
-                  href={`/entries/${record.slug}`}
-                  className="idc-pin-tile"
-                  aria-label={`${record.album} — ${record.artist}`}
-                  title={`${record.album} — ${record.artist}`}
-                >
-                  {record.album_art
-                    ? <img src={record.album_art} alt="" />
-                    : <span className="idc-pin-none" aria-hidden="true">♪</span>}
-                </Link>
-              ))}
-            </span>
+        {/* ── The pinned record ────────────────────────────────────────────
+            One album from the journal, as art, with its name beside it. It is
+            the only image on this card besides the portrait and the reason the
+            card does not read as all type and numbers — a face, three counted
+            facts, and the record somebody is holding up.
+            One, and the shape is the rule rather than a check: pinned_entry_id
+            is a single column, so pinning a second unpins the first, and its
+            foreign key clears the pin if the entry is ever deleted.
+            Chosen on the entry itself and never here; see the pin in
+            app/entries/[slug]/FullPostPage.js. */}
+        {pinned && (
+          <p className="idc-line idc-pin-row">
+            <span className="idc-line-label">Pinned album</span>
+            <Link
+              href={`/entries/${pinned.slug}`}
+              className="idc-pin"
+              aria-label={`${pinned.album} — ${pinned.artist}`}
+            >
+              <span className="idc-pin-art">
+                {pinned.album_art
+                  ? <img src={pinned.album_art} alt="" />
+                  : <span className="idc-pin-none" aria-hidden="true">♪</span>}
+              </span>
+              <span className="idc-pin-said">
+                <span className="idc-pin-album">{pinned.album}</span>
+                <span className="idc-pin-artist">{pinned.artist}</span>
+              </span>
+            </Link>
           </p>
         )}
 

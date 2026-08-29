@@ -51,7 +51,6 @@ import { useTheme } from './Lightswitch';
 import { foldKey, useListeningBeacon } from '../../hooks/useListeningBeacon';
 import { useBookplate } from './Bookplate';
 import ListeningBeacon from './ListeningBeacon';
-import { readPins } from './IdentityCard';
 import Journal from './Journal';
 import EdgeCaret from './EdgeCaret';
 import About from './About';
@@ -85,8 +84,7 @@ function ease() {
 }
 
 export default function HomeNav() {
-  const settings = useBookplate();
-  const { cover_name } = settings;
+  const { cover_name, pinned_entry_id } = useBookplate();
   const { theme, toggle: toggleTheme } = useTheme();
   const { isLive, recentAlbums } = useListeningBeacon();
 
@@ -407,16 +405,11 @@ export default function HomeNav() {
   // address and nothing in the interface currently points at any of them — see
   // NOTES, which is where that is written down rather than solved.
 
-  // The records the card shows, in the order they were pinned. Found here
-  // rather than fetched, because this already holds every entry — the wall
-  // needs them — and asking the server for three rows it has already sent
-  // would be a second request for a copy of something in memory.
-  //
-  // An id with no entry behind it drops out. That is what a deleted record
-  // leaves, and this list has no foreign key to clear it for us.
-  const pinned = readPins(settings)
-    .map(id => entries.find(e => e.id === id))
-    .filter(Boolean);
+  // The record the card shows. Found here rather than fetched, because this
+  // already holds every entry — the wall needs them — and asking the server for
+  // one row it has already sent would be a second request for a copy of
+  // something in memory.
+  const pinned = entries.find(e => e.id === pinned_entry_id) || null;
 
   const marks = paneMarks(authed);
 

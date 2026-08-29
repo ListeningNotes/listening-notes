@@ -144,10 +144,6 @@ const BOOKPLATE_FIELDS = [
   // says as a finished sentence, and the column is left holding its old value
   // rather than shipped to every page for nothing to read.
   'bioanswers',
-  // Three integers, and the card cannot draw the records without them.
-  // pinned_entry_id stays alongside it as the fallback for a pin made before
-  // the list existed — see readPins.
-  'pinned_entries',
   // Two percentages. Without it the portrait is drawn centred, which for a
   // photograph of a person is often a picture of their chin.
   'portrait_position',
