@@ -622,11 +622,31 @@ export default function FullPostPage({ entry, references = [] }) {
       {/* ── NAV ── shared site nav (logo + dot nav), identical to every other public page */}
       <SiteNav />
 
+      {/* A correction is open, and the page is long. The controls that started
+          it are at the top of the entry, which is a screen and a half away by
+          the time you are fixing a note on track nine — so they come with you.
+          It is also the only thing on the page that says you are editing at
+          all once the hero has scrolled off. */}
+      {edit.editing && (
+        <div className="ln-editing-bar">
+          <span className="ln-editing-label">Editing</span>
+          <button type="button" className="ln-pin ln-pin--on" onClick={edit.save} disabled={edit.saving}>
+            <Check size={13} weight="bold" aria-hidden="true" />
+            <span>{edit.saving ? 'Saving' : 'Save'}</span>
+          </button>
+          <button type="button" className="ln-pin" onClick={edit.cancel} disabled={edit.saving}>
+            <X size={13} weight="bold" aria-hidden="true" />
+            <span>Cancel</span>
+          </button>
+        </div>
+      )}
+      {edit.trouble && <p className="ln-trouble">{edit.trouble}</p>}
+
       {/* On phones this is the scroll container the two screens snap inside —
           the same arrangement as .hp-mobile-screens on the homepage. On
           desktop it has no height or overflow of its own, so everything below
           just falls back into normal document flow. */}
-      <div className="ln-screens">
+      <div className={'ln-screens' + (edit.editing ? ' ln-editing' : '')}>
 
       {/* ── SCREEN ONE (phones) ── a full screen of album: art up top, then the
           title, artist, year, rating and qualifiers centred beneath it. The
@@ -794,14 +814,15 @@ export default function FullPostPage({ entry, references = [] }) {
               {parsedTracks.map((t, i) => (
                 <TrackThread
                   key={i}
-                  track={edit.editing ? edit.draft.tracks[i] ?? t : t}
+                  track={t}
                   note={edit.editing ? null : linkedTrackNotes[i]}
                   trackIndex={i}
                   slug={entry.slug}
                   commentsByTrack={commentsByTrack}
                   onRefresh={loadComments}
                   editing={edit.editing}
-                  onNote={value => edit.setTrack(i, 'note', value)}
+                  draft={edit.draft.tracks[i]}
+                  onField={(key, value) => edit.setTrack(i, key, value)}
                 />
               ))}
             </div>
