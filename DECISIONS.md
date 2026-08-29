@@ -225,11 +225,134 @@ something *is* playing.
 counts with one line about taste, and turned down: the card is a glance and
 four rows is already the most a glance holds. Ruled out rather than parked.
 
-**Its picker is search, not a grid.** At 39 entries a grid works and at 300 it
-is a wall, and somebody pinning a record already knows which one. It reuses the
-journal wall being extracted from `archive/page.js`, in a sheet, with
-tap-to-select instead of tap-to-open — which is why it is sequenced after
-Journal rather than before it.
+**It is pinned from the record, not picked from the card.** The search sheet
+was the original plan and was dropped: by the time you are looking at your own
+card you have to *remember* which album you wanted, where on the record itself
+you *recognise* it. So the control is a pin in the chip row of an entry, owner
+only, and there is no picker at all — which is also less machinery than the
+sheet would have been.
+
+**Reversed the same day, 2026-08-28. The pin goes back on the card, and the
+search sheet with it.** Recognising beats remembering and that argument still
+holds — it is just not worth what it costs here. `pinned_entry_id` is a field
+on the settings row, so it belongs with the other settings fields, behind the
+card's pencil; a control for it in the chip row of an entry is an admin button
+sitting in the middle of somebody's reading. The entry editor gets no pin at
+all: changing your pin should not mean opening an editor for an album you were
+not thinking about.
+
+**The trade, accepted:** from an entry there is no "pin this one" — you go to
+the card and search for it. More steps for the rarer action, which is the right
+way round.
+
+**One, and the shape is the rule.** `pinned_entry_id` is a single column, so
+pinning a second record unpins the first without anything having to check, and
+its foreign key carries ON DELETE SET NULL, so deleting a pinned entry clears
+the pin rather than leaving the card pointing at nothing.
+
+Three lived here for an afternoon and were taken back out. The reason is worth
+keeping, because it is the same trade in both directions: three needed a jsonb
+list, jsonb has no foreign key, and losing the key meant losing both the
+guarantee and the self-clearing. It also meant a new column, a bump-the-oldest
+rule and a message explaining what the bump had done — a good deal of machinery
+around the fact that a card has room for one record. The list never reached the
+live database, so reverting cost nothing.
+
+**The album and artist read to the right of the art.** The row it sits in is a
+table of labels and answers, and this is one answer: a cover and what it is.
+Both lines ellipsis, because a long album name that refuses to would push the
+row off the edge of the card.
+
+**Nothing about writing on the beacon.** "+ Start a listen" and "Messages" sat
+under it from when the cover was the only screen an owner had. The desk is one
+swipe right and carries both, with the same unread count on the same door — so
+the cover was showing the same two controls twice, a hundred pixels apart, on a
+screen whose whole job is one record. Duplication was argued for once, on the
+grounds that the moment you want to log something is while you are looking at
+what is playing; the swipe turned out to be short enough that the argument did
+not survive seeing it.
+
+**No prompt on the card.** One was promoted there to give the Send button its
+reason; the card is the counted facts and the records now, and all three
+prompts sit together on the screen below, which is what that pane is for.
+
+**An entry is edited on the entry.** The CMS list at `/dashboard/entries` was
+built when there was nowhere else to do it, and it is the same shape the card
+had before this session: a form for something you cannot see while you type
+into it. Finding one among many is what the archive's search already does, so
+the list is not earning its place either.
+
+**Editing is for typos, second thoughts soon after, and genuine mistakes — not
+for revising a listen.** A relisten is a new entry; the journal is a record of
+encounters and rewriting an old one would be falsifying the encounter rather
+than adding to it. That is what makes the next decision cheap: if editing is
+only ever small, a mark saying it happened costs nothing and settles the
+question of whether the record can be trusted.
+
+**A changed note says so.** Editing an album note or a track note stamps
+"Edited on {date}", shown with the entry. Never written down until now, and
+never built — `entries` has `created_at` and no `updated_at`, so this needs a
+column. The point is not an audit trail; it is that a journal nobody can
+silently rewrite is worth more than one where every entry might have been.
+
+**Delete lives at the foot of an entry's edit mode**, behind a second
+confirmation and a warning that says what it is. Not in the bar beside Save:
+they are not the same weight, and a destructive control next to the one pressed
+every time is one that gets pressed by accident. The first press opens the
+warning in place rather than a dialog — a dialog is dismissed by reflex, and
+this has to be read to be got past.
+
+**The delete cleans up after itself rather than warning about the mess.** Only
+one of the three things referring to an entry is a foreign key:
+`settings.pinned_entry_id` clears itself, while `comments.entry_slug` is plain
+text and `entries.source_entry_id` has an index and no key. So the delete
+removes the entry's comments and clears the chain links pointing at it before
+removing the row. The alternative was a warning long enough to explain the mess
+it was about to leave, which is a worse answer than not leaving one.
+
+**The warning is two sentences: it deletes this album permanently, and it can
+only be undone by restoring a backed up copy.** It said four. The other two were true
+of the database rather than of anything a reader would recognise — what happens
+to comment rows, and what a broken source link means — and nobody should have
+to understand the schema to be warned about losing an album. Both are handled
+by the delete itself now, which is a better place for a consequence than a
+paragraph.
+
+**`source_entry_id` is lineage, not association.** It points at *the sender's
+entry for the same album*, never at the entry that prompted the recommendation.
+Zach logs Voodoo and sends it to Miyel; Miyel logs Voodoo and her entry's
+`source_entry_id` points at Zach's Voodoo entry. Walking the column upward
+gives the whole history of one record — who found it first and who passed it to
+whom — and that only works because every hop is the same album. `null` means
+origin.
+
+The tempting misreading is association: somebody reads your entry on Voodoo,
+sends you Black Messiah, and that new entry points back at the Voodoo entry.
+That is a real relationship and it is not this one — the album changes at every
+hop, so the trail cannot be walked because each step changes the subject.
+
+**A valid `source_entry_id` must share the current entry's `album_key`,** and
+that is enforced on write. The invariant is also the argument for keeping the
+two ideas apart: it is impossible to state if one column carries both.
+
+**`prompted_by` is the column association would need**, if it is ever wanted.
+Parked, not built.
+
+**Lineage is written once; the rest of the chain is editable.** `received_from`
+and `received_date` are corrections — you log something and remember a week
+later that Zach sent it, which is the same kind of fix as a typo.
+`source_entry_id` is not: either their entry led to yours or it did not, and a
+lineage anyone can rewrite is a record of nothing. So it may be set while it is
+empty and never again, which is the `WRITE_ONCE` rule `serial` and `founded_at`
+already use, and it is dropped silently for the same reason — the editor posts
+every field it knows about and should not fail because one was already settled.
+
+Two consequences worth having written down. It reopens if the entry it points
+at is deleted, because `ON DELETE SET NULL` clears it — which is right, since
+that is the one case where the lineage genuinely ended. And until the send flow
+exists there is nothing to set it automatically, so the only setter is a hand
+in the editor and a wrong one can only be undone in SQL. That is the accepted
+cost of not having editable lineage.
 
 **Everything editable is edited where it prints.** The link rows and the rig
 rows were fields on the card for things that appear a screen below it, which is
@@ -335,6 +458,24 @@ the phone. Not removable, but quiet.
 smallest type, no version number. Satisfies AGPL §13 whether or not anyone has
 modified anything, so nobody has to think about compliance.
 
+**One header everywhere, 2026-08-28.** Mark centred, one control each side —
+the same arrangement the About card uses, scaled down. The header currently
+changes shape between the panes and an entry; every screen should read the
+same.
+
+**`NavBeacon` goes from everywhere but the beacon pane.** It is a persistent
+status bar for something the visitor was already told, it competes with the
+writing, and it is part of why five components poll Last.fm independently.
+
+**Owner tools are server-checked, not hidden with CSS.** Two icons, top left,
+rendered only for the owner: pencil to the editor, printer to the export flow.
+The difference matters — asking the browser whether you are signed in and
+hiding what it finds still ships the buttons to everyone. No `DotsThree`: if a
+fourth tool appears the pencil becomes a menu and nothing else moves.
+
+**Admin controls do not sit in the reading flow.** The Edit and Pin bubbles
+come out of the chip row under the rating; that row is for the reader.
+
 ---
 
 ## The journal
@@ -377,6 +518,28 @@ rater and a harsh rater with identical taste should score as identical.
 editable. Changing a rating on an older entry prompts once: opinion changed, or
 fixing a mistake?
 
+**Editing happens on the entry, and nowhere else. `/dashboard/entries` is
+deleted, 2026-08-28.** A table of every row with a form behind each one is a
+CMS, and this site does not have a CMS shape — it has entries. The list you
+find something in already exists and is called the journal. The last argument
+for keeping the route was that it could change two things the entry could not,
+album art and entry type; both are fields on the entry now, so the argument
+went with them.
+
+**The cover is the control.** While a correction is open the album art is a
+button: press it and the address opens underneath, with a "Find it again" that
+re-asks Apple using whatever album and artist are currently in the draft. That
+second ask is the point — art arrives from a search on those two fields, so a
+wrong cover is nearly always a wrong match, and by the time somebody is in here
+the album and artist have usually just been corrected. Outside a correction the
+cover is a picture and pressing it does nothing, which is what keeps the press
+free for the parked tap-to-QR.
+
+**No `relationship` picker in the entry editor.** The field was retired above
+and this is where that finishes: the old dashboard form was the last place it
+could be set, and deleting the route took the last picker off the site. Old
+rows keep their values as legacy data.
+
 **`entries.tags` dropped, 2026-08-27.** Autogenerated by the model in the old
 format call, never written by hand, never used to find anything. Of 401 values,
 54% restated a column the table already had and the rest were generic
@@ -404,6 +567,15 @@ installing from it does.
 ---
 
 ## Sharing
+
+**Two different things were sharing one word, 2026-08-28.** They split by
+audience, which is the same line the rest of this section draws — addresses
+travel freely, contents do not:
+
+- **The printer** makes an artifact out of the owner's writing and rating.
+  Owner-only, server-checked, and it lives in the header.
+- **Copy link and QR** pass along an address. Available to anyone, at the foot
+  of an entry, and eventually on the art itself.
 
 **Cards carry the mark only — no URL.** Printing the address on everyone's
 cards advertises Miyel, not the software.
@@ -519,7 +691,12 @@ someone sending it on. A directory doesn't solve discovery.
   already exist as video, so the assets are ready).
 - Manual now-playing override — covers vinyl and iOS Apple Music, where
   scrobbling is unreliable.
-- Photo-QR on individual entries — works, but verification on mount makes pages
-  sluggish. Store the winning version and band instead of re-verifying.
+- Tap-to-QR on individual entries — tapping the art swaps it for a code to that
+  entry and copies the link. It works; it was sluggish because verification ran
+  on mount. Three things fix it: build on tap rather than on mount, cache the
+  winning version and tonal band on the entry so later builds skip decoding,
+  and do it server-side, because iTunes sends no CORS headers and a browser
+  canvas cannot read album art pixels. Needs a "link copied" line — a clipboard
+  write with no feedback reads as broken.
 - Address book (`people` table) — turns journal compare from "paste a URL" into
   "pick a name."

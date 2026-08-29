@@ -9,8 +9,11 @@
 'use client';
 import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { Check, PencilSimple, PushPin, PushPinSlash, X } from '@phosphor-icons/react';
 import { fonts } from '../../../library/sitewide_visuals';
-import { parseHorizon, entryTracks, splitNotes, entryTypeLabel } from '../../../library/entry_formatter';
+import { sizedAlbumArt, fetchAlbumArtUrl } from '../../../library/music_data_api';
+import { parseHorizon, entryTracks, splitNotes, entryTypeLabel, parseRating } from '../../../library/entry_formatter';
 import { kept_receipts } from '../../../library/receipts';
 import { buildReferenceIndex, createReferenceLinker } from '../../../library/cross_references';
 import SiteNav from '../../../components/main_components/SiteNav';
@@ -20,13 +23,282 @@ import CommentBubble from '../../../components/main_components/Slug_Page/Comment
 import MetadataLabel from '../../../components/main_components/Slug_Page/MetadataLabel';
 import Chip from '../../../components/main_components/Slug_Page/Chip';
 import StarRating from '../../../components/main_components/StarRating';
+import StarPicker from '../../../components/session_components/StarRating';
+import { editStamp } from '../../../library/entry_formatter';
+import { useEntryEditor } from '../../../hooks/useEntryEditor';
+import { useBookplate } from '../../../components/main_components/Bookplate';
 
 
 // The pair of actions that close the entry out used to share a local style
 // object; it's .ln-pill in globals.css now, so the same button reads the
 // same way at the foot of every page on the site.
 
+// The hero's thumbnail, sized here rather than inline because the element it
+// sizes changes tag while a correction is open — a picture when there is
+// nothing to do to it, a button when there is — and the two have to come out
+// exactly the same size or the hero row moves when you press Edit.
+const HERO_COVER = {
+  width: '110px', height: '110px', borderRadius: '12px', overflow: 'hidden', flexShrink: 0,
+  boxShadow: 'var(--shadow-lift)', border: '1px solid var(--panel-border)',
+};
+
 export default function FullPostPage({ entry, references = [] }) {
+  // ── The pin ───────────────────────────────────────────────────────────────
+  // One record from the journal shows as art on the About card, and this is
+  // where it gets chosen: on the record itself, at the moment somebody is
+  // looking at it and thinks *that one*. The alternative was a search sheet
+  // opened from the card, which is more machinery for a worse moment — by the
+  // time you are looking at your own card you have to remember what you wanted
+  // rather than recognise it.
+  //
+  // Exactly one, and the shape is the rule rather than a check: pinned_entry_id
+  // is a single column, so pinning a second unpins the first with nothing
+  // having to decide that, and its foreign key carries ON DELETE SET NULL, so
+  // deleting a pinned entry clears the pin instead of leaving the card
+  // pointing at nothing. Three of them lived here for an afternoon and needed
+  // jsonb to hold, which meant losing the key and the guarantee with it.
+  const router = useRouter();
+  const { pinned_entry_id } = useBookplate();
+  const [authed, setAuthed] = useState(false);
+  // What this page currently believes, which is not always what the context
+  // says: the context is server state and only catches up on a refresh, so a
+  // press updates this immediately and the refresh confirms it.
+  const [pinnedHere, setPinnedHere] = useState(null);
+  const [pinning, setPinning] = useState(false);
+  const isPinned = pinnedHere === null ? pinned_entry_id === entry.id : pinnedHere;
+
+  useEffect(() => {
+    fetch('/api/auth/check')
+      .then(r => r.json())
+      .then(d => setAuthed(!!d.authed))
+      .catch(() => {});
+  }, []);
+
+  async function togglePin() {
+    if (pinning) return;
+    const next = !isPinned;
+    setPinning(true);
+    // Moved before the request rather than after it. This is one integer and
+    // the answer is never in doubt; waiting on a round trip to redraw a pin
+    // makes a press feel like it did not land.
+    setPinnedHere(next);
+    try {
+      const res = await fetch('/api/settings', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pinned_entry_id: next ? entry.id : null }),
+      });
+      if (!res.ok) throw new Error('save failed');
+      // The card reads pinned_entry_id off the root layout, which is a server
+      // component — so the way to make the card agree with this page is to ask
+      // the server to render again.
+      router.refresh();
+    } catch {
+      setPinnedHere(!next);
+    } finally {
+      setPinning(false);
+    }
+  }
+
+  // ── Correcting what is written ────────────────────────────────────────────
+  // The fields are drawn where the writing is, not in a form somewhere else:
+  // the album note becomes a textarea in the album note's place, and a track's
+  // note becomes one under that track. Same argument as the card's editor —
+  // a field for something you cannot see while you type into it is a field you
+  // fill in blind.
+  const edit = useEntryEditor(entry);
+
+  // ── The cover ─────────────────────────────────────────────────────────────
+  // Whether the address under the art is showing. The art is the button: press
+  // it while a correction is open and it becomes the field for its own
+  // address, which is the rule the whole editor follows — you press the thing
+  // you are changing, and there is nowhere else to go and look for it.
+  //
+  // Closed again whenever the correction closes, so it is never found already
+  // open by somebody who came back to fix a typo.
+  const [coverOpen, setCoverOpen] = useState(false);
+  const [finding, setFinding] = useState(false);
+  const [coverNote, setCoverNote] = useState('');
+  useEffect(() => { if (!edit.editing) { setCoverOpen(false); setCoverNote(''); } }, [edit.editing]);
+
+  // Asking Apple again, which is what a wrong cover almost always wants. The
+  // art arrives from a search on album and artist, so a cover that is wrong is
+  // nearly always a search that matched the wrong record — and by the time
+  // somebody is in here the album and artist have usually just been corrected,
+  // which is exactly what makes the second ask land where the first did not.
+  async function findCover() {
+    if (finding) return;
+    setFinding(true);
+    setCoverNote('');
+    try {
+      const found = await fetchAlbumArtUrl(edit.draft.album, edit.draft.artist, edit.draft.year);
+      if (found) edit.set('album_art', found);
+      else setCoverNote('Apple has nothing under that album and artist.');
+    } finally {
+      setFinding(false);
+    }
+  }
+
+  // What the page draws. album_art holds the master, which is up to 3000px
+  // square, and the largest this is ever printed is 110 — so the draft is
+  // sized on the way to the screen for the same reason the served copy is.
+  const coverSrc = edit.editing
+    ? (edit.draft.album_art ? sizedAlbumArt(edit.draft.album_art, 900) : '')
+    : entry.album_art;
+
+  const coverField = edit.editing && coverOpen && (
+    <div className="ln-cover-swap">
+      <input
+        className="ln-field ln-cover-url"
+        value={edit.draft.album_art}
+        onChange={e => edit.set('album_art', e.target.value)}
+        placeholder="Image address"
+        aria-label="Album art address"
+        spellCheck={false}
+      />
+      <span className="ln-flags-row">
+        <button type="button" className="ln-flag" onClick={findCover} disabled={finding}>
+          {finding ? 'Looking' : 'Find it again'}
+        </button>
+        {edit.draft.album_art && (
+          <button type="button" className="ln-flag" onClick={() => edit.set('album_art', '')}>Clear</button>
+        )}
+        <button type="button" className="ln-flag" onClick={() => setCoverOpen(false)}>Done</button>
+      </span>
+      {coverNote && <p className="ln-cover-note">{coverNote}</p>}
+    </div>
+  );
+
+  // ── Which shelf it came off ───────────────────────────────────────────────
+  // Whether this is something from the library or something somebody sent.
+  // It is the Submission chip, set rather than read, and it was one of the two
+  // things /dashboard/entries could do that this page could not.
+  //
+  // The other legacy field on that form was `relationship` — First Listen,
+  // Revisit, Study. It is not here and does not come back: DECISIONS retired
+  // it, every value having dissolved into something that says it better (a
+  // revisit is the listen number, a submission is `received_from`, formative
+  // is a flag). Old rows keep their values as legacy data. Retiring that route
+  // is what finally takes the last picker off the site.
+  const typeField = (
+    <span className="ln-flags-row">
+      <select
+        className="ln-select"
+        value={edit.draft.entry_type}
+        onChange={e => edit.set('entry_type', e.target.value)}
+        aria-label="Which shelf this came off"
+      >
+        <option value="">Shelf —</option>
+        <option value="Personal Library">Library</option>
+        <option value="Submission">Submission</option>
+      </select>
+    </span>
+  );
+
+  // Only the way in. Save and Cancel used to sit here too, and then again in
+  // the bar at the foot of the page — the same pair twice on one screen, and
+  // the one that matters is the one that follows you down to the note you are
+  // actually fixing. This is the button that opens a correction; the bar is
+  // what closes it.
+  const editControls = authed && !edit.editing && (
+    <button type="button" className="ln-pin" onClick={edit.begin}>
+      <PencilSimple size={13} weight="regular" aria-hidden="true" />
+      <span>Edit</span>
+    </button>
+  );
+
+  // ── The fields at the head of the entry ───────────────────────────────────
+  // Album, artist, year, genre, the score and the three flags. They print in
+  // two places — the phone's first screen and the desktop hero — so like the
+  // pin they are written once here and mounted in both, rather than kept as
+  // two copies to drift apart.
+  const titleField = (
+    <input
+      className="ln-field ln-field--title"
+      value={edit.draft.album}
+      onChange={e => edit.set('album', e.target.value)}
+      placeholder="Album"
+      aria-label="Album"
+    />
+  );
+
+  const bylineField = (
+    <span className="ln-byline-fields">
+      <input
+        className="ln-field"
+        value={edit.draft.artist}
+        onChange={e => edit.set('artist', e.target.value)}
+        placeholder="Artist"
+        aria-label="Artist"
+      />
+      <input
+        className="ln-field ln-field--year"
+        value={edit.draft.year}
+        onChange={e => edit.set('year', e.target.value)}
+        placeholder="Year"
+        inputMode="numeric"
+        aria-label="Year"
+      />
+    </span>
+  );
+
+  const flagFields = (
+    <span className="ln-flags">
+      {/* One thing per line rather than five wrapping into each other: the
+          score, then the genre, then the flags. A row that reflows as you
+          widen a genre is a row you cannot aim at. */}
+      <span className="ln-flags-row">
+        <StarPicker
+          value={parseRating(edit.draft.rating) || 0}
+          onChange={v => edit.set('rating', String(v))}
+          size={22}
+        />
+      </span>
+      <input
+        className="ln-field ln-field--genre"
+        value={edit.draft.genre}
+        onChange={e => edit.set('genre', e.target.value)}
+        placeholder="Genre"
+        aria-label="Genre"
+      />
+      <span className="ln-flags-row">
+      {[
+        { key: 'favorite', label: 'Favorite' },
+        { key: 'masterpiece', label: 'Masterpiece' },
+        { key: 'formative', label: 'Formative' },
+      ].map(flag => (
+        <button
+          key={flag.key}
+          type="button"
+          className={'ln-flag' + (edit.draft[flag.key] ? ' ln-flag--on' : '')}
+          onClick={() => edit.set(flag.key, !edit.draft[flag.key])}
+          aria-pressed={!!edit.draft[flag.key]}
+        >
+          {flag.label}
+        </button>
+      ))}
+      </span>
+      {typeField}
+    </span>
+  );
+
+  const pinButton = authed && !edit.editing && (
+    <button
+      type="button"
+      className={'ln-pin' + (isPinned ? ' ln-pin--on' : '')}
+      onClick={togglePin}
+      disabled={pinning}
+      aria-pressed={isPinned}
+      aria-label={isPinned ? 'Unpin this from the card' : 'Pin this to the card'}
+      title={isPinned ? 'Pinned to your card' : 'Pin to your card'}
+    >
+      {isPinned
+        ? <PushPin size={13} weight="fill" aria-hidden="true" />
+        : <PushPinSlash size={13} weight="regular" aria-hidden="true" />}
+      <span>{isPinned ? 'Pinned' : 'Pin'}</span>
+    </button>
+  );
+
   const [commentsByTrack, setCommentsByTrack] = useState({});
   const [commentsLoaded, setCommentsLoaded] = useState(false);
 
@@ -131,6 +403,28 @@ export default function FullPostPage({ entry, references = [] }) {
   // album's own year — a second bare date there would just read as a second
   // release year.
   const postedOn = new Date(entry.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  // A stamp sits next to the thing that changed, never at the top of the page.
+  // One date on a post says only that something moved; a date under a track's
+  // note says what — and an entry carrying five of them looks different from
+  // one carrying a single typo fix, which is the difference that keeps this
+  // from being a quiet rewrite tool.
+  //
+  // Short, because it prints inline under prose rather than as a field.
+  const editedOn = entry.edited_at ? editStamp(entry.edited_at) : null;
+
+  // A textarea that grows instead of scrolling, so a note is written at the
+  // length it will be read at. Runs on mount as well as on every keystroke, or
+  // a note already six lines long opens showing one.
+  const grow = event => {
+    const el = event.currentTarget;
+    el.style.height = 'auto';
+    el.style.height = `${el.scrollHeight}px`;
+  };
+  const growOnMount = el => {
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = `${el.scrollHeight}px`;
+  };
 
   const allTracksFive = parsedTracks.length > 0 && parsedTracks.every(t => t.stars === 5);
   const isMasterpiece = allTracksFive || entry.rating === 'Masterpiece';
@@ -213,6 +507,7 @@ export default function FullPostPage({ entry, references = [] }) {
         .ln-hero-pad    { position: absolute; bottom: 0; left: 0; right: 0; padding: 0 48px 36px; }
         .ln-hero-row    { display: flex; align-items: flex-end; gap: 24px; }
         .ln-content     { padding: 48px 48px 100px; }
+        .ln-cover-hero  { max-width: 860px; margin: 0 auto; padding: 16px 48px 0; }
         .ln-screen-one  { display: none; }
         /* How much of the top the header occupies on screen two. The dot nav
            is hidden by then, so this only has to clear the logo row (which
@@ -223,7 +518,7 @@ export default function FullPostPage({ entry, references = [] }) {
         @media (max-width: 768px) {
           /* ── SCREEN ONE ── a full viewport of album: art on top, everything
              we know about it centred underneath, and a cue to scroll on. */
-          .ln-hero { display: none; }
+          .ln-hero, .ln-cover-hero { display: none; }
 
           /* The two screens snap inside their own container rather than the
              document. This is the whole trick, and it is why the homepage
@@ -409,33 +704,73 @@ export default function FullPostPage({ entry, references = [] }) {
       {/* ── NAV ── shared site nav (logo + dot nav), identical to every other public page */}
       <SiteNav />
 
+      {/* A correction is open, and the page is long. The controls that started
+          it are at the top of the entry, which is a screen and a half away by
+          the time you are fixing a note on track nine — so they come with you.
+          It is also the only thing on the page that says you are editing at
+          all once the hero has scrolled off. */}
+      {edit.editing && (
+        <div className="ln-editing-bar">
+          <span className="ln-editing-label">Editing</span>
+          <button type="button" className="ln-pin ln-pin--on" onClick={edit.save} disabled={edit.saving}>
+            <Check size={13} weight="bold" aria-hidden="true" />
+            <span>{edit.saving ? 'Saving' : 'Save'}</span>
+          </button>
+          <button type="button" className="ln-pin" onClick={edit.cancel} disabled={edit.saving}>
+            <X size={13} weight="bold" aria-hidden="true" />
+            <span>Cancel</span>
+          </button>
+        </div>
+      )}
+      {edit.trouble && <p className="ln-trouble">{edit.trouble}</p>}
+
       {/* On phones this is the scroll container the two screens snap inside —
           the same arrangement as .hp-mobile-screens on the homepage. On
           desktop it has no height or overflow of its own, so everything below
           just falls back into normal document flow. */}
-      <div className="ln-screens">
+      <div className={'ln-screens' + (edit.editing ? ' ln-editing' : '')}>
 
       {/* ── SCREEN ONE (phones) ── a full screen of album: art up top, then the
           title, artist, year, rating and qualifiers centred beneath it. The
           desktop hero below is the same information in a different shape. */}
       <section className="ln-screen-one">
-        {entry.album_art && (
+        {edit.editing ? (
+          <button
+            type="button"
+            className="ln-screen-one-art ln-cover ln-cover--live"
+            onClick={() => setCoverOpen(o => !o)}
+            aria-expanded={coverOpen}
+            aria-label="Replace the cover"
+          >
+            {coverSrc && <img src={coverSrc} alt="" />}
+            <span className="ln-cover-hint">{coverSrc ? 'Replace' : 'Add a cover'}</span>
+          </button>
+        ) : entry.album_art && (
           <div className="ln-screen-one-art">
             <img src={entry.album_art} alt={entry.album} />
           </div>
         )}
-        <h1 className="ln-screen-one-title" style={{ fontSize: titleSize }}>{entry.album}</h1>
+        {coverField}
+        {edit.editing
+          ? <div className="ln-screen-one-title" style={{ fontSize: titleSize }}>{titleField}</div>
+          : <h1 className="ln-screen-one-title" style={{ fontSize: titleSize }}>{entry.album}</h1>}
         <div className="ln-screen-one-artist">
-          {entry.artist}{entry.year ? ' · ' + entry.year : ''}
+          {edit.editing ? bylineField : <>{entry.artist}{entry.year ? ' · ' + entry.year : ''}</>}
         </div>
-        {displayRating > 0 && (
+        {/* The score and the chips are what the flags below edit, so while a
+            correction is open they stand down rather than sit beside their own
+            controls saying the same thing twice. */}
+        {!edit.editing && displayRating > 0 && (
           <StarRating rating={displayRating} size={24} glow={isMasterpiece} animate burst={isMasterpiece} />
         )}
+        {edit.editing && flagFields}
         <div className="ln-screen-one-chips">
-          {listenLabel && <Chip>{listenLabel}</Chip>}
-          {isSubmission && <Chip>Submission</Chip>}
-          {(entry.favorite === true || entry.favorite === 'true') && <Chip tone="fav">Favorite</Chip>}
-          {isMasterpiece && <Chip tone="mp">Masterpiece</Chip>}
+          {editControls}
+          {pinButton}
+          {!edit.editing && listenLabel && <Chip>{listenLabel}</Chip>}
+          {!edit.editing && isSubmission && <Chip>Submission</Chip>}
+          {!edit.editing && (entry.favorite === true || entry.favorite === 'true') && <Chip tone="fav">Favorite</Chip>}
+          {!edit.editing && isMasterpiece && <Chip tone="mp">Masterpiece</Chip>}
         </div>
         <div style={{ fontFamily: fonts.mono, fontSize: '9px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--ink-faint)' }}>
           Posted {postedOn}
@@ -460,36 +795,48 @@ export default function FullPostPage({ entry, references = [] }) {
           clear SiteNav + DotNav), and content-sized on phones, where the
           block stacks and would otherwise run up behind the nav. */}
       <div className="ln-hero">
-        {entry.album_art && (
-          <div style={{ position: 'absolute', inset: '-40px', backgroundImage: 'url(' + entry.album_art + ')', backgroundSize: 'cover', backgroundPosition: 'center', filter: 'blur(50px) saturate(1.3) brightness(1.05)', transform: 'scale(1.2)' }} />
+        {coverSrc && (
+          <div style={{ position: 'absolute', inset: '-40px', backgroundImage: 'url(' + coverSrc + ')', backgroundSize: 'cover', backgroundPosition: 'center', filter: 'blur(50px) saturate(1.3) brightness(1.05)', transform: 'scale(1.2)' }} />
         )}
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, var(--bg) 20%, transparent 100%)' }} />
         <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to bottom, var(--bg) 0%, transparent 38%)' }} />
 
         <div className="ln-hero-pad" style={{ maxWidth: '860px', margin: '0 auto' }}>
           <div className="ln-hero-row">
-            {entry.album_art && (
-              <div style={{
-                width: '110px', height: '110px', borderRadius: '12px', overflow: 'hidden', flexShrink: 0,
-                boxShadow: 'var(--shadow-lift)',
-                border: '1px solid var(--panel-border)',
-              }}>
-                <img src={entry.album_art} alt={entry.album} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+            {edit.editing ? (
+              <button
+                type="button"
+                className="ln-cover ln-cover--live"
+                style={HERO_COVER}
+                onClick={() => setCoverOpen(o => !o)}
+                aria-expanded={coverOpen}
+                aria-label="Replace the cover"
+              >
+                {coverSrc && <img src={coverSrc} alt="" />}
+                <span className="ln-cover-hint">{coverSrc ? 'Replace' : 'Add'}</span>
+              </button>
+            ) : entry.album_art && (
+              <div className="ln-cover" style={HERO_COVER}>
+                <img src={entry.album_art} alt={entry.album} />
               </div>
             )}
             <div style={{ flex: 1, paddingBottom: '4px' }}>
               <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(1.8rem, 4vw, 2.8rem)', fontWeight: 'var(--font-display-weight)', lineHeight: 1.05, letterSpacing: '-0.015em', color: 'var(--ink)', marginBottom: '6px' }}>
-                {entry.album}
-                {isMasterpiece && <span style={{ fontFamily: 'var(--font-label)', fontSize: '10px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--accent)', marginLeft: '12px', verticalAlign: 'middle', animation: 'ln-breathe 2.8s ease-in-out infinite' }}>Masterpiece</span>}
+                {edit.editing ? titleField : entry.album}
+                {!edit.editing && isMasterpiece && <span style={{ fontFamily: 'var(--font-label)', fontSize: '10px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--accent)', marginLeft: '12px', verticalAlign: 'middle', animation: 'ln-breathe 2.8s ease-in-out infinite' }}>Masterpiece</span>}
               </h1>
               <div style={{ fontFamily: 'var(--font-label)', fontSize: '11px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--ink-soft)', marginBottom: '12px' }}>
-                {entry.artist}{entry.year ? ' · ' + entry.year : ''}
+                {edit.editing ? bylineField : <>{entry.artist}{entry.year ? ' · ' + entry.year : ''}</>}
               </div>
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
-                {displayRating > 0 && <StarRating rating={displayRating} size={15} glow={isMasterpiece} style={{ verticalAlign: 'middle' }} />}
-                {listenLabel && <Chip>{listenLabel}</Chip>}
-                      {isSubmission && <Chip>Submission</Chip>}
-                {(entry.favorite === true || entry.favorite === 'true') && <Chip tone="fav">Favorite</Chip>}
+                {edit.editing
+                  ? flagFields
+                  : displayRating > 0 && <StarRating rating={displayRating} size={15} glow={isMasterpiece} style={{ verticalAlign: 'middle' }} />}
+                {editControls}
+                {pinButton}
+                {!edit.editing && listenLabel && <Chip>{listenLabel}</Chip>}
+                {!edit.editing && isSubmission && <Chip>Submission</Chip>}
+                {!edit.editing && (entry.favorite === true || entry.favorite === 'true') && <Chip tone="fav">Favorite</Chip>}
               </div>
               <div style={{ fontFamily: fonts.mono, fontSize: '9px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--ink-faint)', marginTop: '12px' }}>
                 Posted {postedOn}
@@ -498,6 +845,12 @@ export default function FullPostPage({ entry, references = [] }) {
           </div>
         </div>
       </div>
+      {/* Under the hero rather than inside it. .ln-hero is a fixed 390px with
+          its content anchored to the bottom, so a panel added in there grows
+          upward and pushes the album title up behind the header — which is
+          exactly what it did. Phones use the copy on screen one; this one is
+          hidden there, or both would show. */}
+      <div className="ln-cover-hero">{coverField}</div>
 
       {/* ── SCREEN TWO ── on phones this is the second snap screen: the header
           stays put at the top while everything below scrolls inside it, the
@@ -518,7 +871,19 @@ export default function FullPostPage({ entry, references = [] }) {
             <MetadataLabel sticky>Album Notes</MetadataLabel>
             {/* 6px, the same gap a track note leaves under itself before its
                 own bubble. */}
-            <div style={{ lineHeight: 1.95, fontSize: '15px', whiteSpace: 'pre-wrap', color: 'var(--ink)', marginBottom: '6px' }}>{linkedAlbumNotes}</div>
+            {edit.editing ? (
+              <textarea
+                className="ln-write"
+                value={edit.draft.notes}
+                onChange={e => edit.set('notes', e.target.value)}
+                ref={growOnMount}
+                onInput={grow}
+                aria-label="Album notes"
+              />
+            ) : (
+              <div style={{ lineHeight: 1.95, fontSize: '15px', whiteSpace: 'pre-wrap', color: 'var(--ink)', marginBottom: '6px' }}>{linkedAlbumNotes}</div>
+            )}
+            {editedOn && !edit.editing && <p className="ln-edited">Edited {editedOn}</p>}
             <CommentBubble
               slug={entry.slug}
               trackIndex={-1}
@@ -558,11 +923,14 @@ export default function FullPostPage({ entry, references = [] }) {
                 <TrackThread
                   key={i}
                   track={t}
-                  note={linkedTrackNotes[i]}
+                  note={edit.editing ? null : linkedTrackNotes[i]}
                   trackIndex={i}
                   slug={entry.slug}
                   commentsByTrack={commentsByTrack}
                   onRefresh={loadComments}
+                  editing={edit.editing}
+                  draft={edit.draft.tracks[i]}
+                  onField={(key, value) => edit.setTrack(i, key, value)}
                 />
               ))}
             </div>
@@ -574,6 +942,11 @@ export default function FullPostPage({ entry, references = [] }) {
         {/* All Entries leads: its arrow points back the way you came, and the
             up arrow reads better second. */}
         <div style={{ borderTop: '1px solid var(--border)', paddingTop: '28px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+          {/* The way out of the entry, and — while a correction is open — the
+              way to end it. Delete sits at the very foot rather than in the bar
+              with Save: they are not the same weight, and a destructive control
+              beside the one you press every time is a control you will
+              eventually press by accident. */}
           <Link href="/" className="ln-pill">← All entries</Link>
           <button
             onClick={() => {
@@ -594,6 +967,111 @@ export default function FullPostPage({ entry, references = [] }) {
             ↑ Back to top
           </button>
         </div>
+
+        {/* ── Where this came from ─────────────────────────────────────────
+            Private, and the only part of an entry a visitor never sees —
+            withoutChain strips all three before the page is rendered, which is
+            why they arrive by their own fetch when an edit opens rather than
+            with the entry.
+            The source is the sender's entry for *this same album*, so the
+            picker offers exactly that and nothing else: walking the column
+            upward is what gives the history of one record, and it only holds
+            while every hop is the same album. */}
+        {edit.editing && (
+          <div className="ln-chain">
+            <p className="ln-chain-head">Where this came from · only you see this</p>
+            <label className="ln-chain-row">
+              <span className="ln-chain-label">Sent by</span>
+              <input
+                className="ln-field"
+                value={edit.draft.received_from ?? ''}
+                onChange={e => edit.set('received_from', e.target.value)}
+                placeholder="Nobody — I found it"
+              />
+            </label>
+            <label className="ln-chain-row">
+              <span className="ln-chain-label">Received</span>
+              <input
+                className="ln-field"
+                type="date"
+                value={edit.draft.received_date ?? ''}
+                onChange={e => edit.set('received_date', e.target.value)}
+              />
+            </label>
+            {/* Written once. Where an entry sits in the tree is not an
+                opinion — either their entry led to yours or it did not — so it
+                can be set while it is empty and never again. Once it points
+                somewhere the picker is gone and the line simply says where.
+                See the note in update_entry, which enforces the same thing
+                where it cannot be got around. */}
+            {edit.draft.source_entry_id ? (
+              <div className="ln-chain-row">
+                <span className="ln-chain-label">Their entry</span>
+                <span className="ln-chain-fixed">
+                  {edit.kin.find(k => String(k.id) === String(edit.draft.source_entry_id))?.album
+                    ?? 'Another entry for this album'}
+                  <span className="ln-chain-locked"> · set once, not editable</span>
+                </span>
+              </div>
+            ) : (
+              <label className="ln-chain-row">
+                <span className="ln-chain-label">Their entry</span>
+                <select
+                  className="ln-field"
+                  value={edit.draft.source_entry_id ?? ''}
+                  onChange={e => edit.set('source_entry_id', e.target.value)}
+                  disabled={edit.kin.length === 0}
+                >
+                  <option value="">
+                    {edit.kin.length === 0 ? 'No other entry for this album' : 'None — this is the origin'}
+                  </option>
+                  {edit.kin.map(k => (
+                    <option key={k.id} value={k.id}>
+                      {k.album} · listen {k.listen_number}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+          </div>
+        )}
+
+        {edit.editing && (
+          <div className="ln-danger">
+            {!edit.asking ? (
+              <button type="button" className="ln-danger-open" onClick={edit.ask}>
+                Delete this entry
+              </button>
+            ) : (
+              <div className="ln-danger-ask">
+                {/* Two sentences. It said four, and the other two were true
+                    of the database rather than of anything a reader would
+                    recognise — what happens to comment rows, and what a broken
+                    source link means. Nobody should have to understand the
+                    schema to be warned about losing an album.
+                    Both of those are handled by delete_entry now anyway, which
+                    is the better place for a consequence than a paragraph. */}
+                <p className="ln-danger-warn">
+                  This deletes <strong>{entry.album}</strong> permanently. It can only be
+                  undone by restoring a backed up copy.
+                </p>
+                <div className="ln-danger-row">
+                  <button
+                    type="button"
+                    className="ln-danger-go"
+                    onClick={edit.remove}
+                    disabled={edit.removing}
+                  >
+                    {edit.removing ? 'Deleting…' : 'Delete permanently'}
+                  </button>
+                  <button type="button" className="ln-pill" onClick={edit.unask} disabled={edit.removing}>
+                    Keep it
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
       </div>
 
