@@ -1955,40 +1955,81 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 .beacon-recent-tile:nth-child(2) { opacity: 0.46; filter: saturate(0.48); transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease, filter 0.4s ease; }
 .beacon-recent-tile:nth-child(3) { opacity: 0.32; filter: saturate(0.32); transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease, filter 0.4s ease; }
 
-/* ── FlipTile — the archive grid's album tile ──────────────────────────────
-   Two behaviours in one component (see FlipTile.js): on desktop it's a
-   still tile with a hover wash that opens EntryModal, on a phone it turns
-   over to its metadata card.
+/* ── The layer ─────────────────────────────────────────────────────────────
+   An entry over the journal. Fixed and opaque and the full screen, because it
+   is not a card floating on the wall — it is the record, and the wall is
+   simply still there underneath, holding its place.
 
-   Only .ft-inner rotates, and each face carries its own border-radius +
-   overflow. Putting the clipping on the rotating box instead is what tears
-   the rounded corners off in iOS Safari — the same class of bug the
-   .strip-tile notes above describe. */
+   It slides in from the right because that is where things arrive from, not
+   because right means entry. The cross has three directions with one meaning
+   each; a fourth that depended on which row you were in would be a mode. */
+.lay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  background: var(--bg);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  animation: layIn 0.26s cubic-bezier(0.32, 0.72, 0, 1);
+}
+@keyframes layIn {
+  from { transform: translateX(100%); }
+  to   { transform: none; }
+}
+/* While a finger has hold of it the transform is written inline, frame by
+   frame, so it tracks 1:1 rather than easing along behind. */
+.lay--dragging { animation: none; }
+/* And when the finger lets go, it either springs back or finishes leaving. */
+.lay--settling { animation: none; transition: transform 0.18s ease-out; }
+
+@media (prefers-reduced-motion: reduce) {
+  .lay { animation: none; }
+  .lay--settling { transition: none; }
+}
+
+/* Top right, in the moon's place — not beside it. The header rule is one
+   control each side of the mark, and a layer that added a third would break
+   the rule on the one screen that is already a departure from it.
+
+   So on this surface the right-hand control means "get out", which is also the
+   direction the layer leaves in. The lights are one swipe away on every other
+   screen and this is a surface you are passing through; hiding the toggle here
+   costs nothing, where a close control you had to hunt for would cost the way
+   out. Hidden with CSS, which is fine because this is presentation — unlike
+   the owner's tools, where hiding was the wrong tool for the job. */
+.lay .sitenav-theme-btn { display: none; }
+.lay-shut {
+  position: fixed;
+  top: calc(22px + var(--safe-top));
+  right: 28px;
+  z-index: 210;
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 30px; height: 30px; border-radius: 9px;
+  color: var(--ink-faint); background: transparent; border: 0;
+  cursor: pointer; transition: color 0.15s, background 0.15s;
+}
+.lay-shut:hover { color: var(--ink); background: var(--bg-warm); }
+
+/* ── AlbumTile — the journal wall's album ──────────────────────────────────
+   A cover and a link to the record it is of. It used to be FlipTile, which
+   turned over on a phone to show a metadata card and opened a modal on a
+   desktop; both were ways of finding out more about a record without leaving
+   the wall, and the layer does that better than either — see app/@layer.
+
+   The `perspective` that made the turn possible is gone with it, and that is
+   worth a line of its own: perspective promotes every tile it is set on into
+   its own compositing layer, and those layers painted straight over the fixed
+   nav's backdrop. Album art scrolling through the logo was this property. */
 .ft {
   position: relative;
+  display: block;
   aspect-ratio: 1 / 1;
-  perspective: 900px;
   cursor: pointer;
+  text-decoration: none;
+  color: inherit;
   -webkit-tap-highlight-color: transparent;
 }
-.ft-inner {
-  position: absolute;
-  inset: 0;
-  transform-style: preserve-3d;
-  /* Slow enough to read as a card being turned over rather than a state
-     swap — the turn is most of what sells this, so it gets the time. */
-  transition: transform 0.72s cubic-bezier(0.4, 0, 0.2, 1);
-}
-/* will-change ONLY on the card that's actually turned over, never on the
-   whole grid. Blanket will-change put all 34 tiles on their own compositing
-   layers, and those layers painted straight over the fixed nav's backdrop —
-   album art scrolled through the logo and the dot labels. One card at a
-   time is also the state that needs it: face-up there's no 3D transform to
-   tear, face-down there is (see the .strip-tile notes above). */
-.ft--flipped .ft-inner {
-  transform: rotateY(180deg);
-  will-change: transform;
-}
+.ft-inner { position: absolute; inset: 0; }
 
 .ft-face {
   position: absolute;
@@ -1996,19 +2037,9 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   border-radius: 10px;
   overflow: hidden;
   background: var(--bg-warm);
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
 }
-.ft-face--back { transform: rotateY(180deg); }
 
 .ft-art { width: 100%; height: 100%; object-fit: cover; display: block; }
-/* The back face keeps the album's own art behind the metadata, blurred, so
-   the card still belongs to the record it came from — and mirrored on the
-   same axis the card turns on, the way the back of a real card would be.
-   The negative X scale is what makes the turn read as one object rotating
-   rather than two images cross-fading. The metadata on top is a separate
-   element, so it stays the right way round. */
-.ft-art--blurred { filter: blur(7px); transform: scale(-1.12, 1.12); }
 
 .ft-placeholder {
   width: 100%; height: 100%;
@@ -2019,9 +2050,9 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   color: var(--ink-faint);
 }
 
-/* Lift only where there's a pointer to hover with — on a phone the tile's
-   job is to turn over, and a hover state left stuck on after a tap looks
-   like the tile is still selected. */
+/* Lift only where there is a pointer to hover with. On a phone a hover state
+   left stuck on after a tap looks like the tile is still selected — and the
+   wash says which record this is, which is a question only a cursor asks. */
 @media (hover: hover) {
   .ft { transition: transform 0.18s ease, box-shadow 0.18s ease; }
   .ft:hover { transform: translateY(-3px); box-shadow: var(--shadow-lift); }
