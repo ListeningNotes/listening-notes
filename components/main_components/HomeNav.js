@@ -414,7 +414,7 @@ export default function HomeNav() {
       <div className="hn-rail" ref={railRef}>
         <section className="hn-pane" ref={paneRefs[0]} aria-label="About this journal">
           {crown}
-          <About stamps={stamps} authed={authed} pinned={pinned} />
+          <About stamps={stamps} authed={authed} pinned={pinned} entries={entries} />
         </section>
 
         <section className="hn-pane hn-pane--home" ref={paneRefs[1]} aria-label="Now listening">

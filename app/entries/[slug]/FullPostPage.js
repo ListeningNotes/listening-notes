@@ -9,8 +9,7 @@
 'use client';
 import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { Check, PushPin, PushPinSlash, X } from '@phosphor-icons/react';
+import { Check, X } from '@phosphor-icons/react';
 import { fonts } from '../../../library/sitewide_visuals';
 import { sizedAlbumArt, fetchAlbumArtUrl } from '../../../library/music_data_api';
 import { parseHorizon, entryTracks, splitNotes, entryTypeLabel, parseRating } from '../../../library/entry_formatter';
@@ -27,7 +26,6 @@ import StarRating from '../../../components/main_components/StarRating';
 import StarPicker from '../../../components/session_components/StarRating';
 import { editStamp } from '../../../library/entry_formatter';
 import { useEntryEditor } from '../../../hooks/useEntryEditor';
-import { useBookplate } from '../../../components/main_components/Bookplate';
 
 
 // The pair of actions that close the entry out used to share a local style
@@ -43,56 +41,19 @@ const HERO_COVER = {
   boxShadow: 'var(--shadow-lift)', border: '1px solid var(--panel-border)',
 };
 
+// ── There is no pin here ────────────────────────────────────────────────────
+// There was, for a week: a Pin chip in the row under the rating, on the
+// argument that you pick a record where you *recognise* it rather than where
+// you have to remember it. That argument was right and did not survive what it
+// cost. pinned_entry_id is a settings column, so it belongs with the other
+// settings fields behind the card's own pencil — and a control for it here is
+// an admin button in the middle of somebody's reading, on a line otherwise
+// made of facts about the record.
+//
+// So it is chosen from the card, through a search over the journal. From an
+// entry there is now no "pin this one": you go to the card and look it up.
+// More steps for the rarer action, which is the right way round.
 export default function FullPostPage({ entry, references = [], authed = false }) {
-  // ── The pin ───────────────────────────────────────────────────────────────
-  // One record from the journal shows as art on the About card, and this is
-  // where it gets chosen: on the record itself, at the moment somebody is
-  // looking at it and thinks *that one*. The alternative was a search sheet
-  // opened from the card, which is more machinery for a worse moment — by the
-  // time you are looking at your own card you have to remember what you wanted
-  // rather than recognise it.
-  //
-  // Exactly one, and the shape is the rule rather than a check: pinned_entry_id
-  // is a single column, so pinning a second unpins the first with nothing
-  // having to decide that, and its foreign key carries ON DELETE SET NULL, so
-  // deleting a pinned entry clears the pin instead of leaving the card
-  // pointing at nothing. Three of them lived here for an afternoon and needed
-  // jsonb to hold, which meant losing the key and the guarantee with it.
-  const router = useRouter();
-  const { pinned_entry_id } = useBookplate();
-  // What this page currently believes, which is not always what the context
-  // says: the context is server state and only catches up on a refresh, so a
-  // press updates this immediately and the refresh confirms it.
-  const [pinnedHere, setPinnedHere] = useState(null);
-  const [pinning, setPinning] = useState(false);
-  const isPinned = pinnedHere === null ? pinned_entry_id === entry.id : pinnedHere;
-
-  async function togglePin() {
-    if (pinning) return;
-    const next = !isPinned;
-    setPinning(true);
-    // Moved before the request rather than after it. This is one integer and
-    // the answer is never in doubt; waiting on a round trip to redraw a pin
-    // makes a press feel like it did not land.
-    setPinnedHere(next);
-    try {
-      const res = await fetch('/api/settings', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pinned_entry_id: next ? entry.id : null }),
-      });
-      if (!res.ok) throw new Error('save failed');
-      // The card reads pinned_entry_id off the root layout, which is a server
-      // component — so the way to make the card agree with this page is to ask
-      // the server to render again.
-      router.refresh();
-    } catch {
-      setPinnedHere(!next);
-    } finally {
-      setPinning(false);
-    }
-  }
-
   // ── Correcting what is written ────────────────────────────────────────────
   // The fields are drawn where the writing is, not in a form somewhere else:
   // the album note becomes a textarea in the album note's place, and a track's
@@ -277,23 +238,6 @@ export default function FullPostPage({ entry, references = [], authed = false })
       </span>
       {typeField}
     </span>
-  );
-
-  const pinButton = authed && !edit.editing && (
-    <button
-      type="button"
-      className={'ln-pin' + (isPinned ? ' ln-pin--on' : '')}
-      onClick={togglePin}
-      disabled={pinning}
-      aria-pressed={isPinned}
-      aria-label={isPinned ? 'Unpin this from the card' : 'Pin this to the card'}
-      title={isPinned ? 'Pinned to your card' : 'Pin to your card'}
-    >
-      {isPinned
-        ? <PushPin size={13} weight="fill" aria-hidden="true" />
-        : <PushPinSlash size={13} weight="regular" aria-hidden="true" />}
-      <span>{isPinned ? 'Pinned' : 'Pin'}</span>
-    </button>
   );
 
   const [commentsByTrack, setCommentsByTrack] = useState({});
@@ -762,7 +706,6 @@ export default function FullPostPage({ entry, references = [], authed = false })
         )}
         {edit.editing && flagFields}
         <div className="ln-screen-one-chips">
-          {pinButton}
           {!edit.editing && listenLabel && <Chip>{listenLabel}</Chip>}
           {!edit.editing && isSubmission && <Chip>Submission</Chip>}
           {!edit.editing && (entry.favorite === true || entry.favorite === 'true') && <Chip tone="fav">Favorite</Chip>}
@@ -828,7 +771,6 @@ export default function FullPostPage({ entry, references = [], authed = false })
                 {edit.editing
                   ? flagFields
                   : displayRating > 0 && <StarRating rating={displayRating} size={15} glow={isMasterpiece} style={{ verticalAlign: 'middle' }} />}
-                {pinButton}
                 {!edit.editing && listenLabel && <Chip>{listenLabel}</Chip>}
                 {!edit.editing && isSubmission && <Chip>Submission</Chip>}
                 {!edit.editing && (entry.favorite === true || entry.favorite === 'true') && <Chip tone="fav">Favorite</Chip>}
