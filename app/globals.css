@@ -2054,6 +2054,10 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   padding: 172px 24px 0;
   gap: 16px;
 }
+/* --border, not --bg-warm. Warm is #efebe2 against a #eef0ec page: four
+   points apart, which on a phone in daylight is nothing at all, and the layer
+   read as having arrived empty. This is ink at eight percent — quiet, but
+   unmistakably something. */
 .lay-wait-art {
   height: min(40dvh, 78vw);
   width: auto;
@@ -2061,12 +2065,12 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   flex-shrink: 1;
   min-height: 0;
   border-radius: 16px;
-  background: var(--bg-warm);
+  background: var(--border);
 }
 .lay-wait-line {
   height: 1em;
   border-radius: 6px;
-  background: var(--bg-warm);
+  background: var(--border);
 }
 .lay-wait-line--title { width: min(62%, 300px); height: 1.9rem; margin-top: 6px; }
 .lay-wait-line--byline { width: min(38%, 190px); height: 0.9rem; }
@@ -2074,14 +2078,36 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
    bar and invites you to watch it; this just says the page is alive. */
 .lay-wait-art,
 .lay-wait-line { animation: layWait 1.6s ease-in-out infinite; }
+/* A wider swing than the first version's, for the same reason the fill got
+   darker: the point of it is to be seen. */
 @keyframes layWait {
   0%, 100% { opacity: 1; }
-  50%      { opacity: 0.55; }
+  50%      { opacity: 0.35; }
 }
 @media (prefers-reduced-motion: reduce) {
   .lay-wait-art,
   .lay-wait-line { animation: none; }
 }
+
+/* The way back to the top of a piece of reading. Sized and coloured like the
+   arrow half of an EdgeCaret, because that is what it is — the same family
+   with nothing over it, since the place it lands is the place you are. */
+.ln-totop {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 0;
+  border-radius: 9px;
+  background: none;
+  color: var(--ink-faint);
+  opacity: 0.6;
+  cursor: pointer;
+  transition: color 0.2s ease, opacity 0.2s ease;
+}
+.ln-totop:hover { color: var(--ink); opacity: 1; }
 
 .lay-edge {
   position: absolute;
@@ -2816,10 +2842,22 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   scrollbar-width: none;
 }
 .hn-rail::-webkit-scrollbar { display: none; }
-/* Downstairs, the cross holds still sideways. See the note in HomeNav: the
-   panes' own vertical scrolling still passes through, and the rail keeps its
-   scroll position, which taking the overflow away would have reset. */
-.hn-rail--held { touch-action: pan-y; }
+/* Downstairs, the cross holds still sideways. The panes' own vertical
+   scrolling passes through untouched — that is a different element.
+
+   overflow-x, and touch-action only as a hint alongside it. touch-action was
+   the whole of it for a day and did nothing on a real iPhone: the property is
+   honoured for what a touch does to *descendants*, and Safari goes on panning
+   a scroll container in its own axis regardless. Taking the overflow away is
+   what actually stops it.
+
+   The reason to avoid overflow-x was that it would reset scrollLeft and slide
+   the cross home every time you went downstairs. Measured, and it does not —
+   scrollLeft survives the change in both directions. */
+.hn-rail--held {
+  overflow-x: hidden;
+  touch-action: pan-y;
+}
 
 .hn-pane {
   flex: 0 0 100%;

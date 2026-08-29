@@ -8,14 +8,17 @@
 
 'use client';
 import { useState, useEffect, useMemo } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Check, X } from '@phosphor-icons/react';
+import { CaretUp, Check, X } from '@phosphor-icons/react';
+import { BookOpen } from '@phosphor-icons/react';
 import { fonts } from '../../../library/sitewide_visuals';
 import { sizedAlbumArt, fetchAlbumArtUrl } from '../../../library/music_data_api';
 import { parseHorizon, entryTracks, splitNotes, entryTypeLabel, parseRating } from '../../../library/entry_formatter';
 import { kept_receipts } from '../../../library/receipts';
 import { buildReferenceIndex, createReferenceLinker } from '../../../library/cross_references';
 import SiteNav from '../../../components/main_components/SiteNav';
+import EdgeCaret from '../../../components/main_components/EdgeCaret';
 import KeeperTools from '../../../components/main_components/KeeperTools';
 import HorizonBar from '../../../components/main_components/Slug_Page/HorizonBar';
 import TrackThread from '../../../components/main_components/Slug_Page/TrackThread';
@@ -53,7 +56,12 @@ const HERO_COVER = {
 // So it is chosen from the card, through a search over the journal. From an
 // entry there is now no "pin this one": you go to the card and look it up.
 // More steps for the rarer action, which is the right way round.
-export default function FullPostPage({ entry, references = [], authed = false }) {
+// `layered` is true when this is drawn on the layer over the journal rather
+// than as its own page. The only thing it changes is what the way out does:
+// on the layer the journal is one step back through history and still holding
+// its scroll position, and on its own page there is no history to go back to.
+export default function FullPostPage({ entry, references = [], authed = false, layered = false }) {
+  const router = useRouter();
   // ── Correcting what is written ────────────────────────────────────────────
   // The fields are drawn where the writing is, not in a form somewhere else:
   // the album note becomes a textarea in the album note's place, and a track's
@@ -893,15 +901,28 @@ export default function FullPostPage({ entry, references = [], authed = false })
 
         {/* Footer — the two ways out, as a matching pair. The posted date used
             to sit here; it lives up in the album's metadata now. */}
-        {/* All Entries leads: its arrow points back the way you came, and the
-            up arrow reads better second. */}
+        {/* The way back leads, and the way up follows. It was a pair of
+            worded pills — "← All entries" and "↑ Back to top" — and the first
+            of them had stopped leading anywhere: the journal is where you came
+            from now, not a separate page you go to.
+
+            So it is the same control the rest of the site uses for this, the
+            mark of where you land over the arrow for which way that is. It can
+            sit here without crowding anything because it only exists at the
+            very bottom of the reading, which is the one place nothing else
+            wants. */}
         <div style={{ borderTop: '1px solid var(--border)', paddingTop: '28px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
           {/* The way out of the entry, and — while a correction is open — the
               way to end it. Delete sits at the very foot rather than in the bar
               with Save: they are not the same weight, and a destructive control
               beside the one you press every time is a control you will
               eventually press by accident. */}
-          <Link href="/" className="ln-pill">← All entries</Link>
+          <EdgeCaret
+            direction="left"
+            onClick={() => (layered ? router.back() : router.push('/archive'))}
+            label="Back to the journal"
+            icon={BookOpen}
+          />
           <button
             onClick={() => {
               const screens = document.querySelector('.ln-screens');
@@ -916,9 +937,15 @@ export default function FullPostPage({ entry, references = [], authed = false })
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }
             }}
-            className="ln-pill"
+            className="ln-totop"
+            aria-label="Back to the top"
+            title="Back to the top"
           >
-            ↑ Back to top
+            {/* An arrow and nothing else. Every other control in this family
+                carries a mark for where it lands, and this one lands where you
+                already are — the top of the thing you are reading. There is no
+                second place to name. */}
+            <CaretUp size={14} weight="bold" aria-hidden="true" />
           </button>
         </div>
 
