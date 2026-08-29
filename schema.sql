@@ -111,6 +111,18 @@ CREATE TABLE IF NOT EXISTS entries (
   album_art text,
   post_link text,
   created_at timestamp without time zone DEFAULT now(),
+  -- When the writing was last changed, and only the writing. Set by
+  -- update_entry when the album note or the tracks actually differ from what
+  -- is already stored — not when a genre is corrected or a favourite toggled,
+  -- because those are filing rather than rewriting.
+  --
+  -- Null means never edited, which is why it is not defaulted to now(): an
+  -- entry written once should say nothing rather than claim it was edited on
+  -- the day it was posted.
+  --
+  -- The point is not an audit trail. It is that a journal nobody can silently
+  -- rewrite is worth more than one where every entry might have been.
+  edited_at timestamp without time zone,
   slug text,
   masterpiece boolean DEFAULT false,
   -- The third and last flag. Formative was a relationship — one of five things
@@ -334,6 +346,7 @@ ALTER TABLE settings ADD COLUMN IF NOT EXISTS display_name text;
 ALTER TABLE settings ADD COLUMN IF NOT EXISTS "serial" text;
 ALTER TABLE settings ADD COLUMN IF NOT EXISTS setup_complete boolean DEFAULT false;
 ALTER TABLE settings ADD COLUMN IF NOT EXISTS bioanswers jsonb;
+ALTER TABLE entries ADD COLUMN IF NOT EXISTS edited_at timestamp without time zone;
 
 -- Foreign keys, added once every table exists
 DO $$ BEGIN
