@@ -3123,39 +3123,9 @@ a.ab-rig-name:hover { text-decoration: underline; }
   font-size: 9px;
 }
 
-/* ── The cover's own two rows, moved off the deleted page-level stylesheet ── */
-.hp-write {
-  display: inline-flex;
-  align-items: center;
-  padding: 9px 20px;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--ink-soft);
-  text-decoration: none;
-  background: transparent;
-  transition: color 0.15s, border-color 0.15s;
-}
-.hp-write:hover { color: var(--ink); border-color: var(--ink-faint); }
-.hp-write:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 3px; }
-.hp-write-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
-.hp-write-count {
-  margin-left: 7px;
-  min-width: 16px;
-  height: 16px;
-  padding: 0 4px;
-  border-radius: 999px;
-  background: var(--fav);
-  color: #fff;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 9px;
-  letter-spacing: 0;
-}
+/* The writing row that used to sit under the beacon — "+ Start a listen" and
+   "Messages" — is gone with its rules. The desk is one swipe right and carries
+   both, so the cover was showing the same two controls twice. */
 
 /* What came before — three covers, small and dim, under the beacon. */
 .hp-recent {

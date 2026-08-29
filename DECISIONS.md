@@ -250,6 +250,15 @@ table of labels and answers, and this is one answer: a cover and what it is.
 Both lines ellipsis, because a long album name that refuses to would push the
 row off the edge of the card.
 
+**Nothing about writing on the beacon.** "+ Start a listen" and "Messages" sat
+under it from when the cover was the only screen an owner had. The desk is one
+swipe right and carries both, with the same unread count on the same door — so
+the cover was showing the same two controls twice, a hundred pixels apart, on a
+screen whose whole job is one record. Duplication was argued for once, on the
+grounds that the moment you want to log something is while you are looking at
+what is playing; the swipe turned out to be short enough that the argument did
+not survive seeing it.
+
 **No prompt on the card.** One was promoted there to give the Send button its
 reason; the card is the counted facts and the records now, and all three
 prompts sit together on the screen below, which is what that pane is for.
