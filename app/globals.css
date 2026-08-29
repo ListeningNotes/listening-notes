@@ -1733,6 +1733,20 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   white-space: nowrap;
   transition: opacity 0.5s ease;
 }
+/* The full beacon's title, which wraps instead of scrolling — see the note in
+   ListeningBeacon.js. Everything above still applies to the mini one in the
+   nav row, which is narrow enough that a marquee is the only thing that fits. */
+.beacon-track--wrap {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  white-space: normal;
+  text-wrap: balance;
+  max-width: 340px;
+  margin: 0 auto;
+}
 .beacon-artist {
   font-family: var(--font-nunito), sans-serif;
   font-size: 0.85rem;
@@ -2363,8 +2377,13 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
      turning rather than three pages going past. Every landing screen subtracts
      it so that crown plus landing still comes to one screen.
      Scaled to the window rather than fixed, because a tall phone can carry the
-     mark further down than a short one and a short one has none to spare. */
-  --hn-crown: clamp(140px, 24dvh, 210px);
+     mark further down than a short one and a short one has none to spare.
+     Raised from 24dvh once the card was seen on a real screen: the pane was
+     reading top-heavy, with the mark and the photograph carrying the weight
+     and the slack pooling under the button. The ceiling is still the card —
+     everything here is spending the same 290-odd pixels the crown, the square
+     and the down caret have to share. */
+  --hn-crown: clamp(150px, 28dvh, 248px);
   /* The air between the mark and the square under it. One number for both
      panes: the card's portrait and the beacon's album art are the same 180px
      square in the same frame, and the whole point of a fixed crown is that
@@ -2619,9 +2638,18 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   bottom: max(14px, env(safe-area-inset-bottom));
   z-index: 96;
   display: flex;
-  align-items: flex-end;
+  /* Tops aligned, not bottoms. The two side controls are a mark with an arrow
+     beside it and the middle one is a mark with an arrow underneath, so they
+     are different heights — hung from the bottom their marks sat on three
+     different lines. Hung from the top, the three marks read as one row and
+     the down arrow is simply the thing that hangs below it. */
+  align-items: flex-start;
+  /* A group with room in it, rather than three glyphs touching or one control
+     pinned to each edge. Pushed to the edges they stopped reading as a row and
+     started reading as three separate things; at the gap they had before, the
+     card and the cog were close enough to press by accident. */
   justify-content: center;
-  gap: 30px;
+  gap: 76px;
   /* The row is a transparent strip across the whole window; only the controls
      in it take a press, or it would swallow every tap along the bottom edge. */
   pointer-events: none;
@@ -2667,12 +2695,14 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 /* Down keeps its arrow underneath its mark rather than beside it. It is the
    one direction the page itself moves in, and a chevron next to the book would
    read as a fourth pane somewhere off to the right.
-   It is also the only one that bobs, because down is the direction nobody
-   thinks to try on a page that already moves sideways. */
+   It used to bob, from when it stood alone in the middle of the screen and had
+   to say "down" on a page that already moved sideways. In a row of three still
+   marks the movement stopped reading as a hint and started reading as one of
+   them being loose — and it put the book five pixels below the other two for
+   most of every cycle, which is the one thing this row is lined up to avoid. */
 .edge-caret--down {
   flex-direction: column;
   gap: 2px;
-  animation: hp-scroll-btn-bob 2.4s ease-in-out infinite;
 }
 @media (prefers-reduced-motion: reduce) {
   .edge-caret--down { animation: none; }
