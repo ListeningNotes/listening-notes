@@ -1955,6 +1955,103 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 .beacon-recent-tile:nth-child(2) { opacity: 0.46; filter: saturate(0.48); transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease, filter 0.4s ease; }
 .beacon-recent-tile:nth-child(3) { opacity: 0.32; filter: saturate(0.32); transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease, filter 0.4s ease; }
 
+/* Wide screens read the hero instead; this shape is the phone's. It sits out
+   here with the rest of them so that the layer's stand-in obeys it too — left
+   in the entry page's own stylesheet, a fallback on a wide window drew a full
+   phone screen nobody asked for. */
+.ln-screen-one { display: none; }
+
+/* ── The card, and the screen under it ─────────────────────────────────────
+   The two-screen shape an entry is read in on a phone: a screen of album that
+   holds still, and a screen of writing below it that scrolls inside itself.
+
+   These lived in a <style> block inside FullPostPage, which was fine while
+   that component was the only thing that drew them. It is not any more: the
+   layer shows this same first screen, with the cover the journal already had,
+   for the few hundred milliseconds before the entry itself arrives — and a
+   stylesheet that only exists once its own component has rendered is no use to
+   the thing standing in for that component. The fallback drew unstyled boxes
+   and the page jumped 270px when the real one replaced them.
+
+   So they live here, where the rest of the .ln-* family already lives. See
+   LayerWaiting, which is the other thing that draws them. */
+@media (max-width: 768px) {
+.ln-screens {
+  height: 100dvh;
+  overflow-y: auto;
+  scroll-snap-type: y mandatory;
+  -webkit-overflow-scrolling: touch;
+  touch-action: pan-y;
+  overscroll-behavior-y: none;
+}
+.ln-screen-one {
+  height: 100dvh;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+}
+
+.ln-screen-one {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  min-height: 100dvh;
+  box-sizing: border-box;
+  /* clears the fixed logo row and the dot labels beneath it */
+  padding: 172px 24px 0;
+  gap: 16px;
+}
+.ln-screen-one-art {
+  /* Sized off viewport HEIGHT as well as width. A width-only size
+     overflowed once Safari's chrome was showing — the chips and the
+     scroll cue ended up under the address bar — and a long title
+     pushed it further still. Squaring to the smaller of the two
+     shrinks the art on a short screen instead of losing the bottom
+     of the page, and flex-shrink lets it give up more if it has to. */
+  height: min(40dvh, 78vw);
+  width: auto;
+  aspect-ratio: 1 / 1;
+  flex-shrink: 1;
+  min-height: 0;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid var(--panel-border);
+  box-shadow: var(--shadow-lift);
+}
+.ln-screen-one-art img {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+}
+.ln-screen-one-title {
+  font-family: var(--font-display);
+  font-size: clamp(1.6rem, 6.6vw, 2.1rem);
+  font-weight: var(--font-display-weight);
+  /* 1.1 packed the two rows so tightly that overflow:hidden sliced
+     the bottom off the second one — parentheses and descenders sit
+     below the line box at this size, and "TV Animation BLEACH
+     (Original Soundtrack 3)" lost the underside of its brackets.
+     The extra leading plus a little padding gives them somewhere to
+     go without letting a third row through. */
+  line-height: 1.22;
+  padding-bottom: 0.1em;
+  color: var(--ink);
+  /* Two rows at most. "Salvation Laughs in the Face of a Grieving
+     Mother" ran to three at full size and shoved the rating, the
+     chips and the scroll cue off the bottom of the screen. */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+.ln-screen-one-artist {
+  font-family: var(--font-label);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin-top: -8px;
+}
+}
+
 /* ── The layer ─────────────────────────────────────────────────────────────
    An entry over the journal. Fixed and opaque and the full screen, because it
    is not a card floating on the wall — it is the record, and the wall is

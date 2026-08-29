@@ -42,27 +42,10 @@ import { neon } from '@neondatabase/serverless';
 import { pull_entry_by_slug } from '@/library/database_actions';
 import { wristbandOnHand } from '@/library/wristband';
 import LayerEntry from '@/components/main_components/LayerEntry';
+import LayerWaiting from '@/components/main_components/LayerWaiting';
 import PostClient from '../../../entries/[slug]/FullPostPage';
 
 const sql = neon(process.env.DATABASE_URL);
-
-// What is on the layer while the entry is still being read. Shaped like the
-// first screen it is about to become — a square where the cover goes, two
-// lines where the title and byline go — so the swap is a picture arriving in a
-// frame rather than the page changing shape under you.
-//
-// No spinner. A spinner says "something is happening somewhere"; this says
-// "the record is on its way and it will be here", which is the same thing said
-// in the shape of the answer.
-function Waiting() {
-  return (
-    <div className="lay-wait" aria-hidden="true">
-      <div className="lay-wait-art" />
-      <div className="lay-wait-line lay-wait-line--title" />
-      <div className="lay-wait-line lay-wait-line--byline" />
-    </div>
-  );
-}
 
 // The reads, which are identical to the standalone page's, deliberately. An
 // entry opened as a layer and the same entry opened cold have to be the same
@@ -80,7 +63,10 @@ async function Entry({ slug }) {
 export default function EntryOverTheJournal({ params }) {
   return (
     <LayerEntry>
-      <Suspense fallback={<Waiting />}>
+      {/* The fallback is handed the slug so it can check that what the
+          journal left behind is about this record and not the last one
+          tapped — see LayerWaiting. */}
+      <Suspense fallback={params.then(({ slug }) => <LayerWaiting slug={slug} />)}>
         {params.then(({ slug }) => <Entry slug={slug} />)}
       </Suspense>
     </LayerEntry>

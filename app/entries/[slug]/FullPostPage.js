@@ -474,7 +474,6 @@ export default function FullPostPage({ entry, references = [], authed = false, l
         .ln-hero-row    { display: flex; align-items: flex-end; gap: 24px; }
         .ln-content     { padding: 48px 48px 100px; }
         .ln-cover-hero  { max-width: 860px; margin: 0 auto; padding: 16px 48px 0; }
-        .ln-screen-one  { display: none; }
         /* How much of the top the header occupies on screen two. The dot nav
            is hidden by then, so this only has to clear the logo row (which
            ends at 58px) — not the 150px the labelled dots needed. The band
@@ -493,81 +492,12 @@ export default function FullPostPage({ entry, references = [], authed = false, l
              exactly one viewport tall, and a mandatory snap over
              viewport-sized areas can commit hard without ever trapping the
              reading. scroll-snap-stop stops a fast flick skipping past. */
-          .ln-screens {
-            height: 100dvh;
-            overflow-y: auto;
-            scroll-snap-type: y mandatory;
-            -webkit-overflow-scrolling: touch;
-            touch-action: pan-y;
-            overscroll-behavior-y: none;
-          }
-          .ln-screen-one,
           .ln-screen-two {
             height: 100dvh;
             scroll-snap-align: start;
             scroll-snap-stop: always;
           }
 
-          .ln-screen-one {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-            min-height: 100dvh;
-            box-sizing: border-box;
-            /* clears the fixed logo row and the dot labels beneath it */
-            padding: 172px 24px 0;
-            gap: 16px;
-          }
-          .ln-screen-one-art {
-            /* Sized off viewport HEIGHT as well as width. A width-only size
-               overflowed once Safari's chrome was showing — the chips and the
-               scroll cue ended up under the address bar — and a long title
-               pushed it further still. Squaring to the smaller of the two
-               shrinks the art on a short screen instead of losing the bottom
-               of the page, and flex-shrink lets it give up more if it has to. */
-            height: min(40dvh, 78vw);
-            width: auto;
-            aspect-ratio: 1 / 1;
-            flex-shrink: 1;
-            min-height: 0;
-            border-radius: 16px;
-            overflow: hidden;
-            border: 1px solid var(--panel-border);
-            box-shadow: var(--shadow-lift);
-          }
-          .ln-screen-one-art img {
-            width: 100%; height: 100%; object-fit: cover; display: block;
-          }
-          .ln-screen-one-title {
-            font-family: var(--font-display);
-            font-size: clamp(1.6rem, 6.6vw, 2.1rem);
-            font-weight: var(--font-display-weight);
-            /* 1.1 packed the two rows so tightly that overflow:hidden sliced
-               the bottom off the second one — parentheses and descenders sit
-               below the line box at this size, and "TV Animation BLEACH
-               (Original Soundtrack 3)" lost the underside of its brackets.
-               The extra leading plus a little padding gives them somewhere to
-               go without letting a third row through. */
-            line-height: 1.22;
-            padding-bottom: 0.1em;
-            color: var(--ink);
-            /* Two rows at most. "Salvation Laughs in the Face of a Grieving
-               Mother" ran to three at full size and shoved the rating, the
-               chips and the scroll cue off the bottom of the screen. */
-            display: -webkit-box;
-            -webkit-box-orient: vertical;
-            -webkit-line-clamp: 2;
-            overflow: hidden;
-          }
-          .ln-screen-one-artist {
-            font-family: var(--font-label);
-            font-size: 11px;
-            letter-spacing: 0.14em;
-            text-transform: uppercase;
-            color: var(--ink-soft);
-            margin-top: -8px;
-          }
           .ln-screen-one-chips {
             display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
           }
