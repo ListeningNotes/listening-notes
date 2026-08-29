@@ -10,13 +10,14 @@
 import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Check, PencilSimple, PushPin, PushPinSlash, X } from '@phosphor-icons/react';
+import { Check, PushPin, PushPinSlash, X } from '@phosphor-icons/react';
 import { fonts } from '../../../library/sitewide_visuals';
 import { sizedAlbumArt, fetchAlbumArtUrl } from '../../../library/music_data_api';
 import { parseHorizon, entryTracks, splitNotes, entryTypeLabel, parseRating } from '../../../library/entry_formatter';
 import { kept_receipts } from '../../../library/receipts';
 import { buildReferenceIndex, createReferenceLinker } from '../../../library/cross_references';
 import SiteNav from '../../../components/main_components/SiteNav';
+import KeeperTools from '../../../components/main_components/KeeperTools';
 import HorizonBar from '../../../components/main_components/Slug_Page/HorizonBar';
 import TrackThread from '../../../components/main_components/Slug_Page/TrackThread';
 import CommentBubble from '../../../components/main_components/Slug_Page/CommentBubble';
@@ -42,7 +43,7 @@ const HERO_COVER = {
   boxShadow: 'var(--shadow-lift)', border: '1px solid var(--panel-border)',
 };
 
-export default function FullPostPage({ entry, references = [] }) {
+export default function FullPostPage({ entry, references = [], authed = false }) {
   // ── The pin ───────────────────────────────────────────────────────────────
   // One record from the journal shows as art on the About card, and this is
   // where it gets chosen: on the record itself, at the moment somebody is
@@ -59,20 +60,12 @@ export default function FullPostPage({ entry, references = [] }) {
   // jsonb to hold, which meant losing the key and the guarantee with it.
   const router = useRouter();
   const { pinned_entry_id } = useBookplate();
-  const [authed, setAuthed] = useState(false);
   // What this page currently believes, which is not always what the context
   // says: the context is server state and only catches up on a refresh, so a
   // press updates this immediately and the refresh confirms it.
   const [pinnedHere, setPinnedHere] = useState(null);
   const [pinning, setPinning] = useState(false);
   const isPinned = pinnedHere === null ? pinned_entry_id === entry.id : pinnedHere;
-
-  useEffect(() => {
-    fetch('/api/auth/check')
-      .then(r => r.json())
-      .then(d => setAuthed(!!d.authed))
-      .catch(() => {});
-  }, []);
 
   async function togglePin() {
     if (pinning) return;
@@ -198,13 +191,17 @@ export default function FullPostPage({ entry, references = [] }) {
   // Only the way in. Save and Cancel used to sit here too, and then again in
   // the bar at the foot of the page — the same pair twice on one screen, and
   // the one that matters is the one that follows you down to the note you are
-  // actually fixing. This is the button that opens a correction; the bar is
-  // what closes it.
-  const editControls = authed && !edit.editing && (
-    <button type="button" className="ln-pin" onClick={edit.begin}>
-      <PencilSimple size={13} weight="regular" aria-hidden="true" />
-      <span>Edit</span>
-    </button>
+  // actually fixing. This is what opens a correction; the bar is what closes
+  // it.
+  //
+  // It used to be a pill in the chip row under the rating, beside Favorite and
+  // Masterpiece — which put an admin control in the middle of the reading, on
+  // a line otherwise made of facts about the record. It is a glyph in the
+  // header now, top left, where the card keeps its own pencil. Drawn only for
+  // the owner, and drawn on the server: a visitor's copy of this page does not
+  // contain it.
+  const keeperTools = authed && !edit.editing && (
+    <KeeperTools onEdit={edit.begin} slug={entry.slug} />
   );
 
   // ── The fields at the head of the entry ───────────────────────────────────
@@ -702,7 +699,7 @@ export default function FullPostPage({ entry, references = [] }) {
       `}</style>
 
       {/* ── NAV ── shared site nav (logo + dot nav), identical to every other public page */}
-      <SiteNav />
+      <SiteNav tools={keeperTools} />
 
       {/* A correction is open, and the page is long. The controls that started
           it are at the top of the entry, which is a screen and a half away by
@@ -765,7 +762,6 @@ export default function FullPostPage({ entry, references = [] }) {
         )}
         {edit.editing && flagFields}
         <div className="ln-screen-one-chips">
-          {editControls}
           {pinButton}
           {!edit.editing && listenLabel && <Chip>{listenLabel}</Chip>}
           {!edit.editing && isSubmission && <Chip>Submission</Chip>}
@@ -832,7 +828,6 @@ export default function FullPostPage({ entry, references = [] }) {
                 {edit.editing
                   ? flagFields
                   : displayRating > 0 && <StarRating rating={displayRating} size={15} glow={isMasterpiece} style={{ verticalAlign: 'middle' }} />}
-                {editControls}
                 {pinButton}
                 {!edit.editing && listenLabel && <Chip>{listenLabel}</Chip>}
                 {!edit.editing && isSubmission && <Chip>Submission</Chip>}

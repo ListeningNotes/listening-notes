@@ -35,7 +35,12 @@ import { useTheme } from './Lightswitch';
 import { useListeningBeacon } from '../../hooks/useListeningBeacon';
 import { useBookplate } from './Bookplate';
 
-export default function SiteNav() {
+// `tools` is whatever the page wants in the left slot — in practice the
+// owner's, on the pages that have any. It arrives as an element rather than as
+// a flag because this row should not know what a keeper is: it holds a slot
+// open and the page decides what belongs in it. On every other page the slot
+// is an empty grid column, which is the thing holding the mark in the middle.
+export default function SiteNav({ tools = null }) {
   const { cover_name } = useBookplate();
   const { theme, toggle } = useTheme();
   const { isLive } = useListeningBeacon();
@@ -64,7 +69,7 @@ export default function SiteNav() {
       {/* The left slot. Empty on most pages: it is where the owner's tools go
           on the ones that have any, and an empty grid column is what holds the
           mark in the middle when they do not. */}
-      <div className="sitenav-side sitenav-side--left" />
+      <div className="sitenav-side sitenav-side--left">{tools}</div>
 
       <Link href="/" className="sitenav-logo" aria-label={cover_name}>
         <svg viewBox="76 96 241 140" className="sitenav-logo-mark" xmlns="http://www.w3.org/2000/svg">
