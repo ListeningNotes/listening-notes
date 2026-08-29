@@ -325,6 +325,22 @@ two ideas apart: it is impossible to state if one column carries both.
 **`prompted_by` is the column association would need**, if it is ever wanted.
 Parked, not built.
 
+**Lineage is written once; the rest of the chain is editable.** `received_from`
+and `received_date` are corrections — you log something and remember a week
+later that Zach sent it, which is the same kind of fix as a typo.
+`source_entry_id` is not: either their entry led to yours or it did not, and a
+lineage anyone can rewrite is a record of nothing. So it may be set while it is
+empty and never again, which is the `WRITE_ONCE` rule `serial` and `founded_at`
+already use, and it is dropped silently for the same reason — the editor posts
+every field it knows about and should not fail because one was already settled.
+
+Two consequences worth having written down. It reopens if the entry it points
+at is deleted, because `ON DELETE SET NULL` clears it — which is right, since
+that is the one case where the lineage genuinely ended. And until the send flow
+exists there is nothing to set it automatically, so the only setter is a hand
+in the editor and a wrong one can only be undone in SQL. That is the accepted
+cost of not having editable lineage.
+
 **Everything editable is edited where it prints.** The link rows and the rig
 rows were fields on the card for things that appear a screen below it, which is
 filling in a form blind. They moved down into the sections they belong to when

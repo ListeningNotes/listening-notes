@@ -283,7 +283,7 @@ export async function update_entry(slug, fields) {
   // given a source but never stripped of one is a trap. So each is applied
   // only when the caller actually sent the key, and null then means null.
   const touched = key => Object.prototype.hasOwnProperty.call(fields, key);
-  const set_source = touched('source_entry_id');
+  let set_source = touched('source_entry_id');
   const set_from = touched('received_from');
   const set_date = touched('received_date');
   const source_entry_id = set_source ? entryRef(fields.source_entry_id) : null;
@@ -293,8 +293,29 @@ export async function update_entry(slug, fields) {
   // cannot be done in SQL the way an entry-wide one could — a per-track answer
   // needs the old and the new tracklists side by side in the same loop.
   const [current] = await database`
-    SELECT id, notes, tracks, album_key FROM entries WHERE slug = ${slug} LIMIT 1
+    SELECT id, notes, tracks, album_key, source_entry_id
+      FROM entries WHERE slug = ${slug} LIMIT 1
   `;
+
+  // ── Lineage is written once ─────────────────────────────────────────────
+  // received_from and received_date are corrections: you log something and
+  // remember a week later that Zach sent it, which is the same kind of fix as a
+  // typo. Where it sits in the tree is not. Either their entry led to yours or
+  // it did not, and a lineage anyone can rewrite is a record of nothing — the
+  // tree stops being evidence and becomes an opinion about the past.
+  //
+  // So it may be written while it is empty and never again. Same rule as
+  // `serial` and `founded_at` in settings_actions, and dropped silently for the
+  // same reason: the editor posts every field it knows about, and it should not
+  // fail because one of them was already settled.
+  //
+  // It can become null again, but only by the source entry being deleted — the
+  // foreign key's ON DELETE SET NULL does it. That is the one case where the
+  // lineage genuinely ended, and it reopens the field to be set correctly
+  // rather than leaving it pointing at nothing.
+  if (set_source && current?.source_entry_id != null) {
+    set_source = false;
+  }
 
   if (set_source && source_entry_id) {
     // A source is the entry somebody else wrote about *the same album* — that
