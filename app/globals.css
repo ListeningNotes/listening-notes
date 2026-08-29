@@ -784,8 +784,23 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   display: none;
 }
 
-.sitenav-side { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.sitenav-side { display: flex; align-items: center; gap: 2px; min-width: 0; }
 .sitenav-side--left { justify-content: flex-start; }
+
+/* The keeper's tools. Deliberately the same object as the About card's pencil
+   — 30px box, 9px radius, faint until you go near it — because they are the
+   same kind of control and two treatments would read as two ideas. The card
+   states these for itself in its own style block, so this is the second copy
+   rather than a shared rule; if a third surface ever wants them, that is the
+   moment to lift them somewhere common, not before. */
+.kt-tool {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 30px; height: 30px; border-radius: 9px;
+  color: var(--ink-faint); background: transparent; border: 0;
+  cursor: pointer; text-decoration: none;
+  transition: color 0.15s, background 0.15s;
+}
+.kt-tool:hover { color: var(--ink); background: var(--bg-warm); }
 .sitenav-logo { display: block; justify-self: center; }
 .sitenav-logo-mark {
   height: 28px;
