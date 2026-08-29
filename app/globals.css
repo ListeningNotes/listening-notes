@@ -2303,6 +2303,56 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   pointer-events: none;
 }
 
+/* ── The fields at the head of an entry ─────────────────────────────────────
+   Each one is set in the type of the thing it replaces — the album title in
+   the title's face and size, the byline in the byline's — so a field is that
+   line with a caret in it rather than a form control standing where the line
+   was. The rule underneath is the only thing that marks it as typeable. */
+.ln-field {
+  display: inline-block;
+  max-width: 100%;
+  box-sizing: border-box;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  padding: 0 0 3px;
+  background: transparent;
+  font: inherit;
+  letter-spacing: inherit;
+  color: var(--ink);
+  text-align: inherit;
+}
+.ln-field:focus { outline: none; border-bottom-color: var(--ink-faint); }
+.ln-field::placeholder { color: var(--ink-faint); }
+.ln-field--title { width: 100%; text-align: center; }
+/* A year is four characters and should not take the width of an artist. */
+.ln-field--year { width: 5.5em; }
+.ln-field--genre { width: 9em; }
+.ln-byline-fields { display: inline-flex; gap: 10px; align-items: baseline; flex-wrap: wrap; justify-content: center; }
+
+/* The flags are the chips they stand in for, pressed rather than read. Off is
+   the same chip with the ink taken out, so the row does not change shape when
+   one is turned on. */
+.ln-flags {
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  width: 100%;
+}
+.ln-flags-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: center; }
+.ln-flag {
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: transparent;
+  font-family: var(--font-label);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.ln-flag:hover { color: var(--ink); border-color: var(--ink-faint); }
+.ln-flag--on { color: var(--bg); background: var(--ink); border-color: var(--ink); }
+
 /* A note being written, in the place the note is read. Set in the type the
    note prints in, so the field is the paragraph with a caret in it rather than
    a form control standing where a paragraph was — the rule underneath is the

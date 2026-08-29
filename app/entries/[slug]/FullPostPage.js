@@ -12,7 +12,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Check, PencilSimple, PushPin, PushPinSlash, X } from '@phosphor-icons/react';
 import { fonts } from '../../../library/sitewide_visuals';
-import { parseHorizon, entryTracks, splitNotes, entryTypeLabel } from '../../../library/entry_formatter';
+import { parseHorizon, entryTracks, splitNotes, entryTypeLabel, parseRating } from '../../../library/entry_formatter';
 import { kept_receipts } from '../../../library/receipts';
 import { buildReferenceIndex, createReferenceLinker } from '../../../library/cross_references';
 import SiteNav from '../../../components/main_components/SiteNav';
@@ -22,6 +22,7 @@ import CommentBubble from '../../../components/main_components/Slug_Page/Comment
 import MetadataLabel from '../../../components/main_components/Slug_Page/MetadataLabel';
 import Chip from '../../../components/main_components/Slug_Page/Chip';
 import StarRating from '../../../components/main_components/StarRating';
+import StarPicker from '../../../components/session_components/StarRating';
 import { editStamp } from '../../../library/entry_formatter';
 import { useEntryEditor } from '../../../hooks/useEntryEditor';
 import { useBookplate } from '../../../components/main_components/Bookplate';
@@ -120,6 +121,84 @@ export default function FullPostPage({ entry, references = [] }) {
         <span>Edit</span>
       </button>
     )
+  );
+
+  // ── The fields at the head of the entry ───────────────────────────────────
+  // Album, artist, year, genre, the score and the three flags. They print in
+  // two places — the phone's first screen and the desktop hero — so like the
+  // pin and the edit controls they are written once here and mounted in both,
+  // rather than kept as two copies to drift apart.
+  const titleField = (
+    <input
+      className="ln-field ln-field--title"
+      value={edit.draft.album}
+      onChange={e => edit.set('album', e.target.value)}
+      placeholder="Album"
+      aria-label="Album"
+    />
+  );
+
+  const bylineField = (
+    <span className="ln-byline-fields">
+      <input
+        className="ln-field"
+        value={edit.draft.artist}
+        onChange={e => edit.set('artist', e.target.value)}
+        placeholder="Artist"
+        aria-label="Artist"
+      />
+      <input
+        className="ln-field ln-field--year"
+        value={edit.draft.year}
+        onChange={e => edit.set('year', e.target.value)}
+        placeholder="Year"
+        inputMode="numeric"
+        aria-label="Year"
+      />
+    </span>
+  );
+
+  // The flags are the chips they replace, pressed rather than read. A chip
+  // that is off is the same chip with its ink taken out, so the row does not
+  // change shape when a flag is turned on — and what a visitor sees is exactly
+  // the subset that is lit.
+  const flagFields = (
+    <span className="ln-flags">
+      {/* One thing per line rather than five wrapping into each other: the
+          score, then the genre, then the flags. A row that reflows as you
+          widen a genre is a row you cannot aim at. */}
+      <span className="ln-flags-row">
+        <StarPicker
+          value={parseRating(edit.draft.rating) || 0}
+          onChange={v => edit.set('rating', String(v))}
+          size={22}
+        />
+      </span>
+      <input
+        className="ln-field ln-field--genre"
+        value={edit.draft.genre}
+        onChange={e => edit.set('genre', e.target.value)}
+        placeholder="Genre"
+        aria-label="Genre"
+      />
+      <span className="ln-flags-row">
+      {[
+        { key: 'favorite', label: 'Favorite' },
+        { key: 'masterpiece', label: 'Masterpiece' },
+        { key: 'formative', label: 'Formative' },
+      ].map(flag => (
+        <button
+          key={flag.key}
+          type="button"
+          className={'ln-flag' + (edit.draft[flag.key] ? ' ln-flag--on' : '')}
+          onClick={() => edit.set(flag.key, !edit.draft[flag.key])}
+          aria-pressed={!!edit.draft[flag.key]}
+        >
+          {flag.label}
+        </button>
+      ))}
+      </span>
+    </span>
   );
 
   const pinButton = authed && !edit.editing && (
@@ -558,20 +637,26 @@ export default function FullPostPage({ entry, references = [] }) {
             <img src={entry.album_art} alt={entry.album} />
           </div>
         )}
-        <h1 className="ln-screen-one-title" style={{ fontSize: titleSize }}>{entry.album}</h1>
+        {edit.editing
+          ? <div className="ln-screen-one-title" style={{ fontSize: titleSize }}>{titleField}</div>
+          : <h1 className="ln-screen-one-title" style={{ fontSize: titleSize }}>{entry.album}</h1>}
         <div className="ln-screen-one-artist">
-          {entry.artist}{entry.year ? ' · ' + entry.year : ''}
+          {edit.editing ? bylineField : <>{entry.artist}{entry.year ? ' · ' + entry.year : ''}</>}
         </div>
-        {displayRating > 0 && (
+        {/* The score and the chips are what the flags below edit, so while a
+            correction is open they stand down rather than sit beside their own
+            controls saying the same thing twice. */}
+        {!edit.editing && displayRating > 0 && (
           <StarRating rating={displayRating} size={24} glow={isMasterpiece} animate burst={isMasterpiece} />
         )}
+        {edit.editing && flagFields}
         <div className="ln-screen-one-chips">
           {editControls}
           {pinButton}
-          {listenLabel && <Chip>{listenLabel}</Chip>}
-          {isSubmission && <Chip>Submission</Chip>}
-          {(entry.favorite === true || entry.favorite === 'true') && <Chip tone="fav">Favorite</Chip>}
-          {isMasterpiece && <Chip tone="mp">Masterpiece</Chip>}
+          {!edit.editing && listenLabel && <Chip>{listenLabel}</Chip>}
+          {!edit.editing && isSubmission && <Chip>Submission</Chip>}
+          {!edit.editing && (entry.favorite === true || entry.favorite === 'true') && <Chip tone="fav">Favorite</Chip>}
+          {!edit.editing && isMasterpiece && <Chip tone="mp">Masterpiece</Chip>}
         </div>
         <div style={{ fontFamily: fonts.mono, fontSize: '9px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--ink-faint)' }}>
           Posted {postedOn}
@@ -615,19 +700,21 @@ export default function FullPostPage({ entry, references = [] }) {
             )}
             <div style={{ flex: 1, paddingBottom: '4px' }}>
               <h1 style={{ fontFamily: 'var(--font-display)', fontSize: 'clamp(1.8rem, 4vw, 2.8rem)', fontWeight: 'var(--font-display-weight)', lineHeight: 1.05, letterSpacing: '-0.015em', color: 'var(--ink)', marginBottom: '6px' }}>
-                {entry.album}
-                {isMasterpiece && <span style={{ fontFamily: 'var(--font-label)', fontSize: '10px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--accent)', marginLeft: '12px', verticalAlign: 'middle', animation: 'ln-breathe 2.8s ease-in-out infinite' }}>Masterpiece</span>}
+                {edit.editing ? titleField : entry.album}
+                {!edit.editing && isMasterpiece && <span style={{ fontFamily: 'var(--font-label)', fontSize: '10px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--accent)', marginLeft: '12px', verticalAlign: 'middle', animation: 'ln-breathe 2.8s ease-in-out infinite' }}>Masterpiece</span>}
               </h1>
               <div style={{ fontFamily: 'var(--font-label)', fontSize: '11px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--ink-soft)', marginBottom: '12px' }}>
-                {entry.artist}{entry.year ? ' · ' + entry.year : ''}
+                {edit.editing ? bylineField : <>{entry.artist}{entry.year ? ' · ' + entry.year : ''}</>}
               </div>
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
-                {displayRating > 0 && <StarRating rating={displayRating} size={15} glow={isMasterpiece} style={{ verticalAlign: 'middle' }} />}
+                {edit.editing
+                  ? flagFields
+                  : displayRating > 0 && <StarRating rating={displayRating} size={15} glow={isMasterpiece} style={{ verticalAlign: 'middle' }} />}
                 {editControls}
                 {pinButton}
-                {listenLabel && <Chip>{listenLabel}</Chip>}
-                      {isSubmission && <Chip>Submission</Chip>}
-                {(entry.favorite === true || entry.favorite === 'true') && <Chip tone="fav">Favorite</Chip>}
+                {!edit.editing && listenLabel && <Chip>{listenLabel}</Chip>}
+                {!edit.editing && isSubmission && <Chip>Submission</Chip>}
+                {!edit.editing && (entry.favorite === true || entry.favorite === 'true') && <Chip tone="fav">Favorite</Chip>}
               </div>
               <div style={{ fontFamily: fonts.mono, fontSize: '9px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--ink-faint)', marginTop: '12px' }}>
                 Posted {postedOn}
