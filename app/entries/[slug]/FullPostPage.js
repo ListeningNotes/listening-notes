@@ -208,6 +208,18 @@ export default function FullPostPage({ entry, references = [] }) {
   // album's own year — a second bare date there would just read as a second
   // release year.
   const postedOn = new Date(entry.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  // Only if the writing has actually been changed since it was posted. The
+  // column is null until update_entry sees a note or a tracklist genuinely
+  // differ, so an entry written once and never touched says nothing rather
+  // than claiming it was edited on the day it went up.
+  //
+  // It sits beside the posted date rather than under the note it refers to,
+  // because it belongs to the entry rather than to a paragraph — and a reader
+  // deciding how much to trust what they are about to read should be told
+  // before they read it, not after.
+  const editedOn = entry.edited_at
+    ? new Date(entry.edited_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+    : null;
 
   const allTracksFive = parsedTracks.length > 0 && parsedTracks.every(t => t.stars === 5);
   const isMasterpiece = allTracksFive || entry.rating === 'Masterpiece';
@@ -517,6 +529,7 @@ export default function FullPostPage({ entry, references = [] }) {
         </div>
         <div style={{ fontFamily: fonts.mono, fontSize: '9px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--ink-faint)' }}>
           Posted {postedOn}
+          {editedOn && <> · Edited {editedOn}</>}
         </div>
         <div
           className="ln-scroll-cue"
@@ -572,6 +585,7 @@ export default function FullPostPage({ entry, references = [] }) {
               </div>
               <div style={{ fontFamily: fonts.mono, fontSize: '9px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--ink-faint)', marginTop: '12px' }}>
                 Posted {postedOn}
+                {editedOn && <> · Edited {editedOn}</>}
               </div>
             </div>
           </div>

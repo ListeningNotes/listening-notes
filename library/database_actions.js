@@ -323,6 +323,19 @@ export async function update_entry(slug, fields) {
       horizon = COALESCE(${fields.horizon ?? null}, horizon),
       album_art = COALESCE(${fields.album_art ?? null}, album_art),
       post_link = COALESCE(${fields.post_link ?? null}, post_link),
+      -- Stamped only when the writing actually changed, and compared against
+      -- the row's own current values inside the same statement — which is the
+      -- only place both the old and the new are in hand at once. Correcting a
+      -- year or toggling a favourite leaves this alone: those are filing, not
+      -- rewriting, and a stamp that moved for either would stop meaning
+      -- anything. Comparing tracks covers track_notes and horizon too, since
+      -- both are derived from it a few lines above.
+      edited_at = CASE
+        WHEN (${fields.notes ?? null}::text IS NOT NULL
+              AND ${fields.notes ?? null}::text IS DISTINCT FROM notes)
+          OR (${fields.tracks ? JSON.stringify(fields.tracks) : null}::jsonb IS NOT NULL
+              AND ${fields.tracks ? JSON.stringify(fields.tracks) : null}::jsonb IS DISTINCT FROM tracks)
+        THEN NOW() ELSE edited_at END,
       source_entry_id = CASE WHEN ${set_source} THEN ${source_entry_id}::int ELSE source_entry_id END,
       received_from = CASE WHEN ${set_from} THEN ${set_from ? blankToNull(fields.received_from) : null}::text ELSE received_from END,
       received_date = CASE WHEN ${set_date} THEN ${set_date ? blankToNull(fields.received_date) : null}::date ELSE received_date END

@@ -73,7 +73,15 @@ The cross is built and merged. What is left of it:
 - [ ] **Compare wants two homes** — one on an individual album, for comparing that record against another, and one on the About pane for comparing the collection overall. It is reachable from neither today; the route works if you type it.
 - [ ] **Surprise (`/shuffle`) has no way in.** Work in progress by decision — the shake is the intended gesture and is not built. See DECISIONS.
 - [ ] **Move entry editing onto the entry**, and retire `/dashboard/entries`. See DECISIONS. Three parts worth knowing before starting: the per-track ratings and notes are most of the modal and want to be inline on the tracklist the page already draws; the discovery-chain fields (`source_entry_id`, `received_from`, `received_date`) are private and must render only behind the wristband; and delete has to come with it, since nothing else calls it.
-- [ ] **"Edited on {date}" on a changed note.** `entries` has `created_at` and no `updated_at`, so this needs a column plus a write in `update_entry`. Decided, not built.
+**DO THIS BEFORE EDITING AN ENTRY — the column is not on the live database:**
+
+```sql
+ALTER TABLE entries ADD COLUMN IF NOT EXISTS edited_at timestamp without time zone;
+```
+
+Reads are safe without it; the stamp simply never shows. It is the write that
+fails, and the write is every entry edit — so the existing CMS breaks until
+this is run. Take a backup first (`npm run backup`).
 - [ ] **What a delete actually does, before writing the warning.** `delete_entry` is a hard `DELETE FROM entries WHERE slug = …` — no soft delete, no undo beyond the nightly backup and Neon's six hours. And "permanent" understates it: `comments.entry_slug` is plain text with no foreign key, so an entry's comments stay in the table forever, orphaned and unreachable; `entries.source_entry_id` has an index but no key either, so deleting an album somebody else's entry was received from silently breaks that chain. Only `settings.pinned_entry_id` cleans itself up, because it is the one with `ON DELETE SET NULL`. Either the warning says all of this or the delete tidies up after itself first.
 - [ ] **`/get` is half a page.** It renders the essay and nothing else. The other half of what that address owes a stranger — what the software is, that it is free, and the way to install a copy — is unwritten, so somebody arriving from another copy's pitch pane reads the why and finds no door. Its tab still reads `Why · …` too.
 - [ ] **Source link wants a settings column.** It ships today as `NEXT_PUBLIC_SOURCE_URL` defaulting to upstream, which is the smaller half of the job — a modified copy owes *its own* source and should not need a redeploy to say so.
