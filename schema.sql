@@ -111,17 +111,23 @@ CREATE TABLE IF NOT EXISTS entries (
   album_art text,
   post_link text,
   created_at timestamp without time zone DEFAULT now(),
-  -- When the writing was last changed, and only the writing. Set by
-  -- update_entry when the album note or the tracks actually differ from what
-  -- is already stored — not when a genre is corrected or a favourite toggled,
-  -- because those are filing rather than rewriting.
+  -- When the *album note* was last rewritten. Not the entry as a whole: each
+  -- track carries its own stamp inside the tracks column below, because a date
+  -- at the top of a post says only that something moved, where a date under
+  -- track two says what. This column is the album note's because that note is
+  -- the one piece of writing the entry itself owns.
+  --
+  -- Set by update_entry when the note genuinely differs from what is stored —
+  -- not when a genre is corrected or a favourite toggled, which are filing
+  -- rather than rewriting.
   --
   -- Null means never edited, which is why it is not defaulted to now(): an
   -- entry written once should say nothing rather than claim it was edited on
   -- the day it was posted.
   --
-  -- The point is not an audit trail. It is that a journal nobody can silently
-  -- rewrite is worth more than one where every entry might have been.
+  -- The point is not an audit trail. An entry carrying five track stamps looks
+  -- different from one carrying a single typo fix, and that visible difference
+  -- is what keeps editing from becoming a quiet rewrite tool.
   edited_at timestamp without time zone,
   slug text,
   masterpiece boolean DEFAULT false,
@@ -131,6 +137,10 @@ CREATE TABLE IF NOT EXISTS entries (
   -- shaped how you listen goes on having done that on every later listen.
   formative boolean DEFAULT false,
   track_notes text,
+  -- [{ number, title, rating, favorite, note, edited }]. `edited` is an ISO
+  -- timestamp set by update_entry when that one track's note changes, and it
+  -- is why the stamps can sit next to the writing they belong to rather than
+  -- at the top of the entry. Absent until a track has actually been rewritten.
   tracks jsonb,
   genre text,
   source_entry_id integer,
