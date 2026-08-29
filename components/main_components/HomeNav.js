@@ -168,6 +168,12 @@ export default function HomeNav() {
   const settle = useRef(null);
   // Whether each pane has anything below its first screen, and whether you are
   // already down there. Both are measured, never declared.
+  // The scroller inside each pane's lower half. The pane used to be what
+  // scrolled the journal; now the pane only ever moves between two screens and
+  // the reading scrolls inside the second one, so anything that needs to know
+  // what is moving under it — the wall's sticky bar, its filter sheet — has to
+  // be given this rather than the pane.
+  const underRefs = [useRef(null), useRef(null), useRef(null)];
   const [deep, setDeep] = useState([false, false, false]);
   const [down, setDown] = useState([false, false, false]);
 
@@ -426,26 +432,41 @@ export default function HomeNav() {
            place. */}
       <div className={'hn-rail' + (down[pane] ? ' hn-rail--held' : '')} ref={railRef}>
         <section className="hn-pane" ref={paneRefs[0]} aria-label="About this journal">
-          {crown}
-          <About stamps={stamps} authed={authed} pinned={pinned} entries={entries} />
+          <About stamps={stamps} authed={authed} pinned={pinned} entries={entries} crown={crown} />
         </section>
 
+        {/* ── Two screens, not one long scroll ─────────────────────────
+            The same shape an entry is read in: a card that holds still, and a
+            screen below it that is its own place rather than more of the same
+            page. Everything the pane holds is inside one of the two, so the
+            snap has exactly two things to land on — the crown goes in with the
+            card, because the mark is part of the card rather than something
+            floating above a scroll.
+
+            The lower half scrolls inside itself. That is the whole trick and
+            it is why an entry feels solid: both screens stay exactly one
+            viewport tall however long the writing under them runs, so the snap
+            never has to decide between two places at once. */}
         <section className="hn-pane hn-pane--home" ref={paneRefs[1]} aria-label="Now listening">
-          {crown}
-          <div className="hn-screen">
-            <div className="hp-dashboard">
-              <div className="hp-dash-cell hp-dash-beacon">
-                <ListeningBeacon />
+          <div className="hn-top">
+            {crown}
+            <div className="hn-screen">
+              <div className="hp-dashboard">
+                <div className="hp-dash-cell hp-dash-beacon">
+                  <ListeningBeacon />
+                </div>
               </div>
+              {recentRow}
             </div>
-            {recentRow}
           </div>
           <div className="hn-under">
-            <Journal
-              entries={entries}
-              loading={loading}
-              scroller={paneRefs[1]}
-            />
+            <div className="hn-under-scroll" ref={underRefs[1]}>
+              <Journal
+                entries={entries}
+                loading={loading}
+                scroller={underRefs[1]}
+              />
+            </div>
           </div>
         </section>
 

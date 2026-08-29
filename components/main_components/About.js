@@ -62,7 +62,11 @@ const PIN_RESULTS = 40;
 // over a list that is already in memory. A journal large enough for that to be
 // the wrong shape is a journal whose archive has the same problem, and they
 // should be solved together.
-export default function About({ stamps, authed = false, pinned = null, entries = [] }) {
+// `crown` is the cross's mark, handed down rather than drawn here. It belongs
+// inside the card's half of the pane rather than floating above the whole
+// scroll: the two halves are a screen each, and a mark that sat outside both
+// would be a third thing for the snap to argue with.
+export default function About({ stamps, authed = false, pinned = null, entries = [], crown = null }) {
   const settings = useBookplate();
   const { bioanswers, rig: rigRows, rig_icon, social_links, instagram_url } = settings;
 
@@ -262,6 +266,8 @@ export default function About({ stamps, authed = false, pinned = null, entries =
 
   return (
     <div className="ab-pane" ref={paneRef}>
+      <div className="hn-top">
+      {crown}
       <div className="ab-card">
         <IdentityCard
           stamps={stamps}
@@ -270,6 +276,7 @@ export default function About({ stamps, authed = false, pinned = null, entries =
           pinned={showingPin}
           onPickPin={() => { setPinQuery(''); setPinOpen(true); }}
         />
+      </div>
       </div>
 
       {/* ── The pin's search ──────────────────────────────────────────────
@@ -337,13 +344,17 @@ export default function About({ stamps, authed = false, pinned = null, entries =
         </>
       )}
 
-      {/* Where the card ends and the reading starts. This boundary was a snap
-          point for a day — proximity snapping, to catch a reader settling onto
-          it — and it came out because what it actually did was argue with the
-          thumb, pulling back toward a line somebody had deliberately gone
-          past. The entrance to a pane's lower half wants designing properly;
-          until it is, this is just where one thing stops and the next
-          begins. */}
+      {/* Where the card ends and the reading starts, and now a real boundary
+          rather than a place where one thing happens to stop.
+
+          It was a proximity snap for a day, long ago, and came out because it
+          argued with the thumb — pulling back toward a line somebody had
+          deliberately gone past. What was missing then is what is here now:
+          the two halves are a screen each and the reading scrolls inside the
+          lower one, so the snap has two whole places to choose between rather
+          than a line in the middle of one long scroll. */}
+      <div className="hn-under">
+      <div className="hn-under-scroll">
       <div className="ab-below">
         {/* The prompts. Prompt and answer on one line, because they are one
             sentence: "I can never skip — Voodoo, side two" is a thought, and
@@ -682,6 +693,8 @@ export default function About({ stamps, authed = false, pinned = null, entries =
           </section>
         )}
 
+      </div>
+      </div>
       </div>
     </div>
   );
