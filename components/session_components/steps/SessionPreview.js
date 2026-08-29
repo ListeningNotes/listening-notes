@@ -138,15 +138,16 @@ export default function SessionPreview({
           </SessionButton>
         ) : (
           // Saying "saved" and leaving you on the dashboard meant finding the
-          // entry again by hand to check it. These go straight to the two
-          // places you'd actually want: the post, and the row behind it.
+          // entry again by hand to check it. This goes straight to the post,
+          // which is now also where it gets corrected — there used to be a
+          // second link here, to the row behind it in /dashboard/entries, and
+          // both the row and the route are gone.
           <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
             <span style={{ fontFamily: fonts.mono, fontSize: 11, color: tx(0.9), letterSpacing: '0.1em' }}>✓ Saved</span>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', justifyContent: 'center' }}>
               {savedEntry?.slug && (
                 <a href={`/entries/${savedEntry.slug}`} target="_blank" rel="noreferrer" style={savedLink(true)}>View the post →</a>
               )}
-              <a href="/dashboard/entries" style={savedLink(false)}>Edit in entries</a>
             </div>
             <a href="/dashboard" style={{ fontFamily: fonts.mono, fontSize: 10, color: tx(0.32), letterSpacing: '0.08em', textDecoration: 'none' }}>← Back to dashboard</a>
           </div>

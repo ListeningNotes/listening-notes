@@ -84,7 +84,7 @@ function ease() {
 }
 
 export default function HomeNav() {
-  const { cover_name } = useBookplate();
+  const { cover_name, pinned_entry_id } = useBookplate();
   const { theme, toggle: toggleTheme } = useTheme();
   const { isLive, recentAlbums } = useListeningBeacon();
 
@@ -386,17 +386,11 @@ export default function HomeNav() {
     </div>
   );
 
-  // The writing entrance, kept exactly as it was on the cover. Signed out it
-  // renders nothing at all, so a visitor sees a pane with no seam in it.
-  const writingLine = authed && (
-    <div className="hp-write-row">
-      <Link href="/dashboard/echo" className="hp-write">+ Start a listen</Link>
-      <Link href="/dashboard/inbox" className="hp-write">
-        Messages
-        {waiting?.total > 0 && <span className="hp-write-count">{waiting.total}</span>}
-      </Link>
-    </div>
-  );
+  // "+ Start a listen" and "Messages" used to sit under the beacon, from when
+  // the cover was the only screen an owner had and the writing had to be
+  // reachable from it. The desk is one swipe right and carries both, with the
+  // same unread count on the same door — so this was the same two controls
+  // twice, a hundred pixels apart, on a screen whose whole job is one record.
 
   // Compare, Submit and Surprise sat at the foot of the wall for a day, as the
   // last of the dot row's destinations looking for a home. They are off it: the
@@ -404,6 +398,12 @@ export default function HomeNav() {
   // to elsewhere is the site asking them to leave. Each still has its own
   // address and nothing in the interface currently points at any of them — see
   // NOTES, which is where that is written down rather than solved.
+
+  // The record the card shows. Found here rather than fetched, because this
+  // already holds every entry — the wall needs them — and asking the server for
+  // one row it has already sent would be a second request for a copy of
+  // something in memory.
+  const pinned = entries.find(e => e.id === pinned_entry_id) || null;
 
   const marks = paneMarks(authed);
 
@@ -414,7 +414,7 @@ export default function HomeNav() {
       <div className="hn-rail" ref={railRef}>
         <section className="hn-pane" ref={paneRefs[0]} aria-label="About this journal">
           {crown}
-          <About stamps={stamps} authed={authed} />
+          <About stamps={stamps} authed={authed} pinned={pinned} />
         </section>
 
         <section className="hn-pane hn-pane--home" ref={paneRefs[1]} aria-label="Now listening">
@@ -426,7 +426,6 @@ export default function HomeNav() {
               </div>
             </div>
             {recentRow}
-            {writingLine}
           </div>
           <div className="hn-under">
             <Journal

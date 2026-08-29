@@ -283,17 +283,97 @@ export async function update_entry(slug, fields) {
   // given a source but never stripped of one is a trap. So each is applied
   // only when the caller actually sent the key, and null then means null.
   const touched = key => Object.prototype.hasOwnProperty.call(fields, key);
-  const set_source = touched('source_entry_id');
+  let set_source = touched('source_entry_id');
   const set_from = touched('received_from');
   const set_date = touched('received_date');
   const source_entry_id = set_source ? entryRef(fields.source_entry_id) : null;
 
+  // The row as it stands, fetched once and used twice: to check the chain for
+  // cycles, and to work out which pieces of writing actually changed. The stamps
+  // cannot be done in SQL the way an entry-wide one could — a per-track answer
+  // needs the old and the new tracklists side by side in the same loop.
+  const [current] = await database`
+    SELECT id, notes, tracks, album_key, source_entry_id
+      FROM entries WHERE slug = ${slug} LIMIT 1
+  `;
+
+  // ── Lineage is written once ─────────────────────────────────────────────
+  // received_from and received_date are corrections: you log something and
+  // remember a week later that Zach sent it, which is the same kind of fix as a
+  // typo. Where it sits in the tree is not. Either their entry led to yours or
+  // it did not, and a lineage anyone can rewrite is a record of nothing — the
+  // tree stops being evidence and becomes an opinion about the past.
+  //
+  // So it may be written while it is empty and never again. Same rule as
+  // `serial` and `founded_at` in settings_actions, and dropped silently for the
+  // same reason: the editor posts every field it knows about, and it should not
+  // fail because one of them was already settled.
+  //
+  // It can become null again, but only by the source entry being deleted — the
+  // foreign key's ON DELETE SET NULL does it. That is the one case where the
+  // lineage genuinely ended, and it reopens the field to be set correctly
+  // rather than leaving it pointing at nothing.
+  if (set_source && current?.source_entry_id != null) {
+    set_source = false;
+  }
+
   if (set_source && source_entry_id) {
-    const row = await database`SELECT id FROM entries WHERE slug = ${slug} LIMIT 1`;
-    if (await wouldFormCycle(row[0]?.id, source_entry_id)) {
+    // A source is the entry somebody else wrote about *the same album* — that
+    // is the whole mechanic. Walking the column upward gives the history of one
+    // record, who found it first and who passed it to whom, and that only holds
+    // because every hop is the same album.
+    //
+    // The tempting misreading is association: they read your entry on one album
+    // and sent you a different one. That is a real relationship and not this
+    // column's — the album would change at every hop, so the trail could not be
+    // walked, because each step changes the subject. If it is ever wanted it
+    // wants a column of its own.
+    //
+    // Which makes this check the thing that keeps the two apart. It is
+    // impossible to state if one column carries both.
+    const [source] = await database`
+      SELECT id, album_key FROM entries WHERE id = ${source_entry_id} LIMIT 1
+    `;
+    if (!source) throw new Error('That entry no longer exists.');
+    if (source.album_key !== current?.album_key) {
+      throw new Error('A source has to be an entry for this same album.');
+    }
+    if (await wouldFormCycle(current?.id, source_entry_id)) {
       throw new Error('That would send this album back up its own chain.');
     }
   }
+
+  // ── Edit stamps ─────────────────────────────────────────────────────────
+  // A stamp goes next to the thing that changed, not at the top of the entry.
+  // One date on a post says only that something moved; a date under track two
+  // says what. It is also what keeps this from becoming a quiet rewrite tool —
+  // an entry carrying five track stamps looks different from one carrying a
+  // single typo fix, and that visible difference is the honesty.
+  //
+  // Notes only. Correcting a year or toggling a favourite is filing rather
+  // than rewriting, and a stamp that moved for either would stop meaning
+  // anything.
+  const stampedAt = new Date().toISOString();
+
+  if (Array.isArray(fields.tracks)) {
+    const before = Array.isArray(current?.tracks) ? current.tracks : [];
+    fields.tracks = fields.tracks.map((track, index) => {
+      // By number where there is one, by position otherwise: a tracklist can
+      // be re-ordered, and matching on position alone would read every track
+      // after the moved one as rewritten.
+      const was = before.find(t => t.number != null && t.number === track.number) ?? before[index];
+      const changed = was && (track.note || '') !== (was.note || '');
+      // A track with no previous version is new writing rather than an edit —
+      // filling in a tracklist later is not revising it.
+      const edited = changed ? stampedAt : (was?.edited ?? track.edited ?? null);
+      return edited ? { ...track, edited } : { ...track };
+    });
+  }
+
+  // The album note's own stamp. Its column is the entry's, because the album
+  // note is the one piece of writing the entry itself owns.
+  const noteChanged =
+    fields.notes != null && (fields.notes || '') !== (current?.notes || '');
 
   // Editing tracks re-derives both text shapes from them here rather than in the
   // caller, so there's no way to update the track list and leave the prose
@@ -323,6 +403,7 @@ export async function update_entry(slug, fields) {
       horizon = COALESCE(${fields.horizon ?? null}, horizon),
       album_art = COALESCE(${fields.album_art ?? null}, album_art),
       post_link = COALESCE(${fields.post_link ?? null}, post_link),
+      edited_at = CASE WHEN ${noteChanged} THEN ${stampedAt}::timestamp ELSE edited_at END,
       source_entry_id = CASE WHEN ${set_source} THEN ${source_entry_id}::int ELSE source_entry_id END,
       received_from = CASE WHEN ${set_from} THEN ${set_from ? blankToNull(fields.received_from) : null}::text ELSE received_from END,
       received_date = CASE WHEN ${set_date} THEN ${set_date ? blankToNull(fields.received_date) : null}::date ELSE received_date END
@@ -332,9 +413,38 @@ export async function update_entry(slug, fields) {
   return result[0] || null;
 }
 
+// Deleting an entry, and everything that pointed at it.
+//
+// A bare DELETE FROM entries is not enough, and the reason is that only one of
+// the three things referring to an entry is a foreign key. settings.pinned_entry_id
+// carries ON DELETE SET NULL and clears itself. The other two do not:
+//
+//   comments.entry_slug is a plain text column, so an entry's comments survive
+//   it — sitting in the table forever, unreachable, and turning up years later
+//   in a backup attached to a record nobody can find.
+//
+//   entries.source_entry_id has an index and no key, so an album that somebody
+//   else's entry was received *from* leaves that entry pointing at a row that
+//   is not there, which quietly breaks the discovery chain rather than ending
+//   it.
+//
+// So this clears both first. The alternative was a warning long enough to
+// explain the mess it was about to leave, which is a worse answer than not
+// leaving one.
 export async function delete_entry(slug) {
-  await database`DELETE FROM entries WHERE slug = ${slug}`;
-  return { deleted: true };
+  const [row] = await database`SELECT id FROM entries WHERE slug = ${slug} LIMIT 1`;
+  if (!row) return { deleted: false };
+
+  const comments = await database`DELETE FROM comments WHERE entry_slug = ${slug} RETURNING id`;
+  // The chain ends here rather than dangling: an album received from this one
+  // keeps its entry and loses its source, which is what "I no longer know where
+  // this came from" actually looks like.
+  const unlinked = await database`
+    UPDATE entries SET source_entry_id = NULL WHERE source_entry_id = ${row.id} RETURNING id
+  `;
+  await database`DELETE FROM entries WHERE id = ${row.id}`;
+
+  return { deleted: true, comments: comments.length, unlinked: unlinked.length };
 }
 
 // ── Briefings ──────────────────────────────────────────────────────────

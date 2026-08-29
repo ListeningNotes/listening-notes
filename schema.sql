@@ -111,6 +111,24 @@ CREATE TABLE IF NOT EXISTS entries (
   album_art text,
   post_link text,
   created_at timestamp without time zone DEFAULT now(),
+  -- When the *album note* was last rewritten. Not the entry as a whole: each
+  -- track carries its own stamp inside the tracks column below, because a date
+  -- at the top of a post says only that something moved, where a date under
+  -- track two says what. This column is the album note's because that note is
+  -- the one piece of writing the entry itself owns.
+  --
+  -- Set by update_entry when the note genuinely differs from what is stored —
+  -- not when a genre is corrected or a favourite toggled, which are filing
+  -- rather than rewriting.
+  --
+  -- Null means never edited, which is why it is not defaulted to now(): an
+  -- entry written once should say nothing rather than claim it was edited on
+  -- the day it was posted.
+  --
+  -- The point is not an audit trail. An entry carrying five track stamps looks
+  -- different from one carrying a single typo fix, and that visible difference
+  -- is what keeps editing from becoming a quiet rewrite tool.
+  edited_at timestamp without time zone,
   slug text,
   masterpiece boolean DEFAULT false,
   -- The third and last flag. Formative was a relationship — one of five things
@@ -119,6 +137,10 @@ CREATE TABLE IF NOT EXISTS entries (
   -- shaped how you listen goes on having done that on every later listen.
   formative boolean DEFAULT false,
   track_notes text,
+  -- [{ number, title, rating, favorite, note, edited }]. `edited` is an ISO
+  -- timestamp set by update_entry when that one track's note changes, and it
+  -- is why the stamps can sit next to the writing they belong to rather than
+  -- at the top of the entry. Absent until a track has actually been rewritten.
   tracks jsonb,
   genre text,
   source_entry_id integer,
@@ -180,6 +202,14 @@ CREATE TABLE IF NOT EXISTS settings (
   lastfm_user text,
   site_address text,
   founded_at date,
+  -- The one record from this journal shown as art on the About card. One, and
+  -- the shape is the rule: a single column cannot hold two, so pinning a
+  -- second unpins the first without anything having to check. The foreign key
+  -- below carries ON DELETE SET NULL, so deleting a pinned entry clears the
+  -- pin rather than leaving the card pointing at nothing.
+  --
+  -- A list of three lived here for an afternoon and was taken back out. Three
+  -- needed jsonb, and jsonb meant losing the key and the guarantee with it.
   pinned_entry_id integer,
   -- The paragraph at the top of /about, and the long note behind it. Both
   -- live here rather than in the page for the same reason the name does: a
@@ -326,6 +356,7 @@ ALTER TABLE settings ADD COLUMN IF NOT EXISTS display_name text;
 ALTER TABLE settings ADD COLUMN IF NOT EXISTS "serial" text;
 ALTER TABLE settings ADD COLUMN IF NOT EXISTS setup_complete boolean DEFAULT false;
 ALTER TABLE settings ADD COLUMN IF NOT EXISTS bioanswers jsonb;
+ALTER TABLE entries ADD COLUMN IF NOT EXISTS edited_at timestamp without time zone;
 
 -- Foreign keys, added once every table exists
 DO $$ BEGIN

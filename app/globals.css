@@ -1733,6 +1733,20 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   white-space: nowrap;
   transition: opacity 0.5s ease;
 }
+/* The full beacon's title, which wraps instead of scrolling — see the note in
+   ListeningBeacon.js. Everything above still applies to the mini one in the
+   nav row, which is narrow enough that a marquee is the only thing that fits. */
+.beacon-track--wrap {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  white-space: normal;
+  text-wrap: balance;
+  max-width: 340px;
+  margin: 0 auto;
+}
 .beacon-artist {
   font-family: var(--font-nunito), sans-serif;
   font-size: 0.85rem;
@@ -2289,6 +2303,368 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   pointer-events: none;
 }
 
+/* ── The fields at the head of an entry ─────────────────────────────────────
+   Each one is set in the type of the thing it replaces — the album title in
+   the title's face and size, the byline in the byline's — so a field is that
+   line with a caret in it rather than a form control standing where the line
+   was. The rule underneath is the only thing that marks it as typeable. */
+.ln-field {
+  display: inline-block;
+  max-width: 100%;
+  box-sizing: border-box;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  padding: 0 0 3px;
+  background: transparent;
+  font: inherit;
+  letter-spacing: inherit;
+  color: var(--ink);
+  text-align: inherit;
+}
+.ln-field:focus { outline: none; border-bottom-color: var(--ink-faint); }
+.ln-field::placeholder { color: var(--ink-faint); }
+.ln-field--title { width: 100%; text-align: center; }
+/* A year is four characters and should not take the width of an artist. */
+.ln-field--year { width: 5.5em; }
+.ln-field--genre { width: 9em; }
+.ln-byline-fields { display: inline-flex; gap: 10px; align-items: baseline; flex-wrap: wrap; justify-content: center; }
+
+/* The flags are the chips they stand in for, pressed rather than read. Off is
+   the same chip with the ink taken out, so the row does not change shape when
+   one is turned on. */
+.ln-flags {
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  width: 100%;
+}
+.ln-flags-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: center; }
+.ln-flag {
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: transparent;
+  font-family: var(--font-label);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.ln-flag:hover { color: var(--ink); border-color: var(--ink-faint); }
+.ln-flag--on { color: var(--bg); background: var(--ink); border-color: var(--ink); }
+
+/* Entry type and what kind of listen it was. Filing rather than writing, so
+   they are set in the same face as the chips they stand in for and sit on the
+   same row — a select that looked like a form control would be the only thing
+   on this page that did. */
+.ln-select {
+  appearance: none;
+  -webkit-appearance: none;
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: transparent;
+  font-family: var(--font-label);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink);
+  cursor: pointer;
+}
+.ln-select:hover { border-color: var(--ink-faint); }
+
+/* ── Replacing the cover ────────────────────────────────────────────────────
+   The art is the control. Press it while a correction is open and the address
+   under it opens — same rule as everything else in this editor, where the
+   field is drawn in the place of the thing it changes rather than in a form
+   somewhere else.
+
+   Only while a correction is open. Outside one the cover is a picture and
+   nothing happens when a reader touches it, which is also what leaves the
+   press free for the tap-to-QR idea that is parked. */
+.ln-cover { position: relative; padding: 0; background: transparent; }
+.ln-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* Dashed, and only here: it is the one border on the page that means
+   "this is not finished with", which is the whole of what edit mode is. */
+.ln-cover--live { cursor: pointer; border: 1px dashed var(--ink-faint); }
+.ln-cover-hint {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  padding: 5px 0;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  font-family: var(--font-label);
+  font-size: 8.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-align: center;
+}
+.ln-cover-swap {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  /* Pixels, not ems. The hero inherits a 24px font size, so 26em resolved to
+     624 — a line of machine text stretched the width of the writing. */
+  max-width: 420px;
+  margin: 0 auto;
+}
+/* The label face, not the body one. An address is a machine's line and reads
+   as one, and set in the page's own type it would sit there looking like a
+   sentence somebody wrote. */
+.ln-cover-url {
+  width: 100%;
+  font-family: var(--font-label);
+  font-size: 11px;
+  letter-spacing: 0.02em;
+  text-align: center;
+}
+.ln-cover-note {
+  margin: 0;
+  font-family: var(--font-label);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  text-align: center;
+}
+
+/* ── Where an entry came from ───────────────────────────────────────────────
+   The private half, shown only while its keeper is correcting the entry. It is
+   labelled as private on the page rather than only in the code, because the
+   one thing somebody needs to know before typing a friend's name into a
+   journal is who else will see it. */
+.ln-chain {
+  margin-top: 48px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  max-width: 34em;
+}
+.ln-chain-head {
+  margin: 0;
+  font-family: var(--font-label);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.ln-chain-row { display: flex; align-items: baseline; gap: 12px; }
+.ln-chain-label {
+  flex: 0 0 84px;
+  font-family: var(--font-label);
+  font-size: 8.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.ln-chain-row .ln-field { flex: 1; min-width: 0; font-size: 13px; }
+.ln-chain-row select.ln-field { appearance: none; -webkit-appearance: none; }
+.ln-chain-row select.ln-field:disabled { color: var(--ink-faint); }
+/* Once lineage points somewhere it is a fact rather than a field, so it stops
+   looking like one — no rule under it, nothing to press. */
+.ln-chain-fixed { flex: 1; min-width: 0; font-size: 13px; color: var(--ink); }
+.ln-chain-locked {
+  font-family: var(--font-label);
+  font-size: 8.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+/* ── Deleting an entry ──────────────────────────────────────────────────────
+   At the very foot of the page, and only while a correction is open. Not in
+   the bar beside Save: they are not the same weight, and a destructive control
+   next to the one pressed every time is one that gets pressed by accident.
+   The first press opens the warning in place rather than a dialog. A dialog is
+   dismissed by reflex; this has to be read to be got past. */
+.ln-danger {
+  margin-top: 56px;
+  padding-top: 28px;
+  border-top: 1px solid var(--border);
+}
+.ln-danger-open {
+  display: inline-flex;
+  padding: 7px 14px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: transparent;
+  font-family: var(--font-label);
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+.ln-danger-open:hover { color: var(--fav); border-color: var(--fav); }
+.ln-danger-ask { display: flex; flex-direction: column; gap: 12px; }
+.ln-danger-warn {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--ink-soft);
+  max-width: 46em;
+}
+.ln-danger-warn strong { color: var(--ink); }
+.ln-danger-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+/* The only filled red thing on the site. It is the one action here that cannot
+   be taken back, and it should not look like anything else. */
+.ln-danger-go {
+  padding: 9px 18px;
+  border: 1px solid var(--fav);
+  border-radius: 999px;
+  background: var(--fav);
+  font-family: var(--font-label);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #fff;
+  cursor: pointer;
+}
+.ln-danger-go:disabled { opacity: 0.6; cursor: default; }
+
+/* ── The bar that says a correction is open ─────────────────────────────────
+   The controls that started it live at the top of the entry, which is a screen
+   and a half away by the time somebody is fixing a note on track nine. This
+   follows them down, and once the hero has scrolled off it is the only thing
+   on the page saying they are editing at all. */
+.ln-editing-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 140;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+  /* The page's own colour, not the frosted panel the rest of the site uses.
+     A translucent bar works over album art and fails over prose: the words it
+     sits on read straight through it, and the one control that has to be
+     unmistakable ends up the least legible thing on screen. */
+  background: var(--bg);
+  border-top: 1px solid var(--border);
+}
+/* Room for it, on the element that actually scrolls. .ln-screen-two holds an
+   inner scroller, so padding on the outer box is padding the content slides
+   straight past — the last track's note went on being written underneath the
+   bar that saves it. */
+.ln-editing .ln-screen-two-scroll { padding-bottom: 96px; }
+.ln-editing-label {
+  font-family: var(--font-label);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-right: 4px;
+}
+.ln-trouble {
+  position: fixed;
+  left: 16px; right: 16px; bottom: 76px;
+  z-index: 141;
+  margin: 0;
+  text-align: center;
+  font-family: var(--font-label);
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  color: var(--fav);
+}
+
+/* A track's own row while it is being corrected: the title becomes a field in
+   the title's place, and the heart is always drawn so it can be pressed. Read
+   rather than edited, an empty heart on every track would be a column of
+   controls nobody asked for — so it only appears filled. */
+.ln-track-field { flex: 1; min-width: 0; font-size: 13px; }
+.ln-track-heart {
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 0; border: 0; background: none;
+  color: var(--ink-faint); cursor: pointer;
+  transition: color 0.15s;
+}
+.ln-track-heart:hover { color: var(--fav); }
+.ln-track-heart--on { color: var(--fav); }
+
+/* A note being written, in the place the note is read. Set in the type the
+   note prints in, so the field is the paragraph with a caret in it rather than
+   a form control standing where a paragraph was — the rule underneath is the
+   only thing that says it can be typed into.
+   It grows in script (see grow() in FullPostPage.js); resize would put a drag
+   handle in the corner of somebody's writing. */
+.ln-write {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  padding: 0 0 8px;
+  margin-bottom: 6px;
+  background: transparent;
+  font-family: inherit;
+  font-size: 15px;
+  line-height: 1.95;
+  color: var(--ink);
+  resize: none;
+  overflow: hidden;
+}
+.ln-write:focus { outline: none; border-bottom-color: var(--ink-faint); }
+.ln-write::placeholder { color: var(--ink-faint); }
+/* A track's note is set smaller than the album's, and its field follows. */
+.ln-write--track { font-size: 13px; line-height: 1.8; color: var(--ink-soft); }
+
+/* An edit stamp, printed under the piece of writing it belongs to — a track's
+   note, or the album note. Never at the top of an entry: one date on a post
+   says only that something moved, where a date under track two says what. It
+   is also what stops this being a quiet rewrite tool, since an entry carrying
+   five of these looks different from one carrying a single typo fix.
+   Small and faint on purpose. It is a disclosure, not a headline. */
+.ln-edited {
+  margin: 0 0 6px;
+  font-family: var(--font-label);
+  font-size: 8.5px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+/* ── The pin ────────────────────────────────────────────────────────────────
+   On an entry, for its owner: this is the record the About card shows. Shaped
+   like the chips it stands beside rather than like a button, because it is a
+   statement about the entry in a row of statements about the entry — and
+   because a filled button next to three quiet chips would read as the most
+   important thing on a page about an album.
+   Pressed, it fills. That is the whole state: an outline is "could be", solid
+   is "is". */
+.ln-pin {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: transparent;
+  font-family: var(--font-label);
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.ln-pin:hover:not(:disabled) { color: var(--ink); border-color: var(--ink-faint); }
+.ln-pin--on {
+  color: var(--bg);
+  background: var(--ink);
+  border-color: var(--ink);
+}
+.ln-pin--on:hover:not(:disabled) { color: var(--bg); border-color: var(--ink); }
+.ln-pin:disabled { opacity: 0.5; cursor: default; }
+.ln-pin:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 3px; }
+
 /* Held still while something covers it. Put on whichever element actually
    scrolls — the body on a page, a pane in the cross — for as long as a sheet
    is over it, so the thing underneath does not slide away under the finger
@@ -2329,8 +2705,13 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
      turning rather than three pages going past. Every landing screen subtracts
      it so that crown plus landing still comes to one screen.
      Scaled to the window rather than fixed, because a tall phone can carry the
-     mark further down than a short one and a short one has none to spare. */
-  --hn-crown: clamp(140px, 24dvh, 210px);
+     mark further down than a short one and a short one has none to spare.
+     Raised from 24dvh once the card was seen on a real screen: the pane was
+     reading top-heavy, with the mark and the photograph carrying the weight
+     and the slack pooling under the button. The ceiling is still the card —
+     everything here is spending the same 290-odd pixels the crown, the square
+     and the down caret have to share. */
+  --hn-crown: clamp(150px, 28dvh, 248px);
   /* The air between the mark and the square under it. One number for both
      panes: the card's portrait and the beacon's album art are the same 180px
      square in the same frame, and the whole point of a fixed crown is that
@@ -2585,9 +2966,18 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   bottom: max(14px, env(safe-area-inset-bottom));
   z-index: 96;
   display: flex;
-  align-items: flex-end;
+  /* Tops aligned, not bottoms. The two side controls are a mark with an arrow
+     beside it and the middle one is a mark with an arrow underneath, so they
+     are different heights — hung from the bottom their marks sat on three
+     different lines. Hung from the top, the three marks read as one row and
+     the down arrow is simply the thing that hangs below it. */
+  align-items: flex-start;
+  /* A group with room in it, rather than three glyphs touching or one control
+     pinned to each edge. Pushed to the edges they stopped reading as a row and
+     started reading as three separate things; at the gap they had before, the
+     card and the cog were close enough to press by accident. */
   justify-content: center;
-  gap: 30px;
+  gap: 76px;
   /* The row is a transparent strip across the whole window; only the controls
      in it take a press, or it would swallow every tap along the bottom edge. */
   pointer-events: none;
@@ -2633,12 +3023,14 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 /* Down keeps its arrow underneath its mark rather than beside it. It is the
    one direction the page itself moves in, and a chevron next to the book would
    read as a fourth pane somewhere off to the right.
-   It is also the only one that bobs, because down is the direction nobody
-   thinks to try on a page that already moves sideways. */
+   It used to bob, from when it stood alone in the middle of the screen and had
+   to say "down" on a page that already moved sideways. In a row of three still
+   marks the movement stopped reading as a hint and started reading as one of
+   them being loose — and it put the book five pixels below the other two for
+   most of every cycle, which is the one thing this row is lined up to avoid. */
 .edge-caret--down {
   flex-direction: column;
   gap: 2px;
-  animation: hp-scroll-btn-bob 2.4s ease-in-out infinite;
 }
 @media (prefers-reduced-motion: reduce) {
   .edge-caret--down { animation: none; }
@@ -3059,39 +3451,9 @@ a.ab-rig-name:hover { text-decoration: underline; }
   font-size: 9px;
 }
 
-/* ── The cover's own two rows, moved off the deleted page-level stylesheet ── */
-.hp-write {
-  display: inline-flex;
-  align-items: center;
-  padding: 9px 20px;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--ink-soft);
-  text-decoration: none;
-  background: transparent;
-  transition: color 0.15s, border-color 0.15s;
-}
-.hp-write:hover { color: var(--ink); border-color: var(--ink-faint); }
-.hp-write:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 3px; }
-.hp-write-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
-.hp-write-count {
-  margin-left: 7px;
-  min-width: 16px;
-  height: 16px;
-  padding: 0 4px;
-  border-radius: 999px;
-  background: var(--fav);
-  color: #fff;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 9px;
-  letter-spacing: 0;
-}
+/* The writing row that used to sit under the beacon — "+ Start a listen" and
+   "Messages" — is gone with its rules. The desk is one swipe right and carries
+   both, so the cover was showing the same two controls twice. */
 
 /* What came before — three covers, small and dim, under the beacon. */
 .hp-recent {
