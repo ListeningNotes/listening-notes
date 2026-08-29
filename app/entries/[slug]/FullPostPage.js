@@ -23,6 +23,7 @@ import MetadataLabel from '../../../components/main_components/Slug_Page/Metadat
 import Chip from '../../../components/main_components/Slug_Page/Chip';
 import StarRating from '../../../components/main_components/StarRating';
 import { useBookplate } from '../../../components/main_components/Bookplate';
+import { PIN_LIMIT, readPins } from '../../../components/main_components/IdentityCard';
 
 
 // The pair of actions that close the entry out used to share a local style
@@ -31,26 +32,29 @@ import { useBookplate } from '../../../components/main_components/Bookplate';
 
 export default function FullPostPage({ entry, references = [] }) {
   // ── The pin ───────────────────────────────────────────────────────────────
-  // One record from the journal is shown as art on the About card, and this is
-  // where it gets chosen: on the record itself, at the moment somebody is
-  // looking at it and thinks *that one*. The alternative was a search sheet
+  // Up to three records from the journal show as art on the About card, and
+  // this is where they are chosen: on the record itself, at the moment somebody
+  // is looking at it and thinks *that one*. The alternative was a search sheet
   // opened from the card, which is more machinery for a worse moment — by the
   // time you are looking at your own card you have to remember what you wanted
   // rather than recognise it.
   //
-  // Exactly one, structurally: it is a single column on the settings row, so
-  // pinning a second record unpins the first without anything having to check.
-  // The column is a foreign key with ON DELETE SET NULL, so deleting a pinned
-  // entry clears the pin instead of leaving the card pointing at nothing.
+  // The button says which slot this one holds, because with three of them the
+  // useful fact is not "pinned" but *which* — and how much room is left.
   const router = useRouter();
-  const { pinned_entry_id } = useBookplate();
+  const settings = useBookplate();
   const [authed, setAuthed] = useState(false);
-  // What the button should say right now, which is not always what the context
-  // says: the context is server state and only catches up on a refresh, so a
-  // press updates this immediately and the refresh confirms it.
-  const [pinnedHere, setPinnedHere] = useState(null);
+  // The list as this page currently believes it to be. Null until somebody
+  // presses something, because until then the server's answer is the truth and
+  // holding a copy of it would only be a second thing to keep in step.
+  const [draft, setDraft] = useState(null);
   const [pinning, setPinning] = useState(false);
-  const isPinned = pinnedHere === null ? pinned_entry_id === entry.id : pinnedHere;
+  // What the last press pushed off the card, held just long enough to say so.
+  const [bumped, setBumped] = useState(null);
+
+  const pins = draft ?? readPins(settings);
+  const slot = pins.indexOf(entry.id);
+  const isPinned = slot !== -1;
 
   useEffect(() => {
     fetch('/api/auth/check')
@@ -59,47 +63,72 @@ export default function FullPostPage({ entry, references = [] }) {
       .catch(() => {});
   }, []);
 
+  useEffect(() => {
+    if (!bumped) return;
+    const t = setTimeout(() => setBumped(null), 5000);
+    return () => clearTimeout(t);
+  }, [bumped]);
+
   async function togglePin() {
     if (pinning) return;
-    const next = !isPinned;
+    let next;
+    let pushedOut = null;
+    if (isPinned) {
+      next = pins.filter(id => id !== entry.id);
+    } else {
+      next = [...pins, entry.id];
+      // Full. Pin anyway and drop the oldest rather than refusing: refusing
+      // means going and unpinning something before you can do the thing you
+      // came to do. Saying which one went is what keeps that from being a
+      // silent edit to somebody's card.
+      if (next.length > PIN_LIMIT) {
+        pushedOut = next[0];
+        next = next.slice(next.length - PIN_LIMIT);
+      }
+    }
     setPinning(true);
-    // Moved before the request rather than after it. This is one integer and
-    // the answer is never in doubt; waiting for a round trip to redraw a pin
+    // Moved before the request rather than after it. This is three integers and
+    // the answer is never in doubt; waiting on a round trip to redraw a pin
     // makes a press feel like it did not land.
-    setPinnedHere(next);
+    setDraft(next);
+    setBumped(pushedOut ? (references.find(r => r.id === pushedOut) || null) : null);
     try {
       const res = await fetch('/api/settings', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pinned_entry_id: next ? entry.id : null }),
+        body: JSON.stringify({ pinned_entries: next.length ? next : null }),
       });
       if (!res.ok) throw new Error('save failed');
-      // The card reads pinned_entry_id off the root layout, which is a server
-      // component — so the way to make the card agree with this page is to ask
-      // the server to render again.
+      // The card reads this off the root layout, which is a server component —
+      // so the way to make the card agree with this page is to ask the server
+      // to render again.
       router.refresh();
     } catch {
-      setPinnedHere(!next);
+      setDraft(pins);
+      setBumped(null);
     } finally {
       setPinning(false);
     }
   }
 
   const pinButton = authed && (
-    <button
-      type="button"
-      className={'ln-pin' + (isPinned ? ' ln-pin--on' : '')}
-      onClick={togglePin}
-      disabled={pinning}
-      aria-pressed={isPinned}
-      aria-label={isPinned ? 'Unpin this from the card' : 'Pin this to the card'}
-      title={isPinned ? 'Pinned to your card' : 'Pin to your card'}
-    >
-      {isPinned
-        ? <PushPin size={13} weight="fill" aria-hidden="true" />
-        : <PushPinSlash size={13} weight="regular" aria-hidden="true" />}
-      <span>{isPinned ? 'Pinned' : 'Pin'}</span>
-    </button>
+    <span className="ln-pin-wrap">
+      <button
+        type="button"
+        className={'ln-pin' + (isPinned ? ' ln-pin--on' : '')}
+        onClick={togglePin}
+        disabled={pinning}
+        aria-pressed={isPinned}
+        aria-label={isPinned ? `Pinned to the card, ${slot + 1} of ${PIN_LIMIT}. Unpin it.` : 'Pin this to the card'}
+        title={isPinned ? 'Pinned to your card' : 'Pin to your card'}
+      >
+        {isPinned
+          ? <PushPin size={13} weight="fill" aria-hidden="true" />
+          : <PushPinSlash size={13} weight="regular" aria-hidden="true" />}
+        <span>{isPinned ? `Pinned ${slot + 1}/${PIN_LIMIT}` : 'Pin'}</span>
+      </button>
+      {bumped && <span className="ln-pin-bump">Unpinned {bumped.album}</span>}
+    </span>
   );
 
   const [commentsByTrack, setCommentsByTrack] = useState({});

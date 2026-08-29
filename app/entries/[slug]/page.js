@@ -36,7 +36,9 @@ export default async function PostPage({ params }) {
   // rows — cheaper to fetch than to cache, and fetching it per request is
   // what makes the linking retroactive: log an album tomorrow and every
   // review that already mentioned it links to it on the next load.
-  const references = await sql`SELECT album, artist, slug FROM entries`;
+  // id as well as the name, so the pin can say which record it pushed out of
+  // the card when the third slot was already full.
+  const references = await sql`SELECT id, album, artist, slug FROM entries`;
 
   if (!entry) {
     return (
