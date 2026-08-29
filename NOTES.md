@@ -78,11 +78,17 @@ The cross is built and merged. What is left of it:
 - [ ] **One header everywhere**: mark centred, one control each side, the same
       arrangement the About card uses. Today the header changes shape between
       the panes and an entry, and every screen should read the same.
-- [ ] **`NavBeacon` goes** from every page but the beacon pane. It is a status
-      bar for something the visitor has already been told, it competes with the
-      writing, and it is part of why five components poll Last.fm
-      independently — the dev log shows a beacon request roughly every second
-      and a half, and input on the entry page times out while they land.
+- [ ] **The nav beacon goes** from every page but the beacon pane. It is a
+      status bar for something the visitor has already been told, and it
+      competes with the writing.
+
+      Not for the polling, though — that is already fixed. `useListeningBeacon`
+      runs one module-level timer for however many components subscribe, and
+      `/api/public/beacon` caches the upstream answer for ten seconds. Five
+      callers cost one request every fifteen seconds, not five. What the dev
+      log actually shows is that each of those requests takes 1.4–1.9s of
+      application time, which is a different problem and stays after this one
+      is gone.
 - [ ] **Owner tools, top left, server-checked**: pencil to the editor, printer
       to the export flow. Not hidden with CSS — the entry page currently asks
       the browser whether you are signed in and hides what it finds, which

@@ -718,13 +718,15 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   transition: filter 0.2s;
 }
 
-/* SiteNav — the ONE sitewide nav row: logo (doubling as the live indicator)
-   on the left, a caret + the compact beacon centered, day/night toggle on
-   the right. Used by every page, including the homepage's screen two —
-   there's no separate/bespoke version anymore. Fixed across the top of the
-   page everywhere except the homepage, where it flows in place inside
-   screen two (see the .hp override below), matching how that screen's
-   layout already works. */
+/* SiteNav — the ONE sitewide nav row: the mark centred, one control each
+   side. Three columns rather than a flex row, and the outer two are equal
+   whatever is in them, which is what keeps the mark on the centre line of the
+   page instead of on the centre line of whatever is left over.
+
+   The row is 58px tall whether or not either side has anything in it. That
+   number is inherited — it used to come from the beacon slot's min-height, and
+   several pages pad their content to clear a header of about this size. It
+   stays until the tools land and the whole band gets measured on purpose. */
 .sitenav-row {
   position: fixed;
   top: calc(22px + var(--safe-top));
@@ -732,10 +734,11 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   right: 0;
   z-index: 100;
   display: grid;
-  grid-template-columns: 1fr 2fr 1fr;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
   gap: 10px;
   padding: 0 28px;
+  min-height: 58px;
 }
 /* The band that hides scrolling page content behind the fixed header. It has
    to cover this row AND the dot-nav below it (which is a separate fixed
@@ -781,7 +784,9 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   display: none;
 }
 
-.sitenav-logo { display: block; justify-self: start; }
+.sitenav-side { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.sitenav-side--left { justify-content: flex-start; }
+.sitenav-logo { display: block; justify-self: center; }
 .sitenav-logo-mark {
   height: 28px;
   width: auto;
@@ -796,31 +801,6 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 @keyframes sitenav-logo-dot-pulse {
   0%, 100% { opacity: 1; }
   50%      { opacity: 0.55; }
-}
-
-/* Center slot — the way back to screen one (the big "now listening" screen)
-   from anywhere on the site. It used to carry a small up-caret hinting at
-   that, but it crowded the beacon in a row this tight; the beacon itself is
-   the affordance now. Note the slot is empty when nothing is playing. */
-.sitenav-beacon-slot {
-  position: relative;
-  justify-self: center;
-  display: flex;
-  align-items: center;
-  min-width: 0;
-  min-height: 58px; /* holds the row's height steady whether or not the
-    beacon is showing, so the dot nav below never has to guess which case
-    it's clearing */
-  text-decoration: none;
-  cursor: pointer;
-}
-/* The compact beacon's own art/marquee styling (.beacon-mini*) only exists
-   inside the ≤768px media query below (it was built for screen two, which
-   is mobile-only) — showing it wider than that would render unstyled, so
-   it's scoped off until there's a desktop-appropriate version. */
-.sitenav-beacon { display: none; }
-@media (max-width: 768px) {
-  .sitenav-beacon { display: block; }
 }
 
 .sitenav-theme-btn {
@@ -1343,82 +1323,6 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
     0%, 100% { opacity: 1; }
     50%      { opacity: 0.55; }
   }
-  .beacon-mini-wrap {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-self: center; /* the box below can be narrower than its grid
-      track (it shrinks/grows with the title), so center it within that
-      track rather than stretching to fill it */
-    min-width: 0;
-    gap: 0;
-  }
-  .beacon-mini {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    min-width: 0;
-    max-width: 190px; /* free to expand/contract with the title up to this
-      cap — past it, growing further would push the art too far off-center,
-      so it marquees inside the capped width instead (same mechanics as
-      screen one) */
-  }
-  .beacon-mini-art {
-    width: 40px;
-    height: 40px;
-    border-radius: 8px;
-    overflow: hidden;
-    flex-shrink: 0;
-    box-shadow: 0 6px 16px rgba(0,0,0,0.14);
-  }
-  .beacon-mini-img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-  }
-  .beacon-mini-meta {
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 2px;
-  }
-  .beacon-mini-track-clip {
-    width: 100%;
-    min-width: 0;
-    overflow: hidden;
-    display: flex;
-    justify-content: center;
-  }
-  .beacon-mini-track-clip.is-marqueeing {
-    justify-content: flex-start; /* start of the title, not the visually-centered middle */
-  }
-  .beacon-mini-track-text {
-    display: inline-block;
-    flex-shrink: 0;
-    white-space: nowrap;
-    font-family: var(--font-nunito), sans-serif;
-    font-weight: 700;
-    font-size: 0.85rem;
-    line-height: 1;
-    color: var(--ink);
-  }
-  .beacon-mini-artist {
-    width: 100%; /* without this it has nothing to clip against — align-items:
-      center on the parent lets a block child size to its own content, so a
-      long artist name was just overflowing past the row instead of eliding */
-    font-family: var(--font-nunito), sans-serif;
-    font-size: 0.7rem;
-    line-height: 1;
-    color: var(--ink-soft);
-    text-align: center;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
   .hp-screen--two .hp-dotnav {
     margin-top: 0;
   }
@@ -1694,33 +1598,6 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   color: var(--text-muted);
 }
 
-/* Fixed-width lane the title scrolls inside when it's too long to fit —
-   short titles just sit centered and still, no animation applied. */
-.beacon-track-clip {
-  width: 100%;
-  max-width: 360px;
-  margin: 0 auto;
-  overflow: hidden;
-  display: flex;
-  justify-content: center;
-}
-.beacon-track-clip.is-marqueeing {
-  justify-content: flex-start; /* start of the title, not the visually-centered middle */
-}
-
-/* Shared by both the full and mini marquee titles — the trailing copy that
-   makes the wraparound loop seamless. Gap width must match MARQUEE_GAP in
-   ListeningBeacon.js exactly or the loop point will visibly jump. */
-.marquee-track {
-  display: flex;
-  align-items: center;
-  white-space: nowrap;
-}
-.marquee-track-gap {
-  width: 48px;
-  flex-shrink: 0;
-}
-
 .beacon-track {
   display: inline-block;
   flex-shrink: 0;
@@ -1733,9 +1610,11 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   white-space: nowrap;
   transition: opacity 0.5s ease;
 }
-/* The full beacon's title, which wraps instead of scrolling — see the note in
-   ListeningBeacon.js. Everything above still applies to the mini one in the
-   nav row, which is narrow enough that a marquee is the only thing that fits. */
+/* The beacon's title wraps rather than scrolling. It used to scroll, in a
+   fixed-width lane with a trailing copy that made the loop seamless, and all
+   of that machinery is gone: the only place a marquee was the right answer was
+   the compact beacon in the nav row, and that beacon no longer exists. A title
+   that scrolls has to be waited for; two lines can simply be read. */
 .beacon-track--wrap {
   display: -webkit-box;
   -webkit-box-orient: vertical;
