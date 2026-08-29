@@ -10,7 +10,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { PushPin, PushPinSlash } from '@phosphor-icons/react';
+import { Check, PencilSimple, PushPin, PushPinSlash, X } from '@phosphor-icons/react';
 import { fonts } from '../../../library/sitewide_visuals';
 import { parseHorizon, entryTracks, splitNotes, entryTypeLabel } from '../../../library/entry_formatter';
 import { kept_receipts } from '../../../library/receipts';
@@ -23,6 +23,7 @@ import MetadataLabel from '../../../components/main_components/Slug_Page/Metadat
 import Chip from '../../../components/main_components/Slug_Page/Chip';
 import StarRating from '../../../components/main_components/StarRating';
 import { editStamp } from '../../../library/entry_formatter';
+import { useEntryEditor } from '../../../hooks/useEntryEditor';
 import { useBookplate } from '../../../components/main_components/Bookplate';
 
 
@@ -88,7 +89,40 @@ export default function FullPostPage({ entry, references = [] }) {
     }
   }
 
-  const pinButton = authed && (
+  // ── Correcting what is written ────────────────────────────────────────────
+  // The fields are drawn where the writing is, not in a form somewhere else:
+  // the album note becomes a textarea in the album note's place, and a track's
+  // note becomes one under that track. Same argument as the card's editor —
+  // a field for something you cannot see while you type into it is a field you
+  // fill in blind.
+  const edit = useEntryEditor(entry);
+
+  const editControls = authed && (
+    edit.editing ? (
+      <>
+        <button
+          type="button"
+          className="ln-pin ln-pin--on"
+          onClick={edit.save}
+          disabled={edit.saving}
+        >
+          <Check size={13} weight="bold" aria-hidden="true" />
+          <span>{edit.saving ? 'Saving' : 'Save'}</span>
+        </button>
+        <button type="button" className="ln-pin" onClick={edit.cancel} disabled={edit.saving}>
+          <X size={13} weight="bold" aria-hidden="true" />
+          <span>Cancel</span>
+        </button>
+      </>
+    ) : (
+      <button type="button" className="ln-pin" onClick={edit.begin}>
+        <PencilSimple size={13} weight="regular" aria-hidden="true" />
+        <span>Edit</span>
+      </button>
+    )
+  );
+
+  const pinButton = authed && !edit.editing && (
     <button
       type="button"
       className={'ln-pin' + (isPinned ? ' ln-pin--on' : '')}
@@ -217,6 +251,20 @@ export default function FullPostPage({ entry, references = [] }) {
   //
   // Short, because it prints inline under prose rather than as a field.
   const editedOn = entry.edited_at ? editStamp(entry.edited_at) : null;
+
+  // A textarea that grows instead of scrolling, so a note is written at the
+  // length it will be read at. Runs on mount as well as on every keystroke, or
+  // a note already six lines long opens showing one.
+  const grow = event => {
+    const el = event.currentTarget;
+    el.style.height = 'auto';
+    el.style.height = `${el.scrollHeight}px`;
+  };
+  const growOnMount = el => {
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = `${el.scrollHeight}px`;
+  };
 
   const allTracksFive = parsedTracks.length > 0 && parsedTracks.every(t => t.stars === 5);
   const isMasterpiece = allTracksFive || entry.rating === 'Masterpiece';
@@ -518,6 +566,7 @@ export default function FullPostPage({ entry, references = [] }) {
           <StarRating rating={displayRating} size={24} glow={isMasterpiece} animate burst={isMasterpiece} />
         )}
         <div className="ln-screen-one-chips">
+          {editControls}
           {pinButton}
           {listenLabel && <Chip>{listenLabel}</Chip>}
           {isSubmission && <Chip>Submission</Chip>}
@@ -574,6 +623,7 @@ export default function FullPostPage({ entry, references = [] }) {
               </div>
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
                 {displayRating > 0 && <StarRating rating={displayRating} size={15} glow={isMasterpiece} style={{ verticalAlign: 'middle' }} />}
+                {editControls}
                 {pinButton}
                 {listenLabel && <Chip>{listenLabel}</Chip>}
                       {isSubmission && <Chip>Submission</Chip>}
@@ -606,8 +656,19 @@ export default function FullPostPage({ entry, references = [] }) {
             <MetadataLabel sticky>Album Notes</MetadataLabel>
             {/* 6px, the same gap a track note leaves under itself before its
                 own bubble. */}
-            <div style={{ lineHeight: 1.95, fontSize: '15px', whiteSpace: 'pre-wrap', color: 'var(--ink)', marginBottom: '6px' }}>{linkedAlbumNotes}</div>
-            {editedOn && <p className="ln-edited">Edited {editedOn}</p>}
+            {edit.editing ? (
+              <textarea
+                className="ln-write"
+                value={edit.draft.notes}
+                onChange={e => edit.set('notes', e.target.value)}
+                ref={growOnMount}
+                onInput={grow}
+                aria-label="Album notes"
+              />
+            ) : (
+              <div style={{ lineHeight: 1.95, fontSize: '15px', whiteSpace: 'pre-wrap', color: 'var(--ink)', marginBottom: '6px' }}>{linkedAlbumNotes}</div>
+            )}
+            {editedOn && !edit.editing && <p className="ln-edited">Edited {editedOn}</p>}
             <CommentBubble
               slug={entry.slug}
               trackIndex={-1}
@@ -646,12 +707,14 @@ export default function FullPostPage({ entry, references = [] }) {
               {parsedTracks.map((t, i) => (
                 <TrackThread
                   key={i}
-                  track={t}
-                  note={linkedTrackNotes[i]}
+                  track={edit.editing ? edit.draft.tracks[i] ?? t : t}
+                  note={edit.editing ? null : linkedTrackNotes[i]}
                   trackIndex={i}
                   slug={entry.slug}
                   commentsByTrack={commentsByTrack}
                   onRefresh={loadComments}
+                  editing={edit.editing}
+                  onNote={value => edit.setTrack(i, 'note', value)}
                 />
               ))}
             </div>
