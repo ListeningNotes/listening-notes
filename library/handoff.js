@@ -49,6 +49,19 @@ export function handOff(entry) {
     artist: entry.artist || '',
     year: entry.year || '',
     album_art: entry.album_art || '',
+    // Everything else the first screen prints. The rating and the flags were
+    // left out of the first version of this on the theory that a score drawn
+    // from memory and then corrected would be worse than one that arrived
+    // late. That was wrong twice: it is the same row from the same request the
+    // wall was drawn from, so there is nothing to correct — and leaving them
+    // out is what made the open feel like two events, a cover and then, half a
+    // second later, everything that says what you thought of it.
+    rating: entry.rating ?? '',
+    masterpiece: entry.masterpiece === true,
+    favorite: entry.favorite === true || entry.favorite === 'true',
+    entry_type: entry.entry_type || '',
+    listen_total: entry.listen_total ?? 0,
+    created_at: entry.created_at || null,
   };
 }
 
