@@ -843,6 +843,57 @@ export default function FullPostPage({ entry, references = [] }) {
           </button>
         </div>
 
+        {/* ── Where this came from ─────────────────────────────────────────
+            Private, and the only part of an entry a visitor never sees —
+            withoutChain strips all three before the page is rendered, which is
+            why they arrive by their own fetch when an edit opens rather than
+            with the entry.
+            The source is the sender's entry for *this same album*, so the
+            picker offers exactly that and nothing else: walking the column
+            upward is what gives the history of one record, and it only holds
+            while every hop is the same album. */}
+        {edit.editing && (
+          <div className="ln-chain">
+            <p className="ln-chain-head">Where this came from · only you see this</p>
+            <label className="ln-chain-row">
+              <span className="ln-chain-label">Sent by</span>
+              <input
+                className="ln-field"
+                value={edit.draft.received_from ?? ''}
+                onChange={e => edit.set('received_from', e.target.value)}
+                placeholder="Nobody — I found it"
+              />
+            </label>
+            <label className="ln-chain-row">
+              <span className="ln-chain-label">Received</span>
+              <input
+                className="ln-field"
+                type="date"
+                value={edit.draft.received_date ?? ''}
+                onChange={e => edit.set('received_date', e.target.value)}
+              />
+            </label>
+            <label className="ln-chain-row">
+              <span className="ln-chain-label">Their entry</span>
+              <select
+                className="ln-field"
+                value={edit.draft.source_entry_id ?? ''}
+                onChange={e => edit.set('source_entry_id', e.target.value)}
+                disabled={edit.kin.length === 0}
+              >
+                <option value="">
+                  {edit.kin.length === 0 ? 'No other entry for this album' : 'None — this is the origin'}
+                </option>
+                {edit.kin.map(k => (
+                  <option key={k.id} value={k.id}>
+                    {k.album} · listen {k.listen_number}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+        )}
+
         {edit.editing && (
           <div className="ln-danger">
             {!edit.asking ? (

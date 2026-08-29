@@ -305,6 +305,26 @@ to understand the schema to be warned about losing an album. Both are handled
 by the delete itself now, which is a better place for a consequence than a
 paragraph.
 
+**`source_entry_id` is lineage, not association.** It points at *the sender's
+entry for the same album*, never at the entry that prompted the recommendation.
+Zach logs Voodoo and sends it to Miyel; Miyel logs Voodoo and her entry's
+`source_entry_id` points at Zach's Voodoo entry. Walking the column upward
+gives the whole history of one record — who found it first and who passed it to
+whom — and that only works because every hop is the same album. `null` means
+origin.
+
+The tempting misreading is association: somebody reads your entry on Voodoo,
+sends you Black Messiah, and that new entry points back at the Voodoo entry.
+That is a real relationship and it is not this one — the album changes at every
+hop, so the trail cannot be walked because each step changes the subject.
+
+**A valid `source_entry_id` must share the current entry's `album_key`,** and
+that is enforced on write. The invariant is also the argument for keeping the
+two ideas apart: it is impossible to state if one column carries both.
+
+**`prompted_by` is the column association would need**, if it is ever wanted.
+Parked, not built.
+
 **Everything editable is edited where it prints.** The link rows and the rig
 rows were fields on the card for things that appear a screen below it, which is
 filling in a form blind. They moved down into the sections they belong to when

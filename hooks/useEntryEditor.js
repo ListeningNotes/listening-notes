@@ -20,13 +20,23 @@
 // only ever small, a mark saying it happened costs nothing. update_entry sets
 // them, one per piece of writing, and they print next to what changed.
 //
-// ── What it deliberately cannot reach ───────────────────────────────────────
-// The discovery chain — source_entry_id, received_from, received_date. Those
-// are stripped from the entry before it reaches the page (see
-// pull_entry_by_slug), so they are not in the draft and cannot be saved from
-// here: a field seeded from a value the page was never given would save a blank
-// over whatever is stored. They stay in the dashboard until there is an
-// owner-only read to seed them from.
+// ── The discovery chain ─────────────────────────────────────────────────────
+// source_entry_id, received_from and received_date are private: withoutChain
+// strips all three before an entry reaches any page or the public feed, so no
+// visitor ever sees who sent somebody an album. Which means the page cannot
+// seed them — a field filled from a value the page was never given would save
+// a blank over what is stored.
+//
+// So they are fetched on open, from GET /api/entries/[slug], which already
+// includes the chain when the caller has a wristband. Until they arrive the
+// three fields are simply absent from the draft, and update_entry only writes
+// a chain field when the key is actually present — so a save that lands before
+// the fetch does leaves them alone rather than clearing them.
+//
+// source_entry_id points at the sender's entry for *the same album*. Walking it
+// upward gives the history of one record; that only holds because every hop is
+// the same album, which is why the picker offers nothing else and why
+// update_entry refuses anything else.
 
 'use client';
 import { useCallback, useState } from 'react';
@@ -67,6 +77,9 @@ export function useEntryEditor(entry) {
   // reflex — this has to be read to be got past.
   const [asking, setAsking] = useState(false);
   const [removing, setRemoving] = useState(false);
+  // Other entries for this same album, which is the entire set of valid
+  // sources. Empty until asked for, and asked for only when an edit opens.
+  const [kin, setKin] = useState([]);
 
   // Seeded on open rather than held permanently, so a draft abandoned an hour
   // ago is not what the fields come back showing.
@@ -74,6 +87,31 @@ export function useEntryEditor(entry) {
     setDraft(draftFrom(entry));
     setTrouble(null);
     setEditing(true);
+
+    // The private half, and the candidates for the one field that is a
+    // reference rather than a value. Both are fetched rather than waited for:
+    // the fields that do not need them are usable immediately.
+    fetch(`/api/entries/${entry.slug}`)
+      .then(r => (r.ok ? r.json() : null))
+      .then(data => {
+        const row = data?.entry;
+        if (!row || !('received_from' in row)) return;
+        setDraft(d => ({
+          ...d,
+          source_entry_id: row.source_entry_id ?? '',
+          received_from: row.received_from ?? '',
+          received_date: row.received_date ? String(row.received_date).slice(0, 10) : '',
+        }));
+      })
+      .catch(() => {});
+
+    fetch('/api/entries')
+      .then(r => (r.ok ? r.json() : null))
+      .then(data => {
+        const all = data?.entries || [];
+        setKin(all.filter(e => e.album_key === entry.album_key && e.id !== entry.id));
+      })
+      .catch(() => {});
   }, [entry]);
 
   const cancel = useCallback(() => {
@@ -140,6 +178,6 @@ export function useEntryEditor(entry) {
 
   return {
     editing, saving, trouble, draft, begin, cancel, set, setTrack, save,
-    asking, ask, unask, removing, remove,
+    asking, ask, unask, removing, remove, kin,
   };
 }

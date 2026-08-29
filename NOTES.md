@@ -75,7 +75,8 @@ The cross is built and merged. What is left of it:
 - [ ] **Entry editing, continued.** The writing is done — `hooks/useEntryEditor.js`, with the album note and every track note editable in place. What is left:
   - [ ] The header fields: album, artist, year, genre, rating, and the three flags. They print in two places (the phone hero and the desktop hero), so the fields do too.
   - [x] Delete, at the foot of edit mode, behind a second confirmation, with the cleanup. **Never actually run** — the only honest test destroys a real entry. Take a backup first if you want it proven.
-  - [ ] The discovery-chain fields. `pull_entry_by_slug` strips them before the page sees them, so they cannot be seeded from the entry it was handed; they need an owner-only read first, and until then they stay in the dashboard.
+  - [x] The discovery-chain fields, fetched on open from `GET /api/entries/[slug]`, which already included the chain for a caller with a wristband. The source picker offers only other entries for the same album, which is the invariant said twice — once in the UI and once in `update_entry`.
+  - [ ] **Two things the dashboard can still do that the entry cannot**, and the reason it has not been retired yet: change the album art, and change the entry type. Both are carried through a save unchanged, so nothing is lost by editing on the entry — there is simply no field for them.
   - [ ] Retire `/dashboard/entries` once the three above are in — nothing else calls the delete route.
 **DO THIS BEFORE EDITING AN ENTRY — the column is not on the live database:**
 

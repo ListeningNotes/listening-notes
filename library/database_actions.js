@@ -292,9 +292,31 @@ export async function update_entry(slug, fields) {
   // cycles, and to work out which pieces of writing actually changed. The stamps
   // cannot be done in SQL the way an entry-wide one could — a per-track answer
   // needs the old and the new tracklists side by side in the same loop.
-  const [current] = await database`SELECT id, notes, tracks FROM entries WHERE slug = ${slug} LIMIT 1`;
+  const [current] = await database`
+    SELECT id, notes, tracks, album_key FROM entries WHERE slug = ${slug} LIMIT 1
+  `;
 
   if (set_source && source_entry_id) {
+    // A source is the entry somebody else wrote about *the same album* — that
+    // is the whole mechanic. Walking the column upward gives the history of one
+    // record, who found it first and who passed it to whom, and that only holds
+    // because every hop is the same album.
+    //
+    // The tempting misreading is association: they read your entry on one album
+    // and sent you a different one. That is a real relationship and not this
+    // column's — the album would change at every hop, so the trail could not be
+    // walked, because each step changes the subject. If it is ever wanted it
+    // wants a column of its own.
+    //
+    // Which makes this check the thing that keeps the two apart. It is
+    // impossible to state if one column carries both.
+    const [source] = await database`
+      SELECT id, album_key FROM entries WHERE id = ${source_entry_id} LIMIT 1
+    `;
+    if (!source) throw new Error('That entry no longer exists.');
+    if (source.album_key !== current?.album_key) {
+      throw new Error('A source has to be an entry for this same album.');
+    }
     if (await wouldFormCycle(current?.id, source_entry_id)) {
       throw new Error('That would send this album back up its own chain.');
     }
