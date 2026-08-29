@@ -718,13 +718,15 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   transition: filter 0.2s;
 }
 
-/* SiteNav — the ONE sitewide nav row: logo (doubling as the live indicator)
-   on the left, a caret + the compact beacon centered, day/night toggle on
-   the right. Used by every page, including the homepage's screen two —
-   there's no separate/bespoke version anymore. Fixed across the top of the
-   page everywhere except the homepage, where it flows in place inside
-   screen two (see the .hp override below), matching how that screen's
-   layout already works. */
+/* SiteNav — the ONE sitewide nav row: the mark centred, one control each
+   side. Three columns rather than a flex row, and the outer two are equal
+   whatever is in them, which is what keeps the mark on the centre line of the
+   page instead of on the centre line of whatever is left over.
+
+   The row is 58px tall whether or not either side has anything in it. That
+   number is inherited — it used to come from the beacon slot's min-height, and
+   several pages pad their content to clear a header of about this size. It
+   stays until the tools land and the whole band gets measured on purpose. */
 .sitenav-row {
   position: fixed;
   top: calc(22px + var(--safe-top));
@@ -732,10 +734,11 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   right: 0;
   z-index: 100;
   display: grid;
-  grid-template-columns: 1fr 2fr 1fr;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
   gap: 10px;
   padding: 0 28px;
+  min-height: 58px;
 }
 /* The band that hides scrolling page content behind the fixed header. It has
    to cover this row AND the dot-nav below it (which is a separate fixed
@@ -781,7 +784,24 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   display: none;
 }
 
-.sitenav-logo { display: block; justify-self: start; }
+.sitenav-side { display: flex; align-items: center; gap: 2px; min-width: 0; }
+.sitenav-side--left { justify-content: flex-start; }
+
+/* The keeper's tools. Deliberately the same object as the About card's pencil
+   — 30px box, 9px radius, faint until you go near it — because they are the
+   same kind of control and two treatments would read as two ideas. The card
+   states these for itself in its own style block, so this is the second copy
+   rather than a shared rule; if a third surface ever wants them, that is the
+   moment to lift them somewhere common, not before. */
+.kt-tool {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 30px; height: 30px; border-radius: 9px;
+  color: var(--ink-faint); background: transparent; border: 0;
+  cursor: pointer; text-decoration: none;
+  transition: color 0.15s, background 0.15s;
+}
+.kt-tool:hover { color: var(--ink); background: var(--bg-warm); }
+.sitenav-logo { display: block; justify-self: center; }
 .sitenav-logo-mark {
   height: 28px;
   width: auto;
@@ -796,31 +816,6 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 @keyframes sitenav-logo-dot-pulse {
   0%, 100% { opacity: 1; }
   50%      { opacity: 0.55; }
-}
-
-/* Center slot — the way back to screen one (the big "now listening" screen)
-   from anywhere on the site. It used to carry a small up-caret hinting at
-   that, but it crowded the beacon in a row this tight; the beacon itself is
-   the affordance now. Note the slot is empty when nothing is playing. */
-.sitenav-beacon-slot {
-  position: relative;
-  justify-self: center;
-  display: flex;
-  align-items: center;
-  min-width: 0;
-  min-height: 58px; /* holds the row's height steady whether or not the
-    beacon is showing, so the dot nav below never has to guess which case
-    it's clearing */
-  text-decoration: none;
-  cursor: pointer;
-}
-/* The compact beacon's own art/marquee styling (.beacon-mini*) only exists
-   inside the ≤768px media query below (it was built for screen two, which
-   is mobile-only) — showing it wider than that would render unstyled, so
-   it's scoped off until there's a desktop-appropriate version. */
-.sitenav-beacon { display: none; }
-@media (max-width: 768px) {
-  .sitenav-beacon { display: block; }
 }
 
 .sitenav-theme-btn {
@@ -1343,82 +1338,6 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
     0%, 100% { opacity: 1; }
     50%      { opacity: 0.55; }
   }
-  .beacon-mini-wrap {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-self: center; /* the box below can be narrower than its grid
-      track (it shrinks/grows with the title), so center it within that
-      track rather than stretching to fill it */
-    min-width: 0;
-    gap: 0;
-  }
-  .beacon-mini {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    min-width: 0;
-    max-width: 190px; /* free to expand/contract with the title up to this
-      cap — past it, growing further would push the art too far off-center,
-      so it marquees inside the capped width instead (same mechanics as
-      screen one) */
-  }
-  .beacon-mini-art {
-    width: 40px;
-    height: 40px;
-    border-radius: 8px;
-    overflow: hidden;
-    flex-shrink: 0;
-    box-shadow: 0 6px 16px rgba(0,0,0,0.14);
-  }
-  .beacon-mini-img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    display: block;
-  }
-  .beacon-mini-meta {
-    flex: 1;
-    min-width: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 2px;
-  }
-  .beacon-mini-track-clip {
-    width: 100%;
-    min-width: 0;
-    overflow: hidden;
-    display: flex;
-    justify-content: center;
-  }
-  .beacon-mini-track-clip.is-marqueeing {
-    justify-content: flex-start; /* start of the title, not the visually-centered middle */
-  }
-  .beacon-mini-track-text {
-    display: inline-block;
-    flex-shrink: 0;
-    white-space: nowrap;
-    font-family: var(--font-nunito), sans-serif;
-    font-weight: 700;
-    font-size: 0.85rem;
-    line-height: 1;
-    color: var(--ink);
-  }
-  .beacon-mini-artist {
-    width: 100%; /* without this it has nothing to clip against — align-items:
-      center on the parent lets a block child size to its own content, so a
-      long artist name was just overflowing past the row instead of eliding */
-    font-family: var(--font-nunito), sans-serif;
-    font-size: 0.7rem;
-    line-height: 1;
-    color: var(--ink-soft);
-    text-align: center;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-
   .hp-screen--two .hp-dotnav {
     margin-top: 0;
   }
@@ -1694,33 +1613,6 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   color: var(--text-muted);
 }
 
-/* Fixed-width lane the title scrolls inside when it's too long to fit —
-   short titles just sit centered and still, no animation applied. */
-.beacon-track-clip {
-  width: 100%;
-  max-width: 360px;
-  margin: 0 auto;
-  overflow: hidden;
-  display: flex;
-  justify-content: center;
-}
-.beacon-track-clip.is-marqueeing {
-  justify-content: flex-start; /* start of the title, not the visually-centered middle */
-}
-
-/* Shared by both the full and mini marquee titles — the trailing copy that
-   makes the wraparound loop seamless. Gap width must match MARQUEE_GAP in
-   ListeningBeacon.js exactly or the loop point will visibly jump. */
-.marquee-track {
-  display: flex;
-  align-items: center;
-  white-space: nowrap;
-}
-.marquee-track-gap {
-  width: 48px;
-  flex-shrink: 0;
-}
-
 .beacon-track {
   display: inline-block;
   flex-shrink: 0;
@@ -1733,9 +1625,11 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   white-space: nowrap;
   transition: opacity 0.5s ease;
 }
-/* The full beacon's title, which wraps instead of scrolling — see the note in
-   ListeningBeacon.js. Everything above still applies to the mini one in the
-   nav row, which is narrow enough that a marquee is the only thing that fits. */
+/* The beacon's title wraps rather than scrolling. It used to scroll, in a
+   fixed-width lane with a trailing copy that made the loop seamless, and all
+   of that machinery is gone: the only place a marquee was the right answer was
+   the compact beacon in the nav row, and that beacon no longer exists. A title
+   that scrolls has to be waited for; two lines can simply be read. */
 .beacon-track--wrap {
   display: -webkit-box;
   -webkit-box-orient: vertical;
@@ -2352,26 +2246,6 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 }
 .ln-flag:hover { color: var(--ink); border-color: var(--ink-faint); }
 .ln-flag--on { color: var(--bg); background: var(--ink); border-color: var(--ink); }
-
-/* Entry type and what kind of listen it was. Filing rather than writing, so
-   they are set in the same face as the chips they stand in for and sit on the
-   same row — a select that looked like a form control would be the only thing
-   on this page that did. */
-.ln-select {
-  appearance: none;
-  -webkit-appearance: none;
-  padding: 4px 10px;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  background: transparent;
-  font-family: var(--font-label);
-  font-size: 9px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--ink);
-  cursor: pointer;
-}
-.ln-select:hover { border-color: var(--ink-faint); }
 
 /* ── Replacing the cover ────────────────────────────────────────────────────
    The art is the control. Press it while a correction is open and the address
@@ -3040,6 +2914,107 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 
 /* ── Left: About ────────────────────────────────────────────────────────── */
 .ab-pane { display: flex; flex-direction: column; }
+
+/* ── The pin's search ───────────────────────────────────────────────────────
+   A panel in the middle of a desktop screen and a bottom sheet on a phone,
+   which is the arrangement the archive's filters already use. It is the same
+   idea in the same house, so it is the same object — see .arc-sheet in
+   Journal.js, which states this for itself because it is scoped to that
+   component. */
+.ab-pin-scrim {
+  position: fixed; inset: 0; z-index: 150;
+  background: rgba(0, 0, 0, 0.28);
+  animation: abPinFade 0.18s ease;
+}
+@keyframes abPinFade { from { opacity: 0; } to { opacity: 1; } }
+.ab-pin-sheet {
+  position: fixed; z-index: 151;
+  top: 50%; left: 50%; transform: translate(-50%, -50%);
+  width: min(420px, calc(100vw - 48px));
+  max-height: min(70vh, 560px);
+  display: flex; flex-direction: column; gap: 12px;
+  padding: 16px;
+  /* Opaque, where every other panel on the site is frosted. Those sit over
+     album art, where 14% of a blurred cover showing through is texture; this
+     one sits over the card, and 14% of a portrait and a name showing through
+     forty album titles is a list you cannot read. Tried it frosted first and
+     it was unusable. */
+  background: var(--bg);
+  border: 1px solid var(--panel-border);
+  border-radius: 16px;
+  box-shadow: var(--shadow-lift);
+  animation: abPinPop 0.18s ease;
+}
+@keyframes abPinPop {
+  from { opacity: 0; transform: translate(-50%, calc(-50% + 8px)); }
+  to   { opacity: 1; transform: translate(-50%, -50%); }
+}
+.ab-pin-search {
+  display: flex; align-items: center; gap: 8px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+  color: var(--ink-faint);
+}
+.ab-pin-field {
+  flex: 1; min-width: 0;
+  border: 0; background: transparent; outline: none;
+  font-family: var(--font-label); font-size: 13px;
+  color: var(--ink);
+}
+.ab-pin-field::placeholder { color: var(--ink-faint); }
+/* The list scrolls, the sheet does not. A sheet that scrolls as a whole takes
+   the search field away with it exactly when somebody wants to narrow the
+   list further. */
+.ab-pin-list {
+  flex: 1; min-height: 0;
+  overflow-y: auto; overscroll-behavior: contain;
+  display: flex; flex-direction: column; gap: 2px;
+}
+.ab-pin-hit {
+  display: flex; align-items: center; gap: 10px;
+  width: 100%; padding: 6px; border: 0; border-radius: 10px;
+  background: transparent; color: var(--ink);
+  text-align: left; cursor: pointer;
+  transition: background 0.14s;
+}
+.ab-pin-hit:hover { background: var(--bg-warm); }
+.ab-pin-hit--on { background: var(--bg-warm); }
+.ab-pin-hit-art {
+  display: flex; align-items: center; justify-content: center;
+  width: 40px; height: 40px; flex-shrink: 0;
+  border-radius: 8px; overflow: hidden;
+  background: var(--bg-warm); color: var(--ink-faint);
+}
+.ab-pin-hit-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ab-pin-hit-said { display: flex; flex-direction: column; gap: 1px; min-width: 0; flex: 1; }
+.ab-pin-hit-album,
+.ab-pin-hit-artist { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ab-pin-hit-album { font-size: 13px; line-height: 1.3; }
+.ab-pin-hit-artist { font-size: 11px; line-height: 1.3; color: var(--ink-faint); }
+.ab-pin-empty {
+  margin: 12px 0; text-align: center;
+  font-family: var(--font-label); font-size: 11px; color: var(--ink-faint);
+}
+.ab-pin-foot { display: flex; gap: 8px; justify-content: center; }
+
+@media (max-width: 768px) {
+  /* A panel in the middle is a desktop idiom; on a phone it wants to be under
+     the thumb. */
+  .ab-pin-sheet {
+    top: auto; left: 0; right: 0;
+    transform: none; width: auto;
+    /* Both of these are written by About.js from visualViewport while the
+       sheet is open — how much of the bottom the keyboard is covering, and how
+       much screen is left above it. The fallbacks are the no-keyboard case and
+       are what a browser without visualViewport gets. */
+    bottom: var(--ab-pin-lift, 0px);
+    max-height: calc(min(var(--ab-pin-room, 100dvh), 100dvh) - 72px);
+    border-radius: 20px 20px 0 0; border-bottom: none;
+    padding: 16px 20px calc(16px + env(safe-area-inset-bottom));
+    animation: abPinSlide 0.22s ease;
+  }
+  @keyframes abPinSlide { from { transform: translateY(100%); } to { transform: none; } }
+}
 .ab-card {
   min-height: calc(100dvh - var(--hn-crown));
   box-sizing: border-box;

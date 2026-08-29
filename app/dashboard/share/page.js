@@ -489,7 +489,13 @@ export default function SessionShare() {
         const list = (d.entries || []).filter(e => e.album_art);
         setEntries(list);
         setWallpaper([...list].sort(() => Math.random() - 0.5));
-        setSelected(list[0] || null);
+        // ?entry=<slug> means somebody pressed the printer on a record and
+        // meant that record. Read off the address rather than through
+        // useSearchParams, which would want a Suspense boundary around a page
+        // that has no other reason for one. Falls back to the first entry, so
+        // arriving here from the desk still opens on something.
+        const asked = new URLSearchParams(window.location.search).get('entry');
+        setSelected(list.find(e => e.slug === asked) || list[0] || null);
       })
       .catch(() => setStatus('Could not load entries.'));
   }, [authed]);

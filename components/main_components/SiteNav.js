@@ -1,18 +1,28 @@
 // Copyright (C) 2026 Miyel Brown
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // components/main_components/SiteNav.js
-// The sitewide nav row: logo (doubling as the live indicator) on the left,
-// a caret + the compact "now listening" beacon in the center, and the
-// day/night toggle on the right — the same row on every page but the
-// homepage (DotNav renders separately beneath it, unchanged). Previously
-// these were two different implementations that drifted apart; this is the
-// one shared version.
+// The sitewide nav row: the mark in the middle, one control on each side.
 //
-// Both the mark and the centre slot go home, which is the cross, which opens
-// on the centre pane. They used to go to two different places — the mark to
-// the old screen two, the beacon to screen one — and steering between them
-// needed a sessionStorage flag because a full page navigation cannot carry
-// component state. There is one home now, so there is nothing to steer.
+// That shape is the whole point of this file. It is the arrangement the About
+// card uses, scaled down, and until now it was not what this row did — the
+// mark sat left, a compact beacon sat centre, and the row read differently
+// from every pane of the cross. One header everywhere means one header
+// everywhere.
+//
+// ── The beacon is gone from here ──────────────────────────────────────────
+// It was a persistent status bar for something the visitor had already been
+// told, sitting a few pixels above somebody's writing and moving while they
+// read it. What is playing lives on the beacon pane, which is one swipe from
+// anywhere, and that is enough.
+//
+// Not for the polling, which was the other argument and is a wrong one:
+// useListeningBeacon runs one timer for however many components subscribe, so
+// this row never cost a request of its own. The mark's live dot still reads
+// isLive, and still costs nothing.
+//
+// The mark goes home, which is the cross, which opens on the centre pane. It
+// used to need a sessionStorage flag to steer between two screens; there is
+// one home now, so there is nothing to steer.
 //
 // This row does not render on the homepage at all: the cross carries its own
 // bar (see HomeNav.js), because a fixed row belonging to no pane cannot be one
@@ -23,10 +33,14 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useTheme } from './Lightswitch';
 import { useListeningBeacon } from '../../hooks/useListeningBeacon';
-import ListeningBeacon from './ListeningBeacon';
 import { useBookplate } from './Bookplate';
 
-export default function SiteNav() {
+// `tools` is whatever the page wants in the left slot — in practice the
+// owner's, on the pages that have any. It arrives as an element rather than as
+// a flag because this row should not know what a keeper is: it holds a slot
+// open and the page decides what belongs in it. On every other page the slot
+// is an empty grid column, which is the thing holding the mark in the middle.
+export default function SiteNav({ tools = null }) {
   const { cover_name } = useBookplate();
   const { theme, toggle } = useTheme();
   const { isLive } = useListeningBeacon();
@@ -44,15 +58,19 @@ export default function SiteNav() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  // Both of these used to steer the old two-screen cover: the logo flagged
-  // sessionStorage so a navigation home landed on screen two, and the beacon
-  // scrolled to screen one. Neither screen exists — home is the cross now, and
-  // it always opens on the centre pane, which is what both of these were
-  // reaching for. So both are plain links again and the flag is gone with the
+  // The mark used to steer the old two-screen cover, flagging sessionStorage
+  // so a navigation home landed on screen two. Neither screen exists — home is
+  // the cross, and it always opens on the centre pane, which is what that was
+  // reaching for. So it is a plain link again and the flag is gone with the
   // markup that read it.
 
   return (
     <div className={'sitenav-row' + (scrolled ? ' sitenav-row--scrolled' : '')}>
+      {/* The left slot. Empty on most pages: it is where the owner's tools go
+          on the ones that have any, and an empty grid column is what holds the
+          mark in the middle when they do not. */}
+      <div className="sitenav-side sitenav-side--left">{tools}</div>
+
       <Link href="/" className="sitenav-logo" aria-label={cover_name}>
         <svg viewBox="76 96 241 140" className="sitenav-logo-mark" xmlns="http://www.w3.org/2000/svg">
           <path
@@ -70,14 +88,6 @@ export default function SiteNav() {
             className={'sitenav-logo-dot' + (isLive ? ' sitenav-logo-dot--live' : '')}
           />
         </svg>
-      </Link>
-
-      <Link href="/" className="sitenav-beacon-slot" aria-label="Now listening">
-        {isLive && (
-          <div className="sitenav-beacon">
-            <ListeningBeacon compact />
-          </div>
-        )}
       </Link>
 
       <button className="hp-icon-btn sitenav-theme-btn" onClick={toggle} aria-label="Toggle theme">

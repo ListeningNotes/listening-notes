@@ -62,6 +62,31 @@ export async function checkWristband(request) {
   return (await readWristband(request)) !== null;
 }
 
+// The same question, asked by a page instead of by a route.
+//
+// checkWristband takes a request, which is what an API route is handed and
+// what a server component never sees. This reaches for the cookie jar itself.
+//
+// It exists so that owner-only controls can be decided on the server and left
+// out of the HTML entirely, rather than shipped to everybody and hidden with a
+// class. Hiding is not withholding: a stranger reading the source of a page
+// that hides its edit button can still see the button, and can see what it was
+// going to call. Neither of those is a way in — every writing endpoint checks
+// the wristband for itself, and always did — but a door drawn on a wall
+// invites people to push it, and there is no reason to draw one.
+export async function wristbandOnHand() {
+  const { cookies } = await import('next/headers');
+  const jar = await cookies();
+  const token = jar.get(COOKIE_NAME)?.value;
+  if (!token) return false;
+  try {
+    await jwtVerify(token, getSecret());
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 // Whether a valid wristband is old enough to be worth replacing. `iat` is the
 // second it was issued, set by setIssuedAt when it was stamped.
 export function shouldRenewWristband(payload) {

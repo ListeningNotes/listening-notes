@@ -9,14 +9,14 @@
 'use client';
 import { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
-import { Check, PencilSimple, PushPin, PushPinSlash, X } from '@phosphor-icons/react';
+import { Check, X } from '@phosphor-icons/react';
 import { fonts } from '../../../library/sitewide_visuals';
 import { sizedAlbumArt, fetchAlbumArtUrl } from '../../../library/music_data_api';
 import { parseHorizon, entryTracks, splitNotes, entryTypeLabel, parseRating } from '../../../library/entry_formatter';
 import { kept_receipts } from '../../../library/receipts';
 import { buildReferenceIndex, createReferenceLinker } from '../../../library/cross_references';
 import SiteNav from '../../../components/main_components/SiteNav';
+import KeeperTools from '../../../components/main_components/KeeperTools';
 import HorizonBar from '../../../components/main_components/Slug_Page/HorizonBar';
 import TrackThread from '../../../components/main_components/Slug_Page/TrackThread';
 import CommentBubble from '../../../components/main_components/Slug_Page/CommentBubble';
@@ -26,7 +26,6 @@ import StarRating from '../../../components/main_components/StarRating';
 import StarPicker from '../../../components/session_components/StarRating';
 import { editStamp } from '../../../library/entry_formatter';
 import { useEntryEditor } from '../../../hooks/useEntryEditor';
-import { useBookplate } from '../../../components/main_components/Bookplate';
 
 
 // The pair of actions that close the entry out used to share a local style
@@ -42,64 +41,19 @@ const HERO_COVER = {
   boxShadow: 'var(--shadow-lift)', border: '1px solid var(--panel-border)',
 };
 
-export default function FullPostPage({ entry, references = [] }) {
-  // ── The pin ───────────────────────────────────────────────────────────────
-  // One record from the journal shows as art on the About card, and this is
-  // where it gets chosen: on the record itself, at the moment somebody is
-  // looking at it and thinks *that one*. The alternative was a search sheet
-  // opened from the card, which is more machinery for a worse moment — by the
-  // time you are looking at your own card you have to remember what you wanted
-  // rather than recognise it.
-  //
-  // Exactly one, and the shape is the rule rather than a check: pinned_entry_id
-  // is a single column, so pinning a second unpins the first with nothing
-  // having to decide that, and its foreign key carries ON DELETE SET NULL, so
-  // deleting a pinned entry clears the pin instead of leaving the card
-  // pointing at nothing. Three of them lived here for an afternoon and needed
-  // jsonb to hold, which meant losing the key and the guarantee with it.
-  const router = useRouter();
-  const { pinned_entry_id } = useBookplate();
-  const [authed, setAuthed] = useState(false);
-  // What this page currently believes, which is not always what the context
-  // says: the context is server state and only catches up on a refresh, so a
-  // press updates this immediately and the refresh confirms it.
-  const [pinnedHere, setPinnedHere] = useState(null);
-  const [pinning, setPinning] = useState(false);
-  const isPinned = pinnedHere === null ? pinned_entry_id === entry.id : pinnedHere;
-
-  useEffect(() => {
-    fetch('/api/auth/check')
-      .then(r => r.json())
-      .then(d => setAuthed(!!d.authed))
-      .catch(() => {});
-  }, []);
-
-  async function togglePin() {
-    if (pinning) return;
-    const next = !isPinned;
-    setPinning(true);
-    // Moved before the request rather than after it. This is one integer and
-    // the answer is never in doubt; waiting on a round trip to redraw a pin
-    // makes a press feel like it did not land.
-    setPinnedHere(next);
-    try {
-      const res = await fetch('/api/settings', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pinned_entry_id: next ? entry.id : null }),
-      });
-      if (!res.ok) throw new Error('save failed');
-      // The card reads pinned_entry_id off the root layout, which is a server
-      // component — so the way to make the card agree with this page is to ask
-      // the server to render again.
-      router.refresh();
-    } catch {
-      setPinnedHere(!next);
-    } finally {
-      setPinning(false);
-    }
-  }
-
+// ── There is no pin here ────────────────────────────────────────────────────
+// There was, for a week: a Pin chip in the row under the rating, on the
+// argument that you pick a record where you *recognise* it rather than where
+// you have to remember it. That argument was right and did not survive what it
+// cost. pinned_entry_id is a settings column, so it belongs with the other
+// settings fields behind the card's own pencil — and a control for it here is
+// an admin button in the middle of somebody's reading, on a line otherwise
+// made of facts about the record.
+//
+// So it is chosen from the card, through a search over the journal. From an
+// entry there is now no "pin this one": you go to the card and look it up.
+// More steps for the rarer action, which is the right way round.
+export default function FullPostPage({ entry, references = [], authed = false }) {
   // ── Correcting what is written ────────────────────────────────────────────
   // The fields are drawn where the writing is, not in a form somewhere else:
   // the album note becomes a textarea in the album note's place, and a track's
@@ -180,31 +134,52 @@ export default function FullPostPage({ entry, references = [] }) {
   // revisit is the listen number, a submission is `received_from`, formative
   // is a flag). Old rows keep their values as legacy data. Retiring that route
   // is what finally takes the last picker off the site.
+  //
+  // Two pills rather than a dropdown, and the reason is not taste. Every input,
+  // textarea and select on this site is forced to 16px on a phone, because iOS
+  // zooms the whole page in when you focus anything smaller — so a select here
+  // came out half again the size of the Favorite and Masterpiece chips sitting
+  // beside it, in a different colour, in a row that is otherwise one object
+  // repeated. A field with two possible answers was never a dropdown anyway.
+  //
+  // Pressing the one that is already on turns it off, because "neither" is a
+  // real answer: an entry from before the column existed has no shelf, and
+  // being unable to put it back would make this a one-way door.
+  const SHELVES = [
+    { value: 'Personal Library', label: 'Library' },
+    { value: 'Submission', label: 'Submission' },
+  ];
+
   const typeField = (
     <span className="ln-flags-row">
-      <select
-        className="ln-select"
-        value={edit.draft.entry_type}
-        onChange={e => edit.set('entry_type', e.target.value)}
-        aria-label="Which shelf this came off"
-      >
-        <option value="">Shelf —</option>
-        <option value="Personal Library">Library</option>
-        <option value="Submission">Submission</option>
-      </select>
+      {SHELVES.map(shelf => (
+        <button
+          key={shelf.value}
+          type="button"
+          className={'ln-flag' + (edit.draft.entry_type === shelf.value ? ' ln-flag--on' : '')}
+          onClick={() => edit.set('entry_type', edit.draft.entry_type === shelf.value ? '' : shelf.value)}
+          aria-pressed={edit.draft.entry_type === shelf.value}
+        >
+          {shelf.label}
+        </button>
+      ))}
     </span>
   );
 
   // Only the way in. Save and Cancel used to sit here too, and then again in
   // the bar at the foot of the page — the same pair twice on one screen, and
   // the one that matters is the one that follows you down to the note you are
-  // actually fixing. This is the button that opens a correction; the bar is
-  // what closes it.
-  const editControls = authed && !edit.editing && (
-    <button type="button" className="ln-pin" onClick={edit.begin}>
-      <PencilSimple size={13} weight="regular" aria-hidden="true" />
-      <span>Edit</span>
-    </button>
+  // actually fixing. This is what opens a correction; the bar is what closes
+  // it.
+  //
+  // It used to be a pill in the chip row under the rating, beside Favorite and
+  // Masterpiece — which put an admin control in the middle of the reading, on
+  // a line otherwise made of facts about the record. It is a glyph in the
+  // header now, top left, where the card keeps its own pencil. Drawn only for
+  // the owner, and drawn on the server: a visitor's copy of this page does not
+  // contain it.
+  const keeperTools = authed && !edit.editing && (
+    <KeeperTools onEdit={edit.begin} slug={entry.slug} />
   );
 
   // ── The fields at the head of the entry ───────────────────────────────────
@@ -280,23 +255,6 @@ export default function FullPostPage({ entry, references = [] }) {
       </span>
       {typeField}
     </span>
-  );
-
-  const pinButton = authed && !edit.editing && (
-    <button
-      type="button"
-      className={'ln-pin' + (isPinned ? ' ln-pin--on' : '')}
-      onClick={togglePin}
-      disabled={pinning}
-      aria-pressed={isPinned}
-      aria-label={isPinned ? 'Unpin this from the card' : 'Pin this to the card'}
-      title={isPinned ? 'Pinned to your card' : 'Pin to your card'}
-    >
-      {isPinned
-        ? <PushPin size={13} weight="fill" aria-hidden="true" />
-        : <PushPinSlash size={13} weight="regular" aria-hidden="true" />}
-      <span>{isPinned ? 'Pinned' : 'Pin'}</span>
-    </button>
   );
 
   const [commentsByTrack, setCommentsByTrack] = useState({});
@@ -702,7 +660,7 @@ export default function FullPostPage({ entry, references = [] }) {
       `}</style>
 
       {/* ── NAV ── shared site nav (logo + dot nav), identical to every other public page */}
-      <SiteNav />
+      <SiteNav tools={keeperTools} />
 
       {/* A correction is open, and the page is long. The controls that started
           it are at the top of the entry, which is a screen and a half away by
@@ -765,8 +723,6 @@ export default function FullPostPage({ entry, references = [] }) {
         )}
         {edit.editing && flagFields}
         <div className="ln-screen-one-chips">
-          {editControls}
-          {pinButton}
           {!edit.editing && listenLabel && <Chip>{listenLabel}</Chip>}
           {!edit.editing && isSubmission && <Chip>Submission</Chip>}
           {!edit.editing && (entry.favorite === true || entry.favorite === 'true') && <Chip tone="fav">Favorite</Chip>}
@@ -832,8 +788,6 @@ export default function FullPostPage({ entry, references = [] }) {
                 {edit.editing
                   ? flagFields
                   : displayRating > 0 && <StarRating rating={displayRating} size={15} glow={isMasterpiece} style={{ verticalAlign: 'middle' }} />}
-                {editControls}
-                {pinButton}
                 {!edit.editing && listenLabel && <Chip>{listenLabel}</Chip>}
                 {!edit.editing && isSubmission && <Chip>Submission</Chip>}
                 {!edit.editing && (entry.favorite === true || entry.favorite === 'true') && <Chip tone="fav">Favorite</Chip>}
