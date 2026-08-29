@@ -270,11 +270,22 @@ problem was something else.
 `overflow: visible` is the only value that means "not a scroll container".
 Cost an entire wrong fix on the entry layer.
 
-**A JS horizontal-drag handler and native vertical scroll fight over the first
-gesture** unless you tell the browser which is which. Set `touch-action: pan-y`
-on the element the handler is attached to: vertical panning is the browser's,
-horizontal is yours, and there is no decision phase where the first swipe gets
-eaten while the browser works out whose it was.
+**`touch-action: pan-y` does not arbitrate a diagonal gesture — it runs both
+halves of it.** It was meant to settle who owns a swipe: vertical to the
+browser, horizontal to the drag handler. What it actually means is that the
+browser will start panning on the *vertical component* of any gesture, at once,
+while the handler is still watching the horizontal one. So a back-swipe that
+drifts slightly downward scrolls the page **and** drags the layer. On the entry
+layer that landed you in the notes instead of back on the journal, and being
+stricter about what counted as horizontal only traded it for swipes that did
+nothing.
+
+There is no ratio that fixes this, because the browser has already acted before
+the ratio is known. The fix is to remove the ambiguity somewhere small:
+`touch-action: none` on a narrow edge strip, with the gesture only recognised
+there. Inside the strip the browser does not pan at all, so the gesture can only
+be the one thing; outside it scrolling is untouched. That is also what iOS does
+with its own back gesture, so it is the gesture people already reach for.
 
 **`scroll-behavior: smooth` makes scroll tests lie.** It is set on `<html>`
 sitewide, and it applies to `element.scrollTop = n` as well as to

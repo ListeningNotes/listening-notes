@@ -2029,33 +2029,28 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   }
 }
 
-/* The way out sits in the row the cross keeps its controls in, and the numbers
-   are .hn-controls' numbers rather than numbers that look like them — same
-   offset from the bottom, same transparent strip that only its own contents
-   can be pressed through.
+/* The strip the back-pull starts in. Invisible, full height, a thumb's width,
+   pinned to the left edge — the same place and the same idea as the system
+   gesture it borrows from.
 
-   It was a cross in the top right corner first. Two things were wrong with
-   that: nothing else on this site asks for that corner, and the corner it took
-   was the lights'. The header keeps its one control each side, the moon
-   included, and the layer's own control is somewhere a thumb already goes. */
-.lay-controls {
-  position: fixed;
+   touch-action: none is the whole point of it. Everywhere else on the layer
+   the browser owns vertical panning, which is what let a slightly-diagonal
+   back-swipe scroll the page down while the swipe handler was still deciding.
+   In here the browser does not pan at all, so a gesture that starts on this
+   strip can only be one thing.
+
+   36px: Apple's own edge gesture is about this wide, it is comfortably inside
+   the thumb's arc on the side people hold, and it is narrow enough that
+   nothing on the entry is hard to reach past it. */
+.lay-edge {
+  position: absolute;
+  top: 0;
+  bottom: 0;
   left: 0;
-  right: 0;
-  bottom: max(14px, env(safe-area-inset-bottom));
-  z-index: 210;
-  display: flex;
-  align-items: flex-start;
-  justify-content: center;
-  pointer-events: none;
+  width: 36px;
+  z-index: 205;
+  touch-action: none;
 }
-.lay-controls > * { pointer-events: auto; }
-
-/* The entry's own scroll cue hangs at the foot of its first screen, which is
-   exactly where the row above now sits — the two were drawn on top of each
-   other, twenty pixels of overlap. Only inside the layer, because on the
-   standalone page there is no row for it to clear. */
-.lay .ln-scroll-cue { margin-bottom: 46px; }
 
 /* ── AlbumTile — the journal wall's album ──────────────────────────────────
    A cover and a link to the record it is of. It used to be FlipTile, which
