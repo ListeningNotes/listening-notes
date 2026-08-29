@@ -23,18 +23,21 @@
 // with its own metadata. One address, two presentations, and the address is
 // the real one in both.
 //
-// What this replaced was EntryModal, which fetched the entry over the API and
-// then pushed the URL into the address bar with history.pushState. That URL
-// looked right and was: it pointed at a page that existed. But the overlay was
-// a second copy of the entry's layout, drifting from the real one, and a
-// refresh threw the whole thing away. This draws the same FullPostPage the
-// standalone route draws, so there is one entry layout on the site.
+// ── Why the layer is outside the Suspense boundary ────────────────────────
+// This function is deliberately not async, and it does not await `params`.
 //
-// ── The reads ─────────────────────────────────────────────────────────────
-// Identical to the standalone page's, deliberately. An entry opened as a layer
-// and the same entry opened cold have to be the same entry; two loaders would
-// be two chances to disagree.
+// Awaiting anything up here would mean the whole file waits on the database
+// before it returns anything at all — and until it returns, nothing has
+// changed on screen. That is the pause after tapping a cover where you wonder
+// whether the tap registered. The layer is the answer to the tap, so the layer
+// has to be the thing that does not wait.
+//
+// So LayerEntry is rendered synchronously and starts sliding in at once, and
+// the entry itself streams into it behind a Suspense boundary. `params` is a
+// promise resolved inline with .then() rather than awaited, which is what lets
+// the suspending part sit inside the layer instead of above it.
 
+import { Suspense } from 'react';
 import { neon } from '@neondatabase/serverless';
 import { pull_entry_by_slug } from '@/library/database_actions';
 import { wristbandOnHand } from '@/library/wristband';
@@ -43,17 +46,43 @@ import PostClient from '../../../entries/[slug]/FullPostPage';
 
 const sql = neon(process.env.DATABASE_URL);
 
-export default async function EntryOverTheJournal({ params }) {
-  const { slug } = await params;
+// What is on the layer while the entry is still being read. Shaped like the
+// first screen it is about to become — a square where the cover goes, two
+// lines where the title and byline go — so the swap is a picture arriving in a
+// frame rather than the page changing shape under you.
+//
+// No spinner. A spinner says "something is happening somewhere"; this says
+// "the record is on its way and it will be here", which is the same thing said
+// in the shape of the answer.
+function Waiting() {
+  return (
+    <div className="lay-wait" aria-hidden="true">
+      <div className="lay-wait-art" />
+      <div className="lay-wait-line lay-wait-line--title" />
+      <div className="lay-wait-line lay-wait-line--byline" />
+    </div>
+  );
+}
+
+// The reads, which are identical to the standalone page's, deliberately. An
+// entry opened as a layer and the same entry opened cold have to be the same
+// entry; two loaders would be two chances to disagree.
+async function Entry({ slug }) {
   const entry = await pull_entry_by_slug(slug);
   if (!entry) return null;
 
   const references = await sql`SELECT album, artist, slug FROM entries`;
   const authed = await wristbandOnHand();
 
+  return <PostClient entry={entry} references={references} authed={authed} />;
+}
+
+export default function EntryOverTheJournal({ params }) {
   return (
     <LayerEntry>
-      <PostClient entry={entry} references={references} authed={authed} />
+      <Suspense fallback={<Waiting />}>
+        {params.then(({ slug }) => <Entry slug={slug} />)}
+      </Suspense>
     </LayerEntry>
   );
 }
