@@ -316,25 +316,12 @@ current.
 
 ## Complete
 
-**2026-08-28 — pinned albums**
-
-**DO THIS BEFORE PINNING ANYTHING — the column is not on the live database yet:**
-
-```sql
-ALTER TABLE settings ADD COLUMN IF NOT EXISTS pinned_entries jsonb;
-```
-
-Same shape as the `bioanswers` one. Reads are safe without it — `pull_settings`
-does `SELECT *` and a missing column comes back null — so the site renders fine;
-it is only the write that fails. Existing single pins keep working either way,
-because a null list falls back to `pinned_entry_id`.
-
-- [x] **A pin in the chip row of every entry**, owner only, reading `Pin` or `Pinned 2/3`.
-- [x] **Three slots**, in `settings.pinned_entries`. A fourth bumps the oldest and names what it dropped for five seconds.
-- [x] **The card draws them** as a labelled row under Top genres, at the 48px the beacon gives its recent listens.
+**2026-08-28 — the pinned album**
+- [x] **A pin in the chip row of every entry**, owner only, reading `Pin` or `Pinned`. Writes `settings.pinned_entry_id`, which was already a writable column with a foreign key — no schema change, nothing to run.
+- [x] **The card draws it** as a labelled row under Top genres: the art at the 48px the beacon gives its recent listens, with the album and artist to its right.
 - [x] **The last prompt came off the card** — all three now sit on the pane below.
-- [x] No picker and no new endpoint: the cross already holds every entry for the wall, so the card resolves the pins in memory.
-- [ ] **The three-slot behaviour has never been pressed.** One pin was, on the live site, through the old single column. The bump-the-oldest path, the slot numbers and the `pinned_entries` write are all unexercised.
+- [x] No picker and no new endpoint: the cross already holds every entry for the wall, so the card resolves the pin in memory.
+- [x] Three pins were built and reverted the same afternoon — see DECISIONS. The `pinned_entries` column never reached the live database, so nothing needs undoing there.
 
 **2026-08-28 — the cross, merged to main**
 

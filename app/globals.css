@@ -2322,21 +2322,6 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 .ln-pin--on:hover:not(:disabled) { color: var(--bg); border-color: var(--ink); }
 .ln-pin:disabled { opacity: 0.5; cursor: default; }
 .ln-pin:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 3px; }
-.ln-pin-wrap { display: inline-flex; align-items: center; gap: 8px; }
-/* What the last press pushed off the card, for five seconds. Three slots and a
-   press that always works means something can leave without being chosen to —
-   this is the difference between that and a silent edit to somebody's card. */
-.ln-pin-bump {
-  font-family: var(--font-label);
-  font-size: 9px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--ink-faint);
-  /* No animation. arcFade lives in Journal's own style block, which is not on
-     an entry page — a rule pointing at a keyframe that is not there is a rule
-     that silently does nothing, and looks like it works because it does not
-     error. */
-}
 
 /* Held still while something covers it. Put on whichever element actually
    scrolls — the body on a page, a pane in the cross — for as long as a sheet
