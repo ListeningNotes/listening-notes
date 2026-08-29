@@ -38,8 +38,8 @@
 // nothing.
 
 'use client';
-import { useEffect, useMemo, useState } from 'react';
-import { ArrowSquareOut, CaretDown, Check, GlobeSimple, LinkSimple, Plus, X } from '@phosphor-icons/react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { ArrowSquareOut, CaretDown, Check, GlobeSimple, LinkSimple, MagnifyingGlass, Plus, X } from '@phosphor-icons/react';
 import IdentityCard, {
   DEFAULT_RIG_ICON, LINK_ICONS, RIG_ICONS, identify, readLink, rigIcon,
 } from './IdentityCard';
@@ -52,7 +52,17 @@ import { BIO_PROMPTS, readBioAnswers } from '../../library/bioprompt';
 // glance and a row of nine reads as a footer.
 const LINK_LIMIT = 3;
 
-export default function About({ stamps, authed = false, pinned = null }) {
+// How many records the pin's search shows at once. Enough to scroll a little
+// and find something without typing, few enough that the sheet does not become
+// the archive — which exists, one swipe away, and is the right place to browse.
+const PIN_RESULTS = 40;
+
+// `entries` is every record in the journal, handed down rather than fetched:
+// the cross already holds them for the wall, and the pin's search is a filter
+// over a list that is already in memory. A journal large enough for that to be
+// the wrong shape is a journal whose archive has the same problem, and they
+// should be solved together.
+export default function About({ stamps, authed = false, pinned = null, entries = [] }) {
   const settings = useBookplate();
   const { bioanswers, rig: rigRows, rig_icon, social_links, instagram_url } = settings;
 
@@ -61,6 +71,13 @@ export default function About({ stamps, authed = false, pinned = null }) {
   // on it; the prompts print below it now, and two instances of the hook would
   // be two drafts of the same page with one save button between them.
   const edit = useIdentificationCardEditor(settings);
+
+  // Whether the pin's search is open, and what has been typed into it. Both
+  // belong to the pane rather than to the card: the sheet covers the pane, and
+  // a fixed panel rendered from inside the card would be a panel owned by the
+  // thing it is covering.
+  const [pinOpen, setPinOpen] = useState(false);
+  const [pinQuery, setPinQuery] = useState('');
 
   // Which slot has its list of openings open, if any. One at a time, the same
   // way the card's mark chooser works — two lists of nine sentences open at
@@ -134,11 +151,191 @@ export default function About({ stamps, authed = false, pinned = null }) {
       .slice(0, LINK_LIMIT);
   }, [social_links, instagram_url]);
 
+  // What the card should draw in the pinned row. While a correction is open
+  // that is the draft — press a record in the sheet and the card shows it at
+  // once, before anything is saved — and otherwise it is what the pane was
+  // handed, which is what a visitor sees.
+  const showingPin = edit.editing
+    ? (entries.find(e => e.id === edit.pin) || null)
+    : pinned;
+
+  // The search. Album and artist only: this is somebody looking for a record
+  // they already have in mind, not browsing, and matching notes as well would
+  // put an album in the results for a sentence written about a different one.
+  const pinResults = useMemo(() => {
+    const q = pinQuery.trim().toLowerCase();
+    const rows = q
+      ? entries.filter(e =>
+          `${e.album || ''} ${e.artist || ''}`.toLowerCase().includes(q))
+      : entries;
+    return rows.slice(0, PIN_RESULTS);
+  }, [entries, pinQuery]);
+
+  // Leaving the correction closes it: the sheet belongs to an edit, not to the
+  // pane. Read through `editing` rather than cleared by an effect, for the same
+  // reason openSlot is above — an effect whose whole body is setState is a
+  // render asking to happen again, and React now says so out loud.
+  const pinSheetOpen = edit.editing && pinOpen;
+
+  // ── The sheet and the keyboard ────────────────────────────────────────────
+  // A fixed panel anchored to the bottom of the screen is anchored to the
+  // *layout* viewport, and an iOS keyboard does not change that — it slides up
+  // over it. The sheet went behind the keyboard, Safari scrolled the page to
+  // chase the field, and the whole thing ended up above the top of the screen
+  // with its search box off-screen and its list running through the clock.
+  //
+  // visualViewport is the part actually being looked at. This measures how much
+  // of the bottom is covered and lifts the sheet by exactly that, and caps its
+  // height to the room that is left. Written straight onto the element rather
+  // than into state: it fires on every frame of the keyboard animation, and a
+  // re-render per frame to move one box is a re-render of the whole pane.
+  // ── Leaving the pane puts the pencil down ─────────────────────────────────
+  // A correction left open while somebody swipes to the beacon is a correction
+  // they will come back to hours later, having forgotten what they changed, and
+  // press Save on. It is also two panes of the cross disagreeing about what
+  // state the site is in.
+  //
+  // Watched here rather than handed down from HomeNav, so About does not have
+  // to know it is sitting in a cross — it asks whether it is on screen, which
+  // is a question it can answer anywhere it is mounted.
+  //
+  // The threshold is a small number rather than zero, and that is the whole of
+  // what took two attempts to get right.
+  //
+  // Scroll snapping parks a pane exactly edge to edge. A pane that has gone
+  // completely off the left sits at left: -444, right: 0 against a viewport
+  // starting at 0 — the rectangles touch, and a browser calls touching
+  // rectangles intersecting. It reports isIntersecting: true with
+  // intersectionRatio: 0, in both the on-screen and the gone state. An observer
+  // watching for zero therefore sees no crossing and never fires a second time,
+  // which is exactly what it did: one callback on open and silence afterwards.
+  //
+  // A small positive threshold is crossed for real — 0.5-ish down to 0 — so the
+  // callback arrives. And it stays well clear of the legitimate low readings:
+  // this pane is taller than the window, so its ratio sits near half even when
+  // somebody has scrolled to the bottom of the rig, and cancelling an edit for
+  // that would be worse than not cancelling it at all.
+  const GONE = 0.02;
+  const paneRef = useRef(null);
+  // Read off the session rather than through it, so the effect depends on the
+  // two things it uses instead of on the whole editor — which changes on every
+  // keystroke into every field on the card.
+  const { editing: correcting, cancel: putThePencilDown } = edit;
+  useEffect(() => {
+    if (!correcting) return undefined;
+    const pane = paneRef.current;
+    if (!pane) return undefined;
+    const watch = new IntersectionObserver(
+      ([seen]) => { if (seen.intersectionRatio < GONE) putThePencilDown(); },
+      { threshold: GONE },
+    );
+    watch.observe(pane);
+    return () => watch.disconnect();
+  }, [correcting, putThePencilDown]);
+
+  const sheetRef = useRef(null);
+  useEffect(() => {
+    if (!pinSheetOpen) return undefined;
+    const seen = window.visualViewport;
+    if (!seen) return undefined;
+    const place = () => {
+      const el = sheetRef.current;
+      if (!el) return;
+      const covered = Math.max(0, window.innerHeight - seen.height - seen.offsetTop);
+      el.style.setProperty('--ab-pin-lift', `${covered}px`);
+      el.style.setProperty('--ab-pin-room', `${Math.round(seen.height)}px`);
+    };
+    place();
+    seen.addEventListener('resize', place);
+    seen.addEventListener('scroll', place);
+    return () => {
+      seen.removeEventListener('resize', place);
+      seen.removeEventListener('scroll', place);
+    };
+  }, [pinSheetOpen]);
+
+  function choosePin(id) {
+    edit.setPin(id);
+    setPinOpen(false);
+    setPinQuery('');
+  }
+
   return (
-    <div className="ab-pane">
+    <div className="ab-pane" ref={paneRef}>
       <div className="ab-card">
-        <IdentityCard stamps={stamps} authed={authed} edit={edit} pinned={pinned} />
+        <IdentityCard
+          stamps={stamps}
+          authed={authed}
+          edit={edit}
+          pinned={showingPin}
+          onPickPin={() => { setPinQuery(''); setPinOpen(true); }}
+        />
       </div>
+
+      {/* ── The pin's search ──────────────────────────────────────────────
+          A bottom sheet on a phone and a panel in the middle on a desktop,
+          which is the shape the archive's filters already use — see
+          .arc-sheet in Journal.js. No drag-to-dismiss here: that sheet is
+          opened and closed dozens of times while somebody browses, and this
+          one is opened when a person changes their mind about which record
+          they are holding up, which is not often.
+
+          It is rendered from the pane rather than the card because it covers
+          the pane. A fixed panel drawn from inside the card would belong to
+          the thing it is sitting on top of. */}
+      {pinSheetOpen && (
+        <>
+          <div className="ab-pin-scrim" onClick={() => setPinOpen(false)} />
+          <div className="ab-pin-sheet" ref={sheetRef} role="dialog" aria-label="Choose a pinned album">
+            <div className="ab-pin-search">
+              <MagnifyingGlass size={14} weight="bold" aria-hidden="true" />
+              <input
+                className="ab-pin-field"
+                value={pinQuery}
+                onChange={e => setPinQuery(e.target.value)}
+                placeholder="Search your albums"
+                aria-label="Search your albums"
+              />
+            </div>
+
+            <div className="ab-pin-list">
+              {pinResults.map(row => (
+                <button
+                  key={row.id}
+                  type="button"
+                  className={'ab-pin-hit' + (row.id === edit.pin ? ' ab-pin-hit--on' : '')}
+                  onClick={() => choosePin(row.id)}
+                >
+                  <span className="ab-pin-hit-art">
+                    {row.album_art
+                      ? <img src={row.album_art} alt="" />
+                      : <span aria-hidden="true">♪</span>}
+                  </span>
+                  <span className="ab-pin-hit-said">
+                    <span className="ab-pin-hit-album">{row.album}</span>
+                    <span className="ab-pin-hit-artist">{row.artist}</span>
+                  </span>
+                  {row.id === edit.pin && <Check size={14} weight="bold" aria-hidden="true" />}
+                </button>
+              ))}
+              {pinResults.length === 0 && (
+                <p className="ab-pin-empty">Nothing in the journal matches that.</p>
+              )}
+            </div>
+
+            <div className="ab-pin-foot">
+              {/* Clearing it is a thing somebody means to do, so it says so
+                  rather than being the absence of a choice. */}
+              <button type="button" className="ln-pill" onClick={() => choosePin(null)}>
+                Pin nothing
+              </button>
+              <button type="button" className="ln-pill" onClick={() => setPinOpen(false)}>
+                Done
+              </button>
+            </div>
+          </div>
+        </>
+      )}
 
       {/* Where the card ends and the reading starts. This boundary was a snap
           point for a day — proximity snapping, to catch a reader settling onto

@@ -3,6 +3,7 @@
 import { neon } from '@neondatabase/serverless';
 import { pull_entry_by_slug } from '@/library/database_actions';
 import { pull_settings, titleName } from '@/library/settings_actions';
+import { wristbandOnHand } from '@/library/wristband';
 import PostClient from './FullPostPage';
 
 // This page kept its own connection and its own SELECT for a while, which meant
@@ -32,6 +33,13 @@ export default async function PostPage({ params }) {
   const { slug } = await params;
   const entry = await pull_entry_by_slug(slug);
 
+  // Decided here rather than in the browser. The page used to render for
+  // everybody and then ask /api/auth/check whether to show the owner's
+  // controls, which meant the controls were in every visitor's HTML and simply
+  // hidden — and it meant the owner watched them appear a beat late on their
+  // own page. Both stop by asking before anything is rendered.
+  const authed = await wristbandOnHand();
+
   // Everything the archive knows how to be linked to. Three columns of 39
   // rows — cheaper to fetch than to cache, and fetching it per request is
   // what makes the linking retroactive: log an album tomorrow and every
@@ -48,5 +56,5 @@ export default async function PostPage({ params }) {
   // pull_entry_by_slug has already taken the chain off — a server component's
   // props are serialised into the HTML, so it has to come off before this point
   // rather than being left to whatever does the rendering.
-  return <PostClient entry={entry} references={references} />;
+  return <PostClient entry={entry} references={references} authed={authed} />;
 }

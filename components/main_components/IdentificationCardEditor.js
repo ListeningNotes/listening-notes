@@ -423,6 +423,14 @@ export function useIdentificationCardEditor(settings) {
     ? `https://${(settings.site_address || '').replace(/^https?:\/\//, '')}`
     : '');
   const [hidden, setHidden] = useState(() => new Set());
+  // Which record the card holds up, as its id. It is a settings column like
+  // every other field in this hook, and it is edited here for that reason —
+  // it used to be pinned from the entry itself, which put an admin control in
+  // the middle of somebody's reading and meant changing your pin started by
+  // opening an editor for an album you were not thinking about.
+  //
+  // null is a real value here: it is the pin cleared.
+  const [pin, setPin] = useState(null);
 
   // Opening takes a copy. Everything typed after this point is a draft, and
   // Cancel is simply never committing it — no undo stack, no diffing, and the
@@ -461,6 +469,7 @@ export function useIdentificationCardEditor(settings) {
       ? rows.map(r => ({ name: r?.name || '', role: r?.role || '' }))
       : [{ name: '', role: '' }]);
     setHidden(new Set(Array.isArray(settings.hidden_fields) ? settings.hidden_fields : []));
+    setPin(settings.pinned_entry_id ?? null);
     setTrouble(null);
     holdZoom(true);
     setEditing(true);
@@ -636,6 +645,10 @@ export function useIdentificationCardEditor(settings) {
           bioanswers: bioClean.length ? bioClean : null,
           ...codePatch,
           hidden_fields: hidden.size ? [...hidden] : null,
+          // Sent every time, including as null. Unpinning is a thing somebody
+          // does on purpose, and a field that is only written when it has a
+          // value cannot express it.
+          pinned_entry_id: pin ?? null,
           // Emptied on purpose. Every link lives in one list now; leaving this
           // filled would put Instagram on the card twice the moment someone
           // added it to the list, and the de-duplication that hides that is a
@@ -654,7 +667,7 @@ export function useIdentificationCardEditor(settings) {
       setTrouble(error.message);
     }
     setSaving(false);
-  }, [name, bio, posX, posY, portrait, links, hidden, rig, gear, settings, router]);
+  }, [name, bio, posX, posY, portrait, links, hidden, rig, gear, pin, settings, router]);
 
   return {
     editing, begin, cancel, save, saving, busy, trouble,
@@ -667,6 +680,7 @@ export function useIdentificationCardEditor(settings) {
     rig, setRig,
     gear, setGearField, addGear, dropGear,
     hidden, toggleHidden,
+    pin, setPin,
     choosePhoto, removePhoto,
   };
 }
