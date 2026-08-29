@@ -189,6 +189,50 @@ export default function About({ stamps, authed = false, pinned = null, entries =
   // height to the room that is left. Written straight onto the element rather
   // than into state: it fires on every frame of the keyboard animation, and a
   // re-render per frame to move one box is a re-render of the whole pane.
+  // ── Leaving the pane puts the pencil down ─────────────────────────────────
+  // A correction left open while somebody swipes to the beacon is a correction
+  // they will come back to hours later, having forgotten what they changed, and
+  // press Save on. It is also two panes of the cross disagreeing about what
+  // state the site is in.
+  //
+  // Watched here rather than handed down from HomeNav, so About does not have
+  // to know it is sitting in a cross — it asks whether it is on screen, which
+  // is a question it can answer anywhere it is mounted.
+  //
+  // The threshold is a small number rather than zero, and that is the whole of
+  // what took two attempts to get right.
+  //
+  // Scroll snapping parks a pane exactly edge to edge. A pane that has gone
+  // completely off the left sits at left: -444, right: 0 against a viewport
+  // starting at 0 — the rectangles touch, and a browser calls touching
+  // rectangles intersecting. It reports isIntersecting: true with
+  // intersectionRatio: 0, in both the on-screen and the gone state. An observer
+  // watching for zero therefore sees no crossing and never fires a second time,
+  // which is exactly what it did: one callback on open and silence afterwards.
+  //
+  // A small positive threshold is crossed for real — 0.5-ish down to 0 — so the
+  // callback arrives. And it stays well clear of the legitimate low readings:
+  // this pane is taller than the window, so its ratio sits near half even when
+  // somebody has scrolled to the bottom of the rig, and cancelling an edit for
+  // that would be worse than not cancelling it at all.
+  const GONE = 0.02;
+  const paneRef = useRef(null);
+  // Read off the session rather than through it, so the effect depends on the
+  // two things it uses instead of on the whole editor — which changes on every
+  // keystroke into every field on the card.
+  const { editing: correcting, cancel: putThePencilDown } = edit;
+  useEffect(() => {
+    if (!correcting) return undefined;
+    const pane = paneRef.current;
+    if (!pane) return undefined;
+    const watch = new IntersectionObserver(
+      ([seen]) => { if (seen.intersectionRatio < GONE) putThePencilDown(); },
+      { threshold: GONE },
+    );
+    watch.observe(pane);
+    return () => watch.disconnect();
+  }, [correcting, putThePencilDown]);
+
   const sheetRef = useRef(null);
   useEffect(() => {
     if (!pinSheetOpen) return undefined;
@@ -217,7 +261,7 @@ export default function About({ stamps, authed = false, pinned = null, entries =
   }
 
   return (
-    <div className="ab-pane">
+    <div className="ab-pane" ref={paneRef}>
       <div className="ab-card">
         <IdentityCard
           stamps={stamps}
