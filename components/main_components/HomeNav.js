@@ -261,6 +261,53 @@ export default function HomeNav() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stir]);
 
+  // ── Sideways, at the edges ────────────────────────────────────────────────
+  // The pane body is vertical-only now, so this is where a sideways move
+  // starts. It follows the finger rather than firing on release, because a
+  // swipe that only acts once you let go does not feel like moving a thing.
+  //
+  // The rail's own snap is switched off for the length of the drag. Setting
+  // scrollLeft by hand against `x mandatory` means fighting the snap for every
+  // frame of it — it drags the rail back toward the pane you are leaving —
+  // and turning it off and back on is how you borrow the rail for a moment
+  // without arguing with it.
+  const dragging = useRef(null);
+
+  function edgeStart(event) {
+    const el = railRef.current;
+    if (!el || event.touches.length !== 1) { dragging.current = null; return; }
+    dragging.current = { x: event.touches[0].clientX, from: el.scrollLeft };
+    el.style.scrollSnapType = 'none';
+    stir();
+  }
+
+  function edgeMove(event) {
+    const el = railRef.current;
+    const grip = dragging.current;
+    if (!el || !grip || event.touches.length !== 1) return;
+    // No preventDefault. React attaches its touch listeners passively, so the
+    // call would warn and do nothing — and it is not needed: the strip carries
+    // touch-action: none, so the browser is not panning anything here to
+    // prevent. See LayerEntry, where the listener genuinely had to be attached
+    // by hand because it does need to cancel a scroll that could start.
+    el.scrollLeft = grip.from - (event.touches[0].clientX - grip.x);
+  }
+
+  function edgeEnd() {
+    const el = railRef.current;
+    const grip = dragging.current;
+    dragging.current = null;
+    if (!el || !grip) return;
+    el.style.scrollSnapType = '';
+    // Whichever pane it is nearest, which is what the snap would have decided
+    // if it had been on. A third of a pane is enough to count as leaving.
+    const width = el.clientWidth || 1;
+    const moved = el.scrollLeft - grip.from;
+    const started = Math.round(grip.from / width);
+    const step = Math.abs(moved) > width / 3 ? Math.sign(moved) : 0;
+    goTo(Math.max(0, Math.min(2, started + step)));
+  }
+
   function goTo(index) {
     const el = railRef.current;
     if (!el) return;
@@ -411,20 +458,7 @@ export default function HomeNav() {
     <div className="hn">
       {header}
 
-      {/* Once you are downstairs the rail stops taking sideways gestures.
-           The carets already hid themselves down there, on the argument that a
-           control pointing at a pane you cannot see is noise — but hiding the
-           sign while leaving the door open is the worse half of the deal, and
-           swiping between panes from halfway down somebody's writing lands you
-           in an unrelated pane at an unrelated scroll position with no memory
-           of how you got there.
- 
-           Blocked with touch-action rather than by taking the overflow away:
-           overflow-x: hidden on a scrolled container snaps it back to zero, so
-           going down a pane would slide the cross back to the card. This lets
-           vertical through and refuses horizontal, and the rail keeps its
-           place. */}
-      <div className={'hn-rail' + (down[pane] ? ' hn-rail--held' : '')} ref={railRef}>
+      <div className="hn-rail" ref={railRef}>
         <section className="hn-pane" ref={paneRefs[0]} aria-label="About this journal">
           {crown}
           <About stamps={stamps} authed={authed} pinned={pinned} entries={entries} />
@@ -454,6 +488,26 @@ export default function HomeNav() {
           {authed ? <Dashboard waiting={waiting} /> : <Pitch />}
         </section>
       </div>
+
+      {/* Invisible, and the only place a sideways gesture starts. Away
+          downstairs, where sliding out of a pane's lower half would land you
+          somewhere unrelated. */}
+      <div
+        className={'hn-edge hn-edge--left' + (down[pane] ? ' hn-edge--away' : '')}
+        onTouchStart={edgeStart}
+        onTouchMove={edgeMove}
+        onTouchEnd={edgeEnd}
+        onTouchCancel={edgeEnd}
+        aria-hidden="true"
+      />
+      <div
+        className={'hn-edge hn-edge--right' + (down[pane] ? ' hn-edge--away' : '')}
+        onTouchStart={edgeStart}
+        onTouchMove={edgeMove}
+        onTouchEnd={edgeEnd}
+        onTouchCancel={edgeEnd}
+        aria-hidden="true"
+      />
 
       {/* ── The row along the bottom ────────────────────────────────────
           All three together rather than one on each edge. Pinned to the edges
