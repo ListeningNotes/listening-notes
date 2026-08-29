@@ -1973,6 +1973,12 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
      whole of why the scrolling felt broken. */
   overflow-y: auto;
   overscroll-behavior: contain;
+  /* Vertical panning belongs to the browser, horizontal to the swipe handler
+     in LayerEntry. Saying so removes the decision the browser would otherwise
+     have to make at the start of every gesture — and that decision, made while
+     a JS handler is also watching, is the other half of why a swipe had to be
+     made twice. */
+  touch-action: pan-y;
   /* Slow, and slowing down as it lands. This is a page being pulled off a
      shelf rather than a panel being snapped into place — the first version was
      260ms on a sharp curve and read as a state change. */
@@ -1994,23 +2000,33 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   .lay--settling { transition: none; }
 }
 
-/* ── Why this must not scroll on a phone ───────────────────────────────────
+/* ── Why this must not be a scroll container on a phone ────────────────────
    The entry's phone layout is already two scroll containers deep: .ln-screens
    holds the two snap screens, and .ln-screen-two-scroll holds the notes inside
-   the second one. Adding a scrolling box around both made three.
+   the second one. A scrolling box around both makes three, and the third one
+   breaks the other two.
 
-   The outer one never actually scrolled — its content is exactly one viewport
-   tall — but being a scroll container at all was enough to do two things. It
-   drew its own scrollbar, which is the second one overlapping the first. And
-   it joined the scroll chain, so every time the inner scrollers reached an end
-   the browser handed the gesture outward to a box that could not move and then
-   stopped it dead, which is the hitch when scrolling back up out of the notes
-   and into the card.
+   It never scrolls — its content is exactly one viewport tall — but a scroll
+   container that cannot move is worse than one that can. It draws its own
+   scrollbar, which is the second bar overlapping the first. And it sits in the
+   scroll chain carrying overscroll-behavior: contain, so every gesture that
+   reaches the end of an inner scroller is handed out to a box that cannot take
+   it and is then refused passage: the scroll dies there. That is the freeze on
+   the second screen, and it is why a swipe had to be made twice — the first
+   one was absorbed at this boundary and sprang back.
 
-   So on a phone the layer is a plain box and .ln-screens does the scrolling,
-   which is what it was written to do. */
+   `overflow: hidden` is NOT the fix and was tried first. Hidden still creates
+   a scroll container; it only takes the scrollbar away, so the chain still
+   ended here and only the visible half of the symptom went. It has to be
+   `visible` — genuinely not a scroll container — and then the layer is just a
+   box and .ln-screens does the scrolling it was written to do. Nothing
+   overflows it, because screen one and screen two are each exactly one
+   viewport tall. */
 @media (max-width: 768px) {
-  .lay { overflow: hidden; }
+  .lay {
+    overflow: visible;
+    overscroll-behavior: auto;
+  }
 }
 
 /* The way out sits in the row the cross keeps its controls in, and the numbers

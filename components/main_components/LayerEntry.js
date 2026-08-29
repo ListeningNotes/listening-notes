@@ -64,10 +64,12 @@ export default function LayerEntry({ children }) {
     return () => root.classList.remove('ln-locked');
   }, []);
 
+  // No setState here, deliberately. This runs at the start of every touch on
+  // the page, including every scroll, and a re-render of the whole layer on
+  // touchstart is a frame spent on something that is probably not a swipe.
   function onPointerDown(event) {
     if (event.pointerType === 'mouse') return;
     from.current = { x: event.clientX, y: event.clientY, at: event.timeStamp, owned: false };
-    setSettling(false);
   }
 
   function onPointerMove(event) {
@@ -81,8 +83,12 @@ export default function LayerEntry({ children }) {
     // hands itself back to the scroller halfway through.
     if (!start.owned) {
       if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
-      if (Math.abs(dx) <= Math.abs(dy)) { from.current = null; return; }
+      // Clearly horizontal, not merely more horizontal than vertical. A
+      // diagonal flick that was meant as a scroll used to qualify, which is a
+      // page leaving when somebody meant to read on.
+      if (Math.abs(dx) < Math.abs(dy) * 1.5) { from.current = null; return; }
       start.owned = true;
+      setSettling(false);
     }
 
     // Rightward only. Dragging the other way would pull the layer off its own

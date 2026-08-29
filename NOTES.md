@@ -258,6 +258,24 @@ existed and got walked past once anyway. `git rm` on a file is recoverable from
 history; `DROP COLUMN` is not recoverable from anything but a backup. Read the
 values before deciding, and take a backup either way.
 
+**`overflow: hidden` still creates a scroll container.** It takes the scrollbar
+away and stops the user scrolling it; it does not take the element out of the
+scroll chain. So a box wrapped around a scrolling layout, set to `hidden` and
+carrying `overscroll-behavior: contain`, still catches every gesture that
+reaches the end of an inner scroller and refuses to pass it on — the scroll
+dies there. Half the symptom disappears (the second scrollbar) and the worse
+half stays (the freeze), which makes it look like the fix worked and the
+problem was something else.
+
+`overflow: visible` is the only value that means "not a scroll container".
+Cost an entire wrong fix on the entry layer.
+
+**A JS horizontal-drag handler and native vertical scroll fight over the first
+gesture** unless you tell the browser which is which. Set `touch-action: pan-y`
+on the element the handler is attached to: vertical panning is the browser's,
+horizontal is yours, and there is no decision phase where the first swipe gets
+eaten while the browser works out whose it was.
+
 **`scroll-behavior: smooth` makes scroll tests lie.** It is set on `<html>`
 sitewide, and it applies to `element.scrollTop = n` as well as to
 `scrollIntoView` — so setting a scroll position and reading it back gets a
