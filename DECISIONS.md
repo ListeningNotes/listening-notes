@@ -34,6 +34,23 @@ platform behaviour the whole architecture removes.
 outbound and opt-in. A journal can show what is playing; it never shows who is
 reading.
 
+**Additive-only schema, starting at the first install that is not ours.** From
+the first external install onward, migrations add columns and never rename or
+drop them. Copies in the wild have to survive every migration, and one that
+fails is somebody's journal that stops opening.
+
+**Until then the database is a draft.** Dropping a dead column, renaming a bad
+one, deleting a table nothing uses — all fine, and worth doing while it is
+still free. The rule protects databases on machines nobody here can reach;
+until Junior installs one there are none, and paying the cost of a rule whose
+reason has not arrived yet is how a schema accumulates columns nobody wanted to
+keep. Publishing the repo does not end the draft — somebody installing from it
+does.
+
+These two sit here rather than under The journal because they are facts about
+distribution. They were filed with the schema notes and kept being looked for
+in the wrong place.
+
 ---
 
 ## Licence and ownership
@@ -289,11 +306,30 @@ than adding to it. That is what makes the next decision cheap: if editing is
 only ever small, a mark saying it happened costs nothing and settles the
 question of whether the record can be trusted.
 
-**A changed note says so.** Editing an album note or a track note stamps
-"Edited on {date}", shown with the entry. Never written down until now, and
-never built — `entries` has `created_at` and no `updated_at`, so this needs a
-column. The point is not an audit trail; it is that a journal nobody can
-silently rewrite is worth more than one where every entry might have been.
+**A changed note says so, next to the thing that changed.** Editing an album
+note or a track note stamps "Edited {date}" under that piece of writing — not
+at the top of the post. A stamp at the top says only that something moved,
+which tells a reader nothing; a stamp under track two says what.
+
+It is also what keeps this from becoming a quiet rewrite tool. An entry
+carrying five track stamps looks different from one carrying a single typo fix,
+and that visible difference is the honesty. The point is not an audit trail: a
+journal nobody can silently rewrite is worth more than one where every entry
+might have been.
+
+**Latest edit only, never a list.** One date per piece of writing, replaced
+each time. A history of every touch is an audit trail, which is the thing this
+is deliberately not.
+
+Built 2026-08-28. Two notes on the shape, because the brief that settled this
+described it slightly wrong and the code is the thing that is true:
+
+- The column is `entries.edited_at`, not `updated_at`. `updated_at` exists, but
+  on `drafts`, and it means something else.
+- It is not unrendered plumbing. `edited_at` belongs to the album note, which
+  is the one piece of writing the entry itself owns, so it prints under the
+  album note — a per-thing stamp like the track ones, not a post-level banner.
+  The per-track stamps live in the `tracks` jsonb, one `edited` key each.
 
 **Delete lives at the foot of an entry's edit mode**, behind a second
 confirmation and a warning that says what it is. Not in the bar beside Save:
@@ -459,13 +495,34 @@ smallest type, no version number. Satisfies AGPL §13 whether or not anyone has
 modified anything, so nobody has to think about compliance.
 
 **One header everywhere, 2026-08-28.** Mark centred, one control each side —
-the same arrangement the About card uses, scaled down. The header currently
-changes shape between the panes and an entry; every screen should read the
-same.
+the same arrangement the About card uses, scaled down. Entry pages and the
+panes had different shapes, and one arrangement is what makes the site read as
+one system rather than as several pages that happen to share a logo.
 
-**`NavBeacon` goes from everywhere but the beacon pane.** It is a persistent
-status bar for something the visitor was already told, it competes with the
-writing, and it is part of why five components poll Last.fm independently.
+**The mini beacon goes from everywhere but the beacon pane.** It is a status
+bar for something the visitor has already been told, and it competes with the
+writing it sits above. It was also part of what had five components polling
+Last.fm independently — worth recording as history rather than as a reason,
+because that half is already fixed: `useListeningBeacon` runs one timer for
+however many components subscribe, and the route caches the upstream answer, so
+removing this saves renders and not requests.
+
+The reason that does still stand is the one about repetition. Repeating the
+beacon on every screen is how the beacon becomes wallpaper, and a thing nobody
+looks at is worse than a thing that is not there.
+
+**`/dashboard/entries` retires; editing happens on the entry itself.** Two
+interfaces for one job means neither is canonical — you end up maintaining both
+and trusting neither. Same reason the About tab died. See The journal below for
+what the entry editor had to grow first.
+
+**The pinned album belongs to the card, not the entry.** `pinned_entry_id` is a
+field on the settings row, so it is edited from the About card's pencil beside
+the other card fields, through a search over the journal. The entry editor has
+no Pin control at all: changing your pin should not mean opening an editor for
+an album you were not thinking about. Trade-off accepted — from an entry page
+there is no "pin this one". The fuller version of this, including the argument
+it reverses, is under The journal.
 
 **Owner tools are server-checked, not hidden with CSS.** Two icons, top left,
 rendered only for the owner: pencil to the editor, printer to the export flow.
@@ -551,18 +608,6 @@ how the archive works now.
 took this column while it still held data; what settled it was reading the
 values. Unread is not unused, and a `DROP COLUMN` is irreversible in a way
 `git rm` is not — take a backup either way.
-
-**Additive schema only — starting at the first install that is not ours.** Add columns forever,
-never rename or drop. Copies in the wild have to survive migrations, and a
-migration that fails is somebody's journal that stops opening.
-
-**Before any copy exists, the database is a draft.** Dropping a dead column,
-renaming a bad one, deleting a table nothing uses — all fine, and worth doing
-while it is still free. The rule protects databases on machines nobody here can
-reach; until Junior installs one there are none, and paying the cost of a rule
-whose reason has not arrived yet is how a schema accumulates columns nobody
-wanted to keep. Publishing the repo does not end the draft — somebody
-installing from it does.
 
 ---
 
