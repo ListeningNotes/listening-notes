@@ -49,6 +49,8 @@ const EMPTY = {
   // three one-line answers, which is a few hundred bytes and belongs in the
   // context the way the rig rows do.
   bioanswers: null,
+  // Up to three entry ids; see schema.sql. Three integers.
+  pinned_entries: null,
 };
 
 const BookplateContext = createContext(EMPTY);

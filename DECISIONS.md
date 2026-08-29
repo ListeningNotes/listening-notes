@@ -232,10 +232,25 @@ you *recognise* it. So the control is a pin in the chip row of an entry, owner
 only, and there is no picker at all — which is also less machinery than the
 sheet would have been.
 
-Exactly one, structurally. It is a single column on the settings row, so
-pinning a second record unpins the first without anything having to check, and
-the foreign key's ON DELETE SET NULL means deleting a pinned entry clears the
-pin rather than leaving the card pointing at nothing.
+**Three, not one, and they live in `settings.pinned_entries`.** Three is a
+shelf: one is a favourite and nine is the archive again. The old
+`pinned_entry_id` held exactly one *and held it with a foreign key*, which is
+the same shape that cannot hold three — so the list is jsonb, like `rig` and
+`social_links`, and pays the same price. No foreign key means a deleted entry
+leaves its id behind; harmless, because the card looks entries up by id and a
+miss simply draws nothing, which is the self-healing `readBioAnswers` already
+does for a retired prompt. The old column keeps its value, stops being written,
+and is read as a list of one when the new column is empty — so a pin made
+before the list existed survives without a migration.
+
+**A fourth pin bumps the oldest, and says which.** Refusing would mean going
+and unpinning something before you can do the thing you came to do. The button
+reads which slot a record holds — `Pinned 2/3` — because with three of them the
+useful fact is not *pinned* but *which*, and how much room is left.
+
+**No prompt on the card.** One was promoted there to give the Send button its
+reason; the card is the counted facts and the records now, and all three
+prompts sit together on the screen below, which is what that pane is for.
 
 **Everything editable is edited where it prints.** The link rows and the rig
 rows were fields on the card for things that appear a screen below it, which is

@@ -45,7 +45,7 @@ import IdentityCard, {
 } from './IdentityCard';
 import { useIdentificationCardEditor } from './IdentificationCardEditor';
 import { useBookplate } from './Bookplate';
-import { BIO_PROMPTS, CARD_PROMPT, readBioAnswers } from '../../library/bioprompt';
+import { BIO_PROMPTS, readBioAnswers } from '../../library/bioprompt';
 
 // Three, and the cap is the point. Somewhere to be found is not somewhere to
 // list every account anybody has ever opened — a row of three marks reads at a
@@ -101,11 +101,11 @@ export default function About({ stamps, authed = false, pinned = null }) {
   // happen twice.
   const openSlot = edit.editing ? picking : null;
 
-  // Three finished openings, which is what a bio is here. The one the card may
-  // print is dropped from this list rather than repeated — it sits above the
-  // Send button a screen up, and the same sentence twice on one pane reads as
-  // a mistake rather than as emphasis.
-  const answered = readBioAnswers(bioanswers).filter(row => row.key !== CARD_PROMPT);
+  // All three, here. One of them used to be promoted onto the card and dropped
+  // from this list so it did not print twice — the card is the counted facts
+  // and a record now, and the writing all sits together on the screen below it,
+  // which is what the pane is for.
+  const answered = readBioAnswers(bioanswers);
   // Same filter the card applies, for the same reason: a row with no name is a
   // row somebody started and abandoned in the editor, and it should not print.
   const rigList = (Array.isArray(rigRows) ? rigRows : []).filter(r => r?.name?.trim());
