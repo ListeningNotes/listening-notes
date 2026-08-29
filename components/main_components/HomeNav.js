@@ -84,7 +84,7 @@ function ease() {
 }
 
 export default function HomeNav() {
-  const { cover_name } = useBookplate();
+  const { cover_name, pinned_entry_id } = useBookplate();
   const { theme, toggle: toggleTheme } = useTheme();
   const { isLive, recentAlbums } = useListeningBeacon();
 
@@ -405,6 +405,12 @@ export default function HomeNav() {
   // address and nothing in the interface currently points at any of them — see
   // NOTES, which is where that is written down rather than solved.
 
+  // The record the card shows. Found here rather than fetched, because this
+  // already has every entry — the wall needs them — and asking the server for
+  // one row it has already sent would be a second request for a copy of
+  // something in memory.
+  const pinned = entries.find(e => e.id === pinned_entry_id) || null;
+
   const marks = paneMarks(authed);
 
   return (
@@ -414,7 +420,7 @@ export default function HomeNav() {
       <div className="hn-rail" ref={railRef}>
         <section className="hn-pane" ref={paneRefs[0]} aria-label="About this journal">
           {crown}
-          <About stamps={stamps} authed={authed} />
+          <About stamps={stamps} authed={authed} pinned={pinned} />
         </section>
 
         <section className="hn-pane hn-pane--home" ref={paneRefs[1]} aria-label="Now listening">

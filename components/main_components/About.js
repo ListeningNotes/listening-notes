@@ -52,7 +52,7 @@ import { BIO_PROMPTS, CARD_PROMPT, readBioAnswers } from '../../library/biopromp
 // glance and a row of nine reads as a footer.
 const LINK_LIMIT = 3;
 
-export default function About({ stamps, authed = false }) {
+export default function About({ stamps, authed = false, pinned = null }) {
   const settings = useBookplate();
   const { bioanswers, rig: rigRows, rig_icon, social_links, instagram_url } = settings;
 
@@ -137,7 +137,7 @@ export default function About({ stamps, authed = false }) {
   return (
     <div className="ab-pane">
       <div className="ab-card">
-        <IdentityCard stamps={stamps} authed={authed} edit={edit} />
+        <IdentityCard stamps={stamps} authed={authed} edit={edit} pinned={pinned} />
       </div>
 
       {/* Where the card ends and the reading starts. This boundary was a snap

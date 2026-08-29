@@ -252,7 +252,7 @@ function AddressCode({ text }) {
 // `edit` is handed in rather than made here. The prompts print on the About
 // pane below this card and are edited there, and one edit session cannot be
 // two instances of the hook — so the pane owns it and the card is given it.
-export default function IdentityCard({ stamps, authed = false, edit }) {
+export default function IdentityCard({ stamps, authed = false, edit, pinned = null }) {
   const settings = useBookplate();
   const {
     cover_name,
@@ -846,6 +846,31 @@ export default function IdentityCard({ stamps, authed = false, edit }) {
            The labels beside them are already doing the quietening; the answers
            are the content and they weigh the same. */
         .idc-line-value { min-width: 0; color: var(--ink); }
+        /* ── The pinned record ──
+           Ninety-six, against the portrait's hundred and eighty. The two are
+           the only images on the card and the ratio is the sentence: this is a
+           person, and that is what they are pointing at. Same corner radius
+           family, a lighter shadow — it sits on the card rather than being the
+           card. */
+        .idc-pinned {
+          display: block;
+          width: 96px; height: 96px;
+          margin: 20px auto 0;
+          border-radius: 12px;
+          overflow: hidden;
+          background: var(--bg-warm);
+          box-shadow: 0 8px 22px rgba(0,0,0,0.14);
+          transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .idc-pinned:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 14px 30px rgba(0,0,0,0.18);
+        }
+        .idc-pinned img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        @media (prefers-reduced-motion: reduce) {
+          .idc-pinned:hover { transform: none; }
+        }
+
         /* Not a row of the table above it. The four counted facts are labels
            and values; this is a sentence, and a sentence indented into a value
            column reads as a fifth fact that lost its label. Centred and full
@@ -1171,6 +1196,28 @@ export default function IdentityCard({ stamps, authed = false, edit }) {
 
             The pane below drops this row from its own list rather than
             printing it twice. */}
+        {/* ── The pinned record ────────────────────────────────────────────
+            One album from the journal, as art. It is the only image on this
+            card besides the portrait and the reason the card does not read as
+            all type and numbers — a face, four facts and a record somebody is
+            pointing at.
+            Smaller than the portrait, deliberately: the person is the subject
+            and the record is what they are holding up. No label either, because
+            a sleeve under somebody's name does not need one.
+            Chosen on the entry itself, not here — see the pin in
+            app/entries/[slug]/FullPostPage.js. Null renders nothing, which is
+            also what a deleted entry leaves behind. */}
+        {pinned?.album_art && (
+          <Link
+            href={`/entries/${pinned.slug}`}
+            className="idc-pinned"
+            aria-label={`${pinned.album} — ${pinned.artist}`}
+            title={`${pinned.album} — ${pinned.artist}`}
+          >
+            <img src={pinned.album_art} alt="" />
+          </Link>
+        )}
+
         {cardAsk && (
           <p className="idc-ask">
             <span className="idc-ask-said">{cardAsk.text}</span>{' '}

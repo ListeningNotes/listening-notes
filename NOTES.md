@@ -72,7 +72,6 @@ The cross is built and merged. What is left of it:
 - [ ] **`/rig` is still a forwarding stub**, and by the same argument that deleted `/why` it may not have earned one: three days live, linked from a card, on a site nobody else runs. `/about` genuinely did earn its stub. Worth one decision rather than two defaults.
 - [ ] **Compare wants two homes** — one on an individual album, for comparing that record against another, and one on the About pane for comparing the collection overall. It is reachable from neither today; the route works if you type it.
 - [ ] **Surprise (`/shuffle`) has no way in.** Work in progress by decision — the shake is the intended gesture and is not built. See DECISIONS.
-- [ ] **Pinned album on the card** — the render half can ship on its own; the picker is blocked on Journal. See DECISIONS. The column and its foreign key already exist.
 - [ ] **`/get` is half a page.** It renders the essay and nothing else. The other half of what that address owes a stranger — what the software is, that it is free, and the way to install a copy — is unwritten, so somebody arriving from another copy's pitch pane reads the why and finds no door. Its tab still reads `Why · …` too.
 - [ ] **Source link wants a settings column.** It ships today as `NEXT_PUBLIC_SOURCE_URL` defaulting to upstream, which is the smaller half of the job — a modified copy owes *its own* source and should not need a redeploy to say so.
 - [ ] **Listen numbering** — an album has many listens, numbered, computed from `album_key` and never chosen.
@@ -316,6 +315,12 @@ current.
 ---
 
 ## Complete
+
+**2026-08-28 — the pinned album**
+- [x] **A pin in the chip row of every entry**, owner only. Writes `settings.pinned_entry_id`, which was already a writable column with a foreign key.
+- [x] **The card draws it** at 96px, under the counted rows and above Send an Album — the only image on the card besides the portrait.
+- [x] No picker and no new endpoint: the cross already has every entry for the wall, so the card finds the pinned one in memory rather than asking for a row the page has been sent.
+- [ ] **Never pressed.** Same wristband problem as the card editor — the button only renders for the owner, so both states were verified by injecting the markup and looking at it, and the write path has not been run once. First thing to try on the live site.
 
 **2026-08-28 — the cross, merged to main**
 
