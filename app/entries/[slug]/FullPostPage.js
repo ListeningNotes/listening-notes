@@ -25,6 +25,7 @@ import TrackThread from '../../../components/main_components/Slug_Page/TrackThre
 import CommentBubble from '../../../components/main_components/Slug_Page/CommentBubble';
 import MetadataLabel from '../../../components/main_components/Slug_Page/MetadataLabel';
 import Chip from '../../../components/main_components/Slug_Page/Chip';
+import MiniCard from '../../../components/main_components/Slug_Page/MiniCard';
 import StarRating from '../../../components/main_components/StarRating';
 import StarPicker from '../../../components/session_components/StarRating';
 import { editStamp } from '../../../library/entry_formatter';
@@ -411,7 +412,34 @@ export default function FullPostPage({ entry, references = [], authed = false, l
     : null;
 
   const isSubmission = entry.entry_type === 'Submission';
+  // The flag is the only source now. Nine older entries carried this as
+  // relationship = 'Formative'; they were migrated onto the flag and the
+  // column is gone, so there is nothing else left to read.
+  const isFormative = entry.formative === true || entry.formative === 'true';
   const displayRating = isMasterpiece ? 5 : parseFloat(entry.rating) || 0;
+
+  // Back to the top of the record. Was written inline on the up-caret and is
+  // named now because the mini card at the head of the notes does the same
+  // thing, and two copies of a scroll dance that has to know about both
+  // scrollers is two things to keep in step.
+  //
+  // Which scroller depends on the width: on a phone .ln-screens holds the two
+  // snap screens and is what moves, and on a desktop the document does. The
+  // test is whether .ln-screens actually overflows rather than a breakpoint,
+  // so it answers the question it is really asking.
+  function backToTheRecord() {
+    const screens = document.querySelector('.ln-screens');
+    const inner = document.querySelector('.ln-screen-two-scroll');
+    const paged = screens && screens.scrollHeight > screens.clientHeight;
+    if (paged) {
+      screens.scrollTo({ top: 0, behavior: 'smooth' });
+      // Reset the notes once screen one is covering them, so they start from
+      // the top next time rather than mid-tracklist.
+      setTimeout(() => { if (inner) inner.scrollTop = 0; }, 600);
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }
 
   return (
     <div
@@ -479,6 +507,10 @@ export default function FullPostPage({ entry, references = [], authed = false, l
            ends at 58px) — not the 150px the labelled dots needed. The band
            height, the snap position and the scroll cue all read this. */
         .ln-entry       { --ln-band: calc(96px + var(--safe-top)); }
+        /* Phone-only, the same way .ln-screen-one is. On a wide window screen
+           two is a plain wrapper and the blurred hero above the notes already
+           keeps the record in view. */
+        .ln-mini        { display: none; }
 
         @media (max-width: 768px) {
           /* ── SCREEN ONE ── a full viewport of album: art on top, everything
@@ -542,6 +574,80 @@ export default function FullPostPage({ entry, references = [], authed = false, l
             display: flex;
             flex-direction: column;
           }
+          /* ── The mini card ── the record kept at the head of the reading.
+             Everything about it is width-tight: on a 375px phone the art, the
+             marks and the padding take about 190px between them, and the title
+             lives on whatever is left, so both of its lines ellipsis rather
+             than wrap. A second line here would push the notes down the screen
+             on exactly the albums whose names are already hardest to fit. */
+          /* Above the header band, and opaque. The band fades out over the
+             34px below --ln-band, and this strip starts exactly at --ln-band —
+             so unlifted, the top third of the record sat under a gradient and
+             the album's name came out greyer than the artist under it.
+
+             Raising it is the right fix rather than shortening the band,
+             because on screen two the band has nothing left to hide: the notes
+             scroll in .ln-screen-two-scroll, which now begins below this strip
+             rather than below the band. What still has to be covered is the
+             logo row, and that is above this. */
+          .ln-mini {
+            position: relative;
+            z-index: 101;
+            background: var(--bg);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+            box-sizing: border-box;
+            flex-shrink: 0;
+            padding: 0 24px 12px;
+            margin: 0;
+            border: none;
+            border-bottom: 1px solid var(--border);
+            text-align: left;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+          }
+          .ln-mini-art {
+            flex-shrink: 0;
+            width: 44px; height: 44px;
+            border-radius: 8px;
+            overflow: hidden;
+            background: var(--panel);
+            border: 1px solid var(--panel-border);
+            box-shadow: var(--shadow-soft);
+            display: flex; align-items: center; justify-content: center;
+          }
+          .ln-mini-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+          .ln-mini-none { font-size: 18px; color: var(--ink-faint); }
+
+          .ln-mini-said {
+            display: flex; flex-direction: column; gap: 1px;
+            min-width: 0; flex: 1;
+          }
+          .ln-mini-album {
+            font-family: var(--font-display);
+            font-weight: var(--font-display-weight);
+            font-size: 14px; line-height: 1.25; color: var(--ink);
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+          }
+          .ln-mini-artist {
+            font-family: var(--font-label);
+            font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase;
+            color: var(--ink-soft);
+            overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+          }
+
+          /* Stacked, not in a row. Five stars and up to three marks side by
+             side came to about 100px and took the width off the title; one
+             above the other is 70 and still shorter than the art beside it. */
+          .ln-mini-marks {
+            flex-shrink: 0;
+            display: flex; flex-direction: column; align-items: flex-end; gap: 3px;
+          }
+          .ln-mini-flags { display: flex; align-items: center; gap: 5px; }
+          .ln-mini-flag { display: inline-flex; }
+
           .ln-screen-two-scroll {
             flex: 1;
             min-height: 0;
@@ -665,6 +771,10 @@ export default function FullPostPage({ entry, references = [], authed = false, l
           {!edit.editing && isSubmission && <Chip>Submission</Chip>}
           {!edit.editing && (entry.favorite === true || entry.favorite === 'true') && <Chip tone="fav">Favorite</Chip>}
           {!edit.editing && isMasterpiece && <Chip tone="mp">Masterpiece</Chip>}
+          {/* The third flag, missing from this row since the row was written.
+              Chip has carried a formative tone the whole time and nothing ever
+              passed it. */}
+          {!edit.editing && isFormative && <Chip tone="formative">Formative</Chip>}
         </div>
         <div style={{ fontFamily: fonts.mono, fontSize: '9px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--ink-faint)' }}>
           Posted {postedOn}
@@ -749,6 +859,23 @@ export default function FullPostPage({ entry, references = [], authed = false, l
           way Recent Listens does on the homepage. On desktop it is a plain
           wrapper and the page scrolls normally. */}
       <section className="ln-screen-two">
+      {/* Between the header band and the notes, and outside the scroller, so
+          it holds still while the writing moves under it. Hidden on desktop by
+          .ln-mini's own display rule — screen two only exists on a phone, and
+          the hero above the notes is already doing this job on a wide window.
+          Stood down while a correction is open: the fields being edited are
+          the same facts, and a small copy of them repeating the answers next
+          to their own controls is the same argument that takes the score and
+          the chips off screen one. */}
+      {!edit.editing && (
+        <MiniCard
+          entry={entry}
+          coverSrc={coverSrc}
+          rating={displayRating}
+          masterpiece={isMasterpiece}
+          onReturn={backToTheRecord}
+        />
+      )}
       <div className="ln-screen-two-scroll">
 
       <div id="ln-content" className="ln-content" style={{ maxWidth: '860px', margin: '0 auto' }}>
@@ -854,19 +981,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
             icon={BookOpen}
           />
           <button
-            onClick={() => {
-              const screens = document.querySelector('.ln-screens');
-              const inner = document.querySelector('.ln-screen-two-scroll');
-              const paged = screens && screens.scrollHeight > screens.clientHeight;
-              if (paged) {
-                screens.scrollTo({ top: 0, behavior: 'smooth' });
-                // Reset the notes once screen one is covering them, so they
-                // start from the top next time rather than mid-tracklist.
-                setTimeout(() => { if (inner) inner.scrollTop = 0; }, 600);
-              } else {
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-              }
-            }}
+            onClick={backToTheRecord}
             className="ln-totop"
             aria-label="Back to the top"
             title="Back to the top"

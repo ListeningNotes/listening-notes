@@ -621,6 +621,83 @@ you down into the notes. No ratio fixes that, because the browser has already
 acted before the ratio is known. The strip removes the ambiguity instead of
 arbitrating it, and it is what iOS does with its own back gesture.
 
+**The record stays at the head of the reading, 2026-08-30.** An entry on a
+phone is two screens, and the second one is a wall of text — an album note,
+then a tracklist of them — with the thing all of it is about a swipe away. A
+small strip holds the least of the record that still says which one it is: the
+art, the name, the artist, the score and the marks. It sits between the header
+band and the notes scroller, outside it, so it holds still while the writing
+moves under it.
+
+Nothing on it is new information, and that is the point rather than a problem:
+it is not a second place to learn about the album, it is the card a screen
+above shrunk to a line so the writing has something to sit under. Which is why
+it carries no controls — it says what you are reading and gives you the way
+back to it. Phone only; on a wide window the blurred hero over the notes is
+already doing this.
+
+**Formative was decided, defined, coloured, stored — and never built,
+2026-08-30.** Found by looking for it and not finding it. It had a column, an
+`ON`/`OFF` in the entry editor, a definition on `/key`, a `--formative` token in
+globals.css and a `formative` tone on Chip. What it did not have was a control
+anywhere a listen is actually scored, or a single place that drew it: the
+session hook had no state for it and never sent it, so every entry logged since
+the flag existed says false; the one component that drew the mark was
+`EntryMarks`, inside `AlbumPreview.js`, which has no reader. Set on 0 of 39
+entries.
+
+So: a toggle on the score screen beside Masterpiece and Favorite, carried
+through the hook into both the draft and the entry save; the chip on the
+entry's own row, where Chip had been carrying a formative tone nobody passed;
+and Formative in the archive's Highlights beside Favorites and Masterpieces.
+
+**The lesson is the one already written down, arriving from the other side.**
+This file warns against deciding a column is dead by grepping for readers. The
+same grep run forwards is just as misleading: a flag can be fully specified,
+documented and stored and still not exist, because what makes a field real is a
+way to set it and a place it shows. Neither is visible in a schema.
+
+**The nine legacy rows are migrated onto the flag.** `relationship =
+'Formative'` on Cathedral, EP1, MAGDALENE, Come to Daddy, System, the BLEACH
+soundtrack, Shrines, Grey Oceans and La Planète Sauvage. `AlbumPreview.js` said
+they were deliberately not rewritten and that the owner would re-mark them —
+which could never happen, because there was nowhere to do it. Reversed: they
+are carried across, and `relationship` keeps its values.
+
+**`relationship` is dropped, and the argument for it changed on the way.** The
+original reason was that every value had dissolved into something else. That
+turned out to be false: all seven Revisit rows have `listen_total` of 1,
+because the listen number counts repeats *within the journal* and cannot know
+about a record somebody lived with for years before starting one, and Study had
+no replacement at all. So nine rows held something nothing else did.
+
+Dropped anyway, on a better reason: **a journal records listens going forward,
+and whether you had heard something before is a sentence, not a column.** The
+point of the thing is that when you listen to an album you put it in here and
+carry on from there; the past only belongs in it where somebody has written the
+past into their own prose. Counting listens from the first entry onward is the
+method, and it is the one that works for every keeper rather than only for the
+one whose listening predates their journal. The nine facts are worth losing to
+avoid a column that exists to describe the years before the record started.
+
+**The check was still right.** The column was nearly dropped on a premise that
+did not hold, and the premise was only visible by reading the values — which is
+the guardrail this file already carries, arriving for the second time. The
+decision that came out the other side is the same one, made on a reason that is
+true.
+
+**Formative was migrated first, and the order is the whole risk.** `UPDATE
+entries SET formative = true WHERE relationship = 'Formative'` before the drop,
+or the nine records go with the column. Done 2026-08-30, nine rows, verified
+against the flag before anything was dropped.
+
+**The flags are marks, not words, and there are no tags.** Heart, SketchLogo
+and Fingerprint in `--fav`, `--mp` and `--formative`, which is the pairing the
+rest of the site already uses. "Masterpiece" and "Formative" as worded chips
+are too wide for a strip that has to leave room for an album title. Formative
+appears here and not on screen one, which is a gap in screen one rather than a
+decision made here.
+
 ---
 
 ## The journal

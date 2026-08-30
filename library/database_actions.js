@@ -242,7 +242,7 @@ async function next_free_slug(album) {
 
 export async function save_new_entry(body) {
   const {
-    album, artist, year, genre = '', entry_type, relationship,
+    album, artist, year, genre = '', entry_type,
     rating, favorite, masterpiece = false, formative = false, background = '', notes,
     track_notes, horizon, album_art, post_link, tracks = null,
     source_entry_id = null, received_from = null, received_date = null,
@@ -253,12 +253,12 @@ export async function save_new_entry(body) {
 
   const result = await database`
     INSERT INTO entries (
-      album, artist, year, genre, entry_type, relationship,
+      album, artist, year, genre, entry_type,
       rating, favorite, masterpiece, formative, background, notes, track_notes,
       horizon, album_art, post_link, slug, tracks,
       source_entry_id, received_from, received_date, user_id
     ) VALUES (
-      ${album}, ${artist}, ${year}, ${genre}, ${entry_type}, ${relationship},
+      ${album}, ${artist}, ${year}, ${genre}, ${entry_type},
       ${rating}, ${favorite}, ${masterpiece}, ${formative}, ${background}, ${notes},
       ${track_notes},
       ${horizon}, ${album_art}, ${post_link}, ${slug},
@@ -394,7 +394,6 @@ export async function update_entry(slug, fields) {
       year = COALESCE(${fields.year ?? null}, year),
       genre = COALESCE(${fields.genre ?? null}, genre),
       entry_type = COALESCE(${fields.entry_type ?? null}, entry_type),
-      relationship = COALESCE(${fields.relationship ?? null}, relationship),
       rating = COALESCE(${fields.rating ?? null}, rating),
       favorite = COALESCE(${fields.favorite ?? null}, favorite),
       background = COALESCE(${fields.background ?? null}, background),
@@ -494,7 +493,7 @@ export async function pull_drafts() {
 
 export async function save_draft(body) {
   const {
-    album, artist, year = '', genre = '', entry_type = '', relationship = '',
+    album, artist, year = '', genre = '', entry_type = '',
     album_art = '', collection_id = '', step = 0, elapsed = 0,
     rating = 0, masterpiece = false, favorite = false, formative = false, notes = '', tracks = null,
     // Carried so that walking away from a listen started in the inbox and
@@ -509,12 +508,12 @@ export async function save_draft(body) {
 
   const result = await database`
     INSERT INTO drafts (
-      lookup_key, album, artist, year, genre, entry_type, relationship,
+      lookup_key, album, artist, year, genre, entry_type,
       album_art, collection_id, step, elapsed, rating, masterpiece, formative,
       favorite, notes, tracks, received_from, received_date
     ) VALUES (
       ${lookup_key(album, artist)}, ${album}, ${artist}, ${year}, ${genre},
-      ${entry_type}, ${relationship}, ${album_art}, ${String(collection_id || '')},
+      ${entry_type}, ${album_art}, ${String(collection_id || '')},
       ${step}, ${elapsed}, ${rating}, ${masterpiece}, ${formative}, ${favorite}, ${notes},
       ${tracks ? JSON.stringify(tracks) : null},
       ${blankToNull(received_from)}, ${blankToNull(received_date)}
@@ -522,7 +521,7 @@ export async function save_draft(body) {
     ON CONFLICT (lookup_key) DO UPDATE SET
       album = EXCLUDED.album, artist = EXCLUDED.artist, year = EXCLUDED.year,
       genre = EXCLUDED.genre, entry_type = EXCLUDED.entry_type,
-      relationship = EXCLUDED.relationship, album_art = EXCLUDED.album_art,
+      album_art = EXCLUDED.album_art,
       collection_id = EXCLUDED.collection_id, step = EXCLUDED.step,
       elapsed = EXCLUDED.elapsed, rating = EXCLUDED.rating,
       masterpiece = EXCLUDED.masterpiece, formative = EXCLUDED.formative,

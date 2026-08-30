@@ -60,7 +60,8 @@ export default function EchoSessionPage() {
     albumArt, setAlbumArt, albumInput, setAlbumInput, artistName, setArtistName,
     overallNotes, setOverallNotes,
     rating, setRating, Masterpiece, setMasterpiece, Favorite, setFavorite,
-    entryType, setEntryType, relationship, setRelationship, setGenre,
+    Formative, setFormative,
+    entryType, setEntryType, setGenre,
     setReceivedFrom, setReceivedDate,
     tracks, tracksLoading, trackNotes, setTrackNotes, trackRatings, setTrackRatings,
     trackFavorites, setTrackFavorites,
@@ -91,14 +92,13 @@ export default function EchoSessionPage() {
     if (!pending?.album) { router.replace('/dashboard/echo'); return; }
     const {
       album, artist, artUrl, collectionId, genre: gen,
-      relationship: rel, entryType: et, draft,
+      entryType: et, draft,
       receivedFrom, receivedDate,
     } = pending;
 
     setAlbumInput(album);
     setArtistName(artist);
     if (artUrl) setAlbumArt(artUrl);
-    setRelationship(rel || '');
     setEntryType(et || '');
     setGenre(gen || '');
     // Present only on a listen started from the inbox — see the note in
@@ -110,8 +110,8 @@ export default function EchoSessionPage() {
     // to it stays reachable in the sidebar.
     if (draft) { setStep(draft.step || 0); setMaxStep(draft.step || 0); }
 
-    // Pass relationship/entryType explicitly to avoid stale-closure issue
-    doResearch(album, artist, artUrl, { relationship: rel || '', entryType: et || '', collectionId, draft });
+    // Passed explicitly to avoid a stale-closure issue
+    doResearch(album, artist, artUrl, { entryType: et || '', collectionId, draft });
   }, [authed]);
 
   // Animation timing — all relative to auth completing, fires exactly once.
@@ -349,9 +349,8 @@ export default function EchoSessionPage() {
                   </div>
                 )}
 
-                {!railed && (relationship || entryType || elapsed > 0) && (
+                {!railed && (entryType || elapsed > 0) && (
                   <div style={{ padding: '10px 16px', borderTop: `1px solid ${bdr(0.08)}`, borderBottom: `1px solid ${bdr(0.08)}`, marginBottom: 12 }}>
-                    {relationship && <div style={{ fontFamily: fonts.mono, fontSize: 9, color: tx(0.38), letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 3 }}>{relationship}</div>}
                     {entryType && <div style={{ fontFamily: fonts.mono, fontSize: 9, color: tx(0.38), letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 3 }}>{entryTypeLabel(entryType)}</div>}
                     {elapsed > 0 && <div style={{ fontFamily: fonts.mono, fontSize: 9, color: tx(0.25), letterSpacing: '0.1em', marginTop: 4 }}>{SessionDuration(elapsed)}</div>}
                   </div>
@@ -425,8 +424,8 @@ export default function EchoSessionPage() {
                     {step === 0 && <AlbumDebrief brief={brief} researchState={researchState} researchError={researchError} onNext={() => goToStep(1)} onReset={() => router.replace('/dashboard/echo')} onRefresh={refreshResearch} />}
                     {step === 1 && <TrackNotes tracks={tracks} tracksLoading={tracksLoading} trackNotes={trackNotes} setTrackNotes={setTrackNotes} trackRatings={trackRatings} setTrackRatings={setTrackRatings} trackFavorites={trackFavorites} setTrackFavorites={setTrackFavorites} openTrack={openTrack} setOpenTrack={setOpenTrack} onNext={() => goToStep(2)} />}
                     {step === 2 && <AlbumNotes tracks={tracks} trackRatings={trackRatings} trackFavorites={trackFavorites} overallNotes={overallNotes} setOverallNotes={setOverallNotes} onNext={() => goToStep(3)} />}
-                    {step === 3 && <ScoreScreen tracks={tracks} trackRatings={trackRatings} trackFavorites={trackFavorites} rating={rating} setRating={setRating} Masterpiece={Masterpiece} setMasterpiece={setMasterpiece} Favorite={Favorite} setFavorite={setFavorite} onNext={() => goToStep(4)} />}
-                    {step === 4 && <SessionPreview brief={brief} albumArt={albumArt} output={output} formatting={formatting} rating={rating} Masterpiece={Masterpiece} Favorite={Favorite} entryType={entryType} relationship={relationship} saving={saving} saved={saved} savedEntry={savedEntry} overallNotes={overallNotes} tracks={tracks} trackRatings={trackRatings} trackFavorites={trackFavorites} doFormat={doFormat} doSave={doSave} />}
+                    {step === 3 && <ScoreScreen tracks={tracks} trackRatings={trackRatings} trackFavorites={trackFavorites} rating={rating} setRating={setRating} Masterpiece={Masterpiece} setMasterpiece={setMasterpiece} Favorite={Favorite} setFavorite={setFavorite} Formative={Formative} setFormative={setFormative} onNext={() => goToStep(4)} />}
+                    {step === 4 && <SessionPreview brief={brief} albumArt={albumArt} output={output} formatting={formatting} rating={rating} Masterpiece={Masterpiece} Favorite={Favorite} Formative={Formative} entryType={entryType} saving={saving} saved={saved} savedEntry={savedEntry} overallNotes={overallNotes} tracks={tracks} trackRatings={trackRatings} trackFavorites={trackFavorites} doFormat={doFormat} doSave={doSave} />}
                   </div>
                 </div>
               </div>

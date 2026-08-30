@@ -85,6 +85,21 @@ only the write that breaks. Run it in Neon's SQL editor. Take a backup first
 The cross is built and merged. What is left of it:
 
 - [x] **`usePlaceKeeper` is not needed and will not be built.** It was going to remember the pane index and the per-pane scroll offset across a route change, because browsers do not restore nested scroll containers. Going out to an entry and back is the only thing that lost them, and an entry is a layer now — the cross never unmounts, so both survive on their own. Verified: pane scroll 991 before and after, and the rail still on the beacon pane.
+- [ ] **RUN THIS LAST — drop `relationship`, once the code below is deployed.**
+      The Formative migration is already done (nine rows, verified). Nothing in
+      the code reads or writes this column any more, so the drop is safe the
+      moment that code is live — and only then. Dropping it against the old
+      code breaks saving an entry, because `save_new_entry` still inserts into
+      it there.
+
+      ```sql
+      ALTER TABLE entries DROP COLUMN IF EXISTS relationship;
+      ALTER TABLE drafts  DROP COLUMN IF EXISTS relationship;
+      ```
+
+      Backup first (`npm run backup`). This one is genuinely irreversible: it
+      takes seven Revisit rows and two Study rows with it, deliberately. See
+      DECISIONS.
 - [ ] **`useShake` + `firework()`** — shake the phone, a firework goes up, then `/shuffle`. The Surprise pill stays where it is.
 - [ ] **`AlbumPreview.js` has no reader.** 175 lines, and the only thing that mounted it was the tile flip. The share printer redraws the same card independently rather than importing it, so nothing broke when the flip went. Its `.ln-marks` CSS is dead with it. Left on disk rather than deleted in passing — it is a designed piece and the deletion is somebody's call, not a side effect.
 - [ ] **A CSS cleanup pass, once the cross has shipped and settled.** Not a rewrite — one section at a time: delete, look at the site, commit. The reason to wait is that each of these removals makes the next lot of dead rules obvious, and doing it all at once means not knowing which deletion broke what.
@@ -193,8 +208,10 @@ Worth deciding before the first install, while it is still cheap:
       the question now. Holds `Listening Notes` on the live database.
 - [ ] `settings.instagram_url` — legacy. Every link lives in `social_links`,
       and the card editor already blanks this on every save.
-- [ ] `entries.relationship` — DECISIONS.md records the field as removed and
-      the picker gone, but the column and its legacy values remain.
+- [x] `entries.relationship` — settled 2026-08-30. Code stripped, Formative
+      migrated onto its flag, the drop written into schema.sql and waiting to
+      be run against the live database once the code is deployed. `drafts` had
+      the same column and goes with it.
 - [ ] `echo_memory` and `conversations` — **zero code references between them.**
       Two tables every fresh copy builds and nothing ever touches.
 
@@ -298,6 +315,21 @@ Project → Settings → Environment Variables.
 
 Things that cost real time. Each one is here because it was not obvious and
 will not be obvious again in six months.
+
+**A rule scoped to `.lay` hits every layer, and the two layers are not alike.**
+`.lay .sitenav-row { position: relative }` was written for the send sheet,
+which scrolls itself and therefore cannot hold a fixed child still. An entry is
+the other kind of layer: it does its own scrolling in `.ln-screens` and leaves
+the sheet still, so its header was right as it was. The rule put that header
+into the flow, pushed `.ln-screens` 80px down a sheet it is sized to exactly
+fill, and cut the bottom 80px off screen two — shipped, and not noticed for a
+day, because the send sheet was the only layer looked at after the change.
+
+The distinction is `.lay--scrolls`, and it is the one that actually matters:
+`.lay` sets a containing block for fixed descendants either way (it animates a
+transform on the way in), but pinning to a sheet that is fixed at inset 0 and
+never moves is the same as pinning to the window. It only goes wrong once the
+sheet scrolls. **When a layer gains a second tenant, check the first one.**
 
 **A text field under 16px makes iOS Safari zoom, and it does not zoom back.**
 Safari zooms the page in whenever it focuses an input whose type is smaller
