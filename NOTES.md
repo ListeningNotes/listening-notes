@@ -40,6 +40,26 @@ re-propose anything listed as ruled out.
 
 ## Pending
 
+**DO THIS FIRST — the send flow's columns are not on the live database**
+
+Five statements. Until they have been run, **the inbox shows no submissions at
+all** — `pull_submissions` selects three columns that do not exist yet, so
+`/api/submissions` answers 500 and the page's `.catch` renders "No pending
+submissions" rather than an error. It looks like an empty inbox and it is a
+broken read. Sending is blocked the same way, and fails loudly.
+
+```sql
+ALTER TABLE submissions ADD COLUMN IF NOT EXISTS album_art text;
+ALTER TABLE submissions ADD COLUMN IF NOT EXISTS collection_id text;
+ALTER TABLE submissions ADD COLUMN IF NOT EXISTS sender_url text;
+ALTER TABLE drafts ADD COLUMN IF NOT EXISTS received_from text;
+ALTER TABLE drafts ADD COLUMN IF NOT EXISTS received_date date;
+```
+
+All five are additive and nullable, so nothing existing changes and no row is
+rewritten. Run them in Neon's SQL editor. Take a backup first (`npm run
+backup`); this is the production database and there is no other one.
+
 **DO THIS FIRST — the prompts column is not on the live database**
 
 `schema.sql` has it, nothing runs `schema.sql`, and the card's save writes it.
@@ -255,7 +275,12 @@ the default that arrives by missing the deadline.
 **DASHBOARD**
 - [ ] Spotify data panel (monthly listeners, artist ranking)
 - [ ] Discogs genre tags via Claude API
-- [ ] Inbox (`/dashboard/inbox`) — built; still wants the Comments + Submissions tabs finished
+- [ ] Inbox (`/dashboard/inbox`) — the Submissions tab is rebuilt as a shelf
+      and done; the Comments tab is still the moderation list it always was.
+      Two things left on the sent side, neither urgent: a sender who gave a
+      journal URL is a name and an address and nothing collects them (the
+      `people` table is still parked), and Dismiss is one press with no undo,
+      unlike every other destructive control on the site.
 - [ ] Share (`/dashboard/share`) — wire Reddit + Instagram backends
 
 **LIVE STATUS**
@@ -273,6 +298,51 @@ Project → Settings → Environment Variables.
 
 Things that cost real time. Each one is here because it was not obvious and
 will not be obvious again in six months.
+
+**A text field under 16px makes iOS Safari zoom, and it does not zoom back.**
+Safari zooms the page in whenever it focuses an input whose type is smaller
+than 16px, and on blur it frequently leaves the page scaled and offset instead
+of restoring it. What you see is the layout going wrong *after* leaving a
+field, worst near the bottom of a page where there is nothing below to scroll
+back to — so it looks like a scroll or layout bug and it is a font-size bug.
+16px on the field is the entire fix; scope it to `@media (pointer: coarse)` to
+keep smaller type where there is a mouse. `maximum-scale=1` on the viewport
+also stops it and is the wrong answer — it takes pinch-zoom away from everyone
+who needs it. The rest of the site's inputs are still 13–15px and have not been
+looked at.
+
+**The clipboard cannot be tested in the Browser pane, and the failure looks
+like a bug in your code.** `navigator.clipboard.writeText` rejects with
+`NotAllowedError: Write permission denied` whenever the document is hidden, and
+the pane reports `document.visibilityState === 'hidden'` almost all the time —
+the same fact already recorded above about IntersectionObserver. A real trusted
+click does not help, and neither does forcing a frame with a screenshot; the
+write is refused and, since the handler catches its own rejection, absolutely
+nothing happens on screen. It reads exactly like a handler that never ran.
+
+Check `document.visibilityState` before believing it. What can be verified is
+the logic: replace `navigator.clipboard` with a stub whose `writeText` records
+its argument and resolves, then press the control and assert on what it was
+handed and what appeared. That covers everything except the browser's own
+permission, which is the one part that was never broken.
+
+**`overflow: visible` on the layer is right for an entry and wrong for
+everything else.** `.lay` gives up being a scroll container on a phone, for a
+good reason written at length in globals.css — the entry's own layout does the
+scrolling and a third container breaks the other two. Put anything else on that
+sheet and the reason evaporates while the rule stays: a form is one ordinary
+column, it overflows the fixed box, and the bottom of it simply cannot be
+reached. There is no scrollbar and no error, so it looks like a layout that
+ends early rather than content that is unreachable. `.lay--scrolls` is the
+opt-in.
+
+**A `SELECT` naming a column that does not exist takes out the whole page
+quietly.** Adding three columns to `pull_submissions` before running the
+migration made `/api/submissions` answer 500, and the inbox's `.catch` turned
+that into "No pending submissions" — an empty shelf where there were real rows.
+The read was broken and the page said everything was fine. Worth remembering
+that a fetch with a `.catch` that sets an empty state cannot tell you apart
+from a genuinely empty table.
 
 **CSS is not "last rule wins."** Specificity decides first and source order
 only breaks ties — `.card` beats `div`, `#hero` beats `.card`, and an inline
@@ -480,6 +550,84 @@ current.
 ---
 
 ## Complete
+
+**2026-08-29 — the send flow**
+
+Sending somebody an album is a gift, not a form submission. See DECISIONS for
+the reasoning; this is what was built.
+
+- [x] **`AlbumFinder`** (`components/main_components/AlbumFinder.js`) — type,
+      see covers, pick one. Wraps `searchAlbums()` from `music_data_api.js`,
+      which is the good half of the session flow's search — two searches
+      merged, pressings collapsed, editions scored. Deliberately not
+      `useAlbumSelection`: that wraps the same lookup in the Echo ceremony,
+      which is the owner's opening ritual and not something to make a stranger
+      watch on the way into a form. Keeps a plain type-it-in fallback for
+      records Apple has never heard of, offered from the start rather than only
+      after a search comes back empty.
+- [x] **The send page rebuilt** (`app/submit/page.js`) — cover, message, name,
+      journal URL. No email. The route is unchanged and the title is now "Send
+      an album".
+- [x] **It opens as a layer** (`app/@layer/(.)submit/page.js`) — over whatever
+      you were looking at, in practice the About pane, since the button is on
+      the card. Renders synchronously and awaits nothing, so it starts arriving
+      on the first frame; there is nothing to load, so unlike the entry there
+      is no Suspense boundary and no waiting state.
+- [x] **`LayerEntry` generalised** — takes `label` and `scrolls`. It was
+      written knowing nothing about entries and had `aria-label="Entry"`
+      hardcoded anyway.
+- [x] **`.lay--scrolls`** — the sheet scrolls itself again. `.lay` drops to
+      `overflow: visible` on a phone because an entry's layout is already two
+      scroll containers deep; a form is one ordinary column and needs the sheet
+      to scroll it. Measured: 973px of form in an 812px viewport, so without
+      this the Send button is genuinely unreachable on a phone.
+- [x] **`library/return_address.js`** — the sender's own journal URL, kept in
+      their browser and prefilled on every send after the first. Written only
+      once a send has actually gone through.
+- [x] **Three columns on `submissions`** — `album_art`, `collection_id`,
+      `sender_url`. `sender_url` is normalised to a bare host on the server as
+      well as in the browser.
+- [x] **The inbox is a shelf** — cover, message, sender, and their journal if
+      they gave one. `NoteModal` deleted with the table that needed it.
+- [x] **Start a listen closes the loop** — the inbox writes the existing
+      `ln_pending_session` and goes straight to the session, entry type
+      `Submission`, with `received_from` and `received_date` off the row.
+      Plumbed through `useListeningSession` into `create_entry`, and through
+      `save_draft` as well so pausing a listen does not lose who sent it.
+- [x] **Turning the card to its code copies the address** and says *Copied —
+      paste it anywhere*.
+- [x] **One screen, no scrolling.** Subtitle gone, Back/Archive pills gone, the
+      name and journal fields side by side wherever there is width, and every
+      vertical measurement clamped against dvh so they give way together on a
+      short window. Measured fitting exactly at 375×812 (phone, layer and
+      standalone), 1280×860 and 1280×700. It fits by layout, not by clipping —
+      min-height and the scrollbar stay, because a form that fits by clipping
+      has an unreachable Send button.
+- [x] **16px fields on touch**, which is the whole fix for Safari zooming in on
+      focus and not zooming back out. See Gotchas.
+- [x] **One square, three states.** An empty sleeve waits where the record will
+      go, the results fill the same square as a sideways-scrolling shelf, and
+      the chosen record replaces them. Nothing moves between the three, and the
+      whole page still fits a viewport while a search is open — measured at
+      375×812 with twelve results on the shelf.
+- [x] **A circled ✕ on the cover's corner** clears the choice, replacing the
+      "Choose a different one" line under it.
+- [x] **The title is one small line under the mark, standalone only.** The
+      layer gets none — you pressed the button to get there.
+
+Verified in the browser: search returns TANGK first for "idles tangk"; the
+picked state draws the cover centred at the beacon's proportions; a full reload
+restores the album, message and name; the layer opens at the real `/submit`
+with one nav row whose mark lands on the same line as the standalone's (37px on
+both) and Escape returns to `/` with the scroll lock released; the whole page
+fits a viewport at three sizes on both surfaces. The clipboard write could only
+be verified with the API stubbed — see Gotchas.
+
+**Known limit:** below roughly 700px of viewport height the page scrolls rather
+than fitting, which is deliberate — see DECISIONS. An iPhone SE will scroll.
+
+**Not done, and deliberately:** nothing was run against the live database. The
+five statements are at the top of Pending.
 
 **2026-08-29 — an entry is a layer over the journal**
 

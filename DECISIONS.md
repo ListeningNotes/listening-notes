@@ -737,6 +737,19 @@ from someone else's entry.
 
 **Screenshots are not a threat model.** Don't fight them.
 
+**Turning the card to its code also copies the address, 2026-08-29.** The code
+is for a phone pointed at the screen, which only helps somebody standing in
+front of it; the rest of the time what is wanted is the address itself, to
+paste into a send form. Reading a QR back into text by hand is not a thing
+anybody does.
+
+The copy is free, so it has to say so — a clipboard write with nothing on
+screen is indistinguishable from a button that did nothing. The line reads
+*Copied — paste it anywhere*, and it holds its space open empty on cards that
+can show it so the name below never jumps. Only on the way to the code: turning
+back to the portrait is undoing the press, and undoing it should not quietly
+copy anything.
+
 **Fixed layout, swappable background.** Album art, title, artist, rating and
 mark stay in locked positions on every export variant. The background changes
 mood, never information — the card stays deliberately insufficient.
@@ -778,6 +791,153 @@ can't become a scroll.
 
 **`received_from` published per entry**, with a per-entry toggle for private
 sends. Public credit is the default; quiet is a choice.
+
+**A send is a gift, not a form, 2026-08-29.** The old page was six text fields
+under "Submit an Album", and a form asking for a title, an artist and a year
+reads as a request being filed. Three parts, in this order: the object, the
+note, and who it is from. The album is picked off a shelf of covers, because a
+cover is what makes it read as something handed across rather than a title
+being reported. The message is the body of the page with a placeholder that
+teaches what goes in it, not an optional notes box at the foot. A name is
+required.
+
+**No email, and this is the point rather than a detail.** The old form asked
+for one and nothing ever used it — a contact detail held for no reason, which
+is the first crack in not holding anyone's data. `submitter_email` keeps the
+values it has and loses its writer, exactly the trade `settings.bio` took:
+real data, a schema still in draft, and a column dropped in passing is the
+move this file already warns about. Decide it at the welcome screen.
+
+**A journal URL takes its place, and is not the same kind of thing.** An
+address is where something is; an email is who somebody is. It is also the
+thing an address book would eventually be built out of, which the email never
+was.
+
+**It cannot be filled in from the sender's session, and that is the
+architecture working.** Cookies are scoped per origin, so a copy at one
+address cannot see anything set by a copy at another — which is exactly what
+stops anyone being followed from one journal to the next. So the URL is kept
+in the sender's own browser instead and prefilled from there, which makes it
+per browser and not per person: the same sender on a phone and a laptop pastes
+it twice. The same honest limit `dog_ear.js` documents, and the cost is one
+paste.
+
+**Stored without a scheme, and normalised on the server as well as in the
+browser.** The inbox turns this value into a link somebody clicks, and a route
+cannot assume the only thing posting to it is the page that shipped with it. A
+bare host is the one shape that cannot carry a scheme of its own, so the
+inbox's `https://` is the only one there can be.
+
+**The send page is a layer, at its real address.** `/submit` is not renamed and
+not redirected: press the button on the card and it slides in over whatever you
+were looking at, open the same address cold and you get the standalone page
+with the nav row on it. One address, two presentations — the entry's rule,
+applied unchanged, and the reason `LayerEntry` was written knowing nothing
+about entries. It arrives from the right for the reason already recorded: that
+is where things arrive from.
+
+**A dismissed layer must never eat a written message.** The layer is one
+careless swipe from gone and what would be lost is somebody's writing rather
+than a scroll position. A confirmation was the other option and is the wrong
+one — it taxes every deliberate dismiss to catch the rare accidental one, and
+this file already has the finding that a dialog is dismissed by reflex. So
+nothing is confirmed and nothing is lost: what has been typed is kept in the
+browser and put back when the page opens again, layer or address.
+
+**Starting a listen from the inbox asks nothing, because nothing is left to
+ask.** The session's one remaining question is *Where's it from?*, and an album
+that arrived in the inbox answers it by having arrived in the inbox. The
+record, the pressing, who sent it and when are all on the row already. So it
+goes straight to the session the way resuming a draft does, and `received_from`
+fills itself in rather than being typed a week later from memory — which is the
+loop the send flow exists to close.
+
+**`drafts` carries `received_from` and `received_date` too.** Otherwise the
+loop would close only for a listen finished in one sitting, and drafts exist
+precisely because that is not the common case.
+
+**The send is one screen, 2026-08-29.** A cover, a message, a name and an
+address, with nothing below the fold — there is no reason to make somebody
+scroll past the record they are sending to reach the button that sends it. The
+subtitle under the title went, and so did the Back and Archive pills at the
+foot: a row of links to elsewhere under a form is the same mistake already
+taken off the foot of the archive, offering to leave at the moment somebody is
+halfway through doing something. The mark at the top goes home and the layer is
+left by swiping, which is what LayerEntry decided when it removed its own close
+button.
+
+**Everything vertical gives way together on a short window, and 180px is a
+ceiling rather than a constant.** The square, the gaps, the title and the
+message box are all clamped against dvh, the same trade `--hn-crown` makes one
+screen away. The beacon can afford a fixed 180 because it has a screen to
+itself; here the same square shares one with three fields. What is being kept
+is the shape — square, then title, then artist, centred, in those proportions —
+not the measurement, because what has to fit is different.
+
+**It fits by layout and not by clipping.** min-height, and the sheet keeps its
+scrollbar. A small phone, large accessibility type or the software keyboard
+shortening the viewport all have to be able to overflow, because a form that
+fits by clipping is a form with an unreachable Send button.
+
+**The name and the journal share a row wherever there is width.** Two short
+fields stacked left a column of empty page beside them and cost height the page
+did not have. The rule that used to divide the required half from the optional
+one went with the stack: the asterisks already say which is which, and a
+divider cannot sit between two things in the same row.
+
+**One square holding three things, 2026-08-29.** The finder is a square with a
+field under it, and the square holds whichever is true: an empty sleeve while
+there is nothing to show, the results while there are some, the record once one
+is chosen. Same size, same place — so choosing is a sleeve being filled rather
+than the page laying itself out again, and the empty state has the shape of the
+chosen one instead of a short form floating in a screen it cannot fill.
+
+**Results are a shelf, not a grid.** One row inside the square's height,
+scrolling sideways. The grid under the field was four rows of covers on a phone
+and pushed the message, the name and the Send button off the bottom; sideways
+is the one axis the page is not already spending. It is safe inside the layer
+because the back-swipe only listens on a 36px edge strip carrying
+`touch-action: none`, so a drag across the covers can only be this.
+
+**Nothing on this page is captioned that shows what it is.** No "The album"
+over the sleeve or over the cover — the field's own placeholder asks for an
+artist or an album, and a picture says what it is. The text fields keep their
+labels, because an empty box does not. Same decision as the beacon's, which
+stopped saying "Now listening" over a record with its title under it.
+
+**Clearing the record is a mark on its corner, not a sentence under it.**
+"Choose a different one" was a line of type explaining a control where the
+control could simply be there, and it sat in the centred run under the cover
+arguing with the album's own name.
+
+**The title is one small line, and only on the standalone address.** The large
+"Send an album" was captioning a button that had just been pressed — on the
+layer you know what you tapped, and it was the biggest thing on a screen whose
+subject is somebody else's record. It survives small, under the mark, on the
+one arrival where nothing was pressed: a link somebody was sent, a bookmark, a
+QR. The layer gets none.
+
+**The form is aligned to the top, not centred.** Centring only looked right on
+the chosen state, because that state happens to fill the screen; with nothing
+picked it opened a band of empty page above the first field that read as
+something missing.
+
+**One example in the message placeholder, not three.** Three read as a list to
+choose from. One reads as the kind of thing that goes here, which is what a
+placeholder is for.
+
+**Form fields are 16px on touch.** Safari zooms the page in on focusing
+anything smaller and does not reliably zoom back out, so leaving a field leaves
+the page scaled and offset — worst at the bottom, where there is nothing below
+to scroll to, and it reads as the layout breaking on exit. Scoped to coarse
+pointers, so the design keeps its 14px wherever there is a mouse and no zoom to
+trigger. Not `maximum-scale=1`, which also stops it and takes pinch-zoom away
+from everyone who needs it.
+
+**The inbox is a shelf, not a table.** The five-column grid reported the right
+facts in the shape of a database row, and hid the one part that mattered — why
+somebody sent it — behind a button marked "Note". Cover, message, name, in that
+order. The modal is gone with the table that needed it.
 
 **Each copy brings its own Last.fm key, read server-side.** `LASTFM_KEY` in
 the environment, never `NEXT_PUBLIC_` — the key identifies the *application*,
