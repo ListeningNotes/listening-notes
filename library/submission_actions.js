@@ -2,16 +2,28 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import database from './database_connection.js';
 
-export async function save_submission({ album, artist, year, note, submitter_name, submitter_email }) {
+// The cover, the pressing and the sender's journal ride along with the note
+// now. submitter_email is not written any more and is not accepted here —
+// the column keeps what it has, which is a different thing from keeping the
+// field. See the note in schema.sql.
+export async function save_submission({
+  album, artist, year, note, submitter_name,
+  album_art, collection_id, sender_url,
+}) {
   const result = await database`
-    INSERT INTO submissions (album, artist, year, note, submitter_name, submitter_email, status)
+    INSERT INTO submissions (
+      album, artist, year, note, submitter_name,
+      album_art, collection_id, sender_url, status
+    )
     VALUES (
       ${album.trim()},
       ${artist.trim()},
       ${year?.trim() || null},
       ${note.trim()},
       ${submitter_name?.trim() || null},
-      ${submitter_email?.trim().toLowerCase() || null},
+      ${album_art?.trim() || null},
+      ${collection_id ? String(collection_id) : null},
+      ${sender_url?.trim().toLowerCase() || null},
       'pending'
     )
     RETURNING id, album, artist, year, submitter_name, created_at
@@ -21,7 +33,8 @@ export async function save_submission({ album, artist, year, note, submitter_nam
 
 export async function pull_submissions() {
   return await database`
-    SELECT id, album, artist, year, note, submitter_name, submitter_email, status, created_at
+    SELECT id, album, artist, year, note, submitter_name, submitter_email,
+           album_art, collection_id, sender_url, status, created_at
     FROM submissions
     ORDER BY created_at DESC
   `;
