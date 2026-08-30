@@ -169,7 +169,7 @@ export async function research_album(album, artist) {
 // more: the only generated thing was the tag list, and tags are gone — the
 // archive searches the notes and genre is its own field. So this is now a
 // local, instant, free assembly of prose that was never round-tripped anyway.
-export async function format_post({ brief, notes, rating, masterpiece, favorite, entryType, relationship, trackNotes, trackRatings, tracks }) {
+export async function format_post({ brief, notes, rating, masterpiece, favorite, entryType, trackNotes, trackRatings, tracks }) {
   const trackNotesBlock = tracks?.length
     ? tracks.map((t, i) => {
         const note = trackNotes?.[i];

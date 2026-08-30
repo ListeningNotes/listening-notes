@@ -75,11 +75,10 @@ export default function EchoPage() {
 
   // Confirm flow — two sequential questions before research fires
   const [confirmPhase, setConfirmPhase] = useState(null); // null | 'q2' — q1 asked
-                                                          // for a relationship, which nothing picks any more
+                                                          // for a relationship, a field that is gone entirely now
   const [pendingAlbum, setPendingAlbum] = useState(null);
 
   // Held here so they're available at the moment handleAlbumSelect fires
-  const [relationship, setRelationship] = useState('');
   const [entryType, setEntryType]       = useState('');
 
   // Listens saved and walked away from. Offered under the prompt card, so the
@@ -114,7 +113,6 @@ export default function EchoPage() {
     step: -1,
     onAlbumPick({ album, artist, year, artUrl, artLarge, collectionId, genre }) {
       setPendingAlbum({ album, artist, year, artUrl, artLarge, collectionId, genre });
-      setRelationship('');
       setEntryType('');
       setConfirmPhase('q2');
       // Research needs nothing but the album and artist, so start it here and
@@ -195,7 +193,6 @@ export default function EchoPage() {
       artUrl: draft.album_art || '',
       collectionId: draft.collection_id || null,
       genre: draft.genre || '',
-      relationship: draft.relationship || '',
       entryType: draft.entry_type || '',
       draft,
     }));
@@ -215,7 +212,7 @@ export default function EchoPage() {
   // the button that sets it calls this in the same breath, so the state here is
   // still one render behind. Q1's answer is a phase older and has landed.
   function handleAlbumSelect({ album, artist, year, artUrl }, chosen = {}) {
-    const pending = { album, artist, year, artUrl: pendingAlbum?.artLarge || artUrl, collectionId: pendingAlbum?.collectionId, genre: pendingAlbum?.genre || '', relationship, entryType: chosen.entryType ?? entryType };
+    const pending = { album, artist, year, artUrl: pendingAlbum?.artLarge || artUrl, collectionId: pendingAlbum?.collectionId, genre: pendingAlbum?.genre || '', entryType: chosen.entryType ?? entryType };
     localStorage.setItem('ln_pending_session', JSON.stringify(pending));
     router.push('/dashboard/echo/session');
   }

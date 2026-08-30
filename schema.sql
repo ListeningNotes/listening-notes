@@ -60,7 +60,6 @@ CREATE TABLE IF NOT EXISTS drafts (
   year text,
   genre text DEFAULT ''::text,
   entry_type text DEFAULT ''::text,
-  relationship text DEFAULT ''::text,
   album_art text DEFAULT ''::text,
   collection_id text,
   step integer DEFAULT 0,
@@ -86,6 +85,13 @@ CREATE TABLE IF NOT EXISTS drafts (
 ALTER TABLE drafts ADD COLUMN IF NOT EXISTS received_from text;
 ALTER TABLE drafts ADD COLUMN IF NOT EXISTS received_date date;
 
+-- Gone from both tables. Safe to run on a database that has already lost it.
+-- On entries, run the Formative migration FIRST or nine records are lost with
+-- the column:
+--   UPDATE entries SET formative = true WHERE relationship = 'Formative';
+ALTER TABLE entries DROP COLUMN IF EXISTS relationship;
+ALTER TABLE drafts  DROP COLUMN IF EXISTS relationship;
+
 CREATE TABLE IF NOT EXISTS echo_memory (
   id serial NOT NULL,
   -- 'owner' rather than a person's name. This defaulted to the name of whoever
@@ -105,7 +111,14 @@ CREATE TABLE IF NOT EXISTS entries (
   artist text NOT NULL,
   year text,
   entry_type text,
-  relationship text,
+  -- relationship text was here. First Listen / Revisit / Formative / Study /
+  -- Submission: one word for what kind of listen this was. Every value has
+  -- gone somewhere better or gone deliberately — Submission is entry_type,
+  -- Formative is a flag of its own, and Revisit and Study were dropped on the
+  -- grounds that a journal records listens going forward and whether you had
+  -- heard something before is a sentence in the notes rather than a column.
+  -- Dropped 2026-08-30, after the nine Formative rows were migrated onto the
+  -- flag. See DECISIONS.
   rating text,
   favorite boolean DEFAULT false,
   background text,

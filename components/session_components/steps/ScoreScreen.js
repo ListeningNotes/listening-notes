@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 'use client';
 import { useState } from 'react';
-import { Heart, SketchLogo } from '@phosphor-icons/react';
+import { Heart, SketchLogo, Fingerprint } from '@phosphor-icons/react';
 import { fonts, colors } from '../../../library/sitewide_visuals';
 import { tx, bdr, dk, lbl } from '../../../library/session_styles';
 import { goldBurst } from '../../../library/gold_burst';
@@ -25,6 +25,8 @@ export default function ScoreScreen({
   setMasterpiece,
   Favorite,
   setFavorite,
+  Formative,
+  setFormative,
   onNext,
 }) {
   // Same reasoning as the track list — a running average shouldn't steer the
@@ -103,6 +105,17 @@ export default function ScoreScreen({
           <button onClick={() => setFavorite(!Favorite)} style={pill(Favorite)}>
             {Favorite && <Heart size={13} weight="fill" color={colors.fav} />}
             Favorite
+          </button>
+          {/* The third flag, and until now the only one with no way to say it.
+              Masterpiece and Favorite have been here since this screen was
+              written; Formative was decided at the same time, given a colour,
+              a definition on /key and a column — and no control anywhere
+              except the entry editor, which is not where a listen is scored.
+              So every entry logged since it existed says false, and it does
+              not mean false. */}
+          <button onClick={() => setFormative(!Formative)} style={pill(Formative)}>
+            {Formative && <Fingerprint size={13} weight="bold" color={colors.formative} />}
+            Formative
           </button>
         </div>
       </div>

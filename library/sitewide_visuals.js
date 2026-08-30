@@ -14,6 +14,9 @@ export const colors_light = {
   gold:           '#E8B84B',
   fav:            '#f0484f',
   mp:             '#4a9bf0',
+  // The third flag. --formative has been in globals.css all along; it was
+  // never mirrored here, so every JS-drawn mark could reach two of the three.
+  formative:      '#3fa96b',
   shadow_soft:    '0 2px 12px rgba(0,0,0,0.04), 0 8px 32px rgba(0,0,0,0.04)',
   shadow_lift:    '0 4px 20px rgba(0,0,0,0.06), 0 16px 48px rgba(0,0,0,0.06)',
 };
@@ -32,6 +35,7 @@ export const colors_dark = {
   gold:           '#E8B84B',
   fav:            '#f0484f',
   mp:             '#4a9bf0',
+  formative:      '#3fa96b',
   shadow_soft:    '0 2px 12px rgba(0,0,0,0.3), 0 8px 32px rgba(0,0,0,0.2)',
   shadow_lift:    '0 4px 20px rgba(0,0,0,0.4), 0 16px 48px rgba(0,0,0,0.3)',
 };
