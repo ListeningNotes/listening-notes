@@ -113,7 +113,6 @@ export default function Inbox() {
       artUrl: sent.album_art || '',
       collectionId: sent.collection_id || null,
       genre: '',
-      relationship: '',
       entryType: 'Submission',
       receivedFrom: sent.submitter_name || '',
       receivedDate: sent.created_at ? String(sent.created_at).slice(0, 10) : '',

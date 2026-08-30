@@ -309,7 +309,7 @@ function drawCard(ctx, img, entry, shape, isDark, siteUrl, families, logo) {
   const masterpiece = isMasterpiece(entry);
   const isFav = entry.favorite === true || entry.favorite === 'true';
   const displayRating = masterpiece ? 5 : parseRating(entry.rating);
-  const provenance = [entry.relationship, entry.entry_type === 'Submission' ? 'Submission' : '']
+  const provenance = [entry.entry_type === 'Submission' ? 'Submission' : '']
     .filter(Boolean).join(' · ').toUpperCase();
 
   // ── measure the stack before drawing any of it, so the panel can be sized
