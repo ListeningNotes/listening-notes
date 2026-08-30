@@ -45,3 +45,14 @@ next-env.d.ts
 
 # Claude Code worktrees
 .claude/worktrees/
+
+# Anything named *.local.md is this copy's own and never ships.
+#
+# AGENTS.md, DECISIONS.md and NOTES.md are public on purpose — a stranger
+# running their own journal needs to know how it is built and why. What does
+# not belong in every copy is anything about the person keeping this one:
+# how they want things explained, and where they are taking the project.
+#
+# One pattern rather than a list, so the next one is covered without anybody
+# having to remember this file exists.
+*.local.md
