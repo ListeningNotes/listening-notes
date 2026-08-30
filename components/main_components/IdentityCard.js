@@ -297,6 +297,38 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
   const canTurnSlot = Boolean(portrait_url && address);
   const [slotCode, setSlotCode] = useState(!portrait_url && Boolean(address));
 
+  // ── Turning it also puts the address on the clipboard ────────────────────
+  // The code is for a phone pointed at the screen, and that only helps
+  // somebody standing in front of it. The other half of the time what is
+  // wanted is the address itself — to paste into a send form, into a message,
+  // into somebody's notes — and reading a QR back into text by hand is not a
+  // thing anybody does.
+  //
+  // So the press does both. The turn is what you asked for and the copy is
+  // free, which means it has to say so: a clipboard write with nothing on
+  // screen is indistinguishable from a button that did nothing, and that is
+  // the whole reason this line exists.
+  const [copied, setCopied] = useState(false);
+  const copiedTimer = useRef(null);
+  useEffect(() => () => clearTimeout(copiedTimer.current), []);
+
+  function turnSlot() {
+    const showing = !slotCode;
+    setSlotCode(showing);
+    // Only on the way to the code. Turning back to the portrait is undoing
+    // the press, and undoing it should not quietly copy anything.
+    if (!showing) return;
+    // Absent over plain http and in a browser that has never had it. Nothing
+    // to fall back to that is not worse than saying nothing, so the turn
+    // simply happens without the line.
+    if (!navigator.clipboard?.writeText) return;
+    navigator.clipboard.writeText(`https://${address}`).then(() => {
+      setCopied(true);
+      clearTimeout(copiedTimer.current);
+      copiedTimer.current = setTimeout(() => setCopied(false), 2600);
+    }).catch(() => {});
+  }
+
   // ── Framing the picture ─────────────────────────────────────────────────
   // The slot is square and a photograph almost never is, so the browser crops
   // whatever is not in the middle — which for a photograph of a person is
@@ -452,7 +484,7 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
       <button
         type="button"
         className={'idc-portrait idc-portrait--turnable' + (bareSlot ? ' idc-portrait--bare' : '')}
-        onClick={() => setSlotCode(v => !v)}
+        onClick={turnSlot}
         aria-pressed={slotCode}
         aria-label={slotCode ? 'Show the portrait' : 'Show the code for this address'}
       >
@@ -771,6 +803,19 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
            a thing this file has learned once already. */
         .idc-file { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
         .idc-file:focus-visible + .idc-portrait-badge { outline: 2px solid var(--ink-faint); outline-offset: 2px; }
+        /* Sits in the flow under the slot and keeps its line whether or not
+           it is saying anything, so the name below never jumps when it
+           appears. */
+        .idc-copied {
+          margin: 8px 0 0;
+          min-height: 1em;
+          text-align: center;
+          font-family: var(--font-label);
+          font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase;
+          color: var(--ink-faint);
+          pointer-events: none;
+        }
+
         .idc-portrait-said {
           font-family: var(--font-label);
           font-size: 8.5px; letter-spacing: 0.1em; text-transform: uppercase;
@@ -1133,6 +1178,23 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
         </div>
 
         {slot}
+
+        {/* Only on a card where the press does something. A card with no
+            address cannot copy one, and reserving a line on every card for a
+            message that can never appear there would change the height of the
+            card for nothing.
+
+            Where it does exist the line is held open empty, so the name below
+            does not jump down and back as it comes and goes. And the words
+            themselves are added and removed rather than faded, because that is
+            what makes role="status" read them out — a message that is always
+            in the page and merely invisible is a message a screen reader has
+            already been past. */}
+        {canTurnSlot && (
+          <p className="idc-copied" role="status">
+            {copied ? 'Copied \u2014 paste it anywhere' : ''}
+          </p>
+        )}
 
         {/* cover_name, not keeper_name: this is the one place a person is
             reading the name, so it is allowed to be the ornamented one. The

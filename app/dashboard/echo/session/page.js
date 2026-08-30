@@ -61,6 +61,7 @@ export default function EchoSessionPage() {
     overallNotes, setOverallNotes,
     rating, setRating, Masterpiece, setMasterpiece, Favorite, setFavorite,
     entryType, setEntryType, relationship, setRelationship, setGenre,
+    setReceivedFrom, setReceivedDate,
     tracks, tracksLoading, trackNotes, setTrackNotes, trackRatings, setTrackRatings,
     trackFavorites, setTrackFavorites,
     openTrack, setOpenTrack,
@@ -88,7 +89,11 @@ export default function EchoSessionPage() {
   useEffect(() => {
     if (!authed) return;
     if (!pending?.album) { router.replace('/dashboard/echo'); return; }
-    const { album, artist, artUrl, collectionId, genre: gen, relationship: rel, entryType: et, draft } = pending;
+    const {
+      album, artist, artUrl, collectionId, genre: gen,
+      relationship: rel, entryType: et, draft,
+      receivedFrom, receivedDate,
+    } = pending;
 
     setAlbumInput(album);
     setArtistName(artist);
@@ -96,6 +101,10 @@ export default function EchoSessionPage() {
     setRelationship(rel || '');
     setEntryType(et || '');
     setGenre(gen || '');
+    // Present only on a listen started from the inbox — see the note in
+    // useListeningSession. Nothing else in the flow sets or asks for them.
+    setReceivedFrom(receivedFrom || '');
+    setReceivedDate(receivedDate || '');
 
     // A resumed listen reopens on the step it was left on, and everything up
     // to it stays reachable in the sidebar.

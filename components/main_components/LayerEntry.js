@@ -61,7 +61,19 @@ const FAR_ENOUGH = 0.2;
 // quick swipe is the common case, not the exception.
 const FAST_ENOUGH = 0.3;
 
-export default function LayerEntry({ children }) {
+// `label` is what the sheet announces itself as, because "Entry" was written
+// in here while an entry was the only thing that could arrive on it — and this
+// file is supposed to know nothing about entries.
+//
+// `scrolls` restores the sheet's own scrolling on a phone. It is off by
+// default because of the note in globals.css: an entry's phone layout is
+// already two scroll containers deep and a third one breaks the other two, so
+// the layer has to be genuinely not a scroll container underneath it. That
+// reasoning is about the entry, not about the layer — anything arriving here
+// that is one ordinary column of content has nothing nested to break and needs
+// the sheet to scroll it, or it simply overflows the fixed box and the bottom
+// of it cannot be reached.
+export default function LayerEntry({ children, label = 'Entry', scrolls = false }) {
   const router = useRouter();
   const sheetRef = useRef(null);
   const edgeRef = useRef(null);
@@ -155,12 +167,13 @@ export default function LayerEntry({ children }) {
 
   return (
     <div
-      className={'lay' + (settling ? ' lay--settling' : '') + (drag > 0 ? ' lay--dragging' : '')}
+      className={'lay' + (scrolls ? ' lay--scrolls' : '')
+        + (settling ? ' lay--settling' : '') + (drag > 0 ? ' lay--dragging' : '')}
       ref={sheetRef}
       style={drag > 0 ? { transform: `translateX(${drag}px)` } : undefined}
       role="dialog"
       aria-modal="true"
-      aria-label="Entry"
+      aria-label={label}
     >
       {/* Invisible, full height, a thumb's width. Nothing is drawn in it: the
           affordance is that the gesture is the platform's own, not that there

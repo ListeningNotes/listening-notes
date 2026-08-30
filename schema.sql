@@ -71,11 +71,20 @@ CREATE TABLE IF NOT EXISTS drafts (
   favorite boolean DEFAULT false,
   notes text DEFAULT ''::text,
   tracks jsonb,
+  -- Only ever set on a listen started from the inbox, where both are already
+  -- known. Here rather than only on entries so that pausing such a listen and
+  -- picking it up tomorrow does not lose who sent the record.
+  received_from text,
+  received_date date,
   created_at timestamp with time zone DEFAULT now(),
   updated_at timestamp with time zone DEFAULT now(),
   CONSTRAINT drafts_pkey PRIMARY KEY (id),
   CONSTRAINT drafts_lookup_key_key UNIQUE (lookup_key)
 );
+
+-- The two above, for a database that already has this table.
+ALTER TABLE drafts ADD COLUMN IF NOT EXISTS received_from text;
+ALTER TABLE drafts ADD COLUMN IF NOT EXISTS received_date date;
 
 CREATE TABLE IF NOT EXISTS echo_memory (
   id serial NOT NULL,
@@ -157,6 +166,18 @@ END) STORED,
   CONSTRAINT entries_pkey PRIMARY KEY (id)
 );
 
+-- ── submissions ────────────────────────────────────────────────────────────
+-- An album somebody sent, and why. Three columns are what turn a form
+-- submission into a gift being handed over: the cover, so the inbox shows the
+-- record rather than reporting its title; the collection id, so the listen it
+-- starts opens on the same pressing the sender chose rather than searching for
+-- it again; and the sender's own journal, which is an address rather than a
+-- contact detail and is what an address book would eventually be built from.
+--
+-- submitter_email keeps the values it already holds and has no writer any
+-- more — the send flow does not ask for one. Same trade settings.bio took: the
+-- data is real, the schema is still a draft, and a column dropped in passing
+-- is the exact move DECISIONS warns about. Decide it at the welcome screen.
 CREATE TABLE IF NOT EXISTS submissions (
   id serial NOT NULL,
   album text NOT NULL,
@@ -165,10 +186,20 @@ CREATE TABLE IF NOT EXISTS submissions (
   note text NOT NULL,
   submitter_name text,
   submitter_email text,
+  album_art text,
+  collection_id text,
+  sender_url text,
   status text DEFAULT 'pending'::text,
   created_at timestamp with time zone DEFAULT now(),
   CONSTRAINT submissions_pkey PRIMARY KEY (id)
 );
+
+-- The three above, for a database that already has this table. CREATE TABLE IF
+-- NOT EXISTS does nothing to one that exists, so a live copy needs these
+-- separately.
+ALTER TABLE submissions ADD COLUMN IF NOT EXISTS album_art text;
+ALTER TABLE submissions ADD COLUMN IF NOT EXISTS collection_id text;
+ALTER TABLE submissions ADD COLUMN IF NOT EXISTS sender_url text;
 
 CREATE TABLE IF NOT EXISTS users (
   id serial NOT NULL,
