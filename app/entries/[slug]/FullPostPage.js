@@ -602,8 +602,12 @@ export default function FullPostPage({ entry, references = [], authed = false, l
             flex-shrink: 0;
             padding: 0 24px 12px;
             margin: 0;
+            /* No rule under it. The Album Notes heading is directly below with
+               its own line, so the strip's border sat a few pixels above
+               another one and read as a double underline on the first thing
+               you see. What separates it from the notes is that the notes
+               move and it does not. */
             border: none;
-            border-bottom: 1px solid var(--border);
             text-align: left;
             cursor: pointer;
             -webkit-tap-highlight-color: transparent;
