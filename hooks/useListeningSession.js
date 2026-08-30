@@ -30,8 +30,12 @@ export function useListeningSession({ step }) {
   const [rating, setRating]               = useState(0);
   const [Masterpiece, setMasterpiece]     = useState(false);
   const [Favorite, setFavorite]           = useState(false);
+  // The third flag. It had a column, a colour and a definition and no state
+  // anywhere in the session, which is the whole reason nothing has ever been
+  // marked formative: create_entry has always accepted it and nothing has
+  // ever sent it.
+  const [Formative, setFormative]         = useState(false);
   const [entryType, setEntryType]         = useState('');
-  const [relationship, setRelationship]   = useState('');
   // Apple's genre for the record, carried from the album picker. Falls back to
   // the briefing's, which is prose rather than a category, so it only stands in
   // when the record was typed in by hand.
@@ -96,12 +100,12 @@ export function useListeningSession({ step }) {
     const draft = {
       album: brief.album, artist: brief.artist, year: brief.year,
       albumArt, overallNotes, trackNotes, trackRatings, trackFavorites,
-      rating, Masterpiece, Favorite, entryType, relationship,
+      rating, Masterpiece, Favorite, Formative, entryType,
     };
     localStorage.setItem('ln_session_draft', JSON.stringify(draft));
     // brief is a dependency because it now arrives after the user can type —
     // without it, notes written before the briefing landed would go unsaved.
-  }, [brief, overallNotes, trackNotes, trackRatings, trackFavorites, rating, Masterpiece, Favorite, entryType, relationship]);
+  }, [brief, overallNotes, trackNotes, trackRatings, trackFavorites, rating, Masterpiece, Favorite, Formative, entryType]);
 
   // Format one step early, so the preview is already written by the time the
   // Score step is done rather than being watched for on arrival.
@@ -144,8 +148,8 @@ export function useListeningSession({ step }) {
     setRating(draft.rating || 0);
     setMasterpiece(!!draft.masterpiece);
     setFavorite(!!draft.favorite);
+    setFormative(!!draft.formative);
     setEntryType(draft.entry_type || '');
-    setRelationship(draft.relationship || '');
     setGenre(draft.genre || '');
     setElapsed(draft.elapsed || 0);
 
@@ -182,7 +186,6 @@ export function useListeningSession({ step }) {
           year: brief?.year || '',
           genre: genre || brief?.genre || '',
           entry_type: entryType,
-          relationship,
           album_art: albumArt,
           collection_id: collectionIdRef.current,
           step,
@@ -190,6 +193,7 @@ export function useListeningSession({ step }) {
           rating,
           masterpiece: Masterpiece,
           favorite: Favorite,
+          formative: Formative,
           notes: overallNotes,
           tracks: draftTrackRows(),
         }),
@@ -227,7 +231,7 @@ export function useListeningSession({ step }) {
       setMasterpiece(prev => prev || s.Masterpiece || false);
       setFavorite(prev => prev || s.Favorite || false);
       setEntryType(prev => prev || s.entryType || '');
-      setRelationship(prev => prev || s.relationship || '');
+      setFormative(prev => prev || s.Formative || false);
     } catch {}
   }
 
@@ -352,7 +356,7 @@ export function useListeningSession({ step }) {
           conversationHistory: chatMessages.map(m => ({ role: m.role === 'user' ? 'user' : 'assistant', content: m.text })),
           entryContext: {
             album: brief?.album || '', artist: brief?.artist || '', year: brief?.year || '',
-            entryType, relationship,
+            entryType,
             trackNotes: trackContextLines(),
             albumNotes: overallNotes.trim(),
             rating: rating ? rating + ' stars' : '',
@@ -378,7 +382,7 @@ export function useListeningSession({ step }) {
       const res = await fetch('/api/format', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ brief, notes: overallNotes, rating, Masterpiece, Favorite, entryType, relationship, trackNotes, trackRatings, tracks: tracks || [] }),
+        body: JSON.stringify({ brief, notes: overallNotes, rating, Masterpiece, Favorite, Formative, entryType, trackNotes, trackRatings, tracks: tracks || [] }),
       });
       const data = await res.json();
       if (data.error) throw new Error(data.error);
@@ -410,7 +414,6 @@ export function useListeningSession({ step }) {
           album: brief.album, artist: brief.artist, year: brief.year,
           genre: genre || brief.genre || '',
           entry_type: entryType || 'Personal Library',
-          relationship: relationship || '',
           // The score and the mark are two different things and travel in two
           // different columns. Writing 'Masterpiece' into rating threw the
           // stars away, left the masterpiece column false, and drew no stars
@@ -419,6 +422,7 @@ export function useListeningSession({ step }) {
           rating: rating ? rating + ' stars' : (Masterpiece ? '5 stars' : ''),
           favorite: Favorite,
           masterpiece: Masterpiece,
+          formative: Formative,
           notes: output.album_notes,
           tracks: structuredTracks,
           track_notes: derived.track_notes,
@@ -460,8 +464,8 @@ export function useListeningSession({ step }) {
     rating, setRating,
     Masterpiece, setMasterpiece,
     Favorite, setFavorite,
+    Formative, setFormative,
     entryType, setEntryType,
-    relationship, setRelationship,
     genre, setGenre,
     receivedFrom, setReceivedFrom,
     receivedDate, setReceivedDate,

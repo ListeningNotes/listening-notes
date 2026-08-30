@@ -114,6 +114,9 @@ export default function Journal({ entries: given, loading: givenLoading, scrolle
   const [genresOpen, setGenresOpen] = useState(false);
   const [favoritesOnly, setFavoritesOnly] = useState(false);
   const [masterpiecesOnly, setMasterpiecesOnly] = useState(false);
+  // Highlights had two of the three flags in it. The third was decided at the
+  // same time as the other two and never given a way in here.
+  const [formativeOnly, setFormativeOnly] = useState(false);
   // null until the entries land — the range can't be known before the data
   // is, and an unset range means "every year", not "no years".
   const [yearRange, setYearRange] = useState(null);
@@ -285,6 +288,10 @@ export default function Journal({ entries: given, loading: givenLoading, scrolle
         if (genre && (e.genre || '') !== genre) return false;
         if (favoritesOnly && !(e.favorite === true || e.favorite === 'true')) return false;
         if (masterpiecesOnly && e.rating !== 'Masterpiece' && e.masterpiece !== true) return false;
+        // The flag, which is now the only place this is recorded — the nine
+        // rows that said so under the old relationship column were migrated
+        // onto it before that column was dropped.
+        if (formativeOnly && !(e.formative === true || e.formative === 'true')) return false;
         if (yearActive) {
           const y = releaseYear(e);
           // An entry with no year can't be shown to fall inside a range, so
@@ -302,7 +309,7 @@ export default function Journal({ entries: given, loading: givenLoading, scrolle
         if (sortBy === 'year')   return dir * ((releaseYear(a) || 0) - (releaseYear(b) || 0));
         return dir * (new Date(a.created_at) - new Date(b.created_at));
       });
-  }, [entries, search, sortBy, sortDir, genre, favoritesOnly, masterpiecesOnly, yearActive, yearRange]);
+  }, [entries, search, sortBy, sortDir, genre, favoritesOnly, masterpiecesOnly, formativeOnly, yearActive, yearRange]);
 
   const pages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
   // Clamped rather than reset in an effect: if the filters shrink the results
@@ -334,7 +341,7 @@ export default function Journal({ entries: given, loading: givenLoading, scrolle
   function clearFilters() {
     setPage(0);
     setSearch(''); setGenre(''); setGenresOpen(false);
-    setFavoritesOnly(false); setMasterpiecesOnly(false);
+    setFavoritesOnly(false); setMasterpiecesOnly(false); setFormativeOnly(false);
     setSortBy('posted'); setSortDir('desc');
     setYearRange(yearBounds ? [yearBounds.min, yearBounds.max] : null);
   }
@@ -344,7 +351,7 @@ export default function Journal({ entries: given, loading: givenLoading, scrolle
   // number on the button with nothing behind it to explain the number.
   const tuckedAwayCount =
     (genre ? 1 : 0) +
-    (favoritesOnly ? 1 : 0) + (masterpiecesOnly ? 1 : 0) +
+    (favoritesOnly ? 1 : 0) + (masterpiecesOnly ? 1 : 0) + (formativeOnly ? 1 : 0) +
     (yearActive ? 1 : 0) +
     (sortBy !== 'posted' || sortDir !== 'desc' ? 1 : 0);
   const hasActiveFilters = Boolean(search) || tuckedAwayCount > 0;
@@ -927,6 +934,7 @@ export default function Journal({ entries: given, loading: givenLoading, scrolle
               <div className="arc-sheet-opts">
                 <button type="button" className={'arc-opt' + (favoritesOnly ? ' arc-opt--on' : '')} onClick={() => setFavoritesOnly(v => !v)}>Favorites</button>
                 <button type="button" className={'arc-opt' + (masterpiecesOnly ? ' arc-opt--on' : '')} onClick={() => setMasterpiecesOnly(v => !v)}>Masterpieces</button>
+                <button type="button" className={'arc-opt' + (formativeOnly ? ' arc-opt--on' : '')} onClick={() => setFormativeOnly(v => !v)}>Formative</button>
               </div>
             </div>
 

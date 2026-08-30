@@ -48,7 +48,6 @@ export async function POST(request) {
       if (entryContext.year)   contextBlock += ` (${entryContext.year})`;
       contextBlock += '\n';
     }
-    if (entryContext.relationship) contextBlock += `Relationship: ${entryContext.relationship}\n`;
     if (entryContext.entryType)    contextBlock += `Entry type: ${entryContext.entryType}\n`;
     if (entryContext.rating)       contextBlock += `Rating: ${entryContext.rating}\n`;
     if (Array.isArray(entryContext.trackNotes) && entryContext.trackNotes.length > 0) {

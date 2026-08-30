@@ -1,7 +1,7 @@
 // Copyright (C) 2026 Miyel Brown
 // SPDX-License-Identifier: AGPL-3.0-or-later
 'use client';
-import { Heart, SketchLogo } from '@phosphor-icons/react';
+import { Heart, SketchLogo, Fingerprint } from '@phosphor-icons/react';
 import { fonts, colors } from '../../../library/sitewide_visuals';
 import { tx, bdr, dk, lbl } from '../../../library/session_styles';
 import { entryTypeLabel } from '../../../library/entry_formatter';
@@ -32,8 +32,8 @@ export default function SessionPreview({
   rating,
   Masterpiece,
   Favorite,
+  Formative,
   entryType,
-  relationship,
   saving,
   saved,
   savedEntry,
@@ -94,7 +94,7 @@ export default function SessionPreview({
               invisible until the entry existed, which is a bad time to find
               out the type is wrong or the mark didn't take. */}
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginTop: 10 }}>
-            {[relationship, entryTypeLabel(entryType)].filter(Boolean).map(t => (
+            {[entryTypeLabel(entryType)].filter(Boolean).map(t => (
               <span key={t} style={{ fontFamily: fonts.mono, fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: tx(0.45), border: `1px solid ${bdr(0.14)}`, borderRadius: 4, padding: '3px 8px' }}>{t}</span>
             ))}
             {Masterpiece && (
@@ -105,6 +105,11 @@ export default function SessionPreview({
             {Favorite && (
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontFamily: fonts.mono, fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: tx(0.7) }}>
                 <Heart size={13} weight="fill" color={colors.fav} />Favorite
+              </span>
+            )}
+            {Formative && (
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontFamily: fonts.mono, fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: tx(0.7) }}>
+                <Fingerprint size={13} weight="bold" color={colors.formative} />Formative
               </span>
             )}
           </div>
