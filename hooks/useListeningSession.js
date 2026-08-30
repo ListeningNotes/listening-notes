@@ -37,6 +37,19 @@ export function useListeningSession({ step }) {
   // when the record was typed in by hand.
   const [genre, setGenre]                 = useState('');
 
+  // Who sent it, and when they did. Only ever set by a listen started from the
+  // inbox, where both are already known — the sender put their name on the
+  // send and the row is stamped with the moment it arrived. Everywhere else
+  // these stay empty and the entry editor is still the only way to fill them
+  // in, which is what it was for: DECISIONS calls them corrections, the kind
+  // you make a week later on remembering who gave you the record.
+  //
+  // This is the half of the loop the send flow closes. It used to be that
+  // somebody sent you an album, you logged it, and then typed their name into
+  // a field to record a fact the database already had.
+  const [receivedFrom, setReceivedFrom]   = useState('');
+  const [receivedDate, setReceivedDate]   = useState('');
+
   // Tracks
   const [tracks, setTracks]               = useState(null);
   const [tracksLoading, setTracksLoading] = useState(false);
@@ -412,6 +425,11 @@ export function useListeningSession({ step }) {
           horizon: derived.horizon,
           album_art: albumArt,
           post_link: '',
+          // Blank unless this listen came out of the inbox. create_entry runs
+          // them through blankToNull, so an ordinary listen writes null here
+          // exactly as it did before these existed.
+          received_from: receivedFrom,
+          received_date: receivedDate,
         }),
       });
       const data = await res.json();
@@ -445,6 +463,8 @@ export function useListeningSession({ step }) {
     entryType, setEntryType,
     relationship, setRelationship,
     genre, setGenre,
+    receivedFrom, setReceivedFrom,
+    receivedDate, setReceivedDate,
     // Tracks
     tracks,
     tracksLoading,

@@ -784,6 +784,35 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   display: none;
 }
 
+/* And a layer is the second surface where this row cannot be fixed, for a
+   different reason that lands in the same place. The sheet is itself
+   position: fixed and carries its own scroller, so a fixed child of it does
+   not hold still — it scrolls away with the content, measured at 378px off
+   the top of a 400px scroll. The scrolled state is wrong there too: it reads
+   window.scrollY, and the window is not what is moving.
+
+   Both are one fact — the window is not the scroller here — so the row goes
+   into the sheet's flow exactly as it does on the homepage, and loses its
+   band for the same reason the homepage does. Nothing can scroll under a row
+   that is not floating over anything.
+
+   The 22px the fixed version offsets itself by moves from `top` to a margin,
+   so the mark sits on the same line either way and the row takes the same 80px
+   of space the pages above reserve for it. A margin and not padding: the row
+   carries min-height: 58px and box-sizing is border-box everywhere, so padding
+   would have been absorbed into that 58 instead of added to it, and the row
+   came out 22px short with its own contents squeezed. */
+.lay .sitenav-row {
+  position: relative;
+  top: auto;
+  left: auto;
+  right: auto;
+  margin-top: calc(22px + var(--safe-top));
+}
+.lay .sitenav-row::before {
+  display: none;
+}
+
 .sitenav-side { display: flex; align-items: center; gap: 2px; min-width: 0; }
 .sitenav-side--left { justify-content: flex-start; }
 
@@ -2124,6 +2153,23 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
     overflow: visible;
     overscroll-behavior: auto;
   }
+}
+
+/* ── Unless what arrived is not an entry ───────────────────────────────────
+   Everything above is a fact about the entry's phone layout, not about the
+   layer. A form — the send page is the first — is one ordinary column of
+   fields with nothing nested inside it, so there is no chain to break and no
+   second scrollbar to draw: it needs the sheet to scroll it, and without this
+   it simply overflows a fixed box and the bottom of the form cannot be
+   reached at all.
+
+   So the sheet is not a scroll container by default, and says so when it is.
+   The rule is written after the media query rather than inside one, so it
+   wins on source order at every width and the desktop behaviour it restates
+   is the behaviour that was already there. */
+.lay--scrolls {
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 /* The strip the back-pull starts in. Invisible, full height, a thumb's width,

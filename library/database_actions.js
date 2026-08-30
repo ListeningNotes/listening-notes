@@ -497,6 +497,12 @@ export async function save_draft(body) {
     album, artist, year = '', genre = '', entry_type = '', relationship = '',
     album_art = '', collection_id = '', step = 0, elapsed = 0,
     rating = 0, masterpiece = false, favorite = false, formative = false, notes = '', tracks = null,
+    // Carried so that walking away from a listen started in the inbox and
+    // picking it up later still knows who sent the record. Without these the
+    // send flow's whole point — that received_from fills itself in rather than
+    // being typed — would hold only for a listen finished in one sitting, and
+    // drafts exist precisely because that is not the common case.
+    received_from = '', received_date = '',
   } = body;
 
   if (!album) throw new Error('A draft needs an album');
@@ -505,12 +511,13 @@ export async function save_draft(body) {
     INSERT INTO drafts (
       lookup_key, album, artist, year, genre, entry_type, relationship,
       album_art, collection_id, step, elapsed, rating, masterpiece, formative,
-      favorite, notes, tracks
+      favorite, notes, tracks, received_from, received_date
     ) VALUES (
       ${lookup_key(album, artist)}, ${album}, ${artist}, ${year}, ${genre},
       ${entry_type}, ${relationship}, ${album_art}, ${String(collection_id || '')},
       ${step}, ${elapsed}, ${rating}, ${masterpiece}, ${formative}, ${favorite}, ${notes},
-      ${tracks ? JSON.stringify(tracks) : null}
+      ${tracks ? JSON.stringify(tracks) : null},
+      ${blankToNull(received_from)}, ${blankToNull(received_date)}
     )
     ON CONFLICT (lookup_key) DO UPDATE SET
       album = EXCLUDED.album, artist = EXCLUDED.artist, year = EXCLUDED.year,
@@ -520,7 +527,9 @@ export async function save_draft(body) {
       elapsed = EXCLUDED.elapsed, rating = EXCLUDED.rating,
       masterpiece = EXCLUDED.masterpiece, formative = EXCLUDED.formative,
       favorite = EXCLUDED.favorite,
-      notes = EXCLUDED.notes, tracks = EXCLUDED.tracks, updated_at = NOW()
+      notes = EXCLUDED.notes, tracks = EXCLUDED.tracks,
+      received_from = EXCLUDED.received_from, received_date = EXCLUDED.received_date,
+      updated_at = NOW()
     RETURNING *
   `;
   return result[0];
