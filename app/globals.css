@@ -784,32 +784,39 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   display: none;
 }
 
-/* And a layer is the second surface where this row cannot be fixed, for a
-   different reason that lands in the same place. The sheet is itself
-   position: fixed and carries its own scroller, so a fixed child of it does
-   not hold still — it scrolls away with the content, measured at 378px off
-   the top of a 400px scroll. The scrolled state is wrong there too: it reads
-   window.scrollY, and the window is not what is moving.
+/* And a layer that scrolls itself is the second surface where this row cannot
+   be fixed, for a different reason that lands in the same place. `.lay` sets a
+   containing block for its fixed descendants — it animates a transform on the
+   way in — so a fixed child is pinned to the sheet rather than to the window.
+   That is harmless while the sheet is not a scroller, because the sheet is
+   fixed at inset 0 and pinning to it is pinning to the window. It stops being
+   harmless the moment the sheet scrolls: the row then scrolls away with the
+   content, measured 378px off the top on a 400px scroll. The scrolled state is
+   wrong there too — it reads window.scrollY, and the window is not moving.
 
-   Both are one fact — the window is not the scroller here — so the row goes
-   into the sheet's flow exactly as it does on the homepage, and loses its
-   band for the same reason the homepage does. Nothing can scroll under a row
-   that is not floating over anything.
+   So this is scoped to .lay--scrolls and not to .lay, and the difference is
+   exactly the one that matters. An entry is the other kind: it does its own
+   scrolling in .ln-screens and leaves the sheet still, so its header stays
+   fixed and is right. Scoped to .lay it pushed .ln-screens 80px down the
+   sheet, which put the whole entry 80px past the bottom of a screen it is
+   sized to exactly fill.
 
-   The 22px the fixed version offsets itself by moves from `top` to a margin,
-   so the mark sits on the same line either way and the row takes the same 80px
-   of space the pages above reserve for it. A margin and not padding: the row
-   carries min-height: 58px and box-sizing is border-box everywhere, so padding
-   would have been absorbed into that 58 instead of added to it, and the row
-   came out 22px short with its own contents squeezed. */
-.lay .sitenav-row {
+   Where it does apply, the row goes into the sheet's flow exactly as it does
+   on the homepage, and loses its band for the same reason — nothing can scroll
+   under a row that is not floating over anything. The 22px the fixed version
+   offsets itself by moves from `top` to a margin, so the mark sits on the same
+   line either way and the row takes the same 80px the pages above reserve for
+   it. A margin and not padding: the row carries min-height: 58px and
+   box-sizing is border-box everywhere, so padding would have been absorbed
+   into that 58 rather than added to it. */
+.lay--scrolls .sitenav-row {
   position: relative;
   top: auto;
   left: auto;
   right: auto;
   margin-top: calc(22px + var(--safe-top));
 }
-.lay .sitenav-row::before {
+.lay--scrolls .sitenav-row::before {
   display: none;
 }
 
