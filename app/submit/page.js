@@ -18,10 +18,11 @@
 // same kind of thing: an address is where something is, not who somebody is,
 // and it is the thing that eventually builds the address book.
 //
-// The submitter_email column keeps the values it already has and loses its
-// writer, the same trade settings.bio took: the schema is still a draft, the
-// data is real, and a column dropped in passing is exactly what DECISIONS
-// warns about. Decide it at the welcome screen.
+// The column went too, 2026-08-31. It was kept for a fortnight on the
+// settings.bio precedent — real data, draft schema — and then dropped on the
+// better argument: the reason not to ask for an email is the reason not to
+// hold the ones already given, and the draft window is the only time that is
+// free.
 //
 // ── Why the values are kept ───────────────────────────────────────────────
 // On the layer this page is one careless swipe from gone, and what would be

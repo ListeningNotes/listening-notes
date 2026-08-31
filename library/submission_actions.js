@@ -2,10 +2,10 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import database from './database_connection.js';
 
-// The cover, the pressing and the sender's journal ride along with the note
-// now. submitter_email is not written any more and is not accepted here —
-// the column keeps what it has, which is a different thing from keeping the
-// field. See the note in schema.sql.
+// The cover, the pressing and the sender's journal ride along with the note.
+// There is no email here and there is no longer a column for one either — see
+// schema.sql. What replaced it is sender_url, which is an address rather than
+// a person.
 export async function save_submission({
   album, artist, year, note, submitter_name,
   album_art, collection_id, sender_url,
@@ -33,7 +33,7 @@ export async function save_submission({
 
 export async function pull_submissions() {
   return await database`
-    SELECT id, album, artist, year, note, submitter_name, submitter_email,
+    SELECT id, album, artist, year, note, submitter_name,
            album_art, collection_id, sender_url, status, created_at
     FROM submissions
     ORDER BY created_at DESC
