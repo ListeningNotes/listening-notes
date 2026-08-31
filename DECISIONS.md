@@ -880,10 +880,25 @@ required.
 
 **No email, and this is the point rather than a detail.** The old form asked
 for one and nothing ever used it — a contact detail held for no reason, which
-is the first crack in not holding anyone's data. `submitter_email` keeps the
-values it has and loses its writer, exactly the trade `settings.bio` took:
-real data, a schema still in draft, and a column dropped in passing is the
-move this file already warns about. Decide it at the welcome screen.
+is the first crack in not holding anyone's data.
+
+**And the column went too, 2026-08-31.** It was kept for a fortnight on the
+`settings.bio` precedent — real data, draft schema, don't drop things in
+passing — and then dropped on the better argument: the reason not to ask for an
+email is the same reason not to keep the three already given. Holding them
+achieved nothing the principle allows and cost the one thing the principle is
+about. The draft window is also the only time dropping is free, and it closes
+the day somebody else installs a copy.
+
+Read before dropping, as the guardrail requires: three rows, all with an
+address, two of them the owner's own test submissions. The third was a real
+person, and losing her address is the actual cost of this decision rather than
+a rounding error. `sender_url` is what replaced it, and is a different kind of
+thing — an address is where something is, not who somebody is.
+
+**`comments.author_email` is a separate column and stays.** The comment form
+still asks for one and still requires it. Whether that survives the same
+argument is a real question and deliberately not answered here.
 
 **A journal URL takes its place, and is not the same kind of thing.** An
 address is where something is; an email is who somebody is. It is also the

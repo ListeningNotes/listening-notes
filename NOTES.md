@@ -75,6 +75,11 @@ only the write that breaks. Run it in Neon's SQL editor. Take a backup first
 (`npm run backup`); this is the production database and there is no other one.
 
 **SHIPPING A COPY** — the gap between "it runs here" and "someone else can run it"
+
+The four below, plus SCALING further down, are what stands between this and
+somebody else installing it. Two are structural and unbuilt — there is no
+migration runner and no welcome screen — and until both exist a fresh account
+cannot be tested end to end.
 - [ ] **Migration runner** — nothing executes `schema.sql`. A fresh copy has no tables and no way to make them without opening Neon's SQL editor by hand. `schema.sql` has also never actually been run against an empty database; every statement is guarded, but "reads correctly" and "builds a working journal from nothing" are different claims and only the first is checked.
 - [ ] **Welcome screen** — first run should ask who this copy belongs to and write the owner row plus the settings row. `setup_complete` exists as a column and nothing sets it. Until this lands, `keeper_name`, `founded_at` and `serial` can only be set in the database.
 - [ ] **Deploy button** — the README has one, but it lands on a copy with no schema. Blocked on the migration runner.
@@ -195,12 +200,19 @@ already exists.
 - [ ] **The feed as a network** — `/feed.xml` publishes, but nothing reads anyone else's. Two views, submissions first. A shelf, not a river.
 - [ ] **Relationship field removal** — every value has dissolved into something else. Legacy data stays; the picker goes.
 
-**SCALING — the archive still loads every record, and that is the last wall**
+**SCALING — BLOCKER. The archive loads every record on every page view**
+
+Moved onto the blocker list 2026-08-31, and the reason is that it is not a
+problem with this journal. It is a problem every copy inherits: the code pulls
+the whole archive to draw a grid of covers, so a keeper's journal gets harder
+to read the longer they keep it. Junior would hit it in year two, with no idea
+why, exactly as his writing got good. A ceiling that arrives with success is
+not a later item.
 
 The target is a page view that costs the same whether the journal holds fifty
 records or five thousand: roughly **160,000 views a month, flat, forever**.
-Today's work got the cost down by 92% but left it proportional to the archive,
-so it still degrades as the journal grows.
+The 2026-08-30 work got the cost down by 92% but left it proportional to the
+archive, so it still degrades as the journal grows.
 
 Measured 2026-08-30, 663 bytes per entry over the wire:
 

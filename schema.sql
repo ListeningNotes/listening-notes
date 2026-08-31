@@ -92,6 +92,10 @@ ALTER TABLE drafts ADD COLUMN IF NOT EXISTS received_date date;
 ALTER TABLE entries DROP COLUMN IF EXISTS relationship;
 ALTER TABLE drafts  DROP COLUMN IF EXISTS relationship;
 
+-- The send flow stopped asking for an email; this stops keeping the ones it
+-- already had. Run after the code that no longer selects it is deployed.
+ALTER TABLE submissions DROP COLUMN IF EXISTS submitter_email;
+
 CREATE TABLE IF NOT EXISTS echo_memory (
   id serial NOT NULL,
   -- 'owner' rather than a person's name. This defaulted to the name of whoever
@@ -187,10 +191,12 @@ END) STORED,
 -- it again; and the sender's own journal, which is an address rather than a
 -- contact detail and is what an address book would eventually be built from.
 --
--- submitter_email keeps the values it already holds and has no writer any
--- more — the send flow does not ask for one. Same trade settings.bio took: the
--- data is real, the schema is still a draft, and a column dropped in passing
--- is the exact move DECISIONS warns about. Decide it at the welcome screen.
+-- There is no email column. The send flow does not ask for one, and the
+-- reason not to ask is the reason not to keep the ones already given: a
+-- contact detail held for no purpose is the first crack in not holding
+-- anybody's data. Dropped 2026-08-31, while the schema was still a draft and
+-- dropping was still free. sender_url replaced it and is a different kind of
+-- thing — an address is where something is, not who somebody is.
 CREATE TABLE IF NOT EXISTS submissions (
   id serial NOT NULL,
   album text NOT NULL,
@@ -198,7 +204,6 @@ CREATE TABLE IF NOT EXISTS submissions (
   year text,
   note text NOT NULL,
   submitter_name text,
-  submitter_email text,
   album_art text,
   collection_id text,
   sender_url text,
