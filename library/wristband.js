@@ -14,7 +14,18 @@ const COOKIE_NAME = 'ln_session';
 // maxAge have to agree, and they were written separately as '30d' and
 // 60*60*24*30 — the same value twice, which is the shape a drift bug takes
 // right before someone edits one of them.
-const LIFETIME_SECONDS = 60 * 60 * 24 * 30;   // 30 days
+// Six months. This is a lock on one person's own room in their own building,
+// not a session on a service with many users — the thing being protected is
+// the writing side of a journal, and the person opening it is always the same
+// person on the same two or three devices. Thirty days meant logging in every
+// month for no gain; half a year means a new phone or a cleared Safari, which
+// is about twice.
+//
+// The trade is stated rather than hidden: an unlocked phone is dashboard
+// access. That is accepted. Anybody holding an unlocked phone has the mail app
+// on it too, and a login that has to be repeated monthly is a login that gets
+// a weaker password.
+const LIFETIME_SECONDS = 60 * 60 * 24 * 180;   // 6 months
 const EXPIRES_IN = `${LIFETIME_SECONDS}s`;
 
 // A wristband is renewed rather than left to run out. Without this, a cookie
@@ -26,7 +37,7 @@ const EXPIRES_IN = `${LIFETIME_SECONDS}s`;
 // load, so it waits until a third of the life has gone. In practice a journal
 // touched more than once a month never expires, and one abandoned for a month
 // asks again — which is the right way round.
-const RENEW_AFTER_SECONDS = LIFETIME_SECONDS / 3;   // 10 days
+const RENEW_AFTER_SECONDS = LIFETIME_SECONDS / 3;   // 60 days
 
 function getSecret() {
   const secret = process.env.SESSION_SECRET;

@@ -1,6 +1,7 @@
 // Copyright (C) 2026 Miyel Brown
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { save_submission, pull_submissions } from '@/library/submission_actions';
+import { mayKnock, tooSoon, whoIsKnocking } from '@/library/doorman';
 import { requireWristband } from '@/library/wristband';
 import { tidyAddress } from '@/library/return_address';
 
@@ -12,6 +13,11 @@ import { tidyAddress } from '@/library/return_address';
 // route is not a form: it has to state its own rules rather than trust that
 // the only thing posting to it is the page that shipped with it.
 export async function POST(request) {
+  // Open to anyone, which is the point, and therefore open to a script.
+  // See library/doorman.js.
+  const knock = mayKnock('submission', whoIsKnocking(request));
+  if (!knock.allowed) return tooSoon(knock.retryAfter);
+
   try {
     const {
       album, artist, year, note, submitter_name,
