@@ -195,6 +195,61 @@ already exists.
 - [ ] **The feed as a network** — `/feed.xml` publishes, but nothing reads anyone else's. Two views, submissions first. A shelf, not a river.
 - [ ] **Relationship field removal** — every value has dissolved into something else. Legacy data stays; the picker goes.
 
+**SCALING — the archive still loads every record, and that is the last wall**
+
+The target is a page view that costs the same whether the journal holds fifty
+records or five thousand: roughly **160,000 views a month, flat, forever**.
+Today's work got the cost down by 92% but left it proportional to the archive,
+so it still degrades as the journal grows.
+
+Measured 2026-08-30, 663 bytes per entry over the wire:
+
+| entries | per page view | views/month on 5 GB |
+|---------|---------------|---------------------|
+| 39      | 26 kB         | ~207,000            |
+| 250     | 166 kB        | ~32,000             |
+| 500     | 332 kB        | ~16,000             |
+| 1000    | 664 kB        | ~8,000              |
+
+Paginated at 50 in the database it is ~33 kB and ~160,000 a month at *any*
+size. That is the number to aim at.
+
+- [ ] **Move the archive's paging into the query.** `components/main_components/Journal.js`
+      fetches every entry and paginates in the browser — `PER_PAGE = 50`, but
+      it downloads the lot first. The blocker is that everything else in that
+      file runs client-side over the full set and would have to move with it:
+      - search over album and artist (`foldForSearch`, accent-folded — the SQL
+        needs the same folding or Beyonce stops finding Beyoncé)
+      - the genre filter, the three flag filters, the year range
+      - five sort modes, two of which (`rating`, `year`) parse text in JS
+        (`parseRating`, `releaseYear`) rather than sorting a column —
+        `rating_value` exists and is generated; release year does not and may
+        want one
+      - the genre list itself and its counts, and the year bounds, which are
+        derived from the whole set and want their own small cached queries
+      - the filtered **count**, which the page prints
+- [ ] **Untangle who owns the entries.** `Journal` takes `entries` as an
+      optional prop: at `/archive` it fetches its own, in the cross the
+      homepage hands over what it already loaded. Server-side paging means the
+      component owns its own fetching in both places, and the homepage keeps
+      whatever it still needs separately.
+- [ ] **The homepage strip wants about ten records, not all of them.**
+      `HomeNav` reads `.album`, `.id` and `.slug` for the recent row and the
+      counts. A count is `SELECT count(*)`, not a list.
+- [ ] **`/dashboard` and `/dashboard/inbox` pull every entry for a decorative
+      background** of shuffled covers. They want album art URLs and nothing
+      else, and probably only twenty of them.
+
+**How to measure any of this.** Do not guess from the query — the one that
+nearly bankrupted the allowance was fast. Measure what the row weighs:
+
+```sql
+SELECT pg_size_pretty(sum(pg_column_size(entries.*))::bigint) FROM entries;
+SELECT pg_column_size(settings.*) FROM settings;
+```
+
+and for the wire, `curl -s http://localhost:3000/api/entries | wc -c`.
+
 **SCHEMA — the draft window is still open**
 
 Additive-only migrations start the day somebody else is running a copy. Nobody
@@ -330,6 +385,41 @@ The distinction is `.lay--scrolls`, and it is the one that actually matters:
 transform on the way in), but pinning to a sheet that is fixed at inset 0 and
 never moves is the same as pinning to the window. It only goes wrong once the
 sheet scrolls. **When a layer gains a second tenant, check the first one.**
+
+**A cheap query can still be the expensive one.** The Neon transfer allowance
+hit 95% with healthy compute, no long-running query and no runaway poll —
+every signal said nothing was wrong. The cause was `pull_settings` doing
+`SELECT *` on a row holding two base64 images, 307 kB of 310, read twice per
+page render and every fifteen seconds by the beacon. One tab open for a working
+day moved 580 MB.
+
+Monitoring measures how hard a query *works*. It does not measure what the
+query *carries*. When transfer is high and compute is fine, stop reading the
+query plan and weigh the row:
+
+```sql
+SELECT pg_column_size(settings.*) FROM settings;
+SELECT column_name FROM information_schema.columns WHERE table_name='settings';
+```
+
+then size each column and look for the outlier. It took about four minutes once
+pointed the right way, and no amount of staring at the dashboard would have
+found it.
+
+**Neon's free allowances are per project, so a dev branch does not reduce
+transfer.** It is still worth having — it stops local development writing to
+the live journal — but it isolates *data*, not usage. Both branches spend the
+same 5 GB.
+
+**`allowedDevOrigins` fails silently and looks like a broken site.** Next
+refuses dev requests from any origin not on that list, and the refusal is
+invisible in the worst way: the page still server-renders, so it appears to
+load, and then nothing on it works — empty beacon, no entries, blank card. It
+reads as the app being broken, so the instinct is to blame whatever you changed
+last. It is in `next.config.mjs` and now uses wildcards for the private ranges
+plus `*.local`, so a changed LAN IP cannot cause it again. The laptop's mDNS
+name (`Miyels-Laptop.local:3000`) is the address that survives changing
+networks; `ipconfig getifaddr en0` gives the current IP.
 
 **A text field under 16px makes iOS Safari zoom, and it does not zoom back.**
 Safari zooms the page in whenever it focuses an input whose type is smaller
@@ -582,6 +672,44 @@ current.
 ---
 
 ## Complete
+
+**2026-08-30 — the transfer emergency, and what a read costs**
+
+Neon's transfer allowance was at 95% and climbing. Compute was healthy, no
+query ran long, no poll ran away — which is why it had gone unexplained. Two
+causes, both about how much a read *carries* rather than how hard it works.
+
+- [x] **`pull_settings` stopped reading two base64 images.** `portrait_data`
+      and `portrait_code` are 307 kB of a 310 kB row, and that row is read
+      twice per page render and every fifteen seconds by the beacon. One open
+      tab moved 580 MB a day; a month is 17 GB against a 5 GB allowance.
+      **310.7 kB → 5.1 kB.** Explicit column list, because `to_jsonb` and
+      subtract silently turns `founded_at`, `why_date` and `updated_at` into
+      strings, and keying off `EMPTY` drops `why_essay`, which `/get` reads.
+- [x] **`pull_wall_entries`** — the eighteen fields a list actually uses. A
+      full row is 8.5 kB and those are 0.3 kB, so 97% of every archive load was
+      writing nobody drew. **`/api/entries` 330 kB → 25.9 kB.**
+- [x] **The public feed names its columns** instead of `SELECT *` then dropping
+      them in JS. **330 kB → 20.6 kB.**
+- [x] **`pull_beacon_settings`** — one column for the query that runs every
+      fifteen seconds. ~100 bytes.
+- [x] **`pull_random_slug`** — `/shuffle` read the whole journal to pick one at
+      random in JS.
+- [x] **`/dashboard/share` fetches the full record only for the one being
+      exported**, because `isMasterpiece` reads `track_notes`. Lean list to
+      choose from, full record for the chosen one.
+- [x] **A dev branch in Neon**, so local work stops writing to the live
+      journal. Does not reduce transfer — same project, same allowance — but
+      it was overdue on its own merits.
+
+Verified after: the wall still draws 39, the Formative filter still returns 9,
+an entry still opens instantly with its cover and title before its writing
+arrives, and `/`, `/archive`, `/get`, `/shuffle`, `/entries/[slug]`, `/feed.xml`
+and the beacon all answer 200.
+
+Net effect at today's size: **~15,900 → ~207,000 page views a month.** The
+remaining wall — that cost still scales with the archive — is written up under
+SCALING in Pending, with the target and the specific blockers.
 
 **2026-08-29 — the send flow**
 

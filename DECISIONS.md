@@ -1035,6 +1035,61 @@ checking public GitHub releases instead.
 
 ---
 
+## What a read costs
+
+Added 2026-08-30, after the Neon transfer allowance hit 95% and the cause
+turned out to be two of these rules not existing.
+
+**A list of records never carries the writing.** A wall of covers, a search, a
+sort, a recent strip and a picker all want the same eighteen fields — the
+cover, who made it, when, how it landed, and the slug to open it.
+`pull_wall_entries` is that list and it is the only thing the archive reads.
+Measured: a full row averages 8.5 kB and those fields average 0.3 kB, so 97% of
+what the archive used to pull was text it never drew.
+
+**Lean list to choose from, full record for the one chosen.** Already how the
+journal worked without anybody naming it — the tile hands eleven fields to the
+layer through `handoff.js` and the entry's writing is fetched when it opens.
+Now also how `/dashboard/share` works, and the rule for anything that shows
+many records and then one. The full list was never what made an entry open with
+no wait; the handoff was.
+
+**A query on a timer gets its own narrow reader, and it is never widened.**
+`pull_beacon_settings` returns one column because the beacon asks every fifteen
+seconds in every open tab. The temptation next time something on a hot path
+needs a field will be to add it here. Don't — a general reader on a short timer
+is exactly how the allowance got spent. Give the next one its own.
+
+**Nothing that reads settings gets the portrait.** `portrait_data` and
+`portrait_code` are base64 images and 307 kB of a 310 kB row; every surface
+that shows either points at `/api/portrait`, which reads them itself. They are
+excluded from `pull_settings` by an explicit column list. A new settings column
+has to be added to that list — a visible cost, chosen over `to_jsonb` and
+subtract, which silently turns dates into strings.
+
+**Measure the row, not the query.** The monitoring was right that compute was
+healthy and no query ran long. The expensive query was cheap to run and
+carrying a suitcase — `pg_column_size` on the columns is what found it, and it
+is the first thing to reach for when transfer is high and compute is not.
+
+**Neon's free allowances are per project, and branches share them.** A dev
+branch isolates the data, which is worth doing on its own merits; it does not
+reduce transfer. Worth writing down because the opposite is easy to assume.
+
+**The target is a page view that costs the same at any journal size.** Reads
+are lean now but still scale with the archive: every visitor downloads a
+summary of every record ever written to look at one screen. At 500 entries that
+is about 16,000 views a month, at 1,000 about 8,000. The goal is roughly
+160,000 a month and flat — which means the database paginating, not the
+browser. Not built; see NOTES.
+
+**The journal should get better as it fills up.** Which is the actual reason
+any of this matters, and the sentence to measure a change against: a cost that
+grows with the archive means the longer somebody keeps a journal the less it
+can be read, and that is backwards.
+
+---
+
 ## Ruled out
 
 **Apple MusicKit.** Developer tokens are domain-scoped and expire in six
