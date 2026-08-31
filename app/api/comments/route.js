@@ -1,6 +1,7 @@
 // Copyright (C) 2026 Miyel Brown
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { nest_comments, save_comment } from '@/library/comment_actions';
+import { mayKnock, tooSoon, whoIsKnocking } from '@/library/doorman';
 import { issue_receipt } from '@/library/wristband';
 
 export async function GET(request) {
@@ -13,6 +14,11 @@ export async function GET(request) {
 }
 
 export async function POST(request) {
+  // Open to anyone, which is the point, and therefore open to a script.
+  // See library/doorman.js.
+  const knock = mayKnock('comment', whoIsKnocking(request));
+  if (!knock.allowed) return tooSoon(knock.retryAfter);
+
   try {
     const { slug, track_index, parent_id, author_name, author_email, content } = await request.json();
 
