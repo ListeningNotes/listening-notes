@@ -63,29 +63,31 @@ export default function WritingAccess({
 
   const close = useCallback(() => setOpen(false), []);
 
-  // Escape, and pressing anywhere else. Both are what a small panel over a
-  // page is expected to answer to, and neither needs explaining.
+  // ── Closing it ────────────────────────────────────────────────────────
+  // The same three taps, which is the whole gesture rather than a second one
+  // to learn: what opened it closes it, and the mark stays the only control.
+  //
+  // Pressing elsewhere on the page deliberately does NOT close it. That is the
+  // usual behaviour for something floating over a page, and it is wrong for
+  // something sitting in the page with a half-typed password in it — a stray
+  // tap while reaching for the field would throw the typing away, and this
+  // panel does not cover anything that would make somebody want it gone in a
+  // hurry. Escape still works for anyone with a keyboard.
   useEffect(() => {
     if (!open) return undefined;
     const onKey = e => { if (e.key === 'Escape') close(); };
-    const onDown = e => { if (wrap.current && !wrap.current.contains(e.target)) close(); };
     window.addEventListener('keydown', onKey);
-    window.addEventListener('pointerdown', onDown);
-    return () => {
-      window.removeEventListener('keydown', onKey);
-      window.removeEventListener('pointerdown', onDown);
-    };
+    return () => window.removeEventListener('keydown', onKey);
   }, [open, close]);
 
   function countTap() {
-    if (open) return;
     const now = Date.now();
     const r = run.current;
     r.count = now - r.last > TAP_WINDOW_MS ? 1 : r.count + 1;
     r.last = now;
     if (r.count >= taps) {
       r.count = 0;
-      setOpen(true);
+      setOpen(v => !v);
     }
   }
 
@@ -98,7 +100,7 @@ export default function WritingAccess({
   }
 
   return (
-    <span ref={wrap} className={className} style={{ position: 'relative', display: 'inline-flex' }}>
+    <span ref={wrap} className={className} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
       {children
         ? <span onPointerDown={countTap} style={{ display: 'inline-flex' }}>{children}</span>
         : (
@@ -117,17 +119,35 @@ export default function WritingAccess({
           >{label}</button>
         )}
 
+      {/* ── It pushes rather than covers ──────────────────────────────────
+          The panel is in the flow, not floating over it. Opening it makes the
+          box it sits in taller and everything below moves down ahead of it —
+          on the beacon pane the album strip slides toward the bottom and off,
+          which is the right thing to lose while you are typing a password.
+          Nothing is hidden behind the panel, because nothing is behind it.
+
+          The animation is a grid whose single row goes from 0fr to 1fr. That
+          is the one way to transition to a height nobody knows in advance:
+          height: auto cannot be animated, and a fixed pixel height would have
+          to be guessed and would be wrong the moment the panel says something
+          longer, like the doorman's wait message. */}
+      <span
+        style={{
+          display: 'grid',
+          gridTemplateRows: open ? '1fr' : '0fr',
+          transition: 'grid-template-rows 0.32s cubic-bezier(0.22,0.61,0.36,1)',
+          width: open ? 260 : 0,
+        }}
+        aria-hidden={!open}
+      >
+      <span style={{ overflow: 'hidden', minHeight: 0 }}>
       {open && (
         <span
           role="dialog"
           aria-label="Writing access"
           style={{
-            position: 'absolute',
-            top: 'calc(100% + 10px)',
-            left: align === 'center' ? '50%' : 'auto',
-            right: align === 'right' ? 0 : 'auto',
-            transform: align === 'center' ? 'translateX(-50%)' : 'none',
-            zIndex: 300,
+            display: 'block',
+            marginTop: 10,
             width: 260,
             padding: 16,
             borderRadius: 14,
@@ -150,6 +170,8 @@ export default function WritingAccess({
           <PasswordGate bare onAuth={admitted} />
         </span>
       )}
+      </span>
+      </span>
     </span>
   );
 }
