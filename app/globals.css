@@ -3033,7 +3033,12 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
    The mark sits 26px off the bottom of it, so the token alone decides how far
    down the window the whole pane begins. */
 .hn-crown {
-  height: var(--hn-crown);
+  /* min-height, not height, so the crown can grow when the writing panel
+     opens under the mark and push the pane's contents down ahead of it rather
+     than covering them. With nothing under the mark this measures exactly as
+     the fixed height did, so --hn-crown goes on being the one control the
+     comment below describes. */
+  min-height: var(--hn-crown);
   box-sizing: border-box;
   display: flex;
   /* Held against the bottom of its own box rather than centred in it. That is
