@@ -1,13 +1,22 @@
 // Copyright (C) 2026 Miyel Brown
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import { pull_all_entries, save_new_entry } from '@/library/database_actions';
-import { checkWristband, requireWristband } from '@/library/wristband';
+import { pull_wall_entries, save_new_entry } from '@/library/database_actions';
+import { requireWristband } from '@/library/wristband';
 
-// The dashboard reads this list too, and its source picker needs the chain.
-// Anyone else gets it stripped — see withoutChain in database_actions.
-export async function GET(request) {
+// A list of records, without the writing in them. Everything that reads this
+// is drawing a grid of covers, filtering one, or picking one — see
+// pull_wall_entries for the measurements and for why nothing loses anything.
+//
+// The one caller that needs an entry's text is /dashboard/share, and it needs
+// it for the single record being exported rather than for all of them; it
+// fetches that one from /api/entries/[slug]. Same shape as the journal: a lean
+// list to choose from, the full record for the one chosen.
+//
+// The chain came off with the writing. It was included here for the source
+// picker, which reads /api/entries/[slug] and gets the chain from there.
+export async function GET() {
   try {
-    const entries = await pull_all_entries({ includeChain: await checkWristband(request) });
+    const entries = await pull_wall_entries();
     return Response.json({ entries });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });

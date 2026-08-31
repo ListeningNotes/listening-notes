@@ -449,6 +449,12 @@ export default function SessionShare() {
   const [checking, setChecking] = useState(true);
   const [entries, setEntries] = useState([]);
   const [selected, setSelected] = useState(null);
+  // The picker's rows carry no writing — see pull_wall_entries — and the card
+  // needs some: isMasterpiece reads track_notes to spot a record where every
+  // track got five stars, which is not the same question as the flag. So the
+  // chosen record is fetched in full, one at a time, which is also why the
+  // wall of them no longer has to be.
+  const [chosen, setChosen] = useState(null);
   const [query, setQuery] = useState('');
   const [shapeKey, setShapeKey] = useState('portrait');
   const [isDark, setIsDark] = useState(false);
@@ -518,7 +524,19 @@ export default function SessionShare() {
 
   // Redraw both slides whenever anything they depend on moves.
   useEffect(() => {
-    if (!selected || !coverRef.current || !cardRef.current) return;
+    if (!selected?.slug) { setChosen(null); return undefined; }
+    let alive = true;
+    // Falls back to the lean row rather than drawing nothing: a card that is
+    // right about everything except an unflagged masterpiece beats no card.
+    fetch(`/api/entries/${selected.slug}`)
+      .then(r => r.json())
+      .then(d => { if (alive) setChosen({ ...selected, ...(d.entry || {}) }); })
+      .catch(() => { if (alive) setChosen(selected); });
+    return () => { alive = false; };
+  }, [selected]);
+
+  useEffect(() => {
+    if (!chosen || !coverRef.current || !cardRef.current) return;
     let cancelled = false;
     setStatus('Drawing…');
     setTainted(false);
@@ -530,7 +548,7 @@ export default function SessionShare() {
 
     // The stored URL is the full-resolution master; album_art has already been
     // sized down to 600 for the grid, which is not enough for a 1080 export.
-    const src = sizedAlbumArt(selected.album_art_source || selected.album_art, 1080);
+    const src = sizedAlbumArt(chosen.album_art_source || chosen.album_art, 1080);
 
     const load = crossOrigin => new Promise((resolve, reject) => {
       const img = new Image();
@@ -564,13 +582,13 @@ export default function SessionShare() {
         canvas.height = shape.h;
         const ctx = canvas.getContext('2d');
         if (draw === drawCover) drawCover(ctx, img, shape, isDark);
-        else drawCard(ctx, img, selected, shape, isDark, siteUrl, families, logo);
+        else drawCard(ctx, img, chosen, shape, isDark, siteUrl, families, logo);
       }
       setStatus('');
     })();
 
     return () => { cancelled = true; };
-  }, [selected, shape, isDark, siteUrl]);
+  }, [chosen, shape, isDark, siteUrl]);
 
   // The link a Story sticker wants. Built from the journal's stored address
   // rather than window.location on purpose: this page is used on the dev

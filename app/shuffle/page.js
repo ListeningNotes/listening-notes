@@ -1,13 +1,15 @@
 // Copyright (C) 2026 Miyel Brown
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import { redirect } from 'next/navigation';
-import { pull_all_entries } from '@/library/database_actions';
+import { pull_random_slug } from '@/library/database_actions';
 
 export const dynamic = 'force-dynamic';
 
 export default async function ShufflePage() {
-  const entries = await pull_all_entries();
-  if (!entries.length) redirect('/');
-  const random = entries[Math.floor(Math.random() * entries.length)];
-  redirect(`/entries/${random.slug}`);
+  // Was: read the entire journal, then pick one at random in JS — 330 kB
+  // across the wire on a 39-entry journal, and growing, to produce a single
+  // slug. The database can pick one.
+  const slug = await pull_random_slug();
+  if (!slug) redirect('/');
+  redirect(`/entries/${slug}`);
 }

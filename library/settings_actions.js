@@ -224,6 +224,26 @@ export async function pull_settings() {
   }
 }
 
+// ── One field, for the most-repeated query in the app ─────────────────────
+// The beacon asks every fifteen seconds, in every open tab, all day. It wants
+// the Last.fm username and nothing else, and it used to get the whole settings
+// row to find it — 310 kB before the images came out of that read, 5.1 kB
+// after, and about 100 bytes now.
+//
+// The name says "settings" and the temptation will be to add a second field to
+// it the next time something needs one on a hot path. Don't. The reason this
+// function exists is that a general reader on a fifteen-second timer is how
+// the transfer allowance was spent in the first place; a second field is how
+// it grows back. Give the next hot path its own narrow reader.
+export async function pull_beacon_settings() {
+  try {
+    const [row] = await database`SELECT lastfm_user FROM settings WHERE id = 1`;
+    return { lastfm_user: row?.lastfm_user || null };
+  } catch {
+    return { lastfm_user: null };
+  }
+}
+
 export async function save_settings(fields) {
   const patch = {};
   for (const key of WRITABLE) {
