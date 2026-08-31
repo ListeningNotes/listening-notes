@@ -8,7 +8,6 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { fonts } from '../../library/sitewide_visuals';
-import PasswordGate from '../../components/session_components/PasswordGate';
 import { Headphones, Envelope, PaperPlane } from '@phosphor-icons/react';
 import backgrounds from '../../components/session_components/backgrounds';
 import { useBookplate } from '../../components/main_components/Bookplate';
@@ -52,7 +51,8 @@ export default function SessionHub() {
   }, [authed]);
 
   if (checking) return <div style={{ minHeight: '100vh', background: '#eef0ec' }} />;
-  if (!authed)  return <PasswordGate onAuth={() => setAuthed(true)} />;
+  if (!authed)  if (typeof window !== 'undefined') window.location.replace('/login');
+  return null;
 
   return (
     <div className="hub-page" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: fonts.sans, position: 'relative', background: '#eef0ec' }}>

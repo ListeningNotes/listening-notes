@@ -6,7 +6,6 @@ import { useRouter } from 'next/navigation';
 import { fonts } from '../../../library/sitewide_visuals';
 import { useAlbumSelection, CARD_STAGGER_MS } from '../../../hooks/useAlbumSelection';
 import { handOff } from '../../../library/baton';
-import PasswordGate from '../../../components/session_components/PasswordGate';
 import EchoNetwork from '../../../components/EchoNetwork';
 import PreListenQuestionnaire from '../../../components/session_components/steps/PreListenQuestionnaire';
 import { SESSION_STEPS } from '../../../hooks/useListeningSession';
@@ -218,7 +217,7 @@ export default function EchoPage() {
   }
 
   if (checking) return <div style={{ minHeight: '100vh', background: '#f5f2ec' }} />;
-  if (!authed) return <PasswordGate onAuth={handleAuth} />;
+  if (!authed) { if (typeof window !== 'undefined') window.location.replace('/login'); return null; }
 
   return (
     <>

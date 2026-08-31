@@ -45,6 +45,7 @@
 
 'use client';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import WritingAccess from './WritingAccess';
 import Link from 'next/link';
 import { IdentificationCard, BookOpen, Broadcast, Gear, Info } from '@phosphor-icons/react';
 import { useTheme } from './Lightswitch';
@@ -337,6 +338,10 @@ export default function HomeNav() {
   // should have to know they are sitting in one.
   const crown = (
     <div className="hn-crown">
+      {/* Three taps here open the writing panel — see WritingAccess. Free to
+          count, because this mark already swallows its own click to re-centre
+          the cross rather than navigating. */}
+      <WritingAccess className="hn-crown-tap">
       <Link href="/" className="hn-crown-mark" aria-label={cover_name} onClick={e => { e.preventDefault(); goTo(HOME); }}>
         <svg viewBox="76 96 241 140" className="hn-crown-svg" xmlns="http://www.w3.org/2000/svg">
           <path
@@ -355,6 +360,7 @@ export default function HomeNav() {
           />
         </svg>
       </Link>
+      </WritingAccess>
     </div>
   );
 

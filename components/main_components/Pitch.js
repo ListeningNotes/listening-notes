@@ -46,6 +46,8 @@ const HOME = 'https://www.listeningnotes.blog/get';
 //
 // TODO: this wants a settings column so it can be changed without a redeploy.
 // An environment variable is the smaller half of the job and ships today.
+import WritingAccess from './WritingAccess';
+
 const SOURCE_URL =
   process.env.NEXT_PUBLIC_SOURCE_URL || 'https://github.com/miyelbrown/listening-notes';
 
@@ -72,9 +74,19 @@ export default function Pitch() {
 
         {/* No version number: a version is a thing to keep current, and a line
             that goes stale is worse than a line that is simply true. */}
-        <a className="pt-source" href={SOURCE_URL} target="_blank" rel="noopener noreferrer">
-          Source
-        </a>
+        <div className="pt-foot">
+          <a className="pt-source" href={SOURCE_URL} target="_blank" rel="noopener noreferrer">
+            Source
+          </a>
+          {/* The visible way in, and the only one. Three taps on the mark is
+              the everyday door; this is here for the day that gesture does not
+              work on somebody's phone, and for the fact that a door only one
+              person needs should still be findable by that person.
+
+              This pane is what a logged-out visitor is shown, which is exactly
+              and only when a sign-in line is any use. */}
+          <WritingAccess label="Sign in" align="center" />
+        </div>
       </div>
     </div>
   );
