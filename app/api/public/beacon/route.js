@@ -19,7 +19,7 @@
 // own application, and the answer is cached for ten seconds, so a hundred
 // people reading at once cost one upstream request rather than sixteen hundred.
 
-import { pull_settings } from '@/library/settings_actions';
+import { pull_beacon_settings } from '@/library/settings_actions';
 
 const HISTORY = 25;        // enough tracks to find three distinct records in
 const UPSTREAM_TTL = 10;   // seconds; the client polls every 15
@@ -50,7 +50,7 @@ function tidy(row) {
 const NOTHING = { tracks: [] };
 
 export async function GET() {
-  const { lastfm_user } = await pull_settings();
+  const { lastfm_user } = await pull_beacon_settings();
   const key = process.env.LASTFM_KEY;
 
   // Nothing to ask, or nothing to ask with. Returning early rather than

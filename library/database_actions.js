@@ -65,6 +65,50 @@ const WITH_LISTEN_NUMBERS = `
   FROM entries
 `;
 
+// ── The wall, and everything else that lists records ──────────────────────
+// What a grid of covers, a search, a sort and the instant-open actually use.
+// Deliberately not the writing: no notes, no track_notes, no tracks, no
+// background.
+//
+// Measured on a 39-entry journal, a full row averages 8.5 kB and these fields
+// average 0.3 kB — so 97% of what the archive pulled was text it never drew.
+// And because the wall loads every entry to draw itself, that waste scaled
+// with the journal: at 500 records a single page view moved 4.1 MB, which is
+// about 1,200 views a month against a 5 GB allowance. The better the journal
+// got, the less it could be read, which is exactly backwards.
+//
+// Nothing loses anything. handoff.js — the thing that makes an entry open with
+// no wait — carries eleven fields and every one of them is here; the writing
+// was always fetched separately when the layer opened. The archive's search
+// covers album and artist, its filters cover genre and the three flags, and
+// its sorts cover rating, year and date. All present.
+//
+// listen_number and listen_total are computed by the window rather than
+// stored, which is why this selects from it rather than from entries.
+const WALL_FIELDS = [
+  'id', 'slug', 'album', 'artist', 'year', 'genre', 'album_key',
+  'rating', 'rating_value', 'entry_type', 'favorite', 'masterpiece',
+  'formative', 'horizon', 'album_art', 'created_at',
+  'listen_number', 'listen_total',
+];
+
+// One slug, chosen by the database. /shuffle used to read every entry and pick
+// in JS, which is a whole journal crossing the wire to produce one URL.
+export async function pull_random_slug() {
+  const [row] = await database`
+    SELECT slug FROM entries ORDER BY random() LIMIT 1`;
+  return row?.slug || null;
+}
+
+export async function pull_wall_entries() {
+  const rows = await database.query(
+    `SELECT ${WALL_FIELDS.map(f => `"${f}"`).join(', ')}
+     FROM (${WITH_LISTEN_NUMBERS}) ranked
+     ORDER BY created_at DESC`
+  );
+  return rows.map(row => withSizedArt(row, LIST_ART_PX));
+}
+
 export async function pull_all_entries({ includeChain = false } = {}) {
   const rows = await database.query(
     `${WITH_LISTEN_NUMBERS} ORDER BY created_at DESC`
@@ -108,8 +152,13 @@ export async function pull_public_entries() {
   // and gives the stored value verbatim, which can then be labelled UTC — the
   // one thing it actually is. Deterministic, and independent of wherever this
   // happens to be running.
+  // Named rather than SELECT *. The allow-list below still decides what leaves
+  // — that has not changed — but it no longer decides it *after* the whole
+  // entry has crossed the wire. A feed that deliberately carries no writing
+  // was reading every word of it and throwing it away.
   const rows = await database.query(
-    `SELECT *, created_at::text AS created_at_utc
+    `SELECT ${PUBLIC_FIELDS.filter(f => f !== 'created_at').map(f => `"${f}"`).join(', ')},
+            created_at, created_at::text AS created_at_utc
      FROM (${WITH_LISTEN_NUMBERS}) ranked
      ORDER BY created_at DESC`
   );
