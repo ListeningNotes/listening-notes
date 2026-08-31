@@ -34,7 +34,13 @@ CREATE TABLE IF NOT EXISTS comments (
   track_index integer DEFAULT '-1'::integer NOT NULL,
   parent_id integer,
   author_name text NOT NULL,
-  author_email text NOT NULL,
+  -- Where the commenter keeps their own journal, if they keep one. Optional,
+  -- and it replaced author_email rather than joining it: nothing on this site
+  -- sends email, so an address was a personal detail held for no purpose. A
+  -- URL is the other kind of thing — where something is, not who somebody is —
+  -- and one that resolves to a real journal is a better signal than an email,
+  -- which anybody can invent. Stored without a scheme; see return_address.js.
+  author_url text,
   content text NOT NULL,
   upvotes integer DEFAULT 0 NOT NULL,
   pending boolean DEFAULT false NOT NULL,
@@ -95,6 +101,12 @@ ALTER TABLE drafts  DROP COLUMN IF EXISTS relationship;
 -- The send flow stopped asking for an email; this stops keeping the ones it
 -- already had. Run after the code that no longer selects it is deployed.
 ALTER TABLE submissions DROP COLUMN IF EXISTS submitter_email;
+
+-- No email anywhere on the site. Add the address column before dropping the
+-- old one, and run both after the code that stopped selecting author_email is
+-- deployed.
+ALTER TABLE comments ADD COLUMN IF NOT EXISTS author_url text;
+ALTER TABLE comments DROP COLUMN IF EXISTS author_email;
 
 CREATE TABLE IF NOT EXISTS echo_memory (
   id serial NOT NULL,
