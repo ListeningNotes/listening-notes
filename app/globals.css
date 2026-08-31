@@ -3809,3 +3809,15 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   gap: 18px;
   flex-wrap: wrap;
 }
+
+/* The mark turning into the password panel and back — the same crossfade the
+   About card uses to turn a portrait into its code, because it is the same
+   move: one thing giving up its place to another in the spot it was already
+   occupying. */
+@keyframes wa-face {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  @keyframes wa-face { from { opacity: 1; } to { opacity: 1; } }
+}

@@ -26,6 +26,24 @@
 // guesses. What hiding it costs is also nothing, which is the whole argument
 // for it.
 //
+// ── The mark becomes the panel ────────────────────────────────────────────
+// Not a box over the page and not a box shoved between the mark and the page:
+// the mark's own place turns into the password, the way pressing the portrait
+// on the About card turns it into the scannable code. Same idea, and it is the
+// idea because it answers the question a floating panel could not — what does
+// it cover, and what moves to make room. Nothing covers anything. The mark is
+// simply not there while you are signing in, and it comes back when you are
+// done.
+//
+// The panel is taller than the mark, so the crown grows by the difference and
+// the pane's contents move down ahead of it. On the beacon that is the album
+// art and the recent strip sliding toward the bottom, which is the right thing
+// to give up while typing a password.
+//
+// Getting back is the badge on the corner, which is also the card's answer —
+// the portrait has one to turn it back and so does this. Three taps cannot do
+// it, because once the mark has gone there is nothing left to tap.
+//
 // ── Where the taps work, and where they do not ────────────────────────────
 // On the homepage the mark already swallows its own click — it re-centres the
 // cross rather than navigating — so counting taps there is free and three of
@@ -41,6 +59,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { X } from '@phosphor-icons/react';
 import PasswordGate from '../session_components/PasswordGate';
 
 // Three, and they have to be deliberate. Far enough apart that a double-tap
@@ -102,7 +121,15 @@ export default function WritingAccess({
   return (
     <span ref={wrap} className={className} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
       {children
-        ? <span onPointerDown={countTap} style={{ display: 'inline-flex' }}>{children}</span>
+        ? (
+          <span
+            onPointerDown={open ? undefined : countTap}
+            style={{
+              display: open ? 'none' : 'inline-flex',
+              animation: 'wa-face 0.26s ease',
+            }}
+          >{children}</span>
+        )
         : (
           // No children means this is the visible way in — the line at the
           // foot of the About pane. One press, because a fallback nobody can
@@ -119,36 +146,15 @@ export default function WritingAccess({
           >{label}</button>
         )}
 
-      {/* ── It pushes rather than covers ──────────────────────────────────
-          The panel is in the flow, not floating over it. Opening it makes the
-          box it sits in taller and everything below moves down ahead of it —
-          on the beacon pane the album strip slides toward the bottom and off,
-          which is the right thing to lose while you are typing a password.
-          Nothing is hidden behind the panel, because nothing is behind it.
-
-          The animation is a grid whose single row goes from 0fr to 1fr. That
-          is the one way to transition to a height nobody knows in advance:
-          height: auto cannot be animated, and a fixed pixel height would have
-          to be guessed and would be wrong the moment the panel says something
-          longer, like the doorman's wait message. */}
-      <span
-        style={{
-          display: 'grid',
-          gridTemplateRows: open ? '1fr' : '0fr',
-          transition: 'grid-template-rows 0.32s cubic-bezier(0.22,0.61,0.36,1)',
-          width: open ? 260 : 0,
-        }}
-        aria-hidden={!open}
-      >
-      <span style={{ overflow: 'hidden', minHeight: 0 }}>
       {open && (
         <span
           role="dialog"
           aria-label="Writing access"
           style={{
             display: 'block',
-            marginTop: 10,
+            position: 'relative',
             width: 260,
+            animation: 'wa-face 0.26s ease',
             padding: 16,
             borderRadius: 14,
             background: 'var(--panel-strong, #fff)',
@@ -168,10 +174,28 @@ export default function WritingAccess({
             color: 'var(--ink-faint)', marginBottom: 12,
           }}>writing access</span>
           <PasswordGate bare onAuth={admitted} />
+
+          {/* The way back, and the card's own answer to the same question:
+              the portrait has a badge to turn it into the code and another to
+              turn it back. Three taps cannot close this, because once the mark
+              has given up its place there is nothing left to tap. */}
+          <button
+            type="button"
+            onClick={close}
+            aria-label="Put the mark back"
+            style={{
+              position: 'absolute', top: -9, right: -9,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              width: 24, height: 24, borderRadius: '50%',
+              background: 'var(--bg)', border: '1px solid var(--border)',
+              color: 'var(--ink-faint)', cursor: 'pointer', padding: 0,
+              boxShadow: '0 2px 8px rgba(0,0,0,0.10)',
+            }}
+          >
+            <X size={11} weight="bold" aria-hidden="true" />
+          </button>
         </span>
       )}
-      </span>
-      </span>
     </span>
   );
 }
