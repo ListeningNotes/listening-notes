@@ -3793,3 +3793,14 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   .hn-controls { display: none; }
   .hn-under .hp-strip-track--grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
+
+/* The foot of the pitch pane: the source link, and the way in. Two quiet lines
+   that belong together — one says where the software came from, the other is
+   for the one person who keeps this copy of it. */
+.pt-foot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 18px;
+  flex-wrap: wrap;
+}

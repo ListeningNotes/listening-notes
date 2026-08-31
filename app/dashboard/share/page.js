@@ -29,7 +29,6 @@ import Link from 'next/link';
 import { fonts } from '../../../library/sitewide_visuals';
 import { sizedAlbumArt } from '../../../library/music_data_api';
 import { parseRating, parseTracksFromNotes } from '../../../library/entry_formatter';
-import PasswordGate from '../../../components/session_components/PasswordGate';
 import { useBookplate } from '../../../components/main_components/Bookplate';
 import backgrounds from '../../../components/session_components/backgrounds';
 
@@ -631,7 +630,7 @@ export default function SessionShare() {
   }, [selected]);
 
   if (checking) return null;
-  if (!authed) return <PasswordGate onAuth={() => setAuthed(true)} />;
+  if (!authed) { if (typeof window !== 'undefined') window.location.replace('/login'); return null; }
 
   const btn = (on = false) => ({
     fontFamily: MONO, fontSize: 10, letterSpacing: '0.08em', textTransform: 'uppercase',

@@ -1035,6 +1035,71 @@ checking public GitHub releases instead.
 
 ---
 
+## The lock
+
+**The login is an ownership check, not an identity, 2026-08-30.** There is one
+owner, nobody else has an account, and there is nothing to be here but
+yourself. So it is a yes/no key to a locked room in a building anybody may walk
+into: the journal is the public floor, the writing side is the room.
+
+**The blast radius of a compromised copy is one journal.** Every copy checks
+its own password against its own server, so logging in on somebody else's copy
+does nothing at all — there is no shared system to be let into, no central
+login, and no database of everybody. A password that leaks costs its owner
+their own journal and costs nobody else anything. This is a structural
+consequence of self-hosting rather than an accident of the design, and it is
+worth stating because it is the thing a hosted service can never offer.
+
+**Which is why the entrance can be hidden.** A normal login has to be findable
+because strangers need it; nobody needs this one but the keeper. Three taps on
+the mark, and a quiet Sign in line beside the source link on the pitch pane for
+when a gesture will not do. Hiding a door adds no security and this is honest
+about that — the lock is what protects the room. It costs nothing either, which
+is the whole argument.
+
+**It opens where you pressed, not as a screen.** A full-screen gate is what you
+build when the login is the destination. This one is a small panel under the
+mark, because signing in is something done in passing on the way to writing.
+
+**`/login` exists and nothing links to it prominently.** A gesture that is the
+only way in is a way in that cannot be linked, bookmarked, or reached when it
+breaks on a device nobody tested. It redirects home once you are wearing a
+wristband. `/dashboard` stops being the de facto login route, which it had
+become by being the page that happened to show the gate.
+
+**One password field, in one file.** The form markup lives once and is rendered
+two ways, because a second copy is exactly how the first drifted out of the
+shape a password manager can read. Safari needs a real form, a real submit
+button, `autocomplete="current-password"`, and a username to file the entry
+under — the last of which looks wrong for a site with no usernames and is not:
+managers store a pair, so with nothing to name the entry there is nowhere to
+put it. There is one owner, so it is hidden and holds the keeper's name.
+
+**Six months on the wristband.** A lock on one person's own room, opened by the
+same person on the same two or three devices. Monthly logins are how a password
+gets weaker, not stronger. The trade is stated rather than hidden: an unlocked
+phone is dashboard access, and that is accepted.
+
+**A door that can be knocked on is a door that gets counted.** See the rate
+limiting decisions below; the two belong together, because hiding an entrance
+is worth nothing and counting attempts is worth everything.
+
+**Rate limiting is in memory, and the limits it can honestly promise are
+written down.** A managed store is ruled out by what this software is — every
+copy is run by its keeper for nothing, and a limiter needing an account
+elsewhere is one most copies will run without. A database table answers a flood
+by writing a row per request, spending the thing under pressure to protect it.
+On a copy running as one process the count is exact; on serverless it is a
+speed bump that still stops the realistic attack, which is one machine
+hammering one endpoint. `library/doorman.js` says all of this at the top.
+
+**An upvote is one per person per comment, not a rate.** Keyed on the comment
+as well as the caller, so the rule reads the way the feature means it. In
+memory, so it forgets: a durable record of who voted for what is the kind of
+thing this site does not keep about its readers.
+
+---
+
 ## What a read costs
 
 Added 2026-08-30, after the Neon transfer allowance hit 95% and the cause

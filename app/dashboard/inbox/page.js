@@ -4,7 +4,6 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import PasswordGate from '../../../components/session_components/PasswordGate';
 import backgrounds from '../../../components/session_components/backgrounds';
 import { fonts } from '../../../library/sitewide_visuals';
 
@@ -138,7 +137,7 @@ export default function Inbox() {
   };
 
   if (checking) return <div style={{ minHeight: '100vh', background: '#eef0ec' }} />;
-  if (!authed) return <PasswordGate onAuth={() => setAuthed(true)} />;
+  if (!authed) { if (typeof window !== 'undefined') window.location.replace('/login'); return null; }
 
 
   const subFilter = (f) => ({

@@ -7,7 +7,6 @@ import { fonts } from '../../../../library/sitewide_visuals';
 import { tx, bdr, dk } from '../../../../library/session_styles';
 import { entryTypeLabel } from '../../../../library/entry_formatter';
 import { useListeningSession, SESSION_STEPS } from '../../../../hooks/useListeningSession';
-import PasswordGate from '../../../../components/session_components/PasswordGate';
 import SessionButton from '../../../../components/session_components/SessionButton';
 import EchoNetwork from '../../../../components/EchoNetwork';
 import { SessionDuration } from '../../../../library/session_timers';
@@ -210,7 +209,7 @@ export default function EchoSessionPage() {
     : ['Reflect on my notes so far', 'What patterns do you notice?', 'Push back on something I said'];
 
   if (checking) return <div style={{ minHeight: '100vh', background: '#f5f2ec' }} />;
-  if (!authed) return <PasswordGate onAuth={() => setAuthed(true)} />;
+  if (!authed) { if (typeof window !== 'undefined') window.location.replace('/login'); return null; }
 
   // Show loading only until the assembly animation completes — and not at all
   // when the briefing was already on file.

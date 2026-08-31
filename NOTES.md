@@ -250,6 +250,27 @@ SELECT pg_column_size(settings.*) FROM settings;
 
 and for the wire, `curl -s http://localhost:3000/api/entries | wc -c`.
 
+**THE LOCK — what is left after the doorman**
+
+- [ ] **Retire `/dashboard`.** It is no longer the login route — the pages
+      behind it now send a signed-out visitor to `/login` — and the plan is to
+      delete it outright once the owner's tools live where the work does.
+      Deleting it means finding new homes for what it still holds.
+- [ ] **The three-tap gesture only works where the mark does not navigate.** On
+      the homepage the crown swallows its own click to re-centre the cross, so
+      counting taps there is free. On every other page `SiteNav`'s mark is a
+      real link home, and taking that away to count taps would break the one
+      thing it is for — so the first tap goes home and the gesture works there.
+      Acceptable, and worth revisiting if a better idea turns up. The visible
+      fallback is the Sign in line on the pitch pane.
+- [ ] **`/api/comments/receipts` has no doorman.** It is a read that verifies
+      signed receipts, so a flood costs a query rather than a row, but it is
+      the one public POST still uncounted.
+- [ ] **Rate limiting is per instance on serverless.** Exact on a copy running
+      as one process. If the canonical instance ever needs the strict version,
+      the seam is `library/doorman.js` — swap the Map for a store and nothing
+      that calls it changes.
+
 **SCHEMA — the draft window is still open**
 
 Additive-only migrations start the day somebody else is running a copy. Nobody
@@ -315,7 +336,8 @@ the default that arrives by missing the deadline.
   the README used to call this a thing never to do after launch; they now say
   what it actually costs, which is typing the password once.
 
-- [ ] Upvote abuse prevention (IP or cookie check)
+- [x] Upvote abuse prevention — done 2026-08-30. One vote per comment per
+      address per twelve hours, via library/doorman.js.
 
 **BUGS**
 - [ ] **Slug fix** — `create_slug` collapses spaces to hyphens and then calls `.trim()`, which only strips whitespace. A title that starts or ends with punctuation keeps a stray hyphen: `— Blue` becomes `-blue`. Numbering for repeat listens is handled separately in `database_actions.js` and is fine.
