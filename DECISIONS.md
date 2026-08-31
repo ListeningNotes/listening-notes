@@ -39,6 +39,23 @@ the first external install onward, migrations add columns and never rename or
 drop them. Copies in the wild have to survive every migration, and one that
 fails is somebody's journal that stops opening.
 
+**Additive-only starts at the first external deploy, and until then dropping
+is free — with one exception.** Any column may go while the schema is a draft,
+*except* one holding writing the owner authored: entries, notes, tags, bio,
+prompt answers. Those are somebody's work and are never dropped to tidy up.
+Everything else is fair game, including data collected from visitors through
+forms that no longer exist — that is the category email fell into, and keeping
+it would have meant holding personal details precisely because nothing was
+using them.
+
+Confirm before dropping anything with rows in it. A grep finding no readers is
+not evidence a column is unused; read the values. That rule has now been right
+twice — it saved `entries.tags` from being misjudged, and it is what turned up
+that dropping `relationship` would destroy nine rows of listening history
+rather than none.
+
+From the first external deploy onward, nothing is dropped at all.
+
 **Until then the database is a draft.** Dropping a dead column, renaming a bad
 one, deleting a table nothing uses — all fine, and worth doing while it is
 still free. The rule protects databases on machines nobody here can reach;
@@ -882,23 +899,33 @@ required.
 for one and nothing ever used it — a contact detail held for no reason, which
 is the first crack in not holding anyone's data.
 
-**And the column went too, 2026-08-31.** It was kept for a fortnight on the
-`settings.bio` precedent — real data, draft schema, don't drop things in
-passing — and then dropped on the better argument: the reason not to ask for an
-email is the same reason not to keep the three already given. Holding them
-achieved nothing the principle allows and cost the one thing the principle is
-about. The draft window is also the only time dropping is free, and it closes
-the day somebody else installs a copy.
+**No email anywhere on the site, 2026-08-31.** Not in the send flow, not in
+comments, not in the schema. Nothing here sends email — there is no mailing
+list, no notification, no account to recover — so an address is a personal
+detail collected for no purpose, and that is the first crack in not holding
+anyone's data.
 
-Read before dropping, as the guardrail requires: three rows, all with an
-address, two of them the owner's own test submissions. The third was a real
-person, and losing her address is the actual cost of this decision rather than
-a rounding error. `sender_url` is what replaced it, and is a different kind of
-thing — an address is where something is, not who somebody is.
+**A journal URL does every job an email might have.** It makes somebody
+reachable, it is what the address book will be built from, and it is an
+address rather than contact information: where something is, not who somebody
+is. It is also the better signal of the two. An email is trivially invented; a
+URL that resolves to a real journal is not.
 
-**`comments.author_email` is a separate column and stays.** The comment form
-still asks for one and still requires it. Whether that survives the same
-argument is a real question and deliberately not answered here.
+**So both forms ask the same two things: a name, and a journal if you keep
+one.** `submissions.sender_url` and `comments.author_url`, with
+`submitter_email` and `author_email` dropped.
+
+Read before dropping, as the guardrail requires. Submissions: three rows with
+an address, two of them the owner's own tests, the third a real person — losing
+her address is the actual cost here rather than a rounding error. Comments: one
+of nine, and it was `test@test.com`.
+
+**One stored value, not one per feature.** The URL lives in localStorage under
+a single key owned by `return_address.js`, shared by the send form, the comment
+form, and later the compare affordance. Fill it in once on any journal and it
+is prefilled on every journal after. That sharing is also what makes Compare
+possible for a visitor: a journal offers it when the browser holds an address,
+regardless of which form put it there.
 
 **A journal URL takes its place, and is not the same kind of thing.** An
 address is where something is; an email is who somebody is. It is also the

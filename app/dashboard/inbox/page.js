@@ -351,7 +351,12 @@ export default function Inbox() {
                           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                             <button onClick={() => approveComment(c.id)} style={{ ...rowAction(false, true), fontSize: 10, padding: '7px 18px' }}>Approve</button>
                             <button onClick={() => dismissComment(c.id)} style={{ ...rowAction(true, false), fontSize: 10, padding: '7px 18px' }}>Dismiss</button>
-                            {c.author_email && <span style={{ fontFamily: MONO, fontSize: 10, color: 'rgba(26,25,22,0.3)', marginLeft: 'auto' }}>{c.author_email}</span>}
+                            {c.author_url && (
+                              <a href={'https://' + c.author_url} target="_blank" rel="noopener noreferrer"
+                                 style={{ fontFamily: MONO, fontSize: 10, color: 'rgba(26,25,22,0.4)', marginLeft: 'auto', textDecoration: 'none', borderBottom: '1px solid rgba(26,25,22,0.15)' }}>
+                                {c.author_url} &#8599;
+                              </a>
+                            )}
                           </div>
                         </div>
                       ))}

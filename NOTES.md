@@ -90,6 +90,19 @@ cannot be tested end to end.
 The cross is built and merged. What is left of it:
 
 - [x] **`usePlaceKeeper` is not needed and will not be built.** It was going to remember the pane index and the per-pane scroll offset across a route change, because browsers do not restore nested scroll containers. Going out to an entry and back is the only thing that lost them, and an entry is a layer now — the cross never unmounts, so both survive on their own. Verified: pane scroll 991 before and after, and the rail still on the beacon pane.
+- [ ] **RUN THIS — no email anywhere, once this code is deployed.** Nothing
+      selects either column any more. Already applied to the `dev` branch and
+      tested there; production is outstanding.
+
+      ```sql
+      ALTER TABLE comments    ADD COLUMN IF NOT EXISTS author_url text;
+      ALTER TABLE comments    DROP COLUMN IF EXISTS author_email;
+      ALTER TABLE submissions DROP COLUMN IF EXISTS submitter_email;
+      ```
+
+      Add before dropping, and run after deploy — the live code still selects
+      `author_email` until then. Backup first. What is lost: one real person's
+      address on a submission, and a `test@test.com` on a comment.
 - [ ] **RUN THIS LAST — drop `relationship`, once the code below is deployed.**
       The Formative migration is already done (nine rows, verified). Nothing in
       the code reads or writes this column any more, so the drop is safe the

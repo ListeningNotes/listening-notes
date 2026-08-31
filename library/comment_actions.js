@@ -40,15 +40,15 @@ export async function nest_comments(slug, own_ids = []) {
   return by_track;
 }
 
-export async function save_comment({ slug, track_index, parent_id, author_name, author_email, content }) {
+export async function save_comment({ slug, track_index, parent_id, author_name, author_url, content }) {
   const result = await database`
-    INSERT INTO comments (entry_slug, track_index, parent_id, author_name, author_email, content, pending)
+    INSERT INTO comments (entry_slug, track_index, parent_id, author_name, author_url, content, pending)
     VALUES (
       ${slug},
       ${track_index ?? -1},
       ${parent_id ?? null},
       ${author_name.trim()},
-      ${author_email?.trim().toLowerCase() ?? ''},
+      ${author_url?.trim().toLowerCase() || null},
       ${content.trim()},
       true
     )
@@ -70,7 +70,7 @@ export async function upvote_comment(id) {
 export async function pull_pending_comments() {
   return await database`
     SELECT id, entry_slug, track_index, parent_id,
-           author_name, author_email, content, created_at
+           author_name, author_url, content, created_at
     FROM comments
     WHERE pending = true
     ORDER BY created_at DESC
