@@ -167,9 +167,50 @@ export function titleName(settings) {
   return `${keeper || 'A listening journal'} \u00b7 ${SOFTWARE_NAME}`;
 }
 
+// ── The two columns this must never select ────────────────────────────────
+// portrait_data and portrait_code hold the portrait and the portrait-made-into
+// -a-code as base64, and together they are 307 kB of a 310 kB row. Nothing
+// that reads settings wants them: every surface that shows either image points
+// at /api/portrait through portrait_url or portrait_code_url, and that route
+// does its own targeted SELECT for the bytes. They were pure freight on every
+// caller.
+//
+// And the freight was enormous, because this is the most-read row in the
+// database. The root layout reads it twice per page render, and the beacon
+// route reads it every fifteen seconds for one field — so a single homepage
+// tab left open moved about 580 MB a day, and a month of that is 17 GB against
+// a 5 GB allowance. It read as a runaway poll and it was a runaway row.
+//
+// Named columns rather than SELECT * would be stricter still, and would also
+// mean this list drifting out of step with the schema every time a column is
+// added. Excluding the two that are known to be huge keeps new columns arriving
+// for free and keeps the images out, which is the whole of the problem.
+// Every column except those two, named. `SELECT *` minus a list is not
+// something Postgres can express, and the two ways of faking it are both
+// worse: to_jsonb() and subtract would hand back founded_at, why_date and
+// updated_at as strings instead of dates, silently, and keying the list off
+// EMPTY would drop why_essay and why_date — which are columns /get reads and
+// EMPTY has never listed.
+//
+// The cost is that a column added later does not appear until it is added
+// here. That is a real cost and it is the smaller one; the alternative was a
+// silent type change or a silently missing page. Add new columns to this list.
+const SETTINGS_FIELDS = [
+  'id', 'journal_name', 'keeper_name', 'bio', 'portrait_url',
+  'instagram_url', 'lastfm_user', 'site_address', 'founded_at',
+  'pinned_entry_id', 'updated_at', 'about_intro', 'why_essay',
+  'why_date', 'definitions', 'social_links', 'hidden_fields',
+  'portrait_mime', 'send_me', 'portrait_position', 'rig_icon', 'rig',
+  'portrait_code_url', 'display_name', 'serial', 'setup_complete',
+  'bioanswers',
+];
+const SETTINGS_SELECT = SETTINGS_FIELDS.map(f => `"${f}"`).join(', ');
+
 export async function pull_settings() {
   try {
-    const [row] = await database`SELECT * FROM settings WHERE id = 1`;
+    const [row] = await database.query(
+      `SELECT ${SETTINGS_SELECT} FROM settings WHERE id = 1`
+    );
     // definitions always comes back complete — whatever the owner rewrote,
     // folded over the shipped text — so nothing downstream has to know that
     // the column holds only the differences.
