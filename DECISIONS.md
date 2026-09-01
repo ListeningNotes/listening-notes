@@ -511,6 +511,21 @@ the phone. Not removable, but quiet.
 smallest type, no version number. Satisfies AGPL §13 whether or not anyone has
 modified anything, so nobody has to think about compliance.
 
+**And it is an environment variable, never a setting, 2026-08-31.** A fork owes
+*its* source rather than this one's, so the value genuinely has to be
+changeable — but almost nobody modifies the code, and anybody who does is
+already comfortable with `NEXT_PUBLIC_SOURCE_URL`. A developer section in the
+settings would advertise a capability most owners neither need nor should have
+to think about. **The settings page is about the journal, not about the
+software.** Resolution is the variable if set, then the canonical repository.
+
+**A fallback that is always used is not a fallback.** The variable was missing
+from the deploy button's environment list, so no fresh copy could set it and
+every copy showed the default — which was pointing at a repository that does
+not exist. That is the §13 offer attempted and missed, which is worse than a
+plainly broken link because it looks discharged. Both fixed together, and they
+were one bug: an untested default is a default nobody has read.
+
 **One header everywhere, 2026-08-28.** Mark centred, one control each side —
 the same arrangement the About card uses, scaled down. Entry pages and the
 panes had different shapes, and one arrangement is what makes the site read as

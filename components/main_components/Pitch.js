@@ -37,19 +37,27 @@
 
 const HOME = 'https://www.listeningnotes.blog/get';
 
-// Where this copy's source lives. §13 asks for the source of *the running
-// program*, which for a modified copy is that copy's own repository and not
-// this one — so an owner who has changed anything points this at their fork.
-// Defaulted to upstream, because the honest answer for an unmodified copy is
-// upstream and nobody should have to think about compliance to install a
-// journal.
-//
-// TODO: this wants a settings column so it can be changed without a redeploy.
-// An environment variable is the smaller half of the job and ships today.
 import WritingAccess from './WritingAccess';
 
+// Where this copy's source lives. §13 asks for the source of *the running
+// program*, which for a modified copy is that copy's own repository and not
+// this one — so an owner who has changed anything points this at their fork
+// with NEXT_PUBLIC_SOURCE_URL. Defaulted to upstream, because the honest
+// answer for an unmodified copy is upstream and nobody should have to think
+// about compliance to install a journal.
+//
+// An environment variable and nothing else. This wanted a settings column
+// once, and the answer is no: almost nobody modifies the code, anybody who
+// does is already comfortable with environment variables, and a developer
+// section in the settings would advertise a capability most owners neither
+// need nor should have to think about. The settings page is about the journal,
+// not about the software.
+//
+// The fallback was pointing at a repository that does not exist, which is the
+// §13 offer being attempted and missed — worse than a link that is merely
+// broken, because it looks discharged.
 const SOURCE_URL =
-  process.env.NEXT_PUBLIC_SOURCE_URL || 'https://github.com/miyelbrown/listening-notes';
+  process.env.NEXT_PUBLIC_SOURCE_URL || 'https://github.com/ListeningNotes/listening-notes';
 
 export default function Pitch() {
   return (
