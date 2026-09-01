@@ -4,7 +4,7 @@
 import { useState, useEffect } from 'react';
 import { fonts } from '../../../library/sitewide_visuals';
 import { keep_receipt } from '../../../library/receipts';
-import { recallAddress, keepAddress } from '../../../library/return_address';
+import { recallSender, keepSender } from '../../../library/return_address';
 
 const inputStyle = {
   background: 'var(--panel)', border: '1px solid var(--border)', borderRadius: '6px',
@@ -26,12 +26,15 @@ export default function NewCommentForm({ slug, trackIndex, onPosted }) {
   const [address, setAddress] = useState('');
   const [text, setText] = useState('');
 
-  // The same one value the send form keeps, under the same key — see
-  // return_address.js. Fill it in on any journal and it is already there on
-  // the next one, whichever form asked for it first. That shared key is also
-  // what will let a journal offer Compare to a visitor: the offer depends on
-  // the browser holding an address, not on where it was typed.
-  useEffect(() => { setAddress(recallAddress()); }, []);
+  // Both remembered, under the one key the send form uses — see
+  // return_address.js. Type your name on any journal and it is already there
+  // on the next one, which matters more here than on a send: somebody leaving
+  // a second comment should not be asked who they are again.
+  useEffect(() => {
+    const known = recallSender();
+    setName(known.name);
+    setAddress(known.address);
+  }, []);
   const [posting, setPosting] = useState(false);
   const [error, setError] = useState('');
 
