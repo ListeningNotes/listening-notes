@@ -7,7 +7,10 @@ only reason all three stay current.
 
 | File | Holds | For |
 |---|---|---|
-| [README.md](README.md) | What this is, how to run it, where things live | Strangers |
+| [README.md](README.md) | What this is and how to run a copy | Strangers |
+| [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Where everything lives, what to change | Anyone working on it |
+| [docs/OPERATIONS.md](docs/OPERATIONS.md) | Backups, restore, export, keys | Whoever keeps a copy running |
+| [docs/LICENCE-NOTES.md](docs/LICENCE-NOTES.md) | The appendix notice, §13, the DCO | Anyone who asks |
 | **NOTES.md** | Pending, Complete, gotchas | Miyel |
 | [DECISIONS.md](DECISIONS.md) | What is settled, and why | Read every session |
 
@@ -29,6 +32,20 @@ Before wrapping up:
 **Read [DECISIONS.md](DECISIONS.md) at the start of every session.** If
 something in it comes up, the answer is already written down. Do not
 re-propose anything listed as ruled out.
+
+---
+
+## Writing code in this project
+
+Miyel's own working rules. These lived in the README until 2026-08-31, where
+they were three audiences deep in a file a stranger reads to decide whether to
+deploy a copy — and none of it is anything they need.
+
+- Edit JavaScript files directly in VS Code
+- For .env.local use the terminal, not VS Code (VS Code silently fails to save it)
+- When writing Python scripts that contain JavaScript with backticks, write to a temp file first, never use heredoc
+- Always commit after something is working and tested
+- git restore filename will undo changes to a single file if something goes wrong. Think of it like a checkpoint.
 
 ---
 
@@ -109,7 +126,7 @@ cannot be tested end to end.
       Not re-enterable: it redirects home once claimed. **That leaves
       `keeper_name` with no editor** once a `display_name` is set — the card
       editor writes `display_name` instead. Real gap, see below.
-- [ ] **Deploy button** — the README has one, but it lands on a copy with no schema. Blocked on the migration runner.
+- [x] **Deploy button** — done, and no longer lands on a copy with no schema: the migration runner builds the tables and the welcome screen asks who it belongs to.
 - [ ] **`/api/export`** — a copy should be able to hand its owner their own data back.
 
 **STRUCTURE** — see DECISIONS.md before starting any of these
@@ -327,6 +344,14 @@ and for the wire, `curl -s http://localhost:3000/api/entries | wc -c`.
       the seam is `library/doorman.js` — swap the Map for a store and nothing
       that calls it changes.
 
+- [ ] **A copy with no Anthropic key half-works, and says it fully works.**
+      Nothing checks `ANTHROPIC_API_KEY`, so the research, format and companion
+      controls all render on a keyless copy and fail at the request —
+      `/api/format` returns a 500 and `/api/research` streams an error. The
+      Last.fm key is the model to copy: `/api/public/beacon` returns nothing
+      when the key is absent and the client draws nothing. Until then a keyless
+      copy cannot complete a listening session, which makes the key closer to
+      required than optional.
 - [ ] **`keeper_name` has no editor.** `IdentificationCardEditor` writes
       `display_name` once one exists, and setup does not reopen. Belongs in the
       card editor, which is where things are edited.
@@ -728,7 +753,7 @@ in a file that gets committed. `.env.example` holds names and never values.
 
 **`pg_dump` is not installed and cannot easily be** — no Homebrew, no
 Postgres.app, nothing to run it with. Don't plan around one. What exists
-instead is `npm run backup` / `npm run restore`; see the README.
+instead is `npm run backup` / `npm run restore`; see [docs/OPERATIONS.md](docs/OPERATIONS.md).
 
 **Neon keeps six hours of history on this plan.** That covers the mistake you
 notice immediately and nothing else. It is not the safety net — the nightly
@@ -766,7 +791,7 @@ database. A destructive query typed here is typed there.
 Not repeated here, because two copies of the same thing means neither stays
 current.
 
-- **Architecture** — what every file and route does: [README.md](README.md).
+- **Architecture** — what every file and route does: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 - **Design tokens** — colours and fonts: `library/sitewide_visuals.js` and the
   custom properties at the top of `app/globals.css`. Those files are the
   source; anything written down elsewhere goes stale.
