@@ -91,7 +91,24 @@ cannot be tested end to end.
       **zero foreign keys**, because the DO blocks matched constraint names
       without scoping to a table. Scoped by `conrelid` now, and the rehearsal
       gives 9 / 18 / 3.
-- [ ] **Welcome screen** — first run should ask who this copy belongs to and write the owner row plus the settings row. `setup_complete` exists as a column and nothing sets it. Until this lands, `keeper_name`, `founded_at` and `serial` can only be set in the database.
+- [x] **Welcome screen** — done 2026-08-31. `/setup` → `WelcomeScreen`, writing
+      through `POST /api/setup`. Four fields: name, address, logging-since,
+      Last.fm. The password comes first, as `PasswordGate bare`.
+
+      An unclaimed copy holds its whole site behind `ComingSoon` rather than
+      redirecting — a stranger should not land on somebody's setup form even
+      though it is behind the same password as everything else. `proxy.js`
+      carries the pathname so the layout can exempt `/setup`; it does no
+      database work, because a read there would be a read per request.
+
+      `isSetUp()` is a separate reader that does NOT catch. `pull_settings`
+      swallows errors and returns `setup_complete: false`, so a gate built on
+      it would read a database outage as an unclaimed journal and hold a live
+      site. It caches once true, since the latch never goes back.
+
+      Not re-enterable: it redirects home once claimed. **That leaves
+      `keeper_name` with no editor** once a `display_name` is set — the card
+      editor writes `display_name` instead. Real gap, see below.
 - [ ] **Deploy button** — the README has one, but it lands on a copy with no schema. Blocked on the migration runner.
 - [ ] **`/api/export`** — a copy should be able to hand its owner their own data back.
 
@@ -309,6 +326,24 @@ and for the wire, `curl -s http://localhost:3000/api/entries | wc -c`.
       as one process. If the canonical instance ever needs the strict version,
       the seam is `library/doorman.js` — swap the Map for a store and nothing
       that calls it changes.
+
+- [ ] **`keeper_name` has no editor.** `IdentificationCardEditor` writes
+      `display_name` once one exists, and setup does not reopen. Belongs in the
+      card editor, which is where things are edited.
+- [ ] **Fresh-copy surfaces are still wrong once the hold lifts**, all found
+      while designing the welcome screen and all separate from it: the beacon
+      draws a grey ♪ and an em-dash forever with no `lastfm_user` (its own
+      route's comment promises the client draws nothing); `Journal.js` has no
+      `entries.length === 0` branch so an empty journal says "No entries match
+      these filters"; `/api/public/stamps` returns `0` from its catch so a
+      database outage prints "Albums logged 0"; and `IdentificationCardEditor`
+      seeds `lastCodeUrl` from the current address rather than the one the
+      stored code was built for, so changing the address never rebuilds the QR
+      — now live, because setup can write an address.
+- [ ] **`doorman.js` trusts the first `X-Forwarded-For` entry.** True of
+      Vercel, backwards for nginx, ALB, Traefik and Cloudflare, which append.
+      On a bare Node deploy the login bucket key is attacker-chosen and the
+      5/minute limit never fires.
 
 **SCHEMA — the draft window is still open**
 

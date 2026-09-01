@@ -4,7 +4,10 @@ import './globals.css';
 import { Nunito, DM_Mono } from 'next/font/google';
 import { Lightswitch } from '../components/main_components/Lightswitch';
 import { Bookplate } from '../components/main_components/Bookplate';
-import { pull_settings, coverName, titleName } from '../library/settings_actions';
+import ComingSoon from '../components/main_components/ComingSoon';
+import { PATH_HEADER } from '../proxy';
+import { headers } from 'next/headers';
+import { isSetUp, pull_settings, coverName, titleName } from '../library/settings_actions';
 
 const nunito = Nunito({
   subsets: ['latin'],
@@ -162,7 +165,36 @@ const BOOKPLATE_FIELDS = [
 // be taken here rather than anywhere lower because the journal is mounted in
 // two places, the cross's centre pane and /archive, and a layer that only
 // worked from one of them would be a layer that worked by accident.
+// ── The hold ──────────────────────────────────────────────────────────────
+// A copy nobody has claimed shows one plain page instead of its whole site.
+// Not a redirect to /setup: a stranger who found a fresh deployment would land
+// on somebody else's setup form, which looks like an invitation even though it
+// is behind the same password as everything else. Cannot be taken and does not
+// look takeable are different things, and only the second is a decision.
+//
+// The path comes from proxy.js as a header, because a server layout is not
+// given one. /setup is the single exemption — hold that too and the owner
+// cannot get in.
+//
+// isSetUp rather than the settings row already read below, deliberately.
+// pull_settings swallows database errors and returns setup_complete false, so
+// a Neon outage would read as an unclaimed journal and hold a live site behind
+// this page. isSetUp lets the error throw, and the catch here fails closed:
+// if the question cannot be answered, assume the journal is somebody's.
+const SETUP_PATH = '/setup';
+
+async function holdTheDoor() {
+  const path = (await headers()).get(PATH_HEADER) || '';
+  if (path === SETUP_PATH || path.startsWith('/api/')) return false;
+  try {
+    return !(await isSetUp());
+  } catch {
+    return false;
+  }
+}
+
 export default async function RootLayout({ children, layer }) {
+  const holding = await holdTheDoor();
   const all = await pull_settings();
 
   // Named keys only, rather than spreading what is left after removing the
@@ -203,8 +235,10 @@ export default async function RootLayout({ children, layer }) {
         />
         <Bookplate settings={settings}>
           <Lightswitch>
-            {children}
-            {layer}
+            {holding ? <ComingSoon /> : <>
+              {children}
+              {layer}
+            </>}
           </Lightswitch>
         </Bookplate>
       </body>

@@ -94,6 +94,41 @@ const WALL_FIELDS = [
 
 // One slug, chosen by the database. /shuffle used to read every entry and pick
 // in JS, which is a whole journal crossing the wire to produce one URL.
+// ── The owner row ─────────────────────────────────────────────────────────
+// Written once, by setup, and by nothing else. Every entry files against it
+// through the COALESCE in save_new_entry, and until it exists that resolves to
+// NULL — which quietly voids the unique index on (user_id, slug), because
+// Postgres counts NULLs as distinct from each other. So an unclaimed copy is
+// one where two entries could take the same slug and the update that follows,
+// which has no LIMIT, would rewrite both.
+//
+// The handle is derived, never asked. DECISIONS is explicit that a journal is
+// named after whoever keeps it and that asking for a second name is the
+// mistake journal_name already made — so this takes the keeper's name through
+// the same create_slug the entries use, with the same kind of floor for the
+// case where somebody finishes setup without naming themselves. Both columns
+// are NOT NULL, which is why there is a floor at all.
+//
+// Inserts only into an empty table. ON CONFLICT (handle) was the first attempt
+// and it is not the same guarantee: it stops a duplicate *name*, not a second
+// owner, so a copy that already had a row got a second one under a different
+// handle. The owner is singular — everything downstream reads it as
+// `SELECT id FROM users ORDER BY id LIMIT 1` — so the row either does not exist
+// yet or is not setup's to add to. Caught by running setup against a database
+// that already had one, which is the state every existing journal is in.
+const KEEPER_FLOOR = 'keeper';
+
+export async function claim_journal(keeper_name) {
+  const handle = create_slug(String(keeper_name || '')) || KEEPER_FLOOR;
+  const shown = String(keeper_name || '').trim() || KEEPER_FLOOR;
+  const [row] = await database`
+    INSERT INTO users (handle, display_name)
+    SELECT ${handle}, ${shown}
+    WHERE NOT EXISTS (SELECT 1 FROM users)
+    RETURNING id, handle`;
+  return row || null;
+}
+
 export async function pull_random_slug() {
   const [row] = await database`
     SELECT slug FROM entries ORDER BY random() LIMIT 1`;

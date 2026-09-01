@@ -224,6 +224,33 @@ export async function pull_settings() {
   }
 }
 
+// ── Has anybody claimed this copy yet ─────────────────────────────────────
+// One column, and — unlike everything else in this file — it does NOT catch.
+//
+// That is the whole point of it existing separately. pull_settings swallows
+// every database error and hands back EMPTY, in which setup_complete is false,
+// because a copy whose database is unreachable should still render its first
+// page rather than an error. Right for rendering, and exactly wrong here: a
+// Neon outage and "never set up" would be the same answer, so a gate built on
+// it would fail OPEN — showing a stranger the holding page, or worse the setup
+// screen, for a journal that has been running for a year.
+//
+// So the error is allowed to throw and the caller decides. A gate should fail
+// closed, and the closed direction here is "assume it is set up".
+//
+// Cached once it has answered true, because it is a latch: no path in the app
+// sets it back to false, and a journal that has been claimed stays claimed.
+// That turns a per-request read into one read per server instance, which
+// matters because this is checked on the way to every public page.
+let claimed = false;
+
+export async function isSetUp() {
+  if (claimed) return true;
+  const [row] = await database`SELECT setup_complete FROM settings WHERE id = 1`;
+  if (row?.setup_complete === true) claimed = true;
+  return claimed;
+}
+
 // ── One field, for the most-repeated query in the app ─────────────────────
 // The beacon asks every fifteen seconds, in every open tab, all day. It wants
 // the Last.fm username and nothing else, and it used to get the whole settings

@@ -39,9 +39,10 @@ it the journal works and those features are simply absent.
 3. Deploy. The tables build themselves on first start — see
    [`migrations/`](migrations). You do not need to open a SQL editor.
 
-> **There is no welcome screen yet**, so a fresh copy has its tables but no
-> owner row and no settings until you write in it. That one is still on the
-> Pending list in [NOTES.md](NOTES.md).
+On first visit the copy shows a holding page and asks to be set up. That is
+four questions — your name, this journal's address, when you started logging,
+and a Last.fm username if you use one — behind the `SESSION_PASSWORD` you just
+set. Only the name matters; the rest can be left blank.
 
 **Naming your copy.** Every copy is named after whoever keeps it, so yours is
 not called Listening Notes and should not be. The name comes from `keeper_name`
