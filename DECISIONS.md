@@ -1196,6 +1196,73 @@ thing this site does not keep about its readers.
 
 ---
 
+## Setting a copy up
+
+**A route, not a takeover, 2026-08-31.** `/setup`, redirecting home once the
+journal is claimed — the same shape as `/login` and for the same reason. A
+screen only ever reached by being redirected to it cannot be linked,
+bookmarked, or reached again after a half-finished attempt.
+
+**An unclaimed copy holds its whole site behind a plain page.** Not a redirect
+to setup: a stranger who found a fresh deployment would land on somebody else's
+setup form, which reads as an invitation. It is behind the same password as
+everything else and cannot actually be taken — the password is an environment
+variable set in the deploy form before the URL resolves — but *cannot be taken*
+and *does not look takeable* are different things, and only the second is a
+design decision.
+
+**Held, rather than left public.** An unconfigured copy does render correctly —
+`coverName()` falls back, the About pane is designed for a journal with nothing
+in it. But rendering correctly and being worth showing are different: behind
+the hold is an empty archive, a nameless card and a dead beacon at somebody's
+public address. There is nothing to read, so there is no reading to protect.
+
+**`proxy.js` carries the pathname and does nothing else.** Holding everything
+while keeping `/setup` reachable needs the path, and a server layout is not
+given one. The proxy does no database work: it runs on every request, and a
+read there is a read per request, which is the exact shape of the thing that
+spent the transfer allowance.
+
+**The gate reads through `isSetUp()`, which does not catch.** `pull_settings`
+swallows database errors and returns `setup_complete: false` — right for
+rendering, and exactly wrong for a gate, because an outage and "never set up"
+become the same answer and a live journal gets held behind the holding page.
+The reader lets the error throw and the caller fails closed: if the question
+cannot be answered, assume the journal is somebody's. It caches once true,
+because the latch never goes back.
+
+**One step, four fields, and the rest is edited where it prints.** Name,
+address, logging-since, Last.fm. Everything else on the card already has an
+editor, so a longer setup would be a second one. The nine bio prompts
+especially are not here: three get answered, and nine is a questionnaire.
+
+**The handle is derived and the serial is minted; neither is asked.** A journal
+is named after whoever keeps it, so asking for a second name is the mistake
+`journal_name` already made. The serial is the copy's identity rather than the
+keeper's, and it is random rather than derived — anything derived from a name
+or a date is frozen wrong the moment either is corrected, and `WRITE_ONCE`
+means there is no second chance.
+
+**One owner row, and the guard is "the table is empty", not "this handle is
+free".** The first version used `ON CONFLICT (handle)`, which stops a duplicate
+name and not a second owner — a copy that already had a row got another under
+a different handle. Everything downstream reads the owner as `ORDER BY id LIMIT
+1`, so the row either does not exist yet or is not setup's to add to.
+
+**It does not reopen.** Setup redirects away once claimed rather than showing a
+form that appears to save `serial` and `founded_at` and silently drops both.
+The cost is that `keeper_name` has no editor once a `display_name` exists; that
+belongs in the card editor, which is where things are edited, and is in NOTES.
+
+**Existing journals were claimed by a migration, not by asking.** Every copy in
+the world read `setup_complete: false`, including this one after a year of
+writing, because nothing had ever written the column. Turning it into a gate
+without `002_claim_existing_journals.sql` would have held a live journal behind
+the holding page on deploy. A non-null `keeper_name` is somebody having already
+answered the question setup asks.
+
+---
+
 ## Migrations
 
 **A copy builds its own database, 2026-08-31.** Until now every schema change
