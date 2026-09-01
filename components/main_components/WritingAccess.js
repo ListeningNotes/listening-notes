@@ -59,6 +59,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { useBookplate } from './Bookplate';
 import { X } from '@phosphor-icons/react';
 import PasswordGate from '../session_components/PasswordGate';
 
@@ -76,6 +77,12 @@ export default function WritingAccess({
   className = '',
 }) {
   const router = useRouter();
+  // The ornamented name, not the plain one. This is the journal's own cover
+  // saying whose room is being unlocked, and the full-screen gate at /login
+  // has always shown it — the panel dropping it made the two disagree about
+  // what a person sees on the way in. Machine-read places still get the plain
+  // keeper_name: the hidden username field a moment below is one of those.
+  const { cover_name } = useBookplate();
   const [open, setOpen] = useState(false);
   const wrap = useRef(null);
   const run = useRef({ count: 0, last: 0 });
@@ -167,11 +174,19 @@ export default function WritingAccess({
             overscrollBehavior: 'contain',
           }}
         >
+          {cover_name && (
+            <span style={{
+              display: 'block',
+              fontFamily: 'var(--font-display)', fontWeight: 'var(--font-display-weight)',
+              fontSize: 15, lineHeight: 1.2, color: 'var(--ink)',
+              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+            }}>{cover_name}</span>
+          )}
           <span style={{
             display: 'block',
             fontFamily: 'var(--font-label)', fontSize: 9,
             letterSpacing: '0.14em', textTransform: 'uppercase',
-            color: 'var(--ink-faint)', marginBottom: 12,
+            color: 'var(--ink-faint)', marginTop: 3, marginBottom: 12,
           }}>writing access</span>
           <PasswordGate bare onAuth={admitted} />
 
