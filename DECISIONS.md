@@ -1077,6 +1077,45 @@ checking public GitHub releases instead.
 
 ---
 
+## Things open in the page, not over it
+
+**A control opens where it belongs, 2026-08-31.** Not floating in the middle of
+a darkened screen. Twice in a week a popup was built and then taken back out —
+the writing panel and the comment form — and both times the reason was the
+same, so it is a rule now rather than a preference to rediscover.
+
+**A form is about the thing next to it.** A comment is a reply to the note
+directly above it; the writing panel belongs to the mark it was tapped on. Put
+either in an overlay and it has been carried away from its subject, and the
+page it was answering is dimmed behind it — which is the one thing you might
+still want to read while writing.
+
+**Pushing content down is not the problem to avoid.** The old comment modal
+existed on the argument that a form unfolding in the tracklist shoves
+everything below it down the page. That is true, and it is what leaving room
+for something looks like. The page grows and you scroll, which is what a page
+does.
+
+**What replaces an overlay depends on the shape of the thing.** A form belonging
+to a spot in the page unfolds in the flow. Something occupying a place that is
+already reserved — the mark's box — takes that place instead, the way the
+portrait turns into its code. Neither covers anything.
+
+**Two exceptions, and both are the same exception.** An entry arriving over the
+journal is a whole page rather than a control, and it is a layer with a real
+address behind it rather than a floating box; the archive's filter sheet on a
+phone is the same case, a screenful of controls with nowhere in the flow to
+live. The test is whether the thing has a *place* on the page. If it does, it
+opens there. If it is a page in its own right, it may arrive over one.
+
+**Dismissing is not the same question.** A layer closes on a stray gesture
+because that is the platform's habit and nothing is lost. A form in the page
+does not: a tap outside while reaching for a field would throw away what has
+been typed, and there is nothing underneath needing to be got back to in a
+hurry. Both keep Escape.
+
+---
+
 ## The lock
 
 **The login is an ownership check, not an identity, 2026-08-30.** There is one
