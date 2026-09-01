@@ -51,8 +51,7 @@ export default function SessionHub() {
   }, [authed]);
 
   if (checking) return <div style={{ minHeight: '100vh', background: '#eef0ec' }} />;
-  if (!authed)  if (typeof window !== 'undefined') window.location.replace('/login');
-  return null;
+  if (!authed) { if (typeof window !== 'undefined') window.location.replace('/login'); return null; }
 
   return (
     <div className="hub-page" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', fontFamily: fonts.sans, position: 'relative', background: '#eef0ec' }}>
