@@ -30,17 +30,17 @@
 // folder occasionally rather than trusting it blindly.
 //
 // JSON rather than SQL because there is no pg_dump on this machine and no
-// straightforward way to get one. schema.sql is copied in beside the data, so
+// straightforward way to get one. The migrations are copied in beside the data, so
 // the pair is a complete description: structure from one, contents from the
 // other. scripts/restore.mjs puts them back.
 
 import { neon } from '@neondatabase/serverless';
-import { readFileSync, writeFileSync, mkdirSync, copyFileSync, readdirSync, rmSync } from 'node:fs';
+import { readFileSync, writeFileSync, mkdirSync, copyFileSync, readdirSync, rmSync, cpSync} from 'node:fs';
 import { join } from 'node:path';
 
 const KEEP = 30;   // a month of nights; older ones are pruned
 
-// Every table in schema.sql. A table missing from this list is a table that
+// Every table the migrations build. A table missing from this list is one that
 // silently does not get backed up, so adding one here is part of adding one
 // there — see the note in scripts/restore.mjs about the order.
 const TABLES = [
@@ -116,7 +116,9 @@ for (const table of TABLES) {
 
 // The structure, beside the contents. Without it the JSON is a pile of objects
 // nobody can rebuild a database from.
-copyFileSync(new URL('../schema.sql', import.meta.url), join(dir, 'schema.sql'));
+// The migrations that built this database, not a separate schema file — that
+// file is gone, and a backup should carry the thing that can rebuild it.
+cpSync(new URL('../migrations', import.meta.url), join(dir, 'migrations'), { recursive: true });
 writeFileSync(join(dir, 'manifest.json'), JSON.stringify(manifest, null, 2));
 
 // Keep the last KEEP, drop the rest. Only ever prunes directories whose names

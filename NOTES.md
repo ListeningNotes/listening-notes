@@ -62,7 +62,7 @@ backup`); this is the production database and there is no other one.
 
 **DO THIS FIRST — the prompts column is not on the live database**
 
-`schema.sql` has it, nothing runs `schema.sql`, and the card's save writes it.
+`migrations/001_initial.sql` has it, the runner applies it, and the card's save writes it.
 Until this statement has been run, pressing save on the card fails:
 
 ```sql
@@ -80,7 +80,17 @@ The four below, plus SCALING further down, are what stands between this and
 somebody else installing it. Two are structural and unbuilt — there is no
 migration runner and no welcome screen — and until both exist a fresh account
 cannot be tested end to end.
-- [ ] **Migration runner** — nothing executes `schema.sql`. A fresh copy has no tables and no way to make them without opening Neon's SQL editor by hand. `schema.sql` has also never actually been run against an empty database; every statement is guarded, but "reads correctly" and "builds a working journal from nothing" are different claims and only the first is checked.
+- [x] **Migration runner** — done 2026-08-31. `library/migrator.js`, run from
+      `instrumentation.js` on server start, ledger in `schema_migrations`,
+      files in `migrations/`. A fresh copy builds its own tables and nobody
+      opens a SQL editor. `schema.sql` is retired; `migrations/001_initial.sql`
+      is the whole schema and the thing backups now carry.
+
+      Both claims are checked, and the second one caught a bug: rehearsed
+      against an empty schema, 001 produced nine tables, eighteen indexes and
+      **zero foreign keys**, because the DO blocks matched constraint names
+      without scoping to a table. Scoped by `conrelid` now, and the rehearsal
+      gives 9 / 18 / 3.
 - [ ] **Welcome screen** — first run should ask who this copy belongs to and write the owner row plus the settings row. `setup_complete` exists as a column and nothing sets it. Until this lands, `keeper_name`, `founded_at` and `serial` can only be set in the database.
 - [ ] **Deploy button** — the README has one, but it lands on a copy with no schema. Blocked on the migration runner.
 - [ ] **`/api/export`** — a copy should be able to hand its owner their own data back.
@@ -310,7 +320,7 @@ Worth deciding before the first install, while it is still cheap:
 - [ ] `settings.instagram_url` — legacy. Every link lives in `social_links`,
       and the card editor already blanks this on every save.
 - [x] `entries.relationship` — settled 2026-08-30. Code stripped, Formative
-      migrated onto its flag, the drop written into schema.sql and waiting to
+      migrated onto its flag, the drop written into the schema and waiting to
       be run against the live database once the code is deployed. `drafts` had
       the same column and goes with it.
 - [ ] `echo_memory` and `conversations` — **zero code references between them.**
@@ -432,6 +442,23 @@ The distinction is `.lay--scrolls`, and it is the one that actually matters:
 transform on the way in), but pinning to a sheet that is fixed at inset 0 and
 never moves is the same as pinning to the window. It only goes wrong once the
 sheet scrolls. **When a layer gains a second tenant, check the first one.**
+
+**Never `SET search_path` on a pooled connection.** Neon's `-pooler` endpoint
+is PgBouncer, and a session-level `SET` leaks into the pool: the next client to
+be handed that backend inherits it. Setting `search_path` to a temporary schema
+while rehearsing a migration, then dropping that schema, left roughly one
+connection in eight pointing at a schema that no longer existed — so `SELECT
+count(*) FROM entries` failed on a database where `entries` was perfectly fine.
+
+It reads as data loss and is not. `SHOW search_path` on a fresh connection
+tells you immediately. Fixing it means `SET search_path TO "$user", public` on
+enough connections to sweep the poisoned ones out, and `ALTER DATABASE ... SET
+search_path` so recycled backends come back right.
+
+Better: rehearse a fresh install in its own **database**, not its own schema.
+The schema trick also gives a false negative on foreign keys, because a `DO`
+block matching a constraint name without scoping it finds the real one in
+`public` and skips.
 
 **A cheap query can still be the expensive one.** The Neon transfer allowance
 hit 95% with healthy compute, no long-running query and no runaway poll —
@@ -685,7 +712,7 @@ explicit `!.env.example` line below it, or the one file that is meant to be
 committed silently is not.
 
 **`CREATE TABLE IF NOT EXISTS` does nothing to a table that already exists.**
-So a column added to `settings` has to be added twice in `schema.sql`: once in
+So a column added to `settings` has to be added twice in the migration: once in
 the CREATE for a database being built from nothing, and once as
 `ALTER TABLE ... ADD COLUMN IF NOT EXISTS` for one built last month. Miss the
 second and the column exists only on fresh copies.
@@ -951,7 +978,7 @@ site.
 
 
 **2026-08-27 session — backups, properly**
-- [x] **`scripts/backup.mjs`** — every table to `<BACKUP_DIR>/<timestamp>/`, with `schema.sql` copied in and a manifest. Keeps 30, prunes the rest, exits non-zero if a table fails so a silent half-backup can't pass as a good one. `npm run backup`.
+- [x] **`scripts/backup.mjs`** — every table to `<BACKUP_DIR>/<timestamp>/`, with `migrations/` copied in and a manifest. Keeps 30, prunes the rest, exits non-zero if a table fails so a silent half-backup can't pass as a good one. `npm run backup`.
 - [x] **`scripts/restore.mjs`** — the half that makes the other half a backup. Skips `GENERATED ALWAYS` columns read from the catalogue rather than hardcoded, inserts in foreign-key order with comments sorted by id, and resets every sequence past its highest id. Dry run by default; `--yes` to write.
 - [x] **Restore rehearsed, not assumed** — replayed all 39 entries into a scratch table cloned from `entries`. Generated columns correctly skipped and recomputed, 39 distinct `album_key`s, `tracks` JSONB round-tripped identical. Scratch table dropped.
 - [x] **Daily LaunchAgent** at `~/Library/LaunchAgents/blog.listeningnotes.backup.plist`, 03:00, logging to `~/Library/Logs/listening-notes-backup.log`. Forced a run to confirm: exit code 0.

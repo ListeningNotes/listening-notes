@@ -33,17 +33,15 @@ it the journal works and those features are simply absent.
 **First run.**
 
 1. Create a Neon project. Copy its connection string.
-2. **Build the tables.** Open Neon's SQL editor, paste in the whole of
-   [`schema.sql`](schema.sql), and run it. It is safe to run more than once.
-3. Set the environment variables — see [`.env.example`](.env.example) for the
+2. Set the environment variables — see [`.env.example`](.env.example) for the
    list and what each one is for. `SESSION_PASSWORD` is what you will type to
    reach the writing side of your own journal.
-4. Deploy, open the site, and go to `/dashboard`.
+3. Deploy. The tables build themselves on first start — see
+   [`migrations/`](migrations). You do not need to open a SQL editor.
 
-> **Step 2 is manual for now.** Nothing runs `schema.sql` for you yet, and
-> there is no welcome screen — so a fresh copy also has no owner row and no
-> settings until you write in it. Both are on the Pending list in
-> [NOTES.md](NOTES.md). Until they land, expect to open a SQL editor once.
+> **There is no welcome screen yet**, so a fresh copy has its tables but no
+> owner row and no settings until you write in it. That one is still on the
+> Pending list in [NOTES.md](NOTES.md).
 
 **Naming your copy.** Every copy is named after whoever keeps it, so yours is
 not called Listening Notes and should not be. The name comes from `keeper_name`
@@ -264,7 +262,7 @@ removed; do not reintroduce one.
 
 ## The Database
 
-One database (Neon Postgres). [`schema.sql`](schema.sql) is the whole of it and
+One database (Neon Postgres). [`migrations/`](migrations) is the whole of it and
 is generated from a live catalogue, so it describes what actually exists rather
 than what anyone remembers building.
 
@@ -312,7 +310,7 @@ moderation, and the email addresses people left with submissions.
 npm run backup
 ```
 
-Writes every table to `$BACKUP_DIR/<timestamp>/` with a copy of `schema.sql`
+Writes every table to `$BACKUP_DIR/<timestamp>/` with a copy of `migrations/`
 beside it, keeps the last 30 and prunes the rest. `BACKUP_DIR` defaults to
 `~/listening-notes-backups`; point it at a synced folder — an iCloud Drive
 directory, say — and your backups stop living on the same machine as the thing

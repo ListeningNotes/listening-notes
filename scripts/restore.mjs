@@ -48,7 +48,7 @@ if (!source || !existsSync(source)) {
 }
 
 // Two shapes hold the same thing. scripts/backup.mjs writes a folder — one
-// file per table, plus a manifest and a copy of schema.sql. /api/export sends
+// file per table, plus a manifest and a copy of migrations/001_initial.sql. /api/export sends
 // a single file with every table inside it, because a download is one file or
 // it is a chore. Both are read here rather than making anyone convert one into
 // the other, since the moment somebody needs this is the worst possible moment

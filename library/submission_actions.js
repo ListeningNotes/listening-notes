@@ -4,7 +4,7 @@ import database from './database_connection.js';
 
 // The cover, the pressing and the sender's journal ride along with the note.
 // There is no email here and there is no longer a column for one either — see
-// schema.sql. What replaced it is sender_url, which is an address rather than
+// migrations/001_initial.sql. What replaced it is sender_url, which is an address rather than
 // a person.
 export async function save_submission({
   album, artist, year, note, submitter_name,

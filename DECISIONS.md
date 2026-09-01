@@ -1181,6 +1181,57 @@ thing this site does not keep about its readers.
 
 ---
 
+## Migrations
+
+**A copy builds its own database, 2026-08-31.** Until now every schema change
+was somebody pasting SQL into a console and remembering which branch they were
+pointed at. That survives exactly one database and one person, and it had
+already failed once — an afternoon lost to a migration that ran against a dev
+branch while everybody believed it had run against production. It does not
+survive a second copy at all: somebody installs this, their database is empty,
+and there is nowhere for them to get the SQL from and no reason they should
+have to.
+
+**`instrumentation.js` is where it runs**, because `register()` is called once
+per server instance and finishes before the first request is served. A request
+should never reach a schema older than the code answering it.
+
+**The lock is the whole trick, and it lives on a session.** Serverless has no
+single server: every cold start runs `register()` and several can start at
+once, so without a lock two instances both apply the same file.
+`pg_advisory_lock` is held by the database, so it works across instances that
+know nothing about each other — and because it is session-scoped, everything
+runs on one `Client` rather than through the app's usual handle. That handle is
+the HTTP driver, which opens a fresh connection per call; take a lock through
+it and the lock is released the instant the call returns, leaving something
+that looks like a lock and holds nothing.
+
+**A `Client` for the second reason too.** The HTTP driver prepares statements
+and refuses more than one per call, so it cannot run a schema file at all —
+and splitting one on semicolons means writing a SQL parser that understands
+dollar-quoted `DO` blocks. Not a thing to write.
+
+**No down migrations.** Reversing a migration by running SQL backwards assumes
+the failure happened somewhere the reverse is meaningful, and a half-applied
+`DROP` is not. The answer to a bad migration is a backup and a new file, which
+is already the answer this file gives for a bad `DROP`.
+
+**No baseline step, because the schema was idempotent before the runner
+existed.** Every `CREATE` carries `IF NOT EXISTS`, every added column too, and
+the foreign keys sit in `DO` blocks. So 001 does nothing against the journal it
+was written on and builds everything against an empty database. The fiddliest
+part of adopting a runner — teaching it that an existing database is already up
+to date — never arises.
+
+**`schema.sql` is retired and `migrations/001_initial.sql` is the schema.** Two
+files describing one database is two files that drift, and this one already had
+a rule about that. Backups carry the migrations rather than a separate copy.
+
+**Nothing edits a migration that has run.** The filename is the identity, so a
+renamed file is a file that runs again. A change is a new numbered file.
+
+---
+
 ## What a read costs
 
 Added 2026-08-30, after the Neon transfer allowance hit 95% and the cause

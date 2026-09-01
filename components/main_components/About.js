@@ -467,7 +467,7 @@ export default function About({ stamps, authed = false, pinned = null, entries =
                 staying out: what is worth saying here is what the thing is
                 and what it does, and the rest is the journal. Hardcoded they
                 would also be one person's essay shipped inside everybody's
-                copy — see the note on the rig column in schema.sql. */}
+                copy — see the note on the rig column in migrations/001_initial.sql. */}
             <h2 className="ab-subhead">
               {RigMark && <RigMark size={15} weight="regular" aria-hidden="true" />}
               Rig setup

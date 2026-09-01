@@ -41,7 +41,7 @@ const RECENT_TRACKS = 3;
 // JavaScript so a scrobble can be matched against the journal without asking
 // the server. Lower-cased, accents folded, & spelled out, everything that is
 // not a letter or a digit collapsed to a single space. It has to agree with the
-// album_key column in schema.sql — if that expression ever changes, this is the
+// album_key column in migrations/001_initial.sql — if that expression ever changes, this is the
 // other half of it.
 export function foldKey(text) {
   return String(text ?? '')
