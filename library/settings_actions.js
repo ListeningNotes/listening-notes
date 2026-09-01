@@ -43,16 +43,16 @@ const EMPTY = {
   // a context nothing had put it into. The card carries it now, so it is worth
   // the two lines it costs to actually deliver it.
   about_intro: null,
-  // A list of plain URLs, or null. See the note on the column in schema.sql.
+  // A list of plain URLs, or null. See the note on the column in migrations/001_initial.sql.
   social_links: null,
   // Which counted rows to leave off the card. A list of keys, or null.
   hidden_fields: null,
-  // What its keeper would like sent to them. See the column in schema.sql.
+  // What its keeper would like sent to them. See the column in migrations/001_initial.sql.
   send_me: null,
   // Where in the portrait to look. A CSS object-position, or null for centred.
   portrait_position: null,
   portrait_code_url: null,
-  // Which mark stands for the rig, and the rig itself. See schema.sql.
+  // Which mark stands for the rig, and the rig itself. See migrations/001_initial.sql.
   rig_icon: null,
   rig: null,
   bioanswers: null,
@@ -84,7 +84,7 @@ const WRITABLE = [
   // The uploaded portrait. Written by /api/portrait rather than by a form, but
   // it goes through the same door as everything else in this table.
   'portrait_data', 'portrait_mime',
-  // The portrait rendered as the journal's code. See the column in schema.sql.
+  // The portrait rendered as the journal's code. See the column in migrations/001_initial.sql.
   'portrait_code', 'portrait_code_url',
   // Set at setup and then frozen — see WRITE_ONCE. They are on this list
   // because they have to be writable exactly once; the list below is what

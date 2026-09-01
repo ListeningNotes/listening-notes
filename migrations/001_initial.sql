@@ -1,20 +1,26 @@
 -- Copyright (C) 2026 Miyel Brown
 -- SPDX-License-Identifier: AGPL-3.0-or-later
--- Listening Notes — database setup
+-- migrations/001_initial.sql
 --
--- The site runs this against its own database the first time it starts, before
--- showing the welcome screen. Nobody has to open a SQL editor: a new copy finds
--- an empty database, builds these tables, and gets on with it.
+-- The whole schema as it stands, as one migration. Everything before this file
+-- existed was applied by hand, so 001 has to be safe to run against a database
+-- that already has all of it — and it is: every CREATE carries IF NOT EXISTS,
+-- every added column carries IF NOT EXISTS, and the foreign keys are wrapped in
+-- DO blocks that check pg_constraint first. Against the journal this was
+-- written on, 001 does nothing at all. Against an empty database it builds
+-- everything.
 --
--- Every statement is written to be safe to run more than once, so a redeploy
--- that runs it again changes nothing.
+-- That is why there is no baseline step and no "assume 001 has run" flag. The
+-- fiddliest part of adopting a migration runner is usually teaching it that an
+-- existing database is already up to date; this schema was idempotent before
+-- the runner existed, so the problem never arises.
 --
--- It creates structure only — no albums, no notes, no owner. The `users` table
--- is left empty on purpose: the owner row has to carry the name of whoever set
--- this copy up, so the welcome screen writes it, not this file.
+-- Columns dropped along the way — entries.relationship, drafts.relationship,
+-- submissions.submitter_email, comments.author_email — are not here. A fresh
+-- database never creates them, and the one database that had them has already
+-- lost them. Their reasons live in DECISIONS, which is where reasons go.
 --
--- Generated from a live database's system catalogue, so it describes what
--- actually exists rather than what anyone remembers building.
+-- From here on, nothing edits this file. A change is a new numbered file.
 
 CREATE TABLE IF NOT EXISTS briefings (
   id serial NOT NULL,
@@ -90,23 +96,6 @@ CREATE TABLE IF NOT EXISTS drafts (
 -- The two above, for a database that already has this table.
 ALTER TABLE drafts ADD COLUMN IF NOT EXISTS received_from text;
 ALTER TABLE drafts ADD COLUMN IF NOT EXISTS received_date date;
-
--- Gone from both tables. Safe to run on a database that has already lost it.
--- On entries, run the Formative migration FIRST or nine records are lost with
--- the column:
---   UPDATE entries SET formative = true WHERE relationship = 'Formative';
-ALTER TABLE entries DROP COLUMN IF EXISTS relationship;
-ALTER TABLE drafts  DROP COLUMN IF EXISTS relationship;
-
--- The send flow stopped asking for an email; this stops keeping the ones it
--- already had. Run after the code that no longer selects it is deployed.
-ALTER TABLE submissions DROP COLUMN IF EXISTS submitter_email;
-
--- No email anywhere on the site. Add the address column before dropping the
--- old one, and run both after the code that stopped selecting author_email is
--- deployed.
-ALTER TABLE comments ADD COLUMN IF NOT EXISTS author_url text;
-ALTER TABLE comments DROP COLUMN IF EXISTS author_email;
 
 CREATE TABLE IF NOT EXISTS echo_memory (
   id serial NOT NULL,
@@ -419,20 +408,33 @@ ALTER TABLE settings ADD COLUMN IF NOT EXISTS setup_complete boolean DEFAULT fal
 ALTER TABLE settings ADD COLUMN IF NOT EXISTS bioanswers jsonb;
 ALTER TABLE entries ADD COLUMN IF NOT EXISTS edited_at timestamp without time zone;
 
--- Foreign keys, added once every table exists
+-- Foreign keys, added once every table exists.
+--
+-- Scoped to the table by conrelid, not matched on the constraint name alone.
+-- A bare name check asks "does anything anywhere call itself this", which is
+-- true of another schema in the same database that happens to use the same
+-- names — and the answer to that question skips creating the key here, so a
+-- fresh install silently comes up with no foreign keys at all. Found exactly
+-- that way, rehearsing 001 against an empty schema alongside a populated one.
 DO $$ BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'comments_parent_id_fkey') THEN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint
+                 WHERE conname = 'comments_parent_id_fkey'
+                   AND conrelid = 'comments'::regclass) THEN
     ALTER TABLE comments ADD CONSTRAINT comments_parent_id_fkey FOREIGN KEY (parent_id) REFERENCES comments(id) ON DELETE CASCADE;
   END IF;
 END $$;
 DO $$ BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'settings_pinned_entry_id_fkey') THEN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint
+                 WHERE conname = 'settings_pinned_entry_id_fkey'
+                   AND conrelid = 'settings'::regclass) THEN
     ALTER TABLE settings ADD CONSTRAINT settings_pinned_entry_id_fkey
       FOREIGN KEY (pinned_entry_id) REFERENCES entries(id) ON DELETE SET NULL;
   END IF;
 END $$;
 DO $$ BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'entries_user_id_fkey') THEN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint
+                 WHERE conname = 'entries_user_id_fkey'
+                   AND conrelid = 'entries'::regclass) THEN
     ALTER TABLE entries ADD CONSTRAINT entries_user_id_fkey FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL;
   END IF;
 END $$;

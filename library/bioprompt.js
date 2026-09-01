@@ -16,7 +16,7 @@
 // unasked.
 //
 // Stored as key and answer, never as the sentence — see `bioanswers` in
-// schema.sql. The wording here is going to be revised, and revising it must
+// migrations/001_initial.sql. The wording here is going to be revised, and revising it must
 // not orphan what somebody wrote. A key that no longer matches anything in
 // this list is dropped on render rather than printed bare, so retiring a
 // prompt is safe and renaming one is a migration.
