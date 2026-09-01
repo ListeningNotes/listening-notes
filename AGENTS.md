@@ -11,7 +11,11 @@ This version has breaking changes — APIs, conventions, and file structure may 
   written down; do not re-propose anything listed as ruled out.
 - **[NOTES.md](NOTES.md)** — what is pending, what is done, and the gotchas
   that cost real time.
-- **[README.md](README.md)** — what this is, how to run it, where things live.
+- **[README.md](README.md)** — what this is and how to run a copy. The front
+  door, for strangers.
+- **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** — where everything lives and
+  what to touch to change a given thing. Read this before hunting for a file.
+- **[docs/OPERATIONS.md](docs/OPERATIONS.md)** — backups, restore, export, keys.
 
 # End of session
 
