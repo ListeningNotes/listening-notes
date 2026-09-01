@@ -7,7 +7,8 @@ import CommentThread from './CommentThread';
 import NewCommentForm from './NewCommentForm';
 
 // Everything behind the little speech bubble: the count, the thread it folds
-// open, and the modal you post from. It lived inside TrackThread until the
+// open, and the form you post from — which unfolds in place rather than
+// floating over the page. See the note by it. It lived inside TrackThread until the
 // album notes needed the same thing — copying it would have meant two places
 // to keep in step, and the whole point is that commenting on the album feels
 // identical to commenting on a track.
@@ -39,7 +40,7 @@ export default function CommentBubble({ slug, trackIndex, comments = [], label, 
     <>
       {/* The way in, at the end of the note you've just read. With comments it
           carries the count and folds the thread; with none it carries a plus
-          and opens the modal.
+          and unfolds the form.
 
           The spacing here is deliberate and easy to undo by accident: it sits
           6px under the note, and only spaces itself away from what follows
@@ -81,49 +82,48 @@ export default function CommentBubble({ slug, trackIndex, comments = [], label, 
         </div>
       )}
 
-      {/* Posting is a modal rather than a form unfolding in place: in the
-          tracklist that pushed everything below it down the page while you
-          typed. */}
+      {/* ── It unfolds here, it does not float over the page ──────────────
+          This was a fixed overlay with a backdrop, on the argument that a form
+          opening in the tracklist pushes everything below it down while you
+          type. That is true and it is the wrong thing to avoid: a comment is a
+          reply to the note directly above it, and a box floating in the middle
+          of a darkened screen has been taken away from the thing it is about.
+          Pushing the tracks down is what leaving space looks like.
+
+          Nothing is covered, nothing is dimmed, and the note you are answering
+          stays where it was and stays readable. The page grows and you can
+          scroll, which is what a page does. */}
       {composing && (
         <div
-          onClick={() => setComposing(false)}
           style={{
-            position: 'fixed', inset: 0, zIndex: 600,
-            background: 'rgba(0,0,0,0.35)',
-            backdropFilter: 'blur(3px)', WebkitBackdropFilter: 'blur(3px)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px',
+            marginTop: '10px', marginBottom: '16px',
+            padding: '16px',
+            background: 'var(--panel)',
+            backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
+            border: '1px solid var(--border)', borderRadius: '14px',
+            animation: 'cb-unfold 0.24s ease both',
           }}
         >
-          <div
-            onClick={e => e.stopPropagation()}
-            style={{
-              width: '100%', maxWidth: '420px', boxSizing: 'border-box',
-              background: 'var(--bg)', border: '1px solid var(--panel-border)',
-              borderRadius: '20px', padding: '20px', boxShadow: 'var(--shadow-lift)',
-              maxHeight: '80dvh', overflowY: 'auto',
-            }}
-          >
-            <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '12px', marginBottom: '14px' }}>
-              <div style={{ minWidth: 0 }}>
-                <div style={{ fontFamily: fonts.mono, fontSize: '9px', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ink-faint)', marginBottom: '4px' }}>Add a comment</div>
-                {/* What you're answering — a track name, or the album's own
-                    title when the bubble belongs to the album notes. */}
-                <div style={{ fontSize: '14px', color: 'var(--ink)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label}</div>
-              </div>
-              <button
-                onClick={() => setComposing(false)}
-                aria-label="Close"
-                style={{ fontFamily: fonts.mono, fontSize: '14px', color: 'var(--ink-faint)', background: 'none', border: 'none', cursor: 'pointer', padding: '4px 6px', lineHeight: 1 }}
-              >
-                ✕
-              </button>
+          <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: '12px', marginBottom: '12px' }}>
+            <div style={{ minWidth: 0 }}>
+              <div style={{ fontFamily: fonts.mono, fontSize: '9px', letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ink-faint)', marginBottom: '4px' }}>Add a comment</div>
+              {/* What you're answering — a track name, or the album's own
+                  title when the bubble belongs to the album notes. */}
+              <div style={{ fontSize: '13px', color: 'var(--ink-soft)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{label}</div>
             </div>
-            <NewCommentForm
-              slug={slug}
-              trackIndex={trackIndex}
-              onPosted={() => { setComposing(false); setShowComments(true); onRefresh(); }}
-            />
+            <button
+              onClick={() => setComposing(false)}
+              aria-label="Close"
+              style={{ ...quietAction, fontSize: '13px', lineHeight: 1, padding: '2px 4px' }}
+            >
+              ✕
+            </button>
           </div>
+          <NewCommentForm
+            slug={slug}
+            trackIndex={trackIndex}
+            onPosted={() => { setComposing(false); setShowComments(true); onRefresh(); }}
+          />
         </div>
       )}
     </>

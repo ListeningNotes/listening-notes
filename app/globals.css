@@ -3821,3 +3821,14 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
 @media (prefers-reduced-motion: reduce) {
   @keyframes wa-face { from { opacity: 1; } to { opacity: 1; } }
 }
+
+/* A comment form opening where the comment will go. It grows out of the note
+   it is answering rather than arriving over the top of it — see the note in
+   CommentBubble for why the modal it replaced was the wrong instinct. */
+@keyframes cb-unfold {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  @keyframes cb-unfold { from { opacity: 1; } to { opacity: 1; } }
+}

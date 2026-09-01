@@ -39,7 +39,7 @@ import { useState, useEffect } from 'react';
 import { fonts } from '../../library/sitewide_visuals';
 import SiteNav from '../../components/main_components/SiteNav';
 import AlbumFinder from '../../components/main_components/AlbumFinder';
-import { recallAddress, keepAddress } from '../../library/return_address';
+import { recallSender, keepSender } from '../../library/return_address';
 
 // What has been typed and not yet sent. Named alongside ln-dog-ear rather than
 // the underscored session keys, because like the dog ear it belongs to a
@@ -78,12 +78,14 @@ export default function SubmitPage({ layered = false }) {
   useEffect(() => {
     let kept = null;
     try { kept = JSON.parse(window.localStorage.getItem(DRAFT_KEY) || 'null'); } catch {}
-    const address = kept?.address || recallAddress();
+    // The unsent draft wins where it has something, because it is this
+    // person mid-sentence; the remembered sender fills the rest.
+    const known = recallSender();
     setForm({
       pick: kept?.pick ?? null,
       note: kept?.note ?? '',
-      name: kept?.name ?? '',
-      address,
+      name: kept?.name || known.name,
+      address: kept?.address || known.address,
     });
   }, []);
 
@@ -125,9 +127,9 @@ export default function SubmitPage({ layered = false }) {
       });
       const data = await res.json();
       if (data.error) { setError(data.error); return; }
-      // Only once it has actually gone. An address kept from a send that
-      // failed would be prefilling from something that never happened.
-      keepAddress(form.address);
+      // Only once it has actually gone. A name or address kept from a send
+      // that failed would be prefilling from something that never happened.
+      keepSender({ name: form.name, address: form.address });
       try { window.localStorage.removeItem(DRAFT_KEY); } catch {}
       setDone(true);
     } catch {

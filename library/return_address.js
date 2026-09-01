@@ -1,8 +1,12 @@
 // Copyright (C) 2026 Miyel Brown
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // library/return_address.js
-// The address on the back of the envelope — the sender's own journal, kept so
-// they only have to paste it once.
+// The back of the envelope: a name and a journal, kept so nobody types either
+// twice.
+//
+// Both, not just the URL, because a return address is a name and an address —
+// and because being asked your own name on every comment is the kind of small
+// friction that stops somebody leaving the second one.
 //
 // ── Why this cannot be read from the session ──────────────────────────────
 // Somebody arriving here to send an album may well be keeping a journal of
@@ -21,6 +25,11 @@
 // Deliberately free of imports and of anything server-only — same reason as
 // dog_ear.js and receipts.js, which this is modelled on.
 
+// One key, shared by the send form, the comment form and — when it exists —
+// the compare affordance. Not one per feature: fill it in anywhere and it is
+// filled in everywhere after, which is also what lets a journal offer Compare
+// to a visitor. The offer depends on the browser holding an address, not on
+// which form happened to ask for it.
 const KEY = 'ln-return-address';
 
 // What counts as an address worth keeping. Deliberately loose: this is a
@@ -44,42 +53,54 @@ export function tidyAddress(value) {
   return LOOKS_LIKE_A_HOST.test(bare.split('/')[0]) ? bare : '';
 }
 
-// What to put in the field when the page opens. Empty string rather than null,
-// because it goes straight into a controlled input and null would make it
+// What to put in the fields when a form opens. Always both strings, never
+// null: they go straight into controlled inputs, and null would make one
 // uncontrolled halfway through the first keystroke.
-export function recallAddress() {
-  // Called from a component that also renders on the server, so window is
+//
+// The stored value used to be a bare URL string and may still be one in
+// somebody's browser, so a string is read as an address with no name rather
+// than thrown away. Nobody should have to re-paste because the shape changed.
+export function recallSender() {
+  // Called from components that also render on the server, so window is
   // genuinely absent sometimes. A corrupt value should not take the page down
-  // either — losing this costs a sender one paste.
-  if (typeof window === 'undefined') return '';
+  // either — losing this costs somebody one paste.
+  if (typeof window === 'undefined') return { name: '', address: '' };
   try {
-    return tidyAddress(window.localStorage.getItem(KEY) || '');
+    const raw = window.localStorage.getItem(KEY);
+    if (!raw) return { name: '', address: '' };
+    if (raw[0] !== '{') return { name: '', address: tidyAddress(raw) };
+    const held = JSON.parse(raw);
+    return {
+      name: String(held?.name || '').trim(),
+      address: tidyAddress(held?.address || ''),
+    };
   } catch {
-    return '';
+    return { name: '', address: '' };
   }
 }
 
-// Called once a send has actually gone through, never while typing. A half
-// typed address saved on every keystroke would be prefilled next time as
-// whatever the sender had got to before they changed their mind.
+// Called once something has actually posted, never while typing. A half typed
+// name saved on every keystroke would come back next time as whatever somebody
+// had got to before they changed their mind.
 //
-// An address that does not pass tidyAddress clears what is kept rather than
-// leaving the old one in place: somebody who empties the field meant to.
-export function keepAddress(value) {
-  if (typeof window === 'undefined') return '';
-  const tidy = tidyAddress(value);
+// Emptying a field clears that half rather than leaving the old value behind:
+// somebody who deleted their name meant to. Clearing both removes the key, so
+// there is nothing left in the browser for a person who wanted nothing left.
+export function keepSender({ name = '', address = '' } = {}) {
+  if (typeof window === 'undefined') return { name: '', address: '' };
+  const kept = { name: String(name).trim(), address: tidyAddress(address) };
   try {
-    if (tidy) window.localStorage.setItem(KEY, tidy);
+    if (kept.name || kept.address) window.localStorage.setItem(KEY, JSON.stringify(kept));
     else window.localStorage.removeItem(KEY);
   } catch {
     // Private browsing, a full quota, storage switched off — none of them
-    // worth a broken send. The field simply starts empty next time.
+    // worth a broken send. The fields simply start empty next time.
   }
-  return tidy;
+  return kept;
 }
 
 // Testing seam. Nothing in the app calls this.
-export function forgetAddress() {
+export function forgetSender() {
   if (typeof window === 'undefined') return;
   try { window.localStorage.removeItem(KEY); } catch {}
 }
