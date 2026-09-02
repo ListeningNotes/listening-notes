@@ -178,6 +178,8 @@ export default function SettingsPage() {
           color: var(--ink-faint); border-bottom: 1px solid var(--border);
         }
         .st-clear:hover { color: var(--ink-soft); }
+        .st-section--out { align-items: flex-start; }
+        .st-section--out .st-clear { margin-left: 0; }
         .st-doors { display: flex; flex-direction: column; gap: 0; }
         .st-door {
           display: flex; justify-content: space-between; align-items: center; padding: 12px 0;
@@ -306,6 +308,24 @@ export default function SettingsPage() {
               </Link>
             ))}
           </div>
+        </div>
+        {/* The only way out. The route has existed since the wristband did
+            and nothing ever called it, so signing out meant clearing cookies.
+            Here because Settings is the owner's page: you came in through it
+            and you leave through it. A full load afterwards, so the page
+            renders as a visitor's rather than keeping the desk on screen with
+            no cookie behind it. */}
+        <div className="st-section st-section--out">
+          <button
+            type="button"
+            className="st-clear"
+            onClick={async () => {
+              await fetch('/api/auth/logout', { method: 'POST' }).catch(() => {});
+              window.location.assign('/');
+            }}
+          >
+            Sign out
+          </button>
         </div>
       </main>
     </div>

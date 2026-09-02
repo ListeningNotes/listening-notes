@@ -11,10 +11,12 @@
 // a better answer to that question than a feature list.
 //
 // The other half of what this page owes a stranger — what the software is,
-// that it is free, and the way to install a copy — is under the essay now:
-// the button, the steps in order with what to expect and roughly how long,
-// a place for screenshots, and where to say it did not work. Written for
-// somebody with nobody beside them.
+// that it is free, and the way to install a copy — comes first now, 2026-09-02:
+// a short brief, the button, then the steps in order with what to expect and
+// roughly how long, a place for screenshots, and where to say it did not
+// work. Written for somebody with nobody beside them. The essay is under it,
+// as the story of why this exists, for whoever wants to read on before or
+// after pressing the button.
 //
 // The screenshots are files in public/install/, drawn only when they exist,
 // so the steps read fine on a copy that has not taken them and the canonical
@@ -33,7 +35,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
-import { pull_settings, coverName, titleName } from '../../library/settings_actions';
+import { pull_settings, titleName } from '../../library/settings_actions';
 import SiteNav from '../../components/main_components/SiteNav';
 
 // The stored text uses one convention and no more: a line starting with "## "
@@ -80,7 +82,7 @@ export async function generateMetadata() {
   if (!settings.why_essay) return {};
   // The tab, so the plain name. The heading on the page itself uses
   // coverName below, because that one is read by a person.
-  return { title: `Why · ${titleName(settings)}` };
+  return { title: `Getting one · ${titleName(settings)}` };
 }
 
 export default async function GetPage() {
@@ -140,7 +142,8 @@ export default async function GetPage() {
         }
 
         /* ── Getting one ── */
-        .get-wrap { margin-top: 72px; padding-top: 40px; border-top: 1px solid var(--border); }
+        .get-wrap { margin: 0; }
+        .why-story { margin-top: 72px; padding-top: 48px; border-top: 1px solid var(--border); }
         .get-lede { font-size: 15px; line-height: 1.95; color: var(--ink); margin: 0 0 22px; }
         .get-button { display: inline-block; margin: 6px 0 30px; line-height: 0; }
         .get-button img { height: 32px; width: auto; }
@@ -158,24 +161,17 @@ export default async function GetPage() {
       <SiteNav />
 
       <article className="why-wrap">
-        <header className="why-head">
-          {written && <div className="why-date">{written}</div>}
-          <h1 className="why-title">{coverName(settings)}</h1>
-        </header>
-
-        {blocks.map((b, i) => b.type === 'heading'
-          ? <h2 key={i} className="why-subhead">{b.text}</h2>
-          : <p key={i} className="why-para">{b.text}</p>
-        )}
-
         {/* ── Getting one ──────────────────────────────────────────────── */}
         <section className="get-wrap" id="install" aria-labelledby="get-title">
-          <h2 className="why-subhead" id="get-title">Getting one</h2>
+          <header className="why-head">
+            <div className="why-date">Free software</div>
+            <h1 className="why-title" id="get-title">A listening journal of your own</h1>
+          </header>
           <p className="get-lede">
-            This is free software. You run your own copy, at your own address,
-            named after you, and nothing you write is kept on anybody else’s
-            server. It takes about ten minutes and two accounts that are made
-            in your own name. Press the button and follow along.
+            You listen to a record, you write about it, and it lives at your
+            own address, named after you. Nothing you write is kept on anybody
+            else’s server. Getting one takes about ten minutes and two accounts
+            made in your own name. Press the button and follow along.
           </p>
           <a href={DEPLOY_URL} className="get-button">
             <img src="https://vercel.com/button" alt="Deploy with Vercel" />
@@ -205,6 +201,19 @@ export default async function GetPage() {
             should not, you are stuck anywhere — <a href={`${SOURCE_URL}/issues`}>say so here</a>.
             Say what you pressed and what you saw. Somebody will answer.
           </p>
+        </section>
+
+        {/* ── The story ────────────────────────────────────────────────── */}
+        <section className="why-story" aria-labelledby="why-title">
+          <header className="why-head">
+            {written && <div className="why-date">{written}</div>}
+            <h2 className="why-title" id="why-title">The Listening Notes story</h2>
+          </header>
+
+          {blocks.map((b, i) => b.type === 'heading'
+            ? <h3 key={i} className="why-subhead">{b.text}</h3>
+            : <p key={i} className="why-para">{b.text}</p>
+          )}
         </section>
 
         {/* The way back is the journal itself — for a stranger who arrived
