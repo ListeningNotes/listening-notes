@@ -35,21 +35,43 @@ Nothing it says ever enters the entry; it is read, and then you write.
 
 **Deploy.**
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FListeningNotes%2Flistening-notes&env=DATABASE_URL,SESSION_SECRET,SESSION_PASSWORD,NEXT_PUBLIC_SOURCE_URL&envDescription=The%20first%20three%20are%20required.%20The%20fourth%20only%20if%20you%20have%20modified%20the%20code%20%E2%80%94%20see%20.env.example&envLink=https%3A%2F%2Fgithub.com%2FListeningNotes%2Flistening-notes%2Fblob%2Fmain%2F.env.example)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FListeningNotes%2Flistening-notes&products=%5B%7B%22type%22%3A%22integration%22%2C%22integrationSlug%22%3A%22neon%22%2C%22productSlug%22%3A%22neon%22%2C%22protocol%22%3A%22storage%22%7D%5D)
+
+The button asks Vercel to clone the code into your GitHub, make a project, and
+attach a Neon database to it. It should ask you for nothing else: the database
+connection string arrives from Neon, the signing key generates itself, and your
+password is chosen on the site.
+
+Two things on Vercel's screens are worth knowing in advance. **Git Scope** is
+which GitHub account the copy goes into — pick yours. **Private Repository
+Name** is what your copy of the code will be called on GitHub; anything you
+like. And GitHub's permissions screen looks alarming; it is asking to put the
+code into your account, which is the point.
 
 **First run.**
 
-1. Create a Neon project. Copy its connection string.
-2. Set the environment variables — see [`.env.example`](.env.example) for the
-   list and what each one is for. `SESSION_PASSWORD` is what you will type to
-   reach the writing side of your own journal.
-3. Deploy. The tables build themselves on first start — see
-   [`migrations/`](migrations). You do not need to open a SQL editor.
+1. Deploy. Watch the build log while it runs — near the end it prints a box
+   with a **claim code**. Copy it. (Missed it? It is also in the project's
+   runtime logs, and printed again on every restart until the copy is claimed.)
+2. Open your site. It says the journal isn't ready yet, with a small
+   *Set it up* link. Press it and type the claim code.
+3. Setup asks for your name, then offers a photo, three prompts, Last.fm, links
+   and your rig, each of which you can skip, then a password. Everything you
+   skip has a home later — on the card, or in Settings behind the gear beside
+   the card's pencil.
+4. The last screen shows how to put the journal on your home screen, where it
+   opens like an app. Skippable; it is in Settings too.
 
-On first visit the copy shows a holding page and asks to be set up. That is
-four questions — your name, this journal's address, when you started logging,
-and a Last.fm username if you use one — behind the `SESSION_PASSWORD` you just
-set. Only the name matters; the rest can be left blank.
+The same steps, with what to expect at each and roughly how long, are written
+out on the canonical copy at [listeningnotes.blog/get](https://listeningnotes.blog/get#install).
+If it did not work, [say so here](https://github.com/ListeningNotes/listening-notes/issues)
+— what you pressed and what you saw.
+
+If the button did not attach a database, the site will say so on a plain page:
+add `DATABASE_URL` under the project's Settings → Environment Variables (the
+connection string from a Neon project) and redeploy. The tables build
+themselves; you never open a SQL editor. `.env.example` lists every variable,
+and all of them except `DATABASE_URL` are optional.
 
 **Naming your copy.** Every copy is named after whoever keeps it, so yours is
 not called Listening Notes and should not be. The name comes from `keeper_name`

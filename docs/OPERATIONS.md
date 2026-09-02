@@ -55,22 +55,35 @@ DATABASE_URL='postgres://...branch...' npm run restore -- <backup> --yes
 
 ## Secret Keys
 
-**[`.env.example`](../.env.example) is the list**, with what each variable is for
-and where to get it. Copy it to `.env.local` and fill it in; `.env.local` is
-gitignored and never leaves your machine. On Vercel the same values go in
-Project → Settings → Environment Variables.
+**Most of them live in the journal now, not in the environment.** The password
+is chosen during setup and changed in Settings (the gear beside the card's
+pencil). The Last.fm and Anthropic keys are pasted into Settings. The key that
+signs the login cookie mints itself on first start. All of it sits in the
+`secrets` table, which nothing but `library/secrets.js` reads, and which the
+backup carries like any other table — so a restore brings the password back
+with the writing.
 
-It is deliberately the only place these are written down. A second copy of the
-list in this file is a second copy to keep current, and the one that went stale
-first was this one.
+**[`.env.example`](../.env.example) is still the list** of what the
+environment *can* hold, with what each variable is for. Only `DATABASE_URL`
+is required. A copy that set the others before Settings existed keeps
+working: the database is read first, then the environment, so a value typed
+into Settings takes over from the variable and the variable can then be
+removed.
 
 Two worth knowing without opening the file:
 
-- `SESSION_SECRET` — it signs the login cookie, so changing it signs you out of
-  your own journal on every device and you log in again with the same password.
-  Disruptive, not dangerous. Don't rotate it casually; do rotate it if you think
-  it leaked.
-- `ANTHROPIC_API_KEY` — bills to your Console **API credit balance**, which is
+- **The session secret** signs the login cookie. Setting `SESSION_SECRET`
+  yourself is allowed and wins over the minted one; changing either signs you
+  out of your own journal on every device and you log in again with the same
+  password. Disruptive, not dangerous. Don't rotate it casually; do rotate it
+  if you think it leaked.
+- **The Anthropic key** bills to your Console **API credit balance**, which is
   a separate pool from a Claude.ai subscription. See the gotchas in
   [NOTES.md](../NOTES.md). Optional: without it the Research button and the
   question mark on the session's cover are absent, and everything else works.
+
+**Locked out.** With the password in the database there is no variable to
+edit. Get in with a wristband you still hold on another device and change it
+in Settings; failing that, clear `password_hash` in the `secrets` row from
+Neon's SQL editor and, if `SESSION_PASSWORD` is not set either, the copy is
+back to asking for a claim code, which the next restart prints.

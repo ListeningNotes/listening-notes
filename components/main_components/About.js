@@ -220,7 +220,21 @@ export default function About({ stamps, authed = false, pinned = null, entries =
   // Read off the session rather than through it, so the effect depends on the
   // two things it uses instead of on the whole editor — which changes on every
   // keystroke into every field on the card.
-  const { editing: correcting, cancel: putThePencilDown } = edit;
+  const { editing: correcting, cancel: putThePencilDown, begin: pickUpThePencil } = edit;
+
+  // ── Arriving with the pencil already up ───────────────────────────────────
+  // /?edit=card opens the correction as soon as the wristband is confirmed.
+  // It exists for the settings page, which lists the photo, the prompts, the
+  // links and the rig as things edited here rather than there, and has to be
+  // able to say "here" with a link that lands on the fields and not on the
+  // card. Once, on arrival; the query is not watched afterwards.
+  const arrived = useRef(false);
+  useEffect(() => {
+    if (!authed || arrived.current) return;
+    if (new URLSearchParams(window.location.search).get('edit') !== 'card') return;
+    arrived.current = true;
+    pickUpThePencil();
+  }, [authed, pickUpThePencil]);
   useEffect(() => {
     if (!correcting) return undefined;
     const pane = paneRef.current;

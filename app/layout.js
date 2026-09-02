@@ -8,6 +8,7 @@ import ComingSoon from '../components/main_components/ComingSoon';
 import { PATH_HEADER } from '../proxy';
 import { headers } from 'next/headers';
 import { isSetUp, pull_settings, coverName, titleName } from '../library/settings_actions';
+import { hasDatabase, explainDatabaseError } from '../library/database_connection';
 
 const nunito = Nunito({
   subsets: ['latin'],
@@ -183,13 +184,30 @@ const BOOKPLATE_FIELDS = [
 // if the question cannot be answered, assume the journal is somebody's.
 const SETUP_PATH = '/setup';
 
+// Returns why the site is held, or null to let it through. 'database' is a
+// copy with no connection string at all — it built and started, which it
+// could not do before the connection was opened lazily, and the only honest
+// page is one saying what is missing. 'setup' is a copy with a database and
+// no owner.
+//
+// 'unreachable' is the third: a connection string is set and the read threw.
+// The old answer was to fail closed and render the site anyway, so an outage
+// on a live journal would not put it behind the holding page — and that is
+// still the rule for the *setup* page, which is never shown on a thrown
+// read. But rendering anyway meant a nameless, empty journal with nothing on
+// it saying why, which for a live journal is a blank page during an outage
+// and for a fresh copy with a mistyped string is a dead end with nobody to
+// ask. A page that says the database cannot be reached is true in both cases
+// and points the owner at the one thing to check.
 async function holdTheDoor() {
   const path = (await headers()).get(PATH_HEADER) || '';
-  if (path === SETUP_PATH || path.startsWith('/api/')) return false;
+  if (path.startsWith('/api/')) return null;
+  if (!hasDatabase()) return 'database';
+  if (path === SETUP_PATH) return null;
   try {
-    return !(await isSetUp());
-  } catch {
-    return false;
+    return (await isSetUp()) ? null : 'setup';
+  } catch (error) {
+    return { reason: 'unreachable', said: explainDatabaseError(error) };
   }
 }
 
@@ -225,11 +243,21 @@ export default async function RootLayout({ children, layer }) {
   settings.cover_name = coverName(all);
   // Whether research is on. The key itself never leaves the server; a boolean
   // does, so the session's album screen can leave the button out on a copy
-  // that has no key rather than show one that fails.
-  settings.research_available = !!process.env.ANTHROPIC_API_KEY;
+  // that has no key rather than show one that fails. Settings first, the
+  // environment second — the same order the vault resolves it in.
+  settings.research_available = Boolean(all.has_anthropic_key || process.env.ANTHROPIC_API_KEY);
+  // Same shape for the beacon: the cross lands on the journal when there is
+  // nothing to ask Last.fm with, and it needs to know that before paint.
+  settings.beacon_available = Boolean(all.lastfm_user && (all.has_lastfm_key || process.env.LASTFM_KEY));
+
+  // The owner's chosen starting theme, on the document from the server so the
+  // first paint is already the right colour. A reader who has pressed the
+  // switch keeps their own choice: the inline script below reads it out of
+  // storage and overrides this before anything is drawn.
+  const theme = all.theme === 'dark' || all.theme === 'light' ? all.theme : undefined;
 
   return (
-    <html lang="en" suppressHydrationWarning className={`${nunito.variable} ${dmMono.variable}`}>
+    <html lang="en" suppressHydrationWarning data-theme={theme} className={`${nunito.variable} ${dmMono.variable}`}>
       <body>
         <script
           suppressHydrationWarning
@@ -239,7 +267,9 @@ export default async function RootLayout({ children, layer }) {
         />
         <Bookplate settings={settings}>
           <Lightswitch>
-            {holding ? <ComingSoon /> : <>
+            {holding
+              ? <ComingSoon reason={typeof holding === 'string' ? holding : holding.reason} said={holding.said} />
+              : <>
               {children}
               {layer}
             </>}

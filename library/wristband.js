@@ -7,6 +7,7 @@
 // protects against XSS token theft.
 
 import { SignJWT, jwtVerify } from 'jose';
+import { sessionSecret } from './secrets.js';
 
 const COOKIE_NAME = 'ln_session';
 
@@ -39,10 +40,12 @@ const EXPIRES_IN = `${LIFETIME_SECONDS}s`;
 // asks again — which is the right way round.
 const RENEW_AFTER_SECONDS = LIFETIME_SECONDS / 3;   // 60 days
 
-function getSecret() {
-  const secret = process.env.SESSION_SECRET;
-  if (!secret) throw new Error('SESSION_SECRET is not set in .env.local');
-  return new TextEncoder().encode(secret);
+// The wax itself comes from the vault — SESSION_SECRET if the environment has
+// one, otherwise a key the copy minted for itself on first start and keeps in
+// its own database. See sessionSecret in library/secrets.js. Async because the
+// first call may have to read or mint it; every caller here already awaits.
+async function getSecret() {
+  return await sessionSecret();
 }
 
 // Stamps a fresh wristband. Returns the signed token string.
@@ -51,7 +54,7 @@ export async function issueWristband() {
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
     .setExpirationTime(EXPIRES_IN)
-    .sign(getSecret());
+    .sign(await getSecret());
 }
 
 // Returns the wristband's contents if the wax seal holds, or null. Callers that
@@ -61,7 +64,7 @@ export async function readWristband(request) {
   const token = request.cookies.get(COOKIE_NAME)?.value;
   if (!token) return null;
   try {
-    const { payload } = await jwtVerify(token, getSecret());
+    const { payload } = await jwtVerify(token, await getSecret());
     return payload;
   } catch {
     return null;
@@ -91,7 +94,7 @@ export async function wristbandOnHand() {
   const token = jar.get(COOKIE_NAME)?.value;
   if (!token) return false;
   try {
-    await jwtVerify(token, getSecret());
+    await jwtVerify(token, await getSecret());
     return true;
   } catch {
     return false;
@@ -137,7 +140,7 @@ export async function issue_receipt(comment_id) {
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
     .setExpirationTime(RECEIPT_EXPIRES_IN)
-    .sign(getSecret());
+    .sign(await getSecret());
 }
 
 // Returns the comment id a receipt vouches for, or null if the seal is broken,
@@ -146,7 +149,7 @@ export async function issue_receipt(comment_id) {
 export async function verify_receipt(token) {
   if (!token || typeof token !== 'string') return null;
   try {
-    const { payload } = await jwtVerify(token, getSecret());
+    const { payload } = await jwtVerify(token, await getSecret());
     return Number.isInteger(payload.cid) ? payload.cid : null;
   } catch {
     return null;

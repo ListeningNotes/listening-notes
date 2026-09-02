@@ -37,15 +37,17 @@
 // promise resolved inline with .then() rather than awaited, which is what lets
 // the suspending part sit inside the layer instead of above it.
 
+import database from '@/library/database_connection';
 import { Suspense } from 'react';
-import { neon } from '@neondatabase/serverless';
 import { pull_entry_by_slug } from '@/library/database_actions';
 import { wristbandOnHand } from '@/library/wristband';
 import LayerEntry from '@/components/main_components/LayerEntry';
 import LayerWaiting from '@/components/main_components/LayerWaiting';
 import PostClient from '../../../entries/[slug]/FullPostPage';
 
-const sql = neon(process.env.DATABASE_URL);
+// The shared handle, opened on first use — see library/database_connection.js.
+// A neon() call at module load fails a build that has no DATABASE_URL.
+const sql = database;
 
 // The reads, which are identical to the standalone page's, deliberately. An
 // entry opened as a layer and the same entry opened cold have to be the same

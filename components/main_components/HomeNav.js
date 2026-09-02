@@ -45,7 +45,6 @@
 
 'use client';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
-import WritingAccess from './WritingAccess';
 import Link from 'next/link';
 import { IdentificationCard, BookOpen, Broadcast, Gear, Info } from '@phosphor-icons/react';
 import { useTheme } from './Lightswitch';
@@ -85,7 +84,7 @@ function ease() {
 }
 
 export default function HomeNav() {
-  const { cover_name, pinned_entry_id } = useBookplate();
+  const { cover_name, pinned_entry_id, beacon_available } = useBookplate();
   const { theme, toggle: toggleTheme } = useTheme();
   const { isLive, recentAlbums } = useListeningBeacon();
 
@@ -186,9 +185,12 @@ export default function HomeNav() {
   // slides away from it — the page would appear to start somewhere it does not.
   // On desktop the rail is a grid with nothing to scroll, so this clamps to 0
   // and costs nothing.
+  // /?edit=card lands on the card instead, with its pencil up — see About.
   useLayoutEffect(() => {
     const el = railRef.current;
-    if (el) el.scrollLeft = el.clientWidth * HOME;
+    if (!el) return;
+    const toCard = new URLSearchParams(window.location.search).get('edit') === 'card';
+    el.scrollLeft = el.clientWidth * (toCard ? 0 : HOME);
   }, []);
 
   // Which pane is on screen, read off the scroll position rather than set by
@@ -338,10 +340,11 @@ export default function HomeNav() {
   // should have to know they are sitting in one.
   const crown = (
     <div className="hn-crown">
-      {/* Three taps here open the writing panel — see WritingAccess. Free to
-          count, because this mark already swallows its own click to re-centre
-          the cross rather than navigating. */}
-      <WritingAccess className="hn-crown-tap">
+      {/* The mark re-centres the cross and does nothing else. It counted
+          taps for a while — three opened a password panel here, then went to
+          Settings — and does not any more: the way in is on the right pane,
+          the pitch's sign-in line or the desk, and a mark that is secretly a
+          door is a mark somebody will open by accident. */}
       <Link href="/" className="hn-crown-mark" aria-label={cover_name} onClick={e => { e.preventDefault(); goTo(HOME); }}>
         <svg viewBox="76 96 241 140" className="hn-crown-svg" xmlns="http://www.w3.org/2000/svg">
           <path
@@ -360,7 +363,6 @@ export default function HomeNav() {
           />
         </svg>
       </Link>
-      </WritingAccess>
     </div>
   );
 
@@ -423,17 +425,24 @@ export default function HomeNav() {
           <About stamps={stamps} authed={authed} pinned={pinned} entries={entries} />
         </section>
 
-        <section className="hn-pane hn-pane--home" ref={paneRefs[1]} aria-label="Now listening">
+        <section className="hn-pane hn-pane--home" ref={paneRefs[1]} aria-label={beacon_available ? 'Now listening' : 'The journal'}>
           {crown}
-          <div className="hn-screen">
-            <div className="hp-dashboard">
-              <div className="hp-dash-cell hp-dash-beacon">
-                <ListeningBeacon />
+          {/* No Last.fm — no username, or no key to ask with — and there is
+              no beacon screen at all: the journal is the first thing under
+              the crown, rather than a tile pretending something might play.
+              The layout decides beacon_available on the server, so this is
+              settled before the first paint and the pane never re-lays out. */}
+          {beacon_available && (
+            <div className="hn-screen">
+              <div className="hp-dashboard">
+                <div className="hp-dash-cell hp-dash-beacon">
+                  <ListeningBeacon />
+                </div>
               </div>
+              {recentRow}
             </div>
-            {recentRow}
-          </div>
-          <div className="hn-under">
+          )}
+          <div className={'hn-under' + (beacon_available ? '' : ' hn-under--first')}>
             <Journal
               entries={entries}
               loading={loading}

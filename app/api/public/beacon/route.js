@@ -15,8 +15,9 @@
 // requests a minute, and the nav's dropdown ran a separate poll on top of that.
 // Multiply by everyone reading at the time.
 //
-// Both go away here. The key is read from the environment so each copy is its
-// own application, and the answer is cached for ten seconds, so a hundred
+// Both go away here. The key is the copy's own — typed into Settings, or set
+// in the environment — so each copy is its own application, and the answer is
+// cached for ten seconds, so a hundred
 // people reading at once cost one upstream request rather than sixteen hundred.
 
 import { pull_beacon_settings } from '@/library/settings_actions';
@@ -50,8 +51,7 @@ function tidy(row) {
 const NOTHING = { tracks: [] };
 
 export async function GET() {
-  const { lastfm_user } = await pull_beacon_settings();
-  const key = process.env.LASTFM_KEY;
+  const { lastfm_user, lastfm_key: key } = await pull_beacon_settings();
 
   // Nothing to ask, or nothing to ask with. Returning early rather than
   // building a URL with an empty field in it, which Last.fm answers with an

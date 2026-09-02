@@ -84,6 +84,24 @@ function pendingFiles(done) {
   return names.filter(n => !done.has(n));
 }
 
+// ── Which address to migrate through ──────────────────────────────────────
+// The direct one, never the pooler. Everything above about the advisory lock
+// assumes a session that is one Postgres backend for its whole life, and
+// Neon's `-pooler` endpoint is PgBouncer in transaction mode — a statement
+// can land on a different backend from the last one, so the lock is taken on
+// one and "released" on another, and a session-level SET leaks into the pool
+// (NOTES has the afternoon that cost). The Vercel integration sets
+// DATABASE_URL to the pooled address and DATABASE_URL_UNPOOLED to the direct
+// one; a hand-pasted string is usually direct already. Prefer the unpooled
+// variable, and failing that strip the `-pooler` marker off the host.
+export function directDatabaseUrl() {
+  const unpooled = process.env.DATABASE_URL_UNPOOLED;
+  if (unpooled) return unpooled;
+  const pooled = process.env.DATABASE_URL;
+  if (!pooled) return '';
+  return pooled.replace(/-pooler(?=\.)/, '');
+}
+
 // Kept plain, and named the way every other tool names it, because this is the
 // one table a stranger opening the database has to recognise on sight.
 const LEDGER = `
@@ -96,12 +114,13 @@ const LEDGER = `
 // a migration itself fails, because a database that did not finish migrating
 // is not a database the site should serve from.
 export async function bringUpToDate({ log = () => {} } = {}) {
-  if (!process.env.DATABASE_URL) {
+  const url = directDatabaseUrl();
+  if (!url) {
     log('no DATABASE_URL — skipping migrations');
     return { applied: [], skipped: true };
   }
 
-  const client = new Client(process.env.DATABASE_URL);
+  const client = new Client(url);
   await client.connect();
 
   try {

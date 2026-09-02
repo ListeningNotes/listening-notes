@@ -32,6 +32,20 @@ export default function ListeningBeacon() {
   // and prints "last played" across it, which is the same fact told by the
   // thing it is about.
 
+  // Nothing has ever been played. A Last.fm account that is connected and
+  // has no scrobbles yet, or one whose history could not be read. The tile
+  // used to draw itself anyway — a white square, a grey note and a dash, the
+  // largest thing on the landing page, looking broken — and a copy with no
+  // Last.fm at all no longer reaches this component (the cross lands on the
+  // journal instead). What is left is one quiet line.
+  if (!trackObj) {
+    return (
+      <div className="beacon-stage beacon-stage--quiet">
+        <p className="beacon-quiet">Nothing played yet.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="beacon-stage">
       <div className="beacon-card beacon-card--main">

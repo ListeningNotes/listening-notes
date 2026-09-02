@@ -38,7 +38,17 @@ function subscribe(callback) {
 }
 
 // Returns a string, so React's equality check is stable between renders.
-const readTheme   = () => (typeof window === 'undefined' ? 'light' : localStorage.getItem(THEME_KEY) || 'light');
+//
+// The reader's own choice first. Failing that, whatever the owner chose as
+// the starting theme in Settings — the layout stamps it on <html> on the
+// server, so it is already on the document by the time this runs and the
+// first paint was the right colour. Failing both, light, which is the
+// default identity.
+const ownerTheme = () => {
+  const set = typeof document === 'undefined' ? null : document.documentElement.getAttribute('data-theme');
+  return set === 'dark' ? 'dark' : 'light';
+};
+const readTheme   = () => (typeof window === 'undefined' ? 'light' : localStorage.getItem(THEME_KEY) || ownerTheme());
 const serverTheme = () => 'light';   // no storage during SSR — light is the default identity
 
 // ThemeProvider — wraps the whole app in layout.js.

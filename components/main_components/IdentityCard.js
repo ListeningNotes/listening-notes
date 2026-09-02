@@ -27,7 +27,7 @@ import {
   DiscordLogo, FacebookLogo, GithubLogo, InstagramLogo,
   LinkSimple, LinkedinLogo, MediumLogo, QrCode, RedditLogo, SoundcloudLogo,
   CassetteTape, Check, DeviceMobileSpeaker, Equalizer, Eye, EyeSlash,
-  GlobeSimple, Guitar, Headphones, MastodonLogo, Pencil, PinterestLogo,
+  GlobeSimple, Guitar, Headphones, MastodonLogo, Pencil, PinterestLogo, GearSix,
   Plus, Radio, SnapchatLogo, SpeakerHifi, SpotifyLogo, TelegramLogo,
   ThreadsLogo, TiktokLogo, TwitchLogo, UploadSimple, User, VinylRecord,
   WhatsappLogo, X, XLogo, YoutubeLogo,
@@ -477,6 +477,12 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
         )}
       </div>
     );
+  } else if (!portrait_url && !address) {
+    // Nothing to show on either face. The box used to print anyway — an
+    // empty square with two corner marks, the first thing on a new copy's
+    // card and the thing that made it look broken. Absent instead; the
+    // editor still draws it, because there it is the way to choose a photo.
+    slot = null;
   } else if (!canTurnSlot) {
     slot = <div className={'idc-portrait' + (bareSlot ? ' idc-portrait--bare' : '')}>{slotFaces}</div>;
   } else {
@@ -1163,15 +1169,30 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
                   </button>
                 </>
               ) : (
-                <button
-                  type="button"
-                  className="idc-tool"
-                  onClick={edit.begin}
-                  aria-label="Edit this card"
-                  title="Edit this card"
-                >
-                  <Pencil size={16} weight="bold" aria-hidden="true" />
-                </button>
+                <>
+                  <button
+                    type="button"
+                    className="idc-tool"
+                    onClick={edit.begin}
+                    aria-label="Edit this card"
+                    title="Edit this card"
+                  >
+                    <Pencil size={16} weight="bold" aria-hidden="true" />
+                  </button>
+                  {/* The machinery — keys, password, theme, the address —
+                      lives at /settings and is reached from here, beside the
+                      pencil, because this is the one place the owner already
+                      looks for their own controls. Same treatment as the
+                      pencil and the printer on an entry: two glyphs, no menu. */}
+                  <Link
+                    href="/settings"
+                    className="idc-tool"
+                    aria-label="Settings"
+                    title="Settings"
+                  >
+                    <GearSix size={16} weight="bold" aria-hidden="true" />
+                  </Link>
+                </>
               )}
             </div>
           )}

@@ -637,6 +637,9 @@ export default function Journal({ entries: given, loading: givenLoading, scrolle
           text-align: center; padding: 80px 0; color: var(--ink-faint);
           font-family: var(--font-label); font-size: 12px; letter-spacing: 0.1em;
         }
+        .arc-empty--new { display: flex; flex-direction: column; gap: 10px; align-items: center; }
+        .arc-empty-said { color: var(--ink-soft); }
+        .arc-empty-how { font-size: 10px; letter-spacing: 0.08em; }
 
         @media (max-width: 768px) {
           .arc-page { padding-top: calc(var(--arc-nav-bottom) + 10px); }
@@ -714,6 +717,14 @@ export default function Journal({ entries: given, loading: givenLoading, scrolle
         {loading ? (
           <div className="arc-grid" data-density={density}>
             {[...Array(18)].map((_, i) => <div key={i} className="arc-skel" style={{ animationDelay: (i * 0.04) + 's' }} />)}
+          </div>
+        ) : entries.length === 0 ? (
+          /* Zero entries is a different fact from zero matches, and on a new
+             copy it is the first thing anybody sees. "No entries match these
+             filters" told a new owner their filters were wrong. */
+          <div className="arc-empty arc-empty--new">
+            <span className="arc-empty-said">Nothing logged yet.</span>
+            <span className="arc-empty-how">The first listen goes in from the desk.</span>
           </div>
         ) : filtered.length === 0 ? (
           <div className="arc-empty">No entries match these filters.</div>
