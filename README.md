@@ -51,11 +51,13 @@ code into your account, which is the point.
 **First run.**
 
 1. Deploy. Watch the build log while it runs — near the end it prints a box
-   with a **claim code**. Copy it. (Missed it? It is also in the project's
-   runtime logs, and printed again on every restart until the copy is claimed.)
-2. Open your site. It says the journal isn't ready yet, with a small
-   *Set it up* link. Press it and type the claim code.
-3. Setup asks for your name, then offers a photo, three prompts, Last.fm, links
+   with a **link**. Open it. That is what makes the copy yours: the link
+   carries a one-time code, and only the person who saw the log has it.
+   (Missed it? It is also in the project's runtime logs, and printed again on
+   every restart until the copy is claimed. The code under the link can be
+   typed by hand at *Set it up* on the holding page.)
+2. Setup opens.
+3. It asks for your name, then offers a photo, three prompts, Last.fm, links
    and your rig, each of which you can skip, then a password. Everything you
    skip has a home later — on the card, or in Settings behind the gear beside
    the card's pencil.

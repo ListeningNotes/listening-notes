@@ -954,6 +954,11 @@ Two briefs in one session, on branch `setup-and-settings`. See DECISIONS,
       in the runtime log; every holding page and `/get` link to the issues;
       `/get` has the seven steps under the essay with screenshot slots.
 
+- [x] **Fresh-account run, 2026-09-02** — the `products` parameter survived
+      Vercel's sign-in redirect: a Neon database was attached and deploy
+      asked for nothing. The claim code showed in the build log. Confusing,
+      so the log prints a link with the code in it now (see DECISIONS).
+
 **Not verified here, and needs the fresh-account test again:** the whole
 first-run flow end to end (there is no local Postgres and only the one live
 database, which is claimed), whether `products` survives Vercel's sign-in
