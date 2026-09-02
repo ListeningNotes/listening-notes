@@ -1369,6 +1369,125 @@ can be read, and that is backwards.
 
 ---
 
+## The session
+
+**One address, `/session`, 2026-09-01.** The album picker and the note-taking
+tool were two routes named for a character this software no longer has, with
+a ceremony between them. They are one page now: with nothing on the desk it is
+the picker, tap a cover and it is the listen. The record being listened to is
+kept in the browser, so a reload or a locked phone reopens where you were.
+
+**No forwarding stub for `/dashboard/echo`.** The retired-route rule applies:
+only the owner ever had that address, the dashboard's Listen door is one tap
+from home and points at the new one, and a stub ships to every install.
+
+**The Echo framing is dropped throughout.** Less companion, more function: find
+the album, log the listen. `EchoNetwork` is not deleted: it is one of the
+dashboard's backgrounds, where it is ambient rather than in the way. The
+floating nodes assembling into album art were beautiful and worth building;
+they sat between "I want to log this" and logging it, and every listen paid
+for a spectacle already seen.
+
+**The chat comes back as a reference, not a character, 2026-09-01.** It has no
+name. It is something you can ask questions of that already knows the album
+and what you have written so far — what instrument is that, what is the word
+for this sound, what connects my track notes. The reason it lives in the app
+rather than another tab is the last of those: notes across a dozen screens
+cannot reasonably be pasted elsewhere. Context is the whole feature. A
+question mark on the cover's corner, from any screen; a bottom sheet on a
+phone that opens on the field with the keyboard up, a column beside the
+writing on a desk. Answers are a paragraph. Dismissing it gives the note back
+its cursor. **Nothing it says ever enters the entry** — it is read, and then
+the owner writes. Same principle as the research: AI is a tool the owner uses,
+never a voice on the page. It is also the strongest argument for the optional
+key, stronger than research, which any search engine can do; the README says
+so.
+
+**The session opens as a layer, 2026-09-01.** From the desk it slides in from
+the right on the sheet an entry arrives on, and leaving it puts you back on
+the desk rather than on the beacon the cross lands on from cold — the cross
+never unmounted. `/session` opened cold is still a page. There is no dashboard
+door on the picker or after a save: the dashboard is being retired, the desk
+is where the listen opened from, and the way back to it is the layer's swipe.
+
+**The strip is the horizon being built.** The tracks screen shows every track
+as a column — its bar rising as it is rated, its title under it the way the
+entry page writes them, and a dot that is empty until something is written,
+filled once it is, lit for the track on screen. A row of dots said where you
+were; it could not say which song was three back.
+
+**The album screen is the art.** Cover large and centred, everything under it
+centred too, and the horizon once the tracks have stars. On the notes screen
+the score and marks come first and the writing last, where a growing field
+wants nothing under it but the button.
+
+**The mobile version is not a reduced version.** Every screen holds one thing
+and runs full-bleed on both devices, and nothing exists on one and not the
+other. The panel over a blurred cover is gone everywhere, not only on phones —
+it was the one dark glass panel on a light site, and the session now reads the
+same tokens as every other page and follows the theme.
+
+**Research is a button, not a step.** *Research this album* on the album
+screen; tap it for the background before listening, skip it for a quick log.
+The API is called only when somebody wants it, which is cheaper for whoever
+pays for the key, and a copy with no key logs a listen with the button simply
+absent — `research_available` rides down with the bookplate for that. A
+briefing already on file still comes back for free when asked.
+
+**One track per screen.** Name and number at the top, stars, a heart, a note,
+arrows or a swipe to the next. It matches the pace of the record — you are on
+track four, so track four is on screen — and it turned out better on a desk
+too, so it is the only layout. The step is not skippable; the track notes are
+what the journal is built on. Nothing insists on a note for every song.
+
+**The score lives on the note screen.** `pick → [research] → tracks → note →
+preview → save` has no score step, on purpose: the score is the last line of
+the note, not a thing on its own. Stars and the three marks sit under the
+album note; the horizon sits above it.
+
+**No question before the listen.** Relationship and source are both gone as
+concepts. Where a record is from is decided by how the listen started — the
+inbox says Submission, anything else is the library — and corrected on the
+entry like everything else.
+
+**Nothing is confirmed and nothing is lost, again.** The back caret saves a
+draft if anything has been written, then goes to the picker, so the listen is
+waiting under Unfinished. The browser's own copy is written on every change
+and carries the tracklist, so a restored listen files every note under the
+song it was written about. Where two copies of a draft exist — the row and
+the browser's — the newer one wins, so typing a little more after pressing
+Save draft and then losing the tab no longer loses that little more.
+
+**The one moment kept is the landing.** The cover you tap flies to where the
+album screen draws it, large and centred, half a second on the entry layer's
+curve. Nothing waits on it.
+
+**No small cover in the header, 2026-09-01.** The album screen is the art; a
+thumbnail of it a screen above was the same picture twice. The header is the
+title line, the question mark and the theme switch, and the steps.
+
+**The draft saves itself.** Three seconds after the last change, and on the
+way out. A Save draft button was a thing to remember on a phone that locks
+mid-sentence; the browser's copy covers the seconds between. Saving the entry
+waits for any draft write still in the air before deleting the row.
+
+**The whole listen is one swipe.** Album → tracks → each track → notes →
+preview, left to right, and back the other way. The tracks screen turns its
+own pages and hands over at either end. Nothing on the way forward is gated;
+only the save waits for an album note.
+
+**The preview is the entry page.** Not a rendering of its own: FullPostPage,
+handed a row that does not exist yet and told it is a preview — no fetches,
+no comment controls, no footer. It stands on its own sheet over the session,
+because the entry's phone layout needs the viewport, and it is reachable from
+any step at any time: the page so far is how you find out what the note still
+needs.
+
+**Start session, Resume session.** The album screen's button knows whether
+you have been in: a draft picked up, or the screen revisited mid-listen.
+
+---
+
 ## Ruled out
 
 **Apple MusicKit.** Developer tokens are domain-scoped and expire in six

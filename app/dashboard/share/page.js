@@ -694,7 +694,7 @@ export default function SessionShare() {
 
       <div style={{ height: '100vh', position: 'relative', zIndex: 1, fontFamily: fonts.sans, color: INK, display: 'flex', flexDirection: 'column' }}>
 
-        {/* Top bar — the echo-style back button the other dashboard pages use */}
+        {/* Top bar — the back button the other dashboard pages use */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 28px', flexShrink: 0 }}>
           <Link href="/dashboard" style={{ fontFamily: fonts.mono, fontWeight: 600, fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(26,21,32,0.5)', textDecoration: 'none', padding: '6px 10px', borderRadius: 8, border: '1px solid rgba(26,21,32,0.12)', background: 'rgba(245,242,236,0.6)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', flexShrink: 0 }}>← Dashboard</Link>
           <span style={{ fontFamily: MONO, fontSize: 10, color: 'rgba(26,25,22,0.35)', letterSpacing: '0.08em' }}>

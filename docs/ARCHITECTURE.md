@@ -39,8 +39,11 @@ land somewhere.
 **Private side** — only you can access this (password protected, never linked
 publicly):
 - `/dashboard` — the hub: Listen, Inbox, Share
-- `/dashboard/echo` — album search powered by Echo's network animation
-- `/dashboard/echo/session` — the note-taking tool
+- `/session` — find the album, log the listen. The picker and the note-taking
+  tool at one address: a search field and a grid of covers, then four screens
+  under a small persistent header — the album, the tracks one at a time, the
+  score and note, the preview. Identical on a phone and a desk. From the desk
+  it opens as a layer, the way an entry does, and a swipe puts you back
 - `/dashboard/inbox` — sent albums and comments awaiting moderation
 - `/dashboard/share` — the album exporter
 - `/dashboard/submissions` — a redirect into the inbox, kept for old links
@@ -68,10 +71,9 @@ The library — logic, no visuals
     slug_generator.js          Turns "Pet Sounds" into "pet-sounds" for the URL
     entry_formatter.js         Parses entry data so it can be displayed correctly
     sitewide_visuals.js        All colors and fonts — change here, changes everywhere
-    session_styles.js          Style helpers scoped to the session panel (tx, bdr, lbl)
-    ai_integration.js          The Claude AI calls: research, format, echo
+    ai_integration.js          The Claude AI calls: research, and the local assembly of a post
     music_data_api.js          Fetches album art and tracklists from iTunes
-    session_timers.js          Track length display, session timer, loading phrases
+    session_timers.js          Track length display, session timer
     wristband.js               Session auth — issues and checks the JWT cookie
 
 The front doors — receive requests, hand them off, send back responses
@@ -81,18 +83,16 @@ The front doors — receive requests, hand them off, send back responses
     comments/route.js          Load or submit comments
     comments/upvote/route.js   Upvote a comment
     research/route.js          Ask Claude to research an album
-    format/route.js            Ask Claude to format your notes
-    echo/route.js              Echo AI — research briefing, chat, reflection
+    format/route.js            Assemble your notes into a post (local, no model)
+    ask/route.js               A question, answered with the album and your notes in context
 
 The hooks — reusable logic shared across pages
   hooks/
     useListeningBeacon.js      Checks Last.fm every 15 seconds for what's playing
-    useAlbumSelection.js       Artist search, EchoNetwork animation, album grid, card phases
-    useListeningSession.js     All session state — research, notes, chat, formatting, saving
+    useListeningSession.js     All session state — the record, tracks, notes, score, preview, saving; research on request
 
 The furniture — visual pieces
   components/
-    EchoNetwork.js             Canvas animation — floating nodes that become album art
     main_components/           Everything on the public side
       HomeNav.js               The cross itself — three panes, the mark, the carets
       About.js                 The left pane: the card, then the writing under it
@@ -128,19 +128,19 @@ The furniture — visual pieces
         Chip.js                The small pill tags (Favorite, Masterpiece, etc)
     session_components/        Everything in the private dashboard
       PasswordGate.js          The password screen
-      SessionButton.js         Frosted pill button used throughout the session panel
+      AlbumPicker.js           Type, see a grid of covers, tap one — the screen before a listen
+      SessionHeader.js         The title line, the glowing question mark and the theme switch, and the four steps
+      AskSheet.js              The reference — a bottom sheet on a phone, a column beside the writing on a desk
       StarRating.js            The interactive stars you click to rate
       steps/
-        PreListenQuestionnaire.js  One question before research fires — where the record is from
-        AlbumDebrief.js        Step 0 — Echo narrative + research sections
-        TrackNotes.js          Step 1 — expandable track list with per-track notes
-        AlbumNotes.js          Step 2 — the horizon so far, then free-text album notes
-        ReflectChat.js         The ask column — open alongside steps 1 and 2, not a step of its own
-        ScoreScreen.js         Step 3 — the score and the three flags
-        SessionPreview.js      Step 4 — formatted preview with save button
-      backgrounds/             9 animated canvas scenes for the dashboard hub
+        AlbumScreen.js         Step 0 — the cover, large; Start or Resume session; Research as a button
+        TrackNotes.js          Step 1 — one track per screen, under a strip of every track's bar, dot and title
+        AlbumNotes.js          Step 2 — the horizon so far, the score, the three marks, then the album note
+        SessionPreview.js      Step 3 — the real entry page (FullPostPage in preview mode) on its own sheet, with the save bar
+      backgrounds/             10 animated canvas scenes for the dashboard hub
         Rain.js / DVD.js / Gallery.js / Fizzy.js / SplitScreen.js
         Snake.js / Pong.js / Solitaire.js / Reel.js
+        EchoNetwork.js         The network of floating covers that used to open every listen
         index.js               Exports all backgrounds as an array
 
 The rooms — full pages assembled from furniture
@@ -152,7 +152,7 @@ The rooms — full pages assembled from furniture
     feed.xml/route.js          The journal as an RSS feed
     entries/[slug]/
       page.js                  Loads the entry, hands it to FullPostPage
-      FullPostPage.js          The full public entry page with comments
+      FullPostPage.js          The full public entry page with comments — and, in preview mode, the session's preview
     archive/page.js            Every entry — search, sort, filters
     key/page.js                What the stars and the three marks mean
     submit/page.js             Send the keeper an album
@@ -161,11 +161,10 @@ The rooms — full pages assembled from furniture
     get/page.js                The keeper's long note. 404s when unwritten
     about/page.js              Redirect to / — the identity card is the about page
     rig/page.js                Redirect to / — the rig lives on the card
+    session/page.js            The listen — picker, then four screens under one header
+    @layer/(.)session/page.js  The same listen, opened as a layer over the desk
     dashboard/
       page.js                  Hub — 3 buttons (Listen, Inbox, Share)
-      echo/
-        page.js                Album search — EchoNetwork + artist search + album grid
-        session/page.js        The note-taking session — 5-step flow, sidebar, frosted panel
       submissions/page.js      Redirect into the inbox — kept for old links
       inbox/page.js            Comments and submissions in one place
       share/page.js            Album exporter — slides for sharing an entry
@@ -179,17 +178,17 @@ The rooms — full pages assembled from furniture
 | The site's colors | library/sitewide_visuals.js |
 | The site's fonts | library/sitewide_visuals.js |
 | What Claude says during research | library/ai_integration.js, research_album |
-| How Claude formats your notes | library/ai_integration.js, format_post |
-| How Echo talks to you | library/ai_integration.js, ask_echo |
-| The loading screen phrases | library/session_timers.js, LOADING_PHRASES |
+| How your notes are assembled into a post | library/ai_integration.js, format_post |
 | The nav row | components/main_components/SiteNav.js, and HomeNav.js on the cross |
 | The listening beacon | components/main_components/ListeningBeacon.js |
 | The row of recent covers under the beacon | components/main_components/HomeNav.js, recentRow |
 | The entry that slides in over the wall | components/main_components/LayerEntry.js and app/@layer/ |
 | The full entry post page | app/entries/[slug]/FullPostPage.js |
-| The album search page | app/dashboard/echo/page.js |
-| The note-taking session | app/dashboard/echo/session/page.js |
-| The session steps (debrief, tracks, notes etc.) | components/session_components/steps/ |
+| The album picker | components/session_components/AlbumPicker.js |
+| The note-taking session, and its styles | app/session/page.js |
+| The header above every session screen | components/session_components/SessionHeader.js |
+| The question mark's sheet, and what it is told | components/session_components/AskSheet.js and app/api/ask/route.js |
+| The session screens (album, tracks, notes, preview) | components/session_components/steps/ |
 | Editing an entry | hooks/useEntryEditor.js, drawn into app/entries/[slug]/FullPostPage.js |
 
 ---

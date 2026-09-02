@@ -1,6 +1,6 @@
 // Copyright (C) 2026 Miyel Brown
 // SPDX-License-Identifier: AGPL-3.0-or-later
-// app/session/page.js
+// app/dashboard/page.js
 // Session hub — the private dashboard landing page.
 // Password protected. Never linked publicly.
 
@@ -16,7 +16,7 @@ import { useBookplate } from '../../components/main_components/Bookplate';
 // table behind that card is gone and the card with it — see the note on DOORS
 // in components/main_components/Dashboard.js.
 const cards = [
-  { href: '/dashboard/echo',  label: 'Listen',  Icon: Headphones },
+  { href: '/session',         label: 'Listen',  Icon: Headphones },
   { href: '/dashboard/inbox',   label: 'Inbox',   Icon: Envelope },
   { href: '/dashboard/share',   label: 'Share',   Icon: PaperPlane },
 ];
