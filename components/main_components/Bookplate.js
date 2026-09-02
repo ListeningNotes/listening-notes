@@ -49,6 +49,10 @@ const EMPTY = {
   // three one-line answers, which is a few hundred bytes and belongs in the
   // context the way the rig rows do.
   bioanswers: null,
+  // Whether this copy has an Anthropic key. Not a setting — a fact about the
+  // environment, worked out on the server, so the session can leave the
+  // Research button out rather than show one that fails.
+  research_available: false,
 };
 
 const BookplateContext = createContext(EMPTY);

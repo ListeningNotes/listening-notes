@@ -9,6 +9,9 @@ import Snake       from './Snake';
 import Pong        from './Pong';
 import Solitaire   from './Solitaire';
 import Reel        from './Reel';
+// The network of floating covers that used to open every listen. Ambient here
+// rather than in the way — see components/session_components/AlbumPicker.js.
+import EchoNetwork from './EchoNetwork';
 // Add new backgrounds here — each receives an `albums` prop (may be ignored)
 const backgrounds = [
   Rain,
@@ -20,6 +23,7 @@ const backgrounds = [
   Pong,
   Solitaire,
   Reel,
+  EchoNetwork,
 ];
 
 export default backgrounds;

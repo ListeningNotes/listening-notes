@@ -714,7 +714,7 @@ export default function AlbumNetwork({
     <canvas
       ref={canvasRef}
       style={{
-        position: 'fixed', inset: 0, zIndex: 0, display: 'block',
+        position: 'absolute', inset: 0, zIndex: 0, display: 'block',
         opacity: completing ? 0 : dimmed ? 0.12 : 1,
         transform: zooming ? 'scale(1.65)' : 'scale(1)',
         transition: completing

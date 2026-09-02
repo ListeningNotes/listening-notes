@@ -223,6 +223,10 @@ export default async function RootLayout({ children, layer }) {
   // string. So the server answers it here, and the nav, the gate and the
   // wordmark just read it.
   settings.cover_name = coverName(all);
+  // Whether research is on. The key itself never leaves the server; a boolean
+  // does, so the session's album screen can leave the button out on a copy
+  // that has no key rather than show one that fails.
+  settings.research_available = !!process.env.ANTHROPIC_API_KEY;
 
   return (
     <html lang="en" suppressHydrationWarning className={`${nunito.variable} ${dmMono.variable}`}>
