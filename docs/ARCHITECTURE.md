@@ -136,7 +136,7 @@ The furniture — visual pieces
         AlbumScreen.js         Step 0 — the cover, large; Start or Resume session; Research as a button
         TrackNotes.js          Step 1 — one track per screen, under a strip of every track's bar, dot and title
         AlbumNotes.js          Step 2 — the horizon so far, the score, the three marks, then the album note
-        SessionPreview.js      Step 3 — the real entry page (FullPostPage in preview mode) on its own sheet, with the save bar
+        SessionPreview.js      Step 3 — the real entry page (FullPostPage in preview mode) on its own sheet, with Return to session and Save to journal at its foot
       backgrounds/             10 animated canvas scenes for the dashboard hub
         Rain.js / DVD.js / Gallery.js / Fizzy.js / SplitScreen.js
         Snake.js / Pong.js / Solitaire.js / Reel.js

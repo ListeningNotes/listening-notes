@@ -1452,7 +1452,7 @@ entry like everything else.
 
 **Nothing is confirmed and nothing is lost, again.** The back caret saves a
 draft if anything has been written, then goes to the picker, so the listen is
-waiting under Unfinished. The browser's own copy is written on every change
+waiting under Drafts. The browser's own copy is written on every change
 and carries the tracklist, so a restored listen files every note under the
 song it was written about. Where two copies of a draft exist — the row and
 the browser's — the newer one wins, so typing a little more after pressing
