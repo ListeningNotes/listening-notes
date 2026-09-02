@@ -116,19 +116,41 @@ export default function WelcomeScreen() {
   // thing a working journal does not have.
   const [rehearsing, setRehearsing] = useState(false);
 
+  // The code, if the person arrived by the link in the build log. Tried
+  // once, silently, before anything is drawn: if it opens the door the first
+  // thing they see is the name screen, and the words "claim code" never come
+  // up. If it does not — used already, mistyped, expired — the gate shows
+  // with the code already in the field, so the worst case is one press.
+  const [codeFromLink, setCodeFromLink] = useState('');
+
   useEffect(() => {
-    const rehearse = new URLSearchParams(window.location.search).has('rehearse');
+    const query = new URLSearchParams(window.location.search);
+    const rehearse = query.has('rehearse');
+    const code = (query.get('code') || '').trim();
     Promise.all([
       fetch('/api/auth/check').then(r => r.json()).catch(() => ({})),
       fetch('/api/setup').then(r => r.json()).catch(() => ({ claimed: true })),
-    ]).then(([auth, status]) => {
+    ]).then(async ([auth, status]) => {
       // Already claimed: there is nothing to do here and a form that appears
       // to save write-once fields it will silently drop is worse than none.
       // Unless the owner asked to see it again.
       if (status?.claimed && !(rehearse && auth.authed)) { router.replace('/'); return; }
       setRehearsing(Boolean(status?.claimed && rehearse));
       setHasPassword(Boolean(status?.has_password));
-      setAuthed(!!auth.authed);
+      let admitted = !!auth.authed;
+      if (!admitted && code && !status?.claimed) {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password: code }),
+        }).catch(() => null);
+        if (res?.ok) admitted = true;
+        else setCodeFromLink(code);
+        // The code comes off the address either way. It is a one-time secret
+        // and should not sit in the history or get pasted on somewhere.
+        window.history.replaceState(null, '', '/setup');
+      }
+      setAuthed(admitted);
       setChecking(false);
     });
   }, [router]);
@@ -361,11 +383,12 @@ export default function WelcomeScreen() {
             <div className="su-line">{hasPassword ? 'Writing access' : 'Claim this journal'}</div>
             {!hasPassword && (
               <p className="su-why" style={{ textAlign: 'center', marginBottom: 18 }}>
-                The claim code is in the build log of the deploy you just made,
-                in a box near the end.
+                {codeFromLink
+                  ? 'That link did not open the door. The code from it is below — press Enter to try again, or find the newest one in the build log.'
+                  : 'The build log of the deploy you just made ends with a box holding a link. Open the link, or type the code from it here.'}
               </p>
             )}
-            <PasswordGate bare asking={hasPassword ? 'password' : 'claim code'} onAuth={() => setAuthed(true)} />
+            <PasswordGate bare asking={hasPassword ? 'password' : 'claim code'} initial={codeFromLink} onAuth={() => setAuthed(true)} />
           </>
         ) : (
           <>

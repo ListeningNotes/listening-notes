@@ -1317,6 +1317,15 @@ watching — and again on every start until the copy is claimed, then cleared
 at the moment of claiming. It stands in for the password at the gate and
 nowhere else.
 
+**And it travels as a link, 2026-09-02.** The fresh-account run worked and
+the code confused: a person at a deploy screen does not know what a claim
+code is or where it goes. Vercel tells the build its own address, so the box
+prints `https://<site>/setup?code=…` and the setup page reads the code off
+the address, tries it once, and drops it from the history. Open the link and
+the first thing on screen is the name field; the words "claim code" appear
+only for somebody who lost the link. The bare code is still printed under it
+for that case, and for a copy run somewhere with no address to print.
+
 **The build migrates too.** `npm run build` runs the migrator before
 `next build`, purely so the claim code reaches the build log. The server
 still migrates on every start; the build step finding nothing pending is the

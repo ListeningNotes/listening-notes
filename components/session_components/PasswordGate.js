@@ -16,7 +16,10 @@ import { useJournalHost } from '../../hooks/useJournalHost';
 // the build log is what opens this door. The route behind it is the same one;
 // only the words on the field change, and the autocomplete hint, because a
 // password manager should not offer to save a code that is about to expire.
-export default function PasswordGate({ onAuth, bare = false, asking = 'password' }) {
+// `initial` fills the field before anybody types — the setup screen uses it
+// to hand back a code from a link that did not open the door, so the person
+// can see it and press Enter rather than find the log again.
+export default function PasswordGate({ onAuth, bare = false, asking = 'password', initial = '' }) {
   const claiming = asking === 'claim code';
   // The journal's own name over the password box, rather than the name of the
   // journal this software was written for. The owner is the only person who
@@ -24,7 +27,7 @@ export default function PasswordGate({ onAuth, bare = false, asking = 'password'
   // own writing is the exact wrong first impression for a copy to make.
   const { cover_name } = useBookplate();
   const host = useJournalHost();
-  const [pw, setPw] = useState('');
+  const [pw, setPw] = useState(initial);
   // A string now rather than a flag, because there are two things that can go
   // wrong here and "incorrect password" is the wrong thing to say about the
   // other one.
