@@ -22,15 +22,16 @@ database is yours, and it is named after you rather than after this software.
 | [Vercel](https://vercel.com) | Runs the site |
 | [Neon](https://neon.tech) | The Postgres database your writing lives in |
 
-Optionally, an [Anthropic API key](https://console.anthropic.com) for the album
-research and the listening companion, on your own usage.
-
-It is closer to required than optional today, and that is a known gap rather
-than a design: without a key the journal still *reads* fine, but it cannot
-easily be written in — a listening session stops at the briefing with an error,
-and the step that turns your notes into a saved entry needs the same key.
-Nothing checks for it and hides those controls the way the Last.fm key is
-handled. Noted in [NOTES.md](NOTES.md).
+Optionally, an [Anthropic API key](https://console.anthropic.com), on your own
+usage. Without one the journal reads and writes exactly the same; two things
+are simply absent from a listen. One is *Research this album*, a button on the
+album screen that fetches a sourced briefing — useful, but any search engine
+does the same. The other is the stronger reason to have a key: a question mark
+on the cover, from any screen, that already knows the record and every note you
+have written so far. What instrument is that, what is the word for this sound,
+what connects my track notes — asked without leaving the page, because notes
+spread across a dozen screens cannot reasonably be pasted anywhere else.
+Nothing it says ever enters the entry; it is read, and then you write.
 
 **Deploy.**
 

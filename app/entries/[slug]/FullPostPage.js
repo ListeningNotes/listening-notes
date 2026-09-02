@@ -61,7 +61,11 @@ const HERO_COVER = {
 // than as its own page. The only thing it changes is what the way out does:
 // on the layer the journal is one step back through history and still holding
 // its scroll position, and on its own page there is no history to go back to.
-export default function FullPostPage({ entry, references = [], authed = false, layered = false }) {
+// `preview` draws an entry that does not exist yet — the session shows the
+// listen in progress exactly as the page will print it. Nothing is fetched
+// for it (there is no slug to fetch by), nothing can be commented on, and the
+// footer's ways out are left off: the session is the way out.
+export default function FullPostPage({ entry, references = [], authed = false, layered = false, preview = false }) {
   const router = useRouter();
   // ── Correcting what is written ────────────────────────────────────────────
   // The fields are drawn where the writing is, not in a form somewhere else:
@@ -337,6 +341,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   // set during the effect's synchronous pass, and a cancel flag stops a slow
   // response writing state after the page has moved on.
   useEffect(() => {
+    if (preview) return undefined;
     let cancelled = false;
     (async () => {
       try {
@@ -907,13 +912,15 @@ export default function FullPostPage({ entry, references = [], authed = false, l
               <div style={{ lineHeight: 1.95, fontSize: '15px', whiteSpace: 'pre-wrap', color: 'var(--ink)', marginBottom: '6px' }}>{linkedAlbumNotes}</div>
             )}
             {editedOn && !edit.editing && <p className="ln-edited">Edited {editedOn}</p>}
-            <CommentBubble
-              slug={entry.slug}
-              trackIndex={-1}
-              comments={albumComments}
-              label={entry.album}
-              onRefresh={loadComments}
-            />
+            {!preview && (
+              <CommentBubble
+                slug={entry.slug}
+                trackIndex={-1}
+                comments={albumComments}
+                label={entry.album}
+                onRefresh={loadComments}
+              />
+            )}
           </section>
         )}
 
@@ -954,6 +961,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
                   editing={edit.editing}
                   draft={edit.draft.tracks[i]}
                   onField={(key, value) => edit.setTrack(i, key, value)}
+                  preview={preview}
                 />
               ))}
             </div>
@@ -972,7 +980,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
             sit here without crowding anything because it only exists at the
             very bottom of the reading, which is the one place nothing else
             wants. */}
-        <div style={{ borderTop: '1px solid var(--border)', paddingTop: '28px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+        {!preview && <div style={{ borderTop: '1px solid var(--border)', paddingTop: '28px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
           {/* The way out of the entry, and — while a correction is open — the
               way to end it. Delete sits at the very foot rather than in the bar
               with Save: they are not the same weight, and a destructive control
@@ -996,7 +1004,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
                 second place to name. */}
             <CaretUp size={14} weight="bold" aria-hidden="true" />
           </button>
-        </div>
+        </div>}
 
         {/* ── Where this came from ─────────────────────────────────────────
             Private, and the only part of an entry a visitor never sees —

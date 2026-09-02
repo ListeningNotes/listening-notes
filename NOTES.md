@@ -344,14 +344,12 @@ and for the wire, `curl -s http://localhost:3000/api/entries | wc -c`.
       the seam is `library/doorman.js` — swap the Map for a store and nothing
       that calls it changes.
 
-- [ ] **A copy with no Anthropic key half-works, and says it fully works.**
-      Nothing checks `ANTHROPIC_API_KEY`, so the research, format and companion
-      controls all render on a keyless copy and fail at the request —
-      `/api/format` returns a 500 and `/api/research` streams an error. The
-      Last.fm key is the model to copy: `/api/public/beacon` returns nothing
-      when the key is absent and the client draws nothing. Until then a keyless
-      copy cannot complete a listening session, which makes the key closer to
-      required than optional.
+- [x] **A copy with no Anthropic key half-works, and says it fully works.**
+      Settled 2026-09-01 by the session overhaul. Research is a button and the
+      button is absent on a keyless copy (`research_available`, worked out in
+      the layout from the env and carried down with the bookplate); the route
+      answers plainly if asked anyway. Formatting stopped reaching a model some
+      time ago and the companion is gone, so a keyless copy completes a listen.
 - [ ] **`keeper_name` has no editor.** `IdentificationCardEditor` writes
       `display_name` once one exists, and setup does not reopen. Belongs in the
       card editor, which is where things are edited.
@@ -488,6 +486,25 @@ Project → Settings → Environment Variables.
 ---
 
 ## Gotchas
+
+**A fixed sheet inside the layer is not fixed to the screen.** `.lay` is a
+containing block for its fixed descendants (see the note on `.sitenav-row`),
+so a second `position: fixed; inset: 0` sheet rendered inside the session's
+layer measures against the outer sheet — on a phone that put the preview's
+entry a scroll's worth too low. Anything that needs the real viewport from
+inside a layer goes through `createPortal(…, document.body)`.
+
+**Focus events do not fire in the Browser pane.** Its document is never the
+focused one (`document.hasFocus()` is false), so `el.focus()` sets
+activeElement without dispatching `focusin`/`focusout`, and anything keyed on
+them looks broken. Dispatch `new FocusEvent('focusin', { bubbles: true })` to
+exercise the handler, and test the real thing on a device.
+
+**`react-hooks/set-state-in-effect` is an error here, not a warning.** Any
+`setState` called synchronously in an effect body fails lint. Read stored
+values in a `useState` initialiser, set state from the event that caused the
+change, and do DOM measurement inside `requestAnimationFrame` — a callback is
+fine, the effect body is not. Two old instances remain in the share page.
 
 Things that cost real time. Each one is here because it was not obvious and
 will not be obvious again in six months.
@@ -810,6 +827,111 @@ current.
 ---
 
 ## Complete
+
+**2026-09-01 — the session, mobile-first**
+
+Briefed as "the mobile version is not a reduced version." See DECISIONS, *The
+session*, for what was decided; this is what was built, on branch
+`session-overhaul`.
+
+- [x] **`/session`** — one route replaces `/dashboard/echo` and
+      `/dashboard/echo/session`. `app/session/page.js` holds the picker-or-
+      listen switch, the landing animation and the session's styles (in the
+      page, the way AlbumFinder keeps its own). Dashboard, hub and inbox point
+      at it. No forwarding stub, per the retired-route rule.
+- [x] **`AlbumPicker`** — a field, a grid of every cover the search found,
+      the type-it-in fallback, and the Unfinished drafts under the field until
+      you start typing. `useAlbumSelection`, the card phases, the fly-to-centre
+      and `PreListenQuestionnaire` are deleted.
+- [x] **`SessionHeader`** — 44px cover, title, artist · year, the four steps as
+      a row, Save draft, and a back caret to the picker. Sticky, frosted, safe-
+      area aware.
+- [x] **`AlbumScreen`** (was `AlbumDebrief`) — the record, Start listening,
+      and *Research this album* as a button. The briefing streams in below if
+      asked; hidden entirely on a copy with no key.
+- [x] **`TrackNotes`** — one track per screen. Dots for every track (filled
+      once covered), stars, heart, an auto-growing note, Prev/Next, swipe on
+      touch, Continue on the last track and a quiet *Album notes →* before it.
+      Focuses the note only on a fine pointer, so a phone's keyboard stays down
+      between swipes.
+- [x] **`AlbumNotes`** — the horizon, the note, then the score and three marks.
+      `ScoreScreen` is merged in and deleted.
+- [x] **`SessionPreview`** — assembles itself on arrival (format_post is local)
+      and re-assembles every time the Preview opens, so edits on the way back
+      through Notes always show. Read it → / Log another / ← Dashboard after
+      the save.
+- [x] **`useListeningSession`** — `beginListen(record)` opens a record and
+      returns the step to land on; `doResearch()` only researches, on demand,
+      and reads the NDJSON stream itself (`library/baton.js` deleted — there is
+      no route jump left to carry a request across). The browser draft now
+      carries the tracklist and a timestamp; the newer of it and the `drafts`
+      row wins. `save_draft` now actually receives `received_from` /
+      `received_date` — the API accepted them and the hook never sent them.
+- [x] **Echo, removed:** `ReflectChat`, `/api/echo`, `/api/reflect`,
+      `ask_echo`, `SessionButton`, `session_styles.js`, `LOADING_PHRASES`.
+      **Kept:** `EchoNetwork`, moved into `backgrounds/` and registered as the
+      tenth scene; its canvas is `absolute` now like its siblings.
+- [x] **Drafts' `step` column** — old rows counted five steps, new ones count
+      four. Read clamped to the new range; a draft left on the old Score step
+      reopens on Preview, which is one tap from where it was.
+
+**Second pass, same day — the feedback round.** The session opens as a layer
+from the desk (`app/@layer/(.)session/page.js`), Escape/swipe lands back on
+the desk pane. Dashboard buttons gone from the picker and the saved screen;
+the picker carries `SiteNav` (mark + theme switch), and the session header
+carries the theme switch at the end of the steps row. Album screen centred on
+the art with the horizon once ratings exist; notes screen reordered score →
+horizon → note. `TrackNotes` dots replaced by the strip: bar, dot, rotated
+title per track, `--dense` past 18 tracks. The reference is back without a
+name: `/api/ask` (inline Anthropic call, plain-text answers, ~80 words),
+`AskSheet` (bottom sheet with visualViewport keyboard lift and a head-drag to
+dismiss; a 380px column past 900px with the writing moved over), a `?` badge
+on the header cover, absent on a keyless copy. Verified in the pane: the
+layer both ways, the sheet on a phone width, one real question answered with
+the album in context. **Not driven:** the head-drag dismiss, the keyboard lift
+and the cursor hand-back need a real phone. The wide column was checked at
+1280px.
+
+**Third pass, same day.** Header loses the cover and the Save draft button;
+the question mark (glowing) and the theme switch sit top right. Drafts save
+themselves (3s debounce in the hook, in-flight write awaited by doSave).
+Landing flies to the album screen's big cover, and that screen fades rather
+than slides while it does. Swipes turn steps on every screen; TrackNotes hands
+over at either end (`onPrev`). Small round carets replace Prev/Next. Notes
+screen: horizon → centred stars → small marks in their own colours → note.
+"Start session" / "Resume session". Preview rebuilt on `FullPostPage` with a
+`preview` prop (no fetch, no CommentBubble, no footer; `TrackThread` takes
+`preview` too), standing on a `.lay` sheet with a save bar; every step is
+tappable at any time. "Unfinished" → "Drafts". A favourited track wears a
+heart above its bar in the strip, in ink rather than red. **Tried and
+reverted the same evening:** folding the strip / horizon while a note had
+focus and pinning the header to `visualViewport.offsetTop`, meant to give iOS
+less to pan when the keyboard opens. On the device it hid the field entirely
+("now I can't see anything"); the plain behaviour was better. The keyboard
+pan is iOS's and is left alone. **Preview on a phone:** the sheet was drawn
+inside the session's own `.lay--scrolls`, so `position: fixed` measured
+against that sheet and the entry sat a scroll's worth too low with its foot
+cut off. `SessionPreview` now portals to `document.body`, where a real entry
+layer lives; the foot is two quiet links over a fade rather than a bar —
+*← Return to session* and *Save to journal →* — and `.ln-content` gets room
+under it. Every forward move in the listen is now
+the same quiet centred link (Start/Resume session, Album notes →, which stays
+on the last track too, Preview →). The band under the bar in Safari is Safari's own collapsed
+toolbar strip, not the page; the installed app has none. All verified in the pane at
+375×812; the test draft the autosave created was discarded afterwards.
+
+**Verified:** `next build` passes; ESLint is clean on every file touched (the
+two `set-state-in-effect` errors left are in the untouched share page and were
+there before). Walked through in the Browser pane at 375×812: picker → grid
+(three across) → album screen → tracks one at a time with a star, a heart and
+a note → the note screen with the horizon → the preview, assembled and
+correct; a reload reopened the same listen on the Preview step with everything
+intact; the back caret filed it under Unfinished; discard removed it. The
+research button was exercised from a second browser and answered in 38s.
+**Not driven from here:** the swipe between tracks and the landing animation
+(the pane's clicks time out on this site, so every tap was scripted). Try both
+on a real phone, plus the keyboard over the note field and resuming a draft
+after locking the screen.
 
 **2026-08-30 — the transfer emergency, and what a read costs**
 
