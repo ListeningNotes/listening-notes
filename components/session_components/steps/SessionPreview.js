@@ -1,163 +1,142 @@
 // Copyright (C) 2026 Miyel Brown
 // SPDX-License-Identifier: AGPL-3.0-or-later
 'use client';
-import { Heart, SketchLogo, Fingerprint } from '@phosphor-icons/react';
-import { fonts, colors } from '../../../library/sitewide_visuals';
-import { tx, bdr, dk, lbl } from '../../../library/session_styles';
-import { entryTypeLabel } from '../../../library/entry_formatter';
-import SessionButton from '../SessionButton';
-import HorizonChart from '../../main_components/HorizonChart';
-import StarDisplay from '../../main_components/StarRating';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
+import { serializeTracks } from '../../../library/entry_formatter';
+import FullPostPage from '../../../app/entries/[slug]/FullPostPage';
 
-// Step 5 — formatted entry preview with save action.
-// Three states: waiting to format / formatting in progress / formatted output ready.
-
-// The two ways on from a finished entry. Accent is the post — that's the thing
-// that was just made; the entries tab is where it gets corrected.
-const savedLink = (accent) => ({
-  fontFamily: fonts.mono, fontSize: 11, letterSpacing: '0.08em',
-  textTransform: 'uppercase', textDecoration: 'none',
-  color: accent ? tx(0.96) : tx(0.7),
-  background: accent ? dk(0.58) : dk(0.42),
-  border: `1px solid ${accent ? bdr(0.5) : bdr(0.16)}`,
-  borderRadius: 50, padding: '10px 22px',
-  boxShadow: accent ? `0 0 16px 2px rgba(255,255,255,0.3), 0 4px 14px ${dk(0.4)}` : `0 2px 8px ${dk(0.28)}`,
-});
+// Step 3 — the entry, exactly as the page will print it, and the button that
+// saves it. Not a rendering of its own: it is the entry page, handed a row
+// that does not exist yet and told it is a preview. So what you see is what
+// a reader will see, down to the sticky labels and the horizon, and any
+// change to how an entry looks changes this with it.
+//
+// It stands on the same sheet an entry arrives on (`.lay`), over the whole
+// session, because the entry's phone layout is two snap screens that need
+// the viewport and would not survive being nested in the session's own
+// scroller. And it is drawn at the top of the document, not inside the
+// session: the session itself is a layer, a fixed sheet that scrolls, and a
+// fixed sheet inside a fixed sheet is positioned against the outer one
+// rather than the screen — which on a phone put the entry a scroll's worth
+// too low and cut its foot off. A portal puts this where a real entry layer
+// lives. A bar along the foot holds the way back and the save.
+//
+// Viewable at any time, from any step — a look at the page so far is how you
+// find out what the note still needs. Saving waits for an album note. The
+// pencil over the save is the way back to the writing — the same mark the
+// entry's own keeper tools use for editing — and a swipe right or Escape
+// does the same.
 
 export default function SessionPreview({
-  brief,
-  albumArt,
-  output,
-  formatting,
-  rating,
-  Masterpiece,
-  Favorite,
-  Formative,
-  entryType,
-  saving,
-  saved,
-  savedEntry,
-  overallNotes,
-  tracks,
-  trackRatings,
-  trackFavorites,
-  doFormat,
-  doSave,
+  album, artist, year, albumArt, genre,
+  overallNotes, rating, Masterpiece, Favorite, Formative, entryType, receivedFrom,
+  tracks, trackRatings, trackFavorites, trackNotes,
+  saving, saved, savedEntry,
+  doSave, onBack, onAnother,
 }) {
-  // Not yet formatted
-  if (!output && !formatting) {
-    return (
-      <div style={{ width: '100%' }}>
-        <div style={{ textAlign: 'center', paddingTop: 60 }}>
-          {albumArt && (
-            <img src={albumArt} alt={brief?.album} style={{ width: 88, height: 88, borderRadius: 12, objectFit: 'cover', display: 'block', margin: '0 auto 24px', boxShadow: `0 10px 40px ${bdr(0.2)}` }} />
-          )}
-          <div style={{ fontFamily: fonts.serif, fontSize: 26, color: tx(0.85), marginBottom: 4, lineHeight: 1.1 }}>{brief?.album}</div>
-          <div style={{ fontFamily: fonts.mono, fontSize: 11, color: tx(0.38), marginBottom: 48 }}>{brief?.artist}</div>
-          <SessionButton onClick={doFormat} disabled={!overallNotes?.trim()} accent style={{ padding: '14px 44px', fontSize: 13 }}>
-            Format My Notes →
-          </SessionButton>
-        </div>
-      </div>
-    );
+  // The row as create_entry would receive it, built the same way doSave
+  // builds its payload so the two cannot disagree. No slug: nothing on the
+  // page fetches by one, and the preview flag keeps it that way.
+  const entry = useMemo(() => {
+    const structured = (tracks || []).map((t, i) => ({
+      number: t.number || i + 1,
+      title: t.title,
+      rating: trackRatings[i] || 0,
+      favorite: !!trackFavorites[i],
+      note: (trackNotes[i] || '').trim(),
+    })).filter(t => t.rating > 0 || t.note || t.favorite);
+    const derived = serializeTracks(structured);
+    return {
+      slug: '',
+      album, artist, year: year || '', genre: genre || '',
+      album_art: albumArt || '',
+      entry_type: entryType || 'Personal Library',
+      rating: rating ? rating + ' stars' : (Masterpiece ? '5 stars' : ''),
+      favorite: Favorite, masterpiece: Masterpiece, formative: Formative,
+      notes: overallNotes,
+      tracks: structured,
+      track_notes: derived.track_notes,
+      horizon: derived.horizon,
+      received_from: receivedFrom || null,
+      created_at: new Date().toISOString(),
+      edited_at: null,
+      listen_number: 1, listen_total: 1,
+    };
+  }, [album, artist, year, genre, albumArt, entryType, rating, Masterpiece, Favorite, Formative, overallNotes, tracks, trackRatings, trackFavorites, trackNotes, receivedFrom]);
+
+  // Escape is the way back here, and only here — the layer under this
+  // listens for the same key, and stopping it keeps one press from closing
+  // the whole listen.
+  function onKey(e) {
+    if (e.key !== 'Escape') return;
+    e.stopPropagation();
+    onBack();
   }
 
-  // Formatting in progress
-  if (formatting) {
-    return (
-      <div style={{ width: '100%' }}>
-        <div style={{ textAlign: 'center', paddingTop: 80 }}>
-          <div style={{ fontFamily: fonts.mono, fontSize: 11, color: tx(0.35), letterSpacing: '0.1em', marginBottom: 20 }}>Formatting notes…</div>
-          <div style={{ display: 'flex', gap: 6, justifyContent: 'center' }}>
-            {[0, 1, 2].map(i => <div key={i} style={{ width: 5, height: 5, borderRadius: '50%', background: tx(0.25), animation: `ln-dot 1.4s ease-in-out ${i * 0.22}s infinite` }} />)}
-          </div>
-        </div>
-      </div>
-    );
+  // A swipe to the right is the same page-turn the rest of the session uses.
+  const touch = useRef(null);
+  function start(e) { if (e.touches.length === 1) touch.current = { x: e.touches[0].clientX, y: e.touches[0].clientY }; }
+  function end(e) {
+    const from = touch.current; touch.current = null;
+    if (!from) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - from.x, dy = t.clientY - from.y;
+    if (dx > 56 && dx > Math.abs(dy) * 1.5) onBack();
   }
 
-  // Output ready
-  return (
-    <div style={{ width: '100%' }}>
-      <div style={{ display: 'flex', gap: 18, alignItems: 'flex-start', marginBottom: 24, paddingBottom: 24, borderBottom: `1px solid ${bdr(0.08)}` }}>
-        {albumArt && (
-          <img src={albumArt} alt={brief?.album} style={{ width: 72, height: 72, borderRadius: 10, objectFit: 'cover', flexShrink: 0, boxShadow: `0 6px 24px ${bdr(0.2)}` }} />
-        )}
-        <div>
-          <div style={{ fontFamily: fonts.serif, fontSize: 22, color: tx(0.88), lineHeight: 1.05, marginBottom: 4 }}>{brief?.album}</div>
-          <div style={{ fontFamily: fonts.mono, fontSize: 11, color: tx(0.38), marginBottom: 10 }}>
-            {brief?.artist}{brief?.year ? ' · ' + brief.year : ''}
-          </div>
-          <StarDisplay rating={rating} size={16} />
+  // The sheet takes the focus so Escape reaches it.
+  const sheet = useRef(null);
+  useEffect(() => { sheet.current?.focus({ preventScroll: true }); }, []);
 
-          {/* Everything else about to be written to the row. These were all
-              invisible until the entry existed, which is a bad time to find
-              out the type is wrong or the mark didn't take. */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', marginTop: 10 }}>
-            {[entryTypeLabel(entryType)].filter(Boolean).map(t => (
-              <span key={t} style={{ fontFamily: fonts.mono, fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: tx(0.45), border: `1px solid ${bdr(0.14)}`, borderRadius: 4, padding: '3px 8px' }}>{t}</span>
-            ))}
-            {Masterpiece && (
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontFamily: fonts.mono, fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: tx(0.7) }}>
-                <SketchLogo size={13} weight="fill" color={colors.mp} />Masterpiece
-              </span>
-            )}
-            {Favorite && (
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontFamily: fonts.mono, fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: tx(0.7) }}>
-                <Heart size={13} weight="fill" color={colors.fav} />Favorite
-              </span>
-            )}
-            {Formative && (
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontFamily: fonts.mono, fontSize: 9, letterSpacing: '0.1em', textTransform: 'uppercase', color: tx(0.7) }}>
-                <Fingerprint size={13} weight="bold" color={colors.formative} />Formative
-              </span>
-            )}
-          </div>
-        </div>
-      </div>
+  const canSave = !!overallNotes.trim() && !saved;
 
-      <div style={{ ...lbl, marginBottom: 12 }}>Album Notes</div>
-      <div style={{ fontFamily: fonts.sans, fontSize: 14, lineHeight: 1.9, color: tx(0.88), whiteSpace: 'pre-wrap', marginBottom: 28 }}>{output.album_notes}</div>
+  // The portal needs the document. This only ever renders in the browser —
+  // the session page draws nothing until the door has been checked — so the
+  // body is there on the first render.
+  const [host] = useState(() => (typeof document !== 'undefined' ? document.body : null));
+  if (!host) return null;
 
-      {/* Drawn, not typed. This used to render the ▁▂▃█ block characters as
-          text, and the font fell back per-glyph — which is why the bars sat on
-          different baselines. As flex children of one flex-end row they can't. */}
-      {tracks?.length > 0 && (
-        <div style={{ margin: '28px 0 8px' }}>
-          <div style={{ ...lbl, marginBottom: 10 }}>Listening Horizon</div>
-          <HorizonChart tracks={tracks} trackRatings={trackRatings} favorites={trackFavorites} height={90} labels animate={false} />
-        </div>
-      )}
+  return createPortal(
+    <div
+      ref={sheet}
+      className="lay ses-preview"
+      role="dialog"
+      aria-label="Preview"
+      tabIndex={-1}
+      onKeyDown={onKey}
+      onTouchStart={start}
+      onTouchEnd={end}
+    >
+      {/* Keyed so a changed note re-mounts the page and its typed-in reveals
+          rather than patching a page built for the old text. */}
+      <FullPostPage key={entry.notes.length + ':' + entry.tracks.length} entry={entry} references={[]} layered preview />
 
-      {output.track_notes && (
-        <>
-          <div style={{ ...lbl, marginBottom: 12, marginTop: 4 }}>Track Notes</div>
-          <div style={{ fontFamily: fonts.sans, fontSize: 14, lineHeight: 1.9, color: tx(0.72), whiteSpace: 'pre-wrap', marginBottom: 28 }}>{output.track_notes}</div>
-        </>
-      )}
-
-      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 16, marginTop: 8 }}>
+      {/* The foot: two quiet links, the same ones every screen in the listen
+          moves on with — back to the session, or on to the journal. */}
+      <div className="ses-preview-bar">
         {!saved ? (
-          <SessionButton onClick={doSave} disabled={saving} accent style={{ padding: '12px 40px', fontSize: 12 }}>
-            {saving ? 'Saving…' : 'Save to Site →'}
-          </SessionButton>
-        ) : (
-          // Saying "saved" and leaving you on the dashboard meant finding the
-          // entry again by hand to check it. This goes straight to the post,
-          // which is now also where it gets corrected — there used to be a
-          // second link here, to the row behind it in /dashboard/entries, and
-          // both the row and the route are gone.
-          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 16 }}>
-            <span style={{ fontFamily: fonts.mono, fontSize: 11, color: tx(0.9), letterSpacing: '0.1em' }}>✓ Saved</span>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', justifyContent: 'center' }}>
-              {savedEntry?.slug && (
-                <a href={`/entries/${savedEntry.slug}`} target="_blank" rel="noreferrer" style={savedLink(true)}>View the post →</a>
+          <>
+            <button type="button" className="ses-quiet" onClick={onBack}>← Return to session</button>
+            {!overallNotes.trim()
+              ? <span className="ses-label">Write an album note to save</span>
+              : (
+                <button type="button" className="ses-quiet ses-quiet--lead" onClick={doSave} disabled={saving}>
+                  {saving ? 'Saving…' : 'Save to journal →'}
+                </button>
               )}
-            </div>
-            <a href="/dashboard" style={{ fontFamily: fonts.mono, fontSize: 10, color: tx(0.32), letterSpacing: '0.08em', textDecoration: 'none' }}>← Back to dashboard</a>
-          </div>
+          </>
+        ) : (
+          <>
+            <span className="ses-label" style={{ color: 'var(--ink)' }}>✓ Saved</span>
+            {savedEntry?.slug && (
+              <a href={`/entries/${savedEntry.slug}`} className="ses-btn ses-btn--primary">Read it →</a>
+            )}
+            <button type="button" className="ses-btn" onClick={onAnother}>Log another</button>
+          </>
         )}
       </div>
-    </div>
+    </div>,
+    host
   );
 }

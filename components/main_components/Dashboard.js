@@ -47,7 +47,7 @@ export default function Dashboard({ waiting }) {
             because it goes somewhere — the listening flow is its own route
             with its own background, and pretending otherwise with a button
             would only mean a navigation that looked like it failed. */}
-        <Link href="/dashboard/echo" className="db-hero">
+        <Link href="/session" className="db-hero">
           <Headphones size={34} weight="regular" aria-hidden="true" />
           <span className="db-hero-label">Start a listen</span>
         </Link>

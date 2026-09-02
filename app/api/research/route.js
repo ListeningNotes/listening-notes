@@ -17,6 +17,16 @@ export async function POST(request) {
   const { album, artist, refresh } = await request.json();
   const encoder = new TextEncoder();
 
+  // A copy with no key does not get as far as the SDK, which would otherwise
+  // fail with an authentication message written for a developer. The album
+  // screen hides the button on such a copy; this is for anything that asks
+  // anyway.
+  if (!process.env.ANTHROPIC_API_KEY) {
+    return new Response(JSON.stringify({ error: 'Research is off on this copy — there is no Anthropic key set.' }) + '\n', {
+      headers: { 'Content-Type': 'application/x-ndjson; charset=utf-8', 'Cache-Control': 'no-store' },
+    });
+  }
+
   if (!refresh) {
     try {
       const stored = await pull_briefing(album, artist);

@@ -117,7 +117,7 @@ export default function Inbox() {
       receivedDate: sent.created_at ? String(sent.created_at).slice(0, 10) : '',
     }));
     await updateStatus(sent.id, 'reviewed');
-    router.push('/dashboard/echo/session');
+    router.push('/session');
   }
 
   async function approveComment(id) {
@@ -226,7 +226,7 @@ export default function Inbox() {
         <Background albums={albums} />
         <div style={{ position: 'absolute', inset: 0, zIndex: 1, backdropFilter: 'blur(3px)', WebkitBackdropFilter: 'blur(3px)', background: 'rgba(224,224,220,0.5)', pointerEvents: 'none' }} />
 
-        {/* Back to dashboard — same style + place as /dashboard/echo */}
+        {/* Back to dashboard — same style + place as the share page */}
         <div style={{ position: 'relative', zIndex: 3, padding: '14px 28px', display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
           <a href="/dashboard" style={{ fontFamily: fonts.mono, fontWeight: 600, fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(26,21,32,0.5)', textDecoration: 'none', padding: '6px 10px', borderRadius: 8, border: '1px solid rgba(26,21,32,0.12)', background: 'rgba(245,242,236,0.6)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', flexShrink: 0 }}>← Dashboard</a>
         </div>

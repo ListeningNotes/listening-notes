@@ -72,4 +72,5 @@ Two worth knowing without opening the file:
   it leaked.
 - `ANTHROPIC_API_KEY` — bills to your Console **API credit balance**, which is
   a separate pool from a Claude.ai subscription. See the gotchas in
-  [NOTES.md](../NOTES.md).
+  [NOTES.md](../NOTES.md). Optional: without it the Research button and the
+  question mark on the session's cover are absent, and everything else works.

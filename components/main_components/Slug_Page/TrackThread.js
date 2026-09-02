@@ -19,6 +19,9 @@ import { editStamp } from '../../../library/entry_formatter';
 export default function TrackThread({
   track, note, trackIndex, slug, commentsByTrack, onRefresh,
   editing = false, draft, onField,
+  // The session's preview of an entry that is not saved yet: nothing to
+  // comment on, so no bubble under the note.
+  preview = false,
 }) {
   // Under this track's note, if this track's note has been rewritten. Stored
   // on the track itself rather than on the entry — see the stamps in
@@ -98,13 +101,13 @@ export default function TrackThread({
       {/* The way in, at the end of the note you've just read. Lives in
           CommentBubble now, which the album notes share — see the note at the
           top of that file for why. */}
-      <CommentBubble
+      {!preview && <CommentBubble
         slug={slug}
         trackIndex={trackIndex}
         comments={trackComments}
         label={track.name}
         onRefresh={onRefresh}
-      />
+      />}
     </div>
   );
 }
