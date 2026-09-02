@@ -16,6 +16,7 @@
 
 import Anthropic from '@anthropic-ai/sdk';
 import { requireWristband } from '@/library/wristband';
+import { anthropicKey } from '@/library/secrets';
 
 const SYSTEM = `You are a reference inside a personal listening journal. You are not a character, not a companion, and you have no name. The owner is logging an album and writing notes track by track; you already know the album and what they have written so far.
 
@@ -36,7 +37,8 @@ export async function POST(request) {
   const blocked = await requireWristband(request);
   if (blocked) return blocked;
 
-  if (!process.env.ANTHROPIC_API_KEY) {
+  const apiKey = await anthropicKey();
+  if (!apiKey) {
     return Response.json({ error: 'This copy has no Anthropic key set, so there is nothing to ask.' });
   }
 
@@ -55,7 +57,7 @@ export async function POST(request) {
     if (context.albumNotes) lines.push(`Album note so far:\n${context.albumNotes}`);
     const system = lines.length ? `${SYSTEM}\n\nWhat is on the desk:\n${lines.join('\n')}` : SYSTEM;
 
-    const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+    const client = new Anthropic({ apiKey });
     const response = await client.messages.create({
       model: 'claude-sonnet-4-6',
       max_tokens: 320,

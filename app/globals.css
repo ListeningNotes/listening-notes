@@ -1591,6 +1591,14 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   color: var(--text-muted);
 }
 
+/* The beacon with nothing to show: one line where the tile would be, in the
+   same faint label type the rest of the site uses for an absence. */
+.beacon-stage--quiet { display: flex; align-items: flex-start; justify-content: center; }
+.beacon-quiet {
+  font-family: var(--font-label); font-size: 11px; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--ink-faint); margin: 24px 0 0;
+}
+
 .beacon-live-dot { display: none; }
 @keyframes beacon-breathe {
   0%   { box-shadow: 0 0 0 0 rgba(124,255,155,0.5); }
@@ -3092,6 +3100,10 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   --arc-nav-bottom: calc(env(safe-area-inset-top) + 44px);
   padding: 0 0 max(28px, env(safe-area-inset-bottom));
 }
+/* The wall as the first screen, on a copy with no beacon. The crown is still
+   above it, so it starts where the beacon's art would have and the pane reads
+   the same as its neighbours. */
+.hn-under--first { padding-top: var(--hn-square-top); }
 /* The wall pays no gutter of its own here. It had one — the pane's 34px, on
    top of the 24 the wall already carries — and 58px of margin down each side of
    a phone is a whole column of covers given away to nothing. The wall's own

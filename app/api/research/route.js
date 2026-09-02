@@ -3,6 +3,7 @@
 import { research_album_live } from '@/library/ai_integration';
 import { pull_briefing, save_briefing } from '@/library/database_actions';
 import { requireWristband } from '@/library/wristband';
+import { anthropicKey } from '@/library/secrets';
 
 // Streams the briefing as NDJSON — one complete brief object per line, each
 // superseding the last. The client renders whatever arrived most recently, so
@@ -21,7 +22,7 @@ export async function POST(request) {
   // fail with an authentication message written for a developer. The album
   // screen hides the button on such a copy; this is for anything that asks
   // anyway.
-  if (!process.env.ANTHROPIC_API_KEY) {
+  if (!(await anthropicKey())) {
     return new Response(JSON.stringify({ error: 'Research is off on this copy — there is no Anthropic key set.' }) + '\n', {
       headers: { 'Content-Type': 'application/x-ndjson; charset=utf-8', 'Cache-Control': 'no-store' },
     });

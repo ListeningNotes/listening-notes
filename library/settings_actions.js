@@ -61,6 +61,9 @@ const EMPTY = {
   display_name: null,
   // Written once and then fixed for the life of the copy. See WRITE_ONCE.
   serial: null,
+  // Which way the site opens for somebody who has never touched the switch:
+  // 'light', 'dark', or null for the default. See Lightswitch.
+  theme: null,
   // False until the welcome screen has run. Not null: "we have not asked yet"
   // and "they answered no" are the same answer here, and false is the one a
   // fresh copy needs before its database has a row in it at all.
@@ -81,6 +84,7 @@ const WRITABLE = [
   'hidden_fields', 'send_me', 'portrait_position', 'rig_icon', 'rig',
   'bioanswers',
   'definitions',
+  'theme',
   // The uploaded portrait. Written by /api/portrait rather than by a form, but
   // it goes through the same door as everything else in this table.
   'portrait_data', 'portrait_mime',
@@ -202,9 +206,16 @@ const SETTINGS_FIELDS = [
   'why_date', 'definitions', 'social_links', 'hidden_fields',
   'portrait_mime', 'send_me', 'portrait_position', 'rig_icon', 'rig',
   'portrait_code_url', 'display_name', 'serial', 'setup_complete',
-  'bioanswers',
+  'bioanswers', 'theme',
 ];
-const SETTINGS_SELECT = SETTINGS_FIELDS.map(f => `"${f}"`).join(', ');
+// Two booleans about the vault, answered inside the same read rather than by
+// a second one. The layout wants to know whether research is on, and the
+// cross wants to know whether the beacon can ask Last.fm; neither needs the
+// key, and a page render that made a second trip for a yes/no would be a
+// second trip on every page.
+const SETTINGS_SELECT = SETTINGS_FIELDS.map(f => `"${f}"`).join(', ')
+  + `, (SELECT anthropic_key IS NOT NULL FROM secrets WHERE id = 1) AS has_anthropic_key`
+  + `, (SELECT lastfm_key IS NOT NULL FROM secrets WHERE id = 1) AS has_lastfm_key`;
 
 export async function pull_settings() {
   try {
@@ -262,12 +273,24 @@ export async function isSetUp() {
 // function exists is that a general reader on a fifteen-second timer is how
 // the transfer allowance was spent in the first place; a second field is how
 // it grows back. Give the next hot path its own narrow reader.
+//
+// It carries two columns now, not one, and that is not the widening the
+// paragraph above warns about: the key moved out of the environment and into
+// the vault, and the beacon cannot ask Last.fm without both halves of the same
+// question — who to ask about, and what to ask with. One read for one
+// question. Anything else on this timer still gets its own reader.
 export async function pull_beacon_settings() {
   try {
-    const [row] = await database`SELECT lastfm_user FROM settings WHERE id = 1`;
-    return { lastfm_user: row?.lastfm_user || null };
+    const [row] = await database`
+      SELECT s.lastfm_user, k.lastfm_key
+      FROM settings s LEFT JOIN secrets k ON k.id = 1
+      WHERE s.id = 1`;
+    return {
+      lastfm_user: row?.lastfm_user || null,
+      lastfm_key: row?.lastfm_key || process.env.LASTFM_KEY || null,
+    };
   } catch {
-    return { lastfm_user: null };
+    return { lastfm_user: null, lastfm_key: process.env.LASTFM_KEY || null };
   }
 }
 
@@ -359,8 +382,11 @@ export async function save_settings(fields) {
      ON CONFLICT (id) DO UPDATE SET
        ${columns.map(c => `"${c}" = EXCLUDED."${c}"`).join(', ')},
        updated_at = now()
-     RETURNING *`,
+     RETURNING ${SETTINGS_SELECT}`,
     values
   );
+  // The same shape a read gives. RETURNING * used to hand back the whole row,
+  // portrait bytes and all, to a caller that only wanted to know it saved —
+  // and the route passed it straight to the browser.
   return { ...EMPTY, ...row, definitions: mergeDefinitions(row?.definitions) };
 }

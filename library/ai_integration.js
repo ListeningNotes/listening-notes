@@ -2,9 +2,12 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import Anthropic from '@anthropic-ai/sdk';
 import { buildHorizon } from './entry_formatter.js';
+import { anthropicKey } from './secrets.js';
 
-function get_client() {
-  return new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+// The key comes from the vault — Settings first, the environment second — so
+// the client is made per call rather than once at import.
+async function get_client() {
+  return new Anthropic({ apiKey: await anthropicKey() });
 }
 
 const RESEARCH_CALL = (album, artist) => ({
@@ -128,7 +131,7 @@ function briefBuilder(album, artist) {
 // closes. Same call and same thoroughness as research_album — the difference is
 // that the caller can start rendering at ~21s instead of waiting the full ~55s.
 export async function* research_album_live(album, artist) {
-  const client = get_client();
+  const client = await get_client();
   const builder = briefBuilder(album, artist);
   const stream = client.messages.stream(RESEARCH_CALL(album, artist));
 

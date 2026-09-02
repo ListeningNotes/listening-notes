@@ -1,0 +1,313 @@
+// Copyright (C) 2026 Miyel Brown
+// SPDX-License-Identifier: AGPL-3.0-or-later
+// app/settings/page.js
+// The machinery. Owner-only, reached from the gear beside the card's pencil.
+//
+// ── What belongs here and what does not ───────────────────────────────────
+// Setup offers to skip almost everything, and Skip has to mean later rather
+// than never — so every field it can skip needs a home. This is that home
+// for the things that are not printed anywhere: Last.fm, the two keys, the
+// password, and the address. The starting theme and the wording of the key
+// were here for an afternoon and came off (2026-09-01) — parked, not
+// rejected; the theme column and the definitions column both still exist.
+//
+// The card's own fields — the name, the photo, the prompts, the links, the
+// rig, the pinned record — are not edited here. Everything editable is
+// edited where it prints, which is a decision this repo made once and keeps
+// making: two editors for one field means neither is the real one. They are
+// listed at the foot of this page so that nothing setup skipped is
+// unfindable, and each row is a door to the card with its pencil already up.
+//
+// ── Secrets go in and never come back out ─────────────────────────────────
+// The keys and the password are written through /api/secrets and the page is
+// only ever told whether one is set and its last four characters. A key that
+// has been typed is replaced by typing another, or cleared; it is not shown.
+//
+// ── One Save per section ──────────────────────────────────────────────────
+// Rather than one at the foot of the page, so that "that did not save" can
+// say which part, and so that changing the password is its own act rather
+// than a side effect of correcting a Last.fm username.
+
+'use client';
+
+import { useCallback, useEffect, useState } from 'react';
+import Link from 'next/link';
+import { fonts } from '../../library/sitewide_visuals';
+import SiteNav from '../../components/main_components/SiteNav';
+import PasswordGate from '../../components/session_components/PasswordGate';
+import AddToHomeScreen from '../../components/main_components/AddToHomeScreen';
+import { useJournalHost } from '../../hooks/useJournalHost';
+
+const PASSWORD_FLOOR = 8;
+
+async function send(url, body) {
+  const res = await fetch(url, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok || data.error) throw new Error(data.error || 'That did not save. Try again.');
+  return data;
+}
+
+// A section with its own Save, its own busy state and its own trouble line.
+function Section({ title, note, onSave, children, saveLabel = 'Save' }) {
+  const [busy, setBusy] = useState(false);
+  const [said, setSaid] = useState('');
+  const [trouble, setTrouble] = useState('');
+
+  async function save(event) {
+    event.preventDefault();
+    setBusy(true); setSaid(''); setTrouble('');
+    try {
+      await onSave();
+      setSaid('Saved');
+      setTimeout(() => setSaid(''), 2200);
+    } catch (e) {
+      setTrouble(e.message || 'That did not save.');
+    }
+    setBusy(false);
+  }
+
+  return (
+    <form className="st-section" onSubmit={save}>
+      <h2 className="st-h">{title}</h2>
+      {note && <p className="st-note">{note}</p>}
+      {children}
+      <div className="st-foot">
+        <button type="submit" className="st-save" disabled={busy}>{busy ? 'Saving…' : saveLabel}</button>
+        {said && <span className="st-said" role="status">{said}</span>}
+        {trouble && <span className="st-trouble" role="alert">{trouble}</span>}
+      </div>
+    </form>
+  );
+}
+
+// What a stored secret looks like on this page: a line saying it is set and
+// where from, and a field to replace it.
+function secretLine(status) {
+  if (!status) return 'Not set.';
+  const where = status.source === 'environment' ? 'set in the environment' : 'set here';
+  return `Set, ending ${status.tail} — ${where}.`;
+}
+
+export default function SettingsPage() {
+  const host = useJournalHost();
+  const [checking, setChecking] = useState(true);
+  const [authed, setAuthed] = useState(false);
+  const [settings, setSettings] = useState(null);
+  const [secrets, setSecrets] = useState(null);
+
+  const [address, setAddress] = useState('');
+  const [lastfmUser, setLastfmUser] = useState('');
+  const [lastfmKey, setLastfmKey] = useState('');
+  const [anthropic, setAnthropic] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirm, setConfirm] = useState('');
+
+  const load = useCallback(async () => {
+    const [s, k] = await Promise.all([
+      fetch('/api/settings').then(r => r.json()),
+      fetch('/api/secrets').then(r => r.json()),
+    ]);
+    const row = s.settings || {};
+    setSettings(row);
+    setSecrets(k);
+    setAddress(row.site_address || '');
+    setLastfmUser(row.lastfm_user || '');
+  }, []);
+
+  useEffect(() => {
+    fetch('/api/auth/check')
+      .then(r => r.json())
+      .then(async d => {
+        if (d.authed) { await load(); setAuthed(true); }
+        setChecking(false);
+      })
+      .catch(() => setChecking(false));
+  }, [load]);
+
+  if (checking) return <div style={{ minHeight: '100dvh', background: 'var(--bg)' }} />;
+  // Signed out, this page *is* the sign-in: the three taps on the mark and
+  // the pitch pane's line both land here. See WritingAccess.
+  if (!authed) return <PasswordGate onAuth={async () => { await load(); setAuthed(true); }} />;
+
+  return (
+    <div className="st-page" style={{ fontFamily: fonts.sans }}>
+      <style>{`
+        .st-page { min-height: 100dvh; background: var(--bg); color: var(--ink); padding-top: calc(80px + var(--safe-top)); }
+        .st-main { max-width: 560px; margin: 0 auto; padding: 40px 24px 120px; }
+        .st-title { font-family: var(--font-display); font-weight: var(--font-display-weight, 700); font-size: 28px; margin: 0 0 4px; letter-spacing: -0.01em; }
+        .st-kicker {
+          font-family: var(--font-label); font-size: 10px; letter-spacing: 0.14em;
+          text-transform: uppercase; color: var(--ink-faint); margin: 0 0 36px;
+        }
+        .st-section { padding: 26px 0; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 14px; }
+        .st-h { font-family: var(--font-label); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-faint); margin: 0; }
+        .st-note { font-size: 13px; line-height: 1.65; color: var(--ink-soft); margin: 0; }
+        .st-note a { color: var(--ink); }
+        .st-label {
+          display: block; font-family: var(--font-label); font-size: 10px;
+          letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 6px;
+        }
+        .st-status { font-family: var(--font-label); font-size: 10px; color: var(--ink-faint); margin: 0 0 8px; line-height: 1.5; }
+        .st-field {
+          display: block; width: 100%; box-sizing: border-box;
+          background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+          color: var(--ink); padding: 10px 13px; font-family: ${fonts.sans}; font-size: 14px; line-height: 1.6; outline: none;
+        }
+        .st-field:focus { border-color: var(--ink-faint); }
+        .st-field::placeholder { color: var(--ink-faint); }
+        .st-who { background: none; border-color: transparent; padding-left: 0; color: var(--ink-faint); font-family: var(--font-label); font-size: 12px; letter-spacing: 0.08em; }
+        textarea.st-field { resize: vertical; min-height: 96px; }
+        @media (pointer: coarse) { .st-field { font-size: 16px; } }
+        .st-foot { display: flex; align-items: center; gap: 14px; margin-top: 4px; }
+        .st-save {
+          display: inline-flex; align-items: center; padding: 9px 18px; border-radius: 999px;
+          background: var(--ink); color: var(--bg); border: 1px solid var(--ink);
+          font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; cursor: pointer;
+        }
+        .st-save:disabled { opacity: 0.5; cursor: default; }
+        .st-said, .st-trouble { font-family: var(--font-label); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; }
+        .st-said { color: var(--ink-faint); }
+        .st-trouble { color: #e05555; }
+        .st-clear {
+          background: none; border: 0; padding: 0; cursor: pointer; margin-left: 10px;
+          font-family: var(--font-label); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
+          color: var(--ink-faint); border-bottom: 1px solid var(--border);
+        }
+        .st-clear:hover { color: var(--ink-soft); }
+        .st-doors { display: flex; flex-direction: column; gap: 0; }
+        .st-door {
+          display: flex; justify-content: space-between; align-items: center; padding: 12px 0;
+          border-bottom: 1px solid var(--border); text-decoration: none; color: var(--ink);
+          font-size: 14px;
+        }
+        .st-door:last-child { border-bottom: 0; }
+        .st-door span:last-child { font-family: var(--font-label); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint); }
+      `}</style>
+
+      <SiteNav />
+
+      <main className="st-main">
+        <h1 className="st-title">Settings</h1>
+        <p className="st-kicker">The machinery</p>
+
+        <Section
+          title="This journal’s address"
+          note="Where the card’s scannable code points. Filled in from wherever the copy was first opened; change it if you have since put the journal on a domain of your own."
+          onSave={() => send('/api/settings', { site_address: address })}
+        >
+          <input className="st-field" value={address} onChange={e => setAddress(e.target.value)} placeholder="yourname.example.com" inputMode="url" autoCapitalize="none" autoComplete="off" />
+        </Section>
+
+        <Section
+          title="Last.fm"
+          note={<>Connect your journal to a Last.fm account so you can have a live beacon of what you’re listening to. Create a free account, connect it to Spotify or Apple Music, then get an API key at <a href="https://www.last.fm/api/account/create" target="_blank" rel="noopener noreferrer">last.fm/api</a>.</>}
+          onSave={async () => {
+            await send('/api/settings', { lastfm_user: lastfmUser });
+            if (lastfmKey.trim()) {
+              setSecrets(await send('/api/secrets', { lastfm_key: lastfmKey.trim() }));
+              setLastfmKey('');
+            }
+          }}
+        >
+          <div>
+            <span className="st-label">Username</span>
+            <input className="st-field" value={lastfmUser} onChange={e => setLastfmUser(e.target.value)} autoCapitalize="none" autoComplete="off" />
+          </div>
+          <div>
+            <span className="st-label">API key</span>
+            <p className="st-status">
+              {secretLine(secrets?.lastfm_key)}
+              {secrets?.lastfm_key?.source === 'journal' && (
+                <button type="button" className="st-clear" onClick={async () => setSecrets(await send('/api/secrets', { lastfm_key: '' }))}>Clear</button>
+              )}
+            </p>
+            <input className="st-field" value={lastfmKey} onChange={e => setLastfmKey(e.target.value)} placeholder={secrets?.lastfm_key ? 'Replace it' : 'Paste it here'} autoCapitalize="none" autoComplete="off" spellCheck={false} />
+            <p className="st-status" style={{ marginTop: 8 }}>
+              The form asks for an application name and a description. Any name works — your
+              journal’s — and one line for the description. Leave the callback URL blank. You want
+              the API key, not the shared secret.
+            </p>
+          </div>
+        </Section>
+
+        <Section
+          title="Research"
+          note={<>An Anthropic API key turns on two things during a listen: the Research button on the album screen, and the question mark that answers with the record and your notes in context. Get one at <a href="https://console.anthropic.com" target="_blank" rel="noopener noreferrer">console.anthropic.com</a>; it bills to your own API balance, which is separate from a Claude.ai subscription. Leave it blank and everything else works.</>}
+          onSave={async () => {
+            if (!anthropic.trim()) return;
+            setSecrets(await send('/api/secrets', { anthropic_key: anthropic.trim() }));
+            setAnthropic('');
+          }}
+        >
+          <div>
+            <span className="st-label">Anthropic API key</span>
+            <p className="st-status">
+              {secretLine(secrets?.anthropic_key)}
+              {secrets?.anthropic_key?.source === 'journal' && (
+                <button type="button" className="st-clear" onClick={async () => setSecrets(await send('/api/secrets', { anthropic_key: '' }))}>Clear</button>
+              )}
+            </p>
+            <input className="st-field" value={anthropic} onChange={e => setAnthropic(e.target.value)} placeholder={secrets?.anthropic_key ? 'Replace it' : 'Paste it here'} autoCapitalize="none" autoComplete="off" spellCheck={false} />
+          </div>
+        </Section>
+
+        <Section
+          title="Password"
+          note={secrets?.password === 'environment'
+            ? 'Set when this copy was deployed, as SESSION_PASSWORD. Choose one here and it takes over; the variable can then be removed.'
+            : secrets?.password === 'journal'
+              ? 'What you type to reach the writing side.'
+              : 'No password is set yet.'}
+          saveLabel="Change it"
+          onSave={async () => {
+            if (password.length < PASSWORD_FLOOR) throw new Error(`At least ${PASSWORD_FLOOR} characters.`);
+            if (password !== confirm) throw new Error('The two passwords do not match.');
+            setSecrets(await send('/api/secrets', { password }));
+            setPassword(''); setConfirm('');
+          }}
+        >
+          <div>
+            <span className="st-label">Journal</span>
+            {/* The address the password is filed under — a real, visible,
+                writable input, because that is what a password manager will
+                pair the password with. Typing into it changes nothing. */}
+            <input className="st-field st-who" type="text" name="username" autoComplete="username" value={host} onChange={() => {}} aria-label="Journal" tabIndex={-1} />
+          </div>
+          <div>
+            <span className="st-label">New password</span>
+            <input className="st-field" type="password" autoComplete="new-password" value={password} onChange={e => setPassword(e.target.value)} />
+          </div>
+          <div>
+            <span className="st-label">Again</span>
+            <input className="st-field" type="password" autoComplete="new-password" value={confirm} onChange={e => setConfirm(e.target.value)} />
+          </div>
+        </Section>
+
+        <div className="st-section">
+          <h2 className="st-h">On your home screen</h2>
+          <AddToHomeScreen />
+        </div>
+
+        <div className="st-section">
+          <h2 className="st-h">On the card</h2>
+          <p className="st-note">
+            These are edited where they print — press the pencil on the card,
+            or any row here to arrive with it already up.
+          </p>
+          <div className="st-doors">
+            {[['Your name', 'the name on the card'], ['Photo', 'and how it is framed'], ['Prompts', 'three openings, answered'], ['Links', 'where else to find you'], ['Rig', 'what you listen on'], ['Pinned album', 'the record the card holds up']].map(([what, how]) => (
+              <Link key={what} href="/?edit=card" className="st-door">
+                <span>{what}</span>
+                <span>{how}</span>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+}

@@ -1,6 +1,6 @@
 // Copyright (C) 2026 Miyel Brown
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import { neon } from '@neondatabase/serverless';
+import database from '@/library/database_connection';
 import { pull_entry_by_slug } from '@/library/database_actions';
 import { pull_settings, titleName } from '@/library/settings_actions';
 import { wristbandOnHand } from '@/library/wristband';
@@ -11,7 +11,9 @@ import PostClient from './FullPostPage';
 // art sizing and the listen numbers both stopped at the library door. The read
 // goes through pull_entry_by_slug now; the raw connection stays only for the
 // two small queries below that have no business in the data layer.
-const sql = neon(process.env.DATABASE_URL);
+// The shared handle, opened on first use — see library/database_connection.js.
+// A neon() call at module load fails a build that has no DATABASE_URL.
+const sql = database;
 
 export async function generateMetadata({ params }) {
   const { slug } = await params;

@@ -1,7 +1,7 @@
 // Copyright (C) 2026 Miyel Brown
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // app/setup/page.js
-// Who this copy belongs to. Asked once.
+// Who this copy belongs to. Asked once, one screen at a time.
 //
 // ── A route, not a takeover ───────────────────────────────────────────────
 // Same shape as /login and for the same reason: a screen that is only ever
@@ -10,90 +10,202 @@
 // been claimed, exactly as /login redirects home once you are wearing a
 // wristband.
 //
-// ── One step, four fields ─────────────────────────────────────────────────
-// Everything else on the card is edited where it prints, which is a decision
-// this repo already made — so a longer setup would be a second editor for
-// fields that have one. The nine bio prompts in particular do not belong: the
-// file that holds them says three get answered and nine is a questionnaire.
+// ── One screen at a time, and everything after the name says Skip ─────────
+// The old version was one form with four fields, and two of the four were
+// there only because nothing else could write them. Neither is asked now:
+// the address is the host the request came in on, and the founding date is
+// today. What is left is the name, which is the only thing the journal
+// needs, and then a series of things it would be nice to have — the photo,
+// the prompts, Last.fm, the links, the rig — each on its own screen with a
+// Skip under it. Skip means later, not never: every one of them has a home
+// afterwards, on the card or at /settings, which is what makes offering to
+// skip honest.
 //
-// Of the four, only the name is really the journal's. The other three are here
-// because nothing else can ever write them:
-//   site_address  is in WRITABLE and no surface writes it, so the card's code
-//                 face and the share flow are dead until somebody does
-//   founded_at    is write-once, so this is the only chance
-//   lastfm_user   is in WRITABLE with no writer, and its absence is why the
-//                 landing pane of a fresh copy has nothing playing on it
+// The password is near the end rather than first. It is the thing the
+// person is least sure about, and by then they have told the journal their
+// name and seen it take a photograph, which is a better moment to be asked
+// to choose one than a blank form is. After it, one more screen: add the
+// journal to the home screen. iOS cannot be asked to do that by a page, so
+// the screen shows the gesture and the icon; it is skippable and lives in
+// Settings too.
 //
-// The serial is minted by the route rather than asked for. It is the copy's
-// identity, not the keeper's.
+// ── How the door opens before there is a password ─────────────────────────
+// There is no password yet on a fresh copy, so the gate asks for the claim
+// code instead — the one printed in the build log while the copy was
+// deploying, which only the person who deployed it has seen. It buys a
+// wristband like a password would, and the wristband is what the rest of
+// these screens write with. A copy that was locked the old way, with
+// SESSION_PASSWORD in the environment, asks for that password as before;
+// the password screen is still required, and the one chosen there takes
+// over.
 //
-// ── The password comes first, and it is the same form ─────────────────────
-// PasswordGate in its bare shape, which exists for this. There is no
-// choose-a-password step and there must not be: the password is an environment
-// variable, set in the deploy form before the URL resolves, which is what
-// makes a fresh copy unclaimable rather than a land grab waiting to happen.
+// ── What each screen writes, and when ─────────────────────────────────────
+// Next writes; Skip writes nothing. The photo goes up the moment it is chosen
+// (it is the one field that can fail on its own terms). The name and the
+// password wait for the last screen, because they are what the claim is made
+// of, and the claim is the one write that has to be all or nothing.
 
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { CaretDown, Check } from '@phosphor-icons/react';
 import { fonts } from '../../library/sitewide_visuals';
+import { BIO_PROMPTS, BIO_LIMIT } from '../../library/bioprompt';
 import PasswordGate from '../../components/session_components/PasswordGate';
+import { shrink, LINK_LIMIT } from '../../components/main_components/IdentificationCardEditor';
+import AddToHomeScreen from '../../components/main_components/AddToHomeScreen';
+import { useJournalHost } from '../../hooks/useJournalHost';
 
-const today = () => new Date().toISOString().slice(0, 10);
+// The password claims the journal; the home screen comes after, because it is
+// the one step the software cannot perform and the moment right after the
+// journal starts working is the moment somebody will actually do it.
+const STEPS = ['name', 'photo', 'prompts', 'lastfm', 'links', 'rig', 'password', 'homescreen'];
+const PASSWORD_FLOOR = 8;
+
+async function patchSettings(fields) {
+  const res = await fetch('/api/settings', {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(fields),
+  });
+  if (!res.ok) throw new Error('That did not save. Try again.');
+}
+
+async function patchSecrets(fields) {
+  const res = await fetch('/api/secrets', {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(fields),
+  });
+  if (!res.ok) throw new Error('That did not save. Try again.');
+}
 
 export default function WelcomeScreen() {
   const router = useRouter();
+  const host = useJournalHost();
   const [checking, setChecking] = useState(true);
   const [authed, setAuthed] = useState(false);
-  const [saving, setSaving] = useState(false);
+  // Whether a password already exists — from the environment, on a copy
+  // locked the old way — which decides what the gate asks for and whether
+  // the password screen may be skipped.
+  const [hasPassword, setHasPassword] = useState(false);
+  const [step, setStep] = useState(0);
+  const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  const [form, setForm] = useState({
-    keeper_name: '',
-    site_address: '',
-    lastfm_user: '',
-    founded_at: today(),
-  });
+
+  const [name, setName] = useState('');
+  const [portrait, setPortrait] = useState('');
+  const [bio, setBio] = useState(() => Array.from({ length: BIO_LIMIT }, () => ({ key: '', answer: '' })));
+  // Which slot has its list of openings open, if any. One at a time — the
+  // About pane's rule, for the About pane's reason: two lists of nine
+  // sentences open at once is most of the screen.
+  const [picking, setPicking] = useState(null);
+  const [lastfmUser, setLastfmUser] = useState('');
+  const [lastfmKey, setLastfmKey] = useState('');
+  const [links, setLinks] = useState(['']);
+  const [gear, setGear] = useState([{ name: '', role: '' }]);
+  const [password, setPassword] = useState('');
+  const [confirm, setConfirm] = useState('');
+
+  // ── Rehearsal ─────────────────────────────────────────────────────────────
+  // /setup?rehearse shows the screens on a copy that is already claimed, for
+  // its owner, and writes nothing: Next moves on without saving, the photo
+  // is previewed and not uploaded, and the last screen goes home. It exists
+  // so the setup can be looked at without a fresh database, which is the one
+  // thing a working journal does not have.
+  const [rehearsing, setRehearsing] = useState(false);
 
   useEffect(() => {
+    const rehearse = new URLSearchParams(window.location.search).has('rehearse');
     Promise.all([
       fetch('/api/auth/check').then(r => r.json()).catch(() => ({})),
-      fetch('/api/settings').then(r => r.json()).catch(() => ({})),
-    ]).then(([auth, s]) => {
+      fetch('/api/setup').then(r => r.json()).catch(() => ({ claimed: true })),
+    ]).then(([auth, status]) => {
       // Already claimed: there is nothing to do here and a form that appears
       // to save write-once fields it will silently drop is worse than none.
-      if (s?.settings?.setup_complete) { router.replace('/'); return; }
+      // Unless the owner asked to see it again.
+      if (status?.claimed && !(rehearse && auth.authed)) { router.replace('/'); return; }
+      setRehearsing(Boolean(status?.claimed && rehearse));
+      setHasPassword(Boolean(status?.has_password));
       setAuthed(!!auth.authed);
       setChecking(false);
     });
   }, [router]);
 
-  function set(key) {
-    return e => setForm(f => ({ ...f, [key]: e.target.value }));
+  const current = STEPS[step];
+  const last = step === STEPS.length - 1;
+  // The journal is claimed on the password screen; the screen after it only
+  // leaves. Once claimed, Back is no longer offered — there is nothing behind
+  // it that could still be changed here.
+  const claimed = current === 'homescreen';
+
+  // Move on, after doing whatever this screen's Next does. Skip calls it with
+  // nothing to do.
+  async function advance(work) {
+    setError('');
+    setBusy(true);
+    try {
+      if (work && !rehearsing) await work();
+      if (last) {
+        // A full load rather than a push. The hold in the root layout is
+        // decided on the server from a value that has just changed, and the
+        // cached answer behind it lives in the server process — a client
+        // navigation would re-use a tree rendered while this copy was still
+        // unclaimed.
+        window.location.assign('/');
+        return;
+      }
+      setStep(s => s + 1);
+    } catch (e) {
+      setError(e.message || 'Something went wrong. Try again.');
+    } finally {
+      setBusy(false);
+    }
   }
 
-  async function claim(e) {
-    e.preventDefault();
+  // ── The claim ─────────────────────────────────────────────────────────────
+  async function claim() {
+    const chosen = password;
+    if (chosen.length < PASSWORD_FLOOR) throw new Error(`At least ${PASSWORD_FLOOR} characters.`);
+    if (chosen !== confirm) throw new Error('The two passwords do not match.');
+    const res = await fetch('/api/setup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ keeper_name: name, password: chosen }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || data.error) throw new Error(data.error || 'Setup failed');
+  }
+
+  // ── The photo ─────────────────────────────────────────────────────────────
+  const fileRef = useRef(null);
+  async function choosePhoto(event) {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    setBusy(true);
     setError('');
-    setSaving(true);
     try {
-      const res = await fetch('/api/setup', {
+      const body = await shrink(file);
+      if (rehearsing) {
+        setPortrait(`data:${body.mime};base64,${body.data}`);
+        setBusy(false);
+        return;
+      }
+      const res = await fetch('/api/portrait', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
+        body: JSON.stringify(body),
       });
-      const data = await res.json();
-      if (data.error) { setError(data.error); return; }
-      // A full load rather than a push. The hold in the root layout is decided
-      // on the server from a value that has just changed, and the cached
-      // answer behind it lives in the server process — a client navigation
-      // would re-use a tree rendered while this copy was still unclaimed.
-      window.location.assign('/');
-    } catch {
-      setError('Something went wrong. Try again.');
-    } finally {
-      setSaving(false);
+      const answer = await res.json();
+      if (!res.ok) throw new Error(answer.error || 'That did not upload.');
+      setPortrait(answer.portrait_url);
+      await patchSettings({ portrait_url: answer.portrait_url, portrait_position: '50.0% 50.0%' });
+    } catch (e) {
+      setError(e.message === 'unreadable' ? 'That file could not be read as a picture.' : e.message);
     }
+    setBusy(false);
   }
 
   if (checking) return <div style={{ minHeight: '100dvh', background: 'var(--bg)' }} />;
@@ -115,6 +227,35 @@ export default function WelcomeScreen() {
           letter-spacing: 0.14em; text-transform: uppercase;
           color: var(--ink-faint); text-align: center; margin-bottom: 26px;
         }
+        .su-count { display: block; margin-bottom: 6px; }
+        /* The lights. Dots sit on a hairline track; the fill runs along the
+           track to the current dot. Both animate, so pressing Next is seen
+           as movement rather than as a different picture. */
+        .su-lights {
+          position: relative; display: flex; justify-content: space-between; align-items: center;
+          margin: 0 auto 22px; width: 220px; height: 14px;
+        }
+        .su-track {
+          position: absolute; left: 3px; right: 3px; top: 50%; height: 1px;
+          background: var(--border); transform: translateY(-50%);
+        }
+        .su-fill {
+          display: block; height: 100%; background: var(--ink);
+          transition: width 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .su-light {
+          position: relative; width: 6px; height: 6px; border-radius: 50%;
+          background: var(--bg); border: 1px solid var(--ink-faint); box-sizing: border-box;
+          transition: background 0.3s, border-color 0.3s, transform 0.3s;
+        }
+        .su-light--past { background: var(--ink); border-color: var(--ink); }
+        .su-light--current {
+          background: var(--ink); border-color: var(--ink); transform: scale(1.35);
+          box-shadow: 0 0 0 3px var(--bg), 0 0 0 4px var(--ink-faint);
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .su-fill, .su-light { transition: none; }
+        }
         .su-fields { display: flex; flex-direction: column; gap: 18px; }
         .su-label {
           display: block; font-family: var(--font-label); font-size: 10px;
@@ -125,6 +266,10 @@ export default function WelcomeScreen() {
           font-family: var(--font-label); font-size: 10px;
           color: var(--ink-faint); margin-top: 6px; line-height: 1.5;
         }
+        .su-why {
+          font-size: 13px; line-height: 1.65; color: var(--ink-soft); margin: 0 0 4px;
+        }
+        .su-why a { color: var(--ink); }
         .su-field {
           display: block; width: 100%; box-sizing: border-box;
           background: var(--panel); border: 1px solid var(--border);
@@ -134,8 +279,27 @@ export default function WelcomeScreen() {
         }
         .su-field:focus { border-color: var(--ink-faint); }
         .su-field::placeholder { color: var(--ink-faint); }
+        .su-who { background: none; border-color: transparent; padding-left: 0; color: var(--ink-faint); font-family: var(--font-label); font-size: 12px; letter-spacing: 0.08em; }
+        textarea.su-field { resize: vertical; min-height: 64px; }
+        /* The prompt rows borrow the About pane's classes; this is only the
+           frame around the three of them, so they sit on the card's panel
+           stock like the other fields do. */
+        .su-prompts {
+          background: var(--panel); border: 1px solid var(--border);
+          border-radius: 10px; padding: 2px 13px;
+        }
+        .su-prompts .ab-prompt-input { font-size: 14px; }
+        @media (pointer: coarse) { .su-prompts .ab-prompt-input { font-size: 16px; } }
         /* 16px on touch or Safari zooms in on focus and does not zoom back. */
         @media (pointer: coarse) { .su-field { font-size: 16px; } }
+        .su-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .su-row { display: flex; flex-direction: column; gap: 8px; }
+        .su-add {
+          align-self: flex-start; background: none; border: 0; padding: 0;
+          font-family: var(--font-label); font-size: 10px; letter-spacing: 0.1em;
+          text-transform: uppercase; color: var(--ink-faint); cursor: pointer;
+        }
+        .su-add:hover { color: var(--ink); }
         .su-go {
           margin-top: 26px; width: 100%;
           display: inline-flex; align-items: center; justify-content: center;
@@ -145,7 +309,28 @@ export default function WelcomeScreen() {
           letter-spacing: 0.14em; text-transform: uppercase; cursor: pointer;
         }
         .su-go:disabled { opacity: 0.5; cursor: not-allowed; }
+        .su-under { display: flex; justify-content: space-between; margin-top: 14px; }
+        .su-skip, .su-back {
+          background: none; border: 0; padding: 0; cursor: pointer;
+          font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em;
+          text-transform: uppercase; color: var(--ink-faint);
+          border-bottom: 1px solid var(--border);
+        }
+        .su-skip:hover, .su-back:hover { color: var(--ink-soft); }
+        .su-skip:disabled, .su-back:disabled { opacity: 0.4; cursor: default; }
         .su-error { font-size: 13px; color: #e05555; margin-top: 14px; }
+        .su-photo {
+          width: 132px; height: 132px; border-radius: 26px; margin: 0 auto 4px;
+          background: var(--panel); border: 1px solid var(--border);
+          display: flex; align-items: center; justify-content: center; overflow: hidden;
+          cursor: pointer;
+        }
+        .su-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .su-photo span {
+          font-family: var(--font-label); font-size: 10px; letter-spacing: 0.1em;
+          text-transform: uppercase; color: var(--ink-faint);
+        }
+        .su-file { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
       `}</style>
 
       <div className="su-card">
@@ -170,53 +355,292 @@ export default function WelcomeScreen() {
           />
           </svg>
         </div>
-        <div className="su-line">{authed ? 'Whose journal is this?' : 'Writing access'}</div>
 
         {!authed ? (
-          <PasswordGate bare onAuth={() => setAuthed(true)} />
+          <>
+            <div className="su-line">{hasPassword ? 'Writing access' : 'Claim this journal'}</div>
+            {!hasPassword && (
+              <p className="su-why" style={{ textAlign: 'center', marginBottom: 18 }}>
+                The claim code is in the build log of the deploy you just made,
+                in a box near the end.
+              </p>
+            )}
+            <PasswordGate bare asking={hasPassword ? 'password' : 'claim code'} onAuth={() => setAuthed(true)} />
+          </>
         ) : (
-          <form onSubmit={claim} className="su-fields">
-            <div>
-              <span className="su-label">Your name</span>
-              <input className="su-field" value={form.keeper_name} onChange={set('keeper_name')} autoFocus />
-              <div className="su-hint">
-                The journal is named after whoever keeps it. This is the name machines read —
-                you can add a decorated one to the card later.
+          <>
+            {/* ── The lights ──────────────────────────────────────────────
+                The session's step dots, borrowed: one light per screen, lit
+                once you have been through it, the current one ringed. Under
+                them a track that fills as far as you have come, so it reads
+                as a loading bar as much as a row of lights — and it moves
+                when you press Next, which is the moment a person looks at it.
+                Not buttons here, unlike the session's: the screens are in
+                order and Back is underneath. */}
+            <div
+              className="su-lights"
+              role="progressbar"
+              aria-label="Setup progress"
+              aria-valuemin={1}
+              aria-valuemax={STEPS.length}
+              aria-valuenow={step + 1}
+              aria-valuetext={`Step ${step + 1} of ${STEPS.length}`}
+            >
+              <span className="su-track" aria-hidden="true">
+                <span className="su-fill" style={{ width: `${(step / (STEPS.length - 1)) * 100}%` }} />
+              </span>
+              {STEPS.map((name, i) => (
+                <span
+                  key={name}
+                  aria-hidden="true"
+                  className={'su-light' + (i < step ? ' su-light--past' : '') + (i === step ? ' su-light--current' : '')}
+                />
+              ))}
+            </div>
+            <div className="su-line">
+              {rehearsing && <span className="su-count">Rehearsal — nothing is saved</span>}
+              {{
+                name: 'Whose journal is this?',
+                photo: 'A photo',
+                prompts: 'Three openings',
+                lastfm: 'What you are playing',
+                links: 'Where else to find you',
+                rig: 'What you listen on',
+                password: 'A password',
+                homescreen: 'One more thing',
+              }[current]}
+            </div>
+
+            {current === 'name' && (
+              <form className="su-fields" onSubmit={e => { e.preventDefault(); if (name.trim()) advance(); }}>
+                <div>
+                  <span className="su-label">Your name</span>
+                  <input className="su-field" value={name} onChange={e => setName(e.target.value)} placeholder="Miyel" autoFocus autoComplete="name" />
+                </div>
+                <button type="submit" className="su-go" disabled={busy || !name.trim()}>Next</button>
+              </form>
+            )}
+
+            {current === 'photo' && (
+              <div className="su-fields">
+                <label className="su-photo">
+                  <input ref={fileRef} className="su-file" type="file" accept="image/*" onChange={choosePhoto} disabled={busy} />
+                  {portrait ? <img src={portrait} alt="" /> : <span>{busy ? 'Working…' : 'Choose a photo'}</span>}
+                </label>
+                <div className="su-hint" style={{ textAlign: 'center' }}>
+                  It goes on the card. You can reframe or replace it there later.
+                </div>
+                <button type="button" className="su-go" disabled={busy || !portrait} onClick={() => advance()}>Next</button>
               </div>
-            </div>
+            )}
 
-            <div>
-              <span className="su-label">This journal’s address</span>
-              <input
-                className="su-field" value={form.site_address} onChange={set('site_address')}
-                placeholder="yourname.example.com" autoComplete="off" inputMode="url"
-              />
-              <div className="su-hint">Optional. It is what the card’s scannable code points at.</div>
-            </div>
-
-            <div>
-              <span className="su-label">Logging since</span>
-              <input className="su-field" type="date" value={form.founded_at} onChange={set('founded_at')} />
-              <div className="su-hint">
-                Today unless you are moving an older journal over. This one cannot be changed afterwards.
+            {current === 'prompts' && (
+              <div className="su-fields">
+                <p className="su-why">Three sentences a visitor reads about you. Pick an opening and finish it. Any number of the three can stay empty.</p>
+                {/* The About pane's picker, wearing the same classes: press
+                    the line, the list opens under it, press a line to take
+                    it. A native select was here for a day and drew the
+                    system's own grey wheel on a phone, which is the one
+                    bevelled thing on a site made of rules and type. Choosing
+                    an opening already used in another slot swaps the two
+                    rather than refusing. */}
+                <div className="su-prompts">
+                  {bio.map((row, i) => {
+                    const chosen = BIO_PROMPTS.find(p => p.key === row.key) || null;
+                    const open = picking === i;
+                    return (
+                      <div className="ab-prompt-edit" key={i}>
+                        <button
+                          type="button"
+                          className={'ab-prompt-pick' + (open ? ' ab-prompt-pick--on' : '')}
+                          onClick={() => setPicking(open ? null : i)}
+                          aria-expanded={open}
+                          aria-label={`Opening ${i + 1}`}
+                        >
+                          <span className={chosen ? 'ab-prompt-ask' : 'ab-prompt-none'}>
+                            {chosen ? chosen.text : 'Choose an opening'}
+                          </span>
+                          <CaretDown size={11} weight="bold" aria-hidden="true" />
+                        </button>
+                        {open && (
+                          <div className="ab-prompt-menu" role="group" aria-label="Openings">
+                            {BIO_PROMPTS.map(prompt => {
+                              const on = prompt.key === row.key;
+                              const elsewhere = !on && bio.some((r, j) => j !== i && r.key === prompt.key);
+                              return (
+                                <button
+                                  key={prompt.key}
+                                  type="button"
+                                  className={'ab-prompt-opt' + (on ? ' ab-prompt-opt--on' : '') + (elsewhere ? ' ab-prompt-opt--taken' : '')}
+                                  onClick={() => {
+                                    setBio(rows => rows.map((r, j) => {
+                                      if (j === i) return { ...r, key: prompt.key };
+                                      if (r.key === prompt.key) return { ...r, key: rows[i].key };
+                                      return r;
+                                    }));
+                                    setPicking(null);
+                                  }}
+                                  aria-pressed={on}
+                                >
+                                  <span>{prompt.text}</span>
+                                  {on && <Check size={12} weight="bold" aria-hidden="true" />}
+                                  {elsewhere && <span className="ab-prompt-taken" aria-hidden="true">in use</span>}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
+                        <textarea
+                          className="ab-prompt-input"
+                          rows={1}
+                          value={row.answer}
+                          onChange={e => {
+                            const el = e.currentTarget;
+                            setBio(rows => rows.map((r, j) => (j === i ? { ...r, answer: el.value } : r)));
+                            el.style.height = 'auto';
+                            el.style.height = `${el.scrollHeight}px`;
+                          }}
+                          onKeyDown={e => { if (e.key === 'Enter') e.preventDefault(); }}
+                          placeholder={row.key ? 'Finish the sentence' : ''}
+                          disabled={!row.key}
+                          aria-label={chosen ? chosen.text : `Answer ${i + 1}`}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
+                <button
+                  type="button" className="su-go" disabled={busy}
+                  onClick={() => advance(async () => {
+                    const clean = bio.map(r => ({ key: r.key, answer: r.answer.trim() })).filter(r => r.key && r.answer);
+                    if (clean.length) await patchSettings({ bioanswers: clean });
+                  })}
+                >Next</button>
               </div>
-            </div>
+            )}
 
-            <div>
-              <span className="su-label">Last.fm username</span>
-              <input
-                className="su-field" value={form.lastfm_user} onChange={set('lastfm_user')}
-                placeholder="Optional" autoComplete="off"
-              />
-              <div className="su-hint">Optional. Without it the journal simply shows no beacon.</div>
-            </div>
+            {current === 'lastfm' && (
+              <form className="su-fields" onSubmit={e => { e.preventDefault(); advance(async () => {
+                if (lastfmUser.trim()) await patchSettings({ lastfm_user: lastfmUser.trim() });
+                if (lastfmKey.trim()) await patchSecrets({ lastfm_key: lastfmKey.trim() });
+              }); }}>
+                <p className="su-why">
+                  Connect your journal to a Last.fm account so you can have a
+                  live beacon of what you’re listening to. Create a free
+                  account, connect it to Spotify or Apple Music, then get an
+                  API key at{' '}
+                  <a href="https://www.last.fm/api/account/create" target="_blank" rel="noopener noreferrer">last.fm/api</a>.
+                </p>
+                <div>
+                  <span className="su-label">Last.fm username</span>
+                  <input className="su-field" value={lastfmUser} onChange={e => setLastfmUser(e.target.value)} autoComplete="off" autoCapitalize="none" />
+                </div>
+                <div>
+                  <span className="su-label">Last.fm API key</span>
+                  <input className="su-field" value={lastfmKey} onChange={e => setLastfmKey(e.target.value)} autoComplete="off" autoCapitalize="none" spellCheck={false} />
+                  <div className="su-hint">
+                    The form asks for an application name and a description. Any name works — your
+                    journal’s — and one line for the description, like “shows what I’m listening to
+                    on my own site”. Leave the callback URL blank. You want the API key, not the shared secret.
+                  </div>
+                </div>
+                <button type="submit" className="su-go" disabled={busy || !lastfmUser.trim()}>Next</button>
+              </form>
+            )}
+
+            {current === 'links' && (
+              <form className="su-fields" onSubmit={e => { e.preventDefault(); advance(async () => {
+                const clean = links.map(u => u.trim()).filter(Boolean).map(url => ({ url, icon: 'auto' }));
+                if (clean.length) await patchSettings({ social_links: clean });
+              }); }}>
+                <p className="su-why">Up to three addresses — Instagram, Bandcamp, a site. They print at the foot of the About pane.</p>
+                {links.map((url, i) => (
+                  <input
+                    key={i} className="su-field" value={url} inputMode="url" autoCapitalize="none" autoComplete="off"
+                    placeholder="instagram.com/you"
+                    onChange={e => setLinks(rows => rows.map((r, j) => (j === i ? e.target.value : r)))}
+                  />
+                ))}
+                {links.length < LINK_LIMIT && (
+                  <button type="button" className="su-add" onClick={() => setLinks(rows => [...rows, ''])}>+ Another</button>
+                )}
+                <button type="submit" className="su-go" disabled={busy || !links.some(u => u.trim())}>Next</button>
+              </form>
+            )}
+
+            {current === 'rig' && (
+              <form className="su-fields" onSubmit={e => { e.preventDefault(); advance(async () => {
+                const clean = gear.map(g => ({ name: g.name.trim(), role: g.role.trim() })).filter(g => g.name);
+                if (clean.length) await patchSettings({ rig: clean });
+              }); }}>
+                <p className="su-why">The setup you listen on, as rows: the thing, and what it does. Speakers, an amp, a turntable, a pair of headphones.</p>
+                {gear.map((g, i) => (
+                  <div className="su-pair" key={i}>
+                    <input className="su-field" value={g.name} placeholder="KEF LS50" onChange={e => setGear(rows => rows.map((r, j) => (j === i ? { ...r, name: e.target.value } : r)))} />
+                    <input className="su-field" value={g.role} placeholder="Speakers" onChange={e => setGear(rows => rows.map((r, j) => (j === i ? { ...r, role: e.target.value } : r)))} />
+                  </div>
+                ))}
+                <button type="button" className="su-add" onClick={() => setGear(rows => [...rows, { name: '', role: '' }])}>+ Another</button>
+                <button type="submit" className="su-go" disabled={busy || !gear.some(g => g.name.trim())}>Next</button>
+              </form>
+            )}
+
+            {current === 'password' && (
+              <form className="su-fields" onSubmit={e => { e.preventDefault(); advance(claim); }}>
+                <p className="su-why">What you’ll type to reach the writing side of your journal.</p>
+                {/* The address the password is filed under — the same value
+                    the sign-in form and Settings use, so the entry saved here
+                    is the one offered later. Visible and writable, because a
+                    password manager ignores a field it considers hidden and
+                    Safari skips a read-only one. Typing into it does nothing.
+                    See hooks/useJournalHost.js. */}
+                <div>
+                  <span className="su-label">Journal</span>
+                  <input className="su-field su-who" type="text" name="username" autoComplete="username" value={host} onChange={() => {}} aria-label="Journal" tabIndex={-1} />
+                </div>
+                <div>
+                  <span className="su-label">Password</span>
+                  <input className="su-field" type="password" name="new-password" autoComplete="new-password" value={password} onChange={e => setPassword(e.target.value)} minLength={PASSWORD_FLOOR} />
+                  <div className="su-hint">At least {PASSWORD_FLOOR} characters.</div>
+                </div>
+                <div>
+                  <span className="su-label">Again</span>
+                  <input className="su-field" type="password" name="confirm-password" autoComplete="new-password" value={confirm} onChange={e => setConfirm(e.target.value)} />
+                </div>
+                <button type="submit" className="su-go" disabled={busy || !password || !confirm}>
+                  {busy ? 'Claiming…' : 'Claim the journal'}
+                </button>
+              </form>
+            )}
+
+            {current === 'homescreen' && (
+              <div className="su-fields">
+                <p className="su-why">It’s yours. Put it on your home screen.</p>
+                <AddToHomeScreen />
+                <button type="button" className="su-go" disabled={busy} onClick={() => advance()}>Open the journal</button>
+              </div>
+            )}
 
             {error && <div className="su-error">{error}</div>}
 
-            <button type="submit" className="su-go" disabled={saving}>
-              {saving ? 'Opening…' : 'Open the journal'}
-            </button>
-          </form>
+            {step > 0 && !claimed && (
+              <div className="su-under">
+                <button type="button" className="su-back" disabled={busy} onClick={() => { setError(''); setStep(s => s - 1); }}>Back</button>
+                {/* No Skip on the password screen. Under this flow nobody
+                    typed one at deploy, so there is nothing to keep; a
+                    developer who set SESSION_PASSWORD by hand can find
+                    Settings. */}
+                {current !== 'password' && (
+                  <button type="button" className="su-skip" disabled={busy} onClick={() => advance()}>Skip</button>
+                )}
+              </div>
+            )}
+            {claimed && (
+              <div className="su-under" style={{ justifyContent: 'flex-end' }}>
+                <button type="button" className="su-skip" disabled={busy} onClick={() => advance()}>Later — it’s in Settings</button>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

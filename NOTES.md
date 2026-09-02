@@ -57,6 +57,43 @@ deploy a copy — and none of it is anything they need.
 
 ## Pending
 
+**FIRST — rerun the fresh-account test on branch `setup-and-settings`**
+
+Everything below it was built blind against one claimed database. Watch for:
+- the deploy button: does `products=` attach a Neon database and set
+  `DATABASE_URL` after the sign-in redirect? If not, the bare
+  `?repository-url=` form plus the "no database yet" page is the path.
+- the build log: is the claim code box visible on the deploy screen?
+- `/setup`: claim code at the gate, then seven screens, Skip on each, password
+  with confirm; does Safari offer to save the password?
+- the landing: no Last.fm → the wall of covers under the crown, saying
+  "Nothing logged yet."
+- Settings: the Last.fm key pasted there reaches the beacon; the Anthropic
+  key pasted there turns the Research button on (`research_available` reads
+  `has_anthropic_key`).
+
+**`/setup?rehearse`** — shows the setup screens on a claimed copy, owner
+only, writing nothing (added 2026-09-02 to look at the screens without a
+fresh database). Next moves on without saving; the photo previews locally.
+The header says so. On a real first run the flag does nothing.
+
+**Screenshots for `/get`** — seven files, drawn only when present, so the
+page reads fine until they exist. Take them during the fresh-account rerun
+and drop them in `public/install/`: `01-button.png` (Vercel's clone screen),
+`02-github.png` (GitHub's permission screen with Git Scope / repo name),
+`03-neon.png` (the Neon plan picker), `04-build.png` (the build log with the
+claim-code box), `05-holding.png` (the "isn't ready yet" page),
+`06-setup.png` (the name screen), `07-homescreen.png` (the last screen).
+
+**Names to confirm** — chosen without asking, because the session was
+autonomous. Rename freely: `secrets` (table), `library/secrets.js`,
+`library/claim_notice.js`, `scripts/prepare_database.mjs`, `/api/secrets`,
+`beacon_available`, `/?edit=card`, `.st-*` and the setup page's `.su-*`.
+
+**Settings may want the photo, prompts, links and rig outright.** The brief
+said so; what shipped lists them as doors to the card, on the
+edited-where-it-prints rule. Miyel's call — see DECISIONS.
+
 **DO THIS FIRST — the send flow's columns are not on the live database**
 
 Five statements. Until they have been run, **the inbox shows no submissions at
@@ -198,6 +235,12 @@ at the top of a pane. Anything that scrolls worse than that is worse, however
 much else it fixes.
 
 **PARKED** — decided, deliberately not being built yet
+
+- [ ] **Theme and the key's wording in Settings.** Both editors were built on
+      2026-09-01 and taken off the page the same day. `settings.theme` exists
+      and the layout honours it if set; `definitions` exists and nothing
+      writes it. Put either back by restoring its Section in
+      `app/settings/page.js` (git has the version).
 
 - [ ] **Tap-to-QR on album art.** Tapping the art swaps it for a QR of that entry's URL and silently copies the link. It needs a brief "link copied" line: a clipboard write with no feedback reads as broken.
 
@@ -486,6 +529,34 @@ Project → Settings → Environment Variables.
 ---
 
 ## Gotchas
+
+- **A `<Link>` inside something the root layout renders is dead.** Root
+  layouts do not re-render on client navigation, so `ComingSoon`'s link to
+  `/setup` changed the URL and left the hold on screen. Anything the layout
+  draws *instead of* the page has to navigate with a plain `<a>`.
+- **`@next/env` is CommonJS.** `import { loadEnvConfig } from '@next/env'`
+  fails in an `.mjs` script; import the default and destructure it.
+- **`next dev` refuses a second server in the same folder** (Next 16). A
+  second session cannot start its own preview; it has to use the one on :3000,
+  which serves the same working tree anyway.
+- **`RETURNING *` on the settings row returned the portrait bytes** to the
+  browser on every card save. `save_settings` now returns the same column
+  list a read uses. Anything that writes to a row with a blob in it should
+  never return the whole row.
+- **Password managers ignore hidden and read-only username fields.** The
+  hidden 1px `readOnly` username input never got Safari to offer a save. The
+  field has to be visible and writable; see PasswordGate's `.pg-who`.
+- **`beforeinstallprompt` is not a promise.** Chrome fires it only when it
+  has decided the site is installable, and its own automatic prompt still
+  wants a service worker with a fetch handler, which this site does not
+  ship. `AddToHomeScreen` shows the real button only if the event arrived and
+  the menu steps otherwise; do not "fix" a missing button by adding an empty
+  service worker.
+- **A subquery in `SETTINGS_SELECT` needs the table to exist.** Migrations
+  run before the first request, so this is safe in practice — but on a
+  database where 003 has not run, `pull_settings` throws, catches, and the
+  whole site reads as blank. If a copy ever looks unconfigured after a deploy,
+  check `schema_migrations` first.
 
 **A fixed sheet inside the layer is not fixed to the screen.** `.lay` is a
 containing block for its fixed descendants (see the note on `.sitenav-row`),
@@ -827,6 +898,67 @@ current.
 ---
 
 ## Complete
+
+**2026-09-01 — setup expanded, Settings, and the password out of deploy**
+
+Two briefs in one session, on branch `setup-and-settings`. See DECISIONS,
+*Setting a copy up*, for what was decided; this is what was built.
+
+- [x] **`/settings`** — `app/settings/page.js`, owner-only, reached from a
+      gear beside the card's pencil. Address, Last.fm username and key,
+      Anthropic key, password. The card's fields are listed at the foot as
+      doors to `/?edit=card`. Theme and the key's wording were built and
+      removed the same day (see Parked).
+- [x] **The vault** — `migrations/003_secrets_and_theme.sql` adds a `secrets`
+      table and `settings.theme`. `library/secrets.js` is its only reader:
+      key resolution (database, then environment), scrypt password hashing,
+      the self-minting session secret, the claim code. `/api/secrets` is the
+      owner-only door; GET returns whether each thing is set and its last four
+      characters, never a value. Applied to production 2026-09-01.
+- [x] **Setup, one screen at a time** — `app/setup/page.js` rewritten. Name,
+      then photo / prompts / Last.fm / links / rig each with Skip, then a
+      password with a confirm. Address derived from the request host, founding
+      date from the day. `POST /api/setup` takes name and password; `GET
+      /api/setup` says whether the copy is claimed and whether a password
+      exists. The gate asks for the claim code on a copy with no password.
+- [x] **Claim code** — minted on the first migration run of an unclaimed copy,
+      printed by `scripts/prepare_database.mjs` (now the first half of `npm
+      run build`) and by `instrumentation.js` on every start, accepted by
+      `/api/auth/login` in place of a password while unclaimed, cleared at
+      claiming.
+- [x] **Boots without `SESSION_PASSWORD` or `SESSION_SECRET`.** Login reads
+      the hash from the vault, then the variable; the wristband's key comes
+      from `sessionSecret()`.
+- [x] **Lazy database connection** — `library/database_connection.js` opens
+      on first use; the two entry pages use it instead of their own `neon()`.
+      A copy with no `DATABASE_URL` builds, starts, and holds on a page that
+      names the variable. Verified with `DATABASE_URL= npm run build` and a
+      `next start` of that build.
+- [x] **Four empty states** — no Last.fm: the journal is the centre pane's
+      first screen (`beacon_available`, decided in the layout); a beacon with
+      no track prints one quiet line; zero entries says "Nothing logged yet"
+      instead of the filter message; a card with no portrait and no address
+      draws no square. The pin row already printed nothing outside editing —
+      the "empty pinned square" in the brief was the portrait slot.
+- [x] **Holding page button** — a plain `<a>`; see Gotchas.
+- [x] **Deploy button** — bare repository URL plus Neon's `products`
+      parameter; `env` parameters dropped. README rewritten around the claim
+      code, with the Git Scope / Private Repository Name note.
+
+- [x] **Installation without Miyel present (third brief, same day)** — the
+      button carries Neon's `products` parameter (their button has no
+      `integration-ids`; see DECISIONS); the migrator prefers
+      `DATABASE_URL_UNPOOLED`; `AddToHomeScreen` is the last setup screen
+      and a Settings section; database failures become a sentence
+      (`explainDatabaseError`) on a third holding page, in the build log and
+      in the runtime log; every holding page and `/get` link to the issues;
+      `/get` has the seven steps under the essay with screenshot slots.
+
+**Not verified here, and needs the fresh-account test again:** the whole
+first-run flow end to end (there is no local Postgres and only the one live
+database, which is claimed), whether `products` survives Vercel's sign-in
+redirect, whether the claim code shows in the deploy screen's build log, and
+setup's password step against a real password manager.
 
 **2026-09-01 — the session, mobile-first**
 

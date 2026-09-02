@@ -8,10 +8,11 @@
 // stranger who finds a freshly deployed copy would land on somebody else's
 // setup form — which looks like an invitation to fill it in, and is the one
 // shape this design has otherwise avoided entirely. Nothing here can actually
-// be claimed by them: the password is an environment variable set before the
-// URL resolves, so setup is behind the same lock as everything else. But
-// "cannot be taken" and "does not look takeable" are different things, and
-// only the second one is a design decision.
+// be claimed by them: setup opens to the claim code printed in the deploy's
+// build log, which only the person who deployed it has seen, so it is behind
+// a lock like everything else. But "cannot be taken" and "does not look
+// takeable" are different things, and only the second one is a design
+// decision.
 //
 // So a visitor gets a sentence, and the owner gets the address.
 //
@@ -27,8 +28,21 @@
 // This is not a loading state and must not look like one. A copy can sit here
 // for a week while its owner gets round to it, and a spinner would say the
 // wait is nearly over. It says what is true and stops.
-
-import Link from 'next/link';
+//
+// ── Why the door is a plain anchor ────────────────────────────────────────
+// It was a <Link>, and it did nothing. This component is drawn by the root
+// layout *in place of* the page, and a root layout does not re-render on a
+// client-side navigation — so pressing the link changed the address to /setup
+// and left this page on screen. A full document load is the only navigation
+// that asks the layout the question again. The first thing a new owner
+// presses has to work.
+//
+// ── Two reasons to hold ───────────────────────────────────────────────────
+// 'setup' is a copy with a database and no owner: a sentence for a visitor
+// and a door for the owner. 'database' is a copy with no connection string at
+// all — it built and started anyway, and the only useful page is one that
+// says what to set. That one is addressed to the owner alone, because nobody
+// else can be looking at it yet.
 
 // The mark, drawn rather than spelled. Third copy of this path data — SiteNav
 // and HomeNav carry the other two — and consistent with how the site already
@@ -41,7 +55,15 @@ import Link from 'next/link';
 // so a dot that could go green would be a promise about a journal that does
 // not exist yet.
 
-export default function ComingSoon() {
+// Where to say it did not work. The same address the pitch pane offers the
+// source at, because the issues live beside the code, and a fork's owner can
+// point both at their own.
+const SOURCE_URL =
+  process.env.NEXT_PUBLIC_SOURCE_URL || 'https://github.com/ListeningNotes/listening-notes';
+
+export default function ComingSoon({ reason = 'setup', said = '' }) {
+  const noDatabase = reason === 'database';
+  const unreachable = reason === 'unreachable';
   return (
     <div className="cs-page">
       <style>{`
@@ -71,6 +93,18 @@ export default function ComingSoon() {
           margin-top: 6px;
         }
         .cs-door:hover { color: var(--ink-soft); }
+        .cs-how {
+          font-family: var(--font-mono); font-size: 11px; line-height: 1.8;
+          color: var(--ink-faint); max-width: 40ch; text-align: left;
+          margin-top: 6px;
+        }
+        .cs-how code { color: var(--ink-soft); }
+        .cs-help {
+          font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.08em;
+          color: var(--ink-faint); text-decoration: none; margin-top: 18px;
+          border-bottom: 1px solid var(--border);
+        }
+        .cs-help:hover { color: var(--ink-soft); }
       `}</style>
 
       <div className="cs-mark" aria-label="Listening Notes" role="img">
@@ -91,10 +125,34 @@ export default function ComingSoon() {
         />
         </svg>
       </div>
-      <p className="cs-said">
-        This journal isn’t ready yet.
-      </p>
-      <Link href="/setup" className="cs-door">Set it up</Link>
+      {noDatabase ? (
+        <>
+          <p className="cs-said">
+            This copy has no database yet.
+          </p>
+          <p className="cs-how">
+            In Vercel, open the project’s Settings → Environment Variables and
+            add <code>DATABASE_URL</code> — the connection string from your
+            Neon project. Then redeploy. The tables build themselves.
+          </p>
+          <a href={`${SOURCE_URL}/issues`} className="cs-help">It didn’t work</a>
+        </>
+      ) : unreachable ? (
+        <>
+          <p className="cs-said">
+            This journal’s database can’t be reached right now.
+          </p>
+          <p className="cs-how">{said}</p>
+          <a href={`${SOURCE_URL}/issues`} className="cs-help">It didn’t work</a>
+        </>
+      ) : (
+        <>
+          <p className="cs-said">
+            This journal isn’t ready yet.
+          </p>
+          <a href="/setup" className="cs-door">Set it up</a>
+        </>
+      )}
     </div>
   );
 }

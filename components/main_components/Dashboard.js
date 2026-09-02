@@ -21,7 +21,7 @@
 
 'use client';
 import Link from 'next/link';
-import { Headphones, Envelope, PaperPlane } from '@phosphor-icons/react';
+import { Headphones, Envelope, PaperPlane, GearSix } from '@phosphor-icons/react';
 
 // Everything but the first. Order is how often you would want it, which is not
 // the order they were built in: messages are what you open the journal to
@@ -37,6 +37,10 @@ import { Headphones, Envelope, PaperPlane } from '@phosphor-icons/react';
 const DOORS = [
   { href: '/dashboard/inbox',   label: 'Inbox',   note: 'Submissions and comments waiting on you', Icon: Envelope, counted: true },
   { href: '/dashboard/share',   label: 'Share',   note: 'Print a card, or the code to /get', Icon: PaperPlane },
+  // The machinery: the keys, the password, Last.fm, the address. It is also
+  // reached from the gear beside the card's pencil; here because the desk is
+  // where the owner's things are, and the password form lives behind it.
+  { href: '/settings',          label: 'Settings', note: 'Keys, password, Last.fm, the address', Icon: GearSix },
 ];
 
 export default function Dashboard({ waiting }) {

@@ -29,8 +29,10 @@ Think of it like a house.
 - `/compare` — read another journal's feed and compare taste
 - `/shuffle` — redirect to a random entry
 - `/feed.xml` — the journal as a feed another copy can read
-- `/get` — the long note about why somebody keeps a listening journal. Only on
-  the canonical copy; blank on a fresh one, and blank means it does not render
+- `/get` — the long note about why somebody keeps a listening journal, and
+  under it the way to get one: the button, the steps, the screenshots, where
+  to say it did not work. Only on the canonical copy; blank on a fresh one,
+  and blank means it does not render
 
 There is no `/about` route of its own. The identity card on the landing page
 *is* the about page; `/about` and `/rig` stay only as redirects, so old links
@@ -47,17 +49,23 @@ publicly):
 - `/dashboard/inbox` — sent albums and comments awaiting moderation
 - `/dashboard/share` — the album exporter
 - `/dashboard/submissions` — a redirect into the inbox, kept for old links
+- `/settings` — the machinery: address, Last.fm, the keys, the password.
+  Reached from the gear beside the
+  card's pencil. The card's own fields are edited on the card, and Settings
+  lists them as doors that arrive there with the pencil up (`/?edit=card`)
 
 Editing an entry happens on the entry itself, not in a list. There used to be a
 `/dashboard/entries` table and it was retired: two interfaces for one job means
 neither is canonical.
 
-**Getting in.** Three taps on the mark opens the password panel — on the cross,
-where the mark re-centres the panes rather than navigating and so is free to
-count. Everywhere else it is a real link home: the first tap takes you there,
-and the gesture works from then on. `/login` is the same door at an address,
-for when a gesture will not do. `/setup` runs once, on a copy nobody has
-claimed yet.
+**Getting in.** The right pane. Signed out it is the pitch, with a "Sign in"
+line at its foot; signed in it is the desk, with a Settings door. Both go to
+`/settings`, which asks for the password when you are not wearing a
+wristband and is the machinery when you are. Nothing on the mark opens
+anything. `/login` is the same door at an address, for when a link will not
+do. `/setup` runs once, on a copy nobody has claimed yet — one screen at a
+time, opened with the claim code printed in the build log, and it is where
+the password is chosen.
 
 ---
 
@@ -65,7 +73,7 @@ claimed yet.
 
 The library — logic, no visuals
   library/
-    database_connection.js     Opens the connection to the database
+    database_connection.js     Opens the connection to the database, on first use; and says a database failure in a sentence
     database_actions.js        Everything to do with saving and loading entries
     comment_actions.js         Everything to do with comments
     slug_generator.js          Turns "Pet Sounds" into "pet-sounds" for the URL
@@ -75,6 +83,10 @@ The library — logic, no visuals
     music_data_api.js          Fetches album art and tracklists from iTunes
     session_timers.js          Track length display, session timer
     wristband.js               Session auth — issues and checks the JWT cookie
+    secrets.js                 The vault: the keys, the password hash, the session secret, the claim code. Database first, environment second
+    claim_notice.js            The box printed in the build log while a copy is unclaimed
+    settings_actions.js        The settings row: read, write, the name, the beacon's narrow reader
+    migrator.js                Brings the database up to date — from instrumentation.js on start, and from scripts/prepare_database.mjs at build
 
 The front doors — receive requests, hand them off, send back responses
   app/api/
@@ -85,6 +97,10 @@ The front doors — receive requests, hand them off, send back responses
     research/route.js          Ask Claude to research an album
     format/route.js            Assemble your notes into a post (local, no model)
     ask/route.js               A question, answered with the album and your notes in context
+    settings/route.js          The settings row — public to read, owner-only to write
+    secrets/route.js           The vault — owner-only both ways; says what is set, never the value
+    setup/route.js             GET: is this copy claimed. POST: the one write that claims it
+    auth/login/route.js        The password, the deploy-time variable, or — unclaimed — the claim code
 
 The hooks — reusable logic shared across pages
   hooks/
@@ -102,11 +118,12 @@ The furniture — visual pieces
       AlbumStrip.js            The scrolling row of albums
       Journal.js               The wall of covers, with its search, filters and sort
       AlbumTile.js             One cover on that wall
-      Dashboard.js             The right pane, for the owner
+      Dashboard.js             The right pane, for the owner — Listen, Inbox, Share, Settings
       Pitch.js                 The right pane, for everybody else
       KeeperTools.js           The owner's pencil and printer
-      WritingAccess.js         Three taps on the mark, and the password panel
-      ComingSoon.js            What an unclaimed copy shows instead of a site
+      WritingAccess.js         The sign-in line at the foot of the pitch pane; it goes to Settings
+      ComingSoon.js            What a held copy shows instead of a site — unclaimed, no database, or database unreachable
+      AddToHomeScreen.js       The one step the software cannot do: the last screen of setup, and a Settings section
       AlbumFinder.js           Type, see covers, pick one — the send flow's search
       LayerEntry.js            The sheet an entry arrives on, over the journal
       LayerWaiting.js          What stands in while that entry loads
@@ -162,6 +179,8 @@ The rooms — full pages assembled from furniture
     about/page.js              Redirect to / — the identity card is the about page
     rig/page.js                Redirect to / — the rig lives on the card
     session/page.js            The listen — picker, then four screens under one header
+    setup/page.js              Claiming a copy: the code, the name, five skippable screens, the password
+    settings/page.js           The machinery, owner-only
     @layer/(.)session/page.js  The same listen, opened as a layer over the desk
     dashboard/
       page.js                  Hub — 3 buttons (Listen, Inbox, Share)
@@ -222,7 +241,8 @@ than what anyone remembers building.
 | Table | What it holds |
 |---|---|
 | `entries` | The journal. One row per listen — an album listened to twice is two entries, never an overwrite. |
-| `settings` | Everything that makes a copy someone's own: the keeper, the portrait, the links, the rig. Exactly one row, forced by a check on `id`. |
+| `settings` | Everything that makes a copy someone's own: the keeper, the portrait, the links, the rig, the starting theme. Exactly one row, forced by a check on `id`. |
+| `secrets` | What must never reach a visitor: the session secret, the password hash, the claim code, the two API keys. One row; read only by `library/secrets.js`. |
 | `users` | The owner. One row, written at setup. |
 | `comments` | Replies on entries and on individual tracks, with a moderation queue. |
 | `submissions` | Albums other people have sent you. |

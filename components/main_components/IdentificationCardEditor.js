@@ -44,7 +44,7 @@ const PORTRAIT_QUALITY = 0.85;
 // hands over, including the HEIC an iPhone camera produces. Where it is
 // missing or refuses the format, an <img> and an object URL get there too — a
 // browser that can show a picture can draw it into a canvas.
-async function shrink(file) {
+export async function shrink(file) {
   let source;
   try {
     source = await createImageBitmap(file);

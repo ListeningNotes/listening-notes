@@ -1261,6 +1261,157 @@ without `002_claim_existing_journals.sql` would have held a live journal behind
 the holding page on deploy. A non-null `keeper_name` is somebody having already
 answered the question setup asks.
 
+**Reversed 2026-09-01: setup is one screen at a time, and everything after the
+name says Skip.** Name → photo → prompts → Last.fm → links → rig → password.
+The fresh-account test showed that "one step, four fields" was one field that
+mattered and three that nothing else could write — and the fix for the three
+is not to ask, it is to derive: the address is the host the request came in
+on, and the founding date is the day setup ran. An editable date anyone can
+set to anything says nothing. Skip means later, not never: every field that
+can be skipped has a home afterwards, which is what Settings is for.
+
+**Settings is the machinery, reached from a gear beside the card's pencil.**
+`/settings`, owner-only: the address, Last.fm (username and key), the
+Anthropic key, and the password. The starting theme and the wording of the
+key were on it for an afternoon and came off the same day, 2026-09-01, on
+Miyel's call — parked, not rejected. Both columns exist; nothing writes them.
+The card's own fields — name, photo, prompts, links, rig, pinned album — are
+*not* edited there: everything editable is edited where it prints, and two
+editors for one field means neither is canonical. Settings lists them at its
+foot as doors that land on the card with the pencil already up (`/?edit=card`),
+so nothing setup skipped is unfindable. The brief said Settings should hold
+photo, prompts, links and rig outright; this is the narrower reading, and it
+is Miyel's to widen.
+
+**The keys live in the database now, in a table of their own.** Reversed from
+"secrets stay in environment variables": a setup screen cannot set an
+environment variable, and a key nobody is prompted for is a key nobody sets.
+`secrets` holds the session secret, the password hash, the claim code and the
+two API keys, has one narrow reader (`library/secrets.js`), and is never
+selected by anything that reads `settings` — which is why it is a second
+table rather than five more columns beside the portrait. Resolution is the
+database first, then the environment, so a copy locked the old way keeps
+working and a value typed into Settings wins because it is the later
+decision. The session secret is the one exception — environment first — since
+a copy that chose one should not be signed out by a row it did not know about.
+
+**Deploy asks for nothing.** The password is chosen on the site, near the end
+of setup, in a real password field with a confirm and `new-password`
+autocomplete so a manager offers to save it. The signing key mints itself on
+first start and persists. Nobody should invent their site's password in a
+hosting dashboard, in a field named like a variable, before the site exists.
+`SESSION_PASSWORD` and `SESSION_SECRET` still work where already set.
+The password screen has no Skip, 2026-09-02: under this flow nobody typed one
+at deploy, so there is nothing to keep, and a skip would leave a copy with a
+password its owner never chose or none at all. The one person it could have
+served, a developer who set `SESSION_PASSWORD` by hand, can find Settings.
+
+**The window is closed with a claim code, not a timer.** An unclaimed copy
+with no password would be claimable by whoever reached `/setup` first. Three
+answers were weighed: a code printed in the build log, a timed window after
+first boot, and accepting it. The code wins. A window closes on the slow and
+opens for whoever's request happens to be the first cold start; accepting it
+is a land grab waiting for a scanner. The code is minted by the first
+migration run, printed in the build log — the screen the deployer is already
+watching — and again on every start until the copy is claimed, then cleared
+at the moment of claiming. It stands in for the password at the gate and
+nowhere else.
+
+**The build migrates too.** `npm run build` runs the migrator before
+`next build`, purely so the claim code reaches the build log. The server
+still migrates on every start; the build step finding nothing pending is the
+normal case, and a build that cannot reach the database says so and carries
+on rather than failing.
+
+**A copy with no database builds and says so.** The connection used to open at
+import, so a missing `DATABASE_URL` failed the *build* and its owner read
+"deployment failed" in a dashboard. It opens on first use now, and the root
+layout holds on a page that names the variable and where to set it. Worth
+deciding, and decided: a page that explains beats a build that refuses.
+
+**No Last.fm means the journal is the first screen.** With no username or no
+key, the centre pane has no beacon screen at all — the wall of covers sits
+directly under the crown. Nothing pretending something might play. That is
+what made the empty journal state the first thing to write: a new owner
+would otherwise land on "No entries match these filters."
+
+**The holding page's door is a plain anchor.** `<Link>` to `/setup` from a
+page the *root layout* draws is dead: layouts do not re-render on a client
+navigation, so the address changed and the hold stayed. A full load is the
+only navigation that asks the layout again. First thing a new owner presses.
+
+**The deploy button carries `products`, not `env`.** The `env`,
+`envDescription` and `envLink` parameters did not survive Vercel's sign-in
+redirect in the fresh-account test. Neon's own marketplace template uses a
+`products=[{"type":"integration","integrationSlug":"neon",…}]` parameter,
+which attaches a Neon database and sets `DATABASE_URL` — so with the password
+gone from deploy, the button should ask for nothing at all. Whether
+`products` survives the same redirect is untested from here; the bare
+`?repository-url=` form is the known fallback and the README says what to
+add by hand if the database does not arrive.
+
+**Neon's integration is a `products` parameter, not an `integration-ids` one,
+2026-09-01.** The brief said to find the `oac_` ID in Neon's own deploy
+button; there is none. Neon's marketplace template uses
+`products=[{"type":"integration","integrationSlug":"neon","productSlug":"neon","protocol":"storage"}]`,
+which is Vercel's newer shape for the same thing, and that is what the button
+carries. Whether it survives the sign-in redirect, and whether Neon's
+integration has a UI hook that stops it rendering in the deploy flow, only
+the fresh-account test can say.
+
+**Migrations go through the direct endpoint, never the pooler.** The
+integration sets `DATABASE_URL` pooled and `DATABASE_URL_UNPOOLED` direct.
+The app's HTTP driver is happy on either; the migrator is not — its advisory
+lock is session-level, and PgBouncer in transaction mode hands statements to
+different backends, so the lock would be taken on one and released on
+another. It reads the unpooled variable, and failing that strips `-pooler`
+off the host.
+
+**Add to Home Screen is the last screen of setup, and lives in Settings.**
+It is the one step the software cannot do, so it goes at the one moment
+somebody will do it: right after the journal starts working. iOS gets the
+share-sheet steps with the icon; Chrome gets its real prompt where it fires
+and the menu route where it does not. No service worker was added for it —
+Chrome's menu install has not needed one since 108, and a fetch handler that
+exists to satisfy a prompt is the anti-pattern Chrome dropped the rule over.
+
+**A database that cannot be reached holds on a page that says so.** The
+earlier rule — a thrown read fails closed and the site renders — stands for
+the *setup* invitation, which is still never shown on an error. But rendering
+a nameless empty journal during an outage told nobody anything, and for a
+fresh copy with a mistyped string it was a dead end. The page now names what
+to check, in a sentence chosen from the driver's error (`explainDatabaseError`
+in `library/database_connection.js`), and the same sentence goes to the
+build log and the runtime log. Every holding page carries an "It didn't
+work" link to the repository's issues, which costs nothing.
+
+**`/get` carries the steps.** Under the essay, on the canonical copy only:
+the button, seven steps with what to expect and how long, screenshot slots
+drawn only when `public/install/NN-*.png` exists, and the issues link. The
+long-standing note that `/get` owed a stranger two things and gave one is
+discharged.
+
+**The sign-in form lives on Settings, and nothing on the mark opens it,
+2026-09-02.** The mark used to turn into a password panel in place, on the
+cross — a login form on the beacon page, which is meant to be a record and
+its art and nothing else. Then, for an afternoon, three taps went to Settings
+instead. Both are out, on Miyel's call: no gesture on the logo at all. The
+way in is the right pane and only the right pane — the pitch's "Sign in"
+line when you are out, and the desk when you are in, which now carries a
+Settings door beside Inbox and Share. `/settings` signed out *is* the
+sign-in, titled so; `/login` stays as the address form. One form, one place.
+This supersedes "The way in is three taps on the mark" under The lock.
+
+**The password is filed under the journal's address, in a visible field.**
+Password managers pair a password with a username and stay silent without
+one. The hidden username field was read-only and one pixel wide, and Safari
+skips both kinds — so the manager never offered to save. It is a visible
+line now, showing the host, a real writable input that typing does nothing
+to, on all three screens that touch the password: sign-in, setup, Settings.
+The host rather than the keeper's name, because the name may not exist yet
+at setup, and the same value everywhere is what makes the entry saved at
+setup the one offered at sign-in.
+
 ---
 
 ## Migrations

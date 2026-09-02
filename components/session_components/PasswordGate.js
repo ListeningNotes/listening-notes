@@ -4,19 +4,26 @@
 import { useState } from 'react';
 import { fonts } from '../../library/sitewide_visuals';
 import { useBookplate } from '../main_components/Bookplate';
-
-const border = '1px solid #e0dcd5';
+import { useJournalHost } from '../../hooks/useJournalHost';
 
 // `bare` returns the form and nothing around it, for WritingAccess to put in
 // its panel. The alternative was a second copy of these fields, and a second
 // copy is precisely how the first one drifted out of the shape a password
 // manager can read — the whole fix was markup, so the markup lives once.
-export default function PasswordGate({ onAuth, bare = false }) {
+//
+// `asking` changes what the field says it wants — 'password' normally, or
+// 'claim code' on a copy nobody has claimed yet, where the code printed in
+// the build log is what opens this door. The route behind it is the same one;
+// only the words on the field change, and the autocomplete hint, because a
+// password manager should not offer to save a code that is about to expire.
+export default function PasswordGate({ onAuth, bare = false, asking = 'password' }) {
+  const claiming = asking === 'claim code';
   // The journal's own name over the password box, rather than the name of the
   // journal this software was written for. The owner is the only person who
   // ever sees this screen, and seeing a stranger's name on the way into your
   // own writing is the exact wrong first impression for a copy to make.
-  const { cover_name, keeper_name } = useBookplate();
+  const { cover_name } = useBookplate();
+  const host = useJournalHost();
   const [pw, setPw] = useState('');
   // A string now rather than a flag, because there are two things that can go
   // wrong here and "incorrect password" is the wrong thing to say about the
@@ -46,7 +53,7 @@ export default function PasswordGate({ onAuth, bare = false }) {
         setError(body?.error || 'Too many attempts. Wait a minute.');
         setPw('');
       } else {
-        setError('Incorrect password');
+        setError(claiming ? 'That code did not match' : 'Incorrect password');
         setPw('');
       }
     } catch {
@@ -66,33 +73,66 @@ export default function PasswordGate({ onAuth, bare = false }) {
   // The username is the one that looks wrong and is not. Managers store a
   // pair; with no username there is nothing to name the entry, so Safari has
   // nowhere to put it and stays quiet. There is only ever one owner here, so
-  // the field is hidden and filled with the keeper's name — the answer was
-  // always known, it just had to be said out loud.
+  // the field is hidden and filled with the journal's host — the same value
+  // the setup screen filed the password under, which is what makes the saved
+  // entry the one offered here. It was the keeper's name for a while, which
+  // is not set yet when the password is first chosen.
   const fields = (
-        <form onSubmit={handleAuth} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <form onSubmit={handleAuth} className="pg-form">
+          <style>{`
+            .pg-form { display: flex; flex-direction: column; gap: 12px; }
+            /* The journal's address, as the thing the password is filed
+               under. A real input rather than a label, because that is what
+               a password manager pairs the password with — and visible,
+               because managers ignore fields they consider hidden, and not
+               read-only, because Safari skips those too. Typing into it does
+               nothing; it is the address. */
+            .pg-who {
+              width: 100%; box-sizing: border-box; text-align: center;
+              background: none; border: 0; outline: none; padding: 0;
+              font-family: var(--font-label); font-size: 10px; letter-spacing: 0.12em;
+              text-transform: uppercase; color: var(--ink-faint);
+            }
+            .pg-pw {
+              width: 100%; box-sizing: border-box; text-align: center;
+              background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+              padding: 12px 16px; font-family: var(--font-mono); font-size: 16px;
+              color: var(--ink); outline: none; transition: border-color 0.15s;
+            }
+            .pg-pw:focus { border-color: var(--ink-faint); }
+            .pg-pw::placeholder { color: var(--ink-faint); }
+            .pg-pw--wrong { border-color: #e05555; }
+            .pg-said { font-family: var(--font-label); font-size: 10px; color: #e05555; line-height: 1.5; text-align: center; }
+            .pg-go {
+              width: 100%; padding: 12px 0; border-radius: 999px; cursor: pointer;
+              background: var(--ink); color: var(--bg); border: 1px solid var(--ink);
+              font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em;
+              text-transform: uppercase;
+            }
+            .pg-go:disabled { opacity: 0.5; cursor: default; }
+          `}</style>
           <input
             type="text"
             name="username"
             autoComplete="username"
-            value={keeper_name || cover_name || 'keeper'}
-            readOnly
-            aria-hidden="true"
+            className="pg-who"
+            value={host}
+            onChange={() => {}}
+            aria-label="Journal"
             tabIndex={-1}
-            style={{ position: 'absolute', width: 1, height: 1, opacity: 0, pointerEvents: 'none' }}
           />
           <input
-            type="password"
+            type={claiming ? 'text' : 'password'}
             name="password"
-            autoComplete="current-password"
-            placeholder="password"
+            autoComplete={claiming ? 'off' : 'current-password'}
+            placeholder={claiming ? 'claim code' : 'password'}
+            className={'pg-pw' + (error ? ' pg-pw--wrong' : '')}
             value={pw}
             onChange={e => { setPw(e.target.value); setError(''); }}
             disabled={loading}
-            style={{ background: '#fff', border: `1px solid ${error ? '#ef4444' : '#e0dcd5'}`, borderRadius: 8, padding: '12px 16px', fontFamily: fonts.mono, fontSize: 16, color: '#1a1916', outline: 'none', opacity: loading ? 0.6 : 1, textAlign: 'center' }}
           />
-          {error && <div style={{ fontFamily: fonts.mono, fontSize: 11, color: '#ef4444', lineHeight: 1.5, textAlign: 'center' }}>{error}</div>}
-          <button type="submit" disabled={loading}
-            style={{ background: '#1a1916', color: '#fff', borderRadius: 8, padding: '12px 0', fontFamily: fonts.mono, fontSize: 11, letterSpacing: '0.12em', textTransform: 'uppercase', cursor: loading ? 'default' : 'pointer', border: 'none', fontWeight: 600, opacity: loading ? 0.6 : 1 }}>
+          {error && <div className="pg-said">{error}</div>}
+          <button type="submit" className="pg-go" disabled={loading}>
             {loading ? 'Checking…' : 'Enter →'}
           </button>
         </form>
@@ -102,11 +142,11 @@ export default function PasswordGate({ onAuth, bare = false }) {
   if (bare) return <div style={{ display: 'flex', flexDirection: 'column', gap: 14, fontFamily: fonts.sans }}>{fields}</div>;
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f5f3ef', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, fontFamily: fonts.sans }}>
-      <div style={{ background: '#fff', border, borderRadius: 20, padding: 48, width: '100%', maxWidth: 360, display: 'flex', flexDirection: 'column', gap: 20, boxShadow: '0 4px 32px rgba(0,0,0,0.08)', textAlign: 'center' }}>
+    <div style={{ minHeight: '100dvh', background: 'var(--bg)', color: 'var(--ink)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, fontFamily: fonts.sans }}>
+      <div style={{ width: '100%', maxWidth: 340, display: 'flex', flexDirection: 'column', gap: 20, textAlign: 'center' }}>
         <div>
-          <div style={{ fontFamily: fonts.sans, fontSize: 26, fontWeight: 900, color: '#1a1916', letterSpacing: '-0.02em' }}>{cover_name}</div>
-          <div style={{ fontFamily: fonts.mono, fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#7a776f', marginTop: 4 }}>writing access</div>
+          <div style={{ fontFamily: 'var(--font-display)', fontWeight: 'var(--font-display-weight)', fontSize: 24, letterSpacing: '-0.02em' }}>{cover_name}</div>
+          <div style={{ fontFamily: 'var(--font-label)', fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--ink-faint)', marginTop: 4 }}>Sign in</div>
         </div>
         {fields}
       </div>

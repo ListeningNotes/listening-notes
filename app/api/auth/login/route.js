@@ -3,10 +3,20 @@
 // app/api/auth/login/route.js
 // The front desk. Checks the password; if correct, stamps a wristband
 // and sends the visitor in wearing it (HttpOnly cookie).
+//
+// ── Three things open this door ───────────────────────────────────────────
+// The password the owner chose on the site, as a hash in the vault. Failing
+// that, SESSION_PASSWORD from the environment, which is how every copy was
+// locked before setup asked. And on a copy nobody has claimed yet — no hash,
+// no variable — the claim code printed in the build log, once, so that the
+// person who deployed it is the person who sets its password. The moment the
+// copy is claimed the code is cleared and stops being an answer.
 
 import { NextResponse } from 'next/server';
 import { issueWristband, WRISTBAND_COOKIE } from '@/library/wristband';
 import { mayKnock, forgetKnocks, tooSoon, whoIsKnocking } from '@/library/doorman';
+import { isSetUp } from '@/library/settings_actions';
+import { pull_secrets, verifyPassword, claimCodeMatches } from '@/library/secrets';
 import { timingSafeEqual } from 'node:crypto';
 
 // Compares in constant time, so the answer takes as long for a password that
@@ -20,6 +30,17 @@ function sameSecret(given, actual) {
   const b = Buffer.from(String(actual));
   if (a.length !== b.length) return false;
   return timingSafeEqual(a, b);
+}
+
+async function opens(password) {
+  const { password_hash } = await pull_secrets();
+  if (password_hash) return await verifyPassword(password, password_hash);
+  if (process.env.SESSION_PASSWORD) return sameSecret(password, process.env.SESSION_PASSWORD);
+  // No password of any kind. Only an unclaimed copy is in this state, and
+  // only its claim code gets through. isSetUp does not catch, and here that
+  // is right: if the question cannot be answered, nobody gets in.
+  if (await isSetUp()) return false;
+  return await claimCodeMatches(password);
 }
 
 export async function POST(request) {
@@ -36,11 +57,7 @@ export async function POST(request) {
 
     const { password } = await request.json();
 
-    if (!process.env.SESSION_PASSWORD) {
-      return NextResponse.json({ error: 'Server misconfigured' }, { status: 500 });
-    }
-
-    if (!password || !sameSecret(password, process.env.SESSION_PASSWORD)) {
+    if (!password || !(await opens(password))) {
       // Small delay makes brute-force slow without bothering a real human
       await new Promise(r => setTimeout(r, 400));
       return NextResponse.json({ error: 'Wrong password' }, { status: 401 });

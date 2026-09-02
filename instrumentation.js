@@ -32,6 +32,21 @@ export async function register() {
     if (applied.length) console.log(`[migrations] applied ${applied.length}: ${applied.join(', ')}`);
     else console.log('[migrations] up to date');
   } catch (error) {
-    console.error('[migrations] FAILED —', error?.message || error);
+    const { explainDatabaseError } = await import('./library/database_connection.js');
+    console.error('[migrations] FAILED —', explainDatabaseError(error));
+    console.error('[migrations] the driver said:', error?.message || error);
+    return;
+  }
+
+  // While nobody has claimed this copy, say how to. The same lines the build
+  // printed, repeated here on every start, so a code missed in the build log
+  // can still be found in the runtime log rather than by redeploying.
+  try {
+    const { claimCode } = await import('./library/secrets.js');
+    const { claimNotice } = await import('./library/claim_notice.js');
+    const code = await claimCode();
+    if (code) console.log(claimNotice(code));
+  } catch (error) {
+    console.error('[setup] could not mint a claim code —', error?.message || error);
   }
 }
