@@ -66,7 +66,7 @@ code into your account, which is the point.
    opens like an app. Skippable; it is in Settings too.
 
 The same steps, with what to expect at each and roughly how long, are written
-out on the canonical copy at [listeningnotes.blog/get](https://listeningnotes.blog/get#install).
+out on the canonical copy at [listeningnotes.blog/get/install](https://listeningnotes.blog/get/install).
 If it did not work, [say so here](https://github.com/ListeningNotes/listening-notes/issues)
 — what you pressed and what you saw.
 
