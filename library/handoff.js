@@ -72,3 +72,15 @@ export function handOff(entry) {
 export function handedOver(slug) {
   return passing && passing.slug === slug ? passing : null;
 }
+
+// Where a record's tile is on screen right now, if the wall is mounted under
+// the layer. The layer grows out of this box on the way in, so the entry
+// opens from the square that was pressed.
+export function tileBoxOf(slug) {
+  if (typeof document === 'undefined') return null;
+  const tile = document.querySelector(`[data-tile-slug="${CSS.escape(slug)}"]`);
+  if (!tile) return null;
+  const box = tile.getBoundingClientRect();
+  if (box.width === 0 || box.height === 0) return null;
+  return { x: box.left, y: box.top, w: box.width, h: box.height };
+}

@@ -946,6 +946,13 @@ was the gestures or the layer itself.
       that decoded a frame late. Now `FullPostPage` skips the flourish when
       the wait state already drew the score (`alreadyShown`, read off the
       handoff once), and the first-screen cover is `decoding="sync"`.
+- [x] **The entry grows out of the tile** (2026-09-03): `LayerEntry` reads
+      the pressed tile's box (`tileBoxOf` in handoff.js) before paint and
+      runs the sheet from that exact square to the full screen with the Web
+      Animations API, origin at the tile's corner; the stylesheet's fade is
+      the fallback for a form or an off-wall tile. Measured in the pane: the
+      sheet is the tile at the first frame and fills the screen at ~420ms,
+      no stray frames. Closing is unchanged (edge pull, Escape, back).
 
 **2026-09-01 — setup expanded, Settings, and the password out of deploy**
 
