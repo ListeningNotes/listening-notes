@@ -41,7 +41,7 @@ export default function KeeperTools({ onEdit, slug }) {
         aria-label="Correct this entry"
         title="Correct this entry"
       >
-        <Pencil size={16} weight="bold" aria-hidden="true" />
+        <Pencil size={18} weight="regular" aria-hidden="true" />
       </button>
 
       {/* The slug travels so the printer opens on this record rather than on
@@ -54,7 +54,7 @@ export default function KeeperTools({ onEdit, slug }) {
         aria-label="Print this entry"
         title="Print this entry"
       >
-        <Printer size={16} weight="bold" aria-hidden="true" />
+        <Printer size={18} weight="regular" aria-hidden="true" />
       </Link>
     </>
   );

@@ -50,8 +50,8 @@ publicly):
 - `/dashboard/share` — the album exporter
 - `/dashboard/submissions` — a redirect into the inbox, kept for old links
 - `/settings` — the machinery: address, Last.fm, the keys, the password,
-  the home-screen step, and Sign out. Reached from the gear beside the
-  card's pencil and the Settings door on the desk. The card's own fields are
+  the home-screen step, and Sign out. Reached from the Settings door on
+  the desk. The card's own fields are
   edited on the card, behind its pencil
 
 Editing an entry happens on the entry itself, not in a list. There used to be a

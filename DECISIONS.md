@@ -1270,7 +1270,9 @@ on, and the founding date is the day setup ran. An editable date anyone can
 set to anything says nothing. Skip means later, not never: every field that
 can be skipped has a home afterwards, which is what Settings is for.
 
-**Settings is the machinery, reached from a gear beside the card's pencil.**
+**Settings is the machinery, reached from the desk.** (A gear sat beside the
+card's pencil for a day and came off, 2026-09-02: the card and Settings do
+not need to link to each other.)
 `/settings`, owner-only: the address, Last.fm (username and key), the
 Anthropic key, and the password. The starting theme and the wording of the
 key were on it for an afternoon and came off the same day, 2026-09-01, on
