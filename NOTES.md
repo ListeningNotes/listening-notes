@@ -940,6 +940,12 @@ this branch's history (commits "The entry expands from its cover" and "The
 flight lands"); `git revert` of the baseline commit brings it back. Next
 step is to judge the baseline on the phone, then decide whether the glitch
 was the gestures or the layer itself.
+- [x] **The blink when the entry lands** (2026-09-02, and "it has always
+      done this"): the real page replayed the star-fill flourish, which
+      starts every star empty for a beat, and mounted a fresh cover image
+      that decoded a frame late. Now `FullPostPage` skips the flourish when
+      the wait state already drew the score (`alreadyShown`, read off the
+      handoff once), and the first-screen cover is `decoding="sync"`.
 
 **2026-09-01 — setup expanded, Settings, and the password out of deploy**
 
