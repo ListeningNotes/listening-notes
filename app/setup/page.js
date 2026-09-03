@@ -439,7 +439,7 @@ export default function WelcomeScreen() {
                 photo: 'A photo',
                 prompts: 'Three openings',
                 lastfm: 'What you are playing',
-                anthropic: 'Research',
+                anthropic: 'Optional: AI assistance',
                 rig: 'What you listen on',
                 password: 'A password',
                 homescreen: 'One more thing',
@@ -605,13 +605,25 @@ export default function WelcomeScreen() {
                 if (anthropic.trim()) await patchSecrets({ anthropic_key: anthropic.trim() });
               }); }}>
                 <p className="su-why">
-                  An Anthropic API key turns on two things during a listen: a
-                  Research button on the album screen, and a question mark that
-                  answers with the record and your notes in front of it. Get one
-                  at{' '}
-                  <a href="https://console.anthropic.com" target="_blank" rel="noopener noreferrer">console.anthropic.com</a>;
-                  it bills to your own API balance, separate from a Claude.ai
-                  subscription. Everything else works without it.
+                  If you add an Anthropic key, two things appear during a
+                  listening session. Research looks the album up and cites its
+                  sources, so you can read the background before you start. And
+                  a question mark you can open at any point, which already knows
+                  the record and what you’ve written so far — useful for asking
+                  questions during a listen, or for finding a common thread
+                  through multiple track notes.
+                </p>
+                <p className="su-why">
+                  Nothing it says goes into your entry. You read it, then you
+                  write what you write.
+                </p>
+                <p className="su-why">
+                  Get a key at{' '}
+                  <a href="https://console.anthropic.com" target="_blank" rel="noopener noreferrer">console.anthropic.com</a>.
+                  You pay your own usage, and most people spend under a dollar a
+                  month. Note that it draws from an API balance, which is
+                  separate from a Claude.ai subscription. Everything else works
+                  without it.
                 </p>
                 <div>
                   <span className="su-label">Anthropic API key</span>
