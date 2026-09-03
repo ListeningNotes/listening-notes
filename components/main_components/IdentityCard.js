@@ -633,9 +633,12 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
            simply starting further down the page. The header is corner
            furniture; space under it reads as air. */
         .idc-tools { display: flex; align-items: center; gap: 2px; }
+        /* The same box as the lights on the other end of the line — 36px,
+           a 10px radius, an 18px glyph — so the two ends of the bar read as
+           one row of controls rather than a big one and a small one. */
         .idc-tool {
           display: inline-flex; align-items: center; justify-content: center;
-          width: 30px; height: 30px; border-radius: 9px;
+          width: 36px; height: 36px; border-radius: 10px;
           color: var(--ink-faint); background: transparent; border: 0;
           cursor: pointer; transition: color 0.15s, background 0.15s;
         }
@@ -1155,7 +1158,7 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
                     aria-label="Save this card"
                     title="Save"
                   >
-                    <Check size={16} weight="bold" aria-hidden="true" />
+                    <Check size={18} weight="regular" aria-hidden="true" />
                   </button>
                   <button
                     type="button"
@@ -1165,7 +1168,7 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
                     aria-label="Stop editing without saving"
                     title="Cancel"
                   >
-                    <X size={16} weight="bold" aria-hidden="true" />
+                    <X size={18} weight="regular" aria-hidden="true" />
                   </button>
                 </>
               ) : (
@@ -1177,7 +1180,7 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
                     aria-label="Edit this card"
                     title="Edit this card"
                   >
-                    <Pencil size={16} weight="bold" aria-hidden="true" />
+                    <Pencil size={18} weight="regular" aria-hidden="true" />
                   </button>
                   {/* The machinery — keys, password, theme, the address —
                       lives at /settings and is reached from here, beside the
@@ -1190,7 +1193,7 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
                     aria-label="Settings"
                     title="Settings"
                   >
-                    <GearSix size={16} weight="bold" aria-hidden="true" />
+                    <GearSix size={18} weight="regular" aria-hidden="true" />
                   </Link>
                 </>
               )}
