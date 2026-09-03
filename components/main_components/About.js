@@ -52,6 +52,12 @@ import { BIO_PROMPTS, readBioAnswers } from '../../library/bioprompt';
 // glance and a row of nine reads as a footer.
 const LINK_LIMIT = 3;
 
+// The links are retired from view, 2026-09-02, on the keeper's call: not
+// shown anywhere, not asked for at setup, not edited on the pane. The column
+// and its rows stay — it is somebody's data and the schema is still a draft —
+// so flipping this back is the whole of un-retiring them.
+const LINKS_SHOWN = false;
+
 // How many records the pin's search shows at once. Enough to scroll a little
 // and find something without typing, few enough that the sheet does not become
 // the archive — which exists, one swipe away, and is the right place to browse.
@@ -591,7 +597,7 @@ export default function About({ stamps, authed = false, pinned = null, entries =
           </section>
         )}
 
-        {(socials.length > 0 || edit.editing) && (
+        {LINKS_SHOWN && (socials.length > 0 || edit.editing) && (
           <section className="ab-block">
             {/* Headed like the rig above it, because it is the same kind of
                 thing: a short list of facts about somebody, at the end of the

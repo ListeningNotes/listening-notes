@@ -130,13 +130,17 @@ export default function AddToHomeScreen() {
             <ol className="a2h-steps">
               <li>
                 <span>
-                  Press the share button
+                  In Safari, press the share button
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-label="share"><path d="M12 3v12"/><path d="M8 7l4-4 4 4"/><path d="M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"/></svg>
-                  at the bottom of Safari.
+                  — the square with an arrow pointing up. On an iPhone it is in
+                  the bar at the bottom of the screen, in the middle; on an iPad
+                  it is at the top right, beside the address.
                 </span>
               </li>
-              <li><span>Scroll the list and choose <strong>Add to Home Screen</strong>.</span></li>
-              <li><span>Press <strong>Add</strong>. The icon above lands on your screen.</span></li>
+              <li><span>A sheet slides up. Scroll its list down past the apps until you see <strong>Add to Home Screen</strong>, with a small plus in a square. Press it.</span></li>
+              <li><span>It shows the icon above and the name. Press <strong>Add</strong>, top right.</span></li>
+              <li><span>The icon lands on your home screen, on the last page. Open it from there from now on — it opens without Safari around it.</span></li>
+              <li><span>In Chrome on an iPhone the share button is at the top right instead, in the address bar; the rest is the same.</span></li>
             </ol>
           )}
 

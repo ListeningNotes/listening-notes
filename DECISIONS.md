@@ -1435,6 +1435,19 @@ The host rather than the keeper's name, because the name may not exist yet
 at setup, and the same value everywhere is what makes the entry saved at
 setup the one offered at sign-in.
 
+**The fresh-account run passed, 2026-09-02, in Safari.** Button → GitHub →
+Add on the Neon row → Free → Create → Deploy → picture → Set it up → name →
+screens → password → home screen → a working journal. Two findings on the
+way: the Claude in-app browser cannot complete the Neon step, so tests run in
+a real browser; and the Neon panel's "Auth" toggle is on by default and is
+not wanted, so the steps say to switch it off.
+
+**Links are retired from view.** Not asked at setup, not on the About pane,
+not in Settings' doors. The column and its rows stay — writing is never
+dropped and the schema is still a draft — and `LINKS_SHOWN` in About.js is
+the whole of bringing them back. Miyel's call; whether they leave the
+codebase entirely is a later decision.
+
 ---
 
 ## Migrations
