@@ -661,13 +661,15 @@ and on the send page there is none, so the browser scrolls the shelf. A row
 of small thumbnails is not how anybody recognises a record; the covers are
 the point.
 
-**The send page is a wall, 2026-09-03.** The field first, under the header,
-then the results as a wall of large covers, newest first, two across on a
-phone; the message, the name and Send appear only once a record is picked.
-Three things this settles. The wall replaces the shelf because a row of
-small covers is not how you recognise a record and the journal itself is a
-wall. The field goes above the results because focusing it on a phone
-scrolls the sheet, and with a square above it the header went under the
+**The send page keeps its landing, and the wall is a chooser over it,
+2026-09-03.** The landing is the sleeve, the field and the whole form, as it
+was; a blank page until a record is picked was wrong. Focus the field and a
+chooser opens over the page — the field at its head, the results as a wall
+of large covers under it, newest first, two across on a phone — and a
+picked cover flies down into the sleeve before the held state appears. The
+wall replaces the shelf because a row of small covers is not how you
+recognise a record and the journal itself is a wall. The chooser has its
+own field at the top, so the keyboard never scrolls the header under the
 clock. And newest first reverses "a discography reads forwards": on a wall
 the newest record at the top, scrolling back through the years, is the
 order that reads. Also: the search folds accents before matching, so "bjork"
