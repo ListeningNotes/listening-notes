@@ -3,7 +3,6 @@
 
 @import "tailwindcss";
 
-
 :root {
   --sb-width: 260px;
 
@@ -581,71 +580,9 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
    HOMEPAGE v2 — top nav + hero beacon + album strip
 ═══════════════════════════════════════════════════ */
 
-.hp {
-  background: var(--bg);
-  color: var(--ink);
-  min-height: 100vh;
-  overflow-x: hidden;
-  display: flex;
-  flex-direction: column;
-}
-
-/* Soft fade into the background at the left/right screen edges */
-.hp::before,
-.hp::after {
-  content: '';
-  position: fixed;
-  top: 0;
-  bottom: 0;
-  width: 160px;
-  z-index: 50;
-  pointer-events: none;
-}
-.hp::before {
-  left: 0;
-  background: linear-gradient(to right, var(--bg), transparent);
-}
-.hp::after {
-  right: 0;
-  background: linear-gradient(to left, var(--bg), transparent);
-}
-
 /* This edge fade was for the desktop horizontal album-strip scroll — the
    two-screen mobile/tablet layout doesn't need it and it's getting reworked
    soon anyway, so drop it there. Desktop keeps it. */
-@media (max-width: 768px) {
-  .hp::before,
-  .hp::after {
-    display: none;
-  }
-}
-
-/* ── Homepage layout — scroll strip, beacon, dot nav ── */
-.hp-main {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 22px;
-  padding: 58px 0 40px;
-}
-
-/* Homepage only: dot-nav flows in directly under the logo instead of being
-   pinned to the top edge (it sits right after the logo in the markup). */
-.hp .hp-logo {
-  position: relative;
-  z-index: 91;
-}
-.hp .hp-dotnav {
-  position: relative;
-  top: auto;
-  left: auto;
-  transform: none;
-  z-index: 91;
-  margin-top: -18px;
-  margin-bottom: 30px; /* reserve space for the labels that hang below the dots */
-}
 
 /* Homepage dashboard — one unified box holding the listening beacon, centered.
    The recent-listens strip sits below it. Stacks gracefully on narrow screens. */
@@ -667,15 +604,6 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   .hp-dashboard { max-width: 440px; padding: 24px; }
 }
 
-/* Corner icons — Instagram + theme toggle */
-.hp-corner {
-  position: fixed;
-  top: 24px;
-  right: 28px;
-  z-index: 100;
-  display: flex;
-  gap: 4px;
-}
 .hp-icon-btn {
   display: flex;
   align-items: center;
@@ -690,32 +618,6 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 .hp-icon-btn:hover {
   color: var(--ink);
   background: var(--bg-warm);
-}
-
-/* Centered logo — matches the /dashboard logo size */
-.hp-logo {
-  display: block;
-}
-.hp-logo img {
-  height: 104px;
-  width: auto;
-  display: block;
-  transition: filter 0.2s;
-}
-
-/* Small top-left logo used as a wayfinder on non-homepage pages */
-.hp-logo-mini {
-  position: fixed;
-  top: 22px;
-  left: 28px;
-  z-index: 100;
-  display: block;
-}
-.hp-logo-mini img {
-  height: 36px;
-  width: auto;
-  display: block;
-  transition: filter 0.2s;
 }
 
 /* SiteNav — the ONE sitewide nav row: the mark centred, one control each
@@ -769,19 +671,6 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 }
 .sitenav-row--scrolled::before {
   opacity: 1;
-}
-
-.hp .sitenav-row {
-  position: relative;
-  top: auto;
-  left: auto;
-  right: auto;
-  width: 100%;
-  padding: 0 20px;
-}
-/* The homepage keeps this row in normal flow, so nothing scrolls under it. */
-.hp .sitenav-row::before {
-  display: none;
 }
 
 /* And a layer that scrolls itself is the second surface where this row cannot
@@ -868,265 +757,13 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   50% { opacity: 0.4; transform: scale(0.8); }
 }
 
-/* ── Beacon (below the strip) — wide frosted music-player case ── */
-.hp-beacon {
-  display: flex;
-  align-items: center;
-  width: auto;
-  max-width: calc(100vw - 48px);
-  padding: 16px;
-  background: var(--panel);
-  border: 1px solid var(--panel-border);
-  border-radius: 26px;
-  box-shadow: var(--shadow-soft), inset 0 1px 0 rgba(255, 255, 255, 0.6);
-  font: inherit;
-  color: inherit;
-  text-align: left;
-  cursor: pointer;
-}
-.hp-beacon-row {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  flex-shrink: 0;
-}
-.hp-beacon-art {
-  width: 104px;
-  height: 104px;
-  flex-shrink: 0;
-  border-radius: 16px;
-  overflow: hidden;
-  box-shadow: 0 6px 18px rgba(0,0,0,0.16);
-}
-.hp-beacon-art img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-}
-.hp-beacon-art-ph {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--bg-warm);
-  color: var(--ink-faint);
-  font-size: 2.2rem;
-}
-.hp-beacon-body {
-  width: 220px;
-  min-width: 0;
-  flex-shrink: 0;
-}
-.hp-beacon-label {
-  font-family: var(--font-label);
-  font-size: 9.5px;
-  letter-spacing: 0.15em;
-  text-transform: uppercase;
-  color: var(--ink-faint);
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  margin-bottom: 8px;
-}
-.hp-beacon-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--ink-faint);
-  flex-shrink: 0;
-}
-.hp-beacon-dot--live {
-  background: var(--live);
-  animation: beacon-dot-glow 2.4s ease-in-out infinite;
-}
 @keyframes beacon-dot-glow {
   0%, 100% { box-shadow: 0 0 5px rgba(124, 255, 155, 0.5); }
   50%      { box-shadow: 0 0 11px rgba(124, 255, 155, 0.9); }
 }
-.hp-beacon-title {
-  font-family: var(--font-display);
-  font-weight: var(--font-display-weight);
-  font-size: 26px;
-  line-height: 1.12;
-  letter-spacing: -0.01em;
-  color: var(--ink);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.hp-beacon-artist {
-  font-size: 14px;
-  color: var(--ink-soft);
-  margin-top: 4px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-/* Equalizer — animated bars when the beacon is live */
-.hp-beacon-eq {
-  display: flex;
-  align-items: flex-end;
-  gap: 3px;
-  height: 20px;
-  flex-shrink: 0;
-  align-self: flex-start;
-}
-.hp-beacon-eq span {
-  width: 3px;
-  height: 28%;
-  border-radius: 2px;
-  background: var(--ink-faint);
-}
-.hp-beacon-eq--live span {
-  background: var(--live);
-  animation: eq-bounce 0.9s ease-in-out infinite;
-}
-.hp-beacon-eq--live span:nth-child(1) { animation-duration: 0.86s; }
-.hp-beacon-eq--live span:nth-child(2) { animation-duration: 0.62s; animation-delay: 0.12s; }
-.hp-beacon-eq--live span:nth-child(3) { animation-duration: 1.04s; animation-delay: 0.05s; }
-.hp-beacon-eq--live span:nth-child(4) { animation-duration: 0.74s; animation-delay: 0.2s; }
 @keyframes eq-bounce {
   0%, 100% { height: 22%; }
   50%      { height: 100%; }
-}
-
-/* Expandable recent-tracks panel — slides out horizontally */
-.hp-beacon-recent-wrap {
-  display: grid;
-  grid-template-columns: 0fr;
-  transition: grid-template-columns 0.34s cubic-bezier(0.4, 0, 0.2, 1);
-}
-.hp-beacon--open .hp-beacon-recent-wrap {
-  grid-template-columns: 1fr;
-}
-.hp-beacon-recent {
-  min-width: 0;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  gap: 10px;
-  padding-left: 18px;
-  margin-left: 18px;
-  border-left: 1px solid var(--border);
-}
-.hp-beacon-recent-empty {
-  font-family: var(--font-label);
-  font-size: 11px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--ink-faint);
-}
-.hp-beacon-recent-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-.hp-beacon-recent-art {
-  width: 40px;
-  height: 40px;
-  border-radius: 8px;
-  object-fit: cover;
-  flex-shrink: 0;
-  background: var(--bg-warm);
-}
-.hp-beacon-recent-art--ph {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: var(--ink-faint);
-  font-size: 1.1rem;
-}
-.hp-beacon-recent-meta {
-  width: 160px;
-  min-width: 0;
-}
-.hp-beacon-recent-track {
-  font-size: 14px;
-  color: var(--ink);
-  line-height: 1.25;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-.hp-beacon-recent-artist {
-  font-family: var(--font-label);
-  font-size: 10px;
-  letter-spacing: 0.06em;
-  color: var(--ink-soft);
-  margin-top: 2px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-/* ── Dot navigation (fixed top bar) ── */
-.hp-dotnav {
-  position: fixed;
-  top: calc(96px + var(--safe-top)); /* clears .sitenav-row above it (top:22px
-    + its reserved min-height), which now spans the full page instead of a
-    small left-corner box — the homepage overrides this back to in-flow
-    below. Shifts down with the row when installed to a home screen. */
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 100;
-  display: flex;
-  align-items: flex-start;
-  gap: 64px;
-}
-.hp-dot {
-  position: relative;
-  width: 11px;
-  height: 11px;
-  border-radius: 50%;
-  /* Theme variables, not a fixed near-black: at 18% black these were all but
-     invisible on the dark theme. It went unnoticed while the only thing
-     behind them was page art, but the nav's backdrop now puts a flat --bg
-     panel behind every dot. Matches the homepage dots, which already use
-     --ink-faint. */
-  background: var(--ink-faint);
-  transition: background 0.2s, transform 0.2s;
-}
-.hp-dot--active {
-  background: var(--ink);
-}
-.hp-dot:hover {
-  background: var(--ink-soft);
-}
-/* The visible dot is 11px across — far under the ~44px a fingertip expects,
-   so on a phone you have to aim at it. This invisible square widens the tap
-   area without changing how the dot looks. The 50px/64px gaps between dots
-   are bigger than the square, so neighbouring targets never overlap. */
-.hp-dot::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 44px;
-  height: 44px;
-}
-/* Page labels sit under every dot and stay visible at all times. */
-.hp-dot-label {
-  position: absolute;
-  top: calc(100% + 11px);
-  left: 50%;
-  transform: translateX(-50%);
-  font-family: var(--font-label);
-  font-size: 13px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--ink-soft);
-  white-space: nowrap;
-  transition: color 0.18s;
-}
-.hp-dot:hover .hp-dot-label {
-  color: var(--ink);
-}
-.hp-dot--active .hp-dot-label {
-  color: var(--ink);
 }
 
 /* iOS Safari zooms the whole page in whenever you focus a field whose text is
@@ -1145,15 +782,6 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 /* On phones the labelled dots are too wide to share the top row with the logo
    and corner icons, so drop them to their own second row and grow the header
    backdrop to cover both rows. */
-@media (max-width: 480px) {
-  .hp-dotnav {
-    gap: 50px;
-  }
-  .hp-dot-label {
-    font-size: 11px;
-    letter-spacing: 0.06em;
-  }
-}
 
 /* ── Homepage masthead on phones ──────────────────────────────────────────
    Desktop keeps the single labelled dot-row under the logo. On a phone six
@@ -1162,72 +790,6 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
    the logo -> nav -> strip -> beacon rhythm sits in one comfortable column.
    All rules are scoped to `.hp` so the fixed dot-nav on other pages is
    untouched. */
-@media (max-width: 480px) {
-  .hp-main {
-    padding: 34px 0 52px;
-    gap: 26px;
-  }
-  .hp .hp-logo {
-    position: relative;
-    z-index: 95;
-  }
-  .hp-logo img {
-    height: 112px;
-  }
-
-  /* Two rows of three; each dot is now a tap-friendly column (dot + label). */
-  .hp .hp-dotnav {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    column-gap: 10px;
-    row-gap: 20px;
-    width: 100%;
-    max-width: 300px;
-    margin-top: 2px;
-  }
-  .hp .hp-dot {
-    width: auto;
-    height: auto;
-    background: transparent;
-    border-radius: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 9px;
-    padding: 2px 0;
-  }
-  /* The visible dot moves to a pseudo-element so the label can flow beneath it
-     instead of being absolutely positioned. Theme-adaptive colour keeps the
-     inactive dots visible in dark mode too. */
-  .hp .hp-dot::before {
-    content: '';
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background: var(--ink-faint);
-    transition: background 0.2s, transform 0.2s;
-  }
-  .hp .hp-dot--active::before {
-    background: var(--ink);
-  }
-  .hp .hp-dot-label {
-    position: static;
-    transform: none;
-    font-size: 12px;
-    letter-spacing: 0.1em;
-  }
-
-  /* Smaller tiles + tighter vertical padding so the strip stops dominating. */
-  .hp .strip-tile {
-    width: 188px;
-    height: 188px;
-    border-radius: 18px;
-  }
-  .hp .hp-strip-track {
-    gap: 22px;
-    padding: 26px calc(50vw - 94px);
-  }
-}
 
 /* ── Homepage two-screen snap layout (phones + tablets, ≤768px) ──────────────
    Below 769px the homepage swaps from one long column to two full-height
@@ -1236,127 +798,18 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
    the notch), the six nav dots below it, and the recent-listens strip at the
    bottom. Desktop/tablet-wide keeps the original single-column layout,
    untouched — the two layouts are separate markup, toggled by display. */
-@media (min-width: 769px) {
-  .hp-mobile-screens { display: none; }
-}
 @media (max-width: 768px) {
-  .hp-desktop-layout { display: none; }
-
-  /* Instagram + theme toggle move down into .hp-screen-one-controls on
-     screen one and disappear entirely on screen two — scrolling in means
-     you've "entered" the site, so those two utility icons go away until
-     you scroll back up. */
-  .hp .hp-corner { display: none; }
-
-  .hp-mobile-screens {
-    width: 100%;
-    height: 100dvh;
-    overflow-y: auto;
-    scroll-snap-type: y mandatory;
-    -webkit-overflow-scrolling: touch;
-    touch-action: pan-y; /* stops stray pinch/double-tap zoom from fighting the swipe */
-  }
-  .hp-screen {
-    width: 100%;
-    height: 100dvh;
-    flex-shrink: 0;
-    scroll-snap-align: start;
-    scroll-snap-stop: always;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    position: relative;
-  }
-
-  .hp-screen--one {
-    justify-content: center;
-    gap: 28px;
-  }
-
-  /* .beacon-stage has a fixed height that only fits its collapsed art+meta
-     content when the desktop 250px value has room to spare; on mobile the
-     un-scaled card (art 180px + meta) runs taller, so give it enough room
-     to avoid the dot-nav on screen two overlapping the artist name. */
-  .hp-mobile-screens .beacon-stage {
-    height: 320px;
-  }
-  .hp-screen--one .hp-logo img {
-    height: 112px;
-  }
-  .hp-logo-mark.hp-logo-mark--large {
-    /* compound selector — .hp-logo-mark (28px, defined later in the file)
-       is the same specificity as a lone .hp-logo-mark--large would be, so
-       source order made it win; this needs the extra class to actually
-       override it.
-       Height is 82px, not 112px: this SVG is cropped tight to the glyphs
-       (no padding), while the old PNG had transparent margin around them,
-       so the same box-height rendered smaller letters. 82px here measures
-       out to the same actual letter height (~70.6px) the PNG rendered at
-       112px — matched via direct pixel measurement, not a guess. */
-    height: 82px;
-    width: auto;
-  }
-  /* Experiment: the live status now reads via the logo's dot instead —
-     drop the separate dot from the "Now listening" line above the art on
-     screen one only (desktop's beacon-status is untouched). */
-  .hp-screen--one .beacon-status .beacon-dot {
-    display: none;
-  }
-
-  /* Screen one's bottom row: Instagram (left), scroll cue (center), theme
-     toggle (right) — the row itself owns the fixed bottom position, so its
-     three children lay out as normal flex items. */
-  .hp-screen-one-controls {
-    position: absolute;
-    bottom: max(28px, env(safe-area-inset-bottom));
-    left: 50%;
-    transform: translateX(-50%);
-    display: flex;
-    align-items: center;
-    gap: 20px;
-  }
-  /* Plain icons, no circular bubble chrome — matches the caret's minimal
-     style in the shared nav row above. */
-  .hp-screen-one-controls .hp-icon-btn {
-    width: 44px;
-    height: 44px;
-    color: var(--ink-faint);
-    transition: color 0.2s;
-  }
-  .hp-screen-one-controls .hp-icon-btn:hover {
-    color: var(--ink-soft);
-  }
-
-  .hp-scroll-btn {
-    width: 44px;
-    height: 44px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--ink-faint);
-    cursor: pointer;
-    touch-action: manipulation; /* removes tap delay + double-tap-zoom ambiguity */
-    animation: hp-scroll-btn-bob 2.2s ease-in-out infinite;
-    transition: color 0.2s;
-  }
-  .hp-scroll-btn:hover {
-    color: var(--ink-soft);
-  }
-  @keyframes hp-scroll-btn-bob {
+  
+    
+  
+    
+  
+      @keyframes hp-scroll-btn-bob {
     0%, 100% { transform: translateY(0); }
     50% { transform: translateY(5px); }
   }
 
-  .hp-screen--two {
-    justify-content: flex-start;
-    /* Apple's safe-area-inset-top clears the Dynamic Island with a fair
-       amount of buffer below it — trim some of that back so the navbar
-       sits closer to the island's actual edges instead of floating well
-       below it. Floors at 16px on notch-less devices (inset is 0 there). */
-    padding-top: max(16px, calc(env(safe-area-inset-top) - 16px));
-    gap: 14px;
-  }
-
+  
   .hp-logo-mark {
     height: 28px; /* smaller — reads as one navbar unit with the beacon art, not its own bigger element */
     width: auto;
@@ -1376,118 +829,10 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
     0%, 100% { opacity: 1; }
     50%      { opacity: 0.55; }
   }
-  .hp-screen--two .hp-dotnav {
-    margin-top: 0;
-  }
+  
+          
 
-  /* Recent listens: titled grid that scrolls within its own bounded area —
-     overscroll-behavior: contain stops it from handing off to the outer
-     screen-snap scroller once you hit the top/bottom of the list. */
-  .hp-screen--two .hp-screen-strip {
-    flex: 1;
-    min-height: 0;
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    padding: 0 20px;
-  }
-  .hp-screen-strip-title {
-    font-family: var(--font-nunito), sans-serif;
-    font-size: 0.7rem;
-    font-weight: 700;
-    letter-spacing: 0.12em;
-    text-transform: uppercase;
-    color: var(--ink-soft);
-  }
-  .hp-screen-strip-scroll {
-    flex: 1;
-    min-height: 0;
-    overflow-y: auto;
-    overscroll-behavior: contain;
-    -webkit-overflow-scrolling: touch;
-    padding-bottom: max(16px, env(safe-area-inset-bottom));
-  }
-  .hp-screen--two .hp-screen-strip .hp-strip--grid {
-    width: 100%;
-  }
-  .hp-screen--two .hp-screen-strip .hp-strip-track--grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px;
-    width: 100%;
-    padding: 0;
-  }
-  /* Sits at the end of the scrolled listens, with room above it so it reads
-     as the end of the list rather than another row of it. */
-  .hp-screen-strip-scroll .hp-strip-actions {
-    padding: 22px 0 8px;
-  }
-  .hp-screen--two .hp-screen-strip .strip-tile--grid {
-    width: 100%;
-    height: auto;
-    min-width: 0;
-    aspect-ratio: 1 / 1;
-    border-radius: 24px; /* rounder, to read like the listening beacon's art square */
-    transform: translateZ(0); /* keep the layer-promotion fix above even with the scroll-strip scale reset */
-    opacity: 1;
-  }
-
-  /* The beacon widget's own panel box (background/border/shadow) is dropped
-     on mobile — screen one and two now show the beacon at the same native
-     size with no surrounding card. */
-  .hp-mobile-screens .hp-dashboard {
-    background: none;
-    border: none;
-    box-shadow: none;
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-    padding: 0;
-  }
-
-  /* A compact centered row, same spacing style as every other page's dot
-     nav — not stretched edge to edge. Home is dropped entirely on the
-     homepage (see DotNav.js) — never just hidden — so this is always
-     exactly 5 (Archive, Compare, About, Submit, Surprise). Each .hp-dot's
-     own width is driven by its label text (see below), which already does
-     most of the visual separating, so the gap here can stay tight without
-     the row overflowing a phone's width. */
-  .hp-mobile-screens .hp-dotnav {
-    display: flex;
-    justify-content: center;
-    width: 100%;
-    gap: 12px;
-  }
-  .hp-mobile-screens .hp-dot {
-    width: auto;
-    height: auto;
-    background: transparent;
-    border-radius: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 8px;
-    padding: 2px 0;
-  }
-  .hp-mobile-screens .hp-dot::before {
-    content: '';
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    background: var(--ink-faint);
-    transition: background 0.2s, transform 0.2s;
-  }
-  .hp-mobile-screens .hp-dot--active::before {
-    background: var(--ink);
-  }
-  .hp-mobile-screens .hp-dot-label {
-    position: static;
-    transform: none;
-    font-size: 11px;
-    letter-spacing: 0.04em;
-  }
-}
-
+        }
 
 .hero {
   display: flex;
@@ -1784,17 +1129,6 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   will-change: transform;
 }
 
-/* The pair of ways on at the foot of the recent listens — See full archive /
-   Submit an album. Wraps on a narrow screen so neither ever gets clipped. */
-.hp-strip-actions {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-  padding: 4px 20px 0;
-}
-
 .strip-tile {
   flex-shrink: 0;
   width: 200px;
@@ -1861,12 +1195,6 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   .hp-strip-track { gap: 24px; padding: 36px calc(50vw - 110px); }
 }
 
-/* Hide Neon button on homepage */
-.hp #__neon-widget,
-.hp [id*="neon"],
-.hp [class*="neon-"] {
-  display: none !important;
-}
 /* Nav dropdowns */
 
 /* Surprise nav link */
@@ -1907,7 +1235,6 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   0%   { opacity: 1; transform: translate(0,0) scale(1) rotate(0deg); }
   100% { opacity: 0; transform: translate(var(--gx), var(--gy)) scale(0.1) rotate(var(--gr, 180deg)); }
 }
-
 
 /* ── Beacon Stage (expanded recent listens) ── */
 .beacon-stage {
@@ -2315,7 +1642,6 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   transition: color 0.2s ease, opacity 0.2s ease;
 }
 .ln-totop:hover { color: var(--ink); opacity: 1; }
-
 
 /* ── AlbumTile — the journal wall's album ──────────────────────────────────
    A cover and a link to the record it is of. It used to be FlipTile, which
@@ -2986,8 +2312,6 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   cursor: pointer;
 }
 
-
-
 /* The band that stops a scrolled pane running through the mark. Same shape as
    .sitenav-row::before, and here for the same reason: this row is fixed with
    no background of its own, so the wall of covers scrolled straight through
@@ -3149,7 +2473,6 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
    a phone is a whole column of covers given away to nothing. The wall's own
    padding is the only padding. */
 
-
 /* Restated from the dead .hp-mobile-screens block — same values, new scope. */
 .hn .beacon-stage { height: 320px; }
 .hn-screen .beacon-status .beacon-dot { display: none; }
@@ -3182,7 +2505,6 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   transform: translateZ(0);
   opacity: 1;
 }
-.hn-under .hp-strip-actions { padding: 20px 0 8px; }
 
 /* ── The row along the bottom ───────────────────────────────────────────────
    Three controls together rather than one on each edge of the window. On the
