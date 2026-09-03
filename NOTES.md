@@ -1228,6 +1228,16 @@ copy up*, for what was decided; this is what was built.
       `npm run backup` run so the iCloud backups cover the live journal from
       today.
 
+- [x] **The steps and the story open as a layer over the door, 2026-09-03**
+      — `app/@layer/(.)get/install` and `(.)get/story` intercept the two
+      routes the way `(.)submit` does: LayerEntry with `arrives="bottom"`
+      and `scrolls`, so they rise from the foot of the screen and a pull
+      down closes them. Cold loads of the same addresses still get the
+      standalone pages with the nav row. The `.get-*` rules moved from
+      app/get/layout.js into globals.css, because a layer never passes
+      through that layout. "It didn't work" stays a plain link: it goes to
+      GitHub, and another site opens in the browser, not on the sheet.
+
 - [x] **The essay replaced, 2026-09-03** — the final version, five sections
       under `## ` headings, written straight into `settings.why_essay` with
       `why_date` set to the day. The previous text (1,787 characters, dated

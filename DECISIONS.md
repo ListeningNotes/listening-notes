@@ -1508,6 +1508,15 @@ one or two sentences — a long step overwhelms the person it is for — but
 every trap the run found is named, and any future rewrite of the page starts from the
 recorded run and the README rather than from a shorter retelling.
 
+**The two pages under the door open as a layer, 2026-09-03.** From /get,
+the steps and the story rise from the foot of the screen on the shared sheet
+— the same mechanic an entry and the send form use, with the same pull down
+to close — so leaving the door and coming back feels like every other page
+here rather than like a site. Their addresses stay real: opened cold they
+are standalone pages with the nav row, which is what a texted link needs.
+"It didn't work" is not layered, because it goes to GitHub, and visiting
+another site opens the browser.
+
 **The install steps have a phone/laptop toggle, and the choice is in the
 address.** The two flows genuinely differ and both screenshot sets are being
 captured. `?on=phone` or `?on=laptop`, written with `replaceState` as the
