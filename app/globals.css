@@ -2134,6 +2134,10 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 /* LayerEntry says which arrival this is. Grows: the Web Animations run does
    everything and the stylesheet stays out of it. Fades: the plain version. */
 .lay--fades { animation: layFade 0.32s ease-out; }
+/* A form rises from the foot of the screen, so a pull down to close is the
+   same movement in reverse. */
+.lay--rises { animation: layRise 0.42s cubic-bezier(0.22, 0.61, 0.36, 1); }
+@keyframes layRise { from { transform: translateY(100%); } to { transform: none; } }
 
 /* ── Browsing sideways ──
    The content follows the finger while held, settles when let go, and a
@@ -2168,7 +2172,7 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 @media (hover: hover) and (pointer: fine) { .lay-step { display: inline-flex; } }
 @media (prefers-reduced-motion: reduce) {
   .lay--settling .lay-content { transition: none; }
-  .lay-content--from-right, .lay-content--from-left { animation: none; }
+  .lay-content--from-right, .lay-content--from-left, .lay--rises { animation: none; }
 }
 @keyframes layFade {
   from { opacity: 0; }

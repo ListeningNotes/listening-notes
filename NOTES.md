@@ -999,6 +999,12 @@ was the gestures or the layer itself.
       entry's `ln-entry` / `ln-entry--scrolled` classes so the band behind
       the row keeps working. Measured: the row at the same place through the
       whole exit and entrance.
+- [x] **The send page, after the merge** (2026-09-03): it arrives from the
+      bottom (`arrives="bottom"`, `lay--rises`) and sinks back on the pull
+      down; the layer claims sideways only where there are neighbours
+      (`browses`), so scrolling rows work again everywhere else; and the
+      finder's shelf is a vertical list of rows in the same square
+      (`.af-rows` / `.af-row`).
 - [x] **A close never waits forever on an animation.** A hidden tab freezes
       every animation and their finish never comes; `leave()` now also runs
       a timer a beat longer than the flight, and whichever comes first goes
