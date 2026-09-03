@@ -28,7 +28,7 @@ import nextEnv from '@next/env';
 nextEnv.loadEnvConfig(process.cwd());
 
 const { bringUpToDate } = await import('../library/migrator.js');
-const { claimCode } = await import('../library/secrets.js');
+const { claimCode, openSetupWindow } = await import('../library/secrets.js');
 const { claimNotice } = await import('../library/claim_notice.js');
 const { explainDatabaseError } = await import('../library/database_connection.js');
 
@@ -51,7 +51,10 @@ try {
 
 try {
   const code = await claimCode();
-  if (code) console.log(claimNotice(code));
+  if (code) {
+    await openSetupWindow();
+    console.log(claimNotice(code, { windowOpen: true }));
+  }
 } catch (error) {
   say(`could not read the claim code (${error?.message || error}); it will be in the runtime log`);
 }

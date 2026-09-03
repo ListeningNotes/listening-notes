@@ -29,7 +29,7 @@ const scrypt = promisify(scryptCallback);
 
 // Anything a caller sends that is not one of these is ignored — the same
 // allow-list shape save_settings uses, for the same reason.
-const WRITABLE = ['session_secret', 'password_hash', 'claim_code', 'lastfm_key', 'anthropic_key'];
+const WRITABLE = ['session_secret', 'password_hash', 'claim_code', 'lastfm_key', 'anthropic_key', 'setup_open_until'];
 
 // Read the row. Catches, like pull_settings: a copy whose database is not
 // built yet still has to answer "is there a key" with no rather than a stack
@@ -37,7 +37,7 @@ const WRITABLE = ['session_secret', 'password_hash', 'claim_code', 'lastfm_key',
 export async function pull_secrets() {
   try {
     const [row] = await database`
-      SELECT session_secret, password_hash, claim_code, lastfm_key, anthropic_key
+      SELECT session_secret, password_hash, claim_code, lastfm_key, anthropic_key, setup_open_until
       FROM secrets WHERE id = 1`;
     return row || {};
   } catch {
@@ -173,6 +173,33 @@ export async function claimCode() {
     RETURNING claim_code`;
   return row.claim_code;
 }
+
+// ── The window ────────────────────────────────────────────────────────────
+// For half an hour after a build, an unclaimed copy lets its owner into setup
+// with no code at all. The build is the one moment the owner is certainly
+// the person looking — Vercel's Congratulations screen is in front of them,
+// and pressing the picture on it opens the site. Only the build opens the
+// window: a server start would be opened by whoever's visit woke the copy,
+// and that could be anybody. Past the window, the code in the log or a
+// redeploy, which runs the build again. Claiming clears it.
+const WINDOW_MINUTES = 30;
+
+export async function openSetupWindow() {
+  const [claimed] = await database`SELECT setup_complete FROM settings WHERE id = 1`;
+  if (claimed?.setup_complete === true) return null;
+  const until = new Date(Date.now() + WINDOW_MINUTES * 60_000);
+  await database`
+    INSERT INTO secrets (id, setup_open_until) VALUES (1, ${until})
+    ON CONFLICT (id) DO UPDATE SET setup_open_until = EXCLUDED.setup_open_until`;
+  return until;
+}
+
+export async function setupWindowOpen() {
+  const { setup_open_until } = await pull_secrets();
+  return Boolean(setup_open_until && new Date(setup_open_until).getTime() > Date.now());
+}
+
+export { WINDOW_MINUTES };
 
 export async function claimCodeMatches(given) {
   const typed = tidyClaimCode(given);

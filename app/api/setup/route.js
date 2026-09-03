@@ -26,7 +26,7 @@ import { requireWristband } from '@/library/wristband';
 import { isSetUp, save_settings } from '@/library/settings_actions';
 import { claim_journal } from '@/library/database_actions';
 import { tidyAddress } from '@/library/return_address';
-import { hashPassword, passwordSource, save_secrets } from '@/library/secrets';
+import { hashPassword, passwordSource, save_secrets, setupWindowOpen } from '@/library/secrets';
 
 // Eight is the floor. There is no strength meter — one password, chosen once,
 // saved by a password manager the field is shaped for — but a floor keeps
@@ -41,11 +41,14 @@ export async function GET() {
   try {
     const claimed = await isSetUp();
     const password = await passwordSource();
-    return NextResponse.json({ claimed, has_password: Boolean(password) });
+    // Whether the door is open with nothing typed — the half hour after a
+    // build. The page knocks first when it is.
+    const open = !claimed && !password && (await setupWindowOpen());
+    return NextResponse.json({ claimed, has_password: Boolean(password), open });
   } catch {
     // Cannot be answered: fail the same direction the hold does, and treat
     // the copy as claimed.
-    return NextResponse.json({ claimed: true, has_password: true });
+    return NextResponse.json({ claimed: true, has_password: true, open: false });
   }
 }
 
@@ -101,6 +104,7 @@ export async function POST(request) {
     await save_secrets({
       password_hash: await hashPassword(chosen),
       claim_code: null,
+      setup_open_until: null,
     });
 
     return NextResponse.json({ ok: true });

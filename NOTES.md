@@ -957,7 +957,11 @@ Two briefs in one session, on branch `setup-and-settings`. See DECISIONS,
 - [x] **Fresh-account run, 2026-09-02** — the `products` parameter survived
       Vercel's sign-in redirect: a Neon database was attached and deploy
       asked for nothing. The claim code showed in the build log. Confusing,
-      so the log prints a link with the code in it now (see DECISIONS).
+      so the log prints a link with the code in it — and then, because the
+      log is hidden behind Vercel's Congratulations screen and people press
+      the picture instead, setup is simply open for half an hour after each
+      build (`secrets.setup_open_until`, migration 004, applied to production
+      2026-09-02). The code and the link are the fallback (see DECISIONS).
 
 **Not verified here, and needs the fresh-account test again:** the whole
 first-run flow end to end (there is no local Postgres and only the one live
