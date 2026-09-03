@@ -67,8 +67,10 @@ export default function EntryOverTheJournal({ params }) {
     <LayerEntry>
       {/* The fallback is handed the slug so it can check that what the
           journal left behind is about this record and not the last one
-          tapped — see LayerWaiting. */}
-      <Suspense fallback={params.then(({ slug }) => <LayerWaiting slug={slug} />)}>
+          tapped — see LayerWaiting — and whether the reader is the keeper,
+          so the header it holds still carries the same tools the entry's
+          will. The cookie read is quick and needs no database. */}
+      <Suspense fallback={Promise.all([params, wristbandOnHand()]).then(([{ slug }, authed]) => <LayerWaiting slug={slug} authed={authed} />)}>
         {params.then(({ slug }) => <Entry slug={slug} />)}
       </Suspense>
     </LayerEntry>

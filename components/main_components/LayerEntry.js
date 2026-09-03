@@ -48,7 +48,7 @@
 // leave the address bar pointing at an entry nobody is looking at.
 
 'use client';
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { CaretLeft, CaretRight } from '@phosphor-icons/react';
 import { tileBoxOf, neighboursOf, handOffNeighbour, arrivingBySwipe, tookASwipe } from '../../library/handoff';
@@ -81,10 +81,32 @@ const FAST_ENOUGH = 0.3;
 // that is one ordinary column of content has nothing nested to break and needs
 // the sheet to scroll it, or it simply overflows the fixed box and the bottom
 // of it cannot be reached.
+// ── A place for the header that does not turn with the page ──────────────
+// The entry's header — the mark, the pencil and the printer, the lights —
+// used to be inside the content, so it slid off the edge with the record and
+// slid back in with the next one, and read as the whole page reloading. It
+// lives in this slot now: a node the layer makes once, outside the moving
+// content, handed down through context. A page that wants its header held
+// still renders it into the slot through a portal (see FullPostPage). The
+// node exists before the page renders, so the portal has somewhere to go on
+// the first render, and it is attached to the layer before paint.
+export const LayerHeaderSlot = createContext(null);
+export function useLayerHeaderSlot() {
+  return useContext(LayerHeaderSlot);
+}
+
 export default function LayerEntry({ children, label = 'Entry', scrolls = false }) {
+  const sheetRef = useRef(null);
+  const [headerSlot] = useState(() => (typeof document === 'undefined' ? null : document.createElement('div')));
+  useLayoutEffect(() => {
+    const sheet = sheetRef.current;
+    if (!sheet || !headerSlot) return undefined;
+    headerSlot.setAttribute('class', 'lay-header');
+    sheet.appendChild(headerSlot);
+    return () => headerSlot.remove();
+  }, [headerSlot]);
   const router = useRouter();
   const pathname = usePathname();
-  const sheetRef = useRef(null);
 
   // ── Growing out of the tile ───────────────────────────────────────────────
   // Before paint, once. The sheet is a full-screen box; a transform puts it
@@ -349,6 +371,7 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false 
       {/* The content. It follows a finger sideways, springs back if let go
           early, or leaves off the edge; a neighbour is a new layer and
           enters from the side it was on. */}
+      <LayerHeaderSlot.Provider value={headerSlot}>
       <div
         className={'lay-content'
           + (arrival.swiped === 1 ? ' lay-content--from-right' : arrival.swiped === -1 ? ' lay-content--from-left' : '')}
@@ -356,6 +379,7 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false 
       >
         {children}
       </div>
+      </LayerHeaderSlot.Provider>
 
       {/* For a pointer, where there is no swipe: a caret at each edge, and
           only where there is somewhere to go. Stop at the ends, never wrap. */}

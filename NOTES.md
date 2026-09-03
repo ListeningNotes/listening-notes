@@ -989,6 +989,15 @@ was the gestures or the layer itself.
       new +1280 → 0 over ~260ms. The address has to change *after* the
       exit — prefetched, the neighbour arrives so fast that changed
       together it replaced the layer before the exit moved a pixel.
+- [x] **The header holds still.** The mark, the pencil and printer, and the
+      lights used to be inside the content and turned with the page. The
+      layer now makes a header slot outside the content (`LayerHeaderSlot`
+      context in LayerEntry.js); `FullPostPage` portals its `SiteNav` into
+      it, and so does `LayerWaiting` — with the keeper's tools inert — so
+      the row is there for the length of the fetch too. The slot wears the
+      entry's `ln-entry` / `ln-entry--scrolled` classes so the band behind
+      the row keeps working. Measured: the row at the same place through the
+      whole exit and entrance.
 - [x] **A close never waits forever on an animation.** A hidden tab freezes
       every animation and their finish never comes; `leave()` now also runs
       a timer a beat longer than the flight, and whichever comes first goes

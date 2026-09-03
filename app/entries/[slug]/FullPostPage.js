@@ -18,6 +18,8 @@ import { parseHorizon, entryTracks, splitNotes, entryTypeLabel, parseRating } fr
 import { kept_receipts } from '../../../library/receipts';
 import { buildReferenceIndex, createReferenceLinker } from '../../../library/cross_references';
 import SiteNav from '../../../components/main_components/SiteNav';
+import { createPortal } from 'react-dom';
+import { useLayerHeaderSlot } from '../../../components/main_components/LayerEntry';
 import EdgeCaret from '../../../components/main_components/EdgeCaret';
 import KeeperTools from '../../../components/main_components/KeeperTools';
 import HorizonBar from '../../../components/main_components/Slug_Page/HorizonBar';
@@ -371,6 +373,14 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   // have to.
   const titleLength = (entry.album || '').length || 1;
   const titleSize = `clamp(1.25rem, ${(300 / titleLength).toFixed(2)}vw, 2.1rem)`;
+  // The layer's header slot, if this is drawn on one. The band behind the
+  // nav row is styled off .ln-entry / .ln-entry--scrolled, which the row is
+  // no longer inside, so the slot is given the same two classes.
+  const headerSlot = useLayerHeaderSlot();
+  useEffect(() => {
+    if (!headerSlot) return;
+    headerSlot.setAttribute('class', 'lay-header ln-entry' + (scrolled ? ' ln-entry--scrolled' : ''));
+  }, [headerSlot, scrolled]);
   // Whether the first screen was already on the layer before this rendered —
   // drawn by LayerWaiting from what the wall handed over. Read once, on the
   // first render, because the handoff is about the moment of arrival.
@@ -717,8 +727,13 @@ export default function FullPostPage({ entry, references = [], authed = false, l
         }
       `}</style>
 
-      {/* ── NAV ── shared site nav (logo + dot nav), identical to every other public page */}
-      <SiteNav tools={keeperTools} />
+      {/* ── NAV ── shared site nav (logo + tools + lights), identical to
+          every other public page. On the layer it is rendered into the
+          layer's own header slot, outside the content that turns with a
+          swipe, so the mark and the tools hold still while the record
+          beneath them changes. The slot wears this page's classes so the
+          band behind the row keeps working — see the effect below. */}
+      {headerSlot ? createPortal(<SiteNav tools={keeperTools} />, headerSlot) : <SiteNav tools={keeperTools} />}
 
       {/* A correction is open, and the page is long. The controls that started
           it are at the top of the entry, which is a screen and a half away by
