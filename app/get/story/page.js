@@ -52,6 +52,7 @@ export default async function StoryPage() {
 
   return (
     <article className="get-wrap">
+      <Link href="/get" className="get-back">← Get one</Link>
       {written && <p className="get-kicker">{written}</p>}
       <h1 className="get-title">Our story</h1>
 
