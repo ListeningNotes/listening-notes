@@ -89,6 +89,19 @@ named by its keeper, and the mark travels as a colophon.
 
 ---
 
+**No tool is named in a commit, 2026-09-03.** Commits carry Miyel's name and
+sign-off and nothing else. GitHub builds its contributors list from author
+fields and `Co-Authored-By` trailers, and a trailer naming an AI model was
+putting one on that list. Nothing asked for it: not the licence, not the
+DCO — a tool cannot hold copyright or sign off — and not GitHub. The
+copyright is Miyel Brown's either way; a name in a trailer has no bearing
+on authorship of the work. The 428 commits already carrying the trailer
+stay as they are: rewriting them is a force push that breaks every clone
+and re-signs every commit, a real cost to retire something harmless. Only
+if Miyel asks for that specifically.
+
+---
+
 ## Structure
 
 **Cross navigation.** Beacon is home. Down → journal (only from the beacon).
