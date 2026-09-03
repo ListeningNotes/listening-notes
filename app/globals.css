@@ -351,8 +351,6 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   flex-shrink: 0;
 }
 
-}
-
 @keyframes beacon-dot-glow {
   0%, 100% { box-shadow: 0 0 5px rgba(124, 255, 155, 0.5); }
   50%      { box-shadow: 0 0 11px rgba(124, 255, 155, 0.9); }
