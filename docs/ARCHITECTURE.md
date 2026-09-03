@@ -124,7 +124,7 @@ The furniture — visual pieces
       WritingAccess.js         The sign-in line at the foot of the pitch pane; it goes to Settings
       ComingSoon.js            What a held copy shows instead of a site — unclaimed, no database, or database unreachable
       AddToHomeScreen.js       The one step the software cannot do: the last screen of setup, and a Settings section
-      AlbumFinder.js           Type, see a list of records, tap one — the send flow's search
+      AlbumFinder.js           Type, see covers, pick one — the send flow's search
       LayerEntry.js            The sheet a page arrives on over the journal — from the side for forms, expanding from the cover for an entry, with swipes to the neighbours
       LayerWaiting.js          What stands in while that entry loads
       EdgeCaret.js             The chevrons that say there is more that way

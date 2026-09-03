@@ -654,10 +654,12 @@ rises, 2026-09-03.** The layer takes a sideways drag only on an entry with a
 record beside it on the wall; on a form, or an entry opened cold, a sideways
 drag is the browser's. The send page arrives from the foot of the screen and
 sinks back on the pull down, so the close is the arrival in reverse; the
-session still fades. And the finder's results are rows, not a shelf: a
-shelf that scrolled sideways inside the square was fine while sideways was a
-free axis, and stopped being fine the day sideways meant the record beside
-this one. Rows want a tap and nothing else.
+session rises the same way. The finder's shelf of covers stays: it was rows
+for an hour, on the argument that sideways had stopped being a free axis —
+but the layer only takes sideways where there is a record beside this one,
+and on the send page there is none, so the browser scrolls the shelf. A row
+of small thumbnails is not how anybody recognises a record; the covers are
+the point.
 
 **The URL stays real either way, and that is not negotiable.** Built with
 intercepting routes rather than a modal component: tap from the journal and the
