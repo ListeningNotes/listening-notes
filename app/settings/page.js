@@ -1,7 +1,7 @@
 // Copyright (C) 2026 Miyel Brown
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // app/settings/page.js
-// The machinery. Owner-only, reached from the gear beside the card's pencil.
+// The machinery. Owner-only, reached from the Settings door on the desk.
 //
 // ── What belongs here and what does not ───────────────────────────────────
 // Setup offers to skip almost everything, and Skip has to mean later rather

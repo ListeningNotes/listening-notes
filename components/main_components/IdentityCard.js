@@ -27,7 +27,7 @@ import {
   DiscordLogo, FacebookLogo, GithubLogo, InstagramLogo,
   LinkSimple, LinkedinLogo, MediumLogo, QrCode, RedditLogo, SoundcloudLogo,
   CassetteTape, Check, DeviceMobileSpeaker, Equalizer, Eye, EyeSlash,
-  GlobeSimple, Guitar, Headphones, MastodonLogo, Pencil, PinterestLogo, GearSix,
+  GlobeSimple, Guitar, Headphones, MastodonLogo, Pencil, PinterestLogo,
   Plus, Radio, SnapchatLogo, SpeakerHifi, SpotifyLogo, TelegramLogo,
   ThreadsLogo, TiktokLogo, TwitchLogo, UploadSimple, User, VinylRecord,
   WhatsappLogo, X, XLogo, YoutubeLogo,
@@ -1172,30 +1172,15 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
                   </button>
                 </>
               ) : (
-                <>
-                  <button
-                    type="button"
-                    className="idc-tool"
-                    onClick={edit.begin}
-                    aria-label="Edit this card"
-                    title="Edit this card"
-                  >
-                    <Pencil size={18} weight="regular" aria-hidden="true" />
-                  </button>
-                  {/* The machinery — keys, password, theme, the address —
-                      lives at /settings and is reached from here, beside the
-                      pencil, because this is the one place the owner already
-                      looks for their own controls. Same treatment as the
-                      pencil and the printer on an entry: two glyphs, no menu. */}
-                  <Link
-                    href="/settings"
-                    className="idc-tool"
-                    aria-label="Settings"
-                    title="Settings"
-                  >
-                    <GearSix size={18} weight="regular" aria-hidden="true" />
-                  </Link>
-                </>
+                <button
+                  type="button"
+                  className="idc-tool"
+                  onClick={edit.begin}
+                  aria-label="Edit this card"
+                  title="Edit this card"
+                >
+                  <Pencil size={18} weight="regular" aria-hidden="true" />
+                </button>
               )}
             </div>
           )}

@@ -829,9 +829,11 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
    states these for itself in its own style block, so this is the second copy
    rather than a shared rule; if a third surface ever wants them, that is the
    moment to lift them somewhere common, not before. */
+/* The same box as the lights and the card's pencil — 36px, a 10px radius,
+   an 18px glyph — so every control on that line is the same size. */
 .kt-tool {
   display: inline-flex; align-items: center; justify-content: center;
-  width: 30px; height: 30px; border-radius: 9px;
+  width: 36px; height: 36px; border-radius: 10px;
   color: var(--ink-faint); background: transparent; border: 0;
   cursor: pointer; text-decoration: none;
   transition: color 0.15s, background 0.15s;
