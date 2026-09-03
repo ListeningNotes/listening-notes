@@ -63,13 +63,18 @@ function reducedMotion() {
     && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 }
 
-// The box the entry's own cover occupies on the sheet, once drawn.
+// The box the entry's own cover occupies on the sheet, once drawn. The entry
+// draws its cover in one place on a phone (the first screen) and another on
+// a wide window (the hero above the writing); whichever is laid out is the
+// one to fly to.
+const COVER_SPOTS = '.ln-screen-one-art img, .ln-screen-one-art, .ln-hero-row .ln-cover img, .ln-hero-row .ln-cover';
 function coverBoxOn(sheet) {
-  const art = sheet?.querySelector('.ln-screen-one-art img, .ln-screen-one-art');
-  if (!art) return null;
-  const box = art.getBoundingClientRect();
-  if (!box.width) return null;
-  return { x: box.left, y: box.top, w: box.width, h: box.height };
+  if (!sheet) return null;
+  for (const art of sheet.querySelectorAll(COVER_SPOTS)) {
+    const box = art.getBoundingClientRect();
+    if (box.width && box.height) return { x: box.left, y: box.top, w: box.width, h: box.height };
+  }
+  return null;
 }
 
 // Fly a copy of the cover from one box to another, over the sheet, and
@@ -138,7 +143,7 @@ export default function LayerEntry({
       const sheet = sheetRef.current;
       const here = coverBoxOn(sheet);
       const home = coverBoxOf(slug);
-      const src = sheet?.querySelector('.ln-screen-one-art img')?.src;
+      const src = sheet?.querySelector('.ln-screen-one-art img')?.src || home?.src;
       // Only fly home to a tile that is actually on screen. Flying to a box
       // three screens below the fold reads as the cover vanishing downwards.
       const homeVisible = home && home.y > -home.h && home.y < window.innerHeight;
@@ -197,23 +202,38 @@ export default function LayerEntry({
   // Once, on mount. The entry's first screen is drawn immediately from what
   // the wall handed over, so its cover has a box to fly into before the
   // writing arrives. With reduced motion the sheet simply fades.
-  const flownIn = useRef(false);
+  // Only for the record the layer opened on. A neighbour arriving later
+  // enters from the side instead. A ref rather than a "done" flag, because
+  // development runs every effect twice and a flag set by the first run
+  // would stop the second — which is the one that survives — from flying.
+  const openedOn = useRef(slug);
   useLayoutEffect(() => {
-    if (!fromSource || flownIn.current) return;
-    flownIn.current = true;
+    if (!fromSource || slug !== openedOn.current) return;
     const sheet = sheetRef.current;
+    // The cover and where it is come from the tile, not from the sheet: at
+    // this moment the sheet holds nothing yet — the first screen is still
+    // being handed in behind the Suspense boundary — so the picture has to
+    // travel with the box it left. Then a few frames of waiting for the
+    // sheet to draw the first screen, which gives the flight somewhere to
+    // land. Past that, the fade alone; a flight to nowhere is worse than
+    // no flight.
     const home = coverBoxOf(slug);
-    const src = sheet?.querySelector('.ln-screen-one-art img')?.src;
     let cancelled = false;
-    // One frame, so the sheet has laid out and the cover's box is real. The
-    // no-flight cases land in the same frame rather than synchronously, so
-    // the fade still runs as a transition instead of the sheet popping in.
-    requestAnimationFrame(() => {
+    let tries = 0;
+    const settle = () => {
       if (cancelled) return;
-      const here = reducedMotion() || !home || !src ? null : coverBoxOn(sheet);
-      if (!here) { setArrived(true); return; }
-      fly(src, home, here, FLIGHT_MS).then(() => { if (!cancelled) setArrived(true); });
-    });
+      if (reducedMotion() || !home?.src) { setArrived(true); return; }
+      const here = coverBoxOn(sheet);
+      if (here) {
+        fly(home.src, home, here, FLIGHT_MS).then(() => { if (!cancelled) setArrived(true); });
+        return;
+      }
+      // Up to a second and a half: on a wide window the landing spot is on
+      // the entry itself, which is still being read.
+      if (++tries < 90) requestAnimationFrame(settle);
+      else setArrived(true);
+    };
+    requestAnimationFrame(settle);
     return () => { cancelled = true; };
   }, [fromSource, slug]);
 
