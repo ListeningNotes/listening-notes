@@ -138,6 +138,9 @@ export function handOffNeighbour(entry) {
 // itself. The swipe says so here on its way out, and the next layer asks
 // once as it mounts: a layer that arrived by swipe draws the record and
 // does nothing else, no growth from a tile and no fade.
-let bySwipe = false;
-export function arrivingBySwipe() { bySwipe = true; }
-export function tookASwipe() { const was = bySwipe; bySwipe = false; return was; }
+// The direction travels too: 1 for a swipe to the next record (the new one
+// comes in from the right), -1 for the previous (from the left), 0 for no
+// swipe at all.
+let bySwipe = 0;
+export function arrivingBySwipe(dir) { bySwipe = dir; }
+export function tookASwipe() { const was = bySwipe; bySwipe = 0; return was; }
