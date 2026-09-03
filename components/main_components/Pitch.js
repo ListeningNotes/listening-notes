@@ -63,7 +63,7 @@ export default function Pitch() {
   return (
     <div className="pt-pane">
       <div className="pt-body">
-        <h1 className="pt-title">What this is</h1>
+        <h1 className="pt-title">What is this?</h1>
 
         {/* Three sentences, and the count is the design. Everything true about
             this software that a stranger needs in the ten seconds they are
@@ -73,27 +73,27 @@ export default function Pitch() {
         <div className="pt-prose">
           <p>A listening journal you keep yourself.</p>
           <p>The software is free and you run your own copy of it, at your own address.</p>
-          <p>Nobody hosts it, nobody counts your readers, and what you write stays in your own database.</p>
+          <p>You host your own, nobody counts your readers, and what you write stays in your own database.</p>
         </div>
 
         <a className="ln-pill pt-cta" href={HOME} target="_blank" rel="noopener noreferrer">
-          Get Listening Notes
+          Get one
         </a>
 
         {/* No version number: a version is a thing to keep current, and a line
             that goes stale is worse than a line that is simply true. */}
+        {/* Stacked and set well below the button, 2026-09-03: the two lines
+            used to sit side by side under it and the pane read as a button
+            with a caption. Sign in first because it is the one a person
+            might be looking for; the source line last, smallest, where a
+            colophon goes. */}
         <div className="pt-foot">
+          <WritingAccess label="Sign in" align="center" />
+          {/* No version number: a version is a thing to keep current, and a line
+              that goes stale is worse than a line that is simply true. */}
           <a className="pt-source" href={SOURCE_URL} target="_blank" rel="noopener noreferrer">
             Source
           </a>
-          {/* The visible way in, and the only one. Three taps on the mark is
-              the everyday door; this is here for the day that gesture does not
-              work on somebody's phone, and for the fact that a door only one
-              person needs should still be findable by that person.
-
-              This pane is what a logged-out visitor is shown, which is exactly
-              and only when a sign-in line is any use. */}
-          <WritingAccess label="Sign in" align="center" />
         </div>
       </div>
     </div>
