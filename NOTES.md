@@ -554,6 +554,10 @@ Project → Settings → Environment Variables.
 
 ## Gotchas
 
+**GitHub's Contributors sidebar counts co-author trailers; its contributors
+API does not.** Checking the API and concluding a co-author is not listed is
+wrong. Look at the repository page itself.
+
 - **The dev server on :3000 does not pick up globals.css edits.** Already
   written down; bitten again on 2026-09-02 twice. Check
   `document.styleSheets` for the new selector before concluding a rule is
@@ -1188,6 +1192,16 @@ copy up*, for what was decided; this is what was built.
       this?", third sentence "You host your own…", button "Get one" and
       centred, Sign in and Source stacked below it. A fourth sentence was
       tried and removed the same day (see DECISIONS).
+
+- [x] **Claude removed from the contributors list, 2026-09-03** — the
+      repository page's Contributors sidebar counts `Co-Authored-By`
+      trailers (the contributors API does not, which is what made the first
+      check wrong). All 16 branches on GitHub were rewritten with
+      `git filter-branch --msg-filter` to drop only that line, trees and
+      sign-offs verified identical, and force-pushed. Nobody else had a
+      clone yet, so nothing broke. A mirror and a bundle from before the
+      rewrite are in `~/listening-notes-backups/repo-before-rewrite-*`.
+      Going forward the trailer is off in Claude Code's global settings.
 
 - [x] **The essay replaced, 2026-09-03** — the final version, five sections
       under `## ` headings, written straight into `settings.why_essay` with
