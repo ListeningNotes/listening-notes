@@ -1527,6 +1527,13 @@ renamed file is a file that runs again. A change is a new numbered file.
 
 ## What a read costs
 
+**Album art is a plain `<img>`, not Next's image component, 2026-09-03.**
+The optimiser is metered on Vercel and would run on every copy, for every
+cover, on every read — and the covers are already sized upstream
+(`sizedAlbumArt`). So the `no-img-element` lint rule is off in
+`eslint.config.mjs`, with this reason beside it, rather than 35 warnings
+nobody was ever going to act on.
+
 Added 2026-08-30, after the Neon transfer allowance hit 95% and the cause
 turned out to be two of these rules not existing.
 
