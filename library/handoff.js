@@ -131,3 +131,13 @@ export function neighboursOf(slug) {
 export function handOffNeighbour(entry) {
   passing = entry ? firstScreen(entry) : null;
 }
+
+// ── How the layer arrived ─────────────────────────────────────────────────
+// Moving to a neighbour is a new address, and the framework builds the layer
+// afresh for it — so a layer cannot tell a swipe from a tap by looking at
+// itself. The swipe says so here on its way out, and the next layer asks
+// once as it mounts: a layer that arrived by swipe draws the record and
+// does nothing else, no growth from a tile and no fade.
+let bySwipe = false;
+export function arrivingBySwipe() { bySwipe = true; }
+export function tookASwipe() { const was = bySwipe; bySwipe = false; return was; }

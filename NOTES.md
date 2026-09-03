@@ -973,6 +973,13 @@ was the gestures or the layer itself.
       routes prefetched. The edge pull is retired — sideways cannot mean
       both next and leave. Verified in the pane at both widths: key, swipe,
       order, neighbours, and closing afterwards.
+- [x] **A neighbour just appears.** A new address is a new layer, so the
+      first version grew from the tile again on every swipe and read as the
+      journal reopening. The swipe now says so on its way out
+      (`arrivingBySwipe` / `tookASwipe` in handoff.js) and the next layer
+      does nothing on arrival — no growth, no fade, no slide. Verified: the
+      swiped-to layer carries `lay--swiped`, has no animation running, and is
+      full size from its first frame.
 - [x] **A close never waits forever on an animation.** A hidden tab freezes
       every animation and their finish never comes; `leave()` now also runs
       a timer a beat longer than the flight, and whichever comes first goes
