@@ -30,7 +30,6 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { parseRating } from '../../library/entry_formatter';
 import AlbumTile from './AlbumTile';
-import { handOffOrder } from '../../library/handoff';
 import GridDensity, { DEFAULT_DENSITY, readStoredDensity, storeDensity } from './GridDensity';
 
 // Beyonce should find Beyoncé, and Bjork should find Bjork. Accents are a
@@ -311,11 +310,6 @@ export default function Journal({ entries: given, loading: givenLoading, scrolle
         return dir * (new Date(a.created_at) - new Date(b.created_at));
       });
   }, [entries, search, sortBy, sortDir, genre, favoritesOnly, masterpiecesOnly, formativeOnly, yearActive, yearRange]);
-
-  // What is on the wall right now, in this order, left where the layer can
-  // read it — so a swipe on an entry goes to the record beside it here, not
-  // the next one in the database. See library/handoff.js.
-  useEffect(() => { handOffOrder(filtered); }, [filtered]);
 
   const pages = Math.max(1, Math.ceil(filtered.length / PER_PAGE));
   // Clamped rather than reset in an effect: if the filters shrink the results

@@ -1,9 +1,7 @@
 // Copyright (C) 2026 Miyel Brown
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // app/@layer/(.)entries/[slug]/page.js
-// An entry, opened over the journal instead of instead of it. It expands
-// from the cover that was tapped, and a swipe sideways goes to the record
-// beside it on the wall — see LayerEntry for both.
+// An entry, opened over the journal instead of instead of it.
 //
 // ── What the folder name means ────────────────────────────────────────────
 // `@layer` is a parallel slot: it renders alongside whatever `children` is
@@ -34,7 +32,7 @@
 // whether the tap registered. The layer is the answer to the tap, so the layer
 // has to be the thing that does not wait.
 //
-// So LayerEntry is rendered synchronously and starts arriving at once, and
+// So LayerEntry is rendered synchronously and starts sliding in at once, and
 // the entry itself streams into it behind a Suspense boundary. `params` is a
 // promise resolved inline with .then() rather than awaited, which is what lets
 // the suspending part sit inside the layer instead of above it.
@@ -66,7 +64,7 @@ async function Entry({ slug }) {
 
 export default function EntryOverTheJournal({ params }) {
   return (
-    <LayerEntry arrives="source" browse>
+    <LayerEntry>
       {/* The fallback is handed the slug so it can check that what the
           journal left behind is about this record and not the last one
           tapped — see LayerWaiting. */}
