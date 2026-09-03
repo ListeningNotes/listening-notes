@@ -93,30 +93,34 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false 
   // The content scales with it, which is what makes it read as the same
   // thing getting bigger rather than a page appearing. The stylesheet's own
   // fade is switched off for the run so the two do not argue.
+  //
+  // Which arrival this is gets decided during the first render, as state
+  // that never changes, and shows up as a class. Not an inline style: React
+  // owns the element's style attribute and wiped a hand-set `animation:
+  // none` on the next render, so the stylesheet's fade ran on top of the
+  // growth for the length of it. A class React put there stays.
+  const slug = pathname.startsWith('/entries/') ? decodeURIComponent(pathname.slice('/entries/'.length)) : '';
+  const [growFrom] = useState(() => {
+    if (typeof document === 'undefined' || !slug) return null;
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return null;
+    return tileBoxOf(slug);
+  });
+
   useLayoutEffect(() => {
     const sheet = sheetRef.current;
-    if (!sheet) return;
-    const slug = pathname.startsWith('/entries/') ? decodeURIComponent(pathname.slice('/entries/'.length)) : '';
-    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    const box = slug ? tileBoxOf(slug) : null;
-    if (reduced || !box) return;
+    const box = growFrom;
+    if (!sheet || !box) return;
     const W = sheet.offsetWidth || window.innerWidth;
     const H = sheet.offsetHeight || window.innerHeight;
-    sheet.style.animation = 'none';
-    // The origin is in the keyframes as well as on the element, so no frame
-    // can scale about the centre while the inline value is being applied.
-    sheet.style.transformOrigin = '0 0';
     const run = sheet.animate([
-      { transformOrigin: '0 0', transform: `translate(${box.x}px, ${box.y}px) scale(${box.w / W}, ${box.h / H})`, opacity: 0.55, borderRadius: '14px' },
-      { transformOrigin: '0 0', transform: 'none', opacity: 1, borderRadius: '0px' },
+      // Opaque from the first frame. It began at half opacity, and for the
+      // length of the growth the wall showed through a sheet that was also
+      // fading — two things happening where one is the whole idea.
+      { transformOrigin: '0 0', transform: `translate(${box.x}px, ${box.y}px) scale(${box.w / W}, ${box.h / H})`, borderRadius: '14px' },
+      { transformOrigin: '0 0', transform: 'none', borderRadius: '0px' },
     ], { duration: GROW_MS, easing: GROW_EASE });
-    const done = () => { sheet.style.animation = ''; };
-    run.onfinish = done;
-    run.oncancel = done;
     return () => run.cancel();
-    // Once, for the record the layer opened on.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [growFrom]);
   const edgeRef = useRef(null);
   // How far the pull has moved it, in pixels. Held in state rather than
   // written straight to the element, because the closing animation needs to
@@ -126,13 +130,44 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false 
 
   const goBack = useCallback(() => router.back(), [router]);
 
+  // ── Shrinking back into the tile ──────────────────────────────────────────
+  // The growth run backwards: from wherever the sheet is now — at rest, or
+  // part-way through a pull — down to the tile's square, then the route goes
+  // back and the sheet is gone with the tile exactly where it was drawn. The
+  // tile has to be on screen for this to mean anything; otherwise the sheet
+  // fades, briefly. The browser's own back button cannot be intercepted and
+  // simply removes the sheet, which is the platform's habit and fine.
+  const leaving = useRef(false);
+  const leave = useCallback((fromX = 0) => {
+    if (leaving.current) return;
+    leaving.current = true;
+    const sheet = sheetRef.current;
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const box = slug && !reduced ? tileBoxOf(slug) : null;
+    const onScreen = box && box.y > -box.h && box.y < window.innerHeight;
+    if (!sheet) { goBack(); return; }
+    let run;
+    if (onScreen) {
+      const W = sheet.offsetWidth || window.innerWidth;
+      const H = sheet.offsetHeight || window.innerHeight;
+      run = sheet.animate([
+        { transformOrigin: '0 0', transform: `translateX(${fromX}px)`, borderRadius: '0px' },
+        { transformOrigin: '0 0', transform: `translate(${box.x}px, ${box.y}px) scale(${box.w / W}, ${box.h / H})`, borderRadius: '14px' },
+      ], { duration: GROW_MS * 0.8, easing: GROW_EASE, fill: 'forwards' });
+    } else {
+      run = sheet.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 180, easing: 'ease-out', fill: 'forwards' });
+    }
+    run.onfinish = goBack;
+    run.oncancel = goBack;
+  }, [goBack, slug]);
+
   // Escape closes it, the same as the swipe. A full-screen surface with no
   // keyboard way out is a trap for anyone not using a thumb.
   useEffect(() => {
-    const onKey = event => { if (event.key === 'Escape') goBack(); };
+    const onKey = event => { if (event.key === 'Escape') leave(); };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [goBack]);
+  }, [leave]);
 
   // The journal is still mounted underneath and would happily scroll behind
   // the layer. Locking the document rather than hiding the journal keeps its
@@ -180,14 +215,14 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false 
       const travelled = Math.max(0, done.lastX - done.x);
       const speed = travelled / Math.max(1, done.lastAt - done.at);
 
-      setSettling(true);
       if (travelled > width * FAR_ENOUGH || speed > FAST_ENOUGH) {
-        // Let it finish leaving before the route changes, or the layer
-        // vanishes mid-gesture and the journal appears to jump.
-        setDrag(width);
-        window.setTimeout(goBack, 200);
+        // Shrink home from where the finger let go, then change the route —
+        // never before, or the layer vanishes mid-gesture and the journal
+        // appears to jump.
+        leave(travelled);
         return;
       }
+      setSettling(true);
       setDrag(0);
     };
 
@@ -204,11 +239,11 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false 
       strip.removeEventListener('touchend', end);
       strip.removeEventListener('touchcancel', end);
     };
-  }, [goBack]);
+  }, [leave]);
 
   return (
     <div
-      className={'lay' + (scrolls ? ' lay--scrolls' : '')
+      className={'lay' + (growFrom ? ' lay--grows' : ' lay--fades') + (scrolls ? ' lay--scrolls' : '')
         + (settling ? ' lay--settling' : '') + (drag > 0 ? ' lay--dragging' : '')}
       ref={sheetRef}
       style={drag > 0 ? { transform: `translateX(${drag}px)` } : undefined}
