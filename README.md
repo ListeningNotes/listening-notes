@@ -38,9 +38,11 @@ Nothing it says ever enters the entry; it is read, and then you write.
 [![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2FListeningNotes%2Flistening-notes&products=%5B%7B%22type%22%3A%22integration%22%2C%22integrationSlug%22%3A%22neon%22%2C%22productSlug%22%3A%22neon%22%2C%22protocol%22%3A%22storage%22%7D%5D)
 
 The button asks Vercel to clone the code into your GitHub, make a project, and
-attach a Neon database to it. It should ask you for nothing else: the database
-connection string arrives from Neon, the signing key generates itself, and your
-password is chosen on the site.
+attach a Neon database to it. Under "Add Products" press **Add** on the Neon
+row, switch the Auth toggle off, keep the Free plan, and press Create; then
+Deploy. It asks you for nothing else: the database connection string arrives
+from Neon, the signing key generates itself, and your password is chosen on
+the site.
 
 Two things on Vercel's screens are worth knowing in advance. **Git Scope** is
 which GitHub account the copy goes into — pick yours. **Private Repository

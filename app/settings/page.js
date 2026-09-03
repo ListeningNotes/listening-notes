@@ -301,7 +301,7 @@ export default function SettingsPage() {
             or any row here to arrive with it already up.
           </p>
           <div className="st-doors">
-            {[['Your name', 'the name on the card'], ['Photo', 'and how it is framed'], ['Prompts', 'three openings, answered'], ['Links', 'where else to find you'], ['Rig', 'what you listen on'], ['Pinned album', 'the record the card holds up']].map(([what, how]) => (
+            {[['Your name', 'the name on the card'], ['Photo', 'and how it is framed'], ['Prompts', 'three openings, answered'], ['Rig', 'what you listen on'], ['Pinned album', 'the record the card holds up']].map(([what, how]) => (
               <Link key={what} href="/?edit=card" className="st-door">
                 <span>{what}</span>
                 <span>{how}</span>

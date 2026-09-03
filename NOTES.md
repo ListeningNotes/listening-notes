@@ -57,7 +57,8 @@ deploy a copy — and none of it is anything they need.
 
 ## Pending
 
-**FIRST — rerun the fresh-account test on branch `setup-and-settings`**
+**Fresh-account test passed 2026-09-02** — see DECISIONS. What is left of
+this list is what to keep an eye on rather than what to prove:
 
 Everything below it was built blind against one claimed database. Watch for:
 - the deploy button: does `products=` attach a Neon database and set

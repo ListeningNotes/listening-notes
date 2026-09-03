@@ -16,7 +16,7 @@
 // the address is the host the request came in on, and the founding date is
 // today. What is left is the name, which is the only thing the journal
 // needs, and then a series of things it would be nice to have — the photo,
-// the prompts, Last.fm, the links, the rig — each on its own screen with a
+// the prompts, Last.fm, the rig — each on its own screen with a
 // Skip under it. Skip means later, not never: every one of them has a home
 // afterwards, on the card or at /settings, which is what makes offering to
 // skip honest.
@@ -53,14 +53,16 @@ import { CaretDown, Check } from '@phosphor-icons/react';
 import { fonts } from '../../library/sitewide_visuals';
 import { BIO_PROMPTS, BIO_LIMIT } from '../../library/bioprompt';
 import PasswordGate from '../../components/session_components/PasswordGate';
-import { shrink, LINK_LIMIT } from '../../components/main_components/IdentificationCardEditor';
+import { shrink } from '../../components/main_components/IdentificationCardEditor';
 import AddToHomeScreen from '../../components/main_components/AddToHomeScreen';
 import { useJournalHost } from '../../hooks/useJournalHost';
 
 // The password claims the journal; the home screen comes after, because it is
 // the one step the software cannot perform and the moment right after the
 // journal starts working is the moment somebody will actually do it.
-const STEPS = ['name', 'photo', 'prompts', 'lastfm', 'links', 'rig', 'password', 'homescreen'];
+// Links used to sit between Last.fm and the rig and are retired from the
+// whole site for now — see About.js.
+const STEPS = ['name', 'photo', 'prompts', 'lastfm', 'rig', 'password', 'homescreen'];
 const PASSWORD_FLOOR = 8;
 
 async function patchSettings(fields) {
@@ -103,7 +105,6 @@ export default function WelcomeScreen() {
   const [picking, setPicking] = useState(null);
   const [lastfmUser, setLastfmUser] = useState('');
   const [lastfmKey, setLastfmKey] = useState('');
-  const [links, setLinks] = useState(['']);
   const [gear, setGear] = useState([{ name: '', role: '' }]);
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
@@ -437,7 +438,6 @@ export default function WelcomeScreen() {
                 photo: 'A photo',
                 prompts: 'Three openings',
                 lastfm: 'What you are playing',
-                links: 'Where else to find you',
                 rig: 'What you listen on',
                 password: 'A password',
                 homescreen: 'One more thing',
@@ -578,26 +578,6 @@ export default function WelcomeScreen() {
                   </div>
                 </div>
                 <button type="submit" className="su-go" disabled={busy || !lastfmUser.trim()}>Next</button>
-              </form>
-            )}
-
-            {current === 'links' && (
-              <form className="su-fields" onSubmit={e => { e.preventDefault(); advance(async () => {
-                const clean = links.map(u => u.trim()).filter(Boolean).map(url => ({ url, icon: 'auto' }));
-                if (clean.length) await patchSettings({ social_links: clean });
-              }); }}>
-                <p className="su-why">Up to three addresses — Instagram, Bandcamp, a site. They print at the foot of the About pane.</p>
-                {links.map((url, i) => (
-                  <input
-                    key={i} className="su-field" value={url} inputMode="url" autoCapitalize="none" autoComplete="off"
-                    placeholder="instagram.com/you"
-                    onChange={e => setLinks(rows => rows.map((r, j) => (j === i ? e.target.value : r)))}
-                  />
-                ))}
-                {links.length < LINK_LIMIT && (
-                  <button type="button" className="su-add" onClick={() => setLinks(rows => [...rows, ''])}>+ Another</button>
-                )}
-                <button type="submit" className="su-go" disabled={busy || !links.some(u => u.trim())}>Next</button>
               </form>
             )}
 
