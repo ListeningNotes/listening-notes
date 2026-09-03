@@ -14,9 +14,10 @@
 // The card's own fields — the name, the photo, the prompts, the links, the
 // rig, the pinned record — are not edited here. Everything editable is
 // edited where it prints, which is a decision this repo made once and keeps
-// making: two editors for one field means neither is the real one. They are
-// listed at the foot of this page so that nothing setup skipped is
-// unfindable, and each row is a door to the card with its pencil already up.
+// making: two editors for one field means neither is the real one. A list of
+// doors to the card sat at the foot of this page for a day and came off,
+// 2026-09-02 — the pencil on the card is the way, and a list of rows saying
+// "not here" was the page apologising for it.
 //
 // ── Secrets go in and never come back out ─────────────────────────────────
 // The keys and the password are written through /api/secrets and the page is
@@ -31,7 +32,6 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import Link from 'next/link';
 import { fonts } from '../../library/sitewide_visuals';
 import SiteNav from '../../components/main_components/SiteNav';
 import PasswordGate from '../../components/session_components/PasswordGate';
@@ -180,14 +180,6 @@ export default function SettingsPage() {
         .st-clear:hover { color: var(--ink-soft); }
         .st-section--out { align-items: flex-start; }
         .st-section--out .st-clear { margin-left: 0; }
-        .st-doors { display: flex; flex-direction: column; gap: 0; }
-        .st-door {
-          display: flex; justify-content: space-between; align-items: center; padding: 12px 0;
-          border-bottom: 1px solid var(--border); text-decoration: none; color: var(--ink);
-          font-size: 14px;
-        }
-        .st-door:last-child { border-bottom: 0; }
-        .st-door span:last-child { font-family: var(--font-label); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint); }
       `}</style>
 
       <SiteNav />
@@ -290,21 +282,6 @@ export default function SettingsPage() {
           <AddToHomeScreen />
         </div>
 
-        <div className="st-section">
-          <h2 className="st-h">On the card</h2>
-          <p className="st-note">
-            These are edited where they print — press the pencil on the card,
-            or any row here to arrive with it already up.
-          </p>
-          <div className="st-doors">
-            {[['Your name', 'the name on the card'], ['Photo', 'and how it is framed'], ['Prompts', 'three openings, answered'], ['Rig', 'what you listen on'], ['Pinned album', 'the record the card holds up']].map(([what, how]) => (
-              <Link key={what} href="/?edit=card" className="st-door">
-                <span>{what}</span>
-                <span>{how}</span>
-              </Link>
-            ))}
-          </div>
-        </div>
         {/* The only way out. The route has existed since the wristband did
             and nothing ever called it, so signing out meant clearing cookies.
             Here because Settings is the owner's page: you came in through it

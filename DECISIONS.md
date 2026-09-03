@@ -1277,11 +1277,11 @@ key were on it for an afternoon and came off the same day, 2026-09-01, on
 Miyel's call — parked, not rejected. Both columns exist; nothing writes them.
 The card's own fields — name, photo, prompts, links, rig, pinned album — are
 *not* edited there: everything editable is edited where it prints, and two
-editors for one field means neither is canonical. Settings lists them at its
-foot as doors that land on the card with the pencil already up (`/?edit=card`),
-so nothing setup skipped is unfindable. The brief said Settings should hold
-photo, prompts, links and rig outright; this is the narrower reading, and it
-is Miyel's to widen.
+editors for one field means neither is canonical. For a day Settings listed
+them at its foot as doors to the card with the pencil up; those came off on
+2026-09-02 — the pencil is the way, and a list of rows saying "not here" was
+the page apologising for it. `/?edit=card` still opens the card editing, for
+anything that wants to point there.
 
 **The keys live in the database now, in a table of their own.** Reversed from
 "secrets stay in environment variables": a setup screen cannot set an

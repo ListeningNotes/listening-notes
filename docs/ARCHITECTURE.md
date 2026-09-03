@@ -49,10 +49,10 @@ publicly):
 - `/dashboard/inbox` — sent albums and comments awaiting moderation
 - `/dashboard/share` — the album exporter
 - `/dashboard/submissions` — a redirect into the inbox, kept for old links
-- `/settings` — the machinery: address, Last.fm, the keys, the password.
-  Reached from the gear beside the
-  card's pencil. The card's own fields are edited on the card, and Settings
-  lists them as doors that arrive there with the pencil up (`/?edit=card`)
+- `/settings` — the machinery: address, Last.fm, the keys, the password,
+  the home-screen step, and Sign out. Reached from the gear beside the
+  card's pencil and the Settings door on the desk. The card's own fields are
+  edited on the card, behind its pencil
 
 Editing an entry happens on the entry itself, not in a list. There used to be a
 `/dashboard/entries` table and it was retired: two interfaces for one job means
