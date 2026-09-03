@@ -179,9 +179,22 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
   // back button cannot be intercepted and simply removes the sheet, which
   // is the platform's habit and fine.
   const leaving = useRef(false);
+  // A page turn waiting to change the address — see go() below.
+  const pendingTurn = useRef(null);
+  // Whether this layer is still mounted, for the timer that checks the
+  // close actually took.
+  const alive = useRef(true);
+  useEffect(() => () => { alive.current = false; }, []);
   const leave = useCallback((fromX = 0) => {
     if (leaving.current) return;
     leaving.current = true;
+    window.clearTimeout(pendingTurn.current);
+    pendingTurn.current = null;
+    // If going back did not remove this layer — nowhere to go back to, which
+    // a race with a page turn once produced — it must not stay over the site
+    // faded to nothing and swallowing every touch. Half a second after the
+    // close should have finished, a layer still alive goes home outright.
+    window.setTimeout(() => { if (alive.current) router.replace('/'); }, GROW_MS + 500);
     const sheet = sheetRef.current;
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     const box = slug && !reduced ? tileBoxOf(slug) : null;
@@ -233,8 +246,10 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
       borderRadius: getComputedStyle(cover).borderRadius || '12px', transformOrigin: '0 0', pointerEvents: 'none',
     });
     document.body.appendChild(flyer);
+    // `from` was measured with the pull's transform in it, so the copy
+    // starts exactly where the cover is; no offset to add.
     const run = flyer.animate([
-      { transform: `translateX(${fromX}px) scale(1, 1)` },
+      { transform: 'translate(0, 0) scale(1, 1)' },
       { transform: `translate(${box.x - from.left}px, ${box.y - from.top}px) scale(${box.w / from.width}, ${box.h / from.height})` },
     ], { duration: GROW_MS * 0.75, easing: GROW_EASE, fill: 'forwards' });
     const done = () => { flyer.remove(); back(); };
@@ -242,7 +257,7 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
     run.oncancel = done;
     // The flying copy must not outlive the sheet, animation or not.
     window.setTimeout(() => flyer.remove(), GROW_MS + 100);
-  }, [goBack, slug, rises]);
+  }, [goBack, slug, rises, router]);
 
   // ── To a neighbour ────────────────────────────────────────────────────────
   // A page turn. The record on screen keeps going the way it was pushed,
@@ -252,15 +267,25 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
   // prefetched and arrives almost at once, and changed together it replaced
   // this layer before the exit had moved a pixel. The first screen is
   // handed over so the neighbour draws at once when it does come.
+  // The turn's address change is on a timer, and a close can land inside
+  // that window. Left alone, the close goes back to the wall and then the
+  // timer fires and replaces the wall's history entry with the next record —
+  // after which back has nowhere to go, the faded sheet never leaves, and it
+  // sits invisibly over the whole site. So the timer is kept where a close
+  // can cancel it.
   const go = useCallback(dir => {
     const target = dir < 0 ? neighbours.prev : neighbours.next;
-    if (!target || leaving.current) return;
+    if (!target || leaving.current || pendingTurn.current) return;
     handOffNeighbour(target);
     arrivingBySwipe(dir);
     setSettling(true);
     setShift(-dir * (sheetRef.current?.offsetWidth || window.innerWidth));
-    window.setTimeout(() => router.replace(`/entries/${target.slug}`), TURN_MS);
+    pendingTurn.current = window.setTimeout(() => {
+      pendingTurn.current = null;
+      router.replace(`/entries/${target.slug}`);
+    }, TURN_MS);
   }, [neighbours.prev, neighbours.next, router]);
+  useEffect(() => () => window.clearTimeout(pendingTurn.current), []);
 
   useEffect(() => {
     if (neighbours.prev) router.prefetch(`/entries/${neighbours.prev.slug}`);
