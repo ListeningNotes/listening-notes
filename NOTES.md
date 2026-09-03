@@ -78,18 +78,28 @@ only, writing nothing (added 2026-09-02 to look at the screens without a
 fresh database). Next moves on without saving; the photo previews locally.
 The header says so. On a real first run the flag does nothing.
 
-**Screenshots for `/get`** — seven files, drawn only when present, so the
-page reads fine until they exist. Take them during the fresh-account rerun
-and drop them in `public/install/`: `01-button.png` (Vercel's clone screen),
-`02-github.png` (GitHub's permission screen with Git Scope / repo name),
-`03-neon.png` (the Neon plan picker), `04-build.png` (the build log with the
-claim-code box), `05-holding.png` (the "isn't ready yet" page),
-`06-setup.png` (the name screen), `07-homescreen.png` (the last screen).
+**Screenshots for `/get/install`** — nine per device, drawn only when
+present, so the page reads fine until they exist. Two sets, because the page
+has a phone/laptop toggle: `public/install/phone/` and
+`public/install/laptop/`, same nine names in each: `01-button.png` (Vercel's
+clone screen), `02-github.png` (Vercel's sign-in with Continue with GitHub),
+`03-connect.png` (GitHub's permission screen), `04-name.png` (Git Scope and
+Private Repository Name), `05-neon.png` (the Neon panel with the Auth toggle),
+`06-build.png` (the build log or the Congratulations screen),
+`07-holding.png` (the "isn't ready yet" page with Set it up), `08-setup.png`
+(the name screen), `09-homescreen.png` (the last setup screen on a phone; the
+browser's add-to-Dock on a laptop).
 
 **Names to confirm** — chosen without asking, because the session was
 autonomous. Rename freely: `secrets` (table), `library/secrets.js`,
 `library/claim_notice.js`, `scripts/prepare_database.mjs`, `/api/secrets`,
 `beacon_available`, `/?edit=card`, `.st-*` and the setup page's `.su-*`.
+
+**Names to confirm, 2026-09-03** — the `/get` rebuild, also autonomous:
+`components/main_components/InstallSteps.js` (the steps and the toggle),
+`library/install_guide.js` (the deploy and source URLs plus the step text,
+read by both server and client), `app/get/layout.js`, the `?on=phone|laptop`
+query key, the `.get-*` classes, and branch `get-rebuild`.
 
 **Settings may want the photo, prompts, links and rig outright.** The brief
 said so; what shipped lists them as doors to the card, on the
@@ -309,7 +319,6 @@ much else it fixes.
 Per-track stamps need no column: they ride inside the `tracks` jsonb, which
 already exists.
 - [x] **What a delete actually does** — established and handled; the cleanup is in `delete_entry`. Left here for the record: `delete_entry` is a hard `DELETE FROM entries WHERE slug = …` — no soft delete, no undo beyond the nightly backup and Neon's six hours. And "permanent" understates it: `comments.entry_slug` is plain text with no foreign key, so an entry's comments stay in the table forever, orphaned and unreachable; `entries.source_entry_id` has an index but no key either, so deleting an album somebody else's entry was received from silently breaks that chain. Only `settings.pinned_entry_id` cleans itself up, because it is the one with `ON DELETE SET NULL`. Either the warning says all of this or the delete tidies up after itself first.
-- [ ] **`/get` is half a page.** It renders the essay and nothing else. The other half of what that address owes a stranger — what the software is, that it is free, and the way to install a copy — is unwritten, so somebody arriving from another copy's pitch pane reads the why and finds no door. Its tab still reads `Why · …` too.
 - [x] **Source link** — settled 2026-08-31, and the answer is that it does not
       want a settings column. `NEXT_PUBLIC_SOURCE_URL` and nothing else; see
       DECISIONS. The fallback was pointing at a repository that does not exist
@@ -1150,6 +1159,33 @@ copy up*, for what was decided; this is what was built.
       (`explainDatabaseError`) on a third holding page, in the build log and
       in the runtime log; every holding page and `/get` link to the issues;
       `/get` has the seven steps under the essay with screenshot slots.
+
+- [x] **`/get` rebuilt as three routes, 2026-09-03**, on branch `get-rebuild`,
+      unmerged and unreviewed. `/get` is one screen — hero line, the button,
+      "Free, no subscription, about ten minutes", and a three-row table of
+      contents. `/get/install` is the seven steps with a phone/laptop toggle
+      whose choice goes into the address (`?on=laptop`) so the link can be
+      texted; screenshot slots read from `public/install/{phone,laptop}/`.
+      `/get/story` is the essay. "It didn't work" goes to the repository's
+      issues from the door and from the foot of the steps. The README's link
+      moved from `/get#install` to `/get/install`. Verified in the pane at
+      375px and at desktop; the toggle was exercised by script because the
+      pane's touch emulation hangs on a real click. Not yet tried on a phone.
+
+- [x] **The steps rewritten from the notes, 2026-09-03** — nine now. The
+      brief's seven skipped the Neon panel, where the Auth toggle is on by
+      default and has to go off, and lost some of what the run found. A
+      long version was tried and cut back the same day: each step is one or
+      two sentences again, but Git Scope and the repository name, the Neon
+      panel with Auth off, the half-hour window and Redeploy, and what Skip
+      means are all named. Screenshot names renumbered to nine.
+
+- [x] **The essay replaced, 2026-09-03** — the final version, five sections
+      under `## ` headings, written straight into `settings.why_essay` with
+      `why_date` set to the day. The previous text (1,787 characters, dated
+      2026-09-02) is in the nightly backup from before the swap; Neon's six
+      hours have passed. Its title line, "Listening Notes Story", was not
+      stored: the page's heading is "Our story", per the brief.
 
 - [x] **Fresh-account run, 2026-09-02** — the `products` parameter survived
       Vercel's sign-in redirect: a Neon database was attached and deploy
