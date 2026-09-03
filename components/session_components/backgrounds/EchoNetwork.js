@@ -123,6 +123,7 @@ export default function AlbumNetwork({
 
   // Fetch random network art and assign to nodes as images load.
   // Calls onReady once 50 nodes have art so the page can sequence its entrance animation.
+  const spotlitKey = spotlitArts.join('|');
   useEffect(() => {
     fetchNetworkArt().then(urls => {
       const s = stateRef.current;
@@ -185,7 +186,10 @@ export default function AlbumNetwork({
     });
 
     s.spotlitNodes = chosen;
-  }, [spotlitArts.join('|')]);
+  // Keyed on the arts' contents, not the array — a fresh array holding the
+  // same URLs must not re-spotlight the nodes and restart their image loads.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [spotlitKey]);
 
   // Preload session album art (for collapse animation)
   useEffect(() => {

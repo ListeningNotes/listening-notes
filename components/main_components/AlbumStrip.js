@@ -41,16 +41,24 @@ export default function AlbumStrip({ entries, variant = 'scroll' }) {
   // see dog_ear.js for why comparing a row against Date.now() is wrong here.
   // Guarded by a ref so it happens once per visit: entries arriving again
   // must not move the fold and wipe the badges mid-read.
+  //
+  // The read and the write happen in a frame callback rather than in the
+  // effect body itself — "a frame later" is literal. Setting state straight
+  // from an effect body fails lint here (see NOTES, Gotchas), and the
+  // callback is the shape it asks for.
   const [fold, setFold] = useState(null);
   const foldedRef = useRef(false);
   useEffect(() => {
-    if (foldedRef.current || entries.length === 0) return;
-    foldedRef.current = true;
-    const newest = entries.reduce(
-      (max, e) => (max === null || new Date(e.created_at) > new Date(max) ? e.created_at : max),
-      null,
-    );
-    setFold(beginVisit(newest));
+    if (foldedRef.current || entries.length === 0) return undefined;
+    const frame = requestAnimationFrame(() => {
+      foldedRef.current = true;
+      const newest = entries.reduce(
+        (max, e) => (max === null || new Date(e.created_at) > new Date(max) ? e.created_at : max),
+        null,
+      );
+      setFold(beginVisit(newest));
+    });
+    return () => cancelAnimationFrame(frame);
   }, [entries]);
 
   // A tile is a plain link to the entry now, so a swipe that ends on one

@@ -48,7 +48,7 @@ export default function DVD({ albums = [] }) {
     }
     raf = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(raf);
-  }, [albums]);
+  }, [albums, cw, ch]);
 
   if (!albums.length) return null;
 
