@@ -41,18 +41,19 @@ export default async function GetPage() {
 
   return (
     <main className="get-wrap">
-      <p className="get-kicker">Free software</p>
       {/* One word carries the weight. The line is the promise, and "own" is
           the whole of it; setting every word bold says nothing louder. */}
       <h1 className="get-title get-title--door">A music journal you actually <strong>own</strong>.</h1>
       <p className="get-lede">
-        Log what you listen to, rate it track by track, write about it.
-        It runs on your own hosting, in your own database.
-        I never see any of it.
+        A free software that allows you to log what you listen to, rate it
+        track by track, write about it. It runs on your own hosting, in your
+        own database.
       </p>
 
-      <a href={DEPLOY_URL} className="get-cta">Make your own copy</a>
-      <p className="get-expect">Free, no subscription, about ten minutes</p>
+      <div className="get-act">
+        <a href={DEPLOY_URL} className="get-cta">Make your own copy</a>
+        <p className="get-expect">About ten minute set up</p>
+      </div>
 
       <ul className="get-index">
         <li>

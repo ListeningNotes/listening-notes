@@ -478,6 +478,15 @@ address that never existed on their journal.
 dot row on every page for months. `/rig` is the borderline one and should be
 asked the same question.
 
+**The pitch pane stays at three sentences, 2026-09-03.** A fourth — "It
+looks like this: your journal, at your address, like the one you're reading
+now" — was added and removed the same day. The three are the whole pitch;
+what a copy looks like is already the journal the reader just swiped away
+from, and saying so is saying it twice. What did change: the button says
+"Get one" and is centred, because the pane has already said what; Sign in
+and Source stack under it, well below, smallest last — side by side they
+read as a caption on the button.
+
 **The pitch pane ships on every copy.** Logged out, right swipe: three
 sentences and a button to listeningnotes.blog/get. This is the growth
 mechanic — someone asks how to get one, the owner swipes right and hands over

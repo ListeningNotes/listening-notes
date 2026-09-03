@@ -1180,6 +1180,15 @@ copy up*, for what was decided; this is what was built.
       panel with Auth off, the half-hour window and Redeploy, and what Skip
       means are all named. Screenshot names renumbered to nine.
 
+- [x] **Review pass on `/get` and the pitch pane, 2026-09-03** — a "← Get
+      one" link above the heading on `/get/install` and `/get/story`; the
+      door's button and caption centred, the "Free software" kicker gone,
+      the paragraph opening "A free software that allows you to…" and the
+      caption "About ten minute set up". The pitch pane: title "What is
+      this?", third sentence "You host your own…", button "Get one" and
+      centred, Sign in and Source stacked below it. A fourth sentence was
+      tried and removed the same day (see DECISIONS).
+
 - [x] **The essay replaced, 2026-09-03** — the final version, five sections
       under `## ` headings, written straight into `settings.why_essay` with
       `why_date` set to the day. The previous text (1,787 characters, dated

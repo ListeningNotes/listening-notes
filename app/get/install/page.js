@@ -26,6 +26,7 @@
 // cautious person hesitates. And "It didn't work" is repeated at the foot,
 // because the foot is where somebody will be when it fails.
 
+import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
@@ -56,6 +57,7 @@ export default async function InstallPage({ searchParams }) {
 
   return (
     <main className="get-wrap">
+      <Link href="/get" className="get-back">← Get one</Link>
       <p className="get-kicker">About ten minutes</p>
       <h1 className="get-title">How to install</h1>
       <p className="get-lede">

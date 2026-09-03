@@ -33,6 +33,15 @@ export default function GetLayout({ children }) {
           .get-wrap { padding: calc(var(--get-nav-bottom) + 20px) 24px 80px; }
         }
 
+        /* The way back to the door, above the heading on the two pages under
+           it. A link and not the browser's back button, because the link the
+           reader arrived by may have been a text message. */
+        .get-back {
+          display: inline-block; margin: 0 0 22px;
+          font-family: var(--font-label); font-size: 10px; letter-spacing: 0.14em;
+          text-transform: uppercase; color: var(--ink-soft); text-decoration: none;
+        }
+        .get-back:hover { color: var(--ink); }
         .get-kicker {
           font-family: var(--font-label);
           font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
@@ -65,6 +74,8 @@ export default function GetLayout({ children }) {
         }
         .get-cta:hover { opacity: 0.85; }
         .get-cta--step { margin-top: 14px; padding: 12px 22px; font-size: 10px; }
+        /* The button and its caption, centred on the door. */
+        .get-act { text-align: center; }
         .get-expect {
           font-family: var(--font-label); font-size: 10px; letter-spacing: 0.12em;
           text-transform: uppercase; color: var(--ink-faint); margin: 12px 0 0;

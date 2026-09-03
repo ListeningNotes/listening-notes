@@ -2290,11 +2290,10 @@ a.ab-rig-name:hover { text-decoration: underline; }
   line-height: 1.65;
   color: var(--ink-soft);
 }
-.pt-cta { align-self: flex-start; margin-top: 4px; }
+.pt-cta { align-self: center; margin-top: 4px; }
 /* The smallest type on the site. AGPL §13, satisfied once, quietly. */
 .pt-source {
-  align-self: flex-start;
-  margin-top: 10px;
+  margin: 0;
   font-family: var(--font-label);
   font-size: 0.62rem;
   letter-spacing: 0.16em;
@@ -2454,10 +2453,10 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
    for the one person who keeps this copy of it. */
 .pt-foot {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  justify-content: center;
   gap: 18px;
-  flex-wrap: wrap;
+  margin-top: 36px;
 }
 
 @media (prefers-reduced-motion: reduce) {
