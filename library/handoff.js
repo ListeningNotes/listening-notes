@@ -36,6 +36,12 @@
 // if it is ever missing or stale the answer is simply the plainer wait.
 
 let passing = null;
+// The wall's current list, in the wall's current order — after search,
+// filters and sort — so a sideways swipe on the entry goes to the record that
+// was beside it on the wall, not the next one in the database. Opened cold
+// from a shared link there is no wall, no list and no swipe. See
+// handOffOrder and neighboursOf below.
+let order = [];
 
 // Called by a tile as it is pressed. Only the fields the first screen prints,
 // rather than the whole row: what goes past here should be obvious from
@@ -83,4 +89,45 @@ export function tileBoxOf(slug) {
   const box = tile.getBoundingClientRect();
   if (box.width === 0 || box.height === 0) return null;
   return { x: box.left, y: box.top, w: box.width, h: box.height };
+}
+
+// What the first screen prints, and nothing more — the same fields handOff
+// keeps, so a neighbour handed over before its address changes draws the
+// way a tapped record does.
+function firstScreen(entry) {
+  return {
+    slug: entry.slug,
+    album: entry.album || '',
+    artist: entry.artist || '',
+    year: entry.year || '',
+    album_art: entry.album_art || '',
+    rating: entry.rating ?? '',
+    masterpiece: entry.masterpiece === true,
+    favorite: entry.favorite === true || entry.favorite === 'true',
+    entry_type: entry.entry_type || '',
+    listen_total: entry.listen_total ?? 0,
+    created_at: entry.created_at || null,
+  };
+}
+
+// Called by the wall whenever what it shows changes; the layer only reads it.
+export function handOffOrder(entries) {
+  order = Array.isArray(entries) ? entries.map(firstScreen) : [];
+}
+
+// The records either side of this one on the wall, or null at either end —
+// and null both ways when the wall never said.
+export function neighboursOf(slug) {
+  const at = order.findIndex(e => e.slug === slug);
+  if (at < 0) return { prev: null, next: null };
+  return {
+    prev: at > 0 ? order[at - 1] : null,
+    next: at < order.length - 1 ? order[at + 1] : null,
+  };
+}
+
+// A neighbour becoming the record on screen: leave its first screen where
+// the layer's wait state will find it, so the swap draws at once.
+export function handOffNeighbour(entry) {
+  passing = entry ? firstScreen(entry) : null;
 }

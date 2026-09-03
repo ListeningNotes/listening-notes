@@ -2134,6 +2134,37 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 /* LayerEntry says which arrival this is. Grows: the Web Animations run does
    everything and the stylesheet stays out of it. Fades: the plain version. */
 .lay--fades { animation: layFade 0.32s ease-out; }
+
+/* ── Browsing sideways ──
+   The content follows the finger while held, settles when let go, and a
+   neighbour enters from the side it was on. */
+.lay-content { min-height: 100%; }
+.lay--settling .lay-content { transition: transform 0.16s cubic-bezier(0.22, 0.61, 0.36, 1); }
+.lay-content--from-right { animation: layFromRight 0.3s cubic-bezier(0.22, 0.61, 0.36, 1); }
+.lay-content--from-left  { animation: layFromLeft  0.3s cubic-bezier(0.22, 0.61, 0.36, 1); }
+@keyframes layFromRight { from { transform: translateX(60px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes layFromLeft  { from { transform: translateX(-60px); opacity: 0; } to { transform: none; opacity: 1; } }
+
+/* The carets at the sheet's edges, for a pointer. Hidden on touch, where
+   the swipe is the way, and drawn faint until you go near them. */
+.lay-step {
+  position: fixed;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 210;
+  width: 36px; height: 36px; border-radius: 10px;
+  display: none; align-items: center; justify-content: center;
+  color: var(--ink-faint); background: transparent; border: 0; cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+}
+.lay-step:hover { color: var(--ink); background: var(--bg-warm); }
+.lay-step--prev { left: 10px; }
+.lay-step--next { right: 10px; }
+@media (hover: hover) and (pointer: fine) { .lay-step { display: inline-flex; } }
+@media (prefers-reduced-motion: reduce) {
+  .lay-content--from-right, .lay-content--from-left { animation: none; }
+  .lay--settling .lay-content { transition: none; }
+}
 @keyframes layFade {
   from { opacity: 0; }
   to   { opacity: 1; }
@@ -2276,15 +2307,6 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 }
 .ln-totop:hover { color: var(--ink); opacity: 1; }
 
-.lay-edge {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  left: 0;
-  width: 36px;
-  z-index: 205;
-  touch-action: none;
-}
 
 /* ── AlbumTile — the journal wall's album ──────────────────────────────────
    A cover and a link to the record it is of. It used to be FlipTile, which
