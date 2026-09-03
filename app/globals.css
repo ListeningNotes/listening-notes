@@ -151,404 +151,16 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   transition: margin-left var(--ease);
 }
 
-.sidebar {
-  width: var(--sb-width);
-  height: 100dvh;
-  position: fixed;
-  top: 0;
-  left: 0;
-  background: var(--sb-bg);
-  border-right: 1px solid var(--sb-border);
-  display: flex;
-  flex-direction: column;
-  padding: 3.2rem 2.4rem;
-  overflow-y: auto;
-  overflow-x: hidden;
-  z-index: 200;
-  transition: background var(--ease), border-color var(--ease), transform 0.32s cubic-bezier(0.4,0,0.2,1);
-}
-
-.sb-backdrop {
-  display: none;
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.45);
-  z-index: 199;
-}
-
-.sb-wordmark { margin-bottom: 3.6rem; }
-
-.sb-title-link {
-  font-family: var(--font-serif);
-  font-size: 2.2rem;
-  line-height: 1.15;
-  color: var(--text);
-  display: block;
-  transition: color var(--ease);
-}
-
-.sb-title-link:hover { color: var(--accent-dk); }
-
-.sb-tagline {
-  font-family: var(--font-mono);
-  font-size: 1rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  margin-top: 0.6rem;
-}
-
-.sb-nav {
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-  margin-bottom: auto;
-}
-
-.sb-link {
-  display: flex;
-  align-items: center;
-  gap: 1.2rem;
-  padding: 0.9rem 1.2rem;
-  border-radius: var(--r-md);
-  font-family: var(--font-mono);
-  font-size: 1.15rem;
-  letter-spacing: 0.04em;
-  color: var(--text-muted);
-  transition: background var(--ease), color var(--ease);
-}
-
-.sb-link:hover { background: var(--bg2); color: var(--text); }
-.sb-link--active { background: var(--bg2); color: var(--text); }
-
-.sb-link-icon {
-  font-size: 1.3rem;
-  width: 1.8rem;
-  text-align: center;
-  flex-shrink: 0;
-  opacity: 0.7;
-}
-
-.sb-link--active .sb-link-icon { opacity: 1; }
-.sb-link-label { text-transform: lowercase; }
-
-.sb-divider { height: 1px; background: var(--border); margin: 2.4rem 0; }
-
-.sb-beacon { margin-bottom: 2.4rem; }
-
-.sb-beacon-label {
-  display: flex;
-  align-items: center;
-  gap: 0.7rem;
-  font-family: var(--font-mono);
-  font-size: 0.95rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  margin-bottom: 1rem;
-}
-
-.sb-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--text-muted);
-  flex-shrink: 0;
-}
-
-.sb-dot--live {
-  background: #7cff9b;
-  animation: breathe 2.4s ease-in-out infinite;
-}
-
 @keyframes breathe {
   0%, 100% { box-shadow: 0 0 0 rgba(124,255,155,0.4); }
   50%       { box-shadow: 0 0 10px rgba(124,255,155,0.85); }
 }
 
-.sb-card {
-  border-radius: var(--r-lg);
-  overflow: hidden;
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  transition: transform var(--ease), box-shadow var(--ease);
-}
-
-.sb-card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.1); }
-
-.sb-card-art-wrap { position: relative; width: 100%; aspect-ratio: 1; }
-
-.sb-card-art { width: 100%; height: 100%; object-fit: cover; display: block; }
-
-.sb-card-idle-overlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(0,0,0,0.38);
-}
-
-.sb-card-idle-overlay::after {
-  content: 'last played';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%,-50%);
-  font-family: var(--font-mono);
-  font-size: 0.85rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: rgba(124,255,155,0.9);
-}
-
-.sb-card-meta { padding: 1.2rem; }
-
-.sb-card-track {
-  font-size: 1.25rem;
-  font-weight: 500;
-  color: var(--text);
-  line-height: 1.3;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.sb-card-artist {
-  font-family: var(--font-mono);
-  font-size: 1rem;
-  color: var(--text-muted);
-  margin-top: 0.3rem;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.sb-card--empty .sb-card-meta { padding: 1.6rem; }
-
-.sb-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding-top: 1.6rem;
-  border-top: 1px solid var(--border);
-}
-
-.sb-theme-btn {
-  display: flex;
-  align-items: center;
-  gap: 0.8rem;
-  font-family: var(--font-mono);
-  font-size: 1.05rem;
-  letter-spacing: 0.04em;
-  color: var(--text-muted);
-  padding: 0.6rem 0.8rem;
-  border-radius: var(--r-sm);
-  transition: background var(--ease), color var(--ease);
-}
-
-.sb-theme-btn:hover { background: var(--bg2); color: var(--text); }
-.sb-theme-icon { font-size: 1.3rem; }
-
-.sb-footer-year {
-  font-family: var(--font-mono);
-  font-size: 1rem;
-  color: var(--text-muted);
-  opacity: 0.5;
-}
-
-.sb-hamburger {
-  display: none;
-  position: fixed;
-  top: 1.8rem;
-  left: 1.8rem;
-  z-index: 300;
-  width: 40px;
-  height: 40px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--r-md);
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 5px;
-  transition: background var(--ease), border-color var(--ease);
-}
-
-.sb-hamburger span {
-  display: block;
-  width: 18px;
-  height: 1px;
-  background: var(--text);
-  transition: transform var(--ease), opacity var(--ease);
-}
-
-.sb-hamburger--open span:nth-child(1) { transform: translateY(6px) rotate(45deg); }
-.sb-hamburger--open span:nth-child(2) { opacity: 0; }
-.sb-hamburger--open span:nth-child(3) { transform: translateY(-6px) rotate(-45deg); }
-
-.page-header { margin-bottom: 3.2rem; }
-
-.page-heading {
-  display: flex;
-  align-items: baseline;
-  gap: 1rem;
-}
-
-.page-heading-count {
-  font-family: var(--font-serif);
-  font-size: 4.8rem;
-  line-height: 1;
-  color: var(--text);
-}
-
-.page-heading-label {
-  font-family: var(--font-mono);
-  font-size: 1.1rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-}
-
-.album-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 1.6rem;
-}
-
 .tile { display: block; text-decoration: none; color: inherit; }
-
-.tile-art-wrap {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 1;
-  border-radius: var(--r-lg);
-  overflow: hidden;
-  background: var(--bg2);
-  border: 1px solid var(--border);
-}
-
-.tile-art {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-  transition: transform 0.4s cubic-bezier(0.4,0,0.2,1);
-}
-
-.tile:hover .tile-art { transform: scale(1.04); }
-
-.tile-art-placeholder {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--bg2);
-  font-size: 3.2rem;
-  color: var(--text-muted);
-  font-family: var(--font-serif);
-}
-
-.tile-overlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(0,0,0,0);
-  display: flex;
-  align-items: flex-end;
-  opacity: 0;
-  transition: opacity 0.25s ease, background 0.25s ease;
-  border-radius: var(--r-lg);
-}
-
-.tile:hover .tile-overlay { opacity: 1; background: rgba(0,0,0,0.62); }
-
-.tile-overlay-inner {
-  padding: 1.4rem;
-  width: 100%;
-  transform: translateY(6px);
-  transition: transform 0.25s ease;
-}
-
-.tile:hover .tile-overlay-inner { transform: translateY(0); }
-
-.tile-overlay-album {
-  font-family: var(--font-serif);
-  font-size: 1.4rem;
-  color: #fff;
-  line-height: 1.25;
-  margin-bottom: 0.3rem;
-}
-
-.tile-overlay-artist {
-  font-family: var(--font-mono);
-  font-size: 1rem;
-  color: rgba(124,255,155,0.75);
-  letter-spacing: 0.04em;
-}
-
-.tile-overlay-year {
-  font-family: var(--font-mono);
-  font-size: 0.9rem;
-  color: rgba(124,255,155,0.5);
-  margin-top: 0.3rem;
-  letter-spacing: 0.06em;
-}
-
-.tile-overlay-stars {
-  font-size: 1rem;
-  color: var(--accent);
-  margin-top: 0.5rem;
-  letter-spacing: 0.08em;
-}
-
-.tile-label {
-  padding: 0.8rem 0.2rem 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
-}
-
-.tile-label-album {
-  font-size: 1.2rem;
-  font-weight: 500;
-  color: var(--text);
-  line-height: 1.3;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.tile-label-artist {
-  font-family: var(--font-mono);
-  font-size: 1rem;
-  color: var(--text-muted);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.grid-loading {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 1.6rem;
-}
-
-.tile--skeleton {
-  aspect-ratio: 1;
-  border-radius: var(--r-lg);
-  background: var(--bg2);
-  animation: shimmer 1.6s ease-in-out infinite alternate;
-}
 
 @keyframes shimmer {
   from { opacity: 0.5; }
   to   { opacity: 1; }
-}
-
-.grid-empty {
-  font-family: var(--font-mono);
-  font-size: 1.2rem;
-  color: var(--text-muted);
-  padding: 6rem 0;
-  text-align: center;
 }
 
 ::selection { background: rgba(200, 225, 255, 0.55); color: var(--text); }
@@ -557,17 +169,8 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
 
 @media (max-width: 768px) {
-  .sb-hamburger { display: flex; }
-  .sb-backdrop { display: block; }
-  .sidebar { transform: translateX(-100%); }
-  .sidebar--open { transform: translateX(0); }
-  .main { margin-left: 0; padding: 7rem 1.8rem 4rem; }
-  .album-grid, .grid-loading { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 1.2rem; }
-}
-
-@media (max-width: 480px) {
-  .album-grid, .grid-loading { grid-template-columns: repeat(2, 1fr); gap: 1rem; }
-}
+          .main { margin-left: 0; padding: 7rem 1.8rem 4rem; }
+  }
 
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(4px); }
@@ -577,12 +180,8 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 .loading-phrase { animation: fadeIn 0.4s ease forwards; }
 
 /* ═══════════════════════════════════════════════════
-   HOMEPAGE v2 — top nav + hero beacon + album strip
+   HOMEPAGE — what survives of the pre-cross layout: the beacon box and the mark
 ═══════════════════════════════════════════════════ */
-
-/* This edge fade was for the desktop horizontal album-strip scroll — the
-   two-screen mobile/tablet layout doesn't need it and it's getting reworked
-   soon anyway, so drop it there. Desktop keeps it. */
 
 /* Homepage dashboard — one unified box holding the listening beacon, centered.
    The recent-listens strip sits below it. Stacks gracefully on narrow screens. */
@@ -752,9 +351,6 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   flex-shrink: 0;
 }
 
-@keyframes hp-pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.4; transform: scale(0.8); }
 }
 
 @keyframes beacon-dot-glow {
@@ -779,37 +375,10 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   }
 }
 
-/* On phones the labelled dots are too wide to share the top row with the logo
-   and corner icons, so drop them to their own second row and grow the header
-   backdrop to cover both rows. */
-
-/* ── Homepage masthead on phones ──────────────────────────────────────────
-   Desktop keeps the single labelled dot-row under the logo. On a phone six
-   labels in one row collide, so the homepage nav becomes two relaxed rows of
-   three (dot stacked above an in-flow label), and the logo / strip shrink so
-   the logo -> nav -> strip -> beacon rhythm sits in one comfortable column.
-   All rules are scoped to `.hp` so the fixed dot-nav on other pages is
-   untouched. */
-
-/* ── Homepage two-screen snap layout (phones + tablets, ≤768px) ──────────────
-   Below 769px the homepage swaps from one long column to two full-height
-   "screens" that snap like app pages: screen one is just the logo + beacon
-   with a bouncing scroll cue; screen two brings the beacon to the top (under
-   the notch), the six nav dots below it, and the recent-listens strip at the
-   bottom. Desktop/tablet-wide keeps the original single-column layout,
-   untouched — the two layouts are separate markup, toggled by display. */
+/* The mark on a phone: small enough to read as one navbar unit with the
+   beacon art, and its live dot pulses. */
 @media (max-width: 768px) {
-  
-    
-  
-    
-  
-      @keyframes hp-scroll-btn-bob {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(5px); }
-  }
 
-  
   .hp-logo-mark {
     height: 28px; /* smaller — reads as one navbar unit with the beacon art, not its own bigger element */
     width: auto;
@@ -829,58 +398,10 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
     0%, 100% { opacity: 1; }
     50%      { opacity: 0.55; }
   }
-  
+
           
 
         }
-
-.hero {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 140px 24px 64px;
-  position: relative;
-  overflow: hidden;
-  isolation: isolate;
-  margin-top: 0;
-}
-
-.hero-blur-bg {
-  position: absolute;
-  inset: -40px;
-  background-size: cover;
-  background-position: center;
-  filter: blur(20px) saturate(1.4) brightness(.85);
-  transform: scale(1.15);
-  z-index: 0;
-  transition: opacity 0.8s ease;
-}
-
-.hero-fade-bottom {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 55%;
-  background: linear-gradient(to top, var(--bg) 40%, transparent);
-  z-index: 1;
-  pointer-events: none;
-}
-
-.hero-inner {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 100%;
-  max-width: 600px;
-  transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-  z-index: 2;
-}
-
-.hero-inner--panel-open {
-  transform: translateX(-18%);
-}
 
 .beacon-card {
   display: flex;
@@ -1040,13 +561,6 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   transition: opacity 0.5s ease;
 }
 
-.hero-divider {
-  width: 100%;
-  height: 1px;
-  background: var(--border);
-  margin: 0;
-}
-
 .recent-panel {
   position: absolute;
   right: 0;
@@ -1194,8 +708,6 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   .strip-tile { width: 220px; height: 220px; border-radius: 18px; }
   .hp-strip-track { gap: 24px; padding: 36px calc(50vw - 110px); }
 }
-
-/* Nav dropdowns */
 
 /* Surprise nav link */
 .surprise-inner {
@@ -2219,10 +1731,10 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
    Above 769px it becomes three columns, all visible, no gesture — the same
    components saying the same thing out loud.
 
-   The old .hp-mobile-screens / .hp-screen--one / .hp-screen--two rules above
-   are dead: nothing renders those class names any more. Four of them did real
-   work and are restated here against .hn, which is why they are not simply
-   deleted in place — the beacon's height, its status dot, the panel reset on
+   The old .hp-mobile-screens / .hp-screen--one / .hp-screen--two rules were
+   deleted on 2026-09-03: nothing had rendered those class names for a while.
+   Four of them did real work and were restated here against .hn before the
+   deletion — the beacon's height, its status dot, the panel reset on
    .hp-dashboard, and the two-column grid the wall is drawn in.
    ══════════════════════════════════════════════════════════════════════════ */
 
@@ -2473,7 +1985,7 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
    a phone is a whole column of covers given away to nothing. The wall's own
    padding is the only padding. */
 
-/* Restated from the dead .hp-mobile-screens block — same values, new scope. */
+/* Restated from the old .hp-mobile-screens block (since deleted) — same values, new scope. */
 .hn .beacon-stage { height: 320px; }
 .hn-screen .beacon-status .beacon-dot { display: none; }
 .hn .hp-dashboard {
