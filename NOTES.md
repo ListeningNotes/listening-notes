@@ -904,9 +904,10 @@ current.
 
 ## Complete
 
-**2026-09-02 — the entry expands from its cover, and swipes to the next**
+**2026-09-02/03 — the entry grows from its tile, and swipes to the next**
 
-Branch `expand-and-swipe`. See DECISIONS, *The cross*, for the reasoning.
+Branch `expand-and-swipe`, merged to `main` 2026-09-03 after each gesture was
+tested by thumb. See DECISIONS, *The cross*, for the reasoning.
 - [x] `LayerEntry` has two arrivals: `side` (unchanged, the session and the
       send page) and `source` (the entry). Source flies a copy of the cover
       from the tile to the first screen with the Web Animations API, fades
