@@ -402,9 +402,12 @@ function FinderStyles() {
       }
       @keyframes afChooserIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
       @media (prefers-reduced-motion: reduce) { .af-chooser { animation: none; } }
+      /* Clears the whole status area, not the site's header line. The site
+         runs its mark under the clock on purpose (see --safe-top); a field
+         under the clock is a field you cannot read what you typed into. */
       .af-chooser-head {
         display: flex; align-items: center; gap: 8px;
-        padding: calc(14px + var(--safe-top)) 16px 10px;
+        padding: calc(env(safe-area-inset-top, 0px) + 18px) 16px 10px;
         flex: none;
       }
       .af-chooser-head .af-input { flex: 1; }
