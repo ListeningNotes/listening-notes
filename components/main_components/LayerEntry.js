@@ -51,7 +51,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { CaretLeft, CaretRight } from '@phosphor-icons/react';
-import { tileBoxOf, neighboursOf, handOffNeighbour } from '../../library/handoff';
+import { tileBoxOf, neighboursOf, handOffNeighbour, arrivingBySwipe, tookASwipe } from '../../library/handoff';
 
 // How long the sheet takes to grow to the screen. Unhurried, slowing as it
 // lands — the same curve the slide used.
@@ -97,11 +97,15 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false 
   // none` on the next render, so the stylesheet's fade ran on top of the
   // growth for the length of it. A class React put there stays.
   const slug = pathname.startsWith('/entries/') ? decodeURIComponent(pathname.slice('/entries/'.length)) : '';
-  const [growFrom] = useState(() => {
-    if (typeof document === 'undefined' || !slug) return null;
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return null;
-    return tileBoxOf(slug);
+  // Three arrivals: by swipe (draw it, nothing else), by tap (grow out of
+  // the tile), or neither (fade — a form, an off-wall tile, reduced motion).
+  const [arrival] = useState(() => {
+    if (typeof document === 'undefined') return { swiped: false, growFrom: null };
+    if (tookASwipe()) return { swiped: true, growFrom: null };
+    if (!slug || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return { swiped: false, growFrom: null };
+    return { swiped: false, growFrom: tileBoxOf(slug) };
   });
+  const growFrom = arrival.growFrom;
 
   useLayoutEffect(() => {
     const sheet = sheetRef.current;
@@ -123,10 +127,8 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false 
   // know whether it is starting from rest or from wherever a release left it.
   // The pull down, in pixels, moving the whole sheet.
   const [dragY, setDragY] = useState(0);
-  // The sideways position of the content while browsing, and which side the
-  // next record should arrive from.
+  // The sideways position of the content while a finger has it.
   const [shift, setShift] = useState(0);
-  const [enterFrom, setEnterFrom] = useState(null);
   const [settling, setSettling] = useState(false);
   const neighbours = slug ? neighboursOf(slug) : { prev: null, next: null };
 
@@ -195,17 +197,17 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false 
   }, [goBack, slug]);
 
   // ── To a neighbour ────────────────────────────────────────────────────────
+  // Instant. The next record is simply there: no sliding out, no sliding
+  // in, no growth. A page that animated between neighbours read as the
+  // journal opening again every time, which it is not — it is turning a
+  // page. The first screen is handed over so it draws at once.
   const go = useCallback(dir => {
     const target = dir < 0 ? neighbours.prev : neighbours.next;
     if (!target || leaving.current) return;
     handOffNeighbour(target);
-    setEnterFrom(dir);
-    setSettling(true);
-    setShift(-dir * (sheetRef.current?.offsetWidth || window.innerWidth));
-    window.setTimeout(() => {
-      setShift(0);
-      router.replace(`/entries/${target.slug}`);
-    }, 160);
+    arrivingBySwipe();
+    setShift(0);
+    router.replace(`/entries/${target.slug}`);
   }, [neighbours.prev, neighbours.next, router]);
 
   useEffect(() => {
@@ -328,7 +330,7 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false 
 
   return (
     <div
-      className={'lay' + (growFrom ? ' lay--grows' : ' lay--fades') + (scrolls ? ' lay--scrolls' : '')
+      className={'lay' + (arrival.swiped ? ' lay--swiped' : growFrom ? ' lay--grows' : ' lay--fades') + (scrolls ? ' lay--scrolls' : '')
         + (settling ? ' lay--settling' : '') + (pulled ? ' lay--dragging' : '')}
       ref={sheetRef}
       style={pulled ? { transform: `translateY(${dragY}px)` } : undefined}
@@ -336,14 +338,11 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false 
       aria-modal="true"
       aria-label={label}
     >
-      {/* The content, keyed by address so a neighbour arrives fresh and
-          plays its entrance from the side it came from. */}
+      {/* The content. It follows a finger sideways and springs back; a
+          neighbour, when it comes, is a new layer and simply appears. */}
       <div
-        key={slug || 'page'}
-        className={'lay-content'
-          + (enterFrom === 1 ? ' lay-content--from-right' : enterFrom === -1 ? ' lay-content--from-left' : '')}
+        className="lay-content"
         style={shift !== 0 ? { transform: `translateX(${shift}px)` } : undefined}
-        onAnimationEnd={() => setEnterFrom(null)}
       >
         {children}
       </div>

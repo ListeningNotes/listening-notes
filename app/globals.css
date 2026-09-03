@@ -2140,10 +2140,8 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
    neighbour enters from the side it was on. */
 .lay-content { min-height: 100%; }
 .lay--settling .lay-content { transition: transform 0.16s cubic-bezier(0.22, 0.61, 0.36, 1); }
-.lay-content--from-right { animation: layFromRight 0.3s cubic-bezier(0.22, 0.61, 0.36, 1); }
-.lay-content--from-left  { animation: layFromLeft  0.3s cubic-bezier(0.22, 0.61, 0.36, 1); }
-@keyframes layFromRight { from { transform: translateX(60px); opacity: 0; } to { transform: none; opacity: 1; } }
-@keyframes layFromLeft  { from { transform: translateX(-60px); opacity: 0; } to { transform: none; opacity: 1; } }
+/* A layer that arrived by swipe does nothing on the way in. */
+.lay--swiped { animation: none; }
 
 /* The carets at the sheet's edges, for a pointer. Hidden on touch, where
    the swipe is the way, and drawn faint until you go near them. */
@@ -2162,7 +2160,6 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 .lay-step--next { right: 10px; }
 @media (hover: hover) and (pointer: fine) { .lay-step { display: inline-flex; } }
 @media (prefers-reduced-motion: reduce) {
-  .lay-content--from-right, .lay-content--from-left { animation: none; }
   .lay--settling .lay-content { transition: none; }
 }
 @keyframes layFade {
