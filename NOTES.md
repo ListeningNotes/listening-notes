@@ -958,6 +958,13 @@ was the gestures or the layer itself.
       cover from its place on the entry to the tile's exact square, sheet
       opacity to zero alongside, no copy left behind. The browser's back
       button just removes the sheet.
+- [x] **Pull down to close** (2026-09-03): the whole sheet listens; the first
+      move decides — mostly downward, from the top of the first screen, is
+      the pull, and the sheet follows the finger; past a fifth of the screen
+      or a flick it closes the same way as Escape. Anything else goes to the
+      browser. The edge pull stays for now; it goes when left/right become
+      the neighbours. Verified with synthetic touches in the pane; a real
+      thumb against the snap scroller is still the test that counts.
 
 **2026-09-01 — setup expanded, Settings, and the password out of deploy**
 
