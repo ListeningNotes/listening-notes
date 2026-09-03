@@ -1453,6 +1453,45 @@ drawn only when `public/install/NN-*.png` exists, and the issues link. The
 long-standing note that `/get` owed a stranger two things and gave one is
 discharged.
 
+**`/get` is three addresses, not one page, 2026-09-03.** Everyone arriving
+has already seen a journal working — they came from somebody's copy or from
+a post showing one — so they are not being convinced; they are trying to get
+from wanting it to having it, and the page's only job is not losing them in
+between. So the door is one screen: a hero line, the button, the expectation
+under it, and three links that read as a table of contents rather than as
+cards. The steps live at `/get/install` because they need a URL — the person
+who wants them is stuck at step four with Vercel open in another tab, and the
+person helping wants to text a link that opens there. The essay lives at
+`/get/story` because it is long-form reading, not the stretch between a
+button and its instructions. No demo, no screenshots of the journal, no
+feature list, on any of the three.
+
+**The hero line is "a music journal you actually OWN."** Not "at your own
+address" — that is architecture, not a benefit, and it does not land with
+people who do not think in domains.
+
+**"It didn't work" goes to the issues, not to a troubleshooting page.** A
+troubleshooting page would be guesses right now, because nobody knows what
+actually breaks on installs Miyel is not present for. Reporting comes first;
+the issues people file become the troubleshooting page later, once three
+people have hit the same thing. The line is "Tell me what happened. I read
+these." — a promise, and the reason anybody would write.
+
+**The steps are written from the fresh-account run, not from the brief's
+summary of it, 2026-09-03.** The brief's seven one-line steps skipped the
+Neon panel, which does appear and whose "Auth" toggle is on by default and
+has to go off — the one place a first-timer would be left with something
+switched on that nobody told them about. So there are nine steps, each still
+one or two sentences — a long step overwhelms the person it is for — but
+every trap the run found is named, and any future rewrite of the page starts from the
+recorded run and the README rather than from a shorter retelling.
+
+**The install steps have a phone/laptop toggle, and the choice is in the
+address.** The two flows genuinely differ and both screenshot sets are being
+captured. `?on=phone` or `?on=laptop`, written with `replaceState` as the
+reader switches, so the link they copy opens on the same set; without it the
+page guesses phone, because that is what somebody handed a journal is holding.
+
 **The password is filed under the journal's address, in a visible field.**
 Password managers pair a password with a username and stay silent without
 one. The hidden username field was read-only and one pixel wide, and Safari
