@@ -902,8 +902,9 @@ current.
 
 **2026-09-01 — setup expanded, Settings, and the password out of deploy**
 
-Two briefs in one session, on branch `setup-and-settings`. See DECISIONS,
-*Setting a copy up*, for what was decided; this is what was built.
+Two briefs in one session, on branch `setup-and-settings`, merged to `main`
+on 2026-09-02 after the fresh-account run passed. See DECISIONS, *Setting a
+copy up*, for what was decided; this is what was built.
 
 - [x] **`/settings`** — `app/settings/page.js`, owner-only, reached from a
       gear beside the card's pencil. Address, Last.fm username and key,
