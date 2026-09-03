@@ -551,6 +551,15 @@ Project → Settings → Environment Variables.
 - **Password managers ignore hidden and read-only username fields.** The
   hidden 1px `readOnly` username input never got Safari to offer a save. The
   field has to be visible and writable; see PasswordGate's `.pg-who`.
+- **A close inside a page turn froze the site** (2026-09-03, intermittent
+  on the phone). The turn changes the address on a 240ms timer; a close in
+  that window went back to the wall, then the timer replaced the wall's
+  history entry with the next record, after which back had nowhere to go
+  and the faded-out sheet sat invisibly over everything, swallowing every
+  touch. Now a close cancels a pending turn, and a layer still mounted half
+  a second after its close forces `router.replace('/')`. Anything faded to
+  nothing that can intercept touches needs a way out that does not depend
+  on history.
 - **`beforeinstallprompt` is not a promise.** Chrome fires it only when it
   has decided the site is installable, and its own automatic prompt still
   wants a service worker with a fetch handler, which this site does not
