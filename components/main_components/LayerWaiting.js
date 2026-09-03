@@ -32,13 +32,31 @@
 // Chip are cheap and this is the only way the two can be relied on to match.
 
 'use client';
+import { createPortal } from 'react-dom';
 import { handedOver } from '../../library/handoff';
+import SiteNav from './SiteNav';
+import KeeperTools from './KeeperTools';
+import { useLayerHeaderSlot } from './LayerEntry';
 import StarRating from './StarRating';
 import Chip from './Slug_Page/Chip';
 import { fonts } from '../../library/sitewide_visuals';
 
-export default function LayerWaiting({ slug }) {
+export default function LayerWaiting({ slug, authed = false }) {
   const known = handedOver(slug);
+  // The header, held still. The layer keeps a slot for it outside the content
+  // that turns with a swipe (see LayerEntry), and the finished entry draws its
+  // nav there — but the entry is a fetch away, and a header that vanished for
+  // the length of that fetch on every swipe was the one thing still moving.
+  // So the wait draws the same row into the same slot: the mark, the lights,
+  // and for the keeper the pencil and the printer, inert until the entry
+  // lands and takes the slot over with the working ones.
+  const headerSlot = useLayerHeaderSlot();
+  const header = headerSlot
+    ? createPortal(
+        <SiteNav tools={authed ? <KeeperTools onEdit={() => {}} slug={slug} /> : null} />,
+        headerSlot,
+      )
+    : null;
   // The same expression FullPostPage uses. The real title shrinks with its own
   // length, set inline, so a stand-in using the stylesheet's plain clamp would
   // draw a long album name a step too large and the line would jump when the
@@ -48,13 +66,14 @@ export default function LayerWaiting({ slug }) {
     : null;
 
   if (!known) {
-    return (
+    return (<>
+      {header}
       <div className="lay-wait" aria-hidden="true">
         <div className="lay-wait-art" />
         <div className="lay-wait-line lay-wait-line--title" />
         <div className="lay-wait-line lay-wait-line--byline" />
       </div>
-    );
+    </>);
   }
 
   // The real first screen's classes, not lookalikes. If these drift the swap
@@ -67,7 +86,8 @@ export default function LayerWaiting({ slug }) {
     ? new Date(known.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
     : null;
 
-  return (
+  return (<>
+    {header}
     <div className="ln-screens">
       <section className="ln-screen-one">
         {known.album_art && (
@@ -98,5 +118,5 @@ export default function LayerWaiting({ slug }) {
         )}
       </section>
     </div>
-  );
+  </>);
 }
