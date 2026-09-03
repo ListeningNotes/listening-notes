@@ -16,7 +16,7 @@
 // the address is the host the request came in on, and the founding date is
 // today. What is left is the name, which is the only thing the journal
 // needs, and then a series of things it would be nice to have — the photo,
-// the prompts, Last.fm, the rig — each on its own screen with a
+// the prompts, the rig, Last.fm, the Anthropic key — each on its own screen with a
 // Skip under it. Skip means later, not never: every one of them has a home
 // afterwards, on the card or at /settings, which is what makes offering to
 // skip honest.
@@ -62,7 +62,7 @@ import { useJournalHost } from '../../hooks/useJournalHost';
 // journal starts working is the moment somebody will actually do it.
 // Links used to sit between Last.fm and the rig and are retired from the
 // whole site for now — see About.js.
-const STEPS = ['name', 'photo', 'prompts', 'lastfm', 'rig', 'password', 'homescreen'];
+const STEPS = ['name', 'photo', 'prompts', 'rig', 'lastfm', 'anthropic', 'password', 'homescreen'];
 const PASSWORD_FLOOR = 8;
 
 async function patchSettings(fields) {
@@ -105,6 +105,7 @@ export default function WelcomeScreen() {
   const [picking, setPicking] = useState(null);
   const [lastfmUser, setLastfmUser] = useState('');
   const [lastfmKey, setLastfmKey] = useState('');
+  const [anthropic, setAnthropic] = useState('');
   const [gear, setGear] = useState([{ name: '', role: '' }]);
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
@@ -438,6 +439,7 @@ export default function WelcomeScreen() {
                 photo: 'A photo',
                 prompts: 'Three openings',
                 lastfm: 'What you are playing',
+                anthropic: 'Research',
                 rig: 'What you listen on',
                 password: 'A password',
                 homescreen: 'One more thing',
@@ -552,6 +554,23 @@ export default function WelcomeScreen() {
               </div>
             )}
 
+            {current === 'rig' && (
+              <form className="su-fields" onSubmit={e => { e.preventDefault(); advance(async () => {
+                const clean = gear.map(g => ({ name: g.name.trim(), role: g.role.trim() })).filter(g => g.name);
+                if (clean.length) await patchSettings({ rig: clean });
+              }); }}>
+                <p className="su-why">The setup you listen on, as rows: the thing, and what it does. Speakers, an amp, a turntable, a pair of headphones.</p>
+                {gear.map((g, i) => (
+                  <div className="su-pair" key={i}>
+                    <input className="su-field" value={g.name} placeholder="KEF LS50" onChange={e => setGear(rows => rows.map((r, j) => (j === i ? { ...r, name: e.target.value } : r)))} />
+                    <input className="su-field" value={g.role} placeholder="Speakers" onChange={e => setGear(rows => rows.map((r, j) => (j === i ? { ...r, role: e.target.value } : r)))} />
+                  </div>
+                ))}
+                <button type="button" className="su-add" onClick={() => setGear(rows => [...rows, { name: '', role: '' }])}>+ Another</button>
+                <button type="submit" className="su-go" disabled={busy || !gear.some(g => g.name.trim())}>Next</button>
+              </form>
+            )}
+
             {current === 'lastfm' && (
               <form className="su-fields" onSubmit={e => { e.preventDefault(); advance(async () => {
                 if (lastfmUser.trim()) await patchSettings({ lastfm_user: lastfmUser.trim() });
@@ -581,20 +600,25 @@ export default function WelcomeScreen() {
               </form>
             )}
 
-            {current === 'rig' && (
+            {current === 'anthropic' && (
               <form className="su-fields" onSubmit={e => { e.preventDefault(); advance(async () => {
-                const clean = gear.map(g => ({ name: g.name.trim(), role: g.role.trim() })).filter(g => g.name);
-                if (clean.length) await patchSettings({ rig: clean });
+                if (anthropic.trim()) await patchSecrets({ anthropic_key: anthropic.trim() });
               }); }}>
-                <p className="su-why">The setup you listen on, as rows: the thing, and what it does. Speakers, an amp, a turntable, a pair of headphones.</p>
-                {gear.map((g, i) => (
-                  <div className="su-pair" key={i}>
-                    <input className="su-field" value={g.name} placeholder="KEF LS50" onChange={e => setGear(rows => rows.map((r, j) => (j === i ? { ...r, name: e.target.value } : r)))} />
-                    <input className="su-field" value={g.role} placeholder="Speakers" onChange={e => setGear(rows => rows.map((r, j) => (j === i ? { ...r, role: e.target.value } : r)))} />
-                  </div>
-                ))}
-                <button type="button" className="su-add" onClick={() => setGear(rows => [...rows, { name: '', role: '' }])}>+ Another</button>
-                <button type="submit" className="su-go" disabled={busy || !gear.some(g => g.name.trim())}>Next</button>
+                <p className="su-why">
+                  An Anthropic API key turns on two things during a listen: a
+                  Research button on the album screen, and a question mark that
+                  answers with the record and your notes in front of it. Get one
+                  at{' '}
+                  <a href="https://console.anthropic.com" target="_blank" rel="noopener noreferrer">console.anthropic.com</a>;
+                  it bills to your own API balance, separate from a Claude.ai
+                  subscription. Everything else works without it.
+                </p>
+                <div>
+                  <span className="su-label">Anthropic API key</span>
+                  <input className="su-field" value={anthropic} onChange={e => setAnthropic(e.target.value)} autoComplete="off" autoCapitalize="none" spellCheck={false} />
+                  <div className="su-hint">Kept on your own server and never shown to a visitor.</div>
+                </div>
+                <button type="submit" className="su-go" disabled={busy || !anthropic.trim()}>Next</button>
               </form>
             )}
 
