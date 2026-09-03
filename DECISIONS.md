@@ -7,6 +7,13 @@ up again, the answer is already written down — read the reason before
 reopening it. Add to this file when a decision is made, not when it is
 implemented.
 
+**What is here is what could come up again.** Settled history nobody would
+reopen — the licence reasoning, the arguments behind decisions since reversed
+— lives in [docs/DECISIONS-ARCHIVE.md](docs/DECISIONS-ARCHIVE.md), which is
+not read at the start of a session. When a decision is reversed, this file
+keeps the rule as it now stands and the archive keeps the argument it
+replaced.
+
 ---
 
 ## The model
@@ -72,34 +79,13 @@ in the wrong place.
 
 ## Licence and ownership
 
-**AGPL-3.0-or-later.** Chosen over GPL because a journal is a website — section
-13 is what stops a closed fork run as a service. Chosen over PolyForm
-Noncommercial because a business (the hi-fi bar) has to be able to run a copy.
-
-**No section 7(b) attribution clause.** Considered and rejected. It would force
-the mark onto forks that legitimately aren't Listening Notes, and it doesn't
-prevent the scenario actually feared — someone overtaking the project in a
-different category. Trademark protects the name; the licence protects the code.
-
-**CPAL ruled out.** Built on deprecated MPL 1.1, weaker file-level copyleft
-than AGPL, incompatible with GPL/AGPL code, and obscure enough that the
-friction lands on honest contributors.
-
-**Copyright in Miyel Brown's legal name**, not "Listening Notes." No legal
-entity exists by that name, so enforcement would require establishing identity
-first. All commits are already authored under the real name in a public repo.
-
-**Per-file notice is the two-line short form** — copyright line plus SPDX
-identifier. The appendix's full 15-line notice across 125 files would be ~1,900
-lines of boilerplate over comments written with care.
-
-**DCO sign-off required on all commits.** From the first merged contribution
-onward, that contributor owns the copyright in their lines and the licence can
-no longer be changed unilaterally. Recorded now while it is cheap.
-
-**The name is not the code.** The licence grants no use of the Listening Notes
-name or mark. Every copy is named by its keeper; the mark travels as a
-colophon.
+**AGPL-3.0-or-later, copyright in Miyel Brown's legal name, DCO sign-off on
+every commit, the two-line notice per file, and no rights to the name.** The
+reasoning — why not GPL, PolyForm, CPAL or a 7(b) clause — is settled and in
+the archive. Two of these still bind day to day: the DCO means the licence can
+no longer be changed unilaterally once a contribution is merged, and the
+licence grants no use of the Listening Notes name or mark — every copy is
+named by its keeper, and the mark travels as a colophon.
 
 ---
 
@@ -259,25 +245,15 @@ something *is* playing.
 counts with one line about taste, and turned down: the card is a glance and
 four rows is already the most a glance holds. Ruled out rather than parked.
 
-**It is pinned from the record, not picked from the card.** The search sheet
-was the original plan and was dropped: by the time you are looking at your own
-card you have to *remember* which album you wanted, where on the record itself
-you *recognise* it. So the control is a pin in the chip row of an entry, owner
-only, and there is no picker at all — which is also less machinery than the
-sheet would have been.
-
-**Reversed the same day, 2026-08-28. The pin goes back on the card, and the
-search sheet with it.** Recognising beats remembering and that argument still
-holds — it is just not worth what it costs here. `pinned_entry_id` is a field
-on the settings row, so it belongs with the other settings fields, behind the
-card's pencil; a control for it in the chip row of an entry is an admin button
-sitting in the middle of somebody's reading. The entry editor gets no pin at
-all: changing your pin should not mean opening an editor for an album you were
-not thinking about.
-
-**The trade, accepted:** from an entry there is no "pin this one" — you go to
-the card and search for it. More steps for the rarer action, which is the right
-way round.
+**The pin is set from the card, behind the pencil, through a search sheet,
+2026-08-28.** `pinned_entry_id` is a field on the settings row, so it belongs
+with the other settings fields; a control for it in the chip row of an entry
+is an admin button sitting in the middle of somebody's reading, and the entry
+editor gets no pin either — changing your pin should not mean opening an
+editor for an album you were not thinking about. The trade, accepted: from an
+entry there is no "pin this one", you go to the card and search for it. More
+steps for the rarer action, which is the right way round. (Pinning from the
+record was tried first and reversed the same day; the archive has why.)
 
 **One, and the shape is the rule.** `pinned_entry_id` is a single column, so
 pinning a second record unpins the first without anything having to check, and
@@ -598,9 +574,9 @@ would not go down or come back up. The structure is right; it was built on the
 wrong foundation.
 
 **An entry is a layer over the journal, not a fourth pane, 2026-08-29.**
-Tapping a cover slides the entry in over the wall and dismissing slides it
-back. It comes from the right because that is where things arrive from, not
-because right means entry.
+Tapping a cover opens the entry over the wall and dismissing it puts the wall
+back. (It first slid in from the right, the way the session and the send page
+still do; the archive has that version and why it went.)
 
 Left and right meaning different things depending on which row you are in —
 the desk upstairs, an entry downstairs — is **ruled out**. That is a mode, and
@@ -608,20 +584,18 @@ modes are what make gesture navigation unlearnable. Three directions, one
 meaning each; a dimension that depends on invisible state undoes the legibility
 the cross was built for.
 
-**Reversed for the entry, 2026-09-02: it expands from the cover, and
-sideways means the next record.** Junior found there was no way to read
-entry to entry — every next one meant going back to the wall. Adding a
-next-entry swipe to a sheet that already slid sideways to open and close
-would have put three sideways gestures on one screen: the cross's panes,
-dismiss, and next. So the entry no longer slides in from the right. It
-expands from the cover that was tapped, the way a photo viewer opens a
-picture: the cover flies out of its tile into its place at the top of the
-entry while the sheet fades in under it, and on the way out it flies back.
-That frees the sideways axis for browsing — left and right are the previous
-and next record — and closing becomes a pull down from the top of the first
-screen, a press outside the sheet where there is an outside (a wide screen,
-where the entry is a column with the wall showing either side), Escape, or
-back. Both gestures are ones people already own.
+**An entry expands from its cover, and sideways means the next record,
+2026-09-02.** Junior found there was no way to read entry to entry — every
+next one meant going back to the wall — and a next-entry swipe on a sheet
+that already slid sideways to open and close would have been three sideways
+gestures on one screen. So the entry expands from the cover that was tapped,
+the way a photo viewer opens a picture: the cover flies out of its tile into
+its place at the top of the entry while the sheet fades in under it, and on
+the way out it flies back. That frees the sideways axis for browsing — left
+and right are the previous and next record — and closing is a pull down from
+the top of the first screen, a press outside the sheet where there is one (a
+wide screen, where the entry is a column with the wall either side), Escape,
+or back. Both gestures are ones people already own.
 
 What "next" means is the wall as it stands: after search, filters and sort,
 which the wall hands over alongside the tapped record (`library/handoff.js`).
@@ -1213,16 +1187,16 @@ their own journal and costs nobody else anything. This is a structural
 consequence of self-hosting rather than an accident of the design, and it is
 worth stating because it is the thing a hosted service can never offer.
 
-**Which is why the entrance can be hidden.** A normal login has to be findable
-because strangers need it; nobody needs this one but the keeper. Three taps on
-the mark, and a quiet Sign in line beside the source link on the pitch pane for
-when a gesture will not do. Hiding a door adds no security and this is honest
-about that — the lock is what protects the room. It costs nothing either, which
-is the whole argument.
-
-**It opens where you pressed, not as a screen.** A full-screen gate is what you
-build when the login is the destination. This one is a small panel under the
-mark, because signing in is something done in passing on the way to writing.
+**The way in is the right pane, and nothing on the mark opens it,
+2026-09-02.** The pitch's "Sign in" line when you are out, and the desk when
+you are in, which carries a Settings door beside Inbox and Share. `/settings`
+signed out *is* the sign-in, titled so; `/login` stays as the address form.
+One form, one place. No gesture on the logo at all, on Miyel's call: the
+beacon page is a record and its art and nothing else. A normal login has to
+be findable because strangers need it; nobody needs this one but the keeper,
+and the lock, not the door's placement, is what protects the room. (Three
+taps on the mark, and a panel that opened where you pressed, came before
+this; the archive has them.)
 
 **`/login` exists and nothing links to it prominently.** A gesture that is the
 only way in is a way in that cannot be linked, bookmarked, or reached when it
@@ -1298,10 +1272,15 @@ The reader lets the error throw and the caller fails closed: if the question
 cannot be answered, assume the journal is somebody's. It caches once true,
 because the latch never goes back.
 
-**One step, four fields, and the rest is edited where it prints.** Name,
-address, logging-since, Last.fm. Everything else on the card already has an
-editor, so a longer setup would be a second one. The nine bio prompts
-especially are not here: three get answered, and nine is a questionnaire.
+**Setup is one screen at a time, and everything after the name says Skip,
+2026-09-01.** Name → photo → prompts → Last.fm → links → rig → password. The
+fresh-account test showed that the earlier "one step, four fields" was one
+field that mattered and three that nothing else could write — and the fix for
+the three is not to ask, it is to derive: the address is the host the request
+came in on, and the founding date is the day setup ran. An editable date
+anyone can set to anything says nothing. Skip means later, not never: every
+field that can be skipped has a home afterwards, which is what Settings is
+for. The nine bio prompts are still three answered, not nine asked.
 
 **The handle is derived and the serial is minted; neither is asked.** A journal
 is named after whoever keeps it, so asking for a second name is the mistake
@@ -1327,15 +1306,6 @@ writing, because nothing had ever written the column. Turning it into a gate
 without `002_claim_existing_journals.sql` would have held a live journal behind
 the holding page on deploy. A non-null `keeper_name` is somebody having already
 answered the question setup asks.
-
-**Reversed 2026-09-01: setup is one screen at a time, and everything after the
-name says Skip.** Name → photo → prompts → Last.fm → links → rig → password.
-The fresh-account test showed that "one step, four fields" was one field that
-mattered and three that nothing else could write — and the fix for the three
-is not to ask, it is to derive: the address is the host the request came in
-on, and the founding date is the day setup ran. An editable date anyone can
-set to anything says nothing. Skip means later, not never: every field that
-can be skipped has a home afterwards, which is what Settings is for.
 
 **Settings is the machinery, reached from the desk.** (A gear sat beside the
 card's pencil for a day and came off, 2026-09-02: the card and Settings do
@@ -1483,17 +1453,6 @@ drawn only when `public/install/NN-*.png` exists, and the issues link. The
 long-standing note that `/get` owed a stranger two things and gave one is
 discharged.
 
-**The sign-in form lives on Settings, and nothing on the mark opens it,
-2026-09-02.** The mark used to turn into a password panel in place, on the
-cross — a login form on the beacon page, which is meant to be a record and
-its art and nothing else. Then, for an afternoon, three taps went to Settings
-instead. Both are out, on Miyel's call: no gesture on the logo at all. The
-way in is the right pane and only the right pane — the pitch's "Sign in"
-line when you are out, and the desk when you are in, which now carries a
-Settings door beside Inbox and Share. `/settings` signed out *is* the
-sign-in, titled so; `/login` stays as the address form. One form, one place.
-This supersedes "The way in is three taps on the mark" under The lock.
-
 **The password is filed under the journal's address, in a visible field.**
 Password managers pair a password with a username and stay silent without
 one. The hidden username field was read-only and one pixel wide, and Safari
@@ -1560,10 +1519,6 @@ the foreign keys sit in `DO` blocks. So 001 does nothing against the journal it
 was written on and builds everything against an empty database. The fiddliest
 part of adopting a runner — teaching it that an existing database is already up
 to date — never arises.
-
-**`schema.sql` is retired and `migrations/001_initial.sql` is the schema.** Two
-files describing one database is two files that drift, and this one already had
-a rule about that. Backups carry the migrations rather than a separate copy.
 
 **Nothing edits a migration that has run.** The filename is the identity, so a
 renamed file is a file that runs again. A change is a new numbered file.
