@@ -57,6 +57,13 @@ deploy a copy — and none of it is anything they need.
 
 ## Pending
 
+- [ ] **The stray database `ep-old-sea-am0rc38b`.** A copy of the live one,
+      written to from localhost for four days. Find it in the Neon console —
+      likely a branch or a second project — and delete it once nothing there
+      is wanted. It holds the September 2 essay draft and possibly `secrets`
+      rows from a rehearsal. The live database has zero `secrets` rows, so
+      the live site still signs in with the environment's `SESSION_PASSWORD`.
+
 **Fresh-account test passed 2026-09-02** — see DECISIONS. What is left of
 this list is what to keep an eye on rather than what to prove:
 
@@ -553,6 +560,17 @@ Project → Settings → Environment Variables.
 ---
 
 ## Gotchas
+
+**Two databases with the same entries and different settings rows.** From
+about 2026-08-30 to 2026-09-03, `.env.local` pointed at a stray copy of the
+database (`ep-old-sea-am0rc38b`) rather than the one Vercel reads
+(`ep-patient-morning-amam2qx0`). Both held the same 39 entries, so nothing
+looked wrong: an essay written through localhost went into the copy, and
+every nightly backup in that window backed up the copy. The live journal had
+only Neon's six hours for those days. Before any write from localhost, and
+before saying anything about backups, print the host:
+`node --env-file=.env.local -e "console.log(new URL(process.env.DATABASE_URL).host)"`.
+Also: VS Code did not save the first edit to `.env.local`; check the mtime.
 
 **GitHub's Contributors sidebar counts co-author trailers; its contributors
 API does not.** Checking the API and concluding a co-author is not listed is
@@ -1202,6 +1220,13 @@ copy up*, for what was decided; this is what was built.
       clone yet, so nothing broke. A mirror and a bundle from before the
       rewrite are in `~/listening-notes-backups/repo-before-rewrite-*`.
       Going forward the trailer is off in Claude Code's global settings.
+
+- [x] **The essay reached the live database, 2026-09-03** — the first swap
+      had gone into the stray copy (see Gotchas). `.env.local` now carries
+      the live connection string; the essay was written again there, the
+      August 25 version kept aside, the live page verified, and
+      `npm run backup` run so the iCloud backups cover the live journal from
+      today.
 
 - [x] **The essay replaced, 2026-09-03** — the final version, five sections
       under `## ` headings, written straight into `settings.why_essay` with
