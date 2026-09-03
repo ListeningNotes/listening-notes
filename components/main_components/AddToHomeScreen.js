@@ -42,7 +42,9 @@ function detect() {
   return 'desktop';
 }
 
-export default function AddToHomeScreen() {
+// `centered` lines the icon, the name and the why up in the middle — the
+// setup screen is centred top to bottom; Settings is a left-aligned page.
+export default function AddToHomeScreen({ centered = false }) {
   const { cover_name } = useBookplate();
   // Read off the browser rather than copied into state on mount: the server
   // has no navigator and renders 'unknown', the client answers for itself,
@@ -80,10 +82,12 @@ export default function AddToHomeScreen() {
   );
 
   return (
-    <div className="a2h">
+    <div className={'a2h' + (centered ? ' a2h--centered' : '')}>
       <style>{`
         .a2h { display: flex; flex-direction: column; gap: 14px; }
         .a2h-row { display: flex; align-items: center; gap: 14px; }
+        .a2h--centered .a2h-row { justify-content: center; }
+        .a2h--centered .a2h-why { text-align: center; }
         .a2h-icon {
           width: 56px; height: 56px; border-radius: 13px; overflow: hidden; flex: none;
           box-shadow: 0 1px 3px rgba(0,0,0,0.18);
@@ -150,9 +154,11 @@ export default function AddToHomeScreen() {
 
           {where === 'android' && !prompt && (
             <ol className="a2h-steps">
-              <li><span>Open Chrome’s menu — the three dots, top right.</span></li>
-              <li><span>Choose <strong>Add to Home screen</strong>, or <strong>Install app</strong> where it says that.</span></li>
-              <li><span>Press <strong>Add</strong>.</span></li>
+              <li><span>In Chrome, press the menu button — the three dots at the top right, beside the address bar.</span></li>
+              <li><span>In the list that opens, press <strong>Add to Home screen</strong>. On some phones it says <strong>Install app</strong> instead; it is the same thing.</span></li>
+              <li><span>A small panel shows the icon above and the name. Press <strong>Add</strong>, or <strong>Install</strong>.</span></li>
+              <li><span>The icon lands on your home screen. Open it from there from now on — it opens without Chrome around it.</span></li>
+              <li><span>In Samsung Internet the menu is the three lines at the bottom right, and the item is <strong>Add page to</strong>, then <strong>Home screen</strong>.</span></li>
             </ol>
           )}
 

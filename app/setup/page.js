@@ -661,8 +661,8 @@ export default function WelcomeScreen() {
 
             {current === 'homescreen' && (
               <div className="su-fields">
-                <p className="su-why">It’s yours. Put it on your home screen.</p>
-                <AddToHomeScreen />
+                <p className="su-why" style={{ textAlign: 'center' }}>It’s yours. Put it on your home screen.</p>
+                <AddToHomeScreen centered />
                 <button type="button" className="su-go" disabled={busy} onClick={() => advance()}>Open the journal</button>
               </div>
             )}
