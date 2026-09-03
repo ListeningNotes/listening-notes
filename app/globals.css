@@ -2128,10 +2128,12 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
      or an entry whose tile is off the wall, gets. The slide from the right
      that used to be here was: animation: layIn 0.46s with layIn going from
      translateX(100%) to none. */
-  animation: layFade 0.32s ease-out;
   /* The growth scales from the tile's corner, never the centre. */
   transform-origin: 0 0;
 }
+/* LayerEntry says which arrival this is. Grows: the Web Animations run does
+   everything and the stylesheet stays out of it. Fades: the plain version. */
+.lay--fades { animation: layFade 0.32s ease-out; }
 @keyframes layFade {
   from { opacity: 0; }
   to   { opacity: 1; }
