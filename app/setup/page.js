@@ -611,11 +611,8 @@ export default function WelcomeScreen() {
                   a question mark you can open at any point, which already knows
                   the record and what you’ve written so far — useful for asking
                   questions during a listen, or for finding a common thread
-                  through multiple track notes.
-                </p>
-                <p className="su-why">
-                  Nothing it says goes into your entry. You read it, then you
-                  write what you write.
+                  through multiple track notes. Nothing it says goes into your
+                  entry. You read it, then you write what you write.
                 </p>
                 <p className="su-why">
                   Get a key at{' '}
