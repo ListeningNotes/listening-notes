@@ -98,7 +98,7 @@ export default function ComingSoon({ reason = 'setup', said = '' }) {
           color: var(--ink-faint); max-width: 40ch; text-align: left;
           margin-top: 6px;
         }
-        .cs-how code { color: var(--ink-soft); }
+        .cs-how code, .cs-how strong { color: var(--ink-soft); font-weight: 500; }
         .cs-help {
           font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.08em;
           color: var(--ink-faint); text-decoration: none; margin-top: 18px;
@@ -131,9 +131,15 @@ export default function ComingSoon({ reason = 'setup', said = '' }) {
             This copy has no database yet.
           </p>
           <p className="cs-how">
-            In Vercel, open the project’s Settings → Environment Variables and
-            add <code>DATABASE_URL</code> — the connection string from your
-            Neon project. Then redeploy. The tables build themselves.
+            Usually the database arrives a moment after the first build. In
+            Vercel, open the project, find the latest deployment, and press
+            <strong> Redeploy</strong>. Then come back here.
+          </p>
+          <p className="cs-how">
+            Still here after that? Open the project’s Storage tab. If no
+            database is listed, add Neon there. If one is, open Settings →
+            Environment Variables and check <code>DATABASE_URL</code> is
+            present, then redeploy again. The tables build themselves.
           </p>
           <a href={`${SOURCE_URL}/issues`} className="cs-help">It didn’t work</a>
         </>

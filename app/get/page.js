@@ -70,7 +70,7 @@ const STEPS = [
   { shot: '04-build', head: 'Wait for the build', time: 'two to three minutes',
     text: 'A log scrolls past, then Vercel says Congratulations and shows a picture of your site. Press the picture.' },
   { shot: '05-holding', head: 'Press “Set it up”', time: 'a moment',
-    text: 'The site says the journal isn’t ready yet, with a small “Set it up” underneath. Press it. For half an hour after the build that is all it takes — the copy knows the person who just built it is the person looking. Came back later? Press Redeploy in Vercel and try again, or type the code printed at the end of the build log.' },
+    text: 'The site says the journal isn’t ready yet, with a small “Set it up” underneath. Press it. For half an hour after the build that is all it takes — the copy knows the person who just built it is the person looking. Came back later? Press Redeploy in Vercel and try again. If the site says it has no database yet, press Redeploy once; the database usually arrives a moment after the first build.' },
   { shot: '06-setup', head: 'Set up the journal', time: 'as long as you like',
     text: 'Your name first. Then a photo, three openings to finish, Last.fm if you use it, links and your rig — every one of those can be skipped and added later. Then choose a password.' },
   { shot: '07-homescreen', head: 'Put it on your home screen', time: 'ten seconds',

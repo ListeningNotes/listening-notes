@@ -68,11 +68,11 @@ out on the canonical copy at [listeningnotes.blog/get](https://listeningnotes.bl
 If it did not work, [say so here](https://github.com/ListeningNotes/listening-notes/issues)
 — what you pressed and what you saw.
 
-If the button did not attach a database, the site will say so on a plain page:
-add `DATABASE_URL` under the project's Settings → Environment Variables (the
-connection string from a Neon project) and redeploy. The tables build
-themselves; you never open a SQL editor. `.env.example` lists every variable,
-and all of them except `DATABASE_URL` are optional.
+If the site says it has no database yet, press Redeploy once in Vercel; the
+database usually arrives a moment after the first build. If it still says so,
+the page tells you where to look. The tables build themselves; you never open
+a SQL editor. `.env.example` lists every variable, and all of them except
+`DATABASE_URL` are optional.
 
 **Naming your copy.** Every copy is named after whoever keeps it, so yours is
 not called Listening Notes and should not be. The name comes from `keeper_name`
