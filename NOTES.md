@@ -933,9 +933,13 @@ Branch `expand-and-swipe`. See DECISIONS, *The cross*, for the reasoning.
       column-and-scrim on a wide window and the send layer's side arrival
       also checked.
 
-**Not verified, needs a real phone:** the pull-down close against the snap
-scroller (the first move decides the axis; a diagonal start is handed to the
-browser) and the sideways swipe by finger.
+**Backed out to a baseline the same evening.** On a real phone the swipe was
+glitchy, so the layer is back to `main`'s version with one change: it fades
+in instead of sliding from the right. The expand-and-swipe work is intact in
+this branch's history (commits "The entry expands from its cover" and "The
+flight lands"); `git revert` of the baseline commit brings it back. Next
+step is to judge the baseline on the phone, then decide whether the glitch
+was the gestures or the layer itself.
 
 **2026-09-01 — setup expanded, Settings, and the password out of deploy**
 
