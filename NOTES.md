@@ -202,13 +202,18 @@ The cross is built and merged. What is left of it:
       DECISIONS.
 - [ ] **`useShake` + `firework()`** — shake the phone, a firework goes up, then `/shuffle`. The Surprise pill stays where it is.
 - [ ] **`AlbumPreview.js` has no reader.** 175 lines, and the only thing that mounted it was the tile flip. The share printer redraws the same card independently rather than importing it, so nothing broke when the flip went. Its `.ln-marks` CSS is dead with it. Left on disk rather than deleted in passing — it is a designed piece and the deletion is somebody's call, not a side effect.
-- [ ] **A CSS cleanup pass, once the cross has shipped and settled.** Not a rewrite — one section at a time: delete, look at the site, commit. The reason to wait is that each of these removals makes the next lot of dead rules obvious, and doing it all at once means not knowing which deletion broke what.
-
-      What is already known to be dead or nearly dead:
-      - `.hp-mobile-screens`, `.hp-screen--one`, `.hp-screen--two` and everything under them — roughly 300 lines, nothing renders those names. Four rules inside them did real work and are already restated against `.hn`.
-      - Whatever the card flip left behind.
-      - Whatever the two duplicate homepage trees left behind.
-      - The mini beacon's remains are already gone, taken out with it on 2026-08-29 — `.beacon-mini-*`, `.marquee-*` and `.beacon-track-clip`, about seventy lines.
+- [ ] **`AlbumStrip.js` and `library/dog_ear.js` have no reader.** The strip
+      lost its last importer when Journal came out of the archive page
+      (`5fdaf0f`); `dog_ear.js` — the "New since your visit" fold in
+      localStorage — is only read by the strip, so it went with it, and so did
+      the `.strip-tile*` and `.ln-new-mark` rules. Left on disk like
+      `AlbumPreview.js`: the fold is a designed piece with a reader-side store,
+      and whether it comes back on the wall is a decision, not a side effect.
+- [ ] **The share page's lint fix is unverified in the browser.** `chosen` is
+      now derived from the fetched record rather than set in an effect, and the
+      "Drawing…" line is written from a frame callback. Build and lint pass;
+      the page needs a signed-in look at `/dashboard/share` to confirm both
+      slides still draw and the status line settles to blank.
 - [ ] **A QR on the pitch pane.** DECISIONS already settles that the right pane produces a fixed code to `/get`, the same on every copy. Not built, and the "logo made of the QR" idea is unresolved.
 - [ ] **`settings.bio` now has no reader and no writer.** Deliberate — see DECISIONS. The value is still in the database. Decide at the welcome screen whether the column gets a job or gets dropped, while the schema is still a draft.
 - [ ] **`/rig` is still a forwarding stub**, and by the same argument that deleted `/why` it may not have earned one: three days live, linked from a card, on a site nobody else runs. `/about` genuinely did earn its stub. Worth one decision rather than two defaults.
@@ -586,10 +591,29 @@ them looks broken. Dispatch `new FocusEvent('focusin', { bubbles: true })` to
 exercise the handler, and test the real thing on a device.
 
 **`react-hooks/set-state-in-effect` is an error here, not a warning.** Any
-`setState` called synchronously in an effect body fails lint. Read stored
-values in a `useState` initialiser, set state from the event that caused the
-change, and do DOM measurement inside `requestAnimationFrame` — a callback is
-fine, the effect body is not. Two old instances remain in the share page.
+`setState` called synchronously in an effect body fails lint. The shapes that
+pass, all in use in the codebase: a browser-only value (the URL, localStorage,
+a media query) read through `useSyncExternalStore` with a server snapshot, so
+it needs no effect at all; a value derived from other state rather than seeded
+into its own (`typed ?? fallback`, with null meaning untouched); state set from
+the event that caused the change; a DOM write in a `useLayoutEffect` instead of
+a measurement stored in state; and, where "a frame later" is the actual intent,
+`requestAnimationFrame` with the frame cancelled in the cleanup. Lint was clean
+on 2026-09-03. Seven of the nine errors fixed that day had been added while
+lint was already red — which is the reason to keep it at zero.
+
+**A comment is enough to make a class look used.** A grep for a class name
+hits code comments and CSS-in-JS as readily as a `className`, so a dead rule
+whose name a comment still mentions survives a naive scan. Check for
+`className=` or `classList` before calling a class live. The reverse trap too:
+`EdgeCaret` builds `edge-caret--` + direction, so the composed name never
+appears whole anywhere.
+
+**Cutting a `@keyframes` block by regex needs three closing braces.** Two
+frames inside, one around them. A pattern that stops at the second leaves the
+third behind, and PostCSS then refuses the whole stylesheet with
+`Unexpected }` — which reaches the browser as every page blank. A brace-depth
+scan of the file (comments stripped) finds the line in a second.
 
 Things that cost real time. Each one is here because it was not obvious and
 will not be obvious again in six months.
@@ -912,6 +936,39 @@ current.
 ---
 
 ## Complete
+
+**2026-09-03 session — the audit cleanup** (branch `cleanup-audit`)
+- [x] **Lint at zero.** Nine `set-state-in-effect` errors across Journal, the
+      share page, AlbumFinder and AlbumStrip fixed in the shapes the codebase
+      already used (see Gotchas); the six dependency warnings were each
+      deliberate and now say so in a disable comment with the reason; the 35
+      `<img>` warnings were one decision, recorded in DECISIONS and switched
+      off in `eslint.config.mjs`.
+- [x] **DECISIONS.md split.** Five decisions sat beside the ones that reversed
+      them (the pin, how an entry arrives, where the door is, the first shape
+      of setup, schema.sql); each is now one entry stating the current rule,
+      and the superseded argument moved to `docs/DECISIONS-ARCHIVE.md` with
+      the licence reasoning. AGENTS.md points there and says not to read it at
+      session start. The live file went from 1,781 lines to 1,736 — the rest
+      is 250-odd decisions at six lines each, which is the format, not drift.
+- [x] **The CSS cleanup pass** that was waiting on the cross settling. Three
+      families, each deleted, looked at on the dev server, and committed on its
+      own: the old homepage (`.hp-*` two-screen layout, dot nav, beacon box
+      and its recent panel, scroll button), the pre-cross layout (sidebar,
+      hero, tile overlays and labels, page headings, skeleton grid), and the
+      old beacon stage with the recent-tracks panel — plus eight keyframes no
+      animation named. `globals.css` 3,886 → 2,476 lines. Every rule went
+      only after its class names were checked against `className=` in every
+      JS file, not just against a grep.
+- [x] `SessionDuration` had no caller and is gone; `AlbumFinder`'s header
+      described a hook deleted with Echo and now describes `AlbumPicker`.
+- [x] Audited and left alone, on purpose: `EchoNetwork` (a dashboard
+      background), the `/rig` and `/about` redirect stubs (both earn their keep
+      under the forwarding-stub rule in DECISIONS), `research_album` and
+      `format_post`, the `tags` column.
+- [x] Verified: `npm run build` clean (26 pages), lint clean, `/`, `/archive`,
+      an entry, `/session` and `/submit` matched their before-screenshots on
+      desktop and at 375px after each family.
 
 **2026-09-02/03 — the entry grows from its tile, and swipes to the next**
 
