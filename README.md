@@ -58,8 +58,8 @@ code into your account, which is the point.
    knows the person who just built it is the person looking. (Came back
    later? Press Redeploy in Vercel and try again, or type the code from the
    end of the build log.)
-3. It asks for your name, then offers a photo, three prompts, Last.fm, links
-   and your rig, each of which you can skip, then a password. Everything you
+3. It asks for your name, then offers a photo, three prompts, your rig,
+   Last.fm and an Anthropic key, each of which you can skip, then a password. Everything you
    skip has a home later — on the card, or in Settings behind the gear beside
    the card's pencil.
 4. The last screen shows how to put the journal on your home screen, where it
