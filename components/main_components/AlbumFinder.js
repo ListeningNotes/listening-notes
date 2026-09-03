@@ -41,7 +41,7 @@
 
 'use client';
 import { useEffect, useRef, useState } from 'react';
-import { X } from '@phosphor-icons/react';
+import { X, ArrowLeft } from '@phosphor-icons/react';
 import { searchAlbums } from '../../library/music_data_api';
 
 // Long enough that typing an artist's name is one search rather than eight,
@@ -61,6 +61,13 @@ export default function AlbumFinder({ picked, onPick, onClear }) {
   const [looking, setLooking]   = useState(false);
   const [asked, setAsked]       = useState(false);   // a search has come back
   const [byHand, setByHand]     = useState(false);
+  // The chooser: a panel over the page holding the field and the wall of
+  // results. Opens when the landing field is focused, closes on a pick, on
+  // Back, or on Escape. The landing page underneath keeps its sleeve, which
+  // is where the chosen cover flies to.
+  const [open, setOpen]         = useState(false);
+  const chooserInput = useRef(null);
+  const sleeveRef = useRef(null);
   const [hand, setHand]         = useState({ album: '', artist: '', year: '' });
 
   // Which search the results on screen belong to. A slow answer to "rad"
@@ -84,18 +91,58 @@ export default function AlbumFinder({ picked, onPick, onClear }) {
     return () => clearTimeout(id);
   }, [typed]);
 
-  function take(album) {
-    onPick({
+  // Picking: the cover flies out of the wall and down into the sleeve, and
+  // only when it has landed does the record become the chosen one — so the
+  // sleeve is still there to land in, and the held state appears with the
+  // picture already in place. The chooser closes at the start of the flight,
+  // so the flight is over the landing page rather than over the wall.
+  function take(album, from) {
+    const chosen = {
       album: album.name,
       artist: album.artist,
       year: album.year || '',
       art: album.art || '',
       collectionId: album.collectionId || null,
-    });
+    };
+    setOpen(false);
     setTyped('');
     setResults([]);
     setAsked(false);
+    const reduced = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (!from || !album.art || reduced) { onPick(chosen); return; }
+    // One frame for the chooser to leave and the sleeve to be laid out.
+    requestAnimationFrame(() => {
+      const to = sleeveRef.current?.getBoundingClientRect();
+      if (!to || !to.width) { onPick(chosen); return; }
+      const img = document.createElement('img');
+      img.src = album.art;
+      img.alt = '';
+      Object.assign(img.style, {
+        position: 'fixed', zIndex: 320, left: `${from.left}px`, top: `${from.top}px`,
+        width: `${from.width}px`, height: `${from.height}px`, objectFit: 'cover',
+        borderRadius: '6px', transformOrigin: '0 0', pointerEvents: 'none',
+        boxShadow: '0 12px 40px rgba(0,0,0,0.22)',
+      });
+      document.body.appendChild(img);
+      const run = img.animate([
+        { transform: 'translate(0,0) scale(1,1)' },
+        { transform: `translate(${to.left - from.left}px, ${to.top - from.top}px) scale(${to.width / from.width}, ${to.height / from.height})` },
+      ], { duration: 380, easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)', fill: 'forwards' });
+      let done = false;
+      const land = () => { if (done) return; done = true; onPick(chosen); img.remove(); };
+      run.onfinish = land;
+      run.oncancel = land;
+      window.setTimeout(land, 500);
+    });
   }
+
+  // Escape closes the chooser, the way it closes everything else here.
+  useEffect(() => {
+    if (!open) return undefined;
+    const onKey = event => { if (event.key === 'Escape') { event.stopPropagation(); setOpen(false); } };
+    window.addEventListener('keydown', onKey, true);
+    return () => window.removeEventListener('keydown', onKey, true);
+  }, [open]);
 
   function takeByHand() {
     if (!hand.album.trim() || !hand.artist.trim()) return;
@@ -218,42 +265,78 @@ export default function AlbumFinder({ picked, onPick, onClear }) {
     <div className="af">
       <FinderStyles />
 
+      {/* The landing: an empty sleeve, waiting, and the field under it. Not
+          a spinner and not a message — the sleeve is the shape of the thing
+          being asked for, standing where it is going to stand, and it is
+          where the chosen cover flies to. */}
+      <div className="af-slot">
+        <span className="af-square af-sleeve" aria-hidden="true" ref={sleeveRef}>
+          <span className="af-none">♪</span>
+        </span>
+      </div>
+
       <input
         className="af-input"
         value={typed}
         onChange={e => setTyped(e.target.value)}
+        onFocus={() => setOpen(true)}
         placeholder="Search an artist or an album"
         autoComplete="off"
       />
 
-      {/* The results as a wall of covers, newest first, under the field.
-          The field goes first so that focusing it on a phone — which scrolls
-          the sheet to bring it into view — leaves the header where it is;
-          with the square above the field, the header went under the clock.
-          The wall can be as tall as it likes: the rest of the form only
-          appears once a record is picked, so nothing is being pushed off. */}
-      {results.length > 0 && (
-        <div className="af-wall">
-          {results.map(album => (
-            <button
-              type="button"
-              key={album.collectionId}
-              className="af-cover"
-              onClick={() => take(album)}
-            >
-              <span className="af-cover-art">
-                <img src={album.art} alt="" loading="lazy" />
-              </span>
-              <span className="af-cover-album">{album.name}</span>
-              <span className="af-cover-artist">{album.artist}{album.year ? ' · ' + album.year : ''}</span>
+      {/* The chooser: over the page, the field at its head and the results as
+          a wall of covers under it, newest first. It opens when the field is
+          focused and takes the focus with it, so typing carries on and the
+          keyboard stays up. The page's own sleeve is underneath, out of
+          sight, waiting for the flight. */}
+      {open && (
+        <div className="af-chooser" role="dialog" aria-label="Find the album">
+          <div className="af-chooser-head">
+            <button type="button" className="af-chooser-back" onClick={() => setOpen(false)} aria-label="Back">
+              <ArrowLeft size={18} weight="bold" aria-hidden="true" />
             </button>
-          ))}
+            <input
+              ref={chooserInput}
+              className="af-input"
+              value={typed}
+              onChange={e => setTyped(e.target.value)}
+              placeholder="Search an artist or an album"
+              autoComplete="off"
+              autoFocus
+            />
+          </div>
+          <div className="af-chooser-body">
+            {results.length > 0 && (
+              <div className="af-wall">
+                {results.map(album => (
+                  <button
+                    type="button"
+                    key={album.collectionId}
+                    className="af-cover"
+                    onClick={event => take(album, event.currentTarget.querySelector('.af-cover-art')?.getBoundingClientRect())}
+                  >
+                    <span className="af-cover-art">
+                      <img src={album.art} alt="" loading="lazy" />
+                    </span>
+                    <span className="af-cover-album">{album.name}</span>
+                    <span className="af-cover-artist">{album.artist}{album.year ? ' · ' + album.year : ''}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+            <div className="af-under">
+              {looking && <span className="af-word">Looking…</span>}
+              {nothing && <span className="af-word">Nothing found for that.</span>}
+              {!typed.trim() && !looking && <span className="af-word">Type an artist or an album.</span>}
+              <button type="button" className="af-quiet" onClick={() => { setOpen(false); setByHand(true); }}>
+                Can’t find it? Type it in →
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
       <div className="af-under">
-        {looking && <span className="af-word">Looking…</span>}
-        {nothing && <span className="af-word">Nothing found for that.</span>}
         {/* Offered from the start rather than only once a search has come back
             empty: somebody who already knows the record is not on Apple Music
             should not have to prove it first. */}
@@ -306,6 +389,37 @@ function FinderStyles() {
         background: var(--panel);
         border: 1px solid var(--border);
       }
+
+      /* ── The chooser ──────────────────────────────────────────────────────
+         A panel over the whole layer: the field at its head, the wall under
+         it, scrolling. Fixed to the layer rather than the page, because the
+         layer is what the send page is drawn on. */
+      .af-chooser {
+        position: fixed; inset: 0; z-index: 240;
+        background: var(--bg);
+        display: flex; flex-direction: column;
+        animation: afChooserIn 0.22s ease-out;
+      }
+      @keyframes afChooserIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+      @media (prefers-reduced-motion: reduce) { .af-chooser { animation: none; } }
+      .af-chooser-head {
+        display: flex; align-items: center; gap: 8px;
+        padding: calc(14px + var(--safe-top)) 16px 10px;
+        flex: none;
+      }
+      .af-chooser-head .af-input { flex: 1; }
+      .af-chooser-back {
+        display: inline-flex; align-items: center; justify-content: center;
+        width: 36px; height: 36px; border-radius: 10px; flex: none;
+        background: transparent; border: 0; color: var(--ink-faint); cursor: pointer;
+      }
+      .af-chooser-back:hover { color: var(--ink); background: var(--bg-warm); }
+      .af-chooser-body {
+        flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+        padding: 0 16px max(24px, env(safe-area-inset-bottom));
+      }
+      .af-chooser-body .af-under { margin-top: 14px; }
 
       /* ── The wall ─────────────────────────────────────────────────────────
          Results as a wall of covers under the field, two across on a phone

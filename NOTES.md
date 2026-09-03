@@ -1007,7 +1007,12 @@ was the gestures or the layer itself.
       day — and then became a wall (2026-09-03): the field first, a grid of
       large covers under it (`.af-wall`), newest first, 24 at most, and the
       rest of the form gated behind a pick in `app/submit/page.js`. The
-      search folds accents in `norm` so "bjork" finds Björk. A misspelling
+      search folds accents in `norm` so "bjork" finds Björk. Then, the same
+      day, the landing came back — sleeve, field and the whole form — and
+      the wall became a chooser that opens over the page when the field is
+      focused (`.af-chooser`); a picked cover flies down into the sleeve
+      before the held state appears. The message box grows with its text.
+      A misspelling
       ("micheal") still finds nothing — Apple's search is exact on the
       artist's name. The session rises from the bottom too.
 - [x] **A close never waits forever on an animation.** A hidden tab freezes

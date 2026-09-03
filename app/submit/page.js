@@ -227,6 +227,7 @@ export default function SubmitPage({ layered = false }) {
         }
         .sb-field::placeholder { color: var(--ink-faint); }
         .sb-field:focus { border-color: var(--ink-faint); }
+        textarea.sb-field--grows { overflow: hidden; }
         textarea.sb-field {
           resize: none; line-height: 1.7;
           min-height: clamp(72px, 11dvh, 96px);
@@ -335,12 +336,6 @@ export default function SubmitPage({ layered = false }) {
               onClear={() => setForm(f => ({ ...f, pick: null }))}
             />
 
-            {/* The rest of the form waits for a record. Until one is picked
-                the page is the field and a wall of covers, which can be as
-                tall as a search makes it; the message, the name and the Send
-                button arrive with the pick, under the held record, which is
-                where they were always meant to be read. */}
-            {form.pick && (<>
             {/* Not an optional notes box at the foot of the form. This is the
                 part being sent — the album is what it is about — so it sits
                 directly under the record and gets the page's only paragraph of
@@ -349,11 +344,20 @@ export default function SubmitPage({ layered = false }) {
                 far better than an instruction to say why would. */}
             <div>
               <span className="sb-label">Message <span className="sb-req">*</span></span>
+              {/* Grows with the message. A box that scrolled inside itself
+                  made a long note hard to read back; this one is as tall as
+                  the writing, and the page scrolls instead. */}
               <textarea
-                className="sb-field"
+                className="sb-field sb-field--grows"
                 value={form.note}
-                onChange={set('note')}
+                onChange={event => {
+                  set('note')(event);
+                  const el = event.currentTarget;
+                  el.style.height = 'auto';
+                  el.style.height = `${el.scrollHeight}px`;
+                }}
                 placeholder="Here’s that album we talked about."
+                rows={3}
               />
             </div>
 
@@ -388,7 +392,6 @@ export default function SubmitPage({ layered = false }) {
                 {sending ? 'Sending…' : 'Send it'}
               </button>
             </div>
-            </>)}
           </form>
         )}
       </main>
