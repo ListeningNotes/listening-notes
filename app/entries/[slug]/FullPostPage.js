@@ -26,6 +26,7 @@ import CommentBubble from '../../../components/main_components/Slug_Page/Comment
 import MetadataLabel from '../../../components/main_components/Slug_Page/MetadataLabel';
 import Chip from '../../../components/main_components/Slug_Page/Chip';
 import MiniCard from '../../../components/main_components/Slug_Page/MiniCard';
+import { handedOver } from '../../../library/handoff';
 import StarRating from '../../../components/main_components/StarRating';
 import StarPicker from '../../../components/session_components/StarRating';
 import { editStamp } from '../../../library/entry_formatter';
@@ -370,6 +371,10 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   // have to.
   const titleLength = (entry.album || '').length || 1;
   const titleSize = `clamp(1.25rem, ${(300 / titleLength).toFixed(2)}vw, 2.1rem)`;
+  // Whether the first screen was already on the layer before this rendered —
+  // drawn by LayerWaiting from what the wall handed over. Read once, on the
+  // first render, because the handoff is about the moment of arrival.
+  const [alreadyShown] = useState(() => layered && Boolean(handedOver(entry.slug)));
 
   // Says "Posted" because the artist line right above it already carries the
   // album's own year — a second bare date there would just read as a second
@@ -758,7 +763,12 @@ export default function FullPostPage({ entry, references = [], authed = false, l
           </button>
         ) : entry.album_art && (
           <div className="ln-screen-one-art">
-            <img src={entry.album_art} alt={entry.album} />
+            {/* decoding="sync": on the layer this image replaces an identical
+                one the wait state drew, and an async decode of a new element
+                is a frame with no cover in it — the blink at the moment the
+                entry lands. Synchronous, from the cache, it paints in the
+                same frame the old one leaves. */}
+            <img src={entry.album_art} alt={entry.album} decoding="sync" fetchPriority="high" />
           </div>
         )}
         {coverField}
@@ -771,8 +781,13 @@ export default function FullPostPage({ entry, references = [], authed = false, l
         {/* The score and the chips are what the flags below edit, so while a
             correction is open they stand down rather than sit beside their own
             controls saying the same thing twice. */}
+        {/* The stars light up on arrival — unless they were already on
+            screen. On the layer the wait state drew this exact score from
+            what the wall handed over, so the score has not arrived, it has
+            been there all along; replaying the fill starts every star empty
+            for a beat, which is the blink at the moment the entry lands. */}
         {!edit.editing && displayRating > 0 && (
-          <StarRating rating={displayRating} size={24} glow={isMasterpiece} animate burst={isMasterpiece} />
+          <StarRating rating={displayRating} size={24} glow={isMasterpiece} animate={!alreadyShown} burst={isMasterpiece && !alreadyShown} />
         )}
         {edit.editing && flagFields}
         <div className="ln-screen-one-chips">
