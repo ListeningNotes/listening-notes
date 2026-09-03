@@ -28,13 +28,9 @@
 // It is also what keeps the send on one screen while somebody is searching.
 // The results used to be a grid under the field, which on a phone was four
 // rows of covers pushing the message, the name and the Send button off the
-// bottom. Then a shelf that scrolled sideways inside the square. Now, 2026-09-
-// 03, a short list of rows inside the square — a thumbnail, the album, the
-// artist — scrolling up and down within it. The shelf went because sideways
-// stopped being a free axis: on the entry it now means the record beside this
-// one, and a page that asked for a sideways drag to find a record and a
-// different sideways drag to leave was two answers to one gesture. Rows want
-// nothing but a tap, and up-and-down inside a box is what a list already is.
+// bottom. In the square they are one row that scrolls sideways — a shelf,
+// which is what a row of records is, on the one axis this page is not already
+// using.
 //
 // ── And a way through when Apple has never heard of it ────────────────────
 // Search-only would mean a record that is not in the catalogue cannot be sent
@@ -224,23 +220,19 @@ export default function AlbumFinder({ picked, onPick, onClear }) {
 
       <div className="af-slot">
         {results.length > 0 ? (
-          <div className="af-rows" role="listbox" aria-label="Results">
+          <div className="af-shelf">
             {results.map(album => (
               <button
                 type="button"
-                role="option"
-                aria-selected="false"
                 key={album.collectionId}
-                className="af-row"
+                className="af-cover"
                 onClick={() => take(album)}
               >
-                <span className="af-row-art">
+                <span className="af-cover-art">
                   <img src={album.art} alt="" loading="lazy" />
                 </span>
-                <span className="af-row-said">
-                  <span className="af-row-album">{album.name}</span>
-                  <span className="af-row-artist">{album.artist}</span>
-                </span>
+                <span className="af-cover-album">{album.name}</span>
+                <span className="af-cover-artist">{album.artist}</span>
               </button>
             ))}
           </div>
@@ -318,43 +310,52 @@ function FinderStyles() {
         border: 1px solid var(--border);
       }
 
-      /* ── The rows ─────────────────────────────────────────────────────────
-         Results as a short list inside the square's height, scrolling up and
-         down within it. Nothing here asks for a sideways drag — see the note
-         at the top of the file for why the shelf went. */
-      .af-rows {
-        display: flex; flex-direction: column;
+      /* ── The shelf ────────────────────────────────────────────────────────
+         Results as one row scrolling sideways, inside the square's height.
+         Sideways because the page is already spending the other axis, and a
+         grid of covers pushed the Send button off a phone.
+
+         Safe inside the layer: the layer claims a sideways drag only on an
+         entry with a record beside it on the wall (see the browses flag in
+         LayerEntry), and this page has none, so a drag over the covers is
+         the browser's and scrolls the shelf. It was rows for an hour on
+         2026-09-03, while the layer still took every sideways drag; the
+         covers came back the moment it stopped, because a row of small
+         thumbnails is not how you recognise a record. */
+      .af-shelf {
+        display: flex; gap: 12px;
         width: 100%; height: var(--af-square);
-        overflow-y: auto; overscroll-behavior-y: contain;
+        overflow-x: auto; overflow-y: hidden;
+        overscroll-behavior-x: contain;
+        scroll-snap-type: x proximity;
         -webkit-overflow-scrolling: touch;
-        border: 1px solid var(--border); border-radius: 12px;
-        background: var(--panel);
       }
-      .af-rows::-webkit-scrollbar { width: 3px; }
-      .af-rows::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
-      .af-row {
-        display: flex; align-items: center; gap: 12px;
-        width: 100%; padding: 8px 10px; box-sizing: border-box;
-        background: none; border: 0; border-bottom: 1px solid var(--border);
+      .af-shelf::-webkit-scrollbar { height: 3px; }
+      .af-shelf::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+
+      .af-cover {
+        display: flex; flex-direction: column; gap: 2px;
+        flex: 0 0 auto; width: calc(var(--af-square) - 36px);
+        background: none; border: none; padding: 0;
         text-align: left; cursor: pointer; color: inherit;
-        transition: background 0.15s;
+        scroll-snap-align: start;
       }
-      .af-row:last-child { border-bottom: 0; }
-      .af-row:hover, .af-row:focus-visible { background: var(--bg-warm); outline: none; }
-      .af-row-art {
-        display: block; width: 44px; height: 44px; flex: none;
-        border-radius: 6px; overflow: hidden; background: var(--bg);
-        box-shadow: 0 2px 8px rgba(0,0,0,0.14);
+      .af-cover-art {
+        display: block; width: 100%; aspect-ratio: 1;
+        border-radius: 6px; overflow: hidden; background: var(--panel);
+        margin-bottom: 5px;
+        box-shadow: 0 4px 18px rgba(0,0,0,0.18);
+        transition: transform 0.2s cubic-bezier(0.34,1.2,0.64,1);
       }
-      .af-row-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
-      .af-row-said { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-      .af-row-album {
-        font-family: var(--font-nunito), sans-serif; font-weight: 600; font-size: 13px;
+      .af-cover-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+      .af-cover:hover .af-cover-art { transform: scale(1.05); }
+      .af-cover-album {
+        font-family: var(--font-nunito), sans-serif; font-weight: 600; font-size: 11px;
         line-height: 1.25; color: var(--ink);
         overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
       }
-      .af-row-artist {
-        font-family: var(--font-mono); font-size: 10px; color: var(--ink-faint);
+      .af-cover-artist {
+        font-family: var(--font-mono); font-size: 9px; color: var(--ink-faint);
         overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
       }
 

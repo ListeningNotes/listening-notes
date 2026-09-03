@@ -25,7 +25,7 @@ import SessionPage from '../../session/page';
 
 export default function ListenOverThePage() {
   return (
-    <LayerEntry label="Listen" scrolls>
+    <LayerEntry label="Listen" scrolls arrives="bottom">
       <SessionPage />
     </LayerEntry>
   );

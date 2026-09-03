@@ -1002,9 +1002,11 @@ was the gestures or the layer itself.
 - [x] **The send page, after the merge** (2026-09-03): it arrives from the
       bottom (`arrives="bottom"`, `lay--rises`) and sinks back on the pull
       down; the layer claims sideways only where there are neighbours
-      (`browses`), so scrolling rows work again everywhere else; and the
-      finder's shelf is a vertical list of rows in the same square
-      (`.af-rows` / `.af-row`).
+      (`browses`), so scrolling rows work again everywhere else. The
+      finder's shelf was rows for an hour and went back to covers the same
+      day — the big art is the point, and the shelf is safe now that the
+      layer leaves sideways alone there. The session rises from the bottom
+      too.
 - [x] **A close never waits forever on an animation.** A hidden tab freezes
       every animation and their finish never comes; `leave()` now also runs
       a timer a beat longer than the flight, and whichever comes first goes
