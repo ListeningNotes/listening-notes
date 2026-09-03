@@ -978,8 +978,17 @@ was the gestures or the layer itself.
       journal reopening. The swipe now says so on its way out
       (`arrivingBySwipe` / `tookASwipe` in handoff.js) and the next layer
       does nothing on arrival — no growth, no fade, no slide. Verified: the
-      swiped-to layer carries `lay--swiped`, has no animation running, and is
-      full size from its first frame.
+      swiped-to layer carries `lay--swiped` and does not grow or fade.
+- [x] **Then a page turn, the same evening.** "Just appears" felt choppy on
+      the phone: the page snapped back and the next one popped. Now the
+      record on screen keeps going the way it was pushed, off the edge
+      (`TURN_MS`, 240ms, the settling transition run to a full width), and
+      only then does the address change; the new layer's content enters
+      from the other side (`lay-content--from-right/left`, the direction
+      travels in the handoff). Measured: old 0 → −1280 over ~240ms, then
+      new +1280 → 0 over ~260ms. The address has to change *after* the
+      exit — prefetched, the neighbour arrives so fast that changed
+      together it replaced the layer before the exit moved a pixel.
 - [x] **A close never waits forever on an animation.** A hidden tab freezes
       every animation and their finish never comes; `leave()` now also runs
       a timer a beat longer than the flight, and whichever comes first goes

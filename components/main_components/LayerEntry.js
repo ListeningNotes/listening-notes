@@ -56,6 +56,9 @@ import { tileBoxOf, neighboursOf, handOffNeighbour, arrivingBySwipe, tookASwipe 
 // How long the sheet takes to grow to the screen. Unhurried, slowing as it
 // lands — the same curve the slide used.
 const GROW_MS = 420;
+// How long the exit of a page turn takes; the stylesheet's settling
+// transition on .lay-content is the same number.
+const TURN_MS = 240;
 const GROW_EASE = 'cubic-bezier(0.22, 0.61, 0.36, 1)';
 
 // How far right the pull has to travel before letting go leaves rather than
@@ -199,11 +202,12 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false 
 
   // ── To a neighbour ────────────────────────────────────────────────────────
   // A page turn. The record on screen keeps going the way it was pushed,
-  // off the edge, and the next one comes in from the other side — it is
-  // a new layer, so it plays its own entrance (see `arrival`). The address
-  // changes at once rather than after the exit: the new layer replaces this
-  // one the moment its page arrives, and its entrance covers whatever is
-  // left of the exit. The first screen is handed over so it draws at once.
+  // off the edge, and then the next one comes in from the other side — it
+  // is a new layer, so it plays its own entrance (see `arrival`). The
+  // address changes after the exit, not with it: the neighbour's page is
+  // prefetched and arrives almost at once, and changed together it replaced
+  // this layer before the exit had moved a pixel. The first screen is
+  // handed over so the neighbour draws at once when it does come.
   const go = useCallback(dir => {
     const target = dir < 0 ? neighbours.prev : neighbours.next;
     if (!target || leaving.current) return;
@@ -211,7 +215,7 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false 
     arrivingBySwipe(dir);
     setSettling(true);
     setShift(-dir * (sheetRef.current?.offsetWidth || window.innerWidth));
-    router.replace(`/entries/${target.slug}`);
+    window.setTimeout(() => router.replace(`/entries/${target.slug}`), TURN_MS);
   }, [neighbours.prev, neighbours.next, router]);
 
   useEffect(() => {
