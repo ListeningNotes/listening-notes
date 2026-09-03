@@ -100,10 +100,11 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false 
   // Three arrivals: by swipe (draw it, nothing else), by tap (grow out of
   // the tile), or neither (fade — a form, an off-wall tile, reduced motion).
   const [arrival] = useState(() => {
-    if (typeof document === 'undefined') return { swiped: false, growFrom: null };
-    if (tookASwipe()) return { swiped: true, growFrom: null };
-    if (!slug || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return { swiped: false, growFrom: null };
-    return { swiped: false, growFrom: tileBoxOf(slug) };
+    if (typeof document === 'undefined') return { swiped: 0, growFrom: null };
+    const swiped = tookASwipe();
+    if (swiped) return { swiped, growFrom: null };
+    if (!slug || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return { swiped: 0, growFrom: null };
+    return { swiped: 0, growFrom: tileBoxOf(slug) };
   });
   const growFrom = arrival.growFrom;
 
@@ -197,16 +198,19 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false 
   }, [goBack, slug]);
 
   // ── To a neighbour ────────────────────────────────────────────────────────
-  // Instant. The next record is simply there: no sliding out, no sliding
-  // in, no growth. A page that animated between neighbours read as the
-  // journal opening again every time, which it is not — it is turning a
-  // page. The first screen is handed over so it draws at once.
+  // A page turn. The record on screen keeps going the way it was pushed,
+  // off the edge, and the next one comes in from the other side — it is
+  // a new layer, so it plays its own entrance (see `arrival`). The address
+  // changes at once rather than after the exit: the new layer replaces this
+  // one the moment its page arrives, and its entrance covers whatever is
+  // left of the exit. The first screen is handed over so it draws at once.
   const go = useCallback(dir => {
     const target = dir < 0 ? neighbours.prev : neighbours.next;
     if (!target || leaving.current) return;
     handOffNeighbour(target);
-    arrivingBySwipe();
-    setShift(0);
+    arrivingBySwipe(dir);
+    setSettling(true);
+    setShift(-dir * (sheetRef.current?.offsetWidth || window.innerWidth));
     router.replace(`/entries/${target.slug}`);
   }, [neighbours.prev, neighbours.next, router]);
 
@@ -338,10 +342,12 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false 
       aria-modal="true"
       aria-label={label}
     >
-      {/* The content. It follows a finger sideways and springs back; a
-          neighbour, when it comes, is a new layer and simply appears. */}
+      {/* The content. It follows a finger sideways, springs back if let go
+          early, or leaves off the edge; a neighbour is a new layer and
+          enters from the side it was on. */}
       <div
-        className="lay-content"
+        className={'lay-content'
+          + (arrival.swiped === 1 ? ' lay-content--from-right' : arrival.swiped === -1 ? ' lay-content--from-left' : '')}
         style={shift !== 0 ? { transform: `translateX(${shift}px)` } : undefined}
       >
         {children}
