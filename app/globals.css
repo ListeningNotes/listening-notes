@@ -158,11 +158,6 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 
 .tile { display: block; text-decoration: none; color: inherit; }
 
-@keyframes shimmer {
-  from { opacity: 0.5; }
-  to   { opacity: 1; }
-}
-
 ::selection { background: rgba(200, 225, 255, 0.55); color: var(--text); }
 
 ::-webkit-scrollbar { width: 6px; background: var(--bg); }
@@ -171,13 +166,6 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 @media (max-width: 768px) {
           .main { margin-left: 0; padding: 7rem 1.8rem 4rem; }
   }
-
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(4px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-.loading-phrase { animation: fadeIn 0.4s ease forwards; }
 
 /* ═══════════════════════════════════════════════════
    HOMEPAGE — what survives of the pre-cross layout: the beacon box and the mark
@@ -351,15 +339,6 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   flex-shrink: 0;
 }
 
-@keyframes beacon-dot-glow {
-  0%, 100% { box-shadow: 0 0 5px rgba(124, 255, 155, 0.5); }
-  50%      { box-shadow: 0 0 11px rgba(124, 255, 155, 0.9); }
-}
-@keyframes eq-bounce {
-  0%, 100% { height: 22%; }
-  50%      { height: 100%; }
-}
-
 /* iOS Safari zooms the whole page in whenever you focus a field whose text is
    under 16px, which knocks the layout sideways and leaves you pinching back
    out. Fields across the site set their size inline, and inline styles beat
@@ -396,8 +375,6 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
     0%, 100% { opacity: 1; }
     50%      { opacity: 0.55; }
   }
-
-          
 
         }
 
@@ -465,13 +442,6 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   text-transform: uppercase; color: var(--ink-faint); margin: 24px 0 0;
 }
 
-.beacon-live-dot { display: none; }
-@keyframes beacon-breathe {
-  0%   { box-shadow: 0 0 0 0 rgba(124,255,155,0.5); }
-  50%  { box-shadow: 0 0 0 8px rgba(124,255,155,0); }
-  100% { box-shadow: 0 0 0 0 rgba(124,255,155,0); }
-}
-
 .beacon-idle-overlay {
   position: absolute;
   inset: 0;
@@ -497,30 +467,6 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   align-items: center;
   gap: 10px;
   width: 100%;
-}
-
-.beacon-status {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-}
-.beacon-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--text-muted);
-  flex-shrink: 0;
-}
-.beacon-dot--live {
-  background: #7cff9b;
-  animation: beacon-breathe 2.5s ease-in-out infinite;
-}
-.beacon-status-text {
-  font-family: var(--font-nunito), sans-serif;
-  font-size: 0.7rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--text-muted);
 }
 
 .beacon-track {
@@ -557,73 +503,6 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   letter-spacing: 0.08em;
   color: var(--text-muted);
   transition: opacity 0.5s ease;
-}
-
-.recent-panel {
-  position: absolute;
-  right: 0;
-  top: 50%;
-  transform: translateY(-50%) translateX(120%);
-  width: 280px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 16px;
-  padding: 20px;
-  transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s;
-  opacity: 0;
-  pointer-events: none;
-}
-.recent-panel--open {
-  transform: translateY(-50%) translateX(0);
-  opacity: 1;
-  pointer-events: auto;
-}
-
-.recent-panel-header {
-  font-family: var(--font-nunito), sans-serif;
-  font-size: 0.65rem;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--text-muted);
-  margin-bottom: 14px;
-}
-
-.recent-panel-empty {
-  font-family: var(--font-nunito), sans-serif;
-  font-size: 0.8rem;
-  color: var(--text-muted);
-}
-
-.recent-panel-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.recent-item {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.recent-item-art {
-  width: 40px;
-  height: 40px;
-  border-radius: 6px;
-  object-fit: cover;
-  flex-shrink: 0;
-}
-.recent-item-track {
-  font-family: var(--font-nunito), sans-serif;
-  font-size: 0.82rem;
-  font-weight: 500;
-  color: var(--text);
-  line-height: 1.3;
-}
-.recent-item-artist {
-  font-family: var(--font-nunito), sans-serif;
-  font-size: 0.68rem;
-  color: var(--text-muted);
-  letter-spacing: 0.04em;
 }
 
 /* ── Recent-logs strip (scroll-driven) ── */
@@ -691,46 +570,10 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   font-size: 3rem;
 }
 
-.strip-tile--skeleton {
-  cursor: default;
-  background: var(--bg-warm);
-  animation: skeleton-pulse 1.4s ease-in-out infinite;
-}
-@keyframes skeleton-pulse {
-  0%, 100% { opacity: 0.5; }
-  50% { opacity: 1; }
-}
-
 @media (max-width: 768px) {
 
   .strip-tile { width: 220px; height: 220px; border-radius: 18px; }
   .hp-strip-track { gap: 24px; padding: 36px calc(50vw - 110px); }
-}
-
-/* Surprise nav link */
-.surprise-inner {
-  display: inline-block;
-  position: relative;
-  color: var(--text-muted);
-  background: linear-gradient(
-    105deg,
-    transparent 30%,
-    rgba(255, 220, 80, 0.85) 50%,
-    transparent 70%
-  );
-  background-size: 300% 100%;
-  background-position: 200% 0;
-  background-clip: text;
-  -webkit-background-clip: text;
-  animation: glimmer-sweep 6s ease-in-out infinite;
-}
-@keyframes glimmer-sweep {
-  0%   { background-position: 200% 0; color: var(--text-muted); }
-  30%  { background-position: 200% 0; color: var(--text-muted); }
-  45%  { background-position: -50% 0; color: #c8a830; }
-  55%  { background-position: -100% 0; color: #c8a830; }
-  70%  { background-position: -200% 0; color: var(--text-muted); }
-  100% { background-position: -200% 0; color: var(--text-muted); }
 }
 
 /* Gold explosion particles on click */
@@ -762,81 +605,6 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   z-index: 10;
   transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
-
-.beacon-stage--open .beacon-card--main {
-  transform: translateX(calc(-50% - 170px));
-}
-
-/* Recent tiles — all start from center, fan right */
-.beacon-recent-tile {
-  position: absolute;
-  left: 50%;
-  top: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 8px;
-  opacity: 0;
-  pointer-events: none;
-  transform: translateX(-50%) scale(0.3);
-  transition:
-    transform 0.55s cubic-bezier(0.34, 1.56, 0.64, 1),
-    opacity 0.4s ease;
-  transition-delay: var(--delay, 0s);
-}
-
-.beacon-stage--open .beacon-recent-tile {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-.beacon-stage--open .beacon-recent-tile:nth-child(1) {
-  left: 50%;
-  transform: translateX(-50px) scale(0.88);
-}
-.beacon-stage--open .beacon-recent-tile:nth-child(2) {
-  left: 50%;
-  transform: translateX(108px) scale(0.76);
-}
-.beacon-stage--open .beacon-recent-tile:nth-child(3) {
-  left: 50%;
-  transform: translateX(238px) scale(0.64);
-}
-
-.beacon-recent-art {
-  width: 180px;
-  height: 180px;
-  object-fit: cover;
-  border-radius: 14px;
-  display: block;
-  box-shadow: 0 10px 26px rgba(0,0,0,0.16);
-}
-
-.beacon-recent-meta {
-  text-align: center;
-}
-
-.beacon-recent-track {
-  font-family: var(--font-nunito), sans-serif;
-  font-weight: 900;
-  font-size: 0.85rem;
-  color: var(--text);
-  line-height: 1.2;
-  max-width: 140px;
-}
-
-.beacon-recent-artist {
-  font-family: var(--font-nunito), sans-serif;
-  font-size: 0.62rem;
-  letter-spacing: 0.06em;
-  color: var(--text-muted);
-  margin-top: 2px;
-}
-
-/* Echo effect — tiles fade + desaturate progressively, revive on hover */
-.beacon-recent-tile:nth-child(1) { opacity: 0.62; filter: saturate(0.65); transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease, filter 0.4s ease; }
-.beacon-recent-tile:nth-child(2) { opacity: 0.46; filter: saturate(0.48); transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease, filter 0.4s ease; }
-.beacon-recent-tile:nth-child(3) { opacity: 0.32; filter: saturate(0.32); transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.4s ease, filter 0.4s ease; }
 
 /* Wide screens read the hero instead; this shape is the phone's. It sits out
    here with the rest of them so that the layer's stand-in obeys it too — left
@@ -1985,7 +1753,6 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 
 /* Restated from the old .hp-mobile-screens block (since deleted) — same values, new scope. */
 .hn .beacon-stage { height: 320px; }
-.hn-screen .beacon-status .beacon-dot { display: none; }
 .hn .hp-dashboard {
   background: none;
   border: none;
@@ -2489,7 +2256,6 @@ a.ab-rig-name:hover { text-decoration: underline; }
   transition: color 0.18s ease;
 }
 .ab-link:hover { color: var(--ink); }
-.ab-doors { display: flex; gap: 8px; flex-wrap: wrap; }
 /* Moved to the pitch pane — see .pt-source, and the note in Pitch.js about why
    it has to sit on a public pane rather than behind the wristband. */
 
@@ -2694,14 +2460,6 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   flex-wrap: wrap;
 }
 
-/* The mark turning into the password panel and back — the same crossfade the
-   About card uses to turn a portrait into its code, because it is the same
-   move: one thing giving up its place to another in the spot it was already
-   occupying. */
-@keyframes wa-face {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
 @media (prefers-reduced-motion: reduce) {
   @keyframes wa-face { from { opacity: 1; } to { opacity: 1; } }
 }
