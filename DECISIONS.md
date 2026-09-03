@@ -1326,6 +1326,20 @@ the first thing on screen is the name field; the words "claim code" appear
 only for somebody who lost the link. The bare code is still printed under it
 for that case, and for a copy run somewhere with no address to print.
 
+**And the door is simply open for half an hour after a build, 2026-09-02.**
+The second fresh-account run found the real problem: Vercel ends a deploy on
+a Congratulations screen with a picture of the site, and the build log is
+behind it. Nobody goes looking for a log; they press the picture. So the
+build step opens setup for thirty minutes on an unclaimed copy, and pressing
+the picture, then "Set it up", lands in setup with nothing typed. The timed
+window was weighed against the code before and lost; it wins now because it
+is *combined* with the code rather than instead of it, and because it opens
+only at build — a server start could be woken by anybody's visit, a build
+only by the owner. Past the window the site says to press Redeploy in
+Vercel, which runs the build again, or to type the code from the log. The
+exposure is a freshly minted random address for thirty minutes, which is as
+small as this gets without asking a person to type.
+
 **The build migrates too.** `npm run build` runs the migrator before
 `next build`, purely so the claim code reaches the build log. The server
 still migrates on every start; the build step finding nothing pending is the

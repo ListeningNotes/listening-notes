@@ -50,13 +50,12 @@ code into your account, which is the point.
 
 **First run.**
 
-1. Deploy. Watch the build log while it runs — near the end it prints a box
-   with a **link**. Open it. That is what makes the copy yours: the link
-   carries a one-time code, and only the person who saw the log has it.
-   (Missed it? It is also in the project's runtime logs, and printed again on
-   every restart until the copy is claimed. The code under the link can be
-   typed by hand at *Set it up* on the holding page.)
-2. Setup opens.
+1. Deploy. When Vercel says Congratulations, press the picture of your site.
+2. It says the journal isn't ready yet, with a small *Set it up* underneath.
+   Press it. For half an hour after the build that is all it takes — the copy
+   knows the person who just built it is the person looking. (Came back
+   later? Press Redeploy in Vercel and try again, or type the code from the
+   end of the build log.)
 3. It asks for your name, then offers a photo, three prompts, Last.fm, links
    and your rig, each of which you can skip, then a password. Everything you
    skip has a home later — on the card, or in Settings behind the gear beside

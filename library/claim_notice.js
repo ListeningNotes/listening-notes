@@ -33,19 +33,26 @@ export function claimLink(code) {
   return address ? `${address}/setup?code=${encodeURIComponent(code)}` : '';
 }
 
-export function claimNotice(code) {
+export function claimNotice(code, { windowOpen = false } = {}) {
   const link = claimLink(code);
-  const body = [
-    'This journal is not anybody’s yet. Make it yours:',
-    '',
-    ...(link
-      ? [link, '', 'Open that link. If it has expired or you are somewhere', 'else, press “Set it up” on your site and type:']
-      : ['Open your site, press “Set it up”, and type:']),
-    '',
-    code,
-  ];
-  // The box grows to its longest line, which is the link, which is as long
-  // as the project's name makes it.
+  const body = ['This journal is not anybody’s yet. Make it yours:', ''];
+  if (windowOpen) {
+    body.push('Open your site and press “Set it up” — within the next');
+    body.push('30 minutes, nothing else is needed.');
+    body.push('');
+    body.push('After that, press Redeploy to open setup again, or type');
+    body.push('this code where it asks for one:');
+  } else if (link) {
+    body.push(link);
+    body.push('');
+    body.push('Open that link. If it has expired or you are somewhere');
+    body.push('else, press “Set it up” on your site and type:');
+  } else {
+    body.push('Open your site, press “Set it up”, and type:');
+  }
+  body.push('');
+  body.push(code);
+  // The box grows to its longest line.
   const width = Math.max(...body.map(line => line.length)) + 2;
   const rule = '─'.repeat(width);
   return [

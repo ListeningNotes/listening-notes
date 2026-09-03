@@ -1,0 +1,11 @@
+-- Copyright (C) 2026 Miyel Brown
+-- SPDX-License-Identifier: AGPL-3.0-or-later
+-- migrations/004_setup_window.sql
+--
+-- When setup is open without a code. The build step sets it half an hour
+-- ahead on an unclaimed copy, so the person who just deployed can press the
+-- preview picture on Vercel's Congratulations screen and land in setup with
+-- nothing to type. Past it, the claim code — still printed in the log — or a
+-- redeploy, which sets it again. Cleared by claiming. See DECISIONS,
+-- "Setting a copy up".
+ALTER TABLE secrets ADD COLUMN IF NOT EXISTS setup_open_until timestamp with time zone;

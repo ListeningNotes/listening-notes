@@ -138,14 +138,24 @@ export default function WelcomeScreen() {
       setRehearsing(Boolean(status?.claimed && rehearse));
       setHasPassword(Boolean(status?.has_password));
       let admitted = !!auth.authed;
-      if (!admitted && code && !status?.claimed) {
+      const knock = async password => {
         const res = await fetch('/api/auth/login', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ password: code }),
+          body: JSON.stringify({ password }),
         }).catch(() => null);
-        if (res?.ok) admitted = true;
-        else setCodeFromLink(code);
+        return Boolean(res?.ok);
+      };
+      // The window first: for half an hour after the build the door opens
+      // to a knock with nothing in it, which is how pressing the picture on
+      // Vercel's Congratulations screen lands here with nothing to type.
+      if (!admitted && !status?.claimed && status?.open) {
+        admitted = await knock('');
+      }
+      // Then the code, if the person arrived by the link in the log.
+      if (!admitted && code && !status?.claimed) {
+        admitted = await knock(code);
+        if (!admitted) setCodeFromLink(code);
         // The code comes off the address either way. It is a one-time secret
         // and should not sit in the history or get pasted on somewhere.
         window.history.replaceState(null, '', '/setup');
@@ -385,7 +395,7 @@ export default function WelcomeScreen() {
               <p className="su-why" style={{ textAlign: 'center', marginBottom: 18 }}>
                 {codeFromLink
                   ? 'That link did not open the door. The code from it is below — press Enter to try again, or find the newest one in the build log.'
-                  : 'The build log of the deploy you just made ends with a box holding a link. Open the link, or type the code from it here.'}
+                  : 'Setup was open for half an hour after this copy was built, and that has passed. The quickest way back in: in Vercel, open the project, press Redeploy on its latest deployment, and come back here once it finishes. Or type the code from the end of the build log.'}
               </p>
             )}
             <PasswordGate bare asking={hasPassword ? 'password' : 'claim code'} initial={codeFromLink} onAuth={() => setAuthed(true)} />
