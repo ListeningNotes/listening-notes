@@ -6,9 +6,3 @@ export function TrackLength(seconds) {
   const s = String(seconds % 60).padStart(2, '0');
   return m + ':' + s;
 }
-
-export function SessionDuration(seconds) {
-  const m = Math.floor(seconds / 60);
-  const s = String(seconds % 60).padStart(2, '0');
-  return m + ':' + s;
-}

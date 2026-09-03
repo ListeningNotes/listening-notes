@@ -112,6 +112,9 @@ export default function SessionPage() {
       })
       .catch(() => {})
       .finally(() => setChecking(false));
+  // Once, on arrival: the check is a question asked at the door, and what
+  // was left on the desk is read then and only then.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // The landing. The album screen renders in the same commit as the record,

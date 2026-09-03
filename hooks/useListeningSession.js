@@ -143,6 +143,10 @@ export function useListeningSession({ step }) {
     if (!albumInput || !hasWriting || saved) return undefined;
     const t = setTimeout(() => { saveDraft({ quiet: true }); }, 3000);
     return () => clearTimeout(t);
+  // saveDraft is deliberately not a dependency: it is remade on every render,
+  // and listing it would reset the three seconds on renders that changed
+  // nothing worth saving.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [albumInput, overallNotes, trackNotes, trackRatings, trackFavorites, rating, Masterpiece, Favorite, Formative, entryType, step, hasWriting, saved]);
 
   // Assemble the preview on arrival. Nothing here reaches a model — format_post
@@ -153,6 +157,9 @@ export function useListeningSession({ step }) {
     if (step !== SESSION_STEPS.length - 1 || saved) return;
     setOutput(null);
     if (overallNotes.trim()) doFormat();
+  // Keyed on the step alone, on purpose: the preview is rebuilt on arrival,
+  // not on every keystroke behind it.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step]);
 
   // The whole tracklist with each song's marks on it — what gets written to

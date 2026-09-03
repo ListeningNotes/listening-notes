@@ -27,7 +27,7 @@
 
 'use client';
 
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { parseRating } from '../../library/entry_formatter';
 import AlbumTile from './AlbumTile';
 import { handOffOrder } from '../../library/handoff';
@@ -98,17 +98,24 @@ export default function Journal({ entries: given, loading: givenLoading, scrolle
   // desktop it opened EntryModal, a second copy of the entry's layout drawn
   // over the top with the URL pushed in by hand.
 
-  const [search, setSearch] = useState('');
-  const [searchOpen, setSearchOpen] = useState(false);
-
   // An artist named in a review links here with ?q=their name — the archive
   // filtered to one artist is the artist page this site doesn't otherwise
   // have. Read off window rather than through useSearchParams, which would
-  // want a Suspense boundary and cost this page its prerender.
-  useEffect(() => {
-    const q = new URLSearchParams(window.location.search).get('q');
-    if (q) { setSearch(q); setSearchOpen(true); }
-  }, []);
+  // want a Suspense boundary and cost this page its prerender. Read through
+  // useSyncExternalStore so the server renders no query and the browser
+  // renders the real one without the two disagreeing — the same shape as
+  // useJournalHost. Derived rather than synced: the field shows what the link
+  // asked for until someone types over it, and `typed` staying null is what
+  // "untouched" means.
+  const linkedQuery = useSyncExternalStore(
+    () => () => {},
+    () => new URLSearchParams(window.location.search).get('q') || '',
+    () => '',
+  );
+  const [typedSearch, setSearch] = useState(null);
+  const search = typedSearch ?? linkedQuery;
+  const [searchOpened, setSearchOpen] = useState(null);
+  const searchOpen = searchOpened ?? Boolean(linkedQuery);
   const [sortBy, setSortBy] = useState('posted');
   const [sortDir, setSortDir] = useState('desc');
   const [genre, setGenre] = useState('');
@@ -118,16 +125,15 @@ export default function Journal({ entries: given, loading: givenLoading, scrolle
   // Highlights had two of the three flags in it. The third was decided at the
   // same time as the other two and never given a way in here.
   const [formativeOnly, setFormativeOnly] = useState(false);
-  // null until the entries land — the range can't be known before the data
-  // is, and an unset range means "every year", not "no years".
-  const [yearRange, setYearRange] = useState(null);
+  // What the reader has set the handles to, or null for "every year" — which
+  // is the full span once the entries have landed and nothing before that.
+  const [yearPicked, setYearPicked] = useState(null);
   const [filtersOpen, setFiltersOpen] = useState(false);
   // Where the desktop popover hangs. Measured off the button rather than
   // guessed in CSS — its x depends on how wide the search field and the sort
   // select happen to be. Frozen at open time, which holds because the
   // popover closes on scroll (see the effect below).
   const filterBtnRef = useRef(null);
-  const [anchor, setAnchor] = useState(null);
 
   // Drag-to-dismiss on the phone sheet. `drag` is how far down the finger
   // has pulled it; `settling` marks the moment after release, when the
@@ -141,20 +147,26 @@ export default function Journal({ entries: given, loading: givenLoading, scrolle
   // — landing on page four of a search that only has one page is a blank grid
   // and no explanation.
   const [page, setPage] = useState(0);
-  const [density, setDensity] = useState(DEFAULT_DENSITY);
-  // Rendered on the server with no idea which it is; resolved on mount,
+  // The remembered density comes out of localStorage, which the server does
+  // not have; the default is what it renders and the browser corrects it on
+  // hydration. Once the reader picks one, theirs wins for the rest of the
+  // visit — null means they have not.
+  const storedDensity = useSyncExternalStore(() => () => {}, readStoredDensity, () => DEFAULT_DENSITY);
+  const [pickedDensity, setDensity] = useState(null);
+  const density = pickedDensity ?? storedDensity;
+  // Rendered on the server with no idea which it is; resolved on hydration,
   // which lands well before the entries fetch does, so nothing ever shows
-  // the wrong behaviour to a real reader.
-  const [isPhone, setIsPhone] = useState(false);
-
-  useEffect(() => {
-    setDensity(readStoredDensity());
-    const mq = window.matchMedia(`(max-width: ${FLIP_BELOW}px)`);
-    const sync = () => setIsPhone(mq.matches);
-    sync();
-    mq.addEventListener('change', sync);
-    return () => mq.removeEventListener('change', sync);
-  }, []);
+  // the wrong behaviour to a real reader. The media query is the store and
+  // its change event is the subscription.
+  const isPhone = useSyncExternalStore(
+    notify => {
+      const mq = window.matchMedia(`(max-width: ${FLIP_BELOW}px)`);
+      mq.addEventListener('change', notify);
+      return () => mq.removeEventListener('change', notify);
+    },
+    () => window.matchMedia(`(max-width: ${FLIP_BELOW}px)`).matches,
+    () => false,
+  );
 
   useEffect(() => {
     if (supplied) return;
@@ -172,11 +184,18 @@ export default function Journal({ entries: given, loading: givenLoading, scrolle
   // Measured after the open commits, off the live layout — reading the rect
   // inside the click handler catches whatever the bar looked like before
   // React had re-rendered it, which is a different place on the screen.
+  // Written straight onto the popover rather than into state: a layout
+  // effect runs before the browser paints, so the popover is never seen
+  // anywhere but under its button, and there is no second render to pay for.
   useLayoutEffect(() => {
-    if (!filtersOpen) return;
+    if (!filtersOpen || isPhone) return;
     const r = filterBtnRef.current?.getBoundingClientRect();
-    if (r) setAnchor({ left: r.left, top: r.bottom + 8 });
-  }, [filtersOpen]);
+    const sheet = sheetRef.current;
+    if (!r || !sheet) return;
+    sheet.style.left = `${r.left}px`;
+    sheet.style.top = `${r.bottom + 8}px`;
+    sheet.style.right = 'auto';
+  }, [filtersOpen, isPhone]);
 
   useEffect(() => {
     if (!filtersOpen) return;
@@ -254,12 +273,13 @@ export default function Journal({ entries: given, loading: givenLoading, scrolle
     [genres, genresShown],
   );
 
-  // Opens sitting on the full span once the entries arrive. Only ever seeds
-  // it once, so a reload of the list doesn't yank the handles out from under
-  // someone who has already moved them.
-  useEffect(() => {
-    if (yearBounds && !yearRange) setYearRange([yearBounds.min, yearBounds.max]);
-  }, [yearBounds, yearRange]);
+  // Derived rather than seeded: untouched handles sit on the full span, so a
+  // reload of the list moves them only if nobody has, and a range somebody
+  // set stays exactly where they put it.
+  const yearRange = useMemo(
+    () => yearPicked ?? (yearBounds ? [yearBounds.min, yearBounds.max] : null),
+    [yearPicked, yearBounds],
+  );
 
   // A range equal to the full span is the same as no range at all — treated
   // as inactive so it doesn't light up the Filters badge or the Clear button
@@ -349,7 +369,7 @@ export default function Journal({ entries: given, loading: givenLoading, scrolle
     setSearch(''); setGenre(''); setGenresOpen(false);
     setFavoritesOnly(false); setMasterpiecesOnly(false); setFormativeOnly(false);
     setSortBy('posted'); setSortDir('desc');
-    setYearRange(yearBounds ? [yearBounds.min, yearBounds.max] : null);
+    setYearPicked(null);
   }
 
   // Only what's tucked away behind the Filters button counts toward the
@@ -394,12 +414,6 @@ export default function Journal({ entries: given, loading: givenLoading, scrolle
       setDrag(0);                            // spring back
     }
   }
-
-  // Reset between openings, so a sheet dismissed by dragging doesn't come
-  // back still holding the offset it left on.
-  useEffect(() => {
-    if (!filtersOpen) { setDrag(0); setSettling(false); dragFromRef.current = null; }
-  }, [filtersOpen]);
 
   return (
     <>
@@ -819,7 +833,12 @@ export default function Journal({ entries: given, loading: givenLoading, scrolle
             type="button"
             ref={filterBtnRef}
             className={'arc-ctl' + (tuckedAwayCount ? ' arc-ctl--on' : '')}
-            onClick={() => setFiltersOpen(v => !v)}
+            onClick={() => {
+              // Reset on the way in, so a sheet dismissed by dragging doesn't
+              // come back still holding the offset it left on.
+              setDrag(0); setSettling(false); dragFromRef.current = null;
+              setFiltersOpen(v => !v);
+            }}
             aria-label="Filters"
             aria-expanded={filtersOpen}
           >
@@ -854,11 +873,7 @@ export default function Journal({ entries: given, loading: givenLoading, scrolle
               + (settling ? ' arc-sheet--settling' : '')}
             role="dialog"
             aria-label="Filters"
-            style={
-              !isPhone && anchor
-                ? { left: anchor.left, top: anchor.top, right: 'auto' }
-                : (drag > 0 || settling ? { transform: `translateY(${drag}px)` } : undefined)
-            }
+            style={drag > 0 || settling ? { transform: `translateY(${drag}px)` } : undefined}
           >
             {/* Phone only — the desktop popover is dismissed by clicking off
                 it, which is what a popover is expected to do. */}
@@ -942,7 +957,7 @@ export default function Journal({ entries: given, loading: givenLoading, scrolle
                     {yearRange[0] === yearRange[1] ? yearRange[0] : `${yearRange[0]} – ${yearRange[1]}`}
                   </span>
                 </div>
-                <YearRange bounds={yearBounds} value={yearRange} onChange={setYearRange} />
+                <YearRange bounds={yearBounds} value={yearRange} onChange={setYearPicked} />
               </div>
             )}
 

@@ -452,8 +452,11 @@ export default function SessionShare() {
   // needs some: isMasterpiece reads track_notes to spot a record where every
   // track got five stars, which is not the same question as the flag. So the
   // chosen record is fetched in full, one at a time, which is also why the
-  // wall of them no longer has to be.
-  const [chosen, setChosen] = useState(null);
+  // wall of them no longer has to be. `fetched` is the last full record to
+  // arrive, tagged with its slug; `chosen` is derived from it and is null
+  // whenever the selection has moved on and the full record has not caught
+  // up yet, so nothing is ever drawn from a stale one.
+  const [fetched, setFetched] = useState(null);
   const [query, setQuery] = useState('');
   const [shapeKey, setShapeKey] = useState('portrait');
   const [isDark, setIsDark] = useState(false);
@@ -521,24 +524,35 @@ export default function SessionShare() {
 
   const shape = SHAPES[shapeKey];
 
-  // Redraw both slides whenever anything they depend on moves.
   useEffect(() => {
-    if (!selected?.slug) { setChosen(null); return undefined; }
+    if (!selected?.slug) return undefined;
     let alive = true;
     // Falls back to the lean row rather than drawing nothing: a card that is
     // right about everything except an unflagged masterpiece beats no card.
     fetch(`/api/entries/${selected.slug}`)
       .then(r => r.json())
-      .then(d => { if (alive) setChosen({ ...selected, ...(d.entry || {}) }); })
-      .catch(() => { if (alive) setChosen(selected); });
+      .then(d => { if (alive) setFetched({ slug: selected.slug, entry: d.entry || {} }); })
+      .catch(() => { if (alive) setFetched({ slug: selected.slug, entry: {} }); });
     return () => { alive = false; };
   }, [selected]);
 
+  const chosen = useMemo(() => {
+    if (!selected?.slug || fetched?.slug !== selected.slug) return null;
+    return { ...selected, ...fetched.entry };
+  }, [selected, fetched]);
+
+  // Redraw both slides whenever anything they depend on moves.
   useEffect(() => {
-    if (!chosen || !coverRef.current || !cardRef.current) return;
+    if (!chosen || !coverRef.current || !cardRef.current) return undefined;
     let cancelled = false;
-    setStatus('Drawing…');
-    setTainted(false);
+    let done = false;
+    // The status line is written from a frame callback rather than the effect
+    // body (see NOTES, Gotchas) — and only if the draw has not already
+    // finished, which a cached cover and ready fonts can manage inside a
+    // frame. Without the guard "Drawing…" would land after "" and stay.
+    const frame = requestAnimationFrame(() => {
+      if (!cancelled && !done) setStatus('Drawing…');
+    });
 
     const families = {
       sans: getComputedStyle(probeRef.current.querySelector('.probe-sans')).fontFamily,
@@ -561,6 +575,7 @@ export default function SessionShare() {
       let img;
       try {
         img = await load(true);
+        setTainted(false);
       } catch {
         // A cover pasted in by hand may be on a host that sends no CORS
         // headers. It can still be shown, but drawing it poisons the canvas
@@ -584,9 +599,10 @@ export default function SessionShare() {
         else drawCard(ctx, img, chosen, shape, isDark, siteUrl, families, logo);
       }
       setStatus('');
+      done = true;
     })();
 
-    return () => { cancelled = true; };
+    return () => { cancelled = true; cancelAnimationFrame(frame); };
   }, [chosen, shape, isDark, siteUrl]);
 
   // The link a Story sticker wants. Built from the journal's stored address

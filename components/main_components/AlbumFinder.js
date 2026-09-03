@@ -4,13 +4,13 @@
 // Type an artist, see covers, hand one over.
 //
 // ── What this is not ──────────────────────────────────────────────────────
-// The session flow has an album search already, and this is deliberately not
-// it. useAlbumSelection wraps the same lookup in the Echo ceremony — the
-// network zooming, nodes spotlighting, cards growing out of them and flying to
-// the centre — which takes several seconds and is the owner's own opening
-// ritual for sitting down with a record. Somebody sending a friend an album is
-// not sitting down with it, and a stranger meeting that ceremony on their way
-// into a form would be watching an animation to fill in a field.
+// The session flow has an album search already (AlbumPicker), and this is
+// deliberately not it. That one is the owner's own opening ritual for sitting
+// down with a record — it used to wrap the same lookup in the Echo ceremony,
+// the network zooming and cards flying to the centre, and though the ceremony
+// is gone the separation stands. Somebody sending a friend an album is not
+// sitting down with it, and a stranger meeting the session's search on their
+// way into a form would be filling in a field with the wrong tool.
 //
 // What both share is the part worth sharing: searchAlbums() in
 // library/music_data_api.js, which is where the real work is — two searches
@@ -76,10 +76,18 @@ export default function AlbumFinder({ picked, onPick, onClear }) {
   // make it impossible.
   const askedFor = useRef('');
 
+  // Typing is the event, so what typing means happens here: an emptied field
+  // empties the wall at once, and anything else is "looking" from the first
+  // character. The effect below only waits, asks, and reports back.
+  function onType(value) {
+    setTyped(value);
+    if (!value.trim()) { setResults([]); setLooking(false); setAsked(false); }
+    else setLooking(true);
+  }
+
   useEffect(() => {
     const query = typed.trim();
-    if (!query) { setResults([]); setLooking(false); setAsked(false); return undefined; }
-    setLooking(true);
+    if (!query) return undefined;
     const id = setTimeout(async () => {
       askedFor.current = query;
       const found = await searchAlbums(query);
@@ -105,9 +113,7 @@ export default function AlbumFinder({ picked, onPick, onClear }) {
       collectionId: album.collectionId || null,
     };
     setOpen(false);
-    setTyped('');
-    setResults([]);
-    setAsked(false);
+    onType('');
     const reduced = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (!from || !album.art || reduced) { onPick(chosen); return; }
     // One frame for the chooser to leave and the sleeve to be laid out.
@@ -278,7 +284,7 @@ export default function AlbumFinder({ picked, onPick, onClear }) {
       <input
         className="af-input"
         value={typed}
-        onChange={e => setTyped(e.target.value)}
+        onChange={e => onType(e.target.value)}
         onFocus={() => setOpen(true)}
         placeholder="Search an artist or an album"
         autoComplete="off"
@@ -299,7 +305,7 @@ export default function AlbumFinder({ picked, onPick, onClear }) {
               ref={chooserInput}
               className="af-input"
               value={typed}
-              onChange={e => setTyped(e.target.value)}
+              onChange={e => onType(e.target.value)}
               placeholder="Search an artist or an album"
               autoComplete="off"
               autoFocus

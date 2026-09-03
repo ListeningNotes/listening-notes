@@ -81,7 +81,7 @@ The library — logic, no visuals
     sitewide_visuals.js        All colors and fonts — change here, changes everywhere
     ai_integration.js          The Claude AI calls: research, and the local assembly of a post
     music_data_api.js          Fetches album art and tracklists from iTunes
-    session_timers.js          Track length display, session timer
+    session_timers.js          Track length display (m:ss)
     wristband.js               Session auth — issues and checks the JWT cookie
     secrets.js                 The vault: the keys, the password hash, the session secret, the claim code. Database first, environment second
     claim_notice.js            The box printed in the build log while a copy is unclaimed

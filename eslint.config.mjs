@@ -5,6 +5,16 @@ import nextVitals from "eslint-config-next/core-web-vitals";
 
 const eslintConfig = defineConfig([
   ...nextVitals,
+  {
+    rules: {
+      // Plain <img> on purpose. Album art comes from Apple's servers and the
+      // covers are the site; routing every one through Next's image optimiser
+      // would spend a metered allowance on every copy, on every read, for
+      // pictures already sized upstream (see sizedAlbumArt). DECISIONS, "What
+      // a read costs".
+      '@next/next/no-img-element': 'off',
+    },
+  },
   // Override default ignores of eslint-config-next.
   globalIgnores([
     // Default ignores of eslint-config-next:
