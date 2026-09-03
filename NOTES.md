@@ -925,11 +925,17 @@ Branch `expand-and-swipe`. See DECISIONS, *The cross*, for the reasoning.
       back to the wall with nothing moved, no console errors. The production
       build carries the new rules.
 
+- [x] The flight verified in the pane at phone and wide widths, both ways,
+      after three fixes: the cover comes from the tile (the sheet holds
+      nothing at that moment), the wait for its landing spot is up to 1.5s
+      (on a wide window the spot is on the entry itself), and the spot is
+      `.ln-hero-row .ln-cover` there, not the phone's first screen. The
+      column-and-scrim on a wide window and the send layer's side arrival
+      also checked.
+
 **Not verified, needs a real phone:** the pull-down close against the snap
 scroller (the first move decides the axis; a diagonal start is handed to the
-browser), the sideways swipe on a phone, the flight itself as seen (the dev
-server on :3000 was serving a stale stylesheet), the column-and-scrim on a
-wide window, and the send/session layers after the CSS restructure.
+browser) and the sideways swipe by finger.
 
 **2026-09-01 — setup expanded, Settings, and the password out of deploy**
 

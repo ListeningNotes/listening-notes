@@ -87,5 +87,7 @@ export function coverBoxOf(slug) {
   if (!tile) return null;
   const box = tile.getBoundingClientRect();
   if (box.width === 0 || box.height === 0) return null;
-  return { x: box.left, y: box.top, w: box.width, h: box.height };
+  // The picture itself travels with the box, so the flight can start before
+  // the entry's own copy of it exists on the sheet.
+  return { x: box.left, y: box.top, w: box.width, h: box.height, src: tile.currentSrc || tile.src };
 }

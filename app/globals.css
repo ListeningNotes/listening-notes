@@ -2145,11 +2145,15 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 /* The source arrival: the sheet fades in while the cover flies (LayerEntry
    animates the flight itself, over the top). Until it has landed the sheet's
    own cover is hidden, so there is one cover on screen and not two. */
-.lay--source .lay-sheet { opacity: 0; transition: opacity 0.42s cubic-bezier(0.22, 0.61, 0.36, 1); }
-.lay--source.lay--arrived .lay-sheet { opacity: 1; }
+.lay--source .lay-sheet { animation: layFade 0.42s cubic-bezier(0.22, 0.61, 0.36, 1); }
+@keyframes layFade { from { opacity: 0; } to { opacity: 1; } }
+/* Until the cover has landed, the sheet's own copy of it stays out of sight
+   — one cover on screen, not two. On a wide window the landing spot only
+   exists once the entry itself has arrived, so this can outlast the fade. */
 .lay--source:not(.lay--arrived) .ln-screen-one-art img,
+.lay--source:not(.lay--arrived) .ln-hero-row .ln-cover,
 .lay--source:not(.lay--arrived) .lay-wait-art { visibility: hidden; }
-.lay--source.lay--leaving .lay-sheet { opacity: 0; transition-duration: 0.3s; }
+.lay--source.lay--leaving .lay-sheet { opacity: 0; transition: opacity 0.3s; }
 /* The flying copy of the cover. Fixed, over everything, and shaped like the
    tile it left — the radius is the wall's tile radius. */
 .lay-flyer {
@@ -2199,7 +2203,7 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 @media (prefers-reduced-motion: reduce) {
   .lay--side .lay-sheet, .lay-content--from-right, .lay-content--from-left { animation: none; }
   .lay--settling .lay-sheet, .lay--settling .lay-content { transition: none; }
-  .lay--source .lay-sheet { transition: opacity 0.2s; }
+  .lay--source .lay-sheet { animation: layFade 0.2s; }
 }
 
 /* ── Why the sheet must not be a scroll container on a phone ───────────────
@@ -2239,10 +2243,10 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 @media (min-width: 1024px) {
   .lay--source { background: rgba(20, 18, 14, 0.42); }
   .lay--source .lay-sheet {
-    left: 50%;
-    right: auto;
+    left: 0;
+    right: 0;
     width: min(1100px, 100%);
-    margin-left: min(-550px, -50%);
+    margin: 0 auto;
     box-shadow: 0 24px 80px rgba(0, 0, 0, 0.28);
   }
 }
