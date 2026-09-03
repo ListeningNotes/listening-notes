@@ -962,9 +962,21 @@ was the gestures or the layer itself.
       move decides — mostly downward, from the top of the first screen, is
       the pull, and the sheet follows the finger; past a fifth of the screen
       or a flick it closes the same way as Escape. Anything else goes to the
-      browser. The edge pull stays for now; it goes when left/right become
-      the neighbours. Verified with synthetic touches in the pane; a real
-      thumb against the snap scroller is still the test that counts.
+      browser. Verified with synthetic touches in the pane, and by Miyel's
+      thumb on the phone the same day.
+- [x] **Left and right go to the neighbours** (2026-09-03): the wall hands
+      over its current order (`handOffOrder` / `neighboursOf` in
+      handoff.js); the content follows the finger sideways and stiffens at
+      an end; a release past a fifth of the width or a flick goes to the
+      neighbour by `router.replace`, its first screen handed over first so
+      it draws at once; arrow keys and edge carets for a pointer; both
+      routes prefetched. The edge pull is retired — sideways cannot mean
+      both next and leave. Verified in the pane at both widths: key, swipe,
+      order, neighbours, and closing afterwards.
+- [x] **A close never waits forever on an animation.** A hidden tab freezes
+      every animation and their finish never comes; `leave()` now also runs
+      a timer a beat longer than the flight, and whichever comes first goes
+      back. Found because the pane was hidden while testing.
 
 **2026-09-01 — setup expanded, Settings, and the password out of deploy**
 

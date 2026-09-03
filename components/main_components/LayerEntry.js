@@ -25,24 +25,20 @@
 // tile scrolled off the wall — it fades, which is the plainer version of the
 // same thing rather than a different thing. Reduced motion fades too.
 //
-// ── Why the swipe starts at the edge ──────────────────────────────────────
-// It read the whole surface first, and that could not be made to work. The
-// layer sets touch-action: pan-y so the browser owns vertical panning — which
-// means on a swipe that is mostly sideways but slightly down, the browser
-// starts scrolling on the vertical part *while* this is still deciding whether
-// the horizontal part is a swipe. Both happen. On the first screen, with a
-// mandatory snap waiting one viewport below, a back-swipe took you down into
-// the notes instead. Being stricter about what counted as horizontal only
-// traded that for swipes that did nothing at all.
+// ── Sideways means the neighbours, 2026-09-03 ─────────────────────────────
+// Left and right on an entry go to the previous and next record on the wall,
+// in the wall's order as it stands — after search, filters and sort, which
+// the wall hands over (library/handoff.js). It stops at the ends and never
+// wraps. Closing is a pull down from the top of the first screen, Escape or
+// back. The edge pull that used to close it is gone: with sideways meaning
+// next, a sideways pull that also meant leave would be two answers to one
+// gesture.
 //
-// The strip fixes it by removing the ambiguity rather than arbitrating it. It
-// carries touch-action: none, so inside those few pixels the browser does not
-// pan and every gesture there is unambiguously this one; everywhere else
-// scrolling is untouched and can never be mistaken for leaving. It is also
-// what iOS does with its own back gesture, so the thing to reach for is the
-// thing people already reach for — and it works the same over the cover, over
-// the tracklist and in the middle of the prose, because the strip runs the
-// whole height.
+// Moving to a neighbour is router.replace, so the address is always the
+// record on screen and back still goes to the wall rather than through every
+// record swiped past. The neighbour's first screen is handed over before the
+// address changes, so the swap draws at once; the routes either side are
+// prefetched too.
 //
 // ── Going back ────────────────────────────────────────────────────────────
 // Always router.back(), never a state flag. The layer is open because the URL
@@ -54,7 +50,8 @@
 'use client';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
-import { tileBoxOf } from '../../library/handoff';
+import { CaretLeft, CaretRight } from '@phosphor-icons/react';
+import { tileBoxOf, neighboursOf, handOffNeighbour } from '../../library/handoff';
 
 // How long the sheet takes to grow to the screen. Unhurried, slowing as it
 // lands — the same curve the slide used.
@@ -121,15 +118,17 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false 
     ], { duration: GROW_MS, easing: GROW_EASE });
     return () => run.cancel();
   }, [growFrom]);
-  const edgeRef = useRef(null);
   // How far the pull has moved it, in pixels. Held in state rather than
   // written straight to the element, because the closing animation needs to
   // know whether it is starting from rest or from wherever a release left it.
-  const [drag, setDrag] = useState(0);
-  // The pull down, in pixels. Separate from the edge pull rather than one
-  // vector, because the two are different gestures with different homes.
+  // The pull down, in pixels, moving the whole sheet.
   const [dragY, setDragY] = useState(0);
+  // The sideways position of the content while browsing, and which side the
+  // next record should arrive from.
+  const [shift, setShift] = useState(0);
+  const [enterFrom, setEnterFrom] = useState(null);
   const [settling, setSettling] = useState(false);
+  const neighbours = slug ? neighboursOf(slug) : { prev: null, next: null };
 
   const goBack = useCallback(() => router.back(), [router]);
 
@@ -156,10 +155,17 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false 
     // hero band's on a wide window — whichever is laid out.
     const cover = [...sheet.querySelectorAll('.ln-screen-one-art img, .ln-hero-row .ln-cover img')]
       .find(el => el.getBoundingClientRect().width > 0);
+    // Whatever the animations do, the route goes back. A hidden tab freezes
+    // every animation on the page and their finish never comes; a close that
+    // waited on it would wait forever. So the animation's end and a timer a
+    // beat longer both try, and whichever comes first wins.
+    let went = false;
+    const back = () => { if (went) return; went = true; goBack(); };
+    window.setTimeout(back, GROW_MS);
     const fade = sheet.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 200, easing: 'ease-out', fill: 'forwards' });
     if (!onScreen || !cover) {
-      fade.onfinish = goBack;
-      fade.oncancel = goBack;
+      fade.onfinish = back;
+      fade.oncancel = back;
       return;
     }
     // The flying copy. Fixed, over the fading sheet, starting exactly where
@@ -181,18 +187,44 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false 
       { transform: `translateX(${fromX}px) scale(1, 1)` },
       { transform: `translate(${box.x - from.left}px, ${box.y - from.top}px) scale(${box.w / from.width}, ${box.h / from.height})` },
     ], { duration: GROW_MS * 0.75, easing: GROW_EASE, fill: 'forwards' });
-    const done = () => { flyer.remove(); goBack(); };
+    const done = () => { flyer.remove(); back(); };
     run.onfinish = done;
     run.oncancel = done;
+    // The flying copy must not outlive the sheet, animation or not.
+    window.setTimeout(() => flyer.remove(), GROW_MS + 100);
   }, [goBack, slug]);
 
-  // Escape closes it, the same as the swipe. A full-screen surface with no
-  // keyboard way out is a trap for anyone not using a thumb.
+  // ── To a neighbour ────────────────────────────────────────────────────────
+  const go = useCallback(dir => {
+    const target = dir < 0 ? neighbours.prev : neighbours.next;
+    if (!target || leaving.current) return;
+    handOffNeighbour(target);
+    setEnterFrom(dir);
+    setSettling(true);
+    setShift(-dir * (sheetRef.current?.offsetWidth || window.innerWidth));
+    window.setTimeout(() => {
+      setShift(0);
+      router.replace(`/entries/${target.slug}`);
+    }, 160);
+  }, [neighbours.prev, neighbours.next, router]);
+
   useEffect(() => {
-    const onKey = event => { if (event.key === 'Escape') leave(); };
+    if (neighbours.prev) router.prefetch(`/entries/${neighbours.prev.slug}`);
+    if (neighbours.next) router.prefetch(`/entries/${neighbours.next.slug}`);
+  }, [neighbours.prev, neighbours.next, router]);
+
+  // Escape closes it, the same as the pull. A full-screen surface with no
+  // keyboard way out is a trap for anyone not using a thumb. Left and right
+  // arrows browse, where there is somewhere to go.
+  useEffect(() => {
+    const onKey = event => {
+      if (event.key === 'Escape') leave();
+      if (event.key === 'ArrowLeft') go(-1);
+      if (event.key === 'ArrowRight') go(1);
+    };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [leave]);
+  }, [leave, go]);
 
   // The journal is still mounted underneath and would happily scroll behind
   // the layer. Locking the document rather than hiding the journal keeps its
@@ -204,76 +236,16 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false 
     return () => root.classList.remove('ln-locked');
   }, []);
 
-  // Touch events rather than pointer events, and listened for by hand rather
-  // than through props, because this needs { passive: false } — React attaches
-  // its own as passive, and a passive listener cannot call preventDefault,
-  // which is most of the job here.
-  useEffect(() => {
-    const strip = edgeRef.current;
-    if (!strip) return undefined;
-    let pull = null;
-
-    const begin = event => {
-      if (event.touches.length !== 1) { pull = null; return; }
-      const touch = event.touches[0];
-      pull = { x: touch.clientX, at: event.timeStamp, lastX: touch.clientX, lastAt: event.timeStamp };
-      setSettling(false);
-    };
-
-    const move = event => {
-      if (!pull || event.touches.length !== 1) return;
-      const touch = event.touches[0];
-      // Where the finger was last actually seen. A fast flick can end with a
-      // touchend whose coordinates sit behind the last move it fired, so the
-      // decision is made on what was tracked rather than on where it landed.
-      pull.lastX = touch.clientX;
-      pull.lastAt = event.timeStamp;
-      if (event.cancelable) event.preventDefault();
-      setDrag(Math.max(0, touch.clientX - pull.x));
-    };
-
-    const end = () => {
-      const done = pull;
-      pull = null;
-      if (!done) return;
-      const width = sheetRef.current?.offsetWidth || window.innerWidth;
-      const travelled = Math.max(0, done.lastX - done.x);
-      const speed = travelled / Math.max(1, done.lastAt - done.at);
-
-      if (travelled > width * FAR_ENOUGH || speed > FAST_ENOUGH) {
-        // Shrink home from where the finger let go, then change the route —
-        // never before, or the layer vanishes mid-gesture and the journal
-        // appears to jump.
-        leave(travelled);
-        return;
-      }
-      setSettling(true);
-      setDrag(0);
-    };
-
-    strip.addEventListener('touchstart', begin, { passive: false });
-    strip.addEventListener('touchmove', move, { passive: false });
-    strip.addEventListener('touchend', end);
-    // iOS cancels a touch readily, and treating that as "never mind" is how a
-    // quick swipe ends up doing nothing about half the time. A cancelled pull
-    // is judged on what it had already travelled, exactly like a released one.
-    strip.addEventListener('touchcancel', end);
-    return () => {
-      strip.removeEventListener('touchstart', begin);
-      strip.removeEventListener('touchmove', move);
-      strip.removeEventListener('touchend', end);
-      strip.removeEventListener('touchcancel', end);
-    };
-  }, [leave]);
-
-  // ── Pulling down to close, 2026-09-03 ─────────────────────────────────────
+  // ── The finger: down to close, sideways to browse ─────────────────────────
   // The whole sheet listens, and decides on the first move. Mostly downward,
-  // from the top of the first screen, is this gesture: the sheet follows the
+  // from the top of the first screen, is the pull: the sheet follows the
   // finger and a release past a fifth of the screen, or a flick, closes it
-  // the way Escape does — the cover flies home and the page fades under it.
-  // Anything else — sideways, upward, or downward from further into the
-  // entry — is handed to the browser untouched. Deciding once, on the first
-  // move, is what stops a diagonal drag doing two things at once.
+  // the way Escape does. Mostly sideways is browsing: the content follows
+  // the finger, stiffening at an end where there is nothing further, and a
+  // release past a fifth of the width, or a flick, goes to the neighbour.
+  // Anything else — upward, or downward from further into the entry — is
+  // handed to the browser untouched. Deciding once, on the first move, is
+  // what stops a diagonal drag doing two things at once.
   //
   // Same passive: false reasoning as the edge pull: the first move has to be
   // cancelled before the browser starts panning, and React's own listeners
@@ -291,10 +263,8 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false 
 
     const begin = event => {
       if (event.touches.length !== 1) { pull = null; return; }
-      // A touch that started on the edge strip is the edge pull's.
-      if (event.target.closest?.('.lay-edge')) { pull = null; return; }
       const touch = event.touches[0];
-      pull = { x: touch.clientX, y: touch.clientY, at: event.timeStamp, lastY: touch.clientY, lastAt: event.timeStamp, decided: false, mine: false, top: atTop() };
+      pull = { x: touch.clientX, y: touch.clientY, at: event.timeStamp, lastX: touch.clientX, lastY: touch.clientY, lastAt: event.timeStamp, axis: null, top: atTop() };
     };
 
     const move = event => {
@@ -302,32 +272,44 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false 
       const touch = event.touches[0];
       const dx = touch.clientX - pull.x;
       const dy = touch.clientY - pull.y;
-      if (!pull.decided) {
+      if (!pull.axis) {
         if (Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
-        pull.decided = true;
-        pull.mine = pull.top && dy > 0 && Math.abs(dy) > Math.abs(dx);
-        if (!pull.mine) { pull = null; return; }
+        if (Math.abs(dx) > Math.abs(dy)) pull.axis = 'x';
+        else if (pull.top && dy > 0) pull.axis = 'y';
+        else { pull = null; return; }
         setSettling(false);
       }
+      pull.lastX = touch.clientX;
       pull.lastY = touch.clientY;
       pull.lastAt = event.timeStamp;
       if (event.cancelable) event.preventDefault();
-      setDragY(Math.max(0, dy));
+      if (pull.axis === 'y') { setDragY(Math.max(0, dy)); return; }
+      // Stiffens at an end: a third of the distance, so the stop is felt
+      // rather than hit.
+      const blocked = (dx > 0 && !neighbours.prev) || (dx < 0 && !neighbours.next);
+      setShift(blocked ? dx / 3 : dx);
     };
 
     const end = () => {
       const done = pull;
       pull = null;
-      if (!done || !done.mine) return;
+      if (!done || !done.axis) return;
+      const width = sheet.offsetWidth || window.innerWidth;
       const height = sheet.offsetHeight || window.innerHeight;
-      const travelled = Math.max(0, done.lastY - done.y);
-      const speed = travelled / Math.max(1, done.lastAt - done.at);
-      if (travelled > height * FAR_ENOUGH || speed > FAST_ENOUGH) {
-        leave();
+      const elapsed = Math.max(1, done.lastAt - done.at);
+      if (done.axis === 'y') {
+        const travelled = Math.max(0, done.lastY - done.y);
+        if (travelled > height * FAR_ENOUGH || travelled / elapsed > FAST_ENOUGH) { leave(); return; }
+        setSettling(true);
+        setDragY(0);
         return;
       }
+      const dx = done.lastX - done.x;
+      const dir = dx < 0 ? 1 : -1;
+      const target = dir < 0 ? neighbours.prev : neighbours.next;
+      if (target && (Math.abs(dx) > width * FAR_ENOUGH || Math.abs(dx) / elapsed > FAST_ENOUGH)) { go(dir); return; }
       setSettling(true);
-      setDragY(0);
+      setShift(0);
     };
 
     sheet.addEventListener('touchstart', begin, { passive: true });
@@ -340,26 +322,44 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false 
       sheet.removeEventListener('touchend', end);
       sheet.removeEventListener('touchcancel', end);
     };
-  }, [leave]);
+  }, [leave, go, neighbours.prev, neighbours.next]);
 
-  const pulled = drag > 0 || dragY > 0;
+  const pulled = dragY > 0;
 
   return (
     <div
       className={'lay' + (growFrom ? ' lay--grows' : ' lay--fades') + (scrolls ? ' lay--scrolls' : '')
         + (settling ? ' lay--settling' : '') + (pulled ? ' lay--dragging' : '')}
       ref={sheetRef}
-      style={pulled ? { transform: `translate(${drag}px, ${dragY}px)` } : undefined}
+      style={pulled ? { transform: `translateY(${dragY}px)` } : undefined}
       role="dialog"
       aria-modal="true"
       aria-label={label}
     >
-      {/* Invisible, full height, a thumb's width. Nothing is drawn in it: the
-          affordance is that the gesture is the platform's own, not that there
-          is something on screen to find. */}
-      <div className="lay-edge" ref={edgeRef} aria-hidden="true" />
+      {/* The content, keyed by address so a neighbour arrives fresh and
+          plays its entrance from the side it came from. */}
+      <div
+        key={slug || 'page'}
+        className={'lay-content'
+          + (enterFrom === 1 ? ' lay-content--from-right' : enterFrom === -1 ? ' lay-content--from-left' : '')}
+        style={shift !== 0 ? { transform: `translateX(${shift}px)` } : undefined}
+        onAnimationEnd={() => setEnterFrom(null)}
+      >
+        {children}
+      </div>
 
-      {children}
+      {/* For a pointer, where there is no swipe: a caret at each edge, and
+          only where there is somewhere to go. Stop at the ends, never wrap. */}
+      {neighbours.prev && (
+        <button type="button" className="lay-step lay-step--prev" onClick={() => go(-1)} aria-label={`Previous: ${neighbours.prev.album}`} title={neighbours.prev.album}>
+          <CaretLeft size={18} weight="bold" aria-hidden="true" />
+        </button>
+      )}
+      {neighbours.next && (
+        <button type="button" className="lay-step lay-step--next" onClick={() => go(1)} aria-label={`Next: ${neighbours.next.album}`} title={neighbours.next.album}>
+          <CaretRight size={18} weight="bold" aria-hidden="true" />
+        </button>
+      )}
     </div>
   );
 }

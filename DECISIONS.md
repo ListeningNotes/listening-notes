@@ -637,6 +637,18 @@ records on a wall, and nothing is beside them. "It comes from the right
 because that is where things arrive from" still stands for them. `LayerEntry`
 carries both and knows nothing about entries either way.
 
+**Built for real, in this order, 2026-09-03.** The whole sheet grows out of
+the tile that was pressed and, on close, only the cover flies back into it
+while the page fades under it — a page of writing shrinking to a thumbnail
+read as a page, not a record being put back. Closing is a pull down from
+the top of the first screen, Escape, or back. Left and right go to the
+neighbours on the wall in the wall's order, stopping at the ends, by
+`router.replace` so back still means the wall. The edge pull is retired:
+sideways cannot mean both next and leave. The earlier expand-and-swipe
+attempt, which flew the cover both ways and was glitchy on a real phone,
+is in the branch's history; this one was built a gesture at a time and
+tested by thumb after each.
+
 **The URL stays real either way, and that is not negotiable.** Built with
 intercepting routes rather than a modal component: tap from the journal and the
 entry opens as a layer; open the same address from a QR, a shared link, a feed
