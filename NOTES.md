@@ -952,7 +952,12 @@ was the gestures or the layer itself.
       Animations API, origin at the tile's corner; the stylesheet's fade is
       the fallback for a form or an off-wall tile. Measured in the pane: the
       sheet is the tile at the first frame and fills the screen at ~420ms,
-      no stray frames. Closing is unchanged (edge pull, Escape, back).
+      no stray frames. Closing (Escape, edge pull): the cover lifts off the
+      page as a fixed copy and flies into the tile while the sheet fades
+      under it in 200ms — only the art goes back, not the writing. Measured:
+      cover from its place on the entry to the tile's exact square, sheet
+      opacity to zero alongside, no copy left behind. The browser's back
+      button just removes the sheet.
 
 **2026-09-01 — setup expanded, Settings, and the password out of deploy**
 

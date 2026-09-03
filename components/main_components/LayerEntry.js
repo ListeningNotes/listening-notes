@@ -130,13 +130,16 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false 
 
   const goBack = useCallback(() => router.back(), [router]);
 
-  // ── Shrinking back into the tile ──────────────────────────────────────────
-  // The growth run backwards: from wherever the sheet is now — at rest, or
-  // part-way through a pull — down to the tile's square, then the route goes
-  // back and the sheet is gone with the tile exactly where it was drawn. The
-  // tile has to be on screen for this to mean anything; otherwise the sheet
-  // fades, briefly. The browser's own back button cannot be intercepted and
-  // simply removes the sheet, which is the platform's habit and fine.
+  // ── The cover goes back into the tile ─────────────────────────────────────
+  // Opening grows the whole sheet out of the tile; closing does not shrink
+  // the whole sheet back. It did for an hour, and a page of writing and
+  // scores scaling down to a thumbnail is a page, not a record being put
+  // back. So on the way out the cover lifts off the page — a copy of it,
+  // fixed over everything — and flies into the tile's square, while the
+  // sheet fades away underneath it. The tile has to be on screen for this
+  // to mean anything; otherwise the sheet fades alone. The browser's own
+  // back button cannot be intercepted and simply removes the sheet, which
+  // is the platform's habit and fine.
   const leaving = useRef(false);
   const leave = useCallback((fromX = 0) => {
     if (leaving.current) return;
@@ -146,19 +149,38 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false 
     const box = slug && !reduced ? tileBoxOf(slug) : null;
     const onScreen = box && box.y > -box.h && box.y < window.innerHeight;
     if (!sheet) { goBack(); return; }
-    let run;
-    if (onScreen) {
-      const W = sheet.offsetWidth || window.innerWidth;
-      const H = sheet.offsetHeight || window.innerHeight;
-      run = sheet.animate([
-        { transformOrigin: '0 0', transform: `translateX(${fromX}px)`, borderRadius: '0px' },
-        { transformOrigin: '0 0', transform: `translate(${box.x}px, ${box.y}px) scale(${box.w / W}, ${box.h / H})`, borderRadius: '14px' },
-      ], { duration: GROW_MS * 0.8, easing: GROW_EASE, fill: 'forwards' });
-    } else {
-      run = sheet.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 180, easing: 'ease-out', fill: 'forwards' });
+    // The cover as the entry draws it: the first screen's on a phone, the
+    // hero band's on a wide window — whichever is laid out.
+    const cover = [...sheet.querySelectorAll('.ln-screen-one-art img, .ln-hero-row .ln-cover img')]
+      .find(el => el.getBoundingClientRect().width > 0);
+    const fade = sheet.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 200, easing: 'ease-out', fill: 'forwards' });
+    if (!onScreen || !cover) {
+      fade.onfinish = goBack;
+      fade.oncancel = goBack;
+      return;
     }
-    run.onfinish = goBack;
-    run.oncancel = goBack;
+    // The flying copy. Fixed, over the fading sheet, starting exactly where
+    // the page's cover is (offset by any pull in progress) and landing on
+    // the tile. The page's own cover is hidden so there is one on screen.
+    const from = cover.getBoundingClientRect();
+    cover.style.visibility = 'hidden';
+    const flyer = document.createElement('img');
+    flyer.src = cover.currentSrc || cover.src;
+    flyer.alt = '';
+    flyer.className = 'lay-flyer';
+    Object.assign(flyer.style, {
+      position: 'fixed', zIndex: 300, left: `${from.left}px`, top: `${from.top}px`,
+      width: `${from.width}px`, height: `${from.height}px`, objectFit: 'cover',
+      borderRadius: getComputedStyle(cover).borderRadius || '12px', transformOrigin: '0 0', pointerEvents: 'none',
+    });
+    document.body.appendChild(flyer);
+    const run = flyer.animate([
+      { transform: `translateX(${fromX}px) scale(1, 1)` },
+      { transform: `translate(${box.x - from.left}px, ${box.y - from.top}px) scale(${box.w / from.width}, ${box.h / from.height})` },
+    ], { duration: GROW_MS * 0.75, easing: GROW_EASE, fill: 'forwards' });
+    const done = () => { flyer.remove(); goBack(); };
+    run.onfinish = done;
+    run.oncancel = done;
   }, [goBack, slug]);
 
   // Escape closes it, the same as the swipe. A full-screen surface with no
