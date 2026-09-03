@@ -126,6 +126,9 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false 
   // written straight to the element, because the closing animation needs to
   // know whether it is starting from rest or from wherever a release left it.
   const [drag, setDrag] = useState(0);
+  // The pull down, in pixels. Separate from the edge pull rather than one
+  // vector, because the two are different gestures with different homes.
+  const [dragY, setDragY] = useState(0);
   const [settling, setSettling] = useState(false);
 
   const goBack = useCallback(() => router.back(), [router]);
@@ -263,12 +266,90 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false 
     };
   }, [leave]);
 
+  // ── Pulling down to close, 2026-09-03 ─────────────────────────────────────
+  // The whole sheet listens, and decides on the first move. Mostly downward,
+  // from the top of the first screen, is this gesture: the sheet follows the
+  // finger and a release past a fifth of the screen, or a flick, closes it
+  // the way Escape does — the cover flies home and the page fades under it.
+  // Anything else — sideways, upward, or downward from further into the
+  // entry — is handed to the browser untouched. Deciding once, on the first
+  // move, is what stops a diagonal drag doing two things at once.
+  //
+  // Same passive: false reasoning as the edge pull: the first move has to be
+  // cancelled before the browser starts panning, and React's own listeners
+  // cannot do that.
+  useEffect(() => {
+    const sheet = sheetRef.current;
+    if (!sheet) return undefined;
+    let pull = null;
+
+    const atTop = () => {
+      const screens = sheet.querySelector('.ln-screens');
+      const scroller = screens && screens.scrollHeight > screens.clientHeight ? screens : sheet;
+      return scroller.scrollTop <= 0;
+    };
+
+    const begin = event => {
+      if (event.touches.length !== 1) { pull = null; return; }
+      // A touch that started on the edge strip is the edge pull's.
+      if (event.target.closest?.('.lay-edge')) { pull = null; return; }
+      const touch = event.touches[0];
+      pull = { x: touch.clientX, y: touch.clientY, at: event.timeStamp, lastY: touch.clientY, lastAt: event.timeStamp, decided: false, mine: false, top: atTop() };
+    };
+
+    const move = event => {
+      if (!pull || event.touches.length !== 1) return;
+      const touch = event.touches[0];
+      const dx = touch.clientX - pull.x;
+      const dy = touch.clientY - pull.y;
+      if (!pull.decided) {
+        if (Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
+        pull.decided = true;
+        pull.mine = pull.top && dy > 0 && Math.abs(dy) > Math.abs(dx);
+        if (!pull.mine) { pull = null; return; }
+        setSettling(false);
+      }
+      pull.lastY = touch.clientY;
+      pull.lastAt = event.timeStamp;
+      if (event.cancelable) event.preventDefault();
+      setDragY(Math.max(0, dy));
+    };
+
+    const end = () => {
+      const done = pull;
+      pull = null;
+      if (!done || !done.mine) return;
+      const height = sheet.offsetHeight || window.innerHeight;
+      const travelled = Math.max(0, done.lastY - done.y);
+      const speed = travelled / Math.max(1, done.lastAt - done.at);
+      if (travelled > height * FAR_ENOUGH || speed > FAST_ENOUGH) {
+        leave();
+        return;
+      }
+      setSettling(true);
+      setDragY(0);
+    };
+
+    sheet.addEventListener('touchstart', begin, { passive: true });
+    sheet.addEventListener('touchmove', move, { passive: false });
+    sheet.addEventListener('touchend', end);
+    sheet.addEventListener('touchcancel', end);
+    return () => {
+      sheet.removeEventListener('touchstart', begin);
+      sheet.removeEventListener('touchmove', move);
+      sheet.removeEventListener('touchend', end);
+      sheet.removeEventListener('touchcancel', end);
+    };
+  }, [leave]);
+
+  const pulled = drag > 0 || dragY > 0;
+
   return (
     <div
       className={'lay' + (growFrom ? ' lay--grows' : ' lay--fades') + (scrolls ? ' lay--scrolls' : '')
-        + (settling ? ' lay--settling' : '') + (drag > 0 ? ' lay--dragging' : '')}
+        + (settling ? ' lay--settling' : '') + (pulled ? ' lay--dragging' : '')}
       ref={sheetRef}
-      style={drag > 0 ? { transform: `translateX(${drag}px)` } : undefined}
+      style={pulled ? { transform: `translate(${drag}px, ${dragY}px)` } : undefined}
       role="dialog"
       aria-modal="true"
       aria-label={label}
