@@ -125,7 +125,7 @@ The furniture — visual pieces
       ComingSoon.js            What a held copy shows instead of a site — unclaimed, no database, or database unreachable
       AddToHomeScreen.js       The one step the software cannot do: the last screen of setup, and a Settings section
       AlbumFinder.js           Type, see covers, pick one — the send flow's search
-      LayerEntry.js            The sheet an entry arrives on, over the journal
+      LayerEntry.js            The sheet a page arrives on over the journal — from the side for forms, expanding from the cover for an entry, with swipes to the neighbours
       LayerWaiting.js          What stands in while that entry loads
       EdgeCaret.js             The chevrons that say there is more that way
       SiteNav.js               The nav row on pages that are not the cross
@@ -201,7 +201,7 @@ The rooms — full pages assembled from furniture
 | The nav row | components/main_components/SiteNav.js, and HomeNav.js on the cross |
 | The listening beacon | components/main_components/ListeningBeacon.js |
 | The row of recent covers under the beacon | components/main_components/HomeNav.js, recentRow |
-| The entry that slides in over the wall | components/main_components/LayerEntry.js and app/@layer/ |
+| The entry that opens over the wall, and swiping between entries | components/main_components/LayerEntry.js, library/handoff.js and app/@layer/ |
 | The full entry post page | app/entries/[slug]/FullPostPage.js |
 | The album picker | components/session_components/AlbumPicker.js |
 | The note-taking session, and its styles | app/session/page.js |

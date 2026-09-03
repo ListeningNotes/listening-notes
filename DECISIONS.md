@@ -608,6 +608,35 @@ modes are what make gesture navigation unlearnable. Three directions, one
 meaning each; a dimension that depends on invisible state undoes the legibility
 the cross was built for.
 
+**Reversed for the entry, 2026-09-02: it expands from the cover, and
+sideways means the next record.** Junior found there was no way to read
+entry to entry — every next one meant going back to the wall. Adding a
+next-entry swipe to a sheet that already slid sideways to open and close
+would have put three sideways gestures on one screen: the cross's panes,
+dismiss, and next. So the entry no longer slides in from the right. It
+expands from the cover that was tapped, the way a photo viewer opens a
+picture: the cover flies out of its tile into its place at the top of the
+entry while the sheet fades in under it, and on the way out it flies back.
+That frees the sideways axis for browsing — left and right are the previous
+and next record — and closing becomes a pull down from the top of the first
+screen, a press outside the sheet where there is an outside (a wide screen,
+where the entry is a column with the wall showing either side), Escape, or
+back. Both gestures are ones people already own.
+
+What "next" means is the wall as it stands: after search, filters and sort,
+which the wall hands over alongside the tapped record (`library/handoff.js`).
+It stops at the ends and never wraps. Moving to a neighbour is
+`router.replace`, so the address is always the record on screen and back
+still goes to the wall rather than through every record swiped past. The
+neighbours' first screens are already in hand, so a swipe draws the next
+cover and score before its writing is fetched; the routes either side are
+prefetched too. With reduced motion everything cross-fades.
+
+The session and the send page keep the side arrival; they are forms, not
+records on a wall, and nothing is beside them. "It comes from the right
+because that is where things arrive from" still stands for them. `LayerEntry`
+carries both and knows nothing about entries either way.
+
 **The URL stays real either way, and that is not negotiable.** Built with
 intercepting routes rather than a modal component: tap from the journal and the
 entry opens as a layer; open the same address from a QR, a shared link, a feed

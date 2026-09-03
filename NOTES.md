@@ -531,6 +531,10 @@ Project → Settings → Environment Variables.
 
 ## Gotchas
 
+- **The dev server on :3000 does not pick up globals.css edits.** Already
+  written down; bitten again on 2026-09-02 twice. Check
+  `document.styleSheets` for the new selector before concluding a rule is
+  wrong, and prove stylesheet changes in `npm run build` instead.
 - **A `<Link>` inside something the root layout renders is dead.** Root
   layouts do not re-render on client navigation, so `ComingSoon`'s link to
   `/setup` changed the URL and left the hold on screen. Anything the layout
@@ -899,6 +903,33 @@ current.
 ---
 
 ## Complete
+
+**2026-09-02 — the entry expands from its cover, and swipes to the next**
+
+Branch `expand-and-swipe`. See DECISIONS, *The cross*, for the reasoning.
+- [x] `LayerEntry` has two arrivals: `side` (unchanged, the session and the
+      send page) and `source` (the entry). Source flies a copy of the cover
+      from the tile to the first screen with the Web Animations API, fades
+      the sheet in under it, and flies it back on the way out when the tile
+      is on screen.
+- [x] `browse`: sideways swipe or arrow keys go to the neighbour on the wall;
+      carets at the sheet's edges for a pointer; stop at the ends; the
+      neighbour's first screen is handed over before `router.replace` so it
+      draws at once; both routes prefetched.
+- [x] Closing: pull down from the top of screen one, press outside the sheet
+      on a wide screen (the sheet is a 1100px column over a scrim at
+      ≥1024px), Escape, back.
+- [x] `library/handoff.js` carries the wall's current order (`handOffOrder`,
+      `neighboursOf`) and finds a cover's box on screen (`coverBoxOf`).
+- [x] Verified in the desktop pane: open, arrow to next in wall order, Escape
+      back to the wall with nothing moved, no console errors. The production
+      build carries the new rules.
+
+**Not verified, needs a real phone:** the pull-down close against the snap
+scroller (the first move decides the axis; a diagonal start is handed to the
+browser), the sideways swipe on a phone, the flight itself as seen (the dev
+server on :3000 was serving a stale stylesheet), the column-and-scrim on a
+wide window, and the send/session layers after the CSS restructure.
 
 **2026-09-01 — setup expanded, Settings, and the password out of deploy**
 

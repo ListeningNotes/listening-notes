@@ -2106,10 +2106,21 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
    It slides in from the right because that is where things arrive from, not
    because right means entry. The cross has three directions with one meaning
    each; a fourth that depended on which row you were in would be a mode. */
+/* ── The layer ──────────────────────────────────────────────────────────────
+   Two parts now: .lay is the whole viewport, .lay-sheet is the page on it.
+   For the side arrival (the session, the send page) the sheet fills the
+   viewport and slides in from the right, as it always did. For the source
+   arrival (an entry) the sheet is the thing that fades and the cover flies
+   into it; on a wide screen the sheet is a column and .lay is the scrim
+   either side of it, which is the "outside" a press closes it from. */
 .lay {
   position: fixed;
   inset: 0;
   z-index: 200;
+}
+.lay-sheet {
+  position: absolute;
+  inset: 0;
   background: var(--bg);
   /* On a wide screen the entry flows down the document, so this is what
      scrolls it. On a phone it must not be: see the note below, which is the
@@ -2118,32 +2129,80 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   overscroll-behavior: contain;
   /* Vertical panning belongs to the browser, horizontal to the swipe handler
      in LayerEntry. Saying so removes the decision the browser would otherwise
-     have to make at the start of every gesture — and that decision, made while
-     a JS handler is also watching, is the other half of why a swipe had to be
-     made twice. */
+     have to make at the start of every gesture. */
   touch-action: pan-y;
-  /* Slow, and slowing down as it lands. This is a page being pulled off a
-     shelf rather than a panel being snapped into place — the first version was
-     260ms on a sharp curve and read as a state change. */
-  animation: layIn 0.46s cubic-bezier(0.22, 0.61, 0.36, 1);
 }
+
+/* The side arrival: slow, and slowing down as it lands. This is a page being
+   pulled off a shelf rather than a panel being snapped into place — the first
+   version was 260ms on a sharp curve and read as a state change. */
+.lay--side .lay-sheet { animation: layIn 0.46s cubic-bezier(0.22, 0.61, 0.36, 1); }
 @keyframes layIn {
   from { transform: translateX(100%); }
   to   { transform: none; }
 }
-/* While a finger has hold of it the transform is written inline, frame by
-   frame, so it tracks 1:1 rather than easing along behind. */
-.lay--dragging { animation: none; }
-/* And when the finger lets go, it either springs back or finishes leaving.
-   Matched to the way in, so the page does not arrive gently and then snap. */
-.lay--settling { animation: none; transition: transform 0.32s cubic-bezier(0.22, 0.61, 0.36, 1); }
 
-@media (prefers-reduced-motion: reduce) {
-  .lay { animation: none; }
-  .lay--settling { transition: none; }
+/* The source arrival: the sheet fades in while the cover flies (LayerEntry
+   animates the flight itself, over the top). Until it has landed the sheet's
+   own cover is hidden, so there is one cover on screen and not two. */
+.lay--source .lay-sheet { opacity: 0; transition: opacity 0.42s cubic-bezier(0.22, 0.61, 0.36, 1); }
+.lay--source.lay--arrived .lay-sheet { opacity: 1; }
+.lay--source:not(.lay--arrived) .ln-screen-one-art img,
+.lay--source:not(.lay--arrived) .lay-wait-art { visibility: hidden; }
+.lay--source.lay--leaving .lay-sheet { opacity: 0; transition-duration: 0.3s; }
+/* The flying copy of the cover. Fixed, over everything, and shaped like the
+   tile it left — the radius is the wall's tile radius. */
+.lay-flyer {
+  position: fixed;
+  z-index: 300;
+  object-fit: cover;
+  border-radius: 12px;
+  transform-origin: top left;
+  pointer-events: none;
+  will-change: transform;
 }
 
-/* ── Why this must not be a scroll container on a phone ────────────────────
+/* While a finger has hold of it the transform is written inline, frame by
+   frame, so it tracks 1:1 rather than easing along behind. */
+.lay--dragging .lay-sheet { animation: none; }
+/* And when the finger lets go, it either springs back or finishes leaving.
+   Matched to the way in, so the page does not arrive gently and then snap. */
+.lay--settling .lay-sheet { animation: none; transition: transform 0.32s cubic-bezier(0.22, 0.61, 0.36, 1), opacity 0.3s; }
+
+/* ── Browsing sideways ──
+   The content follows the finger while held, settles when let go, and a
+   neighbour enters from the side it was on. */
+.lay-content { min-height: 100%; }
+.lay--settling .lay-content { transition: transform 0.18s cubic-bezier(0.22, 0.61, 0.36, 1); }
+.lay-content--from-right { animation: layFromRight 0.3s cubic-bezier(0.22, 0.61, 0.36, 1); }
+.lay-content--from-left  { animation: layFromLeft  0.3s cubic-bezier(0.22, 0.61, 0.36, 1); }
+@keyframes layFromRight { from { transform: translateX(60px); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes layFromLeft  { from { transform: translateX(-60px); opacity: 0; } to { transform: none; opacity: 1; } }
+
+/* The carets at the sheet's edges, for a pointer. Hidden on touch, where the
+   swipe is the way, and drawn faint until you go near them. */
+.lay-step {
+  position: fixed;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 210;
+  width: 36px; height: 36px; border-radius: 10px;
+  display: none; align-items: center; justify-content: center;
+  color: var(--ink-faint); background: transparent; border: 0; cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+}
+.lay-step:hover { color: var(--ink); background: var(--bg-warm); }
+.lay-step--prev { left: 10px; }
+.lay-step--next { right: 10px; }
+@media (hover: hover) and (pointer: fine) { .lay-step { display: inline-flex; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .lay--side .lay-sheet, .lay-content--from-right, .lay-content--from-left { animation: none; }
+  .lay--settling .lay-sheet, .lay--settling .lay-content { transition: none; }
+  .lay--source .lay-sheet { transition: opacity 0.2s; }
+}
+
+/* ── Why the sheet must not be a scroll container on a phone ───────────────
    The entry's phone layout is already two scroll containers deep: .ln-screens
    holds the two snap screens, and .ln-screen-two-scroll holds the notes inside
    the second one. A scrolling box around both makes three, and the third one
@@ -2161,14 +2220,30 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
    `overflow: hidden` is NOT the fix and was tried first. Hidden still creates
    a scroll container; it only takes the scrollbar away, so the chain still
    ended here and only the visible half of the symptom went. It has to be
-   `visible` — genuinely not a scroll container — and then the layer is just a
+   `visible` — genuinely not a scroll container — and then the sheet is just a
    box and .ln-screens does the scrolling it was written to do. Nothing
    overflows it, because screen one and screen two are each exactly one
    viewport tall. */
 @media (max-width: 768px) {
-  .lay {
+  .lay-sheet {
     overflow: visible;
     overscroll-behavior: auto;
+  }
+}
+
+/* ── On a wide screen the entry is a column, and the wall shows either side ──
+   That is the "outside" a press closes it from, and it is what the source
+   arrival is for: the sheet is visibly a thing that came out of the wall
+   rather than a page that replaced it. The side arrival keeps the whole
+   viewport; a form has no reason to show what is behind it. */
+@media (min-width: 1024px) {
+  .lay--source { background: rgba(20, 18, 14, 0.42); }
+  .lay--source .lay-sheet {
+    left: 50%;
+    right: auto;
+    width: min(1100px, 100%);
+    margin-left: min(-550px, -50%);
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.28);
   }
 }
 
@@ -2184,16 +2259,16 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
    The rule is written after the media query rather than inside one, so it
    wins on source order at every width and the desktop behaviour it restates
    is the behaviour that was already there. */
-.lay--scrolls {
+.lay--scrolls .lay-sheet {
   overflow-y: auto;
   overscroll-behavior: contain;
 }
 
-/* The strip the back-pull starts in. Invisible, full height, a thumb's width,
-   pinned to the left edge — the same place and the same idea as the system
-   gesture it borrows from.
+/* The strip the side arrival's back-pull starts in. Invisible, full height, a
+   thumb's width, pinned to the left edge — the same place and the same idea
+   as the system gesture it borrows from.
 
-   touch-action: none is the whole point of it. Everywhere else on the layer
+   touch-action: none is the whole point of it. Everywhere else on the sheet
    the browser owns vertical panning, which is what let a slightly-diagonal
    back-swipe scroll the page down while the swipe handler was still deciding.
    In here the browser does not pan at all, so a gesture that starts on this
@@ -2214,10 +2289,6 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   padding: 172px 24px 0;
   gap: 16px;
 }
-/* --border, not --bg-warm. Warm is #efebe2 against a #eef0ec page: four
-   points apart, which on a phone in daylight is nothing at all, and the layer
-   read as having arrived empty. This is ink at eight percent — quiet, but
-   unmistakably something. */
 .lay-wait-art {
   height: min(40dvh, 78vw);
   width: auto;
@@ -2268,6 +2339,8 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   transition: color 0.2s ease, opacity 0.2s ease;
 }
 .ln-totop:hover { color: var(--ink); opacity: 1; }
+
+
 
 .lay-edge {
   position: absolute;
