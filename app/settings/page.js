@@ -259,12 +259,8 @@ export default function SettingsPage() {
 
         <Section
           title="Password"
-          note={secrets?.password === 'environment'
-            ? 'Set when this copy was deployed, as SESSION_PASSWORD. Choose one here and it takes over; the variable can then be removed.'
-            : secrets?.password === 'journal'
-              ? 'What you type to reach the writing side.'
-              : 'No password is set yet.'}
-          saveLabel="Change it"
+          note="Change the password you sign in with. At least eight characters."
+          saveLabel="Change password"
           onSave={async () => {
             if (password.length < PASSWORD_FLOOR) throw new Error(`At least ${PASSWORD_FLOOR} characters.`);
             if (password !== confirm) throw new Error('The two passwords do not match.');
