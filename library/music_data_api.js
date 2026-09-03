@@ -37,7 +37,11 @@ export async function fetchTracklist(albumName, artistName, collectionId = null)
     let id = collectionId;
 
     if (!id) {
-      const norm = s => String(s || '').toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, ' ').trim();
+      // Accents folded before anything else is stripped, so "bjork" reads Björk
+// and "beyonce" reads Beyoncé. Without the fold the ö was thrown away with
+// the punctuation and Björk's name came out as two words neither search
+// could match, so typing her name without the umlaut found nothing at all.
+const norm = s => String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/&/g, 'and').replace(/[^a-z0-9]+/g, ' ').trim();
       const query = encodeURIComponent(`${artistName} ${albumName}`);
       const searchRes = await fetch(`https://itunes.apple.com/search?term=${query}&entity=album&limit=25`);
       const searchData = await searchRes.json();
@@ -78,7 +82,11 @@ export async function fetchTracklist(albumName, artistName, collectionId = null)
 
 export async function fetchAlbumArtUrl(albumName, artistName, year) {
   try {
-    const norm = s => String(s || '').toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, ' ').trim();
+    // Accents folded before anything else is stripped, so "bjork" reads Björk
+// and "beyonce" reads Beyoncé. Without the fold the ö was thrown away with
+// the punctuation and Björk's name came out as two words neither search
+// could match, so typing her name without the umlaut found nothing at all.
+const norm = s => String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/&/g, 'and').replace(/[^a-z0-9]+/g, ' ').trim();
     const soundtrackTerms = ['soundtrack', 'original motion picture', 'ost', 'music from', 'score'];
     const albumWords = albumName.replace(/[^a-zA-Z0-9 ]/g, ' ').trim().split(/\s+/);
     const searchAlbum = albumWords.length > 4 ? albumWords.slice(0, 4).join(' ') : albumName;
@@ -135,7 +143,11 @@ const NOT_THE_ALBUM = [
   [/(?:-\s*)?\bep$/i, 14],
 ];
 
-const norm = s => String(s || '').toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, ' ').trim();
+// Accents folded before anything else is stripped, so "bjork" reads Björk
+// and "beyonce" reads Beyoncé. Without the fold the ö was thrown away with
+// the punctuation and Björk's name came out as two words neither search
+// could match, so typing her name without the umlaut found nothing at all.
+const norm = s => String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/&/g, 'and').replace(/[^a-z0-9]+/g, ' ').trim();
 const words = s => norm(s).split(' ').filter(Boolean);
 
 // Apple splits some genres finer than an archive this size can use — Adult
@@ -284,7 +296,6 @@ export async function searchAlbums(searchQuery) {
       if (mine < theirs || (mine === theirs && myYear < theirYear)) groups.set(key, r);
     }
 
-    let browsing = false;
     const albums = [...groups.values()].map(r => {
       const name = r.collectionName || '';
       const artist = r.artistName || '';
@@ -294,7 +305,6 @@ export async function searchAlbums(searchQuery) {
       // ties and edition and year decide the order.
       const rest = residualTerms(query, artist);
       const theirs = rest !== null;
-      if (theirs && !rest.length) browsing = true;
       const terms = theirs ? rest : words(query);
       const title = titleMatch(terms, name, artist);
       return {
@@ -324,14 +334,13 @@ export async function searchAlbums(searchQuery) {
     // covers albums off the top of "radiohead ok computer".
     const matched = albums.filter(a => a._theirs || a._title >= 55);
 
-    // A bare artist name is a discography, and a discography reads forwards.
-    // Sorting it newest-first was half the original complaint: the early records
-    // are the ones being looked for, and they were the ones pushed to the back
-    // behind every later compilation. With search terms present the score has
-    // already decided the order and the year is only a tiebreak.
-    matched.sort((a, b) => b._score - a._score || (browsing
-      ? (a.year || '9999').localeCompare(b.year || '9999')
-      : (b.year || '0').localeCompare(a.year || '0')));
+    // Newest first, always, 2026-09-03. A bare artist name is a discography,
+    // and for a while it read forwards — the argument being that the early
+    // records were the ones being looked for. On a wall of covers the other
+    // way round is the one that reads: the newest record at the top, scrolling
+    // back through the years. With search terms present the score has already
+    // decided the order and the year is only a tiebreak.
+    matched.sort((a, b) => b._score - a._score || (b.year || '0').localeCompare(a.year || '0'));
     // The grid pages at 15, so this is four pages deep — enough to hold a long
     // discography without the old cliff at twenty.
     return matched.slice(0, 60).map(({ _score, _theirs, _title, ...album }) => album);
