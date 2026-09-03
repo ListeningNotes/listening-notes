@@ -661,6 +661,18 @@ and on the send page there is none, so the browser scrolls the shelf. A row
 of small thumbnails is not how anybody recognises a record; the covers are
 the point.
 
+**The send page is a wall, 2026-09-03.** The field first, under the header,
+then the results as a wall of large covers, newest first, two across on a
+phone; the message, the name and Send appear only once a record is picked.
+Three things this settles. The wall replaces the shelf because a row of
+small covers is not how you recognise a record and the journal itself is a
+wall. The field goes above the results because focusing it on a phone
+scrolls the sheet, and with a square above it the header went under the
+clock. And newest first reverses "a discography reads forwards": on a wall
+the newest record at the top, scrolling back through the years, is the
+order that reads. Also: the search folds accents before matching, so "bjork"
+finds Björk — the ö was being thrown away with the punctuation.
+
 **The URL stays real either way, and that is not negotiable.** Built with
 intercepting routes rather than a modal component: tap from the journal and the
 entry opens as a layer; open the same address from a QR, a shared link, a feed

@@ -1004,9 +1004,12 @@ was the gestures or the layer itself.
       down; the layer claims sideways only where there are neighbours
       (`browses`), so scrolling rows work again everywhere else. The
       finder's shelf was rows for an hour and went back to covers the same
-      day — the big art is the point, and the shelf is safe now that the
-      layer leaves sideways alone there. The session rises from the bottom
-      too.
+      day — and then became a wall (2026-09-03): the field first, a grid of
+      large covers under it (`.af-wall`), newest first, 24 at most, and the
+      rest of the form gated behind a pick in `app/submit/page.js`. The
+      search folds accents in `norm` so "bjork" finds Björk. A misspelling
+      ("micheal") still finds nothing — Apple's search is exact on the
+      artist's name. The session rises from the bottom too.
 - [x] **A close never waits forever on an animation.** A hidden tab freezes
       every animation and their finish never comes; `leave()` now also runs
       a timer a beat longer than the flight, and whichever comes first goes

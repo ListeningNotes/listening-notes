@@ -53,7 +53,7 @@ const SETTLE_MS = 420;
 // Enough to find the record without becoming a page to browse. Somebody
 // sending an album knows which one they mean — this is recognition, not
 // shopping, so a second screenful would be answering a question nobody asked.
-const MOST_SHOWN = 12;
+const MOST_SHOWN = 24;
 
 export default function AlbumFinder({ picked, onPick, onClear }) {
   const [typed, setTyped]       = useState('');
@@ -218,34 +218,6 @@ export default function AlbumFinder({ picked, onPick, onClear }) {
     <div className="af">
       <FinderStyles />
 
-      <div className="af-slot">
-        {results.length > 0 ? (
-          <div className="af-shelf">
-            {results.map(album => (
-              <button
-                type="button"
-                key={album.collectionId}
-                className="af-cover"
-                onClick={() => take(album)}
-              >
-                <span className="af-cover-art">
-                  <img src={album.art} alt="" loading="lazy" />
-                </span>
-                <span className="af-cover-album">{album.name}</span>
-                <span className="af-cover-artist">{album.artist}</span>
-              </button>
-            ))}
-          </div>
-        ) : (
-          // An empty sleeve, waiting. Not a spinner and not a message: it is
-          // the shape of the thing being asked for, standing where that thing
-          // is going to stand.
-          <span className="af-square af-sleeve" aria-hidden="true">
-            <span className="af-none">♪</span>
-          </span>
-        )}
-      </div>
-
       <input
         className="af-input"
         value={typed}
@@ -253,6 +225,31 @@ export default function AlbumFinder({ picked, onPick, onClear }) {
         placeholder="Search an artist or an album"
         autoComplete="off"
       />
+
+      {/* The results as a wall of covers, newest first, under the field.
+          The field goes first so that focusing it on a phone — which scrolls
+          the sheet to bring it into view — leaves the header where it is;
+          with the square above the field, the header went under the clock.
+          The wall can be as tall as it likes: the rest of the form only
+          appears once a record is picked, so nothing is being pushed off. */}
+      {results.length > 0 && (
+        <div className="af-wall">
+          {results.map(album => (
+            <button
+              type="button"
+              key={album.collectionId}
+              className="af-cover"
+              onClick={() => take(album)}
+            >
+              <span className="af-cover-art">
+                <img src={album.art} alt="" loading="lazy" />
+              </span>
+              <span className="af-cover-album">{album.name}</span>
+              <span className="af-cover-artist">{album.artist}{album.year ? ' · ' + album.year : ''}</span>
+            </button>
+          ))}
+        </div>
+      )}
 
       <div className="af-under">
         {looking && <span className="af-word">Looking…</span>}
@@ -310,35 +307,24 @@ function FinderStyles() {
         border: 1px solid var(--border);
       }
 
-      /* ── The shelf ────────────────────────────────────────────────────────
-         Results as one row scrolling sideways, inside the square's height.
-         Sideways because the page is already spending the other axis, and a
-         grid of covers pushed the Send button off a phone.
-
-         Safe inside the layer: the layer claims a sideways drag only on an
-         entry with a record beside it on the wall (see the browses flag in
-         LayerEntry), and this page has none, so a drag over the covers is
-         the browser's and scrolls the shelf. It was rows for an hour on
-         2026-09-03, while the layer still took every sideways drag; the
-         covers came back the moment it stopped, because a row of small
-         thumbnails is not how you recognise a record. */
-      .af-shelf {
-        display: flex; gap: 12px;
-        width: 100%; height: var(--af-square);
-        overflow-x: auto; overflow-y: hidden;
-        overscroll-behavior-x: contain;
-        scroll-snap-type: x proximity;
-        -webkit-overflow-scrolling: touch;
+      /* ── The wall ─────────────────────────────────────────────────────────
+         Results as a wall of covers under the field, two across on a phone
+         and three on a wider window, newest first. It was a shelf scrolling
+         sideways for a while, then rows for an hour; the wall is what the
+         keeper asked for — the covers are how you recognise a record, and a
+         wall is how the journal itself shows them. It scrolls with the sheet,
+         and it can be as tall as the results make it, because the rest of
+         the form only appears once a record has been picked. */
+      .af-wall {
+        display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 14px; width: 100%; margin-top: 4px;
       }
-      .af-shelf::-webkit-scrollbar { height: 3px; }
-      .af-shelf::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+      @media (min-width: 640px) { .af-wall { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 
       .af-cover {
-        display: flex; flex-direction: column; gap: 2px;
-        flex: 0 0 auto; width: calc(var(--af-square) - 36px);
+        display: flex; flex-direction: column; gap: 2px; min-width: 0;
         background: none; border: none; padding: 0;
         text-align: left; cursor: pointer; color: inherit;
-        scroll-snap-align: start;
       }
       .af-cover-art {
         display: block; width: 100%; aspect-ratio: 1;

@@ -335,6 +335,12 @@ export default function SubmitPage({ layered = false }) {
               onClear={() => setForm(f => ({ ...f, pick: null }))}
             />
 
+            {/* The rest of the form waits for a record. Until one is picked
+                the page is the field and a wall of covers, which can be as
+                tall as a search makes it; the message, the name and the Send
+                button arrive with the pick, under the held record, which is
+                where they were always meant to be read. */}
+            {form.pick && (<>
             {/* Not an optional notes box at the foot of the form. This is the
                 part being sent — the album is what it is about — so it sits
                 directly under the record and gets the page's only paragraph of
@@ -382,6 +388,7 @@ export default function SubmitPage({ layered = false }) {
                 {sending ? 'Sending…' : 'Send it'}
               </button>
             </div>
+            </>)}
           </form>
         )}
       </main>
