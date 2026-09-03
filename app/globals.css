@@ -2122,11 +2122,15 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
      a JS handler is also watching, is the other half of why a swipe had to be
      made twice. */
   touch-action: pan-y;
-  /* A fade rather than a slide, 2026-09-02 — the baseline for judging the
-     expand-and-swipe work, which is on this branch's history. The slide from
-     the right was: animation: layIn 0.46s cubic-bezier(0.22, 0.61, 0.36, 1)
-     with layIn going from translateX(100%) to none. */
+  /* The fallback arrival: a fade. The real one grows out of the tile that
+     was pressed, run by LayerEntry with the Web Animations API, which
+     switches this off for the duration. This is what a form arriving here,
+     or an entry whose tile is off the wall, gets. The slide from the right
+     that used to be here was: animation: layIn 0.46s with layIn going from
+     translateX(100%) to none. */
   animation: layFade 0.32s ease-out;
+  /* The growth scales from the tile's corner, never the centre. */
+  transform-origin: 0 0;
 }
 @keyframes layFade {
   from { opacity: 0; }

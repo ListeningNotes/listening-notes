@@ -16,12 +16,14 @@
 // people reach for anyway. Escape and the browser's back button do the same
 // thing for anyone not using a thumb.
 //
-// ── Why it comes from the right ───────────────────────────────────────────
-// Because that is where things arrive from, not because right means entry. An
-// entry is a layer over the journal, not a fourth pane of the cross — the
-// cross has three directions with one meaning each, and adding a fourth that
-// depended on which row you were standing in would be a mode. Modes are what
-// make gesture navigation unlearnable.
+// ── How it arrives, 2026-09-02 ────────────────────────────────────────────
+// It grows out of the square that was pressed. The sheet starts as the exact
+// box of the tile on the wall — same place, same size — and scales up to fill
+// the screen, the way an app opens from its icon; the wall never moved, so
+// the return explains itself. It used to slide in from the right, and for an
+// evening it faded. Where the tile cannot be found — a form arriving here, a
+// tile scrolled off the wall — it fades, which is the plainer version of the
+// same thing rather than a different thing. Reduced motion fades too.
 //
 // ── Why the swipe starts at the edge ──────────────────────────────────────
 // It read the whole surface first, and that could not be made to work. The
@@ -50,8 +52,14 @@
 // leave the address bar pointing at an entry nobody is looking at.
 
 'use client';
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
+import { tileBoxOf } from '../../library/handoff';
+
+// How long the sheet takes to grow to the screen. Unhurried, slowing as it
+// lands — the same curve the slide used.
+const GROW_MS = 420;
+const GROW_EASE = 'cubic-bezier(0.22, 0.61, 0.36, 1)';
 
 // How far right the pull has to travel before letting go leaves rather than
 // springs back. A fifth of the screen: far enough that a resting thumb does
@@ -75,7 +83,40 @@ const FAST_ENOUGH = 0.3;
 // of it cannot be reached.
 export default function LayerEntry({ children, label = 'Entry', scrolls = false }) {
   const router = useRouter();
+  const pathname = usePathname();
   const sheetRef = useRef(null);
+
+  // ── Growing out of the tile ───────────────────────────────────────────────
+  // Before paint, once. The sheet is a full-screen box; a transform puts it
+  // exactly over the tile — moved to the tile's corner and scaled down to
+  // the tile's size — and the Web Animations API runs it from there to rest.
+  // The content scales with it, which is what makes it read as the same
+  // thing getting bigger rather than a page appearing. The stylesheet's own
+  // fade is switched off for the run so the two do not argue.
+  useLayoutEffect(() => {
+    const sheet = sheetRef.current;
+    if (!sheet) return;
+    const slug = pathname.startsWith('/entries/') ? decodeURIComponent(pathname.slice('/entries/'.length)) : '';
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const box = slug ? tileBoxOf(slug) : null;
+    if (reduced || !box) return;
+    const W = sheet.offsetWidth || window.innerWidth;
+    const H = sheet.offsetHeight || window.innerHeight;
+    sheet.style.animation = 'none';
+    // The origin is in the keyframes as well as on the element, so no frame
+    // can scale about the centre while the inline value is being applied.
+    sheet.style.transformOrigin = '0 0';
+    const run = sheet.animate([
+      { transformOrigin: '0 0', transform: `translate(${box.x}px, ${box.y}px) scale(${box.w / W}, ${box.h / H})`, opacity: 0.55, borderRadius: '14px' },
+      { transformOrigin: '0 0', transform: 'none', opacity: 1, borderRadius: '0px' },
+    ], { duration: GROW_MS, easing: GROW_EASE });
+    const done = () => { sheet.style.animation = ''; };
+    run.onfinish = done;
+    run.oncancel = done;
+    return () => run.cancel();
+    // Once, for the record the layer opened on.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const edgeRef = useRef(null);
   // How far the pull has moved it, in pixels. Held in state rather than
   // written straight to the element, because the closing animation needs to
