@@ -824,7 +824,7 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 .sitenav-side--left { justify-content: flex-start; }
 
 /* The keeper's tools. Deliberately the same object as the About card's pencil
-   — 30px box, 9px radius, faint until you go near it — because they are the
+   — 36px box, 10px radius, faint until you go near it — because they are the
    same kind of control and two treatments would read as two ideas. The card
    states these for itself in its own style block, so this is the second copy
    rather than a shared rule; if a third surface ever wants them, that is the
