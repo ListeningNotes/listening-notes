@@ -41,7 +41,7 @@ export default function SendOverThePage() {
     // sheet to scroll it. The entry does not: its phone layout is already two
     // scroll containers deep and a third breaks the other two. See the note
     // on .lay--scrolls in globals.css.
-    <LayerEntry label="Send an album" scrolls>
+    <LayerEntry label="Send an album" scrolls arrives="bottom">
       <SubmitPage layered />
     </LayerEntry>
   );

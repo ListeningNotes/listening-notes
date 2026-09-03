@@ -95,7 +95,10 @@ export function useLayerHeaderSlot() {
   return useContext(LayerHeaderSlot);
 }
 
-export default function LayerEntry({ children, label = 'Entry', scrolls = false }) {
+// `arrives` is 'tile' (grow from the pressed tile, with a fade where there is
+// none — the entry) or 'bottom' (rise from the foot of the screen and sink
+// back on a pull — the send page, a form). Both close on the pull down.
+export default function LayerEntry({ children, label = 'Entry', scrolls = false, arrives = 'tile' }) {
   const sheetRef = useRef(null);
   const [headerSlot] = useState(() => (typeof document === 'undefined' ? null : document.createElement('div')));
   useLayoutEffect(() => {
@@ -125,12 +128,13 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false 
   // Three arrivals: by swipe (draw it, nothing else), by tap (grow out of
   // the tile), or neither (fade — a form, an off-wall tile, reduced motion).
   const [arrival] = useState(() => {
-    if (typeof document === 'undefined') return { swiped: 0, growFrom: null };
+    if (typeof document === 'undefined' || arrives === 'bottom') return { swiped: 0, growFrom: null };
     const swiped = tookASwipe();
     if (swiped) return { swiped, growFrom: null };
     if (!slug || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return { swiped: 0, growFrom: null };
     return { swiped: 0, growFrom: tileBoxOf(slug) };
   });
+  const rises = arrives === 'bottom';
   const growFrom = arrival.growFrom;
 
   useLayoutEffect(() => {
@@ -157,6 +161,10 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false 
   const [shift, setShift] = useState(0);
   const [settling, setSettling] = useState(false);
   const neighbours = slug ? neighboursOf(slug) : { prev: null, next: null };
+  // Whether sideways means anything here. Only an entry with a record beside
+  // it on the wall; everywhere else — a form, a cold-opened entry — a
+  // sideways drag is the browser's, so a row that scrolls sideways can.
+  const browses = Boolean(neighbours.prev || neighbours.next);
 
   const goBack = useCallback(() => router.back(), [router]);
 
@@ -179,6 +187,20 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false 
     const box = slug && !reduced ? tileBoxOf(slug) : null;
     const onScreen = box && box.y > -box.h && box.y < window.innerHeight;
     if (!sheet) { goBack(); return; }
+    if (rises) {
+      // Back the way it came: down and out, from wherever the pull left it.
+      let went = false;
+      const back = () => { if (went) return; went = true; goBack(); };
+      window.setTimeout(back, GROW_MS);
+      const height = sheet.offsetHeight || window.innerHeight;
+      const sink = sheet.animate([
+        { transform: `translateY(${fromX}px)` },
+        { transform: `translateY(${height}px)` },
+      ], { duration: GROW_MS * 0.7, easing: GROW_EASE, fill: 'forwards' });
+      sink.onfinish = back;
+      sink.oncancel = back;
+      return;
+    }
     // The cover as the entry draws it: the first screen's on a phone, the
     // hero band's on a wide window — whichever is laid out.
     const cover = [...sheet.querySelectorAll('.ln-screen-one-art img, .ln-hero-row .ln-cover img')]
@@ -220,7 +242,7 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false 
     run.oncancel = done;
     // The flying copy must not outlive the sheet, animation or not.
     window.setTimeout(() => flyer.remove(), GROW_MS + 100);
-  }, [goBack, slug]);
+  }, [goBack, slug, rises]);
 
   // ── To a neighbour ────────────────────────────────────────────────────────
   // A page turn. The record on screen keeps going the way it was pushed,
@@ -306,9 +328,9 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false 
       const dy = touch.clientY - pull.y;
       if (!pull.axis) {
         if (Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
-        if (Math.abs(dx) > Math.abs(dy)) pull.axis = 'x';
+        if (Math.abs(dx) > Math.abs(dy)) pull.axis = browses ? 'x' : null;
         else if (pull.top && dy > 0) pull.axis = 'y';
-        else { pull = null; return; }
+        if (!pull.axis) { pull = null; return; }
         setSettling(false);
       }
       pull.lastX = touch.clientX;
@@ -331,7 +353,7 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false 
       const elapsed = Math.max(1, done.lastAt - done.at);
       if (done.axis === 'y') {
         const travelled = Math.max(0, done.lastY - done.y);
-        if (travelled > height * FAR_ENOUGH || travelled / elapsed > FAST_ENOUGH) { leave(); return; }
+        if (travelled > height * FAR_ENOUGH || travelled / elapsed > FAST_ENOUGH) { leave(travelled); return; }
         setSettling(true);
         setDragY(0);
         return;
@@ -354,13 +376,13 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false 
       sheet.removeEventListener('touchend', end);
       sheet.removeEventListener('touchcancel', end);
     };
-  }, [leave, go, neighbours.prev, neighbours.next]);
+  }, [leave, go, neighbours.prev, neighbours.next, browses]);
 
   const pulled = dragY > 0;
 
   return (
     <div
-      className={'lay' + (arrival.swiped ? ' lay--swiped' : growFrom ? ' lay--grows' : ' lay--fades') + (scrolls ? ' lay--scrolls' : '')
+      className={'lay' + (rises ? ' lay--rises' : arrival.swiped ? ' lay--swiped' : growFrom ? ' lay--grows' : ' lay--fades') + (scrolls ? ' lay--scrolls' : '')
         + (settling ? ' lay--settling' : '') + (pulled ? ' lay--dragging' : '')}
       ref={sheetRef}
       style={pulled ? { transform: `translateY(${dragY}px)` } : undefined}

@@ -649,6 +649,16 @@ attempt, which flew the cover both ways and was glitchy on a real phone,
 is in the branch's history; this one was built a gesture at a time and
 tested by thumb after each.
 
+**Sideways is claimed only where it means something, and the send page
+rises, 2026-09-03.** The layer takes a sideways drag only on an entry with a
+record beside it on the wall; on a form, or an entry opened cold, a sideways
+drag is the browser's. The send page arrives from the foot of the screen and
+sinks back on the pull down, so the close is the arrival in reverse; the
+session still fades. And the finder's results are rows, not a shelf: a
+shelf that scrolled sideways inside the square was fine while sideways was a
+free axis, and stopped being fine the day sideways meant the record beside
+this one. Rows want a tap and nothing else.
+
 **The URL stays real either way, and that is not negotiable.** Built with
 intercepting routes rather than a modal component: tap from the journal and the
 entry opens as a layer; open the same address from a QR, a shared link, a feed
