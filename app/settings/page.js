@@ -237,8 +237,8 @@ export default function SettingsPage() {
         </Section>
 
         <Section
-          title="Research"
-          note={<>An Anthropic API key turns on two things during a listen: the Research button on the album screen, and the question mark that answers with the record and your notes in context. Get one at <a href="https://console.anthropic.com" target="_blank" rel="noopener noreferrer">console.anthropic.com</a>; it bills to your own API balance, which is separate from a Claude.ai subscription. Leave it blank and everything else works.</>}
+          title="Optional: AI assistance"
+          note={<>If you add an Anthropic key, two things appear during a listening session. Research looks the album up and cites its sources, so you can read the background before you start. And a question mark you can open at any point, which already knows the record and what you’ve written so far — useful for asking questions during a listen, or for finding a common thread through multiple track notes. Nothing it says goes into your entry. You read it, then you write what you write. Get a key at <a href="https://console.anthropic.com" target="_blank" rel="noopener noreferrer">console.anthropic.com</a>. You pay your own usage, and most people spend under a dollar a month. Note that it draws from an API balance, which is separate from a Claude.ai subscription. Everything else works without it.</>}
           onSave={async () => {
             if (!anthropic.trim()) return;
             setSecrets(await send('/api/secrets', { anthropic_key: anthropic.trim() }));
