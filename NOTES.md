@@ -214,6 +214,15 @@ The cross is built and merged. What is left of it:
       "Drawing…" line is written from a frame callback. Build and lint pass;
       the page needs a signed-in look at `/dashboard/share` to confirm both
       slides still draw and the status line settles to blank.
+- [ ] **The weight that is left is concentration, not dead code.** After the
+      2026-09-03 cleanup `globals.css` is 2,476 live lines in one file, and
+      `Journal.js` holds the wall's search, sort, filters, year range, phone
+      sheet and pagination in one component. Neither is broken and nothing
+      here is a rewrite: the candidates are splitting the stylesheet by surface
+      (the cross, the wall, the entry layer, the session) so a rule is found
+      where its component is, and lifting the filter sheet out of Journal into
+      its own file. A different kind of job from deleting — do it when a change
+      to one of those is already on the desk, not as a pass of its own.
 - [ ] **A QR on the pitch pane.** DECISIONS already settles that the right pane produces a fixed code to `/get`, the same on every copy. Not built, and the "logo made of the QR" idea is unresolved.
 - [ ] **`settings.bio` now has no reader and no writer.** Deliberate — see DECISIONS. The value is still in the database. Decide at the welcome screen whether the column gets a job or gets dropped, while the schema is still a draft.
 - [ ] **`/rig` is still a forwarding stub**, and by the same argument that deleted `/why` it may not have earned one: three days live, linked from a card, on a site nobody else runs. `/about` genuinely did earn its stub. Worth one decision rather than two defaults.
