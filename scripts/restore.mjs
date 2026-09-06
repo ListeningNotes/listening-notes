@@ -153,7 +153,10 @@ for (const [table, rows] of plan) {
   if (!rows.length) continue;
   const skip = generated.get(table);
   const colType = types.get(table);
-  const cols = Object.keys(rows[0]).filter(c => !skip.has(c));
+  // And columns the table no longer has: a backup from before a drop still
+  // carries them, and after the TRUNCATE above a failed INSERT would leave the
+  // table empty. The catalogue is the authority on what can be written.
+  const cols = Object.keys(rows[0]).filter(c => !skip.has(c) && c in colType);
 
   // comments carries a self-referencing parent_id, so a reply inserted before
   // the comment it answers fails the foreign key. Ascending id puts parents
