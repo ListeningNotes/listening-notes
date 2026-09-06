@@ -82,6 +82,8 @@ The library — logic, no visuals
     sitewide_visuals.js        All colors and fonts — change here, changes everywhere
     ai_integration.js          The Claude AI calls: research, and the local assembly of a post
     music_data_api.js          Fetches album art and tracklists from iTunes
+    card_links.js              The marks a card can wear — which shape stands for the rig, which logo a link gets
+    portrait_code.js           The portrait made into the journal's QR code, checked against both page colours
     session_timers.js          Track length display (m:ss)
     wristband.js               Session auth — issues and checks the JWT cookie
     secrets.js                 The vault: the keys, the password hash, the session secret, the claim code. Database first, environment second
