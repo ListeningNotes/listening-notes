@@ -487,9 +487,25 @@ three days, behind a pill on a card, on a site nobody else has a copy of — so
 the bookmarks it was protecting do not exist. And a stub is not free: it is a
 route that ships to every install, whose whole job is to redirect from an
 address that never existed on their journal.
-`/about` and `/rig` are still stubs and were right to be — `/about` was in the
-dot row on every page for months. `/rig` is the borderline one and should be
-asked the same question.
+`/about` stays and was right to — it was in the dot row on every page for
+months. `/rig` and `/dashboard/submissions` were asked the same question on
+2026-09-06 and deleted: three days behind a pill on one card, and owner-only
+from the start, on a site nobody else runs.
+
+**`/dashboard` forwards home, 2026-09-06.** The desk is the right pane of the
+cross; the route had gone on drawing the old hub — a screensaver, the logo
+image, a font nothing loaded — for a week after the manifest stopped pointing
+at it. The address stays because Inbox and Share live under it, and because a
+bookmark should land somewhere; what it draws is nothing of its own.
+
+**`/shuffle` stays, without a way in, 2026-09-06.** Fourteen lines that work.
+The pill came off the foot of the wall with Compare and Submit, so the shake
+is the only entrance still meant to exist, and deleting the route would be
+deleting the destination of a gesture already decided on.
+
+**`/archive` stays.** It is the one address that takes `?q=`, which is where
+every artist link in a review points, and the entry page and `/key` link to
+it too. The pane absorbs the route; it does not replace the address.
 
 **The pitch pane stays at three sentences, 2026-09-03.** A fourth — "It
 looks like this: your journal, at your address, like the one you're reading
@@ -1592,6 +1608,30 @@ to date — never arises.
 
 **Nothing edits a migration that has run.** The filename is the identity, so a
 renamed file is a file that runs again. A change is a new numbered file.
+
+**The last drop, 2026-09-06, and the draft window closes with it.**
+`entries.background` and `post_link`, `settings.journal_name`, `bio`,
+`instagram_url` and `send_me`, and the tables `conversations`, `echo_memory`
+and `playing_with_neon`. Each had no reader: the background was a
+model-written paragraph from when posts opened with one, `post_link` the old
+Tumblr address, `bio` a paragraph the prompts replaced, `send_me` a line the
+"If you're sending me something" prompt replaced, `journal_name` a title a
+journal does not have, `instagram_url` an address that lives in
+`social_links`. The two tables were built for a companion this software no
+longer has and never held a row; the third is Neon's sample. `bio` and
+`send_me` are the owner's writing and were dropped on the owner's say-so,
+which is the only way writing is ever dropped. `about_intro` holds the same
+text as `bio` and is the one column left undecided.
+
+**Removed from `001_initial.sql` as well, which is the documented exception to
+"nothing edits a migration that has run".** The runner keys on the filename,
+so an edit never re-runs; what the edit changes is what a fresh copy builds.
+Dropped columns have come out of 001 this way since `relationship` did. The
+live database loses them by hand, after the code that stopped naming them is
+deployed — never before, because the code on `main` still writes into them.
+
+**From the first external install, this file's additive-only rule is in
+force and none of the above is ever done again.**
 
 ---
 
