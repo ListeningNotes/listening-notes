@@ -404,7 +404,10 @@ The live database still has all of it, because the code on `main` still
 selects the settings columns and inserts into the entry ones — dropping them
 before that deploy would break saving an entry on the live site.
 
-- [ ] **RUN THIS once `last-cleanup` is merged and deployed.** Backup first
+- [x] **Run 2026-09-06, after the deploy** — backup `2026-09-06-1829` taken
+      first, host checked, all ten statements applied, the site answered
+      200 before and after. The schema is additive-only from here. What was
+      run, for the record. Backup first
       (`npm run backup`; the 2026-09-06-1226 backup already holds every row
       of every one of these). Check the host is `ep-patient-morning` before
       running anything. What is lost, deliberately: 32 model-written
