@@ -1,6 +1,13 @@
 // Copyright (C) 2026 Miyel Brown
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import './globals.css';
+import './styles/base.css';
+import './styles/nav.css';
+import './styles/journal.css';
+import './styles/entry.css';
+import './styles/idcard.css';
+import './styles/session.css';
+import './styles/get.css';
+import './styles/forms.css';
 import { Nunito, DM_Mono } from 'next/font/google';
 import { Lightswitch } from '../components/main_components/Lightswitch';
 import { Bookplate } from '../components/main_components/Bookplate';
@@ -17,7 +24,7 @@ const nunito = Nunito({
 });
 
 // DM Serif Display used to load here as --font-dm-serif and was the site's
-// title face. Titles are Nunito 700 now (see --font-display in globals.css),
+// title face. Titles are Nunito 700 now (see --font-display in styles/base.css),
 // so the whole site runs on two families and this one is no longer fetched.
 const dmMono = DM_Mono({
   subsets: ['latin'],
@@ -118,17 +125,15 @@ export const dynamic = 'force-dynamic';
 // Bulk text belongs to whoever renders it. /key fetches the definitions and
 // /get reads its essay on the server; these are the short facts.
 const BOOKPLATE_FIELDS = [
-  // journal_name is gone from this list. A journal is called after whoever
-  // keeps it, so keeper_name below is the name, and shipping a second one to
-  // every page was shipping a field nothing read.
+  // A journal is called after whoever keeps it, so keeper_name is the name.
   'keeper_name',
   // The ornamented name itself, not just the resolved cover_name above. The
   // card only needs the resolved one to draw, but the editor needs to know
   // which of the two columns it is editing before it can save to the right
   // one. A short string, and the card is on the landing page.
   'display_name',
-  'bio', 'portrait_url',
-  'instagram_url', 'lastfm_user', 'site_address',
+  'portrait_url',
+  'lastfm_user', 'site_address',
   'founded_at', 'pinned_entry_id',
   // Nothing renders this any more — the free-text bio came off the about pane
   // in favour of the prompts. Kept on the list and in the column: it is
@@ -143,10 +148,9 @@ const BOOKPLATE_FIELDS = [
   // Three finished openings, one line each. A few hundred bytes, and the pane
   // that prints them is the landing page.
   //
-  // send_me came off this list when they arrived: "Looking for" was a labelled
-  // field saying what the prompt "If you're sending me something, make it —"
-  // says as a finished sentence, and the column is left holding its old value
-  // rather than shipped to every page for nothing to read.
+  // The old send_me field went when they arrived: "Looking for" was a
+  // labelled field saying what the prompt "If you're sending me something,
+  // make it —" says as a finished sentence.
   'bioanswers',
   // Two percentages. Without it the portrait is drawn centred, which for a
   // photograph of a person is often a picture of their chin.

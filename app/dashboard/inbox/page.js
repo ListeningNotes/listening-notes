@@ -3,6 +3,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import backgrounds from '../../../components/session_components/backgrounds';
 import { fonts } from '../../../library/sitewide_visuals';
@@ -226,9 +227,9 @@ export default function Inbox() {
         <Background albums={albums} />
         <div style={{ position: 'absolute', inset: 0, zIndex: 1, backdropFilter: 'blur(3px)', WebkitBackdropFilter: 'blur(3px)', background: 'rgba(224,224,220,0.5)', pointerEvents: 'none' }} />
 
-        {/* Back to dashboard — same style + place as the share page */}
+        {/* Back home — same style + place as the share page */}
         <div style={{ position: 'relative', zIndex: 3, padding: '14px 28px', display: 'flex', alignItems: 'center', gap: 12, flexShrink: 0 }}>
-          <a href="/dashboard" style={{ fontFamily: fonts.mono, fontWeight: 600, fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(26,21,32,0.5)', textDecoration: 'none', padding: '6px 10px', borderRadius: 8, border: '1px solid rgba(26,21,32,0.12)', background: 'rgba(245,242,236,0.6)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', flexShrink: 0 }}>← Dashboard</a>
+          <Link href="/" style={{ fontFamily: fonts.mono, fontWeight: 600, fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(26,21,32,0.5)', textDecoration: 'none', padding: '6px 10px', borderRadius: 8, border: '1px solid rgba(26,21,32,0.12)', background: 'rgba(245,242,236,0.6)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', flexShrink: 0 }}>← Home</Link>
         </div>
 
         <div style={{ position: 'relative', zIndex: 2, flex: 1, minHeight: 0, width: '100%', maxWidth: 940, alignSelf: 'center', padding: '8px 24px 24px', display: 'flex', flexDirection: 'column' }}>

@@ -7,14 +7,14 @@ import { sizedAlbumArt } from './music_data_api.js';
 
 // Album art is sized on the way out rather than on the way in, so the row
 // keeps whatever URL it was saved with — the full-resolution master. That's
-// deliberate: the Echo session uses the big image as a full-screen backdrop,
+// deliberate: the session uses the big image as a full-screen backdrop,
 // and a URL pasted by hand into the dashboard's album_art field gets sized
 // down here too, without anyone having to remember to do it. The size is a
 // read-time decision, so changing it later is a number, not a migration.
 //
-// Sized here in the data layer and not in the API routes because /shuffle
-// calls pull_all_entries directly, without going through an HTTP endpoint.
-const LIST_ART_PX = 600;   // grid tiles and the homepage strip — tens at once,
+// Sized here in the data layer and not in the API routes because server
+// pages call these functions directly, without going through an HTTP endpoint.
+const LIST_ART_PX = 600;   // grid tiles — tens at once,
                            // none rendered wider than ~190pt
 const ENTRY_ART_PX = 1200; // one album page, one cover, up to ~291pt on a
                            // phone — 1200 keeps it sharp at 3x
@@ -142,16 +142,6 @@ export async function pull_wall_entries() {
      ORDER BY created_at DESC`
   );
   return rows.map(row => withSizedArt(row, LIST_ART_PX));
-}
-
-export async function pull_all_entries({ includeChain = false } = {}) {
-  const rows = await database.query(
-    `${WITH_LISTEN_NUMBERS} ORDER BY created_at DESC`
-  );
-  return rows.map(row => {
-    const sized = withSizedArt(row, LIST_ART_PX);
-    return includeChain ? sized : withoutChain(sized);
-  });
 }
 
 // ── The public feed ────────────────────────────────────────────────────────
@@ -327,8 +317,8 @@ async function next_free_slug(album) {
 export async function save_new_entry(body) {
   const {
     album, artist, year, genre = '', entry_type,
-    rating, favorite, masterpiece = false, formative = false, background = '', notes,
-    track_notes, horizon, album_art, post_link, tracks = null,
+    rating, favorite, masterpiece = false, formative = false, notes,
+    track_notes, horizon, album_art, tracks = null,
     source_entry_id = null, received_from = null, received_date = null,
     user_id = null
   } = body;
@@ -338,14 +328,14 @@ export async function save_new_entry(body) {
   const result = await database`
     INSERT INTO entries (
       album, artist, year, genre, entry_type,
-      rating, favorite, masterpiece, formative, background, notes, track_notes,
-      horizon, album_art, post_link, slug, tracks,
+      rating, favorite, masterpiece, formative, notes, track_notes,
+      horizon, album_art, slug, tracks,
       source_entry_id, received_from, received_date, user_id
     ) VALUES (
       ${album}, ${artist}, ${year}, ${genre}, ${entry_type},
-      ${rating}, ${favorite}, ${masterpiece}, ${formative}, ${background}, ${notes},
+      ${rating}, ${favorite}, ${masterpiece}, ${formative}, ${notes},
       ${track_notes},
-      ${horizon}, ${album_art}, ${post_link}, ${slug},
+      ${horizon}, ${album_art}, ${slug},
       ${tracks ? JSON.stringify(tracks) : null},
       ${entryRef(source_entry_id)}, ${blankToNull(received_from)},
       ${blankToNull(received_date)},
@@ -480,12 +470,10 @@ export async function update_entry(slug, fields) {
       entry_type = COALESCE(${fields.entry_type ?? null}, entry_type),
       rating = COALESCE(${fields.rating ?? null}, rating),
       favorite = COALESCE(${fields.favorite ?? null}, favorite),
-      background = COALESCE(${fields.background ?? null}, background),
       notes = COALESCE(${fields.notes ?? null}, notes),
       track_notes = COALESCE(${fields.track_notes ?? null}, track_notes),
       horizon = COALESCE(${fields.horizon ?? null}, horizon),
       album_art = COALESCE(${fields.album_art ?? null}, album_art),
-      post_link = COALESCE(${fields.post_link ?? null}, post_link),
       edited_at = CASE WHEN ${noteChanged} THEN ${stampedAt}::timestamp ELSE edited_at END,
       source_entry_id = CASE WHEN ${set_source} THEN ${source_entry_id}::int ELSE source_entry_id END,
       received_from = CASE WHEN ${set_from} THEN ${set_from ? blankToNull(fields.received_from) : null}::text ELSE received_from END,
@@ -622,10 +610,5 @@ export async function save_draft(body) {
 // entry is saved for real, the draft it grew out of has nothing left to hold.
 export async function delete_draft(id) {
   await database`DELETE FROM drafts WHERE id = ${id}`;
-  return { deleted: true };
-}
-
-export async function delete_draft_for_album(album, artist) {
-  await database`DELETE FROM drafts WHERE lookup_key = ${lookup_key(album, artist)}`;
   return { deleted: true };
 }

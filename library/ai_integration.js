@@ -128,8 +128,8 @@ function briefBuilder(album, artist) {
 }
 
 // Streams the briefing, yielding the whole brief-so-far each time a text block
-// closes. Same call and same thoroughness as research_album — the difference is
-// that the caller can start rendering at ~21s instead of waiting the full ~55s.
+// closes, so the caller can start rendering at ~21s instead of waiting the
+// full ~55s for the finished brief.
 export async function* research_album_live(album, artist) {
   const client = await get_client();
   const builder = briefBuilder(album, artist);
@@ -159,13 +159,6 @@ export async function* research_album_live(album, artist) {
     }
   }
   yield builder.build(true);
-}
-
-// One-shot version — drains the stream and hands back only the finished brief.
-export async function research_album(album, artist) {
-  let brief = null;
-  for await (const partial of research_album_live(album, artist)) brief = partial;
-  return brief;
 }
 
 // Assembles an entry out of what was written. Nothing here reaches a model any

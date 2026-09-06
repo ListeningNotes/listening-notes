@@ -4,6 +4,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { fetchTracklist, fetchAlbumArtUrl } from '../library/music_data_api';
 import { serializeTracks } from '../library/entry_formatter';
+import { useSessionDraft } from './useSessionDraft';
 
 // Owns every API call and piece of state for a listen in progress:
 // the record → the tracks → the notes and score → the preview → the save.
@@ -11,7 +12,7 @@ import { serializeTracks } from '../library/entry_formatter';
 // happens to you on the way in.
 //
 // step is passed in so the hook can assemble the preview when you reach it,
-// and so the browser's copy of the draft remembers which screen you were on.
+// and so the draft remembers which screen you were on (see useSessionDraft).
 
 // The four screens of a listen, in order. The header draws them and the
 // picker names the one a draft was left on.
@@ -21,12 +22,6 @@ export const SESSION_STEPS = ['Album', 'Tracks', 'Notes', 'Preview'];
 // session, and across a reload. Written by whoever starts a listen — the
 // picker, the inbox — and read by /session as it opens.
 export const PENDING_KEY = 'ln_pending_session';
-
-// The browser's own copy of what has been written, so a closed tab or a locked
-// phone loses nothing. One record at a time; a listen with nothing written
-// yet never overwrites it, so leaving one record for another does not throw
-// away notes on the first before a word has been typed on the second.
-const DRAFT_KEY = 'ln_session_draft';
 
 export function useListeningSession({ step }) {
   // Research — optional, and only ever started by the button on the album screen
@@ -78,13 +73,8 @@ export function useListeningSession({ step }) {
   const [chatInput, setChatInput]       = useState('');
   const [chatLoading, setChatLoading]   = useState(false);
 
-  // Draft — the row in `drafts` this listen is being kept in. It writes itself
-  // a few seconds after the last change, so there is no button to remember;
-  // the in-flight write is held so a save of the entry can wait for it before
-  // deleting the row rather than racing it.
-  const [draftState, setDraftState] = useState('idle');   // idle | saving | saved | error
-  const draftIdRef      = useRef(null);
-  const draftFlightRef  = useRef(null);
+  // The draft — the browser's copy and the row in `drafts` — is kept by
+  // useSessionDraft, below the timer, once everything it watches exists.
   const collectionIdRef = useRef('');
 
   // Preview
@@ -119,35 +109,18 @@ export function useListeningSession({ step }) {
     || Object.values(trackFavorites).some(Boolean)
   );
 
-  // Autosave to the browser whenever anything changes. The tracklist rides
-  // along so a restored listen files every note under the song it was written
-  // about — asking Apple again could hand the list back in a different order.
-  useEffect(() => {
-    if (!albumInput || !hasWriting || saved) return;
-    try {
-      localStorage.setItem(DRAFT_KEY, JSON.stringify({
-        album: albumInput, artist: artistName, year, albumArt,
-        tracks: tracks || [],
-        overallNotes, trackNotes, trackRatings, trackFavorites,
-        rating, Masterpiece, Favorite, Formative, entryType, step,
-        savedAt: Date.now(),
-      }));
-    } catch { /* storage full or blocked — the draft button still works */ }
-  }, [albumInput, artistName, year, albumArt, tracks, overallNotes, trackNotes, trackRatings, trackFavorites, rating, Masterpiece, Favorite, Formative, entryType, step, hasWriting, saved]);
-
-  // The row in `drafts` follows the writing. Debounced, because every keystroke
-  // is a change and a write per keystroke is a flood; three seconds after the
-  // last one is soon enough that a phone locking mid-sentence still has the
-  // sentence. The browser's own copy above is what covers the seconds between.
-  useEffect(() => {
-    if (!albumInput || !hasWriting || saved) return undefined;
-    const t = setTimeout(() => { saveDraft({ quiet: true }); }, 3000);
-    return () => clearTimeout(t);
-  // saveDraft is deliberately not a dependency: it is remade on every render,
-  // and listing it would reset the three seconds on renders that changed
-  // nothing worth saving.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [albumInput, overallNotes, trackNotes, trackRatings, trackFavorites, rating, Masterpiece, Favorite, Formative, entryType, step, hasWriting, saved]);
+  const draft = useSessionDraft({
+    step, saved, hasWriting,
+    values: {
+      albumInput, artistName, year, albumArt, genre, entryType, receivedFrom, receivedDate,
+      collectionIdRef, brief, tracks, overallNotes, trackNotes, trackRatings, trackFavorites,
+      rating, Masterpiece, Favorite, Formative, elapsed,
+    },
+    setters: {
+      setOverallNotes, setRating, setMasterpiece, setFavorite, setFormative, setElapsed,
+      setTrackNotes, setTrackRatings, setTrackFavorites, setEntryType, setAlbumArt,
+    },
+  });
 
   // Assemble the preview on arrival. Nothing here reaches a model — format_post
   // is a local join of what was written — so it is redone every time the
@@ -161,67 +134,6 @@ export function useListeningSession({ step }) {
   // not on every keystroke behind it.
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [step]);
-
-  // The whole tracklist with each song's marks on it — what gets written to
-  // the drafts row, and what a resumed session reads back. Untouched songs stay
-  // in, because a draft has to be able to rebuild the list itself; the entry
-  // save filters them out, which is why it builds its own.
-  function draftTrackRows() {
-    return (tracks || []).map((t, i) => ({
-      number: t.number || i + 1,
-      title: t.title,
-      duration: t.duration ?? null,
-      rating: trackRatings[i] || 0,
-      favorite: !!trackFavorites[i],
-      note: (trackNotes[i] || '').trim(),
-    }));
-  }
-
-  // Puts a saved draft's writing back on the screen, and returns its tracklist.
-  function hydrateDraft(draft) {
-    draftIdRef.current = draft.id;
-    setOverallNotes(draft.notes || '');
-    setRating(draft.rating || 0);
-    setMasterpiece(!!draft.masterpiece);
-    setFavorite(!!draft.favorite);
-    setFormative(!!draft.formative);
-    setElapsed(draft.elapsed || 0);
-
-    const rows = Array.isArray(draft.tracks) ? draft.tracks : [];
-    const notes = {}, ratings = {}, favourites = {};
-    rows.forEach((t, i) => {
-      if (t.note)     notes[i] = t.note;
-      if (t.rating)   ratings[i] = t.rating;
-      if (t.favorite) favourites[i] = true;
-    });
-    setTrackNotes(notes);
-    setTrackRatings(ratings);
-    setTrackFavorites(favourites);
-    return rows;
-  }
-
-  // The browser's copy, if it is about this record.
-  function readLocalDraft(album, artist) {
-    try {
-      const s = JSON.parse(localStorage.getItem(DRAFT_KEY));
-      if (!s || s.album !== album) return null;
-      if (artist && s.artist && s.artist !== artist) return null;
-      return s;
-    } catch { return null; }
-  }
-
-  function applyLocalDraft(s) {
-    setOverallNotes(s.overallNotes || '');
-    setTrackNotes(s.trackNotes || {});
-    setTrackRatings(s.trackRatings || {});
-    setTrackFavorites(s.trackFavorites || {});
-    setRating(s.rating || 0);
-    setMasterpiece(!!s.Masterpiece);
-    setFavorite(!!s.Favorite);
-    setFormative(!!s.Formative);
-    if (s.entryType) setEntryType(s.entryType);
-    if (s.albumArt) setAlbumArt(prev => prev || s.albumArt);
-  }
 
   // Opens a record: the tracklist, any saved draft, and whatever the browser
   // kept. Returns the step to open on. Pass null to clear the desk — the way
@@ -252,10 +164,9 @@ export function useListeningSession({ step }) {
     setSaved(false);
     setSavedEntry(null);
     setOutput(null);
-    setDraftState('idle');
+    draft.reset();
     setChatMessages([]);
     setChatInput('');
-    draftIdRef.current = null;
     collectionIdRef.current = '';
 
     if (!record?.album) {
@@ -267,30 +178,30 @@ export function useListeningSession({ step }) {
     const {
       album, artist = '', year: yr = '', artUrl = '', collectionId = null,
       genre: gen = '', entryType: et = '', receivedFrom: from = '',
-      receivedDate: date = '', draft = null,
+      receivedDate: date = '', draft: savedDraft = null,
     } = record;
 
-    collectionIdRef.current = collectionId || draft?.collection_id || '';
+    collectionIdRef.current = collectionId || savedDraft?.collection_id || '';
     setAlbumInput(album);
     setArtistName(artist);
-    setYear(yr || draft?.year || '');
-    setAlbumArt(artUrl || draft?.album_art || '');
-    setGenre(gen || draft?.genre || '');
-    setEntryType(et || draft?.entry_type || '');
-    setReceivedFrom(from || draft?.received_from || '');
-    setReceivedDate(date || (draft?.received_date ? String(draft.received_date).slice(0, 10) : ''));
+    setYear(yr || savedDraft?.year || '');
+    setAlbumArt(artUrl || savedDraft?.album_art || '');
+    setGenre(gen || savedDraft?.genre || '');
+    setEntryType(et || savedDraft?.entry_type || '');
+    setReceivedFrom(from || savedDraft?.received_from || '');
+    setReceivedDate(date || (savedDraft?.received_date ? String(savedDraft.received_date).slice(0, 10) : ''));
 
     let rows = [];
     let openAt = 0;
-    if (draft) {
-      rows = hydrateDraft(draft);
-      openAt = draft.step || 0;
+    if (savedDraft) {
+      rows = draft.hydrate(savedDraft);
+      openAt = savedDraft.step || 0;
     }
 
-    const local = readLocalDraft(album, artist);
-    const localNewer = local && (!draft || (local.savedAt || 0) > (Date.parse(draft.updated_at) || 0));
+    const local = draft.readLocal(album, artist);
+    const localNewer = local && (!savedDraft || (local.savedAt || 0) > (Date.parse(savedDraft.updated_at) || 0));
     if (localNewer) {
-      applyLocalDraft(local);
+      draft.applyLocal(local);
       if (!rows.length && Array.isArray(local.tracks) && local.tracks.length) rows = local.tracks;
       if (typeof local.step === 'number') openAt = local.step;
     }
@@ -306,7 +217,7 @@ export function useListeningSession({ step }) {
       });
     }
 
-    if (!artUrl && !draft?.album_art) {
+    if (!artUrl && !savedDraft?.album_art) {
       fetchAlbumArtUrl(album, artist, yr).then(url => {
         if (url && run === listenRunRef.current) setAlbumArt(url);
       });
@@ -413,63 +324,6 @@ export function useListeningSession({ step }) {
     } finally { setChatLoading(false); }
   }
 
-  // Writes everything on screen to the drafts table. One row per record, so
-  // writing twice in a listen updates rather than piles up. quiet:true is the
-  // automatic save — it does not raise an alert if it fails, because the next
-  // change will try again and the browser's copy is still there.
-  async function saveDraft({ quiet = false } = {}) {
-    const album = albumInput;
-    if (!album || saved) return;
-    if (draftFlightRef.current) await draftFlightRef.current;
-    setDraftState('saving');
-    const flight = (async () => {
-      const res = await fetch('/api/drafts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          album,
-          artist: artistName || '',
-          year: year || brief?.year || '',
-          genre: genre || brief?.genre || '',
-          entry_type: entryType,
-          album_art: albumArt,
-          collection_id: collectionIdRef.current,
-          step,
-          elapsed,
-          rating,
-          masterpiece: Masterpiece,
-          favorite: Favorite,
-          formative: Formative,
-          notes: overallNotes,
-          tracks: draftTrackRows(),
-          received_from: receivedFrom,
-          received_date: receivedDate,
-        }),
-      });
-      const data = await res.json();
-      if (data.error) throw new Error(data.error);
-      draftIdRef.current = data.draft?.id ?? draftIdRef.current;
-    })();
-    draftFlightRef.current = flight;
-    try {
-      await flight;
-      setDraftState('saved');
-    } catch (err) {
-      setDraftState('error');
-      if (!quiet) alert('Saving the draft failed: ' + err.message);
-    } finally {
-      if (draftFlightRef.current === flight) draftFlightRef.current = null;
-    }
-  }
-
-  // The button says SAVED for a moment and then goes back to offering. Long
-  // enough to read, short enough that it's ready again when you next reach it.
-  useEffect(() => {
-    if (draftState !== 'saved' && draftState !== 'error') return undefined;
-    const t = setTimeout(() => setDraftState('idle'), 2600);
-    return () => clearTimeout(t);
-  }, [draftState]);
-
   // Returns what it assembled as well as setting it, so a save that arrives
   // before the preview's own assembly has landed can assemble and go on.
   async function doFormat() {
@@ -529,7 +383,6 @@ export function useListeningSession({ step }) {
           track_notes: derived.track_notes,
           horizon: derived.horizon,
           album_art: albumArt,
-          post_link: '',
           // Blank unless this listen came out of the inbox. create_entry runs
           // them through blankToNull, so an ordinary listen writes null here.
           received_from: receivedFrom,
@@ -540,15 +393,8 @@ export function useListeningSession({ step }) {
       if (data.error) throw new Error(data.error);
       setSaved(true);
       setSavedEntry(data.entry || null);
-      try { localStorage.removeItem(DRAFT_KEY); } catch { /* nothing to clear */ }
-      // The listen is an entry now. Leaving the draft behind would offer it
-      // back on the picker as though it were still unfinished. An automatic
-      // save may still be in the air; wait for it, or it lands after this.
-      if (draftFlightRef.current) { try { await draftFlightRef.current; } catch { /* already reported */ } }
-      if (draftIdRef.current) {
-        fetch(`/api/drafts/${draftIdRef.current}`, { method: 'DELETE' }).catch(() => {});
-        draftIdRef.current = null;
-      }
+      // The listen is an entry now; the draft — both copies — goes with it.
+      await draft.finish();
     } catch (err) { alert('Save failed: ' + err.message); }
     finally { setSaving(false); }
   }
@@ -582,7 +428,7 @@ export function useListeningSession({ step }) {
     trackFavorites, setTrackFavorites,
     openTrack, setOpenTrack,
     // Draft
-    draftState,
+    draftState: draft.state,
     // The reference
     chatMessages,
     chatInput, setChatInput,
@@ -598,7 +444,7 @@ export function useListeningSession({ step }) {
     // Functions
     beginListen,
     doResearch,
-    saveDraft,
+    saveDraft: draft.save,
     doFormat,
     doSave,
     sendChat,

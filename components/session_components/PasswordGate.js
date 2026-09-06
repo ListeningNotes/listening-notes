@@ -82,38 +82,6 @@ export default function PasswordGate({ onAuth, bare = false, asking = 'password'
   // is not set yet when the password is first chosen.
   const fields = (
         <form onSubmit={handleAuth} className="pg-form">
-          <style>{`
-            .pg-form { display: flex; flex-direction: column; gap: 12px; }
-            /* The journal's address, as the thing the password is filed
-               under. A real input rather than a label, because that is what
-               a password manager pairs the password with — and visible,
-               because managers ignore fields they consider hidden, and not
-               read-only, because Safari skips those too. Typing into it does
-               nothing; it is the address. */
-            .pg-who {
-              width: 100%; box-sizing: border-box; text-align: center;
-              background: none; border: 0; outline: none; padding: 0;
-              font-family: var(--font-label); font-size: 10px; letter-spacing: 0.12em;
-              text-transform: uppercase; color: var(--ink-faint);
-            }
-            .pg-pw {
-              width: 100%; box-sizing: border-box; text-align: center;
-              background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
-              padding: 12px 16px; font-family: var(--font-mono); font-size: 16px;
-              color: var(--ink); outline: none; transition: border-color 0.15s;
-            }
-            .pg-pw:focus { border-color: var(--ink-faint); }
-            .pg-pw::placeholder { color: var(--ink-faint); }
-            .pg-pw--wrong { border-color: #e05555; }
-            .pg-said { font-family: var(--font-label); font-size: 10px; color: #e05555; line-height: 1.5; text-align: center; }
-            .pg-go {
-              width: 100%; padding: 12px 0; border-radius: 999px; cursor: pointer;
-              background: var(--ink); color: var(--bg); border: 1px solid var(--ink);
-              font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em;
-              text-transform: uppercase;
-            }
-            .pg-go:disabled { opacity: 0.5; cursor: default; }
-          `}</style>
           <input
             type="text"
             name="username"

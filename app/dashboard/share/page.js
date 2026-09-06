@@ -11,8 +11,8 @@
 //     carousel's FIRST slide on the profile grid, so this is the slide that
 //     builds the wall of covers.
 //   slide 2 — the back of the archive tile: the cover blurred behind a wash
-//     with the metadata on top. Same card as AlbumPreview.js, redrawn here at
-//     poster size rather than screenshotted, so the type stays sharp.
+//     with the metadata on top. The card the archive tile once showed on its back,
+//     redrawn here at poster size rather than screenshotted, so the type stays sharp.
 //
 // Why canvas and not an image route on the server: the card leans on a heavy
 // blur and a translucent wash, and Satori (what next/og renders with) supports
@@ -54,7 +54,7 @@ const SHAPES = {
   square:   { w: 1080, h: 1080, label: '1:1', note: 'Full bleed' },
 };
 
-// The metadata card in AlbumPreview.js is drawn for a tile about 190px across
+// That metadata card was drawn for a tile about 190px across
 // at the archive's widest density. Every size on slide 2 is that card's size
 // multiplied by this unit, so the proportions arrive intact at 1080.
 const CARD_REF_WIDTH = 190;
@@ -79,7 +79,7 @@ const GEM_PATH = 'M246,98.73l-56-64A8,8,0,0,0,184,32H72a8,8,0,0,0-6,2.73l-56,64a
 const FAV_COLOR = '#f0484f';
 const MP_COLOR = '#4a9bf0';
 
-// Same question AlbumPreview asks: flagged as a masterpiece, or every track on
+// Flagged as a masterpiece, or every track on
 // it got five stars.
 function isMasterpiece(entry) {
   const tracks = parseTracksFromNotes(entry.track_notes || entry.notes);
@@ -710,9 +710,9 @@ export default function SessionShare() {
 
       <div style={{ height: '100vh', position: 'relative', zIndex: 1, fontFamily: fonts.sans, color: INK, display: 'flex', flexDirection: 'column' }}>
 
-        {/* Top bar — the back button the other dashboard pages use */}
+        {/* Top bar — the back button the inbox uses too */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 28px', flexShrink: 0 }}>
-          <Link href="/dashboard" style={{ fontFamily: fonts.mono, fontWeight: 600, fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(26,21,32,0.5)', textDecoration: 'none', padding: '6px 10px', borderRadius: 8, border: '1px solid rgba(26,21,32,0.12)', background: 'rgba(245,242,236,0.6)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', flexShrink: 0 }}>← Dashboard</Link>
+          <Link href="/" style={{ fontFamily: fonts.mono, fontWeight: 600, fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(26,21,32,0.5)', textDecoration: 'none', padding: '6px 10px', borderRadius: 8, border: '1px solid rgba(26,21,32,0.12)', background: 'rgba(245,242,236,0.6)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', flexShrink: 0 }}>← Home</Link>
           <span style={{ fontFamily: MONO, fontSize: 10, color: 'rgba(26,25,22,0.35)', letterSpacing: '0.08em' }}>
             Instagram slides{selected ? ' · ' + selected.album : ''}
           </span>

@@ -22,17 +22,11 @@ import { DEFAULT_DEFINITIONS, mergeDefinitions } from './definitions.js';
 // copy has to show is its title, and coverName() below answers that without a
 // column having to hold a placeholder.
 const EMPTY = {
-  // Dead, and kept for now. A journal is called after whoever keeps it — see
-  // coverName() — so nothing reads this any more. It is still here because
-  // dropping a column is a decision rather than a tidy-up, not because it
-  // cannot be dropped: nobody outside this repo is running a copy yet, so the
-  // schema is still a draft. See the cleanup note in NOTES.md. It stays null
-  // rather than holding a title, so it cannot quietly become a second name.
-  journal_name: null,
+  // There is no journal_name. A journal is called after whoever keeps it —
+  // see coverName() — and the column that once held a title was dropped so
+  // it could not quietly become a second name.
   keeper_name: null,
-  bio: null,
   portrait_url: null,
-  instagram_url: null,
   lastfm_user: null,
   site_address: null,
   founded_at: null,
@@ -47,8 +41,6 @@ const EMPTY = {
   social_links: null,
   // Which counted rows to leave off the card. A list of keys, or null.
   hidden_fields: null,
-  // What its keeper would like sent to them. See the column in migrations/001_initial.sql.
-  send_me: null,
   // Where in the portrait to look. A CSS object-position, or null for centred.
   portrait_position: null,
   portrait_code_url: null,
@@ -74,14 +66,10 @@ const EMPTY = {
 // rather than trusting the request body, so a stray field cannot reach the
 // query — and so adding a setting is a deliberate act in this file.
 const WRITABLE = [
-  // journal_name is deliberately absent. The column is still there and still
-  // holds whatever anyone typed into it, but a journal is named after its
-  // keeper now, so letting a form go on writing this would be maintaining a
-  // second name that nothing ever reads.
-  'keeper_name', 'display_name', 'bio', 'portrait_url',
-  'instagram_url', 'lastfm_user', 'site_address',
+  'keeper_name', 'display_name', 'portrait_url',
+  'lastfm_user', 'site_address',
   'founded_at', 'pinned_entry_id', 'about_intro', 'social_links',
-  'hidden_fields', 'send_me', 'portrait_position', 'rig_icon', 'rig',
+  'hidden_fields', 'portrait_position', 'rig_icon', 'rig',
   'bioanswers',
   'definitions',
   'theme',
@@ -200,11 +188,11 @@ export function titleName(settings) {
 // here. That is a real cost and it is the smaller one; the alternative was a
 // silent type change or a silently missing page. Add new columns to this list.
 const SETTINGS_FIELDS = [
-  'id', 'journal_name', 'keeper_name', 'bio', 'portrait_url',
-  'instagram_url', 'lastfm_user', 'site_address', 'founded_at',
+  'id', 'keeper_name', 'portrait_url',
+  'lastfm_user', 'site_address', 'founded_at',
   'pinned_entry_id', 'updated_at', 'about_intro', 'why_essay',
   'why_date', 'definitions', 'social_links', 'hidden_fields',
-  'portrait_mime', 'send_me', 'portrait_position', 'rig_icon', 'rig',
+  'portrait_mime', 'portrait_position', 'rig_icon', 'rig',
   'portrait_code_url', 'display_name', 'serial', 'setup_complete',
   'bioanswers', 'theme',
 ];

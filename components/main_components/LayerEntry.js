@@ -74,7 +74,7 @@ const FAST_ENOUGH = 0.3;
 // file is supposed to know nothing about entries.
 //
 // `scrolls` restores the sheet's own scrolling on a phone. It is off by
-// default because of the note in globals.css: an entry's phone layout is
+// default because of the note in styles/entry.css: an entry's phone layout is
 // already two scroll containers deep and a third one breaks the other two, so
 // the layer has to be genuinely not a scroll container underneath it. That
 // reasoning is about the entry, not about the layer — anything arriving here

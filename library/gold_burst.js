@@ -4,7 +4,7 @@
 // lives here so marking a Masterpiece in a session fires the same effect the
 // rest of the site uses, rather than reading as a form checkbox.
 //
-// Relies on .gold-particle and @keyframes gold-explode in globals.css.
+// Relies on .gold-particle and @keyframes gold-explode in styles/base.css.
 
 const SYMBOLS = ['✦', '★', '✸', '⬡', '✺', '◆', '✧', '⋆'];
 
