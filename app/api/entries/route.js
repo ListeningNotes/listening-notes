@@ -7,11 +7,6 @@ import { requireWristband } from '@/library/wristband';
 // is drawing a grid of covers, filtering one, or picking one — see
 // pull_wall_entries for the measurements and for why nothing loses anything.
 //
-// The one caller that needs an entry's text is /dashboard/share, and it needs
-// it for the single record being exported rather than for all of them; it
-// fetches that one from /api/entries/[slug]. Same shape as the journal: a lean
-// list to choose from, the full record for the one chosen.
-//
 // The chain came off with the writing. It was included here for the source
 // picker, which reads /api/entries/[slug] and gets the chain from there.
 export async function GET() {

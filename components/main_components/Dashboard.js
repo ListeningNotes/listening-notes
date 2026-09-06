@@ -20,12 +20,15 @@
 
 'use client';
 import Link from 'next/link';
-import { Headphones, Envelope, PaperPlane, GearSix } from '@phosphor-icons/react';
+import { Headphones, Envelope, GearSix } from '@phosphor-icons/react';
 
-// Everything but the first. Order is how often you would want it, which is not
-// the order they were built in: messages are what you open the journal to
-// check, and share is what you open it to do once and then not again for a
-// month.
+// Everything but the first: messages, which are what you open the journal to
+// check, and the machinery.
+//
+// There was a Share door here too, opening the Instagram slide exporter, with
+// a note promising the card printer that never merged. Sharing happens from
+// an entry's own page and from the card now, so the door and the page went
+// together, 2026-09-06.
 //
 // There was a third — Entries, a table of everything with an edit form behind
 // each row. It is gone, and so is the door: correcting an entry happens on the
@@ -35,7 +38,6 @@ import { Headphones, Envelope, PaperPlane, GearSix } from '@phosphor-icons/react
 // site that did not need one.
 const DOORS = [
   { href: '/dashboard/inbox',   label: 'Inbox',   note: 'Submissions and comments waiting on you', Icon: Envelope, counted: true },
-  { href: '/dashboard/share',   label: 'Share',   note: 'Print a card, or the code to /get', Icon: PaperPlane },
   // The machinery: the keys, the password, Last.fm, the address. It is also
   // reached from the gear beside the card's pencil; here because the desk is
   // where the owner's things are, and the password form lives behind it.
