@@ -195,7 +195,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   // the owner, and drawn on the server: a visitor's copy of this page does not
   // contain it.
   const keeperTools = authed && !edit.editing && (
-    <KeeperTools onEdit={edit.begin} />
+    <KeeperTools onEdit={edit.begin} slug={entry.slug} />
   );
 
   // ── The fields at the head of the entry ───────────────────────────────────

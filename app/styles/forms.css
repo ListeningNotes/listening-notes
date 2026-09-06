@@ -797,3 +797,9 @@ a.pp-name:hover svg { color: var(--ink); }
 .ib-comment-row { display: flex; align-items: center; gap: 8px; }
 .ib-comment-row .own-link { font-family: var(--font-label); font-size: 10px; margin-left: auto; }
 
+
+/* ── from app/printer/page.js ─────────────────────────────────────────── */
+.own-screen .kt-tool, .idc-tool { text-decoration: none; }
+.pr-main { width: 100%; max-width: 560px; align-self: center; box-sizing: border-box; padding: 60px 24px 120px; }
+.pr-title { font-family: var(--font-display); font-weight: var(--font-display-weight, 700); font-size: 28px; margin: 10px 0 14px; letter-spacing: -0.01em; }
+.pr-note { font-size: 14px; line-height: 1.7; color: var(--ink-soft); margin: 0; max-width: 46ch; }
