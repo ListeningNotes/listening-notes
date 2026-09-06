@@ -26,25 +26,15 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
-import { fonts } from '../../../library/sitewide_visuals';
 import { sizedAlbumArt } from '../../../library/music_data_api';
 import { parseRating, parseTracksFromNotes } from '../../../library/entry_formatter';
 import { useBookplate } from '../../../components/main_components/Bookplate';
 import backgrounds from '../../../components/session_components/backgrounds';
 
-// The dashboard's shared chrome: one of the album screensavers running behind
-// a frosted panel. Same constants as /dashboard/inbox so the two pages read as
-// one room. DM Sans is named on that one but was never loaded — the site runs
-// on Nunito and DM Mono — so the body face here is Nunito, which is what the
-// type system says it should have been.
-const WALL = '#eef0ec';
-const PANEL_BG = 'rgba(255,255,255,0.8)';
-const INK = '#1a1916';
-// INK is text and stays near-black for legibility; SOLID is the button fill,
-// a softer warm grey, because a button-sized slab of INK reads as harsh.
-const SOLID = '#4a4643';
-const MONO = "'DM Mono', 'Courier New', monospace";
-const HAIR = '1px solid rgba(26,25,22,0.08)';
+// The chrome — a screensaver behind a frosted panel — is the .own-* family in
+// styles/forms.css, shared with the inbox so the two pages read as one room
+// and follow the theme. The colours below are for the slides only: they are
+// pictures for somewhere else and have no theme to follow.
 
 // Both shapes, because which one is right depends on how Instagram is cropping
 // profile grids this month. 4:5 mats the square cover so the grid can't crop
@@ -648,52 +638,12 @@ export default function SessionShare() {
   if (checking) return null;
   if (!authed) { if (typeof window !== 'undefined') window.location.replace('/login'); return null; }
 
-  const btn = (on = false) => ({
-    fontFamily: MONO, fontSize: 10, letterSpacing: '0.08em', textTransform: 'uppercase',
-    padding: '7px 13px', borderRadius: 999, cursor: 'pointer',
-    border: on ? '1px solid ' + SOLID : '1px solid rgba(26,25,22,0.14)',
-    background: on ? SOLID : 'rgba(255,255,255,0.6)',
-    color: on ? '#fff' : 'rgba(26,25,22,0.6)',
-    transition: 'background 0.15s, color 0.15s, border-color 0.15s',
-  });
-
-  const label = { fontFamily: MONO, fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'rgba(26,25,22,0.45)' };
+  // The two shapes of button here: filled for the one that is on or does the
+  // thing, outlined for the rest. Same pair the inbox uses.
+  const btn = (on = false) => 'own-act' + (on ? ' own-act--solid' : '');
 
   return (
     <>
-      <style>{`
-        html, body { background: ${WALL}; }
-        ::-webkit-scrollbar { width: 4px; height: 4px; }
-        ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.14); border-radius: 99px; }
-
-        /* The panel splits into a picker rail and the slides. Both scroll on
-           their own — the shell is a fixed 100vh like the sibling pages, so
-           the document itself never scrolls. */
-        .sh-cols { display: grid; grid-template-columns: 268px 1fr; flex: 1; min-height: 0; }
-        .sh-rail { border-right: ${HAIR}; min-height: 0; overflow-y: auto; padding: 16px; }
-        .sh-main { min-height: 0; overflow-y: auto; padding: 18px 22px 26px; }
-        @media (max-width: 880px) {
-          .sh-cols { grid-template-columns: 1fr; }
-          .sh-rail { border-right: none; border-bottom: ${HAIR}; max-height: 180px; }
-        }
-
-        .sh-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(58px, 1fr)); gap: 7px; }
-        .sh-tile { aspect-ratio: 1/1; border-radius: 7px; overflow: hidden; cursor: pointer;
-          border: 2px solid transparent; padding: 0; background: none; transition: border-color 0.12s, transform 0.12s; }
-        .sh-tile:hover { transform: translateY(-1px); }
-        .sh-tile--on { border-color: ${INK}; }
-        .sh-tile img { width: 100%; height: 100%; object-fit: cover; display: block; }
-
-        .sh-slides { display: flex; gap: 20px; flex-wrap: wrap; }
-        .sh-slide canvas { width: 236px; height: auto; display: block; border-radius: 10px;
-          border: 1px solid rgba(26,25,22,0.10); box-shadow: 0 6px 22px rgba(0,0,0,0.10); background: #fff; }
-
-        .sh-field { font-family: ${MONO}; font-size: 11px; color: ${INK};
-          padding: 7px 11px; border-radius: 9px; border: 1px solid rgba(26,25,22,0.12);
-          background: rgba(255,255,255,0.65); outline: none; }
-        .sh-field:focus { border-color: rgba(26,25,22,0.35); }
-      `}</style>
-
       {/* Canvas cannot read CSS variables, and the font families arrive from
           next/font — so the resolved names are read off these two probes and
           handed to ctx.font rather than guessed at. */}
@@ -702,49 +652,34 @@ export default function SessionShare() {
         <span className="probe-mono" style={{ fontFamily: 'var(--font-dm-mono)' }}>x</span>
       </div>
 
-      {/* Album screensaver + frosted overlay, same as entries and inbox */}
-      <div style={{ position: 'fixed', inset: 0, zIndex: 0, background: WALL, overflow: 'hidden' }}>
-        <Background albums={wallpaper} />
-        <div style={{ position: 'absolute', inset: 0, backdropFilter: 'blur(3px)', WebkitBackdropFilter: 'blur(3px)', background: 'rgba(224,224,220,0.5)' }} />
-      </div>
-
-      <div style={{ height: '100vh', position: 'relative', zIndex: 1, fontFamily: fonts.sans, color: INK, display: 'flex', flexDirection: 'column' }}>
+      <div className="own-screen">
+        {/* Album screensaver + frosted overlay, same as the inbox */}
+        <div className="own-wall"><Background albums={wallpaper} /></div>
+        <div className="own-scrim" />
 
         {/* Top bar — the back button the inbox uses too */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 28px', flexShrink: 0 }}>
-          <Link href="/" style={{ fontFamily: fonts.mono, fontWeight: 600, fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'rgba(26,21,32,0.5)', textDecoration: 'none', padding: '6px 10px', borderRadius: 8, border: '1px solid rgba(26,21,32,0.12)', background: 'rgba(245,242,236,0.6)', backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)', flexShrink: 0 }}>← Home</Link>
-          <span style={{ fontFamily: MONO, fontSize: 10, color: 'rgba(26,25,22,0.35)', letterSpacing: '0.08em' }}>
-            Instagram slides{selected ? ' · ' + selected.album : ''}
-          </span>
+        <div className="own-top">
+          <Link href="/" className="own-home">← Home</Link>
+          <span className="own-crumb">Instagram slides{selected ? ' · ' + selected.album : ''}</span>
         </div>
 
-        <div style={{ flex: 1, minHeight: 0, width: '100%', maxWidth: 1000, alignSelf: 'center', padding: '4px 24px 24px', display: 'flex', flexDirection: 'column' }}>
-
-          {/* Centered search, above the panel — entries does the same */}
-          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 14, flexShrink: 0 }}>
+        <div className="own-body sh-body">
+          {/* Centered search, above the panel */}
+          <div className="sh-search">
             <input
               className="sh-field"
               value={query}
               onChange={e => setQuery(e.target.value)}
               placeholder="Search album or artist…"
-              style={{ width: 'min(420px, 100%)', textAlign: 'center', fontFamily: fonts.sans, fontSize: 13 }}
             />
           </div>
 
-          {/* The frosted panel */}
-          <div style={{
-            flex: 1, minHeight: 0, display: 'flex', flexDirection: 'column',
-            background: PANEL_BG, backdropFilter: 'blur(22px)', WebkitBackdropFilter: 'blur(22px)',
-            border: '1px solid rgba(255,255,255,0.55)', borderRadius: 24,
-            boxShadow: '0 12px 44px rgba(0,0,0,0.10)', overflow: 'hidden', position: 'relative',
-          }}>
-            <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(160deg, rgba(255,255,255,0.5) 0%, transparent 45%)', pointerEvents: 'none' }} />
-
-            <div className="sh-cols" style={{ position: 'relative', zIndex: 1 }}>
+          <div className="own-panel">
+            <div className="sh-cols">
 
               {/* ── the picker rail ── */}
               <div className="sh-rail">
-                <div style={{ ...label, marginBottom: 10 }}>Album · {filtered.length}</div>
+                <div className="own-label" style={{ marginBottom: 10 }}>Album · {filtered.length}</div>
                 <div className="sh-grid">
                   {filtered.map(e => (
                     <button
@@ -762,22 +697,22 @@ export default function SessionShare() {
 
               {/* ── the slides ── */}
               <div className="sh-main">
-                <div style={{ display: 'flex', gap: 18, alignItems: 'center', flexWrap: 'wrap', marginBottom: 18 }}>
-                  <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                    <span style={label}>Size</span>
+                <div className="sh-controls">
+                  <div className="sh-control">
+                    <span className="own-label">Size</span>
                     {Object.entries(SHAPES).map(([key, sh]) => (
-                      <button key={key} type="button" style={btn(shapeKey === key)} onClick={() => setShapeKey(key)} title={sh.note}>
+                      <button key={key} type="button" className={btn(shapeKey === key)} onClick={() => setShapeKey(key)} title={sh.note}>
                         {sh.label}
                       </button>
                     ))}
                   </div>
-                  <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
-                    <span style={label}>Card</span>
-                    <button type="button" style={btn(!isDark)} onClick={() => setIsDark(false)}>Day</button>
-                    <button type="button" style={btn(isDark)} onClick={() => setIsDark(true)}>Night</button>
+                  <div className="sh-control">
+                    <span className="own-label">Card</span>
+                    <button type="button" className={btn(!isDark)} onClick={() => setIsDark(false)}>Day</button>
+                    <button type="button" className={btn(isDark)} onClick={() => setIsDark(true)}>Night</button>
                   </div>
-                  <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                    <span style={label}>Address</span>
+                  <div className="sh-control" style={{ gap: 8 }}>
+                    <span className="own-label">Address</span>
                     <input className="sh-field" value={siteUrl} placeholder="blank for none"
                       onChange={e => setTyped(e.target.value)} style={{ width: 178 }} />
                   </div>
@@ -788,40 +723,40 @@ export default function SessionShare() {
                     <div className="sh-slides">
                       <div className="sh-slide">
                         <canvas ref={coverRef} />
-                        <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 10 }}>
-                          <span style={label}>1 · the grid</span>
-                          <button type="button" style={btn()} onClick={() => download(coverRef, '1')}>Save</button>
+                        <div className="sh-slide-row">
+                          <span className="own-label">1 · the grid</span>
+                          <button type="button" className={btn()} onClick={() => download(coverRef, '1')}>Save</button>
                         </div>
                       </div>
                       <div className="sh-slide">
                         <canvas ref={cardRef} />
-                        <div style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 10 }}>
-                          <span style={label}>2 · the back</span>
-                          <button type="button" style={btn()} onClick={() => download(cardRef, '2')}>Save</button>
+                        <div className="sh-slide-row">
+                          <span className="own-label">2 · the back</span>
+                          <button type="button" className={btn()} onClick={() => download(cardRef, '2')}>Save</button>
                         </div>
                       </div>
                     </div>
 
-                    <div style={{ marginTop: 20, display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+                    <div className="sh-actions">
                       <button
                         type="button"
-                        style={btn(true)}
+                        className={btn(true)}
                         onClick={() => { download(coverRef, '1'); setTimeout(() => download(cardRef, '2'), 400); }}
                       >
                         Save both
                       </button>
-                      <button type="button" style={btn(copied)} onClick={copyLink}>
+                      <button type="button" className={btn(copied)} onClick={copyLink}>
                         {copied ? 'Copied ✓' : 'Copy link'}
                       </button>
-                      {status && <span style={label}>{status}</span>}
-                      {tainted && <span style={{ ...label, color: FAV_COLOR }}>Cover host sends no CORS headers — saving will fail</span>}
+                      {status && <span className="own-label">{status}</span>}
+                      {tainted && <span className="own-label" style={{ color: FAV_COLOR }}>Cover host sends no CORS headers — saving will fail</span>}
                     </div>
                   </>
                 )}
 
-                <div style={{ marginTop: 40, paddingTop: 22, borderTop: HAIR }}>
-                  <div style={{ ...label, marginBottom: 10 }}>Still to do — actual auto-posting</div>
-                  <ul style={{ margin: 0, paddingLeft: 18, fontSize: 13, lineHeight: 1.7, color: 'rgba(26,25,22,0.7)' }}>
+                <div className="sh-todo">
+                  <div className="own-label" style={{ marginBottom: 10 }}>Still to do — actual auto-posting</div>
+                  <ul>
                     <li>Instagram: convert to a Business or Creator account, then a Meta Developer app</li>
                     <li>Long-lived token plus something that refreshes it every 60 days</li>
                     <li>Serve these two slides from a public URL so the Graph API can fetch them</li>

@@ -682,3 +682,162 @@ a.pp-name:hover svg { color: var(--ink); }
   .af-square { border-radius: 15px; }
   .af-hand-pair { grid-template-columns: 1fr; }
 }
+
+/* ── The owner's two tools: the inbox and the share page ──────────────────
+   One shell for both: a screensaver behind a frosted panel, the way the old
+   hub looked, on the site's own tokens so it follows the theme like every
+   other page. Text is the two typefaces every page uses; the third one these
+   pages used to name was never loaded and always fell back. */
+.own-screen {
+  height: 100vh; position: relative; overflow: hidden;
+  background: var(--bg); color: var(--ink); font-family: var(--font-sans);
+  display: flex; flex-direction: column;
+}
+.own-wall { position: absolute; inset: 0; z-index: 0; overflow: hidden; }
+.own-scrim {
+  position: absolute; inset: 0; z-index: 1; pointer-events: none;
+  backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
+  background: color-mix(in srgb, var(--bg) 55%, transparent);
+}
+.own-top { position: relative; z-index: 3; display: flex; align-items: center; gap: 12px; padding: 14px 28px; flex-shrink: 0; }
+.own-home {
+  font-family: var(--font-label); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--ink-soft); text-decoration: none; padding: 6px 10px; border-radius: 8px;
+  border: 1px solid var(--border); background: var(--panel);
+  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); flex-shrink: 0;
+}
+.own-home:hover { color: var(--ink); }
+.own-crumb { font-family: var(--font-label); font-size: 10px; letter-spacing: 0.08em; color: var(--ink-faint); }
+.own-body {
+  position: relative; z-index: 2; flex: 1; min-height: 0; width: 100%;
+  align-self: center; display: flex; flex-direction: column;
+}
+.own-panel {
+  position: relative; z-index: 1; flex: 1; min-height: 0; display: flex; flex-direction: column;
+  background: var(--panel-strong); backdrop-filter: blur(22px); -webkit-backdrop-filter: blur(22px);
+  border: 1px solid var(--panel-border); border-radius: 24px;
+  box-shadow: var(--shadow-lift); overflow: hidden;
+}
+.own-label { font-family: var(--font-label); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-faint); }
+/* The two buttons every row here has: the one that does the thing, filled,
+   and the one that declines it, outlined. Danger is the favourite red the
+   rest of the site already uses for "no". */
+.own-act {
+  display: inline-flex; align-items: center; cursor: pointer; text-decoration: none;
+  font-family: var(--font-label); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 7px 16px; border-radius: 999px;
+  border: 1px solid var(--border); background: var(--panel); color: var(--ink-soft);
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.own-act:hover { color: var(--ink); border-color: var(--ink-faint); }
+.own-act--solid { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.own-act--solid:hover { color: var(--bg); opacity: 0.85; }
+.own-act--danger { color: var(--fav); border-color: color-mix(in srgb, var(--fav) 40%, transparent); }
+.own-act--danger:hover { color: var(--fav); border-color: var(--fav); }
+.own-empty { padding: 80px 0; text-align: center; font-family: var(--font-label); font-size: 11px; color: var(--ink-faint); }
+.own-skeleton { border-radius: 10px; background: var(--panel); }
+.own-link { color: var(--ink-soft); text-decoration: none; border-bottom: 1px solid var(--border); overflow-wrap: anywhere; }
+.own-link:hover { color: var(--ink); }
+
+/* ── from app/dashboard/inbox/page.js ────────────────────────────────── */
+.ib-body { max-width: 940px; padding: 8px 24px 24px; }
+/* Folder tabs that connect to the open panel. */
+.ib-tabs { display: flex; align-items: flex-end; gap: 5px; padding-left: 14px; position: relative; z-index: 2; flex-shrink: 0; }
+.ib-tab {
+  font-family: var(--font-label); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 9px 22px 11px; border: 1px solid var(--panel-border); border-bottom: none; cursor: pointer;
+  border-radius: 16px 16px 0 0; background: var(--panel); color: var(--ink-faint);
+  backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  position: relative; z-index: 1; transition: background 0.15s, color 0.15s, padding 0.12s;
+}
+.ib-tab--on { padding: 11px 24px 13px; margin-bottom: -1px; background: var(--panel-strong); color: var(--ink); z-index: 2; }
+.ib-panel { border-radius: 20px 20px 24px 24px; }
+.ib-scroll { position: relative; z-index: 1; flex: 1; min-height: 0; overflow-y: auto; padding: 22px 26px 28px; }
+.ib-filters { display: flex; gap: 18px; margin-bottom: 18px; }
+.ib-filter {
+  font-family: var(--font-label); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 4px 4px; border: none; background: none; cursor: pointer;
+  color: var(--ink-faint); border-bottom: 1.5px solid transparent;
+}
+.ib-filter--on { color: var(--ink); border-bottom-color: var(--ink); }
+.ib-list { display: flex; flex-direction: column; gap: 6px; }
+/* One received album. Cover on the left at the size of a thing being handed
+   over, everything said about it in a column to the right. */
+.ib-sent { display: flex; gap: 18px; align-items: flex-start; padding: 20px 6px; border-bottom: 1px solid var(--border); }
+.ib-sent:last-child { border-bottom: none; }
+.ib-sent-art {
+  flex-shrink: 0; width: 96px; height: 96px; border-radius: 8px; overflow: hidden;
+  background: var(--panel); box-shadow: var(--shadow-soft);
+  display: flex; align-items: center; justify-content: center;
+}
+.ib-sent-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* A send typed in by hand rather than picked off the shelf has no cover. The
+   frame stays so the column does not shift under the ones that do. */
+.ib-sent-none { font-size: 26px; color: var(--ink-faint); }
+.ib-sent-said { min-width: 0; flex: 1; }
+.ib-sent-album { font-family: var(--font-display); font-weight: var(--font-display-weight, 700); font-size: 16px; color: var(--ink); line-height: 1.25; }
+.ib-sent-artist { font-family: var(--font-label); font-size: 11px; color: var(--ink-soft); margin-top: 2px; }
+/* The message. Set at reading size rather than table size, because it is the
+   only thing here somebody wrote. */
+.ib-sent-note { font-size: 14px; color: var(--ink); line-height: 1.7; margin: 11px 0 10px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.ib-sent-from {
+  display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap;
+  font-family: var(--font-label); font-size: 10px; letter-spacing: 0.08em; color: var(--ink-soft);
+}
+.ib-sent-when { margin-left: auto; color: var(--ink-faint); }
+.ib-sent-row { display: flex; align-items: center; gap: 8px; margin-top: 14px; }
+@media (max-width: 640px) {
+  .ib-sent { gap: 14px; }
+  .ib-sent-art { width: 72px; height: 72px; }
+  .ib-sent-when { margin-left: 0; }
+}
+/* A comment waiting: who, where, what they said, and the two buttons. */
+.ib-comment { padding: 18px 6px; border-bottom: 1px solid var(--border); }
+.ib-comment:last-child { border-bottom: none; }
+.ib-comment-head { display: flex; align-items: baseline; gap: 8px; margin-bottom: 8px; flex-wrap: wrap; }
+.ib-comment-who { font-size: 13px; font-weight: 600; }
+.ib-comment-where { font-family: var(--font-label); font-size: 10px; }
+.ib-comment-when { font-family: var(--font-label); font-size: 10px; color: var(--ink-faint); margin-left: auto; }
+.ib-comment-text { font-size: 14px; color: var(--ink); line-height: 1.7; margin: 0 0 12px; }
+.ib-comment-row { display: flex; align-items: center; gap: 8px; }
+.ib-comment-row .own-link { font-family: var(--font-label); font-size: 10px; margin-left: auto; }
+
+/* ── from app/dashboard/share/page.js ────────────────────────────────── */
+.sh-body { max-width: 1000px; padding: 4px 24px 24px; }
+.sh-search { display: flex; justify-content: center; margin-bottom: 14px; flex-shrink: 0; }
+.sh-search .sh-field { width: min(420px, 100%); text-align: center; font-family: var(--font-sans); font-size: 13px; }
+/* The panel splits into a picker rail and the slides. Both scroll on their
+   own — the shell is a fixed 100vh like the inbox, so the document itself
+   never scrolls. */
+.sh-cols { display: grid; grid-template-columns: 268px 1fr; flex: 1; min-height: 0; position: relative; z-index: 1; }
+.sh-rail { border-right: 1px solid var(--border); min-height: 0; overflow-y: auto; padding: 16px; }
+.sh-main { min-height: 0; overflow-y: auto; padding: 18px 22px 26px; }
+@media (max-width: 880px) {
+  .sh-cols { grid-template-columns: 1fr; }
+  .sh-rail { border-right: none; border-bottom: 1px solid var(--border); max-height: 180px; }
+}
+.sh-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(58px, 1fr)); gap: 7px; }
+.sh-tile {
+  aspect-ratio: 1 / 1; border-radius: 7px; overflow: hidden; cursor: pointer;
+  border: 2px solid transparent; padding: 0; background: none; transition: border-color 0.12s, transform 0.12s;
+}
+.sh-tile:hover { transform: translateY(-1px); }
+.sh-tile--on { border-color: var(--ink); }
+.sh-tile img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.sh-controls { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; margin-bottom: 18px; }
+.sh-control { display: flex; gap: 6px; align-items: center; }
+.sh-slides { display: flex; gap: 20px; flex-wrap: wrap; }
+/* The slides are pictures for somewhere else, so they keep their white ground
+   whatever the page's theme is — a night slide on a night page would vanish. */
+.sh-slide canvas { width: 236px; height: auto; display: block; border-radius: 10px; border: 1px solid var(--border); box-shadow: var(--shadow-soft); background: #fff; }
+.sh-slide-row { display: flex; gap: 8px; align-items: center; margin-top: 10px; }
+.sh-actions { margin-top: 20px; display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.sh-field {
+  font-family: var(--font-label); font-size: 11px; color: var(--ink);
+  padding: 7px 11px; border-radius: 9px; border: 1px solid var(--border);
+  background: var(--panel); outline: none;
+}
+.sh-field:focus { border-color: var(--ink-faint); }
+.sh-field::placeholder { color: var(--ink-faint); }
+.sh-todo { margin-top: 40px; padding-top: 22px; border-top: 1px solid var(--border); }
+.sh-todo ul { margin: 0; padding-left: 18px; font-size: 13px; line-height: 1.7; color: var(--ink-soft); }
