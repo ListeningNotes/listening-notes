@@ -35,7 +35,6 @@ const EMPTY = {
   site_address: null,
   founded_at: null,
   pinned_entry_id: null,
-  about_intro: null,
   social_links: null,
   hidden_fields: null,
   portrait_position: null,

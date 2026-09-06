@@ -465,9 +465,8 @@ export default function About({ stamps, authed = false, pinned = null, entries =
         {/* The free-text bio used to print here and does not. A blank box is a
             hard question badly phrased: asked to describe yourself you write a
             paragraph about the project, asked what you can never skip you
-            write two words worth reading. The column still holds whatever was
-            written in it — see about_intro in app/layout.js — and an optional
-            free-text field alongside the prompts is a later decision, because
+            write two words worth reading. The column that held it is gone, and
+            an optional free-text field alongside the prompts is a later decision, because
             it is much easier to add one than to take one away once people have
             filled it in. */}
 

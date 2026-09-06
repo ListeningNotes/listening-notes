@@ -409,7 +409,7 @@ before that deploy would break saving an entry on the live site.
       of every one of these). Check the host is `ep-patient-morning` before
       running anything. What is lost, deliberately: 32 model-written
       background paragraphs, 28 old Tumblr post links, the free-text bio
-      (its text is also in `about_intro`), "Your best masterpieces!" from
+      and `about_intro` (the same paragraph twice), "Your best masterpieces!" from
       `send_me`, the title "Listening Notes" from `journal_name`, and Neon's
       sample table of ten random numbers.
 
@@ -418,6 +418,7 @@ before that deploy would break saving an entry on the live site.
       ALTER TABLE entries  DROP COLUMN IF EXISTS post_link;
       ALTER TABLE settings DROP COLUMN IF EXISTS journal_name;
       ALTER TABLE settings DROP COLUMN IF EXISTS bio;
+      ALTER TABLE settings DROP COLUMN IF EXISTS about_intro;
       ALTER TABLE settings DROP COLUMN IF EXISTS instagram_url;
       ALTER TABLE settings DROP COLUMN IF EXISTS send_me;
       DROP TABLE IF EXISTS conversations;
@@ -425,11 +426,8 @@ before that deploy would break saving an entry on the live site.
       DROP TABLE IF EXISTS playing_with_neon;
       ```
 
-- [ ] **`settings.about_intro` — the same 281 characters as `bio`, and
-      nothing renders it either.** The layout ships it to every page on the
-      argument that it is somebody's writing. It is the one column left
-      with no reader; decide whether it gets a job or goes with the list
-      above, and if it goes, add it to the SQL.
+- [x] `settings.about_intro` — decided 2026-09-06: the same paragraph as
+      `bio` under a second name, dropped with it. Added to the block above.
 - [x] `entries.relationship`, `comments.author_email`,
       `submissions.submitter_email`, `entries.tags` — all already gone from
       the live database, confirmed 2026-09-06 against the catalogue. The two
