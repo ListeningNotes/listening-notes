@@ -151,10 +151,12 @@ stay or the columns stop agreeing where a square starts.
 The site already carried two separate homepage markup trees that had drifted
 apart; a third would have been the same mistake twice.
 
-**`bio` is the card, `about_intro` is the pane.** They used to fall back into
-each other, which was right while the card was the whole about page and wrong
-the moment there was somewhere longer to write — a card that borrowed the long
-paragraph would print a page of prose on a card.
+**`bio` was the card and `about_intro` was the pane, and both are gone,
+2026-09-06.** They used to fall back into each other, which was right while
+the card was the whole about page and wrong the moment there was somewhere
+longer to write. Then the prompts replaced the bio, nothing read either
+column, and the two held the same paragraph. Dropped together on the
+owner's say-so.
 
 **Prompts replace the free-text bio.** Nine openings ship in
 `library/bioprompt.js`, a keeper answers three in one line each, and the answer
@@ -1633,8 +1635,8 @@ journal does not have, `instagram_url` an address that lives in
 `social_links`. The two tables were built for a companion this software no
 longer has and never held a row; the third is Neon's sample. `bio` and
 `send_me` are the owner's writing and were dropped on the owner's say-so,
-which is the only way writing is ever dropped. `about_intro` holds the same
-text as `bio` and is the one column left undecided.
+which is the only way writing is ever dropped — and `about_intro`, the same
+paragraph under a second name, went with them the same day.
 
 **Removed from `001_initial.sql` as well, which is the documented exception to
 "nothing edits a migration that has run".** The runner keys on the filename,

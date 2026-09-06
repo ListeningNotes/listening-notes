@@ -135,11 +135,6 @@ const BOOKPLATE_FIELDS = [
   'portrait_url',
   'lastfm_user', 'site_address',
   'founded_at', 'pinned_entry_id',
-  // Nothing renders this any more — the free-text bio came off the about pane
-  // in favour of the prompts. Kept on the list and in the column: it is
-  // somebody's writing, there is no editor to put it back with, and a field
-  // that costs a few hundred bytes is not worth losing writing over.
-  'about_intro',
   // A handful of URLs. Short enough to ride along, and the back of the card
   // is on the landing page, which every visitor lands on.
   'social_links',

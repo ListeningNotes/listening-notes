@@ -31,12 +31,6 @@ const EMPTY = {
   site_address: null,
   founded_at: null,
   pinned_entry_id: null,
-  // The paragraph saying what the journal is. It has lived in the database
-  // since the settings table was built and never once reached a page, because
-  // it was left out of this list and out of the layout's — /about read it from
-  // a context nothing had put it into. The card carries it now, so it is worth
-  // the two lines it costs to actually deliver it.
-  about_intro: null,
   // A list of plain URLs, or null. See the note on the column in migrations/001_initial.sql.
   social_links: null,
   // Which counted rows to leave off the card. A list of keys, or null.
@@ -68,7 +62,7 @@ const EMPTY = {
 const WRITABLE = [
   'keeper_name', 'display_name', 'portrait_url',
   'lastfm_user', 'site_address',
-  'founded_at', 'pinned_entry_id', 'about_intro', 'social_links',
+  'founded_at', 'pinned_entry_id', 'social_links',
   'hidden_fields', 'portrait_position', 'rig_icon', 'rig',
   'bioanswers',
   'definitions',
@@ -190,7 +184,7 @@ export function titleName(settings) {
 const SETTINGS_FIELDS = [
   'id', 'keeper_name', 'portrait_url',
   'lastfm_user', 'site_address', 'founded_at',
-  'pinned_entry_id', 'updated_at', 'about_intro', 'why_essay',
+  'pinned_entry_id', 'updated_at', 'why_essay',
   'why_date', 'definitions', 'social_links', 'hidden_fields',
   'portrait_mime', 'portrait_position', 'rig_icon', 'rig',
   'portrait_code_url', 'display_name', 'serial', 'setup_complete',

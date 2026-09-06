@@ -17,7 +17,7 @@
 --
 -- Columns dropped along the way — entries.relationship, drafts.relationship,
 -- submissions.submitter_email, comments.author_email, entries.background,
--- entries.post_link, settings.journal_name, settings.bio,
+-- entries.post_link, settings.journal_name, settings.bio, settings.about_intro,
 -- settings.instagram_url, settings.send_me — and the two tables nothing ever
 -- wrote to, conversations and echo_memory, are not here. A fresh database
 -- never creates them, and the one database that had them has lost them. Their
@@ -243,7 +243,6 @@ CREATE TABLE IF NOT EXISTS settings (
   -- live here rather than in the page for the same reason the name does: a
   -- copy of this software should not open carrying somebody else's writing.
   -- Blank is the shipped state — no note, no page, no link to one.
-  about_intro text,
   why_essay text,
   why_date date,
   -- Wherever else this journal's keeper can be found. A list of plain URLs,
