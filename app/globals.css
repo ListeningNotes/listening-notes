@@ -505,77 +505,6 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   transition: opacity 0.5s ease;
 }
 
-/* ── Recent-logs strip (scroll-driven) ── */
-.hp-strip {
-  width: 100%;
-  overflow: hidden;
-  transform: translateY(var(--strip-y, 0px));
-}
-
-.hp-strip-track {
-  display: flex;
-  gap: 36px;
-  width: max-content;
-  padding: 22px calc(50vw - 100px);
-  will-change: transform;
-}
-
-.strip-tile {
-  flex-shrink: 0;
-  width: 200px;
-  height: 200px;
-  border-radius: 20px;
-  overflow: hidden;
-  position: relative;
-  display: block;
-  padding: 0;
-  border: none;
-  cursor: pointer;
-  text-decoration: none; /* it's an <a> straight to the entry now, not a button */
-  color: inherit;
-  -webkit-tap-highlight-color: transparent;
-  box-shadow: var(--shadow-soft);
-  /* translateZ(0) + will-change force this rounded/clipped box onto its own
-     compositing layer, PERSISTENTLY — iOS Safari clips correctly while a
-     child's filter/opacity transition is actively running, but tears the
-     layer back down once the transition settles, and the rounded corners
-     snap to square right at that moment. will-change keeps the layer alive
-     at rest too, not just mid-transition. */
-  transform: scale(calc(var(--depth, 1) * var(--grow, 1))) translateZ(0);
-  will-change: transform;
-  opacity: var(--dim, 1);
-  transition: transform 0.18s ease-out, opacity 0.18s ease-out, box-shadow 0.3s ease;
-}
-.strip-tile:hover {
-  --grow: 1.05;
-  box-shadow: var(--shadow-lift);
-}
-
-.strip-tile-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  display: block;
-  pointer-events: none;
-}
-
-.strip-tile-placeholder {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: var(--bg-warm);
-  color: var(--ink-faint);
-  font-size: 3rem;
-}
-
-@media (max-width: 768px) {
-
-  .strip-tile { width: 220px; height: 220px; border-radius: 18px; }
-  .hp-strip-track { gap: 24px; padding: 36px calc(50vw - 110px); }
-}
-
 /* Gold explosion particles on click */
 .gold-particle {
   position: fixed;
@@ -996,21 +925,12 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 .arc-grid[data-density="small"] .ft-hover-album { font-size: 10px; -webkit-line-clamp: 1; }
 .arc-grid[data-density="small"] .ft-hover-artist { font-size: 8.5px; }
 
-/* ── EntryMarks — favourite + masterpiece ─────────────────────────────────
-   Phosphor's Heart and SketchLogo, filled. Colour is set here rather than
-   passed as a prop: the icons inherit currentColor, so these two rules are
-   the whole palette. Red and blue are the same hue wheel at matched
-   saturation and lightness, so neither mark pulls harder than the other,
-   and both clear 4.5:1 against the card in either theme. Never on the
-   resting grid (that's just album art) and only on the widest grid step;
-   see EntryMarks in AlbumPreview.js. */
-.ln-marks {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  flex-shrink: 0;
-}
-/* inline-flex, so the SVG doesn't sit on a text baseline and pick up the
+/* ── The three marks — favourite, masterpiece, formative ─────────────────
+   Phosphor's Heart, SketchLogo and Fingerprint, filled, in --fav, --mp and
+   --formative. Colour is set here rather than passed as a prop: the icons
+   inherit currentColor, so these rules are the whole palette. Drawn on /key,
+   which is the page that explains them.
+   inline-flex, so the SVG doesn't sit on a text baseline and pick up the
    line box's leading — the same trap the star row hit. */
 .ln-mark { display: inline-flex; }
 .ln-mark--fav { color: var(--fav); }
@@ -1100,43 +1020,6 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 .ln-xref:hover {
   color: var(--ink);
   text-decoration-color: var(--ink);
-}
-
-/* ── .ln-new-mark — posted since your last visit ──────────────────────────
-   The third mark, next to the favourite heart and the masterpiece diamond,
-   but earned differently: those are facts about the record, this is a fact
-   about the reader. Set by library/dog_ear.js out of the browser's own
-   storage, so it says "new to you", not "recent".
-
-   Chip geometry — mono, 10px, 4px radius, 3px/8px — so it reads as the same
-   family as the Favorite and Masterpiece chips on an entry page. What it
-   can't borrow is their transparency: those sit on a page background, and
-   this sits on album art that might be any colour at all. Hence a filled
-   ground and a shadow, so it stays legible over a white sleeve and a black
-   one both.
-
-   The literal in each color-mix() is a fallback, not a duplicate: color-mix()
-   with an undefined custom property is invalid, and an invalid background
-   would drop the ground out from under the text — the same way a stale
-   stylesheet once left the masterpiece chip with no border. See Chip.js. */
-.ln-new-mark {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  z-index: 2;
-  font-family: var(--font-mono);
-  font-size: 10px;
-  line-height: 1;
-  letter-spacing: 0.08em;
-  border-radius: 4px;
-  padding: 4px 8px;
-  color: #fff;
-  background: color-mix(in srgb, var(--new, #f0a24a) 92%, transparent);
-  border: 1px solid color-mix(in srgb, #fff 34%, transparent);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.22);
-  /* The tile is the link; the badge is decoration sitting on top of it, and
-     shouldn't eat the click or the hover. */
-  pointer-events: none;
 }
 
 /* ── The fields at the head of an entry ─────────────────────────────────────
@@ -1764,23 +1647,6 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
      the pane beside it. A panel with a margin is a panel; this is not one any
      more, so the margin goes with the border and the backdrop. */
   margin-top: 0;
-}
-.hn-under .hp-strip--grid { width: 100%; }
-.hn-under .hp-strip-track--grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 12px;
-  width: 100%;
-  padding: 0;
-}
-.hn-under .strip-tile--grid {
-  width: 100%;
-  height: auto;
-  min-width: 0;
-  aspect-ratio: 1 / 1;
-  border-radius: 24px;
-  transform: translateZ(0);
-  opacity: 1;
 }
 
 /* ── The row along the bottom ───────────────────────────────────────────────
@@ -2445,7 +2311,6 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
      box away and the columns stop agreeing about where a square starts. */
   .hn-pane:not(.hn-pane--home) .hn-crown { visibility: hidden; }
   .hn-controls { display: none; }
-  .hn-under .hp-strip-track--grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 /* The foot of the pitch pane: the source link, and the way in. Two quiet lines
@@ -2457,10 +2322,6 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   align-items: center;
   gap: 18px;
   margin-top: 36px;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  @keyframes wa-face { from { opacity: 1; } to { opacity: 1; } }
 }
 
 /* A comment form opening where the comment will go. It grows out of the note

@@ -19,11 +19,11 @@
 // So the URL is kept here instead, in the sender's own browser, the first time
 // they type it. Which makes this per browser and not per person: the same
 // sender on a phone and a laptop pastes it twice, and a cleared browser forgets
-// it. That is the same honest limit dog_ear.js documents at more length, and
-// it is what to revisit if there are ever accounts to hang it off instead.
+// it. That is the honest limit of doing this without accounts, and it is what
+// to revisit if there are ever accounts to hang it off instead.
 //
 // Deliberately free of imports and of anything server-only — same reason as
-// dog_ear.js and receipts.js, which this is modelled on.
+// receipts.js, which this is modelled on.
 
 // One key, shared by the send form, the comment form and — when it exists —
 // the compare affordance. Not one per feature: fill it in anywhere and it is
@@ -97,10 +97,4 @@ export function keepSender({ name = '', address = '' } = {}) {
     // worth a broken send. The fields simply start empty next time.
   }
   return kept;
-}
-
-// Testing seam. Nothing in the app calls this.
-export function forgetSender() {
-  if (typeof window === 'undefined') return;
-  try { window.localStorage.removeItem(KEY); } catch {}
 }
