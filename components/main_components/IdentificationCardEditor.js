@@ -446,12 +446,8 @@ export function useIdentificationCardEditor(settings) {
     setPosX(Number.parseFloat(x) || 50);
     setPosY(Number.parseFloat(y) || 50);
     setPortrait(settings.portrait_url || '');
-    // instagram_url predates the list and is folded in here, so an owner sees
-    // every link they have rather than every link but one. Saving writes the
-    // whole list back and clears the old column, so the same address cannot
-    // end up stored in two places disagreeing.
     const stored = Array.isArray(settings.social_links) ? settings.social_links : [];
-    const all = [settings.instagram_url, ...stored]
+    const all = stored
       // Plain strings from before marks could be chosen, objects since.
       .map(entry => (typeof entry === 'string' ? { url: entry, icon: 'auto' } : { url: entry?.url || '', icon: entry?.icon || 'auto' }))
       .filter(l => l.url.trim());
@@ -649,11 +645,6 @@ export function useIdentificationCardEditor(settings) {
           // does on purpose, and a field that is only written when it has a
           // value cannot express it.
           pinned_entry_id: pin ?? null,
-          // Emptied on purpose. Every link lives in one list now; leaving this
-          // filled would put Instagram on the card twice the moment someone
-          // added it to the list, and the de-duplication that hides that is a
-          // patch over two sources of truth rather than a reason to keep them.
-          instagram_url: '',
         }),
       });
       if (!res.ok) throw new Error('That didn’t save. Try again.');

@@ -529,7 +529,6 @@ export function useListeningSession({ step }) {
           track_notes: derived.track_notes,
           horizon: derived.horizon,
           album_art: albumArt,
-          post_link: '',
           // Blank unless this listen came out of the inbox. create_entry runs
           // them through blankToNull, so an ordinary listen writes null here.
           received_from: receivedFrom,
