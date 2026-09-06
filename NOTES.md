@@ -1020,6 +1020,8 @@ current.
       last readers and are parked, not deleted — see DECISIONS, Parked.
       **Not seen signed in by Claude** — the pages are behind the password —
       so Miyel's look on the dev server is the check.
+- [x] **The Share door, `/dashboard/share` and the entry's printer glyph are
+      gone** — see DECISIONS. The desk is three things that do what they say.
 
 **2026-09-03 session — the audit cleanup** (branch `cleanup-audit`)
 - [x] **Lint at zero.** Nine `set-state-in-effect` errors across Journal, the

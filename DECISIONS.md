@@ -519,6 +519,16 @@ way the send form and the session do — reading what somebody sent should
 not feel like leaving the journal — and both keep their real addresses for a
 bookmark.
 
+**The Share door and the exporter behind it are gone, 2026-09-06.** The door
+said "Print a card, or the code to /get", which was the share printer that
+never merged; it opened the Instagram slide exporter, which Miyel had moved
+away from in favour of sharing an entry from its own page and the profile
+from the card. A door that promises one thing and opens another, neither of
+them the current model, has no job. The desk is Start a listen, Inbox,
+Settings. The printer glyph beside the pencil on an entry went with it. The
+slide drawing lives on in git and on the `share-printer` branch if a cover
+plate is ever wanted.
+
 **Styles live in eight files by surface, not with their components,
 2026-09-06.** `app/styles/`: base, nav, journal, entry, idcard, session, get,
 forms. A rule is found where its surface is, which is what a stylesheet is

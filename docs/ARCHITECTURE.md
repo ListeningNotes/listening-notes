@@ -41,14 +41,13 @@ and nobody else had the address.
 
 **Private side** — only you can access this (password protected, never linked
 publicly):
-- `/dashboard` — the hub: Listen, Inbox, Share
+- `/dashboard` — forwards home; the desk is the right pane of the cross
 - `/session` — find the album, log the listen. The picker and the note-taking
   tool at one address: a search field and a grid of covers, then four screens
   under a small persistent header — the album, the tracks one at a time, the
   score and note, the preview. Identical on a phone and a desk. From the desk
   it opens as a layer, the way an entry does, and a swipe puts you back
 - `/dashboard/inbox` — sent albums and comments awaiting moderation
-- `/dashboard/share` — the album exporter
 - `/dashboard/submissions` — a redirect into the inbox, kept for old links
 - `/settings` — the machinery: address, Last.fm, the keys, the password,
   the home-screen step, and Sign out. Reached from the Settings door on
@@ -122,9 +121,9 @@ The furniture — visual pieces
       Journal.js               The wall of covers, with its search, filters and sort
       JournalFilters.js        The filter sheet — a popover on a desk, a pull-down sheet on a phone — and the year range
       AlbumTile.js             One cover on that wall
-      Dashboard.js             The right pane, for the owner — Listen, Inbox, Share, Settings
+      Dashboard.js             The right pane, for the owner — Listen, Inbox, Settings
       Pitch.js                 The right pane, for everybody else
-      KeeperTools.js           The owner's pencil and printer
+      KeeperTools.js           The owner's pencil — correcting the entry you are reading
       WritingAccess.js         The sign-in line at the foot of the pitch pane; it goes to Settings
       ComingSoon.js            What a held copy shows instead of a site — unclaimed, no database, or database unreachable
       AddToHomeScreen.js       The one step the software cannot do: the last screen of setup, and a Settings section
@@ -194,11 +193,9 @@ The rooms — full pages assembled from furniture
     settings/page.js           The machinery, owner-only
     @layer/(.)session/page.js  The same listen, opened as a layer over the desk
     @layer/(.)dashboard/inbox/page.js  The inbox, opened as a sheet over the desk
-    @layer/(.)dashboard/share/page.js  The exporter, the same way
     dashboard/
       page.js                  Redirect to / — the desk is the right pane of the cross
       inbox/page.js            Comments and submissions in one place — plain, on the tokens, and a sheet over the desk
-      share/page.js            Album exporter — slides for sharing an entry; the same shell as the inbox
 
 ---
 
