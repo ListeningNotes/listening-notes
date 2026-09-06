@@ -40,9 +40,10 @@
 'use client';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowSquareOut, CaretDown, Check, GlobeSimple, LinkSimple, MagnifyingGlass, Plus, X } from '@phosphor-icons/react';
-import IdentityCard, {
+import IdentityCard from './IdentityCard';
+import {
   DEFAULT_RIG_ICON, LINK_ICONS, RIG_ICONS, identify, readLink, rigIcon,
-} from './IdentityCard';
+} from '../../library/card_links';
 import { useIdentificationCardEditor } from './IdentificationCardEditor';
 import { useBookplate } from './Bookplate';
 import { BIO_PROMPTS, readBioAnswers } from '../../library/bioprompt';
