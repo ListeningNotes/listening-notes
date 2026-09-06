@@ -14,6 +14,8 @@ This version has breaking changes — APIs, conventions, and file structure may 
   session start; go there when DECISIONS.md points you there.
 - **[NOTES.md](NOTES.md)** — what is pending, what is done, and the gotchas
   that cost real time.
+- **[docs/NOTES-ARCHIVE.md](docs/NOTES-ARCHIVE.md)** — what was done before
+  September 2026. Not read at session start.
 - **[README.md](README.md)** — what this is and how to run a copy. The front
   door, for strangers.
 - **[docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)** — where everything lives and
