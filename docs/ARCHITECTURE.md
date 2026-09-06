@@ -35,8 +35,9 @@ Think of it like a house.
   and blank means it does not render
 
 There is no `/about` route of its own. The identity card on the landing page
-*is* the about page; `/about` and `/rig` stay only as redirects, so old links
-land somewhere.
+*is* the about page; `/about` stays only as a redirect, so old links land
+somewhere. `/rig` was a redirect too and is gone: it was live for three days
+and nobody else had the address.
 
 **Private side** — only you can access this (password protected, never linked
 publicly):
@@ -115,7 +116,6 @@ The furniture — visual pieces
       IdentityCard.js          The identity card — this is the About page
       IdentificationCardEditor.js  Editing the card in place
       ListeningBeacon.js       The beacon — what is playing, or last played
-      AlbumStrip.js            The scrolling row of albums
       Journal.js               The wall of covers, with its search, filters and sort
       AlbumTile.js             One cover on that wall
       Dashboard.js             The right pane, for the owner — Listen, Inbox, Share, Settings
@@ -177,14 +177,12 @@ The rooms — full pages assembled from furniture
     shuffle/page.js            Redirect to a random entry
     get/page.js                The keeper's long note. 404s when unwritten
     about/page.js              Redirect to / — the identity card is the about page
-    rig/page.js                Redirect to / — the rig lives on the card
     session/page.js            The listen — picker, then four screens under one header
     setup/page.js              Claiming a copy: the code, the name, five skippable screens, the password
     settings/page.js           The machinery, owner-only
     @layer/(.)session/page.js  The same listen, opened as a layer over the desk
     dashboard/
-      page.js                  Hub — 3 buttons (Listen, Inbox, Share)
-      submissions/page.js      Redirect into the inbox — kept for old links
+      page.js                  Redirect to / — the desk is the right pane of the cross
       inbox/page.js            Comments and submissions in one place
       share/page.js            Album exporter — slides for sharing an entry
 
@@ -218,10 +216,11 @@ Two files, and they are the source — no list is kept here, because the list
 that used to be here spent months claiming the accent was green and the
 headings were set in a serif, and neither had been true for a long time.
 
-- **`library/sitewide_visuals.js`** — `colors_light` and `colors_dark`, plus
-  the `fonts` object. Both themes are defined in full, side by side.
-- **`app/globals.css`** — the same palette as custom properties (`--bg`,
-  `--ink`, `--accent`, `--panel`), which is what most components actually read.
+- **`app/globals.css`** — the palette as custom properties (`--bg`, `--ink`,
+  `--accent`, `--panel`), both themes, which is what components read.
+- **`library/sitewide_visuals.js`** — the `fonts` object, and a `colors`
+  object a few canvas and chart pieces still read because a canvas cannot
+  read a custom property.
 
 Change a value in both and it updates everywhere.
 
@@ -248,8 +247,6 @@ than what anyone remembers building.
 | `submissions` | Albums other people have sent you. |
 | `drafts` | A listening session in progress, so closing the tab does not lose it. |
 | `briefings` | Cached album research, keyed by album, so the same record is not paid for twice. |
-| `conversations` | Defined and unused — the session chat lives in the browser and ends with it. |
-| `echo_memory` | Long-term companion memory. Defined, not yet used by anything. |
 
 Two columns on `entries` are computed by Postgres and cannot be written to:
 `rating_value` (the numeric score, so sorting works) and `album_key` (a

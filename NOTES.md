@@ -189,60 +189,25 @@ cannot be tested end to end.
 The cross is built and merged. What is left of it:
 
 - [x] **`usePlaceKeeper` is not needed and will not be built.** It was going to remember the pane index and the per-pane scroll offset across a route change, because browsers do not restore nested scroll containers. Going out to an entry and back is the only thing that lost them, and an entry is a layer now — the cross never unmounts, so both survive on their own. Verified: pane scroll 991 before and after, and the rail still on the beacon pane.
-- [ ] **RUN THIS — no email anywhere, once this code is deployed.** Nothing
-      selects either column any more. Already applied to the `dev` branch and
-      tested there; production is outstanding.
-
-      ```sql
-      ALTER TABLE comments    ADD COLUMN IF NOT EXISTS author_url text;
-      ALTER TABLE comments    DROP COLUMN IF EXISTS author_email;
-      ALTER TABLE submissions DROP COLUMN IF EXISTS submitter_email;
-      ```
-
-      Add before dropping, and run after deploy — the live code still selects
-      `author_email` until then. Backup first. What is lost: one real person's
-      address on a submission, and a `test@test.com` on a comment.
-- [ ] **RUN THIS LAST — drop `relationship`, once the code below is deployed.**
-      The Formative migration is already done (nine rows, verified). Nothing in
-      the code reads or writes this column any more, so the drop is safe the
-      moment that code is live — and only then. Dropping it against the old
-      code breaks saving an entry, because `save_new_entry` still inserts into
-      it there.
-
-      ```sql
-      ALTER TABLE entries DROP COLUMN IF EXISTS relationship;
-      ALTER TABLE drafts  DROP COLUMN IF EXISTS relationship;
-      ```
-
-      Backup first (`npm run backup`). This one is genuinely irreversible: it
-      takes seven Revisit rows and two Study rows with it, deliberately. See
-      DECISIONS.
-- [ ] **`useShake` + `firework()`** — shake the phone, a firework goes up, then `/shuffle`. The Surprise pill stays where it is.
-- [ ] **`AlbumPreview.js` has no reader.** 175 lines, and the only thing that mounted it was the tile flip. The share printer redraws the same card independently rather than importing it, so nothing broke when the flip went. Its `.ln-marks` CSS is dead with it. Left on disk rather than deleted in passing — it is a designed piece and the deletion is somebody's call, not a side effect.
-- [ ] **`AlbumStrip.js` and `library/dog_ear.js` have no reader.** The strip
-      lost its last importer when Journal came out of the archive page
-      (`5fdaf0f`); `dog_ear.js` — the "New since your visit" fold in
-      localStorage — is only read by the strip, so it went with it, and so did
-      the `.strip-tile*` and `.ln-new-mark` rules. Left on disk like
-      `AlbumPreview.js`: the fold is a designed piece with a reader-side store,
-      and whether it comes back on the wall is a decision, not a side effect.
+- [ ] **`useShake` + `firework()`** — shake the phone, a firework goes up, then `/shuffle`. The route stays (kept on purpose 2026-09-06); the shake is the only way in that is still meant to exist, since the pill came off the foot of the wall.
 - [ ] **The share page's lint fix is unverified in the browser.** `chosen` is
       now derived from the fetched record rather than set in an effect, and the
       "Drawing…" line is written from a frame callback. Build and lint pass;
       the page needs a signed-in look at `/dashboard/share` to confirm both
       slides still draw and the status line settles to blank.
-- [ ] **The weight that is left is concentration, not dead code.** After the
-      2026-09-03 cleanup `globals.css` is 2,476 live lines in one file, and
-      `Journal.js` holds the wall's search, sort, filters, year range, phone
-      sheet and pagination in one component. Neither is broken and nothing
-      here is a rewrite: the candidates are splitting the stylesheet by surface
-      (the cross, the wall, the entry layer, the session) so a rule is found
-      where its component is, and lifting the filter sheet out of Journal into
-      its own file. A different kind of job from deleting — do it when a change
-      to one of those is already on the desk, not as a pass of its own.
+- [ ] **The stylesheet split is next, and is waiting on names.** After this
+      session `globals.css` is 2,454 lines, every class in it used, and a
+      further ~1,500 lines of styles live inside components and pages —
+      `IdentityCard` 558, `Journal` 311, `FullPostPage` 259, `AlbumFinder`
+      218, Submit 130, Setup 120. The pass is to move those out and split the
+      whole thing by surface (base and palette, the cross, the wall, the card,
+      the entry layer, the session, /get, the forms), one file each, imported
+      from `layout.js`. Then the four refactors, in this order: the CSS out of
+      `IdentityCard` and its three helpers into the library; the year range
+      and the phone filter sheet out of `Journal`; the portrait-code builder
+      out of `IdentificationCardEditor`; draft persistence out of
+      `useListeningSession`. Miyel names the files.
 - [ ] **A QR on the pitch pane.** DECISIONS already settles that the right pane produces a fixed code to `/get`, the same on every copy. Not built, and the "logo made of the QR" idea is unresolved.
-- [ ] **`settings.bio` now has no reader and no writer.** Deliberate — see DECISIONS. The value is still in the database. Decide at the welcome screen whether the column gets a job or gets dropped, while the schema is still a draft.
-- [ ] **`/rig` is still a forwarding stub**, and by the same argument that deleted `/why` it may not have earned one: three days live, linked from a card, on a site nobody else runs. `/about` genuinely did earn its stub. Worth one decision rather than two defaults.
 - [ ] **Compare wants two homes** — one on an individual album, for comparing that record against another, and one on the About pane for comparing the collection overall. It is reachable from neither today; the route works if you type it.
 - [ ] **Surprise (`/shuffle`) has no way in.** Work in progress by decision — the shake is the intended gesture and is not built. See DECISIONS.
 
@@ -442,29 +407,45 @@ and for the wire, `curl -s http://localhost:3000/api/entries | wc -c`.
       On a bare Node deploy the login bucket key is attacker-chosen and the
       5/minute limit never fires.
 
-**SCHEMA — the draft window is still open**
+**SCHEMA — the last drop before additive-only**
 
-Additive-only migrations start the day somebody else is running a copy. Nobody
-is yet, so the schema is still a draft and cleanup is free: a column dropped
-today costs nothing, and the same column dropped after Junior installs is a
-migration that can break his journal.
+Decided 2026-09-06, on branch `last-cleanup`: the draft window closes with
+this. Everything below was already removed from the code, the settings lists
+and `migrations/001_initial.sql` (so a fresh copy never builds any of it).
+The live database still has all of it, because the code on `main` still
+selects the settings columns and inserts into the entry ones — dropping them
+before that deploy would break saving an entry on the live site.
 
-Worth deciding before the first install, while it is still cheap:
+- [ ] **RUN THIS once `last-cleanup` is merged and deployed.** Backup first
+      (`npm run backup`; the 2026-09-06-1226 backup already holds every row
+      of every one of these). Check the host is `ep-patient-morning` before
+      running anything. What is lost, deliberately: 32 model-written
+      background paragraphs, 28 old Tumblr post links, the free-text bio
+      (its text is also in `about_intro`), "Your best masterpieces!" from
+      `send_me`, the title "Listening Notes" from `journal_name`, and Neon's
+      sample table of ten random numbers.
 
-- [ ] `settings.journal_name` — dead. Nothing reads it; `coverName()` answers
-      the question now. Holds `Listening Notes` on the live database.
-- [ ] `settings.instagram_url` — legacy. Every link lives in `social_links`,
-      and the card editor already blanks this on every save.
-- [x] `entries.relationship` — settled 2026-08-30. Code stripped, Formative
-      migrated onto its flag, the drop written into the schema and waiting to
-      be run against the live database once the code is deployed. `drafts` had
-      the same column and goes with it.
-- [ ] `echo_memory` and `conversations` — **zero code references between them.**
-      Two tables every fresh copy builds and nothing ever touches.
+      ```sql
+      ALTER TABLE entries  DROP COLUMN IF EXISTS background;
+      ALTER TABLE entries  DROP COLUMN IF EXISTS post_link;
+      ALTER TABLE settings DROP COLUMN IF EXISTS journal_name;
+      ALTER TABLE settings DROP COLUMN IF EXISTS bio;
+      ALTER TABLE settings DROP COLUMN IF EXISTS instagram_url;
+      ALTER TABLE settings DROP COLUMN IF EXISTS send_me;
+      DROP TABLE IF EXISTS conversations;
+      DROP TABLE IF EXISTS echo_memory;
+      DROP TABLE IF EXISTS playing_with_neon;
+      ```
 
-None of these are urgent and none are obviously wrong to keep. The point is
-that "keep it" should be a decision made while it is reversible, rather than
-the default that arrives by missing the deadline.
+- [ ] **`settings.about_intro` — the same 281 characters as `bio`, and
+      nothing renders it either.** The layout ships it to every page on the
+      argument that it is somebody's writing. It is the one column left
+      with no reader; decide whether it gets a job or goes with the list
+      above, and if it goes, add it to the SQL.
+- [x] `entries.relationship`, `comments.author_email`,
+      `submissions.submitter_email`, `entries.tags` — all already gone from
+      the live database, confirmed 2026-09-06 against the catalogue. The two
+      "run this" blocks that used to sit at the top of Pending were done.
 
 **BACKUPS**
 - [ ] **A stale-backup badge on the writing side.** Not urgent, and not
@@ -560,6 +541,19 @@ Project → Settings → Environment Variables.
 ---
 
 ## Gotchas
+
+**A grep for callers in other files calls a function dead when its only
+caller is in its own file.** `foldGenre` came up with no external caller and
+was deleted; it is called thirty lines further down the same file. Count
+mentions inside the file too, and treat "definition + one more" as a call
+before treating it as dead.
+
+**`git add` on a path already staged as deleted fails the whole `add`, and
+the commit that follows sweeps up whatever *was* staged.** After `git rm`,
+the deletions are already in the index; naming them again in a later `git add`
+alongside modified files aborts that add, and the commit then contains the
+earlier deletions under the wrong message. Either commit straight after the
+`git rm`, or leave the removed paths out of the later `add`.
 
 **Two databases with the same entries and different settings rows.** From
 about 2026-08-30 to 2026-09-03, `.env.local` pointed at a stray copy of the
@@ -976,6 +970,31 @@ current.
 ---
 
 ## Complete
+
+**2026-09-06 session — the last cleanup before additive-only** (branch `last-cleanup`)
+- [x] **Deleted, each with its reason in the commit:** `AlbumPreview.js`,
+      `AlbumStrip.js` and `library/dog_ear.js` (no reader, and their
+      stylesheet rules with them); five create-next-app SVGs and
+      `Logo.png` from `public/`; `first-listen-undo.sql`; the `/rig` and
+      `/dashboard/submissions` stubs; `pull_all_entries`,
+      `delete_draft_for_album`, `forgetSender` and the one-shot
+      `research_album`.
+- [x] **`/dashboard` forwards home.** It was still drawing the old hub — a
+      screensaver background, the logo image, a "Syne" font nothing loaded —
+      while the desk is the right pane of the cross. Inbox and Share go back
+      to `/` now.
+- [x] **The tab icon is the mark.** `app/favicon.ico` was the framework's
+      triangle from the first day; `app/icon.png` is the LN. mark at 64px.
+- [x] **Six columns and three tables out of the code and the schema file** —
+      see SCHEMA under Pending for the drop that runs after deploy. The
+      settings lists in `settings_actions.js`, `layout.js` and `Bookplate.js`,
+      the card editor's Instagram fold, and the entry save no longer name them.
+- [x] **Audited and kept, on purpose:** `/archive` (three things link to it and
+      only it takes `?q=`), `/about`, `/shuffle`, `Dashboard.js` (the pane, not
+      the route), `LayerEntry` and `LayerWaiting`, `foldGenre` (called inside
+      its own file), the `users` table, `about_intro` (see SCHEMA).
+- [x] Verified: lint clean, `next build` clean, `/`, `/archive`, `/key`,
+      `/dashboard` → `/` and the icon on the dev server; no console errors.
 
 **2026-09-03 session — the audit cleanup** (branch `cleanup-audit`)
 - [x] **Lint at zero.** Nine `set-state-in-effect` errors across Journal, the
