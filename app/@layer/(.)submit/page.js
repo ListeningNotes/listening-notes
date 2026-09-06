@@ -40,7 +40,7 @@ export default function SendOverThePage() {
     // scrolls, because a form is one ordinary column of fields and wants the
     // sheet to scroll it. The entry does not: its phone layout is already two
     // scroll containers deep and a third breaks the other two. See the note
-    // on .lay--scrolls in globals.css.
+    // on .lay--scrolls in styles/entry.css.
     <LayerEntry label="Send an album" scrolls arrives="bottom">
       <SubmitPage layered />
     </LayerEntry>

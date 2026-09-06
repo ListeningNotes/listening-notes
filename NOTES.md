@@ -195,18 +195,14 @@ The cross is built and merged. What is left of it:
       "Drawing…" line is written from a frame callback. Build and lint pass;
       the page needs a signed-in look at `/dashboard/share` to confirm both
       slides still draw and the status line settles to blank.
-- [ ] **The stylesheet split is next, and is waiting on names.** After this
-      session `globals.css` is 2,454 lines, every class in it used, and a
-      further ~1,500 lines of styles live inside components and pages —
-      `IdentityCard` 558, `Journal` 311, `FullPostPage` 259, `AlbumFinder`
-      218, Submit 130, Setup 120. The pass is to move those out and split the
-      whole thing by surface (base and palette, the cross, the wall, the card,
-      the entry layer, the session, /get, the forms), one file each, imported
-      from `layout.js`. Then the four refactors, in this order: the CSS out of
-      `IdentityCard` and its three helpers into the library; the year range
-      and the phone filter sheet out of `Journal`; the portrait-code builder
-      out of `IdentificationCardEditor`; draft persistence out of
-      `useListeningSession`. Miyel names the files.
+- [ ] **The four refactors, in this order, each waiting on a name from Miyel
+      for the file it makes:** the three card helpers (`rigIcon`, `identify`,
+      `readLink`) out of `IdentityCard` into the library; the year range and
+      the phone filter sheet out of `Journal`; the portrait-code builder
+      (`renderCode`, `flatten`, `buildPortraitCode`, ~250 lines) out of
+      `IdentificationCardEditor`; draft persistence — the browser copy and
+      `/api/drafts` — out of `useListeningSession`. None is broken; each is a
+      file doing two jobs.
 - [ ] **A QR on the pitch pane.** DECISIONS already settles that the right pane produces a fixed code to `/get`, the same on every copy. Not built, and the "logo made of the QR" idea is unresolved.
 - [ ] **Compare wants two homes** — one on an individual album, for comparing that record against another, and one on the About pane for comparing the collection overall. It is reachable from neither today; the route works if you type it.
 - [ ] **Surprise (`/shuffle`) has no way in.** Work in progress by decision — the shake is the intended gesture and is not built. See DECISIONS.
@@ -995,6 +991,21 @@ current.
       its own file), the `users` table, `about_intro` (see SCHEMA).
 - [x] Verified: lint clean, `next build` clean, `/`, `/archive`, `/key`,
       `/dashboard` → `/` and the icon on the dev server; no console errors.
+- [x] **The stylesheet is eight files by surface, in `app/styles/`:** base,
+      nav, journal, entry, idcard, session, get, forms — named by Miyel,
+      imported in that order from `layout.js`. `globals.css` (2,454 lines)
+      was cut by section, every line landing once, and the inline `<style>`
+      blocks came out of IdentityCard (556 lines), Journal, FullPostPage,
+      AlbumFinder (the whole `FinderStyles` function), Submit, Setup,
+      Settings, Compare, Key, PasswordGate and AddToHomeScreen, plus the
+      `SESSION_CSS` constant out of `session/page.js`. The four `${…}`
+      interpolations became `var(--font-sans)` and one literal. Left inline
+      on purpose: ComingSoon (must stand alone when the site cannot),
+      the inbox and share pages (owner tools on the old palette; the inbox
+      block repaints `html, body`), and the canvas backgrounds.
+- [x] Verified after the split: lint clean, `next build` clean, `/`,
+      `/archive`, an entry, `/submit`, `/key`, `/get` and `/login` on the dev
+      server at desktop and 375px, no console errors.
 
 **2026-09-03 session — the audit cleanup** (branch `cleanup-audit`)
 - [x] **Lint at zero.** Nine `set-state-in-effect` errors across Journal, the

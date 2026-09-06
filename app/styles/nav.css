@@ -1,0 +1,919 @@
+/* Copyright (C) 2026 Miyel Brown */
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+/* app/styles/nav.css
+   The cross and the row over it — three panes, the crown, the carets, the
+   bottom controls, the beacon on the centre pane, the pitch and the desk on
+   the right, and the nav row every other page carries in the same place. */
+
+/* ═══════════════════════════════════════════════════
+   HOMEPAGE — what survives of the pre-cross layout: the beacon box and the mark
+═══════════════════════════════════════════════════ */
+
+/* Homepage dashboard — one unified box holding the listening beacon, centered.
+   The recent-listens strip sits below it. Stacks gracefully on narrow screens. */
+.hp-dashboard {
+  width: 100%;
+  max-width: 640px;
+  margin: 6px auto;
+  padding: 18px 28px;
+  background: var(--panel);
+  backdrop-filter: var(--card-blur);
+  -webkit-backdrop-filter: var(--card-blur);
+  border: 1px solid var(--panel-border);
+  border-radius: 24px;
+  box-shadow: var(--shadow-soft);
+}
+.hp-dash-cell { min-width: 0; }
+.hp-dash-beacon { display: flex; align-items: center; justify-content: center; }
+@media (max-width: 820px) {
+  .hp-dashboard { max-width: 440px; padding: 24px; }
+}
+
+.hp-icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  color: var(--ink-soft);
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+}
+.hp-icon-btn:hover {
+  color: var(--ink);
+  background: var(--bg-warm);
+}
+
+/* SiteNav — the ONE sitewide nav row: the mark centred, one control each
+   side. Three columns rather than a flex row, and the outer two are equal
+   whatever is in them, which is what keeps the mark on the centre line of the
+   page instead of on the centre line of whatever is left over.
+
+   The row is 58px tall whether or not either side has anything in it. That
+   number is inherited — it used to come from the beacon slot's min-height, and
+   several pages pad their content to clear a header of about this size. It
+   stays until the tools land and the whole band gets measured on purpose. */
+.sitenav-row {
+  position: fixed;
+  top: calc(22px + var(--safe-top));
+  left: 0;
+  right: 0;
+  z-index: 100;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 10px;
+  padding: 0 28px;
+  min-height: 58px;
+}
+/* The band that hides scrolling page content behind the fixed header. It has
+   to cover this row AND the dot-nav below it (which is a separate fixed
+   element, so one band spanning both is simpler than giving each its own).
+   Solid down past the dot labels, then a short fade so text dissolves out
+   instead of meeting a hard line. z-index -1 puts it behind this row's own
+   logo/beacon/toggle, while the row's stacking context keeps it above the
+   page; the dot-nav is a later sibling, so it paints on top too. */
+.sitenav-row::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 180px;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.22s ease;
+  background: linear-gradient(to bottom, var(--bg) 0%, var(--bg) 84%, transparent 100%);
+  /* Forces this band onto its own compositing layer. Without it, page
+     content that the browser HAS promoted — the archive grid's tiles carry
+     a perspective, so each one gets a layer — paints straight over the top
+     of it, and album art scrolls through the logo and the dot labels. Hit
+     testing was always correct here; it was purely what got drawn. */
+  transform: translateZ(0);
+  will-change: opacity, transform;
+}
+.sitenav-row--scrolled::before {
+  opacity: 1;
+}
+
+/* And a layer that scrolls itself is the second surface where this row cannot
+   be fixed, for a different reason that lands in the same place. `.lay` sets a
+   containing block for its fixed descendants — it animates a transform on the
+   way in — so a fixed child is pinned to the sheet rather than to the window.
+   That is harmless while the sheet is not a scroller, because the sheet is
+   fixed at inset 0 and pinning to it is pinning to the window. It stops being
+   harmless the moment the sheet scrolls: the row then scrolls away with the
+   content, measured 378px off the top on a 400px scroll. The scrolled state is
+   wrong there too — it reads window.scrollY, and the window is not moving.
+
+   So this is scoped to .lay--scrolls and not to .lay, and the difference is
+   exactly the one that matters. An entry is the other kind: it does its own
+   scrolling in .ln-screens and leaves the sheet still, so its header stays
+   fixed and is right. Scoped to .lay it pushed .ln-screens 80px down the
+   sheet, which put the whole entry 80px past the bottom of a screen it is
+   sized to exactly fill.
+
+   Where it does apply, the row goes into the sheet's flow exactly as it does
+   on the homepage, and loses its band for the same reason — nothing can scroll
+   under a row that is not floating over anything. The 22px the fixed version
+   offsets itself by moves from `top` to a margin, so the mark sits on the same
+   line either way and the row takes the same 80px the pages above reserve for
+   it. A margin and not padding: the row carries min-height: 58px and
+   box-sizing is border-box everywhere, so padding would have been absorbed
+   into that 58 rather than added to it. */
+.lay--scrolls .sitenav-row {
+  position: relative;
+  top: auto;
+  left: auto;
+  right: auto;
+  margin-top: calc(22px + var(--safe-top));
+}
+.lay--scrolls .sitenav-row::before {
+  display: none;
+}
+
+.sitenav-side { display: flex; align-items: center; gap: 2px; min-width: 0; }
+.sitenav-side--left { justify-content: flex-start; }
+
+/* The keeper's tools. Deliberately the same object as the About card's pencil
+   — 36px box, 10px radius, faint until you go near it — because they are the
+   same kind of control and two treatments would read as two ideas. The card
+   states these for itself in its own style block, so this is the second copy
+   rather than a shared rule; if a third surface ever wants them, that is the
+   moment to lift them somewhere common, not before. */
+/* The same box as the lights and the card's pencil — 36px, a 10px radius,
+   an 18px glyph — so every control on that line is the same size. */
+.kt-tool {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 36px; height: 36px; border-radius: 10px;
+  color: var(--ink-faint); background: transparent; border: 0;
+  cursor: pointer; text-decoration: none;
+  transition: color 0.15s, background 0.15s;
+}
+.kt-tool:hover { color: var(--ink); background: var(--bg-warm); }
+.sitenav-logo { display: block; justify-self: center; }
+.sitenav-logo-mark {
+  height: 28px;
+  width: auto;
+  display: block;
+}
+.sitenav-logo-mark path { fill: var(--ink); }
+.sitenav-logo-dot { fill: var(--ink); }
+.sitenav-logo-dot--live {
+  fill: #7cff9b;
+  animation: sitenav-logo-dot-pulse 2.5s ease-in-out infinite;
+}
+@keyframes sitenav-logo-dot-pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.55; }
+}
+
+.sitenav-theme-btn {
+  justify-self: end;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+}
+
+/* The mark on a phone: small enough to read as one navbar unit with the
+   beacon art, and its live dot pulses. */
+@media (max-width: 768px) {
+
+  .hp-logo-mark {
+    height: 28px; /* smaller — reads as one navbar unit with the beacon art, not its own bigger element */
+    width: auto;
+    display: block;
+  }
+  .hp-logo-mark path {
+    fill: var(--ink);
+  }
+  .hp-logo-mark-dot {
+    fill: var(--ink);
+  }
+  .hp-logo-mark-dot--live {
+    fill: #7cff9b;
+    animation: hp-logo-dot-pulse 2.5s ease-in-out infinite;
+  }
+  @keyframes hp-logo-dot-pulse {
+    0%, 100% { opacity: 1; }
+    50%      { opacity: 0.55; }
+  }
+
+        }
+
+.beacon-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 28px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  width: 100%;
+}
+
+.beacon-art-wrap {
+  position: relative;
+  width: 180px;
+  height: 180px;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 18px 44px rgba(0,0,0,0.16);
+  transition: box-shadow 0.4s, transform 0.4s;
+}
+.beacon-card:hover .beacon-art-wrap {
+  transform: translateY(-4px);
+  box-shadow: 0 40px 96px rgba(0,0,0,0.26);
+}
+.beacon-art-wrap--live {
+  box-shadow: 0 32px 80px rgba(0,0,0,0.2);
+}
+
+.beacon-art {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  position: absolute;
+  top: 0; left: 0;
+  transition: opacity 0.8s ease, filter 0.4s;
+}
+.beacon-art-wrap {
+  position: relative;
+}
+.beacon-art--idle {
+  filter: grayscale(80%) brightness(0.7);
+}
+
+.beacon-art-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 4rem;
+  background: var(--surface);
+  color: var(--text-muted);
+}
+
+/* The beacon with nothing to show: one line where the tile would be, in the
+   same faint label type the rest of the site uses for an absence. */
+.beacon-stage--quiet { display: flex; align-items: flex-start; justify-content: center; }
+.beacon-quiet {
+  font-family: var(--font-label); font-size: 11px; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--ink-faint); margin: 24px 0 0;
+}
+
+.beacon-idle-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Not green. That was the LED blue-white era's accent, kept alive here long
+     after the accent moved on — and green is the one colour on this site that
+     means "playing", which is precisely what this label is there to say is not
+     happening. Written on the scrim in the scrim's own colour instead. */
+  color: rgba(255,255,255,0.82);
+  font-family: var(--font-nunito), sans-serif;
+  font-size: 0.65rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.beacon-meta {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+}
+
+.beacon-track {
+  display: inline-block;
+  flex-shrink: 0;
+  font-family: var(--font-nunito), sans-serif;
+  font-style: normal;
+  font-weight: 700;
+  font-size: 1.5rem;
+  line-height: 1.15;
+  color: var(--text);
+  white-space: nowrap;
+  transition: opacity 0.5s ease;
+}
+/* The beacon's title wraps rather than scrolling. It used to scroll, in a
+   fixed-width lane with a trailing copy that made the loop seamless, and all
+   of that machinery is gone: the only place a marquee was the right answer was
+   the compact beacon in the nav row, and that beacon no longer exists. A title
+   that scrolls has to be waited for; two lines can simply be read. */
+.beacon-track--wrap {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  white-space: normal;
+  text-wrap: balance;
+  max-width: 340px;
+  margin: 0 auto;
+}
+.beacon-artist {
+  font-family: var(--font-nunito), sans-serif;
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+  transition: opacity 0.5s ease;
+}
+
+/* ── Beacon Stage (expanded recent listens) ── */
+.beacon-stage {
+  position: relative;
+  width: 100%;
+  height: 250px;
+}
+
+/* Closed: centered. Open: shifts left */
+.beacon-card--main {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  transform: translateX(-50%);
+  z-index: 10;
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Wide screens read the hero instead; this shape is the phone's. It sits out
+   here with the rest of them so that the layer's stand-in obeys it too — left
+   in the entry page's own stylesheet, a fallback on a wide window drew a full
+   phone screen nobody asked for. */
+.ln-screen-one { display: none; }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   THE CROSS
+   ─────────────────────────────────────────────────────────────────────────
+   Three panes side by side, each scrolling on its own. See HomeNav.js for
+   why it is a rail and not three routes.
+
+   On a phone the rail is a horizontal scroll-snap container and you swipe.
+   Above 769px it becomes three columns, all visible, no gesture — the same
+   components saying the same thing out loud.
+
+   The old .hp-mobile-screens / .hp-screen--one / .hp-screen--two rules were
+   deleted on 2026-09-03: nothing had rendered those class names for a while.
+   Four of them did real work and were restated here against .hn before the
+   deletion — the beacon's height, its status dot, the panel reset on
+   .hp-dashboard, and the two-column grid the wall is drawn in.
+   ══════════════════════════════════════════════════════════════════════════ */
+
+.hn {
+  /* How far pane content keeps away from the left and right edges. The carets
+     are 40px boxes pinned to those edges, and text that runs under one is the
+     first thing that reads as broken — the glyph lands in the middle of a
+     sentence and neither is legible. Everything a pane draws in a full-width
+     column pays this. */
+  --hn-gutter: 34px;
+  /* How much of every pane the mark takes off the top, and therefore how far
+     down the window the mark itself sits — the crown holds it against its own
+     bottom edge, so raising this walks the logo down the screen and everything
+     under it follows.
+     The same on all three panes, always, which is the point: the square below
+     it — a portrait on the left, an album on the centre — lands on the same
+     line whichever pane you are looking at, and swiping reads as one object
+     turning rather than three pages going past. Every landing screen subtracts
+     it so that crown plus landing still comes to one screen.
+     Scaled to the window rather than fixed, because a tall phone can carry the
+     mark further down than a short one and a short one has none to spare.
+     Raised from 24dvh once the card was seen on a real screen: the pane was
+     reading top-heavy, with the mark and the photograph carrying the weight
+     and the slack pooling under the button. The ceiling is still the card —
+     everything here is spending the same 290-odd pixels the crown, the square
+     and the down caret have to share. */
+  --hn-crown: clamp(150px, 28dvh, 248px);
+  /* The air between the mark and the square under it. One number for both
+     panes: the card's portrait and the beacon's album art are the same 180px
+     square in the same frame, and the whole point of a fixed crown is that
+     they land on the same line — which they only do while they are both
+     offset from it by the same amount. This is the constant that replaced the
+     measured lift the card used to carry.
+     Half the slack, rather than a fixed number or a flat fraction of the
+     screen. What is spent here is whatever is left once the crown, the card
+     and the down caret have taken theirs — 568px for the last two — and
+     halving it puts the same air above the square as below. A flat dvh
+     fraction cannot do that: it hands a short phone an offset it does not have
+     the room for, and the card's last row ends up under the caret.
+     It reads the crown rather than assuming it, so walking the mark down the
+     screen spends the slack once instead of twice. */
+  --hn-square-top: clamp(16px, calc((100dvh - var(--hn-crown) - 568px) / 2), 80px);
+  position: relative;
+  width: 100%;
+  height: 100dvh;
+  overflow: hidden;
+}
+
+/* ── The one row over all three panes ───────────────────────────────────────
+   Fixed to the window, not to a pane, so it holds still while they move. The
+   row itself takes no clicks — it is a transparent strip across the top of a
+   scrolling page, and a strip that swallowed taps would kill the swipe along
+   its whole width. Its two children take theirs back. */
+.hn-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 95;
+  display: flex;
+  align-items: center;
+  /* One control, on the right. The mark that used to sit opposite it is gone:
+     the crown at the head of every pane already is the mark, and a small copy
+     in the corner is a second one whether or not the two are ever on screen
+     together. */
+  justify-content: flex-end;
+  padding: max(12px, calc(env(safe-area-inset-top) - 12px)) 16px 8px;
+  pointer-events: none;
+}
+.hn-bar > * { pointer-events: auto; }
+
+/* The strip you tap to go back to the top of a pane. Invisible on purpose:
+   the band behind this row already appears when a pane is scrolled, so the
+   affordance is the band, and drawing a second thing in it would be labelling
+   a gesture the phone taught its owner years ago.
+   It fills the row and leaves the lights alone at the end of it. Present only
+   while a pane is scrolled — at the top there is nothing to go back to, and a
+   dead tap zone across the cover is worse than no tap zone. */
+.hn-totop {
+  flex: 1;
+  align-self: stretch;
+  min-height: 40px;
+  margin: -8px 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+
+/* The band that stops a scrolled pane running through the mark. Same shape as
+   .sitenav-row::before, and here for the same reason: this row is fixed with
+   no background of its own, so the wall of covers scrolled straight through
+   the logo. It only fades in once the pane under it has actually moved, so the
+   landing screen of every pane still runs clean to the top of the window.
+   translateZ(0) is not decoration — the archive tiles carry a perspective and
+   are therefore on their own compositing layers, which paint over an
+   unpromoted band no matter what its z-index says. */
+.hn-bar::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 140px;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.22s ease;
+  background: linear-gradient(to bottom, var(--bg) 0%, var(--bg) 78%, transparent 100%);
+  transform: translateZ(0);
+  will-change: opacity;
+}
+.hn-bar--scrolled::before { opacity: 1; }
+
+.hn-mark-dot { fill: var(--ink); }
+/* The live indicator, and the only green on the site. Same keyframe the old
+   cover used — the mark is on every pane now, so the one thing always on
+   screen is also the one thing that has to say whether anything is playing. */
+.hn-mark-dot--live {
+  fill: #7cff9b;
+  animation: hp-logo-dot-pulse 2.5s ease-in-out infinite;
+}
+.hn-lights { color: var(--ink-faint); }
+.hn-lights:hover { color: var(--ink-soft); }
+
+/* ── The rail ───────────────────────────────────────────────────────────────
+   overscroll-behavior-x: contain is not a nicety. Without it, a swipe that
+   reaches the left end of the rail keeps going into Safari's own back gesture,
+   and trying to reach the card takes you off the site. */
+.hn-rail {
+  display: flex;
+  width: 100%;
+  height: 100dvh;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.hn-rail::-webkit-scrollbar { display: none; }
+/* There is no rail lock, and there was one for a few hours. It toggled
+   overflow-x on the rail whenever a pane passed eight pixels of scroll — a
+   change to a scroll container's own overflow, made in the middle of a scroll,
+   every time you crossed that line near the top of a pane. It stopped the
+   scroll dead, and it is why this branch scrolled worse than main did.
+
+   The thing it was for — not sliding sideways out of a pane's lower half —
+   is real and still unsolved. Three attempts at it all made the cross worse
+   than leaving it alone: touch-action on the rail (ignored by Safari for a
+   container's own axis), overflow-x (this), and a hand-rolled drag in edge
+   strips (worse than the browser's own scrolling, which is the usual result
+   of reimplementing momentum). It wants designing rather than patching. */
+
+.hn-pane {
+  flex: 0 0 100%;
+  width: 100%;
+  height: 100dvh;
+  scroll-snap-align: start;
+  scroll-snap-stop: always;
+  overflow-y: auto;
+  /* No vertical snap. There was proximity snapping here, meant to catch the
+     reader at the line where a pane's first screen ends and whatever it keeps
+     below begins — and what it produced was a scroll that argued with the
+     thumb, pulling back toward a boundary somebody had deliberately gone past.
+     The entrance to the journal wants designing as a thing in its own right;
+     until it is, a pane scrolls the way a page scrolls.
+     The rail still snaps. That is the other axis and a different argument:
+     there are exactly three panes and you are always on one of them. */
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.hn-pane::-webkit-scrollbar { display: none; }
+
+/* ── The crown ──────────────────────────────────────────────────────────────
+   The mark, large and centred, at the top of every pane — the treatment the
+   old cover gave it on its one first screen, applied to all three. Its total
+   height is --hn-crown and every landing screen is built around that number.
+   The mark sits 26px off the bottom of it, so the token alone decides how far
+   down the window the whole pane begins. */
+.hn-crown {
+  /* min-height, not height, so the crown can grow when the writing panel
+     opens under the mark and push the pane's contents down ahead of it rather
+     than covering them. With nothing under the mark this measures exactly as
+     the fixed height did, so --hn-crown goes on being the one control the
+     comment below describes. */
+  min-height: var(--hn-crown);
+  box-sizing: border-box;
+  display: flex;
+  /* Held against the bottom of its own box rather than centred in it. That is
+     what makes --hn-crown a single control for the whole landing screen:
+     raising it walks the mark down the window by the full amount, and pushes
+     everything under it down too, instead of splitting the difference. */
+  align-items: flex-end;
+  justify-content: center;
+  /* The bottom padding is the air under the mark, and half of the gap down to
+     the square — --hn-square-top is the other half. Narrowing it walks the
+     mark *down* toward the photograph rather than pulling the photograph up
+     to it, which is what keeps everything below where it was put. */
+  padding: env(safe-area-inset-top) 16px 8px;
+}
+.hn-crown-mark { display: block; line-height: 0; }
+/* 82px, not 112. This SVG is cropped tight to the glyphs while the PNG it
+   replaced carried transparent margin, so the same box height rendered
+   smaller letters — 82 here measures out to the letter height the old logo
+   drew at 112, matched by measurement rather than by eye. */
+.hn-crown-svg { height: 82px; width: auto; display: block; }
+.hn-crown-svg path { fill: var(--ink); }
+
+/* The centre pane's first screen. min-height rather than height, so a short
+   phone gets a screen that fits and a long one gets a screen that fills. */
+.hn-screen {
+  min-height: calc(100dvh - var(--hn-crown));
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  /* flex-start, not centre — the album art has to start where the portrait
+     starts on the pane beside it, and centred it floated 70px lower on a tall
+     phone and less on a short one. What is left underneath is not a hole: the
+     recent records sit in it and the down caret sits below them. */
+  justify-content: flex-start;
+  gap: 20px;
+  padding: var(--hn-square-top) var(--hn-gutter) 92px;
+}
+
+/* Everything under it. Not a snap point: a snap here would mean wanting three
+   more lines of the wall got you a whole page of it instead. */
+.hn-under {
+  min-height: 100dvh;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  /* What desktop uses, where the wall's bar stays at the top. On a phone the
+     bar sits on the bottom edge and needs nothing from here — the row of
+     carets that this used to lift it over is hidden for as long as a pane is
+     scrolled, which is the only time the bar is on screen. */
+  --arc-nav-bottom: calc(env(safe-area-inset-top) + 44px);
+  padding: 0 0 max(28px, env(safe-area-inset-bottom));
+}
+/* The wall as the first screen, on a copy with no beacon. The crown is still
+   above it, so it starts where the beacon's art would have and the pane reads
+   the same as its neighbours. */
+.hn-under--first { padding-top: var(--hn-square-top); }
+/* The wall pays no gutter of its own here. It had one — the pane's 34px, on
+   top of the 24 the wall already carries — and 58px of margin down each side of
+   a phone is a whole column of covers given away to nothing. The wall's own
+   padding is the only padding. */
+
+/* Restated from the old .hp-mobile-screens block (since deleted) — same values, new scope. */
+.hn .beacon-stage { height: 320px; }
+.hn .hp-dashboard {
+  background: none;
+  border: none;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  padding: 0;
+  /* Six pixels, which is what the album art was landing below the portrait on
+     the pane beside it. A panel with a margin is a panel; this is not one any
+     more, so the margin goes with the border and the backdrop. */
+  margin-top: 0;
+}
+
+/* ── The row along the bottom ───────────────────────────────────────────────
+   Three controls together rather than one on each edge of the window. On the
+   edges they were three marks scattered over somebody's photograph; in a row
+   they read as one control, and the middle of the bottom edge is the part of a
+   phone screen that is reliably empty and reliably reachable by a thumb.
+
+   Fixed to the window, not to a pane, so they hold still while the panes move
+   under them. */
+.hn-controls {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: max(14px, env(safe-area-inset-bottom));
+  z-index: 96;
+  display: flex;
+  /* Tops aligned, not bottoms. The two side controls are a mark with an arrow
+     beside it and the middle one is a mark with an arrow underneath, so they
+     are different heights — hung from the bottom their marks sat on three
+     different lines. Hung from the top, the three marks read as one row and
+     the down arrow is simply the thing that hangs below it. */
+  align-items: flex-start;
+  /* A group with room in it, rather than three glyphs touching or one control
+     pinned to each edge. Pushed to the edges they stopped reading as a row and
+     started reading as three separate things; at the gap they had before, the
+     card and the cog were close enough to press by accident. */
+  justify-content: center;
+  gap: 76px;
+  /* The row is a transparent strip across the whole window; only the controls
+     in it take a press, or it would swallow every tap along the bottom edge. */
+  pointer-events: none;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+.hn-controls > * { pointer-events: auto; }
+/* Out of the way while anything is moving. These sit over the page rather than
+   beside it, and a wall of album art going past under three static glyphs is
+   the row covering the thing somebody came to look at. Sunk slightly as well
+   as faded, so it reads as getting out of the way rather than blinking. */
+.hn-controls--busy {
+  opacity: 0;
+  transform: translateY(8px);
+  pointer-events: none;
+}
+
+.edge-caret {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--ink-faint);
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: opacity 0.25s ease, color 0.2s ease;
+}
+/* The mark speaks and the arrow only points, so the mark carries the ink and
+   the arrow is a hint under it. */
+.edge-caret-mark { opacity: 0.75; }
+.edge-caret-arrow { opacity: 0.4; }
+.edge-caret:hover { color: var(--ink-soft); }
+.edge-caret:hover .edge-caret-mark { opacity: 1; }
+.edge-caret:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 4px; }
+/* Faded in place, keeping its slot. Removing it would slide the other two
+   across to re-centre, moving the control somebody was reaching for. */
+.edge-caret--away {
+  opacity: 0;
+  pointer-events: none;
+}
+/* Down keeps its arrow underneath its mark rather than beside it. It is the
+   one direction the page itself moves in, and a chevron next to the book would
+   read as a fourth pane somewhere off to the right.
+   It used to bob, from when it stood alone in the middle of the screen and had
+   to say "down" on a page that already moved sideways. In a row of three still
+   marks the movement stopped reading as a hint and started reading as one of
+   them being loose — and it put the book five pixels below the other two for
+   most of every cycle, which is the one thing this row is lined up to avoid. */
+.edge-caret--down {
+  flex-direction: column;
+  gap: 2px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .edge-caret--down { animation: none; }
+  .hn-controls { transition: opacity 0.3s ease; }
+  .hn-controls--busy { transform: none; }
+}
+
+/* ── Right, logged out: Pitch ───────────────────────────────────────────── */
+.pt-pane {
+  min-height: calc(100dvh - var(--hn-crown));
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 var(--hn-gutter) 84px;
+}
+.pt-body {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+  max-width: 360px;
+}
+.pt-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: var(--font-display-weight);
+  font-size: 1.6rem;
+  letter-spacing: -0.01em;
+  color: var(--ink);
+}
+.pt-prose { display: flex; flex-direction: column; gap: 12px; }
+.pt-prose p {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.65;
+  color: var(--ink-soft);
+}
+.pt-cta { align-self: center; margin-top: 4px; }
+/* The smallest type on the site. AGPL §13, satisfied once, quietly. */
+.pt-source {
+  margin: 0;
+  font-family: var(--font-label);
+  font-size: 0.62rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  text-decoration: none;
+  opacity: 0.7;
+}
+.pt-source:hover { opacity: 1; text-decoration: underline; }
+
+/* ── Right, logged in: Dashboard ────────────────────────────────────────── */
+.db-pane {
+  min-height: calc(100dvh - var(--hn-crown));
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 var(--hn-gutter) 84px;
+}
+.db-body {
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+  width: 100%;
+  max-width: 380px;
+}
+/* The one big thing on the pane. What you came to do is listen. */
+.db-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 40px 20px;
+  border: 1px solid var(--border);
+  border-radius: 26px;
+  background: var(--panel);
+  color: var(--ink);
+  text-decoration: none;
+  transition: border-color 0.18s ease, transform 0.18s ease;
+}
+.db-hero:hover { border-color: var(--ink-faint); transform: translateY(-2px); }
+.db-hero-label {
+  font-family: var(--font-label);
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+.db-doors { display: flex; flex-direction: column; }
+.db-door {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 15px 4px;
+  border-bottom: 1px solid var(--border);
+  color: var(--ink);
+  text-decoration: none;
+}
+.db-door:last-child { border-bottom: none; }
+.db-door-mark { flex-shrink: 0; color: var(--ink-faint); }
+.db-door-text { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.db-door-label {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.95rem;
+}
+.db-door-note {
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: var(--ink-faint);
+}
+/* The one count on the site, and the same red the favourite heart uses. */
+.db-count {
+  margin-left: 8px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: var(--fav);
+  color: #fff;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-label);
+  font-size: 9px;
+}
+
+/* The writing row that used to sit under the beacon — "+ Start a listen" and
+   "Messages" — is gone with its rules. The desk is one swipe right and carries
+   both, so the cover was showing the same two controls twice. */
+
+/* What came before — three covers, small and dim, under the beacon. */
+.hp-recent {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  opacity: 0.65;
+  transition: opacity 0.3s;
+}
+.hp-recent:hover { opacity: 0.9; }
+.hp-recent-tile {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  overflow: hidden;
+  flex-shrink: 0;
+  background: var(--bg-warm);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
+  display: block;
+  animation: hp-recent-arrive 0.5s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+.hp-recent-tile img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.hp-recent-none {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  color: var(--ink-faint);
+  font-size: 18px;
+}
+a.hp-recent-tile { transition: transform 0.2s; }
+a.hp-recent-tile:hover { transform: translateY(-2px); }
+@keyframes hp-recent-arrive {
+  from { opacity: 0; transform: translateX(-14px) scale(0.85); }
+  to   { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hp-recent-tile { animation: none; }
+  a.hp-recent-tile:hover { transform: none; }
+}
+
+/* ── Desktop: the same three, said out loud ─────────────────────────────────
+   No gesture, no carets, nothing hidden. Each column keeps its own scroll,
+   which is what makes this the same structure rather than a second layout. */
+@media (min-width: 769px) {
+  .hn-rail {
+    display: grid;
+    grid-template-columns: 1fr 1.3fr 1fr;
+    overflow-x: hidden;
+  }
+  .hn-pane { width: auto; }
+  .hn-pane + .hn-pane { border-left: 1px solid var(--border); }
+  /* One mark, three columns. On a phone you only ever see one pane, so a crown
+     on each is one crown; side by side they are three copies of the same logo
+     across the top of one page. Hidden rather than removed, because the height
+     is what keeps the portrait and the album art on the same line — take the
+     box away and the columns stop agreeing about where a square starts. */
+  .hn-pane:not(.hn-pane--home) .hn-crown { visibility: hidden; }
+  .hn-controls { display: none; }
+}
+
+/* The foot of the pitch pane: the source link, and the way in. Two quiet lines
+   that belong together — one says where the software came from, the other is
+   for the one person who keeps this copy of it. */
+.pt-foot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 18px;
+  margin-top: 36px;
+}

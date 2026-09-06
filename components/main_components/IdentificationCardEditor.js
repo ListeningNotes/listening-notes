@@ -81,7 +81,7 @@ export async function shrink(file) {
 
 // ── Holding the page still while a field is open ────────────────────────
 // iOS Safari zooms the whole page in whenever you focus a field whose text is
-// under 16px. globals.css answers that by forcing every field on a phone up to
+// under 16px. styles/base.css answers that by forcing every field on a phone up to
 // 16px, which is the right answer for a form and the wrong one for this card:
 // the card's writing is smaller than that, so the fields grew, the name shrank,
 // and the whole thing resized itself around whatever you were typing into.

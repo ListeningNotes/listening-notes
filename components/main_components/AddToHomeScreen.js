@@ -83,38 +83,6 @@ export default function AddToHomeScreen({ centered = false }) {
 
   return (
     <div className={'a2h' + (centered ? ' a2h--centered' : '')}>
-      <style>{`
-        .a2h { display: flex; flex-direction: column; gap: 14px; }
-        .a2h-row { display: flex; align-items: center; gap: 14px; }
-        .a2h--centered .a2h-row { justify-content: center; }
-        .a2h--centered .a2h-why { text-align: center; }
-        .a2h-icon {
-          width: 56px; height: 56px; border-radius: 13px; overflow: hidden; flex: none;
-          box-shadow: 0 1px 3px rgba(0,0,0,0.18);
-        }
-        .a2h-icon img { width: 100%; height: 100%; display: block; }
-        .a2h-name { font-size: 14px; color: var(--ink); }
-        .a2h-why { font-size: 13px; line-height: 1.65; color: var(--ink-soft); margin: 0; }
-        .a2h-steps { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; }
-        .a2h-steps li {
-          font-size: 13px; line-height: 1.6; color: var(--ink);
-          display: flex; gap: 10px; align-items: baseline;
-        }
-        .a2h-steps li::before {
-          content: counter(a2h) '.'; counter-increment: a2h;
-          font-family: var(--font-label); font-size: 10px; color: var(--ink-faint);
-        }
-        .a2h-steps { counter-reset: a2h; }
-        .a2h-steps svg { width: 14px; height: 14px; vertical-align: -2px; margin: 0 2px; }
-        .a2h-go {
-          align-self: flex-start; display: inline-flex; align-items: center;
-          padding: 11px 20px; border-radius: 999px;
-          background: var(--ink); color: var(--bg); border: 1px solid var(--ink);
-          font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em;
-          text-transform: uppercase; cursor: pointer;
-        }
-        .a2h-done { font-family: var(--font-label); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint); }
-      `}</style>
 
       <div className="a2h-row">
         {icon}

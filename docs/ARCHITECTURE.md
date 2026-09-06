@@ -164,7 +164,15 @@ The rooms — full pages assembled from furniture
   app/
     page.js                    Homepage
     layout.js                  Wraps every page (fonts, theme)
-    globals.css                All the styling
+    styles/                    The stylesheets, one per surface — see below
+      base.css                 Palette, both themes, the two typefaces, resets, the pill
+      nav.css                  The cross: panes, crown, carets, beacon, pitch, desk, and the nav row on other pages
+      journal.css              The wall of covers and its bar
+      entry.css                The layer, the stand-in, the entry page, comments, corrections
+      idcard.css               The identity card, its editor, the About pane writing
+      session.css              The listen: picker, header, four screens, the reference
+      get.css                  /get — the door, the steps, the story
+      forms.css                Send, setup, settings, the password gate, compare, key
     manifest.js                PWA manifest — force-dynamic, so the name is not baked in
     feed.xml/route.js          The journal as an RSS feed
     entries/[slug]/
@@ -202,7 +210,7 @@ The rooms — full pages assembled from furniture
 | The entry that opens over the wall, and swiping between entries | components/main_components/LayerEntry.js, library/handoff.js and app/@layer/ |
 | The full entry post page | app/entries/[slug]/FullPostPage.js |
 | The album picker | components/session_components/AlbumPicker.js |
-| The note-taking session, and its styles | app/session/page.js |
+| The note-taking session | app/session/page.js, styles in app/styles/session.css |
 | The header above every session screen | components/session_components/SessionHeader.js |
 | The question mark's sheet, and what it is told | components/session_components/AskSheet.js and app/api/ask/route.js |
 | The session screens (album, tracks, notes, preview) | components/session_components/steps/ |
@@ -216,7 +224,7 @@ Two files, and they are the source — no list is kept here, because the list
 that used to be here spent months claiming the accent was green and the
 headings were set in a serif, and neither had been true for a long time.
 
-- **`app/globals.css`** — the palette as custom properties (`--bg`, `--ink`,
+- **`app/styles/base.css`** — the palette as custom properties (`--bg`, `--ink`,
   `--accent`, `--panel`), both themes, which is what components read.
 - **`library/sitewide_visuals.js`** — the `fonts` object, and a `colors`
   object a few canvas and chart pieces still read because a canvas cannot

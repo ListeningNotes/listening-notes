@@ -11,7 +11,7 @@
 // another tab, the story so it can be read as a piece of writing and not as
 // the thing between a button and its instructions.
 //
-// What they share is the nav row, here, and the .get-* rules in globals.css.
+// What they share is the nav row, here, and the .get-* rules in styles/get.css.
 // The rules moved out of this file on 2026-09-03 when the two pages under
 // the door started opening as a layer over it: a layer renders in the root
 // slot and never passes through this layout, so a stylesheet kept here would
