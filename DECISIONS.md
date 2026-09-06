@@ -529,6 +529,15 @@ Settings. The printer glyph beside the pencil on an entry went with it. The
 slide drawing lives on in git and on the `share-printer` branch if a cover
 plate is ever wanted.
 
+**The printer's door ships before the printer, 2026-09-06.** The glyph beside
+the pencil — on an entry, and now on the card too — opens `/printer`, which
+comes up from the foot of the screen and says the press is coming. The door
+goes in first so the press lands where people have already been pressing.
+`?entry=slug` travels from an entry so the press can open on that record; the
+card sends nobody, meaning the profile. Reversed from the same morning, when
+the glyph went with the exporter: the glyph was never the exporter's, it was
+the printer's, and the printer is parked rather than rejected.
+
 **Styles live in eight files by surface, not with their components,
 2026-09-06.** `app/styles/`: base, nav, journal, entry, idcard, session, get,
 forms. A rule is found where its surface is, which is what a stylesheet is

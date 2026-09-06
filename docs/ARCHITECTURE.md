@@ -123,7 +123,7 @@ The furniture — visual pieces
       AlbumTile.js             One cover on that wall
       Dashboard.js             The right pane, for the owner — Listen, Inbox, Settings
       Pitch.js                 The right pane, for everybody else
-      KeeperTools.js           The owner's pencil — correcting the entry you are reading
+      KeeperTools.js           The owner's pencil and printer
       WritingAccess.js         The sign-in line at the foot of the pitch pane; it goes to Settings
       ComingSoon.js            What a held copy shows instead of a site — unclaimed, no database, or database unreachable
       AddToHomeScreen.js       The one step the software cannot do: the last screen of setup, and a Settings section
@@ -189,10 +189,12 @@ The rooms — full pages assembled from furniture
     get/page.js                The keeper's long note. 404s when unwritten
     about/page.js              Redirect to / — the identity card is the about page
     session/page.js            The listen — picker, then four screens under one header
+    printer/page.js            The share printer's address — "coming soon" until the press ships
     setup/page.js              Claiming a copy: the code, the name, five skippable screens, the password
     settings/page.js           The machinery, owner-only
     @layer/(.)session/page.js  The same listen, opened as a layer over the desk
     @layer/(.)dashboard/inbox/page.js  The inbox, opened as a sheet over the desk
+    @layer/(.)printer/page.js  The printer, as a sheet over the entry or the card
     dashboard/
       page.js                  Redirect to / — the desk is the right pane of the cross
       inbox/page.js            Comments and submissions in one place — plain, on the tokens, and a sheet over the desk
