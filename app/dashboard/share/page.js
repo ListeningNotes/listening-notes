@@ -25,11 +25,10 @@
 // a canvas package. Everything above them is just picking an entry.
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import Link from 'next/link';
 import { sizedAlbumArt } from '../../../library/music_data_api';
 import { parseRating, parseTracksFromNotes } from '../../../library/entry_formatter';
 import { useBookplate } from '../../../components/main_components/Bookplate';
-import backgrounds from '../../../components/session_components/backgrounds';
+import SiteNav from '../../../components/main_components/SiteNav';
 
 // The chrome — a screensaver behind a frosted panel — is the .own-* family in
 // styles/forms.css, shared with the inbox so the two pages read as one room
@@ -433,7 +432,7 @@ function drawCard(ctx, img, entry, shape, isDark, siteUrl, families, logo) {
 
 // ── Page ───────────────────────────────────────────────────────────────────
 
-export default function SessionShare() {
+export default function SessionShare({ layered = false }) {
   const [authed, setAuthed] = useState(false);
   const [checking, setChecking] = useState(true);
   const [entries, setEntries] = useState([]);
@@ -460,12 +459,6 @@ export default function SessionShare() {
   const siteUrl = typed ?? site_address ?? '';
   const [status, setStatus] = useState('');
   const [tainted, setTainted] = useState(false);
-  // A screensaver picked once and kept for the visit, exactly as the entries
-  // and inbox pages do it — rerolling on every render would strobe.
-  const [Background] = useState(() => backgrounds[Math.floor(Math.random() * backgrounds.length)]);
-  // The wallpaper wants the covers shuffled; the picker wants them in the
-  // order the archive returns them. Two lists rather than one sorted twice.
-  const [wallpaper, setWallpaper] = useState([]);
   const [copied, setCopied] = useState(false);
 
   const coverRef = useRef(null);
@@ -486,7 +479,6 @@ export default function SessionShare() {
       .then(d => {
         const list = (d.entries || []).filter(e => e.album_art);
         setEntries(list);
-        setWallpaper([...list].sort(() => Math.random() - 0.5));
         // ?entry=<slug> means somebody pressed the printer on a record and
         // meant that record. Read off the address rather than through
         // useSearchParams, which would want a Suspense boundary around a page
@@ -652,16 +644,9 @@ export default function SessionShare() {
         <span className="probe-mono" style={{ fontFamily: 'var(--font-dm-mono)' }}>x</span>
       </div>
 
-      <div className="own-screen">
-        {/* Album screensaver + frosted overlay, same as the inbox */}
-        <div className="own-wall"><Background albums={wallpaper} /></div>
-        <div className="own-scrim" />
-
-        {/* Top bar — the back button the inbox uses too */}
-        <div className="own-top">
-          <Link href="/" className="own-home">← Home</Link>
-          <span className="own-crumb">Instagram slides{selected ? ' · ' + selected.album : ''}</span>
-        </div>
+      <div className={'own-screen' + (layered ? ' own-screen--layered' : '')}>
+        <SiteNav />
+        <div className="own-kicker">Instagram slides{selected ? ' · ' + selected.album : ''}</div>
 
         <div className="own-body sh-body">
           {/* Centered search, above the panel */}
