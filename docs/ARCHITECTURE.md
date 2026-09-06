@@ -107,6 +107,7 @@ The hooks — reusable logic shared across pages
   hooks/
     useListeningBeacon.js      Checks Last.fm every 15 seconds for what's playing
     useListeningSession.js     All session state — the record, tracks, notes, score, preview, saving; research on request
+    useSessionDraft.js         The listen's draft — the browser's copy and the row in drafts — autosave, restore, cleanup
 
 The furniture — visual pieces
   components/
@@ -117,6 +118,7 @@ The furniture — visual pieces
       IdentificationCardEditor.js  Editing the card in place
       ListeningBeacon.js       The beacon — what is playing, or last played
       Journal.js               The wall of covers, with its search, filters and sort
+      JournalFilters.js        The filter sheet — a popover on a desk, a pull-down sheet on a phone — and the year range
       AlbumTile.js             One cover on that wall
       Dashboard.js             The right pane, for the owner — Listen, Inbox, Share, Settings
       Pitch.js                 The right pane, for everybody else

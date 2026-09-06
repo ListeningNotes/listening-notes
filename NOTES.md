@@ -195,14 +195,6 @@ The cross is built and merged. What is left of it:
       "Drawing…" line is written from a frame callback. Build and lint pass;
       the page needs a signed-in look at `/dashboard/share` to confirm both
       slides still draw and the status line settles to blank.
-- [ ] **The four refactors, in this order, each waiting on a name from Miyel
-      for the file it makes:** the three card helpers (`rigIcon`, `identify`,
-      `readLink`) out of `IdentityCard` into the library; the year range and
-      the phone filter sheet out of `Journal`; the portrait-code builder
-      (`renderCode`, `flatten`, `buildPortraitCode`, ~250 lines) out of
-      `IdentificationCardEditor`; draft persistence — the browser copy and
-      `/api/drafts` — out of `useListeningSession`. None is broken; each is a
-      file doing two jobs.
 - [ ] **A QR on the pitch pane.** DECISIONS already settles that the right pane produces a fixed code to `/get`, the same on every copy. Not built, and the "logo made of the QR" idea is unresolved.
 - [ ] **Compare wants two homes** — one on an individual album, for comparing that record against another, and one on the About pane for comparing the collection overall. It is reachable from neither today; the route works if you type it.
 - [ ] **Surprise (`/shuffle`) has no way in.** Work in progress by decision — the shake is the intended gesture and is not built. See DECISIONS.
@@ -1006,6 +998,18 @@ current.
 - [x] Verified after the split: lint clean, `next build` clean, `/`,
       `/archive`, an entry, `/submit`, `/key`, `/get` and `/login` on the dev
       server at desktop and 375px, no console errors.
+- [x] **The four refactors, each a new file named by Miyel:**
+      `library/card_links.js` (the rig and link marks out of IdentityCard,
+      which is 108 lines shorter and imports seven icons instead of forty);
+      `components/main_components/JournalFilters.js` (the sheet, the year
+      range and the sort table out of Journal, 730 → 468 lines; mounted only
+      while open, so no drag offset to reset); `library/portrait_code.js`
+      (the QR builder out of IdentificationCardEditor, 686 → 415);
+      `hooks/useSessionDraft.js` (autosave, restore and cleanup out of
+      useListeningSession, 606 → 453). Lint and build clean; the wall's
+      filters checked open and closed on desk and phone. **The session itself
+      was not exercised** — it sits behind the password — so a signed-in
+      listen with a draft resumed and an entry saved is the check still owed.
 
 **2026-09-03 session — the audit cleanup** (branch `cleanup-audit`)
 - [x] **Lint at zero.** Nine `set-state-in-effect` errors across Journal, the
