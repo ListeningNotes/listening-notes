@@ -158,7 +158,7 @@ The furniture — visual pieces
         TrackNotes.js          Step 1 — one track per screen, under a strip of every track's bar, dot and title
         AlbumNotes.js          Step 2 — the horizon so far, the score, the three marks, then the album note
         SessionPreview.js      Step 3 — the real entry page (FullPostPage in preview mode) on its own sheet, with Return to session and Save to journal at its foot
-      backgrounds/             10 animated canvas scenes for the dashboard hub
+      backgrounds/             10 animated canvas scenes — parked 2026-09-06, nothing mounts them; wanted back as plates for the share printer
         Rain.js / DVD.js / Gallery.js / Fizzy.js / SplitScreen.js
         Snake.js / Pong.js / Solitaire.js / Reel.js
         EchoNetwork.js         The network of floating covers that used to open every listen
@@ -193,10 +193,12 @@ The rooms — full pages assembled from furniture
     setup/page.js              Claiming a copy: the code, the name, five skippable screens, the password
     settings/page.js           The machinery, owner-only
     @layer/(.)session/page.js  The same listen, opened as a layer over the desk
+    @layer/(.)dashboard/inbox/page.js  The inbox, opened as a sheet over the desk
+    @layer/(.)dashboard/share/page.js  The exporter, the same way
     dashboard/
       page.js                  Redirect to / — the desk is the right pane of the cross
-      inbox/page.js            Comments and submissions in one place
-      share/page.js            Album exporter — slides for sharing an entry
+      inbox/page.js            Comments and submissions in one place — plain, on the tokens, and a sheet over the desk
+      share/page.js            Album exporter — slides for sharing an entry; the same shell as the inbox
 
 ---
 

@@ -509,6 +509,16 @@ deleting the destination of a gesture already decided on.
 every artist link in a review points, and the entry page and `/key` link to
 it too. The pane absorbs the route; it does not replace the address.
 
+**The owner's two tools are plain, on the tokens, and arrive as a sheet,
+2026-09-06.** The inbox and the share page were the last screens on the old
+palette: a screensaver behind frosted glass, hardcoded light-mode colours, a
+font nothing loaded. They read the site's tokens now, so they follow the
+theme like every other page, and they are plain because the desk they open
+from is plain. Both come up from the foot of the screen over the desk, the
+way the send form and the session do — reading what somebody sent should
+not feel like leaving the journal — and both keep their real addresses for a
+bookmark.
+
 **Styles live in eight files by surface, not with their components,
 2026-09-06.** `app/styles/`: base, nav, journal, entry, idcard, session, get,
 forms. A rule is found where its surface is, which is what a stylesheet is
@@ -1851,6 +1861,14 @@ someone sending it on. A directory doesn't solve discovery.
 
 ## Parked, not rejected
 
+
+**The ten screensavers, 2026-09-06.** Rain, DVD, Gallery, Fizzy, SplitScreen,
+Snake, Pong, Solitaire, Reel and the EchoNetwork — 2,500 lines of canvas that
+nothing mounts since the inbox and the share page went plain. Kept on disk
+behind their one index rather than deleted, on Miyel's call: they are wanted
+back as plates for the share printer, fun things to export, which is a better
+job than sitting behind a moderation list. Wiring them back is importing the
+array. This is the one deliberate exception to "no reader, no file".
 - Spotify Connect transport control (fragile: two API tightenings in eighteen
   months; needs per-copy client ID and Premium). After the deploy button.
 - Video exports (ffmpeg server-side, Vercel function timeouts; wallpapers

@@ -684,39 +684,34 @@ a.pp-name:hover svg { color: var(--ink); }
 }
 
 /* ── The owner's two tools: the inbox and the share page ──────────────────
-   One shell for both: a screensaver behind a frosted panel, the way the old
-   hub looked, on the site's own tokens so it follows the theme like every
-   other page. Text is the two typefaces every page uses; the third one these
-   pages used to name was never loaded and always fell back. */
+   One shell for both, on the site's own tokens so they follow the theme like
+   every other page, and plain — the desk they open from has no screensaver,
+   and neither do these. Text is the two typefaces every page uses.
+
+   Both arrive as a sheet from the foot of the screen over the desk (see
+   app/@layer/(.)dashboard/), the way the send form and the session do, and
+   are also real addresses. --own-nav-bottom is the same trick .sb-page uses:
+   standalone, the nav row is fixed and the page clears it; on the layer the
+   row sits in the sheet's flow and has already taken its space. */
 .own-screen {
-  height: 100vh; position: relative; overflow: hidden;
-  background: var(--bg); color: var(--ink); font-family: var(--font-sans);
-  display: flex; flex-direction: column;
+  --own-nav-bottom: calc(80px + var(--safe-top));
+  min-height: 100dvh; background: var(--bg); color: var(--ink); font-family: var(--font-sans);
+  display: flex; flex-direction: column; padding-top: var(--own-nav-bottom);
 }
-.own-wall { position: absolute; inset: 0; z-index: 0; overflow: hidden; }
-.own-scrim {
-  position: absolute; inset: 0; z-index: 1; pointer-events: none;
-  backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px);
-  background: color-mix(in srgb, var(--bg) 55%, transparent);
+.own-screen--layered { --own-nav-bottom: 0px; min-height: 0; }
+.own-kicker {
+  width: 100%; max-width: 1000px; align-self: center; box-sizing: border-box;
+  padding: 10px 24px 0; font-family: var(--font-label); font-size: 10px;
+  letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-faint);
 }
-.own-top { position: relative; z-index: 3; display: flex; align-items: center; gap: 12px; padding: 14px 28px; flex-shrink: 0; }
-.own-home {
-  font-family: var(--font-label); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
-  color: var(--ink-soft); text-decoration: none; padding: 6px 10px; border-radius: 8px;
-  border: 1px solid var(--border); background: var(--panel);
-  backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); flex-shrink: 0;
-}
-.own-home:hover { color: var(--ink); }
-.own-crumb { font-family: var(--font-label); font-size: 10px; letter-spacing: 0.08em; color: var(--ink-faint); }
 .own-body {
-  position: relative; z-index: 2; flex: 1; min-height: 0; width: 100%;
+  position: relative; flex: 1; width: 100%; box-sizing: border-box;
   align-self: center; display: flex; flex-direction: column;
 }
 .own-panel {
-  position: relative; z-index: 1; flex: 1; min-height: 0; display: flex; flex-direction: column;
-  background: var(--panel-strong); backdrop-filter: blur(22px); -webkit-backdrop-filter: blur(22px);
-  border: 1px solid var(--panel-border); border-radius: 24px;
-  box-shadow: var(--shadow-lift); overflow: hidden;
+  position: relative; z-index: 1; flex: 1; display: flex; flex-direction: column;
+  background: var(--panel); border: 1px solid var(--border); border-radius: 24px;
+  overflow: hidden;
 }
 .own-label { font-family: var(--font-label); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-faint); }
 /* The two buttons every row here has: the one that does the thing, filled,
@@ -740,19 +735,19 @@ a.pp-name:hover svg { color: var(--ink); }
 .own-link:hover { color: var(--ink); }
 
 /* ── from app/dashboard/inbox/page.js ────────────────────────────────── */
-.ib-body { max-width: 940px; padding: 8px 24px 24px; }
+.ib-body { max-width: 940px; padding: 18px 24px 40px; }
 /* Folder tabs that connect to the open panel. */
 .ib-tabs { display: flex; align-items: flex-end; gap: 5px; padding-left: 14px; position: relative; z-index: 2; flex-shrink: 0; }
 .ib-tab {
   font-family: var(--font-label); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
-  padding: 9px 22px 11px; border: 1px solid var(--panel-border); border-bottom: none; cursor: pointer;
-  border-radius: 16px 16px 0 0; background: var(--panel); color: var(--ink-faint);
-  backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+  padding: 9px 22px 11px; border: 1px solid transparent; border-bottom: none; cursor: pointer;
+  border-radius: 16px 16px 0 0; background: none; color: var(--ink-faint);
   position: relative; z-index: 1; transition: background 0.15s, color 0.15s, padding 0.12s;
 }
-.ib-tab--on { padding: 11px 24px 13px; margin-bottom: -1px; background: var(--panel-strong); color: var(--ink); z-index: 2; }
+.ib-tab:hover { color: var(--ink-soft); }
+.ib-tab--on { padding: 11px 24px 13px; margin-bottom: -1px; background: var(--panel); border-color: var(--border); color: var(--ink); z-index: 2; }
 .ib-panel { border-radius: 20px 20px 24px 24px; }
-.ib-scroll { position: relative; z-index: 1; flex: 1; min-height: 0; overflow-y: auto; padding: 22px 26px 28px; }
+.ib-scroll { position: relative; z-index: 1; flex: 1; padding: 22px 26px 28px; }
 .ib-filters { display: flex; gap: 18px; margin-bottom: 18px; }
 .ib-filter {
   font-family: var(--font-label); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
@@ -803,15 +798,15 @@ a.pp-name:hover svg { color: var(--ink); }
 .ib-comment-row .own-link { font-family: var(--font-label); font-size: 10px; margin-left: auto; }
 
 /* ── from app/dashboard/share/page.js ────────────────────────────────── */
-.sh-body { max-width: 1000px; padding: 4px 24px 24px; }
+.sh-body { max-width: 1000px; padding: 14px 24px 40px; }
 .sh-search { display: flex; justify-content: center; margin-bottom: 14px; flex-shrink: 0; }
 .sh-search .sh-field { width: min(420px, 100%); text-align: center; font-family: var(--font-sans); font-size: 13px; }
-/* The panel splits into a picker rail and the slides. Both scroll on their
-   own — the shell is a fixed 100vh like the inbox, so the document itself
-   never scrolls. */
-.sh-cols { display: grid; grid-template-columns: 268px 1fr; flex: 1; min-height: 0; position: relative; z-index: 1; }
-.sh-rail { border-right: 1px solid var(--border); min-height: 0; overflow-y: auto; padding: 16px; }
-.sh-main { min-height: 0; overflow-y: auto; padding: 18px 22px 26px; }
+/* The panel splits into a picker rail and the slides. */
+.sh-cols { display: grid; grid-template-columns: 268px 1fr; flex: 1; position: relative; z-index: 1; }
+/* The rail keeps its own scroll: a long archive is a tall column of tiny
+   covers, and the slides beside it should stay in view while you pick. */
+.sh-rail { border-right: 1px solid var(--border); max-height: 70vh; overflow-y: auto; padding: 16px; }
+.sh-main { padding: 18px 22px 26px; }
 @media (max-width: 880px) {
   .sh-cols { grid-template-columns: 1fr; }
   .sh-rail { border-right: none; border-bottom: 1px solid var(--border); max-height: 180px; }

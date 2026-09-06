@@ -3,9 +3,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import backgrounds from '../../../components/session_components/backgrounds';
+import SiteNav from '../../../components/main_components/SiteNav';
 // A folder tab that connects to the open panel when active. Module scope so it
 // keeps a stable identity across renders.
 function FolderTab({ id, tab, onSelect, children }) {
@@ -22,15 +21,11 @@ function FolderTab({ id, tab, onSelect, children }) {
 // shelf now and the message is on the front of every item, which is what it
 // was always for.
 
-export default function Inbox() {
+export default function Inbox({ layered = false }) {
   const router = useRouter();
   const [authed, setAuthed] = useState(false);
   const [checking, setChecking] = useState(true);
   const [tab, setTab] = useState('submissions');
-  const [albums, setAlbums] = useState([]);
-  // Lazy initialiser so the pick happens once, not on every render — the
-  // useRef form re-rolled the dice each time and threw the result away.
-  const [Background] = useState(() => backgrounds[Math.floor(Math.random() * backgrounds.length)]);
 
   const [submissions, setSubmissions] = useState([]);
   const [subLoading, setSubLoading] = useState(true);
@@ -45,10 +40,6 @@ export default function Inbox() {
 
   useEffect(() => {
     if (!authed) return;
-    fetch('/api/entries').then(r => r.json()).then(d => {
-      const withArt = (d.entries || []).filter(e => e.album_art);
-      setAlbums(withArt.sort(() => Math.random() - 0.5));
-    }).catch(() => {});
     fetch('/api/submissions').then(r => r.json()).then(d => { setSubmissions(d.submissions || []); setSubLoading(false); }).catch(() => setSubLoading(false));
     fetch('/api/comments/pending').then(r => r.json()).then(d => { setComments(d.comments || []); setComLoading(false); }).catch(() => setComLoading(false));
   }, [authed]);
@@ -113,14 +104,8 @@ export default function Inbox() {
 
 
   return (
-    <div className="own-screen">
-      <div className="own-wall"><Background albums={albums} /></div>
-      <div className="own-scrim" />
-
-      {/* Back home — same bar as the share page */}
-      <div className="own-top">
-        <Link href="/" className="own-home">← Home</Link>
-      </div>
+    <div className={'own-screen' + (layered ? ' own-screen--layered' : '')}>
+      <SiteNav />
 
       <div className="own-body ib-body">
         <div className="ib-tabs">

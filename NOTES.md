@@ -1011,6 +1011,15 @@ current.
       filters checked open and closed on desk and phone. **The session itself
       was not exercised** — it sits behind the password — so a signed-in
       listen with a draft resumed and an entry saved is the check still owed.
+- [x] **The inbox and the share page follow the theme and arrive as sheets**
+      (branch `owner-tools`). Off the old palette and the unloaded DM Sans,
+      onto the tokens through one `.own-*` family in `styles/forms.css`;
+      plain, to match the desk; and both intercepted at
+      `app/@layer/(.)dashboard/` so they come up from the foot of the screen
+      over the desk like the send form does. The ten screensavers lost their
+      last readers and are parked, not deleted — see DECISIONS, Parked.
+      **Not seen signed in by Claude** — the pages are behind the password —
+      so Miyel's look on the dev server is the check.
 
 **2026-09-03 session — the audit cleanup** (branch `cleanup-audit`)
 - [x] **Lint at zero.** Nine `set-state-in-effect` errors across Journal, the
