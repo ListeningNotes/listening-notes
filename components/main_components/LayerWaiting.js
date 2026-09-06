@@ -53,7 +53,7 @@ export default function LayerWaiting({ slug, authed = false }) {
   const headerSlot = useLayerHeaderSlot();
   const header = headerSlot
     ? createPortal(
-        <SiteNav tools={authed ? <KeeperTools onEdit={() => {}} slug={slug} /> : null} />,
+        <SiteNav tools={authed ? <KeeperTools onEdit={() => {}} /> : null} />,
         headerSlot,
       )
     : null;
