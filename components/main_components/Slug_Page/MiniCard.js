@@ -23,12 +23,9 @@
 // formative record, in --fav, --mp and --formative. Those three pairings are
 // the site's, and they are already restated locally in ScoreScreen,
 // SessionPreview, TrackNotes and HorizonChart rather than lifted somewhere
-// common — the same call Chip.js writes down about the keeper's tools. There
-// is a fourth copy in EntryMarks, in AlbumPreview.js, which is the closest to
-// this one and is also a file NOTES has standing for deletion; importing from
-// it would have given a dead component a reader and quietly settled a decision
-// that is somebody else's to make. If AlbumPreview is ever kept, that is the
-// moment to lift one set of marks out for everybody, not before.
+// common — the same call Chip.js writes down about the keeper's tools. A
+// fourth copy lived in AlbumPreview.js until that file was deleted; if the
+// pairings ever change, lifting one set out for everybody is the moment.
 //
 // Formative reads the flag, which is now the only record of it — nine older
 // entries carried it as relationship = 'Formative' and were migrated across
