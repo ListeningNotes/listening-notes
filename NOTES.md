@@ -1022,6 +1022,9 @@ current.
       so Miyel's look on the dev server is the check.
 - [x] **The Share door, `/dashboard/share` and the entry's printer glyph are
       gone** — see DECISIONS. The desk is three things that do what they say.
+- [x] **`/printer` — the share printer's door, before the printer** (branch
+      `printer-door`). Printer glyph beside the pencil on an entry and on the
+      card; the page rises from the foot of the screen and says coming soon.
 
 **2026-09-03 session — the audit cleanup** (branch `cleanup-audit`)
 - [x] **Lint at zero.** Nine `set-state-in-effect` errors across Journal, the

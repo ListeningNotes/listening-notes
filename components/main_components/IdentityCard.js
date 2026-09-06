@@ -23,7 +23,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
-import { Check, Eye, EyeSlash, Pencil, QrCode, UploadSimple, User, X } from '@phosphor-icons/react';
+import { Check, Eye, EyeSlash, Pencil, Printer, QrCode, UploadSimple, User, X } from '@phosphor-icons/react';
 import QRCode from 'qrcode';
 import { useListeningBeacon } from '../../hooks/useListeningBeacon';
 import { useBookplate } from './Bookplate';
@@ -492,15 +492,22 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
                   </button>
                 </>
               ) : (
-                <button
-                  type="button"
-                  className="idc-tool"
-                  onClick={edit.begin}
-                  aria-label="Edit this card"
-                  title="Edit this card"
-                >
-                  <Pencil size={18} weight="regular" aria-hidden="true" />
-                </button>
+                <>
+                  <button
+                    type="button"
+                    className="idc-tool"
+                    onClick={edit.begin}
+                    aria-label="Edit this card"
+                    title="Edit this card"
+                  >
+                    <Pencil size={18} weight="regular" aria-hidden="true" />
+                  </button>
+                  {/* The same printer an entry has, for the card: it opens
+                      /printer with no record, which means the profile. */}
+                  <Link href="/printer" className="idc-tool" aria-label="Print this card" title="Print this card">
+                    <Printer size={18} weight="regular" aria-hidden="true" />
+                  </Link>
+                </>
               )}
             </div>
           )}
