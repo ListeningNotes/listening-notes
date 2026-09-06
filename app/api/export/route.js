@@ -28,7 +28,7 @@ import database from '@/library/database_connection';
 // reads either.
 const TABLES = [
   'users', 'entries', 'settings', 'comments',
-  'submissions', 'drafts', 'briefings', 'conversations', 'echo_memory',
+  'submissions', 'drafts', 'briefings',
 ];
 
 function today() {

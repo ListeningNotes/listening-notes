@@ -70,7 +70,7 @@ const PIN_RESULTS = 40;
 // should be solved together.
 export default function About({ stamps, authed = false, pinned = null, entries = [] }) {
   const settings = useBookplate();
-  const { bioanswers, rig: rigRows, rig_icon, social_links, instagram_url } = settings;
+  const { bioanswers, rig: rigRows, rig_icon, social_links } = settings;
 
   // One edit session for the pane, owned here and handed to the card. The card
   // used to make its own, which was fine while everything editable was printed
@@ -142,20 +142,16 @@ export default function About({ stamps, authed = false, pinned = null, entries =
   // beside "Send an album" on the card, which put "here is somebody's Instagram"
   // next to the one thing the card is actually for. At the foot of the reading
   // they answer the question the reading has just raised: having read about
-  // somebody, you might want to go and find them.
-  //
-  // instagram_url predates the list and is folded in rather than made to move,
-  // de-duplicated on the href so an owner who has it in both places gets one.
+  // somebody, you might want to go and find them. De-duplicated on the href.
   const socials = useMemo(() => {
     const stored = Array.isArray(social_links) ? social_links.map(readLink) : [];
-    const raw = instagram_url ? [{ url: instagram_url, icon: 'auto' }, ...stored] : stored;
     const seen = new Set();
-    return raw
+    return stored
       .filter(l => l.url?.trim())
       .map(l => identify(l.url.trim(), l.icon))
       .filter(l => l && !seen.has(l.href) && seen.add(l.href))
       .slice(0, LINK_LIMIT);
-  }, [social_links, instagram_url]);
+  }, [social_links]);
 
   // What the card should draw in the pinned row. While a correction is open
   // that is the draft — press a record in the sheet and the card shows it at

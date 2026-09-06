@@ -30,9 +30,7 @@ const EMPTY = {
   // The ornamented name, or null when the plain one is the only one. Read by
   // the card's editor to decide which column a name edit belongs in.
   display_name: null,
-  bio: null,
   portrait_url: null,
-  instagram_url: null,
   lastfm_user: null,
   site_address: null,
   founded_at: null,
@@ -40,7 +38,6 @@ const EMPTY = {
   about_intro: null,
   social_links: null,
   hidden_fields: null,
-  send_me: null,
   portrait_position: null,
   portrait_code_url: null,
   rig_icon: null,
@@ -58,7 +55,7 @@ const EMPTY = {
 const BookplateContext = createContext(EMPTY);
 
 // useBookplate — how a component reads the journal's details.
-//   const { instagram_url } = useBookplate();
+//   const { lastfm_user } = useBookplate();
 //
 // Every value can be null, and null means the owner said no. Components are
 // expected to render nothing at all rather than an empty link or a broken

@@ -45,7 +45,7 @@ const KEEP = 30;   // a month of nights; older ones are pruned
 // there — see the note in scripts/restore.mjs about the order.
 const TABLES = [
   'users', 'entries', 'settings', 'comments',
-  'submissions', 'drafts', 'briefings', 'conversations', 'echo_memory',
+  'submissions', 'drafts', 'briefings',
 ];
 
 // The connection string, from the environment when there is one — which is how

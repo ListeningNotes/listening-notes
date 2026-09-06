@@ -89,7 +89,7 @@ const backup = load();
 // Dependency order. Reversed for emptying, used as-is for filling.
 const ORDER = [
   'users', 'entries', 'settings', 'comments',
-  'submissions', 'drafts', 'briefings', 'conversations', 'echo_memory',
+  'submissions', 'drafts', 'briefings',
 ];
 
 function connectionString() {
