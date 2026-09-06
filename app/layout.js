@@ -1,6 +1,13 @@
 // Copyright (C) 2026 Miyel Brown
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import './globals.css';
+import './styles/base.css';
+import './styles/nav.css';
+import './styles/journal.css';
+import './styles/entry.css';
+import './styles/idcard.css';
+import './styles/session.css';
+import './styles/get.css';
+import './styles/forms.css';
 import { Nunito, DM_Mono } from 'next/font/google';
 import { Lightswitch } from '../components/main_components/Lightswitch';
 import { Bookplate } from '../components/main_components/Bookplate';
@@ -17,7 +24,7 @@ const nunito = Nunito({
 });
 
 // DM Serif Display used to load here as --font-dm-serif and was the site's
-// title face. Titles are Nunito 700 now (see --font-display in globals.css),
+// title face. Titles are Nunito 700 now (see --font-display in styles/base.css),
 // so the whole site runs on two families and this one is no longer fetched.
 const dmMono = DM_Mono({
   subsets: ['latin'],

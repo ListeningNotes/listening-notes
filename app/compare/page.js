@@ -117,58 +117,6 @@ export default function ComparePage() {
     <div style={{ background: 'var(--bg)', minHeight: '100vh', color: 'var(--ink)', fontFamily: fonts.sans }}>
       <SiteNav />
 
-      <style>{`
-        /* The nav is fixed and ends on 80px everywhere; About and Submit
-           both clear it by the same 44px, so this page keeps their rhythm
-           rather than inventing a number by eye. */
-        .cmp-wrap {
-          --cmp-nav-bottom: calc(80px + var(--safe-top));
-          max-width: 860px; margin: 0 auto;
-          padding: calc(var(--cmp-nav-bottom) + 44px) 48px 120px;
-        }
-        @media (max-width: 640px) {
-          .cmp-wrap { padding: calc(var(--cmp-nav-bottom) + 24px) 24px 100px; }
-        }
-        .cmp-form { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-bottom: 8px; }
-        .cmp-input {
-          flex: 1; min-width: 240px; max-width: 420px;
-          padding: 11px 18px; border-radius: 999px;
-          border: 1px solid var(--border); background: var(--panel);
-          color: var(--ink); font-family: var(--font-mono); font-size: 12px;
-          outline: none; text-align: center;
-        }
-        .cmp-input:focus { border-color: var(--ink-faint); }
-        .cmp-label {
-          font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em;
-          text-transform: uppercase; color: var(--ink-faint);
-        }
-        .cmp-group { margin-top: 42px; }
-        .cmp-group-head {
-          display: flex; align-items: baseline; gap: 10px;
-          padding-bottom: 10px; border-bottom: 1px solid var(--border); margin-bottom: 6px;
-        }
-        .cmp-group-title { font-family: var(--font-display); font-weight: var(--font-display-weight); font-size: 19px; }
-        .cmp-row {
-          display: flex; align-items: center; gap: 14px;
-          padding: 10px 4px; border-bottom: 1px solid var(--border);
-          text-decoration: none; color: inherit;
-        }
-        .cmp-row:last-child { border-bottom: none; }
-        .cmp-art { width: 42px; height: 42px; border-radius: 6px; object-fit: cover; flex-shrink: 0; display: block; }
-        /* These are spans inside a span, so they need telling to stack —
-           left inline, the album title and the artist run together on one
-           line with no space between them. */
-        .cmp-meta { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
-        .cmp-album { display: block; font-weight: 700; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .cmp-artist { display: block; font-size: 12px; color: var(--ink-soft); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .cmp-scores {
-          font-family: var(--font-mono); font-size: 12px; color: var(--ink-soft);
-          flex-shrink: 0; font-variant-numeric: tabular-nums; text-align: right;
-        }
-        .cmp-gap { color: var(--ink-faint); font-size: 10px; letter-spacing: 0.08em; }
-        .cmp-empty { color: var(--ink-faint); font-size: 13px; padding: 10px 4px; }
-      `}</style>
-
       <div className="cmp-wrap">
         <div style={{ textAlign: 'center', padding: '0 0 26px' }}>
           <h1 style={{

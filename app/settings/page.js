@@ -135,52 +135,6 @@ export default function SettingsPage() {
 
   return (
     <div className="st-page" style={{ fontFamily: fonts.sans }}>
-      <style>{`
-        .st-page { min-height: 100dvh; background: var(--bg); color: var(--ink); padding-top: calc(80px + var(--safe-top)); }
-        .st-main { max-width: 560px; margin: 0 auto; padding: 40px 24px 120px; }
-        .st-title { font-family: var(--font-display); font-weight: var(--font-display-weight, 700); font-size: 28px; margin: 0 0 4px; letter-spacing: -0.01em; }
-        .st-kicker {
-          font-family: var(--font-label); font-size: 10px; letter-spacing: 0.14em;
-          text-transform: uppercase; color: var(--ink-faint); margin: 0 0 36px;
-        }
-        .st-section { padding: 26px 0; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 14px; }
-        .st-h { font-family: var(--font-label); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-faint); margin: 0; }
-        .st-note { font-size: 13px; line-height: 1.65; color: var(--ink-soft); margin: 0; }
-        .st-note a { color: var(--ink); }
-        .st-label {
-          display: block; font-family: var(--font-label); font-size: 10px;
-          letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 6px;
-        }
-        .st-status { font-family: var(--font-label); font-size: 10px; color: var(--ink-faint); margin: 0 0 8px; line-height: 1.5; }
-        .st-field {
-          display: block; width: 100%; box-sizing: border-box;
-          background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
-          color: var(--ink); padding: 10px 13px; font-family: ${fonts.sans}; font-size: 14px; line-height: 1.6; outline: none;
-        }
-        .st-field:focus { border-color: var(--ink-faint); }
-        .st-field::placeholder { color: var(--ink-faint); }
-        .st-who { background: none; border-color: transparent; padding-left: 0; color: var(--ink-faint); font-family: var(--font-label); font-size: 12px; letter-spacing: 0.08em; }
-        textarea.st-field { resize: vertical; min-height: 96px; }
-        @media (pointer: coarse) { .st-field { font-size: 16px; } }
-        .st-foot { display: flex; align-items: center; gap: 14px; margin-top: 4px; }
-        .st-save {
-          display: inline-flex; align-items: center; padding: 9px 18px; border-radius: 999px;
-          background: var(--ink); color: var(--bg); border: 1px solid var(--ink);
-          font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; cursor: pointer;
-        }
-        .st-save:disabled { opacity: 0.5; cursor: default; }
-        .st-said, .st-trouble { font-family: var(--font-label); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; }
-        .st-said { color: var(--ink-faint); }
-        .st-trouble { color: #e05555; }
-        .st-clear {
-          background: none; border: 0; padding: 0; cursor: pointer; margin-left: 10px;
-          font-family: var(--font-label); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
-          color: var(--ink-faint); border-bottom: 1px solid var(--border);
-        }
-        .st-clear:hover { color: var(--ink-soft); }
-        .st-section--out { align-items: flex-start; }
-        .st-section--out .st-clear { margin-left: 0; }
-      `}</style>
 
       <SiteNav />
 

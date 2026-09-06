@@ -8,7 +8,7 @@
 // The steps are named by how big the album art is, not by column count,
 // because the count differs per breakpoint: LARGE is 2 columns on a phone
 // and roughly 5 on a wide desktop, SMALL is 4 and roughly 10. The actual
-// column maths lives in globals.css, keyed off the data-density attribute
+// column maths lives in styles/journal.css, keyed off the data-density attribute
 // this control's value gets written to — see .arc-grid there.
 
 'use client';

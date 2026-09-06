@@ -13,7 +13,7 @@
 // `(.)get/install` intercepts the real route at the same segment level; the
 // @layer folder is a slot and does not count as a segment. The page itself
 // is the same component the standalone route renders, wrapped so the room
-// it reserves for a nav row goes (.get-layered in globals.css).
+// it reserves for a nav row goes (.get-layered in styles/get.css).
 //
 // Not async, so the sheet starts rising on the first frame; the page's own
 // reads — the settings row and the screenshot check — happen inside the

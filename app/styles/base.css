@@ -1,0 +1,250 @@
+/* Copyright (C) 2026 Miyel Brown */
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+/* app/styles/base.css
+   What every page starts from: the palette in both themes, the two typefaces,
+   the resets, the pill, the cross-reference underline, the gold burst. Nothing
+   in here belongs to one surface. The other seven files each belong to one. */
+
+/* Copyright (C) 2026 Miyel Brown */
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+
+@import "tailwindcss";
+
+:root {
+  --sb-width: 260px;
+
+  /* How much further down every fixed thing across the top of the page has
+     to start. In a Safari tab this is 0px and the whole site lands exactly
+     where it always did — the toolbar already sits above the page, so
+     safe-area-inset-top reports 0 there. Added to a home screen it is not:
+     black-translucent runs the page under the clock, and anything pinned at
+     a hardcoded top lands inside the Dynamic Island.
+
+     The 38px subtracted is the 22px .sitenav-row already sits at plus the
+     16px of extra buffer Apple builds into the inset. Landing on inset-16
+     is what makes the fixed row come to rest in the same place as the
+     homepage's screen two, which pads itself by the same amount and is the
+     one screen that already felt right installed. */
+  --safe-top: max(0px, calc(env(safe-area-inset-top) - 38px));
+
+  /* Redesign tokens — cream / frosted glass */
+  --bg:           #eef0ec;  /* matches the private dashboard's base background */
+  --bg-warm:      #efebe2;
+  --panel:        rgba(255, 255, 255, 0.45);
+  /* Same frosted glass as --panel, but opaque enough to carry body text on
+     top of it. --panel works on small controls because what's behind them is
+     mostly flat page; a panel the size of the archive's filter sheet sits
+     over album art, and at 45% the labels inside it wash out. */
+  --panel-strong: rgba(255, 255, 255, 0.86);
+  --panel-solid:  #ffffff;
+  --panel-border: rgba(255, 255, 255, 0.6);
+  --ink:          #1a1a1a;
+  --ink-soft:     #6b6b6b;
+  --ink-faint:    #a8a8a8;
+  --accent:       #b5b2ab;
+  --border:       rgba(26, 26, 26, 0.08);
+  --gold:         #E8B84B;
+  /* The favourite red, shared by every heart on the site — the marks on an
+     archive card, the track rows, and both horizons. Was hardcoded in
+     .ln-mark--fav while the hearts elsewhere were gold, which is how the two
+     drifted apart. */
+  --fav:          #f0484f;
+  /* The masterpiece blue, paired with --fav on the same hue wheel. Lived only
+     inside .ln-mark--mp while the session and the CMS drew a gold ✦ and ★. */
+  --mp:           #4a9bf0;
+  /* Formative — the third mark on a record, and the third of this set. Green,
+     but deliberately not --live's mint below: that one means something is
+     playing right now, and these two would otherwise be the same idea in two
+     places. Deeper and less electric, so it sits with --fav and --mp as a
+     property of the album rather than a signal about the moment. */
+  --formative:    #3fa96b;
+  /* Third of the same set: posted since you were last here. Not a property of
+     the record like --fav and --mp are — a property of the reader, which is
+     why it's the only one of the three that can be true for one person and
+     false for the next. Amber keeps it clear of the red and the blue, and of
+     --live below, which is green and already means something else. */
+  --new:          #f0a24a;
+  --live:         #7cff9b;
+  --card-blur:    blur(48px);
+  --shadow-soft:  0 2px 12px rgba(0,0,0,0.04), 0 8px 32px rgba(0,0,0,0.04);
+  --shadow-lift:  0 4px 20px rgba(0,0,0,0.06), 0 16px 48px rgba(0,0,0,0.06);
+  --radius:       24px;
+  --radius-pill:  999px;
+
+  /* Legacy aliases — map old token names onto the new system */
+  --bg2:       var(--bg-warm);
+  --surface:   var(--panel-solid);
+  --text:      var(--ink);
+  --text-muted:var(--ink-soft);
+  --accent-dk: #99c0f0;
+  --link:      var(--ink-soft);
+  --sb-bg:     var(--panel-solid);
+  --sb-border: var(--border);
+
+  --r-sm: 6px;
+  --r-md: 12px;
+  --r-lg: 20px;
+  --r-xl: 28px;
+  --font-serif: var(--font-nunito), sans-serif;
+  --font-mono:  var(--font-nunito), sans-serif;
+  --font-sans:  var(--font-nunito), sans-serif;
+  /* The title face. Nunito at 700 — the weight the listening beacon already
+     sets a song title in — rather than the DM Serif Display this used to be.
+     One family carries the whole site now, so the step from body copy to a
+     title is a change of weight, not a change of voice.
+
+     The weight has to travel with the family: every title on the site was
+     written `font-weight: 400` because the old face shipped one weight and
+     400 was it. Left alone they'd all come back as regular Nunito and read
+     as body copy, so they ask for this token instead of a number. */
+  --font-display: var(--font-nunito), sans-serif;
+  --font-display-weight: 700;
+  --font-label:   var(--font-dm-mono), 'DM Mono', monospace;
+  --ease: 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+[data-theme='dark'] {
+  --bg:           #0e0e0e;
+  --bg-warm:      #161616;
+  --panel:        rgba(20, 20, 20, 0.45);
+  /* A touch more opaque than the light theme's: pale text on a dark panel
+     over bright album art is the harder of the two directions to hold. */
+  --panel-strong: rgba(18, 18, 18, 0.9);
+  --panel-solid:  #161616;
+  --panel-border: rgba(255, 255, 255, 0.08);
+  --ink:          #e8e4dc;
+  --ink-soft:     #888888;
+  --ink-faint:    #555555;
+  --accent:       #b5b2ab;
+  --border:       rgba(255, 255, 255, 0.08);
+  --shadow-soft:  0 2px 12px rgba(0,0,0,0.3), 0 8px 32px rgba(0,0,0,0.2);
+  --shadow-lift:  0 4px 20px rgba(0,0,0,0.4), 0 16px 48px rgba(0,0,0,0.3);
+
+  --accent-dk: #b8d8ff;
+  --sb-bg:     #111111;
+}
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+html { font-size: 100%; scroll-behavior: smooth; }
+
+body {
+  font-family: var(--font-sans);
+  font-size: 1.5rem;
+  line-height: 1.6;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100dvh;
+  transition: background var(--ease), color var(--ease);
+  margin: 0;
+  padding: 0;
+}
+
+a { color: inherit; text-decoration: none; }
+img { display: block; max-width: 100%; }
+button { cursor: pointer; background: none; border: none; font: inherit; color: inherit; }
+
+.layout { display: flex; min-height: 100dvh; }
+
+.main {
+  flex: 1;
+  margin-left: var(--sb-width);
+  padding: 4rem 3.2rem 6rem;
+  min-height: 100dvh;
+  transition: margin-left var(--ease);
+}
+
+@keyframes breathe {
+  0%, 100% { box-shadow: 0 0 0 rgba(124,255,155,0.4); }
+  50%       { box-shadow: 0 0 10px rgba(124,255,155,0.85); }
+}
+
+.tile { display: block; text-decoration: none; color: inherit; }
+
+::selection { background: rgba(200, 225, 255, 0.55); color: var(--text); }
+
+::-webkit-scrollbar { width: 6px; background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+
+@media (max-width: 768px) {
+          .main { margin-left: 0; padding: 7rem 1.8rem 4rem; }
+  }
+
+/* Gold explosion particles on click */
+.gold-particle {
+  position: fixed;
+  pointer-events: none;
+  font-size: 14px;
+  z-index: 9999;
+  animation: gold-explode var(--dur, 0.8s) ease-out forwards;
+}
+@keyframes gold-explode {
+  0%   { opacity: 1; transform: translate(0,0) scale(1) rotate(0deg); }
+  100% { opacity: 0; transform: translate(var(--gx), var(--gy)) scale(0.1) rotate(var(--gr, 180deg)); }
+}
+
+/* ── .ln-pill — the standard page-action button ───────────────────────────
+   One definition for the outlined pill that closes a page out: "All entries"
+   and "Back to top" at the foot of an album, "Back home" on Archive, About
+   and Compare. These were four near-copies of the same inline style that had
+   already drifted apart on font and size; this is the version they agree on.
+   Works as either a <Link> or a <button> — nothing here assumes which. */
+.ln-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 22px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink-soft);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+.ln-pill:hover {
+  color: var(--ink);
+  border-color: var(--ink-faint);
+}
+
+/* ── .ln-xref — a mention that turned out to be something you've logged ───
+   Applied at display time by library/cross_references.js, never stored in the
+   note. It has to sit inside running prose without breaking the line up, so
+   it borrows the text's own colour and carries only a faint underline —
+   readable as a link when you're looking for one, quiet when you're not.
+   [data-xref] says whether it landed on an album or an artist; nothing styles
+   on it yet, but the hook is there if the two should ever read differently. */
+.ln-xref {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.18em;
+  text-decoration-color: var(--ink-faint);
+  transition: color 0.15s, text-decoration-color 0.15s;
+}
+.ln-xref:hover {
+  color: var(--ink);
+  text-decoration-color: var(--ink);
+}
+
+/* iOS Safari zooms the whole page in whenever you focus a field whose text is
+   under 16px, which knocks the layout sideways and leaves you pinching back
+   out. Fields across the site set their size inline, and inline styles beat
+   the cascade, so this needs !important to land. Phones only — desktop keeps
+   the smaller type it was designed with. */
+@media (max-width: 768px) {
+  input,
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+}

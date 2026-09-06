@@ -1,0 +1,684 @@
+/* Copyright (C) 2026 Miyel Brown */
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+/* app/styles/forms.css
+   The pages that stand on their own, most of them forms: the send page and
+   its album finder, setup, settings, the password gate, compare, the key
+   page, and the add-to-home-screen step. */
+
+/* ── from app/submit/page.js ─────────────────────────────────────────── */
+/* One screen. The whole send is a cover, a message, a name and an
+   address, and there is no reason to make somebody scroll past the
+   record they are sending to reach the button that sends it.
+
+   min-height rather than height, and the sheet keeps its scrollbar:
+   this is laid out to fit and not forced to. A small phone, large
+   accessibility type, or the software keyboard shortening the viewport
+   all have to be able to overflow, because a form that fits by
+   clipping is a form with an unreachable Send button. */
+.sb-page {
+  min-height: 100dvh; background: var(--bg); color: var(--ink);
+  display: flex; flex-direction: column;
+  /* The same 80px the nav ends on everywhere else. */
+  --sb-nav-bottom: calc(80px + var(--safe-top));
+}
+/* On the layer the row is in the sheet's flow rather than fixed over
+   it — see .lay .sitenav-row in nav.css — so it has already taken
+   those 80px as real space, and the hero must not reserve them a
+   second time. The row is on both surfaces; only who is holding it up
+   differs. */
+.sb-page--layered { --sb-nav-bottom: 0px; }
+
+/* The same 860/48 box About uses, so the title, the rules and the
+   closing buttons land on the same left edge on both pages. */
+.sb-hero {
+  max-width: 860px; width: 100%; margin: 0 auto;
+  padding: calc(var(--sb-nav-bottom) + clamp(0px, 1dvh, 8px)) 48px clamp(6px, 1.4dvh, 12px);
+  text-align: center;
+}
+.sb-hero-line {
+  font-family: var(--font-label); font-size: 11px;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+/* Top, not centre. Centring looked right on the chosen state only
+   because that state happens to fill the screen — with nothing picked
+   the form is short, and centring it opened a band of empty page above
+   the first field that read as something missing. Aligned to the top,
+   the empty form sits up under the mark and the page grows downward as
+   a record and its title arrive. */
+.sb-main {
+  max-width: 860px; width: 100%; margin: 0 auto;
+  padding: 0 48px 16px;
+  flex: 1; min-height: 0;
+  display: flex; flex-direction: column; justify-content: flex-start;
+}
+/* Every vertical cost on this page gives way together on a short
+   window, so the Send button stays on screen instead of the page
+   quietly becoming two. Same idea as the square's clamp in
+   AlbumFinder, and the ceilings are the numbers the design was drawn
+   at — nothing is smaller than it was on a normal window. */
+.sb-fields { display: flex; flex-direction: column; gap: clamp(11px, 2.1dvh, 18px); }
+
+.sb-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+.sb-label {
+  display: block;
+  font-family: var(--font-label); font-size: 10px;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--ink-faint); margin-bottom: 7px;
+}
+/* Red, not the site's gold: gold is the rating colour everywhere else,
+   and a required-field mark is not a rating. */
+.sb-req { color: #e05555; }
+
+.sb-field {
+  display: block; width: 100%; box-sizing: border-box;
+  background: var(--panel);
+  border: 1px solid var(--border); border-radius: 10px;
+  color: var(--ink);
+  padding: 11px 13px;
+  font-family: var(--font-sans); font-size: 14px; line-height: 1.6;
+  outline: none; transition: border-color 0.15s;
+}
+.sb-field::placeholder { color: var(--ink-faint); }
+.sb-field:focus { border-color: var(--ink-faint); }
+textarea.sb-field--grows { overflow: hidden; }
+textarea.sb-field {
+  resize: none; line-height: 1.7;
+  min-height: clamp(72px, 11dvh, 96px);
+}
+
+/* ── The one rule that has to be 16px ────────────────────────────────
+   Safari zooms the page in when a field it is about to focus has type
+   smaller than 16px, and it does not reliably zoom back out on blur —
+   so you leave a field and the page is left scaled and offset, which
+   is worst at the bottom where there is nothing below to scroll to. It
+   reads as the layout breaking on exit.
+
+   16px is the whole fix. Not maximum-scale=1 on the viewport, which
+   also stops it and takes pinch-zoom away from everybody who needs it.
+   Scoped to coarse pointers so the design keeps its 14px wherever
+   there is a mouse and no zoom to trigger. */
+@media (pointer: coarse) {
+  .sb-field { font-size: 16px; }
+}
+
+.sb-error { font-size: 13px; color: #e05555; }
+
+.sb-send {
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 13px 40px; border-radius: 999px;
+  background: var(--ink); color: var(--bg); border: 1px solid var(--ink);
+  font-family: var(--font-mono); font-size: 10px;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  cursor: pointer; transition: opacity 0.18s;
+}
+.sb-send:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.sb-done {
+  background: var(--panel);
+  backdrop-filter: var(--card-blur); -webkit-backdrop-filter: var(--card-blur);
+  border: 1px solid var(--panel-border); border-radius: var(--r-lg);
+  box-shadow: var(--shadow-soft);
+  padding: 36px 28px; text-align: center;
+}
+.sb-done-title { font-family: var(--font-display); font-weight: var(--font-display-weight); font-size: 1.7rem; margin-bottom: 10px; }
+.sb-done-body { font-size: 14px; line-height: 1.8; color: var(--ink-soft); margin: 0; }
+
+@media (max-width: 768px) {
+  .sb-hero { padding: calc(var(--sb-nav-bottom) + 6px) 24px 12px; }
+  .sb-main { padding: 0 24px 20px; }
+  .sb-fields { gap: 15px; }
+  .sb-pair { grid-template-columns: 1fr; gap: 15px; }
+  textarea.sb-field { min-height: clamp(64px, 10dvh, 84px); }
+}
+
+/* ── from app/setup/page.js ─────────────────────────────────────────── */
+.su-page {
+  min-height: 100dvh; background: var(--bg); color: var(--ink);
+  display: flex; align-items: center; justify-content: center;
+  padding: 32px 24px;
+}
+.su-card { width: 100%; max-width: 380px; }
+.su-mark { line-height: 0; display: flex; justify-content: center; margin-bottom: 10px; }
+.su-logo { width: 78px; height: auto; display: block; fill: var(--ink); }
+.su-dot { fill: var(--ink); }
+.su-line {
+  font-family: var(--font-label); font-size: 10px;
+  letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--ink-faint); text-align: center; margin-bottom: 26px;
+}
+.su-count { display: block; margin-bottom: 6px; }
+/* The lights. Dots sit on a hairline track; the fill runs along the
+   track to the current dot. Both animate, so pressing Next is seen
+   as movement rather than as a different picture. */
+.su-lights {
+  position: relative; display: flex; justify-content: space-between; align-items: center;
+  margin: 0 auto 22px; width: 220px; height: 14px;
+}
+.su-track {
+  position: absolute; left: 3px; right: 3px; top: 50%; height: 1px;
+  background: var(--border); transform: translateY(-50%);
+}
+.su-fill {
+  display: block; height: 100%; background: var(--ink);
+  transition: width 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.su-light {
+  position: relative; width: 6px; height: 6px; border-radius: 50%;
+  background: var(--bg); border: 1px solid var(--ink-faint); box-sizing: border-box;
+  transition: background 0.3s, border-color 0.3s, transform 0.3s;
+}
+.su-light--past { background: var(--ink); border-color: var(--ink); }
+.su-light--current {
+  background: var(--ink); border-color: var(--ink); transform: scale(1.35);
+  box-shadow: 0 0 0 3px var(--bg), 0 0 0 4px var(--ink-faint);
+}
+@media (prefers-reduced-motion: reduce) {
+  .su-fill, .su-light { transition: none; }
+}
+.su-fields { display: flex; flex-direction: column; gap: 18px; }
+.su-label {
+  display: block; font-family: var(--font-label); font-size: 10px;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--ink-faint); margin-bottom: 6px;
+}
+.su-hint {
+  font-family: var(--font-label); font-size: 10px;
+  color: var(--ink-faint); margin-top: 6px; line-height: 1.5;
+}
+.su-why {
+  font-size: 13px; line-height: 1.65; color: var(--ink-soft); margin: 0 0 4px;
+}
+.su-why a { color: var(--ink); }
+.su-field {
+  display: block; width: 100%; box-sizing: border-box;
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: 10px; color: var(--ink); padding: 11px 13px;
+  font-family: var(--font-sans); font-size: 14px; line-height: 1.6;
+  outline: none; transition: border-color 0.15s;
+}
+.su-field:focus { border-color: var(--ink-faint); }
+.su-field::placeholder { color: var(--ink-faint); }
+.su-who { background: none; border-color: transparent; padding-left: 0; color: var(--ink-faint); font-family: var(--font-label); font-size: 12px; letter-spacing: 0.08em; }
+textarea.su-field { resize: vertical; min-height: 64px; }
+/* The prompt rows borrow the About pane's classes; this is only the
+   frame around the three of them, so they sit on the card's panel
+   stock like the other fields do. */
+.su-prompts {
+  background: var(--panel); border: 1px solid var(--border);
+  border-radius: 10px; padding: 2px 13px;
+}
+.su-prompts .ab-prompt-input { font-size: 14px; }
+@media (pointer: coarse) { .su-prompts .ab-prompt-input { font-size: 16px; } }
+/* 16px on touch or Safari zooms in on focus and does not zoom back. */
+@media (pointer: coarse) { .su-field { font-size: 16px; } }
+.su-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.su-row { display: flex; flex-direction: column; gap: 8px; }
+.su-add {
+  align-self: flex-start; background: none; border: 0; padding: 0;
+  font-family: var(--font-label); font-size: 10px; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--ink-faint); cursor: pointer;
+}
+.su-add:hover { color: var(--ink); }
+.su-go {
+  margin-top: 26px; width: 100%;
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 13px 0; border-radius: 999px;
+  background: var(--ink); color: var(--bg); border: 1px solid var(--ink);
+  font-family: var(--font-mono); font-size: 10px;
+  letter-spacing: 0.14em; text-transform: uppercase; cursor: pointer;
+}
+.su-go:disabled { opacity: 0.5; cursor: not-allowed; }
+.su-under { display: flex; justify-content: space-between; margin-top: 14px; }
+.su-skip, .su-back {
+  background: none; border: 0; padding: 0; cursor: pointer;
+  font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--ink-faint);
+  border-bottom: 1px solid var(--border);
+}
+.su-skip:hover, .su-back:hover { color: var(--ink-soft); }
+.su-skip:disabled, .su-back:disabled { opacity: 0.4; cursor: default; }
+.su-error { font-size: 13px; color: #e05555; margin-top: 14px; }
+.su-photo {
+  width: 132px; height: 132px; border-radius: 26px; margin: 0 auto 4px;
+  background: var(--panel); border: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: center; overflow: hidden;
+  cursor: pointer;
+}
+.su-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.su-photo span {
+  font-family: var(--font-label); font-size: 10px; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--ink-faint);
+}
+.su-file { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+
+/* ── from app/settings/page.js ─────────────────────────────────────────── */
+.st-page { min-height: 100dvh; background: var(--bg); color: var(--ink); padding-top: calc(80px + var(--safe-top)); }
+.st-main { max-width: 560px; margin: 0 auto; padding: 40px 24px 120px; }
+.st-title { font-family: var(--font-display); font-weight: var(--font-display-weight, 700); font-size: 28px; margin: 0 0 4px; letter-spacing: -0.01em; }
+.st-kicker {
+  font-family: var(--font-label); font-size: 10px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--ink-faint); margin: 0 0 36px;
+}
+.st-section { padding: 26px 0; border-top: 1px solid var(--border); display: flex; flex-direction: column; gap: 14px; }
+.st-h { font-family: var(--font-label); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-faint); margin: 0; }
+.st-note { font-size: 13px; line-height: 1.65; color: var(--ink-soft); margin: 0; }
+.st-note a { color: var(--ink); }
+.st-label {
+  display: block; font-family: var(--font-label); font-size: 10px;
+  letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 6px;
+}
+.st-status { font-family: var(--font-label); font-size: 10px; color: var(--ink-faint); margin: 0 0 8px; line-height: 1.5; }
+.st-field {
+  display: block; width: 100%; box-sizing: border-box;
+  background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+  color: var(--ink); padding: 10px 13px; font-family: var(--font-sans); font-size: 14px; line-height: 1.6; outline: none;
+}
+.st-field:focus { border-color: var(--ink-faint); }
+.st-field::placeholder { color: var(--ink-faint); }
+.st-who { background: none; border-color: transparent; padding-left: 0; color: var(--ink-faint); font-family: var(--font-label); font-size: 12px; letter-spacing: 0.08em; }
+textarea.st-field { resize: vertical; min-height: 96px; }
+@media (pointer: coarse) { .st-field { font-size: 16px; } }
+.st-foot { display: flex; align-items: center; gap: 14px; margin-top: 4px; }
+.st-save {
+  display: inline-flex; align-items: center; padding: 9px 18px; border-radius: 999px;
+  background: var(--ink); color: var(--bg); border: 1px solid var(--ink);
+  font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; cursor: pointer;
+}
+.st-save:disabled { opacity: 0.5; cursor: default; }
+.st-said, .st-trouble { font-family: var(--font-label); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; }
+.st-said { color: var(--ink-faint); }
+.st-trouble { color: #e05555; }
+.st-clear {
+  background: none; border: 0; padding: 0; cursor: pointer; margin-left: 10px;
+  font-family: var(--font-label); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--ink-faint); border-bottom: 1px solid var(--border);
+}
+.st-clear:hover { color: var(--ink-soft); }
+.st-section--out { align-items: flex-start; }
+.st-section--out .st-clear { margin-left: 0; }
+
+/* ── from app/compare/page.js ─────────────────────────────────────────── */
+/* The nav is fixed and ends on 80px everywhere; About and Submit
+   both clear it by the same 44px, so this page keeps their rhythm
+   rather than inventing a number by eye. */
+.cmp-wrap {
+  --cmp-nav-bottom: calc(80px + var(--safe-top));
+  max-width: 860px; margin: 0 auto;
+  padding: calc(var(--cmp-nav-bottom) + 44px) 48px 120px;
+}
+@media (max-width: 640px) {
+  .cmp-wrap { padding: calc(var(--cmp-nav-bottom) + 24px) 24px 100px; }
+}
+.cmp-form { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-bottom: 8px; }
+.cmp-input {
+  flex: 1; min-width: 240px; max-width: 420px;
+  padding: 11px 18px; border-radius: 999px;
+  border: 1px solid var(--border); background: var(--panel);
+  color: var(--ink); font-family: var(--font-mono); font-size: 12px;
+  outline: none; text-align: center;
+}
+.cmp-input:focus { border-color: var(--ink-faint); }
+.cmp-label {
+  font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--ink-faint);
+}
+.cmp-group { margin-top: 42px; }
+.cmp-group-head {
+  display: flex; align-items: baseline; gap: 10px;
+  padding-bottom: 10px; border-bottom: 1px solid var(--border); margin-bottom: 6px;
+}
+.cmp-group-title { font-family: var(--font-display); font-weight: var(--font-display-weight); font-size: 19px; }
+.cmp-row {
+  display: flex; align-items: center; gap: 14px;
+  padding: 10px 4px; border-bottom: 1px solid var(--border);
+  text-decoration: none; color: inherit;
+}
+.cmp-row:last-child { border-bottom: none; }
+.cmp-art { width: 42px; height: 42px; border-radius: 6px; object-fit: cover; flex-shrink: 0; display: block; }
+/* These are spans inside a span, so they need telling to stack —
+   left inline, the album title and the artist run together on one
+   line with no space between them. */
+.cmp-meta { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.cmp-album { display: block; font-weight: 700; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cmp-artist { display: block; font-size: 12px; color: var(--ink-soft); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.cmp-scores {
+  font-family: var(--font-mono); font-size: 12px; color: var(--ink-soft);
+  flex-shrink: 0; font-variant-numeric: tabular-nums; text-align: right;
+}
+.cmp-gap { color: var(--ink-faint); font-size: 10px; letter-spacing: 0.08em; }
+.cmp-empty { color: var(--ink-faint); font-size: 13px; padding: 10px 4px; }
+
+/* ── from app/key/page.js ─────────────────────────────────────────── */
+.pp-page { --pp-nav-bottom: calc(80px + var(--safe-top)); padding-top: var(--pp-nav-bottom); }
+.pp-main { max-width: 860px; margin: 0 auto; padding: 46px 48px 100px; }
+.pp-title {
+  font-family: var(--font-display); font-weight: var(--font-display-weight);
+  font-size: 30px; letter-spacing: -0.015em; color: var(--ink);
+  margin: 0 0 8px;
+}
+.pp-kicker {
+  font-family: var(--font-label); font-size: 10px;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--ink-faint); margin: 0 0 34px;
+}
+.pp-prose { font-size: 15px; line-height: 1.95; color: var(--ink); }
+.pp-prose p { margin: 0 0 22px; }
+.pp-prose p:last-child { margin-bottom: 0; }
+.pp-subhead {
+  font-family: var(--font-display); font-weight: var(--font-display-weight);
+  font-size: 20px; letter-spacing: -0.01em; color: var(--ink);
+  margin: 0 0 12px;
+}
+.pp-block + .pp-block { margin-top: 48px; }
+.pp-row { border-bottom: 1px solid var(--border); padding: 14px 0; }
+.pp-row-head { display: flex; align-items: center; gap: 12px; min-height: 20px; }
+.pp-row-tail {
+  margin-left: auto; flex-shrink: 0;
+  font-family: var(--font-label); font-size: 10px;
+  letter-spacing: 0.08em; color: var(--ink-faint);
+}
+.pp-row-body {
+  font-size: 13px; line-height: 1.8; color: var(--ink-soft);
+  margin: 8px 0 0;
+}
+.pp-name { font-size: 13px; color: var(--ink); }
+a.pp-name {
+  display: inline-flex; align-items: center; gap: 6px;
+  border-bottom: 1px solid var(--border); padding-bottom: 1px;
+}
+a.pp-name:hover { border-bottom-color: var(--ink-faint); }
+a.pp-name svg { color: var(--ink-faint); transition: color 0.15s; }
+a.pp-name:hover svg { color: var(--ink); }
+.pp-foot {
+  margin-top: 48px; padding-top: 28px; border-top: 1px solid var(--border);
+  display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap;
+}
+@media (max-width: 768px) {
+  .pp-main { padding: 34px 24px 80px; }
+  .pp-title { font-size: 25px; }
+}
+
+/* ── from components/session_components/PasswordGate.js ─────────────────────────────────────────── */
+.pg-form { display: flex; flex-direction: column; gap: 12px; }
+/* The journal's address, as the thing the password is filed
+   under. A real input rather than a label, because that is what
+   a password manager pairs the password with — and visible,
+   because managers ignore fields they consider hidden, and not
+   read-only, because Safari skips those too. Typing into it does
+   nothing; it is the address. */
+.pg-who {
+  width: 100%; box-sizing: border-box; text-align: center;
+  background: none; border: 0; outline: none; padding: 0;
+  font-family: var(--font-label); font-size: 10px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--ink-faint);
+}
+.pg-pw {
+  width: 100%; box-sizing: border-box; text-align: center;
+  background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
+  padding: 12px 16px; font-family: var(--font-mono); font-size: 16px;
+  color: var(--ink); outline: none; transition: border-color 0.15s;
+}
+.pg-pw:focus { border-color: var(--ink-faint); }
+.pg-pw::placeholder { color: var(--ink-faint); }
+.pg-pw--wrong { border-color: #e05555; }
+.pg-said { font-family: var(--font-label); font-size: 10px; color: #e05555; line-height: 1.5; text-align: center; }
+.pg-go {
+  width: 100%; padding: 12px 0; border-radius: 999px; cursor: pointer;
+  background: var(--ink); color: var(--bg); border: 1px solid var(--ink);
+  font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.pg-go:disabled { opacity: 0.5; cursor: default; }
+
+/* ── from components/main_components/AddToHomeScreen.js ─────────────────────────────────────────── */
+.a2h { display: flex; flex-direction: column; gap: 14px; }
+.a2h-row { display: flex; align-items: center; gap: 14px; }
+.a2h--centered .a2h-row { justify-content: center; }
+.a2h--centered .a2h-why { text-align: center; }
+.a2h-icon {
+  width: 56px; height: 56px; border-radius: 13px; overflow: hidden; flex: none;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.18);
+}
+.a2h-icon img { width: 100%; height: 100%; display: block; }
+.a2h-name { font-size: 14px; color: var(--ink); }
+.a2h-why { font-size: 13px; line-height: 1.65; color: var(--ink-soft); margin: 0; }
+.a2h-steps { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.a2h-steps li {
+  font-size: 13px; line-height: 1.6; color: var(--ink);
+  display: flex; gap: 10px; align-items: baseline;
+}
+.a2h-steps li::before {
+  content: counter(a2h) '.'; counter-increment: a2h;
+  font-family: var(--font-label); font-size: 10px; color: var(--ink-faint);
+}
+.a2h-steps { counter-reset: a2h; }
+.a2h-steps svg { width: 14px; height: 14px; vertical-align: -2px; margin: 0 2px; }
+.a2h-go {
+  align-self: flex-start; display: inline-flex; align-items: center;
+  padding: 11px 20px; border-radius: 999px;
+  background: var(--ink); color: var(--bg); border: 1px solid var(--ink);
+  font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em;
+  text-transform: uppercase; cursor: pointer;
+}
+.a2h-done { font-family: var(--font-label); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint); }
+
+/* ── from components/main_components/AlbumFinder.js ─────────────────────────────────────────── */
+/* One measurement for all three states, so the sleeve, the shelf and the
+   chosen record are the same size in the same place and nothing moves
+   when one becomes another.
+
+   180px is the beacon's square and the ceiling here, not a constant. The
+   beacon has a screen to itself; this one shares with a message, a name
+   and an address, and the whole page has to fit without scrolling — so
+   on a short window it gives way first, which is the same trade
+   --hn-crown makes with clamp(150px, 28dvh, 248px) a screen away. */
+.af {
+  --af-square: clamp(116px, 21dvh, 180px);
+  display: flex; flex-direction: column;
+  gap: clamp(10px, 1.8dvh, 16px);
+}
+
+.af-square {
+  width: var(--af-square); aspect-ratio: 1;
+  border-radius: 18px; overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+}
+.af-none { font-size: 2.2rem; color: var(--ink-faint); line-height: 1; }
+
+/* The slot holds whichever of the three is true, at a fixed height, so
+   the field under it never moves. */
+.af-slot {
+  display: flex; align-items: center; justify-content: center;
+  min-height: var(--af-square);
+}
+
+/* Waiting. Flat and unshadowed, because it is not an object yet — the
+   shadow arrives with the record. */
+.af-sleeve {
+  background: var(--panel);
+  border: 1px solid var(--border);
+}
+
+/* ── The chooser ──────────────────────────────────────────────────────
+   A panel over the whole layer: the field at its head, the wall under
+   it, scrolling. Fixed to the layer rather than the page, because the
+   layer is what the send page is drawn on. */
+.af-chooser {
+  position: fixed; inset: 0; z-index: 240;
+  background: var(--bg);
+  display: flex; flex-direction: column;
+  animation: afChooserIn 0.22s ease-out;
+}
+@keyframes afChooserIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .af-chooser { animation: none; } }
+/* Clears the whole status area, not the site's header line. The site
+   runs its mark under the clock on purpose (see --safe-top); a field
+   under the clock is a field you cannot read what you typed into. */
+.af-chooser-head {
+  display: flex; align-items: center; gap: 8px;
+  padding: calc(env(safe-area-inset-top, 0px) + 18px) 16px 10px;
+  flex: none;
+}
+.af-chooser-head .af-input { flex: 1; }
+.af-chooser-back {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 36px; height: 36px; border-radius: 10px; flex: none;
+  background: transparent; border: 0; color: var(--ink-faint); cursor: pointer;
+}
+.af-chooser-back:hover { color: var(--ink); background: var(--bg-warm); }
+.af-chooser-body {
+  flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  padding: 0 16px max(24px, env(safe-area-inset-bottom));
+}
+.af-chooser-body .af-under { margin-top: 14px; }
+
+/* ── The wall ─────────────────────────────────────────────────────────
+   Results as a wall of covers under the field, two across on a phone
+   and three on a wider window, newest first. It was a shelf scrolling
+   sideways for a while, then rows for an hour; the wall is what the
+   keeper asked for — the covers are how you recognise a record, and a
+   wall is how the journal itself shows them. It scrolls with the sheet,
+   and it can be as tall as the results make it, because the rest of
+   the form only appears once a record has been picked. */
+.af-wall {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px; width: 100%; margin-top: 4px;
+}
+@media (min-width: 640px) { .af-wall { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+
+.af-cover {
+  display: flex; flex-direction: column; gap: 2px; min-width: 0;
+  background: none; border: none; padding: 0;
+  text-align: left; cursor: pointer; color: inherit;
+}
+.af-cover-art {
+  display: block; width: 100%; aspect-ratio: 1;
+  border-radius: 6px; overflow: hidden; background: var(--panel);
+  margin-bottom: 5px;
+  box-shadow: 0 4px 18px rgba(0,0,0,0.18);
+  transition: transform 0.2s cubic-bezier(0.34,1.2,0.64,1);
+}
+.af-cover-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.af-cover:hover .af-cover-art { transform: scale(1.05); }
+.af-cover-album {
+  font-family: var(--font-nunito), sans-serif; font-weight: 600; font-size: 11px;
+  line-height: 1.25; color: var(--ink);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.af-cover-artist {
+  font-family: var(--font-mono); font-size: 9px; color: var(--ink-faint);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
+/* The same frosted recipe every other input on the site uses — the
+   archive's search field is this. */
+.af-input {
+  display: block; width: 100%; box-sizing: border-box;
+  background: var(--panel);
+  border: 1px solid var(--border); border-radius: 10px;
+  color: var(--ink);
+  padding: 11px 13px;
+  font-family: var(--font-nunito), sans-serif; font-size: 14px; line-height: 1.6;
+  outline: none; transition: border-color 0.15s;
+}
+.af-input::placeholder { color: var(--ink-faint); }
+.af-input:focus { border-color: var(--ink-faint); }
+/* 16px on touch, or Safari zooms the page in on focus and does not
+   reliably zoom back out. See the longer note in app/submit/page.js. */
+@media (pointer: coarse) {
+  .af-input { font-size: 16px; }
+}
+
+/* One line under the field, holding its height whether or not anything
+   is being said in it, so the form below does not shuffle as a search
+   starts and finishes. */
+.af-under {
+  display: flex; align-items: baseline; gap: 14px;
+  min-height: 1.2em;
+}
+.af-word {
+  font-family: var(--font-label); font-size: 10px;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.af-sub {
+  display: block;
+  font-family: var(--font-label); font-size: 10px;
+  letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--ink-faint); margin-bottom: 7px;
+}
+
+/* Chosen. Every number below is .beacon-card's, copied rather than
+   referenced because the beacon's classes belong to the beacon — but if
+   one of them moves, this is the thing it has to keep agreeing with. */
+.af-held {
+  display: flex; flex-direction: column; align-items: center;
+  gap: clamp(14px, 3.2dvh, 28px);
+}
+.af-held-frame { position: relative; display: block; }
+.af-held-art {
+  background: var(--panel);
+  box-shadow: 0 18px 44px rgba(0,0,0,0.16);
+}
+.af-held-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* On the corner, half on the record and half off it, so it reads as
+   attached to the thing rather than printed on the cover. Same fill and
+   rule as the About card's own badges — it is the same kind of small
+   control parked on the corner of a square. */
+.af-clear {
+  position: absolute; top: -8px; right: -8px;
+  display: flex; align-items: center; justify-content: center;
+  width: 24px; height: 24px; border-radius: 50%;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--ink-faint);
+  cursor: pointer; padding: 0;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+  transition: color 0.15s, border-color 0.15s;
+}
+.af-clear:hover { color: var(--ink); border-color: var(--ink-faint); }
+.af-clear:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 2px; }
+
+.af-held-meta {
+  display: flex; flex-direction: column; align-items: center;
+  gap: clamp(5px, 1.2dvh, 10px); text-align: center; width: 100%; min-width: 0;
+}
+/* --text and --text-muted are what the beacon names these, and both are
+   aliases of --ink and --ink-soft. Written as the ink tokens because
+   that is what the rest of this page uses. */
+.af-held-album {
+  font-family: var(--font-nunito), sans-serif; font-weight: 700;
+  font-size: clamp(1.15rem, 2.6dvh, 1.5rem); line-height: 1.15; color: var(--ink);
+  text-wrap: balance;
+}
+.af-held-artist {
+  font-family: var(--font-nunito), sans-serif; font-size: 0.85rem;
+  letter-spacing: 0.08em; color: var(--ink-soft);
+}
+
+.af-quiet {
+  background: none; border: none; padding: 0; cursor: pointer;
+  font-family: var(--font-mono); font-size: 10px;
+  letter-spacing: 0.08em; color: var(--ink-faint);
+  border-bottom: 1px solid var(--border);
+  transition: color 0.15s;
+  margin-left: auto;
+}
+.af-quiet:hover { color: var(--ink-soft); }
+
+.af-hand { display: flex; flex-direction: column; gap: 16px; }
+.af-hand-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.af-hand-field--year { max-width: 150px; }
+.af-hand-row { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+.af-hand .af-quiet { margin-left: 0; }
+
+@media (max-width: 768px) {
+  .af { --af-square: min(140px, 19dvh); }
+  .af-square { border-radius: 15px; }
+  .af-hand-pair { grid-template-columns: 1fr; }
+}

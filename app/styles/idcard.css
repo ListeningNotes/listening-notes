@@ -1,0 +1,951 @@
+/* Copyright (C) 2026 Miyel Brown */
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+/* app/styles/idcard.css
+   The identity card, its editor, and the writing under it on the About pane —
+   the pin's search, the prompts and the answering of them. */
+
+/* ── Left: About ────────────────────────────────────────────────────────── */
+.ab-pane { display: flex; flex-direction: column; }
+
+/* ── The pin's search ───────────────────────────────────────────────────────
+   A panel in the middle of a desktop screen and a bottom sheet on a phone,
+   which is the arrangement the archive's filters already use. It is the same
+   idea in the same house, so it is the same object — see .arc-sheet in
+   Journal.js, which states this for itself because it is scoped to that
+   component. */
+.ab-pin-scrim {
+  position: fixed; inset: 0; z-index: 150;
+  background: rgba(0, 0, 0, 0.28);
+  animation: abPinFade 0.18s ease;
+}
+@keyframes abPinFade { from { opacity: 0; } to { opacity: 1; } }
+.ab-pin-sheet {
+  position: fixed; z-index: 151;
+  top: 50%; left: 50%; transform: translate(-50%, -50%);
+  width: min(420px, calc(100vw - 48px));
+  max-height: min(70vh, 560px);
+  display: flex; flex-direction: column; gap: 12px;
+  padding: 16px;
+  /* Opaque, where every other panel on the site is frosted. Those sit over
+     album art, where 14% of a blurred cover showing through is texture; this
+     one sits over the card, and 14% of a portrait and a name showing through
+     forty album titles is a list you cannot read. Tried it frosted first and
+     it was unusable. */
+  background: var(--bg);
+  border: 1px solid var(--panel-border);
+  border-radius: 16px;
+  box-shadow: var(--shadow-lift);
+  animation: abPinPop 0.18s ease;
+}
+@keyframes abPinPop {
+  from { opacity: 0; transform: translate(-50%, calc(-50% + 8px)); }
+  to   { opacity: 1; transform: translate(-50%, -50%); }
+}
+.ab-pin-search {
+  display: flex; align-items: center; gap: 8px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+  color: var(--ink-faint);
+}
+.ab-pin-field {
+  flex: 1; min-width: 0;
+  border: 0; background: transparent; outline: none;
+  font-family: var(--font-label); font-size: 13px;
+  color: var(--ink);
+}
+.ab-pin-field::placeholder { color: var(--ink-faint); }
+/* The list scrolls, the sheet does not. A sheet that scrolls as a whole takes
+   the search field away with it exactly when somebody wants to narrow the
+   list further. */
+.ab-pin-list {
+  flex: 1; min-height: 0;
+  overflow-y: auto; overscroll-behavior: contain;
+  display: flex; flex-direction: column; gap: 2px;
+}
+.ab-pin-hit {
+  display: flex; align-items: center; gap: 10px;
+  width: 100%; padding: 6px; border: 0; border-radius: 10px;
+  background: transparent; color: var(--ink);
+  text-align: left; cursor: pointer;
+  transition: background 0.14s;
+}
+.ab-pin-hit:hover { background: var(--bg-warm); }
+.ab-pin-hit--on { background: var(--bg-warm); }
+.ab-pin-hit-art {
+  display: flex; align-items: center; justify-content: center;
+  width: 40px; height: 40px; flex-shrink: 0;
+  border-radius: 8px; overflow: hidden;
+  background: var(--bg-warm); color: var(--ink-faint);
+}
+.ab-pin-hit-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ab-pin-hit-said { display: flex; flex-direction: column; gap: 1px; min-width: 0; flex: 1; }
+.ab-pin-hit-album,
+.ab-pin-hit-artist { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ab-pin-hit-album { font-size: 13px; line-height: 1.3; }
+.ab-pin-hit-artist { font-size: 11px; line-height: 1.3; color: var(--ink-faint); }
+.ab-pin-empty {
+  margin: 12px 0; text-align: center;
+  font-family: var(--font-label); font-size: 11px; color: var(--ink-faint);
+}
+.ab-pin-foot { display: flex; gap: 8px; justify-content: center; }
+
+@media (max-width: 768px) {
+  /* A panel in the middle is a desktop idiom; on a phone it wants to be under
+     the thumb. */
+  .ab-pin-sheet {
+    top: auto; left: 0; right: 0;
+    transform: none; width: auto;
+    /* Both of these are written by About.js from visualViewport while the
+       sheet is open — how much of the bottom the keyboard is covering, and how
+       much screen is left above it. The fallbacks are the no-keyboard case and
+       are what a browser without visualViewport gets. */
+    bottom: var(--ab-pin-lift, 0px);
+    max-height: calc(min(var(--ab-pin-room, 100dvh), 100dvh) - 72px);
+    border-radius: 20px 20px 0 0; border-bottom: none;
+    padding: 16px 20px calc(16px + env(safe-area-inset-bottom));
+    animation: abPinSlide 0.22s ease;
+  }
+  @keyframes abPinSlide { from { transform: translateY(100%); } to { transform: none; } }
+}
+.ab-card {
+  min-height: calc(100dvh - var(--hn-crown));
+  box-sizing: border-box;
+  display: flex;
+  /* flex-start, not centre. The card leads with the portrait now, and the
+     portrait has to sit directly under the crown to land on the same line as
+     the beacon's album art one pane over. Centred, it drifted by however much
+     shorter than a screen the card happened to be. */
+  align-items: flex-start;
+  justify-content: center;
+  padding: 0 16px 84px;
+}
+/* The card stops carrying its own scrollbar. It had one because it used to be
+   a fixed-size object on a pane that did not scroll; the pane scrolls now, and
+   a scroller inside a scroller means dragging over the card cannot move the
+   page under it. */
+.ab-card .idc {
+  height: auto;
+  max-height: none;
+  /* 340 elsewhere. Twenty pixels narrower is not a change anybody reads as a
+     change, and it is what puts clear air between the card's edge and the
+     caret sitting on the edge of the window. */
+  max-width: 320px;
+}
+/* The mark, once. The bar across the top of the cross carries it on every
+   pane now, and a card printed with the same mark 130px below it reads as a
+   mistake rather than as a colophon. The head keeps its height and its tools:
+   only the logo goes, and the row is pushed right so the owner's edit controls
+   stay in the corner they have always been in. */
+/* The owner's controls, pinned to the window opposite the lights rather than
+   to the corner of the card. Two controls that belong to the page rather than
+   to anything on it, one at each end of the same line — and the pencil stops
+   travelling up the screen with the card as the pane scrolls.
+   Fixed, so it also stops taking a row in the card's column: left in the flow
+   it put 44px of air between the crown and the portrait, which is 44px of
+   drift against the album art on the pane beside it. */
+.ab-card .idc-head {
+  position: fixed;
+  top: max(12px, calc(env(safe-area-inset-top) - 12px));
+  left: 16px;
+  right: auto;
+  min-height: 0;
+  margin: 0;
+  z-index: 97;
+}
+.ab-card .idc-mark { display: none; }
+/* The portrait's own margin becomes the shared offset, so the two squares
+   cannot drift apart by somebody editing one of them. */
+.ab-card .idc-portrait { margin-top: var(--hn-square-top); }
+.ab-card .idc-inner {
+  flex: none;
+  min-height: 0;
+  overflow: visible;
+}
+.ab-card .idc-inner--more {
+  mask-image: none;
+  -webkit-mask-image: none;
+}
+
+/* The link and rig editors moved down here from the card and kept their
+   classes, which are styled in IdentityCard's own stylesheet — hoisted to the
+   head, so they still apply. What did not follow them is --idc-rule, which is
+   declared on .idc: the fields use it for their underline, and outside the
+   card it resolved to nothing. Restated here rather than migrated, because the
+   rules belong to the card's design and this is only where two of them are
+   currently standing. */
+.ab-below { --idc-rule: color-mix(in srgb, var(--ink) 15%, transparent); }
+/* Full measure, not the card's 300px column: down here they have the width of
+   the reading and a 300px island centred in it reads as a leftover. */
+.ab-below .idc-links { max-width: none; margin: 0; }
+
+.ab-below {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  padding: 8px var(--hn-gutter) max(40px, env(safe-area-inset-bottom));
+  box-sizing: border-box;
+}
+.ab-block { display: flex; flex-direction: column; gap: 12px; }
+.ab-subhead {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-family: var(--font-label);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin: 0;
+}
+/* ── The prompts ────────────────────────────────────────────────────────────
+   An opening and its answer on one line, because they are one sentence. The
+   opening is quiet and the answer carries the ink: the interesting half is
+   what somebody said, and a prompt set at the same weight as its answer reads
+   as a form rather than as a person talking. */
+.ab-block--prompts { gap: 0; }
+.ab-prompt {
+  margin: 0;
+  padding: 13px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 15px;
+  line-height: 1.6;
+  /* balance, so a two-line answer breaks somewhere sensible rather than
+     leaving one word under the opening. */
+  text-wrap: pretty;
+}
+.ab-prompt:last-child { border-bottom: none; }
+.ab-prompt-ask { color: var(--ink-faint); }
+.ab-prompt-said { color: var(--ink); }
+
+/* ── Answering them ─────────────────────────────────────────────────────────
+   The opening on its own line above the answer while editing, rather than
+   inline as it prints. Inline, the select and the input are two controls
+   sharing a line and neither has room; stacked, each is the width of the pane
+   and the pair still reads top to bottom in the order the sentence does. */
+.ab-prompt-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 13px 0;
+  border-bottom: 1px solid var(--border);
+}
+.ab-prompt-edit:last-child { border-bottom: none; }
+/* The opening, as a control. Not a native select: the system draws its own
+   grey bevelled box, and on a site made of rules and type it is the only thing
+   on the page with chrome. This is the card's mark chooser said in words —
+   press the line, the list opens under it, press a line to take it. */
+.ab-prompt-pick {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 1.5;
+  text-align: left;
+  color: var(--ink-faint);
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+.ab-prompt-pick > span { flex: 1; min-width: 0; }
+.ab-prompt-pick svg { flex-shrink: 0; opacity: 0.5; transition: transform 0.2s ease; }
+.ab-prompt-pick:hover, .ab-prompt-pick--on { color: var(--ink-soft); }
+.ab-prompt-pick--on svg { transform: rotate(180deg); opacity: 0.9; }
+.ab-prompt-pick:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 4px; }
+/* An empty slot says so in the same weight as an answered one says its
+   opening, so three slots read as three lines rather than as one filled row
+   and two gaps. */
+.ab-prompt-none { color: var(--ink-faint); font-style: italic; }
+
+/* The list. Same stock as the card's mark chooser — a warm panel, a hairline
+   rule, ten pixels of radius — because it is the same gesture in a different
+   shape and two chooser styles on one page is two answers to one question. */
+.ab-prompt-menu {
+  display: flex;
+  flex-direction: column;
+  margin-top: 8px;
+  padding: 6px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg-warm);
+}
+.ab-prompt-opt {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 9px 10px;
+  border: 1px solid transparent;
+  border-radius: 7px;
+  background: transparent;
+  font-family: inherit;
+  font-size: 13px;
+  line-height: 1.45;
+  text-align: left;
+  color: var(--ink-soft);
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+}
+.ab-prompt-opt > span:first-child { flex: 1; min-width: 0; }
+.ab-prompt-opt:hover { color: var(--ink); background: var(--bg); }
+.ab-prompt-opt--on {
+  color: var(--ink);
+  background: var(--bg);
+  border-color: var(--ink-faint);
+}
+.ab-prompt-opt--taken { color: var(--ink-faint); }
+/* Marked rather than disabled: taking one that is already in another slot
+   swaps the two, which is a move somebody is allowed to make and should be
+   told about first. */
+.ab-prompt-taken {
+  flex-shrink: 0;
+  font-family: var(--font-label);
+  font-size: 8px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  opacity: 0.8;
+}
+
+.ab-prompt-input {
+  display: block;
+  width: 100%;
+  border: 0;
+  border-bottom: 1px solid var(--border);
+  padding: 0 0 4px;
+  background: transparent;
+  font-family: inherit;
+  font-size: 15px;
+  /* The leading the answer prints at, so the box is the shape of the sentence
+     rather than the shape of a form field. */
+  line-height: 1.6;
+  color: var(--ink);
+  /* It grows in script instead — see grow() in About.js. resize would put a
+     drag handle in the corner of a sentence. */
+  resize: none;
+  overflow: hidden;
+}
+.ab-prompt-input:focus { outline: none; border-bottom-color: var(--ink-faint); }
+.ab-prompt-input::placeholder { color: var(--ink-faint); }
+/* An answer with no opening chosen is a line nobody asked for. */
+.ab-prompt-input:disabled { border-bottom-color: transparent; }
+/* base.css pushes every field on a phone to 16px with !important, to stop
+   iOS zooming the page in on focus. That is the right rule everywhere it is
+   not being fought — and here it is: the answer would set a pixel larger than
+   the line it becomes the moment you save, so the sentence changes size when
+   you stop typing it. The editor holds the page still for the length of an
+   edit instead (see holdZoom in IdentificationCardEditor.js), which is what
+   lets this keep its own type — the same trade the card's own fields make. */
+@media (max-width: 768px) {
+  .ab-prompt-input { font-size: 15px !important; }
+}
+.ab-rig { display: flex; flex-direction: column; }
+/* Rows, the same shape as a tracklist: the thing's name reads left and what it
+   is reads right. */
+.ab-rig-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--border);
+}
+.ab-rig-row:last-child { border-bottom: none; }
+.ab-rig-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: var(--ink);
+  font-size: 0.95rem;
+  text-decoration: none;
+}
+a.ab-rig-name:hover { text-decoration: underline; }
+.ab-rig-role {
+  flex-shrink: 0;
+  font-family: var(--font-label);
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+/* Where else this person can be found, at the foot of the reading rather than
+   in the row beside "Send an album" — having read about somebody, you might
+   want to go and find them. Three at most; see LINK_LIMIT in About.js. */
+/* Centred under a centred heading. The rig's rows fill the measure so a
+   centred heading sits over a full-width list; one or two marks ranged left
+   under the same heading just looked dropped. */
+.ab-links { display: flex; gap: 20px; align-items: center; justify-content: center; }
+.ab-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--ink-faint);
+  transition: color 0.18s ease;
+}
+.ab-link:hover { color: var(--ink); }
+/* Moved to the pitch pane — see .pt-source, and the note in Pitch.js about why
+   it has to sit on a public pane rather than behind the wristband. */
+
+/* ── from components/main_components/IdentityCard.js ─────────────────────────────────────────── */
+.idc {
+  --idc-rule: color-mix(in srgb, var(--ink) 15%, transparent);
+  width: 100%;
+  max-width: 340px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  /* No stock, no border, no shadow. The front of the cover is the
+     beacon on the page's own colour, and this is the same page. */
+  background: none;
+  position: relative;
+}
+/* Everything inside scrolls, the column itself does not. On a phone the
+   landing page is a fixed pair of snapped panes with no document scroll
+   of its own, so anything taller than the pane has to carry its own
+   scroller or its bottom is unreachable. */
+.idc-inner {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  text-align: center;
+  padding: 0 4px 24px;
+}
+/* Only while something is genuinely still below. The edge means "there
+   is more"; drawn when there is not, it fades the last line for no
+   reason — and the last line used to be a QR code. */
+.idc-inner--more {
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 20px), transparent);
+  -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 20px), transparent);
+}
+.idc-inner { scrollbar-width: none; }
+.idc-inner::-webkit-scrollbar { display: none; }
+
+/* ── The head ── the mark in one corner and the way in at the other,
+   which is where a card keeps the things that are about the card
+   rather than on it. Nothing between them: the name is the first thing
+   you read and it wants the middle of the column, not a slot beside a
+   logo. */
+.idc-head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 12px; min-height: 30px; margin-bottom: 14px;
+}
+/* 28px, which is what .sitenav-logo-mark and .hp-logo-mark are set to
+   in nav.css. The mark is the one thing that appears on every
+   surface of this site, so it is the one thing that has to be the same
+   size on all of them — a card whose logo is a few pixels off reads as
+   a different product rather than as another page. */
+.idc-mark { display: block; height: 28px; width: auto; }
+.idc-mark path { fill: var(--ink); }
+/* The dot on the period. nav.css states these two inside a
+   max-width:768px block for the cover's own logo, so on a wide screen
+   the circle would fall back to an SVG default of black and vanish in
+   the dark. The card states them for itself. */
+.idc-mark .hp-logo-mark-dot { fill: var(--ink); }
+.idc-mark .hp-logo-mark-dot--live {
+  fill: var(--live);
+  animation: idc-dot-pulse 2.5s ease-in-out infinite;
+}
+@keyframes idc-dot-pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.55; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .idc-mark .hp-logo-mark-dot--live { animation: none; }
+}
+
+/* The air that puts the photograph where the beacon's art was. It sits
+   under the header rather than over the photograph: the same number of
+   pixels either way, but above the photograph it is a hole in the
+   middle of a block of writing, and here it is the card's contents
+   simply starting further down the page. The header is corner
+   furniture; space under it reads as air. */
+.idc-tools { display: flex; align-items: center; gap: 2px; }
+/* The same box as the lights on the other end of the line — 36px,
+   a 10px radius, an 18px glyph — so the two ends of the bar read as
+   one row of controls rather than a big one and a small one. */
+.idc-tool {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 36px; height: 36px; border-radius: 10px;
+  color: var(--ink-faint); background: transparent; border: 0;
+  cursor: pointer; transition: color 0.15s, background 0.15s;
+}
+.idc-tool:hover { color: var(--ink); background: var(--bg-warm); }
+.idc-tool:disabled { opacity: 0.4; cursor: default; }
+/* Saving is the one of these that commits something, so it carries
+   full ink where the others are quiet. */
+.idc-tool--keep { color: var(--ink); }
+
+/* ── The name ── the beacon's own title face, set a step above the
+   size it uses. They started matched, which was tidy and wrong: the
+   track title on the front is one of four things in a stack and this
+   is the first thing you read on a card that is about a person. It
+   should arrive before the photograph does.
+   Balanced wrapping, because a long name breaking one word onto a
+   second line is the worst of the available shapes. */
+.idc-name {
+  font-family: var(--font-display);
+  font-weight: var(--font-display-weight);
+  font-size: 36px; line-height: 1.1; letter-spacing: -0.018em;
+  text-wrap: balance;
+  color: var(--ink);
+  /* The name used to lead the column and needed nothing above it. It
+     reads under the photograph now — the mark took the top of the pane
+     — and a name set flush against the bottom edge of a picture of the
+     person it names looks like a caption that slipped. An ornamented
+     name makes it worse: the decorative glyphs reach above the cap
+     height and touch the frame. */
+  margin: 20px 0 0;
+}
+/* ── Fields that are the same size as the writing they replace ────
+   base.css forces every input on a phone to 16px, with !important,
+   to stop iOS zooming the page in on focus. That is the right rule and
+   it wrecked this card: the name dropped from 31px to 16 the moment you
+   pressed edit, the bio and the two lines jumped up to meet it, and
+   everything below reflowed. Which is the disorientation — not the
+   editing, the whole card resizing around it.
+   So the sizes are stated here, on both sides. Above 16px a field can
+   simply match its own text. At or below it cannot, because that is
+   where the zoom starts — so on a phone the writing comes up to 16
+   instead and the field stops moving. Desktop is untouched by the
+   global rule and keeps the smaller type the card was drawn with. */
+.idc-name-input {
+  width: 100%; border: 0; padding: 0; background: transparent;
+  font: inherit; letter-spacing: inherit; color: var(--ink);
+  text-align: center;
+}
+.idc-name-input:focus { outline: none; }
+.idc-name-input::placeholder { color: var(--ink-faint); }
+
+.idc-off { opacity: 0.45; text-decoration: line-through; }
+.idc-eye {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 22px; height: 22px; border-radius: 6px;
+  color: var(--ink-faint); background: transparent; border: 0;
+  cursor: pointer; transition: color 0.15s, background 0.15s;
+}
+.idc-eye:hover { color: var(--ink); background: var(--bg-warm); }
+
+/* ── The photograph ── the same box the beacon draws album art in, to
+   the pixel: 180 square, an 18px radius and that shadow. The front of
+   this cover shows a record at that size in that frame; the back shows
+   a person. Matching them is what makes the two sides read as one
+   object turned over rather than as two designs. */
+.idc-portrait {
+  display: block;
+  position: relative;
+  width: 180px; height: 180px;
+  margin: 20px auto 0;
+  padding: 0;
+  border: 0;
+  border-radius: 18px;
+  overflow: hidden;
+  background: var(--bg-warm);
+  box-shadow: 0 18px 44px rgba(0,0,0,0.16);
+}
+.idc-portrait--bare {
+  background: none;
+  box-shadow: none;
+  border-radius: 0;
+  overflow: visible;
+}
+.idc-portrait--turnable { cursor: pointer; }
+.idc-portrait--turnable:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 3px; }
+.idc-portrait img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* The two sides, stacked and cross-faded. Not a rotation: this box
+   already lives inside the sheet that turns the whole cover over, and
+   nesting one 3D transform in another is where browsers disagree. */
+.idc-face-slot {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; transition: opacity 0.26s ease; pointer-events: none;
+}
+.idc-face-slot--on { opacity: 1; }
+.idc-face-slot--code { background: #f5f4ef /* CODE_PAPER in IdentityCard.js */; }
+/* No plate under the photograph version — the page is the background,
+   which is the whole point of the alpha. A class rather than :has(),
+   because the build drops :has() rules without saying so. */
+.idc-face-slot--photo { background: none; }
+/* The mark that turns it back, kept legible against whatever the code
+   happens to be over — there is no plate under it any more to sit on. */
+.idc-portrait--bare .idc-portrait-badge {
+  left: -6px; bottom: -6px;
+  background: var(--bg);
+}
+/* Sized so the code itself fills the photograph's square, not so the
+   file does. The file is 41 modules across and only 33 of those are
+   code — the rest is the quiet zone, which is empty and has to stay
+   that way. Fitting the file to the box therefore drew the code at
+   four-fifths the size of the picture it replaced, and it is supposed
+   to take the picture's place exactly. So it is drawn 41/33 oversize
+   and the quiet zone hangs off the edges, where it is page anyway.
+   image-rendering keeps the module edges hard rather than resampled. */
+.idc-face-slot .idc-qr { width: 100%; height: auto; display: block; }
+
+/* After the rule above, deliberately. They have the same specificity,
+   so source order decides, and written before it this lost every time
+   and the code drew at four-fifths the size of the picture it replaces.
+   (No backticks in this stylesheet — it is a template literal and one
+   of those ends it mid-file. Twice today.) */
+.idc-face-slot .idc-qr--photo {
+  width: calc(100% * 41 / 33);
+  height: auto;
+  display: block;
+  /* A flex item in a box narrower than it wants to be shrinks back to
+     the box, which undoes the oversize entirely. */
+  flex-shrink: 0;
+  max-width: none;
+  image-rendering: pixelated;
+}
+
+/* No portrait set. Registration corners rather than a grey box with a
+   person-shaped icon in it — a frame waiting for a photo should look
+   like one. */
+.idc-portrait-empty { position: absolute; inset: 0; }
+.idc-portrait-empty::before,
+.idc-portrait-empty::after {
+  content: ''; position: absolute; width: 13px; height: 13px;
+  border: 1px solid var(--idc-rule);
+}
+.idc-portrait-empty::before { top: 10px; left: 10px; border-right: 0; border-bottom: 0; }
+.idc-portrait-empty::after  { bottom: 10px; right: 10px; border-left: 0; border-top: 0; }
+
+/* Bottom-left. It sat bottom-right, which on a portrait is usually
+   somebody's shoulder and often their chin — the eye goes to a face
+   and the chip was landing on it. The left corner of a photograph of a
+   person is nearly always the quietest part of the frame. */
+.idc-portrait-badge {
+  position: absolute; left: 7px; bottom: 7px;
+  display: flex; align-items: center; justify-content: center;
+  width: 21px; height: 21px; border-radius: 7px;
+  background: var(--bg);
+  border: 1px solid var(--idc-rule);
+  color: var(--ink-faint);
+  transition: color 0.15s;
+}
+.idc-portrait--turnable:hover .idc-portrait-badge { color: var(--ink); }
+.idc-portrait-badge--drop { left: auto; right: 7px; cursor: pointer; }
+
+.idc-portrait-hit {
+  position: absolute; inset: 0;
+  display: flex; align-items: flex-end; justify-content: center;
+  padding-bottom: 10px;
+  cursor: pointer;
+}
+/* Hidden from sight but not from the keyboard. The hidden attribute
+   would take it out of the tab order and leave the box unreachable
+   without a mouse; this keeps it focusable and lets the label do the
+   rest. A backtick in this comment would end the stylesheet, which is
+   a thing this file has learned once already. */
+.idc-file { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+.idc-file:focus-visible + .idc-portrait-badge { outline: 2px solid var(--ink-faint); outline-offset: 2px; }
+/* Sits in the flow under the slot and keeps its line whether or not
+   it is saying anything, so the name below never jumps when it
+   appears. */
+.idc-copied {
+  margin: 8px 0 0;
+  min-height: 1em;
+  text-align: center;
+  font-family: var(--font-label);
+  font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--ink-faint);
+  pointer-events: none;
+}
+
+.idc-portrait-said {
+  font-family: var(--font-label);
+  font-size: 8.5px; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--ink-soft);
+  background: var(--bg);
+  border: 1px solid var(--idc-rule);
+  border-radius: 999px;
+  padding: 4px 10px;
+}
+.idc-portrait-hit:hover .idc-portrait-said { color: var(--ink); }
+
+/* Once there is a picture the box is a thing you move rather than a
+   thing you press, so the label shrinks to its own pill and the rest
+   takes the drag. pointer-events has to come off the strip or it would
+   swallow the drag it is sitting on. */
+.idc-portrait-hit--pill { inset: auto 0 10px 0; pointer-events: none; }
+.idc-portrait-hit--pill .idc-portrait-said { pointer-events: auto; }
+.idc-portrait--framing { cursor: grab; touch-action: none; }
+.idc-portrait--framing:active { cursor: grabbing; }
+.idc-portrait--framing img { user-select: none; -webkit-user-drag: none; }
+/* One line, always. Wrapped it was a two-line placard across the top of
+   the photograph, which on a portrait is squarely over the face — and
+   seeing the face is the entire point of the control. */
+.idc-portrait-hint {
+  position: absolute; top: 8px; left: 50%; transform: translateX(-50%);
+  font-family: var(--font-label);
+  font-size: 7.5px; letter-spacing: 0.1em; text-transform: uppercase;
+  white-space: nowrap;
+  color: var(--ink-soft);
+  background: var(--bg);
+  border: 1px solid var(--idc-rule);
+  border-radius: 999px;
+  padding: 3px 8px;
+  pointer-events: none;
+}
+
+/* ── The two lines above the button ──────────────────────────────
+   What the journal actually listens to, counted and never chosen, and
+   what its keeper is asking to be sent. They are only interesting next
+   to each other — the two disagreeing is the point — so they are built
+   to the same shape: a label, then the answer, ranged left in a block
+   the width of the writing above them.
+
+   The ask is the last of them, because it is the last thing you read
+   before the button for acting on it. Anything put between the two
+   weakens that, which is why the genres sit above rather than below. */
+.idc-line {
+  margin: 16px auto 0; max-width: 300px;
+  font-size: 13px; line-height: 1.6; color: var(--ink);
+  display: flex; align-items: baseline; gap: 9px;
+  text-align: left;
+}
+.idc-line-label {
+  flex-shrink: 0;
+  /* A fixed column, so the two answers start at the same place and the
+     pair reads as one small table rather than two stray sentences.
+     Wide enough for the longer of the two labels to stay on one line —
+     a two-line label beside a one-line answer reads as a wrapping
+     accident, not as a heading. */
+  width: 84px;
+  white-space: nowrap;
+  font-family: var(--font-label);
+  font-size: 8.5px; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--ink-faint);
+}
+/* One colour for both answers. They were set a step apart — the
+   genres soft, the request full — which read as one of the two being
+   less finished than the other rather than as a deliberate hierarchy.
+   The labels beside them are already doing the quietening; the answers
+   are the content and they weigh the same. */
+.idc-line-value { min-width: 0; color: var(--ink); }
+/* ── The pinned record ──
+   Forty-eight square with a ten-pixel radius, which is what the beacon
+   draws its recent listens at — same object, same job, so the same
+   frame. The name reads to its right rather than under it, because the
+   row it sits in is a table of labels and answers and this is one
+   answer: a cover and what it is. */
+.idc-pin-row { align-items: center; }
+.idc-pin {
+  display: flex; align-items: center; gap: 10px;
+  min-width: 0; flex: 1;
+  color: var(--ink); text-decoration: none;
+}
+.idc-pin-art {
+  display: block;
+  width: 48px; height: 48px;
+  flex-shrink: 0;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--bg-warm);
+  box-shadow: 0 3px 10px rgba(0,0,0,0.12);
+  transition: transform 0.2s ease;
+}
+.idc-pin:hover .idc-pin-art { transform: translateY(-2px); }
+.idc-pin-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.idc-pin-none {
+  display: flex; align-items: center; justify-content: center;
+  width: 100%; height: 100%;
+  color: var(--ink-faint); font-size: 18px;
+}
+/* min-width: 0 on both, or a long album name refuses to ellipsis and
+   pushes the row past the edge of the card instead. */
+.idc-pin-said { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.idc-pin-album,
+.idc-pin-artist {
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.idc-pin-album { font-size: 13px; line-height: 1.3; }
+.idc-pin-artist { font-size: 11px; line-height: 1.3; color: var(--ink-faint); }
+.idc-pin:hover .idc-pin-album { text-decoration: underline; }
+@media (prefers-reduced-motion: reduce) {
+  .idc-pin:hover .idc-pin-art { transform: none; }
+}
+/* The same row as a button. A button carries its own padding, border,
+   background and text alignment, and left alone it would sit a few
+   pixels off the link it replaces — which is a row that moves when you
+   press Edit. */
+.idc-pin--pick {
+  padding: 0; border: 0; background: transparent;
+  text-align: left; font: inherit; cursor: pointer;
+}
+
+/* The one control that is an action rather than a door, and the reason
+   the ask is written directly above it. Weighted by ink rather than by
+   fill, so it leads without inventing a second kind of button. */
+.idc-send {
+  margin-top: 20px;
+  color: var(--ink);
+  border-color: var(--ink-faint);
+  padding: 10px 22px;
+  font-size: 9.5px;
+}
+.idc-send:hover { border-color: var(--ink); }
+
+/* ── Below the line ── everywhere else the keeper can be found, and the
+   one page the card still carries. Quiet, and after the point. */
+.idc-rule {
+  width: 100%; height: 1px; margin: 22px 0 16px;
+  background-image: linear-gradient(to right, var(--idc-rule) 0 4px, transparent 4px 9px);
+  background-size: 9px 1px; background-repeat: repeat-x;
+}
+/* One line: the action, then every other door as a mark beside it. */
+/* Closer to the block above it than it was. The row used to carry the
+   rig and the links as well and needed the air to read as its own
+   band; it is one button now, and twenty-two pixels under a table of
+   four short rows was reading as a gap where something had been
+   removed — which it was. */
+.idc-row {
+  display: flex; align-items: center; justify-content: center;
+  gap: 6px; flex-wrap: wrap;
+  margin-top: 14px;
+}
+.idc-mark-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 36px; height: 36px; border-radius: 999px;
+  color: var(--ink-faint);
+  border: 1px solid transparent;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+}
+.idc-mark-btn:hover {
+  color: var(--ink);
+  background: var(--bg-warm);
+  border-color: var(--idc-rule);
+}
+
+/* ── The links, opened ── the same marks in the same place, each with
+   the address it stands for beside it. */
+.idc-links { width: 100%; max-width: 300px; margin: 12px auto 0; text-align: left; }
+.idc-link-row {
+  display: grid; grid-template-columns: 26px minmax(0, 1fr) 24px;
+  gap: 8px; align-items: center;
+}
+.idc-link-row + .idc-link-row { margin-top: 10px; }
+/* The mark, which is also the way to change it. */
+.idc-link-mark {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 26px; height: 26px; border-radius: 8px;
+  color: var(--ink-faint);
+  background: transparent; border: 1px solid transparent;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+}
+.idc-link-mark:hover { color: var(--ink); background: var(--bg-warm); }
+.idc-link-mark--on {
+  color: var(--ink);
+  background: var(--bg-warm);
+  border-color: var(--idc-rule);
+}
+
+/* ── The marks themselves ── pictures, not a list of their names. A
+   dropdown asked you to read "Snapchat" to choose a picture of
+   Snapchat, which is the wrong way round: you already know the one you
+   want by sight. It opens in the flow underneath the row rather than
+   floating over it, because this card is a scroller and anything
+   floating in a scroller has to be told where to go when it scrolls. */
+.idc-marks {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(34px, 1fr));
+  gap: 3px;
+  margin-top: 9px; padding: 8px;
+  border: 1px solid var(--idc-rule);
+  border-radius: 10px;
+  background: var(--bg-warm);
+}
+.idc-mark-opt {
+  display: inline-flex; align-items: center; justify-content: center;
+  height: 34px; border-radius: 8px;
+  color: var(--ink-faint);
+  background: transparent; border: 1px solid transparent;
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s, border-color 0.15s;
+}
+.idc-mark-opt:hover { color: var(--ink); background: var(--bg); }
+.idc-mark-opt--on {
+  color: var(--ink);
+  background: var(--bg);
+  border-color: var(--ink-faint);
+}
+/* The one option that is not a picture: let the address decide. */
+.idc-mark-auto {
+  font-family: var(--font-label);
+  font-size: 11px; letter-spacing: 0.04em;
+}
+
+.idc-link-row--rig { margin-top: 14px; }
+.idc-gear { margin-top: 4px; }
+.idc-gear-row {
+  display: grid; grid-template-columns: minmax(0, 1fr) 92px 24px;
+  gap: 8px; align-items: center;
+  margin-top: 10px;
+}
+.idc-gear-role {
+  font-family: var(--font-label);
+  font-size: 10px !important; letter-spacing: 0.08em; text-transform: uppercase;
+}
+.idc-rig-said {
+  font-family: var(--font-label);
+  font-size: 9px; letter-spacing: 0.09em; text-transform: uppercase;
+  color: var(--ink-faint);
+  align-self: center;
+}
+.idc-link-input {
+  min-width: 0; width: 100%;
+  border: 0; padding: 0 0 3px; background: transparent;
+  font-size: 12px; color: var(--ink); font-family: inherit;
+  border-bottom: 1px solid var(--idc-rule);
+}
+.idc-link-input:focus { outline: none; border-bottom-color: var(--ink-faint); }
+.idc-link-input::placeholder { color: var(--ink-faint); }
+.idc-link-drop, .idc-link-add {
+  display: inline-flex; align-items: center; justify-content: center;
+  height: 24px; border-radius: 7px;
+  color: var(--ink-faint); background: transparent; border: 0;
+  cursor: pointer; transition: color 0.15s, background 0.15s;
+}
+.idc-link-drop { width: 24px; }
+.idc-link-drop:hover, .idc-link-add:hover { color: var(--ink); background: var(--bg-warm); }
+.idc-link-add {
+  gap: 5px; padding: 0 9px; margin-top: 11px;
+  font-family: var(--font-label); font-size: 9px;
+  letter-spacing: 0.11em; text-transform: uppercase;
+}
+
+.idc-trouble {
+  font-family: var(--font-label); font-size: 9px; letter-spacing: 0.08em;
+  color: var(--fav); margin: 10px 0 0;
+}
+
+/* Every field takes the size of the writing it stands in for, on a
+   phone as well — base.css pushes fields up to 16px there to stop
+   iOS zooming, and the editor holds the page still for the length of an
+   edit instead, so this card can keep its own type. See holdZoom in
+   IdentificationCardEditor.js. */
+@media (max-width: 768px) {
+  /* inherit works for these, whose fields sit inside the element that
+     carries the size. Stated outright anyway, because the one field
+     where inherit did not work — the bio's textarea, which *was* the
+     element carrying the size — is the reason this block exists. */
+  .idc-name-input { font-size: 36px !important; }
+  .idc-link-input { font-size: 12px !important; }
+}
+@media (max-width: 480px) {
+  .idc-name-input { font-size: 31px !important; }
+}
+
+@media (max-width: 480px) {
+  .idc-name { font-size: 31px; }
+}

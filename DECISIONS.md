@@ -507,6 +507,19 @@ deleting the destination of a gesture already decided on.
 every artist link in a review points, and the entry page and `/key` link to
 it too. The pane absorbs the route; it does not replace the address.
 
+**Styles live in eight files by surface, not with their components,
+2026-09-06.** `app/styles/`: base, nav, journal, entry, idcard, session, get,
+forms. A rule is found where its surface is, which is what a stylesheet is
+for; a rule kept inside a component is found only by whoever already knows
+which component. That was the argument for keeping the session's CSS and the
+finder's with their pages — "a block that leaves with the thing it styles can
+never become the cleanup problem" — and it was true and it lost, because the
+same block was invisible to anyone asking where the session's type is set.
+The exception stays for the one component that has to work when nothing
+else does: ComingSoon draws its own styles because it is what a copy shows
+when the stylesheet's own site is down. Import order in `layout.js` is the
+cascade; it follows the order the rules had in the one file they came from.
+
 **The pitch pane stays at three sentences, 2026-09-03.** A fourth — "It
 looks like this: your journal, at your address, like the one you're reading
 now" — was added and removed the same day. The three are the whole pitch;
