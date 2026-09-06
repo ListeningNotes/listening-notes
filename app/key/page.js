@@ -59,58 +59,6 @@ export default function KeyPage() {
 
   return (
     <div className="pp-page" style={{ background: 'var(--bg)', minHeight: '100vh', color: 'var(--ink)', fontFamily: fonts.sans }}>
-      {/* Same sheet /rig uses. React hoists it once by href, so whichever of the
-          two pages loads first is the one that pays for it. */}
-      <style href="ln-paper-page" precedence="default">{`
-        .pp-page { --pp-nav-bottom: calc(80px + var(--safe-top)); padding-top: var(--pp-nav-bottom); }
-        .pp-main { max-width: 860px; margin: 0 auto; padding: 46px 48px 100px; }
-        .pp-title {
-          font-family: var(--font-display); font-weight: var(--font-display-weight);
-          font-size: 30px; letter-spacing: -0.015em; color: var(--ink);
-          margin: 0 0 8px;
-        }
-        .pp-kicker {
-          font-family: var(--font-label); font-size: 10px;
-          letter-spacing: 0.16em; text-transform: uppercase;
-          color: var(--ink-faint); margin: 0 0 34px;
-        }
-        .pp-prose { font-size: 15px; line-height: 1.95; color: var(--ink); }
-        .pp-prose p { margin: 0 0 22px; }
-        .pp-prose p:last-child { margin-bottom: 0; }
-        .pp-subhead {
-          font-family: var(--font-display); font-weight: var(--font-display-weight);
-          font-size: 20px; letter-spacing: -0.01em; color: var(--ink);
-          margin: 0 0 12px;
-        }
-        .pp-block + .pp-block { margin-top: 48px; }
-        .pp-row { border-bottom: 1px solid var(--border); padding: 14px 0; }
-        .pp-row-head { display: flex; align-items: center; gap: 12px; min-height: 20px; }
-        .pp-row-tail {
-          margin-left: auto; flex-shrink: 0;
-          font-family: var(--font-label); font-size: 10px;
-          letter-spacing: 0.08em; color: var(--ink-faint);
-        }
-        .pp-row-body {
-          font-size: 13px; line-height: 1.8; color: var(--ink-soft);
-          margin: 8px 0 0;
-        }
-        .pp-name { font-size: 13px; color: var(--ink); }
-        a.pp-name {
-          display: inline-flex; align-items: center; gap: 6px;
-          border-bottom: 1px solid var(--border); padding-bottom: 1px;
-        }
-        a.pp-name:hover { border-bottom-color: var(--ink-faint); }
-        a.pp-name svg { color: var(--ink-faint); transition: color 0.15s; }
-        a.pp-name:hover svg { color: var(--ink); }
-        .pp-foot {
-          margin-top: 48px; padding-top: 28px; border-top: 1px solid var(--border);
-          display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap;
-        }
-        @media (max-width: 768px) {
-          .pp-main { padding: 34px 24px 80px; }
-          .pp-title { font-size: 25px; }
-        }
-      `}</style>
 
       <SiteNav />
 

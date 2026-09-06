@@ -27,11 +27,12 @@
 
 'use client';
 
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { parseRating } from '../../library/entry_formatter';
 import AlbumTile from './AlbumTile';
 import { handOffOrder } from '../../library/handoff';
 import GridDensity, { DEFAULT_DENSITY, readStoredDensity, storeDensity } from './GridDensity';
+import JournalFilters, { SORTS, SortArrow } from './JournalFilters';
 
 // Beyonce should find Beyoncé, and Bjork should find Bjork. Accents are a
 // spelling most people don't reach for and half the archive's artists have
@@ -49,13 +50,6 @@ const foldForSearch = value => String(value || '')
 // it again turns it around. `desc` is what the arrow points at, so each
 // field declares which way its own "descending" reads — newest first for a
 // date, highest first for a rating, but Z→A for a title.
-const SORTS = [
-  { value: 'posted', label: 'Date posted',  defaultDir: 'desc', asc: 'Oldest first', desc: 'Newest first' },
-  { value: 'album',  label: 'Album',        defaultDir: 'asc',  asc: 'A–Z',          desc: 'Z–A' },
-  { value: 'artist', label: 'Artist',       defaultDir: 'asc',  asc: 'A–Z',          desc: 'Z–A' },
-  { value: 'rating', label: 'Rating',       defaultDir: 'desc', asc: 'Lowest first', desc: 'Highest first' },
-  { value: 'year',   label: 'Release year', defaultDir: 'desc', asc: 'Oldest first', desc: 'Newest first' },
-];
 
 // Type used to be a filter here — Library or Submission. The archive is the
 // library, so that split was a filter between "everything" and "everything",
@@ -69,7 +63,7 @@ const releaseYear = entry => {
 
 // Below this, a tile turns over to its metadata card instead of opening the
 // modal — the modal is a good desktop experience and a bad phone one. Same
-// number as the sitewide mobile breakpoint in globals.css.
+// number as the sitewide mobile breakpoint in styles/base.css.
 const FLIP_BELOW = 768;
 
 // How many covers before the wall is broken into pages. Fifty is a wall you can
@@ -129,19 +123,14 @@ export default function Journal({ entries: given, loading: givenLoading, scrolle
   // is the full span once the entries have landed and nothing before that.
   const [yearPicked, setYearPicked] = useState(null);
   const [filtersOpen, setFiltersOpen] = useState(false);
+  // Stable, because the sheet subscribes to scroll with it and would otherwise
+  // re-subscribe on every render of the wall.
+  const closeFilters = useCallback(() => setFiltersOpen(false), []);
   // Where the desktop popover hangs. Measured off the button rather than
   // guessed in CSS — its x depends on how wide the search field and the sort
   // select happen to be. Frozen at open time, which holds because the
   // popover closes on scroll (see the effect below).
   const filterBtnRef = useRef(null);
-
-  // Drag-to-dismiss on the phone sheet. `drag` is how far down the finger
-  // has pulled it; `settling` marks the moment after release, when the
-  // transform is being animated rather than driven by the finger.
-  const sheetRef = useRef(null);
-  const dragFromRef = useRef(null);
-  const [drag, setDrag] = useState(0);
-  const [settling, setSettling] = useState(false);
 
   // Which page of the wall. Reset by anything that changes what the wall holds
   // — landing on page four of a search that only has one page is a blank grid
@@ -180,61 +169,6 @@ export default function Journal({ entries: given, loading: givenLoading, scrolle
     setDensity(value);
     storeDensity(value);
   }, []);
-
-  // Measured after the open commits, off the live layout — reading the rect
-  // inside the click handler catches whatever the bar looked like before
-  // React had re-rendered it, which is a different place on the screen.
-  // Written straight onto the popover rather than into state: a layout
-  // effect runs before the browser paints, so the popover is never seen
-  // anywhere but under its button, and there is no second render to pay for.
-  useLayoutEffect(() => {
-    if (!filtersOpen || isPhone) return;
-    const r = filterBtnRef.current?.getBoundingClientRect();
-    const sheet = sheetRef.current;
-    if (!r || !sheet) return;
-    sheet.style.left = `${r.left}px`;
-    sheet.style.top = `${r.bottom + 8}px`;
-    sheet.style.right = 'auto';
-  }, [filtersOpen, isPhone]);
-
-  useEffect(() => {
-    if (!filtersOpen) return;
-    const onKey = e => { if (e.key === 'Escape') setFiltersOpen(false); };
-    window.addEventListener('keydown', onKey);
-
-    // The phone sheet covers the screen, so the grid scrolling behind it
-    // would drop you somewhere you didn't choose — lock it. The desktop
-    // popover is small and pinned to its button, so instead of locking the
-    // page (which pulls the scrollbar out and shifts the bar sideways
-    // underneath the panel it's anchored to) it just closes on scroll.
-    let cleanupScroll;
-    if (isPhone) {
-      // Locking the body does nothing when the body is not what moves — in the
-      // cross the pane is its own scroller and would carry on underneath the
-      // sheet. Lock the one that scrolls.
-      //
-      // A class rather than an inline style, because an inline style has to be
-      // put back exactly as it was found and this element belongs to somebody
-      // else — the pane is HomeNav's, and handing it back with an overflow it
-      // did not have is the kind of thing that shows up three screens later.
-      const port = scroller?.current || document.body;
-      port.classList.add('ln-locked');
-      cleanupScroll = () => port.classList.remove('ln-locked');
-    } else {
-      // Whatever is moving, which on the cross is a pane and not the window.
-      // Listening on window there would be listening to something that never
-      // scrolls, and the popover would hang over the grid as it went past.
-      const port = scroller?.current || window;
-      const onScroll = () => setFiltersOpen(false);
-      port.addEventListener('scroll', onScroll, { passive: true });
-      cleanupScroll = () => port.removeEventListener('scroll', onScroll);
-    }
-
-    return () => {
-      window.removeEventListener('keydown', onKey);
-      cleanupScroll();
-    };
-  }, [filtersOpen, isPhone, scroller]);
 
   // The full span the collection covers, which is what the year slider's
   // ends are pinned to. Recomputed from the entries rather than hardcoded so
@@ -382,352 +316,8 @@ export default function Journal({ entries: given, loading: givenLoading, scrolle
     (sortBy !== 'posted' || sortDir !== 'desc' ? 1 : 0);
   const hasActiveFilters = Boolean(search) || tuckedAwayCount > 0;
 
-  // Pointer events rather than touch events: the same handlers then drive a
-  // finger on a phone and a mouse on a trackpad, and pointer capture keeps
-  // the drag alive when the finger leaves the grip's 28px band — which it
-  // does immediately, since dragging down is the whole gesture.
-  function onGripDown(e) {
-    dragFromRef.current = e.clientY;
-    setSettling(false);
-    e.currentTarget.setPointerCapture(e.pointerId);
-  }
-
-  function onGripMove(e) {
-    if (dragFromRef.current === null) return;
-    // Downward only. Letting it track upward would lift the sheet off the
-    // bottom of the screen and expose the page behind it.
-    setDrag(Math.max(0, e.clientY - dragFromRef.current));
-  }
-
-  function onGripUp() {
-    if (dragFromRef.current === null) return;
-    dragFromRef.current = null;
-    const height = sheetRef.current?.offsetHeight ?? 400;
-    // A short sheet shouldn't need a 120px pull to dismiss, and a tall one
-    // shouldn't dismiss on a twitch — whichever is smaller.
-    const closeAt = Math.min(120, height * 0.28);
-    setSettling(true);
-    if (drag > closeAt) {
-      setDrag(height);                       // ride it the rest of the way out
-      setTimeout(() => setFiltersOpen(false), 180);
-    } else {
-      setDrag(0);                            // spring back
-    }
-  }
-
   return (
     <>
-      <style>{`
-        /* The fixed nav ends at 80px on every breakpoint — it was 136 while a
-           labelled dot row hung under it. The page starts just below, and
-           the filter bar parks there once you scroll — there's no separate
-           page title anymore, so the grid is the first thing you see. */
-        /* 80, not 136. That number covered the nav row and the dot row under
-           it; the dots are gone, so the rest was a band of nothing at the top
-           of every page. */
-        .arc-page {
-          --arc-nav-bottom: calc(80px + var(--safe-top));
-          padding-top: calc(var(--arc-nav-bottom) + 16px);
-          /* A column, so the bar can be ordered back above the wall on a wide
-             screen while sitting after it in the markup. See the note by
-             .arc-bar-wrap. */
-          display: flex;
-          flex-direction: column;
-        }
-
-        .arc-bar-wrap { position: sticky; top: var(--arc-nav-bottom); z-index: 101; padding: 0 24px 10px; }
-
-        /* ── On a phone the bar goes to the bottom ────────────────────────
-           Where the thumb is. At the top it is furthest from the hand and it
-           takes the first hundred pixels of the wall, which on a screen this
-           size is most of a row of covers — the records should have the top of
-           the screen and the controls should be where you can reach them.
-
-           Sticky rather than fixed, and that is not a preference either: this
-           wall is mounted inside a pane of the cross, and a fixed bar would
-           float over the card and the desk when you swiped away from it. A
-           sticky one travels with the pane it belongs to.
-
-           It sticks bottom while being the first child of a very tall column,
-           which pins it to the bottom edge for the whole scroll — the natural
-           position it can never fall below is off the top, so it never
-           unsticks. */
-        @media (min-width: 769px) { .arc-bar-wrap { order: -1; } }
-        @media (max-width: 768px) {
-          .arc-bar-wrap {
-            top: auto;
-            /* On the bottom edge, not hovering above it. It sat 68px up to
-               clear the cross's row of carets — and the carets are hidden for
-               as long as a pane is scrolled, which is the only time this bar is
-               on screen at all, so there was never anything under it to clear.
-               A bar with a strip of page showing beneath reads as a thing
-               floating over the wall rather than the edge of the wall. */
-            bottom: 0;
-          }
-        }
-        .arc-bar {
-          max-width: 1100px; margin: 0 auto;
-          display: flex; align-items: center; gap: 8px;
-          padding: 8px 10px;
-          background: var(--panel);
-          backdrop-filter: var(--card-blur); -webkit-backdrop-filter: var(--card-blur);
-          border: 1px solid var(--panel-border); border-radius: 14px;
-          box-shadow: var(--shadow-soft);
-        }
-
-        /* Search: a real field at rest so it reads as searchable, growing to
-           take the whole bar while you type. flex-basis rather than width so
-           it gives room back to the controls when it collapses. */
-        .arc-search { position: relative; display: flex; align-items: center; flex: 0 1 240px; min-width: 0; transition: flex-basis 0.22s ease; }
-        .arc-search svg { position: absolute; left: 10px; color: var(--ink-faint); pointer-events: none; }
-        /* Translucent, but with no backdrop-filter of their own — the bar
-           beneath has already blurred what's behind it, and these paint on
-           top of that result. Adding a second filter here would blur an
-           already-blurred layer and turn the whole bar to mud. */
-        .arc-search input {
-          width: 100%; min-width: 0;
-          background: var(--panel); color: var(--ink);
-          border: 1px solid var(--border); border-radius: 9px;
-          padding: 7px 10px 7px 30px;
-          font-family: var(--font-label); font-size: 12px; outline: none;
-        }
-        .arc-search input:focus { border-color: var(--ink-faint); }
-        .arc-bar--searching .arc-search { flex-basis: 100%; }
-
-        .arc-ctl {
-          display: flex; align-items: center; gap: 6px; flex-shrink: 0;
-          background: var(--panel); color: var(--ink-soft);
-          border: 1px solid var(--border); border-radius: 9px;
-          padding: 7px 11px; cursor: pointer; outline: none;
-          font-family: var(--font-label); font-size: 11px; letter-spacing: 0.06em;
-          transition: color 0.15s, border-color 0.15s;
-        }
-        .arc-ctl:hover { color: var(--ink); }
-        .arc-ctl--on { color: var(--ink); border-color: var(--ink-faint); }
-        /* Square, so the arrow reads as a companion to the sort select
-           rather than a second, unrelated button. */
-        .arc-dir { padding: 7px 9px; color: var(--ink); }
-        .arc-arrow { flex-shrink: 0; }
-        .arc-badge {
-          min-width: 15px; height: 15px; padding: 0 4px; border-radius: 999px;
-          display: inline-flex; align-items: center; justify-content: center;
-          background: var(--ink); color: var(--bg);
-          font-family: var(--font-label); font-size: 9px; line-height: 1;
-        }
-
-        .arc-count {
-          margin-left: auto; flex-shrink: 0; white-space: nowrap;
-          font-family: var(--font-label); font-size: 10px; letter-spacing: 0.1em;
-          color: var(--ink-faint);
-        }
-
-        /* ── Filters: a popover panel on desktop, a bottom sheet on a phone ── */
-        /* Invisible on desktop — it's only there to catch the click that
-           closes the panel. Dimming the whole page behind a small popover
-           would be far more than the popover is worth; the phone sheet,
-           which does cover the screen, gets the dim back below. */
-        .arc-scrim { position: fixed; inset: 0; z-index: 150; }
-        @keyframes arcFade { from { opacity: 0; } to { opacity: 1; } }
-        .arc-sheet {
-          /* left/top are set inline from the button's own position; these
-             are the fallback for the first paint before it's measured. */
-          position: fixed; z-index: 151;
-          top: calc(var(--arc-nav-bottom) + 78px); left: max(24px, calc(50vw - 550px)); width: 290px;
-          /* The same frosted glass as the bar it hangs off, but at the
-             stronger opacity — this panel is big enough to sit over album
-             art rather than flat page, and --panel's 45% can't hold text
-             against that. */
-          background: var(--panel-strong);
-          backdrop-filter: var(--card-blur); -webkit-backdrop-filter: var(--card-blur);
-          border: 1px solid var(--panel-border);
-          border-radius: 14px; box-shadow: var(--shadow-lift);
-          padding: 16px; display: flex; flex-direction: column; gap: 16px;
-          animation: arcPop 0.18s ease;
-        }
-        @keyframes arcPop { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
-        .arc-sheet-group { display: flex; flex-direction: column; gap: 7px; }
-        .arc-sheet-label {
-          display: flex; align-items: baseline; justify-content: space-between; gap: 8px;
-          font-family: var(--font-label); font-size: 9px; letter-spacing: 0.14em;
-          text-transform: uppercase; color: var(--ink-faint);
-        }
-        /* The live readout of the year handles, sat on the group's own label
-           rather than floating over the track where a handle would cover it. */
-        .arc-sheet-value { color: var(--ink); letter-spacing: 0.08em; }
-        /* Spells out what the arrow means — "Newest first" reads faster than
-           working it out from which way the arrowhead points. */
-        .arc-sheet-hint {
-          font-family: var(--font-label); font-size: 10px;
-          color: var(--ink-faint); letter-spacing: 0.04em;
-        }
-        .arc-sheet-opts { display: flex; flex-wrap: wrap; gap: 6px; }
-        .arc-opt {
-          display: inline-flex; align-items: center; gap: 5px;
-          font-family: var(--font-label); font-size: 11px; letter-spacing: 0.04em;
-          padding: 6px 11px; border-radius: 999px; cursor: pointer;
-          background: transparent; color: var(--ink-soft);
-          border: 1px solid var(--border); transition: background 0.15s, color 0.15s, border-color 0.15s;
-        }
-        .arc-opt--on { background: var(--ink); color: var(--bg); border-color: var(--ink); }
-
-        /* ── Year range ──────────────────────────────────────────────────
-           Two native range inputs on one track. Both are stretched across
-           the full width and made transparent to pointer input, so a press
-           lands on whichever HANDLE is nearest rather than on whichever
-           input happens to be on top. */
-        .yr { position: relative; height: 34px; margin-top: 2px; }
-        .yr-track {
-          position: absolute; left: 0; right: 0; top: 9px; height: 3px;
-          background: var(--border); border-radius: 999px;
-        }
-        .yr-fill { position: absolute; top: 0; bottom: 0; background: var(--ink); border-radius: 999px; }
-        .yr-input {
-          position: absolute; left: 0; top: 0; width: 100%; height: 21px;
-          margin: 0; background: none; pointer-events: none;
-          -webkit-appearance: none; appearance: none;
-        }
-        .yr-input:focus { outline: none; }
-        .yr-input::-webkit-slider-thumb {
-          -webkit-appearance: none; appearance: none;
-          pointer-events: auto; cursor: grab;
-          width: 17px; height: 17px; border-radius: 50%;
-          background: var(--panel-solid); border: 2px solid var(--ink);
-          box-shadow: var(--shadow-soft);
-        }
-        .yr-input::-moz-range-thumb {
-          pointer-events: auto; cursor: grab;
-          width: 17px; height: 17px; border-radius: 50%;
-          background: var(--panel-solid); border: 2px solid var(--ink);
-          box-shadow: var(--shadow-soft);
-        }
-        .yr-input:focus-visible::-webkit-slider-thumb { border-color: var(--accent); }
-        .yr-input::-moz-range-track { background: none; }
-        .yr-ends {
-          position: absolute; left: 0; right: 0; bottom: 0;
-          display: flex; justify-content: space-between;
-          font-family: var(--font-label); font-size: 9px; color: var(--ink-faint);
-        }
-        /* Centred and sized to their own text rather than stretched to the
-           panel's full width — two buttons splitting the width edge to edge
-           read as a segmented control, which is not what they are. */
-        .arc-sheet-foot { display: flex; gap: 8px; justify-content: center; }
-        .arc-sheet-foot button { min-width: 108px; justify-content: center; }
-        .arc-sheet-done { background: var(--ink); color: var(--bg); border-color: var(--ink); }
-        .arc-sheet-grip { display: none; }
-
-        /* ── The grid. Density is set on the container, so every tile's size
-           comes from one attribute rather than being threaded through each
-           tile's styles. ── */
-        /* width and box-sizing are not decoration. Both things that mount this
-           wall are flex columns now, and an auto left-and-right margin on a
-           flex item turns off the stretch that was giving it the full measure
-           — main collapsed to the width of its own content and drew the whole
-           archive down a narrow channel in the middle of the page. */
-        .arc-main { width: 100%; box-sizing: border-box; padding: 4px 24px 120px; }
-        /* 14, not 24. On a phone every pixel down the side is a pixel off the
-           covers, and the tiles are the page — the bar below already sits on
-           the same 14. */
-        @media (max-width: 768px) { .arc-main { padding: 0 14px 132px; } }
-        .arc-pages {
-          display: flex; align-items: center; justify-content: center; gap: 14px;
-          margin-top: 34px;
-        }
-        .arc-page-step {
-          display: inline-flex; align-items: center; justify-content: center;
-          width: 34px; height: 34px; border-radius: 10px;
-          border: 1px solid var(--border); background: transparent;
-          color: var(--ink-soft); cursor: pointer;
-          transition: color 0.15s, border-color 0.15s;
-        }
-        .arc-page-step:hover:not(:disabled) { color: var(--ink); border-color: var(--ink-faint); }
-        .arc-page-step:disabled { opacity: 0.3; cursor: default; }
-        .arc-page-count {
-          font-family: var(--font-label); font-size: 10px;
-          letter-spacing: 0.14em; color: var(--ink-faint);
-        }
-        .arc-grid { display: grid; gap: 14px; }
-        .arc-grid[data-density="large"]  { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); }
-        .arc-grid[data-density="medium"] { grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); }
-        .arc-grid[data-density="small"]  { grid-template-columns: repeat(auto-fill, minmax(94px,  1fr)); gap: 10px; }
-
-        .arc-skel { aspect-ratio: 1 / 1; border-radius: 10px; background: var(--bg-warm); animation: arcPulse 1.4s ease-in-out infinite; }
-        @keyframes arcPulse { 0%,100% { opacity: 0.6; } 50% { opacity: 0.3; } }
-
-        .arc-empty {
-          text-align: center; padding: 80px 0; color: var(--ink-faint);
-          font-family: var(--font-label); font-size: 12px; letter-spacing: 0.1em;
-        }
-        .arc-empty--new { display: flex; flex-direction: column; gap: 10px; align-items: center; }
-        .arc-empty-said { color: var(--ink-soft); }
-        .arc-empty-how { font-size: 10px; letter-spacing: 0.08em; }
-
-        @media (max-width: 768px) {
-          .arc-page { padding-top: calc(var(--arc-nav-bottom) + 10px); }
-          /* Edge to edge and on the floor. This block is further down the
-             sheet than the one that first puts the bar on the bottom, so the
-             padding has to be settled here or the 14px side inset above wins
-             and the bar goes back to being a pill hovering over the covers. */
-          .arc-bar-wrap { padding: 10px 0 0; }
-          .arc-bar {
-            gap: 6px;
-            border-radius: 14px 14px 0 0;
-            border-bottom: none;
-            padding: 6px 12px calc(6px + env(safe-area-inset-bottom));
-          }
-          /* 16px keeps iOS from zooming the page when the field takes focus. */
-          .arc-search input { font-size: 16px; padding: 6px 10px 6px 28px; }
-          .arc-search { flex: 1 1 auto; }
-          /* Typing gets the whole bar: the controls are still one tap away
-             once the field gives focus back. */
-          .arc-bar--searching .arc-ctl,
-          .arc-bar--searching .gd,
-          .arc-bar--searching .arc-count { display: none; }
-          .arc-ctl { padding: 7px 9px; }
-          .arc-ctl-text { display: none; }
-          .arc-count { display: none; }
-
-          .arc-grid[data-density="large"]  { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
-          .arc-grid[data-density="medium"] { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; }
-          .arc-grid[data-density="small"]  { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
-
-          .arc-scrim { background: rgba(0,0,0,0.28); animation: arcFade 0.18s ease; }
-
-          /* The popover becomes a bottom sheet — a panel hanging off a
-             button is a desktop idiom, and up near the nav it's out of
-             thumb reach on a phone. */
-          .arc-sheet {
-            top: auto; bottom: 0; left: 0; right: 0; width: auto;
-            border-radius: 20px 20px 0 0; border-bottom: none;
-            padding: 10px 20px calc(20px + env(safe-area-inset-bottom));
-            animation: arcSlide 0.22s ease;
-            /* Fits an iPhone with room to spare, but a small phone or a
-               large accessibility text size can push it past the top. */
-            max-height: 82vh; overflow-y: auto; overscroll-behavior: contain;
-          }
-          @keyframes arcSlide { from { transform: translateY(100%); } to { transform: none; } }
-          /* Springs back when released short of the threshold; the drag
-             itself sets the transform inline and turns this off, so the
-             sheet tracks the finger 1:1 instead of easing behind it. */
-          .arc-sheet--dragging { animation: none; transition: none; }
-          .arc-sheet--settling { animation: none; transition: transform 0.2s ease-out; }
-
-          /* The grab area, not the bar itself — the visible handle is 4px
-             tall, which is nothing to aim at. This gives it a 28px target
-             spanning the sheet's full width. touch-action stops the browser
-             claiming the gesture as a scroll before we see it. */
-          .arc-sheet-grip {
-            display: block; width: 100%; height: 28px; padding: 0; border: none;
-            background: none; cursor: grab; touch-action: none;
-            margin: -6px 0 0;
-          }
-          .arc-sheet-grip:active { cursor: grabbing; }
-          .arc-sheet-grip::before {
-            content: ''; display: block; width: 36px; height: 4px;
-            border-radius: 999px; background: var(--border); margin: 8px auto 0;
-          }
-          .arc-opt { padding: 8px 13px; font-size: 12px; }
-        }
-      `}</style>
 
       {/* The floor clears the bar now that the bar is on it. 120px was the
           old bottom margin and happens to be about right for a bar plus a row
@@ -833,12 +423,7 @@ export default function Journal({ entries: given, loading: givenLoading, scrolle
             type="button"
             ref={filterBtnRef}
             className={'arc-ctl' + (tuckedAwayCount ? ' arc-ctl--on' : '')}
-            onClick={() => {
-              // Reset on the way in, so a sheet dismissed by dragging doesn't
-              // come back still holding the offset it left on.
-              setDrag(0); setSettling(false); dragFromRef.current = null;
-              setFiltersOpen(v => !v);
-            }}
+            onClick={() => setFiltersOpen(v => !v)}
             aria-label="Filters"
             aria-expanded={filtersOpen}
           >
@@ -864,178 +449,22 @@ export default function Journal({ entries: given, loading: givenLoading, scrolle
       </div>
 
       {filtersOpen && (
-        <>
-          <div className="arc-scrim" onClick={() => setFiltersOpen(false)} />
-          <div
-            ref={sheetRef}
-            className={'arc-sheet'
-              + (drag > 0 && !settling ? ' arc-sheet--dragging' : '')
-              + (settling ? ' arc-sheet--settling' : '')}
-            role="dialog"
-            aria-label="Filters"
-            style={drag > 0 || settling ? { transform: `translateY(${drag}px)` } : undefined}
-          >
-            {/* Phone only — the desktop popover is dismissed by clicking off
-                it, which is what a popover is expected to do. */}
-            {isPhone && (
-              <button
-                type="button"
-                className="arc-sheet-grip"
-                aria-label="Close filters"
-                onPointerDown={onGripDown}
-                onPointerMove={onGripMove}
-                onPointerUp={onGripUp}
-                onPointerCancel={onGripUp}
-                onClick={() => { if (drag === 0) setFiltersOpen(false); }}
-              />
-            )}
-
-            {isPhone && (
-              <div className="arc-sheet-group">
-                <div className="arc-sheet-label">Sort</div>
-                <div className="arc-sheet-opts">
-                  {/* The chip you're on carries the arrow, and tapping it
-                      again turns it over — so the control shows both which
-                      field is sorting and which way, in one place. */}
-                  {SORTS.map(s => {
-                    const on = sortBy === s.value;
-                    return (
-                      <button key={s.value} type="button"
-                        className={'arc-opt' + (on ? ' arc-opt--on' : '')}
-                        aria-pressed={on}
-                        title={on ? s[sortDir] : undefined}
-                        onClick={() => chooseSort(s.value)}>
-                        {s.label}
-                        {on && <SortArrow dir={sortDir} />}
-                      </button>
-                    );
-                  })}
-                </div>
-                <div className="arc-sheet-hint">{activeSort[sortDir]}</div>
-              </div>
-            )}
-
-
-
-            {/* Only worth a group once there's more than one genre to choose
-                between — on a young archive it would be a row with a single
-                option and nothing to compare it against. */}
-            {genres.length > 1 && (
-              <div className="arc-sheet-group">
-                <div className="arc-sheet-label">Genre</div>
-                <div className="arc-sheet-opts">
-                  <button type="button" className={'arc-opt' + (!genre ? ' arc-opt--on' : '')} onClick={() => setGenre('')}>All</button>
-                  {genresShown.map(g => (
-                    <button key={g.name} type="button"
-                      className={'arc-opt' + (genre === g.name ? ' arc-opt--on' : '')}
-                      onClick={() => setGenre(genre === g.name ? '' : g.name)}>{g.name}</button>
-                  ))}
-                  {/* A hidden genre that's currently doing the filtering still
-                      shows, collapsed or not — otherwise the archive would be
-                      filtered by something with nothing on screen saying so. */}
-                  {genresRest.map(g => (
-                    (genresOpen || genre === g.name) && (
-                      <button key={g.name} type="button"
-                        className={'arc-opt' + (genre === g.name ? ' arc-opt--on' : '')}
-                        onClick={() => setGenre(genre === g.name ? '' : g.name)}>{g.name}</button>
-                    )
-                  ))}
-                  {genresRest.length > 0 && (
-                    <button type="button" className="arc-opt" onClick={() => setGenresOpen(v => !v)}>
-                      {genresOpen ? 'Less' : `+${genresRest.length} more`}
-                    </button>
-                  )}
-                </div>
-              </div>
-            )}
-
-            {yearBounds && yearRange && (
-              <div className="arc-sheet-group">
-                <div className="arc-sheet-label">
-                  Release year
-                  <span className="arc-sheet-value">
-                    {yearRange[0] === yearRange[1] ? yearRange[0] : `${yearRange[0]} – ${yearRange[1]}`}
-                  </span>
-                </div>
-                <YearRange bounds={yearBounds} value={yearRange} onChange={setYearPicked} />
-              </div>
-            )}
-
-            <div className="arc-sheet-group">
-              <div className="arc-sheet-label">Highlights</div>
-              <div className="arc-sheet-opts">
-                <button type="button" className={'arc-opt' + (favoritesOnly ? ' arc-opt--on' : '')} onClick={() => setFavoritesOnly(v => !v)}>Favorites</button>
-                <button type="button" className={'arc-opt' + (masterpiecesOnly ? ' arc-opt--on' : '')} onClick={() => setMasterpiecesOnly(v => !v)}>Masterpieces</button>
-                <button type="button" className={'arc-opt' + (formativeOnly ? ' arc-opt--on' : '')} onClick={() => setFormativeOnly(v => !v)}>Formative</button>
-              </div>
-            </div>
-
-            <div className="arc-sheet-foot">
-              {hasActiveFilters && <button type="button" className="arc-opt" onClick={clearFilters}>Clear all</button>}
-              <button type="button" className="arc-opt arc-sheet-done" onClick={() => setFiltersOpen(false)}>
-                Show {filtered.length}
-              </button>
-            </div>
-          </div>
-        </>
+        <JournalFilters
+          onClose={closeFilters}
+          isPhone={isPhone}
+          scroller={scroller}
+          anchorRef={filterBtnRef}
+          sortBy={sortBy} sortDir={sortDir} chooseSort={chooseSort} activeSort={activeSort}
+          genre={genre} setGenre={setGenre} genres={genres} genresShown={genresShown} genresRest={genresRest}
+          genresOpen={genresOpen} setGenresOpen={setGenresOpen}
+          yearBounds={yearBounds} yearRange={yearRange} setYearPicked={setYearPicked}
+          favoritesOnly={favoritesOnly} setFavoritesOnly={setFavoritesOnly}
+          masterpiecesOnly={masterpiecesOnly} setMasterpiecesOnly={setMasterpiecesOnly}
+          formativeOnly={formativeOnly} setFormativeOnly={setFormativeOnly}
+          hasActiveFilters={hasActiveFilters} clearFilters={clearFilters}
+          shownCount={filtered.length}
+        />
       )}
     </>
-  );
-}
-
-// ── Sub-components ─────────────────────────────────────────────────────
-
-// Which way the active sort runs. Deliberately not a caret glyph from the
-// font — at 9px those render at wildly different weights across platforms,
-// and this sits inside a chip next to text that has to stay readable.
-function SortArrow({ dir }) {
-  return (
-    <svg className="arc-arrow" width="9" height="11" viewBox="0 0 9 11" aria-hidden="true" focusable="false">
-      <path
-        d={dir === 'asc' ? 'M4.5 10.5V1M1 4.5L4.5 1L8 4.5' : 'M4.5 0.5V10M1 6.5L4.5 10L8 6.5'}
-        fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
-// Two-handle year range, built from two native range inputs stacked on one
-// track. Native because it inherits keyboard support, the correct touch
-// target sizing and screen-reader semantics for free — a div-and-pointer-
-// events version of this gets all three wrong by default.
-//
-// The trick is that only the handles accept pointer input, not the inputs'
-// full-width tracks; otherwise the one stacked on top would swallow every
-// press aimed at the other. The visible track is a separate element beneath
-// them, which is also what paints the selected span.
-function YearRange({ bounds, value, onChange }) {
-  const { min, max } = bounds;
-  const [lo, hi] = value;
-  const span = Math.max(max - min, 1);
-  const pct = y => ((y - min) / span) * 100;
-
-  return (
-    <div className="yr">
-      <div className="yr-track">
-        <div className="yr-fill" style={{ left: `${pct(lo)}%`, right: `${100 - pct(hi)}%` }} />
-      </div>
-      {/* The handles can meet but not cross — clamping here rather than
-          swapping them keeps "start" and "end" meaning the same thing all
-          the way through a drag. */}
-      <input
-        type="range" className="yr-input" min={min} max={max} value={lo}
-        aria-label="Earliest release year"
-        onChange={e => onChange([Math.min(Number(e.target.value), hi), hi])}
-      />
-      <input
-        type="range" className="yr-input" min={min} max={max} value={hi}
-        aria-label="Latest release year"
-        onChange={e => onChange([lo, Math.max(Number(e.target.value), lo)])}
-      />
-      <div className="yr-ends">
-        <span>{min}</span>
-        <span>{max}</span>
-      </div>
-    </div>
   );
 }

@@ -35,8 +35,9 @@ Think of it like a house.
   and blank means it does not render
 
 There is no `/about` route of its own. The identity card on the landing page
-*is* the about page; `/about` and `/rig` stay only as redirects, so old links
-land somewhere.
+*is* the about page; `/about` stays only as a redirect, so old links land
+somewhere. `/rig` was a redirect too and is gone: it was live for three days
+and nobody else had the address.
 
 **Private side** — only you can access this (password protected, never linked
 publicly):
@@ -81,6 +82,8 @@ The library — logic, no visuals
     sitewide_visuals.js        All colors and fonts — change here, changes everywhere
     ai_integration.js          The Claude AI calls: research, and the local assembly of a post
     music_data_api.js          Fetches album art and tracklists from iTunes
+    card_links.js              The marks a card can wear — which shape stands for the rig, which logo a link gets
+    portrait_code.js           The portrait made into the journal's QR code, checked against both page colours
     session_timers.js          Track length display (m:ss)
     wristband.js               Session auth — issues and checks the JWT cookie
     secrets.js                 The vault: the keys, the password hash, the session secret, the claim code. Database first, environment second
@@ -106,6 +109,7 @@ The hooks — reusable logic shared across pages
   hooks/
     useListeningBeacon.js      Checks Last.fm every 15 seconds for what's playing
     useListeningSession.js     All session state — the record, tracks, notes, score, preview, saving; research on request
+    useSessionDraft.js         The listen's draft — the browser's copy and the row in drafts — autosave, restore, cleanup
 
 The furniture — visual pieces
   components/
@@ -115,8 +119,8 @@ The furniture — visual pieces
       IdentityCard.js          The identity card — this is the About page
       IdentificationCardEditor.js  Editing the card in place
       ListeningBeacon.js       The beacon — what is playing, or last played
-      AlbumStrip.js            The scrolling row of albums
       Journal.js               The wall of covers, with its search, filters and sort
+      JournalFilters.js        The filter sheet — a popover on a desk, a pull-down sheet on a phone — and the year range
       AlbumTile.js             One cover on that wall
       Dashboard.js             The right pane, for the owner — Listen, Inbox, Share, Settings
       Pitch.js                 The right pane, for everybody else
@@ -164,7 +168,15 @@ The rooms — full pages assembled from furniture
   app/
     page.js                    Homepage
     layout.js                  Wraps every page (fonts, theme)
-    globals.css                All the styling
+    styles/                    The stylesheets, one per surface — see below
+      base.css                 Palette, both themes, the two typefaces, resets, the pill
+      nav.css                  The cross: panes, crown, carets, beacon, pitch, desk, and the nav row on other pages
+      journal.css              The wall of covers and its bar
+      entry.css                The layer, the stand-in, the entry page, comments, corrections
+      idcard.css               The identity card, its editor, the About pane writing
+      session.css              The listen: picker, header, four screens, the reference
+      get.css                  /get — the door, the steps, the story
+      forms.css                Send, setup, settings, the password gate, compare, key
     manifest.js                PWA manifest — force-dynamic, so the name is not baked in
     feed.xml/route.js          The journal as an RSS feed
     entries/[slug]/
@@ -177,14 +189,12 @@ The rooms — full pages assembled from furniture
     shuffle/page.js            Redirect to a random entry
     get/page.js                The keeper's long note. 404s when unwritten
     about/page.js              Redirect to / — the identity card is the about page
-    rig/page.js                Redirect to / — the rig lives on the card
     session/page.js            The listen — picker, then four screens under one header
     setup/page.js              Claiming a copy: the code, the name, five skippable screens, the password
     settings/page.js           The machinery, owner-only
     @layer/(.)session/page.js  The same listen, opened as a layer over the desk
     dashboard/
-      page.js                  Hub — 3 buttons (Listen, Inbox, Share)
-      submissions/page.js      Redirect into the inbox — kept for old links
+      page.js                  Redirect to / — the desk is the right pane of the cross
       inbox/page.js            Comments and submissions in one place
       share/page.js            Album exporter — slides for sharing an entry
 
@@ -204,7 +214,7 @@ The rooms — full pages assembled from furniture
 | The entry that opens over the wall, and swiping between entries | components/main_components/LayerEntry.js, library/handoff.js and app/@layer/ |
 | The full entry post page | app/entries/[slug]/FullPostPage.js |
 | The album picker | components/session_components/AlbumPicker.js |
-| The note-taking session, and its styles | app/session/page.js |
+| The note-taking session | app/session/page.js, styles in app/styles/session.css |
 | The header above every session screen | components/session_components/SessionHeader.js |
 | The question mark's sheet, and what it is told | components/session_components/AskSheet.js and app/api/ask/route.js |
 | The session screens (album, tracks, notes, preview) | components/session_components/steps/ |
@@ -218,10 +228,11 @@ Two files, and they are the source — no list is kept here, because the list
 that used to be here spent months claiming the accent was green and the
 headings were set in a serif, and neither had been true for a long time.
 
-- **`library/sitewide_visuals.js`** — `colors_light` and `colors_dark`, plus
-  the `fonts` object. Both themes are defined in full, side by side.
-- **`app/globals.css`** — the same palette as custom properties (`--bg`,
-  `--ink`, `--accent`, `--panel`), which is what most components actually read.
+- **`app/styles/base.css`** — the palette as custom properties (`--bg`, `--ink`,
+  `--accent`, `--panel`), both themes, which is what components read.
+- **`library/sitewide_visuals.js`** — the `fonts` object, and a `colors`
+  object a few canvas and chart pieces still read because a canvas cannot
+  read a custom property.
 
 Change a value in both and it updates everywhere.
 
@@ -248,8 +259,6 @@ than what anyone remembers building.
 | `submissions` | Albums other people have sent you. |
 | `drafts` | A listening session in progress, so closing the tab does not lose it. |
 | `briefings` | Cached album research, keyed by album, so the same record is not paid for twice. |
-| `conversations` | Defined and unused — the session chat lives in the browser and ends with it. |
-| `echo_memory` | Long-term companion memory. Defined, not yet used by anything. |
 
 Two columns on `entries` are computed by Postgres and cannot be written to:
 `rating_value` (the numeric score, so sorting works) and `album_key` (a

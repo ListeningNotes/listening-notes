@@ -3,10 +3,9 @@
 // components/main_components/Dashboard.js
 // The right pane of the cross, seen only by whoever keeps the journal.
 //
-// The same four doors as /dashboard, laid out as a pane rather than as a grid
-// of app icons on a screensaver. The route stays — it is what a bookmark and a
-// home-screen icon point at — and mounts this, the same way /archive mounts
-// Journal. One description of the desk, two places it can be reached.
+// Four doors, laid out as a pane rather than as a grid of app icons on a
+// screensaver, which is what /dashboard used to draw. That address now
+// forwards here: one description of the desk, in one place.
 //
 // One of the four leads and the other three are a list. Starting a listen is
 // the only thing here that makes something which does not exist yet; the rest

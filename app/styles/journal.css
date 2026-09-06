@@ -1,0 +1,439 @@
+/* Copyright (C) 2026 Miyel Brown */
+/* SPDX-License-Identifier: AGPL-3.0-or-later */
+/* app/styles/journal.css
+   The wall of covers: a tile, the three marks, the density control, and the
+   wall's own bar with its search, sort, filters and phone sheet. */
+
+/* ── AlbumTile — the journal wall's album ──────────────────────────────────
+   A cover and a link to the record it is of. It used to be FlipTile, which
+   turned over on a phone to show a metadata card and opened a modal on a
+   desktop; both were ways of finding out more about a record without leaving
+   the wall, and the layer does that better than either — see app/@layer.
+
+   The `perspective` that made the turn possible is gone with it, and that is
+   worth a line of its own: perspective promotes every tile it is set on into
+   its own compositing layer, and those layers painted straight over the fixed
+   nav's backdrop. Album art scrolling through the logo was this property. */
+.ft {
+  position: relative;
+  display: block;
+  aspect-ratio: 1 / 1;
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+.ft-inner { position: absolute; inset: 0; }
+
+.ft-face {
+  position: absolute;
+  inset: 0;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--bg-warm);
+}
+
+.ft-art { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+.ft-placeholder {
+  width: 100%; height: 100%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--font-display);
+  font-weight: var(--font-display-weight);
+  font-size: 48px;
+  color: var(--ink-faint);
+}
+
+/* Lift only where there is a pointer to hover with. On a phone a hover state
+   left stuck on after a tap looks like the tile is still selected — and the
+   wash says which record this is, which is a question only a cursor asks. */
+@media (hover: hover) {
+  .ft { transition: transform 0.18s ease, box-shadow 0.18s ease; }
+  .ft:hover { transform: translateY(-3px); box-shadow: var(--shadow-lift); }
+  .ft:hover .ft-hover { opacity: 1; }
+}
+
+.ft-hover {
+  position: absolute;
+  left: 0; right: 0; bottom: 0;
+  padding: 12px 12px 10px;
+  background: linear-gradient(to top, rgba(0,0,0,0.85), rgba(0,0,0,0));
+  opacity: 0;
+  transition: opacity 0.18s;
+  pointer-events: none;
+}
+.ft-hover-album {
+  font-family: var(--font-sans); font-size: 12px; font-weight: 600;
+  color: #fff; line-height: 1.25;
+  overflow: hidden; text-overflow: ellipsis;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+}
+.ft-hover-artist {
+  font-family: var(--font-label); font-size: 10px;
+  color: rgba(255,255,255,0.7); margin-top: 3px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+/* At the smallest step a tile is ~100px wide and two lines of album title
+   plus an artist fill the whole thing. */
+.arc-grid[data-density="small"] .ft-hover { padding: 8px 8px 7px; }
+.arc-grid[data-density="small"] .ft-hover-album { font-size: 10px; -webkit-line-clamp: 1; }
+.arc-grid[data-density="small"] .ft-hover-artist { font-size: 8.5px; }
+
+/* ── The three marks — favourite, masterpiece, formative ─────────────────
+   Phosphor's Heart, SketchLogo and Fingerprint, filled, in --fav, --mp and
+   --formative. Colour is set here rather than passed as a prop: the icons
+   inherit currentColor, so these rules are the whole palette. Drawn on /key,
+   which is the page that explains them.
+   inline-flex, so the SVG doesn't sit on a text baseline and pick up the
+   line box's leading — the same trap the star row hit. */
+.ln-mark { display: inline-flex; }
+.ln-mark--fav { color: var(--fav); }
+.ln-mark--mp  { color: var(--mp); }
+.ln-mark--formative { color: var(--formative); }
+
+@media (prefers-reduced-motion: reduce) {
+  .ft-inner { transition: none; }
+}
+
+/* ── GridDensity — the three-step album-size control ─────────────────────── */
+.gd {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+  padding: 2px;
+  /* Translucent to match the bar's other controls — no backdrop-filter of
+     its own, since the bar has already blurred what's behind. */
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+}
+.gd-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 26px;
+  padding: 0;
+  border: none;
+  border-radius: 7px;
+  background: transparent;
+  color: var(--ink-faint);
+  cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+}
+.gd-btn svg { fill: currentColor; }
+.gd-btn:hover { color: var(--ink-soft); }
+.gd-btn--on { color: var(--bg); background: var(--ink); }
+.gd-btn--on:hover { color: var(--bg); }
+
+/* ── from components/main_components/Journal.js ─────────────────────────────────────────── */
+/* The fixed nav ends at 80px on every breakpoint — it was 136 while a
+   labelled dot row hung under it. The page starts just below, and
+   the filter bar parks there once you scroll — there's no separate
+   page title anymore, so the grid is the first thing you see. */
+/* 80, not 136. That number covered the nav row and the dot row under
+   it; the dots are gone, so the rest was a band of nothing at the top
+   of every page. */
+.arc-page {
+  --arc-nav-bottom: calc(80px + var(--safe-top));
+  padding-top: calc(var(--arc-nav-bottom) + 16px);
+  /* A column, so the bar can be ordered back above the wall on a wide
+     screen while sitting after it in the markup. See the note by
+     .arc-bar-wrap. */
+  display: flex;
+  flex-direction: column;
+}
+
+.arc-bar-wrap { position: sticky; top: var(--arc-nav-bottom); z-index: 101; padding: 0 24px 10px; }
+
+/* ── On a phone the bar goes to the bottom ────────────────────────
+   Where the thumb is. At the top it is furthest from the hand and it
+   takes the first hundred pixels of the wall, which on a screen this
+   size is most of a row of covers — the records should have the top of
+   the screen and the controls should be where you can reach them.
+
+   Sticky rather than fixed, and that is not a preference either: this
+   wall is mounted inside a pane of the cross, and a fixed bar would
+   float over the card and the desk when you swiped away from it. A
+   sticky one travels with the pane it belongs to.
+
+   It sticks bottom while being the first child of a very tall column,
+   which pins it to the bottom edge for the whole scroll — the natural
+   position it can never fall below is off the top, so it never
+   unsticks. */
+@media (min-width: 769px) { .arc-bar-wrap { order: -1; } }
+@media (max-width: 768px) {
+  .arc-bar-wrap {
+    top: auto;
+    /* On the bottom edge, not hovering above it. It sat 68px up to
+       clear the cross's row of carets — and the carets are hidden for
+       as long as a pane is scrolled, which is the only time this bar is
+       on screen at all, so there was never anything under it to clear.
+       A bar with a strip of page showing beneath reads as a thing
+       floating over the wall rather than the edge of the wall. */
+    bottom: 0;
+  }
+}
+.arc-bar {
+  max-width: 1100px; margin: 0 auto;
+  display: flex; align-items: center; gap: 8px;
+  padding: 8px 10px;
+  background: var(--panel);
+  backdrop-filter: var(--card-blur); -webkit-backdrop-filter: var(--card-blur);
+  border: 1px solid var(--panel-border); border-radius: 14px;
+  box-shadow: var(--shadow-soft);
+}
+
+/* Search: a real field at rest so it reads as searchable, growing to
+   take the whole bar while you type. flex-basis rather than width so
+   it gives room back to the controls when it collapses. */
+.arc-search { position: relative; display: flex; align-items: center; flex: 0 1 240px; min-width: 0; transition: flex-basis 0.22s ease; }
+.arc-search svg { position: absolute; left: 10px; color: var(--ink-faint); pointer-events: none; }
+/* Translucent, but with no backdrop-filter of their own — the bar
+   beneath has already blurred what's behind it, and these paint on
+   top of that result. Adding a second filter here would blur an
+   already-blurred layer and turn the whole bar to mud. */
+.arc-search input {
+  width: 100%; min-width: 0;
+  background: var(--panel); color: var(--ink);
+  border: 1px solid var(--border); border-radius: 9px;
+  padding: 7px 10px 7px 30px;
+  font-family: var(--font-label); font-size: 12px; outline: none;
+}
+.arc-search input:focus { border-color: var(--ink-faint); }
+.arc-bar--searching .arc-search { flex-basis: 100%; }
+
+.arc-ctl {
+  display: flex; align-items: center; gap: 6px; flex-shrink: 0;
+  background: var(--panel); color: var(--ink-soft);
+  border: 1px solid var(--border); border-radius: 9px;
+  padding: 7px 11px; cursor: pointer; outline: none;
+  font-family: var(--font-label); font-size: 11px; letter-spacing: 0.06em;
+  transition: color 0.15s, border-color 0.15s;
+}
+.arc-ctl:hover { color: var(--ink); }
+.arc-ctl--on { color: var(--ink); border-color: var(--ink-faint); }
+/* Square, so the arrow reads as a companion to the sort select
+   rather than a second, unrelated button. */
+.arc-dir { padding: 7px 9px; color: var(--ink); }
+.arc-arrow { flex-shrink: 0; }
+.arc-badge {
+  min-width: 15px; height: 15px; padding: 0 4px; border-radius: 999px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: var(--ink); color: var(--bg);
+  font-family: var(--font-label); font-size: 9px; line-height: 1;
+}
+
+.arc-count {
+  margin-left: auto; flex-shrink: 0; white-space: nowrap;
+  font-family: var(--font-label); font-size: 10px; letter-spacing: 0.1em;
+  color: var(--ink-faint);
+}
+
+/* ── Filters: a popover panel on desktop, a bottom sheet on a phone ── */
+/* Invisible on desktop — it's only there to catch the click that
+   closes the panel. Dimming the whole page behind a small popover
+   would be far more than the popover is worth; the phone sheet,
+   which does cover the screen, gets the dim back below. */
+.arc-scrim { position: fixed; inset: 0; z-index: 150; }
+@keyframes arcFade { from { opacity: 0; } to { opacity: 1; } }
+.arc-sheet {
+  /* left/top are set inline from the button's own position; these
+     are the fallback for the first paint before it's measured. */
+  position: fixed; z-index: 151;
+  top: calc(var(--arc-nav-bottom) + 78px); left: max(24px, calc(50vw - 550px)); width: 290px;
+  /* The same frosted glass as the bar it hangs off, but at the
+     stronger opacity — this panel is big enough to sit over album
+     art rather than flat page, and --panel's 45% can't hold text
+     against that. */
+  background: var(--panel-strong);
+  backdrop-filter: var(--card-blur); -webkit-backdrop-filter: var(--card-blur);
+  border: 1px solid var(--panel-border);
+  border-radius: 14px; box-shadow: var(--shadow-lift);
+  padding: 16px; display: flex; flex-direction: column; gap: 16px;
+  animation: arcPop 0.18s ease;
+}
+@keyframes arcPop { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: none; } }
+.arc-sheet-group { display: flex; flex-direction: column; gap: 7px; }
+.arc-sheet-label {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 8px;
+  font-family: var(--font-label); font-size: 9px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--ink-faint);
+}
+/* The live readout of the year handles, sat on the group's own label
+   rather than floating over the track where a handle would cover it. */
+.arc-sheet-value { color: var(--ink); letter-spacing: 0.08em; }
+/* Spells out what the arrow means — "Newest first" reads faster than
+   working it out from which way the arrowhead points. */
+.arc-sheet-hint {
+  font-family: var(--font-label); font-size: 10px;
+  color: var(--ink-faint); letter-spacing: 0.04em;
+}
+.arc-sheet-opts { display: flex; flex-wrap: wrap; gap: 6px; }
+.arc-opt {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-family: var(--font-label); font-size: 11px; letter-spacing: 0.04em;
+  padding: 6px 11px; border-radius: 999px; cursor: pointer;
+  background: transparent; color: var(--ink-soft);
+  border: 1px solid var(--border); transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.arc-opt--on { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+
+/* ── Year range ──────────────────────────────────────────────────
+   Two native range inputs on one track. Both are stretched across
+   the full width and made transparent to pointer input, so a press
+   lands on whichever HANDLE is nearest rather than on whichever
+   input happens to be on top. */
+.yr { position: relative; height: 34px; margin-top: 2px; }
+.yr-track {
+  position: absolute; left: 0; right: 0; top: 9px; height: 3px;
+  background: var(--border); border-radius: 999px;
+}
+.yr-fill { position: absolute; top: 0; bottom: 0; background: var(--ink); border-radius: 999px; }
+.yr-input {
+  position: absolute; left: 0; top: 0; width: 100%; height: 21px;
+  margin: 0; background: none; pointer-events: none;
+  -webkit-appearance: none; appearance: none;
+}
+.yr-input:focus { outline: none; }
+.yr-input::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  pointer-events: auto; cursor: grab;
+  width: 17px; height: 17px; border-radius: 50%;
+  background: var(--panel-solid); border: 2px solid var(--ink);
+  box-shadow: var(--shadow-soft);
+}
+.yr-input::-moz-range-thumb {
+  pointer-events: auto; cursor: grab;
+  width: 17px; height: 17px; border-radius: 50%;
+  background: var(--panel-solid); border: 2px solid var(--ink);
+  box-shadow: var(--shadow-soft);
+}
+.yr-input:focus-visible::-webkit-slider-thumb { border-color: var(--accent); }
+.yr-input::-moz-range-track { background: none; }
+.yr-ends {
+  position: absolute; left: 0; right: 0; bottom: 0;
+  display: flex; justify-content: space-between;
+  font-family: var(--font-label); font-size: 9px; color: var(--ink-faint);
+}
+/* Centred and sized to their own text rather than stretched to the
+   panel's full width — two buttons splitting the width edge to edge
+   read as a segmented control, which is not what they are. */
+.arc-sheet-foot { display: flex; gap: 8px; justify-content: center; }
+.arc-sheet-foot button { min-width: 108px; justify-content: center; }
+.arc-sheet-done { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.arc-sheet-grip { display: none; }
+
+/* ── The grid. Density is set on the container, so every tile's size
+   comes from one attribute rather than being threaded through each
+   tile's styles. ── */
+/* width and box-sizing are not decoration. Both things that mount this
+   wall are flex columns now, and an auto left-and-right margin on a
+   flex item turns off the stretch that was giving it the full measure
+   — main collapsed to the width of its own content and drew the whole
+   archive down a narrow channel in the middle of the page. */
+.arc-main { width: 100%; box-sizing: border-box; padding: 4px 24px 120px; }
+/* 14, not 24. On a phone every pixel down the side is a pixel off the
+   covers, and the tiles are the page — the bar below already sits on
+   the same 14. */
+@media (max-width: 768px) { .arc-main { padding: 0 14px 132px; } }
+.arc-pages {
+  display: flex; align-items: center; justify-content: center; gap: 14px;
+  margin-top: 34px;
+}
+.arc-page-step {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 34px; height: 34px; border-radius: 10px;
+  border: 1px solid var(--border); background: transparent;
+  color: var(--ink-soft); cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+.arc-page-step:hover:not(:disabled) { color: var(--ink); border-color: var(--ink-faint); }
+.arc-page-step:disabled { opacity: 0.3; cursor: default; }
+.arc-page-count {
+  font-family: var(--font-label); font-size: 10px;
+  letter-spacing: 0.14em; color: var(--ink-faint);
+}
+.arc-grid { display: grid; gap: 14px; }
+.arc-grid[data-density="large"]  { grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); }
+.arc-grid[data-density="medium"] { grid-template-columns: repeat(auto-fill, minmax(132px, 1fr)); }
+.arc-grid[data-density="small"]  { grid-template-columns: repeat(auto-fill, minmax(94px,  1fr)); gap: 10px; }
+
+.arc-skel { aspect-ratio: 1 / 1; border-radius: 10px; background: var(--bg-warm); animation: arcPulse 1.4s ease-in-out infinite; }
+@keyframes arcPulse { 0%,100% { opacity: 0.6; } 50% { opacity: 0.3; } }
+
+.arc-empty {
+  text-align: center; padding: 80px 0; color: var(--ink-faint);
+  font-family: var(--font-label); font-size: 12px; letter-spacing: 0.1em;
+}
+.arc-empty--new { display: flex; flex-direction: column; gap: 10px; align-items: center; }
+.arc-empty-said { color: var(--ink-soft); }
+.arc-empty-how { font-size: 10px; letter-spacing: 0.08em; }
+
+@media (max-width: 768px) {
+  .arc-page { padding-top: calc(var(--arc-nav-bottom) + 10px); }
+  /* Edge to edge and on the floor. This block is further down the
+     sheet than the one that first puts the bar on the bottom, so the
+     padding has to be settled here or the 14px side inset above wins
+     and the bar goes back to being a pill hovering over the covers. */
+  .arc-bar-wrap { padding: 10px 0 0; }
+  .arc-bar {
+    gap: 6px;
+    border-radius: 14px 14px 0 0;
+    border-bottom: none;
+    padding: 6px 12px calc(6px + env(safe-area-inset-bottom));
+  }
+  /* 16px keeps iOS from zooming the page when the field takes focus. */
+  .arc-search input { font-size: 16px; padding: 6px 10px 6px 28px; }
+  .arc-search { flex: 1 1 auto; }
+  /* Typing gets the whole bar: the controls are still one tap away
+     once the field gives focus back. */
+  .arc-bar--searching .arc-ctl,
+  .arc-bar--searching .gd,
+  .arc-bar--searching .arc-count { display: none; }
+  .arc-ctl { padding: 7px 9px; }
+  .arc-ctl-text { display: none; }
+  .arc-count { display: none; }
+
+  .arc-grid[data-density="large"]  { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .arc-grid[data-density="medium"] { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; }
+  .arc-grid[data-density="small"]  { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+
+  .arc-scrim { background: rgba(0,0,0,0.28); animation: arcFade 0.18s ease; }
+
+  /* The popover becomes a bottom sheet — a panel hanging off a
+     button is a desktop idiom, and up near the nav it's out of
+     thumb reach on a phone. */
+  .arc-sheet {
+    top: auto; bottom: 0; left: 0; right: 0; width: auto;
+    border-radius: 20px 20px 0 0; border-bottom: none;
+    padding: 10px 20px calc(20px + env(safe-area-inset-bottom));
+    animation: arcSlide 0.22s ease;
+    /* Fits an iPhone with room to spare, but a small phone or a
+       large accessibility text size can push it past the top. */
+    max-height: 82vh; overflow-y: auto; overscroll-behavior: contain;
+  }
+  @keyframes arcSlide { from { transform: translateY(100%); } to { transform: none; } }
+  /* Springs back when released short of the threshold; the drag
+     itself sets the transform inline and turns this off, so the
+     sheet tracks the finger 1:1 instead of easing behind it. */
+  .arc-sheet--dragging { animation: none; transition: none; }
+  .arc-sheet--settling { animation: none; transition: transform 0.2s ease-out; }
+
+  /* The grab area, not the bar itself — the visible handle is 4px
+     tall, which is nothing to aim at. This gives it a 28px target
+     spanning the sheet's full width. touch-action stops the browser
+     claiming the gesture as a scroll before we see it. */
+  .arc-sheet-grip {
+    display: block; width: 100%; height: 28px; padding: 0; border: none;
+    background: none; cursor: grab; touch-action: none;
+    margin: -6px 0 0;
+  }
+  .arc-sheet-grip:active { cursor: grabbing; }
+  .arc-sheet-grip::before {
+    content: ''; display: block; width: 36px; height: 4px;
+    border-radius: 999px; background: var(--border); margin: 8px auto 0;
+  }
+  .arc-opt { padding: 8px 13px; font-size: 12px; }
+}

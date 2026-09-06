@@ -176,7 +176,6 @@ export default function AlbumFinder({ picked, onPick, onClear }) {
   if (picked) {
     return (
       <div className="af">
-        <FinderStyles />
         <div className="af-held">
           {/* The frame exists so the clear button has something to hang off.
               The art itself carries overflow: hidden, to keep a cover inside
@@ -218,7 +217,6 @@ export default function AlbumFinder({ picked, onPick, onClear }) {
   if (byHand) {
     return (
       <div className="af">
-        <FinderStyles />
         <div className="af-hand">
           <div className="af-hand-pair">
             <label className="af-hand-field">
@@ -269,7 +267,6 @@ export default function AlbumFinder({ picked, onPick, onClear }) {
 
   return (
     <div className="af">
-      <FinderStyles />
 
       {/* The landing: an empty sleeve, waiting, and the field under it. Not
           a spinner and not a message — the sleeve is the shape of the thing
@@ -351,231 +348,5 @@ export default function AlbumFinder({ picked, onPick, onClear }) {
         </button>
       </div>
     </div>
-  );
-}
-
-// Kept in the component rather than in globals.css. The stylesheet already has
-// a cleanup pass waiting on it, and a block that arrives and leaves with the
-// thing it styles is one that can never become part of that problem.
-function FinderStyles() {
-  return (
-    <style>{`
-      /* One measurement for all three states, so the sleeve, the shelf and the
-         chosen record are the same size in the same place and nothing moves
-         when one becomes another.
-
-         180px is the beacon's square and the ceiling here, not a constant. The
-         beacon has a screen to itself; this one shares with a message, a name
-         and an address, and the whole page has to fit without scrolling — so
-         on a short window it gives way first, which is the same trade
-         --hn-crown makes with clamp(150px, 28dvh, 248px) a screen away. */
-      .af {
-        --af-square: clamp(116px, 21dvh, 180px);
-        display: flex; flex-direction: column;
-        gap: clamp(10px, 1.8dvh, 16px);
-      }
-
-      .af-square {
-        width: var(--af-square); aspect-ratio: 1;
-        border-radius: 18px; overflow: hidden;
-        display: flex; align-items: center; justify-content: center;
-      }
-      .af-none { font-size: 2.2rem; color: var(--ink-faint); line-height: 1; }
-
-      /* The slot holds whichever of the three is true, at a fixed height, so
-         the field under it never moves. */
-      .af-slot {
-        display: flex; align-items: center; justify-content: center;
-        min-height: var(--af-square);
-      }
-
-      /* Waiting. Flat and unshadowed, because it is not an object yet — the
-         shadow arrives with the record. */
-      .af-sleeve {
-        background: var(--panel);
-        border: 1px solid var(--border);
-      }
-
-      /* ── The chooser ──────────────────────────────────────────────────────
-         A panel over the whole layer: the field at its head, the wall under
-         it, scrolling. Fixed to the layer rather than the page, because the
-         layer is what the send page is drawn on. */
-      .af-chooser {
-        position: fixed; inset: 0; z-index: 240;
-        background: var(--bg);
-        display: flex; flex-direction: column;
-        animation: afChooserIn 0.22s ease-out;
-      }
-      @keyframes afChooserIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
-      @media (prefers-reduced-motion: reduce) { .af-chooser { animation: none; } }
-      /* Clears the whole status area, not the site's header line. The site
-         runs its mark under the clock on purpose (see --safe-top); a field
-         under the clock is a field you cannot read what you typed into. */
-      .af-chooser-head {
-        display: flex; align-items: center; gap: 8px;
-        padding: calc(env(safe-area-inset-top, 0px) + 18px) 16px 10px;
-        flex: none;
-      }
-      .af-chooser-head .af-input { flex: 1; }
-      .af-chooser-back {
-        display: inline-flex; align-items: center; justify-content: center;
-        width: 36px; height: 36px; border-radius: 10px; flex: none;
-        background: transparent; border: 0; color: var(--ink-faint); cursor: pointer;
-      }
-      .af-chooser-back:hover { color: var(--ink); background: var(--bg-warm); }
-      .af-chooser-body {
-        flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain;
-        -webkit-overflow-scrolling: touch;
-        padding: 0 16px max(24px, env(safe-area-inset-bottom));
-      }
-      .af-chooser-body .af-under { margin-top: 14px; }
-
-      /* ── The wall ─────────────────────────────────────────────────────────
-         Results as a wall of covers under the field, two across on a phone
-         and three on a wider window, newest first. It was a shelf scrolling
-         sideways for a while, then rows for an hour; the wall is what the
-         keeper asked for — the covers are how you recognise a record, and a
-         wall is how the journal itself shows them. It scrolls with the sheet,
-         and it can be as tall as the results make it, because the rest of
-         the form only appears once a record has been picked. */
-      .af-wall {
-        display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 14px; width: 100%; margin-top: 4px;
-      }
-      @media (min-width: 640px) { .af-wall { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
-
-      .af-cover {
-        display: flex; flex-direction: column; gap: 2px; min-width: 0;
-        background: none; border: none; padding: 0;
-        text-align: left; cursor: pointer; color: inherit;
-      }
-      .af-cover-art {
-        display: block; width: 100%; aspect-ratio: 1;
-        border-radius: 6px; overflow: hidden; background: var(--panel);
-        margin-bottom: 5px;
-        box-shadow: 0 4px 18px rgba(0,0,0,0.18);
-        transition: transform 0.2s cubic-bezier(0.34,1.2,0.64,1);
-      }
-      .af-cover-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
-      .af-cover:hover .af-cover-art { transform: scale(1.05); }
-      .af-cover-album {
-        font-family: var(--font-nunito), sans-serif; font-weight: 600; font-size: 11px;
-        line-height: 1.25; color: var(--ink);
-        overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-      }
-      .af-cover-artist {
-        font-family: var(--font-mono); font-size: 9px; color: var(--ink-faint);
-        overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-      }
-
-      /* The same frosted recipe every other input on the site uses — the
-         archive's search field is this. */
-      .af-input {
-        display: block; width: 100%; box-sizing: border-box;
-        background: var(--panel);
-        border: 1px solid var(--border); border-radius: 10px;
-        color: var(--ink);
-        padding: 11px 13px;
-        font-family: var(--font-nunito), sans-serif; font-size: 14px; line-height: 1.6;
-        outline: none; transition: border-color 0.15s;
-      }
-      .af-input::placeholder { color: var(--ink-faint); }
-      .af-input:focus { border-color: var(--ink-faint); }
-      /* 16px on touch, or Safari zooms the page in on focus and does not
-         reliably zoom back out. See the longer note in app/submit/page.js. */
-      @media (pointer: coarse) {
-        .af-input { font-size: 16px; }
-      }
-
-      /* One line under the field, holding its height whether or not anything
-         is being said in it, so the form below does not shuffle as a search
-         starts and finishes. */
-      .af-under {
-        display: flex; align-items: baseline; gap: 14px;
-        min-height: 1.2em;
-      }
-      .af-word {
-        font-family: var(--font-label); font-size: 10px;
-        letter-spacing: 0.12em; text-transform: uppercase;
-        color: var(--ink-faint);
-      }
-      .af-sub {
-        display: block;
-        font-family: var(--font-label); font-size: 10px;
-        letter-spacing: 0.12em; text-transform: uppercase;
-        color: var(--ink-faint); margin-bottom: 7px;
-      }
-
-      /* Chosen. Every number below is .beacon-card's, copied rather than
-         referenced because the beacon's classes belong to the beacon — but if
-         one of them moves, this is the thing it has to keep agreeing with. */
-      .af-held {
-        display: flex; flex-direction: column; align-items: center;
-        gap: clamp(14px, 3.2dvh, 28px);
-      }
-      .af-held-frame { position: relative; display: block; }
-      .af-held-art {
-        background: var(--panel);
-        box-shadow: 0 18px 44px rgba(0,0,0,0.16);
-      }
-      .af-held-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
-
-      /* On the corner, half on the record and half off it, so it reads as
-         attached to the thing rather than printed on the cover. Same fill and
-         rule as the About card's own badges — it is the same kind of small
-         control parked on the corner of a square. */
-      .af-clear {
-        position: absolute; top: -8px; right: -8px;
-        display: flex; align-items: center; justify-content: center;
-        width: 24px; height: 24px; border-radius: 50%;
-        background: var(--bg);
-        border: 1px solid var(--border);
-        color: var(--ink-faint);
-        cursor: pointer; padding: 0;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.10);
-        transition: color 0.15s, border-color 0.15s;
-      }
-      .af-clear:hover { color: var(--ink); border-color: var(--ink-faint); }
-      .af-clear:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 2px; }
-
-      .af-held-meta {
-        display: flex; flex-direction: column; align-items: center;
-        gap: clamp(5px, 1.2dvh, 10px); text-align: center; width: 100%; min-width: 0;
-      }
-      /* --text and --text-muted are what the beacon names these, and both are
-         aliases of --ink and --ink-soft. Written as the ink tokens because
-         that is what the rest of this page uses. */
-      .af-held-album {
-        font-family: var(--font-nunito), sans-serif; font-weight: 700;
-        font-size: clamp(1.15rem, 2.6dvh, 1.5rem); line-height: 1.15; color: var(--ink);
-        text-wrap: balance;
-      }
-      .af-held-artist {
-        font-family: var(--font-nunito), sans-serif; font-size: 0.85rem;
-        letter-spacing: 0.08em; color: var(--ink-soft);
-      }
-
-      .af-quiet {
-        background: none; border: none; padding: 0; cursor: pointer;
-        font-family: var(--font-mono); font-size: 10px;
-        letter-spacing: 0.08em; color: var(--ink-faint);
-        border-bottom: 1px solid var(--border);
-        transition: color 0.15s;
-        margin-left: auto;
-      }
-      .af-quiet:hover { color: var(--ink-soft); }
-
-      .af-hand { display: flex; flex-direction: column; gap: 16px; }
-      .af-hand-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-      .af-hand-field--year { max-width: 150px; }
-      .af-hand-row { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
-      .af-hand .af-quiet { margin-left: 0; }
-
-      @media (max-width: 768px) {
-        .af { --af-square: min(140px, 19dvh); }
-        .af-square { border-radius: 15px; }
-        .af-hand-pair { grid-template-columns: 1fr; }
-      }
-    `}</style>
   );
 }

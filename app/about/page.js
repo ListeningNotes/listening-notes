@@ -6,7 +6,7 @@
 // The cover is two-sided now: the front is the beacon, the back is the card,
 // and the card *is* the about page — portrait, keeper, since, the note, the
 // marks. The two parts that were too long to fit on a card kept their own
-// addresses at /rig and /key.
+// addresses at /key; /rig has since gone too, folded onto the card.
 //
 // This file stays as a forwarding address rather than a deletion. The old tab
 // had been linked from the dot row on every page of the site for months, and a

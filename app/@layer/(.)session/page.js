@@ -18,7 +18,7 @@
 //
 // scrolls, because the session is one ordinary column under a sticky header
 // and wants the sheet to scroll it. The nav row on the picker goes into the
-// sheet's flow for the reason .lay--scrolls .sitenav-row gives in globals.css.
+// sheet's flow for the reason .lay--scrolls .sitenav-row gives in styles/nav.css.
 
 import LayerEntry from '@/components/main_components/LayerEntry';
 import SessionPage from '../../session/page';
