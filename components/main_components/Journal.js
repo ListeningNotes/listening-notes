@@ -262,7 +262,7 @@ export default function Journal({ entries: given, loading: givenLoading, scrolle
         // Undated albums sort as year 0, which parks them at the far end
         // rather than scattering them through the middle.
         if (sortBy === 'year')   return dir * ((releaseYear(a) || 0) - (releaseYear(b) || 0));
-        return dir * (new Date(a.created_at) - new Date(b.created_at));
+        return dir * (new Date(a.posted_at) - new Date(b.posted_at));
       });
   }, [entries, search, sortBy, sortDir, genre, favoritesOnly, masterpiecesOnly, formativeOnly, yearActive, yearRange]);
 

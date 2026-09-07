@@ -43,9 +43,8 @@ export async function GET(request) {
 
   const items = entries.map(e => {
     const link = `${origin}/entries/${e.slug}`;
-    // pull_public_entries hands back a correct UTC instant; RFC 822 is what a
-    // reader expects to parse.
-    const date = e.created_at ? new Date(e.created_at).toUTCString() : null;
+    // posted_at is a real instant; RFC 822 is what a reader expects to parse.
+    const date = e.posted_at ? new Date(e.posted_at).toUTCString() : null;
     const heard = entryTypeLabel(e.entry_type);
     const summary = [e.artist, e.year].filter(Boolean).join(' · ')
       + (e.rating ? ` — ${e.rating}` : '')

@@ -190,6 +190,10 @@ cannot be tested end to end.
 The cross is built and merged. What is left of it:
 
 - [x] **`usePlaceKeeper` is not needed and will not be built.** It was going to remember the pane index and the per-pane scroll offset across a route change, because browsers do not restore nested scroll containers. Going out to an entry and back is the only thing that lost them, and an entry is a layer now — the cross never unmounts, so both survive on their own. Verified: pane scroll 991 before and after, and the rail still on the beacon pane.
+- [ ] **`entries.edited_at` has the same naive type as `created_at` had**, and
+      the same shift: an edit stamped at 11pm reads as tomorrow. Same fix as
+      `posted_at` — a zoned column, filled from the old one, readers switched
+      — and it needs a name from Miyel before the file exists.
 - [ ] **`useShake` + `firework()`** — shake the phone, a firework goes up, then `/shuffle`. The route stays (kept on purpose 2026-09-06); the shake is the only way in that is still meant to exist, since the pill came off the foot of the wall.
 - [ ] **The share page's lint fix is unverified in the browser.** `chosen` is
       now derived from the fetched record rather than set in an effect, and the
@@ -531,6 +535,14 @@ Project → Settings → Environment Variables.
 ---
 
 ## Gotchas
+
+**`ADD COLUMN … DEFAULT now()` dates every existing row today.** Postgres
+fills the new column with the default as the ALTER runs, so an UPDATE that
+then fills "where the column is null" finds nothing and every old row keeps
+the migration's own time. Add the column empty, fill it, then set the
+default. Caught on `posted_at` by counting rows that agreed with the old
+column — zero of 39 — before it shipped; the count is the check, not the
+migration log saying "applied".
 
 **A grep for callers in other files calls a function dead when its only
 caller is in its own file.** `foldGenre` came up with no external caller and
@@ -1026,6 +1038,12 @@ current.
 - [x] **`/printer` — the share printer's door, before the printer** (branch
       `printer-door`). Printer glyph beside the pencil on an entry and on the
       card; the page rises from the foot of the screen and says coming soon.
+- [x] **`posted_at`** (branch `posted-at`) — the timezone fix, additively:
+      migration 005 adds the zoned column, fills it from `created_at` read
+      as UTC, and every entry reader switches to it. Applied to the live
+      journal, 39 of 39 rows agree with the old column, Cathedral reads
+      "August 22" on a New York screen where it read the 23rd. See the
+      gotcha it produced on the way.
 
 **2026-09-03 session — the audit cleanup** (branch `cleanup-audit`)
 - [x] **Lint at zero.** Nine `set-state-in-effect` errors across Journal, the
