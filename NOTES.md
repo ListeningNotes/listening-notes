@@ -58,7 +58,7 @@ deploy a copy — and none of it is anything they need.
 
 ## Pending
 
-- [ ] **The stray database `ep-old-sea-am0rc38b`.** A copy of the live one,
+- [x] **The stray database `ep-old-sea-am0rc38b`** — it was the `dev` branch; deleted in the Neon console 2026-09-06. What it was: A copy of the live one,
       written to from localhost for four days. Find it in the Neon console —
       likely a branch or a second project — and delete it once nothing there
       is wanted. It holds the September 2 essay draft and possibly `secrets`
@@ -190,10 +190,6 @@ cannot be tested end to end.
 The cross is built and merged. What is left of it:
 
 - [x] **`usePlaceKeeper` is not needed and will not be built.** It was going to remember the pane index and the per-pane scroll offset across a route change, because browsers do not restore nested scroll containers. Going out to an entry and back is the only thing that lost them, and an entry is a layer now — the cross never unmounts, so both survive on their own. Verified: pane scroll 991 before and after, and the rail still on the beacon pane.
-- [ ] **`entries.edited_at` has the same naive type as `created_at` had**, and
-      the same shift: an edit stamped at 11pm reads as tomorrow. Same fix as
-      `posted_at` — a zoned column, filled from the old one, readers switched
-      — and it needs a name from Miyel before the file exists.
 - [ ] **The journal's own address has no preview picture.** An entry's does
       now; the root should unfurl as the card. That is the printer's plate,
       so it waits for the printer rather than growing a second card.
@@ -204,8 +200,8 @@ The cross is built and merged. What is left of it:
       the page needs a signed-in look at `/dashboard/share` to confirm both
       slides still draw and the status line settles to blank.
 - [ ] **A QR on the pitch pane.** DECISIONS already settles that the right pane produces a fixed code to `/get`, the same on every copy. Not built, and the "logo made of the QR" idea is unresolved.
-- [ ] **Compare wants two homes** — one on an individual album, for comparing that record against another, and one on the About pane for comparing the collection overall. It is reachable from neither today; the route works if you type it.
-- [ ] **Surprise (`/shuffle`) has no way in.** Work in progress by decision — the shake is the intended gesture and is not built. See DECISIONS.
+- [ ] **PARKED until Junior has a copy — Compare wants two homes** — one on an individual album, for comparing that record against another, and one on the About pane for comparing the collection overall. It is reachable from neither today; the route works if you type it.
+- [ ] **PARKED until Junior has a copy — Surprise (`/shuffle`) has no way in.** Work in progress by decision — the shake is the intended gesture and is not built. See DECISIONS.
 
 **THE CROSS'S TWO OPEN PROBLEMS** — attempted 2026-08-29 and reverted whole
 
@@ -1052,6 +1048,13 @@ current.
       metadata now carrying a description and the large-image card hint.
       Checked on the dev server: Donuts and Cathedral both draw with cover,
       stars and pills; a missing slug draws the keeper's name alone.
+- [x] **`edited_at` reads as the UTC it is** — no new column: the stamp was
+      already stored correctly and only the read shifted it, so the window
+      every entry read goes through re-reads it `AT TIME ZONE 'UTC'` under
+      its own name. Miyel kept the name; additive-only kept the schema.
+- [x] **Settings comes up as a sheet** (branch `settings-sheet`) — the door
+      on the desk and the Sign in line both rise from the foot of the screen
+      now, so there is a way back that is not the browser.
 
 **2026-09-03 session — the audit cleanup** (branch `cleanup-audit`)
 - [x] **Lint at zero.** Nine `set-state-in-effect` errors across Journal, the
