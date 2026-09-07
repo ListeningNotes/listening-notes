@@ -440,10 +440,16 @@ it reaches the canonical instance by its full address rather than by a path.
 why; what the software is, that it is free, and how to install a copy is not
 written yet. Recorded as a known hole rather than discovered as one.
 
-**No mark in the corner.** The crown at the head of every pane is the mark; a
-small one in the bar is a second one whether or not the two are ever on screen
-at once. The band behind that row stays, because it is what stops the wall of
-covers scrolling through the theme toggle.
+**The bar is a flush line with the small mark in it, 2026-09-06.** Reversed
+from the rule that stood here — "no mark in the corner, and the band behind
+the row is a fade". Once a pane has scrolled its crown away, the row becomes
+a bar: the page colour, flush, one hairline under it, and the small mark in
+the middle, which is also the way back to the top. The nav row on every
+other page got the same edge. A fade was a smear the covers dissolved into;
+a line is what a header is. What the old rule protected still holds: the
+crown and the small mark are never on screen together, because the bar only
+appears once the crown has gone. The wall starts under the bar's height so
+its first row is never cut off by it.
 
 **Each caret carries a mark for what is that way** — a card left, a book down,
 a cog right for the owner and an `i` for a visitor. The caret is the verb and
