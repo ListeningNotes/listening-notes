@@ -147,3 +147,36 @@ files describing one database is two files that drift, and this one already had
 a rule about that. Backups carry the migrations rather than a separate copy.
 
 ---
+
+## The last drop — 2026-09-06
+
+The schema's draft window closed on 2026-09-06. What went, and how, is
+history now: nothing is ever dropped again, so nobody will reopen it.
+
+**`bio` was the card and `about_intro` was the pane, and both are gone,
+2026-09-06.** They used to fall back into each other, which was right while
+the card was the whole about page and wrong the moment there was somewhere
+longer to write. Then the prompts replaced the bio, nothing read either
+column, and the two held the same paragraph. Dropped together on the
+owner's say-so.
+
+**The last drop, 2026-09-06, and the draft window closes with it.**
+`entries.background` and `post_link`, `settings.journal_name`, `bio`,
+`instagram_url` and `send_me`, and the tables `conversations`, `echo_memory`
+and `playing_with_neon`. Each had no reader: the background was a
+model-written paragraph from when posts opened with one, `post_link` the old
+Tumblr address, `bio` a paragraph the prompts replaced, `send_me` a line the
+"If you're sending me something" prompt replaced, `journal_name` a title a
+journal does not have, `instagram_url` an address that lives in
+`social_links`. The two tables were built for a companion this software no
+longer has and never held a row; the third is Neon's sample. `bio` and
+`send_me` are the owner's writing and were dropped on the owner's say-so,
+which is the only way writing is ever dropped — and `about_intro`, the same
+paragraph under a second name, went with them the same day.
+
+**Removed from `001_initial.sql` as well, which is the documented exception to
+"nothing edits a migration that has run".** The runner keys on the filename,
+so an edit never re-runs; what the edit changes is what a fresh copy builds.
+Dropped columns have come out of 001 this way since `relationship` did. The
+live database loses them by hand, after the code that stopped naming them is
+deployed — never before, because the code on `main` still writes into them.
