@@ -26,9 +26,9 @@ Before wrapping up:
 - Move finished items to **Complete**, with the date.
 - Add anything new to **Pending**.
 - Record any gotcha that cost real time under **Gotchas**.
-- If a decision was made — something chosen, rejected, or ruled out — write it
-  into **DECISIONS.md** with its reason. Decisions go there when they are made,
-  not when they are built.
+- A decision goes in **DECISIONS.md** only if a future session would reopen
+  it, or repeat a mistake, without the entry. The rule and one reason, six
+  lines at most. Everything else is a commit message or a Gotcha.
 
 **Read [DECISIONS.md](DECISIONS.md) at the start of every session.** If
 something in it comes up, the answer is already written down. Do not
@@ -200,6 +200,11 @@ The cross is built and merged. What is left of it:
       the page needs a signed-in look at `/dashboard/share` to confirm both
       slides still draw and the status line settles to blank.
 - [ ] **A QR on the pitch pane.** DECISIONS already settles that the right pane produces a fixed code to `/get`, the same on every copy. Not built, and the "logo made of the QR" idea is unresolved.
+- [ ] **DECISIONS.md is nearly 2,000 lines and read at every session start.**
+      Pinned by Miyel 2026-09-06: a pass, entry by entry, with the test now
+      written at the top of the file — reopenable or mistake-preventing stays,
+      how-it-was-done goes to the archive, trivia goes. Today's 18 entries
+      first, so the shape of the cut can be seen before the older ones.
 - [ ] **PARKED until Junior has a copy — Compare wants two homes** — one on an individual album, for comparing that record against another, and one on the About pane for comparing the collection overall. It is reachable from neither today; the route works if you type it.
 - [ ] **PARKED until Junior has a copy — Surprise (`/shuffle`) has no way in.** Work in progress by decision — the shake is the intended gesture and is not built. See DECISIONS.
 
