@@ -26,11 +26,6 @@ export default function PrinterPage({ layered = false }) {
       <main className="pr-main">
         <div className="own-label">Share printer</div>
         <h1 className="pr-title">Coming soon.</h1>
-        <p className="pr-note">
-          This is where a record, or the card, becomes something you can hand
-          to somebody — a picture, a card, a code. It is not built yet. For
-          now, the address of an entry is the way to share it.
-        </p>
       </main>
     </div>
   );
