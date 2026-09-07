@@ -123,7 +123,10 @@ export function buildReferenceIndex(entries) {
     const target = {
       kind: 'artist',
       label: entry.artist,
-      href: '/archive?q=' + encodeURIComponent(entry.artist),
+      // The journal itself, filtered — not a page of its own. See HomeNav's
+      // landing note: /?q= puts you on the wall with the search showing the
+      // name, which is the artist page this site has without having one.
+      href: '/?q=' + encodeURIComponent(entry.artist),
       slug: null,
       forms: [],
     };

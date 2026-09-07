@@ -186,11 +186,26 @@ export default function HomeNav() {
   // On desktop the rail is a grid with nothing to scroll, so this clamps to 0
   // and costs nothing.
   // /?edit=card lands on the card instead, with its pencil up — see About.
+  //
+  // /?q=name lands on the wall, already filtered. An artist's name in a review
+  // links here, and the answer to "what else of theirs is in this journal" is
+  // the journal — scrolled down to the covers, with the search field showing
+  // the name — rather than a separate page that opens over the one you were
+  // reading and leaves a stack of them behind you. The centre pane is one
+  // screen of beacon and then the wall, so one screen down is the wall's top;
+  // set before paint like the rail, for the same reason.
   useLayoutEffect(() => {
     const el = railRef.current;
     if (!el) return;
-    const toCard = new URLSearchParams(window.location.search).get('edit') === 'card';
+    const params = new URLSearchParams(window.location.search);
+    const toCard = params.get('edit') === 'card';
     el.scrollLeft = el.clientWidth * (toCard ? 0 : HOME);
+    if (params.get('q')) {
+      const home = paneRefs[HOME].current;
+      if (home) home.scrollTop = home.clientHeight;
+    }
+  // paneRefs is a stable array of refs; listing it would re-run this on every render.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Which pane is on screen, read off the scroll position rather than set by
