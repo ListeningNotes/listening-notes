@@ -67,30 +67,27 @@
   padding: 0 28px;
   min-height: 58px;
 }
-/* The band that hides scrolling page content behind the fixed header. It has
-   to cover this row AND the dot-nav below it (which is a separate fixed
-   element, so one band spanning both is simpler than giving each its own).
-   Solid down past the dot labels, then a short fade so text dissolves out
-   instead of meeting a hard line. z-index -1 puts it behind this row's own
-   logo/beacon/toggle, while the row's stacking context keeps it above the
-   page; the dot-nav is a later sibling, so it paints on top too. */
+/* The bar behind the fixed header once the page has scrolled: the page
+   colour, flush, ending on the same 80px line every page clears, with one
+   hairline under it. A fade used to do this and dissolved the covers into
+   the logo; an edge is what a header is. z-index -1 puts it behind this
+   row's own logo/tools/toggle, while the row's stacking context keeps it
+   above the page. translateZ(0) forces it onto its own compositing layer —
+   the archive grid's tiles carry a perspective and would paint over an
+   unpromoted band. */
 .sitenav-row::before {
   content: '';
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
-  height: 180px;
+  height: calc(80px + var(--safe-top));
   z-index: -1;
   pointer-events: none;
   opacity: 0;
   transition: opacity 0.22s ease;
-  background: linear-gradient(to bottom, var(--bg) 0%, var(--bg) 84%, transparent 100%);
-  /* Forces this band onto its own compositing layer. Without it, page
-     content that the browser HAS promoted — the archive grid's tiles carry
-     a perspective, so each one gets a layer — paints straight over the top
-     of it, and album art scrolls through the logo and the dot labels. Hit
-     testing was always correct here; it was purely what got drawn. */
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
   transform: translateZ(0);
   will-change: opacity, transform;
 }
@@ -421,6 +418,9 @@
    scrolling page, and a strip that swallowed taps would kill the swipe along
    its whole width. Its two children take theirs back. */
 .hn-bar {
+  /* How tall the bar is: its top padding, a 40px control, 8px under. Shared
+     with the wall below, which starts under it — see .hn-under .arc-main. */
+  --hn-bar-h: calc(max(12px, calc(env(safe-area-inset-top) - 12px)) + 48px);
   position: fixed;
   top: 0;
   left: 0;
@@ -437,6 +437,11 @@
   pointer-events: none;
 }
 .hn-bar > * { pointer-events: auto; }
+/* The wall begins one screen down, which is exactly where the bar is, and
+   the bar is opaque now: without this the first row of covers starts under
+   it. The same height the bar computes, so the first row clears it on a
+   notch phone as well as a flat one. */
+.hn-under .arc-main { padding-top: calc(max(12px, calc(env(safe-area-inset-top) - 12px)) + 48px); }
 
 /* The strip you tap to go back to the top of a pane. Invisible on purpose:
    the band behind this row already appears when a pane is scrolled, so the
@@ -456,30 +461,33 @@
   cursor: pointer;
 }
 
-/* The band that stops a scrolled pane running through the mark. Same shape as
-   .sitenav-row::before, and here for the same reason: this row is fixed with
-   no background of its own, so the wall of covers scrolled straight through
-   the logo. It only fades in once the pane under it has actually moved, so the
-   landing screen of every pane still runs clean to the top of the window.
-   translateZ(0) is not decoration — the archive tiles carry a perspective and
-   are therefore on their own compositing layers, which paint over an
-   unpromoted band no matter what its z-index says. */
-.hn-bar::before {
-  content: '';
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 140px;
-  z-index: -1;
-  pointer-events: none;
-  opacity: 0;
-  transition: opacity 0.22s ease;
-  background: linear-gradient(to bottom, var(--bg) 0%, var(--bg) 78%, transparent 100%);
+/* Once the pane under it has moved, the row becomes a bar: the page colour,
+   flush, with one hairline under it and the small mark in the middle. It used
+   to be a fade — a gradient the covers dissolved into — and a fade is a
+   smear; a line is an edge. The landing screen of every pane still runs
+   clean to the top of the window, because the bar only appears once the
+   crown has scrolled away, so the big mark and the small one are never on
+   screen together. translateZ(0) is not decoration — the archive tiles carry
+   a perspective and are on their own compositing layers, which paint over an
+   unpromoted bar no matter what its z-index says. */
+.hn-bar--scrolled {
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
   transform: translateZ(0);
-  will-change: opacity;
 }
-.hn-bar--scrolled::before { opacity: 1; }
+.hn-bar-mark {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  padding: 6px 10px;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  line-height: 0;
+}
+.hn-bar-svg { height: 22px; width: auto; display: block; }
+.hn-bar-svg path { fill: var(--ink); }
 
 .hn-mark-dot { fill: var(--ink); }
 /* The live indicator, and the only green on the site. Same keyframe the old
@@ -916,4 +924,14 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   align-items: center;
   gap: 18px;
   margin-top: 36px;
+}
+
+/* The card's pencil and printer are pinned to the window (see .ab-card
+   .idc-head in idcard.css), which on a phone means they stay on screen when
+   the pane beside the card is the one showing — a pencil for the card,
+   floating over the wall. The cross says which pane is on screen, and on a
+   phone the card's tools are drawn only while it is the card's. On a desk all
+   three panes are on screen and the card is always one of them. */
+@media (max-width: 768px) {
+  .hn:not([data-pane="0"]) .ab-card .idc-head { display: none; }
 }
