@@ -181,6 +181,7 @@ The rooms — full pages assembled from furniture
     entries/[slug]/
       page.js                  Loads the entry, hands it to FullPostPage
       FullPostPage.js          The full public entry page with comments — and, in preview mode, the session's preview
+      opengraph-image.js       The picture an entry's link unfurls into — cover, title, score, marks — drawn on the server per request
     archive/page.js            Every entry — search, sort, filters
     key/page.js                What the stars and the three marks mean
     submit/page.js             Send the keeper an album
