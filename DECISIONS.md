@@ -11,9 +11,7 @@ implemented.
 repeat a mistake, without it?** If not, it does not go here. How a thing was
 built belongs in its commit; a lesson that cost time belongs in NOTES under
 Gotchas; a small choice nobody will revisit belongs nowhere. An entry is the
-rule and one reason, six lines at most. This file had grown to nearly two
-thousand lines by recording all three kinds, and it is read at the start of
-every session; a pass to cut it back is pinned, not done.
+rule and one reason, six lines at most.
 
 **What is here is what could come up again.** Settled history nobody would
 reopen — the licence reasoning, the arguments behind decisions since reversed
@@ -158,13 +156,6 @@ stay or the columns stop agreeing where a square starts.
 **Desktop is the same three components as three columns.** Not a second layout.
 The site already carried two separate homepage markup trees that had drifted
 apart; a third would have been the same mistake twice.
-
-**`bio` was the card and `about_intro` was the pane, and both are gone,
-2026-09-06.** They used to fall back into each other, which was right while
-the card was the whole about page and wrong the moment there was somewhere
-longer to write. Then the prompts replaced the bio, nothing read either
-column, and the two held the same paragraph. Dropped together on the
-owner's say-so.
 
 **Prompts replace the free-text bio.** Nine openings ship in
 `library/bioprompt.js`, a keeper answers three in one line each, and the answer
@@ -448,16 +439,12 @@ it reaches the canonical instance by its full address rather than by a path.
 why; what the software is, that it is free, and how to install a copy is not
 written yet. Recorded as a known hole rather than discovered as one.
 
-**The bar is a flush line with the small mark in it, 2026-09-06.** Reversed
-from the rule that stood here — "no mark in the corner, and the band behind
-the row is a fade". Once a pane has scrolled its crown away, the row becomes
-a bar: the page colour, flush, one hairline under it, and the small mark in
-the middle, which is also the way back to the top. The nav row on every
-other page got the same edge. A fade was a smear the covers dissolved into;
-a line is what a header is. What the old rule protected still holds: the
-crown and the small mark are never on screen together, because the bar only
-appears once the crown has gone. The wall starts under the bar's height so
-its first row is never cut off by it.
+**The bar is a flush line with the small mark in it, 2026-09-06.** Once a
+pane has scrolled its crown away the row becomes a bar: page colour, one
+hairline, the small mark centred, which is also the way back up. Every other
+page's nav row has the same edge. A fade was a smear the covers dissolved
+into. The crown and the small mark are never on screen together, so it is
+still one mark; the wall starts under the bar so its first row is whole.
 
 **Each caret carries a mark for what is that way** — a card left, a book down,
 a cog right for the owner and an `i` for a visitor. The caret is the verb and
@@ -503,67 +490,44 @@ three days, behind a pill on a card, on a site nobody else has a copy of — so
 the bookmarks it was protecting do not exist. And a stub is not free: it is a
 route that ships to every install, whose whole job is to redirect from an
 address that never existed on their journal.
-`/about` stays and was right to — it was in the dot row on every page for
-months. `/rig` and `/dashboard/submissions` were asked the same question on
-2026-09-06 and deleted: three days behind a pill on one card, and owner-only
-from the start, on a site nobody else runs.
+`/about` earned its stub; `/rig` and `/dashboard/submissions` did not and
+are gone (2026-09-06).
 
 **`/dashboard` forwards home, 2026-09-06.** The desk is the right pane of the
-cross; the route had gone on drawing the old hub — a screensaver, the logo
-image, a font nothing loaded — for a week after the manifest stopped pointing
-at it. The address stays because Inbox and Share live under it, and because a
-bookmark should land somewhere; what it draws is nothing of its own.
+cross and draws nothing of its own at the old address. The address stays
+because Inbox lives under it and a bookmark should land somewhere.
 
-**`/shuffle` stays, without a way in, 2026-09-06.** Fourteen lines that work.
-The pill came off the foot of the wall with Compare and Submit, so the shake
-is the only entrance still meant to exist, and deleting the route would be
-deleting the destination of a gesture already decided on.
+**`/shuffle` stays, without a way in, 2026-09-06.** The shake is the only
+entrance still meant to exist; deleting the route would delete the
+destination of a gesture already decided on. Parked with Compare, below.
 
-**`/archive` stays.** It is the one address that takes `?q=`, which is where
-every artist link in a review points, and the entry page and `/key` link to
-it too. The pane absorbs the route; it does not replace the address.
+**`/archive` stays.** `/key` and the entry page's back link go there, and it
+is the wall at an address. The pane absorbs the route; it does not replace it.
 
-**The owner's two tools are plain, on the tokens, and arrive as a sheet,
-2026-09-06.** The inbox and the share page were the last screens on the old
-palette: a screensaver behind frosted glass, hardcoded light-mode colours, a
-font nothing loaded. They read the site's tokens now, so they follow the
-theme like every other page, and they are plain because the desk they open
-from is plain. Both come up from the foot of the screen over the desk, the
-way the send form and the session do — reading what somebody sent should
-not feel like leaving the journal — and both keep their real addresses for a
-bookmark.
+**The owner's pages rise from the foot of the screen over the desk, and are
+plain, on the tokens, 2026-09-06.** Inbox, Settings and the printer: the
+same sheet the send form uses, so reading what somebody sent, or changing a
+key, never feels like leaving the journal. Plain because the desk is plain.
+Each keeps its real address for a bookmark; signed out, Settings' sheet is
+the password gate.
 
-**The Share door and the exporter behind it are gone, 2026-09-06.** The door
-said "Print a card, or the code to /get", which was the share printer that
-never merged; it opened the Instagram slide exporter, which Miyel had moved
-away from in favour of sharing an entry from its own page and the profile
-from the card. A door that promises one thing and opens another, neither of
-them the current model, has no job. The desk is Start a listen, Inbox,
-Settings. The printer glyph beside the pencil on an entry went with it. The
-slide drawing lives on in git and on the `share-printer` branch if a cover
-plate is ever wanted.
+**The Share door and the Instagram exporter behind it are gone, 2026-09-06.**
+Sharing is an entry's own link and the card, not a page the owner exports
+slides from. The desk is Start a listen, Inbox, Settings. The slide drawing
+lives in git and on the `share-printer` branch if a cover plate is wanted.
 
 **The printer's door ships before the printer, 2026-09-06.** The glyph beside
-the pencil — on an entry, and now on the card too — opens `/printer`, which
-comes up from the foot of the screen and says the press is coming. The door
-goes in first so the press lands where people have already been pressing.
-`?entry=slug` travels from an entry so the press can open on that record; the
-card sends nobody, meaning the profile. Reversed from the same morning, when
-the glyph went with the exporter: the glyph was never the exporter's, it was
-the printer's, and the printer is parked rather than rejected.
+the pencil, on an entry and on the card, opens `/printer`, which says the
+press is coming — so the press lands where people have already been
+pressing. `?entry=slug` travels from an entry; the card sends nobody,
+meaning the profile.
 
 **Styles live in eight files by surface, not with their components,
 2026-09-06.** `app/styles/`: base, nav, journal, entry, idcard, session, get,
-forms. A rule is found where its surface is, which is what a stylesheet is
-for; a rule kept inside a component is found only by whoever already knows
-which component. That was the argument for keeping the session's CSS and the
-finder's with their pages — "a block that leaves with the thing it styles can
-never become the cleanup problem" — and it was true and it lost, because the
-same block was invisible to anyone asking where the session's type is set.
-The exception stays for the one component that has to work when nothing
-else does: ComingSoon draws its own styles because it is what a copy shows
-when the stylesheet's own site is down. Import order in `layout.js` is the
-cascade; it follows the order the rules had in the one file they came from.
+forms. A rule is found where its surface is; one kept inside a component is
+found only by whoever already knows which. The one exception is ComingSoon,
+which must draw when nothing else does. Import order in `layout.js` is the
+cascade and follows the order the rules had in the one file they came from.
 
 **The pitch pane stays at three sentences, 2026-09-03.** A fourth — "It
 looks like this: your journal, at your address, like the one you're reading
@@ -1005,20 +969,12 @@ has room for art and metadata together.
 
 ---
 
-**An entry's link unfurls into a picture, 2026-09-06.** The most-shared
-address on the site — the one that goes into a message — used to preview as
-a title and nothing. Now the framework's `opengraph-image` convention beside
-the entry page draws a 1200×630 card on the server when the link is pasted:
-the cover full-height on the left, the keeper's name, the album, the artist
-and year, the stars, and the marks as pills. Drawn per request from the same
-row the page reads, so it can never disagree with the page, and never stored.
-This is the visitor's half of sharing, the half that belongs to everybody;
-the printer is the owner's half and is separate. The two typefaces are
-fetched once from Google Fonts on the server, because the renderer cannot
-read the page's CSS; if that fetch fails the picture still draws in the
-renderer's own face. Stars are drawn as shapes, because a glyph a font
-lacks renders as a box. The journal's own address does not draw one yet —
-that picture is the card, and the card is the printer's job.
+**An entry's link unfurls into a picture, 2026-09-06.** The framework's
+`opengraph-image` file beside the entry page draws the card a message shows
+— cover, keeper, album, artist and year, stars, marks — on the server, per
+request, from the row the page reads, never stored. This is the visitor's
+half of sharing; the printer is the owner's half. The journal's own address
+draws none yet: that picture is the card, and the card is the printer's job.
 
 ## The network
 
@@ -1246,21 +1202,12 @@ checking public GitHub releases instead.
 
 ## Things open in the page, not over it
 
-
 **An artist's name in a review lands you on the wall, filtered, 2026-09-06.**
-It used to open `/archive?q=name`: a second page over the entry, which was
-itself over the journal — a stack of pages going down, the Pinterest shape,
-and on a phone a lone tile above a "Back home" pill. Now the link is
-`/?q=name`: the cross itself, landed on the centre pane one screen down,
-with the search field showing the name and the covers already filtered.
-There is no artist page and no stack; the answer to "what else of theirs is
-here" is the journal, shown the way the journal shows anything. Miyel's
-call, and the right one: the site has one wall, and everything that lists
-records should be that wall.
+`/?q=name`: the cross, landed on the centre pane one screen down, the search
+showing the name. Not a page over the entry over the journal — that stack
+is the Pinterest shape. The site has one wall, and everything that lists
+records is that wall.
 
-**The printer's page says "Coming soon." and nothing else, 2026-09-06.**
-The paragraph explaining what a printer will be came off the same day it
-went on; a door to something unbuilt does not need a brochure.
 **A control opens where it belongs, 2026-08-31.** Not floating in the middle of
 a darkened screen. Twice in a week a popup was built and then taken back out —
 the writing panel and the comment form — and both times the reason was the
@@ -1697,66 +1644,17 @@ to date — never arises.
 **Nothing edits a migration that has run.** The filename is the identity, so a
 renamed file is a file that runs again. A change is a new numbered file.
 
-**The last drop, 2026-09-06, and the draft window closes with it.**
-`entries.background` and `post_link`, `settings.journal_name`, `bio`,
-`instagram_url` and `send_me`, and the tables `conversations`, `echo_memory`
-and `playing_with_neon`. Each had no reader: the background was a
-model-written paragraph from when posts opened with one, `post_link` the old
-Tumblr address, `bio` a paragraph the prompts replaced, `send_me` a line the
-"If you're sending me something" prompt replaced, `journal_name` a title a
-journal does not have, `instagram_url` an address that lives in
-`social_links`. The two tables were built for a companion this software no
-longer has and never held a row; the third is Neon's sample. `bio` and
-`send_me` are the owner's writing and were dropped on the owner's say-so,
-which is the only way writing is ever dropped — and `about_intro`, the same
-paragraph under a second name, went with them the same day.
+**`posted_at` is when an entry was posted; nothing reads `created_at`,
+2026-09-06.** The old column has no zone and the driver returns it as local
+time, hours off. The fix under additive-only was a zoned column filled from
+the old one read as UTC; the old column stays, written by default, read by
+nothing. The first migration of the new kind, and the shape of every later one.
 
-**Removed from `001_initial.sql` as well, which is the documented exception to
-"nothing edits a migration that has run".** The runner keys on the filename,
-so an edit never re-runs; what the edit changes is what a fresh copy builds.
-Dropped columns have come out of 001 this way since `relationship` did. The
-live database loses them by hand, after the code that stopped naming them is
-deployed — never before, because the code on `main` still writes into them.
-
-**From the first external install, this file's additive-only rule is in
-force and none of the above is ever done again.**
-
-**`posted_at` is when an entry was posted, and the first additive migration,
-2026-09-06.** `created_at` was a timestamp without a zone holding a UTC clock
-reading, and the driver hands a naive value back as local time: four hours
-late on a machine four hours behind, so a listen logged at 11pm was dated
-tomorrow, and the feed needed a text-cast workaround to be right. The fix
-under the new rule is a new column with a zone, filled from the old one read
-as UTC, with the old column left in place and written by its default and read
-by nothing. Every reader — the wall, the entry, the stand-in, the feed, the
-card's first-listen stamp — reads `posted_at`.
-
-**Add empty, fill, then default.** `ADD COLUMN … DEFAULT now()` stamps every
-existing row with the default as it runs, so a fill that then looks for empty
-rows finds none, and every old entry is dated the day of the migration. That
-is exactly what happened on the live journal, caught by counting rows that
-agreed with the old column (zero of 39) before anything shipped, and corrected
-by hand. The file was reordered for every fresh copy — the one kind of edit
-to a run migration that is allowed, because the runner keys on the filename
-and the edit only changes what a database that has not run it yet builds.
-`edited_at` had the same naive type; its fix turned out to need no column at
-all — see below.
-
-**`edited_at` keeps its name and its column, and is read as UTC,
-2026-09-06.** The other naive stamp. Unlike `created_at` it was already
-written correctly — an ISO instant cast to the column stores the UTC clock
-reading — so the only fault was the read, and the read is fixed in the one
-window every entry passes through: `(edited_at AT TIME ZONE 'UTC') AS
-edited_at` after the `*`, and the later column of that name wins. No
-migration, nothing for a copy to run. The rule that fell out of it: before
-adding a column to fix a stamp, check whether the stamp is wrong or only
-the reading of it is.
-
-**Settings rises from the foot of the screen, 2026-09-06.** It was the one
-owner page still reached by leaving the cross, and once there the only way
-back was the browser. It is a sheet now like the inbox and the printer;
-signed out, the sheet is the password gate.
-
+**`edited_at` keeps its column and is read as UTC, 2026-09-06.** It was
+already written correctly; only the read shifted it, so the one window every
+entry passes through re-reads it `AT TIME ZONE 'UTC'`. No migration. Before
+adding a column to fix a stamp, check whether the stamp is wrong or only the
+reading of it is.
 
 ---
 
@@ -1961,20 +1859,17 @@ someone sending it on. A directory doesn't solve discovery.
 
 ## Parked, not rejected
 
-
 **Compare and Surprise stay parked until Junior has a copy, 2026-09-06.**
-Both routes work if typed and nothing in the interface reaches them. Not
-cut, not built: a comparison needs a second journal to be worth designing
-against, and the first one that is not Miyel's is the one to design for.
-Miyel's call.
+Both routes work if typed; nothing reaches them. Not cut, not built: a
+comparison needs a second journal to design against, and the first one that
+is not Miyel's is the one to design for.
 
-**The ten screensavers, 2026-09-06.** Rain, DVD, Gallery, Fizzy, SplitScreen,
-Snake, Pong, Solitaire, Reel and the EchoNetwork — 2,500 lines of canvas that
-nothing mounts since the inbox and the share page went plain. Kept on disk
-behind their one index rather than deleted, on Miyel's call: they are wanted
-back as plates for the share printer, fun things to export, which is a better
-job than sitting behind a moderation list. Wiring them back is importing the
-array. This is the one deliberate exception to "no reader, no file".
+**The ten screensavers, 2026-09-06.** 2,500 lines of canvas nothing mounts
+since the owner's pages went plain. Kept behind their one index rather than
+deleted, on Miyel's call: wanted back as plates for the share printer.
+Wiring them back is importing the array. The one exception to "no reader,
+no file".
+
 - Spotify Connect transport control (fragile: two API tightenings in eighteen
   months; needs per-copy client ID and Premium). After the deploy button.
 - Video exports (ffmpeg server-side, Vercel function timeouts; wallpapers

@@ -200,11 +200,10 @@ The cross is built and merged. What is left of it:
       the page needs a signed-in look at `/dashboard/share` to confirm both
       slides still draw and the status line settles to blank.
 - [ ] **A QR on the pitch pane.** DECISIONS already settles that the right pane produces a fixed code to `/get`, the same on every copy. Not built, and the "logo made of the QR" idea is unresolved.
-- [ ] **DECISIONS.md is nearly 2,000 lines and read at every session start.**
-      Pinned by Miyel 2026-09-06: a pass, entry by entry, with the test now
-      written at the top of the file — reopenable or mistake-preventing stays,
-      how-it-was-done goes to the archive, trivia goes. Today's 18 entries
-      first, so the shape of the cut can be seen before the older ones.
+- [ ] **DECISIONS.md is 1,888 lines and read at every session start.** The
+      2026-09-06 entries were cut first (23 → 14, none over six lines; three
+      to the archive, two lessons to Gotchas, the rest shortened or dropped).
+      The older 250 entries are next, by the same test, on Miyel's go.
 - [ ] **PARKED until Junior has a copy — Compare wants two homes** — one on an individual album, for comparing that record against another, and one on the About pane for comparing the collection overall. It is reachable from neither today; the route works if you type it.
 - [ ] **PARKED until Junior has a copy — Surprise (`/shuffle`) has no way in.** Work in progress by decision — the shake is the intended gesture and is not built. See DECISIONS.
 
@@ -539,6 +538,14 @@ Project → Settings → Environment Variables.
 ---
 
 ## Gotchas
+
+**The link-preview renderer cannot read the site's CSS or fonts, and has no
+star glyph.** `ImageResponse` needs font files: the two faces are fetched
+from Google Fonts on the server with an old browser's User-Agent, which
+returns a `.woff` the renderer accepts (asking for `.ttf` alone finds
+nothing and the image fails with "No fonts are loaded"). Neither typeface
+carries ★, and a glyph the font lacks renders as a box — stars are SVG
+shapes. See `app/entries/[slug]/opengraph-image.js`.
 
 **`ADD COLUMN … DEFAULT now()` dates every existing row today.** Postgres
 fills the new column with the default as the ALTER runs, so an UPDATE that
