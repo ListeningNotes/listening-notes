@@ -18,7 +18,7 @@ const sql = database;
 export async function generateMetadata({ params }) {
   const { slug } = await params;
   const [result, settings] = await Promise.all([
-    sql`SELECT album, artist FROM entries WHERE slug = ${slug} LIMIT 1`,
+    sql`SELECT album, artist, year, rating, entry_type FROM entries WHERE slug = ${slug} LIMIT 1`,
     pull_settings(),
   ]);
 
@@ -29,7 +29,16 @@ export async function generateMetadata({ params }) {
   // page on every copy — the single most-shared URL in the whole site, since
   // an entry link is what gets pasted into a message.
   const e = result[0];
-  return { title: `${e.album} — ${e.artist} | ${titleName(settings)}` };
+  const title = `${e.album} — ${e.artist} | ${titleName(settings)}`;
+  // What a preview says under the picture it draws (see opengraph-image.js
+  // beside this file): the artist and year, and the score if there is one.
+  const description = [e.artist, e.year].filter(Boolean).join(' · ') + (e.rating ? ` — ${e.rating}` : '');
+  return {
+    title,
+    description,
+    openGraph: { title: `${e.album} — ${e.artist}`, description, type: 'article', siteName: titleName(settings) },
+    twitter: { card: 'summary_large_image', title: `${e.album} — ${e.artist}`, description },
+  };
 }
 export default async function PostPage({ params }) {
   const { slug } = await params;
