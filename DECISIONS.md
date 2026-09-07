@@ -7,6 +7,14 @@ up again, the answer is already written down — read the reason before
 reopening it. Add to this file when a decision is made, not when it is
 implemented.
 
+**The test for an entry, 2026-09-06: would a future session reopen this, or
+repeat a mistake, without it?** If not, it does not go here. How a thing was
+built belongs in its commit; a lesson that cost time belongs in NOTES under
+Gotchas; a small choice nobody will revisit belongs nowhere. An entry is the
+rule and one reason, six lines at most. This file had grown to nearly two
+thousand lines by recording all three kinds, and it is read at the start of
+every session; a pass to cut it back is pinned, not done.
+
 **What is here is what could come up again.** Settled history nobody would
 reopen — the licence reasoning, the arguments behind decisions since reversed
 — lives in [docs/DECISIONS-ARCHIVE.md](docs/DECISIONS-ARCHIVE.md), which is
