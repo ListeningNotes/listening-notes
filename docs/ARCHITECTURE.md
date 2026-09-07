@@ -252,7 +252,7 @@ than what anyone remembers building.
 
 | Table | What it holds |
 |---|---|
-| `entries` | The journal. One row per listen — an album listened to twice is two entries, never an overwrite. |
+| `entries` | The journal. One row per listen — an album listened to twice is two entries, never an overwrite. `posted_at` is when, with its zone; `created_at` is the older naive stamp, kept and unread. |
 | `settings` | Everything that makes a copy someone's own: the keeper, the portrait, the links, the rig, the starting theme. Exactly one row, forced by a check on `id`. |
 | `secrets` | What must never reach a visitor: the session secret, the password hash, the claim code, the two API keys. One row; read only by `library/secrets.js`. |
 | `users` | The owner. One row, written at setup. |
