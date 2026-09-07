@@ -29,8 +29,12 @@ Update the files, without being asked:
 - Finished items move to **Complete** in NOTES.md, with the date.
 - New items go to **Pending**.
 - Any gotcha that cost real time goes under **Gotchas**.
-- Any decision made — chosen, rejected, or ruled out — goes in **DECISIONS.md**
-  with its reason, when it is decided rather than when it is built.
+- A decision goes in **DECISIONS.md** only if it passes one test: would a
+  future session reopen it, or repeat a mistake, without the entry? If not, it
+  is not recorded there. How something was done is a commit message; a lesson
+  that cost time is a **Gotcha**; a small choice nobody will revisit is
+  nothing. An entry is the rule and one reason, six lines at most. Record it
+  when it is decided rather than when it is built.
 
 # Naming
 
