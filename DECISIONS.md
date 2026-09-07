@@ -991,6 +991,21 @@ has room for art and metadata together.
 
 ---
 
+**An entry's link unfurls into a picture, 2026-09-06.** The most-shared
+address on the site — the one that goes into a message — used to preview as
+a title and nothing. Now the framework's `opengraph-image` convention beside
+the entry page draws a 1200×630 card on the server when the link is pasted:
+the cover full-height on the left, the keeper's name, the album, the artist
+and year, the stars, and the marks as pills. Drawn per request from the same
+row the page reads, so it can never disagree with the page, and never stored.
+This is the visitor's half of sharing, the half that belongs to everybody;
+the printer is the owner's half and is separate. The two typefaces are
+fetched once from Google Fonts on the server, because the renderer cannot
+read the page's CSS; if that fetch fails the picture still draws in the
+renderer's own face. Stars are drawn as shapes, because a glyph a font
+lacks renders as a box. The journal's own address does not draw one yet —
+that picture is the card, and the card is the printer's job.
+
 ## The network
 
 **Backups are two features, not one.** Neon keeps six hours of history on
