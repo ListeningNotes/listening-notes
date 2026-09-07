@@ -200,10 +200,6 @@ The cross is built and merged. What is left of it:
       the page needs a signed-in look at `/dashboard/share` to confirm both
       slides still draw and the status line settles to blank.
 - [ ] **A QR on the pitch pane.** DECISIONS already settles that the right pane produces a fixed code to `/get`, the same on every copy. Not built, and the "logo made of the QR" idea is unresolved.
-- [ ] **DECISIONS.md is 1,888 lines and read at every session start.** The
-      2026-09-06 entries were cut first (23 → 14, none over six lines; three
-      to the archive, two lessons to Gotchas, the rest shortened or dropped).
-      The older 250 entries are next, by the same test, on Miyel's go.
 - [ ] **PARKED until Junior has a copy — Compare wants two homes** — one on an individual album, for comparing that record against another, and one on the About pane for comparing the collection overall. It is reachable from neither today; the route works if you type it.
 - [ ] **PARKED until Junior has a copy — Surprise (`/shuffle`) has no way in.** Work in progress by decision — the shake is the intended gesture and is not built. See DECISIONS.
 
@@ -581,7 +577,11 @@ Also: VS Code did not save the first edit to `.env.local`; check the mtime.
 
 **GitHub's Contributors sidebar counts co-author trailers; its contributors
 API does not.** Checking the API and concluding a co-author is not listed is
-wrong. Look at the repository page itself.
+wrong. Look at the repository page itself. And after a history rewrite the
+sidebar is a cache that lags for days: on 2026-09-06, three days after the
+force push, the API and the Insights graph were clean and the sidebar still
+showed the old name. Nothing in the repository fixes that; it is GitHub's
+cache, and the only lever short of waiting is a support ticket.
 
 - **The dev server on :3000 does not pick up globals.css edits.** Already
   written down; bitten again on 2026-09-02 twice. Check
@@ -1072,6 +1072,10 @@ current.
       the cross lands on the centre pane one screen down with the search
       showing the name. Checked at phone and desk width. The printer page is
       down to "Coming soon."
+- [x] **DECISIONS.md cut by the test, end to end** — 1,887 → 1,018 lines,
+      265 → 195 entries, none over six lines. Everything removed went to
+      `docs/DECISIONS-ARCHIVE.md` (182 → 407 lines) under dated headings,
+      nothing deleted. What stayed is the rule and one reason.
 - [x] **The header is a flush bar, not a fade** (branch `flush-bar`) — on
       the cross once a pane has scrolled, and on every other page's nav row:
       page colour, one hairline, and on the cross the small mark centred in
