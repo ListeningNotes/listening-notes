@@ -67,7 +67,7 @@ export function handOff(entry) {
     favorite: entry.favorite === true || entry.favorite === 'true',
     entry_type: entry.entry_type || '',
     listen_total: entry.listen_total ?? 0,
-    created_at: entry.created_at || null,
+    posted_at: entry.posted_at || null,
   };
 }
 
@@ -106,7 +106,7 @@ function firstScreen(entry) {
     favorite: entry.favorite === true || entry.favorite === 'true',
     entry_type: entry.entry_type || '',
     listen_total: entry.listen_total ?? 0,
-    created_at: entry.created_at || null,
+    posted_at: entry.posted_at || null,
   };
 }
 
