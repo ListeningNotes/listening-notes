@@ -58,8 +58,14 @@ export function withoutChain(row) {
 // Ordered by posted_at with id as the tie-break: two entries saved in the same
 // second would otherwise swap places between reads, and a listen number that
 // moves is worse than one that is arbitrary.
+// edited_at is the one stamp still stored without a zone (posted_at replaced
+// created_at; this one has no readers outside the entry page and did not earn
+// a second column). It holds a UTC clock reading, and the driver would hand
+// it back as local time — so it is read here as the UTC it is, under its own
+// name, which wins over the bare column from the * before it.
 const WITH_LISTEN_NUMBERS = `
   SELECT *,
+         (edited_at AT TIME ZONE 'UTC') AS edited_at,
          ROW_NUMBER() OVER (PARTITION BY album_key ORDER BY posted_at, id)::int AS listen_number,
          COUNT(*)     OVER (PARTITION BY album_key)::int                        AS listen_total
   FROM entries
