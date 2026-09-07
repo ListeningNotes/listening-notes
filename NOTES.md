@@ -1055,6 +1055,11 @@ current.
 - [x] **Settings comes up as a sheet** (branch `settings-sheet`) — the door
       on the desk and the Sign in line both rise from the foot of the screen
       now, so there is a way back that is not the browser.
+- [x] **An artist link lands on the wall, filtered** (branch
+      `artist-lands-on-the-wall`) — `/?q=name` instead of `/archive?q=`;
+      the cross lands on the centre pane one screen down with the search
+      showing the name. Checked at phone and desk width. The printer page is
+      down to "Coming soon."
 
 **2026-09-03 session — the audit cleanup** (branch `cleanup-audit`)
 - [x] **Lint at zero.** Nine `set-state-in-effect` errors across Journal, the

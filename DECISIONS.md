@@ -1232,6 +1232,21 @@ checking public GitHub releases instead.
 
 ## Things open in the page, not over it
 
+
+**An artist's name in a review lands you on the wall, filtered, 2026-09-06.**
+It used to open `/archive?q=name`: a second page over the entry, which was
+itself over the journal — a stack of pages going down, the Pinterest shape,
+and on a phone a lone tile above a "Back home" pill. Now the link is
+`/?q=name`: the cross itself, landed on the centre pane one screen down,
+with the search field showing the name and the covers already filtered.
+There is no artist page and no stack; the answer to "what else of theirs is
+here" is the journal, shown the way the journal shows anything. Miyel's
+call, and the right one: the site has one wall, and everything that lists
+records should be that wall.
+
+**The printer's page says "Coming soon." and nothing else, 2026-09-06.**
+The paragraph explaining what a printer will be came off the same day it
+went on; a door to something unbuilt does not need a brochure.
 **A control opens where it belongs, 2026-08-31.** Not floating in the middle of
 a darkened screen. Twice in a week a popup was built and then taken back out —
 the writing panel and the comment form — and both times the reason was the
