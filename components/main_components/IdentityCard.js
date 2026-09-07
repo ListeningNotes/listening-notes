@@ -91,10 +91,8 @@ function buildCode(url) {
 }
 
 // A month and a year, never a day. The card says how long the journal has been
-// kept, and a precise date invites arithmetic that isn't the point. UTC because
-// created_at is a naive column read through a driver that shifts it by the
-// reader's own offset — a month is coarse enough that no plausible offset can
-// move it, which is the whole reason to print one.
+// kept, and a precise date invites arithmetic that isn't the point. Printed
+// in UTC so the month is the same on every reader's screen.
 function monthAndYear(value) {
   if (!value) return null;
   const date = new Date(value);

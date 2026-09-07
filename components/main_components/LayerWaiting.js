@@ -82,8 +82,8 @@ export default function LayerWaiting({ slug, authed = false }) {
   const isMasterpiece = known.masterpiece || known.rating === 'Masterpiece';
   const displayRating = isMasterpiece ? 5 : parseFloat(known.rating) || 0;
   const listenLabel = known.listen_total > 1 ? `Listen ${known.listen_total}` : null;
-  const postedOn = known.created_at
-    ? new Date(known.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
+  const postedOn = known.posted_at
+    ? new Date(known.posted_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
     : null;
 
   return (<>

@@ -59,7 +59,7 @@ export default function SessionPreview({
       track_notes: derived.track_notes,
       horizon: derived.horizon,
       received_from: receivedFrom || null,
-      created_at: new Date().toISOString(),
+      posted_at: new Date().toISOString(),
       edited_at: null,
       listen_number: 1, listen_total: 1,
     };

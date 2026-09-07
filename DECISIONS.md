@@ -1677,6 +1677,27 @@ deployed — never before, because the code on `main` still writes into them.
 **From the first external install, this file's additive-only rule is in
 force and none of the above is ever done again.**
 
+**`posted_at` is when an entry was posted, and the first additive migration,
+2026-09-06.** `created_at` was a timestamp without a zone holding a UTC clock
+reading, and the driver hands a naive value back as local time: four hours
+late on a machine four hours behind, so a listen logged at 11pm was dated
+tomorrow, and the feed needed a text-cast workaround to be right. The fix
+under the new rule is a new column with a zone, filled from the old one read
+as UTC, with the old column left in place and written by its default and read
+by nothing. Every reader — the wall, the entry, the stand-in, the feed, the
+card's first-listen stamp — reads `posted_at`.
+
+**Add empty, fill, then default.** `ADD COLUMN … DEFAULT now()` stamps every
+existing row with the default as it runs, so a fill that then looks for empty
+rows finds none, and every old entry is dated the day of the migration. That
+is exactly what happened on the live journal, caught by counting rows that
+agreed with the old column (zero of 39) before anything shipped, and corrected
+by hand. The file was reordered for every fresh copy — the one kind of edit
+to a run migration that is allowed, because the runner keys on the filename
+and the edit only changes what a database that has not run it yet builds.
+`edited_at` has the same naive type and the same bug; its fix is the same
+shape and is waiting on a name.
+
 ---
 
 ## What a read costs
