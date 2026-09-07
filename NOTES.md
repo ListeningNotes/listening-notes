@@ -1060,6 +1060,15 @@ current.
       the cross lands on the centre pane one screen down with the search
       showing the name. Checked at phone and desk width. The printer page is
       down to "Coming soon."
+- [x] **The header is a flush bar, not a fade** (branch `flush-bar`) — on
+      the cross once a pane has scrolled, and on every other page's nav row:
+      page colour, one hairline, and on the cross the small mark centred in
+      it, which is also back-to-top. The wall starts under the bar's height
+      so `/?q=name` lands with the first row clear of it.
+- [x] **The card's pencil and printer show only on the card's pane on a
+      phone.** They are pinned to the window, so they had been floating over
+      the wall and the desk too; the cross now says which pane is on screen
+      and the tools draw only while it is the card's.
 
 **2026-09-03 session — the audit cleanup** (branch `cleanup-audit`)
 - [x] **Lint at zero.** Nine `set-state-in-effect` errors across Journal, the
