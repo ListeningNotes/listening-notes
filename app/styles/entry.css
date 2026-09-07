@@ -771,15 +771,16 @@
     animation: ln-cue-bob 2.2s ease-in-out infinite;
   }
 
-  /* ── SCREEN TWO ── the dots go away once you've scrolled in, so the
-     header is only the logo row and the sitewide --bg band can shrink
-     to match. The 180px it uses elsewhere is sized for the labelled
-     dots, and at that height it covered the notes this page snaps to.
-     Solid down to --ln-band, then a short fade so text dissolves out
-     rather than ending on a line. */
+  /* ── SCREEN TWO ── the band behind the logo row ends exactly where the
+     record strip below it begins, and it is solid: the strip is opaque and
+     the notes scroll under the strip, so there is nothing for a fade to
+     dissolve and nothing for a line to separate — the strip's own edge is
+     the edge. The sitewide bar carries a hairline at 80px; here that line
+     would cut through the strip, so it comes off. */
   .ln-entry .sitenav-row::before {
-    height: calc(var(--ln-band) + 34px);
-    background: linear-gradient(to bottom, var(--bg) 0%, var(--bg) var(--ln-band), transparent 100%);
+    height: var(--ln-band);
+    background: var(--bg);
+    border-bottom: none;
   }
   /* SiteNav fades its own band in off window.scrollY, which never moves
      now that the container is what scrolls — so this page drives it. */
