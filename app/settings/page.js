@@ -92,7 +92,7 @@ function secretLine(status) {
   return `Set, ending ${status.tail} — ${where}.`;
 }
 
-export default function SettingsPage() {
+export default function SettingsPage({ layered = false }) {
   const host = useJournalHost();
   const [checking, setChecking] = useState(true);
   const [authed, setAuthed] = useState(false);
@@ -134,7 +134,7 @@ export default function SettingsPage() {
   if (!authed) return <PasswordGate onAuth={async () => { await load(); setAuthed(true); }} />;
 
   return (
-    <div className="st-page" style={{ fontFamily: fonts.sans }}>
+    <div className={'st-page' + (layered ? ' st-page--layered' : '')} style={{ fontFamily: fonts.sans }}>
 
       <SiteNav />
 

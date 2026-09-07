@@ -1710,8 +1710,24 @@ agreed with the old column (zero of 39) before anything shipped, and corrected
 by hand. The file was reordered for every fresh copy — the one kind of edit
 to a run migration that is allowed, because the runner keys on the filename
 and the edit only changes what a database that has not run it yet builds.
-`edited_at` has the same naive type and the same bug; its fix is the same
-shape and is waiting on a name.
+`edited_at` had the same naive type; its fix turned out to need no column at
+all — see below.
+
+**`edited_at` keeps its name and its column, and is read as UTC,
+2026-09-06.** The other naive stamp. Unlike `created_at` it was already
+written correctly — an ISO instant cast to the column stores the UTC clock
+reading — so the only fault was the read, and the read is fixed in the one
+window every entry passes through: `(edited_at AT TIME ZONE 'UTC') AS
+edited_at` after the `*`, and the later column of that name wins. No
+migration, nothing for a copy to run. The rule that fell out of it: before
+adding a column to fix a stamp, check whether the stamp is wrong or only
+the reading of it is.
+
+**Settings rises from the foot of the screen, 2026-09-06.** It was the one
+owner page still reached by leaving the cross, and once there the only way
+back was the browser. It is a sheet now like the inbox and the printer;
+signed out, the sheet is the password gate.
+
 
 ---
 
@@ -1916,6 +1932,12 @@ someone sending it on. A directory doesn't solve discovery.
 
 ## Parked, not rejected
 
+
+**Compare and Surprise stay parked until Junior has a copy, 2026-09-06.**
+Both routes work if typed and nothing in the interface reaches them. Not
+cut, not built: a comparison needs a second journal to be worth designing
+against, and the first one that is not Miyel's is the one to design for.
+Miyel's call.
 
 **The ten screensavers, 2026-09-06.** Rain, DVD, Gallery, Fizzy, SplitScreen,
 Snake, Pong, Solitaire, Reel and the EchoNetwork — 2,500 lines of canvas that
