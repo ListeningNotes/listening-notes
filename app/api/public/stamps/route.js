@@ -24,7 +24,7 @@ export async function GET() {
     const [row] = await database`
       SELECT
         COUNT(*)::int   AS records,
-        MIN(created_at) AS first_listen
+        MIN(posted_at)  AS first_listen
       FROM entries
     `;
 
@@ -44,10 +44,8 @@ export async function GET() {
       LIMIT 3
     `;
 
-    // first_listen is a naive timestamp read through a driver that hands it
-    // back shifted by the reader's own offset — see the note on created_at
-    // elsewhere. The card prints a month and a year, which no plausible
-    // offset can move, so the raw value is safe to send as-is here.
+    // first_listen carries its zone, so it is the instant it is. The card
+    // prints a month and a year from it.
     return Response.json({
       records: row?.records ?? 0,
       first_listen: row?.first_listen ?? null,

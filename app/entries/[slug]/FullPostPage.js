@@ -389,7 +389,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   // Says "Posted" because the artist line right above it already carries the
   // album's own year — a second bare date there would just read as a second
   // release year.
-  const postedOn = new Date(entry.created_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  const postedOn = new Date(entry.posted_at).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
   // A stamp sits next to the thing that changed, never at the top of the page.
   // One date on a post says only that something moved; a date under a track's
   // note says what — and an entry carrying five of them looks different from

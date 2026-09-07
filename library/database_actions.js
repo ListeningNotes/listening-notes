@@ -55,12 +55,12 @@ export function withoutChain(row) {
 // artist + album with the accents flattened, so a Beyoncé listen and a Beyonce
 // listen count as the same record.
 //
-// Ordered by created_at with id as the tie-break: two entries saved in the same
+// Ordered by posted_at with id as the tie-break: two entries saved in the same
 // second would otherwise swap places between reads, and a listen number that
 // moves is worse than one that is arbitrary.
 const WITH_LISTEN_NUMBERS = `
   SELECT *,
-         ROW_NUMBER() OVER (PARTITION BY album_key ORDER BY created_at, id)::int AS listen_number,
+         ROW_NUMBER() OVER (PARTITION BY album_key ORDER BY posted_at, id)::int AS listen_number,
          COUNT(*)     OVER (PARTITION BY album_key)::int                        AS listen_total
   FROM entries
 `;
@@ -88,7 +88,7 @@ const WITH_LISTEN_NUMBERS = `
 const WALL_FIELDS = [
   'id', 'slug', 'album', 'artist', 'year', 'genre', 'album_key',
   'rating', 'rating_value', 'entry_type', 'favorite', 'masterpiece',
-  'formative', 'horizon', 'album_art', 'created_at',
+  'formative', 'horizon', 'album_art', 'posted_at',
   'listen_number', 'listen_total',
 ];
 
@@ -139,7 +139,7 @@ export async function pull_wall_entries() {
   const rows = await database.query(
     `SELECT ${WALL_FIELDS.map(f => `"${f}"`).join(', ')}
      FROM (${WITH_LISTEN_NUMBERS}) ranked
-     ORDER BY created_at DESC`
+     ORDER BY posted_at DESC`
   );
   return rows.map(row => withSizedArt(row, LIST_ART_PX));
 }
@@ -162,30 +162,23 @@ export async function pull_wall_entries() {
 const PUBLIC_FIELDS = [
   'slug', 'album', 'artist', 'year', 'genre',
   'album_key', 'rating', 'rating_value', 'entry_type',
-  'favorite', 'masterpiece', 'formative', 'horizon', 'album_art', 'created_at',
+  'favorite', 'masterpiece', 'formative', 'horizon', 'album_art', 'posted_at',
   'listen_number', 'listen_total',
 ];
 
 export async function pull_public_entries() {
-  // created_at is `timestamp without time zone` holding a UTC value, which the
-  // driver reads as though it were local and "converts" — adding the reader's
-  // offset to a time that was already UTC. On a machine at UTC-7 every entry
-  // came back seven hours late, and a feed is exactly where that shows: dates
-  // on items, and sorting against anyone else's.
+  // posted_at carries its zone, so it comes back as the instant it is and the
+  // feed needs no workaround — the ::text trick that used to live here was
+  // for created_at, which is naive and is not read any more.
   //
-  // Casting to text in the query sidesteps the driver's conversion entirely
-  // and gives the stored value verbatim, which can then be labelled UTC — the
-  // one thing it actually is. Deterministic, and independent of wherever this
-  // happens to be running.
   // Named rather than SELECT *. The allow-list below still decides what leaves
   // — that has not changed — but it no longer decides it *after* the whole
   // entry has crossed the wire. A feed that deliberately carries no writing
   // was reading every word of it and throwing it away.
   const rows = await database.query(
-    `SELECT ${PUBLIC_FIELDS.filter(f => f !== 'created_at').map(f => `"${f}"`).join(', ')},
-            created_at, created_at::text AS created_at_utc
+    `SELECT ${PUBLIC_FIELDS.map(f => `"${f}"`).join(', ')}
      FROM (${WITH_LISTEN_NUMBERS}) ranked
-     ORDER BY created_at DESC`
+     ORDER BY posted_at DESC`
   );
   // Picked in JS rather than named in the SELECT so the allow-list is applied
   // in exactly one place and cannot drift away from the list above.
@@ -193,9 +186,6 @@ export async function pull_public_entries() {
     const out = {};
     for (const field of PUBLIC_FIELDS) out[field] = row[field];
     out.album_art = sizedAlbumArt(row.album_art, LIST_ART_PX);
-    out.created_at = row.created_at_utc
-      ? row.created_at_utc.replace(' ', 'T') + 'Z'
-      : null;
     return out;
   });
 }
