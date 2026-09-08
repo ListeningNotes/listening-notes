@@ -556,19 +556,22 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
             kinds of thing. They are the same kind of thing: a label and an
             answer. Now they are laid out like it, and the card is a glance at
             somebody before the reading starts below it. */}
-        {showAlbums && (
-          <p className={'idc-line' + off('albums')}>
-            <span className="idc-line-label">Albums logged</span>
-            <span className="idc-line-value">{records}</span>
-            {eyeFor('albums')}
-          </p>
-        )}
-
-        {showSince && (
-          <p className={'idc-line' + off('since')}>
-            <span className="idc-line-label">Logging since</span>
-            <span className="idc-line-value">{since}</span>
-            {eyeFor('since')}
+        {/* One line for the two counted facts — "39 · since March 2026" —
+            rather than one row each, so the card fits its floor with room
+            for the Send button above the caret row. Each half keeps its own
+            eye while editing, and its own strike-through when left off. */}
+        {(showAlbums || showSince) && (
+          <p className="idc-line">
+            <span className="idc-line-label">{showAlbums ? 'Albums logged' : 'Logging since'}</span>
+            <span className="idc-line-value">
+              {showAlbums && <span className={'idc-line-part' + off('albums')}>{records}</span>}
+              {showAlbums && showSince && <span className="idc-line-dot"> · </span>}
+              {showSince && (
+                <span className={'idc-line-part' + off('since')}>{showAlbums ? `since ${since}` : since}</span>
+              )}
+            </span>
+            {showAlbums && eyeFor('albums')}
+            {showSince && eyeFor('since')}
           </p>
         )}
 

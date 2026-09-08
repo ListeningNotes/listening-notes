@@ -203,25 +203,171 @@ The cross is built and merged. What is left of it:
 - [ ] **PARKED until Junior has a copy — Compare wants two homes** — one on an individual album, for comparing that record against another, and one on the About pane for comparing the collection overall. It is reachable from neither today; the route works if you type it.
 - [ ] **PARKED until Junior has a copy — Surprise (`/shuffle`) has no way in.** Work in progress by decision — the shake is the intended gesture and is not built. See DECISIONS.
 
-**THE CROSS'S TWO OPEN PROBLEMS** — attempted 2026-08-29 and reverted whole
+**TWO FLOORS ON THE CROSS** — briefed 2026-09-07. Replaces "the cross's two
+open problems" (2026-08-29). Read the ruled-out list in DECISIONS first.
 
-Both are real and neither is built. Read the ruled-out list in DECISIONS before
-starting: three approaches were tried in one session and every one of them left
-the cross worse than not touching it.
+**Built the same day on branch `two-floors`.** First pass: the centre pane's
+two floors (the static test page in step 1 was skipped), the beacon's status
+line and the "Before that" header, the desk's Start a listen as the third
+180px square, the name at 30px/27px, `touch-action: none` on both scrims.
+**Phone test passed on the centre pane** — the structure works on iOS Safari.
+Second pass, from that test: the bar on floor two now has the entry header's
+geometry (80px band, row at 22px, `--hn-bar-h` on `.hn`) so the mark clears
+the notch; the wall's bar is the page colour and square, flush on the bottom
+edge; About has its floors (crown + card, then the writing in
+`.hn-floor-scroll`, `crown` passed in as a prop); "Albums logged" and
+"Logging since" are one row, `39 · since March 2026`; Inbox and Settings are
+two tiles side by side under the square. A floor is `min-height: 100dvh`, so
+on a phone too short for the card the floor grows and scrolls that overrun
+natively before the snap, rather than clipping the Send button; the scroller
+in floor two is a stated 100dvh, because a flex basis against a minimum
+resolves to the content. Still to do on the phone: About's drop and return,
+the bar's mark clearing the notch, the wall's bar at the bottom.
 
-- [ ] **Down should feel like arriving, not scrolling.** The album page has the
-      shape — a card that holds still, then a screen of writing that scrolls
-      inside itself — and Beacon and About are one long scroll instead. The
-      structure was built and reverted: it is right, and it cannot go on top of
-      the gesture problem below. Do that one first.
+- [ ] **About.** Floor one: the card as it stands — portrait, name, the
+      counted rows, the pinned album, Send an album. Floor two: the prompt
+      answers and the rig, which already sit under the card in `.ab-below`.
+      Two fit problems first, because floor one has to be exactly one screen
+      or the snap has nothing to land on. (1) The name is fixed at 36px
+      (31px under 480px wide) with no clamp — smaller, so Send an album sits
+      clear of the caret row; today the button lands about 24px above the
+      carets on a tall phone and under them on a short one. (2) The 180px
+      square is a duplicated literal in `idcard.css` and `nav.css`; it wants
+      to be one token clamped by height (`min(180px, 22dvh)` or Miyel's
+      number) so the whole card fits a 667pt phone with every row on. Floor
+      two is rendered only when there is reading or an edit is open, so a
+      fresh copy gets no caret into an empty room.
+- [ ] **Beacon.** Floor one: the mark, a status line between the mark and the
+      art — "Now listening" while something plays, "Not currently listening"
+      when not — the art, then the recent row with a header over it. Reverses
+      the 2026-08-28 caption decision; recorded in DECISIONS. The row is not
+      the last three plays: it is up to three distinct recent albums from
+      Last.fm, skipping the one on the beacon (`RECENT_ALBUMS` in
+      `hooks/useListeningBeacon.js`), so the header should say that — "Before
+      that", "Also lately", or Miyel's words. With the line saying "Not
+      currently listening", the "LAST PLAYED" scrim on the greyed art says the
+      same thing twice; keep or drop is her call. Floor two: the journal wall,
+      inside the inner scroller. A copy without Last.fm keeps the wall as its
+      first screen, one floor, no snap.
+- [ ] **Desk.** Floor one: Start a listen as a 180px square on the same line
+      as the portrait and the album art (the desk is vertically centred today
+      and never reads `--hn-square-top`; the hero is a full-width panel, not a
+      square), with Inbox and Settings as the doors under it. Floor two: the
+      feed. Not built — nothing reads another copy yet; `/compare` fetches
+      `/api/public/entries` and the inbox is the shelf shape to copy. Until it
+      exists the desk is one floor and measures not deep, so no down caret.
+      The pitch (signed out) is one floor either way. **Open:** Miyel listed
+      "share" among the desk's buttons; the Share door came off the desk on
+      2026-09-06 and sharing is the printer glyph. If a door is wanted it is
+      one line in `DOORS` pointing at `/printer`, and a DECISIONS amendment.
+- [ ] **Settings.** Sign out stays at the foot. **Source under it is optional,
+      not owed:** AGPL §13 is owed to visitors, and the only Source line on the
+      cross is on the pitch pane, which a signed-in owner never sees. The
+      licence is satisfied as it stands. My pick is to leave Settings without
+      it — the pitch already carries the line for the people it is for, and
+      she said off is fine — but it is one faint anchor if she wants it.
+- [ ] **The header and the small mark on floor two.** The fixed bar already
+      turns into a flush line with the small mark and back-to-top once a pane
+      is scrolled; with floors it flips at the floor boundary, so the crown and
+      the small mark are never on screen together by construction. A proper
+      roof in floor two — tools left, mark centre, lights right, the entry's
+      header — comes after the snap is proven, and absorbs "A roof on the
+      journal" below.
+
+**How the entry does it, and why the cross could not.** The entry is a sheet
+laid over everything, and inside the sheet exactly one thing scrolls up and
+down: `.ln-screens`, one viewport tall, with two viewport-tall children and
+`scroll-snap-type: y mandatory`, `scroll-snap-stop: always`. The reading lives
+in a third element inside screen two with its own scroller, so the snapper has
+only ever two stops — that is what keeps screen one still. Nothing under the
+finger scrolls sideways natively, which is why the sideways swipe could be a
+hand gesture. The cross is the opposite: three panes in a rail that scrolls
+sideways natively, each pane a native vertical scroller. Two native scrollers
+under one finger is the whole axis fight.
+
+**The 2026-08-29 test did not test this.** Commit 81e84cb copied a two-screen
+pane and was reverted in four minutes, and the write-down concluded the
+structure has to wait for the axis problem. Three things about that run:
+it used `y proximity` on the pane, not the entry's `mandatory`; it softened the
+rail to `x proximity` at the same time (which is what "stopped landing on a
+pane at all"); and the tree it ran in still carried `.hn-rail--held`, the
+overflow-x lock that toggled at eight pixels of pane scroll — the rule the
+next commit (0a119ee) found had "stopped the scroll dead". So "would not go
+down or come back up" was three changes and a known-bad lock, never the entry's
+shape alone. Today's `main` has none of the ruled-out things in it. The
+structure has still never been tried clean.
+
+**The recommended approach**, chosen from three drafted and scored
+independently: the pane becomes the snap container. Rail untouched. No JavaScript
+gesture handling at all. Inside `@media (max-width: 768px)` the pane gains
+`scroll-snap-type: y mandatory`; each pane's content is wrapped in two floors
+(`height: 100dvh; scroll-snap-align: start; scroll-snap-stop: always;
+overflow: clip` — not `hidden`, which is still a scroll container); floor two
+is a flex column holding one inner scroller (`flex: 1; min-height: 0;
+overflow-y: auto; overscroll-behavior-y: auto` — auto, not contain, or the
+pull back up to floor one never chains). Journal is handed the inner scroller
+as its `scroller`. Why this one: it is the entry's vertical chain with the rail
+around it instead of a non-scrolling sheet; it adds no listener in front of the
+native sideways swipe (the property the rejected approaches all lost); and
+snapping is applied by WebKit when a gesture ends, never during recognition, so
+which scroller takes a diagonal thumb is unchanged from `main`. The other two:
+turning the rail into a hand-driven page-turn (collides in letter with the
+ruled-out hand-rolled drag and deletes `x mandatory`), and floor two as a fixed
+sheet raised by JS (kills sideways on floor two against "the swipe itself is
+untouched", and confines the filter sheet under the bar).
+
+**The prototype, in order.** Names below are placeholders; Miyel names them
+before they exist.
+1. Twenty minutes, no React: one static HTML file in `public/`, served by the
+   dev server on :3000 over the LAN to the real phone — Safari and the
+   home-screen app, never the Claude browser. An `x mandatory` rail of three
+   `y mandatory` panes, each two 100dvh floors, floor two with an inner
+   scroller of two hundred lines; make one floor one 130dvh to see whether
+   mandatory fights inside a tall snap area. Tests: up-swipe lands on floor
+   two every time; a pull at the top of the reading snaps back; flick down,
+   swipe sideways mid-snap, swipe back — is a pane parked between floors, does
+   it self-correct; any rail jitter while a pane settles.
+2. A branch, centre pane only, about forty lines: the CSS above in `nav.css`,
+   the two wrappers in `HomeNav.js`, `scroller` handed the inner scroller.
+   The fixed bar stays the header; no roof, no About, no fit pass.
+   **Measure `main` first**, same phone, same session: twenty up-swipes from
+   the top of the centre pane counting sticks, twenty sideways from the beacon,
+   twenty from deep in the wall. Then the branch, same counts. Pass is no
+   worse. Then the shape: a slow half-screen drag falls back; a flick commits
+   with the wall's first row under the bar; a pull at the wall's top returns
+   to floor one; a pull mid-wall scrolls the wall with no snap fight; the down
+   caret and the bar's mark land exactly on a floor; `/?q=name` lands on floor
+   two; open an entry from a tile, swipe to its neighbour, pull down to close,
+   and the grow and the flyer still aim at the tile; the filter sheet locks the
+   wall and its scrim does not move the floors.
+3. Kill criteria: a pane left between floors that does not self-correct; more
+   sticks than `main`; a drop that fails to commit either way. If killed, the
+   DECISIONS line "a two-screen pane needs the axis problem solved first" gains
+   its reason — the structure alone this time. If it passes, amend that line
+   in the same commit, then: the fit pass on the card, About's floors, the
+   roof, the desk's square, the beacon's status line and row header, and the
+   `scroller` resolver for desktop (Journal walks to the nearest overflowing
+   ancestor, as `MetadataLabel.js` already does, or `toPage` stops working
+   above 768px). Each by thumb before the next, the way the layer was rebuilt
+   on 2026-09-02/03.
+
+**Small things that ride along.** `--hn-bar-h` is declared on `.hn-bar` and
+never read (the wall restates the calc); lift it to `.hn` so floor two pads
+with it, the entry's `--ln-band` pattern. `touch-action: none` on `.arc-scrim`
+and `.ab-pin-scrim` so a drag on an open sheet cannot pan the floors behind it.
+Do not reuse the `.ln-screens` / `.ln-screen-two` class names on a pane:
+`LayerEntry.js` and `FullPostPage.js` find them with `querySelector` as
+singletons and would hit the pane first. `deep` must stay measured, and About's
+floor two exists only with something in it.
+
+**What this leaves alone.** The second open problem — you can still slide
+sideways out of floor two — is unchanged, on purpose: every lever that would
+stop it is one of the four ruled-out things, and the carets already hide down
+there. Whether that still wants solving once floor two has a roof is a
+question for the phone.
+
 - [ ] **You should not slide sideways out of a pane's lower half.** The carets
-      already hide down there; the swipe does not.
-
-The thing under both: a pane is a vertical scroller inside a horizontally
-snapping rail, so every gesture is negotiated between two axes. `main`'s
-behaviour is the baseline to beat — it scrolls smoothly and it sticks slightly
-at the top of a pane. Anything that scrolls worse than that is worse, however
-much else it fixes.
+      already hide down there; the swipe does not. Untouched by the floors.
 
 **PARKED** — decided, deliberately not being built yet
 
@@ -240,12 +386,12 @@ much else it fixes.
 
 **STILL WANTED ON THE CROSS** — asked for 2026-08-29, not started
 
-- [ ] **A roof on the journal.** The same header the album page has — mark
-      centred, one control each side — instead of the band that fades out at
-      the top, which is disliked. The mark doubles as back-to-top. The printer
-      goes on the right, for sharing the journal at large rather than one
-      album; it can point at /dashboard/share until there is something better
-      behind it.
+- [ ] **A roof on the journal.** Folded into the two-floor brief above: it is
+      floor two's header — mark centred, one control each side, the mark
+      doubling as back-to-top. The 2026-09-06 flush bar delivers the mark and
+      the back-to-top; the printer on the right is not built, and
+      `/dashboard/share` no longer exists to point it at — it points at
+      `/printer`.
 - [ ] **The bottom row as one nav bar on every screen.** The entry's back
       control should sit where the beacon's carets sit, with whichever
       direction is irrelevant turned off, so the row means the same thing
@@ -253,10 +399,10 @@ much else it fixes.
 
 **THE HEADER** — briefed 2026-08-28, mostly built on branch `one-header`. See DECISIONS for the shape.
 
-- [ ] **One header everywhere**: mark centred, one control each side, the same
+- [x] **One header everywhere** — recorded settled in DECISIONS (2026-08-28); ticked 2026-09-07. Mark centred, one control each side, the same
       arrangement the About card uses. Today the header changes shape between
       the panes and an entry, and every screen should read the same.
-- [ ] **The nav beacon goes** from every page but the beacon pane. It is a
+- [x] **The nav beacon goes** from every page but the beacon pane — recorded settled in DECISIONS; ticked 2026-09-07. It is a
       status bar for something the visitor has already been told, and it
       competes with the writing.
 
@@ -267,14 +413,14 @@ much else it fixes.
       log actually shows is that each of those requests takes 1.4–1.9s of
       application time, which is a different problem and stays after this one
       is gone.
-- [ ] **Owner tools, top left, server-checked**: pencil to the editor, printer
+- [x] **Owner tools, top left, server-checked** — recorded settled in DECISIONS; ticked 2026-09-07. Pencil to the editor, printer
       to the export flow. Not hidden with CSS — the entry page currently asks
       the browser whether you are signed in and hides what it finds, which
       means the buttons are in the HTML either way. No `DotsThree`; if a fourth
       tool appears the pencil becomes a menu and nothing else moves.
-- [ ] **The Edit and Pin bubbles come out of the chip row.** Admin controls
+- [x] **The Edit and Pin bubbles come out of the chip row.** Recorded settled in DECISIONS (admin controls do not sit in the reading flow); ticked 2026-09-07. Admin controls
       should not sit in the reading flow.
-- [ ] **The pin moves to the card**, with a search over the owner's own entries
+- [x] **The pin moves to the card** — recorded settled in DECISIONS (2026-08-28); ticked 2026-09-07. A search over the owner's own entries
       in a bottom sheet, and the entry editor loses its pin entirely. See
       DECISIONS for the trade this accepts.
 - [ ] **Copy link / QR at the foot of an entry**, for anyone — the other half
@@ -542,6 +688,16 @@ returns a `.woff` the renderer accepts (asking for `.ttf` alone finds
 nothing and the image fails with "No fonts are loaded"). Neither typeface
 carries ★, and a glyph the font lacks renders as a box — stars are SVG
 shapes. See `app/entries/[slug]/opengraph-image.js`.
+
+**A hidden browser tab fires no scroll events and runs no smooth scroll.**
+While the Claude browser pane is hidden (`document.hidden` is true), a
+programmatic `scrollTo` moves the element but the `scroll` event never
+dispatches, so anything React derives from scrolling — the flush bar, the
+carets, `down[pane]` — reads as unchanged, and `behavior: 'smooth'` never
+starts. Two rounds were spent on 2026-09-07 reading a working cross as
+broken. Dispatch `new Event('scroll')` by hand after a programmatic scroll
+when checking state this way, and use `behavior: 'auto'`; or verify with the
+pane showing.
 
 **`ADD COLUMN … DEFAULT now()` dates every existing row today.** Postgres
 fills the new column with the default as the ALTER runs, so an UPDATE that

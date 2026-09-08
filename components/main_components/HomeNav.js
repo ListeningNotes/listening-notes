@@ -83,6 +83,13 @@ function ease() {
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
 }
 
+// Where a pane's second floor begins: the top of its second .hn-floor when it
+// has floors, one screen down when it does not (the no-beacon copy's wall).
+function secondFloorTop(pane) {
+  const floors = pane.querySelectorAll(':scope > .hn-floor, :scope > * > .hn-floor');
+  return floors.length > 1 ? floors[1].offsetTop - floors[0].offsetTop : pane.clientHeight;
+}
+
 export default function HomeNav() {
   const { cover_name, pinned_entry_id, beacon_available } = useBookplate();
   const { theme, toggle: toggleTheme } = useTheme();
@@ -157,6 +164,19 @@ export default function HomeNav() {
   // array of refs because the panes are three different things, not three of
   // the same thing, and a loop over them would be pretending otherwise.
   const paneRefs = [useRef(null), useRef(null), useRef(null)];
+  // The wall's own scroller on a phone — floor two of the centre pane. On a
+  // desk it is a plain wrapper and the pane column is what scrolls, so the
+  // thing handed to Journal answers the question when asked rather than once:
+  // whichever of the two is a scroller right now. Made once so the effects
+  // downstream that list it as a dependency do not re-run every render.
+  const floorRef = useRef(null);
+  const wallScroller = useRef({
+    get current() {
+      const inner = floorRef.current;
+      if (inner && getComputedStyle(inner).overflowY === 'auto') return inner;
+      return paneRefs[HOME].current;
+    },
+  }).current;
 
   const [pane, setPane] = useState(HOME);
   // Whether anything is moving right now. The controls sit over the page
@@ -202,7 +222,7 @@ export default function HomeNav() {
     el.scrollLeft = el.clientWidth * (toCard ? 0 : HOME);
     if (params.get('q')) {
       const home = paneRefs[HOME].current;
-      if (home) home.scrollTop = home.clientHeight;
+      if (home) home.scrollTop = secondFloorTop(home);
     }
   // paneRefs is a stable array of refs; listing it would re-run this on every render.
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -296,12 +316,21 @@ export default function HomeNav() {
     const el = paneRefs[index].current;
     if (!el) return;
     el.scrollTo({ top: 0, behavior: ease() });
+    // The wall goes back to its own top too, once the pane has finished
+    // moving — as the entry's reading does when you return to the record — so
+    // the next drop lands on the first row rather than wherever you left off.
+    if (index === HOME && floorRef.current) {
+      window.setTimeout(() => { if (floorRef.current) floorRef.current.scrollTop = 0; }, 600);
+    }
   }
 
+  // To the second floor where there is one — its own top, not one viewport
+  // down, because a first floor that had to grow past the screen on a short
+  // phone puts the second one lower than that.
   function goDown(index) {
     const el = paneRefs[index].current;
     if (!el) return;
-    el.scrollTo({ top: el.clientHeight, behavior: ease() });
+    el.scrollTo({ top: secondFloorTop(el), behavior: ease() });
   }
 
   // ── The one row that sits over all three panes ────────────────────────────
@@ -401,7 +430,11 @@ export default function HomeNav() {
   // tap opens the entry when the album is in the journal, which is what stops
   // the row being decoration.
   const recentRow = recentAlbums.length > 0 && (
-    <div className="hp-recent">
+    <div className="hp-recent-set">
+      {/* Up to three distinct records from the Last.fm history, skipping the
+          one on the beacon — so "before that", not "the last three plays". */}
+      <p className="hp-recent-head">Before that</p>
+      <div className="hp-recent">
       {recentAlbums.map(album => {
         const entry = entries.find(e => e.album_key === album.key)
           || entries.find(e => foldKey(e.album) === album.title);
@@ -420,6 +453,7 @@ export default function HomeNav() {
           </span>
         );
       })}
+      </div>
     </div>
   );
 
@@ -450,34 +484,64 @@ export default function HomeNav() {
 
       <div className="hn-rail" ref={railRef}>
         <section className="hn-pane" ref={paneRefs[0]} aria-label="About this journal">
-          {crown}
-          <About stamps={stamps} authed={authed} pinned={pinned} entries={entries} />
+          {/* About draws its own two floors — the crown and the card on the
+              first, the writing on the second — so the crown goes in as a
+              prop rather than standing outside the floor it belongs to. */}
+          <About crown={crown} stamps={stamps} authed={authed} pinned={pinned} entries={entries} />
         </section>
 
         <section className="hn-pane hn-pane--home" ref={paneRefs[1]} aria-label={beacon_available ? 'Now listening' : 'The journal'}>
-          {crown}
           {/* No Last.fm — no username, or no key to ask with — and there is
               no beacon screen at all: the journal is the first thing under
               the crown, rather than a tile pretending something might play.
               The layout decides beacon_available on the server, so this is
-              settled before the first paint and the pane never re-lays out. */}
-          {beacon_available && (
-            <div className="hn-screen">
-              <div className="hp-dashboard">
-                <div className="hp-dash-cell hp-dash-beacon">
-                  <ListeningBeacon />
+              settled before the first paint and the pane never re-lays out.
+              That copy keeps one long scroll: the two floors need a first
+              screen that holds still, and a wall of covers is not one. */}
+          {beacon_available ? (
+            <>
+              {/* Floor one — the crown, the status line, the record and what
+                  came before. On a phone it is exactly one screen tall, so the
+                  snap has one place to land; on a desk it is a wrapper. */}
+              <div className="hn-floor">
+                {crown}
+                <div className="hn-screen">
+                  <p className="hn-status">{isLive ? 'Now listening' : 'Not currently listening'}</p>
+                  <div className="hp-dashboard">
+                    <div className="hp-dash-cell hp-dash-beacon">
+                      <ListeningBeacon />
+                    </div>
+                  </div>
+                  {recentRow}
                 </div>
               </div>
-              {recentRow}
-            </div>
+              {/* Floor two — the wall, scrolling inside a box of its own, so
+                  the pane only ever has two stops. The entry's second screen,
+                  in the cross. */}
+              <div className="hn-floor">
+                <div className="hn-floor-scroll" ref={floorRef}>
+                  <div className="hn-under">
+                    <Journal
+                      entries={entries}
+                      loading={loading}
+                      scroller={wallScroller}
+                    />
+                  </div>
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
+              {crown}
+              <div className="hn-under hn-under--first">
+                <Journal
+                  entries={entries}
+                  loading={loading}
+                  scroller={paneRefs[1]}
+                />
+              </div>
+            </>
           )}
-          <div className={'hn-under' + (beacon_available ? '' : ' hn-under--first')}>
-            <Journal
-              entries={entries}
-              loading={loading}
-              scroller={paneRefs[1]}
-            />
-          </div>
         </section>
 
         <section className="hn-pane" ref={paneRefs[2]} aria-label={authed ? 'Your desk' : 'About this software'}>

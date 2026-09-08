@@ -410,6 +410,9 @@
   width: 100%;
   height: 100dvh;
   overflow: hidden;
+  /* How tall the fixed bar is — the entry header's band — read by the bar,
+     by the wall's clearance under it and by the second floor's padding. */
+  --hn-bar-h: calc(80px + var(--safe-top));
 }
 
 /* ── The one row over all three panes ───────────────────────────────────────
@@ -418,14 +421,18 @@
    scrolling page, and a strip that swallowed taps would kill the swipe along
    its whole width. Its two children take theirs back. */
 .hn-bar {
-  /* How tall the bar is: its top padding, a 40px control, 8px under. Shared
-     with the wall below, which starts under it — see .hn-under .arc-main. */
-  --hn-bar-h: calc(max(12px, calc(env(safe-area-inset-top) - 12px)) + 48px);
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   z-index: 95;
+  /* The entry header's geometry, exactly: the band is 80px plus the notch
+     allowance, and the row inside it starts 22px below that allowance and is
+     58px tall, so the small mark and the lights sit on the same line here as
+     they do over an entry. It used to be 12px shorter and sat the mark under
+     the notch. --hn-bar-h is set on .hn so the floors can read it. */
+  height: var(--hn-bar-h);
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   /* One control, on the right. The mark that used to sit opposite it is gone:
@@ -433,15 +440,15 @@
      in the corner is a second one whether or not the two are ever on screen
      together. */
   justify-content: flex-end;
-  padding: max(12px, calc(env(safe-area-inset-top) - 12px)) 16px 8px;
+  padding: calc(22px + var(--safe-top)) 28px 0;
   pointer-events: none;
 }
 .hn-bar > * { pointer-events: auto; }
 /* The wall begins one screen down, which is exactly where the bar is, and
    the bar is opaque now: without this the first row of covers starts under
-   it. The same height the bar computes, so the first row clears it on a
-   notch phone as well as a flat one. */
-.hn-under .arc-main { padding-top: calc(max(12px, calc(env(safe-area-inset-top) - 12px)) + 48px); }
+   it. The same height the bar has, so the first row clears it on a notch
+   phone as well as a flat one. */
+.hn-under .arc-main { padding-top: calc(var(--hn-bar-h) + 16px); }
 
 /* The strip you tap to go back to the top of a pane. Invisible on purpose:
    the band behind this row already appears when a pane is scrolled, so the
@@ -478,7 +485,8 @@
 .hn-bar-mark {
   position: absolute;
   left: 50%;
-  top: 50%;
+  /* The middle of the 58px row, not of the band. */
+  top: calc(22px + var(--safe-top) + 29px);
   transform: translate(-50%, -50%);
   padding: 6px 10px;
   border: 0;
@@ -536,12 +544,14 @@
   scroll-snap-align: start;
   scroll-snap-stop: always;
   overflow-y: auto;
-  /* No vertical snap. There was proximity snapping here, meant to catch the
-     reader at the line where a pane's first screen ends and whatever it keeps
-     below begins — and what it produced was a scroll that argued with the
-     thumb, pulling back toward a boundary somebody had deliberately gone past.
-     The entrance to the journal wants designing as a thing in its own right;
-     until it is, a pane scrolls the way a page scrolls.
+  /* No vertical snap in the base rule. There was proximity snapping here,
+     meant to catch the reader at the line where a pane's first screen ends,
+     and what it produced was a scroll that argued with the thumb, pulling
+     back toward a boundary somebody had deliberately gone past. On a phone
+     the centre pane snaps between two floors instead — see "Two floors"
+     below: a mandatory snap over exactly two screen-tall stops, with the wall
+     scrolling inside the second, which is how the entry keeps its first
+     screen still.
      The rail still snaps. That is the other axis and a different argument:
      there are exactly three panes and you are always on one of them. */
   overscroll-behavior-y: contain;
@@ -620,6 +630,78 @@
    above it, so it starts where the beacon's art would have and the pane reads
    the same as its neighbours. */
 .hn-under--first { padding-top: var(--hn-square-top); }
+
+/* ── Two floors, on a phone ─────────────────────────────────────────────────
+   The entry's shape, in the cross. The pane is the snap container, each floor
+   is exactly one screen, and the long thing — the wall — lives in a scroller
+   of its own inside floor two, so the pane only ever has two places to rest.
+   The rail is untouched and nothing here handles a gesture: WebKit decides
+   which scroller takes a thumb exactly as it does on main, and snapping is
+   applied when the gesture ends, never while it is being recognised. Phone
+   only, as the entry's two screens are — on a desk the floors are plain
+   wrappers in a column that scrolls, and the column is the scroller. */
+@media (max-width: 768px) {
+  .hn-pane { scroll-snap-type: y mandatory; }
+  .hn-floor {
+    /* min-height, not height: a floor is one screen, and on a phone too
+       short for everything on it the floor grows and scrolls that overrun
+       natively before the snap — a snap area taller than the port allows
+       any position that covers the port. A fixed height with the overrun
+       clipped would cut the Send button off the card instead. */
+    min-height: 100dvh;
+    box-sizing: border-box;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+    display: flex;
+    flex-direction: column;
+  }
+  /* The first screen fills what the crown leaves, instead of asking for a
+     minimum of its own — the floor is the height now; on a short phone it is
+     its content's height and the floor grows to fit. */
+  .hn-floor .hn-screen { flex: 1 1 auto; min-height: auto; }
+  /* The writing under the card starts below the bar, the way the wall does. */
+  .hn-floor-scroll .ab-below { padding-top: calc(var(--hn-bar-h) + 24px); }
+  .hn-floor-scroll {
+    /* One screen, stated. The floor's height is a minimum, and a flex basis
+       against a minimum resolves to the content — left to flex: 1 this grew
+       to the whole wall and stopped being a scroller, taking the sticky bar
+       off the bottom of the screen with it. */
+    height: 100dvh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    /* auto, deliberately. contain would stop a pull at the top of the wall
+       from reaching the pane, and the pane is what carries you back up. */
+    overscroll-behavior-y: auto;
+    scrollbar-width: none;
+  }
+  .hn-floor-scroll::-webkit-scrollbar { display: none; }
+  .hn-floor-scroll .hn-under { min-height: auto; }
+}
+
+/* ── The status line ────────────────────────────────────────────────────────
+   Between the mark and the record: "Now listening", or "Not currently
+   listening". It sits in the gap the two already keep — the crown's bottom
+   padding plus --hn-square-top — rather than adding height, so the art stays
+   on the same line as the portrait beside it. Never green: the dot on the
+   mark is the one thing that lights when something plays. */
+.hn-screen { position: relative; }
+.hn-status {
+  position: absolute;
+  top: -8px;
+  left: 0;
+  right: 0;
+  height: calc(var(--hn-square-top) + 8px);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-label);
+  font-size: 0.62rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  pointer-events: none;
+}
 /* The wall pays no gutter of its own here. It had one — the pane's 34px, on
    top of the 24 the wall already carries — and 58px of margin down each side of
    a phone is a whole column of covers given away to nothing. The wall's own
@@ -777,27 +859,37 @@
   min-height: calc(100dvh - var(--hn-crown));
   box-sizing: border-box;
   display: flex;
-  align-items: center;
+  /* A row box holding one column, so align-items is the vertical axis: from
+     the top, not centred, because the square has to start where the portrait
+     and the album art start on the panes beside it. */
+  align-items: flex-start;
   justify-content: center;
-  padding: 0 var(--hn-gutter) 84px;
+  padding: var(--hn-square-top) var(--hn-gutter) 84px;
 }
 .db-body {
   display: flex;
   flex-direction: column;
+  align-items: center;
   gap: 26px;
   width: 100%;
   max-width: 380px;
 }
-/* The one big thing on the pane. What you came to do is listen. */
+/* The one big thing on the pane. What you came to do is listen. The third
+   square of the cross — the same 180px box, radius and shadow as the portrait
+   and the album art, on the same line. */
 .db-hero {
+  width: 180px;
+  height: 180px;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 12px;
-  padding: 40px 20px;
+  padding: 0;
   border: 1px solid var(--border);
-  border-radius: 26px;
+  border-radius: 18px;
+  box-shadow: 0 18px 44px rgba(0,0,0,0.16);
   background: var(--panel);
   color: var(--ink);
   text-decoration: none;
@@ -811,28 +903,40 @@
   text-transform: uppercase;
   color: var(--ink-soft);
 }
-.db-doors { display: flex; flex-direction: column; }
+/* Two doors, side by side, drawn the way the square above them is — panel,
+   hairline, the same radius — so the desk is three tiles of one kind rather
+   than a tile and a list. They were rows with a line of explanation each; the
+   explanation is the tile's title now. */
+.db-doors { display: flex; flex-direction: row; justify-content: center; gap: 14px; width: 100%; }
 .db-door {
+  flex: 1 1 0;
+  max-width: 180px;
+  box-sizing: border-box;
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 14px;
-  padding: 15px 4px;
-  border-bottom: 1px solid var(--border);
+  justify-content: center;
+  gap: 10px;
+  padding: 22px 12px;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  background: var(--panel);
+  box-shadow: 0 10px 28px rgba(0,0,0,0.12);
   color: var(--ink);
   text-decoration: none;
+  transition: border-color 0.18s ease, transform 0.18s ease;
 }
-.db-door:last-child { border-bottom: none; }
-.db-door-mark { flex-shrink: 0; color: var(--ink-faint); }
-.db-door-text { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.db-door:hover { border-color: var(--ink-faint); transform: translateY(-2px); }
+.db-door-mark { flex-shrink: 0; color: var(--ink); }
+.db-door-text { display: flex; flex-direction: column; align-items: center; min-width: 0; }
 .db-door-label {
   display: inline-flex;
   align-items: center;
-  font-size: 0.95rem;
-}
-.db-door-note {
-  font-size: 0.78rem;
-  line-height: 1.4;
-  color: var(--ink-faint);
+  font-family: var(--font-label);
+  font-size: 0.72rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
 }
 /* The one count on the site, and the same red the favourite heart uses. */
 .db-count {
@@ -854,7 +958,22 @@
    "Messages" — is gone with its rules. The desk is one swipe right and carries
    both, so the cover was showing the same two controls twice. */
 
-/* What came before — three covers, small and dim, under the beacon. */
+/* What came before — up to three covers, small and dim, under the beacon,
+   with a line over them saying what they are. */
+.hp-recent-set {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.hp-recent-head {
+  margin: 0;
+  font-family: var(--font-label);
+  font-size: 0.62rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
 .hp-recent {
   display: flex;
   gap: 10px;

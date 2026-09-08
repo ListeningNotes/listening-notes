@@ -59,8 +59,8 @@ export default function Dashboard({ waiting }) {
 
         <div className="db-doors">
           {DOORS.map(({ href, label, note, Icon, counted }) => (
-            <Link key={href} href={href} className="db-door">
-              <Icon size={20} weight="regular" aria-hidden="true" className="db-door-mark" />
+            <Link key={href} href={href} className="db-door" title={note}>
+              <Icon size={26} weight="regular" aria-hidden="true" className="db-door-mark" />
               <span className="db-door-text">
                 <span className="db-door-label">
                   {label}
@@ -74,7 +74,6 @@ export default function Dashboard({ waiting }) {
                     <span className="db-count">{waiting.total}</span>
                   )}
                 </span>
-                <span className="db-door-note">{note}</span>
               </span>
             </Link>
           ))}
