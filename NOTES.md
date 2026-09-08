@@ -244,9 +244,9 @@ tile in the recent row, instead of Safari's broken-picture mark.
       number) so the whole card fits a 667pt phone with every row on. Floor
       two is rendered only when there is reading or an edit is open, so a
       fresh copy gets no caret into an empty room.
-- [x] **Beacon.** Floor one: the mark, a status line between the mark and the
-      art — "Now listening" while something plays, "Not currently listening"
-      when not — the art, then the recent row with a header over it. Reverses
+- [x] **Beacon.** Floor one: the mark, the art, a status line under it —
+      "Now listening" while something plays, "Not currently listening" when
+      not — then the recent row with a header over it. Reverses
       the 2026-08-28 caption decision; recorded in DECISIONS. The row is not
       the last three plays: it is up to three distinct recent albums from
       Last.fm, skipping the one on the beacon (`RECENT_ALBUMS` in
@@ -1187,8 +1187,8 @@ on Miyel's iPhone across three rounds the same day.
 - [x] **The wall's bar is the floor of the wall** — page colour, square,
       one hairline, flush on the bottom edge.
 - [x] **The beacon captions itself again** — "Now listening" / "Not currently
-      listening" in the gap between the mark and the art; "Before that" over
-      the recent row. A cover that fails to load falls back (placeholder on
+      listening" under the art, above the title (it sat in the gap above the
+      art for an hour first); "Before that" over the recent row. A cover that fails to load falls back (placeholder on
       the beacon, the journal's cover or a blank tile in the row).
 - [x] **The desk is three tiles** — Start a listen as the third 180px square
       on the shared line, Inbox and Settings stacked under it, all `.ln-tile`

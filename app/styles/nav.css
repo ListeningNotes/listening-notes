@@ -282,6 +282,15 @@
   text-transform: uppercase;
 }
 
+/* The caption under the art: what the record is, before the title says
+   which. Never green — see the dot on the mark. */
+.beacon-status {
+  font-family: var(--font-label);
+  font-size: 0.62rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
 .beacon-meta {
   text-align: center;
   display: flex;
@@ -678,30 +687,6 @@
   .hn-floor-scroll .hn-under { min-height: auto; }
 }
 
-/* ── The status line ────────────────────────────────────────────────────────
-   Between the mark and the record: "Now listening", or "Not currently
-   listening". It sits in the gap the two already keep — the crown's bottom
-   padding plus --hn-square-top — rather than adding height, so the art stays
-   on the same line as the portrait beside it. Never green: the dot on the
-   mark is the one thing that lights when something plays. */
-.hn-screen { position: relative; }
-.hn-status {
-  position: absolute;
-  top: -8px;
-  left: 0;
-  right: 0;
-  height: calc(var(--hn-square-top) + 8px);
-  margin: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--font-label);
-  font-size: 0.62rem;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--ink-soft);
-  pointer-events: none;
-}
 /* The wall pays no gutter of its own here. It had one — the pane's 34px, on
    top of the 24 the wall already carries — and 58px of margin down each side of
    a phone is a whole column of covers given away to nothing. The wall's own

@@ -508,13 +508,12 @@ export default function HomeNav() {
               screen that holds still, and a wall of covers is not one. */}
           {beacon_available ? (
             <>
-              {/* Floor one — the crown, the status line, the record and what
+              {/* Floor one — the crown, the record with its caption, and what
                   came before. On a phone it is exactly one screen tall, so the
                   snap has one place to land; on a desk it is a wrapper. */}
               <div className="hn-floor">
                 {crown}
                 <div className="hn-screen">
-                  <p className="hn-status">{isLive ? 'Now listening' : 'Not currently listening'}</p>
                   <div className="hp-dashboard">
                     <div className="hp-dash-cell hp-dash-beacon">
                       <ListeningBeacon />

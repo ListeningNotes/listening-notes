@@ -180,7 +180,7 @@ where they do not take the first hundred pixels of covers. Sticky, never
 fixed — the wall lives inside a pane of the cross.
 
 **The beacon captions itself again, 2026-09-07, on Miyel's call.** One line
-between the mark and the art: "Now listening" while something plays, "Not
+under the art, above the title: "Now listening" while something plays, "Not
 currently listening" when not. Reverses 2026-08-28 (the archive has why it
 came off). The idle art still greys, and nothing on the beacon is ever green
 unless something *is* playing.
