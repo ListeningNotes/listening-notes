@@ -351,8 +351,11 @@ sideways out of a pane's lower half. Do not try again: `touch-action` on the
 rail (Safari ignores it for the container's own axis); `overflow-x: hidden`
 while a pane is scrolled (stops the vertical scroll dead — the stutter); a
 hand-rolled horizontal drag (loses to native momentum). `scroll-snap-type: x
-mandatory` is load-bearing — proximity stops landing on a pane at all. A
-two-screen pane needs the axis problem solved first.
+mandatory` is load-bearing — proximity stops landing on a pane at all.
+**A two-floor pane did not need the axis problem solved, 2026-09-07:** the
+pane is the snap container, `y mandatory` over two screen-tall floors with the
+reading in an inner scroller, rail untouched, no gesture code. The 08-29 run
+was three changes at once with the rail lock live; on its own the shape works.
 
 **An entry is a layer over the journal, not a fourth pane, 2026-08-29.** Left
 and right meaning different things depending on which row you are in is ruled

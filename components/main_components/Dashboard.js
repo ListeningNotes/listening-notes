@@ -52,14 +52,14 @@ export default function Dashboard({ waiting }) {
             because it goes somewhere — the listening flow is its own route
             with its own background, and pretending otherwise with a button
             would only mean a navigation that looked like it failed. */}
-        <Link href="/session" className="db-hero">
+        <Link href="/session" className="ln-tile db-hero">
           <Headphones size={34} weight="regular" aria-hidden="true" />
           <span className="db-hero-label">Start a listen</span>
         </Link>
 
         <div className="db-doors">
           {DOORS.map(({ href, label, note, Icon, counted }) => (
-            <Link key={href} href={href} className="db-door" title={note}>
+            <Link key={href} href={href} className="ln-tile db-door" title={note}>
               <Icon size={26} weight="regular" aria-hidden="true" className="db-door-mark" />
               <span className="db-door-text">
                 <span className="db-door-label">

@@ -440,8 +440,16 @@ export default function HomeNav() {
           || entries.find(e => foldKey(e.album) === album.title);
         const label = `${album.album} — ${album.artist}`;
         const cover = album.art || entry?.album_art;
+        // Last.fm's cover URLs fail one at a time. When one does, the journal's
+        // own cover stands in if the record is in the journal; otherwise the
+        // tile goes blank rather than wearing the browser's broken-picture mark.
+        const onBroken = e => {
+          const fallback = entry?.album_art;
+          if (fallback && e.currentTarget.src !== fallback) e.currentTarget.src = fallback;
+          else e.currentTarget.style.display = 'none';
+        };
         const art = cover
-          ? <img src={cover} alt="" />
+          ? <img src={cover} alt="" onError={onBroken} />
           : <span className="hp-recent-none" aria-hidden="true">♪</span>;
         return entry ? (
           <Link key={album.key} href={`/entries/${entry.slug}`} className="hp-recent-tile" title={label} aria-label={label}>
