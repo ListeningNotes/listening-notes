@@ -236,7 +236,9 @@
    closes the panel. Dimming the whole page behind a small popover
    would be far more than the popover is worth; the phone sheet,
    which does cover the screen, gets the dim back below. */
-.arc-scrim { position: fixed; inset: 0; z-index: 150; }
+/* touch-action: none so a drag on the scrim cannot pan the floors behind the
+   sheet — the lock lands on the wall's own scroller, not the pane. */
+.arc-scrim { position: fixed; inset: 0; z-index: 150; touch-action: none; }
 @keyframes arcFade { from { opacity: 0; } to { opacity: 1; } }
 .arc-sheet {
   /* left/top are set inline from the button's own position; these
@@ -378,11 +380,21 @@
      padding has to be settled here or the 14px side inset above wins
      and the bar goes back to being a pill hovering over the covers. */
   .arc-bar-wrap { padding: 10px 0 0; }
+  /* The floor of the wall, the way the bar at the top is its roof: the page
+     colour, flush, one hairline above the controls, square to the edges. It
+     was a translucent panel with rounded shoulders, and a panel with a
+     strip of blurred covers under it read as a thing floating over the wall
+     rather than the edge of it. What is left under the controls is the home
+     indicator's room, and only where the phone has one. */
   .arc-bar {
     gap: 6px;
-    border-radius: 14px 14px 0 0;
-    border-bottom: none;
-    padding: 6px 12px calc(6px + env(safe-area-inset-bottom));
+    border-radius: 0;
+    border: 0;
+    border-top: 1px solid var(--border);
+    background: var(--bg);
+    backdrop-filter: none; -webkit-backdrop-filter: none;
+    box-shadow: none;
+    padding: 8px 12px max(8px, env(safe-area-inset-bottom));
   }
   /* 16px keeps iOS from zooming the page when the field takes focus. */
   .arc-search input { font-size: 16px; padding: 6px 10px 6px 28px; }

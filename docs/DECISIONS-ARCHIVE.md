@@ -73,6 +73,18 @@ way round.
 
 ---
 
+## Structure — the beacon's caption
+
+Current rule: DECISIONS.md, *The beacon captions itself again*.
+
+**The beacon stopped captioning itself, 2026-08-28.** "Now listening" said
+what the screen shows: a record, on a page whose mark carries a lit dot while
+something plays. The idle state greyed the art and printed "last played"
+across it, and that label was never green — green means something *is*
+playing. Reversed 2026-09-07 on Miyel's call: a line between the mark and the
+art, "Now listening" or "Not currently listening", as part of the two-floor
+brief for the cross.
+
 ## Structure — how an entry arrives
 
 Superseded 2026-09-02; the entry expands from its cover now. The first version, for the record:

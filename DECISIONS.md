@@ -66,7 +66,7 @@ licence grants no use of the Listening Notes name or mark.
 sign-off and nothing else: a `Co-Authored-By` trailer naming a model was
 putting one on GitHub's contributors list, and nothing — not the licence, the
 DCO or GitHub — asked for it. The 428 commits already carrying the trailer
-stay as they are; rewriting them is a force push that breaks every clone.
+were rewritten the same day, while nobody else had a clone; see NOTES.
 
 ---
 
@@ -93,13 +93,18 @@ does — which is how the swipe gets learned.
 is deep when its scroller overflows, so a fresh copy with nothing under the
 card has nothing pointing down at it, for free.
 
-**Vertical snapping is `proximity`, not `mandatory`.** The centre pane is three
-screens and a bit — a whole archive under the beacon — and mandatory would
-drag a reader back to a screen edge every time they stopped halfway down.
+**No vertical snap on a one-long-scroll pane; the only vertical snap wanted
+is the entry's, 2026-09-07.** Proximity on the long pane argued with the thumb
+and came off 2026-08-28; mandatory over three screens and a bit would drag a
+reader back to a screen edge halfway down the wall. The two-floor shape (NOTES)
+is different: mandatory over exactly two viewport-tall floors with the reading
+in an inner scroller, which is how the entry keeps its first screen still.
 
 **The mark is large and centred at the top of every pane, at one height,** so
-the square under it — portrait on the left, album in the centre — lands on
-the same line whichever pane you are on. That is what makes the swipe read as
+the square under it — portrait on the left, album in the centre, Start a
+listen on the right (2026-09-07; the desk is vertically centred today and
+does not yet sit on the line) — lands on the same line whichever pane you
+are on. That is what makes the swipe read as
 one object turning. On desktop the outer crowns are hidden, not removed: the
 box has to stay or the columns stop agreeing where a square starts.
 
@@ -174,10 +179,11 @@ asking them to leave.
 where they do not take the first hundred pixels of covers. Sticky, never
 fixed — the wall lives inside a pane of the cross.
 
-**The beacon stops captioning itself.** "Now listening" said what the screen
-shows: a record, on a page whose mark carries a lit dot while something
-plays. The idle state greys the art and prints "last played" across it, and
-that label is never green — green means something *is* playing.
+**The beacon captions itself again, 2026-09-07, on Miyel's call.** One line
+between the mark and the art: "Now listening" while something plays, "Not
+currently listening" when not. Reverses 2026-08-28 (the archive has why it
+came off). The idle art still greys, and nothing on the beacon is ever green
+unless something *is* playing.
 
 **No fourth metric on the card.** The card is a glance and four rows is the
 most a glance holds. Ruled out rather than parked.
@@ -318,8 +324,10 @@ last — side by side they read as a caption on the button.
 a button to listeningnotes.blog/get. This is the growth mechanic — someone
 asks how to get one, the owner swipes right and hands over the phone.
 
-**Source link on every copy** — one faint line at the foot of the About pane.
-Satisfies AGPL §13 whether or not anyone has modified anything. **It is an
+**Source link on every copy** — one faint line at the foot of the pitch pane,
+under "Get one" (it left the About pane 2026-08-28). §13 is owed to visitors,
+so a signed-in owner sees no Source line and is not owed one; it satisfies
+AGPL §13 whether or not anyone has modified anything. **It is an
 environment variable, never a setting:** a fork owes *its* source, and anybody
 who forks is comfortable with `NEXT_PUBLIC_SOURCE_URL`. The settings page is
 about the journal, not the software. An untested default is a default nobody
@@ -343,8 +351,11 @@ sideways out of a pane's lower half. Do not try again: `touch-action` on the
 rail (Safari ignores it for the container's own axis); `overflow-x: hidden`
 while a pane is scrolled (stops the vertical scroll dead — the stutter); a
 hand-rolled horizontal drag (loses to native momentum). `scroll-snap-type: x
-mandatory` is load-bearing — proximity stops landing on a pane at all. A
-two-screen pane needs the axis problem solved first.
+mandatory` is load-bearing — proximity stops landing on a pane at all.
+**A two-floor pane did not need the axis problem solved, 2026-09-07:** the
+pane is the snap container, `y mandatory` over two screen-tall floors with the
+reading in an inner scroller, rail untouched, no gesture code. The 08-29 run
+was three changes at once with the rail lock live; on its own the shape works.
 
 **An entry is a layer over the journal, not a fourth pane, 2026-08-29.** Left
 and right meaning different things depending on which row you are in is ruled

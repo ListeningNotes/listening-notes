@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 'use client';
 
+import { useState } from 'react';
 import { useListeningBeacon } from '../../hooks/useListeningBeacon';
 
 // One beacon, one size. There used to be a `compact` shape as well, drawn in
@@ -13,7 +14,13 @@ export default function ListeningBeacon() {
   const { track: trackObj, isLive } = useListeningBeacon();
   const trackName = trackObj?.name || '—';
   const artistName = trackObj?.artist || '';
-  const artUrl = trackObj?.image || '';
+  // Last.fm hands over a cover URL for every row, and some of them 404 — the
+  // image host is flaky per URL, not per record. An <img> that fails draws
+  // the browser's own broken-picture mark, the largest thing on the screen,
+  // so a URL that fails is remembered and the placeholder is drawn instead
+  // until the track changes.
+  const [failed, setFailed] = useState('');
+  const artUrl = trackObj?.image && trackObj.image !== failed ? trackObj.image : '';
 
   // The recent listens used to be gathered here, in a second poll of the same
   // endpoint, and fanned out around the beacon when you pressed it. They are a
@@ -51,7 +58,7 @@ export default function ListeningBeacon() {
       <div className="beacon-card beacon-card--main">
         <div className={'beacon-art-wrap' + (isLive ? ' beacon-art-wrap--live' : '')}>
           {artUrl
-            ? <img src={artUrl} alt={trackName} className={'beacon-art' + (!isLive ? ' beacon-art--idle' : '')} />
+            ? <img src={artUrl} alt={trackName} className={'beacon-art' + (!isLive ? ' beacon-art--idle' : '')} onError={() => setFailed(artUrl)} />
             : <div className="beacon-art-placeholder">♪</div>
           }
           {!isLive && artUrl && <div className="beacon-idle-overlay"><span>Last played</span></div>}
