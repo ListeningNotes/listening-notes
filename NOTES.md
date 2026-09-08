@@ -221,10 +221,17 @@ two tiles side by side under the square. A floor is `min-height: 100dvh`, so
 on a phone too short for the card the floor grows and scrolls that overrun
 natively before the snap, rather than clipping the Send button; the scroller
 in floor two is a stated 100dvh, because a flex basis against a minimum
-resolves to the content. Still to do on the phone: About's drop and return,
-the bar's mark clearing the notch, the wall's bar at the bottom.
+resolves to the content. Third pass, from the second phone look: the desk's doors stack under the
+square, each 180 wide; the counted row's value is in the label face; Send an
+album is the same tile as the desk's, with a paper plane. The tile is defined
+once as `.ln-tile` in base.css (panel, hairline, 18px radius, shadow, label
+face) and the desk hero, the doors and Send carry it with their own sizes.
+Also: a Last.fm cover that fails to load (their image host answers per URL,
+and per client — one 404s from curl and loads in Safari) falls back to the
+note placeholder on the beacon, and to the journal's own cover or a blank
+tile in the recent row, instead of Safari's broken-picture mark.
 
-- [ ] **About.** Floor one: the card as it stands — portrait, name, the
+- [x] **About.** Floor one: the card as it stands — portrait, name, the
       counted rows, the pinned album, Send an album. Floor two: the prompt
       answers and the rig, which already sit under the card in `.ab-below`.
       Two fit problems first, because floor one has to be exactly one screen
@@ -237,7 +244,7 @@ the bar's mark clearing the notch, the wall's bar at the bottom.
       number) so the whole card fits a 667pt phone with every row on. Floor
       two is rendered only when there is reading or an edit is open, so a
       fresh copy gets no caret into an empty room.
-- [ ] **Beacon.** Floor one: the mark, a status line between the mark and the
+- [x] **Beacon.** Floor one: the mark, a status line between the mark and the
       art — "Now listening" while something plays, "Not currently listening"
       when not — the art, then the recent row with a header over it. Reverses
       the 2026-08-28 caption decision; recorded in DECISIONS. The row is not
@@ -249,7 +256,7 @@ the bar's mark clearing the notch, the wall's bar at the bottom.
       same thing twice; keep or drop is her call. Floor two: the journal wall,
       inside the inner scroller. A copy without Last.fm keeps the wall as its
       first screen, one floor, no snap.
-- [ ] **Desk.** Floor one: Start a listen as a 180px square on the same line
+- [x] **Desk.** (floor one built; floor two waits for the feed) Floor one: Start a listen as a 180px square on the same line
       as the portrait and the album art (the desk is vertically centred today
       and never reads `--hn-square-top`; the hero is a full-width panel, not a
       square), with Inbox and Settings as the doors under it. Floor two: the
@@ -260,13 +267,13 @@ the bar's mark clearing the notch, the wall's bar at the bottom.
       "share" among the desk's buttons; the Share door came off the desk on
       2026-09-06 and sharing is the printer glyph. If a door is wanted it is
       one line in `DOORS` pointing at `/printer`, and a DECISIONS amendment.
-- [ ] **Settings.** Sign out stays at the foot. **Source under it is optional,
+- [x] **Settings.** (left without Source, Miyel's call) Sign out stays at the foot. **Source under it is optional,
       not owed:** AGPL §13 is owed to visitors, and the only Source line on the
       cross is on the pitch pane, which a signed-in owner never sees. The
       licence is satisfied as it stands. My pick is to leave Settings without
       it — the pitch already carries the line for the people it is for, and
       she said off is fine — but it is one faint anchor if she wants it.
-- [ ] **The header and the small mark on floor two.** The fixed bar already
+- [x] **The header and the small mark on floor two.** The fixed bar already
       turns into a flush line with the small mark and back-to-top once a pane
       is scrolled; with floors it flips at the floor boundary, so the crown and
       the small mark are never on screen together by construction. A proper
@@ -370,6 +377,23 @@ question for the phone.
       already hide down there; the swipe does not. Untouched by the floors.
 
 **PARKED** — decided, deliberately not being built yet
+
+- [ ] **The pill with a light going round it.** Tried on Send an album on
+      2026-09-07: a frosted pill inside a thin ring, one bright arc of the
+      ring travelling round it, one lap every six seconds. Liked, and taken
+      off the same hour because it felt out of place on the card. Parked for
+      a button that wants to be noticed — the pitch's "Get one", perhaps.
+      Nothing was committed, so the recipe is here rather than in git: on the
+      button, `position: relative; isolation: isolate; overflow: hidden;
+      border: 0; border-radius: 999px; background: transparent`. A `::before`
+      at `z-index: -2`, centred, `width: 240%; aspect-ratio: 1`,
+      `background-color: var(--border)` under `conic-gradient(from 0deg,
+      transparent 0 74%, color-mix(in srgb, var(--ink) 90%, transparent) 91%,
+      transparent 100%)`, animated `translate(-50%, -50%) rotate(0 → 360deg)`
+      over 6s linear. A `::after` at `z-index: -1; inset: 1.5px;
+      border-radius: inherit; background: var(--panel-strong)` with the card
+      blur. Animation off under `prefers-reduced-motion`. A turning box, not
+      an animated gradient angle, so it needs no `@property`.
 
 - [ ] **Theme and the key's wording in Settings.** Both editors were built on
       2026-09-01 and taken off the page the same day. `settings.theme` exists
@@ -688,6 +712,13 @@ returns a `.woff` the renderer accepts (asking for `.ttf` alone finds
 nothing and the image fails with "No fonts are loaded"). Neither typeface
 carries ★, and a glyph the font lacks renders as a box — stars are SVG
 shapes. See `app/entries/[slug]/opengraph-image.js`.
+
+**A flex basis against a `min-height` resolves to the content.** `flex: 1`
+is `flex: 1 1 0%`, and a percentage basis in a column whose height is only a
+minimum is indefinite, so the item takes its content's height instead of
+the leftover. The wall's scroller in floor two grew to the whole wall that
+way and stopped scrolling, taking its sticky bar off the screen. Give the
+scroller a stated height (`100dvh`) when its parent's height is a minimum.
 
 **A hidden browser tab fires no scroll events and runs no smooth scroll.**
 While the Claude browser pane is hidden (`document.hidden` is true), a
@@ -1139,6 +1170,35 @@ current.
 ---
 
 ## Complete
+
+**2026-09-07 — two floors on the cross, branch `two-floors`, merged to `main`**
+
+The entry's shape on the landing panes, on a phone: a card that holds still,
+a swipe up into the reading, left and right still turning the cross. Tested
+on Miyel's iPhone across three rounds the same day.
+
+- [x] **The centre pane and About have two floors** — the pane is the snap
+      container (`y mandatory`), each floor a screen, the wall and the
+      writing in `.hn-floor-scroll`. Rail untouched; no gesture code. The
+      no-Last.fm copy keeps one long scroll. `secondFloorTop` finds the
+      second floor for the caret and `/?q=`.
+- [x] **The bar on floor two has the entry header's geometry** — 80px band,
+      row at 22px, `--hn-bar-h` on `.hn`, so the mark clears the notch.
+- [x] **The wall's bar is the floor of the wall** — page colour, square,
+      one hairline, flush on the bottom edge.
+- [x] **The beacon captions itself again** — "Now listening" / "Not currently
+      listening" in the gap between the mark and the art; "Before that" over
+      the recent row. A cover that fails to load falls back (placeholder on
+      the beacon, the journal's cover or a blank tile in the row).
+- [x] **The desk is three tiles** — Start a listen as the third 180px square
+      on the shared line, Inbox and Settings stacked under it, all `.ln-tile`
+      (base.css). Its second floor waits for the feed.
+- [x] **The card fits its floor** — the name at 30px/27px; "Albums logged"
+      and "since" as two pairs on one line; Send an album stays a pill (a
+      tile and a travelling-light pill were both tried and taken off).
+- [x] **Gotchas found on the way** — a hidden browser tab fires no scroll
+      events; a flex basis against a `min-height` resolves to the content;
+      base.css needs the cache cleared to reload. All three recorded.
 
 **2026-09-06 session — the last cleanup before additive-only** (branch `last-cleanup`)
 - [x] **Deleted, each with its reason in the commit:** `AlbumPreview.js`,

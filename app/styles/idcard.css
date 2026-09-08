@@ -735,6 +735,10 @@ a.ab-rig-name:hover { text-decoration: underline; }
    The labels beside them are already doing the quietening; the answers
    are the content and they weigh the same. */
 .idc-line-value { min-width: 0; color: var(--ink); }
+/* The second label on the counted line — "since" — sits after the first
+   answer at its own width, not the 84px column the row's first label keeps,
+   so the line reads as two short pairs rather than a table with a gap. */
+.idc-line-label--since { width: auto; margin-left: 2px; }
 /* ── The pinned record ──
    Forty-eight square with a ten-pixel radius, which is what the beacon
    draws its recent listens at — same object, same job, so the same

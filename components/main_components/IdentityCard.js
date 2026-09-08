@@ -556,25 +556,31 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
             kinds of thing. They are the same kind of thing: a label and an
             answer. Now they are laid out like it, and the card is a glance at
             somebody before the reading starts below it. */}
-        {/* One line for the two counted facts — "39 · since March 2026" —
-            rather than one row each, so the card fits its floor with room
-            for the Send button above the caret row. Each half keeps its own
-            eye while editing, and its own strike-through when left off. */}
+        {/* One line for the two counted facts, as two label-and-answer
+            pairs side by side — ALBUMS LOGGED 39 SINCE March 2026 — rather
+            than one row each, so the card fits its floor with room for the
+            Send button above the caret row. Each half keeps its own eye while
+            editing, and its own strike-through when left off. */}
         {(showAlbums || showSince) && (
-          <p className="idc-line">
-            <span className="idc-line-label">{showAlbums ? 'Albums logged' : 'Logging since'}</span>
-            <span className="idc-line-value">
-              {showAlbums && <span className={'idc-line-part' + off('albums')}>{records}</span>}
-              {showAlbums && showSince && <span className="idc-line-dot"> · </span>}
-              {showSince && (
-                <span className={'idc-line-part' + off('since')}>{showAlbums ? `since ${since}` : since}</span>
-              )}
-            </span>
+          <p className="idc-line idc-line--counted">
+            {showAlbums && (
+              <>
+                <span className={'idc-line-label' + off('albums')}>Albums logged</span>
+                <span className={'idc-line-value' + off('albums')}>{records}</span>
+              </>
+            )}
+            {showSince && (
+              <>
+                <span className={'idc-line-label' + (showAlbums ? ' idc-line-label--since' : '') + off('since')}>
+                  {showAlbums ? 'since' : 'Logging since'}
+                </span>
+                <span className={'idc-line-value' + off('since')}>{since}</span>
+              </>
+            )}
             {showAlbums && eyeFor('albums')}
             {showSince && eyeFor('since')}
           </p>
         )}
-
 
         {/* The bio used to sit here and does not any more. It was a paragraph
             about the keeper printed two hundred pixels above a longer, better
