@@ -69,7 +69,7 @@ const PIN_RESULTS = 40;
 // over a list that is already in memory. A journal large enough for that to be
 // the wrong shape is a journal whose archive has the same problem, and they
 // should be solved together.
-export default function About({ stamps, authed = false, pinned = null, entries = [] }) {
+export default function About({ crown = null, stamps, authed = false, pinned = null, entries = [] }) {
   const settings = useBookplate();
   const { bioanswers, rig: rigRows, rig_icon, social_links } = settings;
 
@@ -277,16 +277,27 @@ export default function About({ stamps, authed = false, pinned = null, entries =
     setPinQuery('');
   }
 
+  // Whether there is a second floor at all. A fresh copy with no prompts
+  // answered and no rig has nothing to read, and a caret into an empty room
+  // is worse than no caret — deep is measured, so leaving the floor out is
+  // what keeps the caret away. Editing needs the floor for its fields.
+  const hasReading = answered.length > 0 || rigList.length > 0 || edit.editing;
+
   return (
     <div className="ab-pane" ref={paneRef}>
-      <div className="ab-card">
-        <IdentityCard
-          stamps={stamps}
-          authed={authed}
-          edit={edit}
-          pinned={showingPin}
-          onPickPin={() => { setPinQuery(''); setPinOpen(true); }}
-        />
+      {/* Floor one: the crown and the card, one screen that holds still. On a
+          desk the floor is a wrapper and the column scrolls — see nav.css. */}
+      <div className="hn-floor">
+        {crown}
+        <div className="ab-card">
+          <IdentityCard
+            stamps={stamps}
+            authed={authed}
+            edit={edit}
+            pinned={showingPin}
+            onPickPin={() => { setPinQuery(''); setPinOpen(true); }}
+          />
+        </div>
       </div>
 
       {/* ── The pin's search ──────────────────────────────────────────────
@@ -361,6 +372,9 @@ export default function About({ stamps, authed = false, pinned = null, entries =
           past. The entrance to a pane's lower half wants designing properly;
           until it is, this is just where one thing stops and the next
           begins. */}
+      {hasReading && (
+      <div className="hn-floor">
+      <div className="hn-floor-scroll">
       <div className="ab-below">
         {/* The prompts. Prompt and answer on one line, because they are one
             sentence: "I can never skip — Voodoo, side two" is a thought, and
@@ -699,6 +713,9 @@ export default function About({ stamps, authed = false, pinned = null, entries =
         )}
 
       </div>
+      </div>
+      </div>
+      )}
     </div>
   );
 }

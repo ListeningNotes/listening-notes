@@ -15,6 +15,8 @@
    component. */
 .ab-pin-scrim {
   position: fixed; inset: 0; z-index: 150;
+  /* A drag on the scrim must not pan the pane behind the sheet. */
+  touch-action: none;
   background: rgba(0, 0, 0, 0.28);
   animation: abPinFade 0.18s ease;
 }
@@ -493,7 +495,9 @@ a.ab-rig-name:hover { text-decoration: underline; }
 .idc-name {
   font-family: var(--font-display);
   font-weight: var(--font-display-weight);
-  font-size: 36px; line-height: 1.1; letter-spacing: -0.018em;
+  /* 30px, down from 36 on 2026-09-07, so Send an album clears the caret row
+     on a phone. */
+  font-size: 30px; line-height: 1.1; letter-spacing: -0.018em;
   text-wrap: balance;
   color: var(--ink);
   /* The name used to lead the column and needed nothing above it. It
@@ -939,13 +943,13 @@ a.ab-rig-name:hover { text-decoration: underline; }
      carries the size. Stated outright anyway, because the one field
      where inherit did not work — the bio's textarea, which *was* the
      element carrying the size — is the reason this block exists. */
-  .idc-name-input { font-size: 36px !important; }
+  .idc-name-input { font-size: 30px !important; }
   .idc-link-input { font-size: 12px !important; }
 }
 @media (max-width: 480px) {
-  .idc-name-input { font-size: 31px !important; }
+  .idc-name-input { font-size: 27px !important; }
 }
 
 @media (max-width: 480px) {
-  .idc-name { font-size: 31px; }
+  .idc-name { font-size: 27px; }
 }
