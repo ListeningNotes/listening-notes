@@ -432,8 +432,9 @@ export default function HomeNav() {
   const recentRow = recentAlbums.length > 0 && (
     <div className="hp-recent-set">
       {/* Up to three distinct records from the Last.fm history, skipping the
-          one on the beacon — so "before that", not "the last three plays". */}
-      <p className="hp-recent-head">Before that</p>
+          one on the beacon — so "before that", not "the last three plays".
+          The line sits under the covers, not over them: over them it was a
+          second heading between the record and its past. */}
       <div className="hp-recent">
       {recentAlbums.map(album => {
         const entry = entries.find(e => e.album_key === album.key)
@@ -462,6 +463,7 @@ export default function HomeNav() {
         );
       })}
       </div>
+      <p className="hp-recent-head">Before that</p>
     </div>
   );
 
