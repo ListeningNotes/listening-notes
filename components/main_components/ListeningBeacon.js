@@ -29,15 +29,10 @@ export default function ListeningBeacon() {
   // makes. Pressing the beacon no longer does anything, so it stopped being a
   // button.
 
-  // "Now listening" and "Not listening" used to be written out above the art.
-  // They said what the page already shows: a record with a title and an artist
-  // under it, on a page whose mark carries a lit dot while something is
-  // playing. Two words of label over an image that is the whole point of the
-  // screen was spacing spent on a caption.
-  //
-  // The distinction they carried is not lost — the idle state greys the art
-  // and prints "last played" across it, which is the same fact told by the
-  // thing it is about.
+  // "Now listening" and "Not currently listening" are written out again, under
+  // the art (they came off on 2026-08-28 and came back on 2026-09-07; DECISIONS
+  // has both). The idle state still greys the art and prints "last played"
+  // across it.
 
   // Nothing has ever been played. A Last.fm account that is connected and
   // has no scrobbles yet, or one whose history could not be read. The tile
@@ -64,6 +59,12 @@ export default function ListeningBeacon() {
           {!isLive && artUrl && <div className="beacon-idle-overlay"><span>Last played</span></div>}
         </div>
         <div className="beacon-meta">
+          {/* The caption, back since 2026-09-07 on Miyel's call, and under the
+              art rather than over it: the art is the first thing on the
+              screen, and the line says what it is before the title says
+              which. Never green — the dot on the mark is the one thing that
+              lights when something plays. */}
+          <div className="beacon-status">{isLive ? 'Now listening' : 'Not currently listening'}</div>
           {/* Two lines, not a marquee. The marquee is the right answer in the
               nav row, where the slot is a couple of hundred pixels wide and
               there is nowhere for a long title to go — but here the title has
