@@ -5,6 +5,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import SiteNav from '../../../components/main_components/SiteNav';
+import { useBookplate } from '../../../components/main_components/Bookplate';
+import { carryFrom } from '../../../library/return_address';
 // A folder tab that connects to the open panel when active. Module scope so it
 // keeps a stable identity across renders.
 function FolderTab({ id, tab, onSelect, children }) {
@@ -23,6 +25,9 @@ function FolderTab({ id, tab, onSelect, children }) {
 
 export default function Inbox({ layered = false }) {
   const router = useRouter();
+  // This journal's own address, carried on every link out to a sender's
+  // journal so theirs can offer Compare on arrival. See carryFrom.
+  const { site_address } = useBookplate();
   const [authed, setAuthed] = useState(false);
   const [checking, setChecking] = useState(true);
   const [tab, setTab] = useState('submissions');
@@ -164,9 +169,13 @@ export default function Inbox({ layered = false }) {
                             {/* Stored without a scheme on purpose - see the
                                 note in the submissions route - so the
                                 https:// here is the only one there can be. */}
+                            {/* Carrying this journal's address, so theirs
+                                knows who arrived and can offer Compare —
+                                see carryFrom. Owner-only surface, which is
+                                what makes that safe. */}
                             {sent.sender_url && (
                               <a
-                                href={'https://' + sent.sender_url}
+                                href={carryFrom('https://' + sent.sender_url, site_address)}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="own-link"
@@ -220,7 +229,7 @@ export default function Inbox({ layered = false }) {
                           <button onClick={() => approveComment(c.id)} className="own-act own-act--solid">Approve</button>
                           <button onClick={() => dismissComment(c.id)} className="own-act own-act--danger">Dismiss</button>
                           {c.author_url && (
-                            <a href={'https://' + c.author_url} target="_blank" rel="noopener noreferrer" className="own-link">
+                            <a href={carryFrom('https://' + c.author_url, site_address)} target="_blank" rel="noopener noreferrer" className="own-link">
                               {c.author_url} &#8599;
                             </a>
                           )}

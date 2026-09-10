@@ -21,9 +21,10 @@
 // the page's own colour, and turning something over should not change the
 // colour of the room.
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { Check, Eye, EyeSlash, Pencil, Printer, QrCode, UploadSimple, User, X } from '@phosphor-icons/react';
+import { noteArrival, recallSender, subscribeSender, tidyAddress } from '../../library/return_address';
 import QRCode from 'qrcode';
 import { useListeningBeacon } from '../../hooks/useListeningBeacon';
 import { useBookplate } from './Bookplate';
@@ -128,6 +129,11 @@ function AddressCode({ text }) {
   );
 }
 
+// What the browser holds as the visitor's own journal, for the Compare offer.
+// Module-level so the store reads a stable function.
+const readVisitorJournal = () => recallSender().address;
+const readNothing = () => '';
+
 // `edit` is handed in rather than made here. The prompts print on the About
 // pane below this card and are edited there, and one edit session cannot be
 // two instances of the hook — so the pane owns it and the card is given it.
@@ -173,6 +179,23 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
   // out that is not hunting for the button that opened it.
 
   const address = site_address ? site_address.replace(/^https?:\/\//, '') : null;
+
+  // ── Compare, for a visitor who keeps a journal ────────────────────────────
+  // Offered only when this browser holds an address that is not this
+  // journal's own — put there by a send, a comment, or a link that arrived
+  // from their own copy's inbox (noteArrival, read here because this is the
+  // surface that makes the offer). It goes to *their* copy's compare page
+  // with this address in hand: the comparison is read from the keeper's own
+  // side, and their records link home. The owner never sees it — a journal
+  // compared with itself is nothing. Read through useSyncExternalStore,
+  // because the browser is the only place the answer exists and the server
+  // has to draw the same card without it; the arrival is noted in an effect
+  // and the store tells the card when it has.
+  const visitorJournal = useSyncExternalStore(subscribeSender, readVisitorJournal, readNothing);
+  useEffect(() => { noteArrival(site_address); }, [site_address]);
+  const compareAt = !authed && address && visitorJournal && visitorJournal !== tidyAddress(address)
+    ? `https://${visitorJournal}/compare?with=${encodeURIComponent(address)}`
+    : '';
 
   const canTurnSlot = Boolean(portrait_url && address);
   const [slotCode, setSlotCode] = useState(!portrait_url && Boolean(address));
@@ -667,6 +690,11 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
             itself. */}
         <div className="idc-row" inert={editing ? true : undefined}>
           <Link href="/submit" className="ln-pill idc-send">Send an album</Link>
+          {/* "Mine" is the visitor's: the link goes to their own journal.
+              See compareAt above. */}
+          {compareAt && (
+            <a href={compareAt} className="ln-pill idc-send">Compare with mine</a>
+          )}
         </div>
 
         {/* The link rows and the rig rows used to be here, under the button,
