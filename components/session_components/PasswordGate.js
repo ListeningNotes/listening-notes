@@ -19,7 +19,9 @@ import { useJournalHost } from '../../hooks/useJournalHost';
 // `initial` fills the field before anybody types — the setup screen uses it
 // to hand back a code from a link that did not open the door, so the person
 // can see it and press Enter rather than find the log again.
-export default function PasswordGate({ onAuth, bare = false, asking = 'password', initial = '' }) {
+// `autoFocus` puts the cursor in the field as it appears — for the lock on
+// the pitch pane, where the field only exists because a key was just pressed.
+export default function PasswordGate({ onAuth, bare = false, asking = 'password', initial = '', autoFocus = false }) {
   const claiming = asking === 'claim code';
   // The journal's own name over the password box, rather than the name of the
   // journal this software was written for. The owner is the only person who
@@ -101,6 +103,7 @@ export default function PasswordGate({ onAuth, bare = false, asking = 'password'
             value={pw}
             onChange={e => { setPw(e.target.value); setError(''); }}
             disabled={loading}
+            autoFocus={autoFocus}
           />
           {error && <div className="pg-said">{error}</div>}
           <button type="submit" className="pg-go" disabled={loading}>
