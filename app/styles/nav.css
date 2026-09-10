@@ -994,6 +994,28 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   gap: 18px;
   margin-top: 36px;
 }
+/* ── The lock ── a small key where the Sign in line sat, 2026-09-10. Press
+   it and the password field opens under it, in place: no page, no heading,
+   no address over the box, the pane still behind. A visitor sees a key and
+   nothing happens; the keeper has the key. See WritingAccess.js. */
+.pt-lock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+}
+.pt-key {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 34px; height: 34px; padding: 0;
+  border-radius: 999px;
+  background: none; border: 1px solid transparent;
+  color: var(--ink-faint); cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+.pt-key:hover, .pt-key--open { color: var(--ink); }
+.pt-key--open { border-color: var(--border); }
+.pt-lock-field { width: 100%; max-width: 260px; }
 
 /* The card's pencil and printer are pinned to the window (see .ab-card
    .idc-head in idcard.css), which on a phone means they stay on screen when
