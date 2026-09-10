@@ -58,11 +58,11 @@ Editing an entry happens on the entry itself, not in a list. There used to be a
 `/dashboard/entries` table and it was retired: two interfaces for one job means
 neither is canonical.
 
-**Getting in.** The right pane. Signed out it is the pitch, with a "Sign in"
-line at its foot; signed in it is the desk, with a Settings door. Both go to
-`/settings`, which asks for the password when you are not wearing a
-wristband and is the machinery when you are. Nothing on the mark opens
-anything. `/login` is the same door at an address, for when a link will not
+**Getting in.** The right pane. Signed out it is the pitch, with a small key
+at its foot that opens the password field in place; signed in it is the desk,
+with a Settings door to `/settings`, which asks for the password when you are
+not wearing a wristband and is the machinery when you are. Nothing on the
+mark opens anything. `/login` is the same door at an address, for when a link will not
 do. `/setup` runs once, on a copy nobody has claimed yet — one screen at a
 time, opened with the claim code printed in the build log, and it is where
 the password is chosen.
@@ -124,7 +124,7 @@ The furniture — visual pieces
       Dashboard.js             The right pane, for the owner — Listen, Inbox, Settings
       Pitch.js                 The right pane, for everybody else
       KeeperTools.js           The owner's pencil and printer
-      WritingAccess.js         The sign-in line at the foot of the pitch pane; it goes to Settings
+      WritingAccess.js         The lock at the foot of the pitch pane — a key, and the password field it opens in place
       ComingSoon.js            What a held copy shows instead of a site — unclaimed, no database, or database unreachable
       AddToHomeScreen.js       The one step the software cannot do: the last screen of setup, and a Settings section
       AlbumFinder.js           Type, see covers, pick one — the send flow's search

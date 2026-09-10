@@ -465,6 +465,13 @@ the shadows so one asset works on both themes; album art needs a band clamp,
 not a floor, because covers vary more than faces. Rounded finders break
 detection. Three broken QR pages were published in one session by eyeballing.
 
+**The portrait code reports, 2026-09-10.** Every build ends in a sentence —
+when, bands tried, which page refused, which readers the browser had — kept
+on `settings.portrait_code_report`, public, so it can be read off a copy
+nobody here can open; a silent fallback was indistinguishable from never
+having tried. Safari has no `BarcodeDetector`, and jsQR alone refuses
+light-page codes real readers accept, so an iPhone cannot prove one.
+
 **Screenshots are not a threat model.** Don't fight them.
 
 **Turning the card to its code also copies the address, 2026-08-29.** The
@@ -530,6 +537,13 @@ and it is prefilled on every journal after.
 architecture working.** Cookies are scoped per origin, so no copy can see
 what another set — which is exactly what stops anyone being followed from one
 journal to the next. Per browser, not per person; the cost is one paste.
+
+**A keeper's own address reaches another journal in the link, never through
+storage, 2026-09-10.** localStorage is per origin like the cookie, so a
+signed-in copy writing its address into its own storage is read by nothing
+anywhere else. Owner-only links out — the inbox's — carry `?from=<own
+address>`; the journal landed on keeps it as the return address and clears
+the bar. A public link never carries it: it would make every reader the keeper.
 
 **Stored without a scheme, and normalised on the server as well as in the
 browser.** The inbox turns the value into a link, and a route cannot assume
@@ -638,11 +652,11 @@ into and no database of everybody. That is a structural consequence of
 self-hosting, and the thing a hosted service can never offer.
 
 **The way in is the right pane, and nothing on the mark opens it,
-2026-09-02.** The pitch's "Sign in" line when you are out; the desk's Settings
+2026-09-02.** The pitch's key when you are out — pressed, the password field
+opens under it in place (2026-09-10: a whole screen saying SIGN IN on
+somebody else's journal read as being asked to log in); the desk's Settings
 door when you are in. `/settings` signed out *is* the sign-in; `/login` stays
-as the address form. No gesture on the logo, on Miyel's call: the lock, not
-the door's placement, is what protects the room. (Three taps on the mark came
-before this; the archive has them.)
+as the address form. No gesture on the logo, on Miyel's call.
 
 **`/login` exists and nothing links to it prominently.** A gesture that is the
 only way in cannot be linked, bookmarked, or reached when it breaks on a
@@ -1001,10 +1015,11 @@ someone sending it on. A directory doesn't solve discovery.
 
 ## Parked, not rejected
 
-**Compare and Surprise stay parked until Junior has a copy, 2026-09-06.**
-Both routes work if typed; nothing reaches them. Not cut, not built: a
-comparison needs a second journal to design against, and the first one that
-is not Miyel's is the one to design for.
+**Surprise stays parked; Compare has its first way in, 2026-09-10.** June's
+copy exists, so Compare was designed against it: the card offers it to a
+visitor whose browser holds their own address (The network, above). The
+per-album compare and Surprise's shake are still unbuilt; both routes work
+if typed.
 
 **The ten screensavers, 2026-09-06.** 2,500 lines of canvas nothing mounts
 since the owner's pages went plain. Kept behind their one index rather than
