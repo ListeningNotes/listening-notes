@@ -19,7 +19,7 @@
 // else collapsed to single spaces. Two people who typed "Beyoncé" and "Beyonce"
 // still meet on it.
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { fonts } from '../../library/sitewide_visuals';
 import SiteNav from '../../components/main_components/SiteNav';
@@ -43,16 +43,33 @@ function toOrigin(input) {
 
 const num = v => (v === null || v === undefined || v === '' ? null : Number(v));
 
+// The address this page arrived with, if any: ?with=<address>, put there by
+// the Compare offer on somebody else's card, which sends a keeper home to
+// compare from their own side. Read through useSyncExternalStore so the
+// server renders an empty field and the browser fills it in without a
+// hydration mismatch — the same shape the wall uses for ?q=.
+const never = () => () => {};
+const readArrivedWith = () => {
+  try { return new URL(window.location.href).searchParams.get('with') || ''; } catch { return ''; }
+};
+const readNothing = () => '';
+
 export default function ComparePage() {
-  const [address, setAddress] = useState('');
+  const arrivedWith = useSyncExternalStore(never, readArrivedWith, readNothing);
+  // Null until somebody types: the field shows what the page arrived with
+  // until then, and what was typed after.
+  const [typed, setAddress] = useState(null);
+  const address = typed ?? arrivedWith;
   const [state, setState] = useState('idle');   // idle | loading | done | error
   const [error, setError] = useState('');
   const [mine, setMine] = useState([]);
   const [theirs, setTheirs] = useState([]);
   const [origin, setOrigin] = useState('');
 
-  const run = useCallback(async () => {
-    const target = toOrigin(address);
+  // `said` is the address to compare with. Always passed, so this never
+  // closes over the field and the landing effect below can depend on it.
+  const run = useCallback(async (said) => {
+    const target = toOrigin(said);
     if (!target) { setState('error'); setError("That doesn't look like a web address."); return; }
 
     setState('loading');
@@ -82,7 +99,18 @@ export default function ComparePage() {
           : e.message
       );
     }
-  }, [address]);
+  }, []);
+
+  // Arrived knowing: the comparison should be on screen without a press. A
+  // tick later rather than in the effect itself, so the first paint is the
+  // field already filled and the reading starts from there as a callback —
+  // which is also what keeps the compiler's rule about setting state inside
+  // an effect satisfied without pretending this is not a fetch on mount.
+  useEffect(() => {
+    if (!arrivedWith) return undefined;
+    const soon = setTimeout(() => run(arrivedWith), 0);
+    return () => clearTimeout(soon);
+  }, [arrivedWith, run]);
 
   const buckets = useMemo(() => {
     if (state !== 'done') return null;
@@ -134,13 +162,13 @@ export default function ComparePage() {
               className="cmp-input"
               value={address}
               onChange={e => setAddress(e.target.value)}
-              onKeyDown={e => e.key === 'Enter' && run()}
+              onKeyDown={e => e.key === 'Enter' && run(address)}
               placeholder="their journal's address"
               aria-label="The address of another listening journal"
               autoComplete="url"
               spellCheck={false}
             />
-            <button className="ln-pill" onClick={run} disabled={state === 'loading'}>
+            <button className="ln-pill" onClick={() => run(address)} disabled={state === 'loading'}>
               {state === 'loading' ? 'Reading…' : 'Compare'}
             </button>
           </div>
