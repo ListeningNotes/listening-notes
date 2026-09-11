@@ -459,11 +459,22 @@ About QR shares that person; the pitch pane's is a fixed code to `/get`, the
 same on every copy.
 
 **The photo QR: the photograph carries the dark modules, the finders stay
-sharp, and it is verified by decoding.** Dark modules are scattered and read
-as pixels of photo; light ones form regions and read as holes. A floor lifts
-the shadows so one asset works on both themes; album art needs a band clamp,
-not a floor, because covers vary more than faces. Rounded finders break
-detection. Three broken QR pages were published in one session by eyeballing.
+sharp, and it is verified by decoding.** Dark modules are scattered and
+read as pixels of photo; light ones form regions and read as holes. One file
+serves both themes. Rounded finders break detection. Three broken QR pages
+were published in one session by eyeballing.
+
+**It is pressed on the server and judged by OpenCV, both ways up,
+2026-09-11.** Floors 0–220 first, then bands widest first: a floor lifts the
+shadows and leaves the highlights alone, a band flattens both ends. In the
+browser the judge was whichever reader the owner's phone had, and Safari has
+only jsQR, which refuses this style at every setting real readers accept.
+"Fails" means could not be proved, not does not scan; the plain code stands in.
+
+**A code that exists is left alone.** The press runs when a photograph or
+its framing changes, when the address changes, and when a journal has a
+portrait and no code; never on a save that fixed a typo, and never because
+the build number moved. An owner who likes theirs keeps it.
 
 **Screenshots are not a threat model.** Don't fight them.
 
