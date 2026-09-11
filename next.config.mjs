@@ -28,6 +28,12 @@ const nextConfig = {
   // survives being folded into a route handler. Both are only ever asked
   // for by the press behind /api/portrait/code.
   serverExternalPackages: ['sharp', '@techstark/opencv-js'],
+  // OpenCV is required at run time from the project root, which no bundler
+  // can follow, so its files are named here or the deployed function would
+  // not have them.
+  outputFileTracingIncludes: {
+    '/api/portrait/code': ['./node_modules/@techstark/opencv-js/dist/opencv.js'],
+  },
 };
 
 export default nextConfig;
