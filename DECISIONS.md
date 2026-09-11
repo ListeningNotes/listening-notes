@@ -465,13 +465,6 @@ the shadows so one asset works on both themes; album art needs a band clamp,
 not a floor, because covers vary more than faces. Rounded finders break
 detection. Three broken QR pages were published in one session by eyeballing.
 
-**The portrait code reports, 2026-09-10.** Every build ends in a sentence —
-when, bands tried, which page refused, which readers the browser had — kept
-on `settings.portrait_code_report`, public, so it can be read off a copy
-nobody here can open; a silent fallback was indistinguishable from never
-having tried. Safari has no `BarcodeDetector`, and jsQR alone refuses
-light-page codes real readers accept, so an iPhone cannot prove one.
-
 **Screenshots are not a threat model.** Don't fight them.
 
 **Turning the card to its code also copies the address, 2026-08-29.** The
