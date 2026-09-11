@@ -198,12 +198,18 @@ cannot be tested end to end.
       needs its second tier designed before it is built. Covers can only be
       pressed on the server anyway — iTunes sends no CORS headers, so a
       browser canvas cannot read their pixels.
-- [ ] **The press behind the password is untested on the dev server.** The
-      module was run directly in Node on both portraits and on covers; the
-      route answered 401 signed out, which loads the module. What is owed:
-      a signed-in card save that moves the framing, and a look at the new
-      picture on the card. Miyel's own code is untouched until then — the
-      press leaves an existing code alone.
+- [ ] **The press on Vercel is untested.** It works on the dev server
+      (Miyel's card, 2026-09-11: framing moved, pressed at band 100–190 in
+      1.2s, served at 114 kB). On Vercel two things are unproved: that
+      OpenCV's 14 MB file ships with the function (`outputFileTracingIncludes`
+      in next.config.mjs names it, because a run-time require is nothing a
+      bundler can follow) and what its cold start costs. First deploy: open
+      the journal signed in and read the function log for `[portrait code]`.
+- [ ] **Miyel's old picture is in the 2026-09-10-0315 backup** (iCloud,
+      `settings.json`, framed 36.6%, built by Apple's reader with a wider
+      band). The pressed one at the new framing needed the 100–190 band and
+      is flatter. Restoring it is one write of `portrait_code` and
+      `portrait_code_url` from the backup; her call.
 - [ ] **A dot-style press is parked in `git stash` on `junior-install`**
       ("server-side portrait code: dots, solid finders and alignment target,
       one file per theme"). Miyel chose her current style over it. If the
@@ -763,6 +769,16 @@ inverted image, so a dark page fails unless the picture is inverted before
 asking — which is what the press does. The readers, most to least
 tolerant: Apple's, OpenCV both ways, jsQR, ZXing, zbar.
 
+**Next's loader wraps a package that exports a promise of itself into a
+module namespace whose `then` is not a promise's.** `@techstark/opencv-js`
+does exactly that, and `await import(...)` inside a route handler died with
+"Promise.prototype.then called on incompatible receiver [object Module]"
+after passing every test in plain Node. Require it at run time through
+`createRequire` from the project root, and name its file in
+`outputFileTracingIncludes` so the deployed function still has it. And a
+press that faults must write nothing: the first one through the site
+cleared a good code on its way down.
+
 **`react-hooks/set-state-in-effect` traces into the functions an effect
 calls.** A fetch-on-mount that sets `loading` synchronously fails it even
 when the setState is a call away. Read browser-only values through
@@ -1261,8 +1277,11 @@ Reviewed on the dev server at desktop width; not yet on a phone.
       Settings after the address, by setup after the photo, and by the
       card when the owner opens a journal with a portrait and no code.
       Two dependencies: `sharp` (already Next's) and `@techstark/opencv-js`
-      (14 MB of WebAssembly, loaded once per server, external to the
-      bundle). Not exercised behind the password — see Pending.
+      (14 MB of WebAssembly, loaded once per server, required at run time
+      rather than bundled — see Gotchas). Exercised on the dev server: a
+      signed-in save that moved the framing, then the card's own press on
+      reload, made Miyel's at band 100–190. Vercel still owed — see
+      Pending.
 - [x] **Sign in is a lock, not a page.** A key (Phosphor `Key`) where the
       Sign in line sat; pressing it opens `PasswordGate bare` under it, in
       place — no route change, no heading, no address over the box, the pane
