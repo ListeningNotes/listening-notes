@@ -41,6 +41,18 @@ visible, not a defect. Their journal loads from their server under their
 address; the address bar is the receipt. An iframe or proxy would rebuild the
 platform behaviour the whole architecture removes.
 
+**A website and not a desktop app, because everything social needs an
+address, 2026-09-11.** A local app would be a private journal: no visitors,
+no sends, no comparing, no feed, and no colophon leading anyone anywhere.
+Hosting is not a route that was picked among others; it is what being
+readable by other people requires.
+
+**The QR is the brand's answer to the URL.** Self-hosting produces addresses
+nobody wants to read, and the code is where that stops being a flaw. On a
+home screen there is no address bar, so the code is not hiding the address —
+it is the only form the address takes. Scanning someone's face to reach
+their journal is the native gesture, not a workaround.
+
 **No follower counts, no notifications, no unread badges.** Presence is
 outbound and opt-in. A journal can show what is playing; it never shows who is
 reading.
@@ -607,8 +619,16 @@ in the module with components subscribed to it, and the server caches the
 upstream answer for ten seconds.
 
 **No banner or message system pushed into copies.** That would require every
-copy to phone home, producing a log of who is running one. Updates surface
-by checking public GitHub releases.
+copy to phone home, producing a log of who is running one. A copy asks its
+own server, which reads the public releases at most once a day and says one
+line on the desk when a newer one exists — the only thing it can ever say.
+
+**A copy updates with one button on its own repository, 2026-09-11.** The
+deploy button makes a copy, not a fork, so GitHub offers no sync; the
+`Update this copy` workflow merges upstream main and pushes, on the keeper's
+account, with the token every workflow gets — no terminal, no prerequisite.
+The logic is fetched from upstream each run, because GitHub will not let a
+workflow rewrite workflow files. A release is tagged on each meaningful push.
 
 ---
 

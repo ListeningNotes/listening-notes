@@ -1,0 +1,29 @@
+# Update this copy of Listening Notes.
+#
+# Press "Run workflow" on the Actions tab of your own repository. This brings
+# in the latest Listening Notes, pushes it to your branch, and Vercel builds
+# it from there — your database is brought up to date by the build itself.
+# Nothing to install, nothing to type.
+#
+# Nothing here reports anywhere: it fetches the public code the way a
+# browser would and pushes to the repository it runs in, with the token
+# GitHub gives every workflow. The work itself lives upstream in
+# scripts/update_copy.mjs, fetched fresh each run, so this file never needs
+# to change — which matters, because a workflow cannot rewrite itself.
+name: Update this copy
+on:
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Bring in the latest Listening Notes
+        run: |
+          git fetch --no-tags https://github.com/ListeningNotes/listening-notes.git '+main:refs/remotes/upstream/main'
+          git show upstream/main:scripts/update_copy.mjs > "$RUNNER_TEMP/update_copy.mjs"
+          node "$RUNNER_TEMP/update_copy.mjs"

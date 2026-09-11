@@ -878,6 +878,15 @@
    tile's title now. Side by side read as a pyramid; a short pill read as a
    different kind of thing from the square. */
 .db-doors { display: flex; flex-direction: column; align-items: center; gap: 14px; width: 100%; }
+/* A newer version exists. The smallest type on the desk, and only there
+   when it is true. */
+.db-update {
+  margin-top: 22px;
+  font-family: var(--font-label); font-size: 9.5px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--ink-faint); text-decoration: none;
+  border-bottom: 1px solid var(--border);
+}
+.db-update:hover { color: var(--ink); }
 .db-door {
   width: 180px;
   min-height: 100px;

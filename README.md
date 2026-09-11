@@ -86,6 +86,23 @@ in the back of a book.
 
 ---
 
+**Updating.** Your copy does not update itself. When you want the latest,
+open your repository on GitHub, press **Actions**, choose **Update this
+copy** on the left, and press **Run workflow**. It brings in the newest
+Listening Notes, pushes it, and Vercel rebuilds; a couple of minutes later
+your journal is current, database included. It runs on your account and
+reports to nobody. If you have changed the code yourself and a change
+clashes, it stops without touching anything and tells you which files.
+
+A copy made before September 2026 does not have the button yet. Add it once:
+on your repository press **Add file → Create new file**, name it
+`.github/workflows/update.yml`, paste in the contents of
+[that file](https://github.com/ListeningNotes/listening-notes/blob/main/.github/workflows/update.yml),
+and press **Commit changes**. The Actions tab has the button from then on.
+
+The journal itself tells you when there is something to take: one small
+line on the desk, read from this repository's public releases, once a day.
+
 ## Licence
 
 Listening Notes is free software, released under the **GNU Affero General Public
