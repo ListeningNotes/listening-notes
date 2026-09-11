@@ -1280,6 +1280,16 @@ Reviewed on the dev server at desktop width; not yet on a phone.
       missing or older than this build. One dependency added: `sharp`
       (already Next's own). Exercised on the dev server; Vercel owed — see
       Pending.
+- [x] **"Copied" is a pill over the code, 2026-09-11.** Turning the card to
+      its code copies the address (DECISIONS); the line that said so sat
+      under the slot in faint caps and was not noticed. It is now a pill
+      that rises over the middle of the code and fades after 2.6s
+      (`.idc-copied` in idcard.css, absolute inside the slot, so the name
+      never moves). The words are still added and removed rather than
+      faded, so `role="status"` reads them out. Seen on the dev server by
+      forcing the class: a real press in the automated browser turns the
+      card but the clipboard write is refused there, so the pill itself
+      wants one tap on a phone.
 - [x] **Sign in is a lock, not a page.** A key (Phosphor `Key`) where the
       Sign in line sat; pressing it opens `PasswordGate bare` under it, in
       place — no route change, no heading, no address over the box, the pane
