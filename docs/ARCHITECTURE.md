@@ -82,7 +82,7 @@ The library — logic, no visuals
     ai_integration.js          The Claude AI calls: research, and the local assembly of a post
     music_data_api.js          Fetches album art and tracklists from iTunes
     card_links.js              The marks a card can wear — which shape stands for the rig, which logo a link gets
-    portrait_code.js           The portrait made into the journal's QR code, checked against both page colours
+    portrait_code.js           The press: the portrait made into the journal's QR code on the server, searched for the gentlest treatment and proved by OpenCV on both page colours
     session_timers.js          Track length display (m:ss)
     wristband.js               Session auth — issues and checks the JWT cookie
     secrets.js                 The vault: the keys, the password hash, the session secret, the claim code. Database first, environment second
@@ -103,6 +103,7 @@ The front doors — receive requests, hand them off, send back responses
     secrets/route.js           The vault — owner-only both ways; says what is set, never the value
     setup/route.js             GET: is this copy claimed. POST: the one write that claims it
     auth/login/route.js        The password, the deploy-time variable, or — unclaimed — the claim code
+    portrait/code/route.js     POST: press the journal's code out of the stored portrait — owner-only, no body
 
 The hooks — reusable logic shared across pages
   hooks/

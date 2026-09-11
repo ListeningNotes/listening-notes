@@ -191,24 +191,25 @@ cannot be tested end to end.
       the field that opens under the key on the pitch pane: does it offer to
       save at setup and fill here? The markup is the one PasswordGate has
       always had; only the container changed.
-- [ ] **The photo code, re-briefed by Miyel, 2026-09-11.** What is
-      settled: her current style — the photograph in the dark modules, the
-      page through the light ones — has to work for everyone, and later for
-      album covers too. The brief is hers to write. A report column and a
-      server-side press were built on 2026-09-10/11 and taken back out the
-      same day on her call: the branch was rewritten without them and the
-      two columns (`portrait_code_report`, `portrait_code_dark`) dropped from
-      the live database with their ledger rows, before anything shipped.
-      The press is in `git stash` on `junior-install`. What was measured,
-      on June's and Miyel's real portraits, so it is not measured twice:
-      Apple's reader (an iPhone, or Chromium on a Mac) reads the current
-      style; jsQR, ZXing and zbar all refuse it on the light page, and no
-      camera-like reader runs on a server or in Safari. jsQR passes at every
-      dot size, both pages, all three stress sizes, with a dot per photo
-      module in the page's ink, the three finders *and the small alignment
-      target* solid, and one file per theme; grey one-file versions fail;
-      stress shrinking has to be smooth, never nearest-neighbour. A sharp
-      build is 0.2s a portrait.
+- [ ] **Album covers through the press.** The same search and judge on
+      the 39 covers on this journal: 21 pass, 18 fail every setting, and
+      five of the 21 only on the harshest bands. The plain code is not a
+      rare outcome for covers, so the entry-QR (parked, see DECISIONS)
+      needs its second tier designed before it is built. Covers can only be
+      pressed on the server anyway — iTunes sends no CORS headers, so a
+      browser canvas cannot read their pixels.
+- [ ] **The press behind the password is untested on the dev server.** The
+      module was run directly in Node on both portraits and on covers; the
+      route answered 401 signed out, which loads the module. What is owed:
+      a signed-in card save that moves the framing, and a look at the new
+      picture on the card. Miyel's own code is untouched until then — the
+      press leaves an existing code alone.
+- [ ] **A dot-style press is parked in `git stash` on `junior-install`**
+      ("server-side portrait code: dots, solid finders and alignment target,
+      one file per theme"). Miyel chose her current style over it. If the
+      current style ever needs to pass jsQR rather than OpenCV, that is the
+      shape that does: a dot per photo module in the page's ink, the three
+      finders and the small alignment target solid, one file per theme.
 - [ ] **Add, the other half of the offer.** The mechanism, so it is not
       re-derived: an Add press on the journal being read cannot write to the
       visitor's address book from that origin, so — like Compare — it is a
@@ -217,6 +218,10 @@ cannot be tested end to end.
       Needs the address book, still parked. Entries would then arrive from a
       send that carried a URL, a scanned code, or an Add press; a paste
       field is the last resort.
+- [ ] **Names to confirm, 2026-09-11** — the press: `POST /api/portrait/code`;
+      `pressStoredPortraitCode` and `buildPortraitCode({ url, portrait,
+      position })` in `library/portrait_code.js`; the `f` and `c` (floor and
+      cap) parameters on `portrait_code_url`.
 - [ ] **Names to confirm, 2026-09-10** — autonomous session, rename freely:
       branch `junior-install`; `carryFrom`, `noteArrival`
       and `subscribeSender` in `library/return_address.js`; the query keys
@@ -751,12 +756,12 @@ page and every one on the dark. The textured finder patterns are what it
 cannot find — painted solid, jsQR read the light page at once, and lost the
 dark one, since one solid colour cannot serve both themes. Safari has no
 `BarcodeDetector`, so on an iPhone the verifier is jsQR alone and the photo
-code is refused every time. ZXing was worse than jsQR; blur and smoothing
-before decoding changed nothing. What jsQR *does* pass, measured the next
-day: a dot in each photo module in the page's ink, the three finders and
-the small alignment target drawn solid, one file per theme. With the
-alignment target photographic it fails every time — that one 5×5 patch
-was the whole difference.
+code is refused every time. ZXing and zbar were worse than jsQR; blur and
+smoothing before decoding changed nothing. OpenCV's classic decoder sits
+between jsQR and a phone: it reads this style, but it does not try the
+inverted image, so a dark page fails unless the picture is inverted before
+asking — which is what the press does. The readers, most to least
+tolerant: Apple's, OpenCV both ways, jsQR, ZXing, zbar.
 
 **`react-hooks/set-state-in-effect` traces into the functions an effect
 calls.** A fetch-on-mount that sets `loading` synchronously fails it even
@@ -1237,16 +1242,27 @@ not merged**
 June's copy (`userone-silk.vercel.app`) is the first that is not Miyel's.
 Reviewed on the dev server at desktop width; not yet on a phone.
 
-- [x] **The photo QR: which it was.** It ran and was refused. Reproduced
-      against his actual portrait, in his page: Chromium's own reader passes
-      seven bands and the final check at floor 115, cap 255; jsQR alone —
-      all Safari has — refuses all thirty-five bands on the light page at
-      full size. He edits from an iPhone, so the build ran, every band
-      failed the light-page check, and the card fell back to the plain code
-      without a word. **Nothing of the fix ships on this branch**: a report
-      column and then a server-side press were built and taken back out on
-      Miyel's call, and the shape of the code is being re-briefed — see
-      Pending.
+- [x] **The photo QR: which it was, and the press.** It ran and was
+      refused. Reproduced against his actual portrait, in his page:
+      Chromium's own reader passes seven bands and the final check at floor
+      115, cap 255; jsQR alone — all Safari has — refuses all thirty-five
+      bands on the light page at full size. He edits from an iPhone, so the
+      build ran, every band failed the light-page check, and the card fell
+      back to the plain code without a word. Fixed, 2026-09-11, from
+      Miyel's brief: the code is pressed on the server
+      (`library/portrait_code.js`, sharp + OpenCV, `POST /api/portrait/code`)
+      with the brief's search — floors 0–220, then six bands widest first
+      — and judged by OpenCV trying both ways up, on both pages, at three
+      sizes. Same answer on every phone. The picture is unchanged; the
+      winning floor and cap ride on `portrait_code_url` as `f` and `c`; no
+      new columns. Measured: June at floor 70, Miyel at 80–200, the brief's
+      seven all pass; jsQR still refuses everything, which is why the judge
+      changed. Pressed by the editor when the photo or framing moves, by
+      Settings after the address, by setup after the photo, and by the
+      card when the owner opens a journal with a portrait and no code.
+      Two dependencies: `sharp` (already Next's) and `@techstark/opencv-js`
+      (14 MB of WebAssembly, loaded once per server, external to the
+      bundle). Not exercised behind the password — see Pending.
 - [x] **Sign in is a lock, not a page.** A key (Phosphor `Key`) where the
       Sign in line sat; pressing it opens `PasswordGate bare` under it, in
       place — no route change, no heading, no address over the box, the pane
