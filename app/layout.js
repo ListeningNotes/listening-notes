@@ -16,6 +16,7 @@ import { PATH_HEADER } from '../proxy';
 import { headers } from 'next/headers';
 import { isSetUp, pull_settings, coverName, titleName } from '../library/settings_actions';
 import { hasDatabase, explainDatabaseError } from '../library/database_connection';
+import { isCurrentCode } from '../library/portrait_code';
 
 const nunito = Nunito({
   subsets: ['latin'],
@@ -227,6 +228,10 @@ export default async function RootLayout({ children, layer }) {
   const settings = Object.fromEntries(
     BOOKPLATE_FIELDS.filter(key => key in all).map(key => [key, all[key]])
   );
+  // Whether the journal's code was drawn by an older build. Decided here
+  // because the build number lives in the press, which is server-only, and
+  // the card, which acts on the answer, is not.
+  settings.portrait_code_stale = Boolean(all.portrait_code_url) && !isCurrentCode(all.portrait_code_url);
   // has_note used to ride along here — a boolean saying an essay existed, so
   // the about page could decide whether to draw a link to it without carrying
   // 3.5KB of prose into every page on the site. Nothing links to the essay any

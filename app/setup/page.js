@@ -236,6 +236,10 @@ export default function WelcomeScreen() {
       if (!res.ok) throw new Error(answer.error || 'That did not upload.');
       setPortrait(answer.portrait_url);
       await patchSettings({ portrait_url: answer.portrait_url, portrait_position: '50.0% 50.0%' });
+      // And the journal's code, made out of it on the server. Not awaited:
+      // a second or so of work the person pressing Next has no reason to
+      // wait for, and the card asks again if it is missing.
+      fetch('/api/portrait/code', { method: 'POST' }).catch(() => {});
     } catch (e) {
       setError(e.message === 'unreadable' ? 'That file could not be read as a picture.' : e.message);
     }

@@ -994,6 +994,48 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   gap: 18px;
   margin-top: 36px;
 }
+/* ── The lock ── a small key where the Sign in line sat, 2026-09-10. Press
+   it and the password field opens under it, in place: no page, no heading,
+   no address over the box, the pane still behind. A visitor sees a key and
+   nothing happens; the keeper has the key. See WritingAccess.js. */
+.pt-lock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+}
+.pt-key {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 34px; height: 34px; padding: 0;
+  border-radius: 999px;
+  background: none; border: 1px solid transparent;
+  color: var(--ink-faint); cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+.pt-key:hover, .pt-key--open { color: var(--ink); }
+.pt-key--open { border-color: var(--border); }
+/* The box itself is smaller and quieter than the gate's: no panel behind
+   it, a hairline, a faint Enter. On a phone the type stays 16px — the
+   Safari zoom rule in forms.css — and is 13px wherever there is a mouse. */
+.pt-lock-field { width: 100%; max-width: 150px; }
+.pt-lock-field .pg-form { gap: 6px; align-items: center; }
+/* Still a real, visible, writable field — the password manager's filing
+   label — but as quiet as one can be and stay that. */
+.pt-lock-field .pg-who {
+  font-size: 8px; letter-spacing: 0; text-transform: none; opacity: 0.6;
+}
+.pt-lock-field .pg-pw {
+  padding: 6px 10px; border-radius: 7px;
+  background: none; font-size: 12px;
+}
+.pt-lock-field .pg-pw::placeholder { font-size: 11px; }
+@media (pointer: coarse) { .pt-lock-field .pg-pw { font-size: 16px; } }
+.pt-lock-field .pg-go {
+  width: auto; padding: 4px 12px; font-size: 8px; letter-spacing: 0.1em;
+  background: none; color: var(--ink-faint); border-color: transparent;
+}
+.pt-lock-field .pg-go:hover { color: var(--ink); border-color: var(--border); }
 
 /* The card's pencil and printer are pinned to the window (see .ab-card
    .idc-head in idcard.css), which on a phone means they stay on screen when

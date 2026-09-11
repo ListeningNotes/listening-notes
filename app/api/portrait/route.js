@@ -19,6 +19,7 @@
 import database from '@/library/database_connection';
 import { requireWristband } from '@/library/wristband';
 import { pull_settings, save_settings } from '@/library/settings_actions';
+import { darkPageCode, isCurrentCode } from '@/library/portrait_code';
 
 // Generous for a downscaled photograph and mean enough that this cannot be
 // used to push a film into the settings table. The browser aims at roughly a
@@ -33,16 +34,24 @@ const ALLOWED = new Set(['image/jpeg', 'image/png', 'image/webp']);
 export async function GET(request) {
   // ?of=code asks for the portrait rendered as the journal's QR code rather
   // than the photograph itself. Same row, same caching, one route — they are
-  // the same picture twice and they change at the same moment.
-  const wantsCode = new URL(request.url).searchParams.get('of') === 'code';
+  // the same picture twice and they change at the same moment. The code's
+  // dots are the page's ink, so &theme=dark asks for the dark page's file,
+  // which is the stored one with its ink flipped (library/portrait_code.js)
+  // — only for a code the current build drew; an older picture has no pure
+  // ink to flip and is served as it is for either page.
+  const asked = new URL(request.url).searchParams;
+  const wantsCode = asked.get('of') === 'code';
+  const wantsDark = asked.get('theme') === 'dark';
   try {
     const [row] = await database`
-      SELECT portrait_data, portrait_mime, portrait_code FROM settings WHERE id = 1`;
+      SELECT portrait_data, portrait_mime, portrait_code, portrait_code_url FROM settings WHERE id = 1`;
 
     const stored = wantsCode ? row?.portrait_code : row?.portrait_data;
     if (!stored) return new Response('No portrait', { status: 404 });
 
-    const bytes = Buffer.from(stored, 'base64');
+    const bytes = wantsCode && wantsDark && isCurrentCode(row.portrait_code_url)
+      ? await darkPageCode(stored)
+      : Buffer.from(stored, 'base64');
     return new Response(bytes, {
       headers: {
         'Content-Type': wantsCode ? 'image/png' : (row.portrait_mime || 'image/jpeg'),

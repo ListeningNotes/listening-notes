@@ -59,7 +59,7 @@ import WritingAccess from './WritingAccess';
 const SOURCE_URL =
   process.env.NEXT_PUBLIC_SOURCE_URL || 'https://github.com/ListeningNotes/listening-notes';
 
-export default function Pitch() {
+export default function Pitch({ onSignedIn }) {
   return (
     <div className="pt-pane">
       <div className="pt-body">
@@ -84,11 +84,12 @@ export default function Pitch() {
             that goes stale is worse than a line that is simply true. */}
         {/* Stacked and set well below the button, 2026-09-03: the two lines
             used to sit side by side under it and the pane read as a button
-            with a caption. Sign in first because it is the one a person
-            might be looking for; the source line last, smallest, where a
-            colophon goes. */}
+            with a caption. The lock first because it is the one the keeper
+            is looking for; the source line last, smallest, where a colophon
+            goes. The lock is a key, 2026-09-10, and the field opens under it
+            in place — see WritingAccess. */}
         <div className="pt-foot">
-          <WritingAccess label="Sign in" align="center" />
+          <WritingAccess onSignedIn={onSignedIn} />
           {/* No version number: a version is a thing to keep current, and a line
               that goes stale is worse than a line that is simply true. */}
           <a className="pt-source" href={SOURCE_URL} target="_blank" rel="noopener noreferrer">

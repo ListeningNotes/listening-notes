@@ -145,7 +145,13 @@ export default function SettingsPage({ layered = false }) {
         <Section
           title="This journal’s address"
           note="Where the card’s scannable code points. Filled in from wherever the copy was first opened; change it if you have since put the journal on a domain of your own."
-          onSave={() => send('/api/settings', { site_address: address })}
+          onSave={async () => {
+            await send('/api/settings', { site_address: address });
+            // The code on the card encodes the address, so it is pressed
+            // again once the new one is on the row. Quietly: what happened
+            // is in the server's log, not on this form.
+            await fetch('/api/portrait/code', { method: 'POST' }).catch(() => {});
+          }}
         >
           <input className="st-field" value={address} onChange={e => setAddress(e.target.value)} placeholder="yourname.example.com" inputMode="url" autoCapitalize="none" autoComplete="off" />
         </Section>
