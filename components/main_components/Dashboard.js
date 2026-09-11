@@ -19,6 +19,7 @@
 // pane, so a visitor never sees a door they cannot open.
 
 'use client';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Headphones, Envelope, GearSix } from '@phosphor-icons/react';
 
@@ -45,6 +46,18 @@ const DOORS = [
 ];
 
 export default function Dashboard({ waiting }) {
+  // Whether a newer Listening Notes exists. Asked once, of this copy's own
+  // server, which asks GitHub's public releases at most once a day (see
+  // app/api/update/route.js). The only thing this can ever say is that
+  // there is a newer version, and where the button to take it is.
+  const [update, setUpdate] = useState(null);
+  useEffect(() => {
+    fetch('/api/update')
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => d?.newer && setUpdate(d))
+      .catch(() => {});
+  }, []);
+
   return (
     <div className="db-pane">
       <div className="db-body">
@@ -78,6 +91,15 @@ export default function Dashboard({ waiting }) {
             </Link>
           ))}
         </div>
+
+        {/* The one line on the site that is about the software rather than
+            the journal. Quiet, under the doors, and absent entirely until
+            there is something to say. */}
+        {update && (
+          <a className="db-update" href={update.page} target="_blank" rel="noopener noreferrer">
+            A newer version is available &#8599;
+          </a>
+        )}
       </div>
     </div>
   );
