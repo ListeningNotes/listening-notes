@@ -425,6 +425,16 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
         <span className="idc-portrait-badge" aria-hidden="true">
           {slotCode ? <User size={12} weight="bold" /> : <QrCode size={12} weight="bold" />}
         </span>
+        {/* The copy, said over the code rather than on a line under the
+            slot, 2026-09-11: a pill rising over the picture for a moment
+            gets noticed, and a caption below it did not. The words are
+            still added and removed rather than faded, because that is what
+            makes role="status" read them out — a message that is always in
+            the page and merely invisible is one a screen reader has already
+            been past. */}
+        <span className={'idc-copied' + (copied ? ' idc-copied--on' : '')} role="status">
+          {copied ? 'Copied \u2014 paste it anywhere' : ''}
+        </span>
       </button>
     );
   }
@@ -559,23 +569,6 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
         </div>
 
         {slot}
-
-        {/* Only on a card where the press does something. A card with no
-            address cannot copy one, and reserving a line on every card for a
-            message that can never appear there would change the height of the
-            card for nothing.
-
-            Where it does exist the line is held open empty, so the name below
-            does not jump down and back as it comes and goes. And the words
-            themselves are added and removed rather than faded, because that is
-            what makes role="status" read them out — a message that is always
-            in the page and merely invisible is a message a screen reader has
-            already been past. */}
-        {canTurnSlot && (
-          <p className="idc-copied" role="status">
-            {copied ? 'Copied \u2014 paste it anywhere' : ''}
-          </p>
-        )}
 
         {/* cover_name, not keeper_name: this is the one place a person is
             reading the name, so it is allowed to be the ornamented one. The
