@@ -39,6 +39,11 @@ const EMPTY = {
   hidden_fields: null,
   portrait_position: null,
   portrait_code_url: null,
+  // Whether that picture was drawn by an older build than this software
+  // carries. Worked out on the server in app/layout.js, the only place that
+  // can read the build number without pulling the press — and sharp with
+  // it — into the browser.
+  portrait_code_stale: false,
   rig_icon: null,
   rig: null,
   // Three finished openings; see library/bioprompt.js. Short by design —

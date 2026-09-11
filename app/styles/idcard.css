@@ -607,7 +607,10 @@ a.ab-rig-name:hover { text-decoration: underline; }
      the box, which undoes the oversize entirely. */
   flex-shrink: 0;
   max-width: none;
-  image-rendering: pixelated;
+  /* Smoothed, not pixelated, 2026-09-11: the picture carries a dot in
+     every module now, and nearest-neighbour shrinking drops dots. A lens
+     blurs; so does this. */
+  image-rendering: auto;
 }
 
 /* No portrait set. Registration corners rather than a grey box with a

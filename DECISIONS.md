@@ -458,23 +458,26 @@ cards advertises Miyel, not the software. **Two different QRs:** a journal's
 About QR shares that person; the pitch pane's is a fixed code to `/get`, the
 same on every copy.
 
-**The photo QR: the photograph carries the dark modules, the finders stay
-sharp, and it is verified by decoding.** Dark modules are scattered and
-read as pixels of photo; light ones form regions and read as holes. One file
-serves both themes. Rounded finders break detection. Three broken QR pages
-were published in one session by eyeballing.
+**The photo QR: the photograph fills the dark modules, a dot of ink sits in
+each, the finders and the alignment target are solid, 2026-09-11.** The
+dots and the patterns carry the scan, so the picture keeps its tones and
+the proof is by construction: the strictest reader passed both portraits
+and all 39 covers at the smallest dot, where the photograph carrying the
+code alone passed 21 covers on the most lenient. If a dot ever fails it
+grows a step, ending at the plain code — something scannable always ships.
 
-**It is pressed on the server and judged by OpenCV, both ways up,
-2026-09-11.** Floors 0–220 first, then bands widest first: a floor lifts the
-shadows and leaves the highlights alone, a band flattens both ends. In the
-browser the judge was whichever reader the owner's phone had, and Safari has
-only jsQR, which refuses this style at every setting real readers accept.
-"Fails" means could not be proved, not does not scan; the plain code stands in.
+**Pressed on the server, judged by jsQR, one file with its ink flipped for
+the dark page.** The judge is the strictest reader on purpose: what passes
+it scans on any phone, and the answer is the same whatever phone the owner
+holds — Safari has no reader of its own, which is how June's copy got the
+plain code. The dark page's file is the light one with pure black and white
+swapped at request time; the photo is banded so it never holds either.
 
-**A code that exists is left alone.** The press runs when a photograph or
-its framing changes, when the address changes, and when a journal has a
-portrait and no code; never on a save that fixed a typo, and never because
-the build number moved. An owner who likes theirs keeps it.
+**A code drawn by an older build is re-pressed on the owner's next visit;
+one drawn by this build is left alone.** Every card ends up the same style,
+and a save that fixed a typo never redraws a picture the owner already has.
+The press also runs when the photograph or its framing moves, when the
+address changes, and when a journal has a portrait and no code.
 
 **Screenshots are not a threat model.** Don't fight them.
 
