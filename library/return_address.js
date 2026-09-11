@@ -32,6 +32,18 @@
 // which form happened to ask for it.
 const KEY = 'ln-return-address';
 
+// Who wants to know when it changes. The card offers Compare off this value
+// and reads it through useSyncExternalStore, which is the shape the rest of
+// the site uses for anything only the browser knows: the server draws the
+// card without it, the browser fills it in, and no state is set from inside
+// an effect to get there.
+const watchers = new Set();
+export function subscribeSender(listener) {
+  watchers.add(listener);
+  return () => watchers.delete(listener);
+}
+const tell = () => { for (const listener of watchers) listener(); };
+
 // What counts as an address worth keeping. Deliberately loose: this is a
 // convenience, so the cost of turning away something valid is higher than the
 // cost of keeping something that turns out not to resolve. A dot with
@@ -96,5 +108,64 @@ export function keepSender({ name = '', address = '' } = {}) {
     // Private browsing, a full quota, storage switched off — none of them
     // worth a broken send. The fields simply start empty next time.
   }
+  tell();
   return kept;
+}
+
+// ── Arriving from your own journal ────────────────────────────────────────
+// A keeper reading somebody else's journal is a stranger to it. This browser,
+// at this address, has never been told they keep one — and their own copy,
+// which knows exactly what it is, cannot say so from where it stands: its
+// storage is its origin's, like its cookies, and nothing at another address
+// can read it. A signed-in copy writing its own address into its own storage
+// would be read by nothing, anywhere.
+//
+// So it says so in the link instead. Every place the owner's copy links out
+// to another journal — the inbox, for now — carries ?from=<its own address>;
+// the journal landed on reads that once, keeps it here as the return address,
+// and takes it back off the address bar. Nobody types anything, and nothing
+// is stored anywhere but the visitor's own browser: the same value the send
+// form would have asked for, arriving a different way.
+//
+// Only surfaces the owner alone can reach may add it. A public link that
+// carried the journal's address would introduce every reader as its keeper.
+const FROM = 'from';
+
+// A link out, carrying this journal's address. Given anything that is not a
+// URL, or no address to carry, it hands the link back untouched — a link
+// that stops working is worse than a visitor who has to paste once.
+export function carryFrom(href, ownAddress) {
+  const address = tidyAddress(ownAddress);
+  if (!address) return href;
+  try {
+    const url = new URL(href);
+    url.searchParams.set(FROM, address);
+    return url.toString();
+  } catch {
+    return href;
+  }
+}
+
+// Read on landing. Returns the address kept, or '' when the link carried
+// none, carried something that is not an address, or carried this journal's
+// own — a link back to itself must not introduce a visitor as its keeper.
+// The name already held is kept: the link says where somebody's journal is,
+// not what they are called.
+export function noteArrival(ownAddress) {
+  if (typeof window === 'undefined') return '';
+  let from = '';
+  try {
+    const url = new URL(window.location.href);
+    if (!url.searchParams.has(FROM)) return '';
+    from = tidyAddress(url.searchParams.get(FROM));
+    // Off the address bar either way: the receipt should read as their
+    // address, not as their address with a note pinned to it.
+    url.searchParams.delete(FROM);
+    window.history.replaceState(window.history.state, '', url.toString());
+  } catch {
+    return '';
+  }
+  if (!from || from === tidyAddress(ownAddress)) return '';
+  keepSender({ ...recallSender(), address: from });
+  return from;
 }

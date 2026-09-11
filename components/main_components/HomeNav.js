@@ -141,23 +141,31 @@ export default function HomeNav() {
   // /api/auth/check renews an ageing wristband, simply opening the journal
   // keeps the key alive. On a home screen, where there is no address bar to
   // sign in from, that is what stops the door quietly locking itself.
+  // Only asked once the wristband is confirmed — the endpoint answers 401 to
+  // anyone else, and a failed request on every public visit is noise in the
+  // log for no reason.
+  const askWaiting = useCallback(() => {
+    fetch('/api/waiting')
+      .then(r => (r.ok ? r.json() : null))
+      .then(w => w && setWaiting(w))
+      .catch(() => {});
+  }, []);
   useEffect(() => {
     fetch('/api/auth/check')
       .then(r => r.json())
       .then(d => {
         setAuthed(!!d.authed);
-        // Only asked once the wristband is confirmed — the endpoint answers
-        // 401 to anyone else, and a failed request on every public visit is
-        // noise in the log for no reason.
-        if (d.authed) {
-          fetch('/api/waiting')
-            .then(r => (r.ok ? r.json() : null))
-            .then(w => w && setWaiting(w))
-            .catch(() => {});
-        }
+        if (d.authed) askWaiting();
       })
       .catch(() => {});
-  }, []);
+  }, [askWaiting]);
+  // The lock on the pitch pane opened. The pane it is on becomes the desk,
+  // with nothing reloaded: the wristband was just issued and the cross never
+  // unmounted.
+  const letIn = useCallback(() => {
+    setAuthed(true);
+    askWaiting();
+  }, [askWaiting]);
 
   const railRef = useRef(null);
   // One ref per pane's own vertical scroller. Written as three rather than an
@@ -555,7 +563,7 @@ export default function HomeNav() {
 
         <section className="hn-pane" ref={paneRefs[2]} aria-label={authed ? 'Your desk' : 'About this software'}>
           {crown}
-          {authed ? <Dashboard waiting={waiting} /> : <Pitch />}
+          {authed ? <Dashboard waiting={waiting} /> : <Pitch onSignedIn={letIn} />}
         </section>
       </div>
 

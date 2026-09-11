@@ -185,6 +185,51 @@ cannot be tested end to end.
 - [x] **Deploy button** — done, and no longer lands on a copy with no schema: the migration runner builds the tables and the welcome screen asks who it belongs to.
 - [ ] **`/api/export`** — a copy should be able to hand its owner their own data back.
 
+**FROM JUNE'S INSTALL, 2026-09-10** — see Complete for what shipped.
+
+- [ ] **The inline lock on a real phone.** Safari's password manager against
+      the field that opens under the key on the pitch pane: does it offer to
+      save at setup and fill here? The markup is the one PasswordGate has
+      always had; only the container changed.
+- [ ] **The entry QR for album covers is now buildable.** All 39 covers on
+      this journal pass the dot press at the smallest dot (they passed 21 of
+      39 in the old style on the most lenient judge). Covers can only be
+      pressed on the server — iTunes sends no CORS headers — which is where
+      the press now lives; `buildPortraitCode` takes any picture. Still
+      parked (DECISIONS), but the second tier it was waiting on is no longer
+      a common outcome.
+- [ ] **The press on Vercel is untested.** It works on the dev server. On
+      Vercel what is unproved is that sharp's binary ships with the function
+      (it is Next's own dependency, so it should) and the cold start. First
+      deploy: open the journal signed in and read the function log for
+      `[portrait code]`.
+- [ ] **Miyel's old picture is in the 2026-09-10-0315 backup** (iCloud,
+      `settings.json`, framed 36.6%, the photograph carrying the code alone,
+      built by Apple's reader). Superseded by the dot style on her call;
+      kept there if it is ever wanted. The stash "server-side portrait code:
+      dots…" on `junior-install` is the first draft of what shipped and can
+      be dropped.
+- [ ] **Add, the other half of the offer.** The mechanism, so it is not
+      re-derived: an Add press on the journal being read cannot write to the
+      visitor's address book from that origin, so — like Compare — it is a
+      link back to the visitor's own copy, `https://<their address>/…?add=
+      <this address>`, which files the journal into `people` (owner-only).
+      Needs the address book, still parked. Entries would then arrive from a
+      send that carried a URL, a scanned code, or an Add press; a paste
+      field is the last resort.
+- [ ] **Names to confirm, 2026-09-11** — the press: `POST /api/portrait/code`;
+      `pressStoredPortraitCode`, `buildPortraitCode({ url, portrait,
+      position })`, `flipInk`, `darkPageCode` and `isCurrentCode` in
+      `library/portrait_code.js`; the `d` (dot) parameter and `b` (build)
+      stamp on `portrait_code_url`; `?theme=dark` on `/api/portrait`;
+      `portrait_code_stale` in the Bookplate.
+- [ ] **Names to confirm, 2026-09-10** — autonomous session, rename freely:
+      branch `junior-install`; `carryFrom`, `noteArrival`
+      and `subscribeSender` in `library/return_address.js`; the query keys
+      `?from=` (on a link out from the inbox) and `?with=` (on `/compare`);
+      `letIn` and `askWaiting` in HomeNav; `.pt-lock`, `.pt-key` and
+      `.pt-lock-field` in nav.css; PasswordGate's `autoFocus` prop.
+
 **STRUCTURE** — see DECISIONS.md before starting any of these
 
 The cross is built and merged. What is left of it:
@@ -200,7 +245,7 @@ The cross is built and merged. What is left of it:
       the page needs a signed-in look at `/dashboard/share` to confirm both
       slides still draw and the status line settles to blank.
 - [ ] **A QR on the pitch pane.** DECISIONS already settles that the right pane produces a fixed code to `/get`, the same on every copy. Not built, and the "logo made of the QR" idea is unresolved.
-- [ ] **PARKED until Junior has a copy — Compare wants two homes** — one on an individual album, for comparing that record against another, and one on the About pane for comparing the collection overall. It is reachable from neither today; the route works if you type it.
+- [ ] **Compare wants two homes** — one on an individual album, for comparing that record against another, and one on the About pane for comparing the collection overall. The About-pane home shipped 2026-09-10 as the visitor's offer (see Complete); the per-album one is still open.
 - [ ] **PARKED until Junior has a copy — Surprise (`/shuffle`) has no way in.** Work in progress by decision — the shake is the intended gesture and is not built. See DECISIONS.
 
 **TWO FLOORS ON THE CROSS** — briefed 2026-09-07. Replaces "the cross's two
@@ -705,6 +750,38 @@ Project → Settings → Environment Variables.
 
 ## Gotchas
 
+**jsQR alone refuses light-page photo codes that every real reader accepts.**
+Measured 2026-09-10 on June's portrait, in his page: `BarcodeDetector` passed
+seven bands and the final check; jsQR passed none of thirty-five on the light
+page and every one on the dark. The textured finder patterns are what it
+cannot find — painted solid, jsQR read the light page at once, and lost the
+dark one, since one solid colour cannot serve both themes. Safari has no
+`BarcodeDetector`, so on an iPhone the verifier is jsQR alone and the photo
+code is refused every time. ZXing and zbar were worse than jsQR; blur and
+smoothing before decoding changed nothing. OpenCV's classic decoder sits
+between jsQR and a phone: it reads this style, but it does not try the
+inverted image, so a dark page fails unless the picture is inverted before
+asking — which is what the press does. The readers, most to least
+tolerant: Apple's, OpenCV both ways, jsQR, ZXing, zbar.
+
+**Next's loader wraps a package that exports a promise of itself into a
+module namespace whose `then` is not a promise's.** `@techstark/opencv-js`
+did exactly that, and `await import(...)` inside a route handler died with
+"Promise.prototype.then called on incompatible receiver [object Module]"
+after passing every test in plain Node. Require such a package at run time
+through `createRequire` from the project root, and name its file in
+`outputFileTracingIncludes` so the deployed function still has it. (OpenCV
+was the judge for one afternoon and is gone; the lesson stays.) And a press
+that faults must write nothing: the first one through the site cleared a
+good code on its way down.
+
+**`react-hooks/set-state-in-effect` traces into the functions an effect
+calls.** A fetch-on-mount that sets `loading` synchronously fails it even
+when the setState is a call away. Read browser-only values through
+`useSyncExternalStore` (the wall's `?q=`, the card's Compare offer), and
+start a landing-time fetch from a `setTimeout` callback rather than the
+effect body (`/compare?with=`).
+
 **The link-preview renderer cannot read the site's CSS or fonts, and has no
 star glyph.** `ImageResponse` needs font files: the two faces are fetched
 from Google Fonts on the server with an old browser's User-Agent, which
@@ -1170,6 +1247,77 @@ current.
 ---
 
 ## Complete
+
+**2026-09-10 — three findings from June's install, branch `junior-install`,
+not merged**
+
+June's copy (`userone-silk.vercel.app`) is the first that is not Miyel's.
+Reviewed on the dev server at desktop width; not yet on a phone.
+
+- [x] **The photo QR: which it was, and the press.** It ran and was
+      refused. Reproduced against his actual portrait, in his page:
+      Chromium's own reader passes seven bands and the final check at floor
+      115, cap 255; jsQR alone — all Safari has — refuses all thirty-five
+      bands on the light page at full size. He edits from an iPhone, so the
+      build ran, every band failed the light-page check, and the card fell
+      back to the plain code without a word. Fixed, 2026-09-11, in two passes
+      the same day. First, from Miyel's brief: the press moved to the server
+      (`library/portrait_code.js`, sharp, `POST /api/portrait/code`) with
+      her sweep — floors 0–220, then bands — judged by OpenCV both ways up.
+      It worked (her card at band 100–190) and it was flatter than the
+      picture she had, and still not for everyone: jsQR refused every
+      setting and 18 of 39 covers failed. Second, on her call after seeing
+      it: the dot style. The photograph fills the dark modules as before,
+      with a dot of ink at the centre of each and the finders and the
+      alignment target solid; tones kept at 20–235; judged by jsQR, the
+      strictest reader, on both pages at three sizes; the dark page's file
+      made from the light one at request time by flipping the pure ink
+      (`?theme=dark`). No new columns; the dot rides on `portrait_code_url`
+      as `d`, the build as `b`. Measured: both portraits and all 39 covers
+      pass at the smallest dot. Pressed by the editor when the photo or
+      framing moves, by Settings after the address, by setup after the
+      photo, and by the card when the owner opens a journal whose code is
+      missing or older than this build. One dependency added: `sharp`
+      (already Next's own). Exercised on the dev server; Vercel owed — see
+      Pending.
+- [x] **"Copied" is a pill over the code, 2026-09-11.** Turning the card to
+      its code copies the address (DECISIONS); the line that said so sat
+      under the slot in faint caps and was not noticed. It is now a pill
+      that rises over the middle of the code and fades after 2.6s
+      (`.idc-copied` in idcard.css, absolute inside the slot, so the name
+      never moves). The words are still added and removed rather than
+      faded, so `role="status"` reads them out. Seen on the dev server by
+      forcing the class: a real press in the automated browser turns the
+      card but the clipboard write is refused there, so the pill itself
+      wants one tap on a phone.
+- [x] **Sign in is a lock, not a page.** A key (Phosphor `Key`) where the
+      Sign in line sat; pressing it opens `PasswordGate bare` under it, in
+      place — no route change, no heading, no address over the box, the pane
+      still behind; Escape closes it; on success HomeNav turns the pane into
+      the desk without a reload (`letIn`). The password-manager markup is
+      untouched and checked in the browser: a real form, a submit, `current-
+      password`, the host in a visible writable field. The box under the key
+      is smaller and quieter than the gate's (150px, no panel, a faint
+      Enter, the address line lowercase at 60%), 2026-09-11 on Miyel's
+      call; on a phone the type is still 16px, base.css's zoom rule.
+      `/login` and `/settings` are unchanged. A real-phone test is owed
+      (Pending).
+- [x] **Compare, offered to a keeper who arrived from their own copy.** The
+      brief's fix — a signed-in copy writing its own address into
+      `return_address` — cannot work: localStorage is per origin like the
+      cookie, so a value written at one address is read by nothing at
+      another. What works is the link: the inbox's links out to a sender's
+      journal carry `?from=<this address>` (`carryFrom`), the journal landed
+      on reads it once on the card, keeps it as the return address and takes
+      it off the bar (`noteArrival`), and the card offers "Compare with mine"
+      beside Send an album — visitors only, never for this journal's own
+      address — linking to *their* copy's `/compare?with=<this address>`,
+      which now runs on landing. Verified: `/?from=UserOne-Silk.vercel.app/`
+      stores `userone-silk.vercel.app`, the bar reads `/`, the pill links to
+      `https://userone-silk.vercel.app/compare?with=www.listeningnotes.blog`;
+      `/compare?with=userone-silk.vercel.app` compares on arrival (39 here,
+      0 there — he has not logged anything yet). The inbox links are lint-
+      and build-checked, not seen (owner-only).
 
 **2026-09-07 — two floors on the cross, branch `two-floors`, merged to `main`**
 

@@ -23,6 +23,10 @@ const nextConfig = {
   // Dev-only route indicator badge (bottom-left "N") — never shows in
   // production, just noise while testing locally.
   devIndicators: false,
+  // Required from node_modules at run time rather than bundled: sharp is a
+  // native binary and does not survive being folded into a route handler.
+  // Only the press behind /api/portrait/code asks for it.
+  serverExternalPackages: ['sharp'],
 };
 
 export default nextConfig;

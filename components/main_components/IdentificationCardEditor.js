@@ -22,10 +22,9 @@
 // none of this renders for a reader, so the markup a visitor receives does not
 // contain it.
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { BIO_LIMIT, readBioAnswers } from '../../library/bioprompt';
-import { CODE_BUILD, buildPortraitCode } from '../../library/portrait_code';
 
 // The counted rows: hideable, never writable. A journal that can be told how
 // many records it has is a journal whose numbers mean nothing.
@@ -147,11 +146,6 @@ export function useIdentificationCardEditor(settings) {
   // The setup, as rows. Blank rows are kept while typing and dropped on save,
   // the same as the links.
   const [gear, setGear] = useState([]);
-  // The address the stored code was built for, so a save that changes nothing
-  // else does not rebuild it.
-  const lastCodeUrl = useRef((settings.site_address || '').replace(/^https?:\/\//, '')
-    ? `https://${(settings.site_address || '').replace(/^https?:\/\//, '')}`
-    : '');
   const [hidden, setHidden] = useState(() => new Set());
   // Which record the card holds up, as its id. It is a settings column like
   // every other field in this hook, and it is edited here for that reason —
@@ -305,29 +299,17 @@ export function useIdentificationCardEditor(settings) {
     setSaving(true);
     setTrouble(null);
 
-    // The code is made out of the photograph and the address, so it is rebuilt
-    // when either moves and left alone otherwise. It is not cheap — a decode
-    // per floor until one reads — and neither of those two changes often.
-    const address = (settings.site_address || '').replace(/^https?:\/\//, '');
-    const url = address ? `https://${address}` : '';
+    // The code is made on the server out of what the row holds — see
+    // library/portrait_code.js — so the save goes first and the press is
+    // asked for after it, with the new framing in place. Only when the
+    // photograph or its framing moved: a code that exists is left alone on
+    // a save that fixed a typo, so an owner who likes theirs keeps it. The
+    // address is Settings' to change, and Settings presses after it. With no
+    // photograph there is nothing to make, and the old picture goes with it.
     const framing = `${posX.toFixed(1)}% ${posY.toFixed(1)}%`;
     const portraitMoved = portrait.trim() !== (settings.portrait_url || '')
       || framing !== (settings.portrait_position || '50.0% 50.0%');
-    // The stored picture was drawn by an older version of the drawing.
-    const staleBuild = !String(settings.portrait_code_url || '').includes(`b=${CODE_BUILD}`);
-    const addressMoved = url !== lastCodeUrl.current;
-    let codePatch = {};
-    if (portrait.trim() && url && (portraitMoved || addressMoved || staleBuild)) {
-      const built = await buildPortraitCode(url, portrait.trim(), `${posX}% ${posY}%`);
-      codePatch = built
-        ? { portrait_code: built.data, portrait_code_url: `/api/portrait?of=code&b=${CODE_BUILD}&v=${Date.now()}` }
-        // Nothing in range carried it. Clear rather than keep a stale picture
-        // of the last photograph, and the card falls back to the plain code.
-        : { portrait_code: '', portrait_code_url: '' };
-      lastCodeUrl.current = url;
-    } else if (!portrait.trim()) {
-      codePatch = { portrait_code: '', portrait_code_url: '' };
-    }
+    const codePatch = portrait.trim() ? {} : { portrait_code: '', portrait_code_url: '' };
     // Blank means blank. An empty field is the owner clearing a detail, not
     // leaving it alone, so it is sent rather than skipped — the settings writer
     // turns an empty string into null on the way in.
@@ -378,6 +360,16 @@ export function useIdentificationCardEditor(settings) {
         }),
       });
       if (!res.ok) throw new Error('That didn’t save. Try again.');
+      // The press, once the row is right. A second or so on the server; the
+      // refresh below brings the new picture with it, and what happened is
+      // said in the console. A failure is not this form's to report — the
+      // card saved, which is what it promised.
+      if (portrait.trim() && (portraitMoved || !settings.portrait_code_url)) {
+        await fetch('/api/portrait/code', { method: 'POST' })
+          .then(r => r.json())
+          .then(d => d?.report && console.info('[portrait code]', d.report))
+          .catch(() => {});
+      }
       // The card reads its details from the root layout, which is a server
       // component — so the new values arrive by asking the server to render
       // again, not by pushing them into a context from here.

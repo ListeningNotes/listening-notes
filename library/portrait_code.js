@@ -2,279 +2,285 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // library/portrait_code.js
 // The portrait, made into the journal's code — the QR on the card whose dark
-// modules are the photograph. Lifted out of IdentificationCardEditor.js, which
-// only needs to ask for one and keep the answer; everything about how the
-// picture is cut, floored, capped and checked against both page colours is
-// here. Browser only: it draws on a canvas and reads the result back.
+// modules are the photograph — pressed on the server and proved by decoding
+// before anything is kept. Server only: it reads pixels with sharp and never
+// touches a canvas.
+//
+// ── The picture, 2026-09-11 ───────────────────────────────────────────────
+// The photograph fills the dark modules and the page shows through the light
+// ones, as it always has. Three things carry the scan now, so the picture no
+// longer has to:
+//
+//   1. A dot in the middle of every photo module, in the code's own ink.
+//      A scanner samples the centre of each module, and the centre is now
+//      always the right colour whatever the photograph is doing around it.
+//   2. The three finder squares and the small alignment target, solid.
+//      Every reader locates those before it reads anything. The target was
+//      the surprise: with it solid the strictest reader passed at full
+//      size, and with it photographic it failed every time.
+//   3. Ink that flips with the page. A dot has to be the ink of the page it
+//      sits on — black on the light page, white on the dark — so the light
+//      page's file is what is stored and the dark page's is made from it on
+//      request by flipping the pure ink pixels (flipInk, below). The photo
+//      is banded so it never contains one.
+//
+// Measured before it was built, on both portraits this software has and
+// every album cover on this journal: the strictest reader read all 41 at the
+// smallest dot, on both pages, at three sizes, with the photograph's tones
+// nearly untouched. The picture that carried the code on its own — no dots,
+// finders made of face — read on a phone's own scanner and on almost nothing
+// else, and half the covers on nothing at all (NOTES, Gotchas).
+//
+// ── Proved by decoding, always ────────────────────────────────────────────
+// The picture that ships is decoded here, over both page colours, at the
+// size it ships at and at two shrunken copies, by jsQR — the strictest
+// reader there is, which is the point of using it as the judge: what passes
+// it scans anywhere. If the smallest dot does not read, the dot grows and it
+// is tried again; at a dot the size of the module there is no photograph
+// left and it is the plain code, which always reads. So a build never ends
+// in nothing: the picture gives ground one step at a time.
 
+import sharp from 'sharp';
+import jsQR from 'jsqr';
+import QRCode from 'qrcode';
+import database from './database_connection.js';
+import { save_settings } from './settings_actions.js';
 
-// ── The portrait, made into the code ────────────────────────────────────
-// The photograph fills the dark modules and everything else is transparent, so
-// the page shows through and the ragged silhouette of the code is the picture.
-// No plate, no frame, no rounded clip.
-//
-// Polarity is the whole thing and it is the dark modules that must carry the
-// photograph. Dark modules are scattered and isolated, which gives discrete
-// pixels of photo; the light ones form large connected regions and read as a
-// photograph with holes punched through it.
-//
-// The picture is squeezed into a band rather than only lifted off the bottom.
-//
-// The floor is what the brief called for: every channel raised to at least
-// FLOOR so no part of the picture is ever as dark as the page it sits on. That
-// makes one file work on both themes — right way round on a light page,
-// inverted on a dark one, which phone cameras handle.
-//
-// The ceiling was not in the brief and this is why it is here. A floor lifts
-// the shadows and does nothing to the highlights, so a photograph shot against
-// a bright sky has "dark" modules at 250 sitting on a page at 238 — brighter
-// than the background they are supposed to read against. Polarity breaks in
-// patches and no floor fixes it, because the floor is at the wrong end. The
-// first portrait this was tried on failed the light page at every floor from
-// 100 to 200 and passed the dark page at all of them, which is that fault
-// exactly.
-//
-// So the search looks for the widest band that still decodes, rather than
-// clamping everybody to one. A photograph that needs nothing keeps everything;
-// a bright one gives up only as much of its highlights as it must. Ordered so
-// that the gentlest option wins: caps descend from no cap at all, and the
-// widest surviving band across all the floors is the one that ships.
+// Bumped whenever the way this picture is drawn or judged changes. Stamped
+// on the stored path; the card re-presses a code that carries an older stamp
+// the next time its owner opens the journal, so every card ends up the same.
+export const CODE_BUILD = 5;
+
 const CODE_VERSION = 4;
 const CODE_QUIET = 4;
-const FLOORS = [100, 115, 130, 145, 160, 175, 190];
-const CAPS = [255, 240, 225, 210, 195, 180, 165, 150, 135];
-// Below this there is not enough range left to be a photograph.
-const MIN_RANGE = 40;
-// Drawn at 12 device pixels per module, which is past what any screen shows it
-// at and keeps the edges of each module hard rather than resampled. The search
-// runs at six, where a decode is quick and the answer is the same.
+// Twelve device pixels a module: past what any screen shows it at, so the
+// edges of every module and every dot stay hard rather than resampled.
 const MODULE_PX = 12;
-const SEARCH_PX = 6;
-// A little off the corners of every module but the three finders, which stay
-// square because a scanner finds those before it reads anything.
-const MODULE_RADIUS = 0;
+// The photograph is kept off the two pure values the ink uses, and off the
+// pages' own tones, so a module never vanishes into either page and a photo
+// pixel is never mistaken for a dot when the dark page's file is made.
+const PHOTO_FLOOR = 20;
+const PHOTO_CAP = 235;
+// The dot, as a fraction of the module's side. Tried smallest first; the
+// last is the whole module, which is the plain code.
+const DOTS = [
+  { size: 0.3, said: 'the smallest dots' },
+  { size: 0.34, said: 'small dots' },
+  { size: 0.4, said: 'medium dots' },
+  { size: 0.5, said: 'large dots' },
+  { size: 0.6, said: 'larger dots' },
+  { size: 0.75, said: 'very large dots' },
+  { size: 1, said: 'no photograph left — the plain code' },
+];
+// The sizes a code is asked to survive. A phone photographs a screen showing
+// the file at some scale nobody chose, so the picture has to read at its own
+// size and shrunk. Shrunk by averaging, the way a screen and a lens both do
+// it: dropping pixels would drop dots, and no camera does that.
+const STRESS = [1, 0.62, 0.45];
+const PAGES = { light: [238, 240, 236], dark: [14, 14, 14] };
+const INK = 0;
+const PAPER = 255;
 
-// Bumped whenever the way this picture is drawn changes. A stored code is kept
-// until the photograph or the address moves, which is right — and meant that
-// rewriting the renderer changed nothing, because every journal already had a
-// code and none of them had a reason to rebuild. Copies of this software get
-// the better picture when they update, rather than when their owner happens to
-// change their face.
-export const CODE_BUILD = 3;
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+function dayOf(ms) {
+  const d = new Date(ms);
+  return `${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
+}
 
-// The page colours the code is checked against. A picture that only decodes on
-// one of them is a picture that is broken for half the people who open it.
-const PAGE_LIGHT = [238, 240, 236];
-const PAGE_DARK = [14, 14, 14];
+// The photograph, cover-cropped the way the card crops it, at the code's
+// size. `position` is the card's object-position — two percentages of the
+// overflow. EXIF orientation is honoured first, because the card's <img>
+// honours it and the code must show the same face the right way up.
+async function pictureSquare(bytes, position, px) {
+  const [sx, sy] = String(position || '50% 50%').split(/\s+/);
+  const pos = { x: Number.parseFloat(sx) || 50, y: Number.parseFloat(sy) || 50 };
+  const oriented = await sharp(bytes).rotate().toBuffer();
+  const { width, height } = await sharp(oriented).metadata();
+  const side = Math.min(width, height);
+  const left = Math.round((width - side) * (pos.x / 100));
+  const top = Math.round((height - side) * (pos.y / 100));
+  return sharp(oriented)
+    .extract({ left, top, width: side, height: side })
+    .resize(px, px)
+    .removeAlpha()
+    .raw()
+    .toBuffer();
+}
 
-// Draw the photograph at full size and cut the modules out of it.
-//
-// The first version sampled the picture down to one pixel per module and filled
-// each module with that flat colour, which is what "resized to the module grid"
-// sounds like — and a face at thirty-three pixels across is not a face. The
-// reference gives it away: there is a gradient running across its finder rings,
-// so the photograph in it is at full resolution and the modules are a stencil
-// over it, not a mosaic of it. Every module is a whole square of real
-// photograph now, and you can see who it is.
-//
-// The mask is drawn rather than computed, so corners can be rounded on the
-// modules that may be rounded. The three finders may not: a scanner locks onto
-// those before it decodes anything.
-function renderCode(image, modules, mpx, floor, cap, pos, radius) {
+// The light page's picture at one dot size. RGBA; the quiet zone and the
+// light modules are transparent, so the page shows through.
+function compose(photo, modules, dot) {
   const size = modules.size;
   const span = size + CODE_QUIET * 2;
-  const canvas = document.createElement('canvas');
-  canvas.width = span * mpx;
-  canvas.height = span * mpx;
-  const ctx = canvas.getContext('2d', { willReadFrequently: true });
-
-  // The photograph, cover-cropped the way the card crops it, over the code's
-  // own area — the quiet zone stays empty because it has to.
-  const w = image.naturalWidth || image.width;
-  const h = image.naturalHeight || image.height;
-  const side = Math.min(w, h);
-  ctx.drawImage(
-    image,
-    (w - side) * (pos.x / 100), (h - side) * (pos.y / 100), side, side,
-    CODE_QUIET * mpx, CODE_QUIET * mpx, size * mpx, size * mpx,
-  );
-
-  // Squeezed into the band. Per pixel, not per module, and nothing between the
-  // two ends is touched.
-  const field = ctx.getImageData(0, 0, canvas.width, canvas.height);
-  for (let i = 0; i < field.data.length; i += 4) {
-    field.data[i]     = Math.min(Math.max(field.data[i], floor), cap);
-    field.data[i + 1] = Math.min(Math.max(field.data[i + 1], floor), cap);
-    field.data[i + 2] = Math.min(Math.max(field.data[i + 2], floor), cap);
-  }
-  ctx.putImageData(field, 0, 0);
-
-  // Keep only what sits under a dark module.
-  //
-  // The whole stencil is drawn on its own canvas first and applied in one go.
-  // destination-in composites against the entire destination, not against the
-  // shape being drawn — so filling the modules one at a time straight onto the
-  // picture erased everything the previous fill had kept, and what came out was
-  // a single module. It decoded on neither page at any band, which is the only
-  // reason it was caught.
-  const inFinder = (col, row) => (
-    (col < 7 && row < 7) || (col >= size - 7 && row < 7) || (col < 7 && row >= size - 7)
-  );
-  const stencil = document.createElement('canvas');
-  stencil.width = canvas.width;
-  stencil.height = canvas.height;
-  const cut = stencil.getContext('2d');
-  cut.fillStyle = '#000';
-  for (let row = 0; row < size; row++) {
-    for (let col = 0; col < size; col++) {
-      if (!modules.data[row * size + col]) continue;
-      const x = (col + CODE_QUIET) * mpx;
-      const y = (row + CODE_QUIET) * mpx;
-      if (radius > 0 && !inFinder(col, row)) {
-        cut.beginPath();
-        cut.roundRect(x, y, mpx, mpx, radius * mpx);
-        cut.fill();
+  const W = span * MODULE_PX;
+  const codePx = size * MODULE_PX;
+  const out = Buffer.alloc(W * W * 4, 0);
+  const inFinder = (c, r) => (c < 7 && r < 7) || (c >= size - 7 && r < 7) || (c < 7 && r >= size - 7);
+  // Version 4 has one alignment target, centred on module 26.
+  const inAlign = (c, r) => c >= 24 && c <= 28 && r >= 24 && r <= 28;
+  for (let y = 0; y < codePx; y++) {
+    for (let x = 0; x < codePx; x++) {
+      const col = Math.floor(x / MODULE_PX);
+      const row = Math.floor(y / MODULE_PX);
+      const dark = modules.data[row * size + col] === 1;
+      const solid = inFinder(col, row) || inAlign(col, row);
+      // A light module is a hole, unless it is part of a finder or the
+      // target, where its paper is drawn so the pattern is whole.
+      if (!dark && !solid) continue;
+      const i = ((y + CODE_QUIET * MODULE_PX) * W + (x + CODE_QUIET * MODULE_PX)) * 4;
+      const fx = ((x % MODULE_PX) + 0.5) / MODULE_PX;
+      const fy = ((y % MODULE_PX) + 0.5) / MODULE_PX;
+      const inDot = Math.abs(fx - 0.5) <= dot / 2 && Math.abs(fy - 0.5) <= dot / 2;
+      if (solid || inDot) {
+        const v = dark ? INK : PAPER;
+        out[i] = v; out[i + 1] = v; out[i + 2] = v;
       } else {
-        cut.fillRect(x, y, mpx, mpx);
+        const p = (y * codePx + x) * 3;
+        out[i] = Math.min(Math.max(photo[p], PHOTO_FLOOR), PHOTO_CAP);
+        out[i + 1] = Math.min(Math.max(photo[p + 1], PHOTO_FLOOR), PHOTO_CAP);
+        out[i + 2] = Math.min(Math.max(photo[p + 2], PHOTO_FLOOR), PHOTO_CAP);
       }
+      out[i + 3] = 255;
     }
   }
-  ctx.globalCompositeOperation = 'destination-in';
-  ctx.drawImage(stencil, 0, 0);
-  ctx.globalCompositeOperation = 'source-over';
-  return canvas;
+  return { data: out, width: W };
 }
 
-// Lay the picture over a page colour so it can be decoded, exactly as a screen
-// would show it. Alpha is all or nothing per pixel, so this is a straight
-// choice rather than a blend.
-function flatten(canvas, page, scale = 1) {
-  const flat = document.createElement('canvas');
-  flat.width = Math.round(canvas.width * scale);
-  flat.height = Math.round(canvas.height * scale);
-  const ctx = flat.getContext('2d', { willReadFrequently: true });
-  ctx.fillStyle = `rgb(${page[0]},${page[1]},${page[2]})`;
-  ctx.fillRect(0, 0, flat.width, flat.height);
-  // Nearest neighbour, because that is what image-rendering: pixelated does on
-  // the page — smoothing here would flatter the code in a way a screen will not.
-  ctx.imageSmoothingEnabled = false;
-  ctx.drawImage(canvas, 0, 0, flat.width, flat.height);
-  return flat;
+// The dark page's picture, from the light page's: every pure ink pixel
+// becomes paper and every pure paper pixel becomes ink, and nothing else
+// moves. Only opaque pixels are looked at, and the photograph is banded so
+// it never holds either value — which is what makes this safe to do to a
+// file rather than to the buffer it was drawn in. Used at build time, so the
+// dark page is proved on exactly what /api/portrait will serve.
+export function flipInk(rgba) {
+  const out = Buffer.from(rgba);
+  for (let i = 0; i < out.length; i += 4) {
+    if (out[i + 3] !== 255) continue;
+    if (out[i] === INK && out[i + 1] === INK && out[i + 2] === INK) {
+      out[i] = PAPER; out[i + 1] = PAPER; out[i + 2] = PAPER;
+    } else if (out[i] === PAPER && out[i + 1] === PAPER && out[i + 2] === PAPER) {
+      out[i] = INK; out[i + 1] = INK; out[i + 2] = INK;
+    }
+  }
+  return out;
 }
 
-// Build the code, prove it reads, and hand back a PNG.
-//
-// The proving is not optional and not by eye. Every photograph has its own
-// tonal range, and some will not carry a code inside any band — so it is
-// generated, composited over both page colours and decoded, here, and the one
-// that ships is proved at the size it ships at rather than at the size it was
-// auditioned at. If nothing carries it this returns null and the card falls
-// back to the plain code, which is a worse picture and a working one.
-export async function buildPortraitCode(url, portraitSrc, position = '50% 50%') {
-  if (!url || !portraitSrc) return null;
+// The stored PNG, flipped for the dark page, as a PNG again. What
+// /api/portrait?of=code&theme=dark serves.
+export async function darkPageCode(pngBase64) {
+  const { data, info } = await sharp(Buffer.from(pngBase64, 'base64'))
+    .ensureAlpha()
+    .raw()
+    .toBuffer({ resolveWithObject: true });
+  return sharp(flipInk(data), { raw: { width: info.width, height: info.height, channels: 4 } })
+    .png()
+    .toBuffer();
+}
+
+// Lay a picture over its page and decode it at every stress size.
+async function reads(rgba, W, page, url) {
+  const flat = Buffer.from(rgba);
+  for (let i = 0; i < flat.length; i += 4) {
+    if (flat[i + 3] !== 0) continue;
+    flat[i] = page[0]; flat[i + 1] = page[1]; flat[i + 2] = page[2]; flat[i + 3] = 255;
+  }
+  for (const scale of STRESS) {
+    const w = Math.round(W * scale);
+    const buf = scale === 1
+      ? flat
+      : await sharp(flat, { raw: { width: W, height: W, channels: 4 } }).resize(w, w).raw().toBuffer();
+    const found = jsQR(new Uint8ClampedArray(buf.buffer, buf.byteOffset, buf.byteLength), w, w, {
+      inversionAttempts: 'attemptBoth',
+    });
+    if (found?.data !== url) return false;
+  }
+  return true;
+}
+
+async function toPng(rgba, W) {
+  const png = await sharp(rgba, { raw: { width: W, height: W, channels: 4 } }).png().toBuffer();
+  return png.toString('base64');
+}
+
+// Build the code from a picture and an address, prove it on both pages, and
+// hand back the light page's PNG with the dot that carried it — or nothing,
+// and a sentence saying why, in plain words for the person whose card it is.
+// `kind` says which of three things a miss was: nothing to make from, a
+// picture that could not be proved, or a fault in the press itself.
+export async function buildPortraitCode({ url, portrait, position }) {
+  const began = Date.now();
+  const day = dayOf(began);
+  const took = () => `${((Date.now() - began) / 1000).toFixed(1)}s`;
+  const nothing = (kind, why) => ({ data: null, kind, report: `Not made, ${day}: ${why}` });
+  if (!url) return nothing('empty', 'the journal has no address yet, so there is nothing to put in a code.');
+  if (!portrait) return nothing('empty', 'there is no photo to make it from.');
   try {
-    const [{ default: jsQR }, QRCode] = await Promise.all([
-      import('jsqr'),
-      import('qrcode'),
-    ]);
-
-    // Two decoders, and either one is enough.
-    //
-    // jsQR alone was the reason this feature did not work. It read the flat
-    // version and refused every full-resolution one — the same pictures the
-    // platform's own BarcodeDetector reads on a light page, a dark page and
-    // plain white. A verifier stricter than every real scanner is not a
-    // safeguard, it is a second bug: it was throwing away good codes and
-    // leaving the plain one in their place.
-    //
-    // BarcodeDetector is what the phone itself uses, so where it exists it is
-    // the closer question to ask. jsQR is carried for where it does not —
-    // Safari — so an owner editing on an iPhone still gets a real check rather
-    // than none.
-    const detector = typeof BarcodeDetector !== 'undefined'
-      ? new BarcodeDetector({ formats: ['qr_code'] })
-      : null;
-
-    const image = await new Promise((resolve, reject) => {
-      const img = new Image();
-      img.crossOrigin = 'anonymous';
-      img.onload = () => resolve(img);
-      img.onerror = () => reject(new Error('unreadable'));
-      img.src = portraitSrc;
-    });
-
-    const { modules } = QRCode.create(url, {
-      errorCorrectionLevel: 'H',
-      version: CODE_VERSION,
-    });
-    const [px, py] = String(position).split(/\s+/);
-    const pos = { x: Number.parseFloat(px) || 50, y: Number.parseFloat(py) || 50 };
-
-    // The sizes a code is asked to survive. A phone does not photograph the
-    // file, it photographs a screen showing the file at some scale nobody
-    // chose, and the module edges rarely land on whole pixels when it does. So
-    // the band that wins has to decode at its own size and at two awkward
-    // resamplings of it — otherwise the search happily picks the widest band
-    // that scrapes through once, which is the one with the least margin left.
-    const STRESS = [1, 0.62, 0.45];
-
-    const readsOnce = async (canvas, page, scale) => {
-      const flat = flatten(canvas, page, scale);
-      if (detector) {
-        try {
-          const found = await detector.detect(flat);
-          if (found.some(hit => hit.rawValue === url)) return true;
-        } catch { /* fall through to the other one */ }
-      }
-      const field = flat.getContext('2d').getImageData(0, 0, flat.width, flat.height);
-      const found = jsQR(field.data, field.width, field.height, {
-        inversionAttempts: 'attemptBoth',
-      });
-      return found?.data === url;
-    };
-
-    const reads = async (canvas, page) => {
-      for (const scale of STRESS) {
-        if (!(await readsOnce(canvas, page, scale))) return false;
-      }
-      return true;
-    };
-
-    // The band is searched at a coarse size and the winner is drawn at full
-    // size. Decoding a 500px picture eighty times over is a couple of seconds
-    // of somebody's afternoon; at a sixth of that it is a moment, and the band
-    // that works at six pixels a module works at twelve.
-    let best = null;
-    for (const floor of FLOORS) {
-      for (const cap of CAPS) {
-        if (cap - floor < MIN_RANGE) continue;
-        const trial = renderCode(image, modules, SEARCH_PX, floor, cap, pos, MODULE_RADIUS);
-        // Both pages, not one. The claim is that a single file works on either,
-        // and the only way that claim stays true is to check it against either.
-        if (!(await reads(trial, PAGE_LIGHT)) || !(await reads(trial, PAGE_DARK))) continue;
-        // Caps descend, so the first that survives at this floor is the least
-        // this floor can be made to give up.
-        if (!best || cap - floor > best.range) best = { floor, cap, range: cap - floor };
-        break;
-      }
+    const { modules } = QRCode.create(url, { errorCorrectionLevel: 'H', version: CODE_VERSION });
+    let photo;
+    try {
+      photo = await pictureSquare(portrait, position, modules.size * MODULE_PX);
+    } catch {
+      return nothing('unproved', 'the photo could not be opened as a picture.');
     }
-    if (!best) return null;
-
-    // Draw it properly, and prove the thing that actually ships rather than the
-    // rehearsal of it.
-    const canvas = renderCode(image, modules, MODULE_PX, best.floor, best.cap, pos, MODULE_RADIUS);
-    if (!(await reads(canvas, PAGE_LIGHT)) || !(await reads(canvas, PAGE_DARK))) return null;
-
-    const blob = await new Promise(done => canvas.toBlob(done, 'image/png'));
-    if (!blob) return null;
-    const data = await new Promise((done, fail) => {
-      const reader = new FileReader();
-      reader.onload = () => done(String(reader.result).split(',')[1]);
-      reader.onerror = () => fail(new Error('unreadable'));
-      reader.readAsDataURL(blob);
-    });
-    return { data, floor: best.floor, cap: best.cap };
-  } catch {
-    return null;
+    for (const [step, dot] of DOTS.entries()) {
+      const light = compose(photo, modules, dot.size);
+      const dark = flipInk(light.data);
+      if (!(await reads(light.data, light.width, PAGES.light, url))) continue;
+      if (!(await reads(dark, light.width, PAGES.dark, url))) continue;
+      const gaveGround = step === 0
+        ? ''
+        : ' Smaller dots did not read on this photo; more contrast, or a different crop, may keep more of it.';
+      return {
+        data: await toPng(light.data, light.width),
+        kind: 'made',
+        dot: dot.size,
+        report: `Made, ${day}: the photo is in the code, with ${dot.said} carrying the scan, and it reads on both `
+          + `a light and a dark screen.${gaveGround} (jsQR, three sizes; ${took()})`,
+      };
+    }
+    // Unreachable in practice — the last step is the plain code — but a
+    // build that cannot say what happened is the thing this file exists to
+    // stop.
+    return nothing('unproved', `nothing read, not even the plain code, which should be impossible. (${took()})`);
+  } catch (error) {
+    return nothing('fault', `something went wrong in the press: ${error?.message || error}.`);
   }
+}
+
+// Build from what the settings row holds and write the result back to it.
+// The one way a code gets made, whoever asks: the card's editor after a
+// save, setup after the photo, Settings after the address, the card itself
+// when the owner opens a journal whose code is missing or was drawn by an
+// older build.
+//
+// The picture and the stamped path are written together, or cleared
+// together when the photograph could not be proved or there is nothing to
+// make from — the pointer and the bytes are one fact. A fault in the press
+// itself writes nothing: a code that exists is not the press's to lose. The
+// dot that carried it rides on the path (d), so it can be read off any copy.
+export async function pressStoredPortraitCode() {
+  const [row] = await database`
+    SELECT portrait_data, portrait_position, site_address FROM settings WHERE id = 1`;
+  const address = (row?.site_address || '').replace(/^https?:\/\//, '');
+  const built = await buildPortraitCode({
+    url: address ? `https://${address}` : '',
+    portrait: row?.portrait_data ? Buffer.from(row.portrait_data, 'base64') : null,
+    position: row?.portrait_position,
+  });
+  console.info('[portrait code]', built.report);
+  if (built.kind === 'fault') return { portrait_code_url: null, report: built.report };
+  const patch = built.data
+    ? {
+        portrait_code: built.data,
+        portrait_code_url: `/api/portrait?of=code&b=${CODE_BUILD}&d=${built.dot}&v=${Date.now()}`,
+      }
+    : { portrait_code: '', portrait_code_url: '' };
+  await save_settings(patch);
+  return { portrait_code_url: patch.portrait_code_url, report: built.report };
+}
+
+// Whether a stored path was stamped by this build. The layout hands the
+// answer to the card, which asks for a press when it is no.
+export function isCurrentCode(portraitCodeUrl) {
+  return String(portraitCodeUrl || '').includes(`b=${CODE_BUILD}&`);
 }

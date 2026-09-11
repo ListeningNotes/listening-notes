@@ -58,11 +58,11 @@ Editing an entry happens on the entry itself, not in a list. There used to be a
 `/dashboard/entries` table and it was retired: two interfaces for one job means
 neither is canonical.
 
-**Getting in.** The right pane. Signed out it is the pitch, with a "Sign in"
-line at its foot; signed in it is the desk, with a Settings door. Both go to
-`/settings`, which asks for the password when you are not wearing a
-wristband and is the machinery when you are. Nothing on the mark opens
-anything. `/login` is the same door at an address, for when a link will not
+**Getting in.** The right pane. Signed out it is the pitch, with a small key
+at its foot that opens the password field in place; signed in it is the desk,
+with a Settings door to `/settings`, which asks for the password when you are
+not wearing a wristband and is the machinery when you are. Nothing on the
+mark opens anything. `/login` is the same door at an address, for when a link will not
 do. `/setup` runs once, on a copy nobody has claimed yet — one screen at a
 time, opened with the claim code printed in the build log, and it is where
 the password is chosen.
@@ -82,7 +82,7 @@ The library — logic, no visuals
     ai_integration.js          The Claude AI calls: research, and the local assembly of a post
     music_data_api.js          Fetches album art and tracklists from iTunes
     card_links.js              The marks a card can wear — which shape stands for the rig, which logo a link gets
-    portrait_code.js           The portrait made into the journal's QR code, checked against both page colours
+    portrait_code.js           The press: the portrait made into the journal's QR code on the server — a dot of ink in every photo module, proved by the strictest reader on both page colours
     session_timers.js          Track length display (m:ss)
     wristband.js               Session auth — issues and checks the JWT cookie
     secrets.js                 The vault: the keys, the password hash, the session secret, the claim code. Database first, environment second
@@ -103,6 +103,7 @@ The front doors — receive requests, hand them off, send back responses
     secrets/route.js           The vault — owner-only both ways; says what is set, never the value
     setup/route.js             GET: is this copy claimed. POST: the one write that claims it
     auth/login/route.js        The password, the deploy-time variable, or — unclaimed — the claim code
+    portrait/code/route.js     POST: press the journal's code out of the stored portrait — owner-only, no body
 
 The hooks — reusable logic shared across pages
   hooks/
@@ -124,7 +125,7 @@ The furniture — visual pieces
       Dashboard.js             The right pane, for the owner — Listen, Inbox, Settings
       Pitch.js                 The right pane, for everybody else
       KeeperTools.js           The owner's pencil and printer
-      WritingAccess.js         The sign-in line at the foot of the pitch pane; it goes to Settings
+      WritingAccess.js         The lock at the foot of the pitch pane — a key, and the password field it opens in place
       ComingSoon.js            What a held copy shows instead of a site — unclaimed, no database, or database unreachable
       AddToHomeScreen.js       The one step the software cannot do: the last screen of setup, and a Settings section
       AlbumFinder.js           Type, see covers, pick one — the send flow's search
