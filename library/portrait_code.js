@@ -68,19 +68,30 @@ function dayOf(ms) {
   return `${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}`;
 }
 
-// OpenCV, loaded once per server and kept. The module is ten megabytes of
-// WebAssembly and takes a moment to come up; a cold start pays that once.
+// OpenCV, loaded once per server and kept. The module is fourteen megabytes
+// of WebAssembly and takes a moment to come up; a cold start pays that once.
+//
+// Required, not imported. The package hands back a promise of itself, and
+// Next's loader wrapped that promise in a module namespace whose `then` was
+// no longer a promise's — "Promise.prototype.then called on incompatible
+// receiver" — which is how the first press through the site failed after
+// passing every test in plain Node. A require from the project root gets
+// the promise itself; next.config.mjs makes sure the files ship with the
+// function, since a require built at run time is nothing a bundler can
+// follow.
 let opencv = null;
 async function judge() {
   if (!opencv) {
     opencv = (async () => {
-      const loaded = await import('@techstark/opencv-js');
-      let cv = loaded.default ?? loaded;
-      if (typeof cv.then === 'function') cv = await cv;
+      const { createRequire } = await import('node:module');
+      const need = createRequire(`${process.cwd()}/`);
+      let cv = need('@techstark/opencv-js');
+      if (cv instanceof Promise) cv = await cv;
+      if (cv?.default) cv = cv.default;
       for (let i = 0; i < 400 && !cv.Mat; i++) await new Promise(r => setTimeout(r, 25));
       if (!cv.Mat) throw new Error('OpenCV did not initialise');
       return cv;
-    })();
+    })().catch(error => { opencv = null; throw error; });
   }
   return opencv;
 }
@@ -181,9 +192,11 @@ export async function buildPortraitCode({ url, portrait, position }) {
   const began = Date.now();
   const day = dayOf(began);
   const took = () => `${((Date.now() - began) / 1000).toFixed(1)}s`;
-  const nothing = why => ({ data: null, report: `Not made, ${day}: ${why}` });
-  if (!url) return nothing('the journal has no address yet, so there is nothing to put in a code.');
-  if (!portrait) return nothing('there is no photo to make it from.');
+  // `kind` says which of three things a miss was: nothing to make from,
+  // a picture that could not be proved, or a fault in the press itself.
+  const nothing = (kind, why) => ({ data: null, kind, report: `Not made, ${day}: ${why}` });
+  if (!url) return nothing('empty', 'the journal has no address yet, so there is nothing to put in a code.');
+  if (!portrait) return nothing('empty', 'there is no photo to make it from.');
   try {
     const cv = await judge();
     const { modules } = QRCode.create(url, { errorCorrectionLevel: 'H', version: CODE_VERSION });
@@ -191,7 +204,7 @@ export async function buildPortraitCode({ url, portrait, position }) {
     try {
       photo = await pictureSquare(portrait, position, modules.size * MODULE_PX);
     } catch {
-      return nothing('the photo could not be opened as a picture.');
+      return nothing('unproved', 'the photo could not be opened as a picture.');
     }
     let lightRefused = 0;
     let darkRefused = 0;
@@ -204,6 +217,7 @@ export async function buildPortraitCode({ url, portrait, position }) {
         : `squeezed into the ${floor}–${cap} band`;
       return {
         data: await toPng(picture),
+        kind: 'made',
         floor,
         cap,
         report: `Made, ${day}: the photo carries the code ${treatment}, and it scans on both a light and a dark `
@@ -212,6 +226,7 @@ export async function buildPortraitCode({ url, portrait, position }) {
       };
     }
     return nothing(
+      'unproved',
       'none of the ways of lifting or squeezing the photo made a code that could be proved to scan on both '
       + 'a light and a dark screen, so the card shows the plain code instead. A photo with more contrast, or a '
       + `different crop, may work; a phone may well read what could not be proved here. (OpenCV, both ways, `
@@ -219,7 +234,7 @@ export async function buildPortraitCode({ url, portrait, position }) {
       + `${darkRefused} the dark; ${took()})`,
     );
   } catch (error) {
-    return nothing(`something went wrong: ${error?.message || error}.`);
+    return nothing('fault', `something went wrong in the press: ${error?.message || error}.`);
   }
 }
 
@@ -229,10 +244,12 @@ export async function buildPortraitCode({ url, portrait, position }) {
 // journal that has a portrait and no code yet.
 //
 // The picture and the stamped path are written together, or cleared
-// together when nothing could be made — the pointer and the bytes are one
-// fact. The setting that carried it rides on the path (f and c), so a later
-// build for the same photograph can try it first and so it can be read off
-// any copy; nothing else is stored.
+// together when the photograph could not be proved or there is nothing to
+// make from — the pointer and the bytes are one fact. A fault in the press
+// itself writes nothing: the first press through the site failed on a
+// loader error and took a good picture with it, and a code that exists is
+// not the press's to lose. The setting that carried it rides on the path
+// (f and c), so it can be read off any copy; nothing else is stored.
 export async function pressStoredPortraitCode() {
   const [row] = await database`
     SELECT portrait_data, portrait_position, site_address FROM settings WHERE id = 1`;
@@ -242,6 +259,8 @@ export async function pressStoredPortraitCode() {
     portrait: row?.portrait_data ? Buffer.from(row.portrait_data, 'base64') : null,
     position: row?.portrait_position,
   });
+  console.info('[portrait code]', built.report);
+  if (built.kind === 'fault') return { portrait_code_url: null, report: built.report };
   const patch = built.data
     ? {
         portrait_code: built.data,
@@ -249,6 +268,5 @@ export async function pressStoredPortraitCode() {
       }
     : { portrait_code: '', portrait_code_url: '' };
   await save_settings(patch);
-  console.info('[portrait code]', built.report);
   return { portrait_code_url: patch.portrait_code_url, report: built.report };
 }
