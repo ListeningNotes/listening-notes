@@ -230,6 +230,18 @@ cannot be tested end to end.
       `letIn` and `askWaiting` in HomeNav; `.pt-lock`, `.pt-key` and
       `.pt-lock-field` in nav.css; PasswordGate's `autoFocus` prop.
 
+- [ ] **A copy has no way to update itself.** The deploy button clones the
+      code into a new repository in the keeper's GitHub — a copy, not a
+      fork — so there is no "Sync fork" button, and nothing in the README or
+      OPERATIONS says how to take a new release. Today the only way is git
+      on a computer: clone their repo, `git remote add upstream
+      https://github.com/ListeningNotes/listening-notes.git`, `git pull
+      upstream main`, `git push`; Vercel builds and the migrator runs. June
+      is the first keeper to need this (2026-09-11). Worth designing: a
+      workflow file that ships in every copy and, when its keeper presses
+      Run on GitHub, merges upstream main and pushes — an update without a
+      terminal, and nothing the journal itself phones home for.
+
 **STRUCTURE** — see DECISIONS.md before starting any of these
 
 The cross is built and merged. What is left of it:
