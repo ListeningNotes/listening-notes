@@ -191,20 +191,24 @@ cannot be tested end to end.
       the field that opens under the key on the pitch pane: does it offer to
       save at setup and fill here? The markup is the one PasswordGate has
       always had; only the container changed.
-- [ ] **June's photo code.** His portrait carries the code — proved in
-      Chromium at floor 115, cap 255 — and his iPhone cannot prove it (see
-      Gotchas). Either he saves the card once from Chrome on a Mac or on
-      Android, which the report on his row now tells him, or the Safari path
-      gets a reader that is not jsQR. `@undecaf/zbar-wasm` is the candidate
-      (zbar is what Android used for years and is far more tolerant); a wasm
-      dependency, dynamically imported in the editor only, untested — its
-      jsdelivr entry point would not load in the harness. Miyel's call
-      whether a dependency is worth it.
-- [ ] **Setup's photo step never builds the code.** Only the card's save
-      does, so a keeper who uploads at setup and never opens the pencil has
-      the plain code and a null `portrait_code_report`. Either setup builds
-      it after the upload (a couple of seconds on Next) or the card builds it
-      on the owner's first load. Not decided.
+- [ ] **The photo code, re-briefed by Miyel, 2026-09-11.** What is
+      settled: her current style — the photograph in the dark modules, the
+      page through the light ones — has to work for everyone, and later for
+      album covers too. The brief is hers to write. A report column and a
+      server-side press were built on 2026-09-10/11 and taken back out the
+      same day on her call: the branch was rewritten without them and the
+      two columns (`portrait_code_report`, `portrait_code_dark`) dropped from
+      the live database with their ledger rows, before anything shipped.
+      The press is in `git stash` on `junior-install`. What was measured,
+      on June's and Miyel's real portraits, so it is not measured twice:
+      Apple's reader (an iPhone, or Chromium on a Mac) reads the current
+      style; jsQR, ZXing and zbar all refuse it on the light page, and no
+      camera-like reader runs on a server or in Safari. jsQR passes at every
+      dot size, both pages, all three stress sizes, with a dot per photo
+      module in the page's ink, the three finders *and the small alignment
+      target* solid, and one file per theme; grey one-file versions fail;
+      stress shrinking has to be smooth, never nearest-neighbour. A sharp
+      build is 0.2s a portrait.
 - [ ] **Add, the other half of the offer.** The mechanism, so it is not
       re-derived: an Add press on the journal being read cannot write to the
       visitor's address book from that origin, so — like Compare — it is a
@@ -214,8 +218,7 @@ cannot be tested end to end.
       send that carried a URL, a scanned code, or an Add press; a paste
       field is the last resort.
 - [ ] **Names to confirm, 2026-09-10** — autonomous session, rename freely:
-      branch `junior-install`; column `settings.portrait_code_report` and
-      `migrations/006_portrait_code_report.sql`; `carryFrom`, `noteArrival`
+      branch `junior-install`; `carryFrom`, `noteArrival`
       and `subscribeSender` in `library/return_address.js`; the query keys
       `?from=` (on a link out from the inbox) and `?with=` (on `/compare`);
       `letIn` and `askWaiting` in HomeNav; `.pt-lock`, `.pt-key` and
@@ -749,8 +752,11 @@ cannot find — painted solid, jsQR read the light page at once, and lost the
 dark one, since one solid colour cannot serve both themes. Safari has no
 `BarcodeDetector`, so on an iPhone the verifier is jsQR alone and the photo
 code is refused every time. ZXing was worse than jsQR; blur and smoothing
-before decoding changed nothing. `portrait_code_report` now says which
-reader was on hand.
+before decoding changed nothing. What jsQR *does* pass, measured the next
+day: a dot in each photo module in the page's ink, the three finders and
+the small alignment target drawn solid, one file per theme. With the
+alignment target photographic it fails every time — that one 5×5 patch
+was the whole difference.
 
 **`react-hooks/set-state-in-effect` traces into the functions an effect
 calls.** A fetch-on-mount that sets `loading` synchronously fails it even
@@ -1231,30 +1237,28 @@ not merged**
 June's copy (`userone-silk.vercel.app`) is the first that is not Miyel's.
 Reviewed on the dev server at desktop width; not yet on a phone.
 
-- [x] **The photo QR: which it was, and the report.** It ran and was
-      refused. Reproduced against his actual portrait, in his page:
-      Chromium's own reader passes seven bands and the final check at floor
-      115, cap 255; jsQR alone — all Safari has — refuses all thirty-five
-      bands on the light page at full size. He edits from an iPhone, so the
-      build ran, every band failed the light-page check, and the card fell
-      back to the plain code without a word. Now `buildPortraitCode` returns
-      `{ data, report }` in every case — when, bands tried, which page
-      refused, which readers the browser had, how long — the editor logs it
-      and writes it to `settings.portrait_code_report` (migration 006,
-      additive, already applied to the live database by the build), on the
-      public settings read: `curl https://<copy>/api/settings`. A copy with
-      a portrait and a null report never ran the build. **Not exercised
-      behind the password**: the sentences came from running the module's
-      own code in June's page (both readers: built in 1.8s; jsQR alone: the
-      refusal), not from an owner's save.
+- [x] **The photo QR: which it was.** It ran and was refused. Reproduced
+      against his actual portrait, in his page: Chromium's own reader passes
+      seven bands and the final check at floor 115, cap 255; jsQR alone —
+      all Safari has — refuses all thirty-five bands on the light page at
+      full size. He edits from an iPhone, so the build ran, every band
+      failed the light-page check, and the card fell back to the plain code
+      without a word. **Nothing of the fix ships on this branch**: a report
+      column and then a server-side press were built and taken back out on
+      Miyel's call, and the shape of the code is being re-briefed — see
+      Pending.
 - [x] **Sign in is a lock, not a page.** A key (Phosphor `Key`) where the
       Sign in line sat; pressing it opens `PasswordGate bare` under it, in
       place — no route change, no heading, no address over the box, the pane
       still behind; Escape closes it; on success HomeNav turns the pane into
       the desk without a reload (`letIn`). The password-manager markup is
       untouched and checked in the browser: a real form, a submit, `current-
-      password`, the host in a visible writable field. `/login` and
-      `/settings` are unchanged. A real-phone test is owed (Pending).
+      password`, the host in a visible writable field. The box under the key
+      is smaller and quieter than the gate's (150px, no panel, a faint
+      Enter, the address line lowercase at 60%), 2026-09-11 on Miyel's
+      call; on a phone the type is still 16px, base.css's zoom rule.
+      `/login` and `/settings` are unchanged. A real-phone test is owed
+      (Pending).
 - [x] **Compare, offered to a keeper who arrived from their own copy.** The
       brief's fix — a signed-in copy writing its own address into
       `return_address` — cannot work: localStorage is per origin like the
