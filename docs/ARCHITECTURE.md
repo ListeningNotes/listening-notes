@@ -90,6 +90,10 @@ The library — logic, no visuals
     settings_actions.js        The settings row: read, write, the name, the beacon's narrow reader
     migrator.js                Brings the database up to date — from instrumentation.js on start, and from scripts/prepare_database.mjs at build
 
+The update button
+  .github/workflows/update.yml   Ships in every copy: Actions → Update this copy → Run workflow
+  scripts/update_copy.mjs        What the button does — fetched from upstream each run: graft, merge, push, or stop and say which files clash
+
 The front doors — receive requests, hand them off, send back responses
   app/api/
     entries/route.js           Load all entries / save a new one
@@ -104,6 +108,7 @@ The front doors — receive requests, hand them off, send back responses
     setup/route.js             GET: is this copy claimed. POST: the one write that claims it
     auth/login/route.js        The password, the deploy-time variable, or — unclaimed — the claim code
     portrait/code/route.js     POST: press the journal's code out of the stored portrait — owner-only, no body
+    update/route.js            Is there a newer Listening Notes — the latest public release against package.json, once a day, owner-only
 
 The hooks — reusable logic shared across pages
   hooks/
