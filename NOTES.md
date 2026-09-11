@@ -230,17 +230,32 @@ cannot be tested end to end.
       `letIn` and `askWaiting` in HomeNav; `.pt-lock`, `.pt-key` and
       `.pt-lock-field` in nav.css; PasswordGate's `autoFocus` prop.
 
-- [ ] **A copy has no way to update itself.** The deploy button clones the
-      code into a new repository in the keeper's GitHub — a copy, not a
-      fork — so there is no "Sync fork" button, and nothing in the README or
-      OPERATIONS says how to take a new release. Today the only way is git
-      on a computer: clone their repo, `git remote add upstream
-      https://github.com/ListeningNotes/listening-notes.git`, `git pull
-      upstream main`, `git push`; Vercel builds and the migrator runs. June
-      is the first keeper to need this (2026-09-11). Worth designing: a
-      workflow file that ships in every copy and, when its keeper presses
-      Run on GitHub, merges upstream main and pushes — an update without a
-      terminal, and nothing the journal itself phones home for.
+- [ ] **The update button has not run on GitHub yet.** The merge logic
+      passed locally with plain git (a snapshot copy with no shared history,
+      a clean second run, a keeper's edits that merge, a clash that stops
+      with the files named and nothing touched). Two things only GitHub
+      can prove: that `permissions: contents: write` in the workflow lets
+      the token push on a repository whose default is read-only (the docs
+      say a workflow may elevate; June's is such a repository), and that a
+      push by `github-actions[bot]` makes Vercel build. Needs either the
+      GitHub CLI signed in here (`brew install gh && gh auth login`) so a
+      private scratch copy can be made and run, or June pressing the
+      button. No `gh` on this Mac as of 2026-09-11.
+- [ ] **Releases start now, by hand.** The desk's line reads the latest
+      public release and compares its tag with `package.json`'s version,
+      which is a date: `2026.9.11`. Each meaningful push to main: bump the
+      version, then GitHub → Releases → Draft a new release → tag
+      `v2026.9.11` → publish. Until the first release exists the line never
+      shows. One a day at most, since the version is the day.
+- [ ] **June's copy needs the workflow file added once** (README, Updating).
+      Copies deployed after this ships have it already.
+- [ ] **The install page (`/get/install`) says nothing about updating.**
+      The README does; the page is Miyel's copy's and can carry the same
+      paragraph when the screenshots land.
+- [ ] **Names to confirm, 2026-09-11 (update)** — branch
+      `one-button-update`; `.github/workflows/update.yml` and its name
+      "Update this copy"; `scripts/update_copy.mjs`; `GET /api/update`;
+      `.db-update`; the calendar version scheme.
 
 **STRUCTURE** — see DECISIONS.md before starting any of these
 
@@ -1259,6 +1274,31 @@ current.
 ---
 
 ## Complete
+
+**2026-09-11 — one button to update a copy, branch `one-button-update`,
+not merged**
+
+- [x] **The button.** `.github/workflows/update.yml` ships in every copy:
+      Actions → Update this copy → Run workflow. It fetches
+      `scripts/update_copy.mjs` from upstream and runs it: finds the upstream
+      commit the copy was made from (the deploy button makes a one-commit
+      snapshot, not a fork — no common history, so the copy's first commit
+      is grafted onto its origin), merges upstream main, pushes with the
+      workflow's own token (`permissions: contents: write`), and writes what
+      changed on the run's summary page. A clash aborts the merge, names the
+      files, fails the run, and touches nothing. Upstream changes to
+      workflow files are left out of the merge and said so, because GitHub
+      refuses a workflow's push that alters workflow files. Tested locally
+      with plain git; on GitHub still owed — see Pending.
+- [x] **The line.** `GET /api/update` (owner-only) reads the canonical
+      repository's latest public release at most once a day and compares it
+      with `package.json`'s version; the desk shows "A newer version is
+      available" linking to the copy's own Actions page (Vercel names the
+      repository at build time) or, elsewhere, to the release. Nothing is
+      sent but a request for a public page.
+- [x] **Two brand decisions recorded** — the website over a desktop app,
+      and the QR as the answer to the URL — from the brief, verbatim in
+      spirit.
 
 **2026-09-10 — three findings from June's install, branch `junior-install`,
 not merged**
