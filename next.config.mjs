@@ -24,16 +24,9 @@ const nextConfig = {
   // production, just noise while testing locally.
   devIndicators: false,
   // Required from node_modules at run time rather than bundled: sharp is a
-  // native binary and OpenCV is ten megabytes of WebAssembly, and neither
-  // survives being folded into a route handler. Both are only ever asked
-  // for by the press behind /api/portrait/code.
-  serverExternalPackages: ['sharp', '@techstark/opencv-js'],
-  // OpenCV is required at run time from the project root, which no bundler
-  // can follow, so its files are named here or the deployed function would
-  // not have them.
-  outputFileTracingIncludes: {
-    '/api/portrait/code': ['./node_modules/@techstark/opencv-js/dist/opencv.js'],
-  },
+  // native binary and does not survive being folded into a route handler.
+  // Only the press behind /api/portrait/code asks for it.
+  serverExternalPackages: ['sharp'],
 };
 
 export default nextConfig;

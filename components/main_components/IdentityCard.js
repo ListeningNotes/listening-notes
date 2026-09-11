@@ -26,6 +26,7 @@ import Link from 'next/link';
 import { Check, Eye, EyeSlash, Pencil, Printer, QrCode, UploadSimple, User, X } from '@phosphor-icons/react';
 import { noteArrival, recallSender, subscribeSender, tidyAddress } from '../../library/return_address';
 import { useRouter } from 'next/navigation';
+import { useTheme } from './Lightswitch';
 import QRCode from 'qrcode';
 import { useListeningBeacon } from '../../hooks/useListeningBeacon';
 import { useBookplate } from './Bookplate';
@@ -150,22 +151,30 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
     hidden_fields,
     rig_icon,
     portrait_code_url,
+    portrait_code_stale,
   } = settings;
   const { isLive } = useListeningBeacon();
+  // The code's dots are the page's ink, so the card asks for the file that
+  // matches the page. The server renders light; a dark-page reader gets the
+  // right one a moment after hydration.
+  const { theme } = useTheme();
+  const codeSrc = portrait_code_url ? `${portrait_code_url}&theme=${theme === 'dark' ? 'dark' : 'light'}` : '';
 
-  // A journal with a portrait and no code gets one the first time its owner
-  // opens it, rather than the next time they happen to save the card. Once
-  // per page load, owner only; a code that exists is never touched here,
-  // whoever drew it. The server says what happened in its log.
+  // A journal with a portrait and no code, or a code an older build drew,
+  // gets the current one the first time its owner opens it, rather than the
+  // next time they happen to save the card. Once per page load, owner only.
+  // The server says what happened in its log, and a press that faults
+  // writes nothing.
   const router = useRouter();
   const pressed = useRef(false);
   useEffect(() => {
-    if (!authed || !portrait_url || portrait_code_url || !site_address || pressed.current) return;
+    if (!authed || !portrait_url || !site_address || pressed.current) return;
+    if (portrait_code_url && !portrait_code_stale) return;
     pressed.current = true;
     fetch('/api/portrait/code', { method: 'POST' })
       .then(r => (r.ok ? router.refresh() : null))
       .catch(() => {});
-  }, [authed, portrait_url, portrait_code_url, site_address, router]);
+  }, [authed, portrait_url, portrait_code_url, portrait_code_stale, site_address, router]);
 
   // Only ever true for the person who keeps the journal, and only the visible
   // half of that: the writing endpoints check the wristband for themselves.
@@ -327,8 +336,8 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
               modules have to stay square at any size. Where no such picture
               could be built, the plain code stands in: a worse picture and a
               working one. */}
-          {portrait_code_url
-            ? <img className="idc-qr idc-qr--photo" src={portrait_code_url} alt={`Scannable code for ${address}`} />
+          {codeSrc
+            ? <img className="idc-qr idc-qr--photo" src={codeSrc} alt={`Scannable code for ${address}`} />
             : <AddressCode text={`https://${address}`} />}
         </span>
       )}

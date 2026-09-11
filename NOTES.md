@@ -191,31 +191,24 @@ cannot be tested end to end.
       the field that opens under the key on the pitch pane: does it offer to
       save at setup and fill here? The markup is the one PasswordGate has
       always had; only the container changed.
-- [ ] **Album covers through the press.** The same search and judge on
-      the 39 covers on this journal: 21 pass, 18 fail every setting, and
-      five of the 21 only on the harshest bands. The plain code is not a
-      rare outcome for covers, so the entry-QR (parked, see DECISIONS)
-      needs its second tier designed before it is built. Covers can only be
-      pressed on the server anyway — iTunes sends no CORS headers, so a
-      browser canvas cannot read their pixels.
-- [ ] **The press on Vercel is untested.** It works on the dev server
-      (Miyel's card, 2026-09-11: framing moved, pressed at band 100–190 in
-      1.2s, served at 114 kB). On Vercel two things are unproved: that
-      OpenCV's 14 MB file ships with the function (`outputFileTracingIncludes`
-      in next.config.mjs names it, because a run-time require is nothing a
-      bundler can follow) and what its cold start costs. First deploy: open
-      the journal signed in and read the function log for `[portrait code]`.
+- [ ] **The entry QR for album covers is now buildable.** All 39 covers on
+      this journal pass the dot press at the smallest dot (they passed 21 of
+      39 in the old style on the most lenient judge). Covers can only be
+      pressed on the server — iTunes sends no CORS headers — which is where
+      the press now lives; `buildPortraitCode` takes any picture. Still
+      parked (DECISIONS), but the second tier it was waiting on is no longer
+      a common outcome.
+- [ ] **The press on Vercel is untested.** It works on the dev server. On
+      Vercel what is unproved is that sharp's binary ships with the function
+      (it is Next's own dependency, so it should) and the cold start. First
+      deploy: open the journal signed in and read the function log for
+      `[portrait code]`.
 - [ ] **Miyel's old picture is in the 2026-09-10-0315 backup** (iCloud,
-      `settings.json`, framed 36.6%, built by Apple's reader with a wider
-      band). The pressed one at the new framing needed the 100–190 band and
-      is flatter. Restoring it is one write of `portrait_code` and
-      `portrait_code_url` from the backup; her call.
-- [ ] **A dot-style press is parked in `git stash` on `junior-install`**
-      ("server-side portrait code: dots, solid finders and alignment target,
-      one file per theme"). Miyel chose her current style over it. If the
-      current style ever needs to pass jsQR rather than OpenCV, that is the
-      shape that does: a dot per photo module in the page's ink, the three
-      finders and the small alignment target solid, one file per theme.
+      `settings.json`, framed 36.6%, the photograph carrying the code alone,
+      built by Apple's reader). Superseded by the dot style on her call;
+      kept there if it is ever wanted. The stash "server-side portrait code:
+      dots…" on `junior-install` is the first draft of what shipped and can
+      be dropped.
 - [ ] **Add, the other half of the offer.** The mechanism, so it is not
       re-derived: an Add press on the journal being read cannot write to the
       visitor's address book from that origin, so — like Compare — it is a
@@ -225,9 +218,11 @@ cannot be tested end to end.
       send that carried a URL, a scanned code, or an Add press; a paste
       field is the last resort.
 - [ ] **Names to confirm, 2026-09-11** — the press: `POST /api/portrait/code`;
-      `pressStoredPortraitCode` and `buildPortraitCode({ url, portrait,
-      position })` in `library/portrait_code.js`; the `f` and `c` (floor and
-      cap) parameters on `portrait_code_url`.
+      `pressStoredPortraitCode`, `buildPortraitCode({ url, portrait,
+      position })`, `flipInk`, `darkPageCode` and `isCurrentCode` in
+      `library/portrait_code.js`; the `d` (dot) parameter and `b` (build)
+      stamp on `portrait_code_url`; `?theme=dark` on `/api/portrait`;
+      `portrait_code_stale` in the Bookplate.
 - [ ] **Names to confirm, 2026-09-10** — autonomous session, rename freely:
       branch `junior-install`; `carryFrom`, `noteArrival`
       and `subscribeSender` in `library/return_address.js`; the query keys
@@ -771,13 +766,14 @@ tolerant: Apple's, OpenCV both ways, jsQR, ZXing, zbar.
 
 **Next's loader wraps a package that exports a promise of itself into a
 module namespace whose `then` is not a promise's.** `@techstark/opencv-js`
-does exactly that, and `await import(...)` inside a route handler died with
+did exactly that, and `await import(...)` inside a route handler died with
 "Promise.prototype.then called on incompatible receiver [object Module]"
-after passing every test in plain Node. Require it at run time through
-`createRequire` from the project root, and name its file in
-`outputFileTracingIncludes` so the deployed function still has it. And a
-press that faults must write nothing: the first one through the site
-cleared a good code on its way down.
+after passing every test in plain Node. Require such a package at run time
+through `createRequire` from the project root, and name its file in
+`outputFileTracingIncludes` so the deployed function still has it. (OpenCV
+was the judge for one afternoon and is gone; the lesson stays.) And a press
+that faults must write nothing: the first one through the site cleared a
+good code on its way down.
 
 **`react-hooks/set-state-in-effect` traces into the functions an effect
 calls.** A fetch-on-mount that sets `loading` synchronously fails it even
@@ -1264,23 +1260,25 @@ Reviewed on the dev server at desktop width; not yet on a phone.
       115, cap 255; jsQR alone — all Safari has — refuses all thirty-five
       bands on the light page at full size. He edits from an iPhone, so the
       build ran, every band failed the light-page check, and the card fell
-      back to the plain code without a word. Fixed, 2026-09-11, from
-      Miyel's brief: the code is pressed on the server
-      (`library/portrait_code.js`, sharp + OpenCV, `POST /api/portrait/code`)
-      with the brief's search — floors 0–220, then six bands widest first
-      — and judged by OpenCV trying both ways up, on both pages, at three
-      sizes. Same answer on every phone. The picture is unchanged; the
-      winning floor and cap ride on `portrait_code_url` as `f` and `c`; no
-      new columns. Measured: June at floor 70, Miyel at 80–200, the brief's
-      seven all pass; jsQR still refuses everything, which is why the judge
-      changed. Pressed by the editor when the photo or framing moves, by
-      Settings after the address, by setup after the photo, and by the
-      card when the owner opens a journal with a portrait and no code.
-      Two dependencies: `sharp` (already Next's) and `@techstark/opencv-js`
-      (14 MB of WebAssembly, loaded once per server, required at run time
-      rather than bundled — see Gotchas). Exercised on the dev server: a
-      signed-in save that moved the framing, then the card's own press on
-      reload, made Miyel's at band 100–190. Vercel still owed — see
+      back to the plain code without a word. Fixed, 2026-09-11, in two passes
+      the same day. First, from Miyel's brief: the press moved to the server
+      (`library/portrait_code.js`, sharp, `POST /api/portrait/code`) with
+      her sweep — floors 0–220, then bands — judged by OpenCV both ways up.
+      It worked (her card at band 100–190) and it was flatter than the
+      picture she had, and still not for everyone: jsQR refused every
+      setting and 18 of 39 covers failed. Second, on her call after seeing
+      it: the dot style. The photograph fills the dark modules as before,
+      with a dot of ink at the centre of each and the finders and the
+      alignment target solid; tones kept at 20–235; judged by jsQR, the
+      strictest reader, on both pages at three sizes; the dark page's file
+      made from the light one at request time by flipping the pure ink
+      (`?theme=dark`). No new columns; the dot rides on `portrait_code_url`
+      as `d`, the build as `b`. Measured: both portraits and all 39 covers
+      pass at the smallest dot. Pressed by the editor when the photo or
+      framing moves, by Settings after the address, by setup after the
+      photo, and by the card when the owner opens a journal whose code is
+      missing or older than this build. One dependency added: `sharp`
+      (already Next's own). Exercised on the dev server; Vercel owed — see
       Pending.
 - [x] **Sign in is a lock, not a page.** A key (Phosphor `Key`) where the
       Sign in line sat; pressing it opens `PasswordGate bare` under it, in

@@ -82,7 +82,7 @@ The library — logic, no visuals
     ai_integration.js          The Claude AI calls: research, and the local assembly of a post
     music_data_api.js          Fetches album art and tracklists from iTunes
     card_links.js              The marks a card can wear — which shape stands for the rig, which logo a link gets
-    portrait_code.js           The press: the portrait made into the journal's QR code on the server, searched for the gentlest treatment and proved by OpenCV on both page colours
+    portrait_code.js           The press: the portrait made into the journal's QR code on the server — a dot of ink in every photo module, proved by the strictest reader on both page colours
     session_timers.js          Track length display (m:ss)
     wristband.js               Session auth — issues and checks the JWT cookie
     secrets.js                 The vault: the keys, the password hash, the session secret, the claim code. Database first, environment second
