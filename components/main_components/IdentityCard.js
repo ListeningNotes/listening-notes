@@ -25,6 +25,7 @@ import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'reac
 import Link from 'next/link';
 import { Check, Eye, EyeSlash, Pencil, Printer, QrCode, UploadSimple, User, X } from '@phosphor-icons/react';
 import { noteArrival, recallSender, subscribeSender, tidyAddress } from '../../library/return_address';
+import { useRouter } from 'next/navigation';
 import QRCode from 'qrcode';
 import { useListeningBeacon } from '../../hooks/useListeningBeacon';
 import { useBookplate } from './Bookplate';
@@ -151,6 +152,20 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
     portrait_code_url,
   } = settings;
   const { isLive } = useListeningBeacon();
+
+  // A journal with a portrait and no code gets one the first time its owner
+  // opens it, rather than the next time they happen to save the card. Once
+  // per page load, owner only; a code that exists is never touched here,
+  // whoever drew it. The server says what happened in its log.
+  const router = useRouter();
+  const pressed = useRef(false);
+  useEffect(() => {
+    if (!authed || !portrait_url || portrait_code_url || !site_address || pressed.current) return;
+    pressed.current = true;
+    fetch('/api/portrait/code', { method: 'POST' })
+      .then(r => (r.ok ? router.refresh() : null))
+      .catch(() => {});
+  }, [authed, portrait_url, portrait_code_url, site_address, router]);
 
   // Only ever true for the person who keeps the journal, and only the visible
   // half of that: the writing endpoints check the wristband for themselves.

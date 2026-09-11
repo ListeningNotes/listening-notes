@@ -23,6 +23,11 @@ const nextConfig = {
   // Dev-only route indicator badge (bottom-left "N") — never shows in
   // production, just noise while testing locally.
   devIndicators: false,
+  // Required from node_modules at run time rather than bundled: sharp is a
+  // native binary and OpenCV is ten megabytes of WebAssembly, and neither
+  // survives being folded into a route handler. Both are only ever asked
+  // for by the press behind /api/portrait/code.
+  serverExternalPackages: ['sharp', '@techstark/opencv-js'],
 };
 
 export default nextConfig;
