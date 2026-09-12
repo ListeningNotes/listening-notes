@@ -241,12 +241,15 @@ cannot be tested end to end.
       GitHub CLI signed in here (`brew install gh && gh auth login`) so a
       private scratch copy can be made and run, or June pressing the
       button. No `gh` on this Mac as of 2026-09-11.
-- [ ] **Releases start now, by hand.** The desk's line reads the latest
-      public release and compares its tag with `package.json`'s version,
-      which is a date: `2026.9.11`. Each meaningful push to main: bump the
-      version, then GitHub → Releases → Draft a new release → tag
-      `v2026.9.11` → publish. Until the first release exists the line never
-      shows. One a day at most, since the version is the day.
+- [ ] **Releases, by hand, on every meaningful push to main.** The desk's
+      line reads the latest public release and compares its tag with
+      `package.json`'s version. Semantic versions from 2026-09-12, on
+      Miyel's call: a fix bumps the last number (1.0.1), something new bumps
+      the middle (1.1.0), a change that asks something of keepers bumps the
+      first (2.0.0). Bump `package.json`, commit, then
+      `gh release create vX.Y.Z --target main --title X.Y.Z --notes "…"`.
+      The first release is `v1.0.0` (the date-style `v2026.9.11` was
+      deleted the same day, before any copy had read it).
 - [ ] **June's copy needs the workflow file added once** (README, Updating).
       Copies deployed after this ships have it already. The one thing the
       scratch copy could not prove is Vercel building from the bot's push,
@@ -257,7 +260,7 @@ cannot be tested end to end.
 - [ ] **Names to confirm, 2026-09-11 (update)** — branch
       `one-button-update`; `.github/workflows/update.yml` and its name
       "Update this copy"; `scripts/update_copy.mjs`; `GET /api/update`;
-      `.db-update`; the calendar version scheme.
+      `.db-update`.
 
 **STRUCTURE** — see DECISIONS.md before starting any of these
 
@@ -1308,6 +1311,12 @@ not merged**
 - [x] **Two brand decisions recorded** — the website over a desktop app,
       and the QR as the answer to the URL — from the brief, verbatim in
       spirit.
+- [x] **The version is on the pitch pane, 2026-09-12** (branch
+      `pitch-version`): "Source · 1.0.0" at the foot, the number linking
+      to that version's release notes. Read from `package.json`, so it is
+      whatever the copy is running. The old "no version number" note in
+      Pitch.js is gone — releases keep it true now. Names to confirm:
+      `.pt-colophon`, `.pt-colophon-dot`.
 - [x] **Run on GitHub, 2026-09-12.** `gh` installed at `~/.local/bin`
       (no Homebrew on this Mac; the release binary, on the PATH in
       `.zshrc`), signed in as ListeningNotes with `repo` and `workflow`. A
