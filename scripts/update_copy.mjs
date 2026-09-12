@@ -65,23 +65,40 @@ if (tryGit('merge-base', '--is-ancestor', UPSTREAM_REF, 'HEAD').status === 0) {
 }
 
 // No common ancestor: a snapshot from the deploy button. Find where it came
-// from and graft it there.
+// from and graft it there. An identical tree is the ideal; the nearest is
+// what a real copy has, because the keeper added this very workflow file by
+// hand before the first update, or changed a line or two — so the upstream
+// commit that differs from the copy's first commit in the fewest files is
+// the one it was made from, and whatever differs is the keeper's own work,
+// merged from that base like any other change.
 if (tryGit('merge-base', 'HEAD', UPSTREAM_REF).status !== 0) {
   const roots = git('rev-list', '--max-parents=0', 'HEAD').split('\n').filter(Boolean);
   const root = roots[roots.length - 1];
   const tree = git('rev-parse', `${root}^{tree}`);
-  const origin = git('rev-list', UPSTREAM_REF).split('\n').filter(Boolean)
-    .find(commit => git('rev-parse', `${commit}^{tree}`) === tree);
+  const candidates = git('rev-list', UPSTREAM_REF).split('\n').filter(Boolean);
+  let origin = candidates.find(commit => git('rev-parse', `${commit}^{tree}`) === tree);
   if (!origin) {
-    stop(
-      '## Could not update',
-      '',
-      'This repository\'s first commit does not match any version of Listening Notes, so there is no',
-      'safe point to merge from. This happens when files were changed before the first update, or',
-      'when the repository was not made by the deploy button. Updating it needs git on a computer:',
-      'clone it, add `https://github.com/ListeningNotes/listening-notes.git` as a remote called',
-      '`upstream`, and `git merge --allow-unrelated-histories upstream/main`, resolving what clashes.',
-    );
+    let fewest = Infinity;
+    for (const commit of candidates) {
+      const differing = git('diff-tree', '-r', '--name-only', commit, root).split('\n').filter(Boolean).length;
+      if (differing < fewest) { fewest = differing; origin = commit; }
+      if (fewest === 0) break;
+    }
+    // A copy that shares almost nothing with any version is not a copy of
+    // this software, and grafting it anywhere would turn the update into
+    // one giant clash. Half the files is the line.
+    const total = git('ls-tree', '-r', '--name-only', root).split('\n').filter(Boolean).length;
+    if (!origin || fewest > total / 2) {
+      stop(
+        '## Could not update',
+        '',
+        'This repository\'s files do not resemble any version of Listening Notes closely enough to',
+        'find a safe point to merge from, so nothing was changed. If it was made by the deploy',
+        'button and has been heavily changed since, updating it needs git on a computer: clone it,',
+        'add `https://github.com/ListeningNotes/listening-notes.git` as a remote called `upstream`,',
+        'and `git merge --allow-unrelated-histories upstream/main`, resolving what clashes.',
+      );
+    }
   }
   git('replace', '--graft', root, origin);
 }
