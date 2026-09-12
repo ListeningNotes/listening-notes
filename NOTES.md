@@ -230,28 +230,15 @@ cannot be tested end to end.
       `letIn` and `askWaiting` in HomeNav; `.pt-lock`, `.pt-key` and
       `.pt-lock-field` in nav.css; PasswordGate's `autoFocus` prop.
 
-- [ ] **The update button has not run on GitHub yet.** The merge logic
-      passed locally with plain git (a snapshot copy with no shared history,
-      a clean second run, a keeper's edits that merge, a clash that stops
-      with the files named and nothing touched). Two things only GitHub
-      can prove: that `permissions: contents: write` in the workflow lets
-      the token push on a repository whose default is read-only (the docs
-      say a workflow may elevate; June's is such a repository), and that a
-      push by `github-actions[bot]` makes Vercel build. Needs either the
-      GitHub CLI signed in here (`brew install gh && gh auth login`) so a
-      private scratch copy can be made and run, or June pressing the
-      button. No `gh` on this Mac as of 2026-09-11.
-- [ ] **Releases, by hand, when there is something to tell a keeper.** The
-      desk's line reads the latest public release and compares its tag with
-      `package.json`'s version. Semantic versions from 2026-09-12, on
-      Miyel's call (DECISIONS): a fix bumps the last number (1.1.1),
-      something new the middle (1.2.0), a change that asks something of
-      keepers the first (2.0.0). Several pushes can be one release; a high
-      middle number is a beta being built, not a problem. Bump
-      `package.json`, commit, then `gh release create vX.Y.Z --target main
-      --title X.Y.Z --notes "…"`. `v1.0.0` was the first (the date-style
-      `v2026.9.11` was deleted the same day, before any copy had read it);
-      `v1.1.0` the same day for the version on both panes.
+- [ ] **The scratch copy `ListeningNotes/listening-notes-copy-test` is
+      safe to delete.** Private, made 2026-09-12 to run the button; a
+      snapshot of 9b11b75 with the workflow pasted in, updated four times
+      since (twice by Miyel herself). Keep it if a change to the button
+      wants a rehearsal.
+- [ ] **The "left as they were" path has not been seen on a real run.**
+      The test copy holds `checkout@v4` in its pasted workflow and main now
+      has v5, so its next press should merge and report the file left
+      alone.
 - [ ] **June's copy needs the workflow file added once** (README, Updating).
       Copies deployed after this ships have it already. The one thing the
       scratch copy could not prove is Vercel building from the bot's push,
@@ -1313,6 +1300,12 @@ not merged**
 - [x] **Two brand decisions recorded** — the website over a desktop app,
       and the QR as the answer to the URL — from the brief, verbatim in
       spirit.
+- [x] **The workflow checks out with `actions/checkout@v5`, 2026-09-12.**
+      Every run warned that the v4 action's Node 20 runtime is being
+      retired. Copies that pasted the file before this keep their own line
+      (a workflow's token may not change workflow files; the update leaves
+      them and says so) and keep seeing the warning, which is only a
+      warning; the one-time fix is editing that line on GitHub.
 - [x] **The update's summary page speaks in release notes, 2026-09-12.**
       Miyel pressed the button on the scratch copy herself and it merged
       eight commits — and listed them as commit titles, merges and
