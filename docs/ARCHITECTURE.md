@@ -89,6 +89,7 @@ The library — logic, no visuals
     claim_notice.js            The box printed in the build log while a copy is unclaimed
     settings_actions.js        The settings row: read, write, the name, the beacon's narrow reader
     migrator.js                Brings the database up to date — from instrumentation.js on start, and from scripts/prepare_database.mjs at build
+    version.js                 Which version this copy is running (from package.json) and where its release notes are — read by the pitch pane and the desk
 
 The update button
   .github/workflows/update.yml   Ships in every copy: Actions → Update this copy → Run workflow
