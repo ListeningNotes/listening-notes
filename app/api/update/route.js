@@ -22,8 +22,8 @@ import pkg from '../../../package.json';
 const LATEST = 'https://api.github.com/repos/ListeningNotes/listening-notes/releases/latest';
 const A_DAY = 60 * 60 * 24;
 
-// Versions are dates: 2026.9.11. Compared number by number, so 2026.10.1
-// is newer than 2026.9.30, which a string comparison would get wrong.
+// Semantic versions: major.minor.patch. Compared number by number, so
+// 1.10.0 is newer than 1.9.0, which a string comparison would get wrong.
 function isNewer(latest, current) {
   const a = String(latest).split('.').map(Number);
   const b = String(current).split('.').map(Number);
