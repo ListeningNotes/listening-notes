@@ -248,7 +248,9 @@ cannot be tested end to end.
       `v2026.9.11` → publish. Until the first release exists the line never
       shows. One a day at most, since the version is the day.
 - [ ] **June's copy needs the workflow file added once** (README, Updating).
-      Copies deployed after this ships have it already.
+      Copies deployed after this ships have it already. The one thing the
+      scratch copy could not prove is Vercel building from the bot's push,
+      since it is not connected to Vercel; his first press settles that.
 - [ ] **The install page (`/get/install`) says nothing about updating.**
       The README does; the page is Miyel's copy's and can carry the same
       paragraph when the screenshots land.
@@ -791,6 +793,13 @@ inverted image, so a dark page fails unless the picture is inverted before
 asking — which is what the press does. The readers, most to least
 tolerant: Apple's, OpenCV both ways, jsQR, ZXing, zbar.
 
+**A real copy's first commit never matches an upstream commit exactly.**
+The keeper pasted the workflow file in by hand, or touched a line, so a
+matcher that wants an identical tree finds nothing and the update stops.
+The local rehearsal passed because it skipped the paste. Match the nearest
+commit — fewest differing files — and let the difference be the keeper's
+own change; the first run on GitHub was the one that caught it.
+
 **Next's loader wraps a package that exports a promise of itself into a
 module namespace whose `then` is not a promise's.** `@techstark/opencv-js`
 did exactly that, and `await import(...)` inside a route handler died with
@@ -1299,6 +1308,17 @@ not merged**
 - [x] **Two brand decisions recorded** — the website over a desktop app,
       and the QR as the answer to the URL — from the brief, verbatim in
       spirit.
+- [x] **Run on GitHub, 2026-09-12.** `gh` installed at `~/.local/bin`
+      (no Homebrew on this Mac; the release binary, on the PATH in
+      `.zshrc`), signed in as ListeningNotes with `repo` and `workflow`. A
+      private scratch copy, snapshot of 9b11b75 with the workflow pasted in
+      the way June would: the first press stopped, because the pasted file
+      meant no upstream commit matched byte for byte (Gotchas); the matcher
+      now takes the nearest commit, and the second press merged three
+      commits and pushed as `github-actions[bot]` — so `permissions:
+      contents: write` in the workflow is enough on a new personal
+      repository, no setting to flip, one button. A third press said
+      already up to date. First release cut: `v2026.9.11`.
 
 **2026-09-10 — three findings from June's install, branch `junior-install`,
 not merged**
