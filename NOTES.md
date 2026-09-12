@@ -1311,6 +1311,11 @@ not merged**
 - [x] **Two brand decisions recorded** — the website over a desktop app,
       and the QR as the answer to the URL — from the brief, verbatim in
       spirit.
+- [x] **And on the desk, 2026-09-12** (branch `desk-version`): the same
+      number at the foot of the desk for the owner, with the "newer version"
+      line beside it when there is one; no Source there, since §13 is owed
+      to visitors. Both read `library/version.js` (name to confirm), which
+      reads `package.json`.
 - [x] **The version is on the pitch pane, 2026-09-12** (branch
       `pitch-version`): "Source · 1.0.0" at the foot, the number linking
       to that version's release notes. Read from `package.json`, so it is
