@@ -44,8 +44,9 @@ function toOrigin(input) {
 const num = v => (v === null || v === undefined || v === '' ? null : Number(v));
 
 // The address this page arrived with, if any: ?with=<address>, put there by
-// the Compare offer on somebody else's card, which sends a keeper home to
-// compare from their own side. Read through useSyncExternalStore so the
+// a row in the keeper's own address book (app/dashboard/people/page.js) —
+// this is where a row opens until the page about a person exists, which is
+// what this comparison will become. Read through useSyncExternalStore so the
 // server renders an empty field and the browser fills it in without a
 // hydration mismatch — the same shape the wall uses for ?q=.
 const never = () => () => {};
