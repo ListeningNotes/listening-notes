@@ -38,6 +38,15 @@
 const HOME = 'https://www.listeningnotes.blog/get';
 
 import WritingAccess from './WritingAccess';
+import pkg from '../../package.json';
+
+// The version this copy is running, beside the source line. A version used
+// to be ruled out here as a line that goes stale; releases keep it true now
+// (see the update button, DECISIONS), and it is the one number a keeper
+// needs when asking whether their copy has something. It links to what
+// that version contains.
+const VERSION = pkg.version;
+const RELEASE = `https://github.com/ListeningNotes/listening-notes/releases/tag/v${VERSION}`;
 
 // Where this copy's source lives. §13 asks for the source of *the running
 // program*, which for a modified copy is that copy's own repository and not
@@ -80,8 +89,6 @@ export default function Pitch({ onSignedIn }) {
           Get one
         </a>
 
-        {/* No version number: a version is a thing to keep current, and a line
-            that goes stale is worse than a line that is simply true. */}
         {/* Stacked and set well below the button, 2026-09-03: the two lines
             used to sit side by side under it and the pane read as a button
             with a caption. The lock first because it is the one the keeper
@@ -90,11 +97,17 @@ export default function Pitch({ onSignedIn }) {
             in place — see WritingAccess. */}
         <div className="pt-foot">
           <WritingAccess onSignedIn={onSignedIn} />
-          {/* No version number: a version is a thing to keep current, and a line
-              that goes stale is worse than a line that is simply true. */}
-          <a className="pt-source" href={SOURCE_URL} target="_blank" rel="noopener noreferrer">
-            Source
-          </a>
+          {/* The colophon: where the code is, and which version this is.
+              Smallest type on the site, one line. */}
+          <p className="pt-colophon">
+            <a className="pt-source" href={SOURCE_URL} target="_blank" rel="noopener noreferrer">
+              Source
+            </a>
+            <span className="pt-colophon-dot" aria-hidden="true">·</span>
+            <a className="pt-source" href={RELEASE} target="_blank" rel="noopener noreferrer" title="What this version contains">
+              {VERSION}
+            </a>
+          </p>
         </div>
       </div>
     </div>

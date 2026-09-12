@@ -1308,6 +1308,12 @@ not merged**
 - [x] **Two brand decisions recorded** — the website over a desktop app,
       and the QR as the answer to the URL — from the brief, verbatim in
       spirit.
+- [x] **The version is on the pitch pane, 2026-09-12** (branch
+      `pitch-version`): "Source · 2026.9.11" at the foot, the number linking
+      to that version's release notes. Read from `package.json`, so it is
+      whatever the copy is running. The old "no version number" note in
+      Pitch.js is gone — releases keep it true now. Names to confirm:
+      `.pt-colophon`, `.pt-colophon-dot`.
 - [x] **Run on GitHub, 2026-09-12.** `gh` installed at `~/.local/bin`
       (no Homebrew on this Mac; the release binary, on the PATH in
       `.zshrc`), signed in as ListeningNotes with `repo` and `workflow`. A
