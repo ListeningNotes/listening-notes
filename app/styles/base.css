@@ -239,6 +239,30 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 }
 .ln-tile:hover { border-color: var(--ink-faint); transform: translateY(-2px); }
 
+/* ── .ln-copied — "Copied — paste it anywhere" ─────────────────────────────
+   Said over the picture that was just turned into a code: a pill in the
+   middle of it that rises for a moment and fades. The card's portrait and
+   the entry's cover both say it, so it is one definition (it was the card's
+   alone, as .idc-copied, until 2026-09-12). Absolute inside the box, so
+   nothing under it moves; no pointer events, so a second press still turns
+   the picture back. The component holds it 2.6s; this is the fade either
+   way. */
+.ln-copied {
+  position: absolute; left: 50%; top: 50%;
+  transform: translate(-50%, -50%) translateY(8px);
+  padding: 9px 15px; border-radius: 999px;
+  background: var(--bg); color: var(--ink);
+  border: 1px solid var(--border);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+  font-family: var(--font-label);
+  font-size: 9.5px; letter-spacing: 0.12em; text-transform: uppercase;
+  white-space: nowrap;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.22s ease, transform 0.22s ease;
+  z-index: 2;
+}
+.ln-copied--on { opacity: 1; transform: translate(-50%, -50%); }
+
 /* ── .ln-xref — a mention that turned out to be something you've logged ───
    Applied at display time by library/cross_references.js, never stored in the
    note. It has to sit inside running prose without breaking the line up, so

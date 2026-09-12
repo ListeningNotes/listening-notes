@@ -86,11 +86,16 @@ export function whoIsKnocking(request) {
 // as well as the caller — see the route — one try in a long window is "you
 // have already voted for this one", which is the actual rule an upvote wants.
 // Rate limiting alone would still allow hundreds a day into a single count.
+// Cover is the entry's code, pressed out of its art on request: a quarter
+// of a second of work each, public, and asked for once or twice by a person
+// tapping a cover. Generous for a person and enough to stop a script pressing
+// the whole archive.
 export const DOORS = {
   login:      { tries: 5,  windowMs: 60_000 },
   comment:    { tries: 5,  windowMs: 10 * 60_000 },
   submission: { tries: 5,  windowMs: 10 * 60_000 },
   upvote:     { tries: 1,  windowMs: 12 * 60 * 60_000 },
+  cover:      { tries: 20, windowMs: 60_000 },
 };
 
 // Ask whether this caller may try this door.

@@ -463,7 +463,25 @@ nearly always a wrong match. Outside a correction the cover is a picture.
 **Two different things were sharing one word, 2026-08-28.** Addresses travel
 freely, contents do not. **The printer** makes an artifact out of the owner's
 writing: owner-only, server-checked, in the header. **Copy link and QR** pass
-along an address: available to anyone, at the foot of an entry.
+along an address: available to anyone, and on an entry they are one gesture
+on the cover (below, 2026-09-12).
+
+**An entry's cover turns into its code, for anyone, 2026-09-12.** Tap the
+art and it becomes the code for that entry's address and the address is on
+the clipboard — the card's gesture, the card's dots, the card's Copied line.
+On a home screen there is no address bar, so the code is the only form the
+address takes, and that is the argument for it being on every entry rather
+than card-only. The code encodes the entry's address, never the journal's.
+
+**The cover's code is pressed on request and never stored; the row keeps
+only the dot, 2026-09-12.** A pressed cover is 200–360 kB, and one per entry
+would grow with the archive on every copy's free tier — `settings` reaching
+310 kB on two pictures is the warning. So the picture is redrawn from the
+art on each ask (a quarter second, on the server, because Apple's art cannot
+be read in a browser), and `entries.cover_code` holds the proved dot with
+the press's build and a fingerprint of the art and address: 21 bytes,
+written on the first tap, never on save. Never verify on load; never base64
+a picture into a row.
 
 **Cards carry the mark only — no URL.** Printing the address on everyone's
 cards advertises Miyel, not the software. **Two different QRs:** a journal's
@@ -1067,12 +1085,5 @@ no file".
   already exist as video, so the assets are ready).
 - Manual now-playing override — covers vinyl and iOS Apple Music, where
   scrobbling is unreliable.
-- Tap-to-QR on individual entries — tapping the art swaps it for a code to that
-  entry and copies the link. It works; it was sluggish because verification ran
-  on mount. Three things fix it: build on tap rather than on mount, cache the
-  winning version and tonal band on the entry so later builds skip decoding,
-  and do it server-side, because iTunes sends no CORS headers and a browser
-  canvas cannot read album art pixels. Needs a "link copied" line — a clipboard
-  write with no feedback reads as broken.
 - Address book (`people` table) — turns journal compare from "paste a URL" into
   "pick a name."

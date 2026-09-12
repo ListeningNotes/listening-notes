@@ -375,6 +375,57 @@
    press free for the tap-to-QR idea that is parked. */
 .ln-cover { position: relative; padding: 0; background: transparent; }
 .ln-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* ── The cover as the code ────────────────────────────────────────────────
+   Outside a correction the art is a button too, 2026-09-12: press it and it
+   turns into the code for this entry's address, the way the card's portrait
+   turns into the journal's. The two faces are stacked and cross-faded, not
+   rotated — the same call idcard.css makes, and for the same reason. */
+.ln-cover--turnable { cursor: pointer; appearance: none; -webkit-appearance: none; color: inherit; font: inherit; }
+.ln-cover--turnable:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 3px; }
+.ln-cover--turnable > img { transition: opacity 0.26s ease; border-radius: inherit; }
+/* The art goes when the pressed picture shows: its light modules are holes
+   the page shows through, and a cover under them would show through too. */
+.ln-cover-art--off { opacity: 0; }
+.ln-cover-code {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; transition: opacity 0.26s ease; pointer-events: none;
+}
+.ln-cover-code--on { opacity: 1; }
+.ln-cover-code img, .ln-cover-code svg { display: block; width: 100%; height: auto; }
+/* The pressed picture is the code plus its quiet zone, and the code itself
+   is what takes the art's place — so the file is drawn oversize by the
+   share the margin is (set from the page, per address) and the margin hangs
+   off the edges, where the page is anyway. Smoothed, not pixelated: every
+   module carries a dot, and nearest-neighbour shrinking drops dots. */
+.ln-cover-code--photo img {
+  width: calc(100% * var(--ln-code-span, 1));
+  max-width: none;
+  flex-shrink: 0;
+  image-rendering: auto;
+}
+/* Showing the pressed picture, the box stops being a box: no frame, no
+   shadow, no rounded clip taking a bite out of the quiet zone. The border
+   stays, transparent, so the box does not change size. After the phone's
+   .ln-screen-one-art on purpose — same specificity, and this has to win. */
+.ln-cover--bare {
+  border-color: transparent;
+  box-shadow: none;
+  border-radius: 0;
+  overflow: visible;
+  background: none;
+}
+/* On a wide window the box keeps its frame and grows while the code shows
+   (FullPostPage sizes it — the thumbnail is too fine to point a phone at),
+   and the code sits on a plate of page colour, because the hero behind it
+   is the blurred art and the picture was proved on the page. The quiet zone
+   stays inside the plate, so nothing hangs off; the frame's 12px radius
+   takes less than a module off the corner of an 18px margin. */
+@media (min-width: 769px) {
+  .ln-hero .ln-cover-code { background: var(--bg); }
+  .ln-hero .ln-cover-code--photo img { width: 100%; }
+}
 /* Dashed, and only here: it is the one border on the page that means
    "this is not finished with", which is the whole of what edit mode is. */
 .ln-cover--live { cursor: pointer; border: 1px dashed var(--ink-faint); }
