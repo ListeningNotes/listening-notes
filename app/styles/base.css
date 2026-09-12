@@ -245,7 +245,8 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
    the entry's cover both say it, so it is one definition (it was the card's
    alone, as .idc-copied, until 2026-09-12). Absolute inside the box, so
    nothing under it moves; no pointer events, so a second press still turns
-   the picture back. The component holds it 2.6s; this is the fade either
+   the picture back. The component holds it 1.8s (2.6 until 2026-09-12,
+   on Miyel's call: a bit shorter); this is the fade either
    way. */
 .ln-copied {
   position: absolute; left: 50%; top: 50%;

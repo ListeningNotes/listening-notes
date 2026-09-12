@@ -175,7 +175,7 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
     navigator.clipboard.writeText(`https://${address}`).then(() => {
       setCopied(true);
       clearTimeout(copiedTimer.current);
-      copiedTimer.current = setTimeout(() => setCopied(false), 2600);
+      copiedTimer.current = setTimeout(() => setCopied(false), 1800);
     }).catch(() => {});
   }
 

@@ -180,7 +180,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
     navigator.clipboard.writeText(entryUrl).then(() => {
       setCopied(true);
       clearTimeout(copiedTimer.current);
-      copiedTimer.current = setTimeout(() => setCopied(false), 2600);
+      copiedTimer.current = setTimeout(() => setCopied(false), 1800);
     }).catch(() => {});
   }
 
