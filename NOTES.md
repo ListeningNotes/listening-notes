@@ -206,14 +206,49 @@ cannot be tested end to end.
       kept there if it is ever wanted. The stash "server-side portrait code:
       dots…" on `junior-install` is the first draft of what shipped and can
       be dropped.
-- [ ] **Add, the other half of the offer.** The mechanism, so it is not
-      re-derived: an Add press on the journal being read cannot write to the
-      visitor's address book from that origin, so — like Compare — it is a
-      link back to the visitor's own copy, `https://<their address>/…?add=
-      <this address>`, which files the journal into `people` (owner-only).
-      Needs the address book, still parked. Entries would then arrive from a
-      send that carried a URL, a scanned code, or an Add press; a paste
-      field is the last resort.
+- [ ] **The address book on a real phone, 2026-09-12.** Built in the
+      Claude browser. On the phone, on the live site: the sheet over the
+      desk; Scan a code opening the camera (getUserMedia wants https or
+      localhost, like the clipboard — not the network address); a card's
+      code and a cover's code both read down to a host; the Add press on
+      somebody else's card landing in the field; Add to address book on an
+      inbox row. June's copy, userone-silk.vercel.app, is the one to file.
+- [ ] **Names to confirm, 2026-09-12** — autonomous session, rename freely:
+      branch `address-book`; `library/people_actions.js` with `pull_people`,
+      `save_person`, `remove_person` and `ask_journal_name`; `tidyJournal`
+      and `journalUrl` in `library/return_address.js`; `/dashboard/people`
+      and the door's label Address book; `CodeScanner`; the `.bk-` prefix in
+      forms.css; the pill's words, Add to your address book and Copied —
+      paste it in your address book; `reached` in the POST answer.
+
+**THE ADDRESS BOOK, THE FEED, AND WHERE COMPARE LIVES** — briefed
+2026-09-12. The address book shipped that day on branch `address-book`
+(Complete). The rest is in order; each waits on the one before it.
+
+- [ ] **The feed.** Swiping down from the desk — floor two. Entry-shaped
+      rows with a small face and a name: what the people in the book
+      logged, not who exists. Two views: Recent (everyone in the book, in
+      order) and Submissions (who logged what you sent them, and how they
+      rated it — the default; smaller, warmer, cannot become a scroll). A
+      row offers Compare when it is a record you also have — this album,
+      their rating and their track notes against yours. Reads every
+      person's `/api/public/entries` from the browser, as `/compare` does;
+      the inbox is the shelf shape to copy. **Open before building:** the
+      Submissions view needs an entry to say which journal it came from,
+      and `received_from` is a name. Either a `received_from_url` column
+      on entries (additive, published with the feed) or matching by name.
+- [ ] **The person's page.** A face or a name in the feed, or a row in the
+      book: overlap, where you agree and disagree hardest, what they sent
+      you and how you rated it, their hit rate with you. The whole-journal
+      compare, moved off `/compare` onto your copy, where it can hold what
+      their journal never could. Until then a row opens `/compare?with=`;
+      once it exists `/compare` can go — nobody has the URL, so no stub.
+- [ ] **The printer on that page.** The shape of the agreement without the
+      writing — you and June agree on 34 records; you disagree hardest on
+      these three — naming both people. The notes stay on the journals and
+      the card is a reason to visit both.
+- [ ] **The chain.** Tapping the Submission chip on an entry opens the
+      lineage upward. Backward only (DECISIONS).
 - [ ] **The cover's code on a real phone, 2026-09-12.** Built in the
       Claude browser. On the phone: tap a cover, scan the code with the
       camera from the light and the dark page, paste what was copied into
@@ -256,11 +291,11 @@ cannot be tested end to end.
       stamp on `portrait_code_url`; `?theme=dark` on `/api/portrait`;
       `portrait_code_stale` in the Bookplate.
 - [ ] **Names to confirm, 2026-09-10** — autonomous session, rename freely:
-      branch `junior-install`; `carryFrom`, `noteArrival`
-      and `subscribeSender` in `library/return_address.js`; the query keys
-      `?from=` (on a link out from the inbox) and `?with=` (on `/compare`);
-      `letIn` and `askWaiting` in HomeNav; `.pt-lock`, `.pt-key` and
-      `.pt-lock-field` in nav.css; PasswordGate's `autoFocus` prop.
+      branch `junior-install`; the query key `?with=` on `/compare`
+      (`carryFrom`, `noteArrival`, `subscribeSender` and `?from=` went on
+      2026-09-12); `letIn` and `askWaiting` in HomeNav; `.pt-lock`,
+      `.pt-key` and `.pt-lock-field` in nav.css; PasswordGate's `autoFocus`
+      prop.
 
 - [ ] **The scratch copy `ListeningNotes/listening-notes-copy-test` is
       safe to delete.** Private, made 2026-09-12 to run the button; a
@@ -313,7 +348,6 @@ The cross is built and merged. What is left of it:
       the page needs a signed-in look at `/dashboard/share` to confirm both
       slides still draw and the status line settles to blank.
 - [ ] **A QR on the pitch pane.** DECISIONS already settles that the right pane produces a fixed code to `/get`, the same on every copy. Not built, and the "logo made of the QR" idea is unresolved.
-- [ ] **Compare wants two homes** — one on an individual album, for comparing that record against another, and one on the About pane for comparing the collection overall. The About-pane home shipped 2026-09-10 as the visitor's offer (see Complete); the per-album one is still open.
 - [ ] **PARKED until Junior has a copy — Surprise (`/shuffle`) has no way in.** Work in progress by decision — the shake is the intended gesture and is not built. See DECISIONS.
 
 **TWO FLOORS ON THE CROSS** — briefed 2026-09-07. Replaces "the cross's two
@@ -570,7 +604,7 @@ already exists.
       and now points at this one, and the deploy button asks for the variable
       so a fork can set it at install.
 - [ ] **Listen numbering** — an album has many listens, numbered, computed from `album_key` and never chosen.
-- [ ] **The feed as a network** — `/feed.xml` publishes, but nothing reads anyone else's. Two views, submissions first. A shelf, not a river.
+- [ ] **The feed as a network** — see THE ADDRESS BOOK, THE FEED, AND WHERE COMPARE LIVES above. `/feed.xml` publishes; the address book now says whose to read.
 - [ ] **Relationship field removal** — every value has dissolved into something else. Legacy data stays; the picker goes.
 
 **SCALING — BLOCKER. The archive loads every record on every page view**
@@ -798,9 +832,9 @@ before that deploy would break saving an entry on the live site.
 - [ ] Inbox (`/dashboard/inbox`) — the Submissions tab is rebuilt as a shelf
       and done; the Comments tab is still the moderation list it always was.
       Two things left on the sent side, neither urgent: a sender who gave a
-      journal URL is a name and an address and nothing collects them (the
-      `people` table is still parked), and Dismiss is one press with no undo,
-      unlike every other destructive control on the site.
+      journal URL can be filed in the address book from the row
+      (2026-09-12), and Dismiss is one press with no undo, unlike every
+      other destructive control on the site.
 - [ ] Share (`/dashboard/share`) — wire Reddit + Instagram backends
 
 **LIVE STATUS**
@@ -815,6 +849,19 @@ Project → Settings → Environment Variables.
 ---
 
 ## Gotchas
+
+**A migrator session that dies holding the lock hangs every start after
+it, 2026-09-12.** The dev server was restarted while the Mac changed
+networks; its migrator had taken `pg_advisory_lock` and the connection died
+under it. Neon kept that session idle, still holding the lock, and the next
+dev server said Ready and never answered a request — `register()` was queued
+behind it — and a production cold start would have queued the same way. It
+cleared by itself after about ten minutes, when Neon reaped the session. To
+see it: `SELECT pid, granted, state FROM pg_locks JOIN pg_stat_activity USING
+(pid) WHERE locktype = 'advisory'` — an `idle` holder whose last query was
+the lock is a dead one, and `pg_terminate_backend(pid)` on that row is the
+fix when waiting is not. A server that says Ready and never compiles is this,
+not Turbopack.
 
 **jsQR alone refuses light-page photo codes that every real reader accepts.**
 Measured 2026-09-10 on June's portrait, in his page: `BarcodeDetector` passed
@@ -1336,6 +1383,55 @@ current.
 ---
 
 ## Complete
+
+**2026-09-12 — the address book, branch `address-book`, unmerged; version
+1.3.0 on the branch (a table, a route, a door: the middle number). From the
+brief: the address book, the feed, and where compare lives**
+
+- [x] **The `?from=` link is retired.** The inbox's links out are plain
+      again, the card no longer offers Compare with mine, and
+      `return_address.js` belongs to the send form and the comment form
+      only — `carryFrom`, `noteArrival` and `subscribeSender` are gone, and
+      the argument they stood on is in docs/DECISIONS-ARCHIVE.md. It only
+      worked for somebody arriving from a link their own copy had written;
+      a text, a code or a card carry none. `/compare?with=` stays, because
+      it is where an address-book row opens for now.
+- [x] **The Add press.** On the card, for visitors only, where Compare with
+      mine was: Add to your address book. It copies this journal's address
+      and the pill reads Copied — paste it in your address book for 2.6 s —
+      all a journal can do for a copy it cannot see, and it never learns
+      whether the visitor keeps one. Seen in the Claude browser on
+      localhost: the pill under Send an album, and the state turning (the
+      clipboard itself is denied in that browser, so the write was stubbed
+      to watch it).
+- [x] **The address book.** `people` — migration 007: id, address (unique;
+      no scheme, host only), name, added_at — `library/people_actions.js`,
+      `GET`/`POST /api/people` and `DELETE /api/people/[id]` (owner-only;
+      all three answer 401 without the wristband), a fourth door on the
+      desk between Inbox and Settings, and `/dashboard/people`, the same
+      sheet over the desk the inbox is. Filing an address asks the journal
+      its keeper's name from the server (`/api/settings`, six seconds) and
+      files it either way; the answer says whether it was reached. The
+      face is `<their address>/api/portrait` in an `<img>`, never stored;
+      a journal with none keeps the plain mark. Re-adding is not an error.
+      A row: face, name, address, a visit arrow, Remove; the row opens
+      `/compare?with=`. Migration 007 applied to the live database when
+      the dev server started (the lock story is under Gotchas).
+- [x] **Ways in.** The field (a paste, or an address read aloud); Scan a
+      code, which opens the camera in the panel and reads with jsQR (both
+      inks, frames no wider than 640px, every 150 ms), taking a card's or
+      a cover's code down to its host; Add to address book on any inbox
+      submission or comment that carried a journal, reading In your
+      address book once it is. `tidyJournal` and `journalUrl` in
+      `return_address.js` are the one spelling and the one place the
+      scheme goes back on — checked against an entry link, a capitalised
+      host with a slash, a `?from=` leftover, `127.0.0.1:3000` and a bare
+      word. `localhost:3000` has no dot and is refused, as it always was.
+- [x] **Not seen, owner-only:** the door, the sheet, the list, the scanner
+      and the inbox's buttons are lint- and build-checked — every route
+      compiles, `/dashboard/people` and `/compare?with=` answer 200 — and
+      not looked at signed in. Miyel's look on the dev server is owed, and
+      the real-phone list is in Pending.
 
 **2026-09-12 — tap a cover for its code, branch `cover-code`, merged to
 main the same day as 1.2.0 (a new route and a migration: the middle
