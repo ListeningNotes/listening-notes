@@ -1215,7 +1215,23 @@ the heredoc early and mangle the file. Write to a temp file first.
 Scope the style another way.
 
 **Stale `globals.css` survives a plain dev-server restart.** Stop the server,
-`rm -rf .next`, then start it again. Restarting alone does nothing.
+`rm -rf .next`, then start it again. Restarting alone does nothing. **Still
+true of `base.css` in 2026-09**: three times in one day a rule added to it
+was in the file and not in the page, while edits to `entry.css` in the
+same minute went through. A selector you cannot find in
+`document.styleSheets` after an edit is this, not a typo.
+
+**sharp's png `effort` quietly makes a palette PNG.** It reads as a
+compression knob and is a quantiser: at `effort: 10` a 200 kB pressed
+picture came back at 65 kB with its pixels moved, which breaks the ink
+flip that makes the dark page's file. `compressionLevel: 9` with
+`adaptiveFiltering: true` is the lossless setting, and a fifth off is all
+lossless buys. Measured 2026-09-12; the round-trip check is in the press.
+
+**Safari gives an inline SVG the 150px default height when only its width
+is set.** Chrome derives the height from the viewBox; Safari does not, so a
+code sized by width alone drew small and centred on the phone and full
+size in the preview. Set the height too. 2026-09-12.
 
 **`perspective` promotes tiles into their own layers**, which then paint over
 fixed elements. Watch for it on the archive. The band behind a fixed top row
