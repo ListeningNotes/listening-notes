@@ -239,6 +239,21 @@ cannot be tested end to end.
       The test copy holds `checkout@v4` in its pasted workflow and main now
       has v5, so its next press should merge and report the file left
       alone.
+- [ ] **The version moves with the merge; a release announces it, by hand,
+      when there is something to tell a keeper.** Semantic versions from
+      2026-09-12, on Miyel's call (DECISIONS): a fix bumps the last number
+      (1.1.1), something new the middle (1.2.0), a change that asks
+      something of keepers the first (2.0.0) — in the same merge as the
+      change, so two copies made a day apart cannot share a number and
+      differ. Docs and the updater's own script need no bump. The desk's
+      line compares the latest public release with `package.json`, so
+      nothing reaches a keeper until `gh release create vX.Y.Z --target
+      main --title X.Y.Z --notes "…"` — notes written for keepers: new,
+      fixed, moved. Several versions can pass between releases; a high
+      middle number is a beta being built. The pitch pane's number links
+      to the releases list, never to a tag that may not exist yet. (An
+      earlier version of this item was lost in a NOTES edit on 2026-09-12
+      and rewritten.)
 - [ ] **June's copy needs the workflow file added once** (README, Updating).
       Copies deployed after this ships have it already. The one thing the
       scratch copy could not prove is Vercel building from the bot's push,
