@@ -241,15 +241,17 @@ cannot be tested end to end.
       GitHub CLI signed in here (`brew install gh && gh auth login`) so a
       private scratch copy can be made and run, or June pressing the
       button. No `gh` on this Mac as of 2026-09-11.
-- [ ] **Releases, by hand, on every meaningful push to main.** The desk's
-      line reads the latest public release and compares its tag with
+- [ ] **Releases, by hand, when there is something to tell a keeper.** The
+      desk's line reads the latest public release and compares its tag with
       `package.json`'s version. Semantic versions from 2026-09-12, on
-      Miyel's call: a fix bumps the last number (1.0.1), something new bumps
-      the middle (1.1.0), a change that asks something of keepers bumps the
-      first (2.0.0). Bump `package.json`, commit, then
-      `gh release create vX.Y.Z --target main --title X.Y.Z --notes "…"`.
-      The first release is `v1.0.0` (the date-style `v2026.9.11` was
-      deleted the same day, before any copy had read it).
+      Miyel's call (DECISIONS): a fix bumps the last number (1.1.1),
+      something new the middle (1.2.0), a change that asks something of
+      keepers the first (2.0.0). Several pushes can be one release; a high
+      middle number is a beta being built, not a problem. Bump
+      `package.json`, commit, then `gh release create vX.Y.Z --target main
+      --title X.Y.Z --notes "…"`. `v1.0.0` was the first (the date-style
+      `v2026.9.11` was deleted the same day, before any copy had read it);
+      `v1.1.0` the same day for the version on both panes.
 - [ ] **June's copy needs the workflow file added once** (README, Updating).
       Copies deployed after this ships have it already. The one thing the
       scratch copy could not prove is Vercel building from the bot's push,

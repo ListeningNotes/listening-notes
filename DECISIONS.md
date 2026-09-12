@@ -628,7 +628,14 @@ deploy button makes a copy, not a fork, so GitHub offers no sync; the
 `Update this copy` workflow merges upstream main and pushes, on the keeper's
 account, with the token every workflow gets — no terminal, no prerequisite.
 The logic is fetched from upstream each run, because GitHub will not let a
-workflow rewrite workflow files. A release is tagged on each meaningful push.
+workflow rewrite workflow files.
+
+**Versions are semantic, and a release is cut when there is something to
+tell a keeper, 2026-09-12.** A fix moves the last number, something new the
+middle, a change that asks something of keepers the first — which the
+additive-only schema exists to avoid. A release is what makes every desk
+say a newer version exists, so it is one interruption per thing worth
+saying, not one per push; fixes to a release stay on its last number.
 
 ---
 
