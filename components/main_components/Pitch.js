@@ -38,15 +38,12 @@
 const HOME = 'https://www.listeningnotes.blog/get';
 
 import WritingAccess from './WritingAccess';
-import pkg from '../../package.json';
-
 // The version this copy is running, beside the source line. A version used
 // to be ruled out here as a line that goes stale; releases keep it true now
 // (see the update button, DECISIONS), and it is the one number a keeper
 // needs when asking whether their copy has something. It links to what
-// that version contains.
-const VERSION = pkg.version;
-const RELEASE = `https://github.com/ListeningNotes/listening-notes/releases/tag/v${VERSION}`;
+// that version contains. The desk prints the same number for the owner.
+import { VERSION, RELEASE_URL } from '../../library/version';
 
 // Where this copy's source lives. §13 asks for the source of *the running
 // program*, which for a modified copy is that copy's own repository and not
@@ -104,7 +101,7 @@ export default function Pitch({ onSignedIn }) {
               Source
             </a>
             <span className="pt-colophon-dot" aria-hidden="true">·</span>
-            <a className="pt-source" href={RELEASE} target="_blank" rel="noopener noreferrer" title="What this version contains">
+            <a className="pt-source" href={RELEASE_URL} target="_blank" rel="noopener noreferrer" title="What this version contains">
               {VERSION}
             </a>
           </p>
