@@ -384,27 +384,40 @@
 .ln-cover--turnable { cursor: pointer; appearance: none; -webkit-appearance: none; color: inherit; font: inherit; }
 .ln-cover--turnable:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 3px; }
 .ln-cover--turnable > img { transition: opacity 0.26s ease; border-radius: inherit; }
-/* The art goes when the pressed picture shows: its light modules are holes
-   the page shows through, and a cover under them would show through too. */
+/* The art goes when a code shows: the light modules are holes the page
+   shows through, and a cover under them would show through too. */
 .ln-cover-art--off { opacity: 0; }
+/* While the press is in the air the art breathes, so the tap is seen to
+   have landed (review switch in FullPostPage, ?wait=pulse). */
+.ln-cover-art--pressing { animation: ln-breathe 1.3s ease-in-out infinite; }
 .ln-cover-code {
   position: absolute; inset: 0;
-  display: flex; align-items: center; justify-content: center;
+  border-radius: inherit;
+  color: var(--ink);
   opacity: 0; transition: opacity 0.26s ease; pointer-events: none;
 }
 .ln-cover-code--on { opacity: 1; }
-.ln-cover-code img, .ln-cover-code svg { display: block; width: 100%; height: auto; }
-/* The pressed picture is the code plus its quiet zone, and the code itself
-   is what takes the art's place — so the file is drawn oversize by the
-   share the margin is (set from the page, per address) and the margin hangs
-   off the edges, where the page is anyway. Smoothed, not pixelated: every
-   module carries a dot, and nearest-neighbour shrinking drops dots. */
-.ln-cover-code--photo img {
+/* Two pictures of one code, stacked and centred: the plain one the browser
+   draws at once and the pressed one from the server, each fading on its
+   own. Each is the code plus its quiet zone, and the code itself is what
+   takes the art's place — so both are drawn oversize by the share the
+   margin is (set from the page, per address) and the margin hangs off the
+   edges, where the page is anyway. Smoothed, not pixelated: every module
+   of the pressed picture carries a dot, and nearest-neighbour shrinking
+   drops dots. */
+.ln-cover-plain, .ln-cover-pressed {
+  position: absolute; left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
   width: calc(100% * var(--ln-code-span, 1));
+  height: auto;
   max-width: none;
-  flex-shrink: 0;
+  display: block;
+  opacity: 0; transition: opacity 0.26s ease;
   image-rendering: auto;
 }
+.ln-cover-plain--on, .ln-cover-pressed--on { opacity: 1; }
+.ln-cover--turnable:hover .ln-turn-badge { color: var(--ink); }
+.ln-cover--bare .ln-turn-badge { left: -6px; bottom: -6px; }
 /* Showing the pressed picture, the box stops being a box: no frame, no
    shadow, no rounded clip taking a bite out of the quiet zone. The border
    stays, transparent, so the box does not change size. After the phone's
@@ -424,7 +437,7 @@
    takes less than a module off the corner of an 18px margin. */
 @media (min-width: 769px) {
   .ln-hero .ln-cover-code { background: var(--bg); }
-  .ln-hero .ln-cover-code--photo img { width: 100%; }
+  .ln-hero .ln-cover-plain, .ln-hero .ln-cover-pressed { width: 100%; }
 }
 /* Dashed, and only here: it is the one border on the page that means
    "this is not finished with", which is the whole of what edit mode is. */
