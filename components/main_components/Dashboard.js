@@ -22,6 +22,7 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Headphones, Envelope, GearSix } from '@phosphor-icons/react';
+import { VERSION, RELEASE_URL } from '../../library/version';
 
 // Everything but the first: messages, which are what you open the journal to
 // check, and the machinery.
@@ -92,14 +93,24 @@ export default function Dashboard({ waiting }) {
           ))}
         </div>
 
-        {/* The one line on the site that is about the software rather than
-            the journal. Quiet, under the doors, and absent entirely until
-            there is something to say. */}
-        {update && (
-          <a className="db-update" href={update.page} target="_blank" rel="noopener noreferrer">
-            A newer version is available &#8599;
+        {/* The one line on the desk that is about the software rather than
+            the journal: which version this is, and — only when it is true —
+            that there is a newer one. The same number the pitch pane shows
+            a visitor beside Source; no Source here, because §13 is owed to
+            visitors and the owner already has the code. */}
+        <p className="db-colophon">
+          <a className="pt-source" href={RELEASE_URL} target="_blank" rel="noopener noreferrer" title="What this version contains">
+            {VERSION}
           </a>
-        )}
+          {update && (
+            <>
+              <span className="pt-colophon-dot" aria-hidden="true">·</span>
+              <a className="db-update" href={update.page} target="_blank" rel="noopener noreferrer">
+                A newer version is available &#8599;
+              </a>
+            </>
+          )}
+        </p>
       </div>
     </div>
   );
