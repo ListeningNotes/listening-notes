@@ -191,13 +191,8 @@ cannot be tested end to end.
       the field that opens under the key on the pitch pane: does it offer to
       save at setup and fill here? The markup is the one PasswordGate has
       always had; only the container changed.
-- [ ] **The entry QR for album covers is now buildable.** All 39 covers on
-      this journal pass the dot press at the smallest dot (they passed 21 of
-      39 in the old style on the most lenient judge). Covers can only be
-      pressed on the server — iTunes sends no CORS headers — which is where
-      the press now lives; `buildPortraitCode` takes any picture. Still
-      parked (DECISIONS), but the second tier it was waiting on is no longer
-      a common outcome.
+- [x] **The entry QR for album covers is now buildable.** Built 2026-09-12
+      on branch `cover-code` — see Complete.
 - [ ] **The press on Vercel is untested.** It works on the dev server. On
       Vercel what is unproved is that sharp's binary ships with the function
       (it is Next's own dependency, so it should) and the cold start. First
@@ -217,6 +212,41 @@ cannot be tested end to end.
       Needs the address book, still parked. Entries would then arrive from a
       send that carried a URL, a scanned code, or an Add press; a paste
       field is the last resort.
+- [ ] **The cover's code on a real phone, 2026-09-12.** Built in the
+      Claude browser. On the phone: tap a cover, scan the code with the
+      camera from the light and the dark page, paste what was copied into
+      Notes, tap again to turn it back, and swipe to the next record to see
+      it arrive on its cover. On a desk: the thumbnail grows to 220px and
+      the title moves over. **The Copied pill needs https or localhost:**
+      a browser refuses the clipboard on plain http, so on the phone over
+      the network address (`http://192.168…:3000`) neither the cover nor
+      the card copies anything — the live site does.
+- [ ] **The portrait re-presses itself on the next signed-in visit**, build
+      6 (ten pixels a module, adaptive PNG): the stored code goes from
+      180 kB to about 96 kB, which is the settings row shrinking by half
+      of what the 310 kB scare was about. Nothing to do; read the
+      `[portrait code]` line in the log once.
+- [ ] **Names to confirm, 2026-09-12** — autonomous session, rename freely
+      (`CodeSlot` itself was Miyel's pick): branch `cover-code`; the column
+      `entries.cover_code` and its stamp
+      `b=<build>&d=<dot>&a=<fingerprint>` (migration 006); `GET
+      /api/entries/[slug]/code?theme=`; `pressCoverCode` and `entryAddress`
+      in `library/cover_code.js`; `library/code_shape.js` (`CODE_QUIET`,
+      `LEAST_VERSION`); `components/main_components/AddressCode.js` (moved
+      out of the card); the `cover` door in `doorman.js`; `.ln-copied` in
+      base.css (was `.idc-copied`); in FullPostPage `turnCover`, `coverCode`,
+      `codeFor` (which record the state belongs to), `coverSlot`,
+      `COVER_LABELS`, `artMark`, `HERO_COVER_CODE`; in CodeSlot `picture`,
+      `codeSrc`, `turned`/`onTurn`, `turnable`, `backGlyph`, `labels`,
+      `codeState` ('pressing' | 'pressed' | 'plain'), `asked`, `spanOf`,
+      `COPIED_MS`; `.ln-slot`, `.ln-slot--turnable`, `.ln-slot--bare`,
+      `.ln-slot-picture(--off, --pressing)`, `.ln-slot-code`,
+      `.ln-slot-plain`, `.ln-slot-pressed` and `.ln-turn-badge` in base.css
+      (the last was the card's `.idc-portrait-badge`); `AddressCode`'s
+      `level`, `least`, `ink` and `paper` props;
+      in entry.css `.ln-cover--turnable`, `.ln-cover--bare`,
+      the `--ln-code-span` property; the `dot` argument to
+      `buildPortraitCode` and `codeFor` in the press.
 - [ ] **Names to confirm, 2026-09-11** — the press: `POST /api/portrait/code`;
       `pressStoredPortraitCode`, `buildPortraitCode({ url, portrait,
       position })`, `flipInk`, `darkPageCode` and `isCurrentCode` in
@@ -482,12 +512,9 @@ question for the phone.
       writes it. Put either back by restoring its Section in
       `app/settings/page.js` (git has the version).
 
-- [ ] **Tap-to-QR on album art.** Tapping the art swaps it for a QR of that entry's URL and silently copies the link. It needs a brief "link copied" line: a clipboard write with no feedback reads as broken.
-
-      The previous attempt worked and was sluggish, because verification ran on mount. Three things fix it when it comes back:
-      - Build on tap, not on mount.
-      - Cache the winning QR version and tonal band on the entry, so later builds skip decoding entirely.
-      - Do it server-side. iTunes sends no CORS headers, so a browser canvas cannot read album art pixels at all.
+- [x] **Tap-to-QR on album art.** Built 2026-09-12 on branch `cover-code`,
+      all three fixes as listed: on tap, the dot cached on the row, pressed
+      on the server. See Complete.
 
 **STILL WANTED ON THE CROSS** — asked for 2026-08-29, not started
 
@@ -528,8 +555,9 @@ question for the phone.
 - [x] **The pin moves to the card** — recorded settled in DECISIONS (2026-08-28); ticked 2026-09-07. A search over the owner's own entries
       in a bottom sheet, and the entry editor loses its pin entirely. See
       DECISIONS for the trade this accepts.
-- [ ] **Copy link / QR at the foot of an entry**, for anyone — the other half
-      of the split that puts the printer in the header.
+- [x] **Copy link / QR at the foot of an entry**, for anyone — the other half
+      of the split that puts the printer in the header. Landed on the cover
+      rather than the foot, 2026-09-12: the tap is both. See Complete.
 
 Per-track stamps need no column: they ride inside the `tracks` jsonb, which
 already exists.
@@ -1290,6 +1318,85 @@ current.
 ---
 
 ## Complete
+
+**2026-09-12 — tap a cover for its code, branch `cover-code`, merged to
+main the same day as 1.2.0 (a new route and a migration: the middle
+number); not yet pushed or released**
+
+- [x] **The gesture.** On an entry, outside a correction, the art is a
+      button: press it and it turns into the code for that entry's address,
+      the address goes on the clipboard, and the Copied pill says so — only
+      on the way to the code, never on the way back. For anyone. The same
+      cross-fade the card uses, the same dot treatment, the frame coming off
+      the box so the quiet zone hangs onto the page. On a desk the thumbnail
+      grows to 220px while the code shows (a 110px code is too fine to point
+      a phone at) and sits on a plate of page colour over the blurred hero.
+      The session preview has no address and no tap; a correction keeps the
+      cover as its own control.
+- [x] **Where the portrait's code lives, and why the cover's does not.** The
+      brief's first question: the portrait's code is a row —
+      `settings.portrait_code`, base64, ~150 kB, served by `/api/portrait`.
+      The cover's is never stored: `GET /api/entries/[slug]/code` fetches
+      the art from Apple (the browser cannot read it), presses it, proves it
+      by jsQR on both pages at three sizes, and answers a PNG cached for a
+      day. The row keeps `cover_code` — `b=5&d=0.3&a=9801c63c`, the build,
+      the dot, and a fingerprint of the address and art — so every press
+      after the first composes at the proved dot and skips the judging.
+- [x] **Measured.** Full press on a real cover: fetch 200–300 ms, press and
+      judge 210–270 ms, PNG 207–360 kB. With the stamp: "Redrawn … (0.0s)".
+      `pg_column_size` on the Cathedral row: 5,288 bytes before the first
+      tap, 5,309 after — the 21-byte stamp; journal total 321,040 → 321,061.
+      All 39 covers passed the dot press at the smallest dot on 2026-09-11.
+- [x] **The wait, and the file, second pass the same day.** The first tap
+      on an entry felt like nothing happened: the cover stayed put for the
+      half second the press took. Now the plain code is drawn in the
+      browser the instant the cover is pressed — on the press's own grid
+      (level H, floor 4, `AddressCode` takes `level` and `least`), bare, in
+      the page's ink — and the pressed picture fades in over it, so the
+      photograph develops inside the modules — and Miyel chose the other
+      answer the same evening: the art pulses until the picture lands, and
+      the plain code is kept only for a press that cannot be had (its
+      first showing on her phone was too small: Safari gave the inline SVG
+      its 150px default height, fixed with an explicit height). The switch
+      that held both is gone; DECISIONS has the call. The corner badge
+      from the card (code glyph, then a record glyph) says the cover
+      turns. The file: swept every cover at 8, 10 and 12 pixels a module —
+      at 8 two covers failed and seven needed larger dots; at 10 all 39 read
+      at the smallest dot — and four PNG settings: the adaptive filter is
+      lossless and takes a fifth off; sharp's `effort` quietly makes a
+      palette PNG that halves the file and moves the pixels, ruled out.
+      Ten a module plus the filter: covers average 118 kB (was 185), the
+      largest 269 (was 404), the portrait 96 (was 180). Build 6.
+- [x] **The press picks its version.** It was fixed at version 4, whose
+      34-byte capacity holds a journal's address and not an entry's (49 to
+      93 characters on this journal: versions 6 to 10). The version now
+      follows the data with 4 as the floor, and the alignment targets come
+      from the encoder's own table (`qrcode/lib/core/alignment-pattern`) —
+      six of them from version 7. The portrait's picture is unchanged, so
+      the build stamp stayed at 5.
+- [x] **Shared pieces.** The plain code moved out of the card into
+      `AddressCode.js` and stands in on the entry when the press cannot be
+      had (proved by breaking the picture's address: the plain code drew,
+      framed). The Copied pill is `.ln-copied` in base.css, one definition
+      for the card and the cover. The two numbers both sides size a code by
+      are in `library/code_shape.js`.
+- [x] **CodeSlot, on Miyel's call the same evening.** The turn was written
+      twice — three times with the entry's desk-sized hero — and the copies
+      had already drifted (two hold times for the pill). One component now:
+      `components/main_components/CodeSlot.js` owns the two faces and their
+      fade, the copy and its pill, the corner mark, the frame coming off,
+      and the wait (the picture breathes until the pressed one lands; a
+      plain code stands in when none can be had). The card and the cover
+      hand it a picture, an address, the pressed picture's source and
+      which face is up, and keep their own — the card its editor, the
+      cover its growing desk box. Styles are `.ln-slot-*` in base.css;
+      `.idc-face-slot`, `.idc-qr` and `.idc-portrait--bare` are gone from
+      idcard.css and the `.ln-cover-*` slot rules from entry.css. One
+      visible consequence: the card's plain code (no portrait yet, or a
+      press that failed) is now drawn the cover's way — bare, in the page's
+      ink, on the press's grid — where it had a beige plate and a frame.
+- [x] **Lint clean, build passes.** Migration 006 applied against the shared
+      database from the dev server.
 
 **2026-09-11 — one button to update a copy, branch `one-button-update`,
 not merged**

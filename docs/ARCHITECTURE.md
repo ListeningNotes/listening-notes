@@ -83,6 +83,8 @@ The library — logic, no visuals
     music_data_api.js          Fetches album art and tracklists from iTunes
     card_links.js              The marks a card can wear — which shape stands for the rig, which logo a link gets
     portrait_code.js           The press: the portrait made into the journal's QR code on the server — a dot of ink in every photo module, proved by the strictest reader on both page colours
+    cover_code.js              The same press for an entry's cover: the code for that entry's address, redrawn from the art on each ask, with only the proved dot kept on the row
+    code_shape.js              Two numbers about a code's shape — the quiet zone and the least version — read by the press and by the browser that sizes its picture
     session_timers.js          Track length display (m:ss)
     wristband.js               Session auth — issues and checks the JWT cookie
     secrets.js                 The vault: the keys, the password hash, the session secret, the claim code. Database first, environment second
@@ -99,6 +101,7 @@ The front doors — receive requests, hand them off, send back responses
   app/api/
     entries/route.js           Load all entries / save a new one
     entries/[slug]/route.js    Load, edit, or delete one specific entry
+    entries/[slug]/code/route.js  GET: the entry's code, pressed out of its cover — public, rate-limited, cached a day
     comments/route.js          Load or submit comments
     comments/upvote/route.js   Upvote a comment
     research/route.js          Ask Claude to research an album
@@ -128,6 +131,8 @@ The furniture — visual pieces
       Journal.js               The wall of covers, with its search, filters and sort
       JournalFilters.js        The filter sheet — a popover on a desk, a pull-down sheet on a phone — and the year range
       AlbumTile.js             One cover on that wall
+      CodeSlot.js              A square that holds a picture and turns into that picture's code — the card's portrait and an entry's cover: the two faces, the copy and its pill, the corner mark, the wait
+      AddressCode.js           A plain code for an address, drawn in the browser — what CodeSlot shows when no pressed picture can be had
       Dashboard.js             The right pane, for the owner — Listen, Inbox, Settings
       Pitch.js                 The right pane, for everybody else
       KeeperTools.js           The owner's pencil and printer
@@ -222,6 +227,7 @@ The rooms — full pages assembled from furniture
 | The row of recent covers under the beacon | components/main_components/HomeNav.js, recentRow |
 | The entry that opens over the wall, and swiping between entries | components/main_components/LayerEntry.js, library/handoff.js and app/@layer/ |
 | The full entry post page | app/entries/[slug]/FullPostPage.js |
+| A picture turning into its code (the portrait, a cover) | components/main_components/CodeSlot.js, styles under .ln-slot in app/styles/base.css |
 | The album picker | components/session_components/AlbumPicker.js |
 | The note-taking session | app/session/page.js, styles in app/styles/session.css |
 | The header above every session screen | components/session_components/SessionHeader.js |
@@ -260,7 +266,7 @@ than what anyone remembers building.
 
 | Table | What it holds |
 |---|---|
-| `entries` | The journal. One row per listen — an album listened to twice is two entries, never an overwrite. `posted_at` is when, with its zone; `created_at` is the older naive stamp, kept and unread. |
+| `entries` | The journal. One row per listen — an album listened to twice is two entries, never an overwrite. `posted_at` is when, with its zone; `created_at` is the older naive stamp, kept and unread. `cover_code` is the dot that carried the cover into its code, stamped on the first tap — never the picture. |
 | `settings` | Everything that makes a copy someone's own: the keeper, the portrait, the links, the rig, the starting theme. Exactly one row, forced by a check on `id`. |
 | `secrets` | What must never reach a visitor: the session secret, the password hash, the claim code, the two API keys. One row; read only by `library/secrets.js`. |
 | `users` | The owner. One row, written at setup. |

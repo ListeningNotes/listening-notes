@@ -239,6 +239,132 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 }
 .ln-tile:hover { border-color: var(--ink-faint); transform: translateY(-2px); }
 
+/* ── .ln-copied — "Copied — paste it anywhere" ─────────────────────────────
+   Said over the picture that was just turned into a code: a pill in the
+   middle of it that rises for a moment and fades. The card's portrait and
+   the entry's cover both say it, so it is one definition (it was the card's
+   alone, as .idc-copied, until 2026-09-12). Absolute inside the box, so
+   nothing under it moves; no pointer events, so a second press still turns
+   the picture back. The component holds it 1.8s (2.6 until 2026-09-12,
+   on Miyel's call: a bit shorter); this is the fade either
+   way. */
+.ln-copied {
+  position: absolute; left: 50%; top: 50%;
+  transform: translate(-50%, -50%) translateY(8px);
+  padding: 9px 15px; border-radius: 999px;
+  background: var(--bg); color: var(--ink);
+  border: 1px solid var(--border);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
+  font-family: var(--font-label);
+  font-size: 9.5px; letter-spacing: 0.12em; text-transform: uppercase;
+  white-space: nowrap;
+  opacity: 0; pointer-events: none;
+  transition: opacity 0.22s ease, transform 0.22s ease;
+  z-index: 2;
+}
+.ln-copied--on { opacity: 1; transform: translate(-50%, -50%); }
+
+/* ── .ln-turn-badge — the mark that says a picture turns ──────────────────
+   A small tile in the bottom-left corner of a picture that becomes a code
+   when pressed: a code glyph on the picture, and on the code the glyph for
+   what it turns back into. The card's portrait and the entry's cover both
+   wear it (it was the card's alone, as .idc-portrait-badge, until
+   2026-09-12). Bottom-left because that corner is nearly always the
+   quietest part of a photograph of a person. Once the picture is bare —
+   the code with the page showing through — it steps just off the corner,
+   on a tile of page colour, because there is no plate left to sit on. */
+.ln-turn-badge {
+  position: absolute; left: 7px; bottom: 7px;
+  display: flex; align-items: center; justify-content: center;
+  width: 21px; height: 21px; border-radius: 7px;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  color: var(--ink-faint);
+  transition: color 0.15s;
+  z-index: 1;
+}
+.ln-turn-badge--drop { left: auto; right: 7px; cursor: pointer; }
+
+/* ── .ln-slot — a picture that turns into its code (CodeSlot.js) ──────────
+   The card's portrait and the entry's cover. The box's own size, frame and
+   radius come from the surface (.idc-portrait, .ln-screen-one-art, the
+   hero's inline style); these are the two faces inside it, stacked and
+   cross-faded — not rotated: the card's box already lives inside a sheet
+   that turns, and nesting one 3D transform in another is where browsers
+   disagree. */
+.ln-slot { position: relative; }
+.ln-slot--turnable {
+  cursor: pointer; padding: 0; background: transparent;
+  appearance: none; -webkit-appearance: none; color: inherit; font: inherit;
+}
+.ln-slot--turnable:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 3px; }
+.ln-slot--turnable:hover .ln-turn-badge { color: var(--ink); }
+.ln-slot-picture {
+  position: absolute; inset: 0;
+  border-radius: inherit; overflow: hidden;
+  transition: opacity 0.26s ease;
+}
+/* The picture goes when a code shows: the light modules are holes the page
+   shows through, and a picture under them would show through too. */
+.ln-slot-picture--off { opacity: 0; }
+/* While the pressed picture is on its way the picture breathes, so the tap
+   is seen to have landed and nothing else on screen changes until the
+   picture does. */
+.ln-slot-picture--pressing { animation: ln-breathe 1.3s ease-in-out infinite; }
+.ln-slot-code {
+  position: absolute; inset: 0;
+  border-radius: inherit;
+  color: var(--ink);
+  opacity: 0; transition: opacity 0.26s ease; pointer-events: none;
+}
+.ln-slot-code--on { opacity: 1; }
+/* Two pictures of one code, stacked and centred: the pressed one from the
+   server, and the plain one the browser draws when there is none, each
+   fading on its own. Each is the code plus its quiet zone, and the code
+   itself is what takes the picture's place — so both are drawn oversize by
+   the share the margin is (--ln-code-span, set per address by the
+   component) and the margin hangs off the edges, where the page is anyway.
+   Smoothed, not pixelated: every module of the pressed picture carries a
+   dot, and nearest-neighbour shrinking drops dots. The plain one is an
+   inline SVG, and Safari does not take an SVG's height from its width the
+   way it does an image's — so it is given one; the box is square. Two
+   classes deep on purpose: every surface sizes its own picture with a
+   rule like `.idc-portrait img { width: 100%; height: 100% }`, which
+   outranks a single class and would pull the code back to the box. */
+.ln-slot-code .ln-slot-plain, .ln-slot-code .ln-slot-pressed {
+  position: absolute; left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+  width: calc(100% * var(--ln-code-span, 1));
+  height: auto;
+  max-width: none;
+  display: block;
+  object-fit: fill;
+  opacity: 0; transition: opacity 0.26s ease;
+  image-rendering: auto;
+}
+.ln-slot-code .ln-slot-plain { height: calc(100% * var(--ln-code-span, 1)); }
+/* Two classes deep as well, or the sizing rule above would outrank this
+   and neither picture could ever fade in. */
+.ln-slot-code .ln-slot-plain--on, .ln-slot-code .ln-slot-pressed--on { opacity: 1; }
+/* Showing a code, the box stops being a box: no frame, no shadow, no
+   rounded clip taking a bite out of the quiet zone, no stock behind it —
+   the page is the background, which is the whole point of the alpha. The
+   border stays, transparent, so the box does not change size. Two classes,
+   so this outranks the surface's own single-class box rule whatever order
+   the stylesheets load in. */
+.ln-slot.ln-slot--bare {
+  border-color: transparent;
+  box-shadow: none;
+  border-radius: 0;
+  overflow: visible;
+  background: none;
+}
+.ln-slot--bare .ln-turn-badge { left: -6px; bottom: -6px; }
+
+@keyframes ln-breathe {
+  0%,100% { opacity:1; } 50% { opacity:0.6; }
+}
+
 /* ── .ln-xref — a mention that turned out to be something you've logged ───
    Applied at display time by library/cross_references.js, never stored in the
    note. It has to sit inside running prose without breaking the line up, so

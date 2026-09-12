@@ -554,64 +554,10 @@ a.ab-rig-name:hover { text-decoration: underline; }
   background: var(--bg-warm);
   box-shadow: 0 18px 44px rgba(0,0,0,0.16);
 }
-.idc-portrait--bare {
-  background: none;
-  box-shadow: none;
-  border-radius: 0;
-  overflow: visible;
-}
+/* Turning it, the two faces, the bare box while the code shows: CodeSlot
+   (base.css, .ln-slot-*) — the same square the entry's cover turns in. */
 .idc-portrait--turnable { cursor: pointer; }
-.idc-portrait--turnable:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 3px; }
 .idc-portrait img { width: 100%; height: 100%; object-fit: cover; display: block; }
-
-/* The two sides, stacked and cross-faded. Not a rotation: this box
-   already lives inside the sheet that turns the whole cover over, and
-   nesting one 3D transform in another is where browsers disagree. */
-.idc-face-slot {
-  position: absolute; inset: 0;
-  display: flex; align-items: center; justify-content: center;
-  opacity: 0; transition: opacity 0.26s ease; pointer-events: none;
-}
-.idc-face-slot--on { opacity: 1; }
-.idc-face-slot--code { background: #f5f4ef /* CODE_PAPER in IdentityCard.js */; }
-/* No plate under the photograph version — the page is the background,
-   which is the whole point of the alpha. A class rather than :has(),
-   because the build drops :has() rules without saying so. */
-.idc-face-slot--photo { background: none; }
-/* The mark that turns it back, kept legible against whatever the code
-   happens to be over — there is no plate under it any more to sit on. */
-.idc-portrait--bare .idc-portrait-badge {
-  left: -6px; bottom: -6px;
-  background: var(--bg);
-}
-/* Sized so the code itself fills the photograph's square, not so the
-   file does. The file is 41 modules across and only 33 of those are
-   code — the rest is the quiet zone, which is empty and has to stay
-   that way. Fitting the file to the box therefore drew the code at
-   four-fifths the size of the picture it replaced, and it is supposed
-   to take the picture's place exactly. So it is drawn 41/33 oversize
-   and the quiet zone hangs off the edges, where it is page anyway.
-   image-rendering keeps the module edges hard rather than resampled. */
-.idc-face-slot .idc-qr { width: 100%; height: auto; display: block; }
-
-/* After the rule above, deliberately. They have the same specificity,
-   so source order decides, and written before it this lost every time
-   and the code drew at four-fifths the size of the picture it replaces.
-   (No backticks in this stylesheet — it is a template literal and one
-   of those ends it mid-file. Twice today.) */
-.idc-face-slot .idc-qr--photo {
-  width: calc(100% * 41 / 33);
-  height: auto;
-  display: block;
-  /* A flex item in a box narrower than it wants to be shrinks back to
-     the box, which undoes the oversize entirely. */
-  flex-shrink: 0;
-  max-width: none;
-  /* Smoothed, not pixelated, 2026-09-11: the picture carries a dot in
-     every module now, and nearest-neighbour shrinking drops dots. A lens
-     blurs; so does this. */
-  image-rendering: auto;
-}
 
 /* No portrait set. Registration corners rather than a grey box with a
    person-shaped icon in it — a frame waiting for a photo should look
@@ -625,21 +571,8 @@ a.ab-rig-name:hover { text-decoration: underline; }
 .idc-portrait-empty::before { top: 10px; left: 10px; border-right: 0; border-bottom: 0; }
 .idc-portrait-empty::after  { bottom: 10px; right: 10px; border-left: 0; border-top: 0; }
 
-/* Bottom-left. It sat bottom-right, which on a portrait is usually
-   somebody's shoulder and often their chin — the eye goes to a face
-   and the chip was landing on it. The left corner of a photograph of a
-   person is nearly always the quietest part of the frame. */
-.idc-portrait-badge {
-  position: absolute; left: 7px; bottom: 7px;
-  display: flex; align-items: center; justify-content: center;
-  width: 21px; height: 21px; border-radius: 7px;
-  background: var(--bg);
-  border: 1px solid var(--idc-rule);
-  color: var(--ink-faint);
-  transition: color 0.15s;
-}
-.idc-portrait--turnable:hover .idc-portrait-badge { color: var(--ink); }
-.idc-portrait-badge--drop { left: auto; right: 7px; cursor: pointer; }
+/* The corner mark is .ln-turn-badge, in base.css: the entry's cover wears
+   it too. */
 
 .idc-portrait-hit {
   position: absolute; inset: 0;
@@ -653,26 +586,9 @@ a.ab-rig-name:hover { text-decoration: underline; }
    rest. A backtick in this comment would end the stylesheet, which is
    a thing this file has learned once already. */
 .idc-file { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
-.idc-file:focus-visible + .idc-portrait-badge { outline: 2px solid var(--ink-faint); outline-offset: 2px; }
-/* The copy, said over the code: a pill in the middle of the picture that
-   rises for a moment and fades (2026-09-11; it was a faint line under the
-   slot, and nobody saw it). Absolute inside the slot, so the name below
-   never moves; no pointer events, so a second press still turns the card
-   back. IdentityCard.js holds it 2.6s; this is the fade either way. */
-.idc-copied {
-  position: absolute; left: 50%; top: 50%;
-  transform: translate(-50%, -50%) translateY(8px);
-  padding: 9px 15px; border-radius: 999px;
-  background: var(--bg); color: var(--ink);
-  border: 1px solid var(--border);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.2);
-  font-family: var(--font-label);
-  font-size: 9.5px; letter-spacing: 0.12em; text-transform: uppercase;
-  white-space: nowrap;
-  opacity: 0; pointer-events: none;
-  transition: opacity 0.22s ease, transform 0.22s ease;
-}
-.idc-copied--on { opacity: 1; transform: translate(-50%, -50%); }
+.idc-file:focus-visible + .ln-turn-badge { outline: 2px solid var(--ink-faint); outline-offset: 2px; }
+/* The copy, said over the code — .ln-copied, in base.css: the entry's
+   cover says it too. */
 
 .idc-portrait-said {
   font-family: var(--font-label);
