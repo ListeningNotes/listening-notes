@@ -212,17 +212,6 @@ cannot be tested end to end.
       Needs the address book, still parked. Entries would then arrive from a
       send that carried a URL, a scanned code, or an Add press; a paste
       field is the last resort.
-- [ ] **Choose the wait, then remove the switch, 2026-09-12.** Two answers
-      to the moment between the tap and the pressed picture arriving, both
-      built, one to keep: the art pulsing until the picture lands (the
-      default for now, so it shows from the home-screen app), or the plain
-      code drawn at once with the photograph developing inside it
-      (`?wait=plain` on any entry). `pulseWait` in FullPostPage and
-      `.ln-cover-art--pressing` in entry.css are the switch; whichever
-      loses comes out with them. Miyel's first look at the plain one on
-      her phone: too small — Safari gave the inline SVG its 150px default
-      height; fixed with an explicit height the same day, unseen by her
-      since.
 - [ ] **The cover's code on a real phone, 2026-09-12.** Built in the
       Claude browser. On the phone: tap a cover, scan the code with the
       camera from the light and the dark page, paste what was copied into
@@ -1343,9 +1332,13 @@ current.
       browser the instant the cover is pressed — on the press's own grid
       (level H, floor 4, `AddressCode` takes `level` and `least`), bare, in
       the page's ink — and the pressed picture fades in over it, so the
-      photograph develops inside the modules. The art-pulsing alternative
-      is behind `?wait=pulse` until one is chosen (Pending). The corner
-      badge from the card (code glyph, then a record glyph) says the cover
+      photograph develops inside the modules — and Miyel chose the other
+      answer the same evening: the art pulses until the picture lands, and
+      the plain code is kept only for a press that cannot be had (its
+      first showing on her phone was too small: Safari gave the inline SVG
+      its 150px default height, fixed with an explicit height). The switch
+      that held both is gone; DECISIONS has the call. The corner badge
+      from the card (code glyph, then a record glyph) says the cover
       turns. The file: swept every cover at 8, 10 and 12 pixels a module —
       at 8 two covers failed and seven needed larger dots; at 10 all 39 read
       at the smallest dot — and four PNG settings: the adaptive filter is

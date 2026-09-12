@@ -142,10 +142,10 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   // The picture is pressed on the server the first time it is asked for
   // (app/api/entries/[slug]/code) and never on entry save: most entries are
   // never tapped, and Apple's art cannot be read in a browser anyway. Until
-  // it arrives the cover stays and the Copied line already says the press
-  // did something; if the press cannot be had — the server's reader refused
-  // the picture, or the press faulted — a plain code stands in, a worse
-  // picture and a working one.
+  // it arrives the cover breathes and the Copied line already says the
+  // press did something; if the press cannot be had — the server's reader
+  // refused the picture, or the press faulted — a plain code stands in, a
+  // worse picture and a working one.
   const { site_address } = useBookplate();
   const { theme } = useTheme();
   const host = tidyAddress(site_address);
@@ -154,15 +154,6 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   const [coverCode, setCoverCode] = useState(false);       // showing the code
   const [codeAsked, setCodeAsked] = useState(false);       // the press has been asked for
   const [codeState, setCodeState] = useState('waiting');   // 'waiting' | 'ready' | 'failed'
-  // ── REVIEW SWITCH, 2026-09-12, to be removed once one is chosen ──────────
-  // Two answers to the moment between the tap and the picture arriving:
-  // the art pulsing until the picture lands (the default for now, so it
-  // can be seen from a home screen with no address bar), or the plain code
-  // drawn at once with the picture developing inside it (?wait=plain).
-  const [pulseWait, setPulseWait] = useState(true);
-  useEffect(() => {
-    setPulseWait(new URLSearchParams(window.location.search).get('wait') !== 'plain');
-  }, []);
   // On the layer a swipe brings the next record into this same component, and
   // a record arrives on its cover, not on the last one's code.
   const [codeFor, setCodeFor] = useState(entry.slug);
@@ -213,21 +204,21 @@ export default function FullPostPage({ entry, references = [], authed = false, l
       return 1;
     }
   }, [entryUrl]);
-  // Two pictures of the same code, stacked: the plain one the browser draws
-  // at once, and the pressed one that arrives from the server. Both are the
-  // same grid — same encoder, same level, same floor — so when the pressed
-  // picture fades in over the plain one the photograph develops inside the
-  // modules rather than a second code replacing the first. The plain one is
-  // bare, in the page's ink, and stays as the answer if the press fails.
+  // While the press is in the air the art breathes, so the tap is seen to
+  // have landed without anything else changing on screen; the pressed
+  // picture then fades in over it. Miyel's call, 2026-09-12, over the plain
+  // code drawn at once with the picture developing inside it — that gave the
+  // tap an instant answer, but it was a second picture replacing the first.
+  // The plain code is kept for one case: the press could not be had, and
+  // something scannable still has to ship. It is drawn on the press's own
+  // grid — same encoder, same level, same floor — bare, in the page's ink.
   const photoOn = coverCode && codeState === 'ready';
-  const plainOn = coverCode && (pulseWait ? codeState === 'failed' : codeState !== 'ready');
+  const plainOn = coverCode && codeState === 'failed';
   const showingCode = photoOn || plainOn;
   // Neither picture has a plate behind it — the page shows through the light
   // modules — so the frame comes off the box while either is showing.
   const coverBare = showingCode;
-  // The pulse: the art breathing while the press is in the air (review
-  // switch, above).
-  const pressing = pulseWait && coverCode && codeState === 'waiting';
+  const pressing = coverCode && codeState === 'waiting';
   const coverFace = codeAsked && (
     <span
       className={'ln-cover-code' + (showingCode ? ' ln-cover-code--on' : '')}

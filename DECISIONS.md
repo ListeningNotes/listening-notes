@@ -474,12 +474,14 @@ code is the only form the address takes, and that is the argument for it
 being on every entry rather than card-only. The code encodes the entry's
 address, never the journal's.
 
-**Something scannable is on screen the instant a picture is pressed,
+**While the press is in the air the art breathes, on Miyel's call,
 2026-09-12.** The pressed picture takes half a second to arrive, and a
 cover that stays put for half a second reads as a button that did nothing
-— the clipboard rule again. So the plain code is drawn in the browser on
-the tap, on the press's own grid, and the photograph develops inside it
-when it lands. A wait with nothing to scan is never the answer.
+— the clipboard rule again. Tried the same day and not kept: the plain
+code drawn at once, with the photograph developing inside it. It answered
+the tap instantly, but it was a second picture replacing the first. The
+pulse says the press landed without changing what is on screen; the plain
+code stands in only when the press cannot be had.
 
 **The cover's code is pressed on request and never stored; the row keeps
 only the dot, 2026-09-12.** A pressed cover is 200–360 kB, and one per entry

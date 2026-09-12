@@ -388,7 +388,7 @@
    shows through, and a cover under them would show through too. */
 .ln-cover-art--off { opacity: 0; }
 /* While the press is in the air the art breathes, so the tap is seen to
-   have landed (review switch in FullPostPage, ?wait=pulse). */
+   have landed and nothing else on screen changes until the picture does. */
 .ln-cover-art--pressing { animation: ln-breathe 1.3s ease-in-out infinite; }
 .ln-cover-code {
   position: absolute; inset: 0;
@@ -397,14 +397,14 @@
   opacity: 0; transition: opacity 0.26s ease; pointer-events: none;
 }
 .ln-cover-code--on { opacity: 1; }
-/* Two pictures of one code, stacked and centred: the plain one the browser
-   draws at once and the pressed one from the server, each fading on its
-   own. Each is the code plus its quiet zone, and the code itself is what
-   takes the art's place — so both are drawn oversize by the share the
-   margin is (set from the page, per address) and the margin hangs off the
-   edges, where the page is anyway. Smoothed, not pixelated: every module
-   of the pressed picture carries a dot, and nearest-neighbour shrinking
-   drops dots. */
+/* Two pictures of one code, stacked and centred: the pressed one from the
+   server, and the plain one the browser draws when the press cannot be
+   had, each fading on its own. Each is the code plus its quiet zone, and
+   the code itself is what takes the art's place — so both are drawn
+   oversize by the share the margin is (set from the page, per address)
+   and the margin hangs off the edges, where the page is anyway. Smoothed,
+   not pixelated: every module of the pressed picture carries a dot, and
+   nearest-neighbour shrinking drops dots. */
 .ln-cover-plain, .ln-cover-pressed {
   position: absolute; left: 50%; top: 50%;
   transform: translate(-50%, -50%);
