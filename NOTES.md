@@ -193,11 +193,13 @@ cannot be tested end to end.
       always had; only the container changed.
 - [x] **The entry QR for album covers is now buildable.** Built 2026-09-12
       on branch `cover-code` — see Complete.
-- [ ] **The press on Vercel is untested.** It works on the dev server. On
-      Vercel what is unproved is that sharp's binary ships with the function
-      (it is Next's own dependency, so it should) and the cold start. First
-      deploy: open the journal signed in and read the function log for
-      `[portrait code]`.
+- [x] **The press on Vercel is untested.** Proved 2026-09-12 by the first
+      deploy of 1.2.0: the public cover route answered a minute after the
+      push — the light page's file in 1.2 s cold, the dark page's in 1.1 s,
+      144 and 156 kB, 490 px — and the dark file decoded on a Mac with jsQR
+      to the entry's address. So sharp ships with the function and a cold
+      press is about a second. Still owed: the portrait's own re-press on
+      Miyel's next signed-in visit (below).
 - [ ] **Miyel's old picture is in the 2026-09-10-0315 backup** (iCloud,
       `settings.json`, framed 36.6%, the photograph carrying the code alone,
       built by Apple's reader). Superseded by the dot style on her call;
