@@ -11,4 +11,8 @@
 import pkg from '../package.json';
 
 export const VERSION = pkg.version;
-export const RELEASE_URL = `https://github.com/ListeningNotes/listening-notes/releases/tag/v${VERSION}`;
+// The releases list, newest first, rather than this version's own page: the
+// number moves with the merge that earns it and the release that announces
+// it may come days later, so a link to the exact tag would be dead in the
+// gap. The list never is.
+export const RELEASE_URL = 'https://github.com/ListeningNotes/listening-notes/releases';

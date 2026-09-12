@@ -630,12 +630,12 @@ account, with the token every workflow gets — no terminal, no prerequisite.
 The logic is fetched from upstream each run, because GitHub will not let a
 workflow rewrite workflow files.
 
-**Versions are semantic, and a release is cut when there is something to
-tell a keeper, 2026-09-12.** A fix moves the last number, something new the
-middle, a change that asks something of keepers the first — which the
-additive-only schema exists to avoid. A release is what makes every desk
-say a newer version exists, so it is one interruption per thing worth
-saying, not one per push; fixes to a release stay on its last number.
+**The version moves with the merge; the release announces it,
+2026-09-12.** A fix moves the last number, something new the middle, a change
+that asks something of keepers the first — bumped in the same merge, so a
+copy deployed from main shows a number that is true of its code. A release
+is cut when there is something to tell a keeper: it is what makes every desk
+say a newer version exists, one interruption per thing worth saying.
 
 ---
 
