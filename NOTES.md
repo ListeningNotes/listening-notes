@@ -1408,8 +1408,11 @@ brief: the address book, the feed, and where compare lives**
       no scheme, host only), name, added_at — `library/people_actions.js`,
       `GET`/`POST /api/people` and `DELETE /api/people/[id]` (owner-only;
       all three answer 401 without the wristband), a fourth door on the
-      desk between Inbox and Settings, and `/dashboard/people`, the same
-      sheet over the desk the inbox is. Filing an address asks the journal
+      desk between Inbox and Settings — and the three doors went into one
+      row under the square, wider than it, on Miyel's call the same
+      evening: stacked at the square's width the third made a tower with
+      the weight at the bottom (nav.css has the shapes tried before) —
+      and `/dashboard/people`, the same sheet over the desk the inbox is. Filing an address asks the journal
       its keeper's name from the server (`/api/settings`, six seconds) and
       files it either way; the answer says whether it was reached. The
       face is `<their address>/api/portrait` in an `<img>`, never stored;
