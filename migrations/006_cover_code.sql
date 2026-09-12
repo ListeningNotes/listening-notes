@@ -1,0 +1,20 @@
+-- Copyright (C) 2026 Miyel Brown
+-- SPDX-License-Identifier: AGPL-3.0-or-later
+-- migrations/006_cover_code.sql
+--
+-- What carried an entry's cover into its code. Tapping the art on an entry
+-- turns it into a scannable code for that entry's address, pressed on the
+-- server out of the album art the same way the card's portrait is
+-- (library/portrait_code.js). The picture is never stored — a pressed cover
+-- is two to four hundred kilobytes, and one per entry would grow with the
+-- archive on every copy's free tier. It is redrawn from the art whenever it
+-- is asked for.
+--
+-- What is kept is the one thing worth keeping: the dot size that was proved
+-- to scan for this cover at this address, stamped with the build of the
+-- press that proved it and a fingerprint of what it was proved on — about
+-- twenty-five bytes, written the first time anyone asks for the code and
+-- read on every ask after, so the redraw skips the judging. A stamp from an
+-- older build, or for art or an address that has since changed, is simply
+-- ignored and replaced. See library/cover_code.js.
+ALTER TABLE entries ADD COLUMN IF NOT EXISTS cover_code text;

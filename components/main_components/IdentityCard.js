@@ -21,15 +21,15 @@
 // the page's own colour, and turning something over should not change the
 // colour of the room.
 
-import { useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { Check, Eye, EyeSlash, Pencil, Printer, QrCode, UploadSimple, User, X } from '@phosphor-icons/react';
 import { noteArrival, recallSender, subscribeSender, tidyAddress } from '../../library/return_address';
 import { useRouter } from 'next/navigation';
 import { useTheme } from './Lightswitch';
-import QRCode from 'qrcode';
 import { useListeningBeacon } from '../../hooks/useListeningBeacon';
 import { useBookplate } from './Bookplate';
+import AddressCode from './AddressCode';
 
 // ── The Ln. mark ──────────────────────────────────────────────────────────
 // It sits at the top of the column, and it is the only mark on this side of the
@@ -44,55 +44,6 @@ const MARK_GLYPHS = [
 // something is playing.
 const MARK_DOT = { cx: 297.0547, cy: 216.71875, r: 14.1328 };
 
-// ── The code ──────────────────────────────────────────────────────────────
-// A plain one. It carried the Ln. mark knocked out of the middle for a while,
-// which is a nice object and the wrong one for this slot: the mark is already
-// at the top of the column, printed larger, and a code has one job.
-//
-// Losing the mark changes the numbers underneath it. Version 10 at correction
-// level H was not carrying the URL — an address this short needs a fraction of
-// that — it was carrying the redundancy a hole punched in the middle costs. No
-// hole, no need: the encoder picks the smallest version that fits at level M,
-// which for an address of this length is a quarter as many modules across the
-// same box. Each one ends up several times larger, and a larger module is the
-// only thing that actually makes a code easier to read.
-//
-// Ink and paper stay fixed rather than theme-aware. A camera looks for dark on
-// light, and inverting the code for a dark page asks every scanner in the world
-// to be one of the ones that cope.
-const CODE_QUIET = 4;      // modules of margin, on all four sides
-const CODE_INK = '#191917';
-const CODE_PAPER = '#f5f4ef';
-
-// Built once per address, at module scope. The two cards on the landing page —
-// the desktop markup and the mobile markup — are separate trees asking for the
-// same code, and an address only changes if its owner moves house.
-const CODE_CACHE = new Map();
-
-function buildCode(url) {
-  if (CODE_CACHE.has(url)) return CODE_CACHE.get(url);
-  let built = null;
-  try {
-    const { modules } = QRCode.create(url, { errorCorrectionLevel: 'M' });
-    // Whole cells, no inset and no radius: neighbouring modules meet and read
-    // as one block, which is what a scanner is looking at. One path rather than
-    // a few hundred rects — same picture, one node.
-    let d = '';
-    for (let row = 0; row < modules.size; row++) {
-      for (let col = 0; col < modules.size; col++) {
-        if (modules.data[row * modules.size + col]) d += `M${col} ${row}h1v1h-1z`;
-      }
-    }
-    built = { d, size: modules.size };
-  } catch {
-    // A card with no code on it is still a card; a card that throws while
-    // rendering is a blank page.
-    built = null;
-  }
-  CODE_CACHE.set(url, built);
-  return built;
-}
-
 // A month and a year, never a day. The card says how long the journal has been
 // kept, and a precise date invites arithmetic that isn't the point. Printed
 // in UTC so the month is the same on every reader's screen.
@@ -101,34 +52,6 @@ function monthAndYear(value) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return null;
   return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', timeZone: 'UTC' });
-}
-
-// The address, as the thing you point a phone at.
-//
-// Drawn by hand from the module matrix rather than handed to a hosted code
-// service: a service would mean every journal running this software quietly
-// telling a third party what its address is, every time somebody opened the
-// card. The matrix is computed here and the picture is ours.
-function AddressCode({ text }) {
-  const code = useMemo(() => buildCode(text), [text]);
-  if (!code) return null;
-
-  const span = code.size + CODE_QUIET * 2;
-  return (
-    <svg
-      className="idc-qr"
-      viewBox={`${-CODE_QUIET} ${-CODE_QUIET} ${span} ${span}`}
-      shapeRendering="crispEdges"
-      role="img"
-      aria-label={`Scannable code for ${text}`}
-    >
-      {/* The quiet zone is part of the code, not padding around it — a scanner
-          needs the clear margin to find the edges. Painting it here means the
-          code carries its own margin wherever the box puts it. */}
-      <rect x={-CODE_QUIET} y={-CODE_QUIET} width={span} height={span} fill={CODE_PAPER} />
-      <path d={code.d} fill={CODE_INK} />
-    </svg>
-  );
 }
 
 // What the browser holds as the visitor's own journal, for the Compare offer.
@@ -432,7 +355,7 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
             makes role="status" read them out — a message that is always in
             the page and merely invisible is one a screen reader has already
             been past. */}
-        <span className={'idc-copied' + (copied ? ' idc-copied--on' : '')} role="status">
+        <span className={'ln-copied' + (copied ? ' ln-copied--on' : '')} role="status">
           {copied ? 'Copied \u2014 paste it anywhere' : ''}
         </span>
       </button>

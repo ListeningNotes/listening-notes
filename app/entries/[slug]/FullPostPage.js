@@ -7,7 +7,7 @@
 // It receives the entry data from page.js which fetched it server-side.
 
 'use client';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { CaretUp, Check, X } from '@phosphor-icons/react';
@@ -29,6 +29,12 @@ import MetadataLabel from '../../../components/main_components/Slug_Page/Metadat
 import Chip from '../../../components/main_components/Slug_Page/Chip';
 import MiniCard from '../../../components/main_components/Slug_Page/MiniCard';
 import { handedOver } from '../../../library/handoff';
+import { tidyAddress } from '../../../library/return_address';
+import { CODE_QUIET, LEAST_VERSION } from '../../../library/code_shape';
+import { useBookplate } from '../../../components/main_components/Bookplate';
+import { useTheme } from '../../../components/main_components/Lightswitch';
+import AddressCode from '../../../components/main_components/AddressCode';
+import QRCode from 'qrcode';
 import StarRating from '../../../components/main_components/StarRating';
 import StarPicker from '../../../components/session_components/StarRating';
 import { editStamp } from '../../../library/entry_formatter';
@@ -47,6 +53,22 @@ const HERO_COVER = {
   width: '110px', height: '110px', borderRadius: '12px', overflow: 'hidden', flexShrink: 0,
   boxShadow: 'var(--shadow-lift)', border: '1px solid var(--panel-border)',
 };
+// The same box while it is showing the code, 2026-09-12: a code the size of
+// the thumbnail is too fine to point a phone at, so the box grows to the
+// portrait's scale and the row makes room — the title moves over, the way
+// content is allowed to on this site. Grown from the thumbnail rather than
+// floated over the row, so the code visibly comes out of the cover.
+const HERO_COVER_CODE = { ...HERO_COVER, width: '220px', height: '220px' };
+const HERO_COVER_EASE = { transition: 'width 0.26s ease, height 0.26s ease' };
+
+// A short mark for the art's address, stamped onto the code's address so a
+// corrected cover asks for a fresh picture rather than the one the browser
+// cached for the old one. Not a fingerprint of anything: any change is enough.
+function artMark(text) {
+  let h = 5381;
+  for (let i = 0; i < text.length; i++) h = ((h << 5) + h + text.charCodeAt(i)) | 0;
+  return (h >>> 0).toString(36);
+}
 
 // ── There is no pin here ────────────────────────────────────────────────────
 // There was, for a week: a Pin chip in the row under the rating, on the
@@ -108,6 +130,109 @@ export default function FullPostPage({ entry, references = [], authed = false, l
       setFinding(false);
     }
   }
+
+  // ── The cover as the code ─────────────────────────────────────────────────
+  // Outside a correction, pressing the art turns it into a scannable code for
+  // this entry's address and puts the address on the clipboard — the same
+  // gesture as the portrait on the card, the same dot treatment, the same
+  // Copied line. Available to anyone: an address travels freely; only the
+  // contents don't. On a home screen there is no address bar, so this is not
+  // hiding the address, it is the only form the address takes.
+  //
+  // The picture is pressed on the server the first time it is asked for
+  // (app/api/entries/[slug]/code) and never on entry save: most entries are
+  // never tapped, and Apple's art cannot be read in a browser anyway. Until
+  // it arrives the cover stays and the Copied line already says the press
+  // did something; if the press cannot be had — the server's reader refused
+  // the picture, or the press faulted — a plain code stands in, a worse
+  // picture and a working one.
+  const { site_address } = useBookplate();
+  const { theme } = useTheme();
+  const host = tidyAddress(site_address);
+  const entryUrl = host && entry.slug ? `https://${host}/entries/${entry.slug}` : '';
+  const canTurnCover = Boolean(entryUrl && entry.album_art && !preview);
+  const [coverCode, setCoverCode] = useState(false);       // showing the code
+  const [codeAsked, setCodeAsked] = useState(false);       // the press has been asked for
+  const [codeState, setCodeState] = useState('waiting');   // 'waiting' | 'ready' | 'failed'
+  // On the layer a swipe brings the next record into this same component, and
+  // a record arrives on its cover, not on the last one's code.
+  const [codeFor, setCodeFor] = useState(entry.slug);
+  if (codeFor !== entry.slug) {
+    setCodeFor(entry.slug);
+    setCoverCode(false);
+    setCodeAsked(false);
+    setCodeState('waiting');
+  }
+  const [copied, setCopied] = useState(false);
+  const copiedTimer = useRef(null);
+  useEffect(() => () => clearTimeout(copiedTimer.current), []);
+
+  function turnCover() {
+    const showing = !coverCode;
+    setCoverCode(showing);
+    // Only on the way to the code. Turning back is undoing the press, and
+    // undoing it should not quietly copy anything. Same rule as the card.
+    if (!showing) return;
+    setCodeAsked(true);
+    // Absent over plain http and in a browser that has never had it; the turn
+    // simply happens without the line.
+    if (!navigator.clipboard?.writeText) return;
+    navigator.clipboard.writeText(entryUrl).then(() => {
+      setCopied(true);
+      clearTimeout(copiedTimer.current);
+      copiedTimer.current = setTimeout(() => setCopied(false), 2600);
+    }).catch(() => {});
+  }
+
+  // The dots are the page's ink, so the page asks for the file that matches
+  // it. The art's mark rides along so a corrected cover is never a day stale.
+  const codeSrc = codeAsked
+    ? `/api/entries/${encodeURIComponent(entry.slug)}/code?theme=${theme === 'dark' ? 'dark' : 'light'}`
+      + `&v=${artMark(entry.album_art_source || entry.album_art || '')}`
+    : '';
+  // How much wider than the art's square the pressed file is drawn, so the
+  // code itself fills the square and the quiet zone hangs off the edges. The
+  // file is the code plus its margin; the code's size follows the address,
+  // through the same encoder the press uses.
+  const codeSpan = useMemo(() => {
+    if (!entryUrl) return 1;
+    try {
+      const least = 17 + LEAST_VERSION * 4;
+      const size = Math.max(least, QRCode.create(entryUrl, { errorCorrectionLevel: 'H' }).modules.size);
+      return (size + CODE_QUIET * 2) / size;
+    } catch {
+      return 1;
+    }
+  }, [entryUrl]);
+  const showingCode = coverCode && codeState !== 'waiting';
+  // The pressed picture has no plate behind it — the page shows through the
+  // light modules — so the frame comes off the box while it is showing. The
+  // plain stand-in paints its own paper and keeps the frame.
+  const coverBare = showingCode && codeState === 'ready';
+  const coverFace = codeAsked && (
+    <span
+      className={'ln-cover-code' + (codeState === 'ready' ? ' ln-cover-code--photo' : '') + (showingCode ? ' ln-cover-code--on' : '')}
+      style={{ '--ln-code-span': codeSpan }}
+      aria-hidden={!showingCode}
+    >
+      {codeState === 'failed'
+        ? <AddressCode text={entryUrl} className="ln-cover-plain" />
+        : <img
+            src={codeSrc}
+            alt={`Scannable code for ${entryUrl}`}
+            onLoad={() => setCodeState('ready')}
+            onError={() => setCodeState('failed')}
+          />}
+    </span>
+  );
+  // The words are added and removed rather than faded, so role="status" reads
+  // them out — see the card.
+  const copiedLine = (
+    <span className={'ln-copied' + (copied ? ' ln-copied--on' : '')} role="status">
+      {copied ? 'Copied \u2014 paste it anywhere' : ''}
+    </span>
+  );
+  const turnLabel = coverCode ? 'Show the cover' : 'Show the code for this entry';
 
   // What the page draws. album_art holds the master, which is up to 3000px
   // square, and the largest this is ever printed is 110 — so the draft is
@@ -516,13 +641,25 @@ export default function FullPostPage({ entry, references = [], authed = false, l
             {coverSrc && <img src={coverSrc} alt="" />}
             <span className="ln-cover-hint">{coverSrc ? 'Replace' : 'Add a cover'}</span>
           </button>
-        ) : entry.album_art && (
-          <div className="ln-screen-one-art">
+        ) : entry.album_art && canTurnCover ? (
+          <button
+            type="button"
+            className={'ln-screen-one-art ln-cover ln-cover--turnable' + (coverBare ? ' ln-cover--bare' : '')}
+            onClick={turnCover}
+            aria-pressed={coverCode}
+            aria-label={turnLabel}
+          >
             {/* decoding="sync": on the layer this image replaces an identical
                 one the wait state drew, and an async decode of a new element
                 is a frame with no cover in it — the blink at the moment the
                 entry lands. Synchronous, from the cache, it paints in the
                 same frame the old one leaves. */}
+            <img src={entry.album_art} alt={entry.album} decoding="sync" fetchPriority="high" className={coverBare ? 'ln-cover-art--off' : ''} />
+            {coverFace}
+            {copiedLine}
+          </button>
+        ) : entry.album_art && (
+          <div className="ln-screen-one-art">
             <img src={entry.album_art} alt={entry.album} decoding="sync" fetchPriority="high" />
           </div>
         )}
@@ -597,6 +734,19 @@ export default function FullPostPage({ entry, references = [], authed = false, l
               >
                 {coverSrc && <img src={coverSrc} alt="" />}
                 <span className="ln-cover-hint">{coverSrc ? 'Replace' : 'Add'}</span>
+              </button>
+            ) : entry.album_art && canTurnCover ? (
+              <button
+                type="button"
+                className="ln-cover ln-cover--turnable"
+                style={{ ...(coverCode ? HERO_COVER_CODE : HERO_COVER), ...HERO_COVER_EASE }}
+                onClick={turnCover}
+                aria-pressed={coverCode}
+                aria-label={turnLabel}
+              >
+                <img src={entry.album_art} alt={entry.album} className={coverBare ? 'ln-cover-art--off' : ''} />
+                {coverFace}
+                {copiedLine}
               </button>
             ) : entry.album_art && (
               <div className="ln-cover" style={HERO_COVER}>
