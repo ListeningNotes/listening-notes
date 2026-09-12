@@ -53,6 +53,46 @@ function stop(...lines) {
   process.exit(1);
 }
 
+// The version a repository is at, from its package.json at some commit.
+function versionAt(ref) {
+  const shown = tryGit('show', `${ref}:package.json`);
+  if (shown.status !== 0) return '0.0.0';
+  try { return JSON.parse(shown.stdout).version || '0.0.0'; } catch { return '0.0.0'; }
+}
+// Semantic versions, number by number: 1.10.0 is newer than 1.9.0.
+function isNewer(a, b) {
+  const x = String(a).replace(/^v/, '').split('.').map(Number);
+  const y = String(b).replace(/^v/, '').split('.').map(Number);
+  for (let i = 0; i < Math.max(x.length, y.length); i++) {
+    if ((x[i] || 0) !== (y[i] || 0)) return (x[i] || 0) > (y[i] || 0);
+  }
+  return false;
+}
+// The release notes between two versions, read from upstream's public
+// releases — written for a keeper, unlike commit titles. Empty when the
+// upstream is not on GitHub, when GitHub cannot be reached, or when no
+// release sits between the two versions.
+async function releaseNotesBetween(before, after) {
+  const m = UPSTREAM.match(/github\.com[/:]([^/]+)\/([^/.]+)/);
+  if (!m) return [];
+  try {
+    const headers = { Accept: 'application/vnd.github+json', 'User-Agent': 'listening-notes-update' };
+    if (process.env.GITHUB_TOKEN) headers.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`;
+    const res = await fetch(`https://api.github.com/repos/${m[1]}/${m[2]}/releases?per_page=50`, { headers });
+    if (!res.ok) return [];
+    const releases = await res.json();
+    return releases
+      .filter(r => !r.draft && !r.prerelease && isNewer(r.tag_name, before) && !isNewer(r.tag_name, after))
+      .sort((a, b) => (isNewer(a.tag_name, b.tag_name) ? -1 : 1))
+      .flatMap(r => [`### ${String(r.tag_name).replace(/^v/, '')}`, '', (r.body || '').trim(), '']);
+  } catch {
+    return [];
+  }
+}
+// Commit titles, with the housekeeping left out: merges, version bumps and
+// notes-to-self are not things a keeper needs to read.
+const HOUSEKEEPING = /^(Merge |Version \d|NOTES\b|DECISIONS\b|ARCHITECTURE\b)/;
+
 git('config', 'user.name', 'github-actions[bot]');
 git('config', 'user.email', '41898282+github-actions[bot]@users.noreply.github.com');
 
@@ -104,6 +144,8 @@ if (tryGit('merge-base', 'HEAD', UPSTREAM_REF).status !== 0) {
 }
 
 const base = git('merge-base', 'HEAD', UPSTREAM_REF);
+const before = versionAt('HEAD');
+const after = versionAt(UPSTREAM_REF);
 const merged = tryGit('merge', '--no-commit', '--no-ff', UPSTREAM_REF);
 if (merged.status !== 0) {
   const clashing = git('diff', '--name-only', '--diff-filter=U').split('\n').filter(Boolean);
@@ -136,16 +178,23 @@ for (const file of kept) {
 git('commit', '-q', '--no-edit', '-m', `Update to Listening Notes ${upstream}`);
 git('push', 'origin', `HEAD:refs/heads/${BRANCH}`);
 
-const changes = git('log', '--format=- %s', `${base}..${UPSTREAM_REF}`).split('\n').filter(Boolean);
+// What changed, said the way a keeper reads it: the release notes between
+// the version this copy had and the one it has now. Only when no release
+// sits between them — an update between releases — the commit titles, with
+// the housekeeping left out.
+const notes = await releaseNotesBetween(before, after);
+const commits = git('log', '--format=%s', `${base}..${UPSTREAM_REF}`).split('\n')
+  .filter(line => line && !HOUSEKEEPING.test(line))
+  .map(line => `- ${line}`);
+const changed = notes.length
+  ? ['What changed:', '', ...notes]
+  : [`What changed, between releases (${commits.length} change${commits.length === 1 ? '' : 's'}):`, '', ...commits.slice(0, 40)];
 say(
-  `## Updated to Listening Notes ${upstream}`,
+  `## Updated to Listening Notes ${after === before ? upstream : `${after} (was ${before})`}`,
   '',
   'Pushed to your repository. Vercel is building it now: give it a couple of minutes, then open',
   'your journal signed in. Your database is brought up to date by the build itself.',
   '',
-  `What changed (${changes.length} commit${changes.length === 1 ? '' : 's'}):`,
-  '',
-  ...changes.slice(0, 40),
-  ...(changes.length > 40 ? [`- …and ${changes.length - 40} more`] : []),
+  ...changed,
   ...(kept.length ? ['', 'Left as they were, because GitHub does not let a workflow change workflow files:', '', ...kept.map(f => `- \`${f}\``)] : []),
 );
