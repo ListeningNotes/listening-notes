@@ -156,11 +156,12 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   const [codeState, setCodeState] = useState('waiting');   // 'waiting' | 'ready' | 'failed'
   // ── REVIEW SWITCH, 2026-09-12, to be removed once one is chosen ──────────
   // Two answers to the moment between the tap and the picture arriving:
-  // the plain code drawn at once, with the picture developing inside it
-  // (the default), or the art pulsing until the picture lands (?wait=pulse).
-  const [pulseWait, setPulseWait] = useState(false);
+  // the art pulsing until the picture lands (the default for now, so it
+  // can be seen from a home screen with no address bar), or the plain code
+  // drawn at once with the picture developing inside it (?wait=plain).
+  const [pulseWait, setPulseWait] = useState(true);
   useEffect(() => {
-    setPulseWait(new URLSearchParams(window.location.search).get('wait') === 'pulse');
+    setPulseWait(new URLSearchParams(window.location.search).get('wait') !== 'plain');
   }, []);
   // On the layer a swipe brings the next record into this same component, and
   // a record arrives on its cover, not on the last one's code.
