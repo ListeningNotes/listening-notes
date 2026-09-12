@@ -1313,6 +1313,15 @@ not merged**
 - [x] **Two brand decisions recorded** — the website over a desktop app,
       and the QR as the answer to the URL — from the brief, verbatim in
       spirit.
+- [x] **The update's summary page speaks in release notes, 2026-09-12.**
+      Miyel pressed the button on the scratch copy herself and it merged
+      eight commits — and listed them as commit titles, merges and
+      notes-to-self included. The summary now says "Updated to 1.1.0 (was
+      0.1.0)" and prints the notes of every release between the two, read
+      from GitHub's public releases; only between releases does it fall back
+      to commit titles, with merges, version bumps and NOTES/DECISIONS
+      commits left out. Release notes are written for keepers: new, fixed,
+      moved.
 - [x] **And on the desk, 2026-09-12** (branch `desk-version`): the same
       number at the foot of the desk for the owner, with the "newer version"
       line beside it when there is one; no Source there, since §13 is owed
