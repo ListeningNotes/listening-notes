@@ -131,7 +131,8 @@ The furniture — visual pieces
       Journal.js               The wall of covers, with its search, filters and sort
       JournalFilters.js        The filter sheet — a popover on a desk, a pull-down sheet on a phone — and the year range
       AlbumTile.js             One cover on that wall
-      AddressCode.js           A plain code for an address, drawn in the browser — what stands in when no pressed picture can be had
+      CodeSlot.js              A square that holds a picture and turns into that picture's code — the card's portrait and an entry's cover: the two faces, the copy and its pill, the corner mark, the wait
+      AddressCode.js           A plain code for an address, drawn in the browser — what CodeSlot shows when no pressed picture can be had
       Dashboard.js             The right pane, for the owner — Listen, Inbox, Settings
       Pitch.js                 The right pane, for everybody else
       KeeperTools.js           The owner's pencil and printer
@@ -226,6 +227,7 @@ The rooms — full pages assembled from furniture
 | The row of recent covers under the beacon | components/main_components/HomeNav.js, recentRow |
 | The entry that opens over the wall, and swiping between entries | components/main_components/LayerEntry.js, library/handoff.js and app/@layer/ |
 | The full entry post page | app/entries/[slug]/FullPostPage.js |
+| A picture turning into its code (the portrait, a cover) | components/main_components/CodeSlot.js, styles under .ln-slot in app/styles/base.css |
 | The album picker | components/session_components/AlbumPicker.js |
 | The note-taking session | app/session/page.js, styles in app/styles/session.css |
 | The header above every session screen | components/session_components/SessionHeader.js |

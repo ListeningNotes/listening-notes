@@ -226,22 +226,26 @@ cannot be tested end to end.
       180 kB to about 96 kB, which is the settings row shrinking by half
       of what the 310 kB scare was about. Nothing to do; read the
       `[portrait code]` line in the log once.
-- [ ] **Names to confirm, 2026-09-12** — autonomous session, rename freely:
-      branch `cover-code`; the column `entries.cover_code` and its stamp
+- [ ] **Names to confirm, 2026-09-12** — autonomous session, rename freely
+      (`CodeSlot` itself was Miyel's pick): branch `cover-code`; the column
+      `entries.cover_code` and its stamp
       `b=<build>&d=<dot>&a=<fingerprint>` (migration 006); `GET
       /api/entries/[slug]/code?theme=`; `pressCoverCode` and `entryAddress`
       in `library/cover_code.js`; `library/code_shape.js` (`CODE_QUIET`,
       `LEAST_VERSION`); `components/main_components/AddressCode.js` (moved
       out of the card); the `cover` door in `doorman.js`; `.ln-copied` in
       base.css (was `.idc-copied`); in FullPostPage `turnCover`, `coverCode`,
-      `codeAsked`, `codeState`, `coverBare`, `codeFor` (which record the
-      state belongs to), `photoOn`, `plainOn`, `pressing`, `turnBadge`,
-      `artMark`, `HERO_COVER_CODE`; `.ln-turn-badge` in base.css (was the
-      card's `.idc-portrait-badge`); `AddressCode`'s `level`, `least`,
-      `ink` and `paper` props;
+      `codeFor` (which record the state belongs to), `coverSlot`,
+      `COVER_LABELS`, `artMark`, `HERO_COVER_CODE`; in CodeSlot `picture`,
+      `codeSrc`, `turned`/`onTurn`, `turnable`, `backGlyph`, `labels`,
+      `codeState` ('pressing' | 'pressed' | 'plain'), `asked`, `spanOf`,
+      `COPIED_MS`; `.ln-slot`, `.ln-slot--turnable`, `.ln-slot--bare`,
+      `.ln-slot-picture(--off, --pressing)`, `.ln-slot-code`,
+      `.ln-slot-plain`, `.ln-slot-pressed` and `.ln-turn-badge` in base.css
+      (the last was the card's `.idc-portrait-badge`); `AddressCode`'s
+      `level`, `least`, `ink` and `paper` props;
       in entry.css `.ln-cover--turnable`, `.ln-cover--bare`,
-      `.ln-cover-code`, `.ln-cover-plain`, `.ln-cover-pressed`,
-      `.ln-cover-art--off`, and the `--ln-code-span` property; the `dot` argument to
+      the `--ln-code-span` property; the `dot` argument to
       `buildPortraitCode` and `codeFor` in the press.
 - [ ] **Names to confirm, 2026-09-11** — the press: `POST /api/portrait/code`;
       `pressStoredPortraitCode`, `buildPortraitCode({ url, portrait,
@@ -1359,6 +1363,21 @@ current.
       framed). The Copied pill is `.ln-copied` in base.css, one definition
       for the card and the cover. The two numbers both sides size a code by
       are in `library/code_shape.js`.
+- [x] **CodeSlot, on Miyel's call the same evening.** The turn was written
+      twice — three times with the entry's desk-sized hero — and the copies
+      had already drifted (two hold times for the pill). One component now:
+      `components/main_components/CodeSlot.js` owns the two faces and their
+      fade, the copy and its pill, the corner mark, the frame coming off,
+      and the wait (the picture breathes until the pressed one lands; a
+      plain code stands in when none can be had). The card and the cover
+      hand it a picture, an address, the pressed picture's source and
+      which face is up, and keep their own — the card its editor, the
+      cover its growing desk box. Styles are `.ln-slot-*` in base.css;
+      `.idc-face-slot`, `.idc-qr` and `.idc-portrait--bare` are gone from
+      idcard.css and the `.ln-cover-*` slot rules from entry.css. One
+      visible consequence: the card's plain code (no portrait yet, or a
+      press that failed) is now drawn the cover's way — bare, in the page's
+      ink, on the press's grid — where it had a beige plate and a frame.
 - [x] **Lint clean, build passes.** Migration 006 applied against the shared
       database from the dev server.
 
