@@ -415,6 +415,11 @@
   opacity: 0; transition: opacity 0.26s ease;
   image-rendering: auto;
 }
+/* The plain one is an inline SVG, and Safari does not take an SVG's height
+   from its width the way it does an image's — height: auto came out as
+   the 150px default, a small code centred in the square. The box is
+   square, so the height is simply the width. */
+.ln-cover-plain { height: calc(100% * var(--ln-code-span, 1)); }
 .ln-cover-plain--on, .ln-cover-pressed--on { opacity: 1; }
 .ln-cover--turnable:hover .ln-turn-badge { color: var(--ink); }
 .ln-cover--bare .ln-turn-badge { left: -6px; bottom: -6px; }
@@ -438,6 +443,7 @@
 @media (min-width: 769px) {
   .ln-hero .ln-cover-code { background: var(--bg); }
   .ln-hero .ln-cover-plain, .ln-hero .ln-cover-pressed { width: 100%; }
+  .ln-hero .ln-cover-plain { height: 100%; }
 }
 /* Dashed, and only here: it is the one border on the page that means
    "this is not finished with", which is the whole of what edit mode is. */

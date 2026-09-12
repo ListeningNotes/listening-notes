@@ -214,11 +214,15 @@ cannot be tested end to end.
       field is the last resort.
 - [ ] **Choose the wait, then remove the switch, 2026-09-12.** Two answers
       to the moment between the tap and the pressed picture arriving, both
-      built, one to keep: the plain code drawn at once with the photograph
-      developing inside it (the default), or the art pulsing until the
-      picture lands (`?wait=pulse` on any entry). `pulseWait` in
-      FullPostPage and `.ln-cover-art--pressing` in entry.css are the
-      switch; whichever loses comes out with them.
+      built, one to keep: the art pulsing until the picture lands (the
+      default for now, so it shows from the home-screen app), or the plain
+      code drawn at once with the photograph developing inside it
+      (`?wait=plain` on any entry). `pulseWait` in FullPostPage and
+      `.ln-cover-art--pressing` in entry.css are the switch; whichever
+      loses comes out with them. Miyel's first look at the plain one on
+      her phone: too small — Safari gave the inline SVG its 150px default
+      height; fixed with an explicit height the same day, unseen by her
+      since.
 - [ ] **The cover's code on a real phone, 2026-09-12.** Built in the
       Claude browser. On the phone: tap a cover, scan the code with the
       camera from the light and the dark page, paste what was copied into
