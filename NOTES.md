@@ -212,13 +212,27 @@ cannot be tested end to end.
       Needs the address book, still parked. Entries would then arrive from a
       send that carried a URL, a scanned code, or an Add press; a paste
       field is the last resort.
+- [ ] **Choose the wait, then remove the switch, 2026-09-12.** Two answers
+      to the moment between the tap and the pressed picture arriving, both
+      built, one to keep: the plain code drawn at once with the photograph
+      developing inside it (the default), or the art pulsing until the
+      picture lands (`?wait=pulse` on any entry). `pulseWait` in
+      FullPostPage and `.ln-cover-art--pressing` in entry.css are the
+      switch; whichever loses comes out with them.
 - [ ] **The cover's code on a real phone, 2026-09-12.** Built in the
-      Claude browser, which refuses clipboard writes, so the Copied pill was
-      proved with the clipboard stubbed and not against Safari's own. On the
-      phone: tap a cover, scan the code with the camera from the light and
-      the dark page, paste what was copied into Notes, tap again to turn it
-      back, and swipe to the next record to see it arrive on its cover. On
-      a desk: the thumbnail grows to 220px and the title moves over.
+      Claude browser. On the phone: tap a cover, scan the code with the
+      camera from the light and the dark page, paste what was copied into
+      Notes, tap again to turn it back, and swipe to the next record to see
+      it arrive on its cover. On a desk: the thumbnail grows to 220px and
+      the title moves over. **The Copied pill needs https or localhost:**
+      a browser refuses the clipboard on plain http, so on the phone over
+      the network address (`http://192.168…:3000`) neither the cover nor
+      the card copies anything — the live site does.
+- [ ] **The portrait re-presses itself on the next signed-in visit**, build
+      6 (ten pixels a module, adaptive PNG): the stored code goes from
+      180 kB to about 96 kB, which is the settings row shrinking by half
+      of what the 310 kB scare was about. Nothing to do; read the
+      `[portrait code]` line in the log once.
 - [ ] **Names to confirm, 2026-09-12** — autonomous session, rename freely:
       branch `cover-code`; the column `entries.cover_code` and its stamp
       `b=<build>&d=<dot>&a=<fingerprint>` (migration 006); `GET
@@ -228,10 +242,13 @@ cannot be tested end to end.
       out of the card); the `cover` door in `doorman.js`; `.ln-copied` in
       base.css (was `.idc-copied`); in FullPostPage `turnCover`, `coverCode`,
       `codeAsked`, `codeState`, `coverBare`, `codeFor` (which record the
-      state belongs to), `artMark`, `HERO_COVER_CODE`;
+      state belongs to), `photoOn`, `plainOn`, `pressing`, `turnBadge`,
+      `artMark`, `HERO_COVER_CODE`; `.ln-turn-badge` in base.css (was the
+      card's `.idc-portrait-badge`); `AddressCode`'s `level`, `least`,
+      `ink` and `paper` props;
       in entry.css `.ln-cover--turnable`, `.ln-cover--bare`,
-      `.ln-cover-code`, `.ln-cover-code--photo`, `.ln-cover-art--off`, and
-      the `--ln-code-span` property; the `dot` argument to
+      `.ln-cover-code`, `.ln-cover-plain`, `.ln-cover-pressed`,
+      `.ln-cover-art--off`, and the `--ln-code-span` property; the `dot` argument to
       `buildPortraitCode` and `codeFor` in the press.
 - [ ] **Names to confirm, 2026-09-11** — the press: `POST /api/portrait/code`;
       `pressStoredPortraitCode`, `buildPortraitCode({ url, portrait,
@@ -1316,6 +1333,22 @@ current.
       `pg_column_size` on the Cathedral row: 5,288 bytes before the first
       tap, 5,309 after — the 21-byte stamp; journal total 321,040 → 321,061.
       All 39 covers passed the dot press at the smallest dot on 2026-09-11.
+- [x] **The wait, and the file, second pass the same day.** The first tap
+      on an entry felt like nothing happened: the cover stayed put for the
+      half second the press took. Now the plain code is drawn in the
+      browser the instant the cover is pressed — on the press's own grid
+      (level H, floor 4, `AddressCode` takes `level` and `least`), bare, in
+      the page's ink — and the pressed picture fades in over it, so the
+      photograph develops inside the modules. The art-pulsing alternative
+      is behind `?wait=pulse` until one is chosen (Pending). The corner
+      badge from the card (code glyph, then a record glyph) says the cover
+      turns. The file: swept every cover at 8, 10 and 12 pixels a module —
+      at 8 two covers failed and seven needed larger dots; at 10 all 39 read
+      at the smallest dot — and four PNG settings: the adaptive filter is
+      lossless and takes a fifth off; sharp's `effort` quietly makes a
+      palette PNG that halves the file and moves the pixels, ruled out.
+      Ten a module plus the filter: covers average 118 kB (was 185), the
+      largest 269 (was 404), the portrait 96 (was 180). Build 6.
 - [x] **The press picks its version.** It was fixed at version 4, whose
       34-byte capacity holds a journal's address and not an entry's (49 to
       93 characters on this journal: versions 6 to 10). The version now

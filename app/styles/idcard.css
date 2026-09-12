@@ -580,10 +580,7 @@ a.ab-rig-name:hover { text-decoration: underline; }
 .idc-face-slot--photo { background: none; }
 /* The mark that turns it back, kept legible against whatever the code
    happens to be over — there is no plate under it any more to sit on. */
-.idc-portrait--bare .idc-portrait-badge {
-  left: -6px; bottom: -6px;
-  background: var(--bg);
-}
+.idc-portrait--bare .ln-turn-badge { left: -6px; bottom: -6px; }
 /* Sized so the code itself fills the photograph's square, not so the
    file does. The file is 41 modules across and only 33 of those are
    code — the rest is the quiet zone, which is empty and has to stay
@@ -625,21 +622,9 @@ a.ab-rig-name:hover { text-decoration: underline; }
 .idc-portrait-empty::before { top: 10px; left: 10px; border-right: 0; border-bottom: 0; }
 .idc-portrait-empty::after  { bottom: 10px; right: 10px; border-left: 0; border-top: 0; }
 
-/* Bottom-left. It sat bottom-right, which on a portrait is usually
-   somebody's shoulder and often their chin — the eye goes to a face
-   and the chip was landing on it. The left corner of a photograph of a
-   person is nearly always the quietest part of the frame. */
-.idc-portrait-badge {
-  position: absolute; left: 7px; bottom: 7px;
-  display: flex; align-items: center; justify-content: center;
-  width: 21px; height: 21px; border-radius: 7px;
-  background: var(--bg);
-  border: 1px solid var(--idc-rule);
-  color: var(--ink-faint);
-  transition: color 0.15s;
-}
-.idc-portrait--turnable:hover .idc-portrait-badge { color: var(--ink); }
-.idc-portrait-badge--drop { left: auto; right: 7px; cursor: pointer; }
+/* The corner mark is .ln-turn-badge, in base.css: the entry's cover wears
+   it too. */
+.idc-portrait--turnable:hover .ln-turn-badge { color: var(--ink); }
 
 .idc-portrait-hit {
   position: absolute; inset: 0;
@@ -653,7 +638,7 @@ a.ab-rig-name:hover { text-decoration: underline; }
    rest. A backtick in this comment would end the stylesheet, which is
    a thing this file has learned once already. */
 .idc-file { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
-.idc-file:focus-visible + .idc-portrait-badge { outline: 2px solid var(--ink-faint); outline-offset: 2px; }
+.idc-file:focus-visible + .ln-turn-badge { outline: 2px solid var(--ink-faint); outline-offset: 2px; }
 /* The copy, said over the code — .ln-copied, in base.css: the entry's
    cover says it too. */
 

@@ -468,10 +468,18 @@ on the cover (below, 2026-09-12).
 
 **An entry's cover turns into its code, for anyone, 2026-09-12.** Tap the
 art and it becomes the code for that entry's address and the address is on
-the clipboard — the card's gesture, the card's dots, the card's Copied line.
-On a home screen there is no address bar, so the code is the only form the
-address takes, and that is the argument for it being on every entry rather
-than card-only. The code encodes the entry's address, never the journal's.
+the clipboard — the card's gesture, the card's dots, the card's Copied line,
+the card's corner badge. On a home screen there is no address bar, so the
+code is the only form the address takes, and that is the argument for it
+being on every entry rather than card-only. The code encodes the entry's
+address, never the journal's.
+
+**Something scannable is on screen the instant a picture is pressed,
+2026-09-12.** The pressed picture takes half a second to arrive, and a
+cover that stays put for half a second reads as a button that did nothing
+— the clipboard rule again. So the plain code is drawn in the browser on
+the tap, on the press's own grid, and the photograph develops inside it
+when it lands. A wait with nothing to scan is never the answer.
 
 **The cover's code is pressed on request and never stored; the row keeps
 only the dot, 2026-09-12.** A pressed cover is 200–360 kB, and one per entry

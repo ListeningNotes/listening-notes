@@ -53,13 +53,16 @@ import { CODE_QUIET, LEAST_VERSION } from './code_shape.js';
 // Bumped whenever the way this picture is drawn or judged changes. Stamped
 // on the stored path; the card re-presses a code that carries an older stamp
 // the next time its owner opens the journal, so every card ends up the same.
-export const CODE_BUILD = 5;
+export const CODE_BUILD = 6;
 
 // The quiet zone and the least version are in library/code_shape.js, which
 // the browser reads too.
-// Twelve device pixels a module: past what any screen shows it at, so the
-// edges of every module and every dot stay hard rather than resampled.
-const MODULE_PX = 12;
+// Ten device pixels a module, 2026-09-12 (twelve before): past what any
+// screen shows it at, so the edges of every module and every dot stay hard
+// rather than resampled. Measured on every cover and the portrait: at eight,
+// two covers failed outright and seven needed larger dots; at ten all of
+// them read at the smallest dot, a third smaller on the wire than at twelve.
+const MODULE_PX = 10;
 // The photograph is kept off the two pure values the ink uses, and off the
 // pages' own tones, so a module never vanishes into either page and a photo
 // pixel is never mistaken for a dot when the dark page's file is made.
@@ -211,8 +214,14 @@ async function reads(rgba, W, page, url) {
   return true;
 }
 
+// Lossless, and at the slowest setting: the adaptive filter takes a fifth
+// off a photograph for ninety milliseconds, and every pixel comes back
+// exactly — which the ink flip below depends on. Never a palette: sharp's
+// `effort` quantises to one, which halves the file and moves the pixels.
 async function toPng(rgba, W) {
-  const png = await sharp(rgba, { raw: { width: W, height: W, channels: 4 } }).png().toBuffer();
+  const png = await sharp(rgba, { raw: { width: W, height: W, channels: 4 } })
+    .png({ compressionLevel: 9, adaptiveFiltering: true })
+    .toBuffer();
   return png.toString('base64');
 }
 

@@ -36,11 +36,18 @@ const CODE_PAPER = '#f5f4ef';
 // same code, and an address only changes if its owner moves house.
 const CODE_CACHE = new Map();
 
-function buildCode(url) {
-  if (CODE_CACHE.has(url)) return CODE_CACHE.get(url);
+// `level` and `least` let a caller ask for the same grid the server's press
+// draws (level H, never below version 4 — library/code_shape.js), so the
+// plain code drawn at once and the pressed picture that arrives over it are
+// the same modules in the same places: the photograph develops inside the
+// code rather than replacing it.
+function buildCode(url, level, least) {
+  const key = `${level}/${least}/${url}`;
+  if (CODE_CACHE.has(key)) return CODE_CACHE.get(key);
   let built = null;
   try {
-    const { modules } = QRCode.create(url, { errorCorrectionLevel: 'M' });
+    let { modules, version } = QRCode.create(url, { errorCorrectionLevel: level });
+    if (version < least) ({ modules } = QRCode.create(url, { errorCorrectionLevel: level, version: least }));
     // Whole cells, no inset and no radius: neighbouring modules meet and read
     // as one block, which is what a scanner is looking at. One path rather than
     // a few hundred rects — same picture, one node.
@@ -56,7 +63,7 @@ function buildCode(url) {
     // rendering is a blank page.
     built = null;
   }
-  CODE_CACHE.set(url, built);
+  CODE_CACHE.set(key, built);
   return built;
 }
 
@@ -66,8 +73,13 @@ function buildCode(url) {
 // service: a service would mean every journal running this software quietly
 // telling a third party what its address is, every time somebody opened the
 // card. The matrix is computed here and the picture is ours.
-export default function AddressCode({ text, className = 'idc-qr' }) {
-  const code = useMemo(() => buildCode(text), [text]);
+// `paper` null draws no plate: the ink sits on whatever is behind it, which
+// is how the entry draws it — bare on the page, in the page's own ink, the
+// same geometry as the pressed picture.
+export default function AddressCode({
+  text, className = 'idc-qr', level = 'M', least = 1, ink = CODE_INK, paper = CODE_PAPER,
+}) {
+  const code = useMemo(() => buildCode(text, level, least), [text, level, least]);
   if (!code) return null;
 
   const span = code.size + CODE_QUIET * 2;
@@ -82,8 +94,8 @@ export default function AddressCode({ text, className = 'idc-qr' }) {
       {/* The quiet zone is part of the code, not padding around it — a scanner
           needs the clear margin to find the edges. Painting it here means the
           code carries its own margin wherever the box puts it. */}
-      <rect x={-CODE_QUIET} y={-CODE_QUIET} width={span} height={span} fill={CODE_PAPER} />
-      <path d={code.d} fill={CODE_INK} />
+      {paper && <rect x={-CODE_QUIET} y={-CODE_QUIET} width={span} height={span} fill={paper} />}
+      <path d={code.d} fill={ink} />
     </svg>
   );
 }

@@ -306,7 +306,7 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
             disabled={edit.busy}
           />
           {!framing && (
-            <span className="idc-portrait-badge" aria-hidden="true">
+            <span className="ln-turn-badge" aria-hidden="true">
               <UploadSimple size={12} weight="bold" />
             </span>
           )}
@@ -317,7 +317,7 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
         {framing && (
           <button
             type="button"
-            className="idc-portrait-badge idc-portrait-badge--drop"
+            className="ln-turn-badge ln-turn-badge--drop"
             onClick={edit.removePhoto}
             disabled={edit.busy}
             aria-label="Remove the photo"
@@ -345,7 +345,7 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
         aria-label={slotCode ? 'Show the portrait' : 'Show the code for this address'}
       >
         {slotFaces}
-        <span className="idc-portrait-badge" aria-hidden="true">
+        <span className="ln-turn-badge" aria-hidden="true">
           {slotCode ? <User size={12} weight="bold" /> : <QrCode size={12} weight="bold" />}
         </span>
         {/* The copy, said over the code rather than on a line under the

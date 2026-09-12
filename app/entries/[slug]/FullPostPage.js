@@ -10,7 +10,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { CaretUp, Check, X } from '@phosphor-icons/react';
+import { CaretUp, Check, QrCode, VinylRecord, X } from '@phosphor-icons/react';
 import { BookOpen } from '@phosphor-icons/react';
 import { fonts } from '../../../library/sitewide_visuals';
 import { sizedAlbumArt, fetchAlbumArtUrl } from '../../../library/music_data_api';
@@ -154,6 +154,14 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   const [coverCode, setCoverCode] = useState(false);       // showing the code
   const [codeAsked, setCodeAsked] = useState(false);       // the press has been asked for
   const [codeState, setCodeState] = useState('waiting');   // 'waiting' | 'ready' | 'failed'
+  // ── REVIEW SWITCH, 2026-09-12, to be removed once one is chosen ──────────
+  // Two answers to the moment between the tap and the picture arriving:
+  // the plain code drawn at once, with the picture developing inside it
+  // (the default), or the art pulsing until the picture lands (?wait=pulse).
+  const [pulseWait, setPulseWait] = useState(false);
+  useEffect(() => {
+    setPulseWait(new URLSearchParams(window.location.search).get('wait') === 'pulse');
+  }, []);
   // On the layer a swipe brings the next record into this same component, and
   // a record arrives on its cover, not on the last one's code.
   const [codeFor, setCodeFor] = useState(entry.slug);
@@ -204,27 +212,53 @@ export default function FullPostPage({ entry, references = [], authed = false, l
       return 1;
     }
   }, [entryUrl]);
-  const showingCode = coverCode && codeState !== 'waiting';
-  // The pressed picture has no plate behind it — the page shows through the
-  // light modules — so the frame comes off the box while it is showing. The
-  // plain stand-in paints its own paper and keeps the frame.
-  const coverBare = showingCode && codeState === 'ready';
+  // Two pictures of the same code, stacked: the plain one the browser draws
+  // at once, and the pressed one that arrives from the server. Both are the
+  // same grid — same encoder, same level, same floor — so when the pressed
+  // picture fades in over the plain one the photograph develops inside the
+  // modules rather than a second code replacing the first. The plain one is
+  // bare, in the page's ink, and stays as the answer if the press fails.
+  const photoOn = coverCode && codeState === 'ready';
+  const plainOn = coverCode && (pulseWait ? codeState === 'failed' : codeState !== 'ready');
+  const showingCode = photoOn || plainOn;
+  // Neither picture has a plate behind it — the page shows through the light
+  // modules — so the frame comes off the box while either is showing.
+  const coverBare = showingCode;
+  // The pulse: the art breathing while the press is in the air (review
+  // switch, above).
+  const pressing = pulseWait && coverCode && codeState === 'waiting';
   const coverFace = codeAsked && (
     <span
-      className={'ln-cover-code' + (codeState === 'ready' ? ' ln-cover-code--photo' : '') + (showingCode ? ' ln-cover-code--on' : '')}
+      className={'ln-cover-code' + (showingCode ? ' ln-cover-code--on' : '')}
       style={{ '--ln-code-span': codeSpan }}
       aria-hidden={!showingCode}
     >
-      {codeState === 'failed'
-        ? <AddressCode text={entryUrl} className="ln-cover-plain" />
-        : <img
-            src={codeSrc}
-            alt={`Scannable code for ${entryUrl}`}
-            onLoad={() => setCodeState('ready')}
-            onError={() => setCodeState('failed')}
-          />}
+      <AddressCode
+        text={entryUrl}
+        className={'ln-cover-plain' + (plainOn ? ' ln-cover-plain--on' : '')}
+        level="H"
+        least={LEAST_VERSION}
+        ink="currentColor"
+        paper={null}
+      />
+      {codeState !== 'failed' && (
+        <img
+          className={'ln-cover-pressed' + (photoOn ? ' ln-cover-pressed--on' : '')}
+          src={codeSrc}
+          alt={`Scannable code for ${entryUrl}`}
+          onLoad={() => setCodeState('ready')}
+          onError={() => setCodeState('failed')}
+        />
+      )}
     </span>
   );
+  // The corner mark that says the picture turns — the card's, on the cover.
+  const turnBadge = (
+    <span className="ln-turn-badge" aria-hidden="true">
+      {coverCode ? <VinylRecord size={12} weight="bold" /> : <QrCode size={12} weight="bold" />}
+    </span>
+  );
+  const artClass = (coverBare ? 'ln-cover-art--off' : '') + (pressing ? ' ln-cover-art--pressing' : '');
   // The words are added and removed rather than faded, so role="status" reads
   // them out — see the card.
   const copiedLine = (
@@ -654,8 +688,9 @@ export default function FullPostPage({ entry, references = [], authed = false, l
                 is a frame with no cover in it — the blink at the moment the
                 entry lands. Synchronous, from the cache, it paints in the
                 same frame the old one leaves. */}
-            <img src={entry.album_art} alt={entry.album} decoding="sync" fetchPriority="high" className={coverBare ? 'ln-cover-art--off' : ''} />
+            <img src={entry.album_art} alt={entry.album} decoding="sync" fetchPriority="high" className={artClass} />
             {coverFace}
+            {turnBadge}
             {copiedLine}
           </button>
         ) : entry.album_art && (
@@ -739,13 +774,17 @@ export default function FullPostPage({ entry, references = [], authed = false, l
               <button
                 type="button"
                 className="ln-cover ln-cover--turnable"
-                style={{ ...(coverCode ? HERO_COVER_CODE : HERO_COVER), ...HERO_COVER_EASE }}
+                // Unclipped while the code shows: the Copied pill is wider
+                // than the thumbnail, and the box's corners are kept by the
+                // picture and the plate themselves.
+                style={{ ...(coverCode ? { ...HERO_COVER_CODE, overflow: 'visible' } : HERO_COVER), ...HERO_COVER_EASE }}
                 onClick={turnCover}
                 aria-pressed={coverCode}
                 aria-label={turnLabel}
               >
-                <img src={entry.album_art} alt={entry.album} className={coverBare ? 'ln-cover-art--off' : ''} />
+                <img src={entry.album_art} alt={entry.album} className={artClass} />
                 {coverFace}
+                {turnBadge}
                 {copiedLine}
               </button>
             ) : entry.album_art && (
