@@ -43,19 +43,26 @@
 import sharp from 'sharp';
 import jsQR from 'jsqr';
 import QRCode from 'qrcode';
+// Where the alignment targets sit for each version — the encoder's own table,
+// so the press and the code it draws over can never disagree about it.
+import alignment from 'qrcode/lib/core/alignment-pattern.js';
 import database from './database_connection.js';
 import { save_settings } from './settings_actions.js';
+import { CODE_QUIET, LEAST_VERSION } from './code_shape.js';
 
 // Bumped whenever the way this picture is drawn or judged changes. Stamped
 // on the stored path; the card re-presses a code that carries an older stamp
 // the next time its owner opens the journal, so every card ends up the same.
-export const CODE_BUILD = 5;
+export const CODE_BUILD = 6;
 
-const CODE_VERSION = 4;
-const CODE_QUIET = 4;
-// Twelve device pixels a module: past what any screen shows it at, so the
-// edges of every module and every dot stay hard rather than resampled.
-const MODULE_PX = 12;
+// The quiet zone and the least version are in library/code_shape.js, which
+// the browser reads too.
+// Ten device pixels a module, 2026-09-12 (twelve before): past what any
+// screen shows it at, so the edges of every module and every dot stay hard
+// rather than resampled. Measured on every cover and the portrait: at eight,
+// two covers failed outright and seven needed larger dots; at ten all of
+// them read at the smallest dot, a third smaller on the wire than at twelve.
+const MODULE_PX = 10;
 // The photograph is kept off the two pure values the ink uses, and off the
 // pages' own tones, so a module never vanishes into either page and a photo
 // pixel is never mistaken for a dot when the dark page's file is made.
@@ -107,6 +114,14 @@ async function pictureSquare(bytes, position, px) {
     .toBuffer();
 }
 
+// The code for an address: the smallest version that holds it at level H,
+// and never smaller than the least drawn.
+function codeFor(url) {
+  const least = QRCode.create(url, { errorCorrectionLevel: 'H' });
+  if (least.version >= LEAST_VERSION) return least;
+  return QRCode.create(url, { errorCorrectionLevel: 'H', version: LEAST_VERSION });
+}
+
 // The light page's picture at one dot size. RGBA; the quiet zone and the
 // light modules are transparent, so the page shows through.
 function compose(photo, modules, dot) {
@@ -116,8 +131,10 @@ function compose(photo, modules, dot) {
   const codePx = size * MODULE_PX;
   const out = Buffer.alloc(W * W * 4, 0);
   const inFinder = (c, r) => (c < 7 && r < 7) || (c >= size - 7 && r < 7) || (c < 7 && r >= size - 7);
-  // Version 4 has one alignment target, centred on module 26.
-  const inAlign = (c, r) => c >= 24 && c <= 28 && r >= 24 && r <= 28;
+  // The alignment targets: one at version 4, centred on module 26; six from
+  // version 7. Each is five modules square around its centre.
+  const centres = alignment.getPositions((size - 17) / 4);
+  const inAlign = (c, r) => centres.some(([a, b]) => Math.abs(c - a) <= 2 && Math.abs(r - b) <= 2);
   for (let y = 0; y < codePx; y++) {
     for (let x = 0; x < codePx; x++) {
       const col = Math.floor(x / MODULE_PX);
@@ -197,8 +214,14 @@ async function reads(rgba, W, page, url) {
   return true;
 }
 
+// Lossless, and at the slowest setting: the adaptive filter takes a fifth
+// off a photograph for ninety milliseconds, and every pixel comes back
+// exactly — which the ink flip below depends on. Never a palette: sharp's
+// `effort` quantises to one, which halves the file and moves the pixels.
 async function toPng(rgba, W) {
-  const png = await sharp(rgba, { raw: { width: W, height: W, channels: 4 } }).png().toBuffer();
+  const png = await sharp(rgba, { raw: { width: W, height: W, channels: 4 } })
+    .png({ compressionLevel: 9, adaptiveFiltering: true })
+    .toBuffer();
   return png.toString('base64');
 }
 
@@ -207,7 +230,13 @@ async function toPng(rgba, W) {
 // and a sentence saying why, in plain words for the person whose card it is.
 // `kind` says which of three things a miss was: nothing to make from, a
 // picture that could not be proved, or a fault in the press itself.
-export async function buildPortraitCode({ url, portrait, position }) {
+//
+// `dot` is a dot already proved for this picture and this address — the
+// entry's cover keeps the one that carried it (library/cover_code.js) — and
+// with one given the press composes at it and skips the judging, which is
+// most of the cost. A stored dot is trusted only where the caller has checked
+// it was proved by this build on this picture; that is the caller's job.
+export async function buildPortraitCode({ url, portrait, position, dot = null }) {
   const began = Date.now();
   const day = dayOf(began);
   const took = () => `${((Date.now() - began) / 1000).toFixed(1)}s`;
@@ -215,12 +244,21 @@ export async function buildPortraitCode({ url, portrait, position }) {
   if (!url) return nothing('empty', 'the journal has no address yet, so there is nothing to put in a code.');
   if (!portrait) return nothing('empty', 'there is no photo to make it from.');
   try {
-    const { modules } = QRCode.create(url, { errorCorrectionLevel: 'H', version: CODE_VERSION });
+    const { modules } = codeFor(url);
     let photo;
     try {
       photo = await pictureSquare(portrait, position, modules.size * MODULE_PX);
     } catch {
       return nothing('unproved', 'the photo could not be opened as a picture.');
+    }
+    if (dot) {
+      const light = compose(photo, modules, dot);
+      return {
+        data: await toPng(light.data, light.width),
+        kind: 'made',
+        dot,
+        report: `Redrawn, ${day}: at the dot already proved for this picture. (${took()})`,
+      };
     }
     for (const [step, dot] of DOTS.entries()) {
       const light = compose(photo, modules, dot.size);

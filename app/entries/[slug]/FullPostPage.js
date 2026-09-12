@@ -10,7 +10,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { CaretUp, Check, X } from '@phosphor-icons/react';
+import { CaretUp, Check, VinylRecord, X } from '@phosphor-icons/react';
 import { BookOpen } from '@phosphor-icons/react';
 import { fonts } from '../../../library/sitewide_visuals';
 import { sizedAlbumArt, fetchAlbumArtUrl } from '../../../library/music_data_api';
@@ -29,6 +29,10 @@ import MetadataLabel from '../../../components/main_components/Slug_Page/Metadat
 import Chip from '../../../components/main_components/Slug_Page/Chip';
 import MiniCard from '../../../components/main_components/Slug_Page/MiniCard';
 import { handedOver } from '../../../library/handoff';
+import { tidyAddress } from '../../../library/return_address';
+import { useBookplate } from '../../../components/main_components/Bookplate';
+import { useTheme } from '../../../components/main_components/Lightswitch';
+import CodeSlot from '../../../components/main_components/CodeSlot';
 import StarRating from '../../../components/main_components/StarRating';
 import StarPicker from '../../../components/session_components/StarRating';
 import { editStamp } from '../../../library/entry_formatter';
@@ -47,6 +51,24 @@ const HERO_COVER = {
   width: '110px', height: '110px', borderRadius: '12px', overflow: 'hidden', flexShrink: 0,
   boxShadow: 'var(--shadow-lift)', border: '1px solid var(--panel-border)',
 };
+// The same box while it is showing the code, 2026-09-12: a code the size of
+// the thumbnail is too fine to point a phone at, so the box grows to the
+// portrait's scale and the row makes room — the title moves over, the way
+// content is allowed to on this site. Grown from the thumbnail rather than
+// floated over the row, so the code visibly comes out of the cover.
+const HERO_COVER_CODE = { ...HERO_COVER, width: '220px', height: '220px' };
+const HERO_COVER_EASE = { transition: 'width 0.26s ease, height 0.26s ease' };
+
+// A short mark for the art's address, stamped onto the code's address so a
+// corrected cover asks for a fresh picture rather than the one the browser
+// cached for the old one. Not a fingerprint of anything: any change is enough.
+function artMark(text) {
+  let h = 5381;
+  for (let i = 0; i < text.length; i++) h = ((h << 5) + h + text.charCodeAt(i)) | 0;
+  return (h >>> 0).toString(36);
+}
+
+const COVER_LABELS = { toCode: 'Show the code for this entry', toPicture: 'Show the cover' };
 
 // ── There is no pin here ────────────────────────────────────────────────────
 // There was, for a week: a Pin chip in the row under the rating, on the
@@ -108,6 +130,45 @@ export default function FullPostPage({ entry, references = [], authed = false, l
       setFinding(false);
     }
   }
+
+  // ── The cover as the code ─────────────────────────────────────────────────
+  // Outside a correction the art is a CodeSlot — the square the card's
+  // portrait turns in: press it and it becomes a scannable code for this
+  // entry's address, the address goes on the clipboard, the pill says so.
+  // Available to anyone: an address travels freely; only the contents
+  // don't. On a home screen there is no address bar, so this is not hiding
+  // the address, it is the only form the address takes.
+  //
+  // The picture is pressed on the server the first time it is asked for
+  // (app/api/entries/[slug]/code) and never on entry save: most entries are
+  // never tapped, and Apple's art cannot be read in a browser anyway. The
+  // slot breathes the cover until it arrives.
+  const { site_address } = useBookplate();
+  const { theme } = useTheme();
+  const host = tidyAddress(site_address);
+  const entryUrl = host && entry.slug ? `https://${host}/entries/${entry.slug}` : '';
+  const canTurnCover = Boolean(entryUrl && entry.album_art && !preview);
+  const [coverCode, setCoverCode] = useState(false);
+  // On the layer a swipe brings the next record into this same component,
+  // and a record arrives on its cover, not on the last one's code. The slot
+  // itself is keyed on the slug below, so its own state starts over too.
+  const [codeFor, setCodeFor] = useState(entry.slug);
+  if (codeFor !== entry.slug) {
+    setCodeFor(entry.slug);
+    setCoverCode(false);
+  }
+  // The dots are the page's ink, so the page asks for the file that matches
+  // it. The art's mark rides along so a corrected cover is never a day stale.
+  const codeSrc = `/api/entries/${encodeURIComponent(entry.slug)}/code?theme=${theme === 'dark' ? 'dark' : 'light'}`
+    + `&v=${artMark(entry.album_art_source || entry.album_art || '')}`;
+  const coverSlot = {
+    address: entryUrl,
+    codeSrc,
+    turned: coverCode,
+    onTurn: setCoverCode,
+    backGlyph: <VinylRecord size={12} weight="bold" />,
+    labels: COVER_LABELS,
+  };
 
   // What the page draws. album_art holds the master, which is up to 3000px
   // square, and the largest this is ever printed is 110 — so the draft is
@@ -516,13 +577,20 @@ export default function FullPostPage({ entry, references = [], authed = false, l
             {coverSrc && <img src={coverSrc} alt="" />}
             <span className="ln-cover-hint">{coverSrc ? 'Replace' : 'Add a cover'}</span>
           </button>
+        ) : entry.album_art && canTurnCover ? (
+          /* decoding="sync": on the layer this image replaces an identical
+             one the wait state drew, and an async decode of a new element
+             is a frame with no cover in it — the blink at the moment the
+             entry lands. Synchronous, from the cache, it paints in the
+             same frame the old one leaves. */
+          <CodeSlot
+            key={entry.slug}
+            className="ln-screen-one-art ln-cover"
+            picture={<img src={entry.album_art} alt={entry.album} decoding="sync" fetchPriority="high" />}
+            {...coverSlot}
+          />
         ) : entry.album_art && (
           <div className="ln-screen-one-art">
-            {/* decoding="sync": on the layer this image replaces an identical
-                one the wait state drew, and an async decode of a new element
-                is a frame with no cover in it — the blink at the moment the
-                entry lands. Synchronous, from the cache, it paints in the
-                same frame the old one leaves. */}
             <img src={entry.album_art} alt={entry.album} decoding="sync" fetchPriority="high" />
           </div>
         )}
@@ -598,6 +666,17 @@ export default function FullPostPage({ entry, references = [], authed = false, l
                 {coverSrc && <img src={coverSrc} alt="" />}
                 <span className="ln-cover-hint">{coverSrc ? 'Replace' : 'Add'}</span>
               </button>
+            ) : entry.album_art && canTurnCover ? (
+              /* Unclipped while the code shows: the Copied pill is wider
+                 than the thumbnail, and the box's corners are kept by the
+                 picture and the plate themselves. */
+              <CodeSlot
+                key={entry.slug}
+                className="ln-cover"
+                style={{ ...(coverCode ? { ...HERO_COVER_CODE, overflow: 'visible' } : HERO_COVER), ...HERO_COVER_EASE }}
+                picture={<img src={entry.album_art} alt={entry.album} />}
+                {...coverSlot}
+              />
             ) : entry.album_art && (
               <div className="ln-cover" style={HERO_COVER}>
                 <img src={entry.album_art} alt={entry.album} />

@@ -375,6 +375,21 @@
    press free for the tap-to-QR idea that is parked. */
 .ln-cover { position: relative; padding: 0; background: transparent; }
 .ln-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+/* ── The cover as the code ── is CodeSlot (base.css, .ln-slot-*), 2026-09-12:
+   the same square the card's portrait turns in. What is the entry's own is
+   below. On a wide window the box keeps its frame — its inline style
+   outranks the bare rule — and grows while the code shows (FullPostPage
+   sizes it: the thumbnail is too fine to point a phone at), and the code
+   sits on a plate of page colour, because the hero behind it is the
+   blurred art and the picture was proved on the page. The quiet zone stays
+   inside the plate, so nothing hangs off, and the badge keeps its corner;
+   the frame's 12px radius takes less than a module off an 18px margin. */
+@media (min-width: 769px) {
+  .ln-hero .ln-slot-code { background: var(--bg); }
+  .ln-hero .ln-slot-plain, .ln-hero .ln-slot-pressed { width: 100%; height: 100%; }
+  .ln-hero .ln-turn-badge { left: 7px; bottom: 7px; }
+}
 /* Dashed, and only here: it is the one border on the page that means
    "this is not finished with", which is the whole of what edit mode is. */
 .ln-cover--live { cursor: pointer; border: 1px dashed var(--ink-faint); }
@@ -678,10 +693,6 @@
   0%,100% { box-shadow: 0 0 0 0 var(--accent); }
   50% { box-shadow: 0 0 0 5px transparent; }
 }
-@keyframes ln-breathe {
-  0%,100% { opacity:1; } 50% { opacity:0.6; }
-}
-
 @keyframes ln-cue-bob {
   0%, 100% { transform: translateY(0); }
   50%      { transform: translateY(5px); }
