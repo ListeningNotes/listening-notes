@@ -1,11 +1,11 @@
 // Copyright (C) 2026 Miyel Brown
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // components/main_components/AddressCode.js
-// A plain code for an address, drawn in the browser. The card shows it where
-// no portrait could be made into one, and an entry shows it where the server
-// could not press its cover — a worse picture and a working one, so that
-// something scannable always ships. It lived inside IdentityCard until the
-// entry needed it too.
+// A plain code for an address, drawn in the browser. CodeSlot shows it where
+// no pressed picture can be had — a card with no portrait, a cover the server
+// could not press — a worse picture and a working one, so that something
+// scannable always ships. It lived inside IdentityCard until the entry
+// needed it too.
 
 'use client';
 import { useMemo } from 'react';
@@ -77,7 +77,7 @@ function buildCode(url, level, least) {
 // is how the entry draws it — bare on the page, in the page's own ink, the
 // same geometry as the pressed picture.
 export default function AddressCode({
-  text, className = 'idc-qr', level = 'M', least = 1, ink = CODE_INK, paper = CODE_PAPER,
+  text, className = '', level = 'M', least = 1, ink = CODE_INK, paper = CODE_PAPER,
 }) {
   const code = useMemo(() => buildCode(text, level, least), [text, level, least]);
   if (!code) return null;

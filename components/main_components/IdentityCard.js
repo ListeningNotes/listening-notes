@@ -23,13 +23,13 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
-import { Check, Eye, EyeSlash, Pencil, Printer, QrCode, UploadSimple, User, X } from '@phosphor-icons/react';
+import { Check, Eye, EyeSlash, Pencil, Printer, UploadSimple, User, X } from '@phosphor-icons/react';
 import { noteArrival, recallSender, subscribeSender, tidyAddress } from '../../library/return_address';
 import { useRouter } from 'next/navigation';
 import { useTheme } from './Lightswitch';
 import { useListeningBeacon } from '../../hooks/useListeningBeacon';
 import { useBookplate } from './Bookplate';
-import AddressCode from './AddressCode';
+import CodeSlot from './CodeSlot';
 
 // ── The Ln. mark ──────────────────────────────────────────────────────────
 // It sits at the top of the column, and it is the only mark on this side of the
@@ -53,6 +53,8 @@ function monthAndYear(value) {
   if (Number.isNaN(date.getTime())) return null;
   return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', timeZone: 'UTC' });
 }
+
+const SLOT_LABELS = { toCode: 'Show the code for this address', toPicture: 'Show the portrait' };
 
 // What the browser holds as the visitor's own journal, for the Compare offer.
 // Module-level so the store reads a stable function.
@@ -144,40 +146,13 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
     ? `https://${visitorJournal}/compare?with=${encodeURIComponent(address)}`
     : '';
 
+  // The square is a CodeSlot — the same one an entry's cover turns in. It
+  // owns the turn, the copy and its pill, the corner mark and the wait; the
+  // card owns which face is up. A card with no photograph starts on its
+  // code, because an address with nothing to stand in front of it is still
+  // an address.
   const canTurnSlot = Boolean(portrait_url && address);
   const [slotCode, setSlotCode] = useState(!portrait_url && Boolean(address));
-
-  // ── Turning it also puts the address on the clipboard ────────────────────
-  // The code is for a phone pointed at the screen, and that only helps
-  // somebody standing in front of it. The other half of the time what is
-  // wanted is the address itself — to paste into a send form, into a message,
-  // into somebody's notes — and reading a QR back into text by hand is not a
-  // thing anybody does.
-  //
-  // So the press does both. The turn is what you asked for and the copy is
-  // free, which means it has to say so: a clipboard write with nothing on
-  // screen is indistinguishable from a button that did nothing, and that is
-  // the whole reason this line exists.
-  const [copied, setCopied] = useState(false);
-  const copiedTimer = useRef(null);
-  useEffect(() => () => clearTimeout(copiedTimer.current), []);
-
-  function turnSlot() {
-    const showing = !slotCode;
-    setSlotCode(showing);
-    // Only on the way to the code. Turning back to the portrait is undoing
-    // the press, and undoing it should not quietly copy anything.
-    if (!showing) return;
-    // Absent over plain http and in a browser that has never had it. Nothing
-    // to fall back to that is not worse than saying nothing, so the turn
-    // simply happens without the line.
-    if (!navigator.clipboard?.writeText) return;
-    navigator.clipboard.writeText(`https://${address}`).then(() => {
-      setCopied(true);
-      clearTimeout(copiedTimer.current);
-      copiedTimer.current = setTimeout(() => setCopied(false), 1800);
-    }).catch(() => {});
-  }
 
   // ── Framing the picture ─────────────────────────────────────────────────
   // The slot is square and a photograph almost never is, so the browser crops
@@ -225,53 +200,25 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
   }
 
   // ── The slot ────────────────────────────────────────────────────────────
-  // Built here rather than inline, because inline it was an immediately-called
-  // function inside the JSX and everything in one of those counts as render.
-  //
   // Editing shows the photo side and nothing else: the code is not a thing
   // being changed, and a box that turns to a QR halfway through choosing a
   // picture is a box arguing with you.
-  const showingCode = slotCode && !editing;
   const shownPortrait = editing ? edit.portrait : portrait_url;
-  const slotFaces = (
-    <>
-      <span className={'idc-face-slot' + (showingCode ? '' : ' idc-face-slot--on')} aria-hidden={showingCode}>
-        {shownPortrait
-          ? <img
-              src={shownPortrait}
-              alt={keeper_name || 'The keeper'}
-              draggable={false}
-              style={{ objectPosition: editing ? edit.position : (portrait_position || '50% 50%') }}
-            />
-          : <span className="idc-portrait-empty" />}
-      </span>
-      {address && (
-        <span
-          className={'idc-face-slot idc-face-slot--code'
-            + (portrait_code_url ? ' idc-face-slot--photo' : '')
-            + (showingCode ? ' idc-face-slot--on' : '')}
-          aria-hidden={!showingCode}
-        >
-          {/* The portrait made into the code, when there is one: the photograph
-              fills the dark modules and the page shows through the rest, so
-              there is no plate behind it and no frame around it — the ragged
-              silhouette is the picture. Rendered with hard pixels, because the
-              modules have to stay square at any size. Where no such picture
-              could be built, the plain code stands in: a worse picture and a
-              working one. */}
-          {codeSrc
-            ? <img className="idc-qr idc-qr--photo" src={codeSrc} alt={`Scannable code for ${address}`} />
-            : <AddressCode text={`https://${address}`} />}
-        </span>
-      )}
-    </>
-  );
-
-  // Showing the code made out of the portrait, the box stops being a box. No
-  // stock behind it, no shadow under it and no rounded corner clipping it: the
-  // page is the background, which is the whole point of the transparency, and a
-  // radius on the clip would take a bite out of the quiet zone.
-  const bareSlot = showingCode && Boolean(portrait_code_url);
+  const face = shownPortrait
+    ? <img
+        src={shownPortrait}
+        alt={keeper_name || 'The keeper'}
+        draggable={false}
+        style={{ objectPosition: editing ? edit.position : (portrait_position || '50% 50%') }}
+      />
+    : <span className="idc-portrait-empty" />;
+  const slotProps = {
+    picture: face,
+    address: address ? `https://${address}` : '',
+    codeSrc,
+    backGlyph: <User size={12} weight="bold" />,
+    labels: SLOT_LABELS,
+  };
 
   let slot;
   if (editing) {
@@ -288,14 +235,16 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
     // browser, which is the whole point — a picture of yourself is on your
     // phone, not at an address you can type.
     slot = (
-      <div
+      <CodeSlot
+        {...slotProps}
+        turnable={false}
+        turned={false}
         className={'idc-portrait idc-portrait--turnable' + (framing ? ' idc-portrait--framing' : '')}
         onPointerDown={framing ? frameStart : undefined}
         onPointerMove={framing ? frameMove : undefined}
         onPointerUp={framing ? frameEnd : undefined}
         onPointerCancel={framing ? frameEnd : undefined}
       >
-        {slotFaces}
         {framing && <span className="idc-portrait-hint" aria-hidden="true">Drag to reframe</span>}
         <label className={'idc-portrait-hit' + (framing ? ' idc-portrait-hit--pill' : '')}>
           <input
@@ -325,7 +274,7 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
             <X size={12} weight="bold" aria-hidden="true" />
           </button>
         )}
-      </div>
+      </CodeSlot>
     );
   } else if (!portrait_url && !address) {
     // Nothing to show on either face. The box used to print anyway — an
@@ -334,32 +283,9 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
     // editor still draws it, because there it is the way to choose a photo.
     slot = null;
   } else if (!canTurnSlot) {
-    slot = <div className={'idc-portrait' + (bareSlot ? ' idc-portrait--bare' : '')}>{slotFaces}</div>;
+    slot = <CodeSlot {...slotProps} turnable={false} turned={slotCode} className="idc-portrait" />;
   } else {
-    slot = (
-      <button
-        type="button"
-        className={'idc-portrait idc-portrait--turnable' + (bareSlot ? ' idc-portrait--bare' : '')}
-        onClick={turnSlot}
-        aria-pressed={slotCode}
-        aria-label={slotCode ? 'Show the portrait' : 'Show the code for this address'}
-      >
-        {slotFaces}
-        <span className="ln-turn-badge" aria-hidden="true">
-          {slotCode ? <User size={12} weight="bold" /> : <QrCode size={12} weight="bold" />}
-        </span>
-        {/* The copy, said over the code rather than on a line under the
-            slot, 2026-09-11: a pill rising over the picture for a moment
-            gets noticed, and a caption below it did not. The words are
-            still added and removed rather than faded, because that is what
-            makes role="status" read them out — a message that is always in
-            the page and merely invisible is one a screen reader has already
-            been past. */}
-        <span className={'ln-copied' + (copied ? ' ln-copied--on' : '')} role="status">
-          {copied ? 'Copied \u2014 paste it anywhere' : ''}
-        </span>
-      </button>
-    );
+    slot = <CodeSlot {...slotProps} turned={slotCode} onTurn={setSlotCode} className="idc-portrait" />;
   }
 
   // An eye, for a line that is counted and therefore cannot be written but can

@@ -7,10 +7,10 @@
 // It receives the entry data from page.js which fetched it server-side.
 
 'use client';
-import { useState, useEffect, useMemo, useRef } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { CaretUp, Check, QrCode, VinylRecord, X } from '@phosphor-icons/react';
+import { CaretUp, Check, VinylRecord, X } from '@phosphor-icons/react';
 import { BookOpen } from '@phosphor-icons/react';
 import { fonts } from '../../../library/sitewide_visuals';
 import { sizedAlbumArt, fetchAlbumArtUrl } from '../../../library/music_data_api';
@@ -30,11 +30,9 @@ import Chip from '../../../components/main_components/Slug_Page/Chip';
 import MiniCard from '../../../components/main_components/Slug_Page/MiniCard';
 import { handedOver } from '../../../library/handoff';
 import { tidyAddress } from '../../../library/return_address';
-import { CODE_QUIET, LEAST_VERSION } from '../../../library/code_shape';
 import { useBookplate } from '../../../components/main_components/Bookplate';
 import { useTheme } from '../../../components/main_components/Lightswitch';
-import AddressCode from '../../../components/main_components/AddressCode';
-import QRCode from 'qrcode';
+import CodeSlot from '../../../components/main_components/CodeSlot';
 import StarRating from '../../../components/main_components/StarRating';
 import StarPicker from '../../../components/session_components/StarRating';
 import { editStamp } from '../../../library/entry_formatter';
@@ -69,6 +67,8 @@ function artMark(text) {
   for (let i = 0; i < text.length; i++) h = ((h << 5) + h + text.charCodeAt(i)) | 0;
   return (h >>> 0).toString(36);
 }
+
+const COVER_LABELS = { toCode: 'Show the code for this entry', toPicture: 'Show the cover' };
 
 // ── There is no pin here ────────────────────────────────────────────────────
 // There was, for a week: a Pin chip in the row under the rating, on the
@@ -132,133 +132,43 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   }
 
   // ── The cover as the code ─────────────────────────────────────────────────
-  // Outside a correction, pressing the art turns it into a scannable code for
-  // this entry's address and puts the address on the clipboard — the same
-  // gesture as the portrait on the card, the same dot treatment, the same
-  // Copied line. Available to anyone: an address travels freely; only the
-  // contents don't. On a home screen there is no address bar, so this is not
-  // hiding the address, it is the only form the address takes.
+  // Outside a correction the art is a CodeSlot — the square the card's
+  // portrait turns in: press it and it becomes a scannable code for this
+  // entry's address, the address goes on the clipboard, the pill says so.
+  // Available to anyone: an address travels freely; only the contents
+  // don't. On a home screen there is no address bar, so this is not hiding
+  // the address, it is the only form the address takes.
   //
   // The picture is pressed on the server the first time it is asked for
   // (app/api/entries/[slug]/code) and never on entry save: most entries are
-  // never tapped, and Apple's art cannot be read in a browser anyway. Until
-  // it arrives the cover breathes and the Copied line already says the
-  // press did something; if the press cannot be had — the server's reader
-  // refused the picture, or the press faulted — a plain code stands in, a
-  // worse picture and a working one.
+  // never tapped, and Apple's art cannot be read in a browser anyway. The
+  // slot breathes the cover until it arrives.
   const { site_address } = useBookplate();
   const { theme } = useTheme();
   const host = tidyAddress(site_address);
   const entryUrl = host && entry.slug ? `https://${host}/entries/${entry.slug}` : '';
   const canTurnCover = Boolean(entryUrl && entry.album_art && !preview);
-  const [coverCode, setCoverCode] = useState(false);       // showing the code
-  const [codeAsked, setCodeAsked] = useState(false);       // the press has been asked for
-  const [codeState, setCodeState] = useState('waiting');   // 'waiting' | 'ready' | 'failed'
-  // On the layer a swipe brings the next record into this same component, and
-  // a record arrives on its cover, not on the last one's code.
+  const [coverCode, setCoverCode] = useState(false);
+  // On the layer a swipe brings the next record into this same component,
+  // and a record arrives on its cover, not on the last one's code. The slot
+  // itself is keyed on the slug below, so its own state starts over too.
   const [codeFor, setCodeFor] = useState(entry.slug);
   if (codeFor !== entry.slug) {
     setCodeFor(entry.slug);
     setCoverCode(false);
-    setCodeAsked(false);
-    setCodeState('waiting');
   }
-  const [copied, setCopied] = useState(false);
-  const copiedTimer = useRef(null);
-  useEffect(() => () => clearTimeout(copiedTimer.current), []);
-
-  function turnCover() {
-    const showing = !coverCode;
-    setCoverCode(showing);
-    // Only on the way to the code. Turning back is undoing the press, and
-    // undoing it should not quietly copy anything. Same rule as the card.
-    if (!showing) return;
-    setCodeAsked(true);
-    // Absent over plain http and in a browser that has never had it; the turn
-    // simply happens without the line.
-    if (!navigator.clipboard?.writeText) return;
-    navigator.clipboard.writeText(entryUrl).then(() => {
-      setCopied(true);
-      clearTimeout(copiedTimer.current);
-      copiedTimer.current = setTimeout(() => setCopied(false), 1800);
-    }).catch(() => {});
-  }
-
   // The dots are the page's ink, so the page asks for the file that matches
   // it. The art's mark rides along so a corrected cover is never a day stale.
-  const codeSrc = codeAsked
-    ? `/api/entries/${encodeURIComponent(entry.slug)}/code?theme=${theme === 'dark' ? 'dark' : 'light'}`
-      + `&v=${artMark(entry.album_art_source || entry.album_art || '')}`
-    : '';
-  // How much wider than the art's square the pressed file is drawn, so the
-  // code itself fills the square and the quiet zone hangs off the edges. The
-  // file is the code plus its margin; the code's size follows the address,
-  // through the same encoder the press uses.
-  const codeSpan = useMemo(() => {
-    if (!entryUrl) return 1;
-    try {
-      const least = 17 + LEAST_VERSION * 4;
-      const size = Math.max(least, QRCode.create(entryUrl, { errorCorrectionLevel: 'H' }).modules.size);
-      return (size + CODE_QUIET * 2) / size;
-    } catch {
-      return 1;
-    }
-  }, [entryUrl]);
-  // While the press is in the air the art breathes, so the tap is seen to
-  // have landed without anything else changing on screen; the pressed
-  // picture then fades in over it. Miyel's call, 2026-09-12, over the plain
-  // code drawn at once with the picture developing inside it — that gave the
-  // tap an instant answer, but it was a second picture replacing the first.
-  // The plain code is kept for one case: the press could not be had, and
-  // something scannable still has to ship. It is drawn on the press's own
-  // grid — same encoder, same level, same floor — bare, in the page's ink.
-  const photoOn = coverCode && codeState === 'ready';
-  const plainOn = coverCode && codeState === 'failed';
-  const showingCode = photoOn || plainOn;
-  // Neither picture has a plate behind it — the page shows through the light
-  // modules — so the frame comes off the box while either is showing.
-  const coverBare = showingCode;
-  const pressing = coverCode && codeState === 'waiting';
-  const coverFace = codeAsked && (
-    <span
-      className={'ln-cover-code' + (showingCode ? ' ln-cover-code--on' : '')}
-      style={{ '--ln-code-span': codeSpan }}
-      aria-hidden={!showingCode}
-    >
-      <AddressCode
-        text={entryUrl}
-        className={'ln-cover-plain' + (plainOn ? ' ln-cover-plain--on' : '')}
-        level="H"
-        least={LEAST_VERSION}
-        ink="currentColor"
-        paper={null}
-      />
-      {codeState !== 'failed' && (
-        <img
-          className={'ln-cover-pressed' + (photoOn ? ' ln-cover-pressed--on' : '')}
-          src={codeSrc}
-          alt={`Scannable code for ${entryUrl}`}
-          onLoad={() => setCodeState('ready')}
-          onError={() => setCodeState('failed')}
-        />
-      )}
-    </span>
-  );
-  // The corner mark that says the picture turns — the card's, on the cover.
-  const turnBadge = (
-    <span className="ln-turn-badge" aria-hidden="true">
-      {coverCode ? <VinylRecord size={12} weight="bold" /> : <QrCode size={12} weight="bold" />}
-    </span>
-  );
-  const artClass = (coverBare ? 'ln-cover-art--off' : '') + (pressing ? ' ln-cover-art--pressing' : '');
-  // The words are added and removed rather than faded, so role="status" reads
-  // them out — see the card.
-  const copiedLine = (
-    <span className={'ln-copied' + (copied ? ' ln-copied--on' : '')} role="status">
-      {copied ? 'Copied \u2014 paste it anywhere' : ''}
-    </span>
-  );
-  const turnLabel = coverCode ? 'Show the cover' : 'Show the code for this entry';
+  const codeSrc = `/api/entries/${encodeURIComponent(entry.slug)}/code?theme=${theme === 'dark' ? 'dark' : 'light'}`
+    + `&v=${artMark(entry.album_art_source || entry.album_art || '')}`;
+  const coverSlot = {
+    address: entryUrl,
+    codeSrc,
+    turned: coverCode,
+    onTurn: setCoverCode,
+    backGlyph: <VinylRecord size={12} weight="bold" />,
+    labels: COVER_LABELS,
+  };
 
   // What the page draws. album_art holds the master, which is up to 3000px
   // square, and the largest this is ever printed is 110 — so the draft is
@@ -668,23 +578,17 @@ export default function FullPostPage({ entry, references = [], authed = false, l
             <span className="ln-cover-hint">{coverSrc ? 'Replace' : 'Add a cover'}</span>
           </button>
         ) : entry.album_art && canTurnCover ? (
-          <button
-            type="button"
-            className={'ln-screen-one-art ln-cover ln-cover--turnable' + (coverBare ? ' ln-cover--bare' : '')}
-            onClick={turnCover}
-            aria-pressed={coverCode}
-            aria-label={turnLabel}
-          >
-            {/* decoding="sync": on the layer this image replaces an identical
-                one the wait state drew, and an async decode of a new element
-                is a frame with no cover in it — the blink at the moment the
-                entry lands. Synchronous, from the cache, it paints in the
-                same frame the old one leaves. */}
-            <img src={entry.album_art} alt={entry.album} decoding="sync" fetchPriority="high" className={artClass} />
-            {coverFace}
-            {turnBadge}
-            {copiedLine}
-          </button>
+          /* decoding="sync": on the layer this image replaces an identical
+             one the wait state drew, and an async decode of a new element
+             is a frame with no cover in it — the blink at the moment the
+             entry lands. Synchronous, from the cache, it paints in the
+             same frame the old one leaves. */
+          <CodeSlot
+            key={entry.slug}
+            className="ln-screen-one-art ln-cover"
+            picture={<img src={entry.album_art} alt={entry.album} decoding="sync" fetchPriority="high" />}
+            {...coverSlot}
+          />
         ) : entry.album_art && (
           <div className="ln-screen-one-art">
             <img src={entry.album_art} alt={entry.album} decoding="sync" fetchPriority="high" />
@@ -763,22 +667,16 @@ export default function FullPostPage({ entry, references = [], authed = false, l
                 <span className="ln-cover-hint">{coverSrc ? 'Replace' : 'Add'}</span>
               </button>
             ) : entry.album_art && canTurnCover ? (
-              <button
-                type="button"
-                className="ln-cover ln-cover--turnable"
-                // Unclipped while the code shows: the Copied pill is wider
-                // than the thumbnail, and the box's corners are kept by the
-                // picture and the plate themselves.
+              /* Unclipped while the code shows: the Copied pill is wider
+                 than the thumbnail, and the box's corners are kept by the
+                 picture and the plate themselves. */
+              <CodeSlot
+                key={entry.slug}
+                className="ln-cover"
                 style={{ ...(coverCode ? { ...HERO_COVER_CODE, overflow: 'visible' } : HERO_COVER), ...HERO_COVER_EASE }}
-                onClick={turnCover}
-                aria-pressed={coverCode}
-                aria-label={turnLabel}
-              >
-                <img src={entry.album_art} alt={entry.album} className={artClass} />
-                {coverFace}
-                {turnBadge}
-                {copiedLine}
-              </button>
+                picture={<img src={entry.album_art} alt={entry.album} />}
+                {...coverSlot}
+              />
             ) : entry.album_art && (
               <div className="ln-cover" style={HERO_COVER}>
                 <img src={entry.album_art} alt={entry.album} />

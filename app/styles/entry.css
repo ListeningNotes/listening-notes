@@ -376,74 +376,19 @@
 .ln-cover { position: relative; padding: 0; background: transparent; }
 .ln-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
 
-/* ── The cover as the code ────────────────────────────────────────────────
-   Outside a correction the art is a button too, 2026-09-12: press it and it
-   turns into the code for this entry's address, the way the card's portrait
-   turns into the journal's. The two faces are stacked and cross-faded, not
-   rotated — the same call idcard.css makes, and for the same reason. */
-.ln-cover--turnable { cursor: pointer; appearance: none; -webkit-appearance: none; color: inherit; font: inherit; }
-.ln-cover--turnable:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 3px; }
-.ln-cover--turnable > img { transition: opacity 0.26s ease; border-radius: inherit; }
-/* The art goes when a code shows: the light modules are holes the page
-   shows through, and a cover under them would show through too. */
-.ln-cover-art--off { opacity: 0; }
-/* While the press is in the air the art breathes, so the tap is seen to
-   have landed and nothing else on screen changes until the picture does. */
-.ln-cover-art--pressing { animation: ln-breathe 1.3s ease-in-out infinite; }
-.ln-cover-code {
-  position: absolute; inset: 0;
-  border-radius: inherit;
-  color: var(--ink);
-  opacity: 0; transition: opacity 0.26s ease; pointer-events: none;
-}
-.ln-cover-code--on { opacity: 1; }
-/* Two pictures of one code, stacked and centred: the pressed one from the
-   server, and the plain one the browser draws when the press cannot be
-   had, each fading on its own. Each is the code plus its quiet zone, and
-   the code itself is what takes the art's place — so both are drawn
-   oversize by the share the margin is (set from the page, per address)
-   and the margin hangs off the edges, where the page is anyway. Smoothed,
-   not pixelated: every module of the pressed picture carries a dot, and
-   nearest-neighbour shrinking drops dots. */
-.ln-cover-plain, .ln-cover-pressed {
-  position: absolute; left: 50%; top: 50%;
-  transform: translate(-50%, -50%);
-  width: calc(100% * var(--ln-code-span, 1));
-  height: auto;
-  max-width: none;
-  display: block;
-  opacity: 0; transition: opacity 0.26s ease;
-  image-rendering: auto;
-}
-/* The plain one is an inline SVG, and Safari does not take an SVG's height
-   from its width the way it does an image's — height: auto came out as
-   the 150px default, a small code centred in the square. The box is
-   square, so the height is simply the width. */
-.ln-cover-plain { height: calc(100% * var(--ln-code-span, 1)); }
-.ln-cover-plain--on, .ln-cover-pressed--on { opacity: 1; }
-.ln-cover--turnable:hover .ln-turn-badge { color: var(--ink); }
-.ln-cover--bare .ln-turn-badge { left: -6px; bottom: -6px; }
-/* Showing the pressed picture, the box stops being a box: no frame, no
-   shadow, no rounded clip taking a bite out of the quiet zone. The border
-   stays, transparent, so the box does not change size. After the phone's
-   .ln-screen-one-art on purpose — same specificity, and this has to win. */
-.ln-cover--bare {
-  border-color: transparent;
-  box-shadow: none;
-  border-radius: 0;
-  overflow: visible;
-  background: none;
-}
-/* On a wide window the box keeps its frame and grows while the code shows
-   (FullPostPage sizes it — the thumbnail is too fine to point a phone at),
-   and the code sits on a plate of page colour, because the hero behind it
-   is the blurred art and the picture was proved on the page. The quiet zone
-   stays inside the plate, so nothing hangs off; the frame's 12px radius
-   takes less than a module off the corner of an 18px margin. */
+/* ── The cover as the code ── is CodeSlot (base.css, .ln-slot-*), 2026-09-12:
+   the same square the card's portrait turns in. What is the entry's own is
+   below. On a wide window the box keeps its frame — its inline style
+   outranks the bare rule — and grows while the code shows (FullPostPage
+   sizes it: the thumbnail is too fine to point a phone at), and the code
+   sits on a plate of page colour, because the hero behind it is the
+   blurred art and the picture was proved on the page. The quiet zone stays
+   inside the plate, so nothing hangs off, and the badge keeps its corner;
+   the frame's 12px radius takes less than a module off an 18px margin. */
 @media (min-width: 769px) {
-  .ln-hero .ln-cover-code { background: var(--bg); }
-  .ln-hero .ln-cover-plain, .ln-hero .ln-cover-pressed { width: 100%; }
-  .ln-hero .ln-cover-plain { height: 100%; }
+  .ln-hero .ln-slot-code { background: var(--bg); }
+  .ln-hero .ln-slot-plain, .ln-hero .ln-slot-pressed { width: 100%; height: 100%; }
+  .ln-hero .ln-turn-badge { left: 7px; bottom: 7px; }
 }
 /* Dashed, and only here: it is the one border on the page that means
    "this is not finished with", which is the whole of what edit mode is. */
@@ -748,10 +693,6 @@
   0%,100% { box-shadow: 0 0 0 0 var(--accent); }
   50% { box-shadow: 0 0 0 5px transparent; }
 }
-@keyframes ln-breathe {
-  0%,100% { opacity:1; } 50% { opacity:0.6; }
-}
-
 @keyframes ln-cue-bob {
   0%, 100% { transform: translateY(0); }
   50%      { transform: translateY(5px); }

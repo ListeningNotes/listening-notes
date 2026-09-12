@@ -285,6 +285,86 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
 }
 .ln-turn-badge--drop { left: auto; right: 7px; cursor: pointer; }
 
+/* ── .ln-slot — a picture that turns into its code (CodeSlot.js) ──────────
+   The card's portrait and the entry's cover. The box's own size, frame and
+   radius come from the surface (.idc-portrait, .ln-screen-one-art, the
+   hero's inline style); these are the two faces inside it, stacked and
+   cross-faded — not rotated: the card's box already lives inside a sheet
+   that turns, and nesting one 3D transform in another is where browsers
+   disagree. */
+.ln-slot { position: relative; }
+.ln-slot--turnable {
+  cursor: pointer; padding: 0; background: transparent;
+  appearance: none; -webkit-appearance: none; color: inherit; font: inherit;
+}
+.ln-slot--turnable:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 3px; }
+.ln-slot--turnable:hover .ln-turn-badge { color: var(--ink); }
+.ln-slot-picture {
+  position: absolute; inset: 0;
+  border-radius: inherit; overflow: hidden;
+  transition: opacity 0.26s ease;
+}
+/* The picture goes when a code shows: the light modules are holes the page
+   shows through, and a picture under them would show through too. */
+.ln-slot-picture--off { opacity: 0; }
+/* While the pressed picture is on its way the picture breathes, so the tap
+   is seen to have landed and nothing else on screen changes until the
+   picture does. */
+.ln-slot-picture--pressing { animation: ln-breathe 1.3s ease-in-out infinite; }
+.ln-slot-code {
+  position: absolute; inset: 0;
+  border-radius: inherit;
+  color: var(--ink);
+  opacity: 0; transition: opacity 0.26s ease; pointer-events: none;
+}
+.ln-slot-code--on { opacity: 1; }
+/* Two pictures of one code, stacked and centred: the pressed one from the
+   server, and the plain one the browser draws when there is none, each
+   fading on its own. Each is the code plus its quiet zone, and the code
+   itself is what takes the picture's place — so both are drawn oversize by
+   the share the margin is (--ln-code-span, set per address by the
+   component) and the margin hangs off the edges, where the page is anyway.
+   Smoothed, not pixelated: every module of the pressed picture carries a
+   dot, and nearest-neighbour shrinking drops dots. The plain one is an
+   inline SVG, and Safari does not take an SVG's height from its width the
+   way it does an image's — so it is given one; the box is square. Two
+   classes deep on purpose: every surface sizes its own picture with a
+   rule like `.idc-portrait img { width: 100%; height: 100% }`, which
+   outranks a single class and would pull the code back to the box. */
+.ln-slot-code .ln-slot-plain, .ln-slot-code .ln-slot-pressed {
+  position: absolute; left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+  width: calc(100% * var(--ln-code-span, 1));
+  height: auto;
+  max-width: none;
+  display: block;
+  object-fit: fill;
+  opacity: 0; transition: opacity 0.26s ease;
+  image-rendering: auto;
+}
+.ln-slot-code .ln-slot-plain { height: calc(100% * var(--ln-code-span, 1)); }
+/* Two classes deep as well, or the sizing rule above would outrank this
+   and neither picture could ever fade in. */
+.ln-slot-code .ln-slot-plain--on, .ln-slot-code .ln-slot-pressed--on { opacity: 1; }
+/* Showing a code, the box stops being a box: no frame, no shadow, no
+   rounded clip taking a bite out of the quiet zone, no stock behind it —
+   the page is the background, which is the whole point of the alpha. The
+   border stays, transparent, so the box does not change size. Two classes,
+   so this outranks the surface's own single-class box rule whatever order
+   the stylesheets load in. */
+.ln-slot.ln-slot--bare {
+  border-color: transparent;
+  box-shadow: none;
+  border-radius: 0;
+  overflow: visible;
+  background: none;
+}
+.ln-slot--bare .ln-turn-badge { left: -6px; bottom: -6px; }
+
+@keyframes ln-breathe {
+  0%,100% { opacity:1; } 50% { opacity:0.6; }
+}
+
 /* ── .ln-xref — a mention that turned out to be something you've logged ───
    Applied at display time by library/cross_references.js, never stored in the
    note. It has to sit inside running prose without breaking the line up, so
