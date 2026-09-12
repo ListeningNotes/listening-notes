@@ -1,6 +1,6 @@
 {
   "name": "listening-notes",
-  "version": "2026.9.11",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "dev": "next dev",

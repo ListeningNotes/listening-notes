@@ -838,6 +838,9 @@
   opacity: 0.7;
 }
 .pt-source:hover { opacity: 1; text-decoration: underline; }
+/* Source and the version on one line, 2026-09-12. */
+.pt-colophon { display: flex; align-items: baseline; gap: 8px; margin: 0; }
+.pt-colophon-dot { font-family: var(--font-label); font-size: 0.62rem; color: var(--ink-faint); opacity: 0.6; }
 
 /* ── Right, logged in: Dashboard ────────────────────────────────────────── */
 .db-pane {
