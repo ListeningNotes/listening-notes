@@ -2,8 +2,8 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 /* app/styles/forms.css
    The pages that stand on their own, most of them forms: the send page and
-   its album finder, setup, settings, the password gate, compare, the key
-   page, and the add-to-home-screen step. */
+   its album finder, setup, settings, the inbox and the address book, the
+   password gate, compare, the key page, and the add-to-home-screen step. */
 
 /* ── from app/submit/page.js ─────────────────────────────────────────── */
 /* One screen. The whole send is a cover, a message, a name and an
@@ -798,9 +798,63 @@ a.pp-name:hover svg { color: var(--ink); }
 .ib-comment-text { font-size: 14px; color: var(--ink); line-height: 1.7; margin: 0 0 12px; }
 .ib-comment-row { display: flex; align-items: center; gap: 8px; }
 .ib-comment-row .own-link { font-family: var(--font-label); font-size: 10px; margin-left: auto; }
+/* A send that carried a journal, once filed, says so where the button was. */
+.ib-filed { align-self: center; }
+
+/* ── from app/dashboard/people/page.js ───────────────────────────────── */
+/* The address book: the inbox's sheet and panel, one column of people. A
+   row is a face, a name and where they live; the row itself opens your page
+   about them, the arrow beside it opens their journal. */
+.bk-body { max-width: 720px; padding: 18px 24px 40px; }
+.bk-panel { border-radius: 24px; }
+.bk-scroll { position: relative; z-index: 1; flex: 1; padding: 22px 26px 28px; }
+/* The field and its two ways in: file what is in it, or point the camera at
+   a code. One row, as wide as the list under it. */
+.bk-add { display: flex; gap: 8px; align-items: center; margin-bottom: 6px; }
+.bk-add .own-act { gap: 6px; white-space: nowrap; }
+.bk-field {
+  flex: 1; min-width: 0; box-sizing: border-box;
+  padding: 10px 14px; border-radius: 999px;
+  border: 1px solid var(--border); background: var(--bg); color: var(--ink);
+  font-family: var(--font-sans); font-size: 14px;
+}
+.bk-field:focus { outline: none; border-color: var(--ink-faint); }
+.bk-said {
+  font-family: var(--font-label); font-size: 10px; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--ink-faint); margin: 8px 0 0; min-height: 14px;
+}
+.bk-list { display: flex; flex-direction: column; margin-top: 18px; }
+.bk-row { display: flex; align-items: center; gap: 12px; padding: 14px 6px; border-bottom: 1px solid var(--border); }
+.bk-row:last-child { border-bottom: none; }
+.bk-person { display: flex; align-items: center; gap: 14px; flex: 1; min-width: 0; text-decoration: none; color: inherit; }
+/* Their journal's own portrait, read straight off it, over the plain mark
+   that shows when there is none or the journal is out. */
+.bk-face {
+  position: relative; width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0;
+  background: var(--bg); border: 1px solid var(--border); overflow: hidden;
+  display: flex; align-items: center; justify-content: center; color: var(--ink-faint);
+}
+.bk-face img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.bk-who { display: flex; flex-direction: column; min-width: 0; }
+.bk-name { font-family: var(--font-display); font-weight: var(--font-display-weight, 700); font-size: 15px; color: var(--ink); line-height: 1.25; overflow-wrap: anywhere; }
+.bk-address { font-family: var(--font-label); font-size: 10px; color: var(--ink-soft); margin-top: 2px; overflow-wrap: anywhere; }
+.bk-visit { font-family: var(--font-label); font-size: 10px; white-space: nowrap; }
+/* The camera, in the panel where the field was: a square of it, and Cancel. */
+.bk-scan { display: flex; flex-direction: column; align-items: center; gap: 12px; margin-bottom: 6px; }
+.bk-scan-video { width: 100%; max-width: 360px; aspect-ratio: 1; object-fit: cover; border-radius: 16px; background: #000; }
+.bk-scan-trouble { font-size: 13px; color: var(--fav); margin: 0; text-align: center; }
+@media (max-width: 640px) {
+  .bk-add { flex-wrap: wrap; }
+  .bk-field { flex-basis: 100%; }
+  .bk-row { flex-wrap: wrap; }
+}
+/* Sixteen pixels on touch, like every other field, or Safari zooms in and
+   stays there (the rule the send form's section explains). */
+@media (pointer: coarse) { .bk-field { font-size: 16px; } }
 
 
 /* ── from app/printer/page.js ─────────────────────────────────────────── */
+
 .own-screen .kt-tool, .idc-tool { text-decoration: none; }
 .pr-main { width: 100%; max-width: 560px; align-self: center; box-sizing: border-box; padding: 60px 24px 120px; }
 .pr-title { font-family: var(--font-display); font-weight: var(--font-display-weight, 700); font-size: 28px; margin: 10px 0 14px; letter-spacing: -0.01em; }

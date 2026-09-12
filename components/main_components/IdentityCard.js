@@ -21,10 +21,9 @@
 // the page's own colour, and turning something over should not change the
 // colour of the room.
 
-import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { Check, Eye, EyeSlash, Pencil, Printer, UploadSimple, User, X } from '@phosphor-icons/react';
-import { noteArrival, recallSender, subscribeSender, tidyAddress } from '../../library/return_address';
 import { useRouter } from 'next/navigation';
 import { useTheme } from './Lightswitch';
 import { useListeningBeacon } from '../../hooks/useListeningBeacon';
@@ -58,8 +57,6 @@ const SLOT_LABELS = { toCode: 'Show the code for this address', toPicture: 'Show
 
 // What the browser holds as the visitor's own journal, for the Compare offer.
 // Module-level so the store reads a stable function.
-const readVisitorJournal = () => recallSender().address;
-const readNothing = () => '';
 
 // `edit` is handed in rather than made here. The prompts print on the About
 // pane below this card and are edited there, and one edit session cannot be
@@ -129,22 +126,27 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
 
   const address = site_address ? site_address.replace(/^https?:\/\//, '') : null;
 
-  // ── Compare, for a visitor who keeps a journal ────────────────────────────
-  // Offered only when this browser holds an address that is not this
-  // journal's own — put there by a send, a comment, or a link that arrived
-  // from their own copy's inbox (noteArrival, read here because this is the
-  // surface that makes the offer). It goes to *their* copy's compare page
-  // with this address in hand: the comparison is read from the keeper's own
-  // side, and their records link home. The owner never sees it — a journal
-  // compared with itself is nothing. Read through useSyncExternalStore,
-  // because the browser is the only place the answer exists and the server
-  // has to draw the same card without it; the arrival is noted in an effect
-  // and the store tells the card when it has.
-  const visitorJournal = useSyncExternalStore(subscribeSender, readVisitorJournal, readNothing);
-  useEffect(() => { noteArrival(site_address); }, [site_address]);
-  const compareAt = !authed && address && visitorJournal && visitorJournal !== tidyAddress(address)
-    ? `https://${visitorJournal}/compare?with=${encodeURIComponent(address)}`
-    : '';
+  // ── Add, for a visitor who keeps a journal ──────────────────────────────
+  // The one thing a journal can do for a visitor's address book is hand over
+  // its own address, which it knows: it is the page on screen. It cannot
+  // write to their copy from here, and it does not try to find out whether
+  // they have one — a journal never learns who is reading it. So the press
+  // puts the address on the clipboard and says so, the way the code does,
+  // and their own copy's address book is where it lands. Everything social
+  // lives on the visitor's copy (DECISIONS, The network); this is the
+  // whole of what the journal being read contributes. Never for the owner,
+  // who has nothing to add themselves to.
+  const [added, setAdded] = useState(false);
+  const addedTimer = useRef(null);
+  useEffect(() => () => clearTimeout(addedTimer.current), []);
+  function pressAdd() {
+    if (!address || !navigator.clipboard?.writeText) return;
+    navigator.clipboard.writeText(address).then(() => {
+      setAdded(true);
+      clearTimeout(addedTimer.current);
+      addedTimer.current = setTimeout(() => setAdded(false), 2600);
+    }).catch(() => {});
+  }
 
   // The square is a CodeSlot — the same one an entry's cover turns in. It
   // owns the turn, the copy and its pill, the corner mark and the wait; the
@@ -556,10 +558,13 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
             itself. */}
         <div className="idc-row" inert={editing ? true : undefined}>
           <Link href="/submit" className="ln-pill idc-send">Send an album</Link>
-          {/* "Mine" is the visitor's: the link goes to their own journal.
-              See compareAt above. */}
-          {compareAt && (
-            <a href={compareAt} className="ln-pill idc-send">Compare with mine</a>
+          {/* The address, for the visitor's own address book. See pressAdd
+              above: it copies, because that is all a journal can do for a
+              copy it cannot see. */}
+          {!authed && address && (
+            <button type="button" className="ln-pill idc-send" onClick={pressAdd} aria-live="polite">
+              {added ? 'Copied — paste it in your address book' : 'Add to your address book'}
+            </button>
           )}
         </div>
 

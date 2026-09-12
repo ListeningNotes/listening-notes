@@ -5,8 +5,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import SiteNav from '../../../components/main_components/SiteNav';
-import { useBookplate } from '../../../components/main_components/Bookplate';
-import { carryFrom } from '../../../library/return_address';
+import { journalUrl, tidyJournal } from '../../../library/return_address';
 // A folder tab that connects to the open panel when active. Module scope so it
 // keeps a stable identity across renders.
 function FolderTab({ id, tab, onSelect, children }) {
@@ -25,9 +24,6 @@ function FolderTab({ id, tab, onSelect, children }) {
 
 export default function Inbox({ layered = false }) {
   const router = useRouter();
-  // This journal's own address, carried on every link out to a sender's
-  // journal so theirs can offer Compare on arrival. See carryFrom.
-  const { site_address } = useBookplate();
   const [authed, setAuthed] = useState(false);
   const [checking, setChecking] = useState(true);
   const [tab, setTab] = useState('submissions');
@@ -39,6 +35,12 @@ export default function Inbox({ layered = false }) {
   const [comments, setComments] = useState([]);
   const [comLoading, setComLoading] = useState(true);
 
+  // Who is already in the address book, so a send that carried a journal
+  // offers to file it only once. A send is one of the ways an address gets
+  // in (app/dashboard/people/page.js); this is that way.
+  const [people, setPeople] = useState([]);
+  const filed = new Set(people.map(p => p.address));
+
   useEffect(() => {
     fetch('/api/auth/check').then(r => r.json()).then(d => setAuthed(!!d.authed)).catch(() => {}).finally(() => setChecking(false));
   }, []);
@@ -47,7 +49,20 @@ export default function Inbox({ layered = false }) {
     if (!authed) return;
     fetch('/api/submissions').then(r => r.json()).then(d => { setSubmissions(d.submissions || []); setSubLoading(false); }).catch(() => setSubLoading(false));
     fetch('/api/comments/pending').then(r => r.json()).then(d => { setComments(d.comments || []); setComLoading(false); }).catch(() => setComLoading(false));
+    fetch('/api/people').then(r => r.json()).then(d => setPeople(d.people || [])).catch(() => {});
   }, [authed]);
+
+  // Files a sender's journal in the address book. The server reads the name
+  // off the journal; nothing here is typed.
+  async function file(address) {
+    const r = await fetch('/api/people', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ address }),
+    });
+    const d = await r.json().catch(() => ({}));
+    if (r.ok && d.person) setPeople(prev => [...prev.filter(p => p.id !== d.person.id), d.person]);
+  }
 
   async function updateStatus(id, status) {
     await fetch(`/api/submissions/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status }) });
@@ -167,15 +182,15 @@ export default function Inbox({ layered = false }) {
                           <div className="ib-sent-from">
                             <span>from {sent.submitter_name || 'someone'}</span>
                             {/* Stored without a scheme on purpose - see the
-                                note in the submissions route - so the
-                                https:// here is the only one there can be. */}
-                            {/* Carrying this journal's address, so theirs
-                                knows who arrived and can offer Compare —
-                                see carryFrom. Owner-only surface, which is
-                                what makes that safe. */}
+                                note in the submissions route - so the one
+                                journalUrl puts back is the only one there
+                                can be. A plain link: it used to carry this
+                                journal's address so theirs could offer
+                                Compare, and that is retired (DECISIONS, The
+                                network). */}
                             {sent.sender_url && (
                               <a
-                                href={carryFrom('https://' + sent.sender_url, site_address)}
+                                href={journalUrl(sent.sender_url)}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="own-link"
@@ -194,6 +209,14 @@ export default function Inbox({ layered = false }) {
                               <button onClick={() => updateStatus(sent.id, 'dismissed')} className="own-act own-act--danger">
                                 Dismiss
                               </button>
+                            )}
+                            {/* A send that carried a journal is one of the
+                                ways into the address book. Once filed, the
+                                row says so and offers nothing. */}
+                            {sent.sender_url && tidyJournal(sent.sender_url) && (
+                              filed.has(tidyJournal(sent.sender_url))
+                                ? <span className="own-label ib-filed">In your address book</span>
+                                : <button onClick={() => file(sent.sender_url)} className="own-act">Add to address book</button>
                             )}
                           </div>
                         </div>
@@ -228,8 +251,13 @@ export default function Inbox({ layered = false }) {
                         <div className="ib-comment-row">
                           <button onClick={() => approveComment(c.id)} className="own-act own-act--solid">Approve</button>
                           <button onClick={() => dismissComment(c.id)} className="own-act own-act--danger">Dismiss</button>
+                          {c.author_url && tidyJournal(c.author_url) && (
+                            filed.has(tidyJournal(c.author_url))
+                              ? <span className="own-label ib-filed">In your address book</span>
+                              : <button onClick={() => file(c.author_url)} className="own-act">Add to address book</button>
+                          )}
                           {c.author_url && (
-                            <a href={carryFrom('https://' + c.author_url, site_address)} target="_blank" rel="noopener noreferrer" className="own-link">
+                            <a href={journalUrl(c.author_url)} target="_blank" rel="noopener noreferrer" className="own-link">
                               {c.author_url} &#8599;
                             </a>
                           )}

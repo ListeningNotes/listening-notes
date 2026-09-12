@@ -311,8 +311,9 @@ the password gate.
 
 **The Share door and the Instagram exporter behind it are gone, 2026-09-06.**
 Sharing is an entry's own link and the card, not a page the owner exports
-slides from. The desk is Start a listen, Inbox, Settings. The slide drawing
-lives in git and on the `share-printer` branch if a cover plate is wanted.
+slides from. The desk is Start a listen, Inbox, Address book (2026-09-12)
+and Settings. The slide drawing lives in git and on the `share-printer`
+branch if a cover plate is wanted.
 
 **The printer's door ships before the printer, 2026-09-06.** The glyph beside
 the pencil, on an entry and on the card, opens `/printer`, which says the
@@ -559,6 +560,55 @@ and checks. Nobody learns they were read. **Two views: submissions and
 recent** — submissions is the warmer default and cannot become a scroll. **A
 shelf, not a river:** no counts, no badges, no unread state.
 
+**The feed is entries, not people, 2026-09-12.** Swiping down from the desk:
+entry-shaped rows with a small face and a name — what the people in the
+address book logged, not a list of who exists. Recent is everyone in the
+book, in order; Submissions is who logged what you sent them and how they
+rated it. A row offers Compare only when it is a record you also have —
+this album, their rating and track notes against yours. Compare arrives
+because something happened; it is not a place you navigate to.
+
+**Everything social lives on the visitor's own copy, 2026-09-12.** Their
+copy holds their addresses and does their comparing; other people's journals
+are things you read. The `?from=` link of 2026-09-10 is retired: it only
+worked for somebody arriving from a link their own copy had written — an
+inbox link, and nowhere else — and a text, a code or a shared card carry
+none. Storage is per origin, so the link worked against that grain; the
+argument it replaced is in the archive.
+
+**The address book is a place on the desk, and a person in it is an
+address, 2026-09-12.** Not a relationship: somebody can be added, compared
+against and never have sent anything. Sends are a layer joined from
+submissions by the same address, never what makes a person exist. The
+`people` table holds the address and the name their journal gave; the face
+is read off their journal and never stored.
+
+**Adding is one-sided, and there is nothing to accept.** It is you writing
+down where somebody lives. An accept flow would mean reaching into their
+journal from outside — the phone-home already ruled out. Asymmetric by
+design, the shape of RSS: nobody learns they were added.
+
+**An address arrives without typing.** The Add press on the journal being
+read copies its address — the one thing that journal can do for a copy it
+cannot see, and it never learns whether the visitor keeps one; a send that
+carried a journal has a button in the inbox; a card's or a cover's code can
+be scanned. The paste field is the fallback for an address read aloud.
+
+**Compare is not a destination; it is your page about someone,
+2026-09-12.** A face or a name in the feed, or a row in the book, opens your
+page about that person: overlap, where you agree and disagree hardest, what
+they sent you and how you rated it, their hit rate with you. On your copy,
+which is why it can hold what their journal never could. A printer there
+prints the shape of the agreement and withholds the writing, naming both
+people. Until the page exists a row opens `/compare` with the address.
+
+**Lineage runs backward only, and that is the feature, 2026-09-12.**
+Walking `source_entry_id` upward gives everyone who passed a record before
+you; nothing sees forward, because the link to the next person exists on
+their copy. The forward half arrives through the submissions feed when
+somebody in the book credits you — from them having written something, not
+from anything being tracked. The Submission chip on an entry opens the chain.
+
 **`received_from` is published per entry**, with a per-entry toggle for
 private sends. Public credit is the default; quiet is a choice.
 
@@ -577,20 +627,14 @@ journal if you keep one.
 
 **One stored value, not one per feature.** The sender's URL lives in
 localStorage under a single key owned by `return_address.js`, shared by the
-send form, the comment form and later Compare — fill it in once on any journal
-and it is prefilled on every journal after.
+send form and the comment form — fill it in once on any journal and it is
+prefilled on every journal after. Nothing reads it to decide what a visitor
+is (2026-09-12, above).
 
 **It cannot be filled in from the sender's session, and that is the
 architecture working.** Cookies are scoped per origin, so no copy can see
 what another set — which is exactly what stops anyone being followed from one
 journal to the next. Per browser, not per person; the cost is one paste.
-
-**A keeper's own address reaches another journal in the link, never through
-storage, 2026-09-10.** localStorage is per origin like the cookie, so a
-signed-in copy writing its address into its own storage is read by nothing
-anywhere else. Owner-only links out — the inbox's — carry `?from=<own
-address>`; the journal landed on keeps it as the return address and clears
-the bar. A public link never carries it: it would make every reader the keeper.
 
 **Stored without a scheme, and normalised on the server as well as in the
 browser.** The inbox turns the value into a link, and a route cannot assume
@@ -1077,11 +1121,17 @@ someone sending it on. A directory doesn't solve discovery.
 
 ## Parked, not rejected
 
-**Surprise stays parked; Compare has its first way in, 2026-09-10.** June's
-copy exists, so Compare was designed against it: the card offers it to a
-visitor whose browser holds their own address (The network, above). The
-per-album compare and Surprise's shake are still unbuilt; both routes work
-if typed.
+**Surprise stays parked; Compare's way in is the address book, 2026-09-12.**
+The card's offer to a visitor (2026-09-10) went with the `?from=` link (The
+network). A row in the book opens the whole-journal compare; the per-album
+compare arrives on a feed row; Surprise's shake is still unbuilt and
+`/shuffle` works if typed.
+
+**An overall hit rate for what you send, 2026-09-12.** Two numbers exist and
+only one is complete: what you receive is fully known, what you send is only
+what comes back through the feed. If it is ever built it says so plainly —
+8 of the 11 sent have come back — never a percentage pretending to be whole.
+A number that quietly undercounts is worse than one that admits its gap.
 
 **The ten screensavers, 2026-09-06.** 2,500 lines of canvas nothing mounts
 since the owner's pages went plain. Kept behind their one index rather than
@@ -1095,5 +1145,3 @@ no file".
   already exist as video, so the assets are ready).
 - Manual now-playing override — covers vinyl and iOS Apple Music, where
   scrobbling is unreliable.
-- Address book (`people` table) — turns journal compare from "paste a URL" into
-  "pick a name."
