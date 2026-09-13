@@ -1025,19 +1025,26 @@
   transform-origin: center;
 }
 .ln-printing .ln-print-card > * { position: relative; z-index: 1; }
-/* Opened out on the wide paper, the way the plate lays it: the cover to the
-   left, the writing beside it. */
+/* Opened out on the wide paper, the way the plate lays it: the writing to
+   the left, the cover to the right and as large as the paper allows
+   (Miyel, 2026-09-13), with the paper's padding pulled in to give it room. */
+.ln-printing[data-size="spread"] .ln-print-stack { padding: 4%; }
 .ln-printing[data-size="spread"] .ln-print-card {
   display: grid;
-  grid-template-columns: 42% 1fr;
+  grid-template-columns: 1fr 48%;
   column-gap: 5%;
   row-gap: 8px;
   align-items: center; align-content: center;
   text-align: left;
 }
-.ln-printing[data-size="spread"] .ln-print-card > * { grid-column: 2; justify-self: start; }
-.ln-printing[data-size="spread"] .ln-screen-one-art { grid-column: 1; grid-row: 1 / span 8; justify-self: center; width: 100%; }
+/* The writing is drawn smaller than the art on a paper this short — the
+   whole card scales to fit, and a column of full-size type would drag the
+   cover down to a stamp with it. zoom rather than transform so the grid
+   still measures it. */
+.ln-printing[data-size="spread"] .ln-print-card > * { grid-column: 1; justify-self: start; zoom: 0.55; }
+.ln-printing[data-size="spread"] .ln-screen-one-art { grid-column: 2; grid-row: 1 / span 9; justify-self: center; width: 100%; zoom: 1; }
 .ln-printing[data-size="spread"] .ln-screen-one-chips { justify-content: flex-start; }
+.ln-printing[data-size="spread"] .ln-print-horizon { max-width: none; }
 .ln-printing .ln-screen-one-art { width: 78%; height: auto; aspect-ratio: 1 / 1; flex-shrink: 0; }
 /* The art is the subject and is not a switch: it stays put, and the tap
    that turns a cover into its code stands down with its badge. */
@@ -1045,23 +1052,25 @@
 .ln-printing .ln-turn-badge { display: none; }
 .ln-printing .ln-screen-one-title { font-size: 26px; }
 .ln-printing .ln-screen-one-artist { margin-top: -4px; }
-/* The two plain grounds set the page's tokens at the root — FullPostPage
-   stamps data-print-ground on <html> while printing — so the mark in the
-   fixed header and the sheet itself follow the card, not only what is
-   inside the screen. The record's ground sets nothing: it follows the
-   page's own theme. html:root outranks the theme's own root rules. */
-html:root[data-print-ground="day"] {
+/* The two plain grounds set the page's tokens on the mode's own box — the
+   paper and its bar — and nowhere else: a day or night paper must not turn
+   the site's theme (it did for an hour, from the root). The card carries
+   its own mark, so nothing outside the paper needs the paper's colours.
+   The record's ground sets nothing: it follows the page's own theme. */
+.ln-printing[data-ground="day"] {
   --bg: #eef0ec; --ink: #1a1a1a; --ink-soft: #6b6b6b; --ink-faint: #a8a8a8;
   --panel-border: rgba(255, 255, 255, 0.6); --border: rgba(26, 26, 26, 0.08);
   --shadow-lift: 0 4px 20px rgba(0,0,0,0.06), 0 16px 48px rgba(0,0,0,0.06);
   color-scheme: light;
 }
-html:root[data-print-ground="night"] {
+.ln-printing[data-ground="night"] {
   --bg: #0e0e0e; --ink: #e8e4dc; --ink-soft: #888888; --ink-faint: #555555;
   --panel-border: rgba(255, 255, 255, 0.08); --border: rgba(255, 255, 255, 0.08);
   --shadow-lift: 0 4px 20px rgba(0,0,0,0.4), 0 16px 48px rgba(0,0,0,0.3);
   color-scheme: dark;
 }
+.ln-print-mark { display: block; height: 44px; width: auto; }
+.ln-print-mark path, .ln-print-mark circle { fill: var(--ink); }
 .ln-print-line { cursor: pointer; transition: opacity 0.25s ease; -webkit-tap-highlight-color: transparent; }
 .ln-print-line.ln-off { opacity: 0.18; }
 .ln-print-keeper {
@@ -1116,7 +1125,7 @@ html[data-printing] .lay-step { display: none; }
   .ln-printing { height: calc(100dvh + env(safe-area-inset-top, 0px)); }
   .ln-print-bar {
     bottom: calc(-1 * env(safe-area-inset-top, 0px));
-    padding-bottom: calc(10px + max(env(safe-area-inset-bottom, 0px), env(safe-area-inset-top, 0px)));
+    padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
   }
 }
 @media (prefers-reduced-motion: reduce) { .ln-print-line { transition: none; } }
