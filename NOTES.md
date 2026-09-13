@@ -1422,6 +1422,9 @@ Peyton's desks say a newer version is available**
       A link, because every keeper has a GitHub account by construction and
       DECISIONS already sends "it didn't work" to the issues; nothing phones
       home. Names to confirm: `reportUrl`, the words Report a problem.
+- [x] **The card's Add pill says the keeper's name** — "Add Miyel", then
+      "Copied" for a moment — instead of "Add to your address book", on
+      Miyel's call (she suggested "Add user"; the site has no users). 1.6.1.
 
 **2026-09-13 — the person's page, branch `person-page`, merged to main
 and pushed the same day as 1.5.0 (a route and a page: the middle number).

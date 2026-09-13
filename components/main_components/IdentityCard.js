@@ -560,10 +560,11 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
           <Link href="/submit" className="ln-pill idc-send">Send an album</Link>
           {/* The address, for the visitor's own address book. See pressAdd
               above: it copies, because that is all a journal can do for a
-              copy it cannot see. */}
+              copy it cannot see. "Add Miyel", not "Add to your address book"
+              (Miyel, 2026-09-13: shorter); Copied for a moment after. */}
           {!authed && address && (
-            <button type="button" className="ln-pill idc-send" onClick={pressAdd} aria-live="polite">
-              {added ? 'Copied — paste it in your address book' : 'Add to your address book'}
+            <button type="button" className="ln-pill idc-send" onClick={pressAdd} aria-live="polite" title="Copy this journal's address for your address book">
+              {added ? 'Copied' : `Add ${String(keeper_name || '').trim() || 'me'}`}
             </button>
           )}
         </div>
