@@ -1500,6 +1500,13 @@ unmerged: Miyel reviews on the dev server**
       bar; the earlier layout ran the mark under the name. Other papers are
       untouched by both. The numbers (13% / 13% / 24%) are Instagram's usual
       safe zones, not measured on a phone yet — check the first real story.
+- [x] **Symbols (Miyel's ask, same day).** A toggle, off to begin with,
+      that draws the marks as the feed's own symbols — Phosphor's Heart,
+      SketchLogo and Fingerprint, their path data copied into the plate —
+      at 34 units, about three chips tall, in the marks' colours. With it on
+      the symbols show whatever Chips says; Chips is left governing the
+      listen count, which has no symbol. Posted date came off and the
+      keeper's name grew the same afternoon.
 - [x] **`/printer?entry=slug` prints for the keeper, server-checked.**
       Visitors, a missing record and the card's door still get the sentence.
       The layer page forwards the query. Decoded at 1×, 0.5× and 0.3× on

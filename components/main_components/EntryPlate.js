@@ -69,10 +69,13 @@ const TITLE = 26, TITLE_LEAD = 26 * 1.22;
 const ARTIST = 11;                     // mono caps, as .ln-screen-one-artist
 const STAR = 24, STAR_GAP = 3;         // StarRating size={24}
 const CHIP = 10, CHIP_PAD_X = 8, CHIP_PAD_Y = 3, CHIP_GAP = 8, CHIP_RADIUS = 4;
+// The marks as symbols instead of chips — the feed's own three, much larger
+// than a chip, so a print can carry the marks as pictures (Miyel's ask).
+const SYMBOL = 34, SYMBOL_GAP = 18;
 const HORIZON_H = 34, HORIZON_GAP = 2, HEART = 7;
 const COLUMN_GAP = 28;                 // opened out: between the cover and the stack
 // The screen's gap is 16 between everything; the artist line pulls up by 8.
-const GAP = { keeper: 10, art: 16, title: 16, artist: 8, stars: 16, chips: 16, horizon: 20 };
+const GAP = { keeper: 10, art: 16, title: 16, artist: 8, stars: 16, chips: 16, listen: 10, horizon: 20 };
 
 // How much of the paper the column is allowed, and the height it must fit.
 const FILL_W = 0.86;
@@ -121,6 +124,13 @@ const TONES = {
 // StarRating's star, in an 18-box; a heart in a 24-box for the favourites.
 const STAR_PATH = 'M9 1.5l2.163 4.38 4.837.703-3.5 3.412.826 4.818L9 12.39l-4.326 2.273.826-4.818L2 6.583l4.837-.703z';
 const HEART_PATH = 'M12 21s-8-5.3-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 5.7-8 11-8 11z';
+// The marks' symbols, as Feed.js draws them: Phosphor's Heart (fill),
+// SketchLogo (fill) and Fingerprint (bold), each a single path in a 256-box.
+const SYMBOLS = {
+  fav: 'M240,102c0,70-103.79,126.66-108.21,129a8,8,0,0,1-7.58,0C119.79,228.66,16,172,16,102A62.07,62.07,0,0,1,78,40c20.65,0,38.73,8.88,50,23.89C139.27,48.88,157.35,40,178,40A62.07,62.07,0,0,1,240,102Z',
+  mp: 'M246,98.73l-56-64A8,8,0,0,0,184,32H72a8,8,0,0,0-6,2.73l-56,64a8,8,0,0,0,.17,10.73l112,120a8,8,0,0,0,11.7,0l112-120A8,8,0,0,0,246,98.73ZM222.37,96H180L144,48h36.37ZM74.58,112l30.13,75.33L34.41,112Zm106.84,0h40.17l-70.3,75.33ZM75.63,48H112L76,96H33.63Z',
+  formative: 'M160,128a224.48,224.48,0,0,1-26.37,105.54,12,12,0,1,1-21.16-11.32A200.33,200.33,0,0,0,136,128a8,8,0,0,0-16,0,12,12,0,0,1-24,0,32,32,0,0,1,64,0ZM128,56a12,12,0,1,0,0,24,48.05,48.05,0,0,1,48,48c0,7.62-.36,15.32-1.07,22.87A12,12,0,0,0,185.74,164c.38,0,.76,0,1.14,0a12,12,0,0,0,11.93-10.87c.79-8.3,1.18-16.76,1.18-25.13A72.08,72.08,0,0,0,128,56ZM96,92.23A12,12,0,0,0,80,74.35,72.1,72.1,0,0,0,56,128a120.11,120.11,0,0,1-15.12,58.37,12,12,0,0,0,21,11.69A144.14,144.14,0,0,0,80,128,48.08,48.08,0,0,1,96,92.23Zm10.1,64.1a12,12,0,0,0-14.46,8.9,158.61,158.61,0,0,1-18.88,45.86,12,12,0,0,0,20.5,12.48A182.86,182.86,0,0,0,115,170.79,12,12,0,0,0,106.1,156.33Zm76.73,24.07A12,12,0,0,0,168.19,189a241.5,241.5,0,0,1-8,24.87,12,12,0,0,0,6.91,15.49,11.76,11.76,0,0,0,4.29.8,12,12,0,0,0,11.21-7.71,260.2,260.2,0,0,0,8.79-27.37A12,12,0,0,0,182.83,180.4ZM128,16A112.12,112.12,0,0,0,16,127.44c0,.19,0,.38,0,.57a79.81,79.81,0,0,1-5,27.82,12,12,0,1,0,22.5,8.35A103.59,103.59,0,0,0,40,128.58c0-.19,0-.38,0-.57a88,88,0,0,1,176-.5c0,.16,0,.33,0,.5a282.12,282.12,0,0,1-6.74,61.38,12,12,0,0,0,9.09,14.33A11.84,11.84,0,0,0,221,204a12,12,0,0,0,11.7-9.38A305.87,305.87,0,0,0,240,128.55c0-.18,0-.36,0-.54A112.13,112.13,0,0,0,128,16Z',
+};
 
 // A row of the print: the air above it, its height, and how it draws into
 // the box it is given. Measured and drawn by the same numbers so the two
@@ -184,6 +194,11 @@ export function entryPlate({ entry, keeper }) {
   if (keeper) toggles.push({ key: 'keeper', label: 'Keeper', on: true });
   if (stars > 0) toggles.push({ key: 'stars', label: 'Stars', on: true });
   if (chips.length) toggles.push({ key: 'chips', label: 'Chips', on: true });
+  // The marks as the feed's symbols instead of chips. Off to begin with: the
+  // chips are the post's. With it on the symbols show whatever Chips says,
+  // and Chips is left governing the listen count, which has no symbol.
+  const marks = chips.filter(chip => chip.tone);
+  if (marks.length) toggles.push({ key: 'symbols', label: 'Symbols', on: false });
   if (bars.length) toggles.push({ key: 'horizon', label: 'Horizon', on: true });
   // On by default: a story is the frame that matters and the sticker is how
   // it links, so the first print made should have the room. Only 9:16 has
@@ -301,10 +316,17 @@ export function entryPlate({ entry, keeper }) {
           rows.push({ gap: px(GAP.stars), h: px(STAR), draw: (c, x, y, w) => drawStars(c, x, y, w, unit) });
         }
 
-        // the chips, wrapping and centred as the screen's row does
-        if (chips.length && on('chips')) {
-          const laid = layChips(ctx, chips, colW, unit);
-          rows.push({ gap: px(GAP.chips), h: laid.h, draw: (c, x, y, w) => drawChips(c, x, y, w, laid, unit) });
+        // the marks: as the feed's symbols when Symbols is on, else as the
+        // post's chips when Chips is on. A listen count has no symbol, so
+        // with Symbols on it is the one chip left for Chips to show.
+        const asSymbols = on('symbols') && marks.length > 0;
+        if (asSymbols) {
+          rows.push({ gap: px(GAP.chips), h: px(SYMBOL), draw: (c, x, y, w) => drawSymbols(c, x, y, w, unit) });
+        }
+        const listed = asSymbols ? chips.filter(chip => !chip.tone) : chips;
+        if (on('chips') && listed.length) {
+          const laid = layChips(ctx, listed, colW, unit);
+          rows.push({ gap: px(asSymbols ? GAP.listen : GAP.chips), h: laid.h, draw: (c, x, y, w) => drawChips(c, x, y, w, laid, unit) });
         }
 
 
@@ -452,6 +474,19 @@ export function entryPlate({ entry, keeper }) {
           }
         });
         c.textBaseline = 'top';
+      }
+
+      // ── the symbols ──────────────────────────────────────────────────────
+      // The marks as the feed draws them, large, in their colours, centred.
+      function drawSymbols(c, x, y, w, unit) {
+        const size = SYMBOL * unit;
+        const step = (SYMBOL + SYMBOL_GAP) * unit;
+        const total = marks.length * size + (marks.length - 1) * SYMBOL_GAP * unit;
+        let sx = x + (w - total) / 2;
+        for (const mark of marks) {
+          drawPath(c, SYMBOLS[mark.tone], sx, y, size, 256, TONES[mark.tone].ink);
+          sx += step;
+        }
       }
 
       // ── the horizon ──────────────────────────────────────────────────────
