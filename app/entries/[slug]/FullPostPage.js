@@ -22,6 +22,7 @@ import { createPortal } from 'react-dom';
 import { useLayerHeaderSlot } from '../../../components/main_components/LayerEntry';
 import EdgeCaret from '../../../components/main_components/EdgeCaret';
 import KeeperTools from '../../../components/main_components/KeeperTools';
+import EntryPlate from '../../../components/main_components/EntryPlate';
 import HorizonBar from '../../../components/main_components/Slug_Page/HorizonBar';
 import TrackThread from '../../../components/main_components/Slug_Page/TrackThread';
 import CommentBubble from '../../../components/main_components/Slug_Page/CommentBubble';
@@ -143,7 +144,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   // (app/api/entries/[slug]/code) and never on entry save: most entries are
   // never tapped, and Apple's art cannot be read in a browser anyway. The
   // slot breathes the cover until it arrives.
-  const { site_address } = useBookplate();
+  const { site_address, keeper_name } = useBookplate();
   const { theme } = useTheme();
   const host = tidyAddress(site_address);
   const entryUrl = host && entry.slug ? `https://${host}/entries/${entry.slug}` : '';
@@ -255,8 +256,21 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   // header now, top left, where the card keeps its own pencil. Drawn only for
   // the owner, and drawn on the server: a visitor's copy of this page does not
   // contain it.
+  //
+  // The printer opens in place, over the record. It was a route for a day
+  // (/printer?entry=slug, rising as a sheet), and on a phone the entry is
+  // itself a sheet over the journal: the two shared the one layer slot, so
+  // the printer replaced the entry underneath and closing it rebuilt the
+  // entry with the journal flashing through. In place it is state — close,
+  // and you are on the page you never left. The address still works cold.
+  const [printing, setPrinting] = useState(false);
   const keeperTools = authed && !edit.editing && (
-    <KeeperTools onEdit={edit.begin} slug={entry.slug} />
+    <>
+      <KeeperTools onEdit={edit.begin} slug={entry.slug} onPrint={() => setPrinting(true)} />
+      {printing && (
+        <EntryPlate entry={entry} keeper={(keeper_name || '').trim()} address={entryUrl} onClose={() => setPrinting(false)} />
+      )}
+    </>
   );
 
   // ── The fields at the head of the entry ───────────────────────────────────

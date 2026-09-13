@@ -21,7 +21,9 @@
 // through the whole site: the printer takes the *contents* somewhere, so it
 // is owner-only; copying a link passes along an *address*, so it belongs to
 // everybody and lives at the foot of the entry instead. The printer opens
-// /printer, which says the press is coming — see app/printer/page.js.
+// the press in place over the entry when the page hands an `onPrint`
+// (FullPostPage does, 2026-09-13); without one it is a link to /printer,
+// the press's own address.
 //
 // Nothing here decides whether it should be drawn. The page above does that on
 // the server and simply does not render this for a visitor — see
@@ -31,7 +33,7 @@
 import Link from 'next/link';
 import { Pencil, Printer } from '@phosphor-icons/react';
 
-export default function KeeperTools({ onEdit, slug }) {
+export default function KeeperTools({ onEdit, slug, onPrint = null }) {
   return (
     <>
       <button
@@ -43,16 +45,22 @@ export default function KeeperTools({ onEdit, slug }) {
       >
         <Pencil size={18} weight="regular" aria-hidden="true" />
       </button>
-      {/* The slug travels so the printer opens on this record rather than on
-          whichever one happens to be first in the list. */}
-      <Link
-        href={slug ? `/printer?entry=${encodeURIComponent(slug)}` : '/printer'}
-        className="kt-tool"
-        aria-label="Print this entry"
-        title="Print this entry"
-      >
-        <Printer size={18} weight="regular" aria-hidden="true" />
-      </Link>
+      {onPrint ? (
+        <button type="button" className="kt-tool" onClick={onPrint} aria-label="Print this entry" title="Print this entry">
+          <Printer size={18} weight="regular" aria-hidden="true" />
+        </button>
+      ) : (
+        /* The slug travels so the printer opens on this record rather than
+           on whichever one happens to be first in the list. */
+        <Link
+          href={slug ? `/printer?entry=${encodeURIComponent(slug)}` : '/printer'}
+          className="kt-tool"
+          aria-label="Print this entry"
+          title="Print this entry"
+        >
+          <Printer size={18} weight="regular" aria-hidden="true" />
+        </Link>
+      )}
     </>
   );
 }
