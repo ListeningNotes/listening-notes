@@ -1025,13 +1025,13 @@
   transform-origin: center;
 }
 .ln-printing .ln-print-card > * { position: relative; z-index: 1; }
-/* Opened out on the wide paper, the way the plate lays it: the writing to
-   the left, the cover to the right and as large as the paper allows
+/* Opened out on the wide paper, the way the plate lays it: the cover to
+   the left, as large as the paper allows, and the writing beside it
    (Miyel, 2026-09-13), with the paper's padding pulled in to give it room. */
 .ln-printing[data-size="spread"] .ln-print-stack { padding: 4%; }
 .ln-printing[data-size="spread"] .ln-print-card {
   display: grid;
-  grid-template-columns: 1fr 48%;
+  grid-template-columns: 48% 1fr;
   column-gap: 5%;
   row-gap: 8px;
   align-items: center; align-content: center;
@@ -1041,8 +1041,8 @@
    whole card scales to fit, and a column of full-size type would drag the
    cover down to a stamp with it. zoom rather than transform so the grid
    still measures it. */
-.ln-printing[data-size="spread"] .ln-print-card > * { grid-column: 1; justify-self: start; zoom: 0.55; }
-.ln-printing[data-size="spread"] .ln-screen-one-art { grid-column: 2; grid-row: 1 / span 9; justify-self: center; width: 100%; zoom: 1; }
+.ln-printing[data-size="spread"] .ln-print-card > * { grid-column: 2; justify-self: start; zoom: 0.55; }
+.ln-printing[data-size="spread"] .ln-screen-one-art { grid-column: 1; grid-row: 1 / span 9; justify-self: center; width: 100%; zoom: 1; }
 .ln-printing[data-size="spread"] .ln-screen-one-chips { justify-content: flex-start; }
 .ln-printing[data-size="spread"] .ln-print-horizon { max-width: none; }
 .ln-printing .ln-screen-one-art { width: 78%; height: auto; aspect-ratio: 1 / 1; flex-shrink: 0; }
