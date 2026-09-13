@@ -219,7 +219,9 @@ cannot be tested end to end.
       and `journalUrl` in `library/return_address.js`; `/dashboard/people`
       and the door's label Address book; `CodeScanner`; the `.bk-` prefix in
       forms.css; the pill's words, Add to your address book and Copied —
-      paste it in your address book; `reached` in the POST answer.
+      paste it in your address book; `reached` in the POST answer;
+      `pull_keeper_name` in settings_actions, `nameInBook` on the compare
+      page, and the row's Not answering yet.
 
 **THE ADDRESS BOOK, THE FEED, AND WHERE COMPARE LIVES** — briefed
 2026-09-12. The address book shipped that day on branch `address-book`
@@ -1430,11 +1432,24 @@ brief: the address book, the feed, and where compare lives**
       scheme goes back on — checked against an entry link, a capitalised
       host with a slash, a `?from=` leftover, `127.0.0.1:3000` and a bare
       word. `localhost:3000` has no dot and is refused, as it always was.
-- [x] **Not seen, owner-only:** the door, the sheet, the list, the scanner
-      and the inbox's buttons are lint- and build-checked — every route
-      compiles, `/dashboard/people` and `/compare?with=` answer 200 — and
-      not looked at signed in. Miyel's look on the dev server is owed, and
-      the real-phone list is in Pending.
+- [x] **Seen signed in, the same evening.** Miyel signed in on the Claude
+      browser: the door, the sheet, June filed by paste (his face and name
+      read off his journal), the row's compare running on arrival — 39
+      here, 0 there. The inbox's buttons and the scanner are still unseen.
+- [x] **No address on any page, on Miyel's call the same evening.** The
+      row is a face and a name (a journal that did not answer says Not
+      answering yet, and is asked again each time the book opens); the
+      inbox's sender links read "their journal"; the compare says "with
+      June" and "Only June has heard these". The public feed now carries
+      `keeper_name` (`pull_keeper_name`, one column) so a copy reading it
+      has a name to print; for a copy from before that — June's, until he
+      presses Update — the compare asks the address book instead
+      (`nameInBook`), and a visitor with no book gets the host, as a last
+      resort, and the address field is not drawn when the page arrived
+      knowing whom. The "Only you have heard these" group is gone: it was
+      this journal again, scrolled. The face is a rounded square, the
+      card's shape, not a circle; the inbox's pill rows wrap now that a
+      third pill can be there.
 
 **2026-09-12 — tap a cover for its code, branch `cover-code`, merged to
 main the same day as 1.2.0 (a new route and a migration: the middle

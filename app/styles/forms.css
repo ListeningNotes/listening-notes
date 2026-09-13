@@ -722,7 +722,7 @@ a.pp-name:hover svg { color: var(--ink); }
 .own-act {
   display: inline-flex; align-items: center; cursor: pointer; text-decoration: none;
   font-family: var(--font-label); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
-  padding: 7px 16px; border-radius: 999px;
+  padding: 7px 16px; border-radius: 999px; white-space: nowrap;
   border: 1px solid var(--border); background: var(--panel); color: var(--ink-soft);
   transition: background 0.15s, color 0.15s, border-color 0.15s;
 }
@@ -782,7 +782,9 @@ a.pp-name:hover svg { color: var(--ink); }
   font-family: var(--font-label); font-size: 10px; letter-spacing: 0.08em; color: var(--ink-soft);
 }
 .ib-sent-when { margin-left: auto; color: var(--ink-faint); }
-.ib-sent-row { display: flex; align-items: center; gap: 8px; margin-top: 14px; }
+/* Three pills since the address book (2026-09-12): they wrap onto a second
+   line on a phone rather than folding their own words. */
+.ib-sent-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 14px; }
 @media (max-width: 640px) {
   .ib-sent { gap: 14px; }
   .ib-sent-art { width: 72px; height: 72px; }
@@ -796,15 +798,15 @@ a.pp-name:hover svg { color: var(--ink); }
 .ib-comment-where { font-family: var(--font-label); font-size: 10px; }
 .ib-comment-when { font-family: var(--font-label); font-size: 10px; color: var(--ink-faint); margin-left: auto; }
 .ib-comment-text { font-size: 14px; color: var(--ink); line-height: 1.7; margin: 0 0 12px; }
-.ib-comment-row { display: flex; align-items: center; gap: 8px; }
+.ib-comment-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .ib-comment-row .own-link { font-family: var(--font-label); font-size: 10px; margin-left: auto; }
 /* A send that carried a journal, once filed, says so where the button was. */
 .ib-filed { align-self: center; }
 
 /* ── from app/dashboard/people/page.js ───────────────────────────────── */
 /* The address book: the inbox's sheet and panel, one column of people. A
-   row is a face, a name and where they live; the row itself opens your page
-   about them, the arrow beside it opens their journal. */
+   row is a face and a name, never the address — the row itself opens your
+   page about them, the arrow beside it opens their journal. */
 .bk-body { max-width: 720px; padding: 18px 24px 40px; }
 .bk-panel { border-radius: 24px; }
 .bk-scroll { position: relative; z-index: 1; flex: 1; padding: 22px 26px 28px; }
@@ -828,16 +830,19 @@ a.pp-name:hover svg { color: var(--ink); }
 .bk-row:last-child { border-bottom: none; }
 .bk-person { display: flex; align-items: center; gap: 14px; flex: 1; min-width: 0; text-decoration: none; color: inherit; }
 /* Their journal's own portrait, read straight off it, over the plain mark
-   that shows when there is none or the journal is out. */
+   that shows when there is none or the journal is out. A rounded square,
+   the card's shape at this size, not a circle (Miyel, 2026-09-12). */
 .bk-face {
-  position: relative; width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0;
+  position: relative; width: 44px; height: 44px; border-radius: 10px; flex-shrink: 0;
   background: var(--bg); border: 1px solid var(--border); overflow: hidden;
   display: flex; align-items: center; justify-content: center; color: var(--ink-faint);
 }
 .bk-face img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .bk-who { display: flex; flex-direction: column; min-width: 0; }
 .bk-name { font-family: var(--font-display); font-weight: var(--font-display-weight, 700); font-size: 15px; color: var(--ink); line-height: 1.25; overflow-wrap: anywhere; }
-.bk-address { font-family: var(--font-label); font-size: 10px; color: var(--ink-soft); margin-top: 2px; overflow-wrap: anywhere; }
+/* A journal that has not answered yet has no name, and the row never prints
+   the address in its place. */
+.bk-name--none { color: var(--ink-faint); font-weight: 400; }
 .bk-visit { font-family: var(--font-label); font-size: 10px; white-space: nowrap; }
 /* The camera, in the panel where the field was: a square of it, and Cancel. */
 .bk-scan { display: flex; flex-direction: column; align-items: center; gap: 12px; margin-bottom: 6px; }

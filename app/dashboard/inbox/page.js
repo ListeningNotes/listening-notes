@@ -194,7 +194,7 @@ export default function Inbox({ layered = false }) {
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="own-link"
-                              >{sent.sender_url} &#8599;</a>
+                              >their journal &#8599;</a>
                             )}
                             <span className="ib-sent-when">
                               {new Date(sent.created_at).toLocaleDateString()}
@@ -258,7 +258,7 @@ export default function Inbox({ layered = false }) {
                           )}
                           {c.author_url && (
                             <a href={journalUrl(c.author_url)} target="_blank" rel="noopener noreferrer" className="own-link">
-                              {c.author_url} &#8599;
+                              their journal &#8599;
                             </a>
                           )}
                         </div>

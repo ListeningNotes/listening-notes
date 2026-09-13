@@ -495,7 +495,15 @@ written on the first tap, never on save. Never verify on load; never base64
 a picture into a row.
 
 **Cards carry the mark only — no URL.** Printing the address on everyone's
-cards advertises Miyel, not the software. **Two different QRs:** a journal's
+cards advertises Miyel, not the software.
+
+**No address is ever printed on a page, 2026-09-12.** A journal is shown by
+its keeper's name and face; the address lives in the link and in the code.
+Self-hosting produces addresses nobody wants to read, and the site's answer
+is the code, not smaller type — so the address book's rows, the compare's
+headings and the inbox's links say the name, and the public feed carries
+`keeper_name` so another copy has one to say. A host is printed only when
+nothing else is known, never by choice. **Two different QRs:** a journal's
 About QR shares that person; the pitch pane's is a fixed code to `/get`, the
 same on every copy.
 
