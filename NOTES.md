@@ -1410,8 +1410,10 @@ current.
 
 ## Complete
 
-**2026-09-13 — reports, branch `reports`, version 1.7.0 (a table, a route,
-a sheet: the middle number)**
+**2026-09-13 — reports, branch `reports`, merged to main and pushed the
+same day as 1.7.0 (a table, a route, a sheet: the middle number); release
+v1.7.0 cut with the update steps written for a keeper who has never opened
+GitHub**
 
 - [x] **Report a problem is a box, not a link.** The GitHub issue of 1.6.0
       lasted an hour, on Miyel's call: the people testing are not GitHub
