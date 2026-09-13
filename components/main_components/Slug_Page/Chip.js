@@ -21,7 +21,11 @@ const TONES = {
 export default function Chip({ children, accent, tone }) {
   const t = TONES[tone];
   return (
+    // inline-flex and nowrap, so a chip that carries a mark before its word
+    // — the envelope on Submission, 2026-09-13 — never folds the two onto
+    // separate lines when the row it sits in gets narrow.
     <span style={{
+      display: 'inline-flex', alignItems: 'center', gap: 5, whiteSpace: 'nowrap',
       fontFamily: fonts.mono, fontSize: '10px', letterSpacing: '0.08em',
       border: `1px solid ${t ? t.border : 'var(--border)'}`,
       color: t ? t.color : accent ? 'var(--accent)' : 'var(--ink-soft)',
