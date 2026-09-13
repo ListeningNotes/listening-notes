@@ -41,6 +41,16 @@
 // physically printed flyer would earn a toggle, not a redesign; the sizes
 // that would need are in NOTES.
 //
+// ── The card is the switchboard, 2026-09-13 ──────────────────────────────
+// Every line that can be left off is tapped on the preview to leave it off,
+// and a ghost of it — the line itself at a fifth of its ink — stays where it
+// was, to be tapped back. The marks cycle: chips, then symbols, then gone.
+// The sticker's room is an absence, so its ghost is a sticker-shaped pill in
+// the band it keeps, and a fainter one in the foot margin when it does not.
+// Ghosts are drawn only when `preview` is set; the saved picture is drawn
+// again without them, closed up. `draw` hands the press the boxes to hit.
+// Six bubbles under the preview were sixty-four arrangements, most of them
+// worse than the default, with two labels nobody outside this project knew.
 // ── Units ─────────────────────────────────────────────────────────────────
 // Every measurement is in units of a 340-wide column — a phone's screen one,
 // 390 less its padding — so the numbers here are the post's own pixels, and
@@ -54,6 +64,21 @@ import { useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import SharePrinter, { loadMark, loadPicture, MARK_ASPECT, drawTracked, drawPath, ellipsize, wrapLines, roundRect } from './SharePrinter';
 import { parseRating, parseHorizon, entryTracks } from '../../library/entry_formatter';
+
+// The taps (see the note at the top): what each switchable line does when
+// tapped, and how faint a ghost is.
+const GHOST = 0.18;
+const TAPS = {
+  keeper: shown => ({ keeper: !shown.keeper }),
+  stars: shown => ({ stars: !shown.stars }),
+  horizon: shown => ({ horizon: !shown.horizon }),
+  sticker: shown => ({ sticker: !shown.sticker }),
+  // chips → symbols → gone → chips; without a mark that has a symbol, the
+  // listen count alone goes chips → gone → chips.
+  marks: (shown, hasSymbols) => (shown.chips
+    ? (hasSymbols ? { chips: false, symbols: true } : { chips: false, symbols: false })
+    : shown.symbols ? { chips: false, symbols: false } : { chips: true, symbols: false }),
+};
 
 // ── Measurements, in column units — the post's own ────────────────────────
 const COL = 340;
@@ -196,13 +221,13 @@ export function entryPlate({ entry, keeper }) {
   const toggles = [];
   if (keeper) toggles.push({ key: 'keeper', label: 'Keeper', on: true });
   if (stars > 0) toggles.push({ key: 'stars', label: 'Stars', on: true });
-  // Chips or Symbols: the marks as the post's chips, or as the feed's symbols
-  // — one or the other, or neither, which the printer enforces through the
-  // group. Chips to begin with: they are the post's. A listen count has no
-  // symbol and stays a chip beneath the symbols.
-  if (chips.length) toggles.push({ key: 'chips', label: 'Chips', on: true, group: 'marks' });
+  // Chips or symbols: the marks as the post's chips, or as the feed's
+  // symbols — one or the other, or neither, cycled by tapping them. Chips to
+  // begin with: they are the post's. A listen count has no symbol and stays
+  // a chip beneath the symbols.
+  if (chips.length) toggles.push({ key: 'chips', label: 'Chips', on: true });
   const marks = chips.filter(chip => chip.tone);
-  if (marks.length) toggles.push({ key: 'symbols', label: 'Symbols', on: false, group: 'marks' });
+  if (marks.length) toggles.push({ key: 'symbols', label: 'Symbols', on: false });
   if (bars.length) toggles.push({ key: 'horizon', label: 'Horizon', on: true });
   // On by default: a story is the frame that matters and the sticker is how
   // it links, so the first print made should have the room. Only 9:16 has
@@ -224,10 +249,12 @@ export function entryPlate({ entry, keeper }) {
       return { mark, cover };
     },
 
-    draw(ctx, frame, { art, shown, isDark, families }) {
+    draw(ctx, frame, { art, shown, isDark, families, preview = false }) {
       const ink = isDark ? INKS.night : INKS.day;
       const { sans, mono } = families;
       const on = key => (shown ? shown[key] !== false : true);
+      // The boxes the press hit-tests a tap against, in the paper's pixels.
+      const targets = [];
       const spread = frame.w / frame.h > 1.3;
       const story = frame.w / frame.h < 0.6;
       // The band of paper the print may use: all of it, or on a story what
@@ -274,8 +301,9 @@ export function entryPlate({ entry, keeper }) {
         }
 
         // whose journal, under it
-        if (showKeeper) {
+        if (keeper && (showKeeper || preview)) {
           rows.push({
+            key: 'keeper', ghost: !showKeeper,
             gap: art?.mark ? px(GAP.keeper) : 0,
             h: px(KEEPER) * 1.4,
             draw(c, x, y, w) {
@@ -316,27 +344,33 @@ export function entryPlate({ entry, keeper }) {
         }
 
         // the stars
-        if (stars > 0 && on('stars')) {
-          rows.push({ gap: px(GAP.stars), h: px(STAR), draw: (c, x, y, w) => drawStars(c, x, y, w, unit) });
+        if (stars > 0 && (on('stars') || preview)) {
+          rows.push({ key: 'stars', ghost: !on('stars'), gap: px(GAP.stars), h: px(STAR), draw: (c, x, y, w) => drawStars(c, x, y, w, unit) });
         }
 
-        // the marks: the feed's symbols, or the post's chips, or neither. A
-        // listen count has no symbol, so under the symbols it stays a chip.
+        // the marks: the feed's symbols, or the post's chips, or neither — and
+        // in the preview, a ghost of the chips when neither. A listen count
+        // has no symbol, so under the symbols it stays a chip.
         const asSymbols = on('symbols') && marks.length > 0;
+        const asChips = !asSymbols && on('chips');
         if (asSymbols) {
-          rows.push({ gap: px(GAP.chips), h: px(SYMBOL), draw: (c, x, y, w) => drawSymbols(c, x, y, w, unit) });
+          rows.push({ key: 'marks', gap: px(GAP.chips), h: px(SYMBOL), draw: (c, x, y, w) => drawSymbols(c, x, y, w, unit) });
         }
-        const listed = asSymbols ? chips.filter(chip => !chip.tone) : (on('chips') ? chips : []);
-        if (listed.length) {
+        const listed = asSymbols ? chips.filter(chip => !chip.tone) : chips;
+        if (listed.length && (asSymbols || asChips || preview)) {
           const laid = layChips(ctx, listed, colW, unit);
-          rows.push({ gap: px(asSymbols ? GAP.listen : GAP.chips), h: laid.h, draw: (c, x, y, w) => drawChips(c, x, y, w, laid, unit) });
+          rows.push({
+            key: 'marks', ghost: !asSymbols && !asChips,
+            gap: px(asSymbols ? GAP.listen : GAP.chips), h: laid.h,
+            draw: (c, x, y, w) => drawChips(c, x, y, w, laid, unit),
+          });
         }
 
 
         // the horizon, with headroom for the hearts when there are any
-        if (bars.length && on('horizon')) {
+        if (bars.length && (on('horizon') || preview)) {
           const head = anyFav ? px(HEART + 4) : 0;
-          rows.push({ gap: px(GAP.horizon), h: head + px(HORIZON_H), draw: (c, x, y, w) => drawHorizon(c, x, y + head, w, unit) });
+          rows.push({ key: 'horizon', ghost: !on('horizon'), gap: px(GAP.horizon), h: head + px(HORIZON_H), draw: (c, x, y, w) => drawHorizon(c, x, y + head, w, unit) });
         }
 
         const stack = rows.reduce((sum, row) => sum + row.gap + row.h, 0);
@@ -528,27 +562,64 @@ export function entryPlate({ entry, keeper }) {
       }
 
       // ── lay it down ──────────────────────────────────────────────────────
+      // A ghost row is drawn at a fifth of its ink, and every switchable row
+      // leaves a box — its own height plus the air above it, the column's
+      // full width — for the press to hit-test against.
       const { rows, stack, h, colW, artW } = built;
+      function lay(x, y0) {
+        let y = y0;
+        for (const row of rows) {
+          y += row.gap;
+          if (row.ghost) { ctx.save(); ctx.globalAlpha = GHOST; }
+          row.draw(ctx, x, y, colW);
+          if (row.ghost) ctx.restore();
+          if (row.key) targets.push({ x, y: y - row.gap, w: colW, h: row.h + row.gap, tap: taps(row.key) });
+          y += row.h;
+        }
+      }
       if (spread) {
         const blockW = artW + COLUMN_GAP * U + colW;
         const originX = (frame.w - blockW) / 2;
         const originY = (frame.h - h) / 2;
         drawCover(ctx, originX, originY + (h - artW) / 2, artW, U);
-        const textX = originX + artW + COLUMN_GAP * U;
-        let y = originY + (h - stack) / 2;
-        for (const row of rows) {
-          y += row.gap;
-          row.draw(ctx, textX, y, colW);
-          y += row.h;
-        }
+        lay(originX + artW + COLUMN_GAP * U, originY + (h - stack) / 2);
       } else {
-        const originX = (frame.w - colW) / 2;
-        let y = top + (areaH - h) / 2;
-        for (const row of rows) {
-          y += row.gap;
-          row.draw(ctx, originX, y, colW);
-          y += row.h;
-        }
+        lay((frame.w - colW) / 2, top + (areaH - h) / 2);
+      }
+
+      // The sticker's room, on a story: a ghost pill where the sticker goes,
+      // tapped to give the card the room back; without the room, a fainter
+      // pill in the foot margin Instagram covers anyway, tapped to make it.
+      if (story) {
+        const withRoom = on('sticker');
+        const zoneTop = frame.h * (1 - STICKER_FOOT);
+        const zoneBottom = frame.h * (1 - STORY_FOOT);
+        if (preview) drawStickerGhost(ctx, frame, withRoom, ink, zoneTop, zoneBottom);
+        targets.push(withRoom
+          ? { x: 0, y: zoneTop, w: frame.w, h: zoneBottom - zoneTop, tap: taps('sticker') }
+          : { x: 0, y: zoneBottom, w: frame.w, h: frame.h - zoneBottom, tap: taps('sticker') });
+      }
+      return targets;
+
+      function taps(key) {
+        return key === 'marks' ? shown => TAPS.marks(shown, marks.length > 0) : TAPS[key];
+      }
+      function drawStickerGhost(c, f, withRoom, ink, zoneTop, zoneBottom) {
+        const w = f.w * (withRoom ? 0.5 : 0.34);
+        const h = f.h * (withRoom ? 0.06 : 0.042);
+        const cx = (f.w - w) / 2;
+        const cy = withRoom ? zoneTop + (zoneBottom - zoneTop - h) / 2 : zoneBottom + (f.h - zoneBottom - h) / 2;
+        c.save();
+        c.globalAlpha = withRoom ? GHOST : GHOST * 0.7;
+        c.setLineDash([f.w * 0.012, f.w * 0.008]);
+        c.lineWidth = Math.max(1, f.w * 0.0025);
+        c.strokeStyle = ink.ink;
+        c.fillStyle = ink.ink;
+        roundRect(c, cx, cy, w, h, h / 2);
+        c.stroke();
+        c.globalAlpha *= 0.35;
+        c.fill();
+        c.restore();
       }
     },
   };

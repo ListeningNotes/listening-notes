@@ -1482,6 +1482,26 @@ provisional), 1.8.1: what Miyel saw and what changed**
       The paper takes everything above the look's name, the controls sit at
       the foot, and the press fills the screen edge to edge (checked at
       375×812: the press is the viewport, the controls end at its foot).
+- [x] **Tap the card (Miyel's brief, 2026-09-13).** The Show row is gone.
+      Every switchable line — keeper, stars, marks, horizon — is tapped on
+      the preview to leave it off and stays as a ghost (the line at 18% of
+      its ink) to be tapped back; the marks cycle chips → symbols → gone;
+      the sticker's room is a dashed pill in its band, a fainter one in the
+      foot margin when off. The plate's `draw` takes `preview` (ghosts only
+      then) and returns the boxes it laid each line in; the press hit-tests
+      a tap (a finger that moved under 8px) against them, scaled by the
+      paper's size on screen measured at the tap — not the remembered `z`,
+      which lagged a resize by one step and put every tap a line off — with
+      every box at least 44px tall on screen. The print is drawn again
+      without ghosts at Save. Choices persist for the session under
+      `sessionStorage` `ln-press:<plate title>`. A one-line hint sits
+      under the buttons until the first tap. `canvas.__targets` is set for
+      the pane's tests. Named looks stay the fallback if taps feel fiddly.
+- [x] **Escape closed the press and the entry together.** Both listened on
+      the window; the press now hears keys in the capture phase and stops
+      them. Miyel reported the entry not closing after backing out of the
+      printer; not reproduced in the pane (a simulated pull-down and Escape
+      both close it after the printer), so watch for it on the phone.
 - [x] **The home-screen app's short viewport.** A readout on the press
       (temporary, removed) showed Miyel's installed copy hands the page a
       viewport one status bar shorter than the screen — 812 of 874, inset
