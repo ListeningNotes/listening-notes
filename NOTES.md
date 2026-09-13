@@ -1463,13 +1463,15 @@ unmerged: Miyel reviews on the dev server**
       mounts after the first paint (the server has no body to portal into,
       and the measure and draw effects wait for the same mount — the paper
       stayed at its starting fifth scale until they did).
-- [x] **`EntryPlate.js`.** Cover large, keeper in the label face, album,
-      artist · year, stars (halves drawn, a fraction written), marks and
-      Listen n as outlined pills, and a foot with the mark at the left and
-      the plain code at the right — code floored at 18.5% of the paper's
-      shorter side, on its own light stock on the Ink look. Ranged to the
-      cover's left edge; opened out beside the cover on link-preview paper.
-      Toggles: Keeper, Stars, Marks.
+- [x] **`EntryPlate.js`.** The mark centred at the head, as on every page
+      (Miyel's call, same day — it began in the foot); cover large, keeper in
+      the label face, album, artist · year, stars (halves drawn, a fraction
+      written), marks and Listen n as outlined pills, the horizon as bars in
+      the accent with a heart over a favourite (Miyel's call too), and the
+      plain code alone in the foot's right corner — floored at 18.5% of the
+      paper's shorter side, on its own light stock on the Ink look. Ranged to
+      the cover's left edge; opened out beside the cover on link-preview
+      paper. Toggles: Keeper, Stars, Marks, Horizon.
 - [x] **`/printer?entry=slug` prints for the keeper, server-checked.**
       Visitors, a missing record and the card's door still get the sentence.
       The layer page forwards the query. Decoded at 1×, 0.5× and 0.3× on
