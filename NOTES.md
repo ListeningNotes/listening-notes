@@ -1468,7 +1468,9 @@ unmerged: Miyel reviews on the dev server**
 - [x] **`EntryPlate.js`.** The entry page's first screen, on the record's
       own colour — Miyel's call after the first cut (a cover on plain cream
       with the facts ranged under it) looked like every other app's share
-      card. The mark centred at the head with the keeper under it; the cover
+      card. The mark centred at the head at the statement pages' size (a
+      fifth of the width, Miyel's call — the nav's 28 read as a colophon)
+      with the keeper under it; the cover
       at the screen's radius, hairline and lift; the album; artist · year in
       mono caps; the stars as StarRating draws them; the post's chips
       (Listen n of N, Favorite, Masterpiece, Formative) in Chip.js's tones;
