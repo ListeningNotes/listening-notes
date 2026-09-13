@@ -1424,13 +1424,17 @@ floor: the middle number)**
       Two views by a word: Submissions (default) and Recent (forty at
       most). Empty lines: nobody in the book yet, with a link; nothing
       you sent has come back yet; nobody has logged anything yet.
-      **Reshaped the same evening on Miyel's call:** a row is the record,
-      large and centred (300px, the tile's radius and the square's
-      shadow), the words under it, stars and marks on one line, the face
-      and name under those, Compare last — the shape an entry's first
-      screen has, one after another, rather than a cover-and-title list.
-      The marks are marks, not words (heart, diamond, fingerprint), and a
-      sent record wears an envelope in faint ink.
+      **Reshaped the same evening on Miyel's call, twice:** first the
+      record large and centred with the words under it; then one card per
+      record — a tile, the art full width at its head, and under it the
+      title at 24px, the artist in caps, stars at 17 with the marks beside
+      them, a 26px face and the name, Compare last, the panel opening
+      inside the card on the page colour — everything sized to hold its
+      own against the picture, rather than a cover-and-title list. The
+      marks are marks, not words (heart, diamond, fingerprint), and a sent
+      record wears an envelope in faint ink. Miyel's note: Compare will
+      mostly happen in Submissions, where two people holding the same
+      record is the normal case.
 - [x] **The envelope is the fourth mark, site-wide.** MiniCard's strip,
       the key page (a Submission row, from the shipped definitions), and
       the entry's Submission chip, which now carries the envelope before
