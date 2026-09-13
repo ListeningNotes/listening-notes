@@ -153,7 +153,7 @@ The furniture — visual pieces
       Pitch.js                 The right pane, for everybody else
       KeeperTools.js           The owner's pencil and printer
       SharePrinter.js          The share printer — paper sizes, the looks you turn through, Save and Send; knows nothing about journals, prints whatever plate it is handed
-      EntryPlate.js            A record cut as a plate: cover, keeper, album, artist and year, stars, marks, and the mark with the plain code in the foot
+      EntryPlate.js            A record cut as a plate — the entry page's first screen on the record's blurred colour: mark, keeper, cover, album, artist and year, stars, chips, date, horizon; no code, the press copies the address
       WritingAccess.js         The lock at the foot of the pitch pane — a key, and the password field it opens in place
       ComingSoon.js            What a held copy shows instead of a site — unclaimed, no database, or database unreachable
       AddToHomeScreen.js       The one step the software cannot do: the last screen of setup, and a Settings section

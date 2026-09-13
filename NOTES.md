@@ -282,12 +282,14 @@ person's page the next (Complete). Left: the printer, and the chain.
         Gotchas. AAC is available for a silent track if Instagram wants
         audio. Unproved: iPhone Safari (WebCodecs since iOS 16.4, secure
         context only) and Instagram itself.
-      - **The small code on a story is the plain code, not the pressed
+      - **If a printed flyer ever wants a code (a toggle, off by default):
+        the small code on a story is the plain code, not the pressed
         photo.** At the 0.3× floor the press used before, on a 1080-wide
         story: plain at EC M (v4, 33 modules) reads from 200 px; plain at
         EC H (v6 — an entry address at H needs v6, 41 modules) from 240 px;
         the photo code needs 400 px and only at 0.5×. 200 px is 18% of the
-        width, about 1.2 cm on a phone screen. Recorded in DECISIONS.
+        width, about 1.2 cm on a phone screen. Cut from the print the same
+        day (see Complete) — the argument is in the DECISIONS archive.
 - [ ] **Names to confirm, 2026-09-13 (the person's page)** — autonomous
       session, rename freely: branch `person-page`; `/dashboard/people/
       [id]` and `PersonPage`; `pull_person` and `GET /api/people/[id]`;
@@ -1470,13 +1472,22 @@ unmerged: Miyel reviews on the dev server**
       at the screen's radius, hairline and lift; the album; artist · year in
       mono caps; the stars as StarRating draws them; the post's chips
       (Listen n of N, Favorite, Masterpiece, Formative) in Chip.js's tones;
-      the posted date; the horizon as bars with a heart over a favourite; the
-      plain code centred at the foot on its own light stock, floored at 18.5%
-      of the paper's shorter side. The ground is the cover blurred across the
-      paper under a light wash (Paper) or a dark one (Ink). Labels are soft
+      the posted date; the horizon as bars with a heart over a favourite. The
+      ground is the cover blurred across the paper under a light wash (Paper)
+      or a dark one (Ink). Labels are soft
       rather than faint and the bars ink rather than accent, because both
       sank into a photograph. Opened out beside the cover on link-preview
       paper. Toggles: Keeper, Stars, Chips, Horizon.
+- [x] **The code came off the print, same day, on Miyel's brief.** A story
+      is viewed on the phone that would have to scan it, so a code on a print
+      does no work in the case the print is for. Save and Send copy the
+      entry's address instead, with the cover's own Copied line — copied
+      before the picture is drawn, since Safari writes the clipboard only
+      inside the tap that asked — and the Link button stays for the address
+      alone. In person the entry's art already turns into its photo code. A
+      physically printed flyer would earn a toggle; the sizes it would need
+      are under Pending. The plain code drawn on a print, and its stock,
+      live in git at 0712d7d.
 - [x] **`/printer?entry=slug` prints for the keeper, server-checked.**
       Visitors, a missing record and the card's door still get the sentence.
       The layer page forwards the query. Decoded at 1×, 0.5× and 0.3× on

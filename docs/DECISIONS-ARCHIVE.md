@@ -442,3 +442,24 @@ arrive. The mechanism worked against the per-origin grain rather than with
 it; the address book, on the visitor's own copy, works with it. The code —
 `carryFrom`, `noteArrival`, `subscribeSender` in `library/return_address.js`
 and the card's Compare with mine pill — is in git before 2026-09-12.
+
+---
+
+## Sharing
+
+The current rules live in DECISIONS.md under Sharing.
+
+**A print's code is the plain one, never smaller than a fifth of the
+paper's shorter side, 2026-09-12.** Shrunk to the 0.3× a phone camera sees,
+the pressed photo code needs 400 px of a 1080 Story and the plain code at
+level M reads at 200. Small near the mark means plain; the photo code is for
+when the code is the hero. Every size and look is decoded at 1×, 0.5× and
+0.3× before it ships; the link-preview paper is exempt, nobody scans a message.
+
+Why it went, the same day: a story is viewed on the phone that would have to
+scan it, so a code on a print does no work in the case the print is for. The
+press copies the entry's address for a link sticker instead, and in person
+the entry's art already turns into its photo code. The numbers above stand,
+for the day a physically printed flyer wants a code as a toggle. The current
+rule is in DECISIONS under Sharing, "Cards carry the mark only".
+
