@@ -196,12 +196,13 @@ export function entryPlate({ entry, keeper }) {
   const toggles = [];
   if (keeper) toggles.push({ key: 'keeper', label: 'Keeper', on: true });
   if (stars > 0) toggles.push({ key: 'stars', label: 'Stars', on: true });
-  if (chips.length) toggles.push({ key: 'chips', label: 'Chips', on: true });
-  // The marks as the feed's symbols instead of chips. Off to begin with: the
-  // chips are the post's. With it on the symbols show whatever Chips says,
-  // and Chips is left governing the listen count, which has no symbol.
+  // Chips or Symbols: the marks as the post's chips, or as the feed's symbols
+  // — one or the other, or neither, which the printer enforces through the
+  // group. Chips to begin with: they are the post's. A listen count has no
+  // symbol and stays a chip beneath the symbols.
+  if (chips.length) toggles.push({ key: 'chips', label: 'Chips', on: true, group: 'marks' });
   const marks = chips.filter(chip => chip.tone);
-  if (marks.length) toggles.push({ key: 'symbols', label: 'Symbols', on: false });
+  if (marks.length) toggles.push({ key: 'symbols', label: 'Symbols', on: false, group: 'marks' });
   if (bars.length) toggles.push({ key: 'horizon', label: 'Horizon', on: true });
   // On by default: a story is the frame that matters and the sticker is how
   // it links, so the first print made should have the room. Only 9:16 has
@@ -319,15 +320,14 @@ export function entryPlate({ entry, keeper }) {
           rows.push({ gap: px(GAP.stars), h: px(STAR), draw: (c, x, y, w) => drawStars(c, x, y, w, unit) });
         }
 
-        // the marks: as the feed's symbols when Symbols is on, else as the
-        // post's chips when Chips is on. A listen count has no symbol, so
-        // with Symbols on it is the one chip left for Chips to show.
+        // the marks: the feed's symbols, or the post's chips, or neither. A
+        // listen count has no symbol, so under the symbols it stays a chip.
         const asSymbols = on('symbols') && marks.length > 0;
         if (asSymbols) {
           rows.push({ gap: px(GAP.chips), h: px(SYMBOL), draw: (c, x, y, w) => drawSymbols(c, x, y, w, unit) });
         }
-        const listed = asSymbols ? chips.filter(chip => !chip.tone) : chips;
-        if (on('chips') && listed.length) {
+        const listed = asSymbols ? chips.filter(chip => !chip.tone) : (on('chips') ? chips : []);
+        if (listed.length) {
           const laid = layChips(ctx, listed, colW, unit);
           rows.push({ gap: px(asSymbols ? GAP.listen : GAP.chips), h: laid.h, draw: (c, x, y, w) => drawChips(c, x, y, w, laid, unit) });
         }

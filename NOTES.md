@@ -1503,9 +1503,11 @@ unmerged: Miyel reviews on the dev server**
 - [x] **Symbols (Miyel's ask, same day).** A toggle, off to begin with,
       that draws the marks as the feed's own symbols — Phosphor's Heart,
       SketchLogo and Fingerprint, their path data copied into the plate —
-      at 34 units, about three chips tall, in the marks' colours. With it on
-      the symbols show whatever Chips says; Chips is left governing the
-      listen count, which has no symbol. Posted date came off, the
+      at 34 units, about three chips tall, in the marks' colours. Chips and
+      Symbols are a trade-off: the press learned a `group` on a toggle —
+      turning one on turns the others in its group off, turning the chosen
+      one off leaves nothing chosen (Miyel's call). A listen count has no
+      symbol and stays a chip under the symbols. Posted date came off, the
       keeper's name grew, and the chips grew a third (13 on 10×4) the same
       afternoon: at the post's size they could not be read inside a story.
       Then the stars a quarter up (30 on a 4 gap) and the ground's blur a
