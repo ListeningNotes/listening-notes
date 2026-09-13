@@ -24,6 +24,11 @@
 // A row opens their entry in a new window, which on a home screen is a sheet
 // inside the app (DECISIONS, The model). Their writing stays on their
 // journal: the feed carries none of it, and that is the reason to visit.
+//
+// Each row is the record, large and centred, with the words under it — the
+// shape an entry's first screen has, one after another down the floor — and
+// not a cover-thumbnail-and-title list. A list is a table of what exists; a
+// feed is records going past (Miyel, 2026-09-13).
 'use client';
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
@@ -208,7 +213,7 @@ export default function Feed({ entries = [] }) {
   if (people === null || (stillAsking && shown.length === 0)) {
     body = (
       <div className="fd-list">
-        {[...Array(3)].map((_, i) => <div key={i} className="own-skeleton" style={{ height: 72, marginBottom: 10 }} />)}
+        {[...Array(2)].map((_, i) => <div key={i} className="own-skeleton fd-art" style={{ margin: '0 auto 24px' }} />)}
       </div>
     );
   } else if (people.length === 0) {
@@ -236,25 +241,23 @@ export default function Feed({ entries = [] }) {
           const rated = entry.rating_value !== null && entry.rating_value !== undefined && entry.rating_value !== '';
           return (
             <div key={key}>
-              <article className="fd-row">
+              <article className="fd-item">
                 <a className="fd-art" href={there} target="_blank" rel="noopener noreferrer" aria-label={`${entry.album} on ${person.name || 'their'} journal`}>
                   {entry.album_art && <img src={entry.album_art} alt="" loading="lazy" />}
                 </a>
-                <div className="fd-said">
-                  <a className="fd-album" href={there} target="_blank" rel="noopener noreferrer">{entry.album}</a>
-                  <div className="fd-artist">{entry.artist}{entry.year ? ` · ${entry.year}` : ''}</div>
-                  <div className="fd-stars">
-                    {rated && <StarRating rating={Number(entry.rating_value)} size={11} />}
-                    <Marks entry={entry} />
-                  </div>
-                  <div className="fd-who">
-                    <Link href={`/compare?with=${encodeURIComponent(person.address)}`} title={`Your page about ${person.name || 'them'}`}>
-                      <Face address={person.address} />
-                      {person.name || 'Someone'}
-                    </Link>
-                    <span className="fd-when">&middot; {timeAgo(entry.posted_at)}</span>
-                    {view === 'submissions' && <span className="fd-when">&middot; from you</span>}
-                  </div>
+                <a className="fd-album" href={there} target="_blank" rel="noopener noreferrer">{entry.album}</a>
+                <div className="fd-artist">{entry.artist}{entry.year ? ` · ${entry.year}` : ''}</div>
+                <div className="fd-stars">
+                  {rated && <StarRating rating={Number(entry.rating_value)} size={13} />}
+                  <Marks entry={entry} />
+                </div>
+                <div className="fd-who">
+                  <Link href={`/compare?with=${encodeURIComponent(person.address)}`} title={`Your page about ${person.name || 'them'}`}>
+                    <Face address={person.address} />
+                    {person.name || 'Someone'}
+                  </Link>
+                  <span className="fd-when">&middot; {timeAgo(entry.posted_at)}</span>
+                  {view === 'submissions' && <span className="fd-when">&middot; from you</span>}
                 </div>
                 {mine && (
                   <button
