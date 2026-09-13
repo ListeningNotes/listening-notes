@@ -887,11 +887,13 @@
 .db-doors { display: flex; flex-direction: row; align-items: stretch; justify-content: center; gap: 12px; width: 100%; }
 /* The desk's colophon: the version, and — only when it is true — that a
    newer one exists. The smallest type on the desk, under the doors. */
-.db-colophon { display: flex; align-items: baseline; gap: 8px; margin: 22px 0 0; }
+/* Three things can share the line — the version, a newer one, Report a
+   problem — so it wraps between them, never inside one (2026-09-13). */
+.db-colophon { display: flex; flex-wrap: wrap; justify-content: center; align-items: baseline; gap: 6px 8px; margin: 22px 0 0; text-align: center; }
 .db-update {
   font-family: var(--font-label); font-size: 0.62rem; letter-spacing: 0.16em;
   text-transform: uppercase; color: var(--ink-faint); text-decoration: none;
-  border-bottom: 1px solid var(--border);
+  border-bottom: 1px solid var(--border); white-space: nowrap;
 }
 .db-update:hover { color: var(--ink); }
 .db-door {
