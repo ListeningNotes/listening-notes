@@ -1508,6 +1508,8 @@ unmerged: Miyel reviews on the dev server**
       listen count, which has no symbol. Posted date came off, the
       keeper's name grew, and the chips grew a third (13 on 10×4) the same
       afternoon: at the post's size they could not be read inside a story.
+      Then the stars a quarter up (30 on a 4 gap) and the ground's blur a
+      fifth softer (0.048 of the width, was 0.06) — both Miyel's eye.
 - [x] **`/printer?entry=slug` prints for the keeper, server-checked.**
       Visitors, a missing record and the card's door still get the sentence.
       The layer page forwards the query. Decoded at 1×, 0.5× and 0.3× on

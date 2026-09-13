@@ -67,7 +67,7 @@ const MARK_H = 46;                     // ≈ 80 wide on the 340 column
 const KEEPER = 13;                     // the label face, under the mark — half again the site's line, on Miyel's call
 const TITLE = 26, TITLE_LEAD = 26 * 1.22;
 const ARTIST = 11;                     // mono caps, as .ln-screen-one-artist
-const STAR = 24, STAR_GAP = 3;         // StarRating size={24}
+const STAR = 30, STAR_GAP = 4;         // StarRating size={24}, a quarter up for the same reason as the chips
 // A third larger than the post's chips (10 on 8×3): a print is looked at
 // inside a story, a phone's width scaled into a phone's width, and at the
 // screen's size they could not be read (Miyel, 2026-09-12).
@@ -355,7 +355,9 @@ export function entryPlate({ entry, keeper }) {
           const dh = img.naturalHeight * s;
           c.save();
           if (typeof c.filter === 'string') {
-            c.filter = `blur(${Math.round(f.w * 0.06)}px) saturate(1.3)`;
+            // Six hundredths of the width to begin with; a fifth softer on
+            // Miyel's eye, so the cover's shapes show through as shapes.
+            c.filter = `blur(${Math.round(f.w * 0.048)}px) saturate(1.3)`;
             c.drawImage(img, (f.w - dw) / 2, (f.h - dh) / 2, dw, dh);
           } else {
             // No filter on this canvas: a picture shrunk to a few pixels and
