@@ -51,7 +51,7 @@
 import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { CaretLeft, CaretRight } from '@phosphor-icons/react';
-import { tileBoxOf, neighboursOf, handOffNeighbour, arrivingBySwipe, tookASwipe } from '../../library/handoff';
+import { tileBoxOf, neighboursOf, handOffNeighbour, arrivingBySwipe, tookASwipe, growBoxOf } from '../../library/handoff';
 
 // How long the sheet takes to grow to the screen. Unhurried, slowing as it
 // lands — the same curve the slide used.
@@ -131,8 +131,10 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
     if (typeof document === 'undefined' || arrives === 'bottom') return { swiped: 0, growFrom: null };
     const swiped = tookASwipe();
     if (swiped) return { swiped, growFrom: null };
-    if (!slug || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return { swiped: 0, growFrom: null };
-    return { swiped: 0, growFrom: tileBoxOf(slug) };
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return { swiped: 0, growFrom: null };
+    // An entry grows out of its tile; anything else grows out of whatever
+    // declared this address in data-grows (a row, a face) — see handoff.js.
+    return { swiped: 0, growFrom: slug ? tileBoxOf(slug) : growBoxOf(pathname) };
   });
   const rises = arrives === 'bottom';
   const growFrom = arrival.growFrom;

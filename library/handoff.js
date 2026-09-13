@@ -82,6 +82,20 @@ export function handedOver(slug) {
 // Where a record's tile is on screen right now, if the wall is mounted under
 // the layer. The layer grows out of this box on the way in, so the entry
 // opens from the square that was pressed.
+// Anything else a layer can grow out of: an element that declares, in
+// data-grows, the address it opens — a row in the address book, a face in
+// the feed. The entry keeps its own lookup above; this is the general one
+// (2026-09-13, so a person's page opens from the row you pressed the way an
+// entry opens from its cover).
+export function growBoxOf(path) {
+  if (typeof document === 'undefined' || !path) return null;
+  const from = document.querySelector(`[data-grows="${CSS.escape(path)}"]`);
+  if (!from) return null;
+  const box = from.getBoundingClientRect();
+  if (box.width === 0 || box.height === 0) return null;
+  return { x: box.left, y: box.top, w: box.width, h: box.height };
+}
+
 export function tileBoxOf(slug) {
   if (typeof document === 'undefined') return null;
   const tile = document.querySelector(`[data-tile-slug="${CSS.escape(slug)}"]`);

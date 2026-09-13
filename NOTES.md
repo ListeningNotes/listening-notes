@@ -1434,6 +1434,13 @@ right pane (DECISIONS, The network)**
       June has heard these" list came off — their journal is a tap away
       and says it better — and the sends section reads "What June has sent
       you" ("June hasn't sent you anything yet" when empty).
+- [x] **It opens like an entry, on Miyel's call the same night:** the
+      sheet grows out of the row in the book or the face in the feed that
+      was pressed — `data-grows` on the element names the address it
+      opens, and `growBoxOf` in handoff.js is the general lookup beside the
+      entry's own — and the header's left slot carries a back caret
+      (history when there is one, else the book). The pull down and Escape
+      still work.
 - [x] **Rated alike allows for how each of you rates.** Their ratings are
       shifted by the average difference across the overlap before the gap
       is measured (three records in common at least, else raw), alike is
