@@ -2,8 +2,9 @@
 /* SPDX-License-Identifier: AGPL-3.0-or-later */
 /* app/styles/forms.css
    The pages that stand on their own, most of them forms: the send page and
-   its album finder, setup, settings, the inbox and the address book, the
-   password gate, compare, the key page, and the add-to-home-screen step. */
+   its album finder, setup, settings, the inbox, the address book and the
+   page about a person, the password gate, the key page, and the
+   add-to-home-screen step. */
 
 /* ── from app/submit/page.js ─────────────────────────────────────────── */
 /* One screen. The whole send is a cover, a message, a name and an
@@ -301,57 +302,6 @@ textarea.st-field { resize: vertical; min-height: 96px; }
 .st-clear:hover { color: var(--ink-soft); }
 .st-section--out { align-items: flex-start; }
 .st-section--out .st-clear { margin-left: 0; }
-
-/* ── from app/compare/page.js ─────────────────────────────────────────── */
-/* The nav is fixed and ends on 80px everywhere; About and Submit
-   both clear it by the same 44px, so this page keeps their rhythm
-   rather than inventing a number by eye. */
-.cmp-wrap {
-  --cmp-nav-bottom: calc(80px + var(--safe-top));
-  max-width: 860px; margin: 0 auto;
-  padding: calc(var(--cmp-nav-bottom) + 44px) 48px 120px;
-}
-@media (max-width: 640px) {
-  .cmp-wrap { padding: calc(var(--cmp-nav-bottom) + 24px) 24px 100px; }
-}
-.cmp-form { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-bottom: 8px; }
-.cmp-input {
-  flex: 1; min-width: 240px; max-width: 420px;
-  padding: 11px 18px; border-radius: 999px;
-  border: 1px solid var(--border); background: var(--panel);
-  color: var(--ink); font-family: var(--font-mono); font-size: 12px;
-  outline: none; text-align: center;
-}
-.cmp-input:focus { border-color: var(--ink-faint); }
-.cmp-label {
-  font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em;
-  text-transform: uppercase; color: var(--ink-faint);
-}
-.cmp-group { margin-top: 42px; }
-.cmp-group-head {
-  display: flex; align-items: baseline; gap: 10px;
-  padding-bottom: 10px; border-bottom: 1px solid var(--border); margin-bottom: 6px;
-}
-.cmp-group-title { font-family: var(--font-display); font-weight: var(--font-display-weight); font-size: 19px; }
-.cmp-row {
-  display: flex; align-items: center; gap: 14px;
-  padding: 10px 4px; border-bottom: 1px solid var(--border);
-  text-decoration: none; color: inherit;
-}
-.cmp-row:last-child { border-bottom: none; }
-.cmp-art { width: 42px; height: 42px; border-radius: 6px; object-fit: cover; flex-shrink: 0; display: block; }
-/* These are spans inside a span, so they need telling to stack —
-   left inline, the album title and the artist run together on one
-   line with no space between them. */
-.cmp-meta { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
-.cmp-album { display: block; font-weight: 700; font-size: 14px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.cmp-artist { display: block; font-size: 12px; color: var(--ink-soft); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.cmp-scores {
-  font-family: var(--font-mono); font-size: 12px; color: var(--ink-soft);
-  flex-shrink: 0; font-variant-numeric: tabular-nums; text-align: right;
-}
-.cmp-gap { color: var(--ink-faint); font-size: 10px; letter-spacing: 0.08em; }
-.cmp-empty { color: var(--ink-faint); font-size: 13px; padding: 10px 4px; }
 
 /* ── from app/key/page.js ─────────────────────────────────────────── */
 .pp-page { --pp-nav-bottom: calc(80px + var(--safe-top)); padding-top: var(--pp-nav-bottom); }
@@ -866,6 +816,56 @@ a.pp-name:hover svg { color: var(--ink); }
 
 
 /* ── from app/printer/page.js ─────────────────────────────────────────── */
+
+/* ── from app/dashboard/people/[id]/page.js ──────────────────────────── */
+/* The page about a person: their face and name over a panel of the counted
+   facts and four short lists. The same sheet as the book it opens from. */
+.pn-body { max-width: 720px; padding: 18px 24px 40px; }
+.pn-head { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 10px; padding: 6px 0 22px; }
+/* Their journal's portrait, the card's shape at a size that is a face. */
+.pn-face {
+  position: relative; width: 108px; height: 108px; border-radius: 24px; overflow: hidden;
+  background: var(--panel); border: 1px solid var(--border); box-shadow: 0 14px 36px rgba(0,0,0,0.14);
+  display: flex; align-items: center; justify-content: center; color: var(--ink-faint);
+}
+.pn-face img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.pn-name { font-family: var(--font-display); font-weight: var(--font-display-weight, 700); font-size: 28px; line-height: 1.1; margin: 6px 0 0; color: var(--ink); overflow-wrap: anywhere; }
+.pn-row { display: flex; align-items: center; gap: 10px; margin-top: 4px; }
+.pn-print { display: inline-flex; align-items: center; justify-content: center; width: 36px; height: 36px; border-radius: 999px; border: 1px solid var(--border); color: var(--ink-soft); }
+.pn-print:hover { color: var(--ink); border-color: var(--ink-faint); }
+.pn-panel { border-radius: 24px; }
+.pn-scroll { position: relative; z-index: 1; flex: 1; padding: 22px 26px 28px; }
+/* The counted facts, one table: the card's label-and-answer shape. */
+.pn-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 18px; margin: 0 0 8px; }
+.pn-fact { display: flex; flex-direction: column; gap: 4px; padding: 12px 14px; border: 1px solid var(--border); border-radius: 14px; background: var(--bg); }
+.pn-fact dt { font-family: var(--font-label); font-size: 9.5px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-faint); }
+.pn-fact dd { margin: 0; font-family: var(--font-display); font-weight: var(--font-display-weight, 700); font-size: 22px; line-height: 1.1; color: var(--ink); }
+.pn-fact dd small { font-family: var(--font-label); font-size: 10px; font-weight: 400; letter-spacing: 0.08em; color: var(--ink-soft); margin-left: 6px; }
+.pn-note { font-size: 13px; line-height: 1.6; color: var(--ink-soft); margin: 10px 2px 0; }
+.pn-section { margin-top: 26px; }
+.pn-section-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--border); }
+.pn-section-title { font-family: var(--font-display); font-weight: var(--font-display-weight, 700); font-size: 17px; color: var(--ink); }
+.pn-section-note { font-family: var(--font-label); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint); white-space: nowrap; }
+.pn-empty { padding: 18px 2px; font-family: var(--font-label); font-size: 11px; color: var(--ink-faint); }
+.pn-item { display: flex; align-items: center; gap: 14px; padding: 12px 2px; border-bottom: 1px solid var(--border); }
+.pn-item:last-child { border-bottom: none; }
+.pn-item-art { width: 54px; height: 54px; border-radius: 8px; overflow: hidden; flex-shrink: 0; background: var(--bg); display: block; }
+.pn-item-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.pn-item-said { flex: 1; min-width: 0; }
+.pn-item-album { font-family: var(--font-display); font-weight: var(--font-display-weight, 700); font-size: 15px; line-height: 1.25; color: var(--ink); text-decoration: none; display: block; overflow-wrap: anywhere; }
+a.pn-item-album:hover { text-decoration: underline; text-underline-offset: 3px; }
+.pn-item-artist { font-family: var(--font-label); font-size: 10px; color: var(--ink-soft); margin-top: 2px; }
+.pn-item-note { font-size: 13px; line-height: 1.55; color: var(--ink-soft); margin: 6px 0 0; overflow-wrap: anywhere; }
+.pn-item-tail { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex-shrink: 0; text-align: right; font-family: var(--font-label); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ink-soft); }
+.pn-item-tail b { color: var(--ink); font-weight: 600; }
+.pn-item-tail a { color: var(--ink-soft); text-decoration: none; border-bottom: 1px solid var(--border); }
+.pn-item-tail a:hover { color: var(--ink); }
+.pn-gap { color: var(--ink-faint); }
+@media (max-width: 640px) {
+  .pn-facts { gap: 10px; }
+  .pn-item { flex-wrap: wrap; }
+  .pn-item-tail { align-items: flex-start; text-align: left; flex-basis: 100%; padding-left: 68px; }
+}
 
 .own-screen .kt-tool, .idc-tool { text-decoration: none; }
 .pr-main { width: 100%; max-width: 560px; align-self: center; box-sizing: border-box; padding: 60px 24px 120px; }

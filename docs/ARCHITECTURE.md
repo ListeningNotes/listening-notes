@@ -27,8 +27,6 @@ Think of it like a house.
 - `/archive` — every entry, searchable and filterable
 - `/key` — what the stars and the three marks mean
 - `/submit` — send the keeper an album
-- `/compare` — read another journal's feed and compare taste; where a row
-  in the address book opens, until the page about a person exists
 - `/shuffle` — redirect to a random entry
 - `/feed.xml` — the journal as a feed another copy can read
 - `/get` — the long note about why somebody keeps a listening journal, and
@@ -52,6 +50,8 @@ publicly):
 - `/dashboard/inbox` — sent albums and comments awaiting moderation
 - `/dashboard/people` — the address book: the journals you read, by address,
   and the ways one gets in — a paste, a scanned code, a send that carried one
+- `/dashboard/people/[id]` — your page about one person: what you both have,
+  where you agree and disagree hardest, what they sent you and how it landed
 - `/dashboard/submissions` — a redirect into the inbox, kept for old links
 - `/settings` — the machinery: address, Last.fm, the keys, the password,
   the home-screen step, and Sign out. Reached from the Settings door on
@@ -115,7 +115,7 @@ The front doors — receive requests, hand them off, send back responses
     ask/route.js               A question, answered with the album and your notes in context
     settings/route.js          The settings row — public to read, owner-only to write
     people/route.js            The address book — owner-only: the list, and filing an address
-    people/[id]/route.js       Crossing one out
+    people/[id]/route.js       One person: reading them, crossing them out
     secrets/route.js           The vault — owner-only both ways; says what is set, never the value
     setup/route.js             GET: is this copy claimed. POST: the one write that claims it
     auth/login/route.js        The password, the deploy-time variable, or — unclaimed — the claim code
@@ -207,7 +207,6 @@ The rooms — full pages assembled from furniture
     archive/page.js            Every entry — search, sort, filters
     key/page.js                What the stars and the three marks mean
     submit/page.js             Send the keeper an album
-    compare/page.js            Read another journal's feed, compare taste
     shuffle/page.js            Redirect to a random entry
     get/page.js                The keeper's long note. 404s when unwritten
     about/page.js              Redirect to / — the identity card is the about page
@@ -218,11 +217,13 @@ The rooms — full pages assembled from furniture
     @layer/(.)session/page.js  The same listen, opened as a layer over the desk
     @layer/(.)dashboard/inbox/page.js  The inbox, opened as a sheet over the desk
     @layer/(.)dashboard/people/page.js  The address book, on the same sheet
+    @layer/(.)dashboard/people/[id]/page.js  The page about a person, on the same sheet
     @layer/(.)printer/page.js  The printer, as a sheet over the entry or the card
     dashboard/
       page.js                  Redirect to / — the desk is the right pane of the cross
       inbox/page.js            Comments and submissions in one place — plain, on the tokens, and a sheet over the desk
-      people/page.js           The address book — the list, the field, the scanner; a row opens the compare
+      people/page.js           The address book — the list, the field, the scanner
+      people/[id]/page.js      Your page about one person — the whole-journal compare, and what they sent you
 
 ---
 

@@ -17,10 +17,10 @@
 // where the clipboard lands, and the fallback for somebody reading an
 // address aloud.
 //
-// A row opens your page about that person. Until that page exists it opens
-// the whole-journal compare with their address in hand, which is the larger
-// half of what the page will be; the arrow beside it opens their journal, in
-// the browser, where reading somebody happens.
+// A row opens your page about that person (app/dashboard/people/[id]/
+// page.js) — the whole-journal compare and what they sent you; the arrow
+// beside it opens their journal, in the browser, where reading somebody
+// happens.
 //
 // A row is a face and a name, and never the address: no address is printed
 // on any page of this site (DECISIONS, The network) — the code and the link
@@ -154,9 +154,9 @@ export default function AddressBook({ layered = false }) {
                 {people.map(p => (
                   <div key={p.id} className="bk-row">
                     <Link
-                      href={`/compare?with=${encodeURIComponent(p.address)}`}
+                      href={`/dashboard/people/${p.id}`}
                       className="bk-person"
-                      title={`Compare with ${p.name || p.address}`}
+                      title={`Your page about ${p.name || 'them'}`}
                     >
                       {/* The face is their journal's own portrait, read
                           straight off it; a journal without one, or one

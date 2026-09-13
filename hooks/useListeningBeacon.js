@@ -53,7 +53,9 @@ export function foldKey(text) {
     .trim();
 }
 
-function albumKey(album, artist) {
+// Exported since 2026-09-13: the page about a person matches what somebody
+// sent (a submission row, which has no key) against the keeper's entries.
+export function albumKey(album, artist) {
   return foldKey(`${album ?? ''} ${artist ?? ''}`);
 }
 
