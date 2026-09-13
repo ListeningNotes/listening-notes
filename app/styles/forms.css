@@ -810,12 +810,14 @@ a.pp-name:hover svg { color: var(--ink); }
 .bk-body { max-width: 720px; padding: 18px 24px 40px; }
 .bk-panel { border-radius: 24px; }
 .bk-scroll { position: relative; z-index: 1; flex: 1; padding: 22px 26px 28px; }
-/* The field and its two ways in: file what is in it, or point the camera at
-   a code. One row, as wide as the list under it. */
-.bk-add { display: flex; gap: 8px; align-items: center; margin-bottom: 6px; }
+/* The field, as wide as the list under it, and its two ways in centred
+   beneath: file what is in it, or point the camera at a code. Under, not
+   beside, at every width — one shape on a phone and a desk (Miyel,
+   2026-09-13). */
+.bk-add { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; align-items: center; margin-bottom: 6px; }
 .bk-add .own-act { gap: 6px; white-space: nowrap; }
 .bk-field {
-  flex: 1; min-width: 0; box-sizing: border-box;
+  flex: 1 1 100%; min-width: 0; box-sizing: border-box;
   padding: 10px 14px; border-radius: 999px;
   border: 1px solid var(--border); background: var(--bg); color: var(--ink);
   font-family: var(--font-sans); font-size: 14px;
@@ -856,8 +858,6 @@ a.pp-name:hover svg { color: var(--ink); }
 .bk-scan-video { width: 100%; max-width: 360px; aspect-ratio: 1; object-fit: cover; border-radius: 16px; background: #000; }
 .bk-scan-trouble { font-size: 13px; color: var(--fav); margin: 0; text-align: center; }
 @media (max-width: 640px) {
-  .bk-add { flex-wrap: wrap; }
-  .bk-field { flex-basis: 100%; }
   .bk-row { flex-wrap: wrap; }
 }
 /* Sixteen pixels on touch, like every other field, or Safari zooms in and
