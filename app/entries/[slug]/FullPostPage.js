@@ -318,7 +318,13 @@ export default function FullPostPage({ entry, references = [], authed = false, l
     const card = printCardRef.current;
     if (!stack || !card) return undefined;
     const observer = new ResizeObserver(() => {
-      const k = Math.min(1, stack.clientHeight / card.offsetHeight, stack.clientWidth / card.offsetWidth);
+      // Against the room inside the paper's padding, not the paper: measured
+      // against the whole paper, a card a little too tall scaled to nearly 1
+      // and spilled out of both ends (Miyel's phone, 2026-09-13).
+      const cs = getComputedStyle(stack);
+      const roomH = stack.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+      const roomW = stack.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+      const k = Math.min(1, roomH / card.offsetHeight, roomW / card.offsetWidth);
       setPrintScale(Number.isFinite(k) && k > 0 ? k : 1);
     });
     observer.observe(stack);
