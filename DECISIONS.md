@@ -328,7 +328,8 @@ branch if a cover plate is wanted.
 the pencil, on an entry and on the card, opens `/printer`, which says the
 press is coming — so the press lands where people have already been
 pressing. `?entry=slug` travels from an entry; the card sends nobody,
-meaning the profile.
+meaning the profile. The press landed for the record on 2026-09-12; the
+card's door still says so until its plate is reworked.
 
 **Styles live in eight files by surface, not with their components,
 2026-09-06.** `app/styles/`: base, nav, journal, entry, idcard, session, get,
@@ -513,7 +514,11 @@ written on the first tap, never on save. Never verify on load; never base64
 a picture into a row.
 
 **Cards carry the mark only — no URL.** Printing the address on everyone's
-cards advertises Miyel, not the software.
+cards advertises Miyel, not the software. **A code is not a URL,
+2026-09-12:** a print carries the entry's own code, small, near the mark.
+It points at the keeper's entry on the keeper's server, which is the
+opposite of advertising Miyel. The rule forbids the address in type,
+never the code.
 
 **No address is ever printed on a page, 2026-09-12.** A journal is shown by
 its keeper's name and face; the address lives in the link and in the code.
@@ -558,6 +563,13 @@ the way to the code, never on the way back.
 export variant the art, title, artist, rating and mark stay in locked
 positions; the background changes mood, never information. A Story has room
 for art and metadata together, so no carousel.
+
+**A print's code is the plain one, never smaller than a fifth of the
+paper's shorter side, 2026-09-12.** Shrunk to the 0.3× a phone camera sees,
+the pressed photo code needs 400 px of a 1080 Story and the plain code at
+level M reads at 200. Small near the mark means plain; the photo code is for
+when the code is the hero. Every size and look is decoded at 1×, 0.5× and
+0.3× before it ships; the link-preview paper is exempt, nobody scans a message.
 
 **An entry's link unfurls into a picture, 2026-09-06.** The framework's
 `opengraph-image` file beside the entry page draws the card a message shows
@@ -1200,7 +1212,10 @@ no file".
 
 - Spotify Connect transport control (fragile: two API tightenings in eighteen
   months; needs per-copy client ID and Premium). After the deploy button.
-- Video exports (ffmpeg server-side, Vercel function timeouts; wallpapers
-  already exist as video, so the assets are ready).
+- Video exports. The ffmpeg-and-timeouts reason is gone, 2026-09-12: a
+  browser records its own canvas into an H.264 MP4 with no server, in
+  about a second for four seconds of 1080×1920 (proved in Chromium, see
+  NOTES). Still parked until a phone has posted one and a moving card
+  earns it — motion that means something, not a screensaver.
 - Manual now-playing override — covers vinyl and iOS Apple Music, where
   scrobbling is unreliable.
