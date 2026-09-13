@@ -30,6 +30,7 @@ import Link from 'next/link';
 import { User } from '@phosphor-icons/react';
 import { useBookplate } from './Bookplate';
 import StarRating from './StarRating';
+import Chip from './Slug_Page/Chip';
 import { parseHorizon } from '../../library/entry_formatter';
 import { journalUrl, tidyJournal } from '../../library/return_address';
 
@@ -53,6 +54,29 @@ function timeAgo(when) {
   const w = Math.round(d / 7);
   if (w < 8) return `${w}w ago`;
   return new Date(when).toLocaleDateString(undefined, { month: 'short', year: 'numeric' });
+}
+
+// The marks an entry wears, as the entry page wears them under its stars:
+// which listen this was, that it was sent, and the three flags. The feed
+// carries all four facts, so a row says them the same way (Miyel,
+// 2026-09-13: the tags should show in the feed).
+function Marks({ entry }) {
+  const listen = entry.listen_total > 1
+    ? (entry.listen_number === 1 ? `First listen · 1 of ${entry.listen_total}` : `Listen ${entry.listen_number} of ${entry.listen_total}`)
+    : null;
+  const fav = entry.favorite === true || entry.favorite === 'true';
+  const mp = entry.masterpiece === true || entry.masterpiece === 'true';
+  const formative = entry.formative === true || entry.formative === 'true';
+  if (!listen && entry.entry_type !== 'Submission' && !fav && !mp && !formative) return null;
+  return (
+    <div className="fd-chips">
+      {listen && <Chip>{listen}</Chip>}
+      {entry.entry_type === 'Submission' && <Chip>Submission</Chip>}
+      {fav && <Chip tone="fav">Favorite</Chip>}
+      {mp && <Chip tone="mp">Masterpiece</Chip>}
+      {formative && <Chip tone="formative">Formative</Chip>}
+    </div>
+  );
 }
 
 // Their journal's own portrait, read straight off it; the plain mark when
@@ -208,6 +232,7 @@ export default function Feed({ entries = [] }) {
                   <a className="fd-album" href={there} target="_blank" rel="noopener noreferrer">{entry.album}</a>
                   <div className="fd-artist">{entry.artist}{entry.year ? ` · ${entry.year}` : ''}</div>
                   {rated && <div className="fd-stars"><StarRating rating={Number(entry.rating_value)} size={11} /></div>}
+                  <Marks entry={entry} />
                   <div className="fd-who">
                     <Link href={`/compare?with=${encodeURIComponent(person.address)}`} title={`Your page about ${person.name || 'them'}`}>
                       <Face address={person.address} />

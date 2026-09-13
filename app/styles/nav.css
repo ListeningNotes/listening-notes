@@ -959,6 +959,8 @@
 .fd-album:hover { text-decoration: underline; text-underline-offset: 3px; }
 .fd-artist { font-family: var(--font-label); font-size: 10px; color: var(--ink-soft); margin-top: 2px; }
 .fd-stars { margin-top: 5px; color: var(--ink); }
+/* The marks, as words in the entry's chip: which listen, sent, and the flags. */
+.fd-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
 .fd-who { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin-top: 8px; font-family: var(--font-label); font-size: 10px; color: var(--ink-soft); }
 .fd-who a { display: inline-flex; align-items: center; gap: 6px; color: var(--ink); text-decoration: none; }
 .fd-who a:hover { text-decoration: underline; text-underline-offset: 3px; }
