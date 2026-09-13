@@ -63,7 +63,7 @@ const GROUNDS = [
 // Said under the bar each time the printer opens, until the first tap of
 // that opening — nobody would know a line can be tapped off otherwise
 // (Miyel, 2026-09-13; once-ever was too little).
-const PRINT_HINT = 'Tap a line of the card to leave it off, tap it again to bring it back. Swipe sideways for the ground.';
+const PRINT_HINT = 'Tap an element to remove or add it.';
 
 
 // The pair of actions that close the entry out used to share a local style
@@ -361,13 +361,13 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   // a different mode (LayerEntry looks for .ln-printing).
   const groundSwipe = useRef(null);
   const onGroundTouchStart = e => {
-    if (!printing || e.touches.length !== 1) return;
+    if (!printing || press.picture || e.touches.length !== 1) return;
     groundSwipe.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
   };
   const onGroundTouchEnd = e => {
     const from = groundSwipe.current;
     groundSwipe.current = null;
-    if (!from || !printing || !e.changedTouches?.length) return;
+    if (!from || !printing || press.picture || !e.changedTouches?.length) return;
     const t = e.changedTouches[0];
     const dx = t.clientX - from.x;
     const dy = t.clientY - from.y;
@@ -872,8 +872,10 @@ export default function FullPostPage({ entry, references = [], authed = false, l
             onSave={() => press.save(size)}
             onCopy={press.copy}
             onDone={finishPrinting}
-            status={press.status || (learned ? '' : PRINT_HINT)}
+            status={press.status || (learned || press.picture ? '' : PRINT_HINT)}
             link={entryUrl}
+            final={Boolean(press.picture)}
+            onBack={press.dismissPicture}
           />
         )}
       </section>

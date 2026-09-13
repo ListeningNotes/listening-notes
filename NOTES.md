@@ -1520,6 +1520,12 @@ the press on her phone: "the printer is the door into the app"**
       lights its dot in the site's green (`liveDot`, drawn over the mark in
       the plate at the dot's own place in the 76 96 241 140 box); the title
       and the artist line are tappable lines too.
+      Then: the hint is "Tap an element to remove or add it." (the long one
+      was cut off); the bar's "Printing" label went; Copy link says what it
+      does and copies the old way (a selected hidden field, execCommand)
+      when the clipboard API is missing, as it is on http; and while the
+      final picture is up the bar is only "Back to the card" with the
+      hold-to-save line — nothing else can be changed from there.
       The header (the nav row: mark and light switch) stands down while
       printing — `html[data-printing] .sitenav-row` — and the paper takes
       its room; the card carries its own mark (Miyel, same day).
