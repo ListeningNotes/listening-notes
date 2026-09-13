@@ -385,7 +385,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
     setLearned(true);
     try { localStorage.setItem(PRINT_LEARNED, '1'); } catch { /* private mode */ }
   };
-  const finishPrinting = useCallback(() => { setPrinting(false); }, []);
+  const finishPrinting = useCallback(() => { setPrinting(false); press.dismissPicture(); }, [press]);
   // Escape leaves the mode, and is stopped before the sheet under it hears
   // it and closes the entry too.
   useEffect(() => {
@@ -717,6 +717,11 @@ export default function FullPostPage({ entry, references = [], authed = false, l
           <div className={'ln-print-ground' + (ground === 'record' ? '' : ' ln-print-ground--plain')} aria-hidden="true">
             {ground === 'record' && entry.album_art && <img src={entry.album_art} alt="" />}
           </div>
+        )}
+        {printing && press.picture && (
+          /* The finished picture, for a phone with no share sheet: hold it to
+             add it to Photos (iOS's own callout), tap it to come back. */
+          <img className="ln-print-out" src={press.picture} alt="Your print" onClick={press.dismissPicture} />
         )}
         <div className="ln-print-stack" ref={printStackRef}>
         <div className="ln-print-card" ref={printCardRef} style={printing ? { '--print-scale': printScale } : undefined}>

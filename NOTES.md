@@ -1509,6 +1509,12 @@ the press on her phone: "the printer is the door into the app"**
       the card, gaps of 12, horizon 52) — recorded in DECISIONS. And Save
       on a phone is the share sheet (`navigator.share` with the file —
       Save Image is on it), a download elsewhere; the Send button went.
+      **A dev copy on plain http gets no share sheet** (iOS gives it to
+      https only), which is why Miyel's phone showed the download preview
+      instead: so a phone without the sheet now gets the finished picture
+      ON the paper (`press.picture`, `.ln-print-out`) — hold it and iOS
+      offers Add to Photos, tap it to come back. The live site is https and
+      will get the sheet.
       The header (the nav row: mark and light switch) stands down while
       printing — `html[data-printing] .sitenav-row` — and the paper takes
       its room; the card carries its own mark (Miyel, same day).
