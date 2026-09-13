@@ -267,7 +267,21 @@ export default function SharePrinter({ open, onClose, plate, albums = [], link =
   // is derived from these and its own defaults rather than copied into state
   // when the plate arrives: an effect doing the copying has to guess when NOT
   // to, and would undo a choice every time the card underneath re-rendered.
-  const [pressed, setPressed] = useState({});
+  // Kept for the session, per plate: three records exported in a row are
+  // one set of taps. Read in the initializer — the markup never depends on
+  // it, so the server's empty answer and the client's stored one hydrate
+  // the same. (2026-09-13: the card is the switchboard, see below.)
+  const storeKey = 'ln-press:' + (plate?.title || 'print');
+  const [pressed, setPressed] = useState(() => {
+    try { return JSON.parse(sessionStorage.getItem(storeKey) || '{}') || {}; } catch { return {}; }
+  });
+  useEffect(() => {
+    try { sessionStorage.setItem(storeKey, JSON.stringify(pressed)); } catch { /* private mode */ }
+  }, [pressed, storeKey]);
+  // The boxes the plate laid its switchable lines in, in the paper's pixels,
+  // refreshed on every draw; and whether a tap has landed yet, for the hint.
+  const targetsRef = useRef([]);
+  const [tapped, setTapped] = useState(false);
   const [art, setArt] = useState(null);
   const [status, setStatus] = useState('');
   const [copied, setCopied] = useState(false);
@@ -304,16 +318,19 @@ export default function SharePrinter({ open, onClose, plate, albums = [], link =
   // of them was asked to.
   useEffect(() => {
     if (!open) return;
+    // Heard in the capture phase and stopped there: the entry's sheet
+    // listens for the same keys on the same window, and an Escape meant
+    // for the press closed the entry under it too (2026-09-13).
     const onKey = event => {
-      if (event.key === 'Escape') onClose?.();
-      if (event.key === 'ArrowLeft') turn(-1);
-      if (event.key === 'ArrowRight') turn(1);
+      if (event.key === 'Escape') { event.stopPropagation(); onClose?.(); }
+      if (event.key === 'ArrowLeft') { event.stopPropagation(); turn(-1); }
+      if (event.key === 'ArrowRight') { event.stopPropagation(); turn(1); }
     };
-    window.addEventListener('keydown', onKey);
+    window.addEventListener('keydown', onKey, true);
     const prev = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     return () => {
-      window.removeEventListener('keydown', onKey);
+      window.removeEventListener('keydown', onKey, true);
       document.body.style.overflow = prev;
     };
   }, [open, onClose, turn]);
@@ -352,6 +369,23 @@ export default function SharePrinter({ open, onClose, plate, albums = [], link =
     return () => { cancelled = true; };
   }, [open, plate, isDark, shown]);
 
+  // What a plate needs to draw, the same for the preview and the print.
+  // Canvas cannot read CSS variables and the faces arrive from next/font, so
+  // the resolved family names are read off the two probe spans below.
+  // `backdrop` says whether anything is moving behind the ink — it decides
+  // whether the plate lays a scrim before it writes.
+  const inkContext = useCallback(() => ({
+    art,
+    shown,
+    isDark,
+    families: {
+      sans: getComputedStyle(probeRef.current.querySelector('.shp-probe-sans')).fontFamily,
+      mono: getComputedStyle(probeRef.current.querySelector('.shp-probe-mono')).fontFamily,
+    },
+    backdrop: look.Background ? look.key : null,
+    paper: isDark ? PAPER.night : PAPER.day,
+  }), [art, shown, isDark, look]);
+
   // The ink. Redrawn on every change and then left alone: it is a still
   // picture over a moving one, so there is nothing here to animate.
   useEffect(() => {
@@ -359,46 +393,58 @@ export default function SharePrinter({ open, onClose, plate, albums = [], link =
     let cancelled = false;
     const canvas = plateRef.current;
 
-    const families = {
-      sans: getComputedStyle(probeRef.current.querySelector('.shp-probe-sans')).fontFamily,
-      mono: getComputedStyle(probeRef.current.querySelector('.shp-probe-mono')).fontFamily,
-    };
-
     document.fonts.ready.then(() => {
       if (cancelled) return;
       canvas.width = frame.w;
       canvas.height = frame.h;
       const ctx = canvas.getContext('2d');
       ctx.clearRect(0, 0, frame.w, frame.h);
-      plate.draw(ctx, frame, {
-        art,
-        shown,
-        isDark,
-        families,
-        // Whether anything is moving behind the ink. It decides whether the
-        // plate needs to lay a scrim before it writes: on plain paper the
-        // thing sits on the page exactly as it does on the site, and a panel
-        // drawn there would be a box around something that never had one.
-        backdrop: look.Background ? look.key : null,
-        paper: isDark ? PAPER.night : PAPER.day,
-      });
+      // The preview: ghosts drawn, and the boxes to hit handed back.
+      targetsRef.current = plate.draw(ctx, frame, { ...inkContext(), preview: true }) || [];
+      canvas.__targets = targetsRef.current;   // for the pane's eyes only
     });
 
     return () => { cancelled = true; };
-  }, [open, plate, frame, art, shown, isDark, look, mounted]);
+  }, [open, plate, frame, art, shown, isDark, look, mounted, inkContext]);
 
-  // ── Turning the paper ────────────────────────────────────────────────────
+  // ── Turning the paper, and tapping it ────────────────────────────────────
+  // A sideways drag turns to the next look. A tap — a finger that barely
+  // moved — is put to the plate's boxes: tap a line of the card to leave it
+  // off, tap its ghost to bring it back. The boxes come in the paper's own
+  // pixels, so the tap is scaled back up by the paper's size ON SCREEN at
+  // that moment — measured, not `z`: the remembered scale can lag the
+  // paper by a resize and put a tap one line off. Every box is given at
+  // least a thumb's height on screen, however small the line.
+  const TAP = 8;
+  const THUMB = 44;
   const grab = event => { grabbed.current = { x: event.clientX, y: event.clientY }; };
   const release = event => {
     const from = grabbed.current;
     grabbed.current = null;
     if (!from) return;
     const dx = event.clientX - from.x;
-    // Only a sideways gesture counts. A drag that went further up than across
-    // was somebody scrolling, not somebody turning.
-    if (Math.abs(dx) > TURN && Math.abs(dx) > Math.abs(event.clientY - from.y)) {
+    const dy = event.clientY - from.y;
+    // Only a sideways gesture counts as a turn. A drag that went further up
+    // than across was somebody scrolling, not somebody turning.
+    if (Math.abs(dx) > TURN && Math.abs(dx) > Math.abs(dy)) {
       turn(dx < 0 ? 1 : -1);
+      return;
     }
+    if (Math.hypot(dx, dy) > TAP || !targetsRef.current.length) return;
+    const paper = event.currentTarget.getBoundingClientRect();
+    const scale = paper.width / frame.w;
+    if (!scale) return;
+    const x = (event.clientX - paper.left) / scale;
+    const y = (event.clientY - paper.top) / scale;
+    const minH = THUMB / scale;
+    const hit = targetsRef.current.find(t => {
+      const pad = Math.max(0, (minH - t.h) / 2);
+      return x >= t.x && x <= t.x + t.w && y >= t.y - pad && y <= t.y + t.h + pad;
+    });
+    if (!hit?.tap) return;
+    const patch = hit.tap(shown);
+    setPressed(p => ({ ...p, ...patch }));
+    setTapped(true);
   };
 
   // ── Off the press ────────────────────────────────────────────────────────
@@ -417,9 +463,11 @@ export default function SharePrinter({ open, onClose, plate, albums = [], link =
     if (moving && moving.width && moving.height) {
       ctx.drawImage(moving, 0, 0, frame.w, frame.h);
     }
-    if (plateRef.current) ctx.drawImage(plateRef.current, 0, 0, frame.w, frame.h);
+    // Drawn again rather than copied from the preview: the preview carries
+    // ghosts of what was left off, and a ghost must never reach a story.
+    if (plate?.draw && probeRef.current) plate.draw(ctx, frame, { ...inkContext(), preview: false });
     return out;
-  }, [frame, isDark]);
+  }, [frame, isDark, plate, inkContext]);
 
   // Flat colour and type wants PNG; a photograph of somebody's record shelf
   // wants JPEG and would be four megabytes as a PNG.
@@ -591,33 +639,9 @@ export default function SharePrinter({ open, onClose, plate, albums = [], link =
           ))}
         </div>
 
-        {toggles.length > 0 && (
-          <div className="shp-set">
-            <span className="shp-set-label">Show</span>
-            {toggles.map(t => (
-              <button
-                key={t.key}
-                type="button"
-                aria-pressed={!!shown[t.key]}
-                className={'shp-chip' + (shown[t.key] ? ' shp-chip--on' : '')}
-                onClick={() => setPressed(p => {
-                  const next = { ...p, [t.key]: !shown[t.key] };
-                  // Toggles that share a `group` are a trade-off, one of a
-                  // set: turning one on turns the others off, and turning the
-                  // chosen one off leaves nothing chosen (Miyel, 2026-09-12).
-                  if (t.group && !shown[t.key]) {
-                    for (const other of toggles) {
-                      if (other.group === t.group && other.key !== t.key) next[other.key] = false;
-                    }
-                  }
-                  return next;
-                })}
-              >
-                {t.label}
-              </button>
-            ))}
-          </div>
-        )}
+        {/* No Show row. The plate's toggles still declare what can be left
+            off and how each starts; the card itself is where they are
+            switched (2026-09-13). */}
 
         <div className="shp-acts">
           {/* The way out, down here with the other two rather than pinned to
@@ -648,7 +672,7 @@ export default function SharePrinter({ open, onClose, plate, albums = [], link =
           )}
         </div>
 
-        <div className="shp-said">{status || (art ? '' : 'Loading…')}</div>
+        <div className="shp-said">{status || (!art ? 'Loading…' : tapped ? '' : 'Tap a line of the card to leave it off; tap its ghost to bring it back.')}</div>
       </div>
     </div>
   );

@@ -571,6 +571,13 @@ export variant the art, title, artist, rating and mark stay in locked
 positions; the background changes mood, never information. A Story has room
 for art and metadata together, so no carousel.
 
+**The printer's options are the card itself, 2026-09-13.** Tap a line of
+the print to leave it off; a ghost of it stays where it was, tap that to
+bring it back; the marks cycle chips, symbols, gone; the sticker's room is
+a ghost pill at the foot. Six bubbles under the preview were sixty-four
+arrangements, most worse than the default, with two labels nobody outside
+the project knew. Ghosts are preview-only: the saved picture is drawn again.
+
 **A print is the entry page's first screen on the record's own colour,
 2026-09-12.** The cover blurred across the paper under the look's wash,
 then the card a reader already knows from the journal: centred, the post's
