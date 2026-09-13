@@ -21,7 +21,8 @@ Think of it like a house.
 
 **Public side** — what anyone visiting the site can see:
 - The homepage: three panes of one cross — the identity card, the listening
-  beacon and the album strip, and either the desk or the pitch
+  beacon and the album strip, and either the desk (with the feed under it) or
+  the pitch
 - Individual entry pages where people can read your notes and leave comments
 - `/archive` — every entry, searchable and filterable
 - `/key` — what the stars and the three marks mean
@@ -142,6 +143,7 @@ The furniture — visual pieces
       AddressCode.js           A plain code for an address, drawn in the browser — what CodeSlot shows when no pressed picture can be had
       CodeScanner.js           The camera pointed at a code — the address book's way in for a card's or a cover's code
       Dashboard.js             The right pane, for the owner — Listen, Inbox, Address book, Settings
+      Feed.js                  The desk's second floor — what the people in the address book logged, read off their public feeds; Submissions and Recent; Compare on a row you also have
       Pitch.js                 The right pane, for everybody else
       KeeperTools.js           The owner's pencil and printer
       WritingAccess.js         The lock at the foot of the pitch pane — a key, and the password field it opens in place

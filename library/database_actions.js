@@ -1,6 +1,7 @@
 // Copyright (C) 2026 Miyel Brown
 // SPDX-License-Identifier: AGPL-3.0-or-later
 import database from './database_connection.js';
+import { tidyJournal } from './return_address.js';
 import { create_slug } from './slug_generator.js';
 import { serializeTracks } from './entry_formatter.js';
 import { sizedAlbumArt } from './music_data_api.js';
@@ -33,7 +34,7 @@ function withSizedArt(row, px) {
 // column nothing renders still ships in the HTML. The chain is private until
 // there's a considered decision about showing it, so it's dropped on the way
 // out unless the caller is holding a wristband and asks for it.
-const CHAIN_FIELDS = ['source_entry_id', 'received_from', 'received_date'];
+const CHAIN_FIELDS = ['source_entry_id', 'received_from', 'received_date', 'received_from_url'];
 
 export function withoutChain(row) {
   if (!row) return row;
@@ -182,16 +183,27 @@ export async function pull_public_entries() {
   // entry has crossed the wire. A feed that deliberately carries no writing
   // was reading every word of it and throwing it away.
   const rows = await database.query(
-    `SELECT ${PUBLIC_FIELDS.map(f => `"${f}"`).join(', ')}
+    `SELECT ${PUBLIC_FIELDS.map(f => `"${f}"`).join(', ')}, "received_from", "received_from_url"
      FROM (${WITH_LISTEN_NUMBERS}) ranked
      ORDER BY posted_at DESC`
   );
   // Picked in JS rather than named in the SELECT so the allow-list is applied
   // in exactly one place and cannot drift away from the list above.
+  //
+  // The credit rides on Submission entries only, 2026-09-13: who sent the
+  // record — the name the send carried and where their journal is. Public
+  // credit is the default (DECISIONS, The network); it is what lets the
+  // sender's own copy show, in its feed, that what they sent came back and
+  // how it landed. The chain stays off an entry's own read; this is the one
+  // place it leaves, and only the two fields the credit is.
   return rows.map(row => {
     const out = {};
     for (const field of PUBLIC_FIELDS) out[field] = row[field];
     out.album_art = sizedAlbumArt(row.album_art, LIST_ART_PX);
+    if (row.entry_type === 'Submission') {
+      out.received_from = row.received_from || null;
+      out.received_from_url = row.received_from_url || null;
+    }
     return out;
   });
 }
@@ -316,6 +328,7 @@ export async function save_new_entry(body) {
     rating, favorite, masterpiece = false, formative = false, notes,
     track_notes, horizon, album_art, tracks = null,
     source_entry_id = null, received_from = null, received_date = null,
+    received_from_url = null,
     user_id = null
   } = body;
 
@@ -326,7 +339,7 @@ export async function save_new_entry(body) {
       album, artist, year, genre, entry_type,
       rating, favorite, masterpiece, formative, notes, track_notes,
       horizon, album_art, slug, tracks,
-      source_entry_id, received_from, received_date, user_id
+      source_entry_id, received_from, received_date, received_from_url, user_id
     ) VALUES (
       ${album}, ${artist}, ${year}, ${genre}, ${entry_type},
       ${rating}, ${favorite}, ${masterpiece}, ${formative}, ${notes},
@@ -334,7 +347,7 @@ export async function save_new_entry(body) {
       ${horizon}, ${album_art}, ${slug},
       ${tracks ? JSON.stringify(tracks) : null},
       ${entryRef(source_entry_id)}, ${blankToNull(received_from)},
-      ${blankToNull(received_date)},
+      ${blankToNull(received_date)}, ${blankToNull(tidyJournal(received_from_url))},
       COALESCE(${entryRef(user_id)}, (SELECT id FROM users ORDER BY id LIMIT 1))
     )
     RETURNING *
@@ -356,6 +369,7 @@ export async function update_entry(slug, fields) {
   let set_source = touched('source_entry_id');
   const set_from = touched('received_from');
   const set_date = touched('received_date');
+  const set_url = touched('received_from_url');
   const source_entry_id = set_source ? entryRef(fields.source_entry_id) : null;
 
   // The row as it stands, fetched once and used twice: to check the chain for
@@ -473,7 +487,8 @@ export async function update_entry(slug, fields) {
       edited_at = CASE WHEN ${noteChanged} THEN ${stampedAt}::timestamp ELSE edited_at END,
       source_entry_id = CASE WHEN ${set_source} THEN ${source_entry_id}::int ELSE source_entry_id END,
       received_from = CASE WHEN ${set_from} THEN ${set_from ? blankToNull(fields.received_from) : null}::text ELSE received_from END,
-      received_date = CASE WHEN ${set_date} THEN ${set_date ? blankToNull(fields.received_date) : null}::date ELSE received_date END
+      received_date = CASE WHEN ${set_date} THEN ${set_date ? blankToNull(fields.received_date) : null}::date ELSE received_date END,
+      received_from_url = CASE WHEN ${set_url} THEN ${set_url ? blankToNull(tidyJournal(fields.received_from_url)) : null}::text ELSE received_from_url END
     WHERE slug = ${slug}
     RETURNING *
   `;
@@ -569,7 +584,7 @@ export async function save_draft(body) {
     // send flow's whole point — that received_from fills itself in rather than
     // being typed — would hold only for a listen finished in one sitting, and
     // drafts exist precisely because that is not the common case.
-    received_from = '', received_date = '',
+    received_from = '', received_date = '', received_from_url = '',
   } = body;
 
   if (!album) throw new Error('A draft needs an album');
@@ -578,13 +593,14 @@ export async function save_draft(body) {
     INSERT INTO drafts (
       lookup_key, album, artist, year, genre, entry_type,
       album_art, collection_id, step, elapsed, rating, masterpiece, formative,
-      favorite, notes, tracks, received_from, received_date
+      favorite, notes, tracks, received_from, received_date, received_from_url
     ) VALUES (
       ${lookup_key(album, artist)}, ${album}, ${artist}, ${year}, ${genre},
       ${entry_type}, ${album_art}, ${String(collection_id || '')},
       ${step}, ${elapsed}, ${rating}, ${masterpiece}, ${formative}, ${favorite}, ${notes},
       ${tracks ? JSON.stringify(tracks) : null},
-      ${blankToNull(received_from)}, ${blankToNull(received_date)}
+      ${blankToNull(received_from)}, ${blankToNull(received_date)},
+      ${blankToNull(tidyJournal(received_from_url))}
     )
     ON CONFLICT (lookup_key) DO UPDATE SET
       album = EXCLUDED.album, artist = EXCLUDED.artist, year = EXCLUDED.year,
@@ -596,6 +612,7 @@ export async function save_draft(body) {
       favorite = EXCLUDED.favorite,
       notes = EXCLUDED.notes, tracks = EXCLUDED.tracks,
       received_from = EXCLUDED.received_from, received_date = EXCLUDED.received_date,
+      received_from_url = EXCLUDED.received_from_url,
       updated_at = NOW()
     RETURNING *
   `;

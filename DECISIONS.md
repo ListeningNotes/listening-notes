@@ -577,13 +577,16 @@ and checks. Nobody learns they were read. **Two views: submissions and
 recent** — submissions is the warmer default and cannot become a scroll. **A
 shelf, not a river:** no counts, no badges, no unread state.
 
-**The feed is entries, not people, 2026-09-12.** Swiping down from the desk:
-entry-shaped rows with a small face and a name — what the people in the
-address book logged, not a list of who exists. Recent is everyone in the
-book, in order; Submissions is who logged what you sent them and how they
-rated it. A row offers Compare only when it is a record you also have —
-this album, their rating and track notes against yours. Compare arrives
-because something happened; it is not a place you navigate to.
+**The feed is entries, not people, 2026-09-12; built 2026-09-13.** The
+desk's second floor: entry-shaped rows with a small face and a name — what
+the people in the address book logged, not a list of who exists — read from
+each journal's public feed in the browser, never stored. Recent is everyone
+in the book, newest first, forty at most; Submissions is who logged what you
+sent them and how they rated it, and is the default. A row offers Compare
+only when it is a record you also have — this album, their rating against
+yours and the two horizons; the track notes stay on the journals until an
+entry can be read across origins. Compare arrives because something
+happened; it is not a place you navigate to.
 
 **Everything social lives on the visitor's own copy, 2026-09-12.** Their
 copy holds their addresses and does their comparing; other people's journals
@@ -627,7 +630,12 @@ somebody in the book credits you — from them having written something, not
 from anything being tracked. The Submission chip on an entry opens the chain.
 
 **`received_from` is published per entry**, with a per-entry toggle for
-private sends. Public credit is the default; quiet is a choice.
+private sends. Public credit is the default; quiet is a choice. **Built
+2026-09-13 as the feed's credit:** the public feed carries `received_from`
+and `received_from_url` on Submission entries and nowhere else — the
+entry's own read still keeps the chain off its row — and the address is
+what a sender's copy matches on, the name only for entries from before the
+address travelled. The quiet toggle is still owed (NOTES).
 
 **A send is a gift, not a form, 2026-08-29.** Three parts, in this order: the
 object, the note, and who it is from. The album is picked off covers, because

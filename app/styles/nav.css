@@ -930,6 +930,65 @@
   font-size: 9px;
 }
 
+/* ── The feed — the desk's second floor ──────────────────────────────────
+   What the people in the address book logged, as entry-shaped rows with a
+   small face and a name. Two views switched by a word, no counts. A row's
+   Compare opens a panel under it: two verdicts and two horizons. */
+.fd-wrap { width: 100%; max-width: 560px; margin: 0 auto; padding: 24px var(--hn-gutter) 40px; box-sizing: border-box; }
+/* On a phone the floor starts under the bar, the way the writing under the
+   card does. */
+.hn-floor-scroll .fd-wrap { padding-top: calc(var(--hn-bar-h) + 24px); }
+.fd-views { display: flex; justify-content: center; gap: 22px; margin-bottom: 18px; }
+.fd-view {
+  font-family: var(--font-label); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--ink-faint); background: none; border: 0; border-bottom: 1px solid transparent;
+  padding: 4px 0; cursor: pointer;
+}
+.fd-view:hover { color: var(--ink-soft); }
+.fd-view--on { color: var(--ink); border-bottom-color: var(--ink); }
+.fd-list { display: flex; flex-direction: column; }
+.fd-row { display: flex; gap: 14px; align-items: flex-start; padding: 14px 0; border-bottom: 1px solid var(--border); }
+.fd-list > div:last-child .fd-row { border-bottom: none; }
+.fd-art { width: 56px; height: 56px; border-radius: 8px; overflow: hidden; flex-shrink: 0; background: var(--panel); display: block; }
+.fd-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.fd-said { flex: 1; min-width: 0; }
+.fd-album {
+  font-family: var(--font-display); font-weight: var(--font-display-weight, 700); font-size: 15px;
+  color: var(--ink); text-decoration: none; line-height: 1.25; display: block; overflow-wrap: anywhere;
+}
+.fd-album:hover { text-decoration: underline; text-underline-offset: 3px; }
+.fd-artist { font-family: var(--font-label); font-size: 10px; color: var(--ink-soft); margin-top: 2px; }
+.fd-stars { margin-top: 5px; color: var(--ink); }
+.fd-who { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; margin-top: 8px; font-family: var(--font-label); font-size: 10px; color: var(--ink-soft); }
+.fd-who a { display: inline-flex; align-items: center; gap: 6px; color: var(--ink); text-decoration: none; }
+.fd-who a:hover { text-decoration: underline; text-underline-offset: 3px; }
+/* A small rounded square, the card's shape, with the plain mark behind the
+   picture for a journal without one. */
+.fd-face {
+  position: relative; width: 18px; height: 18px; border-radius: 5px; overflow: hidden; flex-shrink: 0;
+  background: var(--panel); border: 1px solid var(--border);
+  display: inline-flex; align-items: center; justify-content: center; color: var(--ink-faint);
+}
+.fd-face img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.fd-when { color: var(--ink-faint); }
+.fd-compare { align-self: center; }
+.fd-panel { margin: 0 0 14px 70px; padding: 12px 14px; border: 1px solid var(--border); border-radius: 12px; background: var(--panel); }
+.fd-panel-scores { display: flex; flex-wrap: wrap; gap: 18px; font-family: var(--font-label); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-soft); }
+.fd-panel-scores b { color: var(--ink); font-weight: 600; }
+.fd-panel-gap { color: var(--ink-faint); }
+.fd-horizons { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
+.fd-horizon-label { font-family: var(--font-label); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint); }
+.fd-horizon { display: flex; align-items: flex-end; gap: 2px; height: 22px; }
+.fd-horizon span { flex: 1 1 0; background: var(--ink-faint); border-radius: 1px; min-height: 2px; opacity: 0.8; }
+.fd-horizon--mine span { background: var(--ink); opacity: 1; }
+.fd-panel-note { font-size: 12px; color: var(--ink-soft); margin: 12px 0 0; }
+.fd-panel-note a { color: var(--ink); }
+.fd-empty { padding: 40px 0; text-align: center; font-family: var(--font-label); font-size: 11px; color: var(--ink-faint); line-height: 1.9; }
+.fd-empty a { color: var(--ink-soft); }
+@media (max-width: 640px) {
+  .fd-panel { margin-left: 0; }
+}
+
 /* The writing row that used to sit under the beacon — "+ Start a listen" and
    "Messages" — is gone with its rules. The desk is one swipe right and carries
    both, so the cover was showing the same two controls twice. */
