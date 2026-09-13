@@ -41,6 +41,15 @@ visible, not a defect. Their journal loads from their server under their
 address; the address bar is the receipt. An iframe or proxy would rebuild the
 platform behaviour the whole architecture removes.
 
+**A link to another journal opens a new window, and that is what keeps the
+installed app on screen, 2026-09-13.** On a phone the journal lives on the
+home screen, and a link out that opens a new window comes up as a sheet
+inside the app — their journal, at their address, Done to come back. A
+same-window link would hand the whole app to Safari and lose the desk. So
+every link to another journal — the inbox's, the address book's, the feed's
+and the person's page's to come — keeps `target="_blank"`. The address in
+the sheet is still the receipt.
+
 **A website and not a desktop app, because everything social needs an
 address, 2026-09-11.** A local app would be a private journal: no visitors,
 no sends, no comparing, no feed, and no colophon leading anyone anywhere.
