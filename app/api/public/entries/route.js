@@ -9,8 +9,15 @@
 //
 // Metadata only — see PUBLIC_FIELDS in library/database_actions.js for what
 // that includes and why the writing is left out.
+//
+// It also says whose it is: keeper_name rides beside the entries, so a copy
+// reading this one can print a name where it would otherwise have to print
+// an address — and no address is ever printed on a page (DECISIONS, The
+// network). A copy from before 2026-09-12 answers without it, and the reader
+// falls back to what it has.
 
 import { pull_public_entries } from '@/library/database_actions';
+import { pull_keeper_name } from '@/library/settings_actions';
 
 // Read by browsers on other people's journals, so it has to say so out loud.
 // Without this header the request is blocked before it reaches the page, and
@@ -22,8 +29,8 @@ const CORS = {
 
 export async function GET() {
   try {
-    const entries = await pull_public_entries();
-    return Response.json({ entries }, { headers: CORS });
+    const [entries, keeper_name] = await Promise.all([pull_public_entries(), pull_keeper_name()]);
+    return Response.json({ keeper_name, entries }, { headers: CORS });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500, headers: CORS });
   }

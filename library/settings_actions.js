@@ -261,6 +261,22 @@ export async function isSetUp() {
 // the vault, and the beacon cannot ask Last.fm without both halves of the same
 // question — who to ask about, and what to ask with. One read for one
 // question. Anything else on this timer still gets its own reader.
+// ── One field, for what another copy asks ────────────────────────────────
+// The public feed says who it belongs to, so a journal reading it can print
+// a name where an address would otherwise go (DECISIONS: no address is ever
+// printed on a page). One column, for the same reason the beacon has one: the
+// general reader carries the essay and the definitions, and a feed read by
+// every copy that lists this one should not. Null when unclaimed or unreadable
+// — the reader falls back to what it has.
+export async function pull_keeper_name() {
+  try {
+    const [row] = await database`SELECT keeper_name FROM settings WHERE id = 1`;
+    return String(row?.keeper_name || '').trim() || null;
+  } catch {
+    return null;
+  }
+}
+
 export async function pull_beacon_settings() {
   try {
     const [row] = await database`

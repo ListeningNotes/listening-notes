@@ -22,27 +22,24 @@
 // it. That is the honest limit of doing this without accounts, and it is what
 // to revisit if there are ever accounts to hang it off instead.
 //
+// ── What this is not ──────────────────────────────────────────────────────
+// For two days in September 2026 it was also how a journal knew a visitor
+// kept one: the owner's copy stamped its links out with ?from=<its address>,
+// the journal landed on kept that here and offered Compare. Retired, because
+// it only worked for somebody who arrived from a link their own copy had
+// written — an inbox link, and nowhere else. A text, a scanned code, a shared
+// card carry no such thing, and those are how people arrive. Everything
+// social lives on the visitor's own copy now: their address book, their
+// comparing (DECISIONS, The network). This file is the send form's and the
+// comment form's, and nothing reads it to decide what a visitor is.
+//
 // Deliberately free of imports and of anything server-only — same reason as
-// receipts.js, which this is modelled on.
+// receipts.js, which this is modelled on — so the address helpers below are
+// safe to read from the browser and from a route alike.
 
-// One key, shared by the send form, the comment form and — when it exists —
-// the compare affordance. Not one per feature: fill it in anywhere and it is
-// filled in everywhere after, which is also what lets a journal offer Compare
-// to a visitor. The offer depends on the browser holding an address, not on
-// which form happened to ask for it.
+// One key, shared by the send form and the comment form. Not one per feature:
+// fill it in anywhere and it is filled in everywhere after.
 const KEY = 'ln-return-address';
-
-// Who wants to know when it changes. The card offers Compare off this value
-// and reads it through useSyncExternalStore, which is the shape the rest of
-// the site uses for anything only the browser knows: the server draws the
-// card without it, the browser fills it in, and no state is set from inside
-// an effect to get there.
-const watchers = new Set();
-export function subscribeSender(listener) {
-  watchers.add(listener);
-  return () => watchers.delete(listener);
-}
-const tell = () => { for (const listener of watchers) listener(); };
 
 // What counts as an address worth keeping. Deliberately loose: this is a
 // convenience, so the cost of turning away something valid is higher than the
@@ -63,6 +60,26 @@ export function tidyAddress(value) {
     .replace(/\/+$/, '')
     .toLowerCase();
   return LOOKS_LIKE_A_HOST.test(bare.split('/')[0]) ? bare : '';
+}
+
+// The same, cut down to the host. An entry's code carries a path and a
+// pasted link may carry anything; a journal read, compared or filed in the
+// address book is the whole journal, so only the origin matters.
+export function tidyJournal(value) {
+  return tidyAddress(value).split('/')[0];
+}
+
+// The scheme an address is reached at. Stored without one on purpose, so
+// this is the one place it is put back — the inbox's links, the address
+// book's faces, a route asking a journal its name. Plain http for a copy on
+// this machine, which is only ever a rehearsal. Empty for anything that is
+// not an address, so a link built from it is visibly nothing rather than
+// quietly wrong.
+export function journalUrl(address) {
+  const host = tidyJournal(address);
+  if (!host) return '';
+  const local = /^(localhost|127\.0\.0\.1)(:\d+)?$/.test(host);
+  return (local ? 'http://' : 'https://') + host;
 }
 
 // What to put in the fields when a form opens. Always both strings, never
@@ -108,64 +125,5 @@ export function keepSender({ name = '', address = '' } = {}) {
     // Private browsing, a full quota, storage switched off — none of them
     // worth a broken send. The fields simply start empty next time.
   }
-  tell();
   return kept;
-}
-
-// ── Arriving from your own journal ────────────────────────────────────────
-// A keeper reading somebody else's journal is a stranger to it. This browser,
-// at this address, has never been told they keep one — and their own copy,
-// which knows exactly what it is, cannot say so from where it stands: its
-// storage is its origin's, like its cookies, and nothing at another address
-// can read it. A signed-in copy writing its own address into its own storage
-// would be read by nothing, anywhere.
-//
-// So it says so in the link instead. Every place the owner's copy links out
-// to another journal — the inbox, for now — carries ?from=<its own address>;
-// the journal landed on reads that once, keeps it here as the return address,
-// and takes it back off the address bar. Nobody types anything, and nothing
-// is stored anywhere but the visitor's own browser: the same value the send
-// form would have asked for, arriving a different way.
-//
-// Only surfaces the owner alone can reach may add it. A public link that
-// carried the journal's address would introduce every reader as its keeper.
-const FROM = 'from';
-
-// A link out, carrying this journal's address. Given anything that is not a
-// URL, or no address to carry, it hands the link back untouched — a link
-// that stops working is worse than a visitor who has to paste once.
-export function carryFrom(href, ownAddress) {
-  const address = tidyAddress(ownAddress);
-  if (!address) return href;
-  try {
-    const url = new URL(href);
-    url.searchParams.set(FROM, address);
-    return url.toString();
-  } catch {
-    return href;
-  }
-}
-
-// Read on landing. Returns the address kept, or '' when the link carried
-// none, carried something that is not an address, or carried this journal's
-// own — a link back to itself must not introduce a visitor as its keeper.
-// The name already held is kept: the link says where somebody's journal is,
-// not what they are called.
-export function noteArrival(ownAddress) {
-  if (typeof window === 'undefined') return '';
-  let from = '';
-  try {
-    const url = new URL(window.location.href);
-    if (!url.searchParams.has(FROM)) return '';
-    from = tidyAddress(url.searchParams.get(FROM));
-    // Off the address bar either way: the receipt should read as their
-    // address, not as their address with a note pinned to it.
-    url.searchParams.delete(FROM);
-    window.history.replaceState(window.history.state, '', url.toString());
-  } catch {
-    return '';
-  }
-  if (!from || from === tidyAddress(ownAddress)) return '';
-  keepSender({ ...recallSender(), address: from });
-  return from;
 }

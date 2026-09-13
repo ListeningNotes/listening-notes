@@ -21,11 +21,12 @@
 'use client';
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Headphones, Envelope, GearSix } from '@phosphor-icons/react';
+import { Headphones, Envelope, AddressBook, GearSix } from '@phosphor-icons/react';
 import { VERSION, RELEASE_URL } from '../../library/version';
 
 // Everything but the first: messages, which are what you open the journal to
-// check, and the machinery.
+// check; the address book, which is where the people you read live; and the
+// machinery.
 //
 // There was a Share door here too, opening the Instagram slide exporter, with
 // a note promising the card printer that never merged. Sharing happens from
@@ -40,6 +41,10 @@ import { VERSION, RELEASE_URL } from '../../library/version';
 // site that did not need one.
 const DOORS = [
   { href: '/dashboard/inbox',   label: 'Inbox',   note: 'Submissions and comments waiting on you', Icon: Envelope, counted: true },
+  // The journals this keeper reads, by address. A place, not a filter
+  // inside the feed: it is what the feed and comparing are built from, and
+  // it exists before either does (2026-09-12).
+  { href: '/dashboard/people',  label: 'Address book', note: 'The journals you read', Icon: AddressBook },
   // The machinery: the keys, the password, Last.fm, the address. It is also
   // reached from the gear beside the card's pencil; here because the desk is
   // where the owner's things are, and the password form lives behind it.
