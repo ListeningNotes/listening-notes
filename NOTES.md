@@ -208,9 +208,10 @@ cannot be tested end to end.
       be dropped.
 - [ ] **The address book on a real phone, 2026-09-12.** Built in the
       Claude browser; the sheet, June's row and the compare were seen
-      signed in on the Mac. Still owed on the phone: Scan a code reading a
-      card's code and a cover's code down to a host; the Add press on
-      somebody else's card landing in the field; the sheet over the desk.
+      signed in on the Mac. **Scan a code works on the phone, on the live
+      site (2026-09-13): June's card's photo code read off the camera and
+      filed onto his existing row.** Still owed: a cover's code the same
+      way; the Add press on somebody else's card landing in the field.
       **The camera and the clipboard both want https**, so the phone over
       `http://<the Mac's address>:3000` gets "needs a secure address" for
       one and no Copied pill for the other. The way round, before the
@@ -1439,7 +1440,8 @@ brief: the address book, the feed, and where compare lives**
 - [x] **Ways in.** The field (a paste, or an address read aloud); Scan a
       code, which opens the camera in the panel and reads with jsQR (both
       inks, frames no wider than 640px, every 150 ms), taking a card's or
-      a cover's code down to its host; Add to address book on any inbox
+      a cover's code down to its host — proved on Miyel's phone on the live
+      site the next day, June's card read off the camera; Add to address book on any inbox
       submission or comment that carried a journal, reading In your
       address book once it is. `tidyJournal` and `journalUrl` in
       `return_address.js` are the one spelling and the one place the
