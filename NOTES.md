@@ -1480,8 +1480,17 @@ the press on her phone: "the printer is the door into the app"**
       Save (download), Send (share sheet) or Link (clipboard), the address
       copied first and said in the cover's words. **`PrintBar`** (hers too,
       in Slug_Page) wears the correction bar's clothes: three ground dots,
-      Send / Save / Link / Done, and after Send or Save the row swaps to the
-      four sizes — sizes come after you press Save, on her call.
+      a row of the four sizes, and Send / Save / Link / Done. Sizes were
+      offered after Save at first; after her phone look she wanted them
+      seen, so the screen is now a PAPER of the picked size — fitted between
+      the nav and the bar (`height: min(100%, width / ratio)` with
+      `aspect-ratio`), the ground inside it, and the card scaled to fit by a
+      ResizeObserver setting `--print-scale` (`.ln-print-stack` /
+      `.ln-print-card` are `display: contents` until printing). The wide
+      paper lays the card as a grid, cover left. Blur 11px and a 46% wash on
+      screen, the plate at 0.03 of the width and the same wash — her call:
+      the art has to come through; the earlier offset image left a bar down
+      one side of her phone, so the image is scaled from its centre instead.
 - [x] **What went.** The press as a sheet: `SharePrinter.js` is now only the
       toolbox (FRAMES, PAPER, the canvas tools); its sheet, the ghosts on a
       canvas and the tap targets are in git before 2026-09-13 (the plate's

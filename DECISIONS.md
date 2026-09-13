@@ -576,8 +576,9 @@ the card to leave it off; it fades where it stands, and comes back on a
 second tap; the marks cycle chips, symbols, gone; a sideways swipe turns
 the ground — the record blurred across the screen, plain day, plain night.
 Six bubbles under a preview were sixty-four arrangements, most worse than
-the default, with labels nobody outside the project knew. Sizes are asked
-for after Save or Send, since a story and a feed post are different shapes.
+the default, with labels nobody outside the project knew. The paper on
+screen takes the size picked in the bar, so the other shapes are seen, not
+only saved; the card is scaled to fit whatever paper it is on.
 
 **A print is the entry page's first screen on the record's own colour,
 2026-09-12.** The cover blurred across the paper under the look's wash,

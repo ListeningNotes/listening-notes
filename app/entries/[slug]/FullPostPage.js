@@ -7,7 +7,7 @@
 // It receives the entry data from page.js which fetched it server-side.
 
 'use client';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { CaretUp, Check, Envelope, Fingerprint, Heart, SketchLogo, VinylRecord, X } from '@phosphor-icons/react';
@@ -24,6 +24,7 @@ import EdgeCaret from '../../../components/main_components/EdgeCaret';
 import KeeperTools from '../../../components/main_components/KeeperTools';
 import { entryPlate } from '../../../components/main_components/EntryPlate';
 import { usePress } from '../../../hooks/usePress';
+import { FRAMES, FRAME_ORDER } from '../../../components/main_components/SharePrinter';
 import HorizonBar from '../../../components/main_components/Slug_Page/HorizonBar';
 import TrackThread from '../../../components/main_components/Slug_Page/TrackThread';
 import CommentBubble from '../../../components/main_components/Slug_Page/CommentBubble';
@@ -48,9 +49,11 @@ import { useEntryEditor } from '../../../hooks/useEntryEditor';
 // it off (it fades where it stands, and comes back on a second tap); the
 // marks go chips, then symbols, then gone; a sideways swipe turns the ground
 // under the card — the record blurred across the screen, plain day, plain
-// night. Save or Send offers the paper sizes and makes the picture with the
-// plate that mirrors this screen's own numbers (EntryPlate.js), through
-// hooks/usePress.js. Choices are kept for the session, per browser.
+// night. The paper on screen takes the size picked in the bar, fitted
+// between the nav and the bar with the card scaled to fit inside it; Save
+// or Send makes that size with the plate that mirrors this screen's own
+// numbers (EntryPlate.js), through hooks/usePress.js. Choices are kept for
+// the session, per browser.
 const PRINT_STORE = 'ln-printing';
 const GROUNDS = [
   { key: 'record', label: 'The record' },
@@ -301,7 +304,27 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   // Plain night is dark whatever the page's theme; the record's ground
   // follows it, the way the page does.
   const printDark = ground === 'night' || (ground === 'record' && theme === 'dark');
-  const [choosing, setChoosing] = useState(null);   // 'save' | 'send' while the sizes are offered
+  const size = FRAME_ORDER.includes(printChoices.size) ? printChoices.size : 'story';
+  // The paper on screen fits the room between the nav and the bar, and the
+  // card is scaled to fit the paper: measured, never guessed, and only from
+  // the observer (which fires once on observe), so no state is set in the
+  // effect's own body.
+  const printStackRef = useRef(null);
+  const printCardRef = useRef(null);
+  const [printScale, setPrintScale] = useState(1);
+  useLayoutEffect(() => {
+    if (!printing) return undefined;
+    const stack = printStackRef.current;
+    const card = printCardRef.current;
+    if (!stack || !card) return undefined;
+    const observer = new ResizeObserver(() => {
+      const k = Math.min(1, stack.clientHeight / card.offsetHeight, stack.clientWidth / card.offsetWidth);
+      setPrintScale(Number.isFinite(k) && k > 0 ? k : 1);
+    });
+    observer.observe(stack);
+    observer.observe(card);
+    return () => observer.disconnect();
+  }, [printing, size]);
   const keeperName = (keeper_name || '').trim();
   const plate = useMemo(() => entryPlate({ entry, keeper: keeperName }), [entry, keeperName]);
   const press = usePress({
@@ -345,7 +368,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
     else delete root.dataset.printGround;
     return () => { delete root.dataset.printGround; delete root.dataset.printing; };
   }, [printing, ground]);
-  const finishPrinting = useCallback(() => { setPrinting(false); setChoosing(null); }, []);
+  const finishPrinting = useCallback(() => { setPrinting(false); }, []);
   // Escape leaves the mode, and is stopped before the sheet under it hears
   // it and closes the entry too.
   useEffect(() => {
@@ -662,19 +685,24 @@ export default function FullPostPage({ entry, references = [], authed = false, l
       <div
         className={'ln-screens' + (edit.editing ? ' ln-editing' : '') + (printing ? ' ln-printing' : '')}
         data-ground={printing ? ground : undefined}
+        data-size={printing ? size : undefined}
         onTouchStart={printing ? onGroundTouchStart : undefined}
         onTouchEnd={printing ? onGroundTouchEnd : undefined}
       >
-
       {/* ── SCREEN ONE (phones) ── a full screen of album: art up top, then the
           title, artist, year, rating and qualifiers centred beneath it. The
-          desktop hero below is the same information in a different shape. */}
-      <section className="ln-screen-one">
+          desktop hero below is the same information in a different shape.
+          Printing, it is the paper: the shape of the size picked, the ground
+          inside it, and the card scaled to fit (.ln-print-stack and
+          .ln-print-card are display: contents until then). */}
+      <section className="ln-screen-one" style={printing ? { '--print-ratio': FRAMES[size].w / FRAMES[size].h } : undefined}>
         {printing && (
           <div className={'ln-print-ground' + (ground === 'record' ? '' : ' ln-print-ground--plain')} aria-hidden="true">
             {ground === 'record' && entry.album_art && <img src={entry.album_art} alt="" />}
           </div>
         )}
+        <div className="ln-print-stack" ref={printStackRef}>
+        <div className="ln-print-card" ref={printCardRef} style={printing ? { '--print-scale': printScale } : undefined}>
         {printing && keeperName && (
           <div className={'ln-print-line ln-print-keeper' + (shown.keeper ? '' : ' ln-off')} onClick={() => leaveOff('keeper')} role="button" tabIndex={0} title="Tap to leave this off the print">
             {keeperName}
@@ -770,6 +798,8 @@ export default function FullPostPage({ entry, references = [], authed = false, l
             />
           </div>
         )}
+        </div>
+        </div>
         <div
           className="ln-scroll-cue"
           role="button"
@@ -787,9 +817,10 @@ export default function FullPostPage({ entry, references = [], authed = false, l
             grounds={GROUNDS}
             ground={ground}
             onGround={key => setPrintChoices(c => ({ ...c, ground: key }))}
-            choosing={choosing}
-            onChoose={setChoosing}
-            onPick={key => { const which = choosing; setChoosing(null); (which === 'send' ? press.send : press.save)(key); }}
+            size={size}
+            onSize={key => setPrintChoices(c => ({ ...c, size: key }))}
+            onSave={() => press.save(size)}
+            onSend={() => press.send(size)}
             onCopy={press.copy}
             onDone={finishPrinting}
             canSend={press.canSend}
