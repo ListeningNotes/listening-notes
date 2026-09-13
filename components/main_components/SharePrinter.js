@@ -518,7 +518,7 @@ export default function SharePrinter({ open, onClose, plate, albums = [], link =
   if (!inline && !mounted) return null;
 
   const sheet = (
-    <div className={'shp' + (inline ? ' shp--inline' : '')} role="dialog" aria-modal="true" aria-label="Print this">
+    <div className={'shp' + (inline ? ' shp--inline' : ' shp--rises')} role="dialog" aria-modal="true" aria-label="Print this">
 
       {/* Canvas cannot read CSS variables and the faces arrive from next/font,
           so the resolved names are read off these two rather than guessed. */}

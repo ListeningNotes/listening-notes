@@ -331,6 +331,13 @@ pressing. `?entry=slug` travels from an entry; the card sends nobody,
 meaning the profile. The press landed for the record on 2026-09-12; the
 card's door still says so until its plate is reworked.
 
+**On an entry the printer opens in place, not as a route, 2026-09-13.** On a
+phone the entry is itself a sheet over the journal, and the layer slot holds
+one page: a printer route replaced the entry underneath, and closing it
+rebuilt the entry with the journal flashing through. In place it is state —
+close, and you are on the page you never left. `/printer?entry=` still works
+cold, for a bookmark.
+
 **Styles live in eight files by surface, not with their components,
 2026-09-06.** `app/styles/`: base, nav, journal, entry, idcard, session, get,
 forms. A rule is found where its surface is; one kept inside a component is

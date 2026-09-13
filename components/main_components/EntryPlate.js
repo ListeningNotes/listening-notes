@@ -555,18 +555,23 @@ export function entryPlate({ entry, keeper }) {
 }
 
 // ── The page's half ────────────────────────────────────────────────────────
-// What app/printer/page.js renders for the keeper: the press, open, with this
-// record on it; the entry's address goes to the press as the link it copies
-// when a print is made. Closing puts the page's address back — the layer it
-// rose on closes with it — and, opened cold with nowhere to go back to, lands
-// on the record.
-export default function EntryPlate({ entry, keeper, address, layered = false }) {
+// The press, open, with this record on it; the entry's address goes to the
+// press as the link it copies when a print is made.
+//
+// Two callers. The entry page opens it in place — a press over the record,
+// closed by `onClose`, with the page underneath exactly as it was. And
+// app/printer/page.js renders it at its own address, for a bookmark or a
+// cold open; there, closing puts the address back, or lands on the record
+// when there is nowhere to go back to. It was a route from the entry too,
+// for a day, and closing it rebuilt the entry with the journal showing
+// through (DECISIONS, 2026-09-13).
+export default function EntryPlate({ entry, keeper, address, layered = false, onClose = null }) {
   const router = useRouter();
   const plate = useMemo(() => entryPlate({ entry, keeper }), [entry, keeper]);
   const slug = entry?.slug;
-  const close = useCallback(() => {
+  const leave = useCallback(() => {
     if (window.history.length > 1) router.back();
     else router.push(slug ? `/entries/${slug}` : '/');
   }, [router, slug]);
-  return <SharePrinter open inline={layered} plate={plate} link={address || null} onClose={close} />;
+  return <SharePrinter open inline={layered} plate={plate} link={address || null} onClose={onClose || leave} />;
 }

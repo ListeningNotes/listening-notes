@@ -264,9 +264,9 @@ person's page the next (Complete). Left: the printer, and the chain.
         reworked to the 2026-08-25 brief (one toggle for records + since, no
         address) — and **the comparison's**, for `/printer?person=<id>`.
         Both doors still say coming soon.
-      - **A real phone.** Send to the share sheet, Save into the camera roll,
-        and a scan of the printed code at arm's length. Everything so far is
-        the decode check in the pane.
+      - **A real phone.** Miyel looked on 2026-09-13 and three things
+        changed (see Complete). Still to see: Send to the share sheet, Save
+        into the camera roll, a story with the sticker in the space.
       - **The moving card.** Recording is proved (below); Instagram is not —
         the test clip went to Miyel to post. Then two animations that mean
         something and no screensavers: covers arriving, the rating filling.
@@ -1455,6 +1455,26 @@ current.
 ---
 
 ## Complete
+
+**2026-09-13 — the printer on a real phone, branch `printer-fit` (name
+provisional), 1.8.1: what Miyel saw and what changed**
+
+- [x] **The press opens in place over the entry.** On a phone the entry is
+      a sheet over the journal, and the layer slot holds one page: the
+      printer route replaced the entry underneath and closing it rebuilt the
+      entry with the journal flashing through. KeeperTools' printer is a
+      button when the page hands it `onPrint`; FullPostPage keeps a
+      `printing` state and renders `EntryPlate` with `onClose`. Close is
+      instant, the page untouched (checked: the layer, and a marker set on
+      the window, both survive). `/printer?entry=` still works cold, as a
+      link elsewhere. Recorded in DECISIONS.
+- [x] **The press rises when portalled** (`.shp--rises`, entry.css's
+      layRise), so opening in place still comes up from the foot.
+- [x] **Under the phone's bar, not behind it.** `.shp-bar` pads by
+      `env(safe-area-inset-top)`.
+- [x] **The option rows wrap instead of scrolling sideways.** Six chips in a
+      sideways scroll felt long and unnatural; a row's chips are fixed by the
+      plate, so wrapping never moves the print. Chips a shade smaller.
 
 **2026-09-12 — the printer prints the record, branch `printer`, merged to
 main as 1.8.0 the same day (a route's behaviour and two files: the middle
