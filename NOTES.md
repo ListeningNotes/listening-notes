@@ -264,9 +264,11 @@ person's page the next (Complete). Left: the printer, and the chain.
         reworked to the 2026-08-25 brief (one toggle for records + since, no
         address) — and **the comparison's**, for `/printer?person=<id>`.
         Both doors still say coming soon.
-      - **A real phone.** Miyel looked on 2026-09-13 and three things
-        changed (see Complete). Still to see: Send to the share sheet, Save
-        into the camera roll, a story with the sticker in the space.
+      - **A real phone.** Miyel looked on 2026-09-13 and four things
+        changed (see Complete). Still to see: whether the installed copy
+        now fills its screen (the standalone rule, and a force-quit to
+        shed a stale stylesheet), Send to the share sheet, Save into the
+        camera roll, a story with the sticker in the space.
       - **The moving card.** Recording is proved (below); Instagram is not —
         the test clip went to Miyel to post. Then two animations that mean
         something and no screensavers: covers arriving, the rating filling.
@@ -1480,6 +1482,16 @@ provisional), 1.8.1: what Miyel saw and what changed**
       The paper takes everything above the look's name, the controls sit at
       the foot, and the press fills the screen edge to edge (checked at
       375×812: the press is the viewport, the controls end at its foot).
+- [x] **The home-screen app's short viewport.** A readout on the press
+      (temporary, removed) showed Miyel's installed copy hands the page a
+      viewport one status bar shorter than the screen — 812 of 874, inset
+      top 62, bottom 34, standalone true — pinned to the top under the
+      clock. So a press at the viewport's foot stopped 62 above the screen's
+      and the home-indicator inset stacked on that: the dead band she saw.
+      Under `@media (display-mode: standalone)` the press now reaches down
+      by the top inset and its controls stand off by the larger inset, so
+      the last row stays inside the page whichever way the phone paints.
+      Not proved on the phone at the time of writing — see Pending.
 
 **2026-09-12 — the printer prints the record, branch `printer`, merged to
 main as 1.8.0 the same day (a route's behaviour and two files: the middle
