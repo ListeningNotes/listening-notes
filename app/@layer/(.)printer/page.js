@@ -11,10 +11,10 @@
 import LayerEntry from '@/components/main_components/LayerEntry';
 import PrinterPage from '../../printer/page';
 
-export default function PrinterOverThePage() {
+export default function PrinterOverThePage({ searchParams }) {
   return (
     <LayerEntry label="Printer" scrolls arrives="bottom">
-      <PrinterPage layered />
+      <PrinterPage layered searchParams={searchParams} />
     </LayerEntry>
   );
 }

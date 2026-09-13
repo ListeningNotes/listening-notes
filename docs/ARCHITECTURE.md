@@ -152,6 +152,8 @@ The furniture — visual pieces
       Feed.js                  The desk's second floor — what the people in the address book logged, read off their public feeds; Submissions and Recent; Compare on a row you also have
       Pitch.js                 The right pane, for everybody else
       KeeperTools.js           The owner's pencil and printer
+      SharePrinter.js          The share printer — paper sizes, the looks you turn through, Save and Send; knows nothing about journals, prints whatever plate it is handed
+      EntryPlate.js            A record cut as a plate — the entry page's first screen on the record's blurred colour: mark, keeper, cover, album, artist and year, stars, chips, date, horizon; no code, the press copies the address
       WritingAccess.js         The lock at the foot of the pitch pane — a key, and the password field it opens in place
       ComingSoon.js            What a held copy shows instead of a site — unclaimed, no database, or database unreachable
       AddToHomeScreen.js       The one step the software cannot do: the last screen of setup, and a Settings section
@@ -217,7 +219,7 @@ The rooms — full pages assembled from furniture
     get/page.js                The keeper's long note. 404s when unwritten
     about/page.js              Redirect to / — the identity card is the about page
     session/page.js            The listen — picker, then four screens under one header
-    printer/page.js            The share printer's address — "coming soon" until the press ships
+    printer/page.js            The share printer — the press on a record for the keeper (?entry=slug); the sentence for everyone else and for the card, whose plate is still to come
     setup/page.js              Claiming a copy: the code, the name, five skippable screens, the password
     settings/page.js           The machinery, owner-only
     @layer/(.)session/page.js  The same listen, opened as a layer over the desk
@@ -249,6 +251,7 @@ The rooms — full pages assembled from furniture
 | The entry that opens over the wall, and swiping between entries | components/main_components/LayerEntry.js, library/handoff.js and app/@layer/ |
 | The full entry post page | app/entries/[slug]/FullPostPage.js |
 | A picture turning into its code (the portrait, a cover) | components/main_components/CodeSlot.js, styles under .ln-slot in app/styles/base.css |
+| Printing a record (the share printer) | components/main_components/EntryPlate.js draws it, SharePrinter.js is the press, styles under .shp in app/styles/forms.css, app/printer/page.js opens it |
 | The album picker | components/session_components/AlbumPicker.js |
 | The note-taking session | app/session/page.js, styles in app/styles/session.css |
 | The header above every session screen | components/session_components/SessionHeader.js |

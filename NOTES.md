@@ -256,6 +256,40 @@ person's page the next (Complete). Left: the printer, and the chain.
       stay on the journals and the card is a reason to visit both. Its
       door is on the page already: the glyph beside Visit opens
       `/printer?person=<id>`, which says coming soon.
+- [ ] **The printer — what is left after the record's plate, 2026-09-12.**
+      Built on branch `printer` (see Complete): the press back from
+      `share-printer`, `EntryPlate.js`, and `/printer?entry=slug` opening it
+      for the keeper. Left:
+      - **The card's plate** — `IdentityCardPlate.js` on `share-printer`,
+        reworked to the 2026-08-25 brief (one toggle for records + since, no
+        address) — and **the comparison's**, for `/printer?person=<id>`.
+        Both doors still say coming soon.
+      - **A real phone.** Send to the share sheet, Save into the camera roll,
+        and a scan of the printed code at arm's length. Everything so far is
+        the decode check in the pane.
+      - **The moving card.** Recording is proved (below); Instagram is not —
+        the test clip went to Miyel to post. Then two animations that mean
+        something and no screensavers: covers arriving, the rating filling.
+      - **The nine backgrounds as looks**, if the moving card earns them; the
+        four DOM-built ones (Fizzy, Rain, DVD, SplitScreen) have to be taught
+        to draw onto a canvas first.
+      What the session proved, so the build started from numbers:
+      - **A browser records its own canvas into an H.264 MP4 with no
+        server.** WebCodecs (`VideoEncoder`, `avc1.640028`) plus the
+        `mp4-muxer` library made 4 s of 1080×1920 in 1.0 s; `mdimport`
+        reads it as H.264, 4 s, and `avconvert` converts it. `MediaRecorder`
+        also says `video/mp4` but writes a file Apple reads as 0.05 s — see
+        Gotchas. AAC is available for a silent track if Instagram wants
+        audio. Unproved: iPhone Safari (WebCodecs since iOS 16.4, secure
+        context only) and Instagram itself.
+      - **If a printed flyer ever wants a code (a toggle, off by default):
+        the small code on a story is the plain code, not the pressed
+        photo.** At the 0.3× floor the press used before, on a 1080-wide
+        story: plain at EC M (v4, 33 modules) reads from 200 px; plain at
+        EC H (v6 — an entry address at H needs v6, 41 modules) from 240 px;
+        the photo code needs 400 px and only at 0.5×. 200 px is 18% of the
+        width, about 1.2 cm on a phone screen. Cut from the print the same
+        day (see Complete) — the argument is in the DECISIONS archive.
 - [ ] **Names to confirm, 2026-09-13 (the person's page)** — autonomous
       session, rename freely: branch `person-page`; `/dashboard/people/
       [id]` and `PersonPage`; `pull_person` and `GET /api/people/[id]`;
@@ -871,6 +905,13 @@ Project → Settings → Environment Variables.
 
 ## Gotchas
 
+**A `MediaRecorder` MP4 is fragmented, and Apple reads it as a 0.05-second
+video, 2026-09-12.** Chromium's recorder says `video/mp4;codecs=avc1` and
+the file plays in a browser, but it is `moof`/`mdat` fragments, and
+`mdimport -t -d2` (the parser Photos uses) reports the first fragment's
+duration only. For the export, encode with WebCodecs and mux a plain
+`moov`-first MP4; that one reads as 4 s and `avconvert` round-trips it.
+
 **The Claude app's browser pane refuses the camera, always, 2026-09-12.**
 `getUserMedia` answers NotAllowedError with the permission already `denied`
 and nothing to click; the site is a secure context and the camera is there.
@@ -1414,6 +1455,72 @@ current.
 ---
 
 ## Complete
+
+**2026-09-12 — the printer prints the record, branch `printer`, merged to
+main as 1.8.0 the same day (a route's behaviour and two files: the middle
+number); not yet pushed**
+
+- [x] **`SharePrinter.js` brought back from `share-printer`.** Styles moved
+      to forms.css under `.shp`; an `inline` mode so the press rises on the
+      layer sheet with the page instead of popping over it; portalled, it
+      mounts after the first paint (the server has no body to portal into,
+      and the measure and draw effects wait for the same mount — the paper
+      stayed at its starting fifth scale until they did).
+- [x] **`EntryPlate.js`.** The entry page's first screen, on the record's
+      own colour — Miyel's call after the first cut (a cover on plain cream
+      with the facts ranged under it) looked like every other app's share
+      card. The mark centred at the head at the statement pages' size (a
+      fifth of the width, Miyel's call — the nav's 28 read as a colophon)
+      with the keeper under it; the cover
+      at the screen's radius, hairline and lift; the album; artist · year in
+      mono caps; the stars as StarRating draws them; the post's chips
+      (Listen n of N, Favorite, Masterpiece, Formative) in Chip.js's tones;
+      the horizon as bars with a heart over a favourite (the posted date was
+      there and came off, and the keeper's name grew to 13 units — Miyel's
+      calls). The
+      ground is the cover blurred across the paper under a light wash (Day)
+      or a dark one (Night; they were Paper and Ink until Miyel renamed them
+      the same day). Labels are soft
+      rather than faint and the bars ink rather than accent, because both
+      sank into a photograph. Opened out beside the cover on link-preview
+      paper. Toggles: Keeper, Stars, Chips, Horizon.
+- [x] **The code came off the print, same day, on Miyel's brief.** A story
+      is viewed on the phone that would have to scan it, so a code on a print
+      does no work in the case the print is for. Save and Send copy the
+      entry's address instead, with the cover's own Copied line — copied
+      before the picture is drawn, since Safari writes the clipboard only
+      inside the tap that asked — and the Link button stays for the address
+      alone. In person the entry's art already turns into its photo code. A
+      physically printed flyer would earn a toggle; the sizes it would need
+      are under Pending. The plain code drawn on a print, and its stock,
+      live in git at 0712d7d.
+- [x] **Sticker space, and a story's furniture (Miyel's ask, same day).** A
+      fifth toggle, on by default, keeps the bottom 24% of a 9:16 print clear
+      for the link sticker the poster adds — the sticker is how a story links
+      now. Independently, on 9:16 the print keeps out of the top and bottom
+      eighth, where Instagram draws the progress bars, the name and the reply
+      bar; the earlier layout ran the mark under the name. Other papers are
+      untouched by both. The numbers (13% / 13% / 24%) are Instagram's usual
+      safe zones, not measured on a phone yet — check the first real story.
+- [x] **Symbols (Miyel's ask, same day).** A toggle, off to begin with,
+      that draws the marks as the feed's own symbols — Phosphor's Heart,
+      SketchLogo and Fingerprint, their path data copied into the plate —
+      at 34 units, about three chips tall, in the marks' colours. Chips and
+      Symbols are a trade-off: the press learned a `group` on a toggle —
+      turning one on turns the others in its group off, turning the chosen
+      one off leaves nothing chosen (Miyel's call). A listen count has no
+      symbol and stays a chip under the symbols. Posted date came off, the
+      keeper's name grew, and the chips grew a third (13 on 10×4) the same
+      afternoon: at the post's size they could not be read inside a story.
+      Then the stars a quarter up (30 on a 4 gap) and the ground's blur a
+      fifth softer (0.048 of the width, was 0.06) — both Miyel's eye.
+- [x] **`/printer?entry=slug` prints for the keeper, server-checked.**
+      Visitors, a missing record and the card's door still get the sentence.
+      The layer page forwards the query. Decoded at 1×, 0.5× and 0.3× on
+      Day and Night (then Paper and Ink) at 9:16, 4:5 and 1:1: 24 of 24; 1.91:1 reads at 1× only,
+      by design. Apple's art sends CORS headers, so the cover does not taint
+      the print (the "cannot be read in a browser" note in cover_code.js is
+      about sharp, not canvas).
 
 **2026-09-13 — reports, branch `reports`, merged to main and pushed the
 same day as 1.7.0 (a table, a route, a sheet: the middle number); release
