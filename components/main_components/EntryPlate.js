@@ -327,16 +327,21 @@ export function entryPlate({ entry, keeper }) {
           font: `700 ${px(TITLE)}px ${sans}`,
         }));
 
-        // the artist and the year, in the label face
+        // the artist and the year, in the label face — two lines at most,
+        // wrapped as the screen wraps it (Miyel, 2026-09-13), against a
+        // measure narrowed for the tracking the wrapper cannot see
         if (line) {
+          ctx.font = `400 ${px(ARTIST)}px ${mono}`;
+          const artistLines = wrapLines(ctx, line.toUpperCase(), colW * 0.86, 2);
+          const lead = px(ARTIST) * 1.4;
           rows.push({
             gap: px(GAP.artist),
-            h: px(ARTIST) * 1.4,
+            h: artistLines.length * lead,
             draw(c, x, y, w) {
               c.textBaseline = 'top';
               c.font = `400 ${px(ARTIST)}px ${mono}`;
               c.fillStyle = ink.soft;
-              drawTracked(c, ellipsize(c, line.toUpperCase(), w * 0.92), x + w / 2, y, px(ARTIST) * 0.14, 'center');
+              artistLines.forEach((l, i) => drawTracked(c, l, x + w / 2, y + i * lead, px(ARTIST) * 0.14, 'center'));
             },
           });
         }
@@ -579,11 +584,12 @@ export function entryPlate({ entry, keeper }) {
         }
       }
       if (spread) {
-        const blockW = artW + COLUMN_GAP * U + colW;
+        // The writing to the left, the cover to the right (Miyel, 2026-09-13).
+        const blockW = colW + COLUMN_GAP * U + artW;
         const originX = (frame.w - blockW) / 2;
         const originY = (frame.h - h) / 2;
-        drawCover(ctx, originX, originY + (h - artW) / 2, artW, U);
-        lay(originX + artW + COLUMN_GAP * U, originY + (h - stack) / 2);
+        lay(originX, originY + (h - stack) / 2);
+        drawCover(ctx, originX + colW + COLUMN_GAP * U, originY + (h - artW) / 2, artW, U);
       } else {
         lay((frame.w - colW) / 2, top + (areaH - h) / 2);
       }

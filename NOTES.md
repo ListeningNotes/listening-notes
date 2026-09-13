@@ -1491,6 +1491,17 @@ the press on her phone: "the printer is the door into the app"**
       screen, the plate at 0.03 of the width and the same wash — her call:
       the art has to come through; the earlier offset image left a bar down
       one side of her phone, so the image is scaled from its centre instead.
+      Later the same day, from her phone: the card scales against the room
+      inside the paper's padding (against the paper it spilled both ends);
+      the paper's top clears the phone's inset; the bar reaches the screen's
+      foot on the home screen (the press's rule, moved); the plain grounds
+      set their tokens on the mode's box only — from the root they turned
+      the whole site — and the card carries its own copy of the mark at the
+      head, so the nav's stays the site's; a hint sits under the bar until
+      the first tap ever on that browser (`localStorage` `ln-printing-learned`);
+      the print's artist line wraps to two lines like the screen; the wide
+      paper puts the writing left and the cover right, as large as the
+      paper allows, on screen (grid, writing zoomed to 0.55) and in the plate.
 - [x] **What went.** The press as a sheet: `SharePrinter.js` is now only the
       toolbox (FRAMES, PAPER, the canvas tools); its sheet, the ghosts on a
       canvas and the tap targets are in git before 2026-09-13 (the plate's
