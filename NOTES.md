@@ -1488,6 +1488,14 @@ unmerged: Miyel reviews on the dev server**
       physically printed flyer would earn a toggle; the sizes it would need
       are under Pending. The plain code drawn on a print, and its stock,
       live in git at 0712d7d.
+- [x] **Sticker space, and a story's furniture (Miyel's ask, same day).** A
+      fifth toggle, on by default, keeps the bottom 24% of a 9:16 print clear
+      for the link sticker the poster adds — the sticker is how a story links
+      now. Independently, on 9:16 the print keeps out of the top and bottom
+      eighth, where Instagram draws the progress bars, the name and the reply
+      bar; the earlier layout ran the mark under the name. Other papers are
+      untouched by both. The numbers (13% / 13% / 24%) are Instagram's usual
+      safe zones, not measured on a phone yet — check the first real story.
 - [x] **`/printer?entry=slug` prints for the keeper, server-checked.**
       Visitors, a missing record and the card's door still get the sentence.
       The layer page forwards the query. Decoded at 1×, 0.5× and 0.3× on
