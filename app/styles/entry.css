@@ -1069,8 +1069,9 @@
   --shadow-lift: 0 4px 20px rgba(0,0,0,0.4), 0 16px 48px rgba(0,0,0,0.3);
   color-scheme: dark;
 }
-.ln-print-mark { display: block; height: 44px; width: auto; }
-.ln-print-mark path, .ln-print-mark circle { fill: var(--ink); }
+.ln-print-mark { display: block; height: 44px; width: auto; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+.ln-print-mark path, .ln-print-mark circle { fill: var(--ink); transition: fill 0.2s; }
+.ln-print-mark .ln-print-mark-dot--live { fill: var(--live); }
 /* The finished picture over the paper, when a phone has no share sheet to
    take it: held, iOS offers Add to Photos; tapped, the card returns. */
 .ln-print-out {

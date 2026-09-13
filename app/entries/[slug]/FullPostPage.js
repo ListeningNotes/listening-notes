@@ -60,9 +60,9 @@ const GROUNDS = [
   { key: 'day', label: 'Day' },
   { key: 'night', label: 'Night' },
 ];
-// Said under the bar until the first tap has landed, ever, on this browser
-// — nobody would know a line can be tapped off otherwise (Miyel, 2026-09-13).
-const PRINT_LEARNED = 'ln-printing-learned';
+// Said under the bar each time the printer opens, until the first tap of
+// that opening — nobody would know a line can be tapped off otherwise
+// (Miyel, 2026-09-13; once-ever was too little).
 const PRINT_HINT = 'Tap a line of the card to leave it off, tap it again to bring it back. Swipe sideways for the ground.';
 
 
@@ -299,10 +299,15 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   const ground = GROUNDS.some(g => g.key === printChoices.ground) ? printChoices.ground : 'record';
   const shown = {
     keeper: printChoices.keeper !== false,
+    title: printChoices.title !== false,
+    artist: printChoices.artist !== false,
     stars: printChoices.stars !== false,
     chips: printChoices.chips !== false,
     symbols: printChoices.symbols === true,
     horizon: printChoices.horizon !== false,
+    // The mark is not a switch — no print goes out without it — but its dot
+    // is: a tap turns it live green or back to ink (Miyel, 2026-09-13).
+    liveDot: printChoices.liveDot === true,
   };
   // Plain night is dark whatever the page's theme; the record's ground
   // follows it, the way the page does.
@@ -377,14 +382,8 @@ export default function FullPostPage({ entry, references = [], authed = false, l
     if (printing) root.dataset.printing = '1'; else delete root.dataset.printing;
     return () => { delete root.dataset.printing; };
   }, [printing]);
-  const [learned, setLearned] = useState(() => {
-    try { return localStorage.getItem(PRINT_LEARNED) === '1'; } catch { return false; }
-  });
-  const learn = () => {
-    if (learned) return;
-    setLearned(true);
-    try { localStorage.setItem(PRINT_LEARNED, '1'); } catch { /* private mode */ }
-  };
+  const [learned, setLearned] = useState(false);
+  const learn = () => { if (!learned) setLearned(true); };
   const finishPrinting = useCallback(() => { setPrinting(false); press.dismissPicture(); }, [press]);
   // Escape leaves the mode, and is stopped before the sheet under it hears
   // it and closes the entry too.
@@ -395,7 +394,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
     return () => window.removeEventListener('keydown', onKey, true);
   }, [printing, finishPrinting]);
   const keeperTools = authed && !edit.editing && !printing && (
-    <KeeperTools onEdit={edit.begin} slug={entry.slug} onPrint={() => setPrinting(true)} />
+    <KeeperTools onEdit={edit.begin} slug={entry.slug} onPrint={() => { setPrinting(true); setLearned(false); }} />
   );
 
   // ── The fields at the head of the entry ───────────────────────────────────
@@ -729,10 +728,18 @@ export default function FullPostPage({ entry, references = [], authed = false, l
           /* The card's own mark, at the head, as the print has it — the nav's
              is the page's furniture and outside the paper. The fourth copy
              of these paths on the site; each surface states its own. */
-          <svg viewBox="76 96 241 140" className="ln-print-mark" xmlns="http://www.w3.org/2000/svg" aria-label="Listening Notes" role="img">
+          <svg
+            viewBox="76 96 241 140"
+            className="ln-print-mark"
+            xmlns="http://www.w3.org/2000/svg"
+            role="button"
+            tabIndex={0}
+            aria-label={shown.liveDot ? 'The mark, its dot lit — tap for ink' : 'The mark — tap to light its dot'}
+            onClick={() => { learn(); setPrintChoices(c => ({ ...c, liveDot: !shown.liveDot })); }}
+          >
             <path transform="translate(73.734177, 220.794814)" d="M 44.65625 0 C 37.46875 0 31.160156 -1.601562 25.734375 -4.8125 C 20.304688 -8.019531 16.097656 -12.28125 13.109375 -17.59375 C 10.128906 -22.90625 8.640625 -28.773438 8.640625 -35.203125 L 8.640625 -116.21875 L 36.53125 -116.21875 L 36.53125 -33.203125 C 36.53125 -30.546875 37.46875 -28.222656 39.34375 -26.234375 C 41.226562 -24.242188 43.550781 -23.25 46.3125 -23.25 L 77.03125 -23.25 L 77.03125 0 Z M 44.65625 0 " />
             <path transform="translate(153.915942, 220.794814)" d="M 91.96875 2 C 85 2 78.742188 0.476562 73.203125 -2.5625 C 67.671875 -5.613281 63.300781 -9.847656 60.09375 -15.265625 C 56.882812 -20.691406 55.28125 -26.835938 55.28125 -33.703125 L 55.28125 -84.5 C 55.28125 -86.269531 54.835938 -87.875 53.953125 -89.3125 C 53.066406 -90.75 51.90625 -91.910156 50.46875 -92.796875 C 49.03125 -93.679688 47.425781 -94.125 45.65625 -94.125 C 43.882812 -94.125 42.28125 -93.679688 40.84375 -92.796875 C 39.40625 -91.910156 38.269531 -90.75 37.4375 -89.3125 C 36.601562 -87.875 36.1875 -86.269531 36.1875 -84.5 L 36.1875 0 L 8.96875 0 L 8.96875 -82.515625 C 8.96875 -89.484375 10.539062 -95.625 13.6875 -100.9375 C 16.84375 -106.25 21.21875 -110.453125 26.8125 -113.546875 C 32.40625 -116.648438 38.6875 -118.203125 45.65625 -118.203125 C 52.738281 -118.203125 59.046875 -116.648438 64.578125 -113.546875 C 70.109375 -110.453125 74.476562 -106.25 77.6875 -100.9375 C 80.90625 -95.625 82.515625 -89.484375 82.515625 -82.515625 L 82.515625 -31.703125 C 82.515625 -29.929688 82.957031 -28.300781 83.84375 -26.8125 C 84.726562 -25.320312 85.859375 -24.160156 87.234375 -23.328125 C 88.617188 -22.492188 90.144531 -22.078125 91.8125 -22.078125 C 93.582031 -22.078125 95.210938 -22.492188 96.703125 -23.328125 C 98.203125 -24.160156 99.394531 -25.320312 100.28125 -26.8125 C 101.164062 -28.300781 101.609375 -29.929688 101.609375 -31.703125 L 101.609375 -116.21875 L 128.65625 -116.21875 L 128.65625 -33.703125 C 128.65625 -26.835938 127.050781 -20.691406 123.84375 -15.265625 C 120.632812 -9.847656 116.265625 -5.613281 110.734375 -2.5625 C 105.203125 0.476562 98.945312 2 91.96875 2 Z M 91.96875 2 " />
-            <circle cx="297.0547" cy="216.71875" r="14.1328" />
+            <circle cx="297.0547" cy="216.71875" r="14.1328" className={shown.liveDot ? 'ln-print-mark-dot--live' : undefined} />
           </svg>
         )}
         {printing && keeperName && (
@@ -771,8 +778,19 @@ export default function FullPostPage({ entry, references = [], authed = false, l
         {coverField}
         {edit.editing
           ? <div className="ln-screen-one-title" style={{ fontSize: titleSize }}>{titleField}</div>
-          : <h1 className="ln-screen-one-title" style={{ fontSize: titleSize }}>{entry.album}</h1>}
-        <div className="ln-screen-one-artist">
+          : (
+            <h1
+              className={'ln-screen-one-title' + (printing ? ' ln-print-line' : '') + (printing && !shown.title ? ' ln-off' : '')}
+              style={{ fontSize: titleSize }}
+              onClick={printing ? () => leaveOff('title') : undefined}
+            >
+              {entry.album}
+            </h1>
+          )}
+        <div
+          className={'ln-screen-one-artist' + (printing ? ' ln-print-line' : '') + (printing && !shown.artist ? ' ln-off' : '')}
+          onClick={printing ? () => leaveOff('artist') : undefined}
+        >
           {edit.editing ? bylineField : <>{entry.artist}{entry.year ? ' · ' + entry.year : ''}</>}
         </div>
         {/* The score and the chips are what the flags below edit, so while a

@@ -68,6 +68,8 @@ import { parseRating, parseHorizon, entryTracks } from '../../library/entry_form
 const GHOST = 0.18;
 const TAPS = {
   keeper: shown => ({ keeper: !shown.keeper }),
+  title: shown => ({ title: !shown.title }),
+  artist: shown => ({ artist: !shown.artist }),
   stars: shown => ({ stars: !shown.stars }),
   horizon: shown => ({ horizon: !shown.horizon }),
   // chips → symbols → gone → chips; without a mark that has a symbol, the
@@ -133,6 +135,7 @@ const INKS = {
   },
 };
 const GOLD = '#E8B84B';
+const LIVE = '#7cff9b';                // --live: the mark's dot, lit
 const FAV = '#f0484f';                 // --fav
 // The chips' tones, as Chip.js has them: the word in the colour, the hairline
 // the same colour at 40%.
@@ -212,6 +215,8 @@ export function entryPlate({ entry, keeper }) {
   // artist are not switches: they are the card.
   const toggles = [];
   if (keeper) toggles.push({ key: 'keeper', label: 'Keeper', on: true });
+  toggles.push({ key: 'title', label: 'Title', on: true });
+  if (line) toggles.push({ key: 'artist', label: 'Artist', on: true });
   if (stars > 0) toggles.push({ key: 'stars', label: 'Stars', on: true });
   // Chips or symbols: the marks as the post's chips, or as the feed's
   // symbols — one or the other, or neither, cycled by tapping them. Chips to
@@ -272,7 +277,7 @@ export function entryPlate({ entry, keeper }) {
         const rows = [];
         const showKeeper = Boolean(keeper) && on('keeper');
 
-        // the mark, centred, at the head
+        // the mark, centred, at the head — its dot lit when the page's is
         if (art?.mark) {
           rows.push({
             gap: 0,
@@ -280,7 +285,16 @@ export function entryPlate({ entry, keeper }) {
             draw(c, x, y, w) {
               const mh = px(MARK_H);
               const mw = mh * MARK_ASPECT;
-              c.drawImage(art.mark, x + (w - mw) / 2, y, mw, mh);
+              const mx = x + (w - mw) / 2;
+              c.drawImage(art.mark, mx, y, mw, mh);
+              if (shown?.liveDot) {
+                // The dot's place in the mark's box (76 96 241 140): centre
+                // 297.05, 216.72, radius 14.13 — as SiteNav draws it.
+                c.fillStyle = LIVE;
+                c.beginPath();
+                c.arc(mx + ((297.0547 - 76) / 241) * mw, y + ((216.71875 - 96) / 140) * mh, (14.1328 / 241) * mw, 0, Math.PI * 2);
+                c.fill();
+              }
             },
           });
         }
@@ -306,22 +320,28 @@ export function entryPlate({ entry, keeper }) {
         }
 
         // the album, two lines at most, as the screen clamps it
-        ctx.font = `700 ${px(TITLE)}px ${sans}`;
-        rows.push(textRow({
-          gap: px(GAP.title),
-          lines: wrapLines(ctx, entry?.album || '', colW, 2),
-          size: px(TITLE), lead: px(TITLE_LEAD), colour: ink.ink,
-          font: `700 ${px(TITLE)}px ${sans}`,
-        }));
+        if (on('title') || preview) {
+          ctx.font = `700 ${px(TITLE)}px ${sans}`;
+          rows.push({
+            key: 'title', ghost: !on('title'),
+            ...textRow({
+              gap: px(GAP.title),
+              lines: wrapLines(ctx, entry?.album || '', colW, 2),
+              size: px(TITLE), lead: px(TITLE_LEAD), colour: ink.ink,
+              font: `700 ${px(TITLE)}px ${sans}`,
+            }),
+          });
+        }
 
         // the artist and the year, in the label face — two lines at most,
         // wrapped as the screen wraps it (Miyel, 2026-09-13), against a
         // measure narrowed for the tracking the wrapper cannot see
-        if (line) {
+        if (line && (on('artist') || preview)) {
           ctx.font = `400 ${px(ARTIST)}px ${mono}`;
           const artistLines = wrapLines(ctx, line.toUpperCase(), colW * 0.86, 2);
           const lead = px(ARTIST) * 1.4;
           rows.push({
+            key: 'artist', ghost: !on('artist'),
             gap: px(GAP.artist),
             h: artistLines.length * lead,
             draw(c, x, y, w) {

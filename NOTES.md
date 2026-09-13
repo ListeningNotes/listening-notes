@@ -1515,6 +1515,11 @@ the press on her phone: "the printer is the door into the app"**
       ON the paper (`press.picture`, `.ln-print-out`) — hold it and iOS
       offers Add to Photos, tap it to come back. The live site is https and
       will get the sheet.
+      Then: the hint shows on every opening until that opening's first tap
+      (once-ever was too little); the mark cannot be left off but a tap
+      lights its dot in the site's green (`liveDot`, drawn over the mark in
+      the plate at the dot's own place in the 76 96 241 140 box); the title
+      and the artist line are tappable lines too.
       The header (the nav row: mark and light switch) stands down while
       printing — `html[data-printing] .sitenav-row` — and the paper takes
       its room; the card carries its own mark (Miyel, same day).
