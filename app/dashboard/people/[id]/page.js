@@ -26,8 +26,8 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { useParams } from 'next/navigation';
-import { Printer, User } from '@phosphor-icons/react';
+import { useParams, useRouter } from 'next/navigation';
+import { CaretLeft, Printer, User } from '@phosphor-icons/react';
 import SiteNav from '../../../../components/main_components/SiteNav';
 import StarRating from '../../../../components/main_components/StarRating';
 import { albumKey } from '../../../../hooks/useListeningBeacon';
@@ -77,6 +77,14 @@ function Section({ title, note, rows, empty, children }) {
 
 export default function PersonPage({ layered = false }) {
   const { id } = useParams();
+  const router = useRouter();
+  // The way back, in the header's left slot: to the book or the feed this
+  // opened from, or to the book when there is nothing behind it. The pull
+  // down and Escape still work; this is the one that can be seen.
+  const goBack = () => {
+    if (typeof window !== 'undefined' && window.history.length > 1) router.back();
+    else router.push('/dashboard/people');
+  };
   const [authed, setAuthed] = useState(false);
   const [checking, setChecking] = useState(true);
   // null until asked; false when nobody has that id.
@@ -158,7 +166,11 @@ export default function PersonPage({ layered = false }) {
 
   return (
     <div className={'own-screen' + (layered ? ' own-screen--layered' : '')}>
-      <SiteNav />
+      <SiteNav tools={(
+        <button type="button" className="kt-tool" onClick={goBack} aria-label="Back" title="Back">
+          <CaretLeft size={18} weight="regular" aria-hidden="true" />
+        </button>
+      )} />
 
       <div className="own-body pn-body">
         {person === false ? (

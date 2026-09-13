@@ -255,7 +255,7 @@ export default function Feed({ entries = [] }) {
                   <Marks entry={entry} size={20} />
                 </div>
                 <div className="fd-who">
-                  <Link href={`/dashboard/people/${person.id}`} title={`Your page about ${person.name || 'them'}`}>
+                  <Link href={`/dashboard/people/${person.id}`} title={`Your page about ${person.name || 'them'}`} data-grows={`/dashboard/people/${person.id}`}>
                     <Face address={person.address} />
                     {person.name || 'Someone'}
                   </Link>

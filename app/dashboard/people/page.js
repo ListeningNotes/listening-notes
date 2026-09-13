@@ -18,7 +18,9 @@
 // address aloud.
 //
 // A row opens your page about that person (app/dashboard/people/[id]/
-// page.js) — the whole-journal compare and what they sent you; the arrow
+// page.js) — the whole-journal compare and what they sent you — and the
+// page grows out of the row that was pressed, the way an entry grows out of
+// its cover: the row says so in data-grows (library/handoff.js). The arrow
 // beside it opens their journal, in the browser, where reading somebody
 // happens.
 //
@@ -152,7 +154,7 @@ export default function AddressBook({ layered = false }) {
             ) : (
               <div className="bk-list">
                 {people.map(p => (
-                  <div key={p.id} className="bk-row">
+                  <div key={p.id} className="bk-row" data-grows={`/dashboard/people/${p.id}`}>
                     <Link
                       href={`/dashboard/people/${p.id}`}
                       className="bk-person"

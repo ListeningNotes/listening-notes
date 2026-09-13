@@ -3,17 +3,18 @@
 // app/@layer/(.)dashboard/people/[id]/page.js
 // Your page about a person, opened over the desk.
 //
-// From a face or a name in the feed, or a row in the address book, on the
-// same sheet the book itself arrives on. The page reads its own id from
-// the address, so the sheet has nothing to hand it. See
-// app/@layer/(.)dashboard/inbox/page.js for the shape.
+// From a face or a name in the feed, or a row in the address book — and it
+// grows out of the row or the face that was pressed, the way an entry grows
+// out of its cover (data-grows, handoff.js), rather than rising from the
+// foot of the screen like the book. The page reads its own id from the
+// address, so the sheet has nothing to hand it.
 
 import LayerEntry from '@/components/main_components/LayerEntry';
 import PersonPage from '../../../../dashboard/people/[id]/page';
 
 export default function PersonOverTheDesk() {
   return (
-    <LayerEntry label="A person" scrolls arrives="bottom">
+    <LayerEntry label="A person" scrolls>
       <PersonPage layered />
     </LayerEntry>
   );
