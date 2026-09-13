@@ -97,6 +97,9 @@ export default function Inbox({ layered = false }) {
       genre: '',
       entryType: 'Submission',
       receivedFrom: sent.submitter_name || '',
+      // Their journal, so the credit on the entry can name it exactly
+      // (migrations/008_received_from_url.sql).
+      receivedFromUrl: sent.sender_url || '',
       receivedDate: sent.created_at ? String(sent.created_at).slice(0, 10) : '',
     }));
     await updateStatus(sent.id, 'reviewed');

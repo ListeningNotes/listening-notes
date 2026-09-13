@@ -90,6 +90,10 @@
 .ln-mark--fav { color: var(--fav); }
 .ln-mark--mp  { color: var(--mp); }
 .ln-mark--formative { color: var(--formative); }
+/* The fourth mark, for a record that was sent: an envelope, in faint ink
+   rather than a colour of its own, since it says where a record came from
+   and not what the keeper thought of it (2026-09-13). */
+.ln-mark--sent { color: var(--ink-faint); }
 
 @media (prefers-reduced-motion: reduce) {
   .ft-inner { transition: none; }

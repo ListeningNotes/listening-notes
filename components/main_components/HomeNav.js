@@ -55,6 +55,7 @@ import Journal from './Journal';
 import EdgeCaret from './EdgeCaret';
 import About from './About';
 import Dashboard from './Dashboard';
+import Feed from './Feed';
 import Pitch from './Pitch';
 
 // Left, centre, right. Centre is the one you land on, which is why it is not
@@ -562,8 +563,32 @@ export default function HomeNav() {
         </section>
 
         <section className="hn-pane" ref={paneRefs[2]} aria-label={authed ? 'Your desk' : 'About this software'}>
-          {crown}
-          {authed ? <Dashboard waiting={waiting} /> : <Pitch onSignedIn={letIn} />}
+          {authed ? (
+            <>
+              {/* Floor one — the crown and the desk, one screen that holds
+                  still. Floor two — the feed: what the people in the
+                  address book logged, in a scroller of its own, the same
+                  two-floor shape the beacon and the card have. The pane
+                  measures deep once there is a second floor, so the down
+                  caret draws itself (2026-09-13). */}
+              <div className="hn-floor">
+                {crown}
+                <Dashboard waiting={waiting} />
+              </div>
+              <div className="hn-floor">
+                <div className="hn-floor-scroll">
+                  <div className="hn-under">
+                    <Feed entries={entries} />
+                  </div>
+                </div>
+              </div>
+            </>
+          ) : (
+            <>
+              {crown}
+              <Pitch onSignedIn={letIn} />
+            </>
+          )}
         </section>
       </div>
 

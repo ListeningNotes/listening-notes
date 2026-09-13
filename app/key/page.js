@@ -20,7 +20,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Fingerprint, Heart, SketchLogo } from '@phosphor-icons/react';
+import { Envelope, Fingerprint, Heart, SketchLogo } from '@phosphor-icons/react';
 import { fonts } from '../../library/sitewide_visuals';
 import SiteNav from '../../components/main_components/SiteNav';
 import Chip from '../../components/main_components/Slug_Page/Chip';
@@ -42,6 +42,9 @@ const STAR_ROWS = [
   { key: 'masterpiece', masterpiece: true },
   { key: 'favorite', favorite: true },
   { key: 'formative', formative: true },
+  // The fourth mark, 2026-09-13: not a flag but where a record came from.
+  // Faint ink, an envelope — the same mark the strip and the feed draw.
+  { key: 'submission', sent: true },
 ];
 
 export default function KeyPage() {
@@ -79,14 +82,18 @@ export default function KeyPage() {
                         ? <span className="ln-mark ln-mark--fav"><Heart size={15} weight="fill" /></span>
                         : row.formative
                           ? <span className="ln-mark ln-mark--formative"><Fingerprint size={15} weight="bold" /></span>
-                          : <StarRating rating={row.rating} size={14} />}
+                          : row.sent
+                            ? <span className="ln-mark ln-mark--sent"><Envelope size={15} weight="regular" /></span>
+                            : <StarRating rating={row.rating} size={14} />}
                     {row.masterpiece
                       ? <span style={{ marginLeft: 'auto' }}><Chip tone="mp">{def.label}</Chip></span>
                       : row.favorite
                         ? <span style={{ marginLeft: 'auto' }}><Chip tone="fav">{def.label}</Chip></span>
                         : row.formative
                           ? <span style={{ marginLeft: 'auto' }}><Chip tone="formative">{def.label}</Chip></span>
-                          : <span className="pp-row-tail">{def.label}</span>}
+                          : row.sent
+                            ? <span style={{ marginLeft: 'auto' }}><Chip><Envelope size={10} weight="regular" aria-hidden="true" />{def.label}</Chip></span>
+                            : <span className="pp-row-tail">{def.label}</span>}
                   </div>
                   <p className="pp-row-body">{def.body}</p>
                 </div>

@@ -10,7 +10,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { CaretUp, Check, VinylRecord, X } from '@phosphor-icons/react';
+import { CaretUp, Check, Envelope, VinylRecord, X } from '@phosphor-icons/react';
 import { BookOpen } from '@phosphor-icons/react';
 import { fonts } from '../../../library/sitewide_visuals';
 import { sizedAlbumArt, fetchAlbumArtUrl } from '../../../library/music_data_api';
@@ -615,7 +615,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
         {edit.editing && flagFields}
         <div className="ln-screen-one-chips">
           {!edit.editing && listenLabel && <Chip>{listenLabel}</Chip>}
-          {!edit.editing && isSubmission && <Chip>Submission</Chip>}
+          {!edit.editing && isSubmission && <Chip><Envelope size={10} weight="regular" aria-hidden="true" />Submission</Chip>}
           {!edit.editing && (entry.favorite === true || entry.favorite === 'true') && <Chip tone="fav">Favorite</Chip>}
           {!edit.editing && isMasterpiece && <Chip tone="mp">Masterpiece</Chip>}
           {/* The third flag, missing from this row since the row was written.
@@ -695,7 +695,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
                   ? flagFields
                   : displayRating > 0 && <StarRating rating={displayRating} size={15} glow={isMasterpiece} style={{ verticalAlign: 'middle' }} />}
                 {!edit.editing && listenLabel && <Chip>{listenLabel}</Chip>}
-                {!edit.editing && isSubmission && <Chip>Submission</Chip>}
+                {!edit.editing && isSubmission && <Chip><Envelope size={10} weight="regular" aria-hidden="true" />Submission</Chip>}
                 {!edit.editing && (entry.favorite === true || entry.favorite === 'true') && <Chip tone="fav">Favorite</Chip>}
               </div>
               <div style={{ fontFamily: fonts.mono, fontSize: '9px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--ink-faint)', marginTop: '12px' }}>
