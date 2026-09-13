@@ -21,7 +21,7 @@
 //   the mark, centred at the head, as it is on every page; the keeper's
 //   name under it. the cover, large. the album. the artist and year. the
 //   stars. the chips. when it was posted. the horizon — the track ratings
-//   as bars, the shape of the listen. and the code, centred, at the foot.
+//   as bars, the shape of the listen.
 //
 // The notes never travel. A card that says everything is a post, and a post
 // is terminal; this one is deliberately insufficient so the code has a reason
@@ -29,14 +29,16 @@
 // wash and the ink, never the information (DECISIONS: fixed layout, swappable
 // background).
 //
-// ── The code ──────────────────────────────────────────────────────────────
-// Plain, level M, the entry's own address, on its own light stock — the
-// ground is a photograph, and a transparent code is only as good as what is
-// behind it. Not the pressed photo code the cover turns into on the page:
-// measured on 2026-09-12, that one needs four hundred pixels of a Story to
-// read from a phone, and the plain one reads at two hundred. It has a floor
-// in paper pixels (CODE_FLOOR) that the fit-to-paper correction may not go
-// under, because the square print would otherwise shrink it into a texture.
+// ── No code ───────────────────────────────────────────────────────────────
+// There was one, for an afternoon: plain, level M, centred at the foot on
+// its own stock, and it read at every size. It came off the same day
+// (Miyel's brief) because a story is viewed on the phone that would have to
+// scan it — a code on a print does no work in the case the print is for.
+// What carries a reader to the entry is the poster's link sticker, and the
+// press copies the address for it the moment the picture is made. In
+// person, the art on the entry page already turns into its photo code. A
+// physically printed flyer would earn a toggle, not a redesign; the sizes
+// that would need are in NOTES.
 //
 // ── Units ─────────────────────────────────────────────────────────────────
 // Every measurement is in units of a 340-wide column — a phone's screen one,
@@ -49,10 +51,8 @@
 
 import { useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
-import QRCode from 'qrcode';
 import SharePrinter, { loadMark, loadPicture, MARK_ASPECT, drawTracked, drawPath, ellipsize, wrapLines, roundRect } from './SharePrinter';
 import { parseRating, parseHorizon, entryTracks } from '../../library/entry_formatter';
-import { CODE_QUIET } from '../../library/code_shape';
 
 // ── Measurements, in column units — the post's own ────────────────────────
 const COL = 340;
@@ -66,13 +66,9 @@ const STAR = 24, STAR_GAP = 3;         // StarRating size={24}
 const CHIP = 10, CHIP_PAD_X = 8, CHIP_PAD_Y = 3, CHIP_GAP = 8, CHIP_RADIUS = 4;
 const POSTED = 9;
 const HORIZON_H = 34, HORIZON_GAP = 2, HEART = 7;
-const CODE = 64;
-// …but never less than this much of the paper's shorter side, quiet zone
-// included: 200 of a 1080 Story, which is where a phone camera still reads it.
-const CODE_FLOOR = 0.185;
 const COLUMN_GAP = 28;                 // opened out: between the cover and the stack
 // The screen's gap is 16 between everything; the artist line pulls up by 8.
-const GAP = { keeper: 8, art: 16, title: 16, artist: 8, stars: 16, chips: 16, posted: 16, horizon: 20, foot: 28 };
+const GAP = { keeper: 8, art: 16, title: 16, artist: 8, stars: 16, chips: 16, posted: 16, horizon: 20 };
 
 // How much of the paper the column is allowed, and the height it must fit.
 const FILL_W = 0.86;
@@ -99,10 +95,6 @@ const INKS = {
     wash: 'rgba(14,14,14,0.64)', paper: '#0e0e0e',
   },
 };
-// The code's two colours never follow the look — a camera looks for dark on
-// light.
-const CODE_INK = '#191917';
-const CODE_STOCK = '#f5f4ef';
 const GOLD = '#E8B84B';
 const FAV = '#f0484f';                 // --fav
 // The chips' tones, as Chip.js has them: the word in the colour, the hairline
@@ -115,24 +107,6 @@ const TONES = {
 // StarRating's star, in an 18-box; a heart in a 24-box for the favourites.
 const STAR_PATH = 'M9 1.5l2.163 4.38 4.837.703-3.5 3.412.826 4.818L9 12.39l-4.326 2.273.826-4.818L2 6.583l4.837-.703z';
 const HEART_PATH = 'M12 21s-8-5.3-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 5.7-8 11-8 11z';
-
-// ── The code, as a path ────────────────────────────────────────────────────
-// The smallest version that holds the address at level M, the way AddressCode
-// draws it on the page: whole cells, no inset, one path. Built once per plate.
-function buildCode(url) {
-  try {
-    const { modules } = QRCode.create(url, { errorCorrectionLevel: 'M' });
-    let d = '';
-    for (let row = 0; row < modules.size; row++) {
-      for (let col = 0; col < modules.size; col++) {
-        if (modules.data[row * modules.size + col]) d += `M${col} ${row}h1v1h-1z`;
-      }
-    }
-    return { d, size: modules.size };
-  } catch {
-    return null;
-  }
-}
 
 // A row of the print: the air above it, its height, and how it draws into
 // the box it is given. Measured and drawn by the same numbers so the two
@@ -171,7 +145,7 @@ function postedOn(value) {
 
 // ── The plate ──────────────────────────────────────────────────────────────
 
-export function entryPlate({ entry, keeper, address }) {
+export function entryPlate({ entry, keeper }) {
   const score = parseRating(entry?.rating);
   const isMasterpiece = entry?.masterpiece === true || entry?.rating === 'Masterpiece';
   const stars = isMasterpiece ? 5 : score;
@@ -187,7 +161,6 @@ export function entryPlate({ entry, keeper, address }) {
   if (isFormative) chips.push({ text: 'Formative', tone: 'formative' });
   const line = [entry?.artist, entry?.year].filter(Boolean).join(' · ');
   const posted = postedOn(entry?.posted_at);
-  const code = address ? buildCode(address) : null;
 
   // The horizon: the track ratings as bars, read from the column the session
   // derives — or from the tracks themselves, for a record that has ratings
@@ -200,8 +173,8 @@ export function entryPlate({ entry, keeper, address }) {
   const favs = tracks.map(t => !!t.favorite);
   const anyFav = bars.length > 0 && favs.some(Boolean);
 
-  // What the printer offers to leave off. The cover, the album, the artist,
-  // the date and the code are not switches: they are the card.
+  // What the printer offers to leave off. The cover, the album, the artist
+  // and the date are not switches: they are the card.
   const toggles = [];
   if (keeper) toggles.push({ key: 'keeper', label: 'Keeper', on: true });
   if (stars > 0) toggles.push({ key: 'stars', label: 'Stars', on: true });
@@ -228,21 +201,20 @@ export function entryPlate({ entry, keeper, address }) {
       const { sans, mono } = families;
       const on = key => (shown ? shown[key] !== false : true);
       const spread = frame.w / frame.h > 1.3;
-      const codeFloor = Math.min(frame.w, frame.h) * CODE_FLOOR;
 
       // ── the ground ───────────────────────────────────────────────────────
       paintGround(ctx, frame, art?.cover, ink);
 
       // ── measure, then fit ────────────────────────────────────────────────
       // Width decides the unit. If the result is too tall the unit comes down
-      // by the overrun — more than once, because the code's floor does not
-      // scale with it and one correction lands short.
+      // by exactly the overrun; everything scales with it, so one correction
+      // is enough.
       let U = spread
         ? Math.min((frame.h * FILL_H) / ART, (frame.w * FILL_W) / (ART + COL + COLUMN_GAP))
         : (frame.w * FILL_W) / COL;
       const roomH = spread ? frame.h * FILL_H : frame.h * FILL_H;
       let built = build(U);
-      for (let pass = 0; pass < 3 && built.h > roomH * 1.005; pass++) {
+      if (built.h > roomH) {
         U *= roomH / built.h;
         built = build(U);
       }
@@ -251,7 +223,6 @@ export function entryPlate({ entry, keeper, address }) {
         const px = n => n * unit;
         const colW = px(COL);
         const artW = px(ART);
-        const codeBox = Math.max(px(CODE), codeFloor);
         const rows = [];
         const showKeeper = Boolean(keeper) && on('keeper');
 
@@ -340,9 +311,6 @@ export function entryPlate({ entry, keeper, address }) {
           const head = anyFav ? px(HEART + 4) : 0;
           rows.push({ gap: px(GAP.horizon), h: head + px(HORIZON_H), draw: (c, x, y, w) => drawHorizon(c, x, y + head, w, unit) });
         }
-
-        // the foot: the code, centred
-        if (code) rows.push({ gap: px(GAP.foot), h: codeBox, draw: (c, x, y, w) => drawFoot(c, x + (w - codeBox) / 2, y, codeBox, unit) });
 
         const stack = rows.reduce((sum, row) => sum + row.gap + row.h, 0);
         return { rows, stack, h: spread ? Math.max(stack, artW) : stack, colW, artW };
@@ -517,23 +485,6 @@ export function entryPlate({ entry, keeper, address }) {
         }
       }
 
-      // ── the foot ─────────────────────────────────────────────────────────
-      // The code on its own light stock, exactly its box: the ground is a
-      // photograph on both looks, and a code is only as good as what is
-      // behind its light modules.
-      function drawFoot(c, cx, cy, codeBox, unit) {
-        c.fillStyle = CODE_STOCK;
-        roundRect(c, cx, cy, codeBox, codeBox, 4 * unit);
-        c.fill();
-        const cell = codeBox / (code.size + CODE_QUIET * 2);
-        c.save();
-        c.translate(cx + CODE_QUIET * cell, cy + CODE_QUIET * cell);
-        c.scale(cell, cell);
-        c.fillStyle = CODE_INK;
-        c.fill(new Path2D(code.d));
-        c.restore();
-      }
-
       // ── lay it down ──────────────────────────────────────────────────────
       const { rows, stack, h, colW, artW } = built;
       if (spread) {
@@ -563,11 +514,13 @@ export function entryPlate({ entry, keeper, address }) {
 
 // ── The page's half ────────────────────────────────────────────────────────
 // What app/printer/page.js renders for the keeper: the press, open, with this
-// record on it. Closing puts the address back — the layer it rose on closes
-// with it — and, opened cold with nowhere to go back to, lands on the record.
+// record on it; the entry's address goes to the press as the link it copies
+// when a print is made. Closing puts the page's address back — the layer it
+// rose on closes with it — and, opened cold with nowhere to go back to, lands
+// on the record.
 export default function EntryPlate({ entry, keeper, address, layered = false }) {
   const router = useRouter();
-  const plate = useMemo(() => entryPlate({ entry, keeper, address }), [entry, keeper, address]);
+  const plate = useMemo(() => entryPlate({ entry, keeper }), [entry, keeper]);
   const slug = entry?.slug;
   const close = useCallback(() => {
     if (window.history.length > 1) router.back();

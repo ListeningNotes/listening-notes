@@ -513,12 +513,12 @@ the press's build and a fingerprint of the art and address: 21 bytes,
 written on the first tap, never on save. Never verify on load; never base64
 a picture into a row.
 
-**Cards carry the mark only — no URL.** Printing the address on everyone's
-cards advertises Miyel, not the software. **A code is not a URL,
-2026-09-12:** a print carries the entry's own code, small, near the mark.
-It points at the keeper's entry on the keeper's server, which is the
-opposite of advertising Miyel. The rule forbids the address in type,
-never the code.
+**Cards carry the mark only — no URL, and no code, 2026-09-12.** Printing
+the address on everyone's cards advertises Miyel, not the software. A code
+was tried the same day and cut: a story is viewed on the phone that would
+have to scan it, so a code on a print does no work. Exporting copies the
+entry's address for a link sticker; in person, the art on the entry already
+turns into its photo code. A printed flyer would earn a toggle, not a redesign.
 
 **No address is ever printed on a page, 2026-09-12.** A journal is shown by
 its keeper's name and face; the address lives in the link and in the code.
@@ -563,13 +563,6 @@ the way to the code, never on the way back.
 export variant the art, title, artist, rating and mark stay in locked
 positions; the background changes mood, never information. A Story has room
 for art and metadata together, so no carousel.
-
-**A print's code is the plain one, never smaller than a fifth of the
-paper's shorter side, 2026-09-12.** Shrunk to the 0.3× a phone camera sees,
-the pressed photo code needs 400 px of a 1080 Story and the plain code at
-level M reads at 200. Small near the mark means plain; the photo code is for
-when the code is the hero. Every size and look is decoded at 1×, 0.5× and
-0.3× before it ships; the link-preview paper is exempt, nobody scans a message.
 
 **A print is the entry page's first screen on the record's own colour,
 2026-09-12.** The cover blurred across the paper under the look's wash,

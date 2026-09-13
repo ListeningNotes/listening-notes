@@ -229,6 +229,11 @@ export function loadPicture(src) {
 // to the next print rather than as a tap that missed.
 const TURN = 42;
 
+// What the press says when the address is on the clipboard — the cover's own
+// words, from CodeSlot, so the two gestures read as one.
+const COPIED = 'Copied — paste it anywhere';
+const COPIED_MS = 2400;
+
 // Two facts the server cannot know, read the way React wants facts about the
 // client read: as a store whose server snapshot is one answer and whose
 // client snapshot is the other. During hydration React takes the server's
@@ -432,7 +437,26 @@ export default function SharePrinter({ open, onClose, plate, albums = [], link =
     }
   }), [pull, filetype.mime, filetype.quality]);
 
+  // ── The address travels with the picture, 2026-09-12 ──────────────────
+  // A print carries no code: a story is viewed on the phone that would have
+  // to scan it. What carries a reader to the entry is the poster's link
+  // sticker, so making a print puts the entry's address on the clipboard and
+  // says so in the cover's words. Copied FIRST, before the picture is drawn:
+  // Safari only writes the clipboard inside the tap that asked for it, and
+  // composing the picture takes long enough to fall out of that.
+  const copyTimer = useRef(null);
+  const copyLink = useCallback(() => {
+    if (!link || typeof navigator === 'undefined' || !navigator.clipboard) return Promise.resolve(false);
+    return navigator.clipboard.writeText(link).then(() => true, () => false);
+  }, [link]);
+  const sayCopied = useCallback(() => {
+    setStatus(COPIED);
+    clearTimeout(copyTimer.current);
+    copyTimer.current = setTimeout(() => setStatus(s => (s === COPIED ? '' : s)), COPIED_MS);
+  }, []);
+
   const save = useCallback(async () => {
+    const pasted = copyLink();
     try {
       const blob = await toBlob();
       const a = document.createElement('a');
@@ -440,11 +464,11 @@ export default function SharePrinter({ open, onClose, plate, albums = [], link =
       a.download = fileName;
       a.click();
       setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-      setStatus('');
+      if (await pasted) sayCopied(); else setStatus('');
     } catch {
       setStatus('A picture on this print is not CORS-enabled, so it cannot be saved.');
     }
-  }, [toBlob, fileName]);
+  }, [toBlob, fileName, copyLink, sayCopied]);
 
   // The one that matters on a phone: hand the finished picture straight to the
   // share sheet, where Instagram and Messages are already waiting. Only
@@ -457,31 +481,33 @@ export default function SharePrinter({ open, onClose, plate, albums = [], link =
   const canSendFile = useSyncExternalStore(never, probeCanShare, onServer);
 
   const send = useCallback(async () => {
+    const pasted = copyLink();
     try {
       const blob = await toBlob();
       const file = new File([blob], fileName, { type: filetype.mime });
       await navigator.share({ files: [file] });
-      setStatus('');
+      if (await pasted) sayCopied(); else setStatus('');
     } catch (error) {
       // Cancelling the share sheet rejects, and being told about it would be
       // an error message for changing your mind.
       if (error?.name === 'AbortError') return;
       setStatus('That could not be sent from here — save it instead.');
     }
-  }, [toBlob, fileName, filetype.mime]);
+  }, [toBlob, fileName, filetype.mime, copyLink, sayCopied]);
 
+  // The address alone, without a picture.
   const copy = useCallback(async () => {
     if (!link) return;
-    try {
-      await navigator.clipboard.writeText(link);
+    if (await copyLink()) {
       setCopied(true);
       setTimeout(() => setCopied(false), 1800);
-    } catch {
+      sayCopied();
+    } else {
       // The clipboard needs a secure context and a real gesture. Showing the
       // address is still better than swallowing it.
       setStatus(link);
     }
-  }, [link]);
+  }, [link, copyLink, sayCopied]);
 
   if (!open) return null;
   // Portalled, the printer waits for the first paint: the server has no body
