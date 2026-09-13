@@ -1060,3 +1060,19 @@ a.pn-item-album:hover { text-decoration: underline; text-underline-offset: 3px; 
    you are back on the page you never left. */
 .shp--rises { animation: layRise 0.42s cubic-bezier(0.22, 0.61, 0.36, 1); }
 @media (prefers-reduced-motion: reduce) { .shp--rises { animation: none; } }
+
+/* ── On the home screen the viewport is shorter than the phone ──
+   Installed, with the status bar translucent, iOS hands the page a
+   viewport exactly one status bar shorter than the screen and pins it to
+   the top, under the clock: on Miyel's phone 812 of 874, inset top 62.
+   So a press pinned to the viewport's foot stops 62 above the screen's,
+   and the home-indicator inset then stacks on top — a dead band of ~110,
+   measured 2026-09-13. The press reaches down by the top inset to the
+   screen's real foot, and the controls stand off by the larger inset so
+   the last row stays inside the paintable page either way. In a Safari
+   tab the top inset is 0 and none of this moves. */
+@media (display-mode: standalone) {
+  .shp:not(.shp--inline) { bottom: calc(-1 * env(safe-area-inset-top, 0px)); }
+  .shp--inline { height: calc(100dvh + env(safe-area-inset-top, 0px)); }
+  .shp-controls { padding-bottom: calc(14px + max(env(safe-area-inset-bottom, 0px), env(safe-area-inset-top, 0px))); }
+}
