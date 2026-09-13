@@ -7,10 +7,10 @@
 // It receives the entry data from page.js which fetched it server-side.
 
 'use client';
-import { useState, useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { CaretUp, Check, Envelope, VinylRecord, X } from '@phosphor-icons/react';
+import { CaretUp, Check, Envelope, Fingerprint, Heart, SketchLogo, VinylRecord, X } from '@phosphor-icons/react';
 import { BookOpen } from '@phosphor-icons/react';
 import { fonts } from '../../../library/sitewide_visuals';
 import { sizedAlbumArt, fetchAlbumArtUrl } from '../../../library/music_data_api';
@@ -22,12 +22,15 @@ import { createPortal } from 'react-dom';
 import { useLayerHeaderSlot } from '../../../components/main_components/LayerEntry';
 import EdgeCaret from '../../../components/main_components/EdgeCaret';
 import KeeperTools from '../../../components/main_components/KeeperTools';
-import EntryPlate from '../../../components/main_components/EntryPlate';
+import { entryPlate } from '../../../components/main_components/EntryPlate';
+import { usePress } from '../../../hooks/usePress';
 import HorizonBar from '../../../components/main_components/Slug_Page/HorizonBar';
 import TrackThread from '../../../components/main_components/Slug_Page/TrackThread';
 import CommentBubble from '../../../components/main_components/Slug_Page/CommentBubble';
 import MetadataLabel from '../../../components/main_components/Slug_Page/MetadataLabel';
 import Chip from '../../../components/main_components/Slug_Page/Chip';
+import PrintBar from '../../../components/main_components/Slug_Page/PrintBar';
+import HorizonChart from '../../../components/main_components/HorizonChart';
 import MiniCard from '../../../components/main_components/Slug_Page/MiniCard';
 import { handedOver } from '../../../library/handoff';
 import { tidyAddress } from '../../../library/return_address';
@@ -38,6 +41,22 @@ import StarRating from '../../../components/main_components/StarRating';
 import StarPicker from '../../../components/session_components/StarRating';
 import { editStamp } from '../../../library/entry_formatter';
 import { useEntryEditor } from '../../../hooks/useEntryEditor';
+
+// ── Printing, 2026-09-13 ──────────────────────────────────────────────────
+// The printer is a mode of this page, the way correcting is: press the
+// printer glyph and the first screen becomes the flyer. Tap a line to leave
+// it off (it fades where it stands, and comes back on a second tap); the
+// marks go chips, then symbols, then gone; a sideways swipe turns the ground
+// under the card — the record blurred across the screen, plain day, plain
+// night. Save or Send offers the paper sizes and makes the picture with the
+// plate that mirrors this screen's own numbers (EntryPlate.js), through
+// hooks/usePress.js. Choices are kept for the session, per browser.
+const PRINT_STORE = 'ln-printing';
+const GROUNDS = [
+  { key: 'record', label: 'The record' },
+  { key: 'day', label: 'Day' },
+  { key: 'night', label: 'Night' },
+];
 
 
 // The pair of actions that close the entry out used to share a local style
@@ -257,20 +276,86 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   // the owner, and drawn on the server: a visitor's copy of this page does not
   // contain it.
   //
-  // The printer opens in place, over the record. It was a route for a day
-  // (/printer?entry=slug, rising as a sheet), and on a phone the entry is
-  // itself a sheet over the journal: the two shared the one layer slot, so
-  // the printer replaced the entry underneath and closing it rebuilt the
-  // entry with the journal flashing through. In place it is state — close,
-  // and you are on the page you never left. The address still works cold.
+  // The printer is a mode of this page (see PRINT_STORE at the top). It was
+  // a route for a day, and on a phone the entry is itself a sheet over the
+  // journal: the two shared the one layer slot, so the printer replaced the
+  // entry underneath and closing it rebuilt the entry with the journal
+  // flashing through. Then it was a sheet of its own over the entry, which
+  // was the wrong shape for the front door. Now it is this page.
   const [printing, setPrinting] = useState(false);
-  const keeperTools = authed && !edit.editing && (
-    <>
-      <KeeperTools onEdit={edit.begin} slug={entry.slug} onPrint={() => setPrinting(true)} />
-      {printing && (
-        <EntryPlate entry={entry} keeper={(keeper_name || '').trim()} address={entryUrl} onClose={() => setPrinting(false)} />
-      )}
-    </>
+  const [printChoices, setPrintChoices] = useState(() => {
+    try { return JSON.parse(sessionStorage.getItem(PRINT_STORE) || '{}') || {}; } catch { return {}; }
+  });
+  useEffect(() => {
+    try { sessionStorage.setItem(PRINT_STORE, JSON.stringify(printChoices)); } catch { /* private mode */ }
+  }, [printChoices]);
+  const ground = GROUNDS.some(g => g.key === printChoices.ground) ? printChoices.ground : 'record';
+  const shown = {
+    keeper: printChoices.keeper !== false,
+    stars: printChoices.stars !== false,
+    chips: printChoices.chips !== false,
+    symbols: printChoices.symbols === true,
+    horizon: printChoices.horizon !== false,
+    sticker: true,
+  };
+  // Plain night is dark whatever the page's theme; the record's ground
+  // follows it, the way the page does.
+  const printDark = ground === 'night' || (ground === 'record' && theme === 'dark');
+  const [choosing, setChoosing] = useState(null);   // 'save' | 'send' while the sizes are offered
+  const keeperName = (keeper_name || '').trim();
+  const plate = useMemo(() => entryPlate({ entry, keeper: keeperName }), [entry, keeperName]);
+  const press = usePress({
+    plate, shown, ground, isDark: printDark, link: entryUrl,
+    fonts: { sans: '.ln-screen-one-title', mono: '.ln-screen-one-artist' },
+  });
+  const leaveOff = key => setPrintChoices(c => ({ ...c, [key]: !shown[key] }));
+  const cycleMarks = () => setPrintChoices(c => {
+    const hasSymbols = entry.favorite === true || entry.favorite === 'true' || isMasterpiece || isFormative;
+    if (shown.chips) return { ...c, chips: false, symbols: hasSymbols };
+    if (shown.symbols) return { ...c, chips: false, symbols: false };
+    return { ...c, chips: true, symbols: false };
+  });
+  const turnGround = step => setPrintChoices(c => {
+    const i = GROUNDS.findIndex(g => g.key === ground);
+    return { ...c, ground: GROUNDS[(i + step + GROUNDS.length) % GROUNDS.length].key };
+  });
+  // A sideways swipe on the screen turns the ground. The sheet's own
+  // sideways swipe — the next record — stands down while printing; this is
+  // a different mode (LayerEntry looks for .ln-printing).
+  const groundSwipe = useRef(null);
+  const onGroundTouchStart = e => {
+    if (!printing || e.touches.length !== 1) return;
+    groundSwipe.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+  };
+  const onGroundTouchEnd = e => {
+    const from = groundSwipe.current;
+    groundSwipe.current = null;
+    if (!from || !printing || !e.changedTouches?.length) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - from.x;
+    const dy = t.clientY - from.y;
+    if (Math.abs(dx) > 42 && Math.abs(dx) > Math.abs(dy)) turnGround(dx < 0 ? 1 : -1);
+  };
+  // The plain grounds are stamped on <html> so the fixed header's mark and
+  // the sheet take the card's colours too (entry.css, html:root rules).
+  useEffect(() => {
+    const root = document.documentElement;
+    if (printing) root.dataset.printing = '1'; else delete root.dataset.printing;
+    if (printing && ground !== 'record') root.dataset.printGround = ground;
+    else delete root.dataset.printGround;
+    return () => { delete root.dataset.printGround; delete root.dataset.printing; };
+  }, [printing, ground]);
+  const finishPrinting = useCallback(() => { setPrinting(false); setChoosing(null); }, []);
+  // Escape leaves the mode, and is stopped before the sheet under it hears
+  // it and closes the entry too.
+  useEffect(() => {
+    if (!printing) return undefined;
+    const onKey = event => { if (event.key === 'Escape') { event.stopPropagation(); finishPrinting(); } };
+    window.addEventListener('keydown', onKey, true);
+    return () => window.removeEventListener('keydown', onKey, true);
+  }, [printing, finishPrinting]);
+  const keeperTools = authed && !edit.editing && !printing && (
+    <KeeperTools onEdit={edit.begin} slug={entry.slug} onPrint={() => setPrinting(true)} />
   );
 
   // ── The fields at the head of the entry ───────────────────────────────────
@@ -574,12 +659,27 @@ export default function FullPostPage({ entry, references = [], authed = false, l
           the same arrangement as .hp-mobile-screens on the homepage. On
           desktop it has no height or overflow of its own, so everything below
           just falls back into normal document flow. */}
-      <div className={'ln-screens' + (edit.editing ? ' ln-editing' : '')}>
+      <div
+        className={'ln-screens' + (edit.editing ? ' ln-editing' : '') + (printing ? ' ln-printing' : '')}
+        data-ground={printing ? ground : undefined}
+        onTouchStart={printing ? onGroundTouchStart : undefined}
+        onTouchEnd={printing ? onGroundTouchEnd : undefined}
+      >
 
       {/* ── SCREEN ONE (phones) ── a full screen of album: art up top, then the
           title, artist, year, rating and qualifiers centred beneath it. The
           desktop hero below is the same information in a different shape. */}
       <section className="ln-screen-one">
+        {printing && (
+          <div className={'ln-print-ground' + (ground === 'record' ? '' : ' ln-print-ground--plain')} aria-hidden="true">
+            {ground === 'record' && entry.album_art && <img src={entry.album_art} alt="" />}
+          </div>
+        )}
+        {printing && keeperName && (
+          <div className={'ln-print-line ln-print-keeper' + (shown.keeper ? '' : ' ln-off')} onClick={() => leaveOff('keeper')} role="button" tabIndex={0} title="Tap to leave this off the print">
+            {keeperName}
+          </div>
+        )}
         {edit.editing ? (
           <button
             type="button"
@@ -624,22 +724,52 @@ export default function FullPostPage({ entry, references = [], authed = false, l
             been there all along; replaying the fill starts every star empty
             for a beat, which is the blink at the moment the entry lands. */}
         {!edit.editing && displayRating > 0 && (
-          <StarRating rating={displayRating} size={24} glow={isMasterpiece} animate={!alreadyShown} burst={isMasterpiece && !alreadyShown} />
+          <div className={(printing ? 'ln-print-line' : '') + (printing && !shown.stars ? ' ln-off' : '')} onClick={printing ? () => leaveOff('stars') : undefined}>
+            <StarRating rating={displayRating} size={24} glow={isMasterpiece} animate={!alreadyShown} burst={isMasterpiece && !alreadyShown} />
+          </div>
         )}
         {edit.editing && flagFields}
-        <div className="ln-screen-one-chips">
-          {!edit.editing && listenLabel && <Chip>{listenLabel}</Chip>}
-          {!edit.editing && isSubmission && <Chip><Envelope size={10} weight="regular" aria-hidden="true" />Submission</Chip>}
-          {!edit.editing && (entry.favorite === true || entry.favorite === 'true') && <Chip tone="fav">Favorite</Chip>}
-          {!edit.editing && isMasterpiece && <Chip tone="mp">Masterpiece</Chip>}
-          {/* The third flag, missing from this row since the row was written.
-              Chip has carried a formative tone the whole time and nothing ever
-              passed it. */}
-          {!edit.editing && isFormative && <Chip tone="formative">Formative</Chip>}
+        <div
+          className={'ln-screen-one-chips' + (printing ? ' ln-print-line' : '') + (printing && !shown.chips && !shown.symbols ? ' ln-off' : '')}
+          onClick={printing ? cycleMarks : undefined}
+        >
+          {printing && shown.symbols ? (
+            /* The marks as the feed's symbols — the second of the three
+               states a tap cycles through while printing. */
+            <>
+              {(entry.favorite === true || entry.favorite === 'true') && <span className="ln-print-symbol" style={{ color: 'var(--fav, #f0484f)' }}><Heart size={34} weight="fill" aria-label="Favorite" /></span>}
+              {isMasterpiece && <span className="ln-print-symbol" style={{ color: 'var(--mp, #4a9bf0)' }}><SketchLogo size={34} weight="fill" aria-label="Masterpiece" /></span>}
+              {isFormative && <span className="ln-print-symbol" style={{ color: 'var(--formative, #3fa96b)' }}><Fingerprint size={34} weight="bold" aria-label="Formative" /></span>}
+              {listenLabel && <Chip>{listenLabel}</Chip>}
+            </>
+          ) : (
+            <>
+              {!edit.editing && listenLabel && <Chip>{listenLabel}</Chip>}
+              {!edit.editing && !printing && isSubmission && <Chip><Envelope size={10} weight="regular" aria-hidden="true" />Submission</Chip>}
+              {!edit.editing && (entry.favorite === true || entry.favorite === 'true') && <Chip tone="fav">Favorite</Chip>}
+              {!edit.editing && isMasterpiece && <Chip tone="mp">Masterpiece</Chip>}
+              {/* The third flag, missing from this row since the row was
+                  written. Chip has carried a formative tone the whole time
+                  and nothing ever passed it. */}
+              {!edit.editing && isFormative && <Chip tone="formative">Formative</Chip>}
+            </>
+          )}
         </div>
-        <div style={{ fontFamily: fonts.mono, fontSize: '9px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--ink-faint)' }}>
+        <div className="ln-screen-one-posted" style={{ fontFamily: fonts.mono, fontSize: '9px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--ink-faint)' }}>
           Posted {postedOn}
         </div>
+        {printing && (horizonBars.length > 0 || parsedTracks.some(t => t.stars > 0)) && (
+          <div className={'ln-print-line ln-print-horizon' + (shown.horizon ? '' : ' ln-off')} onClick={() => leaveOff('horizon')} title="Tap to leave this off the print">
+            <HorizonChart
+              tracks={parsedTracks.map(t => ({ title: t.name, number: t.num, favorite: t.favorite }))}
+              trackRatings={parsedTracks.map(t => Number(t.stars) || 0)}
+              height={52}
+              color="color-mix(in srgb, var(--ink) 50%, transparent)"
+              emptyColor="color-mix(in srgb, var(--ink) 12%, transparent)"
+              animate={false}
+            />
+          </div>
+        )}
         <div
           className="ln-scroll-cue"
           role="button"
@@ -652,6 +782,21 @@ export default function FullPostPage({ entry, references = [], authed = false, l
             <polyline points="6 9 12 15 18 9" />
           </svg>
         </div>
+        {printing && (
+          <PrintBar
+            grounds={GROUNDS}
+            ground={ground}
+            onGround={key => setPrintChoices(c => ({ ...c, ground: key }))}
+            choosing={choosing}
+            onChoose={setChoosing}
+            onPick={key => { const which = choosing; setChoosing(null); (which === 'send' ? press.send : press.save)(key); }}
+            onCopy={press.copy}
+            onDone={finishPrinting}
+            canSend={press.canSend}
+            status={press.status}
+            link={entryUrl}
+          />
+        )}
       </section>
 
       {/* ── HERO ── Blurred album art background with metadata overlay.

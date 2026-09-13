@@ -60,9 +60,7 @@
 
 'use client';
 
-import { useCallback, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
-import SharePrinter, { loadMark, loadPicture, MARK_ASPECT, drawTracked, drawPath, ellipsize, wrapLines, roundRect } from './SharePrinter';
+import { loadMark, loadPicture, MARK_ASPECT, drawTracked, drawPath, ellipsize, wrapLines, roundRect } from './SharePrinter';
 import { parseRating, parseHorizon, entryTracks } from '../../library/entry_formatter';
 
 // The taps (see the note at the top): what each switchable line does when
@@ -249,7 +247,7 @@ export function entryPlate({ entry, keeper }) {
       return { mark, cover };
     },
 
-    draw(ctx, frame, { art, shown, isDark, families, preview = false }) {
+    draw(ctx, frame, { art, shown, isDark, families, preview = false, ground = 'record' }) {
       const ink = isDark ? INKS.night : INKS.day;
       const { sans, mono } = families;
       const on = key => (shown ? shown[key] !== false : true);
@@ -264,7 +262,7 @@ export function entryPlate({ entry, keeper }) {
       const areaH = frame.h - top - foot;
 
       // ── the ground ───────────────────────────────────────────────────────
-      paintGround(ctx, frame, art?.cover, ink);
+      paintGround(ctx, frame, art?.cover, ink, ground);
 
       // ── measure, then fit ────────────────────────────────────────────────
       // Width decides the unit. If the result is too tall the unit comes down
@@ -378,12 +376,13 @@ export function entryPlate({ entry, keeper }) {
       }
 
       // ── the ground ───────────────────────────────────────────────────────
-      // The cover blurred across the whole paper, overscanned so no edge
-      // shows, under the look's wash. Without a cover, the page's own colour.
-      function paintGround(c, f, img, ink) {
+      // Three grounds (Miyel, 2026-09-13): the record — the cover blurred
+      // across the whole paper, overscanned so no edge shows, under the
+      // look's wash — or plain day, or plain night: the page's own colour.
+      function paintGround(c, f, img, ink, ground) {
         c.fillStyle = ink.paper;
         c.fillRect(0, 0, f.w, f.h);
-        if (img?.naturalWidth) {
+        if (ground === 'record' && img?.naturalWidth) {
           const s = Math.max(f.w / img.naturalWidth, f.h / img.naturalHeight) * 1.3;
           const dw = img.naturalWidth * s;
           const dh = img.naturalHeight * s;
@@ -405,9 +404,9 @@ export function entryPlate({ entry, keeper }) {
             c.drawImage(tiny, (f.w - dw) / 2, (f.h - dh) / 2, dw, dh);
           }
           c.restore();
+          c.fillStyle = ink.wash;
+          c.fillRect(0, 0, f.w, f.h);
         }
-        c.fillStyle = ink.wash;
-        c.fillRect(0, 0, f.w, f.h);
       }
 
       // ── the cover ────────────────────────────────────────────────────────
@@ -623,26 +622,4 @@ export function entryPlate({ entry, keeper }) {
       }
     },
   };
-}
-
-// ── The page's half ────────────────────────────────────────────────────────
-// The press, open, with this record on it; the entry's address goes to the
-// press as the link it copies when a print is made.
-//
-// Two callers. The entry page opens it in place — a press over the record,
-// closed by `onClose`, with the page underneath exactly as it was. And
-// app/printer/page.js renders it at its own address, for a bookmark or a
-// cold open; there, closing puts the address back, or lands on the record
-// when there is nowhere to go back to. It was a route from the entry too,
-// for a day, and closing it rebuilt the entry with the journal showing
-// through (DECISIONS, 2026-09-13).
-export default function EntryPlate({ entry, keeper, address, layered = false, onClose = null }) {
-  const router = useRouter();
-  const plate = useMemo(() => entryPlate({ entry, keeper }), [entry, keeper]);
-  const slug = entry?.slug;
-  const leave = useCallback(() => {
-    if (window.history.length > 1) router.back();
-    else router.push(slug ? `/entries/${slug}` : '/');
-  }, [router, slug]);
-  return <SharePrinter open inline={layered} plate={plate} link={address || null} onClose={onClose || leave} />;
 }

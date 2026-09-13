@@ -331,12 +331,12 @@ pressing. `?entry=slug` travels from an entry; the card sends nobody,
 meaning the profile. The press landed for the record on 2026-09-12; the
 card's door still says so until its plate is reworked.
 
-**On an entry the printer opens in place, not as a route, 2026-09-13.** On a
-phone the entry is itself a sheet over the journal, and the layer slot holds
-one page: a printer route replaced the entry underneath, and closing it
-rebuilt the entry with the journal flashing through. In place it is state —
-close, and you are on the page you never left. `/printer?entry=` still works
-cold, for a bookmark.
+**The printer is a mode of the entry page, 2026-09-13.** Press the glyph and
+the first screen becomes the flyer, the way correcting is a mode: the card
+you already know, full size, in the real type. A sheet of its own — a
+scaled-down preview with rows of buttons — was tried twice that week and was
+the wrong shape for the front door. Also learned: the layer slot holds one
+page, so a printer route over an entry replaced the entry underneath.
 
 **Styles live in eight files by surface, not with their components,
 2026-09-06.** `app/styles/`: base, nav, journal, entry, idcard, session, get,
@@ -572,11 +572,12 @@ positions; the background changes mood, never information. A Story has room
 for art and metadata together, so no carousel.
 
 **The printer's options are the card itself, 2026-09-13.** Tap a line of
-the print to leave it off; a ghost of it stays where it was, tap that to
-bring it back; the marks cycle chips, symbols, gone; the sticker's room is
-a ghost pill at the foot. Six bubbles under the preview were sixty-four
-arrangements, most worse than the default, with two labels nobody outside
-the project knew. Ghosts are preview-only: the saved picture is drawn again.
+the card to leave it off; it fades where it stands, and comes back on a
+second tap; the marks cycle chips, symbols, gone; a sideways swipe turns
+the ground — the record blurred across the screen, plain day, plain night.
+Six bubbles under a preview were sixty-four arrangements, most worse than
+the default, with labels nobody outside the project knew. Sizes are asked
+for after Save or Send, since a story and a feed post are different shapes.
 
 **A print is the entry page's first screen on the record's own colour,
 2026-09-12.** The cover blurred across the paper under the look's wash,
