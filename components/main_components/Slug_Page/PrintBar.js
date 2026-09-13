@@ -3,18 +3,17 @@
 // components/main_components/Slug_Page/PrintBar.js
 // The bar at the foot of the entry while it is being printed.
 //
-// The same fixed bar the correction mode wears, with the printer's four
-// things on it: the ground under the card (three dots, also turned by a
-// sideways swipe on the screen), Send and Save, the address, and Done.
-// Pressing Send or Save does not make the picture yet: the row swaps to the
-// four paper sizes, because a story and a feed post are different shapes,
-// and the picture is made for the one you pick.
+// The same fixed bar the correction mode wears, with the printer's things on
+// it in three rows: the ground under the card (three dots, also turned by a
+// sideways swipe on the screen); the paper's size, which the paper on screen
+// takes at once (Miyel, 2026-09-13: the other sizes have to be seen, not
+// only saved); and Send, Save, the address, and Done.
 'use client';
 
 import { DownloadSimple, LinkSimple, ShareNetwork, X } from '@phosphor-icons/react';
 import { FRAME_ORDER, FRAMES } from '../SharePrinter';
 
-export default function PrintBar({ grounds, ground, onGround, choosing, onChoose, onPick, onCopy, onDone, canSend, status, link }) {
+export default function PrintBar({ grounds, ground, onGround, size, onSize, onSave, onSend, onCopy, onDone, canSend, status, link }) {
   return (
     <div className="ln-print-bar" role="toolbar" aria-label="Printing">
       <div className="ln-print-grounds" role="tablist" aria-label="Ground">
@@ -32,43 +31,45 @@ export default function PrintBar({ grounds, ground, onGround, choosing, onChoose
         ))}
       </div>
 
-      {choosing ? (
-        <div className="ln-print-row">
-          <span className="ln-editing-label">{choosing === 'send' ? 'Send as' : 'Save as'}</span>
-          {FRAME_ORDER.map(key => (
-            <button key={key} type="button" className="ln-pin ln-pin--on" onClick={() => onPick(key)} title={FRAMES[key].note}>
-              <span>{FRAMES[key].label}</span>
-            </button>
-          ))}
-          <button type="button" className="ln-pin" onClick={() => onChoose(null)} aria-label="Back">
-            <X size={13} weight="bold" aria-hidden="true" />
+      <div className="ln-print-row ln-print-sizes" role="tablist" aria-label="Size">
+        {FRAME_ORDER.map(key => (
+          <button
+            key={key}
+            type="button"
+            role="tab"
+            aria-selected={key === size}
+            className={'ln-print-size' + (key === size ? ' ln-print-size--on' : '')}
+            onClick={() => onSize(key)}
+            title={FRAMES[key].note}
+          >
+            {FRAMES[key].label}
           </button>
-        </div>
-      ) : (
-        <div className="ln-print-row">
-          <span className="ln-editing-label">Printing</span>
-          {canSend && (
-            <button type="button" className="ln-pin ln-pin--on" onClick={() => onChoose('send')}>
-              <ShareNetwork size={13} weight="bold" aria-hidden="true" />
-              <span>Send</span>
-            </button>
-          )}
-          <button type="button" className={'ln-pin' + (canSend ? '' : ' ln-pin--on')} onClick={() => onChoose('save')}>
-            <DownloadSimple size={13} weight="bold" aria-hidden="true" />
-            <span>Save</span>
+        ))}
+      </div>
+
+      <div className="ln-print-row">
+        <span className="ln-editing-label">Printing</span>
+        {canSend && (
+          <button type="button" className="ln-pin ln-pin--on" onClick={onSend}>
+            <ShareNetwork size={13} weight="bold" aria-hidden="true" />
+            <span>Send</span>
           </button>
-          {link && (
-            <button type="button" className="ln-pin" onClick={onCopy} title={link}>
-              <LinkSimple size={13} weight="bold" aria-hidden="true" />
-              <span>Link</span>
-            </button>
-          )}
-          <button type="button" className="ln-pin" onClick={onDone}>
-            <X size={13} weight="bold" aria-hidden="true" />
-            <span>Done</span>
+        )}
+        <button type="button" className={'ln-pin' + (canSend ? '' : ' ln-pin--on')} onClick={onSave}>
+          <DownloadSimple size={13} weight="bold" aria-hidden="true" />
+          <span>Save</span>
+        </button>
+        {link && (
+          <button type="button" className="ln-pin" onClick={onCopy} title={link}>
+            <LinkSimple size={13} weight="bold" aria-hidden="true" />
+            <span>Link</span>
           </button>
-        </div>
-      )}
+        )}
+        <button type="button" className="ln-pin" onClick={onDone}>
+          <X size={13} weight="bold" aria-hidden="true" />
+          <span>Done</span>
+        </button>
+      </div>
 
       <div className="ln-print-said" aria-live="polite">{status}</div>
     </div>

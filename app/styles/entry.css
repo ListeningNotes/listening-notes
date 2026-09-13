@@ -948,52 +948,101 @@
 
 /* ── Printing ──────────────────────────────────────────────────────────────
    The printer is a mode of the entry page: the first screen becomes the
-   flyer. The notes, the cue and the date step aside; a ground sits behind
-   the card; each switchable line fades where it stands when tapped off; and
-   the correction mode's bar wears the printer's controls. The two plain
-   grounds set the page's tokens themselves, so plain night is night whatever
-   the page's theme, and everything on the card follows. */
+   flyer. The notes, the cue and the date step aside; the screen becomes a
+   paper of the size picked in the bar, fitted between the nav and the bar;
+   a ground sits inside it; the card is scaled to fit it (the page measures
+   and sets --print-scale); each switchable line fades where it stands when
+   tapped off; and the correction mode's bar wears the printer's controls.
+   Until printing, .ln-print-stack and .ln-print-card are display: contents,
+   so the screen's own flex column lays the card out as it always did. */
+.ln-print-stack, .ln-print-card { display: contents; }
 .ln-printing .ln-screen-two,
 .ln-printing .ln-scroll-cue,
 .ln-printing .ln-screen-one-posted,
 .ln-printing .ln-hero,
 .ln-printing .ln-cover-hero { display: none; }
+.ln-printing {
+  --print-top: 72px;     /* clears the fixed logo row */
+  --print-bar: 190px;    /* the bar's three rows */
+  --print-side: 12px;
+  --print-max: 520px;    /* the paper's width on a wide screen */
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  height: 100dvh; box-sizing: border-box;
+  padding: var(--print-top) var(--print-side) var(--print-bar);
+  overflow: hidden; scroll-snap-type: none;
+}
 .ln-printing .ln-screen-one {
   position: relative;
-  display: flex;
-  /* Taller than a screen when it has to be — the bar and the horizon are
-     added to a column that was sized to fit one viewport, and squeezing the
-     art to a thumbnail to keep it there is worse than a scroll. */
-  height: auto;
-  min-height: 100dvh;
+  display: block;
+  flex: 0 1 auto; min-height: 0;
+  padding: 0; margin: 0;
   overflow: hidden;
-  padding-top: 96px;       /* clears the fixed logo row; the keeper's name sits under the mark */
-  padding-bottom: 150px;   /* the bar */
+  border-radius: 10px;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.22);
+  aspect-ratio: var(--print-ratio, 0.5625);
+  /* As tall as the room allows, unless the width runs out first. */
+  height: min(100%, calc((min(100vw, var(--print-max)) - 2 * var(--print-side)) / var(--print-ratio, 0.5625)));
+  width: auto;
+  scroll-snap-align: none;
 }
-.ln-printing .ln-screen-one > :not(.ln-print-ground):not(.ln-print-bar) { position: relative; z-index: 1; }
-.ln-printing .ln-screen-one-art { flex-shrink: 0; height: min(40dvh, 78vw); }
-/* The art is the subject and is not a switch: it stays put, and the tap
-   that turns a cover into its code stands down with its badge. */
-.ln-printing .ln-screen-one-art { pointer-events: none; }
-.ln-printing .ln-turn-badge { display: none; }
 .ln-print-ground {
   position: absolute; inset: 0;
-  z-index: 0 !important;
+  z-index: 0;
   overflow: hidden;
   background: var(--bg);
 }
+/* Scaled from its centre rather than oversized and offset, so the blur's
+   soft edge stays outside the paper on every phone (an offset version left
+   a bar down one side on Miyel's), and blurred less, under a lighter wash,
+   so the art comes through as art (her eye, 2026-09-13). */
 .ln-print-ground img {
-  position: absolute; inset: -15%;
-  width: 130%; height: 130%;
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
   object-fit: cover;
-  filter: blur(18px) saturate(1.3);
+  transform: scale(1.25);
+  filter: blur(11px) saturate(1.25);
 }
 .ln-print-ground::after {
   content: '';
   position: absolute; inset: 0;
-  background: color-mix(in srgb, var(--bg) 62%, transparent);
+  background: color-mix(in srgb, var(--bg) 46%, transparent);
 }
 .ln-print-ground--plain img, .ln-print-ground--plain::after { display: none; }
+.ln-printing .ln-print-stack {
+  display: flex; align-items: center; justify-content: center;
+  position: absolute; inset: 0; z-index: 1;
+  padding: 7%;
+  box-sizing: border-box;
+}
+.ln-printing .ln-print-card {
+  display: flex; flex-direction: column; align-items: center; text-align: center;
+  gap: 12px;
+  width: 100%;
+  flex: 0 0 auto;
+  transform: scale(var(--print-scale, 1));
+  transform-origin: center;
+}
+.ln-printing .ln-print-card > * { position: relative; z-index: 1; }
+/* Opened out on the wide paper, the way the plate lays it: the cover to the
+   left, the writing beside it. */
+.ln-printing[data-size="spread"] .ln-print-card {
+  display: grid;
+  grid-template-columns: 42% 1fr;
+  column-gap: 5%;
+  row-gap: 8px;
+  align-items: center; align-content: center;
+  text-align: left;
+}
+.ln-printing[data-size="spread"] .ln-print-card > * { grid-column: 2; justify-self: start; }
+.ln-printing[data-size="spread"] .ln-screen-one-art { grid-column: 1; grid-row: 1 / span 8; justify-self: center; width: 100%; }
+.ln-printing[data-size="spread"] .ln-screen-one-chips { justify-content: flex-start; }
+.ln-printing .ln-screen-one-art { width: 78%; height: auto; aspect-ratio: 1 / 1; flex-shrink: 0; }
+/* The art is the subject and is not a switch: it stays put, and the tap
+   that turns a cover into its code stands down with its badge. */
+.ln-printing .ln-screen-one-art { pointer-events: none; }
+.ln-printing .ln-turn-badge { display: none; }
+.ln-printing .ln-screen-one-title { font-size: 26px; }
+.ln-printing .ln-screen-one-artist { margin-top: -4px; }
 /* The two plain grounds set the page's tokens at the root — FullPostPage
    stamps data-print-ground on <html> while printing — so the mark in the
    fixed header and the sheet itself follow the card, not only what is
@@ -1016,7 +1065,7 @@ html:root[data-print-ground="night"] {
 .ln-print-keeper {
   font-family: var(--font-label); font-size: 13px; letter-spacing: 0.14em;
   text-transform: uppercase; color: var(--ink-soft);
-  padding: 6px 24px; margin-top: -6px;
+  padding: 4px 12px;
 }
 .ln-print-symbol { display: inline-flex; line-height: 1; padding: 0 4px; }
 .ln-print-horizon { width: 100%; max-width: 340px; }
@@ -1036,6 +1085,16 @@ html:root[data-print-ground="night"] {
   transition: background 0.15s, border-color 0.15s, transform 0.15s;
 }
 .ln-print-dot--on { background: var(--ink); border-color: var(--ink); transform: scale(1.25); }
+.ln-print-sizes { gap: 6px; }
+.ln-print-size {
+  font-family: var(--font-label); font-size: 9.5px; letter-spacing: 0.1em;
+  padding: 6px 11px; border-radius: 999px;
+  border: 1px solid var(--border); background: transparent; color: var(--ink-soft);
+  cursor: pointer; white-space: nowrap;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.ln-print-size:hover { color: var(--ink); border-color: var(--ink-faint); }
+.ln-print-size--on { color: var(--bg); background: var(--ink); border-color: var(--ink); }
 .ln-print-said {
   font-family: var(--font-label); font-size: 9px; letter-spacing: 0.08em;
   color: var(--ink-faint); min-height: 11px; text-align: center; overflow-wrap: anywhere;

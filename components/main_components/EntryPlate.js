@@ -127,7 +127,7 @@ const INKS = {
     bar: 'rgba(26,26,26,0.5)',
     edge: 'rgba(255,255,255,0.6)',                                  // --panel-border
     lift: ['rgba(0,0,0,0.06)', 'rgba(0,0,0,0.06)'],                 // --shadow-lift
-    wash: 'rgba(238,240,236,0.62)', paper: '#eef0ec',
+    wash: 'rgba(238,240,236,0.46)', paper: '#eef0ec',
   },
   night: {
     ink: '#e8e4dc', soft: '#888888', faint: '#666666', warm: '#161616',
@@ -135,7 +135,7 @@ const INKS = {
     bar: 'rgba(232,228,220,0.5)',
     edge: 'rgba(255,255,255,0.08)',
     lift: ['rgba(0,0,0,0.4)', 'rgba(0,0,0,0.3)'],
-    wash: 'rgba(14,14,14,0.64)', paper: '#0e0e0e',
+    wash: 'rgba(14,14,14,0.5)', paper: '#0e0e0e',
   },
 };
 const GOLD = '#E8B84B';
@@ -388,9 +388,11 @@ export function entryPlate({ entry, keeper }) {
           const dh = img.naturalHeight * s;
           c.save();
           if (typeof c.filter === 'string') {
-            // Six hundredths of the width to begin with; a fifth softer on
-            // Miyel's eye, so the cover's shapes show through as shapes.
-            c.filter = `blur(${Math.round(f.w * 0.048)}px) saturate(1.3)`;
+            // Six hundredths of the width to begin with, then a fifth softer,
+            // then softer again with a lighter wash (2026-09-13): the art has
+            // to come through as art. The same numbers the screen uses
+            // (entry.css .ln-print-ground: 11px on a 375 screen, 46%).
+            c.filter = `blur(${Math.round(f.w * 0.03)}px) saturate(1.25)`;
             c.drawImage(img, (f.w - dw) / 2, (f.h - dh) / 2, dw, dh);
           } else {
             // No filter on this canvas: a picture shrunk to a few pixels and
