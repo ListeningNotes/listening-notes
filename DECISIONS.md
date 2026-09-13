@@ -328,7 +328,8 @@ branch if a cover plate is wanted.
 the pencil, on an entry and on the card, opens `/printer`, which says the
 press is coming — so the press lands where people have already been
 pressing. `?entry=slug` travels from an entry; the card sends nobody,
-meaning the profile.
+meaning the profile. The press landed for the record on 2026-09-12; the
+card's door still says so until its plate is reworked.
 
 **Styles live in eight files by surface, not with their components,
 2026-09-06.** `app/styles/`: base, nav, journal, entry, idcard, session, get,
@@ -512,8 +513,12 @@ the press's build and a fingerprint of the art and address: 21 bytes,
 written on the first tap, never on save. Never verify on load; never base64
 a picture into a row.
 
-**Cards carry the mark only — no URL.** Printing the address on everyone's
-cards advertises Miyel, not the software.
+**Cards carry the mark only — no URL, and no code, 2026-09-12.** Printing
+the address on everyone's cards advertises Miyel, not the software. A code
+was tried the same day and cut: a story is viewed on the phone that would
+have to scan it, so a code on a print does no work. Exporting copies the
+entry's address for a link sticker; in person, the art on the entry already
+turns into its photo code. A printed flyer would earn a toggle, not a redesign.
 
 **No address is ever printed on a page, 2026-09-12.** A journal is shown by
 its keeper's name and face; the address lives in the link and in the code.
@@ -558,6 +563,13 @@ the way to the code, never on the way back.
 export variant the art, title, artist, rating and mark stay in locked
 positions; the background changes mood, never information. A Story has room
 for art and metadata together, so no carousel.
+
+**A print is the entry page's first screen on the record's own colour,
+2026-09-12.** The cover blurred across the paper under the look's wash,
+then the card a reader already knows from the journal: centred, the post's
+chips, the post's stars. The first cut — the cover on plain cream with the
+facts under it — was every other app's share card, and forty albums made
+forty identical prints. Plain paper is not a look; the record is.
 
 **An entry's link unfurls into a picture, 2026-09-06.** The framework's
 `opengraph-image` file beside the entry page draws the card a message shows
@@ -1200,7 +1212,10 @@ no file".
 
 - Spotify Connect transport control (fragile: two API tightenings in eighteen
   months; needs per-copy client ID and Premium). After the deploy button.
-- Video exports (ffmpeg server-side, Vercel function timeouts; wallpapers
-  already exist as video, so the assets are ready).
+- Video exports. The ffmpeg-and-timeouts reason is gone, 2026-09-12: a
+  browser records its own canvas into an H.264 MP4 with no server, in
+  about a second for four seconds of 1080×1920 (proved in Chromium, see
+  NOTES). Still parked until a phone has posted one and a moving card
+  earns it — motion that means something, not a screensaver.
 - Manual now-playing override — covers vinyl and iOS Apple Music, where
   scrobbling is unreliable.
