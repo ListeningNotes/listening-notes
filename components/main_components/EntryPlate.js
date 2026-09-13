@@ -58,7 +58,11 @@ import { parseRating, parseHorizon, entryTracks } from '../../library/entry_form
 const COL = 340;
 const ART = 304;                       // min(40dvh, 78vw) on a 390 phone
 const ART_RADIUS = 16;
-const MARK_H = 22;                     // the nav's 28 on a 390 phone
+// The statement pages' mark, not the nav's: setup's card sets it 78 wide on
+// 380 and the held copy's page 92 on a phone, about a fifth of the width.
+// A print is a statement page too (Miyel, 2026-09-12); the nav's 28 read
+// as a colophon.
+const MARK_H = 46;                     // ≈ 80 wide on the 340 column
 const KEEPER = 9;                      // the label face, under the mark
 const TITLE = 26, TITLE_LEAD = 26 * 1.22;
 const ARTIST = 11;                     // mono caps, as .ln-screen-one-artist
