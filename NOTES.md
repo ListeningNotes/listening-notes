@@ -1411,7 +1411,9 @@ current.
 ## Complete
 
 **2026-09-13 — the bug button, on main as 1.6.0 (something new: the middle
-number), before the first release since 1.0.0**
+number), pushed, and release v1.6.0 cut the same night — the first since
+1.0.0, with notes for keepers covering everything since — so June's and
+Peyton's desks say a newer version is available**
 
 - [x] **Report a problem**, on the desk's colophon beside the version: a
       new issue on the one repository (`ISSUES_URL` and `reportUrl` in
