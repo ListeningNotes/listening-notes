@@ -518,7 +518,7 @@ export default function SharePrinter({ open, onClose, plate, albums = [], link =
   if (!inline && !mounted) return null;
 
   const sheet = (
-    <div className={'shp' + (inline ? ' shp--inline' : ' shp--rises')} role="dialog" aria-modal="true" aria-label="Print this">
+    <div className={'shp' + (inline ? ' shp--inline' : ' shp--rises')} role="dialog" aria-modal="true" aria-label={plate?.title || 'Print this'}>
 
       {/* Canvas cannot read CSS variables and the faces arrive from next/font,
           so the resolved names are read off these two rather than guessed. */}
@@ -527,10 +527,9 @@ export default function SharePrinter({ open, onClose, plate, albums = [], link =
         <span className="shp-probe-mono" style={{ fontFamily: 'var(--font-label)' }}>x</span>
       </div>
 
-      <div className="shp-bar">
-        <span className="shp-title">{plate?.title || 'Print'}</span>
-      </div>
-
+      {/* No bar. "The record" sat across the top for a day and said nothing
+          the paper did not; the paper has the room now, and the plate's
+          title names the dialog for a screen reader (Miyel, 2026-09-13). */}
       <div className="shp-view" ref={viewRef}>
         <button type="button" className="shp-arrow" onClick={() => turn(-1)} aria-label="The print before this one">
           <CaretLeft size={16} weight="bold" aria-hidden="true" />
