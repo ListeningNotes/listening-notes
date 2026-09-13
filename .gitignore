@@ -56,3 +56,6 @@ next-env.d.ts
 # One pattern rather than a list, so the next one is covered without anybody
 # having to remember this file exists.
 *.local.md
+
+# the dev server's own https certificate (next dev --experimental-https), one machine's
+/certificates/

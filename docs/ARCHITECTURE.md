@@ -26,7 +26,8 @@ Think of it like a house.
 - `/archive` — every entry, searchable and filterable
 - `/key` — what the stars and the three marks mean
 - `/submit` — send the keeper an album
-- `/compare` — read another journal's feed and compare taste
+- `/compare` — read another journal's feed and compare taste; where a row
+  in the address book opens, until the page about a person exists
 - `/shuffle` — redirect to a random entry
 - `/feed.xml` — the journal as a feed another copy can read
 - `/get` — the long note about why somebody keeps a listening journal, and
@@ -48,6 +49,8 @@ publicly):
   score and note, the preview. Identical on a phone and a desk. From the desk
   it opens as a layer, the way an entry does, and a swipe puts you back
 - `/dashboard/inbox` — sent albums and comments awaiting moderation
+- `/dashboard/people` — the address book: the journals you read, by address,
+  and the ways one gets in — a paste, a scanned code, a send that carried one
 - `/dashboard/submissions` — a redirect into the inbox, kept for old links
 - `/settings` — the machinery: address, Last.fm, the keys, the password,
   the home-screen step, and Sign out. Reached from the Settings door on
@@ -90,6 +93,8 @@ The library — logic, no visuals
     secrets.js                 The vault: the keys, the password hash, the session secret, the claim code. Database first, environment second
     claim_notice.js            The box printed in the build log while a copy is unclaimed
     settings_actions.js        The settings row: read, write, the name, the beacon's narrow reader
+    people_actions.js          The address book: the people table, and asking a journal its keeper's name
+    return_address.js          The back of the envelope — a sender's name and journal kept in their own browser — and the one spelling an address is kept in
     migrator.js                Brings the database up to date — from instrumentation.js on start, and from scripts/prepare_database.mjs at build
     version.js                 Which version this copy is running (from package.json) and where its release notes are — read by the pitch pane and the desk
 
@@ -108,6 +113,8 @@ The front doors — receive requests, hand them off, send back responses
     format/route.js            Assemble your notes into a post (local, no model)
     ask/route.js               A question, answered with the album and your notes in context
     settings/route.js          The settings row — public to read, owner-only to write
+    people/route.js            The address book — owner-only: the list, and filing an address
+    people/[id]/route.js       Crossing one out
     secrets/route.js           The vault — owner-only both ways; says what is set, never the value
     setup/route.js             GET: is this copy claimed. POST: the one write that claims it
     auth/login/route.js        The password, the deploy-time variable, or — unclaimed — the claim code
@@ -133,7 +140,8 @@ The furniture — visual pieces
       AlbumTile.js             One cover on that wall
       CodeSlot.js              A square that holds a picture and turns into that picture's code — the card's portrait and an entry's cover: the two faces, the copy and its pill, the corner mark, the wait
       AddressCode.js           A plain code for an address, drawn in the browser — what CodeSlot shows when no pressed picture can be had
-      Dashboard.js             The right pane, for the owner — Listen, Inbox, Settings
+      CodeScanner.js           The camera pointed at a code — the address book's way in for a card's or a cover's code
+      Dashboard.js             The right pane, for the owner — Listen, Inbox, Address book, Settings
       Pitch.js                 The right pane, for everybody else
       KeeperTools.js           The owner's pencil and printer
       WritingAccess.js         The lock at the foot of the pitch pane — a key, and the password field it opens in place
@@ -207,10 +215,12 @@ The rooms — full pages assembled from furniture
     settings/page.js           The machinery, owner-only
     @layer/(.)session/page.js  The same listen, opened as a layer over the desk
     @layer/(.)dashboard/inbox/page.js  The inbox, opened as a sheet over the desk
+    @layer/(.)dashboard/people/page.js  The address book, on the same sheet
     @layer/(.)printer/page.js  The printer, as a sheet over the entry or the card
     dashboard/
       page.js                  Redirect to / — the desk is the right pane of the cross
       inbox/page.js            Comments and submissions in one place — plain, on the tokens, and a sheet over the desk
+      people/page.js           The address book — the list, the field, the scanner; a row opens the compare
 
 ---
 

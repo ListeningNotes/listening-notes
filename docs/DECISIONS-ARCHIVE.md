@@ -417,3 +417,28 @@ other forms. `/session` opened cold is still a page.
 **The plain `<img>` rule was added 2026-08-30**, after the Neon transfer
 allowance hit 95% and the cause turned out to be two of the read-cost rules
 not existing.
+
+## The network — the `?from=` link, 2026-09-10 to 2026-09-12
+
+The rule now: everything social lives on the visitor's own copy (DECISIONS,
+The network). What it replaced, kept as written:
+
+**A keeper's own address reaches another journal in the link, never through
+storage, 2026-09-10.** localStorage is per origin like the cookie, so a
+signed-in copy writing its address into its own storage is read by nothing
+anywhere else. Owner-only links out — the inbox's — carry `?from=<own
+address>`; the journal landed on keeps it as the return address and clears
+the bar. A public link never carries it: it would make every reader the keeper.
+
+**Surprise stays parked; Compare has its first way in, 2026-09-10.** June's
+copy exists, so Compare was designed against it: the card offers it to a
+visitor whose browser holds their own address. The per-album compare and
+Surprise's shake are still unbuilt; both routes work if typed.
+
+Why it went, two days later: it only worked for somebody who arrived from a
+link their own copy had written — an inbox link, and nowhere else. A text, a
+scanned code and a shared card carry no address, and those are how people
+arrive. The mechanism worked against the per-origin grain rather than with
+it; the address book, on the visitor's own copy, works with it. The code —
+`carryFrom`, `noteArrival`, `subscribeSender` in `library/return_address.js`
+and the card's Compare with mine pill — is in git before 2026-09-12.
