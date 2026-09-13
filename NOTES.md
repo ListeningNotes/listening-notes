@@ -874,17 +874,20 @@ it in Safari on the Mac (localhost counts as secure) or on the phone on the
 live site. The scanner now says which of the three failures it hit.
 
 **A migrator session that dies holding the lock hangs every start after
-it, 2026-09-12.** The dev server was restarted while the Mac changed
-networks; its migrator had taken `pg_advisory_lock` and the connection died
-under it. Neon kept that session idle, still holding the lock, and the next
-dev server said Ready and never answered a request — `register()` was queued
-behind it — and a production cold start would have queued the same way. It
-cleared by itself after about ten minutes, when Neon reaped the session. To
-see it: `SELECT pid, granted, state FROM pg_locks JOIN pg_stat_activity USING
-(pid) WHERE locktype = 'advisory'` — an `idle` holder whose last query was
-the lock is a dead one, and `pg_terminate_backend(pid)` on that row is the
-fix when waiting is not. A server that says Ready and never compiles is this,
-not Turbopack.
+it, 2026-09-12 and again 2026-09-13.** First the dev server, restarted while
+the Mac changed networks; then Vercel's own build container after the 1.4.0
+deploy. Each migrator took `pg_advisory_lock` and its connection died under
+it; Neon kept the session idle, still holding the lock, for ten minutes or
+more, and every start in that window queued behind it — the dev server said
+Ready and never answered, a local build sat in `prepare_database.mjs` for
+seven minutes, and a production cold start would have done the same. Fixed
+the second night: the migrator's session sets `idle_session_timeout` to two
+minutes, so Postgres ends a ghost itself, and `lock_timeout` to three, so a
+waiter gives up — safely when nothing is pending, loudly when something is.
+To see it: `SELECT pid, granted, state FROM pg_locks JOIN pg_stat_activity
+USING (pid) WHERE locktype = 'advisory'` — an `idle` holder whose last query
+was the lock is a dead one. A server that says Ready and never compiles is
+this, not Turbopack.
 
 **jsQR alone refuses light-page photo codes that every real reader accepts.**
 Measured 2026-09-10 on June's portrait, in his page: `BarcodeDetector` passed
@@ -1430,6 +1433,10 @@ route and a page: the middle number)**
       is measured (three records in common at least, else raw), alike is
       within half a star after that, and the page says the offset in one
       line. DECISIONS, The journal, has the rule this applies.
+- [x] **The migrator's session ends itself** (`idle_session_timeout` 2min,
+      `lock_timeout` 3min) after the second ghost lock of the night, this
+      one left by Vercel's build. Gotchas has the story; DECISIONS,
+      Migrations, the rule. Run once: database up to date.
 - [x] **`/compare` is gone**, page and styles: a public page comparing this
       journal against a typed address has no place once everything social
       is on the visitor's own copy, and nobody had the URL. Its buckets

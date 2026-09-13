@@ -42,6 +42,21 @@
 // cleanup for free: if this process dies mid-migration the session ends and
 // the lock goes with it, so a crash cannot wedge every future boot.
 //
+// ── Except when the session outlives the process ──────────────────────────
+// Twice on 2026-09-13 it did not go with it. A dev server restarted while the
+// machine changed networks, and later Vercel's build container: each took the
+// lock, then its connection died without a clean close, and Neon kept the
+// backend alive — idle, still holding the lock — for ten minutes or more.
+// Every start in that window, on every copy that shares the database, queued
+// behind a ghost: the dev server said Ready and never answered, and a cold
+// start in production would have done the same. So the session now asks
+// Postgres to end it after two idle minutes (idle_session_timeout, Postgres 14
+// and up, which every Neon copy is), which is the only party that can see a
+// client has gone; and a waiter gives up after three (lock_timeout) rather
+// than never. Giving up is safe when nothing is pending, which is the only
+// reason a ghost is ever waited on; with something pending it is a failure,
+// said out loud, and the next start tries again.
+//
 // ── And why a Client rather than the usual handle ─────────────────────────
 // The other reason is that a migration is a whole file. The HTTP driver
 // prepares statements and refuses more than one per call — "cannot insert
@@ -124,17 +139,33 @@ export async function bringUpToDate({ log = () => {} } = {}) {
   await client.connect();
 
   try {
+    // Session-level, so they die with the session: a ghost of this session
+    // is ended by the server, and a wait on someone else's ghost is bounded.
+    await client.query("SET idle_session_timeout = '2min'");
+    await client.query("SET lock_timeout = '3min'");
     await client.query(LEDGER);
 
     // Taken before reading what is pending, not after. Between the read and
     // the write is exactly where a race lives.
-    await client.query('SELECT pg_advisory_lock($1)', [LOCK_KEY]);
+    let locked = true;
+    try {
+      await client.query('SELECT pg_advisory_lock($1)', [LOCK_KEY]);
+    } catch (error) {
+      // 55P03 is lock_not_available: the wait ran out. Not a reason to fail
+      // by itself — see whether there is anything to apply first.
+      if (error?.code !== '55P03') throw error;
+      locked = false;
+      log('the migration lock was held for three minutes by a session that never let go');
+    }
 
     const { rows } = await client.query('SELECT filename FROM schema_migrations');
     const done = new Set(rows.map(r => r.filename));
     const pending = pendingFiles(done);
 
     if (!pending.length) return { applied: [] };
+    if (!locked) {
+      throw new Error(`${pending.length} migration(s) pending and the lock could not be taken — another session is holding it; the next start will try again`);
+    }
 
     const applied = [];
     for (const name of pending) {
