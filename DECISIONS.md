@@ -464,6 +464,11 @@ someone rates by reading their archive.
 **Comparison uses one entry per `album_key`, most recent.** Never average
 across listens. Compare rank order or z-scores, never raw stars — a generous
 rater and a harsh rater with identical taste should score as identical.
+**Applied 2026-09-13 as an offset:** across what two people both have,
+their ratings are shifted by the average difference before a gap is
+measured, and "rated alike" is within half a star after that — the simplest
+rule that honours the sentence above and can be said in one line on the
+page. Three records in common is the least the offset is trusted on.
 
 **The cover is the control.** While a correction is open the album art is a
 button: press it and the address opens underneath, with "Find it again"
@@ -619,12 +624,15 @@ carried a journal has a button in the inbox; a card's or a cover's code can
 be scanned. The paste field is the fallback for an address read aloud.
 
 **Compare is not a destination; it is your page about someone,
-2026-09-12.** A face or a name in the feed, or a row in the book, opens your
-page about that person: overlap, where you agree and disagree hardest, what
-they sent you and how you rated it, their hit rate with you. On your copy,
-which is why it can hold what their journal never could. A printer there
-prints the shape of the agreement and withholds the writing, naming both
-people. Until the page exists a row opens `/compare` with the address.
+2026-09-12; built 2026-09-13.** A face or a name in the feed, or a row in
+the book, opens `/dashboard/people/[id]`: records you both have, rated
+alike, what they sent you and your hit rate with it, then where you agree
+and disagree hardest, what they sent and how it landed, and what only they
+have heard. On your copy, owner-only, which is why it can hold what their
+journal never could. `/compare` is gone with it — a public page that
+compared this journal against a typed address, which the model has no
+place for (everything social is on the visitor's own copy); nobody had the
+URL, so no stub. A printer door on the page waits for the press.
 
 **Lineage runs backward only, and that is the feature, 2026-09-12.**
 Walking `source_entry_id` upward gives everyone who passed a record before
@@ -1150,11 +1158,10 @@ someone sending it on. A directory doesn't solve discovery.
 
 ## Parked, not rejected
 
-**Surprise stays parked; Compare's way in is the address book, 2026-09-12.**
-The card's offer to a visitor (2026-09-10) went with the `?from=` link (The
-network). A row in the book opens the whole-journal compare; the per-album
-compare arrives on a feed row; Surprise's shake is still unbuilt and
-`/shuffle` works if typed.
+**Surprise stays parked, 2026-09-13.** Compare has both its homes now — the
+page about a person for the whole journal, a feed row for one record — and
+the card's offer to a visitor (2026-09-10) is gone with the `?from=` link.
+Surprise's shake is still unbuilt and `/shuffle` works if typed.
 
 **An overall hit rate for what you send, 2026-09-12.** Two numbers exist and
 only one is complete: what you receive is fully known, what you send is only

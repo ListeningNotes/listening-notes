@@ -35,6 +35,13 @@ export async function save_person({ address, name }) {
   return row;
 }
 
+export async function pull_person(id) {
+  const [row] = await database`
+    SELECT id, address, name, added_at FROM people WHERE id = ${id} LIMIT 1
+  `;
+  return row || null;
+}
+
 export async function remove_person(id) {
   const [row] = await database`
     DELETE FROM people WHERE id = ${id} RETURNING id
