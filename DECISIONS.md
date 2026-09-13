@@ -571,6 +571,13 @@ level M reads at 200. Small near the mark means plain; the photo code is for
 when the code is the hero. Every size and look is decoded at 1×, 0.5× and
 0.3× before it ships; the link-preview paper is exempt, nobody scans a message.
 
+**A print is the entry page's first screen on the record's own colour,
+2026-09-12.** The cover blurred across the paper under the look's wash,
+then the card a reader already knows from the journal: centred, the post's
+chips, the post's stars. The first cut — the cover on plain cream with the
+facts under it — was every other app's share card, and forty albums made
+forty identical prints. Plain paper is not a look; the record is.
+
 **An entry's link unfurls into a picture, 2026-09-06.** The framework's
 `opengraph-image` file beside the entry page draws the card a message shows
 — cover, keeper, album, artist and year, stars, marks — on the server, per

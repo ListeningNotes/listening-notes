@@ -10,43 +10,40 @@
 // file knows nothing about Instagram. Adding a printable thing to the site is
 // writing one of these, not touching the press.
 //
-// ── What a print carries ──────────────────────────────────────────────────
+// ── What a print is, 2026-09-12 ───────────────────────────────────────────
+// The entry page's first screen, on the record's own colour. Miyel's call,
+// after the first version — a cover on plain cream with the facts under it —
+// looked like every other app's share card: the print is the card a reader
+// already knows from the journal, centred, the chips the post's chips, and
+// the ground is the cover itself blurred across the paper under a wash. Every
+// print is the colour of its album; a feed of them is a wall of sleeves.
 //
-//   the mark, centred at the head, as it is on every page of the site.
-//   the cover, large — it is what stops a scroll, so it is the subject.
-//   whose journal, small, in the label face. the album. the artist and year.
-//   the stars. the marks. the horizon — the track ratings as bars, the shape
-//   of the listen. and the code, small, in the foot's right corner.
+//   the mark, centred at the head, as it is on every page; the keeper's
+//   name under it. the cover, large. the album. the artist and year. the
+//   stars. the chips. when it was posted. the horizon — the track ratings
+//   as bars, the shape of the listen. and the code, centred, at the foot.
 //
 // The notes never travel. A card that says everything is a post, and a post
 // is terminal; this one is deliberately insufficient so the code has a reason
-// to be scanned. Same layout on every look and every paper — the background
-// changes mood, never information (DECISIONS: fixed layout, swappable
+// to be scanned. Same layout on every look and paper — the look changes the
+// wash and the ink, never the information (DECISIONS: fixed layout, swappable
 // background).
 //
 // ── The code ──────────────────────────────────────────────────────────────
-// Plain, level M, the entry's own address. Not the pressed photo code the
-// cover turns into on the page: measured on 2026-09-12, that one needs four
-// hundred pixels of a Story to read from a phone held at arm's length, and
-// the plain one reads at two hundred. Small near the mark means plain. It
-// has a floor in paper pixels (CODE_FLOOR) that the fit-to-paper correction
-// is not allowed to go under, because the square print would otherwise shrink
-// it into a texture. And it stays dark on light whatever the look: a camera
-// looks for dark on light, so on a night print the code brings its own stock.
-//
-// ── Everything hangs off the cover's edges, except the mark ───────────────
-// The cover sets the column; the writing is ranged left to its left edge and
-// the code sits in the right corner of the foot. A centred title under a
-// square reads as a poster; ranged to the sleeve it reads as the back of one.
-// The mark is the one centred thing, because it is centred on every page of
-// the site and a print is one more page (Miyel, 2026-09-12).
+// Plain, level M, the entry's own address, on its own light stock — the
+// ground is a photograph, and a transparent code is only as good as what is
+// behind it. Not the pressed photo code the cover turns into on the page:
+// measured on 2026-09-12, that one needs four hundred pixels of a Story to
+// read from a phone, and the plain one reads at two hundred. It has a floor
+// in paper pixels (CODE_FLOOR) that the fit-to-paper correction may not go
+// under, because the square print would otherwise shrink it into a texture.
 //
 // ── Units ─────────────────────────────────────────────────────────────────
-// Every measurement is in units of a 340-wide column — the card's own column,
-// so the type here is the site's type — and the whole layout is those numbers
-// times one unit, fitted first to the paper's width and then, if it overran,
-// to its height. Opened out on wide paper (link previews) the cover goes to
-// the left and the writing beside it; the same rows, the fold moved.
+// Every measurement is in units of a 340-wide column — a phone's screen one,
+// 390 less its padding — so the numbers here are the post's own pixels, and
+// the whole layout is those numbers times one unit: fitted first to the
+// paper's width and then, if it overran, to its height. Opened out on wide
+// paper (link previews) the cover goes to the left and the stack beside it.
 
 'use client';
 
@@ -57,59 +54,67 @@ import SharePrinter, { loadMark, loadPicture, MARK_ASPECT, drawTracked, drawPath
 import { parseRating, parseHorizon, entryTracks } from '../../library/entry_formatter';
 import { CODE_QUIET } from '../../library/code_shape';
 
-// ── Measurements, in column units ─────────────────────────────────────────
+// ── Measurements, in column units — the post's own ────────────────────────
 const COL = 340;
-const KEEPER = 8.5;
-const TITLE = 26, TITLE_LEAD = 26 * 1.08;
-const LINE = 13, LINE_LEAD = 13 * 1.5;
-const STAR = 17, STAR_GAP = 5;
-const PILL = 8, PILL_H = 20, PILL_PAD = 9, PILL_GAP = 6;
+const ART = 304;                       // min(40dvh, 78vw) on a 390 phone
+const ART_RADIUS = 16;
+const MARK_H = 22;                     // the nav's 28 on a 390 phone
+const KEEPER = 9;                      // the label face, under the mark
+const TITLE = 26, TITLE_LEAD = 26 * 1.22;
+const ARTIST = 11;                     // mono caps, as .ln-screen-one-artist
+const STAR = 24, STAR_GAP = 3;         // StarRating size={24}
+const CHIP = 10, CHIP_PAD_X = 8, CHIP_PAD_Y = 3, CHIP_GAP = 8, CHIP_RADIUS = 4;
+const POSTED = 9;
 const HORIZON_H = 34, HORIZON_GAP = 2, HEART = 7;
-const MARK_H = 22;   // the nav's 28 on a 390 phone, in column units
 const CODE = 64;
 // …but never less than this much of the paper's shorter side, quiet zone
 // included: 200 of a 1080 Story, which is where a phone camera still reads it.
 const CODE_FLOOR = 0.185;
-const COVER_RADIUS = 6;
-const COLUMN_GAP = 28;   // opened out: between the cover and the writing
-const GAP = { mark: 26, keeper: 24, title: 7, line: 6, stars: 18, pills: 14, horizon: 20, foot: 28 };
+const COLUMN_GAP = 28;                 // opened out: between the cover and the stack
+// The screen's gap is 16 between everything; the artist line pulls up by 8.
+const GAP = { keeper: 8, art: 16, title: 16, artist: 8, stars: 16, chips: 16, posted: 16, horizon: 20, foot: 28 };
 
-// How much of the paper the print is allowed, and the height it must fit in.
-// Narrower over a backdrop, for the reason IdentityCardPlate gives: the scrim
-// is the print plus its padding.
-const FILL_BARE = 0.82;
-const FILL_OVER = 0.72;
-const FILL_H = 0.86;
-const PANEL_PAD = 22;
-const PANEL_RADIUS = 22;
+// How much of the paper the column is allowed, and the height it must fit.
+const FILL_W = 0.86;
+const FILL_H = 0.88;
 
 // ── Ink ────────────────────────────────────────────────────────────────────
 // base.css, stated rather than read: a print is the same colour wherever it
-// is made. The night set is the site's dark theme.
+// is made. Paper is the light theme's ink over a light wash, Ink the dark's.
 const INKS = {
   day: {
     ink: '#1a1a1a', soft: '#6b6b6b', faint: '#a8a8a8', warm: '#efebe2',
-    rule: 'rgba(26,26,26,0.15)', unlit: '#d6d3cc',
-    veil: 'rgba(238,240,236,0.30)', panel: 'rgba(238,240,236,0.96)', panelEdge: 'rgba(255,255,255,0.70)',
+    rule: 'rgba(26,26,26,0.15)', unlit: 'rgba(232,184,75,0.18)',
+    bar: 'rgba(26,26,26,0.5)',
+    edge: 'rgba(255,255,255,0.6)',                                  // --panel-border
+    lift: ['rgba(0,0,0,0.06)', 'rgba(0,0,0,0.06)'],                 // --shadow-lift
+    wash: 'rgba(238,240,236,0.62)', paper: '#eef0ec',
   },
   night: {
     ink: '#e8e4dc', soft: '#888888', faint: '#666666', warm: '#161616',
-    rule: 'rgba(232,228,220,0.16)', unlit: '#3a3a3a',
-    veil: 'rgba(14,14,14,0.34)', panel: 'rgba(14,14,14,0.96)', panelEdge: 'rgba(255,255,255,0.12)',
+    rule: 'rgba(232,228,220,0.16)', unlit: 'rgba(232,184,75,0.18)',
+    bar: 'rgba(232,228,220,0.5)',
+    edge: 'rgba(255,255,255,0.08)',
+    lift: ['rgba(0,0,0,0.4)', 'rgba(0,0,0,0.3)'],
+    wash: 'rgba(14,14,14,0.64)', paper: '#0e0e0e',
   },
 };
-// The code's two colours never follow the look — see the note at the top.
+// The code's two colours never follow the look — a camera looks for dark on
+// light.
 const CODE_INK = '#191917';
 const CODE_STOCK = '#f5f4ef';
 const GOLD = '#E8B84B';
-const ACCENT = '#b5b2ab';   // --accent: the horizon's bars, on both themes
-const FAV = '#f0484f';      // --fav: the heart over a favourite track
-// A heart in a 24-box, for the favourites.
+const FAV = '#f0484f';                 // --fav
+// The chips' tones, as Chip.js has them: the word in the colour, the hairline
+// the same colour at 40%.
+const TONES = {
+  fav: { ink: '#f0484f', edge: 'rgba(240,72,79,0.4)' },
+  mp: { ink: '#4a9bf0', edge: 'rgba(74,155,240,0.4)' },
+  formative: { ink: '#3fa96b', edge: 'rgba(63,169,107,0.4)' },
+};
+// StarRating's star, in an 18-box; a heart in a 24-box for the favourites.
+const STAR_PATH = 'M9 1.5l2.163 4.38 4.837.703-3.5 3.412.826 4.818L9 12.39l-4.326 2.273.826-4.818L2 6.583l4.837-.703z';
 const HEART_PATH = 'M12 21s-8-5.3-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 5.7-8 11-8 11z';
-// The same three marks, in the same colours, as the entry's link preview.
-const MARKS = { masterpiece: ['Masterpiece', '#4a9bf0'], favorite: ['Favorite', '#f0484f'], formative: ['Formative', '#3fa96b'] };
-// A star as a shape, in a 24-box. Neither typeface carries one.
-const STAR_PATH = 'M12 2.5l2.95 6.3 6.9.8-5.1 4.7 1.35 6.85L12 17.75l-6.1 3.4 1.35-6.85-5.1-4.7 6.9-.8z';
 
 // ── The code, as a path ────────────────────────────────────────────────────
 // The smallest version that holds the address at level M, the way AddressCode
@@ -131,28 +136,37 @@ function buildCode(url) {
 
 // A row of the print: the air above it, its height, and how it draws into
 // the box it is given. Measured and drawn by the same numbers so the two
-// passes cannot disagree.
+// passes cannot disagree. Everything is centred in its box.
 function textRow({ gap, lines, size, lead, colour, font }) {
   return {
     gap,
     h: lines.length * lead,
-    draw(c, x, y) {
+    draw(c, x, y, w) {
       c.font = font;
       c.fillStyle = colour;
       c.textBaseline = 'top';
-      c.textAlign = 'left';
+      c.textAlign = 'center';
       const drop = (lead - size) / 2;
-      lines.forEach((line, i) => c.fillText(line, x, y + i * lead + drop));
+      lines.forEach((line, i) => c.fillText(line, x + w / 2, y + i * lead + drop));
+      c.textAlign = 'left';
     },
   };
 }
 
-// How wide a tracked line will be, before it is drawn — for sizing a pill.
+// How wide a tracked line will be, before it is drawn — for sizing a chip.
 function trackedWidth(c, text, spacing) {
   const chars = [...String(text)];
   let total = 0;
   for (const ch of chars) total += c.measureText(ch).width + spacing;
   return Math.max(0, total - spacing);
+}
+
+// The date the post prints, in the post's words.
+function postedOn(value) {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 }
 
 // ── The plate ──────────────────────────────────────────────────────────────
@@ -161,11 +175,18 @@ export function entryPlate({ entry, keeper, address }) {
   const score = parseRating(entry?.rating);
   const isMasterpiece = entry?.masterpiece === true || entry?.rating === 'Masterpiece';
   const stars = isMasterpiece ? 5 : score;
-  const marks = Object.entries(MARKS)
-    .filter(([key]) => (key === 'masterpiece' ? isMasterpiece : entry?.[key] === true || entry?.[key] === 'true'))
-    .map(([, [label, colour]]) => ({ label, colour }));
-  const listen = entry?.listen_total > 1 ? `Listen ${entry.listen_number}` : null;
-  const line = [entry?.artist, entry?.year].filter(Boolean).join('  ·  ');
+  const isFavorite = entry?.favorite === true || entry?.favorite === 'true';
+  const isFormative = entry?.formative === true || entry?.formative === 'true';
+  // The chips, in the post's order and the post's words.
+  const chips = [];
+  if (entry?.listen_total > 1) {
+    chips.push({ text: entry.listen_number === 1 ? `First listen · 1 of ${entry.listen_total}` : `Listen ${entry.listen_number} of ${entry.listen_total}` });
+  }
+  if (isFavorite) chips.push({ text: 'Favorite', tone: 'fav' });
+  if (isMasterpiece) chips.push({ text: 'Masterpiece', tone: 'mp' });
+  if (isFormative) chips.push({ text: 'Formative', tone: 'formative' });
+  const line = [entry?.artist, entry?.year].filter(Boolean).join(' · ');
+  const posted = postedOn(entry?.posted_at);
   const code = address ? buildCode(address) : null;
 
   // The horizon: the track ratings as bars, read from the column the session
@@ -179,12 +200,12 @@ export function entryPlate({ entry, keeper, address }) {
   const favs = tracks.map(t => !!t.favorite);
   const anyFav = bars.length > 0 && favs.some(Boolean);
 
-  // What the printer offers to leave off. The cover, the album, the artist
-  // and the foot are not switches: they are the card.
+  // What the printer offers to leave off. The cover, the album, the artist,
+  // the date and the code are not switches: they are the card.
   const toggles = [];
   if (keeper) toggles.push({ key: 'keeper', label: 'Keeper', on: true });
   if (stars > 0) toggles.push({ key: 'stars', label: 'Stars', on: true });
-  if (marks.length || listen) toggles.push({ key: 'marks', label: 'Marks', on: true });
+  if (chips.length) toggles.push({ key: 'chips', label: 'Chips', on: true });
   if (bars.length) toggles.push({ key: 'horizon', label: 'Horizon', on: true });
 
   return {
@@ -192,8 +213,8 @@ export function entryPlate({ entry, keeper, address }) {
     fileName: entry?.slug || 'record',
     toggles,
 
-    // Two pictures: the mark in the look's ink, and the cover. Either may come
-    // back null and the plate draws on without it.
+    // Two pictures: the mark in the look's ink, and the cover — which is also
+    // the ground. Either may come back null and the plate draws on without it.
     async load({ isDark }) {
       const [mark, cover] = await Promise.all([
         loadMark(isDark ? INKS.night.ink : INKS.day.ink),
@@ -202,22 +223,24 @@ export function entryPlate({ entry, keeper, address }) {
       return { mark, cover };
     },
 
-    draw(ctx, frame, { art, shown, isDark, families, backdrop }) {
+    draw(ctx, frame, { art, shown, isDark, families }) {
       const ink = isDark ? INKS.night : INKS.day;
       const { sans, mono } = families;
       const on = key => (shown ? shown[key] !== false : true);
       const spread = frame.w / frame.h > 1.3;
-      const fillW = backdrop ? FILL_OVER : FILL_BARE;
       const codeFloor = Math.min(frame.w, frame.h) * CODE_FLOOR;
+
+      // ── the ground ───────────────────────────────────────────────────────
+      paintGround(ctx, frame, art?.cover, ink);
 
       // ── measure, then fit ────────────────────────────────────────────────
       // Width decides the unit. If the result is too tall the unit comes down
       // by the overrun — more than once, because the code's floor does not
       // scale with it and one correction lands short.
       let U = spread
-        ? Math.min((frame.h * fillW) / COL, (frame.w * fillW) / (COL * 2 + COLUMN_GAP))
-        : (frame.w * fillW) / COL;
-      const roomH = spread ? frame.h * fillW : frame.h * FILL_H;
+        ? Math.min((frame.h * FILL_H) / ART, (frame.w * FILL_W) / (ART + COL + COLUMN_GAP))
+        : (frame.w * FILL_W) / COL;
+      const roomH = spread ? frame.h * FILL_H : frame.h * FILL_H;
       let built = build(U);
       for (let pass = 0; pass < 3 && built.h > roomH * 1.005; pass++) {
         U *= roomH / built.h;
@@ -227,6 +250,7 @@ export function entryPlate({ entry, keeper, address }) {
       function build(unit) {
         const px = n => n * unit;
         const colW = px(COL);
+        const artW = px(ART);
         const codeBox = Math.max(px(CODE), codeFloor);
         const rows = [];
         const showKeeper = Boolean(keeper) && on('keeper');
@@ -244,59 +268,71 @@ export function entryPlate({ entry, keeper, address }) {
           });
         }
 
-        // the cover, under it. Opened out it is beside the column and not in
-        // this stack at all.
-        if (!spread) {
-          rows.push({ gap: art?.mark ? px(GAP.mark) : 0, h: colW, draw: (c, x, y, w) => drawCover(c, x, y, w, unit) });
-        }
-
-        // whose journal
+        // whose journal, under it
         if (showKeeper) {
           rows.push({
-            gap: px(GAP.keeper),
+            gap: art?.mark ? px(GAP.keeper) : 0,
             h: px(KEEPER) * 1.4,
-            draw(c, x, y) {
+            draw(c, x, y, w) {
               c.textBaseline = 'top';
               c.font = `400 ${px(KEEPER)}px ${mono}`;
-              c.fillStyle = ink.faint;
-              drawTracked(c, keeper.toUpperCase(), x, y, px(KEEPER) * 0.18, 'left');
+              c.fillStyle = ink.soft;   // the post's faint sinks into a photograph
+              drawTracked(c, keeper.toUpperCase(), x + w / 2, y, px(KEEPER) * 0.14, 'center');
             },
           });
         }
 
-        // the album
+        // the cover. Opened out it is beside the stack and not in it.
+        if (!spread) {
+          rows.push({ gap: px(GAP.art), h: artW, draw: (c, x, y, w) => drawCover(c, x + (w - artW) / 2, y, artW, unit) });
+        }
+
+        // the album, two lines at most, as the screen clamps it
         ctx.font = `700 ${px(TITLE)}px ${sans}`;
         rows.push(textRow({
-          gap: px(showKeeper ? GAP.title : GAP.keeper),
-          lines: wrapLines(ctx, entry?.album || '', colW, 3),
+          gap: px(GAP.title),
+          lines: wrapLines(ctx, entry?.album || '', colW, 2),
           size: px(TITLE), lead: px(TITLE_LEAD), colour: ink.ink,
           font: `700 ${px(TITLE)}px ${sans}`,
         }));
 
-        // the artist and the year
+        // the artist and the year, in the label face
         if (line) {
-          ctx.font = `400 ${px(LINE)}px ${sans}`;
-          rows.push(textRow({
-            gap: px(GAP.line),
-            lines: [ellipsize(ctx, line, colW)],
-            size: px(LINE), lead: px(LINE_LEAD), colour: ink.soft,
-            font: `400 ${px(LINE)}px ${sans}`,
-          }));
+          rows.push({
+            gap: px(GAP.artist),
+            h: px(ARTIST) * 1.4,
+            draw(c, x, y, w) {
+              c.textBaseline = 'top';
+              c.font = `400 ${px(ARTIST)}px ${mono}`;
+              c.fillStyle = ink.soft;
+              drawTracked(c, ellipsize(c, line.toUpperCase(), w * 0.92), x + w / 2, y, px(ARTIST) * 0.14, 'center');
+            },
+          });
         }
 
         // the stars
         if (stars > 0 && on('stars')) {
-          rows.push({ gap: px(GAP.stars), h: px(STAR), draw: (c, x, y) => drawStars(c, x, y, unit) });
+          rows.push({ gap: px(GAP.stars), h: px(STAR), draw: (c, x, y, w) => drawStars(c, x, y, w, unit) });
         }
 
-        // the marks, and which listen this was
-        const pills = [];
-        if (on('marks')) {
-          for (const m of marks) pills.push({ label: m.label, colour: m.colour, edge: m.colour });
-          if (listen) pills.push({ label: listen, colour: ink.soft, edge: ink.rule });
+        // the chips, wrapping and centred as the screen's row does
+        if (chips.length && on('chips')) {
+          const laid = layChips(ctx, chips, colW, unit);
+          rows.push({ gap: px(GAP.chips), h: laid.h, draw: (c, x, y, w) => drawChips(c, x, y, w, laid, unit) });
         }
-        if (pills.length) {
-          rows.push({ gap: px(GAP.pills), h: px(PILL_H), draw: (c, x, y, w) => drawPills(c, x, y, w, pills, unit) });
+
+        // when it was posted
+        if (posted) {
+          rows.push({
+            gap: px(GAP.posted),
+            h: px(POSTED) * 1.4,
+            draw(c, x, y, w) {
+              c.textBaseline = 'top';
+              c.font = `400 ${px(POSTED)}px ${mono}`;
+              c.fillStyle = ink.soft;
+              drawTracked(c, `Posted ${posted}`.toUpperCase(), x + w / 2, y, px(POSTED) * 0.12, 'center');
+            },
+          });
         }
 
         // the horizon, with headroom for the hearts when there are any
@@ -305,100 +341,155 @@ export function entryPlate({ entry, keeper, address }) {
           rows.push({ gap: px(GAP.horizon), h: head + px(HORIZON_H), draw: (c, x, y, w) => drawHorizon(c, x, y + head, w, unit) });
         }
 
-        // the foot: the code, in the right corner
-        if (code) rows.push({ gap: px(GAP.foot), h: codeBox, draw: (c, x, y, w) => drawFoot(c, x, y, w, codeBox, unit) });
+        // the foot: the code, centred
+        if (code) rows.push({ gap: px(GAP.foot), h: codeBox, draw: (c, x, y, w) => drawFoot(c, x + (w - codeBox) / 2, y, codeBox, unit) });
 
         const stack = rows.reduce((sum, row) => sum + row.gap + row.h, 0);
-        return { rows, stack, h: spread ? Math.max(stack, colW) : stack, colW };
+        return { rows, stack, h: spread ? Math.max(stack, artW) : stack, colW, artW };
+      }
+
+      // ── the ground ───────────────────────────────────────────────────────
+      // The cover blurred across the whole paper, overscanned so no edge
+      // shows, under the look's wash. Without a cover, the page's own colour.
+      function paintGround(c, f, img, ink) {
+        c.fillStyle = ink.paper;
+        c.fillRect(0, 0, f.w, f.h);
+        if (img?.naturalWidth) {
+          const s = Math.max(f.w / img.naturalWidth, f.h / img.naturalHeight) * 1.3;
+          const dw = img.naturalWidth * s;
+          const dh = img.naturalHeight * s;
+          c.save();
+          if (typeof c.filter === 'string') {
+            c.filter = `blur(${Math.round(f.w * 0.06)}px) saturate(1.3)`;
+            c.drawImage(img, (f.w - dw) / 2, (f.h - dh) / 2, dw, dh);
+          } else {
+            // No filter on this canvas: a picture shrunk to a few pixels and
+            // stretched back is a blur by another route.
+            const tiny = document.createElement('canvas');
+            tiny.width = 12; tiny.height = 12;
+            const t = tiny.getContext('2d');
+            t.imageSmoothingQuality = 'high';
+            t.drawImage(img, 0, 0, 12, 12);
+            c.imageSmoothingQuality = 'high';
+            c.drawImage(tiny, (f.w - dw) / 2, (f.h - dh) / 2, dw, dh);
+          }
+          c.restore();
+        }
+        c.fillStyle = ink.wash;
+        c.fillRect(0, 0, f.w, f.h);
       }
 
       // ── the cover ────────────────────────────────────────────────────────
+      // As .ln-screen-one-art has it: the square's radius, a hairline, the
+      // lift — two shadows, drawn as two fills, since a canvas casts one at a
+      // time.
       function drawCover(c, x, y, size, unit) {
-        const radius = COVER_RADIUS * unit;
+        const radius = ART_RADIUS * unit;
         c.save();
-        c.shadowColor = 'rgba(0,0,0,0.18)';
-        c.shadowBlur = 40 * unit;
-        c.shadowOffsetY = 14 * unit;
+        c.shadowColor = ink.lift[1];
+        c.shadowBlur = 48 * unit;
+        c.shadowOffsetY = 16 * unit;
         c.fillStyle = ink.warm;
         roundRect(c, x, y, size, size, radius);
         c.fill();
+        c.shadowColor = ink.lift[0];
+        c.shadowBlur = 20 * unit;
+        c.shadowOffsetY = 4 * unit;
+        c.fill();
         c.restore();
         const img = art?.cover;
-        if (!img?.naturalWidth) return;
-        // object-fit: cover, by hand. Apple's art is square; a cover that is
-        // not is scaled to fill and centred.
-        const scale = Math.max(size / img.naturalWidth, size / img.naturalHeight);
-        const drawW = img.naturalWidth * scale;
-        const drawH = img.naturalHeight * scale;
-        c.save();
+        if (img?.naturalWidth) {
+          const scale = Math.max(size / img.naturalWidth, size / img.naturalHeight);
+          const drawW = img.naturalWidth * scale;
+          const drawH = img.naturalHeight * scale;
+          c.save();
+          roundRect(c, x, y, size, size, radius);
+          c.clip();
+          c.drawImage(img, x - (drawW - size) / 2, y - (drawH - size) / 2, drawW, drawH);
+          c.restore();
+        }
+        c.strokeStyle = ink.edge;
+        c.lineWidth = Math.max(1, unit * 0.8);
         roundRect(c, x, y, size, size, radius);
-        c.clip();
-        c.drawImage(img, x - (drawW - size) / 2, y - (drawH - size) / 2, drawW, drawH);
-        c.restore();
+        c.stroke();
       }
 
       // ── the stars ────────────────────────────────────────────────────────
-      // Whole stars lit in gold, the rest in the look's unlit grey, and a half
-      // where the score has one. A fractional score is also written after
-      // them, as the link preview does, since a half star is easy to miss.
-      function drawStars(c, x, y, unit) {
+      // StarRating: every star drawn faint in gold, the lit ones over it in
+      // full gold, a half as the left half. A masterpiece glows.
+      function drawStars(c, x, y, w, unit) {
         const box = STAR * unit;
         const step = (STAR + STAR_GAP) * unit;
-        const whole = Math.floor(stars + 0.001);
-        const half = stars - whole >= 0.25 && stars - whole < 0.75;
+        const total = 5 * box + 4 * STAR_GAP * unit;
+        const left = x + (w - total) / 2;
         for (let n = 1; n <= 5; n++) {
-          const sx = x + (n - 1) * step;
-          drawPath(c, STAR_PATH, sx, y, box, 24, n <= whole ? GOLD : ink.unlit);
-          if (half && n === whole + 1) {
-            c.save();
+          const sx = left + (n - 1) * step;
+          drawPath(c, STAR_PATH, sx, y, box, 18, ink.unlit);
+          const fill = stars >= n ? 'full' : stars >= n - 0.5 ? 'half' : 'empty';
+          if (fill === 'empty') continue;
+          c.save();
+          if (isMasterpiece) {
+            c.shadowColor = 'rgba(255,210,60,0.6)';
+            c.shadowBlur = 5 * unit;
+          }
+          if (fill === 'half') {
             c.beginPath();
             c.rect(sx, y, box / 2, box);
             c.clip();
-            drawPath(c, STAR_PATH, sx, y, box, 24, GOLD);
-            c.restore();
           }
-        }
-        if (!isMasterpiece && score > 0 && !Number.isInteger(score)) {
-          c.font = `400 ${(LINE - 1) * unit}px ${mono}`;
-          c.fillStyle = ink.soft;
-          c.textBaseline = 'middle';
-          c.textAlign = 'left';
-          c.fillText(String(score), x + 5 * step + 2 * unit, y + box / 2);
-          c.textBaseline = 'top';
+          drawPath(c, STAR_PATH, sx, y, box, 18, GOLD);
+          c.restore();
         }
       }
 
-      // ── the marks ────────────────────────────────────────────────────────
-      // Outlined pills in the mark's own colour, the label face, tracked.
-      // They run left from the cover's edge and stop rather than wrap: a
-      // second row of marks would be a print about the marks.
-      function drawPills(c, x, y, w, pills, unit) {
-        const h = PILL_H * unit;
-        const pad = PILL_PAD * unit;
-        const spacing = PILL * unit * 0.12;
-        c.font = `400 ${PILL * unit}px ${mono}`;
-        let cx = x;
-        for (const pill of pills) {
-          const text = pill.label.toUpperCase();
-          const tw = trackedWidth(c, text, spacing);
-          const pw = tw + pad * 2;
-          if (cx + pw > x + w + 0.5) break;
-          c.strokeStyle = pill.edge;
-          c.lineWidth = Math.max(1, 1.4 * unit);
-          roundRect(c, cx, y, pw, h, h / 2);
-          c.stroke();
-          c.fillStyle = pill.colour;
-          c.textBaseline = 'middle';
-          drawTracked(c, text, cx + pad, y + h / 2 + 0.5 * unit, spacing, 'left');
-          c.textBaseline = 'top';
-          cx += pw + PILL_GAP * unit;
+      // ── the chips ────────────────────────────────────────────────────────
+      // Chip.js: the label face, tracked a little, a hairline in the tone at
+      // 40%, a small radius. Laid out first so the row knows its height —
+      // they wrap, centred, as the screen's row does.
+      function layChips(c, list, maxW, unit) {
+        const font = `400 ${CHIP * unit}px ${mono}`;
+        const spacing = CHIP * unit * 0.08;
+        const padX = CHIP_PAD_X * unit;
+        const h = CHIP * unit * 1.2 + CHIP_PAD_Y * 2 * unit;
+        const gap = CHIP_GAP * unit;
+        c.font = font;
+        const sized = list.map(chip => ({ ...chip, w: trackedWidth(c, chip.text, spacing) + padX * 2 }));
+        const lines = [[]];
+        let used = 0;
+        for (const chip of sized) {
+          const need = (lines.at(-1).length ? gap : 0) + chip.w;
+          if (lines.at(-1).length && used + need > maxW) { lines.push([chip]); used = chip.w; }
+          else { lines.at(-1).push(chip); used += need; }
         }
+        return { lines, h: lines.length * h + (lines.length - 1) * gap, rowH: h, gap, font, spacing, padX };
+      }
+      function drawChips(c, x, y, w, laid, unit) {
+        c.font = laid.font;
+        c.textBaseline = 'middle';
+        laid.lines.forEach((chipsOnLine, i) => {
+          const total = chipsOnLine.reduce((sum, chip) => sum + chip.w, 0) + laid.gap * (chipsOnLine.length - 1);
+          let cx = x + (w - total) / 2;
+          const cy = y + i * (laid.rowH + laid.gap);
+          for (const chip of chipsOnLine) {
+            const tone = TONES[chip.tone];
+            c.strokeStyle = tone ? tone.edge : ink.rule;
+            c.lineWidth = Math.max(1, unit * 0.8);
+            roundRect(c, cx, cy, chip.w, laid.rowH, CHIP_RADIUS * unit);
+            c.stroke();
+            c.fillStyle = tone ? tone.ink : ink.soft;
+            drawTracked(c, chip.text, cx + laid.padX, cy + laid.rowH / 2 + 0.5 * unit, laid.spacing, 'left');
+            cx += chip.w + laid.gap;
+          }
+        });
+        c.textBaseline = 'top';
       }
 
       // ── the horizon ──────────────────────────────────────────────────────
-      // The entry page's bars: one per track, height by rating, in the
-      // accent, a heart over a favourite. No titles — on a print the shape is
-      // the point, and a diagonal of track names would be a second print.
+      // The entry page's bars: one per track, height by rating, a heart over
+      // a favourite. In the ink at half strength rather than the page's
+      // accent grey, which sank into the washed photograph. No titles — on a
+      // print the shape is the point, and a diagonal of track names would be
+      // a second print.
       function drawHorizon(c, x, y, w, unit) {
         const n = bars.length;
         const gap = HORIZON_GAP * unit;
@@ -409,7 +500,7 @@ export function entryPlate({ entry, keeper, address }) {
           const bh = Math.max(2 * unit, bars[i] * h);
           const x0 = x + i * (bw + gap), x1 = x0 + bw;
           const y0 = y + h - bh, y1 = y + h;
-          c.fillStyle = ACCENT;
+          c.fillStyle = ink.bar;
           c.beginPath();
           c.moveTo(x0, y1);
           c.lineTo(x0, y0 + r);
@@ -427,17 +518,13 @@ export function entryPlate({ entry, keeper, address }) {
       }
 
       // ── the foot ─────────────────────────────────────────────────────────
-      // The code in the right corner. On a night print it sits on its own
-      // light stock, exactly its box and no more; on a day print the paper
-      // is the stock.
-      function drawFoot(c, x, y, w, codeBox, unit) {
-        const cx = x + w - codeBox;
-        const cy = y;
-        if (isDark) {
-          c.fillStyle = CODE_STOCK;
-          roundRect(c, cx, cy, codeBox, codeBox, 4 * unit);
-          c.fill();
-        }
+      // The code on its own light stock, exactly its box: the ground is a
+      // photograph on both looks, and a code is only as good as what is
+      // behind its light modules.
+      function drawFoot(c, cx, cy, codeBox, unit) {
+        c.fillStyle = CODE_STOCK;
+        roundRect(c, cx, cy, codeBox, codeBox, 4 * unit);
+        c.fill();
         const cell = codeBox / (code.size + CODE_QUIET * 2);
         c.save();
         c.translate(cx + CODE_QUIET * cell, cy + CODE_QUIET * cell);
@@ -448,33 +535,13 @@ export function entryPlate({ entry, keeper, address }) {
       }
 
       // ── lay it down ──────────────────────────────────────────────────────
-      const { rows, stack, h, colW } = built;
-      const blockW = spread ? colW * 2 + COLUMN_GAP * U : colW;
-      const originX = (frame.w - blockW) / 2;
-      const originY = (frame.h - h) / 2;
-
-      // The scrim, only when something is moving behind the print.
-      if (backdrop) {
-        ctx.fillStyle = ink.veil;
-        ctx.fillRect(0, 0, frame.w, frame.h);
-        const pad = PANEL_PAD * U;
-        ctx.save();
-        ctx.shadowColor = 'rgba(0,0,0,0.28)';
-        ctx.shadowBlur = 30 * U;
-        ctx.shadowOffsetY = 8 * U;
-        ctx.fillStyle = ink.panel;
-        roundRect(ctx, originX - pad, originY - pad, blockW + pad * 2, h + pad * 2, PANEL_RADIUS * U);
-        ctx.fill();
-        ctx.restore();
-        ctx.strokeStyle = ink.panelEdge;
-        ctx.lineWidth = Math.max(1, 0.5 * U);
-        roundRect(ctx, originX - pad, originY - pad, blockW + pad * 2, h + pad * 2, PANEL_RADIUS * U);
-        ctx.stroke();
-      }
-
+      const { rows, stack, h, colW, artW } = built;
       if (spread) {
-        drawCover(ctx, originX, originY + (h - colW) / 2, colW, U);
-        const textX = originX + colW + COLUMN_GAP * U;
+        const blockW = artW + COLUMN_GAP * U + colW;
+        const originX = (frame.w - blockW) / 2;
+        const originY = (frame.h - h) / 2;
+        drawCover(ctx, originX, originY + (h - artW) / 2, artW, U);
+        const textX = originX + artW + COLUMN_GAP * U;
         let y = originY + (h - stack) / 2;
         for (const row of rows) {
           y += row.gap;
@@ -482,7 +549,8 @@ export function entryPlate({ entry, keeper, address }) {
           y += row.h;
         }
       } else {
-        let y = originY;
+        const originX = (frame.w - colW) / 2;
+        let y = (frame.h - h) / 2;
         for (const row of rows) {
           y += row.gap;
           row.draw(ctx, originX, y, colW);
