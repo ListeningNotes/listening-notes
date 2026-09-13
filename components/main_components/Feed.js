@@ -5,7 +5,8 @@
 //
 // Entries, not people. Each row is a record somebody in the book wrote up —
 // a small face and a name on an entry-shaped row — read straight off their
-// journal's public feed from this browser, the way /compare reads one.
+// journal's public feed from this browser, the way the page about a person
+// reads one.
 // Nothing central, nobody learns they were read, and nothing here is stored:
 // the book says whose feeds to ask and the feeds say the rest.
 //
@@ -18,8 +19,8 @@
 // A row offers Compare only when it is a record you also have: this album,
 // their rating against yours and the shape of the two listens, track by
 // track. Compare arrives because something happened, not as a place you go.
-// The whole-journal compare is the page about a person — not built; a face
-// or a name opens /compare with their address until it is.
+// The whole-journal compare is the page about a person, which a face or a
+// name opens (app/dashboard/people/[id]/page.js).
 //
 // A row opens their entry in a new window, which on a home screen is a sheet
 // inside the app (DECISIONS, The model). Their writing stays on their
@@ -254,7 +255,7 @@ export default function Feed({ entries = [] }) {
                   <Marks entry={entry} size={20} />
                 </div>
                 <div className="fd-who">
-                  <Link href={`/compare?with=${encodeURIComponent(person.address)}`} title={`Your page about ${person.name || 'them'}`}>
+                  <Link href={`/dashboard/people/${person.id}`} title={`Your page about ${person.name || 'them'}`}>
                     <Face address={person.address} />
                     {person.name || 'Someone'}
                   </Link>

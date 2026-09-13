@@ -231,8 +231,8 @@ cannot be tested end to end.
       page, and the row's Not answering yet.
 
 **THE ADDRESS BOOK, THE FEED, AND WHERE COMPARE LIVES** — briefed
-2026-09-12. The address book merged to main that day and the feed the
-next (Complete). The rest is in order; each waits on the one before it.
+2026-09-12. The address book merged to main that day, the feed and the
+person's page the next (Complete). Left: the printer, and the chain.
 
 - [ ] **The feed's two loose ends, 2026-09-13.** (a) The quiet toggle:
       DECISIONS promises a per-entry choice to credit a send privately, and
@@ -250,19 +250,20 @@ next (Complete). The rest is in order; each waits on the one before it.
       carry no name at all (they predate the inbox filling it in). June's
       and Peyton's copies publish no `keeper_name` and no credit until they
       press Update.
-- [ ] **The person's page — next.** A face or a name in the feed, or a
-      row in the book: overlap, where you agree and disagree hardest, what
-      they sent you and how you rated it, their hit rate with you. The
-      whole-journal compare, moved off `/compare` onto your copy, where it
-      can hold what their journal never could. Until then a face, a name
-      and a row open `/compare?with=`; once it exists `/compare` can go —
-      nobody has the URL, so no stub. What they sent you joins
-      `submissions` by `sender_url`; how you rated it joins your entries by
-      album key (the JS twin of the column is in useListeningBeacon).
-- [ ] **The printer on that page.** The shape of the agreement without the
-      writing — you and June agree on 34 records; you disagree hardest on
-      these three — naming both people. The notes stay on the journals and
-      the card is a reason to visit both.
+- [ ] **The printer on the person's page — next.** The shape of the
+      agreement without the writing — you and June agree on 34 records;
+      you disagree hardest on these three — naming both people. The notes
+      stay on the journals and the card is a reason to visit both. Its
+      door is on the page already: the glyph beside Visit opens
+      `/printer?person=<id>`, which says coming soon.
+- [ ] **Names to confirm, 2026-09-13 (the person's page)** — autonomous
+      session, rename freely: branch `person-page`; `/dashboard/people/
+      [id]` and `PersonPage`; `pull_person` and `GET /api/people/[id]`;
+      the `.pn-` prefix in forms.css; the sheet's label "A person"; the
+      facts' words — Records you both have, Rated alike, Sent you, Hit
+      rate with you — and what a hit is (logged and rated four or better);
+      `ALIKE`, `HIT`, `OFFSET_NEEDS`; the section titles, and "the
+      interesting column" kept from the old compare.
 - [ ] **The chain.** Tapping the Submission chip on an entry opens the
       lineage upward. Backward only (DECISIONS).
 - [ ] **The cover's code on a real phone, 2026-09-12.** Built in the
@@ -873,17 +874,20 @@ it in Safari on the Mac (localhost counts as secure) or on the phone on the
 live site. The scanner now says which of the three failures it hit.
 
 **A migrator session that dies holding the lock hangs every start after
-it, 2026-09-12.** The dev server was restarted while the Mac changed
-networks; its migrator had taken `pg_advisory_lock` and the connection died
-under it. Neon kept that session idle, still holding the lock, and the next
-dev server said Ready and never answered a request — `register()` was queued
-behind it — and a production cold start would have queued the same way. It
-cleared by itself after about ten minutes, when Neon reaped the session. To
-see it: `SELECT pid, granted, state FROM pg_locks JOIN pg_stat_activity USING
-(pid) WHERE locktype = 'advisory'` — an `idle` holder whose last query was
-the lock is a dead one, and `pg_terminate_backend(pid)` on that row is the
-fix when waiting is not. A server that says Ready and never compiles is this,
-not Turbopack.
+it, 2026-09-12 and again 2026-09-13.** First the dev server, restarted while
+the Mac changed networks; then Vercel's own build container after the 1.4.0
+deploy. Each migrator took `pg_advisory_lock` and its connection died under
+it; Neon kept the session idle, still holding the lock, for ten minutes or
+more, and every start in that window queued behind it — the dev server said
+Ready and never answered, a local build sat in `prepare_database.mjs` for
+seven minutes, and a production cold start would have done the same. Fixed
+the second night: the migrator's session sets `idle_session_timeout` to two
+minutes, so Postgres ends a ghost itself, and `lock_timeout` to three, so a
+waiter gives up — safely when nothing is pending, loudly when something is.
+To see it: `SELECT pid, granted, state FROM pg_locks JOIN pg_stat_activity
+USING (pid) WHERE locktype = 'advisory'` — an `idle` holder whose last query
+was the lock is a dead one. A server that says Ready and never compiles is
+this, not Turbopack.
 
 **jsQR alone refuses light-page photo codes that every real reader accepts.**
 Measured 2026-09-10 on June's portrait, in his page: `BarcodeDetector` passed
@@ -1405,6 +1409,42 @@ current.
 ---
 
 ## Complete
+
+**2026-09-13 — the person's page, branch `person-page`, merged to main
+and pushed the same day as 1.5.0 (a route and a page: the middle number).
+Miyel's call: it stays on her copy; no door to it on the other journal's
+right pane (DECISIONS, The network)**
+
+- [x] **`/dashboard/people/[id]`**, owner-only, a sheet over the desk like
+      the book (and the standalone address for a bookmark). From a face or
+      a name in the feed, or a row in the book. Their face large, their
+      name, Visit their journal, and the printer's door
+      (`/printer?person=<id>`, coming soon). Then a panel: four counted
+      facts in the card's label-and-answer shape — Records you both have,
+      Rated alike (n of the rated overlap), Sent you (with how many you
+      logged), Hit rate with you (hits of sent; a hit is a send you logged
+      and rated four or better) — and four lists: where you agree hardest
+      (three), where you disagree hardest (three, with the gap), what they
+      sent you (every submission from their address, with your stars if
+      you logged it, else Not logged yet), and Only they have heard these
+      (eight, the interesting column, linking out). Reads their public
+      feed, `/api/entries` and `/api/submissions` in the browser; stores
+      nothing. One entry per record, the most recent.
+- [x] **Rated alike allows for how each of you rates.** Their ratings are
+      shifted by the average difference across the overlap before the gap
+      is measured (three records in common at least, else raw), alike is
+      within half a star after that, and the page says the offset in one
+      line. DECISIONS, The journal, has the rule this applies.
+- [x] **The migrator's session ends itself** (`idle_session_timeout` 2min,
+      `lock_timeout` 3min) after the second ghost lock of the night, this
+      one left by Vercel's build. Gotchas has the story; DECISIONS,
+      Migrations, the rule. Run once: database up to date.
+- [x] **`/compare` is gone**, page and styles: a public page comparing this
+      journal against a typed address has no place once everything social
+      is on the visitor's own copy, and nobody had the URL. Its buckets
+      live on in the person's page. `albumKey` is exported from
+      useListeningBeacon so a send (no key of its own) can be matched
+      against the keeper's entries.
 
 **2026-09-13 — the feed, branch `feed`, merged to main the same day as
 1.4.0 (a migration and a floor: the middle number); not pushed at the
