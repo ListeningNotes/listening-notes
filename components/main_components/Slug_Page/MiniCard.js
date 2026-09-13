@@ -35,12 +35,15 @@
 // place.
 
 'use client';
-import { Heart, SketchLogo, Fingerprint } from '@phosphor-icons/react';
+import { Envelope, Heart, SketchLogo, Fingerprint } from '@phosphor-icons/react';
 import StarRating from '../StarRating';
 
 export default function MiniCard({ entry, coverSrc, rating = 0, masterpiece = false, onReturn }) {
   const favorite  = entry.favorite === true || entry.favorite === 'true';
   const formative = entry.formative === true || entry.formative === 'true';
+  // A record that was sent wears the envelope, in faint ink — the fourth
+  // mark, site-wide since 2026-09-13 (DECISIONS, Structure).
+  const sent = entry.entry_type === 'Submission';
 
   return (
     // A button, because the whole strip is the way back up to the record —
@@ -70,8 +73,14 @@ export default function MiniCard({ entry, coverSrc, rating = 0, masterpiece = fa
           // going off beside somebody's reading.
           <StarRating rating={rating} size={11} glow={false} animate={false} />
         )}
-        {(favorite || masterpiece || formative) && (
+        {(favorite || masterpiece || formative || sent) && (
           <span className="ln-mini-flags">
+            {sent && (
+              <span className="ln-mini-flag" style={{ color: 'var(--ink-faint)' }}
+                    role="img" aria-label="Submission" title="Submission">
+                <Envelope size={12} weight="regular" />
+              </span>
+            )}
             {favorite && (
               <span className="ln-mini-flag" style={{ color: 'var(--fav, #f0484f)' }}
                     role="img" aria-label="Favorite" title="Favorite">
