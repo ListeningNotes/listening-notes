@@ -1456,8 +1456,9 @@ current.
 
 ## Complete
 
-**2026-09-12 — the printer prints the record, branch `printer`, 1.8.0,
-unmerged: Miyel reviews on the dev server**
+**2026-09-12 — the printer prints the record, branch `printer`, merged to
+main as 1.8.0 the same day (a route's behaviour and two files: the middle
+number); not yet pushed**
 
 - [x] **`SharePrinter.js` brought back from `share-printer`.** Styles moved
       to forms.css under `.shp`; an `inline` mode so the press rises on the
