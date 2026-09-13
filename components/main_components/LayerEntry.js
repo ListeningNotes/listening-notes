@@ -358,7 +358,9 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
     };
 
     const begin = event => {
-      if (event.touches.length !== 1) { pull = null; return; }
+      // Printing is a different mode: its sideways swipe turns the ground
+      // under the card, and the pull down would take the flyer away.
+      if (event.touches.length !== 1 || sheet.querySelector('.ln-printing')) { pull = null; return; }
       const touch = event.touches[0];
       pull = { x: touch.clientX, y: touch.clientY, at: event.timeStamp, lastX: touch.clientX, lastY: touch.clientY, lastAt: event.timeStamp, axis: null, top: atTop() };
     };

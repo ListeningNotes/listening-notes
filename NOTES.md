@@ -1458,8 +1458,41 @@ current.
 
 ## Complete
 
-**2026-09-13 — the printer on a real phone, branch `printer-fit` (name
-provisional), 1.8.1: what Miyel saw and what changed**
+**2026-09-13 — the printer becomes a mode of the entry page, branch
+`printer-fit` (name provisional), 1.9.0 — Miyel's redirection after seeing
+the press on her phone: "the printer is the door into the app"**
+
+- [x] **The entry's first screen is the flyer.** `printing` state in
+      FullPostPage, the way `edit.editing` is: the notes, the cue and the
+      date step aside, the keeper's name appears under the mark, the horizon
+      (HorizonChart, no labels, ink at half) under the chips, and a ground
+      sits behind the card — the record blurred across the screen (CSS blur
+      on the cover, a wash of `--bg` at 62%), plain day, plain night; the
+      two plain grounds set the page's tokens on the container so plain
+      night is night whatever the theme. Tap a line to leave it off (`.ln-off`
+      at 18%), tap again to bring it back; the marks cycle chips → the
+      feed's symbols (Phosphor Heart / SketchLogo / Fingerprint at 34) →
+      gone; a sideways touch swipe on the screen turns the ground, and
+      LayerEntry stands its own gestures down while `.ln-printing` is on
+      the sheet. The art is inert and its code badge hidden.
+- [x] **`hooks/usePress.js`** (Miyel's name) makes the picture: the plate
+      drawn at the chosen paper with the page's choices and `ground`, then
+      Save (download), Send (share sheet) or Link (clipboard), the address
+      copied first and said in the cover's words. **`PrintBar`** (hers too,
+      in Slug_Page) wears the correction bar's clothes: three ground dots,
+      Send / Save / Link / Done, and after Send or Save the row swaps to the
+      four sizes — sizes come after you press Save, on her call.
+- [x] **What went.** The press as a sheet: `SharePrinter.js` is now only the
+      toolbox (FRAMES, PAPER, the canvas tools); its sheet, the ghosts on a
+      canvas and the tap targets are in git before 2026-09-13 (the plate's
+      `preview` ghosts and `targets` are still in EntryPlate.js, unused).
+      The `.shp` rules are out of forms.css. `/printer?entry=` redirects to
+      the entry; `/printer` bare is still the card's sentence.
+- [x] **Desktop.** The mode shows the same first screen at width; the hero
+      is hidden while printing.
+
+**Earlier the same day — the printer on a real phone, 1.8.1: what Miyel
+saw and what changed (superseded above, kept for the lessons)**
 
 - [x] **The press opens in place over the entry.** On a phone the entry is
       a sheet over the journal, and the layer slot holds one page: the

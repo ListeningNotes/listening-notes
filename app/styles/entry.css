@@ -945,3 +945,104 @@
     padding: 0 24px 80px;
   }
 }
+
+/* ── Printing ──────────────────────────────────────────────────────────────
+   The printer is a mode of the entry page: the first screen becomes the
+   flyer. The notes, the cue and the date step aside; a ground sits behind
+   the card; each switchable line fades where it stands when tapped off; and
+   the correction mode's bar wears the printer's controls. The two plain
+   grounds set the page's tokens themselves, so plain night is night whatever
+   the page's theme, and everything on the card follows. */
+.ln-printing .ln-screen-two,
+.ln-printing .ln-scroll-cue,
+.ln-printing .ln-screen-one-posted,
+.ln-printing .ln-hero,
+.ln-printing .ln-cover-hero { display: none; }
+.ln-printing .ln-screen-one {
+  position: relative;
+  display: flex;
+  /* Taller than a screen when it has to be — the bar and the horizon are
+     added to a column that was sized to fit one viewport, and squeezing the
+     art to a thumbnail to keep it there is worse than a scroll. */
+  height: auto;
+  min-height: 100dvh;
+  overflow: hidden;
+  padding-top: 96px;       /* clears the fixed logo row; the keeper's name sits under the mark */
+  padding-bottom: 150px;   /* the bar */
+}
+.ln-printing .ln-screen-one > :not(.ln-print-ground):not(.ln-print-bar) { position: relative; z-index: 1; }
+.ln-printing .ln-screen-one-art { flex-shrink: 0; height: min(40dvh, 78vw); }
+/* The art is the subject and is not a switch: it stays put, and the tap
+   that turns a cover into its code stands down with its badge. */
+.ln-printing .ln-screen-one-art { pointer-events: none; }
+.ln-printing .ln-turn-badge { display: none; }
+.ln-print-ground {
+  position: absolute; inset: 0;
+  z-index: 0 !important;
+  overflow: hidden;
+  background: var(--bg);
+}
+.ln-print-ground img {
+  position: absolute; inset: -15%;
+  width: 130%; height: 130%;
+  object-fit: cover;
+  filter: blur(18px) saturate(1.3);
+}
+.ln-print-ground::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: color-mix(in srgb, var(--bg) 62%, transparent);
+}
+.ln-print-ground--plain img, .ln-print-ground--plain::after { display: none; }
+/* The two plain grounds set the page's tokens at the root — FullPostPage
+   stamps data-print-ground on <html> while printing — so the mark in the
+   fixed header and the sheet itself follow the card, not only what is
+   inside the screen. The record's ground sets nothing: it follows the
+   page's own theme. html:root outranks the theme's own root rules. */
+html:root[data-print-ground="day"] {
+  --bg: #eef0ec; --ink: #1a1a1a; --ink-soft: #6b6b6b; --ink-faint: #a8a8a8;
+  --panel-border: rgba(255, 255, 255, 0.6); --border: rgba(26, 26, 26, 0.08);
+  --shadow-lift: 0 4px 20px rgba(0,0,0,0.06), 0 16px 48px rgba(0,0,0,0.06);
+  color-scheme: light;
+}
+html:root[data-print-ground="night"] {
+  --bg: #0e0e0e; --ink: #e8e4dc; --ink-soft: #888888; --ink-faint: #555555;
+  --panel-border: rgba(255, 255, 255, 0.08); --border: rgba(255, 255, 255, 0.08);
+  --shadow-lift: 0 4px 20px rgba(0,0,0,0.4), 0 16px 48px rgba(0,0,0,0.3);
+  color-scheme: dark;
+}
+.ln-print-line { cursor: pointer; transition: opacity 0.25s ease; -webkit-tap-highlight-color: transparent; }
+.ln-print-line.ln-off { opacity: 0.18; }
+.ln-print-keeper {
+  font-family: var(--font-label); font-size: 13px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--ink-soft);
+  padding: 6px 24px; margin-top: -6px;
+}
+.ln-print-symbol { display: inline-flex; line-height: 1; padding: 0 4px; }
+.ln-print-horizon { width: 100%; max-width: 340px; }
+.ln-print-bar {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 140;
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+  background: var(--bg);
+  border-top: 1px solid var(--border);
+  color: var(--ink);
+}
+.ln-print-row { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 8px; }
+.ln-print-grounds { display: flex; align-items: center; gap: 10px; }
+.ln-print-dot {
+  width: 10px; height: 10px; padding: 0; border-radius: 999px;
+  border: 1px solid var(--ink-faint); background: transparent; cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, transform 0.15s;
+}
+.ln-print-dot--on { background: var(--ink); border-color: var(--ink); transform: scale(1.25); }
+.ln-print-said {
+  font-family: var(--font-label); font-size: 9px; letter-spacing: 0.08em;
+  color: var(--ink-faint); min-height: 11px; text-align: center; overflow-wrap: anywhere;
+}
+/* The sheet's own furniture stands down while printing: the carets to the
+   neighbours (a pointer's version of the sideways swipe, which now turns
+   the ground). Reached from the root — the carets are the sheet's, not the
+   page's, and :has() does not survive the build. */
+html[data-printing] .lay-step { display: none; }
+@media (prefers-reduced-motion: reduce) { .ln-print-line { transition: none; } }
