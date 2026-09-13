@@ -20,8 +20,9 @@
 //
 //   the mark, centred at the head, as it is on every page; the keeper's
 //   name under it. the cover, large. the album. the artist and year. the
-//   stars. the chips. when it was posted. the horizon — the track ratings
-//   as bars, the shape of the listen.
+//   stars. the chips. the horizon — the track ratings as bars, the shape of
+//   the listen. Not the posted date: it is on the page, and on a print it
+//   was a line nobody needed (Miyel, 2026-09-12).
 //
 // The notes never travel. A card that says everything is a post, and a post
 // is terminal; this one is deliberately insufficient so the code has a reason
@@ -63,16 +64,15 @@ const ART_RADIUS = 16;
 // A print is a statement page too (Miyel, 2026-09-12); the nav's 28 read
 // as a colophon.
 const MARK_H = 46;                     // ≈ 80 wide on the 340 column
-const KEEPER = 9;                      // the label face, under the mark
+const KEEPER = 13;                     // the label face, under the mark — half again the site's line, on Miyel's call
 const TITLE = 26, TITLE_LEAD = 26 * 1.22;
 const ARTIST = 11;                     // mono caps, as .ln-screen-one-artist
 const STAR = 24, STAR_GAP = 3;         // StarRating size={24}
 const CHIP = 10, CHIP_PAD_X = 8, CHIP_PAD_Y = 3, CHIP_GAP = 8, CHIP_RADIUS = 4;
-const POSTED = 9;
 const HORIZON_H = 34, HORIZON_GAP = 2, HEART = 7;
 const COLUMN_GAP = 28;                 // opened out: between the cover and the stack
 // The screen's gap is 16 between everything; the artist line pulls up by 8.
-const GAP = { keeper: 8, art: 16, title: 16, artist: 8, stars: 16, chips: 16, posted: 16, horizon: 20 };
+const GAP = { keeper: 10, art: 16, title: 16, artist: 8, stars: 16, chips: 16, horizon: 20 };
 
 // How much of the paper the column is allowed, and the height it must fit.
 const FILL_W = 0.86;
@@ -149,14 +149,6 @@ function trackedWidth(c, text, spacing) {
   return Math.max(0, total - spacing);
 }
 
-// The date the post prints, in the post's words.
-function postedOn(value) {
-  if (!value) return null;
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return null;
-  return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
-}
-
 // ── The plate ──────────────────────────────────────────────────────────────
 
 export function entryPlate({ entry, keeper }) {
@@ -174,7 +166,6 @@ export function entryPlate({ entry, keeper }) {
   if (isMasterpiece) chips.push({ text: 'Masterpiece', tone: 'mp' });
   if (isFormative) chips.push({ text: 'Formative', tone: 'formative' });
   const line = [entry?.artist, entry?.year].filter(Boolean).join(' · ');
-  const posted = postedOn(entry?.posted_at);
 
   // The horizon: the track ratings as bars, read from the column the session
   // derives — or from the tracks themselves, for a record that has ratings
@@ -187,8 +178,8 @@ export function entryPlate({ entry, keeper }) {
   const favs = tracks.map(t => !!t.favorite);
   const anyFav = bars.length > 0 && favs.some(Boolean);
 
-  // What the printer offers to leave off. The cover, the album, the artist
-  // and the date are not switches: they are the card.
+  // What the printer offers to leave off. The cover, the album and the
+  // artist are not switches: they are the card.
   const toggles = [];
   if (keeper) toggles.push({ key: 'keeper', label: 'Keeper', on: true });
   if (stars > 0) toggles.push({ key: 'stars', label: 'Stars', on: true });
@@ -316,19 +307,6 @@ export function entryPlate({ entry, keeper }) {
           rows.push({ gap: px(GAP.chips), h: laid.h, draw: (c, x, y, w) => drawChips(c, x, y, w, laid, unit) });
         }
 
-        // when it was posted
-        if (posted) {
-          rows.push({
-            gap: px(GAP.posted),
-            h: px(POSTED) * 1.4,
-            draw(c, x, y, w) {
-              c.textBaseline = 'top';
-              c.font = `400 ${px(POSTED)}px ${mono}`;
-              c.fillStyle = ink.soft;
-              drawTracked(c, `Posted ${posted}`.toUpperCase(), x + w / 2, y, px(POSTED) * 0.12, 'center');
-            },
-          });
-        }
 
         // the horizon, with headroom for the hearts when there are any
         if (bars.length && on('horizon')) {
