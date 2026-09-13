@@ -1475,6 +1475,11 @@ provisional), 1.8.1: what Miyel saw and what changed**
 - [x] **The option rows wrap instead of scrolling sideways.** Six chips in a
       sideways scroll felt long and unnatural; a row's chips are fixed by the
       plate, so wrapping never moves the print. Chips a shade smaller.
+- [x] **No bar.** "The record" across the top said nothing the paper did
+      not; the plate's title names the dialog for a screen reader instead.
+      The paper takes everything above the look's name, the controls sit at
+      the foot, and the press fills the screen edge to edge (checked at
+      375×812: the press is the viewport, the controls end at its foot).
 
 **2026-09-12 — the printer prints the record, branch `printer`, merged to
 main as 1.8.0 the same day (a route's behaviour and two files: the middle

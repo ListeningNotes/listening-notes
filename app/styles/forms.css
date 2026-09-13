@@ -915,29 +915,16 @@ a.pn-item-album:hover { text-decoration: underline; text-underline-offset: 3px; 
   font-family: var(--font-display);
 }
 
-/* ── the bar ── what this is, and the way out, which is the only
-   control on a printer that has to be findable without looking. */
-.shp-bar {
-  position: relative; z-index: 1; flex-shrink: 0;
-  display: flex; align-items: center; justify-content: space-between;
-  gap: 12px;
-  /* Under the phone's own bar — the clock, the island — not behind it. */
-  padding: calc(14px + env(safe-area-inset-top, 0px)) 18px 2px;
-}
-.shp-title {
-  font-family: var(--font-label);
-  font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase;
-  color: var(--ink-faint);
-}
-
-/* ── the paper ── everything left over after the bar, the name of the
-   look and the controls, with the print scaled to fit it. */
+/* ── the paper ── everything above the name of the look and the controls,
+   with the print scaled to fit it. There was a bar above this once; its
+   safe-area padding lives here now, so the paper sits under the phone's
+   clock and island rather than behind them. */
 .shp-view {
   position: relative; z-index: 1;
   flex: 1; min-height: 0;
   display: flex; align-items: center; justify-content: center;
   gap: 4px;
-  padding: 6px 10px;
+  padding: calc(10px + env(safe-area-inset-top, 0px)) 10px 4px;
 }
 .shp-paper {
   position: relative;
@@ -974,8 +961,8 @@ a.pn-item-album:hover { text-decoration: underline; text-underline-offset: 3px; 
    the same control: a mark can be pressed to jump. */
 .shp-turn {
   flex-shrink: 0;
-  display: flex; flex-direction: column; align-items: center; gap: 7px;
-  padding: 2px 0 9px;
+  display: flex; flex-direction: column; align-items: center; gap: 5px;
+  padding: 0 0 6px;
 }
 .shp-look {
   font-family: var(--font-label);
@@ -1058,8 +1045,7 @@ a.pn-item-album:hover { text-decoration: underline; text-underline-offset: 3px; 
 /* Wide enough for a room, and the printer stops being a full screen and
    becomes what it is: a press on a bench with its controls beside it. */
 @media (min-width: 900px) {
-  .shp-bar { padding: 18px 26px 4px; }
-  .shp-view { padding: 6px 26px; }
+  .shp-view { padding: 18px 26px 6px; }
   .shp-set, .shp-acts, .shp-said { padding-left: 26px; padding-right: 26px; }
   .shp-controls { max-width: 620px; width: 100%; align-self: center; }
 }
