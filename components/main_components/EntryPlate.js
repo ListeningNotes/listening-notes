@@ -74,6 +74,16 @@ const GAP = { keeper: 8, art: 16, title: 16, artist: 8, stars: 16, chips: 16, po
 const FILL_W = 0.86;
 const FILL_H = 0.88;
 
+// ── A Story's furniture ───────────────────────────────────────────────────
+// Instagram draws over the top of a story (the progress bars, the name) and
+// the bottom (the reply bar), about an eighth each; on 9:16 the print keeps
+// out of both. With the Sticker toggle it leaves more at the foot — room for
+// the link sticker the poster adds there, which is what carries a reader to
+// the entry now that the print has no code. Miyel's ask, 2026-09-12.
+const STORY_TOP = 0.13;
+const STORY_FOOT = 0.13;
+const STICKER_FOOT = 0.24;
+
 // ── Ink ────────────────────────────────────────────────────────────────────
 // base.css, stated rather than read: a print is the same colour wherever it
 // is made. Paper is the light theme's ink over a light wash, Ink the dark's.
@@ -180,6 +190,10 @@ export function entryPlate({ entry, keeper }) {
   if (stars > 0) toggles.push({ key: 'stars', label: 'Stars', on: true });
   if (chips.length) toggles.push({ key: 'chips', label: 'Chips', on: true });
   if (bars.length) toggles.push({ key: 'horizon', label: 'Horizon', on: true });
+  // On by default: a story is the frame that matters and the sticker is how
+  // it links, so the first print made should have the room. Only 9:16 has
+  // a foot to keep; on the other papers the switch changes nothing.
+  toggles.push({ key: 'sticker', label: 'Sticker space', on: true });
 
   return {
     title: 'The record',
@@ -201,6 +215,12 @@ export function entryPlate({ entry, keeper }) {
       const { sans, mono } = families;
       const on = key => (shown ? shown[key] !== false : true);
       const spread = frame.w / frame.h > 1.3;
+      const story = frame.w / frame.h < 0.6;
+      // The band of paper the print may use: all of it, or on a story what
+      // is left between Instagram's furniture — and under the sticker.
+      const top = story ? frame.h * STORY_TOP : 0;
+      const foot = story ? frame.h * (on('sticker') ? STICKER_FOOT : STORY_FOOT) : 0;
+      const areaH = frame.h - top - foot;
 
       // ── the ground ───────────────────────────────────────────────────────
       paintGround(ctx, frame, art?.cover, ink);
@@ -212,7 +232,7 @@ export function entryPlate({ entry, keeper }) {
       let U = spread
         ? Math.min((frame.h * FILL_H) / ART, (frame.w * FILL_W) / (ART + COL + COLUMN_GAP))
         : (frame.w * FILL_W) / COL;
-      const roomH = spread ? frame.h * FILL_H : frame.h * FILL_H;
+      const roomH = story ? areaH * 0.96 : frame.h * FILL_H;
       let built = build(U);
       if (built.h > roomH) {
         U *= roomH / built.h;
@@ -501,7 +521,7 @@ export function entryPlate({ entry, keeper }) {
         }
       } else {
         const originX = (frame.w - colW) / 2;
-        let y = (frame.h - h) / 2;
+        let y = top + (areaH - h) / 2;
         for (const row of rows) {
           y += row.gap;
           row.draw(ctx, originX, y, colW);
