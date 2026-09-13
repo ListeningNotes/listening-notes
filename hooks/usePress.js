@@ -56,6 +56,10 @@ function readFamilies(fonts) {
 
 export function usePress({ plate, shown, ground, isDark, link, fonts }) {
   const [status, setStatus] = useState('');
+  // The finished picture, shown on the paper for a phone that has no share
+  // sheet to hand it to (a page on plain http gets none): iOS lets a held
+  // finger add any picture on a page to Photos, and that works everywhere.
+  const [picture, setPicture] = useState(null);
   const timer = useRef(null);
   const canSend = useSyncExternalStore(never, probeCanShare, onServer);
 
@@ -92,8 +96,10 @@ export function usePress({ plate, shown, ground, isDark, link, fonts }) {
   // Save. On a phone that takes a file into its share sheet, the sheet is
   // the way — iOS lets no page write to the camera roll, and the sheet has
   // Save Image one tap away, with Instagram beside it (Miyel, 2026-09-13:
-  // a download showed a file preview of a picture already on screen). On a
-  // desktop it is a download.
+  // a download showed a file preview of a picture already on screen). A
+  // phone without the sheet — a page on plain http, like a dev copy on the
+  // home network — gets the picture on the paper to hold and add to
+  // Photos. A desktop gets a download.
   const save = useCallback(async frameKey => {
     const pasted = copyLink();
     try {
@@ -101,14 +107,25 @@ export function usePress({ plate, shown, ground, isDark, link, fonts }) {
       if (canSend) {
         const file = new File([blob], fileName(frameKey), { type: 'image/png' });
         await navigator.share({ files: [file] });
+        if (await pasted) say(COPIED); else setStatus('');
+      } else if (navigator.maxTouchPoints > 0) {
+        const url = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = () => reject(reader.error);
+          reader.readAsDataURL(blob);
+        });
+        setPicture(url);
+        await pasted;
+        say('Touch and hold the picture to add it to Photos. Tap it to come back.', 12000);
       } else {
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
         a.download = fileName(frameKey);
         a.click();
         setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+        if (await pasted) say(COPIED); else setStatus('');
       }
-      if (await pasted) say(COPIED); else setStatus('');
     } catch (error) {
       // Cancelling the share sheet rejects, and being told about it would be
       // an error message for changing your mind.
@@ -116,6 +133,7 @@ export function usePress({ plate, shown, ground, isDark, link, fonts }) {
       say('A picture on this print could not be read, so it cannot be saved.', 4000);
     }
   }, [compose, fileName, copyLink, say, canSend]);
+  const dismissPicture = useCallback(() => { setPicture(null); setStatus(''); }, []);
 
   // The address alone, without a picture.
   const copy = useCallback(async () => {
@@ -124,5 +142,5 @@ export function usePress({ plate, shown, ground, isDark, link, fonts }) {
     else say(link, 6000);   // no clipboard here; showing it beats swallowing it
   }, [link, copyLink, say]);
 
-  return { save, copy, status, canSend };
+  return { save, copy, status, canSend, picture, dismissPicture };
 }
