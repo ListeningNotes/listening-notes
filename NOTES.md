@@ -230,8 +230,8 @@ cannot be tested end to end.
       page, and the row's Not answering yet.
 
 **THE ADDRESS BOOK, THE FEED, AND WHERE COMPARE LIVES** — briefed
-2026-09-12. The address book shipped that day on branch `address-book`
-(Complete). The rest is in order; each waits on the one before it.
+2026-09-12. The address book merged to main that day (Complete). The rest
+is in order; each waits on the one before it.
 
 - [ ] **The feed.** Swiping down from the desk — floor two. Entry-shaped
       rows with a small face and a name: what the people in the book
@@ -1399,9 +1399,10 @@ current.
 
 ## Complete
 
-**2026-09-12 — the address book, branch `address-book`, unmerged; version
-1.3.0 on the branch (a table, a route, a door: the middle number). From the
-brief: the address book, the feed, and where compare lives**
+**2026-09-12 — the address book, branch `address-book`, merged to main the
+same day as 1.3.0 (a table, a route, a door: the middle number); not yet
+pushed or released at the merge. From the brief: the address book, the
+feed, and where compare lives**
 
 - [x] **The `?from=` link is retired.** The inbox's links out are plain
       again, the card no longer offers Compare with mine, and
