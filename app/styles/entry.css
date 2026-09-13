@@ -962,7 +962,9 @@
 .ln-printing .ln-hero,
 .ln-printing .ln-cover-hero { display: none; }
 .ln-printing {
-  --print-top: 72px;     /* clears the fixed logo row */
+  /* Clears the fixed logo row — which sits under the phone's own bar on
+     the home screen, so the inset rides along. */
+  --print-top: calc(78px + env(safe-area-inset-top, 0px));
   --print-bar: 190px;    /* the bar's three rows */
   --print-side: 12px;
   --print-max: 520px;    /* the paper's width on a wide screen */
@@ -1104,4 +1106,17 @@ html:root[data-print-ground="night"] {
    the ground). Reached from the root — the carets are the sheet's, not the
    page's, and :has() does not survive the build. */
 html[data-printing] .lay-step { display: none; }
+/* On the home screen iOS hands the page a viewport one status bar shorter
+   than the screen, pinned under the clock (measured 2026-09-13: 812 of 874,
+   inset top 62), so a bar at the viewport's foot stops short of the
+   screen's. The bar reaches down by the top inset, and stands off by the
+   larger inset so its last row stays inside the page either way; the mode's
+   box grows by the same amount so the paper is centred in the real room. */
+@media (display-mode: standalone) {
+  .ln-printing { height: calc(100dvh + env(safe-area-inset-top, 0px)); }
+  .ln-print-bar {
+    bottom: calc(-1 * env(safe-area-inset-top, 0px));
+    padding-bottom: calc(10px + max(env(safe-area-inset-bottom, 0px), env(safe-area-inset-top, 0px)));
+  }
+}
 @media (prefers-reduced-motion: reduce) { .ln-print-line { transition: none; } }
