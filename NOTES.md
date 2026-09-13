@@ -1430,6 +1430,10 @@ right pane (DECISIONS, The network)**
       (eight, the interesting column, linking out). Reads their public
       feed, `/api/entries` and `/api/submissions` in the browser; stores
       nothing. One entry per record, the most recent.
+- [x] **Two cuts the same night, on Miyel's call, as 1.5.1:** the "Only
+      June has heard these" list came off — their journal is a tap away
+      and says it better — and the sends section reads "What June has sent
+      you" ("June hasn't sent you anything yet" when empty).
 - [x] **Rated alike allows for how each of you rates.** Their ratings are
       shifted by the average difference across the overlap before the gap
       is measured (three records in common at least, else raw), alike is
