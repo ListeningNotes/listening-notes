@@ -1509,6 +1509,9 @@ the press on her phone: "the printer is the door into the app"**
       the card, gaps of 12, horizon 52) — recorded in DECISIONS. And Save
       on a phone is the share sheet (`navigator.share` with the file —
       Save Image is on it), a download elsewhere; the Send button went.
+      The header (the nav row: mark and light switch) stands down while
+      printing — `html[data-printing] .sitenav-row` — and the paper takes
+      its room; the card carries its own mark (Miyel, same day).
 - [x] **What went.** The press as a sheet: `SharePrinter.js` is now only the
       toolbox (FRAMES, PAPER, the canvas tools); its sheet, the ghosts on a
       canvas and the tap targets are in git before 2026-09-13 (the plate's

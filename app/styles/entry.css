@@ -962,9 +962,9 @@
 .ln-printing .ln-hero,
 .ln-printing .ln-cover-hero { display: none; }
 .ln-printing {
-  /* Clears the fixed logo row — which sits under the phone's own bar on
-     the home screen, so the inset rides along. */
-  --print-top: calc(78px + env(safe-area-inset-top, 0px));
+  /* The fixed logo row stands down while printing (below), so only the
+     phone's own bar is cleared — the inset rides along on the home screen. */
+  --print-top: calc(22px + env(safe-area-inset-top, 0px));
   --print-bar: 190px;    /* the bar's three rows */
   --print-side: 12px;
   --print-max: 520px;    /* the paper's width on a wide screen */
@@ -1115,6 +1115,10 @@
    the ground). Reached from the root — the carets are the sheet's, not the
    page's, and :has() does not survive the build. */
 html[data-printing] .lay-step { display: none; }
+/* And the header: the card carries its own mark, and the light switch has
+   nothing to switch while the paper sets its own colours (Miyel,
+   2026-09-13). */
+html[data-printing] .sitenav-row { display: none; }
 /* On the home screen iOS hands the page a viewport one status bar shorter
    than the screen, pinned under the clock (measured 2026-09-13: 812 of 874,
    inset top 62), so a bar at the viewport's foot stops short of the
