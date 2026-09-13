@@ -989,7 +989,12 @@ single server, so without a lock two cold starts apply the same file.
 rather than the HTTP driver, which opens a fresh connection per call and
 would release the lock the instant the call returned. The `Client` is also
 the only thing that can run a schema file: the HTTP driver refuses more than
-one statement per call, and splitting on semicolons means parsing `DO` blocks.
+one statement per call, and splitting on semicolons means parsing `DO` blocks. **And the session ends itself, 2026-09-13:** `idle_session_timeout`
+two minutes and `lock_timeout` three, set on the migrator's session. Twice a
+client died without closing — a dev server under a network change, then
+Vercel's build container — and Neon kept its backend idle with the lock for
+ten minutes, so every start queued behind a ghost. Only the server can see a
+client has gone; a waiter that gives up with nothing pending is safe.
 
 **No down migrations.** A half-applied `DROP` has no meaningful reverse. The
 answer to a bad migration is a backup and a new file.
