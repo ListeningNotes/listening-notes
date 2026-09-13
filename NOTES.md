@@ -1425,8 +1425,17 @@ a sheet: the middle number)**
       `GET /api/reports` and `PATCH /api/reports/[id]` (owner), `REPORTS_URL`
       in version.js (`NEXT_PUBLIC_REPORTS_URL` for a fork). Names to confirm:
       all of those, `.rp-`, and the sheet's words.
-- [ ] **A copy on 1.6.x still shows the GitHub link** until it updates; the
-      1.6.0 release notes say so and are corrected on the release page.
+- [x] **Seen on the dev server:** the sheet from the desk, Send failing
+      the honest way against a live site that does not have the route yet,
+      the Reports tab with a rehearsal report (name, their journal, date,
+      the words, version · browser, Read, Dismiss — left for Miyel to
+      dismiss), the desk's Inbox count including it, and the three tabs
+      fitting a phone by giving up side padding. The cross-origin path is
+      proved by the preflight's headers, not by another copy — none is on
+      1.7 yet.
+- [ ] **A copy on 1.6.x still shows the GitHub link** until it updates. The
+      1.6.0 release notes describe 1.6.0 truthfully; the 1.7.0 notes say the
+      box replaced it.
 
 **2026-09-13 — the bug button, on main as 1.6.0 (something new: the middle
 number), pushed, and release v1.6.0 cut the same night — the first since
