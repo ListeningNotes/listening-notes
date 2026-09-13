@@ -1400,9 +1400,9 @@ current.
 ## Complete
 
 **2026-09-12 — the address book, branch `address-book`, merged to main the
-same day as 1.3.0 (a table, a route, a door: the middle number); not yet
-pushed or released at the merge. From the brief: the address book, the
-feed, and where compare lives**
+same day as 1.3.0 (a table, a route, a door: the middle number), pushed,
+and live on Vercel at 01:51 UTC on the 13th; no release cut. From the
+brief: the address book, the feed, and where compare lives**
 
 - [x] **The `?from=` link is retired.** The inbox's links out are plain
       again, the card no longer offers Compare with mine, and
