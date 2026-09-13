@@ -1406,8 +1406,9 @@ current.
 
 ## Complete
 
-**2026-09-13 — the feed, branch `feed`, version 1.4.0 (a migration and a
-floor: the middle number)**
+**2026-09-13 — the feed, branch `feed`, merged to main the same day as
+1.4.0 (a migration and a floor: the middle number); not pushed at the
+merge**
 
 - [x] **The desk has two floors.** Floor one is the crown and the desk;
       floor two is the feed, in a scroller of its own, the two-floor shape
