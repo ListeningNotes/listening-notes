@@ -1,0 +1,22 @@
+-- Copyright (C) 2026 Miyel Brown
+-- SPDX-License-Identifier: AGPL-3.0-or-later
+-- migrations/008_received_from_url.sql
+--
+-- Where the person who sent a record keeps their journal. A send already
+-- carries it (submissions.sender_url) and a listen started from the inbox
+-- already carries their name into received_from; this carries the address
+-- beside it, on the entry and on the draft a paused listen sits in, so that
+-- the credit on a Submission entry can be matched exactly by the journal it
+-- names rather than by a name somebody typed.
+--
+-- That matching is the feed's Submissions view (components/main_components/
+-- Feed.js): a keeper's copy reads the public feeds of the people in their
+-- address book and shows what those people logged from that keeper's sends
+-- — the entries whose received_from_url is this journal. A name would do
+-- for a while and then two Sams would break it.
+--
+-- Stored the way every other address is: no scheme, host only, lower case.
+-- Private on an entry read like the rest of the chain, and published only
+-- through the public feed, on Submission entries, as the credit.
+ALTER TABLE entries ADD COLUMN IF NOT EXISTS received_from_url text;
+ALTER TABLE drafts ADD COLUMN IF NOT EXISTS received_from_url text;

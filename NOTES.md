@@ -231,27 +231,34 @@ cannot be tested end to end.
       page, and the row's Not answering yet.
 
 **THE ADDRESS BOOK, THE FEED, AND WHERE COMPARE LIVES** — briefed
-2026-09-12. The address book merged to main that day (Complete). The rest
-is in order; each waits on the one before it.
+2026-09-12. The address book merged to main that day and the feed the
+next (Complete). The rest is in order; each waits on the one before it.
 
-- [ ] **The feed.** Swiping down from the desk — floor two. Entry-shaped
-      rows with a small face and a name: what the people in the book
-      logged, not who exists. Two views: Recent (everyone in the book, in
-      order) and Submissions (who logged what you sent them, and how they
-      rated it — the default; smaller, warmer, cannot become a scroll). A
-      row offers Compare when it is a record you also have — this album,
-      their rating and their track notes against yours. Reads every
-      person's `/api/public/entries` from the browser, as `/compare` does;
-      the inbox is the shelf shape to copy. **Open before building:** the
-      Submissions view needs an entry to say which journal it came from,
-      and `received_from` is a name. Either a `received_from_url` column
-      on entries (additive, published with the feed) or matching by name.
-- [ ] **The person's page.** A face or a name in the feed, or a row in the
-      book: overlap, where you agree and disagree hardest, what they sent
-      you and how you rated it, their hit rate with you. The whole-journal
-      compare, moved off `/compare` onto your copy, where it can hold what
-      their journal never could. Until then a row opens `/compare?with=`;
-      once it exists `/compare` can go — nobody has the URL, so no stub.
+- [ ] **The feed's two loose ends, 2026-09-13.** (a) The quiet toggle:
+      DECISIONS promises a per-entry choice to credit a send privately, and
+      the feed now publishes the credit by default — the toggle is a
+      boolean on the entry, a control beside the received-from field in
+      edit mode, and a filter in `pull_public_entries`. (b) Track notes on
+      a row's Compare: the feed carries no writing, so the panel shows the
+      two verdicts and the two horizons and links to both entries. Their
+      track notes need their copy to serve an entry across origins — CORS
+      on `GET /api/entries/[slug]`, additive, every copy gets it on update.
+- [ ] **The Submissions view fills in as copies update.** An entry's
+      credit is matched by `received_from_url`, which only entries logged
+      from the inbox after 1.4.0 carry; older ones match by the typed name
+      against `keeper_name`, and Miyel's own 18 Submission entries mostly
+      carry no name at all (they predate the inbox filling it in). June's
+      and Peyton's copies publish no `keeper_name` and no credit until they
+      press Update.
+- [ ] **The person's page — next.** A face or a name in the feed, or a
+      row in the book: overlap, where you agree and disagree hardest, what
+      they sent you and how you rated it, their hit rate with you. The
+      whole-journal compare, moved off `/compare` onto your copy, where it
+      can hold what their journal never could. Until then a face, a name
+      and a row open `/compare?with=`; once it exists `/compare` can go —
+      nobody has the URL, so no stub. What they sent you joins
+      `submissions` by `sender_url`; how you rated it joins your entries by
+      album key (the JS twin of the column is in useListeningBeacon).
 - [ ] **The printer on that page.** The shape of the agreement without the
       writing — you and June agree on 34 records; you disagree hardest on
       these three — naming both people. The notes stay on the journals and
@@ -613,7 +620,6 @@ already exists.
       and now points at this one, and the deploy button asks for the variable
       so a fork can set it at install.
 - [ ] **Listen numbering** — an album has many listens, numbered, computed from `album_key` and never chosen.
-- [ ] **The feed as a network** — see THE ADDRESS BOOK, THE FEED, AND WHERE COMPARE LIVES above. `/feed.xml` publishes; the address book now says whose to read.
 - [ ] **Relationship field removal** — every value has dissolved into something else. Legacy data stays; the picker goes.
 
 **SCALING — BLOCKER. The archive loads every record on every page view**
@@ -1399,6 +1405,39 @@ current.
 ---
 
 ## Complete
+
+**2026-09-13 — the feed, branch `feed`, version 1.4.0 (a migration and a
+floor: the middle number)**
+
+- [x] **The desk has two floors.** Floor one is the crown and the desk;
+      floor two is the feed, in a scroller of its own, the two-floor shape
+      the beacon and the card already have (`hn-floor` in HomeNav), so the
+      pane measures deep and the down caret draws itself. Signed out the
+      pitch is one floor as before.
+- [x] **The feed** (`components/main_components/Feed.js`, `.fd-` in
+      nav.css). Reads `/api/people`, then every person's
+      `/api/public/entries` from the browser with an eight-second limit
+      each, rows landing as journals answer; nothing stored. Entry-shaped
+      rows: cover, album, artist · year, their stars, a small face and
+      name (opening `/compare?with=` until the person's page exists), how
+      long ago; the cover and the title open their entry in a new window.
+      Two views by a word: Submissions (default) and Recent (forty at
+      most). Empty lines: nobody in the book yet, with a link; nothing
+      you sent has come back yet; nobody has logged anything yet.
+- [x] **Compare on a row you also have:** a panel under the row — You 4 ·
+      June 3.5 · 0.5 apart — and the two horizons as bars, yours in ink,
+      theirs faint, with a line pointing at both entries for the notes.
+      Verified against this journal filed as `127.0.0.1:3000` for a minute
+      (39 rows, every one with Compare) and removed after.
+- [x] **The credit travels.** Migration 008 adds `received_from_url` to
+      entries and drafts; the inbox's Start a listen carries
+      `sender_url` into it, the session and the draft keep it, the entry
+      and draft writers store it (host only, `tidyJournal`), and the entry
+      editor leaves it alone. `pull_public_entries` publishes
+      `received_from` and `received_from_url` on Submission entries only —
+      DECISIONS' "public credit is the default", built; the entry's own
+      read still strips the chain. The Submissions view matches by address,
+      then by the typed name against `keeper_name`.
 
 **2026-09-12 — the address book, branch `address-book`, merged to main the
 same day as 1.3.0 (a table, a route, a door: the middle number), pushed,

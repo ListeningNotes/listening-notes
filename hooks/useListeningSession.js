@@ -50,6 +50,9 @@ export function useListeningSession({ step }) {
   // in, which is what it was for: DECISIONS calls them corrections, the kind
   // you make a week later on remembering who gave you the record.
   const [receivedFrom, setReceivedFrom]   = useState('');
+  // Where the sender's journal is, when the listen came out of the inbox —
+  // the credit the public feed carries (migrations/008_received_from_url.sql).
+  const [receivedFromUrl, setReceivedFromUrl] = useState('');
   const [receivedDate, setReceivedDate]   = useState('');
 
   // What gets written
@@ -113,6 +116,7 @@ export function useListeningSession({ step }) {
     step, saved, hasWriting,
     values: {
       albumInput, artistName, year, albumArt, genre, entryType, receivedFrom, receivedDate,
+      receivedFromUrl,
       collectionIdRef, brief, tracks, overallNotes, trackNotes, trackRatings, trackFavorites,
       rating, Masterpiece, Favorite, Formative, elapsed,
     },
@@ -171,14 +175,14 @@ export function useListeningSession({ step }) {
 
     if (!record?.album) {
       setAlbumInput(''); setArtistName(''); setYear(''); setAlbumArt('');
-      setGenre(''); setEntryType(''); setReceivedFrom(''); setReceivedDate('');
+      setGenre(''); setEntryType(''); setReceivedFrom(''); setReceivedDate(''); setReceivedFromUrl('');
       return 0;
     }
 
     const {
       album, artist = '', year: yr = '', artUrl = '', collectionId = null,
       genre: gen = '', entryType: et = '', receivedFrom: from = '',
-      receivedDate: date = '', draft: savedDraft = null,
+      receivedDate: date = '', receivedFromUrl: fromUrl = '', draft: savedDraft = null,
     } = record;
 
     collectionIdRef.current = collectionId || savedDraft?.collection_id || '';
@@ -189,6 +193,7 @@ export function useListeningSession({ step }) {
     setGenre(gen || savedDraft?.genre || '');
     setEntryType(et || savedDraft?.entry_type || '');
     setReceivedFrom(from || savedDraft?.received_from || '');
+    setReceivedFromUrl(fromUrl || savedDraft?.received_from_url || '');
     setReceivedDate(date || (savedDraft?.received_date ? String(savedDraft.received_date).slice(0, 10) : ''));
 
     let rows = [];
@@ -387,6 +392,7 @@ export function useListeningSession({ step }) {
           // them through blankToNull, so an ordinary listen writes null here.
           received_from: receivedFrom,
           received_date: receivedDate,
+          received_from_url: receivedFromUrl,
         }),
       });
       const data = await res.json();
@@ -413,6 +419,7 @@ export function useListeningSession({ step }) {
     entryType, setEntryType,
     receivedFrom, setReceivedFrom,
     receivedDate, setReceivedDate,
+    receivedFromUrl, setReceivedFromUrl,
     // Writing
     overallNotes, setOverallNotes,
     rating, setRating,
