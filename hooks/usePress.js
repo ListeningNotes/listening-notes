@@ -63,9 +63,31 @@ export function usePress({ plate, shown, ground, isDark, link, fonts }) {
   const timer = useRef(null);
   const canSend = useSyncExternalStore(never, probeCanShare, onServer);
 
+  // The clipboard, two ways: the modern one, which iOS gives only to pages
+  // on https, and the old one — select a hidden field and copy — which works
+  // on a dev copy over plain http too (Miyel's phone, 2026-09-13: "what does
+  // Link do? nothing"). Either way inside the tap that asked.
   const copyLink = useCallback(() => {
-    if (!link || typeof navigator === 'undefined' || !navigator.clipboard) return Promise.resolve(false);
-    return navigator.clipboard.writeText(link).then(() => true, () => false);
+    if (!link || typeof navigator === 'undefined') return Promise.resolve(false);
+    const oldWay = () => {
+      try {
+        const field = document.createElement('textarea');
+        field.value = link;
+        field.setAttribute('readonly', '');
+        field.style.cssText = 'position:fixed;top:0;left:0;opacity:0;pointer-events:none;font-size:16px';
+        document.body.appendChild(field);
+        field.focus();
+        field.select();
+        field.setSelectionRange(0, link.length);
+        const done = document.execCommand('copy');
+        field.remove();
+        return done;
+      } catch {
+        return false;
+      }
+    };
+    if (!navigator.clipboard) return Promise.resolve(oldWay());
+    return navigator.clipboard.writeText(link).then(() => true, () => oldWay());
   }, [link]);
   const say = useCallback((line, ms = COPIED_MS) => {
     setStatus(line);
@@ -117,7 +139,9 @@ export function usePress({ plate, shown, ground, isDark, link, fonts }) {
         });
         setPicture(url);
         await pasted;
-        say('Touch and hold the picture to add it to Photos. Tap it to come back.', 12000);
+        // Said for as long as the picture is up; dismissing it clears it.
+        clearTimeout(timer.current);
+        setStatus('Touch and hold the picture to add it to Photos.');
       } else {
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);

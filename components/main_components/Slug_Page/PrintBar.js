@@ -11,10 +11,25 @@
 // a phone — Save Image and Instagram are on it — and a download elsewhere.
 'use client';
 
-import { DownloadSimple, LinkSimple, X } from '@phosphor-icons/react';
+import { CaretLeft, DownloadSimple, LinkSimple, X } from '@phosphor-icons/react';
 import { FRAME_ORDER, FRAMES } from '../SharePrinter';
 
-export default function PrintBar({ grounds, ground, onGround, size, onSize, onSave, onCopy, onDone, status, link }) {
+export default function PrintBar({ grounds, ground, onGround, size, onSize, onSave, onCopy, onDone, status, link, final = false, onBack }) {
+  // The final picture is up: nothing to choose, only the way back. Holding
+  // the picture is what saves it, and the line under the bar says so.
+  if (final) {
+    return (
+      <div className="ln-print-bar" role="toolbar" aria-label="Your print">
+        <div className="ln-print-row">
+          <button type="button" className="ln-pin" onClick={onBack}>
+            <CaretLeft size={13} weight="bold" aria-hidden="true" />
+            <span>Back to the card</span>
+          </button>
+        </div>
+        <div className="ln-print-said" aria-live="polite">{status}</div>
+      </div>
+    );
+  }
   return (
     <div className="ln-print-bar" role="toolbar" aria-label="Printing">
       <div className="ln-print-grounds" role="tablist" aria-label="Ground">
@@ -49,7 +64,6 @@ export default function PrintBar({ grounds, ground, onGround, size, onSize, onSa
       </div>
 
       <div className="ln-print-row">
-        <span className="ln-editing-label">Printing</span>
         <button type="button" className="ln-pin ln-pin--on" onClick={onSave}>
           <DownloadSimple size={13} weight="bold" aria-hidden="true" />
           <span>Save</span>
@@ -57,7 +71,7 @@ export default function PrintBar({ grounds, ground, onGround, size, onSize, onSa
         {link && (
           <button type="button" className="ln-pin" onClick={onCopy} title={link}>
             <LinkSimple size={13} weight="bold" aria-hidden="true" />
-            <span>Link</span>
+            <span>Copy link</span>
           </button>
         )}
         <button type="button" className="ln-pin" onClick={onDone}>
