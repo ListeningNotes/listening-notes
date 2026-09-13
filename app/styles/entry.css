@@ -1090,12 +1090,18 @@
 .ln-print-symbol { display: inline-flex; line-height: 1; padding: 0 4px; }
 .ln-print-horizon { width: 100%; max-width: 340px; }
 .ln-print-bar {
-  position: fixed; left: 0; right: 0; bottom: 0; z-index: 140;
-  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  /* Above the sheet (200) and the nav (300): it is portalled onto the body
+     so it keeps the site's colours while the paper sets its own. */
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 400;
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
   padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
   background: var(--bg);
   border-top: 1px solid var(--border);
   color: var(--ink);
+}
+.ln-print-look {
+  font-family: var(--font-label); font-size: 9px; letter-spacing: 0.16em;
+  text-transform: uppercase; color: var(--ink-soft);
 }
 .ln-print-row { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 8px; }
 .ln-print-grounds { display: flex; align-items: center; gap: 10px; }

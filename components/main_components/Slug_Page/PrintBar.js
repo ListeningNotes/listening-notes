@@ -7,18 +7,25 @@
 // it in three rows: the ground under the card (three dots, also turned by a
 // sideways swipe on the screen); the paper's size, which the paper on screen
 // takes at once (Miyel, 2026-09-13: the other sizes have to be seen, not
-// only saved); and Save, the address, and Done. Save is the share sheet on
-// a phone — Save Image and Instagram are on it — and a download elsewhere.
+// only saved); and Save and Done. Save is the share sheet on a phone — Save
+// Image and Instagram are on it — and a download elsewhere; the entry's
+// address goes to the clipboard with it. (A Copy link button lived here for
+// an afternoon; the cover on the entry page already copies the address.)
 'use client';
 
-import { CaretLeft, DownloadSimple, LinkSimple, X } from '@phosphor-icons/react';
+import { createPortal } from 'react-dom';
+import { CaretLeft, DownloadSimple, X } from '@phosphor-icons/react';
 import { FRAME_ORDER, FRAMES } from '../SharePrinter';
 
-export default function PrintBar({ grounds, ground, onGround, size, onSize, onSave, onCopy, onDone, status, link, final = false, onBack }) {
+export default function PrintBar({ grounds, ground, onGround, size, onSize, onSave, onDone, status, final = false, onBack }) {
+  // Portalled onto the body: the paper sets its own colours on the box it
+  // sits in, and the bar is the page's, not the paper's — it keeps the
+  // site's theme whatever ground the card is on (Miyel, 2026-09-13).
+  if (typeof document === 'undefined') return null;
   // The final picture is up: nothing to choose, only the way back. Holding
   // the picture is what saves it, and the line under the bar says so.
   if (final) {
-    return (
+    return createPortal(
       <div className="ln-print-bar" role="toolbar" aria-label="Your print">
         <div className="ln-print-row">
           <button type="button" className="ln-pin" onClick={onBack}>
@@ -27,11 +34,14 @@ export default function PrintBar({ grounds, ground, onGround, size, onSize, onSa
           </button>
         </div>
         <div className="ln-print-said" aria-live="polite">{status}</div>
-      </div>
+      </div>,
+      document.body,
     );
   }
-  return (
+  const current = grounds.find(g => g.key === ground);
+  return createPortal(
     <div className="ln-print-bar" role="toolbar" aria-label="Printing">
+      <div className="ln-print-look">{current?.label}</div>
       <div className="ln-print-grounds" role="tablist" aria-label="Ground">
         {grounds.map(g => (
           <button
@@ -68,12 +78,6 @@ export default function PrintBar({ grounds, ground, onGround, size, onSize, onSa
           <DownloadSimple size={13} weight="bold" aria-hidden="true" />
           <span>Save</span>
         </button>
-        {link && (
-          <button type="button" className="ln-pin" onClick={onCopy} title={link}>
-            <LinkSimple size={13} weight="bold" aria-hidden="true" />
-            <span>Copy link</span>
-          </button>
-        )}
         <button type="button" className="ln-pin" onClick={onDone}>
           <X size={13} weight="bold" aria-hidden="true" />
           <span>Done</span>
@@ -81,6 +85,7 @@ export default function PrintBar({ grounds, ground, onGround, size, onSize, onSa
       </div>
 
       <div className="ln-print-said" aria-live="polite">{status}</div>
-    </div>
+    </div>,
+    document.body,
   );
 }
