@@ -94,11 +94,13 @@ export const PAPER = { day: '#eef0ec', night: '#0e0e0e' };
 // still composites it — so bringing them back is adding rows here and teaching
 // the four DOM ones to draw themselves onto a canvas. Nothing else changes.
 //
-// Paper and Ink are not backdrops at all: they are the absence of one, the
-// page's own colour, and what the card looks like on the site.
+// Day and Night are not backdrops at all: they are the absence of one, the
+// page's two colours, and what the thing looks like on the site in each.
+// They were Paper and Ink until 2026-09-12; Miyel renamed them for what
+// they are, and the file name carries the new word.
 export const VARIANTS = [
-  { key: 'paper', label: 'Paper', Background: null, dark: false },
-  { key: 'ink',   label: 'Ink',   Background: null, dark: true  },
+  { key: 'day',   label: 'Day',   Background: null, dark: false },
+  { key: 'night', label: 'Night', Background: null, dark: true  },
 ];
 
 // ── Canvas tools, for plates to draw with ──────────────────────────────────

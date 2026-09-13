@@ -96,7 +96,7 @@ const STICKER_FOOT = 0.24;
 
 // ── Ink ────────────────────────────────────────────────────────────────────
 // base.css, stated rather than read: a print is the same colour wherever it
-// is made. Paper is the light theme's ink over a light wash, Ink the dark's.
+// is made. Day is the light theme's ink over a light wash, Night the dark's.
 const INKS = {
   day: {
     ink: '#1a1a1a', soft: '#6b6b6b', faint: '#a8a8a8', warm: '#efebe2',

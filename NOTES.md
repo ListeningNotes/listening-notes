@@ -1477,8 +1477,9 @@ unmerged: Miyel reviews on the dev server**
       the horizon as bars with a heart over a favourite (the posted date was
       there and came off, and the keeper's name grew to 13 units — Miyel's
       calls). The
-      ground is the cover blurred across the paper under a light wash (Paper)
-      or a dark one (Ink). Labels are soft
+      ground is the cover blurred across the paper under a light wash (Day)
+      or a dark one (Night; they were Paper and Ink until Miyel renamed them
+      the same day). Labels are soft
       rather than faint and the bars ink rather than accent, because both
       sank into a photograph. Opened out beside the cover on link-preview
       paper. Toggles: Keeper, Stars, Chips, Horizon.
@@ -1515,7 +1516,7 @@ unmerged: Miyel reviews on the dev server**
 - [x] **`/printer?entry=slug` prints for the keeper, server-checked.**
       Visitors, a missing record and the card's door still get the sentence.
       The layer page forwards the query. Decoded at 1×, 0.5× and 0.3× on
-      Paper and Ink at 9:16, 4:5 and 1:1: 24 of 24; 1.91:1 reads at 1× only,
+      Day and Night (then Paper and Ink) at 9:16, 4:5 and 1:1: 24 of 24; 1.91:1 reads at 1× only,
       by design. Apple's art sends CORS headers, so the cover does not taint
       the print (the "cannot be read in a browser" note in cover_code.js is
       about sharp, not canvas).
