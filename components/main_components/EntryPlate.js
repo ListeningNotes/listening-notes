@@ -12,10 +12,11 @@
 //
 // ── What a print carries ──────────────────────────────────────────────────
 //
+//   the mark, centred at the head, as it is on every page of the site.
 //   the cover, large — it is what stops a scroll, so it is the subject.
 //   whose journal, small, in the label face. the album. the artist and year.
-//   the stars. the marks. and a foot: the mark on the left, the code on the
-//   right, small, near it.
+//   the stars. the marks. the horizon — the track ratings as bars, the shape
+//   of the listen. and the code, small, in the foot's right corner.
 //
 // The notes never travel. A card that says everything is a post, and a post
 // is terminal; this one is deliberately insufficient so the code has a reason
@@ -33,10 +34,12 @@
 // it into a texture. And it stays dark on light whatever the look: a camera
 // looks for dark on light, so on a night print the code brings its own stock.
 //
-// ── Everything hangs off the cover's edges ────────────────────────────────
+// ── Everything hangs off the cover's edges, except the mark ───────────────
 // The cover sets the column; the writing is ranged left to its left edge and
-// the foot runs edge to edge. A centred title under a square reads as a
-// poster; ranged to the sleeve it reads as the back of one.
+// the code sits in the right corner of the foot. A centred title under a
+// square reads as a poster; ranged to the sleeve it reads as the back of one.
+// The mark is the one centred thing, because it is centred on every page of
+// the site and a print is one more page (Miyel, 2026-09-12).
 //
 // ── Units ─────────────────────────────────────────────────────────────────
 // Every measurement is in units of a 340-wide column — the card's own column,
@@ -51,7 +54,7 @@ import { useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import QRCode from 'qrcode';
 import SharePrinter, { loadMark, loadPicture, MARK_ASPECT, drawTracked, drawPath, ellipsize, wrapLines, roundRect } from './SharePrinter';
-import { parseRating } from '../../library/entry_formatter';
+import { parseRating, parseHorizon, entryTracks } from '../../library/entry_formatter';
 import { CODE_QUIET } from '../../library/code_shape';
 
 // ── Measurements, in column units ─────────────────────────────────────────
@@ -61,14 +64,15 @@ const TITLE = 26, TITLE_LEAD = 26 * 1.08;
 const LINE = 13, LINE_LEAD = 13 * 1.5;
 const STAR = 17, STAR_GAP = 5;
 const PILL = 8, PILL_H = 20, PILL_PAD = 9, PILL_GAP = 6;
-const MARK_H = 16;
+const HORIZON_H = 34, HORIZON_GAP = 2, HEART = 7;
+const MARK_H = 22;   // the nav's 28 on a 390 phone, in column units
 const CODE = 64;
 // …but never less than this much of the paper's shorter side, quiet zone
 // included: 200 of a 1080 Story, which is where a phone camera still reads it.
 const CODE_FLOOR = 0.185;
 const COVER_RADIUS = 6;
 const COLUMN_GAP = 28;   // opened out: between the cover and the writing
-const GAP = { keeper: 24, title: 7, line: 6, stars: 18, pills: 14, foot: 28 };
+const GAP = { mark: 26, keeper: 24, title: 7, line: 6, stars: 18, pills: 14, horizon: 20, foot: 28 };
 
 // How much of the paper the print is allowed, and the height it must fit in.
 // Narrower over a backdrop, for the reason IdentityCardPlate gives: the scrim
@@ -98,6 +102,10 @@ const INKS = {
 const CODE_INK = '#191917';
 const CODE_STOCK = '#f5f4ef';
 const GOLD = '#E8B84B';
+const ACCENT = '#b5b2ab';   // --accent: the horizon's bars, on both themes
+const FAV = '#f0484f';      // --fav: the heart over a favourite track
+// A heart in a 24-box, for the favourites.
+const HEART_PATH = 'M12 21s-8-5.3-8-11a4.5 4.5 0 0 1 8-2.8A4.5 4.5 0 0 1 20 10c0 5.7-8 11-8 11z';
 // The same three marks, in the same colours, as the entry's link preview.
 const MARKS = { masterpiece: ['Masterpiece', '#4a9bf0'], favorite: ['Favorite', '#f0484f'], formative: ['Formative', '#3fa96b'] };
 // A star as a shape, in a 24-box. Neither typeface carries one.
@@ -160,12 +168,24 @@ export function entryPlate({ entry, keeper, address }) {
   const line = [entry?.artist, entry?.year].filter(Boolean).join('  ·  ');
   const code = address ? buildCode(address) : null;
 
+  // The horizon: the track ratings as bars, read from the column the session
+  // derives — or from the tracks themselves, for a record that has ratings
+  // and no column.
+  const tracks = entryTracks(entry || {});
+  let bars = parseHorizon(entry?.horizon);
+  if (!bars.length && tracks.some(t => t.stars > 0)) {
+    bars = tracks.map(t => Math.max(0, Math.min(1, (Number(t.stars) || 0) / 5)));
+  }
+  const favs = tracks.map(t => !!t.favorite);
+  const anyFav = bars.length > 0 && favs.some(Boolean);
+
   // What the printer offers to leave off. The cover, the album, the artist
   // and the foot are not switches: they are the card.
   const toggles = [];
   if (keeper) toggles.push({ key: 'keeper', label: 'Keeper', on: true });
   if (stars > 0) toggles.push({ key: 'stars', label: 'Stars', on: true });
   if (marks.length || listen) toggles.push({ key: 'marks', label: 'Marks', on: true });
+  if (bars.length) toggles.push({ key: 'horizon', label: 'Horizon', on: true });
 
   return {
     title: 'The record',
@@ -211,9 +231,24 @@ export function entryPlate({ entry, keeper, address }) {
         const rows = [];
         const showKeeper = Boolean(keeper) && on('keeper');
 
-        // the cover, at the head of the column. Opened out it is beside the
-        // column and not in this stack at all.
-        if (!spread) rows.push({ gap: 0, h: colW, draw: (c, x, y, w) => drawCover(c, x, y, w, unit) });
+        // the mark, centred, at the head
+        if (art?.mark) {
+          rows.push({
+            gap: 0,
+            h: px(MARK_H),
+            draw(c, x, y, w) {
+              const mh = px(MARK_H);
+              const mw = mh * MARK_ASPECT;
+              c.drawImage(art.mark, x + (w - mw) / 2, y, mw, mh);
+            },
+          });
+        }
+
+        // the cover, under it. Opened out it is beside the column and not in
+        // this stack at all.
+        if (!spread) {
+          rows.push({ gap: art?.mark ? px(GAP.mark) : 0, h: colW, draw: (c, x, y, w) => drawCover(c, x, y, w, unit) });
+        }
 
         // whose journal
         if (showKeeper) {
@@ -264,9 +299,14 @@ export function entryPlate({ entry, keeper, address }) {
           rows.push({ gap: px(GAP.pills), h: px(PILL_H), draw: (c, x, y, w) => drawPills(c, x, y, w, pills, unit) });
         }
 
-        // the foot: the mark, and the code near it
-        const footH = Math.max(codeBox, px(MARK_H));
-        rows.push({ gap: px(GAP.foot), h: footH, draw: (c, x, y, w) => drawFoot(c, x, y, w, footH, codeBox, unit) });
+        // the horizon, with headroom for the hearts when there are any
+        if (bars.length && on('horizon')) {
+          const head = anyFav ? px(HEART + 4) : 0;
+          rows.push({ gap: px(GAP.horizon), h: head + px(HORIZON_H), draw: (c, x, y, w) => drawHorizon(c, x, y + head, w, unit) });
+        }
+
+        // the foot: the code, in the right corner
+        if (code) rows.push({ gap: px(GAP.foot), h: codeBox, draw: (c, x, y, w) => drawFoot(c, x, y, w, codeBox, unit) });
 
         const stack = rows.reduce((sum, row) => sum + row.gap + row.h, 0);
         return { rows, stack, h: spread ? Math.max(stack, colW) : stack, colW };
@@ -355,18 +395,44 @@ export function entryPlate({ entry, keeper, address }) {
         }
       }
 
-      // ── the foot ─────────────────────────────────────────────────────────
-      // The mark at the left edge, the code at the right, both centred on the
-      // row. On a night print the code sits on its own light stock, exactly
-      // its box and no more; on a day print the paper is the stock.
-      function drawFoot(c, x, y, w, h, codeBox, unit) {
-        if (art?.mark) {
-          const mh = MARK_H * unit;
-          c.drawImage(art.mark, x, y + (h - mh) / 2, mh * MARK_ASPECT, mh);
+      // ── the horizon ──────────────────────────────────────────────────────
+      // The entry page's bars: one per track, height by rating, in the
+      // accent, a heart over a favourite. No titles — on a print the shape is
+      // the point, and a diagonal of track names would be a second print.
+      function drawHorizon(c, x, y, w, unit) {
+        const n = bars.length;
+        const gap = HORIZON_GAP * unit;
+        const bw = Math.max(1, (w - gap * (n - 1)) / n);
+        const h = HORIZON_H * unit;
+        const r = Math.min(2 * unit, bw / 2);
+        for (let i = 0; i < n; i++) {
+          const bh = Math.max(2 * unit, bars[i] * h);
+          const x0 = x + i * (bw + gap), x1 = x0 + bw;
+          const y0 = y + h - bh, y1 = y + h;
+          c.fillStyle = ACCENT;
+          c.beginPath();
+          c.moveTo(x0, y1);
+          c.lineTo(x0, y0 + r);
+          c.arcTo(x0, y0, x0 + r, y0, r);
+          c.lineTo(x1 - r, y0);
+          c.arcTo(x1, y0, x1, y0 + r, r);
+          c.lineTo(x1, y1);
+          c.closePath();
+          c.fill();
+          if (favs[i]) {
+            const hs = HEART * unit;
+            drawPath(c, HEART_PATH, x0 + (bw - hs) / 2, y0 - hs - 2 * unit, hs, 24, FAV);
+          }
         }
-        if (!code) return;
+      }
+
+      // ── the foot ─────────────────────────────────────────────────────────
+      // The code in the right corner. On a night print it sits on its own
+      // light stock, exactly its box and no more; on a day print the paper
+      // is the stock.
+      function drawFoot(c, x, y, w, codeBox, unit) {
         const cx = x + w - codeBox;
-        const cy = y + (h - codeBox) / 2;
+        const cy = y;
         if (isDark) {
           c.fillStyle = CODE_STOCK;
           roundRect(c, cx, cy, codeBox, codeBox, 4 * unit);
