@@ -21,6 +21,11 @@
 // the whole-journal compare with their address in hand, which is the larger
 // half of what the page will be; the arrow beside it opens their journal, in
 // the browser, where reading somebody happens.
+//
+// A row is a face and a name, and never the address: no address is printed
+// on any page of this site (DECISIONS, The network) — the code and the link
+// carry it. A journal that did not answer when it was filed has no name yet,
+// so the row says so and asks again each time the book opens.
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
@@ -51,7 +56,23 @@ export default function AddressBook({ layered = false }) {
 
   useEffect(() => {
     if (!authed) return;
-    fetch('/api/people').then(r => r.json()).then(d => { setPeople(d.people || []); setLoading(false); }).catch(() => setLoading(false));
+    fetch('/api/people').then(r => r.json()).then(d => {
+      const had = d.people || [];
+      setPeople(had);
+      setLoading(false);
+      // Anyone filed without a name is asked for it again now — the same
+      // write as adding them, which is not an error the second time and
+      // keeps the name if one comes back.
+      for (const p of had.filter(p => !p.name)) {
+        fetch('/api/people', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ address: p.address }),
+        }).then(r => r.ok ? r.json() : null).then(a => {
+          if (a?.person?.name) setPeople(prev => inOrder(prev.map(q => q.id === a.person.id ? a.person : q)));
+        }).catch(() => {});
+      }
+    }).catch(() => setLoading(false));
   }, [authed]);
 
   // Files an address, however it arrived — a paste, a scanned code, an
@@ -73,7 +94,7 @@ export default function AddressBook({ layered = false }) {
       if (!r.ok) { setSaid(d.error || 'That could not be added.'); return; }
       setPeople(prev => inOrder([...prev.filter(p => p.id !== d.person.id), d.person]));
       setTyped('');
-      setSaid(d.reached ? '' : `Added. ${address} isn't answering just now, so there's no name yet.`);
+      setSaid(d.reached ? '' : "Added, but that journal isn't answering just now, so there's no name yet.");
     } catch {
       setSaid('That could not be added.');
     } finally {
@@ -150,8 +171,9 @@ export default function AddressBook({ layered = false }) {
                         />
                       </span>
                       <span className="bk-who">
-                        <span className="bk-name">{p.name || p.address}</span>
-                        {p.name && <span className="bk-address">{p.address}</span>}
+                        {p.name
+                          ? <span className="bk-name">{p.name}</span>
+                          : <span className="bk-name bk-name--none">Not answering yet</span>}
                       </span>
                     </Link>
                     <a href={journalUrl(p.address)} target="_blank" rel="noopener noreferrer" className="own-link bk-visit" title="Open their journal">

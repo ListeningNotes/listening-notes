@@ -43,6 +43,22 @@ function toOrigin(input) {
 
 const num = v => (v === null || v === undefined || v === '' ? null : Number(v));
 
+// The name the keeper's own address book has for a journal, for a feed that
+// does not say whose it is — a copy from before the feed carried a name.
+// Owner-only, so a visitor reading this page simply gets nothing back and
+// the host stands in.
+async function nameInBook(origin) {
+  try {
+    const host = origin.replace(/^https?:\/\//, '').toLowerCase();
+    const r = await fetch('/api/people');
+    if (!r.ok) return '';
+    const { people } = await r.json();
+    return String(people?.find(p => p.address === host)?.name || '').trim();
+  } catch {
+    return '';
+  }
+}
+
 // The address this page arrived with, if any: ?with=<address>, put there by
 // a row in the keeper's own address book (app/dashboard/people/page.js) —
 // this is where a row opens until the page about a person exists, which is
@@ -66,6 +82,10 @@ export default function ComparePage() {
   const [mine, setMine] = useState([]);
   const [theirs, setTheirs] = useState([]);
   const [origin, setOrigin] = useState('');
+  // What to call them. The feed says whose it is (keeper_name, since
+  // 2026-09-12); an older copy's does not, and then the only thing known
+  // is the host — printed as a last resort, never by choice.
+  const [theirName, setTheirName] = useState('');
 
   // `said` is the address to compare with. Always passed, so this never
   // closes over the field and the landing effect below can depend on it.
@@ -89,6 +109,7 @@ export default function ComparePage() {
       setMine(a.entries || []);
       setTheirs(b.entries || []);
       setOrigin(target);
+      setTheirName(String(b.keeper_name || '').trim() || await nameInBook(target));
       setState('done');
     } catch (e) {
       setState('error');
@@ -131,16 +152,17 @@ export default function ComparePage() {
     }
     differed.sort((x, y) => y.gap - x.gap);
 
+    // No "only you have heard these": that list is this journal again,
+    // scrolled, and the page is about the other one (2026-09-12).
     return {
       agreed,
       differed,
       unrated,
       onlyTheirs: theirs.filter(e => !mineByKey.has(e.album_key)),
-      onlyMine: mine.filter(e => !theirsByKey.has(e.album_key)),
     };
   }, [state, mine, theirs]);
 
-  const host = origin.replace(/^https?:\/\//, '');
+  const them = theirName || origin.replace(/^https?:\/\//, '');
 
   return (
     <div style={{ background: 'var(--bg)', minHeight: '100vh', color: 'var(--ink)', fontFamily: fonts.sans }}>
@@ -158,6 +180,10 @@ export default function ComparePage() {
             Put another listening journal beside this one and see where you met.
           </p>
 
+          {/* Arrived knowing whom — from the address book — the page has
+              nothing to ask, and the field would be the one place on it
+              printing an address. The count line says who it is. */}
+          {!arrivedWith && (
           <div className="cmp-form">
             <input
               className="cmp-input"
@@ -173,6 +199,10 @@ export default function ComparePage() {
               {state === 'loading' ? 'Reading…' : 'Compare'}
             </button>
           </div>
+          )}
+          {arrivedWith && state === 'loading' && (
+            <p className="cmp-label">Reading…</p>
+          )}
 
           {state === 'error' && (
             <p style={{ color: 'var(--fav)', fontSize: 13, marginTop: 14, maxWidth: 420, marginInline: 'auto' }}>{error}</p>
@@ -180,7 +210,7 @@ export default function ComparePage() {
 
           {state === 'done' && buckets && (
             <p className="cmp-label" style={{ marginTop: 18 }}>
-              {mine.length} here · {theirs.length} at {host} ·{' '}
+              {mine.length} here · {theirs.length} with {them} ·{' '}
               {buckets.agreed.length + buckets.differed.length + buckets.unrated.length} in common
             </p>
           )}
@@ -193,34 +223,28 @@ export default function ComparePage() {
               note="sorted by how far apart"
               rows={buckets.differed}
               empty="Nothing you both heard was rated more than half a star apart."
-              render={p => <Pair p={p} host={host} origin={origin} />}
+              render={p => <Pair p={p} />}
             />
             <Group
               title="Where you agreed"
               rows={buckets.agreed}
               empty="No overlap with matching ratings yet."
-              render={p => <Pair p={p} host={host} origin={origin} />}
+              render={p => <Pair p={p} />}
             />
             {buckets.unrated.length > 0 && (
               <Group
                 title="You both heard it"
                 note="one of you hasn't rated it"
                 rows={buckets.unrated}
-                render={p => <Pair p={p} host={host} origin={origin} />}
+                render={p => <Pair p={p} />}
               />
             )}
             <Group
-              title={`Only ${host} has heard these`}
+              title={`Only ${them} has heard these`}
               note="the interesting column"
               rows={buckets.onlyTheirs}
               empty="You've heard everything they have."
               render={e => <Solo e={e} href={`${origin}/entries/${e.slug}`} external />}
-            />
-            <Group
-              title="Only you have heard these"
-              rows={buckets.onlyMine}
-              empty="They've heard everything you have."
-              render={e => <Solo e={e} href={`/entries/${e.slug}`} />}
             />
           </>
         )}
@@ -250,7 +274,7 @@ function Group({ title, note, rows, empty, render }) {
 }
 
 // A record you both logged, with the two verdicts side by side.
-function Pair({ p, host, origin }) {
+function Pair({ p }) {
   const { mine, theirs, gap } = p;
   return (
     <a className="cmp-row" href={`/entries/${mine.slug}`}>
