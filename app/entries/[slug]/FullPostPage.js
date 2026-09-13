@@ -55,8 +55,9 @@ import { useEntryEditor } from '../../../hooks/useEntryEditor';
 // numbers (EntryPlate.js), through hooks/usePress.js. Choices are kept for
 // the session, per browser.
 const PRINT_STORE = 'ln-printing';
+// Reflect is Miyel's word for the cover blurred behind the card.
 const GROUNDS = [
-  { key: 'record', label: 'The record' },
+  { key: 'record', label: 'Reflect' },
   { key: 'day', label: 'Day' },
   { key: 'night', label: 'Night' },
 ];
@@ -870,10 +871,8 @@ export default function FullPostPage({ entry, references = [], authed = false, l
             size={size}
             onSize={key => setPrintChoices(c => ({ ...c, size: key }))}
             onSave={() => press.save(size)}
-            onCopy={press.copy}
             onDone={finishPrinting}
             status={press.status || (learned || press.picture ? '' : PRINT_HINT)}
-            link={entryUrl}
             final={Boolean(press.picture)}
             onBack={press.dismissPicture}
           />

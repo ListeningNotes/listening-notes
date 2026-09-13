@@ -87,7 +87,7 @@ const ART_RADIUS = 16;
 // 380 and the held copy's page 92 on a phone, about a fifth of the width.
 // A print is a statement page too (Miyel, 2026-09-12); the nav's 28 read
 // as a colophon.
-const MARK_H = 46;                     // ≈ 80 wide on the 340 column
+const MARK_H = 44;                     // .ln-print-mark on screen
 const KEEPER = 13;                     // the label face, under the mark — half again the site's line, on Miyel's call
 const TITLE = 26, TITLE_LEAD = 26 * 1.22;
 const ARTIST = 11;                     // mono caps, as .ln-screen-one-artist
@@ -99,7 +99,10 @@ const CHIP = 13, CHIP_PAD_X = 10, CHIP_PAD_Y = 4, CHIP_GAP = 8, CHIP_RADIUS = 5;
 // The marks as symbols instead of chips — the feed's own three, much larger
 // than a chip, so a print can carry the marks as pictures (Miyel's ask).
 const SYMBOL = 34, SYMBOL_GAP = 18;
-const HORIZON_H = 52, HORIZON_GAP = 3, HEART = 7;
+// HorizonChart's own: 52 tall over 13 of headroom, a gap by track count,
+// a heart of 10 sitting 4 above its bar, corners of 3.
+const HORIZON_H = 52, HORIZON_HEAD = 13, HEART = 10, HEART_LIFT = 4, BAR_RADIUS = 3;
+const horizonGap = n => (n > 24 ? 2 : n > 14 ? 3 : 4);
 const COLUMN_GAP = 28;                 // opened out: between the cover and the stack
 // The screen's gap is 16 between everything; the artist line pulls up by 8.
 // The screen's card has one gap between everything.
@@ -209,7 +212,6 @@ export function entryPlate({ entry, keeper }) {
     bars = tracks.map(t => Math.max(0, Math.min(1, (Number(t.stars) || 0) / 5)));
   }
   const favs = tracks.map(t => !!t.favorite);
-  const anyFav = bars.length > 0 && favs.some(Boolean);
 
   // What the printer offers to leave off. The cover, the album and the
   // artist are not switches: they are the card.
@@ -301,15 +303,16 @@ export function entryPlate({ entry, keeper }) {
 
         // whose journal, under it
         if (keeper && (showKeeper || preview)) {
+          // .ln-print-keeper: the line plus 4 of padding above and below
           rows.push({
             key: 'keeper', ghost: !showKeeper,
             gap: art?.mark ? px(GAP.keeper) : 0,
-            h: px(KEEPER) * 1.4,
+            h: px(KEEPER) * 1.4 + px(8),
             draw(c, x, y, w) {
               c.textBaseline = 'top';
               c.font = `400 ${px(KEEPER)}px ${mono}`;
               c.fillStyle = ink.soft;   // the post's faint sinks into a photograph
-              drawTracked(c, keeper.toUpperCase(), x + w / 2, y, px(KEEPER) * 0.14, 'center');
+              drawTracked(c, keeper.toUpperCase(), x + w / 2, y + px(4), px(KEEPER) * 0.14, 'center');
             },
           });
         }
@@ -377,9 +380,9 @@ export function entryPlate({ entry, keeper }) {
         }
 
 
-        // the horizon, with headroom for the hearts when there are any
+        // the horizon, with HorizonChart's headroom for the hearts
         if (bars.length && (on('horizon') || preview)) {
-          const head = anyFav ? px(HEART + 4) : 0;
+          const head = px(HORIZON_HEAD);
           rows.push({ key: 'horizon', ghost: !on('horizon'), gap: px(GAP.horizon), h: head + px(HORIZON_H), draw: (c, x, y, w) => drawHorizon(c, x, y + head, w, unit) });
         }
 
@@ -549,12 +552,12 @@ export function entryPlate({ entry, keeper }) {
       // a second print.
       function drawHorizon(c, x, y, w, unit) {
         const n = bars.length;
-        const gap = HORIZON_GAP * unit;
+        const gap = horizonGap(n) * unit;
         const bw = Math.max(1, (w - gap * (n - 1)) / n);
         const h = HORIZON_H * unit;
-        const r = Math.min(2 * unit, bw / 2);
+        const r = Math.min(BAR_RADIUS * unit, bw / 2);
         for (let i = 0; i < n; i++) {
-          const bh = Math.max(2 * unit, bars[i] * h);
+          const bh = Math.max(0.03 * h, bars[i] * h);
           const x0 = x + i * (bw + gap), x1 = x0 + bw;
           const y0 = y + h - bh, y1 = y + h;
           c.fillStyle = ink.bar;
@@ -569,7 +572,7 @@ export function entryPlate({ entry, keeper }) {
           c.fill();
           if (favs[i]) {
             const hs = HEART * unit;
-            drawPath(c, HEART_PATH, x0 + (bw - hs) / 2, y0 - hs - 2 * unit, hs, 24, FAV);
+            drawPath(c, HEART_PATH, x0 + (bw - hs) / 2, y0 - hs - HEART_LIFT * unit, hs, 24, FAV);
           }
         }
       }

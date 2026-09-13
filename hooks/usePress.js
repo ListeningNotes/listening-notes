@@ -159,12 +159,5 @@ export function usePress({ plate, shown, ground, isDark, link, fonts }) {
   }, [compose, fileName, copyLink, say, canSend]);
   const dismissPicture = useCallback(() => { setPicture(null); setStatus(''); }, []);
 
-  // The address alone, without a picture.
-  const copy = useCallback(async () => {
-    if (!link) return;
-    if (await copyLink()) say(COPIED);
-    else say(link, 6000);   // no clipboard here; showing it beats swallowing it
-  }, [link, copyLink, say]);
-
-  return { save, copy, status, canSend, picture, dismissPicture };
+  return { save, status, canSend, picture, dismissPicture };
 }

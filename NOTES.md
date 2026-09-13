@@ -1526,6 +1526,15 @@ the press on her phone: "the printer is the door into the app"**
       when the clipboard API is missing, as it is on http; and while the
       final picture is up the bar is only "Back to the card" with the
       hold-to-save line — nothing else can be changed from there.
+      Then: Copy link went (the cover on the entry page copies the address,
+      and Save copies it too); the plate's numbers were set to the screen's
+      so the saved picture is the preview (mark 44, HorizonChart's 52 over
+      13 of headroom, hearts of 10 lifted 4, bar corners 3, a gap by track
+      count, the keeper line's padding) — compared side by side; the bar is
+      PORTALLED onto the body at z 400 so it keeps the site's colours while
+      the paper sets its own (a night paper turned the buttons dark, which
+      Miyel called wrong), and it names the ground above the dots: Reflect
+      (her word for the cover blurred behind the card), Day, Night.
       The header (the nav row: mark and light switch) stands down while
       printing — `html[data-printing] .sitenav-row` — and the paper takes
       its room; the card carries its own mark (Miyel, same day).
