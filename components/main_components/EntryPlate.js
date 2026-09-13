@@ -584,12 +584,13 @@ export function entryPlate({ entry, keeper }) {
         }
       }
       if (spread) {
-        // The writing to the left, the cover to the right (Miyel, 2026-09-13).
-        const blockW = colW + COLUMN_GAP * U + artW;
+        // The cover to the left, the writing beside it (Miyel's call,
+        // 2026-09-13, after an hour the other way round).
+        const blockW = artW + COLUMN_GAP * U + colW;
         const originX = (frame.w - blockW) / 2;
         const originY = (frame.h - h) / 2;
-        lay(originX, originY + (h - stack) / 2);
-        drawCover(ctx, originX + colW + COLUMN_GAP * U, originY + (h - artW) / 2, artW, U);
+        drawCover(ctx, originX, originY + (h - artW) / 2, artW, U);
+        lay(originX + artW + COLUMN_GAP * U, originY + (h - stack) / 2);
       } else {
         lay((frame.w - colW) / 2, top + (areaH - h) / 2);
       }
