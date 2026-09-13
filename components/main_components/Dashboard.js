@@ -113,7 +113,10 @@ export default function Dashboard({ waiting }) {
           {update && (
             <>
               <span className="pt-colophon-dot" aria-hidden="true">·</span>
-              <a className="db-update" href={update.page} target="_blank" rel="noopener noreferrer">
+              {/* In ink, not faint: it is only ever here when it is true,
+                  and a line that appears once in a while can afford to be
+                  seen — the Inbox count's rule (Miyel, 2026-09-13). */}
+              <a className="db-update db-update--newer" href={update.page} target="_blank" rel="noopener noreferrer">
                 A newer version is available &#8599;
               </a>
             </>
