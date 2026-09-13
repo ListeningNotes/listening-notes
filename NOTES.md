@@ -207,12 +207,18 @@ cannot be tested end to end.
       dots…" on `junior-install` is the first draft of what shipped and can
       be dropped.
 - [ ] **The address book on a real phone, 2026-09-12.** Built in the
-      Claude browser. On the phone, on the live site: the sheet over the
-      desk; Scan a code opening the camera (getUserMedia wants https or
-      localhost, like the clipboard — not the network address); a card's
-      code and a cover's code both read down to a host; the Add press on
-      somebody else's card landing in the field; Add to address book on an
-      inbox row. June's copy, userone-silk.vercel.app, is the one to file.
+      Claude browser; the sheet, June's row and the compare were seen
+      signed in on the Mac. Still owed on the phone: Scan a code reading a
+      card's code and a cover's code down to a host; the Add press on
+      somebody else's card landing in the field; the sheet over the desk.
+      **The camera and the clipboard both want https**, so the phone over
+      `http://<the Mac's address>:3000` gets "needs a secure address" for
+      one and no Copied pill for the other. The way round, before the
+      branch ships: `npm run dev -- --experimental-https` (Next makes a
+      local certificate in `certificates/`, gitignored; `ln-dev-https` in
+      .claude/launch.json is the same), then open
+      `https://<the Mac's address>:3000` on the phone and go past Safari's
+      certificate warning once. Or test on the live site after the merge.
 - [ ] **Names to confirm, 2026-09-12** — autonomous session, rename freely:
       branch `address-book`; `library/people_actions.js` with `pull_people`,
       `save_person`, `remove_person` and `ask_journal_name`; `tidyJournal`

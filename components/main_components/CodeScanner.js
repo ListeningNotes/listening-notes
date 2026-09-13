@@ -53,8 +53,12 @@ export default function CodeScanner({ onRead, onClose }) {
     }
 
     async function open() {
+      // No camera API at all means the page is not on a secure address:
+      // a phone reaching the dev server by its network address over plain
+      // http. The live site is https; so is the dev server run with
+      // --experimental-https (NOTES, the real-phone item).
       if (!navigator.mediaDevices?.getUserMedia) {
-        setTrouble('The camera cannot be opened here. It needs a secure address.');
+        setTrouble('The camera only opens on a secure address (https). Over a plain http address it cannot — use the live site, or run the dev server over https.');
         return;
       }
       try {
