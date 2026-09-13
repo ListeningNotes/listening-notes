@@ -8,6 +8,8 @@
 // cumulative about a person lives here — how many records you both have,
 // where you agree hardest and disagree hardest, what they have sent you and
 // how you rated it, their hit rate with you — and it lives on your copy,
+// (What only they have heard was a list here too, and came off on Miyel's
+// call, 2026-09-13: their journal is a tap away and says it better.)
 // which is why it can hold what their journal never could: what they sent,
 // how it landed, how often they are right about you.
 //
@@ -39,7 +41,6 @@ const ALIKE = 0.5;
 const HIT = 4;
 const OFFSET_NEEDS = 3;
 const HARDEST = 3;
-const HEARD_MOST = 8;
 const EACH_MS = 8000;
 
 const num = v => (v === null || v === undefined || v === '' ? null : Number(v));
@@ -137,7 +138,6 @@ export default function PersonPage({ layered = false }) {
     const warmth = p => num(p.mine.rating_value) + num(p.theirs.rating_value);
     const agree = [...alike].sort((a, b) => a.gap - b.gap || warmth(b) - warmth(a)).slice(0, HARDEST);
     const disagree = rated.filter(p => p.gap > ALIKE).sort((a, b) => b.gap - a.gap).slice(0, HARDEST);
-    const onlyTheirs = [...theirLatest.values()].filter(t => !mineLatest.has(t.album_key)).slice(0, HEARD_MOST);
 
     const sends = sent.map(s => {
       const logged = mineLatest.get(albumKey(s.album, s.artist)) || null;
@@ -147,7 +147,7 @@ export default function PersonPage({ layered = false }) {
     const loggedCount = sends.filter(s => s.logged).length;
     const hits = sends.filter(s => s.hit).length;
 
-    return { pairs, rated, offset, alike, agree, disagree, onlyTheirs, sends, loggedCount, hits };
+    return { pairs, rated, offset, alike, agree, disagree, sends, loggedCount, hits };
   }, [mine, theirs, sent]);
 
   if (checking) return <div style={{ minHeight: '100vh', background: 'var(--bg)' }} />;
@@ -231,7 +231,7 @@ export default function PersonPage({ layered = false }) {
                   )}
                 </Section>
 
-                <Section title="What they sent you" rows={facts.sends} empty={`${name} hasn't sent you anything.`}>
+                <Section title={`What ${name} has sent you`} rows={facts.sends} empty={`${name} hasn't sent you anything yet.`}>
                   {s => (
                     <div key={s.id} className="pn-item">
                       {s.logged
@@ -253,20 +253,6 @@ export default function PersonPage({ layered = false }) {
                   )}
                 </Section>
 
-                <Section title={`Only ${name} has heard these`} note="the interesting column" rows={facts.onlyTheirs} empty={theirs?.entries?.length ? "You've heard everything they have." : 'Nothing there yet.'}>
-                  {e => (
-                    <div key={e.slug} className="pn-item">
-                      <a href={theirEntry(e)} target="_blank" rel="noopener noreferrer" className="pn-item-art">{e.album_art && <img src={e.album_art} alt="" loading="lazy" />}</a>
-                      <div className="pn-item-said">
-                        <a href={theirEntry(e)} target="_blank" rel="noopener noreferrer" className="pn-item-album">{e.album}</a>
-                        <div className="pn-item-artist">{e.artist}{e.year ? ` · ${e.year}` : ''}</div>
-                      </div>
-                      <div className="pn-item-tail">
-                        {num(e.rating_value) !== null && <StarRating rating={num(e.rating_value)} size={12} />}
-                      </div>
-                    </div>
-                  )}
-                </Section>
               </div>
             </div>
           </>
