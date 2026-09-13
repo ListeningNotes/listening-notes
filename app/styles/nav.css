@@ -896,6 +896,9 @@
   border-bottom: 1px solid var(--border); white-space: nowrap;
 }
 .db-update:hover { color: var(--ink); }
+/* The one that is only there when it is true: in ink, so it is noticed
+   without being looked for. */
+.db-update--newer { color: var(--ink); border-bottom-color: var(--ink-faint); }
 .db-door {
   flex: 1 1 0;
   min-width: 0;
