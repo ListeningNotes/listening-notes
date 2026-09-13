@@ -7,13 +7,14 @@
 // it in three rows: the ground under the card (three dots, also turned by a
 // sideways swipe on the screen); the paper's size, which the paper on screen
 // takes at once (Miyel, 2026-09-13: the other sizes have to be seen, not
-// only saved); and Send, Save, the address, and Done.
+// only saved); and Save, the address, and Done. Save is the share sheet on
+// a phone — Save Image and Instagram are on it — and a download elsewhere.
 'use client';
 
-import { DownloadSimple, LinkSimple, ShareNetwork, X } from '@phosphor-icons/react';
+import { DownloadSimple, LinkSimple, X } from '@phosphor-icons/react';
 import { FRAME_ORDER, FRAMES } from '../SharePrinter';
 
-export default function PrintBar({ grounds, ground, onGround, size, onSize, onSave, onSend, onCopy, onDone, canSend, status, link }) {
+export default function PrintBar({ grounds, ground, onGround, size, onSize, onSave, onCopy, onDone, status, link }) {
   return (
     <div className="ln-print-bar" role="toolbar" aria-label="Printing">
       <div className="ln-print-grounds" role="tablist" aria-label="Ground">
@@ -49,13 +50,7 @@ export default function PrintBar({ grounds, ground, onGround, size, onSize, onSa
 
       <div className="ln-print-row">
         <span className="ln-editing-label">Printing</span>
-        {canSend && (
-          <button type="button" className="ln-pin ln-pin--on" onClick={onSend}>
-            <ShareNetwork size={13} weight="bold" aria-hidden="true" />
-            <span>Send</span>
-          </button>
-        )}
-        <button type="button" className={'ln-pin' + (canSend ? '' : ' ln-pin--on')} onClick={onSave}>
+        <button type="button" className="ln-pin ln-pin--on" onClick={onSave}>
           <DownloadSimple size={13} weight="bold" aria-hidden="true" />
           <span>Save</span>
         </button>

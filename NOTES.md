@@ -1502,7 +1502,13 @@ the press on her phone: "the printer is the door into the app"**
       the print's artist line wraps to two lines like the screen; the wide
       paper keeps the cover LEFT (she preferred it, after an hour on the
       right), as large as the paper allows, the writing beside it, on
-      screen (grid, writing zoomed to 0.55) and in the plate.
+      screen (grid, writing zoomed to 0.55) and in the plate. Then, from
+      her first real export: the plate's hidden story margins (13% top and
+      bottom, 24% sticker room) came out; the print fits the paper's 7%
+      padding like the screen, with the screen's proportions (art 78% of
+      the card, gaps of 12, horizon 52) — recorded in DECISIONS. And Save
+      on a phone is the share sheet (`navigator.share` with the file —
+      Save Image is on it), a download elsewhere; the Send button went.
 - [x] **What went.** The press as a sheet: `SharePrinter.js` is now only the
       toolbox (FRAMES, PAPER, the canvas tools); its sheet, the ghosts on a
       canvas and the tap targets are in git before 2026-09-13 (the plate's
