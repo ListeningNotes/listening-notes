@@ -4,8 +4,24 @@
     {
       "name": "ln-dev",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev"],
+      "runtimeArgs": [
+        "run",
+        "dev"
+      ],
       "port": 3000,
+      "autoPort": true
+    },
+    {
+      "name": "ln-dev-https",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev",
+        "--",
+        "--experimental-https"
+      ],
+      "port": 3000,
+      "url": "https://localhost:3000",
       "autoPort": true
     }
   ]
