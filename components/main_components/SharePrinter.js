@@ -599,7 +599,18 @@ export default function SharePrinter({ open, onClose, plate, albums = [], link =
                 type="button"
                 aria-pressed={!!shown[t.key]}
                 className={'shp-chip' + (shown[t.key] ? ' shp-chip--on' : '')}
-                onClick={() => setPressed(p => ({ ...p, [t.key]: !shown[t.key] }))}
+                onClick={() => setPressed(p => {
+                  const next = { ...p, [t.key]: !shown[t.key] };
+                  // Toggles that share a `group` are a trade-off, one of a
+                  // set: turning one on turns the others off, and turning the
+                  // chosen one off leaves nothing chosen (Miyel, 2026-09-12).
+                  if (t.group && !shown[t.key]) {
+                    for (const other of toggles) {
+                      if (other.group === t.group && other.key !== t.key) next[other.key] = false;
+                    }
+                  }
+                  return next;
+                })}
               >
                 {t.label}
               </button>
