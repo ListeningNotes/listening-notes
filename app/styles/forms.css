@@ -865,6 +865,28 @@ a.pn-item-album:hover { text-decoration: underline; text-underline-offset: 3px; 
   .pn-item-tail { align-items: flex-start; text-align: left; flex-basis: 100%; padding-left: 68px; }
 }
 
+/* ── from app/dashboard/report/page.js ───────────────────────────────── */
+/* Report a problem: one box and Send, on the owner's sheet. */
+.rp-body { max-width: 640px; padding: 18px 24px 40px; }
+.rp-panel { border-radius: 24px; }
+.rp-form { display: flex; flex-direction: column; gap: 14px; padding: 26px 26px 28px; }
+.rp-title { font-family: var(--font-display); font-weight: var(--font-display-weight, 700); font-size: 22px; margin: 0; color: var(--ink); }
+.rp-lead { font-size: 14px; line-height: 1.6; color: var(--ink-soft); margin: 0; }
+.rp-field {
+  width: 100%; box-sizing: border-box; resize: vertical; min-height: 160px;
+  padding: 12px 14px; border-radius: 14px;
+  border: 1px solid var(--border); background: var(--bg); color: var(--ink);
+  font-family: var(--font-sans); font-size: 14px; line-height: 1.6;
+}
+.rp-field:focus { outline: none; border-color: var(--ink-faint); }
+@media (pointer: coarse) { .rp-field { font-size: 16px; } }
+.rp-row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.rp-said { font-family: var(--font-label); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-soft); }
+/* A report in the inbox: the version and the browser under the words, and a
+   read one dimmed. */
+.ib-report-meta { font-family: var(--font-label); font-size: 9.5px; color: var(--ink-faint); margin: -6px 0 12px; overflow-wrap: anywhere; }
+.ib-report--read { opacity: 0.6; }
+
 .own-screen .kt-tool, .idc-tool { text-decoration: none; }
 .pr-main { width: 100%; max-width: 560px; align-self: center; box-sizing: border-box; padding: 60px 24px 120px; }
 .pr-title { font-family: var(--font-display); font-weight: var(--font-display-weight, 700); font-size: 28px; margin: 10px 0 14px; letter-spacing: -0.01em; }
