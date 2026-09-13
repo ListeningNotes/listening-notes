@@ -25,11 +25,12 @@
 // inside the app (DECISIONS, The model). Their writing stays on their
 // journal: the feed carries none of it, and that is the reason to visit.
 //
-// Each row is one card: the record, large, at the top, and everything under
-// it sized to hold its own against the picture — the shape an entry's first
-// screen has, one after another down the floor — and not a cover-thumbnail-
-// and-title list. A list is a table of what exists; a feed is records going
-// past. The Compare panel opens inside the card (Miyel, 2026-09-13).
+// Each row is the record, large and centred, with the words under it — the
+// shape an entry's first screen has, one after another down the floor — and
+// not a cover-thumbnail-and-title list. A list is a table of what exists; a
+// feed is records going past. No box around it: the pieces under the art
+// are simply large, because the feed holds little and can afford to be
+// (Miyel, 2026-09-13). The Compare panel opens under the item.
 'use client';
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
@@ -102,7 +103,7 @@ function Marks({ entry, size = 12 }) {
 function Face({ address }) {
   return (
     <span className="fd-face" aria-hidden="true">
-      <User size={14} weight="regular" />
+      <User size={18} weight="regular" />
       <img src={`${journalUrl(address)}/api/portrait`} alt="" loading="lazy" onError={e => { e.currentTarget.style.display = 'none'; }} />
     </span>
   );
@@ -249,8 +250,8 @@ export default function Feed({ entries = [] }) {
                 <a className="fd-album" href={there} target="_blank" rel="noopener noreferrer">{entry.album}</a>
                 <div className="fd-artist">{entry.artist}{entry.year ? ` · ${entry.year}` : ''}</div>
                 <div className="fd-stars">
-                  {rated && <StarRating rating={Number(entry.rating_value)} size={17} />}
-                  <Marks entry={entry} size={16} />
+                  {rated && <StarRating rating={Number(entry.rating_value)} size={20} />}
+                  <Marks entry={entry} size={20} />
                 </div>
                 <div className="fd-who">
                   <Link href={`/compare?with=${encodeURIComponent(person.address)}`} title={`Your page about ${person.name || 'them'}`}>
