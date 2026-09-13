@@ -47,7 +47,10 @@ publicly):
   under a small persistent header — the album, the tracks one at a time, the
   score and note, the preview. Identical on a phone and a desk. From the desk
   it opens as a layer, the way an entry does, and a swipe puts you back
-- `/dashboard/inbox` — sent albums and comments awaiting moderation
+- `/dashboard/inbox` — sent albums, comments awaiting moderation, and problems
+  keepers wrote in
+- `/dashboard/report` — report a problem: one box, sent to the copy the
+  software comes from
 - `/dashboard/people` — the address book: the journals you read, by address,
   and the ways one gets in — a paste, a scanned code, a send that carried one
 - `/dashboard/people/[id]` — your page about one person: what you both have,
@@ -95,9 +98,10 @@ The library — logic, no visuals
     claim_notice.js            The box printed in the build log while a copy is unclaimed
     settings_actions.js        The settings row: read, write, the name, the beacon's narrow reader
     people_actions.js          The address book: the people table, and asking a journal its keeper's name
+    report_actions.js          Problems keepers wrote in from their desks — the reports table
     return_address.js          The back of the envelope — a sender's name and journal kept in their own browser — and the one spelling an address is kept in
     migrator.js                Brings the database up to date — from instrumentation.js on start, and from scripts/prepare_database.mjs at build
-    version.js                 Which version this copy is running (from package.json) and where its release notes are — read by the pitch pane and the desk
+    version.js                 Which version this copy is running (from package.json), where its release notes are, and where a report goes — read by the pitch pane, the desk and the report sheet
 
 The update button
   .github/workflows/update.yml   Ships in every copy: Actions → Update this copy → Run workflow
@@ -116,6 +120,8 @@ The front doors — receive requests, hand them off, send back responses
     settings/route.js          The settings row — public to read, owner-only to write
     people/route.js            The address book — owner-only: the list, and filing an address
     people/[id]/route.js       One person: reading them, crossing them out
+    reports/route.js           A problem written in — POST from any copy (rate-limited, cross-origin), GET for the owner
+    reports/[id]/route.js      Marking one read or dismissed
     secrets/route.js           The vault — owner-only both ways; says what is set, never the value
     setup/route.js             GET: is this copy claimed. POST: the one write that claims it
     auth/login/route.js        The password, the deploy-time variable, or — unclaimed — the claim code
@@ -218,12 +224,14 @@ The rooms — full pages assembled from furniture
     @layer/(.)dashboard/inbox/page.js  The inbox, opened as a sheet over the desk
     @layer/(.)dashboard/people/page.js  The address book, on the same sheet
     @layer/(.)dashboard/people/[id]/page.js  The page about a person, on the same sheet
+    @layer/(.)dashboard/report/page.js  Report a problem, on the same sheet
     @layer/(.)printer/page.js  The printer, as a sheet over the entry or the card
     dashboard/
       page.js                  Redirect to / — the desk is the right pane of the cross
       inbox/page.js            Comments and submissions in one place — plain, on the tokens, and a sheet over the desk
       people/page.js           The address book — the list, the field, the scanner
       people/[id]/page.js      Your page about one person — the whole-journal compare, and what they sent you
+      report/page.js           Report a problem — one box, Send
 
 ---
 

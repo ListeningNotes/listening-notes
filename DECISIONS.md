@@ -963,12 +963,15 @@ address" is architecture, not a benefit.
 **"It didn't work" goes to the issues, not a troubleshooting page.** A
 troubleshooting page would be guesses; the issues people file become it once
 three people have hit the same thing. The line promises they are read.
-**The bug button is that link, on the desk, 2026-09-13:** Report a problem
-beside the version opens a new issue on the one repository, prefilled with
-the version and the browser. Every keeper has a GitHub account, since the
-deploy button needs one; nothing phones home and nothing is held anywhere
-but there. Never a form that posts to Miyel's copy — that is an inbox for
-strangers' data and a phone-home in one.
+**The bug button is a box on the desk that sends to the one copy the
+software comes from, 2026-09-13.** Report a problem opens a sheet: one box,
+Send, and what was written lands in that copy's inbox beside the sends,
+with the version, the browser, and the keeper's name and journal attached.
+A GitHub issue lasted an hour: the people testing are not GitHub people,
+and being sent there is where a report would stop. This is not the
+phone-home ruled out above — nothing leaves unless a person presses Send;
+it is a letter. The destination is `REPORTS_URL`, fixed like the pitch
+pane's Get one, with an environment variable for a fork.
 
 **The steps are written from the fresh-account run, never from a summary of
 it.** The run found what a summary skipped: the Neon panel's "Auth" toggle is
