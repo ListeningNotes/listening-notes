@@ -1410,8 +1410,10 @@ current.
 
 ## Complete
 
-**2026-09-13 — the person's page, branch `person-page`, version 1.5.0 (a
-route and a page: the middle number)**
+**2026-09-13 — the person's page, branch `person-page`, merged to main
+and pushed the same day as 1.5.0 (a route and a page: the middle number).
+Miyel's call: it stays on her copy; no door to it on the other journal's
+right pane (DECISIONS, The network)**
 
 - [x] **`/dashboard/people/[id]`**, owner-only, a sheet over the desk like
       the book (and the standalone address for a bookmark). From a face or

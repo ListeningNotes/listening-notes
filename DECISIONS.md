@@ -634,6 +634,15 @@ compared this journal against a typed address, which the model has no
 place for (everything social is on the visitor's own copy); nobody had the
 URL, so no stub. A printer door on the page waits for the press.
 
+**The page about a person stays on your copy; their journal gets no door
+to it, 2026-09-13.** Considered: their right pane offering "Compare with
+you" when you arrived from your own book. Ruled out as a mode — right would
+mean the pitch for anyone who came by text or code and compare for you —
+and it would reopen the address-in-the-link rule for one convenience, wait
+on their copy updating, and land in a sheet that borrows Safari's sign-in.
+Their journal is the thing you read; your page about them is where you
+think about them, and the feed's face is the way there.
+
 **Lineage runs backward only, and that is the feature, 2026-09-12.**
 Walking `source_entry_id` upward gives everyone who passed a record before
 you; nothing sees forward, because the link to the next person exists on
