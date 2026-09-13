@@ -319,10 +319,15 @@ person's page the next (Complete). Left: the printer, and the chain.
       snapshot of 9b11b75 with the workflow pasted in, updated four times
       since (twice by Miyel herself). Keep it if a change to the button
       wants a rehearsal.
-- [ ] **The "left as they were" path has not been seen on a real run.**
-      The test copy holds `checkout@v4` in its pasted workflow and main now
-      has v5, so its next press should merge and report the file left
-      alone.
+- [x] **The "left as they were" path, seen on a real run 2026-09-13.**
+      Miyel pressed the button on the scratch copy from the Claude
+      browser: eleven seconds, "Updated to Listening Notes 1.7.2 (was
+      1.1.0)", the 1.7.0 and 1.6.0 notes in the summary, and "Left as they
+      were, because GitHub does not let a workflow change workflow files:
+      .github/workflows/update.yml" — the copy keeps `checkout@v4` while
+      main has v5, and GitHub warns that v4 targets Node 20 and is forced
+      onto 24, but runs it. A copy's pasted workflow file only ever changes
+      by hand; the logic it fetches from upstream is what moves.
 - [ ] **The version moves with the merge; a release announces it, by hand,
       when there is something to tell a keeper.** Semantic versions from
       2026-09-12, on Miyel's call (DECISIONS): a fix bumps the last number
