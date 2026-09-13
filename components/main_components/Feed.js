@@ -27,10 +27,9 @@
 'use client';
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { User } from '@phosphor-icons/react';
+import { Envelope, Fingerprint, Heart, SketchLogo, User } from '@phosphor-icons/react';
 import { useBookplate } from './Bookplate';
 import StarRating from './StarRating';
-import Chip from './Slug_Page/Chip';
 import { parseHorizon } from '../../library/entry_formatter';
 import { journalUrl, tidyJournal } from '../../library/return_address';
 
@@ -56,26 +55,39 @@ function timeAgo(when) {
   return new Date(when).toLocaleDateString(undefined, { month: 'short', year: 'numeric' });
 }
 
-// The marks an entry wears, as the entry page wears them under its stars:
-// which listen this was, that it was sent, and the three flags. The feed
-// carries all four facts, so a row says them the same way (Miyel,
-// 2026-09-13: the tags should show in the feed).
+// The marks an entry wears, beside its stars, as marks and not words — the
+// strip at the head of an entry draws the three flags this way (MiniCard),
+// and a row is a glance (Miyel, 2026-09-13: the icon, not the tag's name).
+// Sent gets an envelope in faint ink, the inbox's own mark.
 function Marks({ entry }) {
-  const listen = entry.listen_total > 1
-    ? (entry.listen_number === 1 ? `First listen · 1 of ${entry.listen_total}` : `Listen ${entry.listen_number} of ${entry.listen_total}`)
-    : null;
   const fav = entry.favorite === true || entry.favorite === 'true';
   const mp = entry.masterpiece === true || entry.masterpiece === 'true';
   const formative = entry.formative === true || entry.formative === 'true';
-  if (!listen && entry.entry_type !== 'Submission' && !fav && !mp && !formative) return null;
+  const sent = entry.entry_type === 'Submission';
+  if (!fav && !mp && !formative && !sent) return null;
   return (
-    <div className="fd-chips">
-      {listen && <Chip>{listen}</Chip>}
-      {entry.entry_type === 'Submission' && <Chip>Submission</Chip>}
-      {fav && <Chip tone="fav">Favorite</Chip>}
-      {mp && <Chip tone="mp">Masterpiece</Chip>}
-      {formative && <Chip tone="formative">Formative</Chip>}
-    </div>
+    <span className="ln-mini-flags fd-marks">
+      {sent && (
+        <span className="ln-mini-flag" style={{ color: 'var(--ink-faint)' }} role="img" aria-label="Submission" title="Submission">
+          <Envelope size={12} weight="regular" />
+        </span>
+      )}
+      {fav && (
+        <span className="ln-mini-flag" style={{ color: 'var(--fav, #f0484f)' }} role="img" aria-label="Favorite" title="Favorite">
+          <Heart size={12} weight="fill" />
+        </span>
+      )}
+      {mp && (
+        <span className="ln-mini-flag" style={{ color: 'var(--mp, #4a9bf0)' }} role="img" aria-label="Masterpiece" title="Masterpiece">
+          <SketchLogo size={12} weight="fill" />
+        </span>
+      )}
+      {formative && (
+        <span className="ln-mini-flag" style={{ color: 'var(--formative, #3fa96b)' }} role="img" aria-label="Formative" title="Formative">
+          <Fingerprint size={12} weight="bold" />
+        </span>
+      )}
+    </span>
   );
 }
 
@@ -231,8 +243,10 @@ export default function Feed({ entries = [] }) {
                 <div className="fd-said">
                   <a className="fd-album" href={there} target="_blank" rel="noopener noreferrer">{entry.album}</a>
                   <div className="fd-artist">{entry.artist}{entry.year ? ` · ${entry.year}` : ''}</div>
-                  {rated && <div className="fd-stars"><StarRating rating={Number(entry.rating_value)} size={11} /></div>}
-                  <Marks entry={entry} />
+                  <div className="fd-stars">
+                    {rated && <StarRating rating={Number(entry.rating_value)} size={11} />}
+                    <Marks entry={entry} />
+                  </div>
                   <div className="fd-who">
                     <Link href={`/compare?with=${encodeURIComponent(person.address)}`} title={`Your page about ${person.name || 'them'}`}>
                       <Face address={person.address} />
