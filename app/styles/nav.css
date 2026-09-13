@@ -946,50 +946,55 @@
 }
 .fd-view:hover { color: var(--ink-soft); }
 .fd-view--on { color: var(--ink); border-bottom-color: var(--ink); }
-.fd-list { display: flex; flex-direction: column; gap: 48px; }
-/* The record, large and centred, the words under it: the shape an entry's
-   first screen has. The art is the tile — the same radius and the square's
-   own shadow — as wide as the column allows up to the size a phone gives an
-   entry, and nothing sits beside it. */
-.fd-item { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 4px; }
+.fd-list { display: flex; flex-direction: column; gap: 28px; }
+/* One card per record: a tile, the art full width at its head, and under it
+   everything at a size that holds its own against the picture. The Compare
+   panel opens inside the card, on the page colour, so the card stays one
+   object with a drawer in it. */
+.fd-item {
+  display: flex; flex-direction: column; align-items: center; text-align: center;
+  width: 100%; box-sizing: border-box; padding: 14px 14px 22px;
+  background: var(--panel); border: 1px solid var(--border); border-radius: 22px;
+  box-shadow: 0 18px 44px rgba(0,0,0,0.12);
+}
 .fd-art {
-  width: min(100%, 300px); aspect-ratio: 1; border-radius: 16px; overflow: hidden; flex-shrink: 0;
-  background: var(--panel); box-shadow: 0 18px 44px rgba(0,0,0,0.16); display: block; margin-bottom: 14px;
+  width: 100%; aspect-ratio: 1; border-radius: 14px; overflow: hidden; flex-shrink: 0;
+  background: var(--bg); display: block; margin-bottom: 18px;
 }
 .fd-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .fd-album {
-  font-family: var(--font-display); font-weight: var(--font-display-weight, 700); font-size: 20px;
-  color: var(--ink); text-decoration: none; line-height: 1.2; display: block; overflow-wrap: anywhere;
-  max-width: 100%;
+  font-family: var(--font-display); font-weight: var(--font-display-weight, 700); font-size: 24px;
+  color: var(--ink); text-decoration: none; line-height: 1.15; display: block; overflow-wrap: anywhere;
+  max-width: 100%; padding: 0 6px;
 }
-.fd-album:hover { text-decoration: underline; text-underline-offset: 3px; }
-.fd-artist { font-family: var(--font-label); font-size: 10px; letter-spacing: 0.08em; color: var(--ink-soft); }
-.fd-stars { display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 8px; color: var(--ink); }
+.fd-album:hover { text-decoration: underline; text-underline-offset: 4px; }
+.fd-artist { font-family: var(--font-label); font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-soft); margin-top: 6px; }
+.fd-stars { display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 14px; color: var(--ink); }
 /* The marks beside the stars — the strip's own marks, MiniCard's classes. */
-.fd-marks { display: inline-flex; align-items: center; gap: 6px; }
-.fd-who { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 6px; margin-top: 10px; font-family: var(--font-label); font-size: 10px; color: var(--ink-soft); }
-.fd-who a { display: inline-flex; align-items: center; gap: 6px; color: var(--ink); text-decoration: none; }
+.fd-marks { display: inline-flex; align-items: center; gap: 8px; }
+.fd-who { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 8px; margin-top: 16px; font-family: var(--font-label); font-size: 12px; letter-spacing: 0.06em; color: var(--ink-soft); }
+.fd-who a { display: inline-flex; align-items: center; gap: 8px; color: var(--ink); text-decoration: none; }
 .fd-who a:hover { text-decoration: underline; text-underline-offset: 3px; }
 /* A small rounded square, the card's shape, with the plain mark behind the
    picture for a journal without one. */
 .fd-face {
-  position: relative; width: 18px; height: 18px; border-radius: 5px; overflow: hidden; flex-shrink: 0;
-  background: var(--panel); border: 1px solid var(--border);
+  position: relative; width: 26px; height: 26px; border-radius: 7px; overflow: hidden; flex-shrink: 0;
+  background: var(--bg); border: 1px solid var(--border);
   display: inline-flex; align-items: center; justify-content: center; color: var(--ink-faint);
 }
 .fd-face img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .fd-when { color: var(--ink-faint); }
-.fd-compare { margin-top: 12px; }
-.fd-panel { margin: 14px 0 0; width: 100%; box-sizing: border-box; text-align: left; padding: 12px 14px; border: 1px solid var(--border); border-radius: 12px; background: var(--panel); }
-.fd-panel-scores { display: flex; flex-wrap: wrap; gap: 18px; font-family: var(--font-label); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-soft); }
+.fd-compare { margin-top: 16px; font-size: 11px; padding: 9px 22px; }
+.fd-panel { margin: 16px 0 0; width: 100%; box-sizing: border-box; text-align: left; padding: 14px 16px; border: 1px solid var(--border); border-radius: 14px; background: var(--bg); }
+.fd-panel-scores { display: flex; flex-wrap: wrap; gap: 18px; font-family: var(--font-label); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-soft); }
 .fd-panel-scores b { color: var(--ink); font-weight: 600; }
 .fd-panel-gap { color: var(--ink-faint); }
 .fd-horizons { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
 .fd-horizon-label { font-family: var(--font-label); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint); }
-.fd-horizon { display: flex; align-items: flex-end; gap: 2px; height: 22px; }
+.fd-horizon { display: flex; align-items: flex-end; gap: 2px; height: 24px; }
 .fd-horizon span { flex: 1 1 0; background: var(--ink-faint); border-radius: 1px; min-height: 2px; opacity: 0.8; }
 .fd-horizon--mine span { background: var(--ink); opacity: 1; }
-.fd-panel-note { font-size: 12px; color: var(--ink-soft); margin: 12px 0 0; }
+.fd-panel-note { font-size: 13px; color: var(--ink-soft); margin: 12px 0 0; }
 .fd-panel-note a { color: var(--ink); }
 .fd-empty { padding: 40px 0; text-align: center; font-family: var(--font-label); font-size: 11px; color: var(--ink-faint); line-height: 1.9; }
 .fd-empty a { color: var(--ink-soft); }

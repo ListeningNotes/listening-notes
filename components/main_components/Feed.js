@@ -25,10 +25,11 @@
 // inside the app (DECISIONS, The model). Their writing stays on their
 // journal: the feed carries none of it, and that is the reason to visit.
 //
-// Each row is the record, large and centred, with the words under it — the
-// shape an entry's first screen has, one after another down the floor — and
-// not a cover-thumbnail-and-title list. A list is a table of what exists; a
-// feed is records going past (Miyel, 2026-09-13).
+// Each row is one card: the record, large, at the top, and everything under
+// it sized to hold its own against the picture — the shape an entry's first
+// screen has, one after another down the floor — and not a cover-thumbnail-
+// and-title list. A list is a table of what exists; a feed is records going
+// past. The Compare panel opens inside the card (Miyel, 2026-09-13).
 'use client';
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
@@ -64,7 +65,7 @@ function timeAgo(when) {
 // strip at the head of an entry draws the three flags this way (MiniCard),
 // and a row is a glance (Miyel, 2026-09-13: the icon, not the tag's name).
 // Sent gets an envelope in faint ink, the inbox's own mark.
-function Marks({ entry }) {
+function Marks({ entry, size = 12 }) {
   const fav = entry.favorite === true || entry.favorite === 'true';
   const mp = entry.masterpiece === true || entry.masterpiece === 'true';
   const formative = entry.formative === true || entry.formative === 'true';
@@ -74,22 +75,22 @@ function Marks({ entry }) {
     <span className="ln-mini-flags fd-marks">
       {sent && (
         <span className="ln-mini-flag" style={{ color: 'var(--ink-faint)' }} role="img" aria-label="Submission" title="Submission">
-          <Envelope size={12} weight="regular" />
+          <Envelope size={size} weight="regular" />
         </span>
       )}
       {fav && (
         <span className="ln-mini-flag" style={{ color: 'var(--fav, #f0484f)' }} role="img" aria-label="Favorite" title="Favorite">
-          <Heart size={12} weight="fill" />
+          <Heart size={size} weight="fill" />
         </span>
       )}
       {mp && (
         <span className="ln-mini-flag" style={{ color: 'var(--mp, #4a9bf0)' }} role="img" aria-label="Masterpiece" title="Masterpiece">
-          <SketchLogo size={12} weight="fill" />
+          <SketchLogo size={size} weight="fill" />
         </span>
       )}
       {formative && (
         <span className="ln-mini-flag" style={{ color: 'var(--formative, #3fa96b)' }} role="img" aria-label="Formative" title="Formative">
-          <Fingerprint size={12} weight="bold" />
+          <Fingerprint size={size} weight="bold" />
         </span>
       )}
     </span>
@@ -101,7 +102,7 @@ function Marks({ entry }) {
 function Face({ address }) {
   return (
     <span className="fd-face" aria-hidden="true">
-      <User size={11} weight="regular" />
+      <User size={14} weight="regular" />
       <img src={`${journalUrl(address)}/api/portrait`} alt="" loading="lazy" onError={e => { e.currentTarget.style.display = 'none'; }} />
     </span>
   );
@@ -248,8 +249,8 @@ export default function Feed({ entries = [] }) {
                 <a className="fd-album" href={there} target="_blank" rel="noopener noreferrer">{entry.album}</a>
                 <div className="fd-artist">{entry.artist}{entry.year ? ` · ${entry.year}` : ''}</div>
                 <div className="fd-stars">
-                  {rated && <StarRating rating={Number(entry.rating_value)} size={13} />}
-                  <Marks entry={entry} />
+                  {rated && <StarRating rating={Number(entry.rating_value)} size={17} />}
+                  <Marks entry={entry} size={16} />
                 </div>
                 <div className="fd-who">
                   <Link href={`/compare?with=${encodeURIComponent(person.address)}`} title={`Your page about ${person.name || 'them'}`}>
@@ -269,8 +270,8 @@ export default function Feed({ entries = [] }) {
                     Compare
                   </button>
                 )}
+                {open === key && mine && <Compared mine={mine} theirs={entry} name={person.name || 'them'} there={there} />}
               </article>
-              {open === key && mine && <Compared mine={mine} theirs={entry} name={person.name || 'them'} there={there} />}
             </div>
           );
         })}
