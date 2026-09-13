@@ -14,17 +14,19 @@
 import { requireWristband } from '@/library/wristband';
 import { count_pending_comments } from '@/library/comment_actions';
 import { count_pending_submissions } from '@/library/submission_actions';
+import { count_pending_reports } from '@/library/report_actions';
 
 export async function GET(request) {
   const blocked = await requireWristband(request);
   if (blocked) return blocked;
 
   try {
-    const [comments, submissions] = await Promise.all([
+    const [comments, submissions, reports] = await Promise.all([
       count_pending_comments(),
       count_pending_submissions(),
+      count_pending_reports(),
     ]);
-    return Response.json({ comments, submissions, total: comments + submissions });
+    return Response.json({ comments, submissions, reports, total: comments + submissions + reports });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
   }

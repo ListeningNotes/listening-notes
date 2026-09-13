@@ -1410,6 +1410,24 @@ current.
 
 ## Complete
 
+**2026-09-13 — reports, branch `reports`, version 1.7.0 (a table, a route,
+a sheet: the middle number)**
+
+- [x] **Report a problem is a box, not a link.** The GitHub issue of 1.6.0
+      lasted an hour, on Miyel's call: the people testing are not GitHub
+      people. Now the desk's line opens a sheet over it — one box, Send, a
+      line saying it goes to Listening Notes with the version and browser
+      attached and the journal's address so there is a way to find them —
+      and the report lands in the canonical copy's inbox under a Reports
+      tab (Read, Dismiss), counted with the sends and comments on the desk's
+      door. `reports` (migration 009), `library/report_actions.js`,
+      `POST /api/reports` (public, cross-origin, three a ten-minute window),
+      `GET /api/reports` and `PATCH /api/reports/[id]` (owner), `REPORTS_URL`
+      in version.js (`NEXT_PUBLIC_REPORTS_URL` for a fork). Names to confirm:
+      all of those, `.rp-`, and the sheet's words.
+- [ ] **A copy on 1.6.x still shows the GitHub link** until it updates; the
+      1.6.0 release notes say so and are corrected on the release page.
+
 **2026-09-13 — the bug button, on main as 1.6.0 (something new: the middle
 number), pushed, and release v1.6.0 cut the same night — the first since
 1.0.0, with notes for keepers covering everything since — so June's and
