@@ -62,8 +62,18 @@ export default function CodeScanner({ onRead, onClose }) {
           video: { facingMode: { ideal: 'environment' } },
           audio: false,
         });
-      } catch {
-        setTrouble('The camera could not be opened.');
+      } catch (e) {
+        // Say which, because the fixes are different: a refusal is a
+        // setting in the browser (or a browser that will not ask, which is
+        // what the Claude app's pane does), no camera is the machine, and
+        // anything else is the camera being busy or unhappy.
+        setTrouble(
+          e?.name === 'NotAllowedError'
+            ? 'The camera was refused. Allow it for this site in the browser, or open the address book in Safari.'
+            : e?.name === 'NotFoundError' || e?.name === 'OverconstrainedError'
+              ? 'No camera was found on this device.'
+              : 'The camera could not be opened. Another app may be using it.'
+        );
         return;
       }
       if (stopped) { stream.getTracks().forEach(t => t.stop()); return; }

@@ -843,7 +843,14 @@ a.pp-name:hover svg { color: var(--ink); }
 /* A journal that has not answered yet has no name, and the row never prints
    the address in its place. */
 .bk-name--none { color: var(--ink-faint); font-weight: 400; }
-.bk-visit { font-family: var(--font-label); font-size: 10px; white-space: nowrap; }
+.bk-visit { white-space: nowrap; }
+/* Crossing somebody out is the rare thing on this page, so it is a faint
+   word and not a pill: red only under the pointer, never at rest. */
+.bk-remove {
+  font-family: var(--font-label); font-size: 9.5px; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--ink-faint); background: none; border: 0; padding: 6px 4px; cursor: pointer;
+}
+.bk-remove:hover { color: var(--fav); }
 /* The camera, in the panel where the field was: a square of it, and Cancel. */
 .bk-scan { display: flex; flex-direction: column; align-items: center; gap: 12px; margin-bottom: 6px; }
 .bk-scan-video { width: 100%; max-width: 360px; aspect-ratio: 1; object-fit: cover; border-radius: 16px; background: #000; }
