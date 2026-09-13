@@ -66,16 +66,15 @@ export default function ReportPage({ layered = false }) {
           <form className="rp-form" onSubmit={send}>
             <h1 className="rp-title">Report a problem</h1>
             <p className="rp-lead">
-              Say what happened, in your own words. It goes to Listening Notes with this
-              copy&rsquo;s version and your browser attached, and your journal&rsquo;s address so
-              there is a way to find you.
+              This will be sent to listeningnotes.blog with your journal&rsquo;s version number and
+              URL attached.
             </p>
             <textarea
               className="rp-field"
               value={said}
               onChange={e => { setSaid(e.target.value); if (state !== 'idle') setState('idle'); }}
-              placeholder="What happened?"
-              aria-label="What happened"
+              placeholder="Please describe what went wrong"
+              aria-label="What went wrong"
               rows={7}
               maxLength={4000}
             />
