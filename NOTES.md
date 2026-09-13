@@ -1474,7 +1474,9 @@ unmerged: Miyel reviews on the dev server**
       at the screen's radius, hairline and lift; the album; artist · year in
       mono caps; the stars as StarRating draws them; the post's chips
       (Listen n of N, Favorite, Masterpiece, Formative) in Chip.js's tones;
-      the posted date; the horizon as bars with a heart over a favourite. The
+      the horizon as bars with a heart over a favourite (the posted date was
+      there and came off, and the keeper's name grew to 13 units — Miyel's
+      calls). The
       ground is the cover blurred across the paper under a light wash (Paper)
       or a dark one (Ink). Labels are soft
       rather than faint and the bars ink rather than accent, because both
