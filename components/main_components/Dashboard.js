@@ -19,14 +19,16 @@
 // pane, so a visitor never sees a door they cannot open.
 
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { Headphones, Envelope, AddressBook, GearSix } from '@phosphor-icons/react';
-import { VERSION, RELEASE_URL } from '../../library/version';
+import { VERSION, RELEASE_URL, reportUrl } from '../../library/version';
 
 // Everything but the first: messages, which are what you open the journal to
 // check; the address book, which is where the people you read live; and the
-// machinery.
+// machinery. Under them, the one line about the software: the version, a
+// newer one when there is one, and Report a problem (2026-09-13) — a new
+// issue on the one repository, the bug button every keeper has.
 //
 // There was a Share door here too, opening the Instagram slide exporter, with
 // a note promising the card printer that never merged. Sharing happens from
@@ -51,6 +53,10 @@ const DOORS = [
   { href: '/settings',          label: 'Settings', note: 'Keys, password, Last.fm, the address', Icon: GearSix },
 ];
 
+const never = () => () => {};
+const readAgent = () => navigator.userAgent;
+const readNothing = () => '';
+
 export default function Dashboard({ waiting }) {
   // Whether a newer Listening Notes exists. Asked once, of this copy's own
   // server, which asks GitHub's public releases at most once a day (see
@@ -63,6 +69,13 @@ export default function Dashboard({ waiting }) {
       .then(d => d?.newer && setUpdate(d))
       .catch(() => {});
   }, []);
+  // The bug button: a new issue on the one repository, carrying the version
+  // and the browser so a keeper need not be asked. The browser is only
+  // known in the browser, so it is read the way the site reads anything
+  // only the browser knows — through useSyncExternalStore, the server
+  // drawing the link without it and no state set from inside an effect.
+  const agent = useSyncExternalStore(never, readAgent, readNothing);
+  const report = reportUrl({ agent });
 
   return (
     <div className="db-pane">
@@ -115,6 +128,10 @@ export default function Dashboard({ waiting }) {
               </a>
             </>
           )}
+          <span className="pt-colophon-dot" aria-hidden="true">·</span>
+          <a className="db-update" href={report} target="_blank" rel="noopener noreferrer" title="Tell Miyel something did not work">
+            Report a problem &#8599;
+          </a>
         </p>
       </div>
     </div>

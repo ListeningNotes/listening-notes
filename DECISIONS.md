@@ -963,6 +963,12 @@ address" is architecture, not a benefit.
 **"It didn't work" goes to the issues, not a troubleshooting page.** A
 troubleshooting page would be guesses; the issues people file become it once
 three people have hit the same thing. The line promises they are read.
+**The bug button is that link, on the desk, 2026-09-13:** Report a problem
+beside the version opens a new issue on the one repository, prefilled with
+the version and the browser. Every keeper has a GitHub account, since the
+deploy button needs one; nothing phones home and nothing is held anywhere
+but there. Never a form that posts to Miyel's copy — that is an inbox for
+strangers' data and a phone-home in one.
 
 **The steps are written from the fresh-account run, never from a summary of
 it.** The run found what a summary skipped: the Neon panel's "Auth" toggle is

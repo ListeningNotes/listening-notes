@@ -1410,6 +1410,17 @@ current.
 
 ## Complete
 
+**2026-09-13 — the bug button, on main as 1.6.0 (something new: the middle
+number), before the first release since 1.0.0**
+
+- [x] **Report a problem**, on the desk's colophon beside the version: a
+      new issue on the one repository (`ISSUES_URL` and `reportUrl` in
+      library/version.js), prefilled with What I did / What happened /
+      What I expected and a footer carrying the version and the browser.
+      A link, because every keeper has a GitHub account by construction and
+      DECISIONS already sends "it didn't work" to the issues; nothing phones
+      home. Names to confirm: `reportUrl`, the words Report a problem.
+
 **2026-09-13 — the person's page, branch `person-page`, merged to main
 and pushed the same day as 1.5.0 (a route and a page: the middle number).
 Miyel's call: it stays on her copy; no door to it on the other journal's
