@@ -1439,8 +1439,17 @@ right pane (DECISIONS, The network)**
       was pressed — `data-grows` on the element names the address it
       opens, and `growBoxOf` in handoff.js is the general lookup beside the
       entry's own — and the header's left slot carries a back caret
-      (history when there is one, else the book). The pull down and Escape
-      still work.
+      (history when there is one, else the book), with the printer's door
+      beside it at the tools' size, the same glyph and place the entry and
+      the card give it (it began as a round button beside Visit; Miyel
+      moved it). The pull down and Escape still work.
+- [x] **Going back is not arriving.** Closing the person's page onto the
+      book used to remount the book's sheet and rise it from the foot of
+      the screen again. Now whoever closes a layer says so first —
+      `arrivingBack` in handoff.js, from the back caret, the pull down,
+      Escape, and the browser's own back via popstate — and the next sheet
+      to mount draws at rest (`lay--still`). Good for a moment only, so a
+      way back that leads to the desk never silences the next door.
 - [x] **Rated alike allows for how each of you rates.** Their ratings are
       shifted by the average difference across the overlap before the gap
       is measured (three records in common at least, else raw), alike is

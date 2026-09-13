@@ -51,7 +51,7 @@
 import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { CaretLeft, CaretRight } from '@phosphor-icons/react';
-import { tileBoxOf, neighboursOf, handOffNeighbour, arrivingBySwipe, tookASwipe, growBoxOf } from '../../library/handoff';
+import { tileBoxOf, neighboursOf, handOffNeighbour, arrivingBySwipe, tookASwipe, growBoxOf, arrivingBack, cameBack } from '../../library/handoff';
 
 // How long the sheet takes to grow to the screen. Unhurried, slowing as it
 // lands — the same curve the slide used.
@@ -128,7 +128,11 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
   // Three arrivals: by swipe (draw it, nothing else), by tap (grow out of
   // the tile), or neither (fade — a form, an off-wall tile, reduced motion).
   const [arrival] = useState(() => {
-    if (typeof document === 'undefined' || arrives === 'bottom') return { swiped: 0, growFrom: null };
+    if (typeof document === 'undefined') return { swiped: 0, growFrom: null };
+    // Returning to a sheet that was under another: draw it at rest. Read
+    // first, before the arrival kind, because it applies to any of them.
+    if (cameBack()) return { swiped: 0, growFrom: null, still: true };
+    if (arrives === 'bottom') return { swiped: 0, growFrom: null };
     const swiped = tookASwipe();
     if (swiped) return { swiped, growFrom: null };
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return { swiped: 0, growFrom: null };
@@ -190,6 +194,8 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
   const leave = useCallback((fromX = 0) => {
     if (leaving.current) return;
     leaving.current = true;
+    // Whatever this closes onto is being returned to, not arrived at.
+    arrivingBack();
     window.clearTimeout(pendingTurn.current);
     pendingTurn.current = null;
     // If going back did not remove this layer — nowhere to go back to, which
@@ -293,6 +299,15 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
     if (neighbours.prev) router.prefetch(`/entries/${neighbours.prev.slug}`);
     if (neighbours.next) router.prefetch(`/entries/${neighbours.next.slug}`);
   }, [neighbours.prev, neighbours.next, router]);
+
+  // The browser's own back — a swipe from the edge, the toolbar — closes
+  // this layer without passing through leave(), so it says the same thing
+  // the moment the history moves: what mounts next is returned to.
+  useEffect(() => {
+    const noteBack = () => arrivingBack();
+    window.addEventListener('popstate', noteBack);
+    return () => window.removeEventListener('popstate', noteBack);
+  }, []);
 
   // Escape closes it, the same as the pull. A full-screen surface with no
   // keyboard way out is a trap for anyone not using a thumb. Left and right
@@ -409,7 +424,7 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
 
   return (
     <div
-      className={'lay' + (rises ? ' lay--rises' : arrival.swiped ? ' lay--swiped' : growFrom ? ' lay--grows' : ' lay--fades') + (scrolls ? ' lay--scrolls' : '')
+      className={'lay' + (arrival.still ? ' lay--still' : rises ? ' lay--rises' : arrival.swiped ? ' lay--swiped' : growFrom ? ' lay--grows' : ' lay--fades') + (scrolls ? ' lay--scrolls' : '')
         + (settling ? ' lay--settling' : '') + (pulled ? ' lay--dragging' : '')}
       ref={sheetRef}
       style={pulled ? { transform: `translateY(${dragY}px)` } : undefined}

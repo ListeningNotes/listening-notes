@@ -32,6 +32,7 @@ import SiteNav from '../../../../components/main_components/SiteNav';
 import StarRating from '../../../../components/main_components/StarRating';
 import { albumKey } from '../../../../hooks/useListeningBeacon';
 import { journalUrl, tidyJournal } from '../../../../library/return_address';
+import { arrivingBack } from '../../../../library/handoff';
 
 // Half a star, after the offset, is the same opinion typed slightly
 // differently. Four stars or better is a hit: something they sent that you
@@ -82,6 +83,9 @@ export default function PersonPage({ layered = false }) {
   // opened from, or to the book when there is nothing behind it. The pull
   // down and Escape still work; this is the one that can be seen.
   const goBack = () => {
+    // The book this closes onto is returned to, not arrived at: it draws
+    // at rest rather than rising again (handoff.js, arrivingBack).
+    arrivingBack();
     if (typeof window !== 'undefined' && window.history.length > 1) router.back();
     else router.push('/dashboard/people');
   };
@@ -166,10 +170,22 @@ export default function PersonPage({ layered = false }) {
 
   return (
     <div className={'own-screen' + (layered ? ' own-screen--layered' : '')}>
+      {/* The header's left slot, where the owner's tools live on every page:
+          the way back, and the printer's door — the press that prints the
+          shape of the agreement and withholds the writing, naming both
+          people (DECISIONS, The network) — the same glyph at the same size
+          the entry and the card wear it. */}
       <SiteNav tools={(
-        <button type="button" className="kt-tool" onClick={goBack} aria-label="Back" title="Back">
-          <CaretLeft size={18} weight="regular" aria-hidden="true" />
-        </button>
+        <>
+          <button type="button" className="kt-tool" onClick={goBack} aria-label="Back" title="Back">
+            <CaretLeft size={18} weight="regular" aria-hidden="true" />
+          </button>
+          {person && (
+            <Link href={`/printer?person=${encodeURIComponent(id)}`} className="kt-tool" aria-label="Print the shape of the agreement" title="Print the shape of the agreement">
+              <Printer size={18} weight="regular" aria-hidden="true" />
+            </Link>
+          )}
+        </>
       )} />
 
       <div className="own-body pn-body">
@@ -184,12 +200,6 @@ export default function PersonPage({ layered = false }) {
               <h1 className="pn-name">{name}</h1>
               <div className="pn-row">
                 <a href={there} target="_blank" rel="noopener noreferrer" className="own-act">Visit their journal &#8599;</a>
-                {/* The printer's door, before the printer: the press that
-                    prints the shape of the agreement and withholds the
-                    writing, naming both people (DECISIONS, The network). */}
-                <Link href={`/printer?person=${encodeURIComponent(id)}`} className="pn-print" aria-label="Print the shape of the agreement" title="Print the shape of the agreement">
-                  <Printer size={18} weight="regular" aria-hidden="true" />
-                </Link>
               </div>
             </header>
 

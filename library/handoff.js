@@ -158,3 +158,18 @@ export function handOffNeighbour(entry) {
 let bySwipe = 0;
 export function arrivingBySwipe(dir) { bySwipe = dir; }
 export function tookASwipe() { const was = bySwipe; bySwipe = 0; return was; }
+
+// Going back to a sheet is not arriving at it. The book's sheet is a new
+// mount when the page about a person closes over it, and left alone it
+// rises from the foot of the screen again as if its door had just been
+// pressed. So whoever closes a layer says so first, and the next layer to
+// mount draws at rest. Stamped, and good for a moment only: if nothing
+// mounts — the way back led to the desk — the flag must not linger to
+// silence the next door somebody presses (2026-09-13).
+let wentBack = 0;
+export function arrivingBack() { wentBack = Date.now(); }
+export function cameBack() {
+  const recent = wentBack && Date.now() - wentBack < 1500;
+  wentBack = 0;
+  return recent;
+}
