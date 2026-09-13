@@ -89,35 +89,33 @@ export function usePress({ plate, shown, ground, isDark, link, fonts }) {
     return `${plate?.fileName || 'print'}-${ground}-${frame.label.replace(':', 'x')}.png`;
   }, [plate, ground]);
 
+  // Save. On a phone that takes a file into its share sheet, the sheet is
+  // the way — iOS lets no page write to the camera roll, and the sheet has
+  // Save Image one tap away, with Instagram beside it (Miyel, 2026-09-13:
+  // a download showed a file preview of a picture already on screen). On a
+  // desktop it is a download.
   const save = useCallback(async frameKey => {
     const pasted = copyLink();
     try {
       const blob = await compose(frameKey);
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = fileName(frameKey);
-      a.click();
-      setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-      if (await pasted) say(COPIED); else setStatus('');
-    } catch {
-      say('A picture on this print could not be read, so it cannot be saved.', 4000);
-    }
-  }, [compose, fileName, copyLink, say]);
-
-  const send = useCallback(async frameKey => {
-    const pasted = copyLink();
-    try {
-      const blob = await compose(frameKey);
-      const file = new File([blob], fileName(frameKey), { type: 'image/png' });
-      await navigator.share({ files: [file] });
+      if (canSend) {
+        const file = new File([blob], fileName(frameKey), { type: 'image/png' });
+        await navigator.share({ files: [file] });
+      } else {
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = fileName(frameKey);
+        a.click();
+        setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+      }
       if (await pasted) say(COPIED); else setStatus('');
     } catch (error) {
       // Cancelling the share sheet rejects, and being told about it would be
       // an error message for changing your mind.
       if (error?.name === 'AbortError') return;
-      say('That could not be sent from here — save it instead.', 4000);
+      say('A picture on this print could not be read, so it cannot be saved.', 4000);
     }
-  }, [compose, fileName, copyLink, say]);
+  }, [compose, fileName, copyLink, say, canSend]);
 
   // The address alone, without a picture.
   const copy = useCallback(async () => {
@@ -126,5 +124,5 @@ export function usePress({ plate, shown, ground, isDark, link, fonts }) {
     else say(link, 6000);   // no clipboard here; showing it beats swallowing it
   }, [link, copyLink, say]);
 
-  return { save, send, copy, status, canSend };
+  return { save, copy, status, canSend };
 }

@@ -580,6 +580,13 @@ the default, with labels nobody outside the project knew. The paper on
 screen takes the size picked in the bar, so the other shapes are seen, not
 only saved; the card is scaled to fit whatever paper it is on.
 
+**The print is the paper on screen, with no hidden margins, 2026-09-13.**
+The saved picture kept bands for Instagram's furniture and a link sticker
+that the preview did not show, and came out with the card smaller than the
+one just approved. Anything a story needs kept clear is drawn on the
+preview as a band, or not kept. On a phone Save is the share sheet — Save
+Image and Instagram are on it — since no page can write to the camera roll.
+
 **A print is the entry page's first screen on the record's own colour,
 2026-09-12.** The cover blurred across the paper under the look's wash,
 then the card a reader already knows from the journal: centred, the post's

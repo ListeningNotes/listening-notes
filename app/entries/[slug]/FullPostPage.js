@@ -303,7 +303,6 @@ export default function FullPostPage({ entry, references = [], authed = false, l
     chips: printChoices.chips !== false,
     symbols: printChoices.symbols === true,
     horizon: printChoices.horizon !== false,
-    sticker: true,
   };
   // Plain night is dark whatever the page's theme; the record's ground
   // follows it, the way the page does.
@@ -848,10 +847,8 @@ export default function FullPostPage({ entry, references = [], authed = false, l
             size={size}
             onSize={key => setPrintChoices(c => ({ ...c, size: key }))}
             onSave={() => press.save(size)}
-            onSend={() => press.send(size)}
             onCopy={press.copy}
             onDone={finishPrinting}
-            canSend={press.canSend}
             status={press.status || (learned ? '' : PRINT_HINT)}
             link={entryUrl}
           />

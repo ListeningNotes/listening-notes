@@ -70,7 +70,6 @@ const TAPS = {
   keeper: shown => ({ keeper: !shown.keeper }),
   stars: shown => ({ stars: !shown.stars }),
   horizon: shown => ({ horizon: !shown.horizon }),
-  sticker: shown => ({ sticker: !shown.sticker }),
   // chips → symbols → gone → chips; without a mark that has a symbol, the
   // listen count alone goes chips → gone → chips.
   marks: (shown, hasSymbols) => (shown.chips
@@ -80,7 +79,7 @@ const TAPS = {
 
 // ── Measurements, in column units — the post's own ────────────────────────
 const COL = 340;
-const ART = 304;                       // min(40dvh, 78vw) on a 390 phone
+const ART = 265;                       // 78% of the card, as the screen has it while printing
 const ART_RADIUS = 16;
 // The statement pages' mark, not the nav's: setup's card sets it 78 wide on
 // 380 and the held copy's page 92 on a phone, about a fifth of the width.
@@ -98,24 +97,19 @@ const CHIP = 13, CHIP_PAD_X = 10, CHIP_PAD_Y = 4, CHIP_GAP = 8, CHIP_RADIUS = 5;
 // The marks as symbols instead of chips — the feed's own three, much larger
 // than a chip, so a print can carry the marks as pictures (Miyel's ask).
 const SYMBOL = 34, SYMBOL_GAP = 18;
-const HORIZON_H = 34, HORIZON_GAP = 2, HEART = 7;
+const HORIZON_H = 52, HORIZON_GAP = 3, HEART = 7;
 const COLUMN_GAP = 28;                 // opened out: between the cover and the stack
 // The screen's gap is 16 between everything; the artist line pulls up by 8.
-const GAP = { keeper: 10, art: 16, title: 16, artist: 8, stars: 16, chips: 16, listen: 10, horizon: 20 };
+// The screen's card has one gap between everything.
+const GAP = { keeper: 12, art: 12, title: 12, artist: 8, stars: 12, chips: 12, listen: 10, horizon: 12 };
 
-// How much of the paper the column is allowed, and the height it must fit.
-const FILL_W = 0.86;
-const FILL_H = 0.88;
-
-// ── A Story's furniture ───────────────────────────────────────────────────
-// Instagram draws over the top of a story (the progress bars, the name) and
-// the bottom (the reply bar), about an eighth each; on 9:16 the print keeps
-// out of both. With the Sticker toggle it leaves more at the foot — room for
-// the link sticker the poster adds there, which is what carries a reader to
-// the entry now that the print has no code. Miyel's ask, 2026-09-12.
-const STORY_TOP = 0.13;
-const STORY_FOOT = 0.13;
-const STICKER_FOOT = 0.24;
+// The paper's padding, as the screen has it: the card fills what is inside.
+// The print IS the paper on screen (Miyel, 2026-09-13: a saved picture that
+// kept hidden margins for Instagram's furniture and a sticker came out with
+// the card smaller than the one she had just approved). If a story ever
+// needs room kept, it is drawn on the preview as a band, not here.
+const PAD = 0.07;
+const PAD_SPREAD = 0.04;
 
 // ── Ink ────────────────────────────────────────────────────────────────────
 // base.css, stated rather than read: a print is the same colour wherever it
@@ -227,10 +221,6 @@ export function entryPlate({ entry, keeper }) {
   const marks = chips.filter(chip => chip.tone);
   if (marks.length) toggles.push({ key: 'symbols', label: 'Symbols', on: false });
   if (bars.length) toggles.push({ key: 'horizon', label: 'Horizon', on: true });
-  // On by default: a story is the frame that matters and the sticker is how
-  // it links, so the first print made should have the room. Only 9:16 has
-  // a foot to keep; on the other papers the switch changes nothing.
-  toggles.push({ key: 'sticker', label: 'Sticker space', on: true });
 
   return {
     title: 'The record',
@@ -254,12 +244,10 @@ export function entryPlate({ entry, keeper }) {
       // The boxes the press hit-tests a tap against, in the paper's pixels.
       const targets = [];
       const spread = frame.w / frame.h > 1.3;
-      const story = frame.w / frame.h < 0.6;
-      // The band of paper the print may use: all of it, or on a story what
-      // is left between Instagram's furniture — and under the sticker.
-      const top = story ? frame.h * STORY_TOP : 0;
-      const foot = story ? frame.h * (on('sticker') ? STICKER_FOOT : STORY_FOOT) : 0;
-      const areaH = frame.h - top - foot;
+      // The room inside the paper's padding, as on screen.
+      const pad = frame.w * (spread ? PAD_SPREAD : PAD);
+      const roomW = frame.w - pad * 2;
+      const roomH = frame.h - pad * 2;
 
       // ── the ground ───────────────────────────────────────────────────────
       paintGround(ctx, frame, art?.cover, ink, ground);
@@ -269,9 +257,8 @@ export function entryPlate({ entry, keeper }) {
       // by exactly the overrun; everything scales with it, so one correction
       // is enough.
       let U = spread
-        ? Math.min((frame.h * FILL_H) / ART, (frame.w * FILL_W) / (ART + COL + COLUMN_GAP))
-        : (frame.w * FILL_W) / COL;
-      const roomH = story ? areaH * 0.96 : frame.h * FILL_H;
+        ? Math.min(roomH / ART, roomW / (ART + COL + COLUMN_GAP))
+        : roomW / COL;
       let built = build(U);
       if (built.h > roomH) {
         U *= roomH / built.h;
@@ -592,42 +579,12 @@ export function entryPlate({ entry, keeper }) {
         drawCover(ctx, originX, originY + (h - artW) / 2, artW, U);
         lay(originX + artW + COLUMN_GAP * U, originY + (h - stack) / 2);
       } else {
-        lay((frame.w - colW) / 2, top + (areaH - h) / 2);
-      }
-
-      // The sticker's room, on a story: a ghost pill where the sticker goes,
-      // tapped to give the card the room back; without the room, a fainter
-      // pill in the foot margin Instagram covers anyway, tapped to make it.
-      if (story) {
-        const withRoom = on('sticker');
-        const zoneTop = frame.h * (1 - STICKER_FOOT);
-        const zoneBottom = frame.h * (1 - STORY_FOOT);
-        if (preview) drawStickerGhost(ctx, frame, withRoom, ink, zoneTop, zoneBottom);
-        targets.push(withRoom
-          ? { x: 0, y: zoneTop, w: frame.w, h: zoneBottom - zoneTop, tap: taps('sticker') }
-          : { x: 0, y: zoneBottom, w: frame.w, h: frame.h - zoneBottom, tap: taps('sticker') });
+        lay((frame.w - colW) / 2, (frame.h - h) / 2);
       }
       return targets;
 
       function taps(key) {
         return key === 'marks' ? shown => TAPS.marks(shown, marks.length > 0) : TAPS[key];
-      }
-      function drawStickerGhost(c, f, withRoom, ink, zoneTop, zoneBottom) {
-        const w = f.w * (withRoom ? 0.5 : 0.34);
-        const h = f.h * (withRoom ? 0.06 : 0.042);
-        const cx = (f.w - w) / 2;
-        const cy = withRoom ? zoneTop + (zoneBottom - zoneTop - h) / 2 : zoneBottom + (f.h - zoneBottom - h) / 2;
-        c.save();
-        c.globalAlpha = withRoom ? GHOST : GHOST * 0.7;
-        c.setLineDash([f.w * 0.012, f.w * 0.008]);
-        c.lineWidth = Math.max(1, f.w * 0.0025);
-        c.strokeStyle = ink.ink;
-        c.fillStyle = ink.ink;
-        roundRect(c, cx, cy, w, h, h / 2);
-        c.stroke();
-        c.globalAlpha *= 0.35;
-        c.fill();
-        c.restore();
       }
     },
   };
