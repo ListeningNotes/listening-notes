@@ -852,6 +852,13 @@ Project → Settings → Environment Variables.
 
 ## Gotchas
 
+**The Claude app's browser pane refuses the camera, always, 2026-09-12.**
+`getUserMedia` answers NotAllowedError with the permission already `denied`
+and nothing to click; the site is a secure context and the camera is there.
+So Scan a code cannot be tried in that pane, the way a deploy cannot: test
+it in Safari on the Mac (localhost counts as secure) or on the phone on the
+live site. The scanner now says which of the three failures it hit.
+
 **A migrator session that dies holding the lock hangs every start after
 it, 2026-09-12.** The dev server was restarted while the Mac changed
 networks; its migrator had taken `pg_advisory_lock` and the connection died
@@ -1449,7 +1456,9 @@ brief: the address book, the feed, and where compare lives**
       knowing whom. The "Only you have heard these" group is gone: it was
       this journal again, scrolled. The face is a rounded square, the
       card's shape, not a circle; the inbox's pill rows wrap now that a
-      third pill can be there.
+      third pill can be there. On a row Visit is the pill and remove a
+      faint word, red only under the pointer — a red pill beside every
+      name read as the row's main offer.
 
 **2026-09-12 — tap a cover for its code, branch `cover-code`, merged to
 main the same day as 1.2.0 (a new route and a migration: the middle

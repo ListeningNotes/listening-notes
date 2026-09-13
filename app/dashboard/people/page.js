@@ -176,10 +176,13 @@ export default function AddressBook({ layered = false }) {
                           : <span className="bk-name bk-name--none">Not answering yet</span>}
                       </span>
                     </Link>
-                    <a href={journalUrl(p.address)} target="_blank" rel="noopener noreferrer" className="own-link bk-visit" title="Open their journal">
-                      visit &#8599;
+                    {/* Visit leads and Remove barely shows: crossing somebody
+                        out is the rare thing here, and a red pill beside
+                        every name read as the row's main offer. */}
+                    <a href={journalUrl(p.address)} target="_blank" rel="noopener noreferrer" className="own-act bk-visit" title="Open their journal">
+                      Visit &#8599;
                     </a>
-                    <button type="button" className="own-act own-act--danger" onClick={() => remove(p.id)}>Remove</button>
+                    <button type="button" className="bk-remove" onClick={() => remove(p.id)} title="Cross them out">remove</button>
                   </div>
                 ))}
               </div>
