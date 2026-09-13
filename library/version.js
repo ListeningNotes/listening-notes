@@ -17,22 +17,12 @@ export const VERSION = pkg.version;
 // gap. The list never is.
 export const RELEASE_URL = 'https://github.com/ListeningNotes/listening-notes/releases';
 
-// Where "it didn't work" goes: a new issue on the one repository, the same
-// on every copy — never a fork's, because the fork's keeper is not the one
-// who reads them (DECISIONS: "It didn't work" goes to the issues). Every
-// keeper has a GitHub account by construction, since the deploy button
-// needs one, so a link is the whole mechanism: nothing phones home, nothing
-// is held anywhere but there, and the report carries what a keeper would
-// otherwise have to be asked for — the version, the page, the browser.
-export const ISSUES_URL = 'https://github.com/ListeningNotes/listening-notes/issues/new';
-
-export function reportUrl({ page = '', agent = '' } = {}) {
-  const body = [
-    'What I did:', '', '', 'What happened:', '', '', 'What I expected:', '', '',
-    '---',
-    `Version ${VERSION}${page ? ` · ${page}` : ''}`,
-    agent ? agent : '',
-  ].join('\n');
-  const query = new URLSearchParams({ title: 'It didn\'t work: ', body });
-  return `${ISSUES_URL}?${query}`;
-}
+// Where "it didn't work" goes: to the one copy the software comes from, as
+// a report a keeper writes on their own desk (app/dashboard/report/page.js)
+// and this route receives (app/api/reports/route.js). The same address on
+// every copy, the way the pitch pane's Get one is — a fork that wants its
+// own reports sets NEXT_PUBLIC_REPORTS_URL, the way it sets its source. A
+// GitHub issue lasted an hour on 2026-09-13: the people testing are not
+// GitHub people, and being sent there is where a report would have stopped.
+export const REPORTS_URL =
+  process.env.NEXT_PUBLIC_REPORTS_URL || 'https://www.listeningnotes.blog/api/reports';

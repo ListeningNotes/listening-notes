@@ -96,6 +96,9 @@ export const DOORS = {
   submission: { tries: 5,  windowMs: 10 * 60_000 },
   upvote:     { tries: 1,  windowMs: 12 * 60 * 60_000 },
   cover:      { tries: 20, windowMs: 60_000 },
+  // A problem written in from another copy's desk. A person writes one and
+  // maybe a second; a script writing hundreds is the thing to stop.
+  report:     { tries: 3,  windowMs: 10 * 60_000 },
 };
 
 // Ask whether this caller may try this door.

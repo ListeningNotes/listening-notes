@@ -35,6 +35,12 @@ export default function Inbox({ layered = false }) {
   const [comments, setComments] = useState([]);
   const [comLoading, setComLoading] = useState(true);
 
+  // Problems keepers wrote in from their desks (library/report_actions.js).
+  // Only the copy the software comes from ever receives any; on every other
+  // copy the tab shows nothing and says so.
+  const [reports, setReports] = useState([]);
+  const [repLoading, setRepLoading] = useState(true);
+
   // Who is already in the address book, so a send that carried a journal
   // offers to file it only once. A send is one of the ways an address gets
   // in (app/dashboard/people/page.js); this is that way.
@@ -50,7 +56,13 @@ export default function Inbox({ layered = false }) {
     fetch('/api/submissions').then(r => r.json()).then(d => { setSubmissions(d.submissions || []); setSubLoading(false); }).catch(() => setSubLoading(false));
     fetch('/api/comments/pending').then(r => r.json()).then(d => { setComments(d.comments || []); setComLoading(false); }).catch(() => setComLoading(false));
     fetch('/api/people').then(r => r.json()).then(d => setPeople(d.people || [])).catch(() => {});
+    fetch('/api/reports').then(r => r.json()).then(d => { setReports(d.reports || []); setRepLoading(false); }).catch(() => setRepLoading(false));
   }, [authed]);
+
+  async function settleReport(id, status) {
+    await fetch(`/api/reports/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status }) });
+    setReports(prev => prev.map(r => r.id === id ? { ...r, status } : r));
+  }
 
   // Files a sender's journal in the address book. The server reads the name
   // off the journal; nothing here is typed.
@@ -134,6 +146,9 @@ export default function Inbox({ layered = false }) {
         <div className="ib-tabs">
           <FolderTab id="submissions" tab={tab} onSelect={setTab}>Submissions{subCounts.pending > 0 ? ` (${subCounts.pending})` : ''}</FolderTab>
           <FolderTab id="comments" tab={tab} onSelect={setTab}>Comments{comments.length > 0 ? ` (${comments.length})` : ''}</FolderTab>
+          {(() => { const open = reports.filter(r => r.status === 'pending').length; return (
+            <FolderTab id="reports" tab={tab} onSelect={setTab}>Reports{open > 0 ? ` (${open})` : ''}</FolderTab>
+          ); })()}
         </div>
 
         {/* The open folder */}
@@ -222,6 +237,43 @@ export default function Inbox({ layered = false }) {
                                 : <button onClick={() => file(sent.sender_url)} className="own-act">Add to address book</button>
                             )}
                           </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+
+            {/* ── REPORTS ── */}
+            {tab === 'reports' && (
+              <>
+                {repLoading ? (
+                  <div className="ib-list" style={{ gap: 14 }}>
+                    {[...Array(2)].map((_, i) => <div key={i} className="own-skeleton" style={{ height: 70 }} />)}
+                  </div>
+                ) : reports.filter(r => r.status !== 'dismissed').length === 0 ? (
+                  <div className="own-empty">No problems reported.</div>
+                ) : (
+                  <div>
+                    {reports.filter(r => r.status !== 'dismissed').map(r => (
+                      <div key={r.id} className={'ib-comment' + (r.status === 'read' ? ' ib-report--read' : '')}>
+                        <div className="ib-comment-head">
+                          <span className="ib-comment-who">{r.keeper_name || 'Someone'}</span>
+                          {r.journal && (
+                            <a href={journalUrl(r.journal)} target="_blank" rel="noopener noreferrer" className="own-link ib-comment-where">
+                              their journal &#8599;
+                            </a>
+                          )}
+                          <span className="ib-comment-when">{new Date(r.created_at).toLocaleDateString()}</span>
+                        </div>
+                        <p className="ib-comment-text">{r.said}</p>
+                        <p className="ib-report-meta">{r.version ? `Version ${r.version}` : ''}{r.agent ? ` · ${r.agent}` : ''}</p>
+                        <div className="ib-comment-row">
+                          {r.status === 'pending' && (
+                            <button onClick={() => settleReport(r.id, 'read')} className="own-act own-act--solid">Read</button>
+                          )}
+                          <button onClick={() => settleReport(r.id, 'dismissed')} className="own-act own-act--danger">Dismiss</button>
                         </div>
                       </div>
                     ))}

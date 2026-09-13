@@ -1410,6 +1410,35 @@ current.
 
 ## Complete
 
+**2026-09-13 — reports, branch `reports`, merged to main and pushed the
+same day as 1.7.0 (a table, a route, a sheet: the middle number); release
+v1.7.0 cut with the update steps written for a keeper who has never opened
+GitHub**
+
+- [x] **Report a problem is a box, not a link.** The GitHub issue of 1.6.0
+      lasted an hour, on Miyel's call: the people testing are not GitHub
+      people. Now the desk's line opens a sheet over it — one box, Send, a
+      line saying it goes to Listening Notes with the version and browser
+      attached and the journal's address so there is a way to find them —
+      and the report lands in the canonical copy's inbox under a Reports
+      tab (Read, Dismiss), counted with the sends and comments on the desk's
+      door. `reports` (migration 009), `library/report_actions.js`,
+      `POST /api/reports` (public, cross-origin, three a ten-minute window),
+      `GET /api/reports` and `PATCH /api/reports/[id]` (owner), `REPORTS_URL`
+      in version.js (`NEXT_PUBLIC_REPORTS_URL` for a fork). Names to confirm:
+      all of those, `.rp-`, and the sheet's words.
+- [x] **Seen on the dev server:** the sheet from the desk, Send failing
+      the honest way against a live site that does not have the route yet,
+      the Reports tab with a rehearsal report (name, their journal, date,
+      the words, version · browser, Read, Dismiss — left for Miyel to
+      dismiss), the desk's Inbox count including it, and the three tabs
+      fitting a phone by giving up side padding. The cross-origin path is
+      proved by the preflight's headers, not by another copy — none is on
+      1.7 yet.
+- [ ] **A copy on 1.6.x still shows the GitHub link** until it updates. The
+      1.6.0 release notes describe 1.6.0 truthfully; the 1.7.0 notes say the
+      box replaced it.
+
 **2026-09-13 — the bug button, on main as 1.6.0 (something new: the middle
 number), pushed, and release v1.6.0 cut the same night — the first since
 1.0.0, with notes for keepers covering everything since — so June's and
