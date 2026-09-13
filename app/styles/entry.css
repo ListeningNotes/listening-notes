@@ -146,6 +146,8 @@
    from the side the finger sent the last one away from. The exit is the
    settling transition above, run to a full width. */
 .lay--swiped { animation: none; }
+/* Returned to, not arrived at: the sheet under a closed one draws at rest. */
+.lay--still { animation: none; }
 .lay--settling .lay-content { transition: transform 0.24s cubic-bezier(0.22, 0.61, 0.36, 1); }
 .lay-content--from-right { animation: layFromRight 0.26s cubic-bezier(0.22, 0.61, 0.36, 1); }
 .lay-content--from-left  { animation: layFromLeft  0.26s cubic-bezier(0.22, 0.61, 0.36, 1); }
