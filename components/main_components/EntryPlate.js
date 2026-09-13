@@ -68,7 +68,10 @@ const KEEPER = 13;                     // the label face, under the mark — hal
 const TITLE = 26, TITLE_LEAD = 26 * 1.22;
 const ARTIST = 11;                     // mono caps, as .ln-screen-one-artist
 const STAR = 24, STAR_GAP = 3;         // StarRating size={24}
-const CHIP = 10, CHIP_PAD_X = 8, CHIP_PAD_Y = 3, CHIP_GAP = 8, CHIP_RADIUS = 4;
+// A third larger than the post's chips (10 on 8×3): a print is looked at
+// inside a story, a phone's width scaled into a phone's width, and at the
+// screen's size they could not be read (Miyel, 2026-09-12).
+const CHIP = 13, CHIP_PAD_X = 10, CHIP_PAD_Y = 4, CHIP_GAP = 8, CHIP_RADIUS = 5;
 // The marks as symbols instead of chips — the feed's own three, much larger
 // than a chip, so a print can carry the marks as pictures (Miyel's ask).
 const SYMBOL = 34, SYMBOL_GAP = 18;
