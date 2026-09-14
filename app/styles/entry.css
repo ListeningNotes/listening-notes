@@ -1070,6 +1070,11 @@
   color-scheme: dark;
 }
 .ln-print-mark { display: block; height: 44px; width: auto; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+/* No focus ring on the tappable lines and the mark: a tap on iOS focuses
+   them and drew a blue box round the mark (Miyel, 2026-09-13). The fade
+   is the feedback. */
+.ln-print-mark:focus, .ln-print-mark:focus-visible,
+.ln-print-line:focus, .ln-print-line:focus-visible { outline: none; }
 .ln-print-mark path, .ln-print-mark circle { fill: var(--ink); transition: fill 0.2s; }
 .ln-print-mark .ln-print-mark-dot--live { fill: var(--live); }
 /* The finished picture over the paper, when a phone has no share sheet to
