@@ -1059,24 +1059,205 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   a.hp-recent-tile:hover { transform: none; }
 }
 
-/* ── Desktop: the same three, said out loud ─────────────────────────────────
-   No gesture, no carets, nothing hidden. Each column keeps its own scroll,
-   which is what makes this the same structure rather than a second layout. */
+/* The two things a desk has that a phone does not. Stated off by default and
+   switched on in the desktop block below, so a phone never draws either. */
+.hn-grip { display: none; }
+.hn-band-ground { display: none; }
+/* The bar's small mark is always in the markup (a desk wants it there) and
+   on a phone it shows only once the crown has scrolled away — the crown and
+   the small mark are never on screen together, so it is still one mark. */
+@media (max-width: 768px) {
+  .hn-bar:not(.hn-bar--scrolled) .hn-bar-mark { display: none; }
+}
+
+/* ── Desktop: the same three, said out loud, at three widths ───────────────
+   No gesture, no carets, each column keeping its own scroll — the same
+   components, which is what makes this the same structure rather than a
+   second layout. What changed on 2026-09-13 is proportion. Three equal
+   columns were three phones parked side by side: no hierarchy, and
+   everything floating in the vertical middle. Now the card and the desk are
+   rails of about 196 and 186px and the centre takes the rest; content starts
+   at the top of every column; and the beacon is a band across the top of the
+   centre, the record's own colour bled to the column's edges, the way a
+   print's ground is.
+
+   The dividers are grips: drag one and that rail widens or narrows, the
+   centre taking the remainder, and the widths are remembered in this browser
+   (hooks/useColumnWidths.js, which also clamps them so nothing can be dragged
+   into a shape that does not work). --hn-left and --hn-right are written on
+   the document's root by that hook — on the root rather than on .hn because
+   the panel a desk page opens in (entry.css, .lay--desk) sits beside the
+   cross and reads the desk's width too. The two numbers here are what the
+   server draws and what a browser with nothing remembered gets. */
 @media (min-width: 769px) {
+  :root {
+    --hn-left: 196px;
+    --hn-right: 186px;
+  }
+  .hn {
+    /* No carets on a desk, so nothing to keep clear of: the column's own
+       padding is the gutter. */
+    --hn-gutter: 16px;
+    /* Where content starts in the two rails: under the line the tools and
+       the lights sit on, which is the 58px row every other page's header
+       has, 22px down. The band's own row starts under the whole bar. */
+    --hn-rail-top: 68px;
+  }
   .hn-rail {
     display: grid;
-    grid-template-columns: 1fr 1.3fr 1fr;
+    grid-template-columns: var(--hn-left) minmax(0, 1fr) var(--hn-right);
     overflow-x: hidden;
   }
-  .hn-pane { width: auto; }
+  .hn-pane { width: auto; min-width: 0; }
   .hn-pane + .hn-pane { border-left: 1px solid var(--border); }
-  /* One mark, three columns. On a phone you only ever see one pane, so a crown
-     on each is one crown; side by side they are three copies of the same logo
-     across the top of one page. Hidden rather than removed, because the height
-     is what keeps the portrait and the album art on the same line — take the
-     box away and the columns stop agreeing about where a square starts. */
-  .hn-pane:not(.hn-pane--home) .hn-crown { visibility: hidden; }
+  /* No crown. The mark is in the bar over the centre column, always, the
+     way every other page's row carries it (SiteNav), so each column starts
+     with what it is for. The crown used to stay as an invisible box on the
+     outer columns to keep three squares on one line; the squares are
+     different sizes now by design — the cover is 118px in the band, the
+     portrait fills a rail — so there is no line to keep. */
+  .hn-crown { display: none; }
   .hn-controls { display: none; }
+
+  /* The bar belongs to the centre column: the mark centred over the band,
+     the lights at the column's right edge, and once the wall has scrolled
+     the page-colour band with its hairline — over the wall, never over the
+     card or the desk beside it. */
+  .hn-bar { left: var(--hn-left); right: var(--hn-right); }
+
+  /* ── The grips ── a hairline already marks each divider (the pane's
+     border); the grip is the nine pixels astride it, invisible until a
+     pointer is over it or holding it. While one is held the panes take no
+     pointer events, so a drag across the wall does not lift a cover. */
+  .hn-grip {
+    display: block;
+    position: absolute; top: 0; bottom: 0; width: 9px; z-index: 90;
+    cursor: col-resize; touch-action: none;
+    background: transparent;
+    transition: background 0.15s;
+  }
+  .hn-grip--left  { left: calc(var(--hn-left) - 4px); }
+  .hn-grip--right { right: calc(var(--hn-right) - 4px); }
+  .hn-grip:hover, .hn-grip--held { background: color-mix(in srgb, var(--ink) 9%, transparent); }
+  .hn-grip:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: -2px; }
+  .hn--dragging { user-select: none; -webkit-user-select: none; cursor: col-resize; }
+  .hn--dragging .hn-pane { pointer-events: none; }
+
+  /* ── The band ── the centre column's first screen, as one row on the
+     record's colour: the cover at 118px with a soft shadow, then the label,
+     the title and the artist beside it, and what came before at the far
+     right, all on the cover's baseline. The ground is the cover blurred
+     across the column under a wash of page colour — the print's recipe
+     (.ln-print-ground in entry.css), blurred further because this is a
+     band behind type rather than paper behind a card. It changes with every
+     record and asks nothing of anyone. */
+  .hn-band {
+    position: relative;
+    min-height: auto;
+    flex-direction: row;
+    align-items: flex-end;
+    justify-content: flex-start;
+    gap: 24px;
+    padding: calc(var(--hn-bar-h) + 4px) 28px 24px;
+  }
+  .hn-band-ground {
+    display: block;
+    position: absolute; inset: 0; z-index: 0;
+    overflow: hidden;
+    background: var(--bg-warm);
+  }
+  .hn-band-ground img {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: cover;
+    transform: scale(1.3);
+    filter: blur(32px) saturate(1.25);
+  }
+  .hn-band-ground::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: color-mix(in srgb, var(--bg) 52%, transparent);
+  }
+  .hn-band > :not(.hn-band-ground) { position: relative; z-index: 1; }
+  .hn-band .hp-dashboard { flex: 1 1 auto; min-width: 0; max-width: none; margin: 0; }
+  .hn-band .hp-dash-beacon { justify-content: flex-start; }
+  .hn .hn-band .beacon-stage { height: auto; }
+  .hn-band .beacon-stage--quiet { justify-content: flex-start; }
+  .hn-band .beacon-quiet { margin: 0; }
+  .hn-band .beacon-card--main { position: static; transform: none; }
+  .hn-band .beacon-card { flex-direction: row; align-items: flex-end; gap: 22px; cursor: default; }
+  .hn-band .beacon-art-wrap {
+    width: 118px; height: 118px; flex-shrink: 0;
+    border-radius: 12px;
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.18);
+  }
+  .hn-band .beacon-card:hover .beacon-art-wrap { transform: none; box-shadow: 0 10px 28px rgba(0, 0, 0, 0.18); }
+  .hn-band .beacon-art-wrap--live { box-shadow: 0 14px 36px rgba(0, 0, 0, 0.22); }
+  .hn-band .beacon-meta { align-items: flex-start; text-align: left; gap: 5px; min-width: 0; padding-bottom: 6px; }
+  .hn-band .beacon-track { font-size: 22px; }
+  .hn-band .beacon-track--wrap { max-width: none; margin: 0; text-wrap: pretty; }
+  .hn-band .beacon-artist { font-size: 0.8rem; }
+  .hn-band .beacon-idle-overlay { font-size: 0.5rem; letter-spacing: 0.14em; }
+  /* What came before: three small covers at the band's far right, on the
+     big cover's baseline, and no line over them — three small covers beside
+     a large one say what they are. */
+  .hn-band .hp-recent-set { margin-left: auto; align-self: flex-end; flex-shrink: 0; padding-bottom: 6px; }
+  .hn-band .hp-recent-head { display: none; }
+  .hn-band .hp-recent { gap: 8px; }
+  .hn-band .hp-recent-tile { width: 28px; height: 28px; border-radius: 6px; }
+  .hn-band .hp-recent-none { font-size: 12px; }
+
+  /* The wall under the band: its bar sticks under the centre's bar once
+     the column has scrolled, and the covers follow it at once. The 96px the
+     phone spends clearing a bar that sits on the wall's own floor is not
+     spent here. */
+  .hn-under { --arc-nav-bottom: var(--hn-bar-h); }
+  .hn-under .arc-main { padding-top: 4px; }
+  .hn-under .arc-bar-wrap { margin-top: 14px; }
+  /* No beacon, no band: the wall is the first thing, under the bar's row. */
+  .hn-under--first { padding-top: var(--hn-bar-h); }
+
+  /* ── Right, signed out: the colophon ── at the top of its rail. The same
+     three sentences and the same button, at the rail's measure. */
+  .pt-pane { min-height: auto; align-items: flex-start; padding: var(--hn-rail-top) var(--hn-gutter) 40px; }
+  .pt-body { gap: 16px; }
+  .pt-title { font-size: 1.15rem; }
+  .pt-prose p { font-size: 0.82rem; line-height: 1.6; }
+  .pt-foot { margin-top: 28px; }
+
+  /* ── Right, signed in: the desk ── Start a listen fills the rail's width
+     as the one square; the three doors are rows under it, mark then word,
+     because three tiles across 150px have no room for a word each. The
+     feed follows on the same scroll. */
+  .db-pane { min-height: auto; align-items: flex-start; padding: var(--hn-rail-top) var(--hn-gutter) 20px; }
+  .db-body { gap: 14px; }
+  .db-hero { width: 100%; height: auto; aspect-ratio: 1 / 1; }
+  .db-doors { flex-direction: column; gap: 8px; }
+  .db-door {
+    flex: none; flex-direction: row; align-items: center; justify-content: flex-start;
+    min-height: 0; gap: 12px; padding: 11px 14px;
+    text-align: left; font-size: 0.6rem;
+  }
+  .db-door-mark { width: 20px; height: 20px; }
+  .db-door-text { align-items: flex-start; }
+  .db-door-label { justify-content: flex-start; }
+  .db-colophon { margin-top: 10px; justify-content: flex-start; text-align: left; }
+
+  /* ── The feed in the rail ── the same rows, at the rail's measure: the
+     cover fills the width, the words under it ranged left. */
+  .fd-wrap { padding: 6px var(--hn-gutter) 40px; }
+  .hn-floor-scroll .fd-wrap { padding-top: 6px; }
+  .fd-views { justify-content: flex-start; gap: 16px; margin-bottom: 14px; }
+  .fd-list { gap: 30px; }
+  .fd-item { align-items: flex-start; text-align: left; }
+  .fd-art { width: 100%; border-radius: 10px; margin-bottom: 10px; box-shadow: 0 8px 22px rgba(0, 0, 0, 0.14); }
+  .fd-album { font-size: 15px; }
+  .fd-artist { font-size: 9.5px; margin-top: 3px; }
+  .fd-stars { justify-content: flex-start; gap: 8px; margin-top: 8px; }
+  .fd-who { justify-content: flex-start; font-size: 11px; margin-top: 10px; gap: 6px; }
+  .fd-face { width: 24px; height: 24px; border-radius: 7px; }
+  .fd-compare { margin-top: 10px; }
+  .fd-panel { padding: 10px 12px; }
 }
 
 /* The foot of the pitch pane: the source link, and the way in. Two quiet lines

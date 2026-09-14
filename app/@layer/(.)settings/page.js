@@ -17,7 +17,7 @@ import SettingsPage from '../../settings/page';
 
 export default function SettingsOverTheDesk() {
   return (
-    <LayerEntry label="Settings" scrolls arrives="bottom">
+    <LayerEntry label="Settings" scrolls arrives="bottom" over="desk">
       <SettingsPage layered />
     </LayerEntry>
   );

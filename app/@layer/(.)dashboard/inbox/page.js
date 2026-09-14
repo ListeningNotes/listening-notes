@@ -17,7 +17,7 @@ import Inbox from '../../../dashboard/inbox/page';
 
 export default function InboxOverTheDesk() {
   return (
-    <LayerEntry label="Messages" scrolls arrives="bottom">
+    <LayerEntry label="Messages" scrolls arrives="bottom" over="desk">
       <Inbox layered />
     </LayerEntry>
   );

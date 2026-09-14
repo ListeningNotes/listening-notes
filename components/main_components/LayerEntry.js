@@ -98,7 +98,17 @@ export function useLayerHeaderSlot() {
 // `arrives` is 'tile' (grow from the pressed tile, with a fade where there is
 // none — the entry) or 'bottom' (rise from the foot of the screen and sink
 // back on a pull — the send page, a form). Both close on the pull down.
-export default function LayerEntry({ children, label = 'Entry', scrolls = false, arrives = 'tile' }) {
+//
+// `over` is where the layer opens on a desk (2026-09-13, Miyel's call): a
+// desk can afford to share the screen, so only a listen takes the whole of
+// it. 'journal' — an entry — covers the journal's column and leaves the card
+// and the desk beside it. 'desk' — the inbox, the address book, a person, a
+// report, Settings — is a panel at the right edge, as wide as the desk's rail
+// or 520px if the rail is narrower, in from the right and out the same way.
+// Left out, the layer is the whole screen. On a phone `over` changes nothing:
+// the stylesheet reads it above 769px only (.lay--over-* in entry.css); this
+// file does the leaving and measures the growth from the sheet's own corner.
+export default function LayerEntry({ children, label = 'Entry', scrolls = false, arrives = 'tile', over = null }) {
   const sheetRef = useRef(null);
   const [headerSlot] = useState(() => (typeof document === 'undefined' ? null : document.createElement('div')));
   useLayoutEffect(() => {
@@ -149,11 +159,15 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
     if (!sheet || !box) return;
     const W = sheet.offsetWidth || window.innerWidth;
     const H = sheet.offsetHeight || window.innerHeight;
+    // Where the sheet rests. The whole window, usually, so this is 0,0 — but
+    // a desk page on a desk is a panel at the right edge, and the tile's
+    // corner has to be measured from the panel's, not the window's.
+    const at = sheet.getBoundingClientRect();
     const run = sheet.animate([
       // Opaque from the first frame. It began at half opacity, and for the
       // length of the growth the wall showed through a sheet that was also
       // fading — two things happening where one is the whole idea.
-      { transformOrigin: '0 0', transform: `translate(${box.x}px, ${box.y}px) scale(${box.w / W}, ${box.h / H})`, borderRadius: '14px' },
+      { transformOrigin: '0 0', transform: `translate(${box.x - at.left}px, ${box.y - at.top}px) scale(${box.w / W}, ${box.h / H})`, borderRadius: '14px' },
       { transformOrigin: '0 0', transform: 'none', borderRadius: '0px' },
     ], { duration: GROW_MS, easing: GROW_EASE });
     return () => run.cancel();
@@ -208,6 +222,21 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
     const box = slug && !reduced ? tileBoxOf(slug) : null;
     const onScreen = box && box.y > -box.h && box.y < window.innerHeight;
     if (!sheet) { goBack(); return; }
+    // A desk page on a desk is a panel at the right edge, and leaves the way
+    // it came: out to the right. The phone's shape is the rise below.
+    if (rises && over === 'desk' && window.matchMedia('(min-width: 769px)').matches) {
+      let went = false;
+      const back = () => { if (went) return; went = true; goBack(); };
+      window.setTimeout(back, GROW_MS);
+      const width = sheet.offsetWidth || window.innerWidth;
+      const slide = sheet.animate([
+        { transform: 'none' },
+        { transform: `translateX(${width}px)` },
+      ], { duration: GROW_MS * 0.7, easing: GROW_EASE, fill: 'forwards' });
+      slide.onfinish = back;
+      slide.oncancel = back;
+      return;
+    }
     if (rises) {
       // Back the way it came: down and out, from wherever the pull left it.
       let went = false;
@@ -265,7 +294,7 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
     run.oncancel = done;
     // The flying copy must not outlive the sheet, animation or not.
     window.setTimeout(() => flyer.remove(), GROW_MS + 100);
-  }, [goBack, slug, rises, router]);
+  }, [goBack, slug, rises, over, router]);
 
   // ── To a neighbour ────────────────────────────────────────────────────────
   // A page turn. The record on screen keeps going the way it was pushed,
@@ -427,13 +456,28 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
   return (
     <div
       className={'lay' + (arrival.still ? ' lay--still' : rises ? ' lay--rises' : arrival.swiped ? ' lay--swiped' : growFrom ? ' lay--grows' : ' lay--fades') + (scrolls ? ' lay--scrolls' : '')
-        + (settling ? ' lay--settling' : '') + (pulled ? ' lay--dragging' : '')}
+        + (over ? ` lay--over-${over}` : '') + (settling ? ' lay--settling' : '') + (pulled ? ' lay--dragging' : '')}
       ref={sheetRef}
       style={pulled ? { transform: `translateY(${dragY}px)` } : undefined}
       role="dialog"
       aria-modal="true"
       aria-label={label}
     >
+      {/* The way back, for a pointer. A phone closes a layer with the pull
+          down and the browser's own back; a desk with the journal in its
+          dock has neither, and Escape alone is a way out nobody is told
+          about (Miyel, 2026-09-13). First in the sheet, in a slot that
+          sticks to the sheet's top as it scrolls, so it sits at the sheet's
+          own corner whatever the sheet is — the whole screen, the journal's
+          column, the desk's panel — and moves with it while it grows or is
+          pulled. The stylesheet draws it only above 769px, never on a phone,
+          where the layer has no close button by decision. */}
+      <div className="lay-back-slot">
+        <button type="button" className="lay-back" onClick={() => leave()} aria-label="Close" title="Close">
+          <CaretLeft size={18} weight="bold" aria-hidden="true" />
+        </button>
+      </div>
+
       {/* The content. It follows a finger sideways, springs back if let go
           early, or leaves off the edge; a neighbour is a new layer and
           enters from the side it was on. */}
