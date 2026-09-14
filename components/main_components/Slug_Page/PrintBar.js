@@ -17,7 +17,7 @@ import { createPortal } from 'react-dom';
 import { CaretLeft, DownloadSimple, X } from '@phosphor-icons/react';
 import { FRAME_ORDER, FRAMES } from '../SharePrinter';
 
-export default function PrintBar({ grounds, ground, onGround, size, onSize, onSave, onDone, status, final = false, onBack }) {
+export default function PrintBar({ grounds, ground, onGround, size, onSize, onSave, onDone, status, final = false, onBack, onDeliver, canDeliver = false }) {
   // Portalled onto the body: the paper sets its own colours on the box it
   // sits in, and the bar is the page's, not the paper's — it keeps the
   // site's theme whatever ground the card is on (Miyel, 2026-09-13).
@@ -29,6 +29,9 @@ export default function PrintBar({ grounds, ground, onGround, size, onSize, onSa
   // the screen's foot, and a last line down there is a line nobody sees
   // (Miyel's phone, 2026-09-13).
   if (final) {
+    // The final picture is up: nothing to choose — the way back, and the
+    // tap that hands the picture over (the share sheet, or a download). A
+    // phone with no sheet holds the picture instead, and the line says so.
     return createPortal(
       <div className="ln-print-bar" role="toolbar" aria-label="Your print">
         <div className="ln-print-said" aria-live="polite">{status}</div>
@@ -37,6 +40,12 @@ export default function PrintBar({ grounds, ground, onGround, size, onSize, onSa
             <CaretLeft size={13} weight="bold" aria-hidden="true" />
             <span>Back to the card</span>
           </button>
+          {canDeliver && (
+            <button type="button" className="ln-pin ln-pin--on" onClick={onDeliver}>
+              <DownloadSimple size={13} weight="bold" aria-hidden="true" />
+              <span>Save</span>
+            </button>
+          )}
         </div>
       </div>,
       document.body,

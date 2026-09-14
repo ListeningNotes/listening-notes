@@ -30,6 +30,8 @@ const COPIED_MS = 2400;
 // navigator, hydrates the same markup. Asked once; the answer does not change.
 const never = () => () => {};
 const onServer = () => false;
+// Whether a finger is what is pressing — a phone or a tablet.
+const probeTouch = () => navigator.maxTouchPoints > 0;
 let canShareFiles = null;
 function probeCanShare() {
   if (canShareFiles === null) {
@@ -60,8 +62,14 @@ export function usePress({ plate, shown, ground, isDark, link, fonts }) {
   // sheet to hand it to (a page on plain http gets none): iOS lets a held
   // finger add any picture on a page to Photos, and that works everywhere.
   const [picture, setPicture] = useState(null);
+  // The picture's file, kept for the second tap that hands it over.
+  const made = useRef(null);
   const timer = useRef(null);
   const canSend = useSyncExternalStore(never, probeCanShare, onServer);
+  const touch = useSyncExternalStore(never, probeTouch, onServer);
+  // Whether a second tap can deliver the picture — the share sheet, or a
+  // download on a desktop. A phone with neither holds the picture to save.
+  const canDeliver = canSend || !touch;
 
   // The clipboard, two ways: the modern one, which iOS gives only to pages
   // on https, and the old one — select a hidden field and copy — which works
@@ -115,49 +123,57 @@ export function usePress({ plate, shown, ground, isDark, link, fonts }) {
     return `${plate?.fileName || 'print'}-${ground}-${frame.label.replace(':', 'x')}.png`;
   }, [plate, ground]);
 
-  // Save. On a phone that takes a file into its share sheet, the sheet is
-  // the way — iOS lets no page write to the camera roll, and the sheet has
-  // Save Image one tap away, with Instagram beside it (Miyel, 2026-09-13:
-  // a download showed a file preview of a picture already on screen). A
-  // phone without the sheet — a page on plain http, like a dev copy on the
-  // home network — gets the picture on the paper to hold and add to
-  // Photos. A desktop gets a download.
+  // Save, in two taps (Miyel, 2026-09-13, from the live site: the sheet
+  // came up straight away and skipped the look at the finished picture).
+  // The first tap makes the picture and shows it on the paper, with the
+  // entry's address on the clipboard; the second hands it over — the share
+  // sheet on a phone, where Save Image and Instagram are one tap, since iOS
+  // lets no page write to the camera roll; a download on a desktop. A phone
+  // with no sheet (a page on plain http, like a dev copy on the home
+  // network) holds the picture to add it to Photos, and has no second tap.
   const save = useCallback(async frameKey => {
     const pasted = copyLink();
     try {
       const blob = await compose(frameKey);
+      made.current = { blob, name: fileName(frameKey) };
+      const url = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => reject(reader.error);
+        reader.readAsDataURL(blob);
+      });
+      setPicture(url);
+      const copied = await pasted;
+      // Said for as long as the picture is up; dismissing it clears it.
+      clearTimeout(timer.current);
+      setStatus(canDeliver
+        ? (copied ? 'This is your print, and its address is copied.' : 'This is your print.')
+        : 'Touch and hold the picture to add it to Photos.');
+    } catch {
+      say('A picture on this print could not be read, so it cannot be saved.', 4000);
+    }
+  }, [compose, fileName, copyLink, say, canDeliver]);
+  const deliver = useCallback(async () => {
+    const it = made.current;
+    if (!it) return;
+    try {
       if (canSend) {
-        const file = new File([blob], fileName(frameKey), { type: 'image/png' });
-        await navigator.share({ files: [file] });
-        if (await pasted) say(COPIED); else setStatus('');
-      } else if (navigator.maxTouchPoints > 0) {
-        const url = await new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result);
-          reader.onerror = () => reject(reader.error);
-          reader.readAsDataURL(blob);
-        });
-        setPicture(url);
-        await pasted;
-        // Said for as long as the picture is up; dismissing it clears it.
-        clearTimeout(timer.current);
-        setStatus('Touch and hold the picture to add it to Photos.');
+        await navigator.share({ files: [new File([it.blob], it.name, { type: 'image/png' })] });
       } else {
         const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = fileName(frameKey);
+        a.href = URL.createObjectURL(it.blob);
+        a.download = it.name;
         a.click();
         setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-        if (await pasted) say(COPIED); else setStatus('');
       }
     } catch (error) {
       // Cancelling the share sheet rejects, and being told about it would be
       // an error message for changing your mind.
       if (error?.name === 'AbortError') return;
-      say('A picture on this print could not be read, so it cannot be saved.', 4000);
+      say('That could not be handed over from here.', 4000);
     }
-  }, [compose, fileName, copyLink, say, canSend]);
-  const dismissPicture = useCallback(() => { setPicture(null); setStatus(''); }, []);
+  }, [canSend, say]);
+  const dismissPicture = useCallback(() => { setPicture(null); made.current = null; setStatus(''); }, []);
 
-  return { save, status, canSend, picture, dismissPicture };
+  return { save, deliver, canDeliver, status, picture, dismissPicture };
 }
