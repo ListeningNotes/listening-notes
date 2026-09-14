@@ -221,7 +221,7 @@ The rooms — full pages assembled from furniture
     about/page.js              Redirect to / — the identity card is the about page
     session/page.js            The listen — picker, then four screens under one header
     printer/page.js            The share printer — the press on a record for the keeper (?entry=slug); the sentence for everyone else and for the card, whose plate is still to come
-    setup/page.js              Claiming a copy: the code, the name, five skippable screens, the password
+    setup/page.js              Claiming a copy: the code, the name, three skippable screens, the password
     settings/page.js           The machinery, owner-only
     @layer/(.)session/page.js  The same listen, opened as a layer over the desk
     @layer/(.)dashboard/inbox/page.js  The inbox, opened as a sheet over the desk
