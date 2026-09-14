@@ -883,3 +883,34 @@ a.ab-rig-name:hover { text-decoration: underline; }
 @media (max-width: 480px) {
   .idc-name { font-size: 27px; }
 }
+
+/* ── On a desk: the card in a rail ─────────────────────────────────────────
+   Above 769px the left column is a rail of about 196px (nav.css, the
+   columns), so the card fills it: the portrait takes the rail's width, the
+   name comes down a step, and the four facts wrap where they have to instead
+   of holding an 84px label column. The tools stay pinned at the window's
+   top-left, on the line the mark over the centre and the lights sit on, and
+   the card starts under that line. The prompts and the rig follow on the
+   same scroll, at the rail's measure. */
+@media (min-width: 769px) {
+  .ab-card { min-height: auto; padding: var(--hn-rail-top) 12px 24px; }
+  .ab-card .idc { max-width: none; }
+  .ab-card .idc-head { top: 22px; left: 12px; }
+  .ab-card .idc-portrait {
+    width: 100%; max-width: 180px; height: auto; aspect-ratio: 1 / 1;
+    margin-top: 0; border-radius: 14px;
+  }
+  .ab-card .idc-name { font-size: 24px; margin-top: 16px; }
+  .ab-card .idc-line { flex-wrap: wrap; row-gap: 2px; max-width: none; margin-top: 12px; font-size: 12px; }
+  .ab-card .idc-line-label { width: auto; }
+  /* The pinned record takes the row under its label rather than the sixty
+     pixels beside it, where the album's name was three letters and dots. */
+  .ab-card .idc-pin-row { flex-direction: column; align-items: flex-start; gap: 6px; }
+  .ab-card .idc-pin { width: 100%; }
+  .ab-card .idc-send { margin-top: 14px; }
+  .ab-below { padding-top: 0; gap: 22px; }
+  .ab-prompt { font-size: 13px; padding: 10px 0; }
+  .ab-subhead { font-size: 0.62rem; }
+  .ab-rig-name { font-size: 0.85rem; }
+  .ab-rig-row { padding: 9px 0; }
+}

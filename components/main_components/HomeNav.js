@@ -42,6 +42,17 @@
 // and no carets. It is the same structure said out loud rather than a second
 // layout: the site already carried two separate homepage markup trees that
 // drifted apart, and a third would have been the same mistake twice.
+//
+// The columns are not equal, since 2026-09-13. Three equal columns were three
+// phones parked side by side: no hierarchy, nowhere for the eye to land, and
+// everything floating in the vertical middle with air above and below. The
+// card and the desk are rails of about 196 and 186px and the centre takes the
+// rest; content starts at the top of every column; and the beacon is a band
+// across the top of the centre, the record's own colour bled to the column's
+// edges the way a print's ground is. The dividers are grips — drag one and
+// that rail widens, the centre giving way — and the widths are remembered per
+// browser (hooks/useColumnWidths.js). Hierarchy comes from width, and nothing
+// about the phone changes: the stylesheet does all of it above 769px.
 
 'use client';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
@@ -49,6 +60,7 @@ import Link from 'next/link';
 import { IdentificationCard, BookOpen, Broadcast, Gear, Info } from '@phosphor-icons/react';
 import { useTheme } from './Lightswitch';
 import { foldKey, useListeningBeacon } from '../../hooks/useListeningBeacon';
+import { useColumnWidths } from '../../hooks/useColumnWidths';
 import { useBookplate } from './Bookplate';
 import ListeningBeacon from './ListeningBeacon';
 import Journal from './Journal';
@@ -94,7 +106,13 @@ function secondFloorTop(pane) {
 export default function HomeNav() {
   const { cover_name, pinned_entry_id, beacon_available } = useBookplate();
   const { theme, toggle: toggleTheme } = useTheme();
-  const { isLive, recentAlbums } = useListeningBeacon();
+  // `track` is for the band's ground on a desk — the record blurred across
+  // the top of the centre column. The beacon draws the record itself.
+  const { isLive, recentAlbums, track } = useListeningBeacon();
+  // The side columns' widths on a desk, and the grips that change them. The
+  // hook writes the widths onto the document's root as two custom
+  // properties the stylesheet reads above 769px and ignores below it.
+  const columns = useColumnWidths();
 
   // ── What the cross asks for ───────────────────────────────────────────────
   // Four requests, made once here rather than three times in three panes.
@@ -378,20 +396,23 @@ export default function HomeNav() {
   const header = (
     <div className={'hn-bar' + (down[pane] ? ' hn-bar--scrolled' : '')}>
       {down[pane] && (
-        <>
-          <button
-            type="button"
-            className="hn-totop"
-            onClick={() => goUp(pane)}
-            aria-label="Back to the top"
-          />
-          {/* The small mark, only while the crown has scrolled away. Pressing
-              it is the same gesture as the strip it sits on: back to the top. */}
-          <button type="button" className="hn-bar-mark" onClick={() => goUp(pane)} aria-label="Back to the top">
-            {mark('hn-bar-svg')}
-          </button>
-        </>
+        <button
+          type="button"
+          className="hn-totop"
+          onClick={() => goUp(pane)}
+          aria-label="Back to the top"
+        />
       )}
+      {/* The small mark. On a phone, only while the crown has scrolled away
+          (the stylesheet hides it until then, so the crown and this are
+          never on screen together). On a desk there is no crown: this is
+          the mark, centred over the band the way every other page's row
+          carries it, and the bar around it earns its ground once the wall
+          has scrolled. Pressing it is the same gesture as the strip it sits
+          on: back to the top. */}
+      <button type="button" className="hn-bar-mark" onClick={() => goUp(pane)} aria-label="Back to the top">
+        {mark('hn-bar-svg')}
+      </button>
       <button className="hp-icon-btn hn-lights" onClick={toggleTheme} aria-label="Toggle theme">
         {theme === 'dark' ? (
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
@@ -497,8 +518,25 @@ export default function HomeNav() {
 
   const marks = paneMarks(authed);
 
+  // The two dividers on a desk, as grips. Each is a separator the keyboard
+  // can hold too: an arrow key moves it a step in the arrow's direction.
+  const gripFor = side => (
+    <div
+      className={'hn-grip hn-grip--' + side + (columns.dragging === side ? ' hn-grip--held' : '')}
+      role="separator"
+      aria-orientation="vertical"
+      aria-label={side === 'left' ? 'Resize the card' : 'Resize the desk'}
+      tabIndex={0}
+      onPointerDown={e => columns.grab(side, e)}
+      onKeyDown={e => {
+        if (e.key === 'ArrowLeft') { e.preventDefault(); columns.nudge(side, -1); }
+        if (e.key === 'ArrowRight') { e.preventDefault(); columns.nudge(side, 1); }
+      }}
+    />
+  );
+
   return (
-    <div className="hn" data-pane={pane}>
+    <div className={'hn' + (columns.dragging ? ' hn--dragging' : '')} data-pane={pane}>
       {header}
 
       <div className="hn-rail" ref={railRef}>
@@ -524,7 +562,18 @@ export default function HomeNav() {
                   snap has one place to land; on a desk it is a wrapper. */}
               <div className="hn-floor">
                 {crown}
-                <div className="hn-screen">
+                {/* The screen on a phone; the band on a desk, where the
+                    same children lie in one row on the record's colour —
+                    the cover and its words, and what came before at the far
+                    right on the cover's baseline. The ground is the record
+                    blurred to the column's edges, drawn only above 769px;
+                    it has no failure state because a picture that will not
+                    load leaves the page colour, which is what a band with
+                    no record has anyway. */}
+                <div className="hn-screen hn-band">
+                  <div className="hn-band-ground" aria-hidden="true">
+                    {track?.image && <img src={track.image} alt="" onError={e => { e.currentTarget.style.display = 'none'; }} />}
+                  </div>
                   <div className="hp-dashboard">
                     <div className="hp-dash-cell hp-dash-beacon">
                       <ListeningBeacon />
@@ -591,6 +640,11 @@ export default function HomeNav() {
           )}
         </section>
       </div>
+
+      {/* The grips, astride the two hairlines between the columns. Nothing
+          on a phone: the stylesheet does not draw them there. */}
+      {gripFor('left')}
+      {gripFor('right')}
 
       {/* ── The row along the bottom ────────────────────────────────────
           All three together rather than one on each edge. Pinned to the edges

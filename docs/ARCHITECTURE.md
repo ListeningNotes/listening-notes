@@ -133,11 +133,12 @@ The hooks — reusable logic shared across pages
     useListeningBeacon.js      Checks Last.fm every 15 seconds for what's playing
     useListeningSession.js     All session state — the record, tracks, notes, score, preview, saving; research on request
     useSessionDraft.js         The listen's draft — the browser's copy and the row in drafts — autosave, restore, cleanup
+    useColumnWidths.js         The cross's two side columns on a desk — how wide, remembered per browser, clamped, dragged by the grips
 
 The furniture — visual pieces
   components/
     main_components/           Everything on the public side
-      HomeNav.js               The cross itself — three panes, the mark, the carets
+      HomeNav.js               The cross itself — three panes, the mark, the carets; on a desk three columns at three widths, the band, the grips
       About.js                 The left pane: the card, then the writing under it
       IdentityCard.js          The identity card — this is the About page
       IdentificationCardEditor.js  Editing the card in place
@@ -158,7 +159,7 @@ The furniture — visual pieces
       ComingSoon.js            What a held copy shows instead of a site — unclaimed, no database, or database unreachable
       AddToHomeScreen.js       The one step the software cannot do: the last screen of setup, and a Settings section
       AlbumFinder.js           Type, see covers, pick one — the send flow's search
-      LayerEntry.js            The sheet a page arrives on over the journal — from the side for forms, expanding from the cover for an entry, with swipes to the neighbours
+      LayerEntry.js            The sheet a page arrives on over the journal — from the side for forms, expanding from the cover for an entry, with swipes to the neighbours; on a desk it covers the journal's column or is the desk's panel, with a back caret
       LayerWaiting.js          What stands in while that entry loads
       EdgeCaret.js             The chevrons that say there is more that way
       SiteNav.js               The nav row on pages that are not the cross
