@@ -559,7 +559,7 @@ export default function About({ crown = null, stamps, authed = false, pinned = n
                           type="text"
                           value={item.name}
                           onChange={e => edit.setGearField(index, 'name', e.target.value)}
-                          placeholder="Sennheiser HD 600"
+                          placeholder="KEF LS50"
                           aria-label={`Equipment ${index + 1}`}
                         />
                         <input
@@ -567,7 +567,7 @@ export default function About({ crown = null, stamps, authed = false, pinned = n
                           type="text"
                           value={item.role}
                           onChange={e => edit.setGearField(index, 'role', e.target.value)}
-                          placeholder="Headphones"
+                          placeholder="Speakers"
                           aria-label={`What equipment ${index + 1} does`}
                         />
                         <button

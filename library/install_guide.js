@@ -51,7 +51,7 @@ export const STEPS = [
   { shot: '07-holding', head: 'Press “Set it up”',
     text: 'It works for half an hour after the build. Came back later? Press Redeploy in Vercel and try again.' },
   { shot: '08-setup', head: 'Claim it', time: 'as long as you like',
-    text: 'Your name, then a password. Everything in between you can skip and edit in Settings later.' },
+    text: 'Your name, then a password. Everything in between you can skip and fill in later.' },
   { shot: '09-homescreen', head: 'Add it to your home screen',
     text: {
       phone: 'This is the part that makes it feel like an app. The last screen during setup will show you how.',

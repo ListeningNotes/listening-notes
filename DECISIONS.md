@@ -908,10 +908,22 @@ answer. The reader lets the error throw and the caller fails closed: if the
 question cannot be answered, assume the journal is somebody's.
 
 **Setup is one screen at a time, and everything after the name says Skip,
-2026-09-01.** Name → photo → prompts → Last.fm → links → rig → password. The
-address is the host the request came in on and the founding date is the day
-setup ran — an editable date anyone can set says nothing. Skip means later:
-every field that can be skipped has a home afterwards, in Settings.
+2026-09-01.** Name → photo → prompts → rig → password (links retired; Last.fm
+and the key moved out, below). The address is the host the request came in
+on and the founding date is the day setup ran — an editable date anyone can
+set says nothing. Skip means later: every field that can be skipped has a
+home afterwards, on the card.
+
+**Nothing in setup needs an account somewhere else, 2026-09-13.** Last.fm and
+the Anthropic key are asked in Settings, never at setup: two of two testers
+stopped at Last.fm — one on Apple Music on an iPhone, which cannot scrobble
+reliably at all — and the key is the same wall with a card attached. A copy
+without either works whole: the beacon falls back to the last record logged,
+and research and the question mark are simply absent.
+
+**The pitch says nothing about AI, 2026-09-13.** The README and `/get` argue
+ownership, and for part of the audience AI and ownership read as opposites;
+a feature that needs a key is found by whoever goes looking in Settings.
 
 **The handle is derived and the serial is minted; neither is asked.** A second
 name is the mistake `journal_name` made. The serial is the copy's identity and
