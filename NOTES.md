@@ -1459,8 +1459,10 @@ current.
 ## Complete
 
 **2026-09-13 — the printer becomes a mode of the entry page, branch
-`printer-fit` (name provisional), 1.9.0 — Miyel's redirection after seeing
-the press on her phone: "the printer is the door into the app"**
+`printer-fit`, merged to main as 1.9.0 the same day (a new shape for the
+mode and two new files: the middle number); not yet pushed — Miyel's
+redirection after seeing the press on her phone: "the printer is the door
+into the app"**
 
 - [x] **The entry's first screen is the flyer.** `printing` state in
       FullPostPage, the way `edit.editing` is: the notes, the cue and the
