@@ -7,7 +7,7 @@ You run your own copy. There is no account here, no subscription, and nothing
 of yours is stored on anybody else's server — the journal is yours, the
 database is yours, and it is named after you rather than after this software.
 
-**Built with:** Next.js, Neon Postgres, Claude AI (optional)
+**Built with:** Next.js, Neon Postgres
 **Licence:** [AGPL-3.0-or-later](LICENSE) — free to run, including for a business
 
 ---
@@ -21,17 +21,6 @@ database is yours, and it is named after you rather than after this software.
 | [GitHub](https://github.com) | Holds your copy of the code |
 | [Vercel](https://vercel.com) | Runs the site |
 | [Neon](https://neon.tech) | The Postgres database your writing lives in |
-
-Optionally, an [Anthropic API key](https://console.anthropic.com), on your own
-usage. Without one the journal reads and writes exactly the same; two things
-are simply absent from a listen. One is *Research this album*, a button on the
-album screen that fetches a sourced briefing — useful, but any search engine
-does the same. The other is the stronger reason to have a key: a question mark
-on the cover, from any screen, that already knows the record and every note you
-have written so far. What instrument is that, what is the word for this sound,
-what connects my track notes — asked without leaving the page, because notes
-spread across a dozen screens cannot reasonably be pasted anywhere else.
-Nothing it says ever enters the entry; it is read, and then you write.
 
 **Deploy.**
 
@@ -58,10 +47,9 @@ code into your account, which is the point.
    knows the person who just built it is the person looking. (Came back
    later? Press Redeploy in Vercel and try again, or type the code from the
    end of the build log.)
-3. It asks for your name, then offers a photo, three prompts, your rig,
-   Last.fm and an Anthropic key, each of which you can skip, then a password. Everything you
-   skip has a home later — on the card, or in Settings behind the gear beside
-   the card's pencil.
+3. It asks for your name, then offers a photo, three prompts and your rig,
+   each of which you can skip, then a password. Everything you skip has a
+   home later, on the card behind its pencil.
 4. The last screen shows how to put the journal on your home screen, where it
    opens like an app. Skippable; it is in Settings too.
 

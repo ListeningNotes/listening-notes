@@ -73,8 +73,8 @@ Everything below it was built blind against one claimed database. Watch for:
   `DATABASE_URL` after the sign-in redirect? If not, the bare
   `?repository-url=` form plus the "no database yet" page is the path.
 - the build log: is the claim code box visible on the deploy screen?
-- `/setup`: claim code at the gate, then seven screens, Skip on each, password
-  with confirm; does Safari offer to save the password?
+- `/setup`: claim code at the gate, then five screens, Skip on each, password
+  with confirm and an eye; does Safari offer to save the password?
 - the landing: no Last.fm → the wall of covers under the crown, saying
   "Nothing logged yet."
 - Settings: the Last.fm key pasted there reaches the beacon; the Anthropic
@@ -102,6 +102,10 @@ browser's add-to-Dock on a laptop).
 autonomous. Rename freely: `secrets` (table), `library/secrets.js`,
 `library/claim_notice.js`, `scripts/prepare_database.mjs`, `/api/secrets`,
 `beacon_available`, `/?edit=card`, `.st-*` and the setup page's `.su-*`.
+
+**Names to confirm, 2026-09-13** — the setup fixes, autonomous: branch
+`setup-fixes`, and `.su-peek` / `.su-eye` (the password field's show/hide
+switch) in forms.css.
 
 **Names to confirm, 2026-09-03** — the `/get` rebuild, also autonomous:
 `components/main_components/InstallSteps.js` (the steps and the toggle),
@@ -1482,6 +1486,29 @@ current.
 ---
 
 ## Complete
+
+**2026-09-13 — setup fixes from the Peyton install, branch `setup-fixes`,
+UNMERGED, waiting on a look at the dev server** — from Miyel's brief: three
+things from watching somebody else go through setup, one from the Last.fm
+decision.
+
+- [x] **An eye on the password.** One switch inside the first field; the
+      confirm follows it. Shown, both fields are plain text with autocorrect
+      and capitals off, so a phone does not rewrite a password it can now
+      see. The real form, the submit, `autocomplete="new-password"`, the
+      visible username line and the 16px rule are untouched. `.su-peek` /
+      `.su-eye` in forms.css. Setup only — the Settings password section has
+      the same two fields and no eye yet.
+- [x] **The name field's placeholder was Miyel's name.** Gone; the label
+      says Your name. Swept the rest: the card editor's rig placeholder was
+      her actual headphones (Sennheiser HD 600 / Headphones) and shows the
+      setup screen's neutral pair now (KEF LS50 / Speakers). Nothing else
+      instance-specific outside the two fixed addresses (Get one, reports).
+- [x] **Last.fm and the Anthropic key out of setup.** Both screens removed;
+      STEPS is name, photo, prompts, rig, password, home screen. Both live
+      in Settings, unchanged. README: the AI paragraph and "Claude AI
+      (optional)" gone from the top, step 3 rewritten. ARCHITECTURE,
+      DECISIONS and the install guide's step-eight sentence updated.
 
 **2026-09-13 — the desktop layout, branch `desktop-columns`, MERGED to main as 1.10.0, pushed, release v1.10.0 cut the same evening (Miyel: quick, refine later):
 three columns at three widths, the beacon as a band, layers that share the

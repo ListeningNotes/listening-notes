@@ -16,10 +16,19 @@
 // the address is the host the request came in on, and the founding date is
 // today. What is left is the name, which is the only thing the journal
 // needs, and then a series of things it would be nice to have — the photo,
-// the prompts, the rig, Last.fm, the Anthropic key — each on its own screen with a
-// Skip under it. Skip means later, not never: every one of them has a home
-// afterwards, on the card or at /settings, which is what makes offering to
-// skip honest.
+// the prompts, the rig — each on its own screen with a Skip under it. Skip
+// means later, not never: every one of them has a home afterwards, on the
+// card, which is what makes offering to skip honest.
+//
+// ── Nothing here needs an account somewhere else, 2026-09-13 ──────────────
+// Last.fm and the Anthropic key had screens here and were moved to Settings
+// after watching two people go through it: both stopped at Last.fm — one of
+// them on Apple Music on an iPhone, which cannot scrobble reliably at all —
+// and the key is the same wall with a developer console and a card attached.
+// A copy without either works whole: the beacon shows the last record
+// logged, and the research button and the question mark are simply absent.
+// So setup is the name, the photo, the prompts, the rig and the password,
+// and everything with a sign-up in it is found later by whoever goes looking.
 //
 // The password is near the end rather than first. It is the thing the
 // person is least sure about, and by then they have told the journal their
@@ -49,7 +58,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { CaretDown, Check } from '@phosphor-icons/react';
+import { CaretDown, Check, Eye, EyeSlash } from '@phosphor-icons/react';
 import { fonts } from '../../library/sitewide_visuals';
 import { BIO_PROMPTS, BIO_LIMIT } from '../../library/bioprompt';
 import PasswordGate from '../../components/session_components/PasswordGate';
@@ -60,22 +69,14 @@ import { useJournalHost } from '../../hooks/useJournalHost';
 // The password claims the journal; the home screen comes after, because it is
 // the one step the software cannot perform and the moment right after the
 // journal starts working is the moment somebody will actually do it.
-// Links used to sit between Last.fm and the rig and are retired from the
-// whole site for now — see About.js.
-const STEPS = ['name', 'photo', 'prompts', 'rig', 'lastfm', 'anthropic', 'password', 'homescreen'];
+// Links used to sit after the rig and are retired from the whole site for
+// now — see About.js. Last.fm and the Anthropic key followed the rig until
+// 2026-09-13 and are asked in Settings now — the note at the top.
+const STEPS = ['name', 'photo', 'prompts', 'rig', 'password', 'homescreen'];
 const PASSWORD_FLOOR = 8;
 
 async function patchSettings(fields) {
   const res = await fetch('/api/settings', {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(fields),
-  });
-  if (!res.ok) throw new Error('That did not save. Try again.');
-}
-
-async function patchSecrets(fields) {
-  const res = await fetch('/api/secrets', {
     method: 'PATCH',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(fields),
@@ -103,12 +104,12 @@ export default function WelcomeScreen() {
   // About pane's rule, for the About pane's reason: two lists of nine
   // sentences open at once is most of the screen.
   const [picking, setPicking] = useState(null);
-  const [lastfmUser, setLastfmUser] = useState('');
-  const [lastfmKey, setLastfmKey] = useState('');
-  const [anthropic, setAnthropic] = useState('');
   const [gear, setGear] = useState([{ name: '', role: '' }]);
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
+  // Whether the password is shown as typed. One switch for both fields: the
+  // confirm follows the first, so a typo can be seen in either.
+  const [peeking, setPeeking] = useState(false);
 
   // ── Rehearsal ─────────────────────────────────────────────────────────────
   // /setup?rehearse shows the screens on a copy that is already claimed, for
@@ -322,8 +323,6 @@ export default function WelcomeScreen() {
                 name: 'Whose journal is this?',
                 photo: 'A photo',
                 prompts: 'Three openings',
-                lastfm: 'What you are playing',
-                anthropic: 'Optional: AI assistance',
                 rig: 'What you listen on',
                 password: 'A password',
                 homescreen: 'One more thing',
@@ -334,7 +333,7 @@ export default function WelcomeScreen() {
               <form className="su-fields" onSubmit={e => { e.preventDefault(); if (name.trim()) advance(); }}>
                 <div>
                   <span className="su-label">Your name</span>
-                  <input className="su-field" value={name} onChange={e => setName(e.target.value)} placeholder="Miyel" autoFocus autoComplete="name" />
+                  <input className="su-field" value={name} onChange={e => setName(e.target.value)} autoFocus autoComplete="name" />
                 </div>
                 <button type="submit" className="su-go" disabled={busy || !name.trim()}>Next</button>
               </form>
@@ -455,66 +454,6 @@ export default function WelcomeScreen() {
               </form>
             )}
 
-            {current === 'lastfm' && (
-              <form className="su-fields" onSubmit={e => { e.preventDefault(); advance(async () => {
-                if (lastfmUser.trim()) await patchSettings({ lastfm_user: lastfmUser.trim() });
-                if (lastfmKey.trim()) await patchSecrets({ lastfm_key: lastfmKey.trim() });
-              }); }}>
-                <p className="su-why">
-                  Connect your journal to a Last.fm account so you can have a
-                  live beacon of what you’re listening to. Create a free
-                  account, connect it to Spotify or Apple Music, then get an
-                  API key at{' '}
-                  <a href="https://www.last.fm/api/account/create" target="_blank" rel="noopener noreferrer">last.fm/api</a>.
-                </p>
-                <div>
-                  <span className="su-label">Last.fm username</span>
-                  <input className="su-field" value={lastfmUser} onChange={e => setLastfmUser(e.target.value)} autoComplete="off" autoCapitalize="none" />
-                </div>
-                <div>
-                  <span className="su-label">Last.fm API key</span>
-                  <input className="su-field" value={lastfmKey} onChange={e => setLastfmKey(e.target.value)} autoComplete="off" autoCapitalize="none" spellCheck={false} />
-                  <div className="su-hint">
-                    The form asks for an application name and a description. Any name works — your
-                    journal’s — and one line for the description, like “shows what I’m listening to
-                    on my own site”. Leave the callback URL blank. You want the API key, not the shared secret.
-                  </div>
-                </div>
-                <button type="submit" className="su-go" disabled={busy || !lastfmUser.trim()}>Next</button>
-              </form>
-            )}
-
-            {current === 'anthropic' && (
-              <form className="su-fields" onSubmit={e => { e.preventDefault(); advance(async () => {
-                if (anthropic.trim()) await patchSecrets({ anthropic_key: anthropic.trim() });
-              }); }}>
-                <p className="su-why">
-                  If you add an Anthropic key, two things appear during a
-                  listening session. Research looks the album up and cites its
-                  sources, so you can read the background before you start. And
-                  a question mark you can open at any point, which already knows
-                  the record and what you’ve written so far — useful for asking
-                  questions during a listen, or for finding a common thread
-                  through multiple track notes. Nothing it says goes into your
-                  entry. You read it, then you write what you write.
-                </p>
-                <p className="su-why">
-                  Get a key at{' '}
-                  <a href="https://console.anthropic.com" target="_blank" rel="noopener noreferrer">console.anthropic.com</a>.
-                  You pay your own usage, and most people spend under a dollar a
-                  month. Note that it draws from an API balance, which is
-                  separate from a Claude.ai subscription. Everything else works
-                  without it.
-                </p>
-                <div>
-                  <span className="su-label">Anthropic API key</span>
-                  <input className="su-field" value={anthropic} onChange={e => setAnthropic(e.target.value)} autoComplete="off" autoCapitalize="none" spellCheck={false} />
-                  <div className="su-hint">Kept on your own server and never shown to a visitor.</div>
-                </div>
-                <button type="submit" className="su-go" disabled={busy || !anthropic.trim()}>Next</button>
-              </form>
-            )}
-
             {current === 'password' && (
               <form className="su-fields" onSubmit={e => { e.preventDefault(); advance(claim); }}>
                 <p className="su-why">What you’ll type to reach the writing side of your journal.</p>
@@ -528,14 +467,35 @@ export default function WelcomeScreen() {
                   <span className="su-label">Journal</span>
                   <input className="su-field su-who" type="text" name="username" autoComplete="username" value={host} onChange={() => {}} aria-label="Journal" tabIndex={-1} />
                 </div>
+                {/* The eye, 2026-09-13: a password typed once on a phone
+                    keyboard, for six months of use, with no way to look at
+                    it. The confirm catches a mismatch and not a typo made
+                    the same way twice. One switch, on the first field; the
+                    confirm follows it. Only `type` flips — the name, the
+                    autocomplete, the form and the submit are what a password
+                    manager reads and stay as they are. Shown, the field is
+                    plain text, so the phone's autocorrect and capitals are
+                    off or it would rewrite a password it can now see. */}
                 <div>
                   <span className="su-label">Password</span>
-                  <input className="su-field" type="password" name="new-password" autoComplete="new-password" value={password} onChange={e => setPassword(e.target.value)} minLength={PASSWORD_FLOOR} />
+                  <div className="su-peek">
+                    <input className="su-field" type={peeking ? 'text' : 'password'} name="new-password" autoComplete="new-password" autoCapitalize="none" autoCorrect="off" spellCheck={false} value={password} onChange={e => setPassword(e.target.value)} minLength={PASSWORD_FLOOR} />
+                    <button
+                      type="button"
+                      className="su-eye"
+                      onClick={() => setPeeking(was => !was)}
+                      aria-pressed={peeking}
+                      aria-label={peeking ? 'Hide the password' : 'Show the password'}
+                      title={peeking ? 'Hide' : 'Show'}
+                    >
+                      {peeking ? <EyeSlash size={18} aria-hidden="true" /> : <Eye size={18} aria-hidden="true" />}
+                    </button>
+                  </div>
                   <div className="su-hint">At least {PASSWORD_FLOOR} characters.</div>
                 </div>
                 <div>
                   <span className="su-label">Again</span>
-                  <input className="su-field" type="password" name="confirm-password" autoComplete="new-password" value={confirm} onChange={e => setConfirm(e.target.value)} />
+                  <input className="su-field" type={peeking ? 'text' : 'password'} name="confirm-password" autoComplete="new-password" autoCapitalize="none" autoCorrect="off" spellCheck={false} value={confirm} onChange={e => setConfirm(e.target.value)} />
                 </div>
                 <button type="submit" className="su-go" disabled={busy || !password || !confirm}>
                   {busy ? 'Claiming…' : 'Claim the journal'}

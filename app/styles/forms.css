@@ -204,6 +204,17 @@ textarea.sb-field {
 .su-field::placeholder { color: var(--ink-faint); }
 .su-who { background: none; border-color: transparent; padding-left: 0; color: var(--ink-faint); font-family: var(--font-label); font-size: 12px; letter-spacing: 0.08em; }
 textarea.su-field { resize: vertical; min-height: 64px; }
+/* The eye on the password field, 2026-09-13: the switch sits inside the
+   field's right edge and the field leaves room for it. */
+.su-peek { position: relative; }
+.su-peek .su-field { padding-right: 46px; }
+.su-eye {
+  position: absolute; right: 6px; top: 50%; transform: translateY(-50%);
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 34px; height: 34px; padding: 0; border: 0; border-radius: 8px;
+  background: none; color: var(--ink-faint); cursor: pointer;
+}
+.su-eye:hover, .su-eye[aria-pressed="true"] { color: var(--ink); }
 /* The prompt rows borrow the About pane's classes; this is only the
    frame around the three of them, so they sit on the card's panel
    stock like the other fields do. */
