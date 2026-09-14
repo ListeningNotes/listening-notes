@@ -41,6 +41,16 @@
 // physically printed flyer would earn a toggle, not a redesign; the sizes
 // that would need are in NOTES.
 //
+// ── The card is the switchboard, 2026-09-13 ──────────────────────────────
+// Every line that can be left off is tapped on the preview to leave it off,
+// and a ghost of it — the line itself at a fifth of its ink — stays where it
+// was, to be tapped back. The marks cycle: chips, then symbols, then gone.
+// The sticker's room is an absence, so its ghost is a sticker-shaped pill in
+// the band it keeps, and a fainter one in the foot margin when it does not.
+// Ghosts are drawn only when `preview` is set; the saved picture is drawn
+// again without them, closed up. `draw` hands the press the boxes to hit.
+// Six bubbles under the preview were sixty-four arrangements, most of them
+// worse than the default, with two labels nobody outside this project knew.
 // ── Units ─────────────────────────────────────────────────────────────────
 // Every measurement is in units of a 340-wide column — a phone's screen one,
 // 390 less its padding — so the numbers here are the post's own pixels, and
@@ -50,20 +60,34 @@
 
 'use client';
 
-import { useCallback, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
-import SharePrinter, { loadMark, loadPicture, MARK_ASPECT, drawTracked, drawPath, ellipsize, wrapLines, roundRect } from './SharePrinter';
+import { loadMark, loadPicture, MARK_ASPECT, drawTracked, drawPath, ellipsize, wrapLines, roundRect } from './SharePrinter';
 import { parseRating, parseHorizon, entryTracks } from '../../library/entry_formatter';
+
+// The taps (see the note at the top): what each switchable line does when
+// tapped, and how faint a ghost is.
+const GHOST = 0.18;
+const TAPS = {
+  keeper: shown => ({ keeper: !shown.keeper }),
+  title: shown => ({ title: !shown.title }),
+  artist: shown => ({ artist: !shown.artist }),
+  stars: shown => ({ stars: !shown.stars }),
+  horizon: shown => ({ horizon: !shown.horizon }),
+  // chips → symbols → gone → chips; without a mark that has a symbol, the
+  // listen count alone goes chips → gone → chips.
+  marks: (shown, hasSymbols) => (shown.chips
+    ? (hasSymbols ? { chips: false, symbols: true } : { chips: false, symbols: false })
+    : shown.symbols ? { chips: false, symbols: false } : { chips: true, symbols: false }),
+};
 
 // ── Measurements, in column units — the post's own ────────────────────────
 const COL = 340;
-const ART = 304;                       // min(40dvh, 78vw) on a 390 phone
+const ART = 265;                       // 78% of the card, as the screen has it while printing
 const ART_RADIUS = 16;
 // The statement pages' mark, not the nav's: setup's card sets it 78 wide on
 // 380 and the held copy's page 92 on a phone, about a fifth of the width.
 // A print is a statement page too (Miyel, 2026-09-12); the nav's 28 read
 // as a colophon.
-const MARK_H = 46;                     // ≈ 80 wide on the 340 column
+const MARK_H = 44;                     // .ln-print-mark on screen
 const KEEPER = 13;                     // the label face, under the mark — half again the site's line, on Miyel's call
 const TITLE = 26, TITLE_LEAD = 26 * 1.22;
 const ARTIST = 11;                     // mono caps, as .ln-screen-one-artist
@@ -75,24 +99,22 @@ const CHIP = 13, CHIP_PAD_X = 10, CHIP_PAD_Y = 4, CHIP_GAP = 8, CHIP_RADIUS = 5;
 // The marks as symbols instead of chips — the feed's own three, much larger
 // than a chip, so a print can carry the marks as pictures (Miyel's ask).
 const SYMBOL = 34, SYMBOL_GAP = 18;
-const HORIZON_H = 34, HORIZON_GAP = 2, HEART = 7;
+// HorizonChart's own: 52 tall over 13 of headroom, a gap by track count,
+// a heart of 10 sitting 4 above its bar, corners of 3.
+const HORIZON_H = 52, HORIZON_HEAD = 13, HEART = 10, HEART_LIFT = 4, BAR_RADIUS = 3;
+const horizonGap = n => (n > 24 ? 2 : n > 14 ? 3 : 4);
 const COLUMN_GAP = 28;                 // opened out: between the cover and the stack
 // The screen's gap is 16 between everything; the artist line pulls up by 8.
-const GAP = { keeper: 10, art: 16, title: 16, artist: 8, stars: 16, chips: 16, listen: 10, horizon: 20 };
+// The screen's card has one gap between everything.
+const GAP = { keeper: 12, art: 12, title: 12, artist: 8, stars: 12, chips: 12, listen: 10, horizon: 12 };
 
-// How much of the paper the column is allowed, and the height it must fit.
-const FILL_W = 0.86;
-const FILL_H = 0.88;
-
-// ── A Story's furniture ───────────────────────────────────────────────────
-// Instagram draws over the top of a story (the progress bars, the name) and
-// the bottom (the reply bar), about an eighth each; on 9:16 the print keeps
-// out of both. With the Sticker toggle it leaves more at the foot — room for
-// the link sticker the poster adds there, which is what carries a reader to
-// the entry now that the print has no code. Miyel's ask, 2026-09-12.
-const STORY_TOP = 0.13;
-const STORY_FOOT = 0.13;
-const STICKER_FOOT = 0.24;
+// The paper's padding, as the screen has it: the card fills what is inside.
+// The print IS the paper on screen (Miyel, 2026-09-13: a saved picture that
+// kept hidden margins for Instagram's furniture and a sticker came out with
+// the card smaller than the one she had just approved). If a story ever
+// needs room kept, it is drawn on the preview as a band, not here.
+const PAD = 0.07;
+const PAD_SPREAD = 0.04;
 
 // ── Ink ────────────────────────────────────────────────────────────────────
 // base.css, stated rather than read: a print is the same colour wherever it
@@ -104,7 +126,7 @@ const INKS = {
     bar: 'rgba(26,26,26,0.5)',
     edge: 'rgba(255,255,255,0.6)',                                  // --panel-border
     lift: ['rgba(0,0,0,0.06)', 'rgba(0,0,0,0.06)'],                 // --shadow-lift
-    wash: 'rgba(238,240,236,0.62)', paper: '#eef0ec',
+    wash: 'rgba(238,240,236,0.46)', paper: '#eef0ec',
   },
   night: {
     ink: '#e8e4dc', soft: '#888888', faint: '#666666', warm: '#161616',
@@ -112,10 +134,11 @@ const INKS = {
     bar: 'rgba(232,228,220,0.5)',
     edge: 'rgba(255,255,255,0.08)',
     lift: ['rgba(0,0,0,0.4)', 'rgba(0,0,0,0.3)'],
-    wash: 'rgba(14,14,14,0.64)', paper: '#0e0e0e',
+    wash: 'rgba(14,14,14,0.5)', paper: '#0e0e0e',
   },
 };
 const GOLD = '#E8B84B';
+const LIVE = '#7cff9b';                // --live: the mark's dot, lit
 const FAV = '#f0484f';                 // --fav
 // The chips' tones, as Chip.js has them: the word in the colour, the hairline
 // the same colour at 40%.
@@ -189,25 +212,22 @@ export function entryPlate({ entry, keeper }) {
     bars = tracks.map(t => Math.max(0, Math.min(1, (Number(t.stars) || 0) / 5)));
   }
   const favs = tracks.map(t => !!t.favorite);
-  const anyFav = bars.length > 0 && favs.some(Boolean);
 
   // What the printer offers to leave off. The cover, the album and the
   // artist are not switches: they are the card.
   const toggles = [];
   if (keeper) toggles.push({ key: 'keeper', label: 'Keeper', on: true });
+  toggles.push({ key: 'title', label: 'Title', on: true });
+  if (line) toggles.push({ key: 'artist', label: 'Artist', on: true });
   if (stars > 0) toggles.push({ key: 'stars', label: 'Stars', on: true });
-  // Chips or Symbols: the marks as the post's chips, or as the feed's symbols
-  // — one or the other, or neither, which the printer enforces through the
-  // group. Chips to begin with: they are the post's. A listen count has no
-  // symbol and stays a chip beneath the symbols.
-  if (chips.length) toggles.push({ key: 'chips', label: 'Chips', on: true, group: 'marks' });
+  // Chips or symbols: the marks as the post's chips, or as the feed's
+  // symbols — one or the other, or neither, cycled by tapping them. Chips to
+  // begin with: they are the post's. A listen count has no symbol and stays
+  // a chip beneath the symbols.
+  if (chips.length) toggles.push({ key: 'chips', label: 'Chips', on: true });
   const marks = chips.filter(chip => chip.tone);
-  if (marks.length) toggles.push({ key: 'symbols', label: 'Symbols', on: false, group: 'marks' });
+  if (marks.length) toggles.push({ key: 'symbols', label: 'Symbols', on: false });
   if (bars.length) toggles.push({ key: 'horizon', label: 'Horizon', on: true });
-  // On by default: a story is the frame that matters and the sticker is how
-  // it links, so the first print made should have the room. Only 9:16 has
-  // a foot to keep; on the other papers the switch changes nothing.
-  toggles.push({ key: 'sticker', label: 'Sticker space', on: true });
 
   return {
     title: 'The record',
@@ -224,29 +244,28 @@ export function entryPlate({ entry, keeper }) {
       return { mark, cover };
     },
 
-    draw(ctx, frame, { art, shown, isDark, families }) {
+    draw(ctx, frame, { art, shown, isDark, families, preview = false, ground = 'record' }) {
       const ink = isDark ? INKS.night : INKS.day;
       const { sans, mono } = families;
       const on = key => (shown ? shown[key] !== false : true);
+      // The boxes the press hit-tests a tap against, in the paper's pixels.
+      const targets = [];
       const spread = frame.w / frame.h > 1.3;
-      const story = frame.w / frame.h < 0.6;
-      // The band of paper the print may use: all of it, or on a story what
-      // is left between Instagram's furniture — and under the sticker.
-      const top = story ? frame.h * STORY_TOP : 0;
-      const foot = story ? frame.h * (on('sticker') ? STICKER_FOOT : STORY_FOOT) : 0;
-      const areaH = frame.h - top - foot;
+      // The room inside the paper's padding, as on screen.
+      const pad = frame.w * (spread ? PAD_SPREAD : PAD);
+      const roomW = frame.w - pad * 2;
+      const roomH = frame.h - pad * 2;
 
       // ── the ground ───────────────────────────────────────────────────────
-      paintGround(ctx, frame, art?.cover, ink);
+      paintGround(ctx, frame, art?.cover, ink, ground);
 
       // ── measure, then fit ────────────────────────────────────────────────
       // Width decides the unit. If the result is too tall the unit comes down
       // by exactly the overrun; everything scales with it, so one correction
       // is enough.
       let U = spread
-        ? Math.min((frame.h * FILL_H) / ART, (frame.w * FILL_W) / (ART + COL + COLUMN_GAP))
-        : (frame.w * FILL_W) / COL;
-      const roomH = story ? areaH * 0.96 : frame.h * FILL_H;
+        ? Math.min(roomH / ART, roomW / (ART + COL + COLUMN_GAP))
+        : roomW / COL;
       let built = build(U);
       if (built.h > roomH) {
         U *= roomH / built.h;
@@ -260,7 +279,7 @@ export function entryPlate({ entry, keeper }) {
         const rows = [];
         const showKeeper = Boolean(keeper) && on('keeper');
 
-        // the mark, centred, at the head
+        // the mark, centred, at the head — its dot lit when the page's is
         if (art?.mark) {
           rows.push({
             gap: 0,
@@ -268,21 +287,32 @@ export function entryPlate({ entry, keeper }) {
             draw(c, x, y, w) {
               const mh = px(MARK_H);
               const mw = mh * MARK_ASPECT;
-              c.drawImage(art.mark, x + (w - mw) / 2, y, mw, mh);
+              const mx = x + (w - mw) / 2;
+              c.drawImage(art.mark, mx, y, mw, mh);
+              if (shown?.liveDot) {
+                // The dot's place in the mark's box (76 96 241 140): centre
+                // 297.05, 216.72, radius 14.13 — as SiteNav draws it.
+                c.fillStyle = LIVE;
+                c.beginPath();
+                c.arc(mx + ((297.0547 - 76) / 241) * mw, y + ((216.71875 - 96) / 140) * mh, (14.1328 / 241) * mw, 0, Math.PI * 2);
+                c.fill();
+              }
             },
           });
         }
 
         // whose journal, under it
-        if (showKeeper) {
+        if (keeper && (showKeeper || preview)) {
+          // .ln-print-keeper: the line plus 4 of padding above and below
           rows.push({
+            key: 'keeper', ghost: !showKeeper,
             gap: art?.mark ? px(GAP.keeper) : 0,
-            h: px(KEEPER) * 1.4,
+            h: px(KEEPER) * 1.4 + px(8),
             draw(c, x, y, w) {
               c.textBaseline = 'top';
               c.font = `400 ${px(KEEPER)}px ${mono}`;
               c.fillStyle = ink.soft;   // the post's faint sinks into a photograph
-              drawTracked(c, keeper.toUpperCase(), x + w / 2, y, px(KEEPER) * 0.14, 'center');
+              drawTracked(c, keeper.toUpperCase(), x + w / 2, y + px(4), px(KEEPER) * 0.14, 'center');
             },
           });
         }
@@ -293,50 +323,67 @@ export function entryPlate({ entry, keeper }) {
         }
 
         // the album, two lines at most, as the screen clamps it
-        ctx.font = `700 ${px(TITLE)}px ${sans}`;
-        rows.push(textRow({
-          gap: px(GAP.title),
-          lines: wrapLines(ctx, entry?.album || '', colW, 2),
-          size: px(TITLE), lead: px(TITLE_LEAD), colour: ink.ink,
-          font: `700 ${px(TITLE)}px ${sans}`,
-        }));
-
-        // the artist and the year, in the label face
-        if (line) {
+        if (on('title') || preview) {
+          ctx.font = `700 ${px(TITLE)}px ${sans}`;
           rows.push({
+            key: 'title', ghost: !on('title'),
+            ...textRow({
+              gap: px(GAP.title),
+              lines: wrapLines(ctx, entry?.album || '', colW, 2),
+              size: px(TITLE), lead: px(TITLE_LEAD), colour: ink.ink,
+              font: `700 ${px(TITLE)}px ${sans}`,
+            }),
+          });
+        }
+
+        // the artist and the year, in the label face — two lines at most,
+        // wrapped as the screen wraps it (Miyel, 2026-09-13), against a
+        // measure narrowed for the tracking the wrapper cannot see
+        if (line && (on('artist') || preview)) {
+          ctx.font = `400 ${px(ARTIST)}px ${mono}`;
+          const artistLines = wrapLines(ctx, line.toUpperCase(), colW * 0.86, 2);
+          const lead = px(ARTIST) * 1.4;
+          rows.push({
+            key: 'artist', ghost: !on('artist'),
             gap: px(GAP.artist),
-            h: px(ARTIST) * 1.4,
+            h: artistLines.length * lead,
             draw(c, x, y, w) {
               c.textBaseline = 'top';
               c.font = `400 ${px(ARTIST)}px ${mono}`;
               c.fillStyle = ink.soft;
-              drawTracked(c, ellipsize(c, line.toUpperCase(), w * 0.92), x + w / 2, y, px(ARTIST) * 0.14, 'center');
+              artistLines.forEach((l, i) => drawTracked(c, l, x + w / 2, y + i * lead, px(ARTIST) * 0.14, 'center'));
             },
           });
         }
 
         // the stars
-        if (stars > 0 && on('stars')) {
-          rows.push({ gap: px(GAP.stars), h: px(STAR), draw: (c, x, y, w) => drawStars(c, x, y, w, unit) });
+        if (stars > 0 && (on('stars') || preview)) {
+          rows.push({ key: 'stars', ghost: !on('stars'), gap: px(GAP.stars), h: px(STAR), draw: (c, x, y, w) => drawStars(c, x, y, w, unit) });
         }
 
-        // the marks: the feed's symbols, or the post's chips, or neither. A
-        // listen count has no symbol, so under the symbols it stays a chip.
+        // the marks: the feed's symbols, or the post's chips, or neither — and
+        // in the preview, a ghost of the chips when neither. A listen count
+        // has no symbol, so under the symbols it stays a chip.
         const asSymbols = on('symbols') && marks.length > 0;
+        const asChips = !asSymbols && on('chips');
         if (asSymbols) {
-          rows.push({ gap: px(GAP.chips), h: px(SYMBOL), draw: (c, x, y, w) => drawSymbols(c, x, y, w, unit) });
+          rows.push({ key: 'marks', gap: px(GAP.chips), h: px(SYMBOL), draw: (c, x, y, w) => drawSymbols(c, x, y, w, unit) });
         }
-        const listed = asSymbols ? chips.filter(chip => !chip.tone) : (on('chips') ? chips : []);
-        if (listed.length) {
+        const listed = asSymbols ? chips.filter(chip => !chip.tone) : chips;
+        if (listed.length && (asSymbols || asChips || preview)) {
           const laid = layChips(ctx, listed, colW, unit);
-          rows.push({ gap: px(asSymbols ? GAP.listen : GAP.chips), h: laid.h, draw: (c, x, y, w) => drawChips(c, x, y, w, laid, unit) });
+          rows.push({
+            key: 'marks', ghost: !asSymbols && !asChips,
+            gap: px(asSymbols ? GAP.listen : GAP.chips), h: laid.h,
+            draw: (c, x, y, w) => drawChips(c, x, y, w, laid, unit),
+          });
         }
 
 
-        // the horizon, with headroom for the hearts when there are any
-        if (bars.length && on('horizon')) {
-          const head = anyFav ? px(HEART + 4) : 0;
-          rows.push({ gap: px(GAP.horizon), h: head + px(HORIZON_H), draw: (c, x, y, w) => drawHorizon(c, x, y + head, w, unit) });
+        // the horizon, with HorizonChart's headroom for the hearts
+        if (bars.length && (on('horizon') || preview)) {
+          const head = px(HORIZON_HEAD);
+          rows.push({ key: 'horizon', ghost: !on('horizon'), gap: px(GAP.horizon), h: head + px(HORIZON_H), draw: (c, x, y, w) => drawHorizon(c, x, y + head, w, unit) });
         }
 
         const stack = rows.reduce((sum, row) => sum + row.gap + row.h, 0);
@@ -344,20 +391,23 @@ export function entryPlate({ entry, keeper }) {
       }
 
       // ── the ground ───────────────────────────────────────────────────────
-      // The cover blurred across the whole paper, overscanned so no edge
-      // shows, under the look's wash. Without a cover, the page's own colour.
-      function paintGround(c, f, img, ink) {
+      // Three grounds (Miyel, 2026-09-13): the record — the cover blurred
+      // across the whole paper, overscanned so no edge shows, under the
+      // look's wash — or plain day, or plain night: the page's own colour.
+      function paintGround(c, f, img, ink, ground) {
         c.fillStyle = ink.paper;
         c.fillRect(0, 0, f.w, f.h);
-        if (img?.naturalWidth) {
+        if (ground === 'record' && img?.naturalWidth) {
           const s = Math.max(f.w / img.naturalWidth, f.h / img.naturalHeight) * 1.3;
           const dw = img.naturalWidth * s;
           const dh = img.naturalHeight * s;
           c.save();
           if (typeof c.filter === 'string') {
-            // Six hundredths of the width to begin with; a fifth softer on
-            // Miyel's eye, so the cover's shapes show through as shapes.
-            c.filter = `blur(${Math.round(f.w * 0.048)}px) saturate(1.3)`;
+            // Six hundredths of the width to begin with, then a fifth softer,
+            // then softer again with a lighter wash (2026-09-13): the art has
+            // to come through as art. The same numbers the screen uses
+            // (entry.css .ln-print-ground: 11px on a 375 screen, 46%).
+            c.filter = `blur(${Math.round(f.w * 0.03)}px) saturate(1.25)`;
             c.drawImage(img, (f.w - dw) / 2, (f.h - dh) / 2, dw, dh);
           } else {
             // No filter on this canvas: a picture shrunk to a few pixels and
@@ -371,9 +421,9 @@ export function entryPlate({ entry, keeper }) {
             c.drawImage(tiny, (f.w - dw) / 2, (f.h - dh) / 2, dw, dh);
           }
           c.restore();
+          c.fillStyle = ink.wash;
+          c.fillRect(0, 0, f.w, f.h);
         }
-        c.fillStyle = ink.wash;
-        c.fillRect(0, 0, f.w, f.h);
       }
 
       // ── the cover ────────────────────────────────────────────────────────
@@ -502,12 +552,12 @@ export function entryPlate({ entry, keeper }) {
       // a second print.
       function drawHorizon(c, x, y, w, unit) {
         const n = bars.length;
-        const gap = HORIZON_GAP * unit;
+        const gap = horizonGap(n) * unit;
         const bw = Math.max(1, (w - gap * (n - 1)) / n);
         const h = HORIZON_H * unit;
-        const r = Math.min(2 * unit, bw / 2);
+        const r = Math.min(BAR_RADIUS * unit, bw / 2);
         for (let i = 0; i < n; i++) {
-          const bh = Math.max(2 * unit, bars[i] * h);
+          const bh = Math.max(0.03 * h, bars[i] * h);
           const x0 = x + i * (bw + gap), x1 = x0 + bw;
           const y0 = y + h - bh, y1 = y + h;
           c.fillStyle = ink.bar;
@@ -522,51 +572,43 @@ export function entryPlate({ entry, keeper }) {
           c.fill();
           if (favs[i]) {
             const hs = HEART * unit;
-            drawPath(c, HEART_PATH, x0 + (bw - hs) / 2, y0 - hs - 2 * unit, hs, 24, FAV);
+            drawPath(c, HEART_PATH, x0 + (bw - hs) / 2, y0 - hs - HEART_LIFT * unit, hs, 24, FAV);
           }
         }
       }
 
       // ── lay it down ──────────────────────────────────────────────────────
+      // A ghost row is drawn at a fifth of its ink, and every switchable row
+      // leaves a box — its own height plus the air above it, the column's
+      // full width — for the press to hit-test against.
       const { rows, stack, h, colW, artW } = built;
+      function lay(x, y0) {
+        let y = y0;
+        for (const row of rows) {
+          y += row.gap;
+          if (row.ghost) { ctx.save(); ctx.globalAlpha = GHOST; }
+          row.draw(ctx, x, y, colW);
+          if (row.ghost) ctx.restore();
+          if (row.key) targets.push({ x, y: y - row.gap, w: colW, h: row.h + row.gap, tap: taps(row.key) });
+          y += row.h;
+        }
+      }
       if (spread) {
+        // The cover to the left, the writing beside it (Miyel's call,
+        // 2026-09-13, after an hour the other way round).
         const blockW = artW + COLUMN_GAP * U + colW;
         const originX = (frame.w - blockW) / 2;
         const originY = (frame.h - h) / 2;
         drawCover(ctx, originX, originY + (h - artW) / 2, artW, U);
-        const textX = originX + artW + COLUMN_GAP * U;
-        let y = originY + (h - stack) / 2;
-        for (const row of rows) {
-          y += row.gap;
-          row.draw(ctx, textX, y, colW);
-          y += row.h;
-        }
+        lay(originX + artW + COLUMN_GAP * U, originY + (h - stack) / 2);
       } else {
-        const originX = (frame.w - colW) / 2;
-        let y = top + (areaH - h) / 2;
-        for (const row of rows) {
-          y += row.gap;
-          row.draw(ctx, originX, y, colW);
-          y += row.h;
-        }
+        lay((frame.w - colW) / 2, (frame.h - h) / 2);
+      }
+      return targets;
+
+      function taps(key) {
+        return key === 'marks' ? shown => TAPS.marks(shown, marks.length > 0) : TAPS[key];
       }
     },
   };
-}
-
-// ── The page's half ────────────────────────────────────────────────────────
-// What app/printer/page.js renders for the keeper: the press, open, with this
-// record on it; the entry's address goes to the press as the link it copies
-// when a print is made. Closing puts the page's address back — the layer it
-// rose on closes with it — and, opened cold with nowhere to go back to, lands
-// on the record.
-export default function EntryPlate({ entry, keeper, address, layered = false }) {
-  const router = useRouter();
-  const plate = useMemo(() => entryPlate({ entry, keeper }), [entry, keeper]);
-  const slug = entry?.slug;
-  const close = useCallback(() => {
-    if (window.history.length > 1) router.back();
-    else router.push(slug ? `/entries/${slug}` : '/');
-  }, [router, slug]);
-  return <SharePrinter open inline={layered} plate={plate} link={address || null} onClose={close} />;
 }
