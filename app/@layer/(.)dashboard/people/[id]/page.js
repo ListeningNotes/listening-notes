@@ -14,7 +14,7 @@ import PersonPage from '../../../../dashboard/people/[id]/page';
 
 export default function PersonOverTheDesk() {
   return (
-    <LayerEntry label="A person" scrolls>
+    <LayerEntry label="A person" scrolls over="desk">
       <PersonPage layered />
     </LayerEntry>
   );
