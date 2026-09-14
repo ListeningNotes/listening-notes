@@ -158,7 +158,7 @@ export default function SettingsPage({ layered = false }) {
 
         <Section
           title="Last.fm"
-          note={<>Connect your journal to a Last.fm account so you can have a live beacon of what you’re listening to. Create a free account, connect it to Spotify or Apple Music, then get an API key at <a href="https://www.last.fm/api/account/create" target="_blank" rel="noopener noreferrer">last.fm/api</a>.</>}
+          note={<>The beacon shows what you’re playing by reading Last.fm, and this is set up on a desktop computer — a Mac or a PC — which is how it is known to work. Make a free Last.fm account. Download the Last.fm desktop app, sign in, and connect it to whatever you play music with, such as Spotify or Apple Music, so every play is sent to Last.fm. Then get an API key at <a href="https://www.last.fm/api/account/create" target="_blank" rel="noopener noreferrer">last.fm/api</a> and paste it below with your Last.fm username. Plays from a phone alone will not reach the beacon.</>}
           onSave={async () => {
             await send('/api/settings', { lastfm_user: lastfmUser });
             if (lastfmKey.trim()) {
