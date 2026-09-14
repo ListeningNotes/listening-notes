@@ -1546,6 +1546,18 @@ into the app"**
       lost its own foot, "cut off at the bottom"), so the bar stays inside
       the viewport and the band, showing the page's --bg, reads as its foot.
       The same is true of the old press's rule; that one is gone with it.
+
+**2026-09-13, after the release, on main (Miyel's call: edit main directly)**
+
+- [x] **Save in two taps.** On the live site (https) the share sheet came
+      up straight from Save and skipped the look at the finished picture.
+      Now the first tap makes the picture and shows it on the paper with
+      the address copied ("This is your print, and its address is copied");
+      the second, Save in the final bar, hands it over — `navigator.share`
+      with the file on a phone, a download on a desktop (`press.deliver`,
+      `canDeliver` = share or no touch). A phone with no sheet has no second
+      tap: it holds the picture. The dev server was stopped by the app
+      between turns and started again.
       The header (the nav row: mark and light switch) stands down while
       printing — `html[data-printing] .sitenav-row` — and the paper takes
       its room; the card carries its own mark (Miyel, same day).

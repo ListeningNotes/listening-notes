@@ -875,6 +875,8 @@ export default function FullPostPage({ entry, references = [], authed = false, l
             status={press.status || (learned || press.picture ? '' : PRINT_HINT)}
             final={Boolean(press.picture)}
             onBack={press.dismissPicture}
+            onDeliver={press.deliver}
+            canDeliver={press.canDeliver}
           />
         )}
       </section>
