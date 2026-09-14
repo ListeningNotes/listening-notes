@@ -231,7 +231,7 @@ cannot be tested end to end.
       page, and the row's Not answering yet.
 
 **THE DESKTOP LAYOUT, 2026-09-13** — built on branch `desktop-columns`
-(Complete), not merged. To look at in Safari before merging:
+(Complete), merged and released as 1.10.0 before a Safari look — Miyel's call, to refine later. Still to look at:
 
 - [ ] **Both grips with a real mouse** — the browser tool's drag never
       landed on the nine pixels; dispatched pointer events proved the hook
@@ -1483,7 +1483,7 @@ current.
 
 ## Complete
 
-**2026-09-13 — the desktop layout, branch `desktop-columns`, UNMERGED:
+**2026-09-13 — the desktop layout, branch `desktop-columns`, MERGED to main as 1.10.0, pushed, release v1.10.0 cut the same evening (Miyel: quick, refine later):
 three columns at three widths, the beacon as a band, layers that share the
 screen** — from Miyel's brief, and three notes she sent while it was built.
 
