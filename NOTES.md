@@ -1488,7 +1488,7 @@ current.
 ## Complete
 
 **2026-09-13 — setup fixes from the Peyton install, branch `setup-fixes`,
-UNMERGED, waiting on a look at the dev server** — from Miyel's brief: three
+MERGED to main as 1.10.1, pushed, release v1.10.1 cut** — from Miyel's brief: three
 things from watching somebody else go through setup, one from the Last.fm
 decision.
 
