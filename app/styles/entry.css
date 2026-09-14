@@ -945,3 +945,206 @@
     padding: 0 24px 80px;
   }
 }
+
+/* ── Printing ──────────────────────────────────────────────────────────────
+   The printer is a mode of the entry page: the first screen becomes the
+   flyer. The notes, the cue and the date step aside; the screen becomes a
+   paper of the size picked in the bar, fitted between the nav and the bar;
+   a ground sits inside it; the card is scaled to fit it (the page measures
+   and sets --print-scale); each switchable line fades where it stands when
+   tapped off; and the correction mode's bar wears the printer's controls.
+   Until printing, .ln-print-stack and .ln-print-card are display: contents,
+   so the screen's own flex column lays the card out as it always did. */
+.ln-print-stack, .ln-print-card { display: contents; }
+.ln-printing .ln-screen-two,
+.ln-printing .ln-scroll-cue,
+.ln-printing .ln-screen-one-posted,
+.ln-printing .ln-hero,
+.ln-printing .ln-cover-hero { display: none; }
+.ln-printing {
+  /* The fixed logo row stands down while printing (below), so only the
+     phone's own bar is cleared — the inset rides along on the home screen. */
+  --print-top: calc(22px + env(safe-area-inset-top, 0px));
+  --print-bar: 190px;    /* the bar's three rows */
+  --print-side: 12px;
+  --print-max: 520px;    /* the paper's width on a wide screen */
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  height: 100dvh; box-sizing: border-box;
+  padding: var(--print-top) var(--print-side) var(--print-bar);
+  overflow: hidden; scroll-snap-type: none;
+}
+.ln-printing .ln-screen-one {
+  position: relative;
+  display: block;
+  flex: 0 1 auto; min-height: 0;
+  padding: 0; margin: 0;
+  overflow: hidden;
+  border-radius: 10px;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.22);
+  aspect-ratio: var(--print-ratio, 0.5625);
+  /* As tall as the room allows, unless the width runs out first. */
+  height: min(100%, calc((min(100vw, var(--print-max)) - 2 * var(--print-side)) / var(--print-ratio, 0.5625)));
+  width: auto;
+  scroll-snap-align: none;
+}
+.ln-print-ground {
+  position: absolute; inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  background: var(--bg);
+}
+/* Scaled from its centre rather than oversized and offset, so the blur's
+   soft edge stays outside the paper on every phone (an offset version left
+   a bar down one side on Miyel's), and blurred less, under a lighter wash,
+   so the art comes through as art (her eye, 2026-09-13). */
+.ln-print-ground img {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover;
+  transform: scale(1.25);
+  filter: blur(11px) saturate(1.25);
+}
+.ln-print-ground::after {
+  content: '';
+  position: absolute; inset: 0;
+  background: color-mix(in srgb, var(--bg) 46%, transparent);
+}
+.ln-print-ground--plain img, .ln-print-ground--plain::after { display: none; }
+.ln-printing .ln-print-stack {
+  display: flex; align-items: center; justify-content: center;
+  position: absolute; inset: 0; z-index: 1;
+  padding: 7%;
+  box-sizing: border-box;
+}
+.ln-printing .ln-print-card {
+  display: flex; flex-direction: column; align-items: center; text-align: center;
+  gap: 12px;
+  width: 100%;
+  flex: 0 0 auto;
+  transform: scale(var(--print-scale, 1));
+  transform-origin: center;
+}
+.ln-printing .ln-print-card > * { position: relative; z-index: 1; }
+/* Opened out on the wide paper, the way the plate lays it: the cover to
+   the left, as large as the paper allows, and the writing beside it
+   (Miyel, 2026-09-13), with the paper's padding pulled in to give it room. */
+.ln-printing[data-size="spread"] .ln-print-stack { padding: 4%; }
+.ln-printing[data-size="spread"] .ln-print-card {
+  display: grid;
+  grid-template-columns: 48% 1fr;
+  column-gap: 5%;
+  row-gap: 8px;
+  align-items: center; align-content: center;
+  text-align: left;
+}
+/* The writing is drawn smaller than the art on a paper this short — the
+   whole card scales to fit, and a column of full-size type would drag the
+   cover down to a stamp with it. zoom rather than transform so the grid
+   still measures it. */
+.ln-printing[data-size="spread"] .ln-print-card > * { grid-column: 2; justify-self: start; zoom: 0.55; }
+.ln-printing[data-size="spread"] .ln-screen-one-art { grid-column: 1; grid-row: 1 / span 9; justify-self: center; width: 100%; zoom: 1; }
+.ln-printing[data-size="spread"] .ln-screen-one-chips { justify-content: flex-start; }
+.ln-printing[data-size="spread"] .ln-print-horizon { max-width: none; }
+.ln-printing .ln-screen-one-art { width: 78%; height: auto; aspect-ratio: 1 / 1; flex-shrink: 0; }
+/* The art is the subject and is not a switch: it stays put, and the tap
+   that turns a cover into its code stands down with its badge. */
+.ln-printing .ln-screen-one-art { pointer-events: none; }
+.ln-printing .ln-turn-badge { display: none; }
+.ln-printing .ln-screen-one-title { font-size: 26px; }
+.ln-printing .ln-screen-one-artist { margin-top: -4px; }
+/* The two plain grounds set the page's tokens on the mode's own box — the
+   paper and its bar — and nowhere else: a day or night paper must not turn
+   the site's theme (it did for an hour, from the root). The card carries
+   its own mark, so nothing outside the paper needs the paper's colours.
+   The record's ground sets nothing: it follows the page's own theme. */
+.ln-printing[data-ground="day"] {
+  --bg: #eef0ec; --ink: #1a1a1a; --ink-soft: #6b6b6b; --ink-faint: #a8a8a8;
+  --panel-border: rgba(255, 255, 255, 0.6); --border: rgba(26, 26, 26, 0.08);
+  --shadow-lift: 0 4px 20px rgba(0,0,0,0.06), 0 16px 48px rgba(0,0,0,0.06);
+  color-scheme: light;
+}
+.ln-printing[data-ground="night"] {
+  --bg: #0e0e0e; --ink: #e8e4dc; --ink-soft: #888888; --ink-faint: #555555;
+  --panel-border: rgba(255, 255, 255, 0.08); --border: rgba(255, 255, 255, 0.08);
+  --shadow-lift: 0 4px 20px rgba(0,0,0,0.4), 0 16px 48px rgba(0,0,0,0.3);
+  color-scheme: dark;
+}
+.ln-print-mark { display: block; height: 44px; width: auto; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+/* No focus ring on the tappable lines and the mark: a tap on iOS focuses
+   them and drew a blue box round the mark (Miyel, 2026-09-13). The fade
+   is the feedback. */
+.ln-print-mark:focus, .ln-print-mark:focus-visible,
+.ln-print-line:focus, .ln-print-line:focus-visible { outline: none; }
+.ln-print-mark path, .ln-print-mark circle { fill: var(--ink); transition: fill 0.2s; }
+.ln-print-mark .ln-print-mark-dot--live { fill: var(--live); }
+/* The finished picture over the paper, when a phone has no share sheet to
+   take it: held, iOS offers Add to Photos; tapped, the card returns. */
+.ln-print-out {
+  position: absolute; inset: 0; z-index: 3;
+  width: 100%; height: 100%; object-fit: contain;
+  background: var(--bg);
+  -webkit-touch-callout: default;
+}
+.ln-print-line { cursor: pointer; transition: opacity 0.25s ease; -webkit-tap-highlight-color: transparent; }
+.ln-print-line.ln-off { opacity: 0.18; }
+.ln-print-keeper {
+  font-family: var(--font-label); font-size: 13px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--ink-soft);
+  padding: 4px 12px;
+}
+.ln-print-symbol { display: inline-flex; line-height: 1; padding: 0 4px; }
+.ln-print-horizon { width: 100%; max-width: 340px; }
+.ln-print-bar {
+  /* Above the sheet (200) and the nav (300): it is portalled onto the body
+     so it keeps the site's colours while the paper sets its own. */
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 400;
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  padding: 10px 16px calc(10px + env(safe-area-inset-bottom));
+  background: var(--bg);
+  border-top: 1px solid var(--border);
+  color: var(--ink);
+}
+.ln-print-look {
+  font-family: var(--font-label); font-size: 9px; letter-spacing: 0.16em;
+  text-transform: uppercase; color: var(--ink-soft);
+}
+.ln-print-row { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 8px; }
+.ln-print-grounds { display: flex; align-items: center; gap: 10px; }
+.ln-print-dot {
+  width: 10px; height: 10px; padding: 0; border-radius: 999px;
+  border: 1px solid var(--ink-faint); background: transparent; cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, transform 0.15s;
+}
+.ln-print-dot--on { background: var(--ink); border-color: var(--ink); transform: scale(1.25); }
+.ln-print-sizes { gap: 6px; }
+.ln-print-size {
+  font-family: var(--font-label); font-size: 9.5px; letter-spacing: 0.1em;
+  padding: 6px 11px; border-radius: 999px;
+  border: 1px solid var(--border); background: transparent; color: var(--ink-soft);
+  cursor: pointer; white-space: nowrap;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.ln-print-size:hover { color: var(--ink); border-color: var(--ink-faint); }
+.ln-print-size--on { color: var(--bg); background: var(--ink); border-color: var(--ink); }
+.ln-print-said {
+  font-family: var(--font-label); font-size: 10px; letter-spacing: 0.08em;
+  color: var(--ink-soft); min-height: 12px; text-align: center; overflow-wrap: anywhere;
+  margin-bottom: 2px;
+}
+/* The sheet's own furniture stands down while printing: the carets to the
+   neighbours (a pointer's version of the sideways swipe, which now turns
+   the ground). Reached from the root — the carets are the sheet's, not the
+   page's, and :has() does not survive the build. */
+html[data-printing] .lay-step { display: none; }
+/* And the header: the card carries its own mark, and the light switch has
+   nothing to switch while the paper sets its own colours (Miyel,
+   2026-09-13). */
+html[data-printing] .sitenav-row { display: none; }
+/* On the home screen iOS hands the page a viewport one status bar shorter
+   than the screen, pinned under the clock (measured 2026-09-13: 812 of 874,
+   inset top 62). The band below the viewport is the phone's: nothing on a
+   page can paint there, and a bar stretched down into it only lost its own
+   foot (tried, 2026-09-13). So the bar stays inside the viewport and the
+   band, which shows the page's background, wears the bar's colour — the
+   same --bg — and reads as the bar's foot rather than as a gap. */
+@media (prefers-reduced-motion: reduce) { .ln-print-line { transition: none; } }

@@ -331,6 +331,13 @@ pressing. `?entry=slug` travels from an entry; the card sends nobody,
 meaning the profile. The press landed for the record on 2026-09-12; the
 card's door still says so until its plate is reworked.
 
+**The printer is a mode of the entry page, 2026-09-13.** Press the glyph and
+the first screen becomes the flyer, the way correcting is a mode: the card
+you already know, full size, in the real type. A sheet of its own — a
+scaled-down preview with rows of buttons — was tried twice that week and was
+the wrong shape for the front door. Also learned: the layer slot holds one
+page, so a printer route over an entry replaced the entry underneath.
+
 **Styles live in eight files by surface, not with their components,
 2026-09-06.** `app/styles/`: base, nav, journal, entry, idcard, session, get,
 forms. A rule is found where its surface is; one kept inside a component is
@@ -563,6 +570,22 @@ the way to the code, never on the way back.
 export variant the art, title, artist, rating and mark stay in locked
 positions; the background changes mood, never information. A Story has room
 for art and metadata together, so no carousel.
+
+**The printer's options are the card itself, 2026-09-13.** Tap a line of
+the card to leave it off; it fades where it stands, and comes back on a
+second tap; the marks cycle chips, symbols, gone; a sideways swipe turns
+the ground — the record blurred across the screen, plain day, plain night.
+Six bubbles under a preview were sixty-four arrangements, most worse than
+the default, with labels nobody outside the project knew. The paper on
+screen takes the size picked in the bar, so the other shapes are seen, not
+only saved; the card is scaled to fit whatever paper it is on.
+
+**The print is the paper on screen, with no hidden margins, 2026-09-13.**
+The saved picture kept bands for Instagram's furniture and a link sticker
+that the preview did not show, and came out with the card smaller than the
+one just approved. Anything a story needs kept clear is drawn on the
+preview as a band, or not kept. On a phone Save is the share sheet — Save
+Image and Instagram are on it — since no page can write to the camera roll.
 
 **A print is the entry page's first screen on the record's own colour,
 2026-09-12.** The cover blurred across the paper under the look's wash,

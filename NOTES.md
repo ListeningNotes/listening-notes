@@ -264,9 +264,11 @@ person's page the next (Complete). Left: the printer, and the chain.
         reworked to the 2026-08-25 brief (one toggle for records + since, no
         address) — and **the comparison's**, for `/printer?person=<id>`.
         Both doors still say coming soon.
-      - **A real phone.** Send to the share sheet, Save into the camera roll,
-        and a scan of the printed code at arm's length. Everything so far is
-        the decode check in the pane.
+      - **A real phone.** Miyel looked on 2026-09-13 and four things
+        changed (see Complete). Still to see: whether the installed copy
+        now fills its screen (the standalone rule, and a force-quit to
+        shed a stale stylesheet), Send to the share sheet, Save into the
+        camera roll, a story with the sticker in the space.
       - **The moving card.** Recording is proved (below); Instagram is not —
         the test clip went to Miyel to post. Then two animations that mean
         something and no screensavers: covers arriving, the rating filling.
@@ -1455,6 +1457,157 @@ current.
 ---
 
 ## Complete
+
+**2026-09-13 — the printer becomes a mode of the entry page, branch
+`printer-fit` (name provisional), 1.9.0 — Miyel's redirection after seeing
+the press on her phone: "the printer is the door into the app"**
+
+- [x] **The entry's first screen is the flyer.** `printing` state in
+      FullPostPage, the way `edit.editing` is: the notes, the cue and the
+      date step aside, the keeper's name appears under the mark, the horizon
+      (HorizonChart, no labels, ink at half) under the chips, and a ground
+      sits behind the card — the record blurred across the screen (CSS blur
+      on the cover, a wash of `--bg` at 62%), plain day, plain night; the
+      two plain grounds set the page's tokens on the container so plain
+      night is night whatever the theme. Tap a line to leave it off (`.ln-off`
+      at 18%), tap again to bring it back; the marks cycle chips → the
+      feed's symbols (Phosphor Heart / SketchLogo / Fingerprint at 34) →
+      gone; a sideways touch swipe on the screen turns the ground, and
+      LayerEntry stands its own gestures down while `.ln-printing` is on
+      the sheet. The art is inert and its code badge hidden.
+- [x] **`hooks/usePress.js`** (Miyel's name) makes the picture: the plate
+      drawn at the chosen paper with the page's choices and `ground`, then
+      Save (download), Send (share sheet) or Link (clipboard), the address
+      copied first and said in the cover's words. **`PrintBar`** (hers too,
+      in Slug_Page) wears the correction bar's clothes: three ground dots,
+      a row of the four sizes, and Send / Save / Link / Done. Sizes were
+      offered after Save at first; after her phone look she wanted them
+      seen, so the screen is now a PAPER of the picked size — fitted between
+      the nav and the bar (`height: min(100%, width / ratio)` with
+      `aspect-ratio`), the ground inside it, and the card scaled to fit by a
+      ResizeObserver setting `--print-scale` (`.ln-print-stack` /
+      `.ln-print-card` are `display: contents` until printing). The wide
+      paper lays the card as a grid, cover left. Blur 11px and a 46% wash on
+      screen, the plate at 0.03 of the width and the same wash — her call:
+      the art has to come through; the earlier offset image left a bar down
+      one side of her phone, so the image is scaled from its centre instead.
+      Later the same day, from her phone: the card scales against the room
+      inside the paper's padding (against the paper it spilled both ends);
+      the paper's top clears the phone's inset; the bar reaches the screen's
+      foot on the home screen (the press's rule, moved); the plain grounds
+      set their tokens on the mode's box only — from the root they turned
+      the whole site — and the card carries its own copy of the mark at the
+      head, so the nav's stays the site's; a hint sits under the bar until
+      the first tap ever on that browser (`localStorage` `ln-printing-learned`);
+      the print's artist line wraps to two lines like the screen; the wide
+      paper keeps the cover LEFT (she preferred it, after an hour on the
+      right), as large as the paper allows, the writing beside it, on
+      screen (grid, writing zoomed to 0.55) and in the plate. Then, from
+      her first real export: the plate's hidden story margins (13% top and
+      bottom, 24% sticker room) came out; the print fits the paper's 7%
+      padding like the screen, with the screen's proportions (art 78% of
+      the card, gaps of 12, horizon 52) — recorded in DECISIONS. And Save
+      on a phone is the share sheet (`navigator.share` with the file —
+      Save Image is on it), a download elsewhere; the Send button went.
+      **A dev copy on plain http gets no share sheet** (iOS gives it to
+      https only), which is why Miyel's phone showed the download preview
+      instead: so a phone without the sheet now gets the finished picture
+      ON the paper (`press.picture`, `.ln-print-out`) — hold it and iOS
+      offers Add to Photos, tap it to come back. The live site is https and
+      will get the sheet.
+      Then: the hint shows on every opening until that opening's first tap
+      (once-ever was too little); the mark cannot be left off but a tap
+      lights its dot in the site's green (`liveDot`, drawn over the mark in
+      the plate at the dot's own place in the 76 96 241 140 box); the title
+      and the artist line are tappable lines too.
+      Then: the hint is "Tap an element to remove or add it." (the long one
+      was cut off); the bar's "Printing" label went; Copy link says what it
+      does and copies the old way (a selected hidden field, execCommand)
+      when the clipboard API is missing, as it is on http; and while the
+      final picture is up the bar is only "Back to the card" with the
+      hold-to-save line — nothing else can be changed from there.
+      Then: Copy link went (the cover on the entry page copies the address,
+      and Save copies it too); the plate's numbers were set to the screen's
+      so the saved picture is the preview (mark 44, HorizonChart's 52 over
+      13 of headroom, hearts of 10 lifted 4, bar corners 3, a gap by track
+      count, the keeper line's padding) — compared side by side; the bar is
+      PORTALLED onto the body at z 400 so it keeps the site's colours while
+      the paper sets its own (a night paper turned the buttons dark, which
+      Miyel called wrong), and it names the ground above the dots: Reflect
+      (her word for the cover blurred behind the card), Day, Night.
+      Then: the bar's line moved to the TOP of the bar and darkened — on the
+      home screen a last line hung below the viewport unseen — and the
+      "reach the screen's foot" rule came out: the band below the installed
+      app's viewport cannot be painted by a page (a bar stretched into it
+      lost its own foot, "cut off at the bottom"), so the bar stays inside
+      the viewport and the band, showing the page's --bg, reads as its foot.
+      The same is true of the old press's rule; that one is gone with it.
+      The header (the nav row: mark and light switch) stands down while
+      printing — `html[data-printing] .sitenav-row` — and the paper takes
+      its room; the card carries its own mark (Miyel, same day).
+- [x] **What went.** The press as a sheet: `SharePrinter.js` is now only the
+      toolbox (FRAMES, PAPER, the canvas tools); its sheet, the ghosts on a
+      canvas and the tap targets are in git before 2026-09-13 (the plate's
+      `preview` ghosts and `targets` are still in EntryPlate.js, unused).
+      The `.shp` rules are out of forms.css. `/printer?entry=` redirects to
+      the entry; `/printer` bare is still the card's sentence.
+- [x] **Desktop.** The mode shows the same first screen at width; the hero
+      is hidden while printing.
+
+**Earlier the same day — the printer on a real phone, 1.8.1: what Miyel
+saw and what changed (superseded above, kept for the lessons)**
+
+- [x] **The press opens in place over the entry.** On a phone the entry is
+      a sheet over the journal, and the layer slot holds one page: the
+      printer route replaced the entry underneath and closing it rebuilt the
+      entry with the journal flashing through. KeeperTools' printer is a
+      button when the page hands it `onPrint`; FullPostPage keeps a
+      `printing` state and renders `EntryPlate` with `onClose`. Close is
+      instant, the page untouched (checked: the layer, and a marker set on
+      the window, both survive). `/printer?entry=` still works cold, as a
+      link elsewhere. Recorded in DECISIONS.
+- [x] **The press rises when portalled** (`.shp--rises`, entry.css's
+      layRise), so opening in place still comes up from the foot.
+- [x] **Under the phone's bar, not behind it.** `.shp-bar` pads by
+      `env(safe-area-inset-top)`.
+- [x] **The option rows wrap instead of scrolling sideways.** Six chips in a
+      sideways scroll felt long and unnatural; a row's chips are fixed by the
+      plate, so wrapping never moves the print. Chips a shade smaller.
+- [x] **No bar.** "The record" across the top said nothing the paper did
+      not; the plate's title names the dialog for a screen reader instead.
+      The paper takes everything above the look's name, the controls sit at
+      the foot, and the press fills the screen edge to edge (checked at
+      375×812: the press is the viewport, the controls end at its foot).
+- [x] **Tap the card (Miyel's brief, 2026-09-13).** The Show row is gone.
+      Every switchable line — keeper, stars, marks, horizon — is tapped on
+      the preview to leave it off and stays as a ghost (the line at 18% of
+      its ink) to be tapped back; the marks cycle chips → symbols → gone;
+      the sticker's room is a dashed pill in its band, a fainter one in the
+      foot margin when off. The plate's `draw` takes `preview` (ghosts only
+      then) and returns the boxes it laid each line in; the press hit-tests
+      a tap (a finger that moved under 8px) against them, scaled by the
+      paper's size on screen measured at the tap — not the remembered `z`,
+      which lagged a resize by one step and put every tap a line off — with
+      every box at least 44px tall on screen. The print is drawn again
+      without ghosts at Save. Choices persist for the session under
+      `sessionStorage` `ln-press:<plate title>`. A one-line hint sits
+      under the buttons until the first tap. `canvas.__targets` is set for
+      the pane's tests. Named looks stay the fallback if taps feel fiddly.
+- [x] **Escape closed the press and the entry together.** Both listened on
+      the window; the press now hears keys in the capture phase and stops
+      them. Miyel reported the entry not closing after backing out of the
+      printer; not reproduced in the pane (a simulated pull-down and Escape
+      both close it after the printer), so watch for it on the phone.
+- [x] **The home-screen app's short viewport.** A readout on the press
+      (temporary, removed) showed Miyel's installed copy hands the page a
+      viewport one status bar shorter than the screen — 812 of 874, inset
+      top 62, bottom 34, standalone true — pinned to the top under the
+      clock. So a press at the viewport's foot stopped 62 above the screen's
+      and the home-indicator inset stacked on that: the dead band she saw.
+      Under `@media (display-mode: standalone)` the press now reaches down
+      by the top inset and its controls stand off by the larger inset, so
+      the last row stays inside the page whichever way the phone paints.
+      Not proved on the phone at the time of writing — see Pending.
 
 **2026-09-12 — the printer prints the record, branch `printer`, merged to
 main as 1.8.0 the same day (a route's behaviour and two files: the middle

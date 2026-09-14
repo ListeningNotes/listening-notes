@@ -7,10 +7,10 @@
 // It receives the entry data from page.js which fetched it server-side.
 
 'use client';
-import { useState, useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { CaretUp, Check, Envelope, VinylRecord, X } from '@phosphor-icons/react';
+import { CaretUp, Check, Envelope, Fingerprint, Heart, SketchLogo, VinylRecord, X } from '@phosphor-icons/react';
 import { BookOpen } from '@phosphor-icons/react';
 import { fonts } from '../../../library/sitewide_visuals';
 import { sizedAlbumArt, fetchAlbumArtUrl } from '../../../library/music_data_api';
@@ -22,11 +22,16 @@ import { createPortal } from 'react-dom';
 import { useLayerHeaderSlot } from '../../../components/main_components/LayerEntry';
 import EdgeCaret from '../../../components/main_components/EdgeCaret';
 import KeeperTools from '../../../components/main_components/KeeperTools';
+import { entryPlate } from '../../../components/main_components/EntryPlate';
+import { usePress } from '../../../hooks/usePress';
+import { FRAMES, FRAME_ORDER } from '../../../components/main_components/SharePrinter';
 import HorizonBar from '../../../components/main_components/Slug_Page/HorizonBar';
 import TrackThread from '../../../components/main_components/Slug_Page/TrackThread';
 import CommentBubble from '../../../components/main_components/Slug_Page/CommentBubble';
 import MetadataLabel from '../../../components/main_components/Slug_Page/MetadataLabel';
 import Chip from '../../../components/main_components/Slug_Page/Chip';
+import PrintBar from '../../../components/main_components/Slug_Page/PrintBar';
+import HorizonChart from '../../../components/main_components/HorizonChart';
 import MiniCard from '../../../components/main_components/Slug_Page/MiniCard';
 import { handedOver } from '../../../library/handoff';
 import { tidyAddress } from '../../../library/return_address';
@@ -37,6 +42,29 @@ import StarRating from '../../../components/main_components/StarRating';
 import StarPicker from '../../../components/session_components/StarRating';
 import { editStamp } from '../../../library/entry_formatter';
 import { useEntryEditor } from '../../../hooks/useEntryEditor';
+
+// ── Printing, 2026-09-13 ──────────────────────────────────────────────────
+// The printer is a mode of this page, the way correcting is: press the
+// printer glyph and the first screen becomes the flyer. Tap a line to leave
+// it off (it fades where it stands, and comes back on a second tap); the
+// marks go chips, then symbols, then gone; a sideways swipe turns the ground
+// under the card — the record blurred across the screen, plain day, plain
+// night. The paper on screen takes the size picked in the bar, fitted
+// between the nav and the bar with the card scaled to fit inside it; Save
+// or Send makes that size with the plate that mirrors this screen's own
+// numbers (EntryPlate.js), through hooks/usePress.js. Choices are kept for
+// the session, per browser.
+const PRINT_STORE = 'ln-printing';
+// Reflect is Miyel's word for the cover blurred behind the card.
+const GROUNDS = [
+  { key: 'record', label: 'Reflect' },
+  { key: 'day', label: 'Day' },
+  { key: 'night', label: 'Night' },
+];
+// Said under the bar each time the printer opens, until the first tap of
+// that opening — nobody would know a line can be tapped off otherwise
+// (Miyel, 2026-09-13; once-ever was too little).
+const PRINT_HINT = 'Tap an element to remove or add it.';
 
 
 // The pair of actions that close the entry out used to share a local style
@@ -143,7 +171,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   // (app/api/entries/[slug]/code) and never on entry save: most entries are
   // never tapped, and Apple's art cannot be read in a browser anyway. The
   // slot breathes the cover until it arrives.
-  const { site_address } = useBookplate();
+  const { site_address, keeper_name } = useBookplate();
   const { theme } = useTheme();
   const host = tidyAddress(site_address);
   const entryUrl = host && entry.slug ? `https://${host}/entries/${entry.slug}` : '';
@@ -255,8 +283,119 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   // header now, top left, where the card keeps its own pencil. Drawn only for
   // the owner, and drawn on the server: a visitor's copy of this page does not
   // contain it.
-  const keeperTools = authed && !edit.editing && (
-    <KeeperTools onEdit={edit.begin} slug={entry.slug} />
+  //
+  // The printer is a mode of this page (see PRINT_STORE at the top). It was
+  // a route for a day, and on a phone the entry is itself a sheet over the
+  // journal: the two shared the one layer slot, so the printer replaced the
+  // entry underneath and closing it rebuilt the entry with the journal
+  // flashing through. Then it was a sheet of its own over the entry, which
+  // was the wrong shape for the front door. Now it is this page.
+  const [printing, setPrinting] = useState(false);
+  const [printChoices, setPrintChoices] = useState(() => {
+    try { return JSON.parse(sessionStorage.getItem(PRINT_STORE) || '{}') || {}; } catch { return {}; }
+  });
+  useEffect(() => {
+    try { sessionStorage.setItem(PRINT_STORE, JSON.stringify(printChoices)); } catch { /* private mode */ }
+  }, [printChoices]);
+  const ground = GROUNDS.some(g => g.key === printChoices.ground) ? printChoices.ground : 'record';
+  const shown = {
+    keeper: printChoices.keeper !== false,
+    title: printChoices.title !== false,
+    artist: printChoices.artist !== false,
+    stars: printChoices.stars !== false,
+    chips: printChoices.chips !== false,
+    symbols: printChoices.symbols === true,
+    horizon: printChoices.horizon !== false,
+    // The mark is not a switch — no print goes out without it — but its dot
+    // is: a tap turns it live green or back to ink (Miyel, 2026-09-13).
+    liveDot: printChoices.liveDot === true,
+  };
+  // Plain night is dark whatever the page's theme; the record's ground
+  // follows it, the way the page does.
+  const printDark = ground === 'night' || (ground === 'record' && theme === 'dark');
+  const size = FRAME_ORDER.includes(printChoices.size) ? printChoices.size : 'story';
+  // The paper on screen fits the room between the nav and the bar, and the
+  // card is scaled to fit the paper: measured, never guessed, and only from
+  // the observer (which fires once on observe), so no state is set in the
+  // effect's own body.
+  const printStackRef = useRef(null);
+  const printCardRef = useRef(null);
+  const [printScale, setPrintScale] = useState(1);
+  useLayoutEffect(() => {
+    if (!printing) return undefined;
+    const stack = printStackRef.current;
+    const card = printCardRef.current;
+    if (!stack || !card) return undefined;
+    const observer = new ResizeObserver(() => {
+      // Against the room inside the paper's padding, not the paper: measured
+      // against the whole paper, a card a little too tall scaled to nearly 1
+      // and spilled out of both ends (Miyel's phone, 2026-09-13).
+      const cs = getComputedStyle(stack);
+      const roomH = stack.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom);
+      const roomW = stack.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+      const k = Math.min(1, roomH / card.offsetHeight, roomW / card.offsetWidth);
+      setPrintScale(Number.isFinite(k) && k > 0 ? k : 1);
+    });
+    observer.observe(stack);
+    observer.observe(card);
+    return () => observer.disconnect();
+  }, [printing, size]);
+  const keeperName = (keeper_name || '').trim();
+  const plate = useMemo(() => entryPlate({ entry, keeper: keeperName }), [entry, keeperName]);
+  const press = usePress({
+    plate, shown, ground, isDark: printDark, link: entryUrl,
+    fonts: { sans: '.ln-screen-one-title', mono: '.ln-screen-one-artist' },
+  });
+  const leaveOff = key => { learn(); setPrintChoices(c => ({ ...c, [key]: !shown[key] })); };
+  const cycleMarks = () => { learn(); setPrintChoices(c => {
+    const hasSymbols = entry.favorite === true || entry.favorite === 'true' || isMasterpiece || isFormative;
+    if (shown.chips) return { ...c, chips: false, symbols: hasSymbols };
+    if (shown.symbols) return { ...c, chips: false, symbols: false };
+    return { ...c, chips: true, symbols: false };
+  }); };
+  const turnGround = step => setPrintChoices(c => {
+    const i = GROUNDS.findIndex(g => g.key === ground);
+    return { ...c, ground: GROUNDS[(i + step + GROUNDS.length) % GROUNDS.length].key };
+  });
+  // A sideways swipe on the screen turns the ground. The sheet's own
+  // sideways swipe — the next record — stands down while printing; this is
+  // a different mode (LayerEntry looks for .ln-printing).
+  const groundSwipe = useRef(null);
+  const onGroundTouchStart = e => {
+    if (!printing || press.picture || e.touches.length !== 1) return;
+    groundSwipe.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+  };
+  const onGroundTouchEnd = e => {
+    const from = groundSwipe.current;
+    groundSwipe.current = null;
+    if (!from || !printing || press.picture || !e.changedTouches?.length) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - from.x;
+    const dy = t.clientY - from.y;
+    if (Math.abs(dx) > 42 && Math.abs(dx) > Math.abs(dy)) turnGround(dx < 0 ? 1 : -1);
+  };
+  // Stamped on <html> so the sheet's own furniture can stand down (entry.css
+  // reaches the carets from the root). The grounds' colours are NOT stamped
+  // there: a day or night paper must not turn the site's own theme — only
+  // the card and its bar (Miyel, 2026-09-13), which carry their own mark.
+  useEffect(() => {
+    const root = document.documentElement;
+    if (printing) root.dataset.printing = '1'; else delete root.dataset.printing;
+    return () => { delete root.dataset.printing; };
+  }, [printing]);
+  const [learned, setLearned] = useState(false);
+  const learn = () => { if (!learned) setLearned(true); };
+  const finishPrinting = useCallback(() => { setPrinting(false); press.dismissPicture(); }, [press]);
+  // Escape leaves the mode, and is stopped before the sheet under it hears
+  // it and closes the entry too.
+  useEffect(() => {
+    if (!printing) return undefined;
+    const onKey = event => { if (event.key === 'Escape') { event.stopPropagation(); finishPrinting(); } };
+    window.addEventListener('keydown', onKey, true);
+    return () => window.removeEventListener('keydown', onKey, true);
+  }, [printing, finishPrinting]);
+  const keeperTools = authed && !edit.editing && !printing && (
+    <KeeperTools onEdit={edit.begin} slug={entry.slug} onPrint={() => { setPrinting(true); setLearned(false); }} />
   );
 
   // ── The fields at the head of the entry ───────────────────────────────────
@@ -560,12 +699,55 @@ export default function FullPostPage({ entry, references = [], authed = false, l
           the same arrangement as .hp-mobile-screens on the homepage. On
           desktop it has no height or overflow of its own, so everything below
           just falls back into normal document flow. */}
-      <div className={'ln-screens' + (edit.editing ? ' ln-editing' : '')}>
-
+      <div
+        className={'ln-screens' + (edit.editing ? ' ln-editing' : '') + (printing ? ' ln-printing' : '')}
+        data-ground={printing ? ground : undefined}
+        data-size={printing ? size : undefined}
+        onTouchStart={printing ? onGroundTouchStart : undefined}
+        onTouchEnd={printing ? onGroundTouchEnd : undefined}
+      >
       {/* ── SCREEN ONE (phones) ── a full screen of album: art up top, then the
           title, artist, year, rating and qualifiers centred beneath it. The
-          desktop hero below is the same information in a different shape. */}
-      <section className="ln-screen-one">
+          desktop hero below is the same information in a different shape.
+          Printing, it is the paper: the shape of the size picked, the ground
+          inside it, and the card scaled to fit (.ln-print-stack and
+          .ln-print-card are display: contents until then). */}
+      <section className="ln-screen-one" style={printing ? { '--print-ratio': FRAMES[size].w / FRAMES[size].h } : undefined}>
+        {printing && (
+          <div className={'ln-print-ground' + (ground === 'record' ? '' : ' ln-print-ground--plain')} aria-hidden="true">
+            {ground === 'record' && entry.album_art && <img src={entry.album_art} alt="" />}
+          </div>
+        )}
+        {printing && press.picture && (
+          /* The finished picture, for a phone with no share sheet: hold it to
+             add it to Photos (iOS's own callout), tap it to come back. */
+          <img className="ln-print-out" src={press.picture} alt="Your print" onClick={press.dismissPicture} />
+        )}
+        <div className="ln-print-stack" ref={printStackRef}>
+        <div className="ln-print-card" ref={printCardRef} style={printing ? { '--print-scale': printScale } : undefined}>
+        {printing && (
+          /* The card's own mark, at the head, as the print has it — the nav's
+             is the page's furniture and outside the paper. The fourth copy
+             of these paths on the site; each surface states its own. */
+          <svg
+            viewBox="76 96 241 140"
+            className="ln-print-mark"
+            xmlns="http://www.w3.org/2000/svg"
+            role="button"
+            tabIndex={0}
+            aria-label={shown.liveDot ? 'The mark, its dot lit — tap for ink' : 'The mark — tap to light its dot'}
+            onClick={() => { learn(); setPrintChoices(c => ({ ...c, liveDot: !shown.liveDot })); }}
+          >
+            <path transform="translate(73.734177, 220.794814)" d="M 44.65625 0 C 37.46875 0 31.160156 -1.601562 25.734375 -4.8125 C 20.304688 -8.019531 16.097656 -12.28125 13.109375 -17.59375 C 10.128906 -22.90625 8.640625 -28.773438 8.640625 -35.203125 L 8.640625 -116.21875 L 36.53125 -116.21875 L 36.53125 -33.203125 C 36.53125 -30.546875 37.46875 -28.222656 39.34375 -26.234375 C 41.226562 -24.242188 43.550781 -23.25 46.3125 -23.25 L 77.03125 -23.25 L 77.03125 0 Z M 44.65625 0 " />
+            <path transform="translate(153.915942, 220.794814)" d="M 91.96875 2 C 85 2 78.742188 0.476562 73.203125 -2.5625 C 67.671875 -5.613281 63.300781 -9.847656 60.09375 -15.265625 C 56.882812 -20.691406 55.28125 -26.835938 55.28125 -33.703125 L 55.28125 -84.5 C 55.28125 -86.269531 54.835938 -87.875 53.953125 -89.3125 C 53.066406 -90.75 51.90625 -91.910156 50.46875 -92.796875 C 49.03125 -93.679688 47.425781 -94.125 45.65625 -94.125 C 43.882812 -94.125 42.28125 -93.679688 40.84375 -92.796875 C 39.40625 -91.910156 38.269531 -90.75 37.4375 -89.3125 C 36.601562 -87.875 36.1875 -86.269531 36.1875 -84.5 L 36.1875 0 L 8.96875 0 L 8.96875 -82.515625 C 8.96875 -89.484375 10.539062 -95.625 13.6875 -100.9375 C 16.84375 -106.25 21.21875 -110.453125 26.8125 -113.546875 C 32.40625 -116.648438 38.6875 -118.203125 45.65625 -118.203125 C 52.738281 -118.203125 59.046875 -116.648438 64.578125 -113.546875 C 70.109375 -110.453125 74.476562 -106.25 77.6875 -100.9375 C 80.90625 -95.625 82.515625 -89.484375 82.515625 -82.515625 L 82.515625 -31.703125 C 82.515625 -29.929688 82.957031 -28.300781 83.84375 -26.8125 C 84.726562 -25.320312 85.859375 -24.160156 87.234375 -23.328125 C 88.617188 -22.492188 90.144531 -22.078125 91.8125 -22.078125 C 93.582031 -22.078125 95.210938 -22.492188 96.703125 -23.328125 C 98.203125 -24.160156 99.394531 -25.320312 100.28125 -26.8125 C 101.164062 -28.300781 101.609375 -29.929688 101.609375 -31.703125 L 101.609375 -116.21875 L 128.65625 -116.21875 L 128.65625 -33.703125 C 128.65625 -26.835938 127.050781 -20.691406 123.84375 -15.265625 C 120.632812 -9.847656 116.265625 -5.613281 110.734375 -2.5625 C 105.203125 0.476562 98.945312 2 91.96875 2 Z M 91.96875 2 " />
+            <circle cx="297.0547" cy="216.71875" r="14.1328" className={shown.liveDot ? 'ln-print-mark-dot--live' : undefined} />
+          </svg>
+        )}
+        {printing && keeperName && (
+          <div className={'ln-print-line ln-print-keeper' + (shown.keeper ? '' : ' ln-off')} onClick={() => leaveOff('keeper')} role="button" tabIndex={0} title="Tap to leave this off the print">
+            {keeperName}
+          </div>
+        )}
         {edit.editing ? (
           <button
             type="button"
@@ -597,8 +779,19 @@ export default function FullPostPage({ entry, references = [], authed = false, l
         {coverField}
         {edit.editing
           ? <div className="ln-screen-one-title" style={{ fontSize: titleSize }}>{titleField}</div>
-          : <h1 className="ln-screen-one-title" style={{ fontSize: titleSize }}>{entry.album}</h1>}
-        <div className="ln-screen-one-artist">
+          : (
+            <h1
+              className={'ln-screen-one-title' + (printing ? ' ln-print-line' : '') + (printing && !shown.title ? ' ln-off' : '')}
+              style={{ fontSize: titleSize }}
+              onClick={printing ? () => leaveOff('title') : undefined}
+            >
+              {entry.album}
+            </h1>
+          )}
+        <div
+          className={'ln-screen-one-artist' + (printing ? ' ln-print-line' : '') + (printing && !shown.artist ? ' ln-off' : '')}
+          onClick={printing ? () => leaveOff('artist') : undefined}
+        >
           {edit.editing ? bylineField : <>{entry.artist}{entry.year ? ' · ' + entry.year : ''}</>}
         </div>
         {/* The score and the chips are what the flags below edit, so while a
@@ -610,21 +803,53 @@ export default function FullPostPage({ entry, references = [], authed = false, l
             been there all along; replaying the fill starts every star empty
             for a beat, which is the blink at the moment the entry lands. */}
         {!edit.editing && displayRating > 0 && (
-          <StarRating rating={displayRating} size={24} glow={isMasterpiece} animate={!alreadyShown} burst={isMasterpiece && !alreadyShown} />
+          <div className={(printing ? 'ln-print-line' : '') + (printing && !shown.stars ? ' ln-off' : '')} onClick={printing ? () => leaveOff('stars') : undefined}>
+            <StarRating rating={displayRating} size={24} glow={isMasterpiece} animate={!alreadyShown} burst={isMasterpiece && !alreadyShown} />
+          </div>
         )}
         {edit.editing && flagFields}
-        <div className="ln-screen-one-chips">
-          {!edit.editing && listenLabel && <Chip>{listenLabel}</Chip>}
-          {!edit.editing && isSubmission && <Chip><Envelope size={10} weight="regular" aria-hidden="true" />Submission</Chip>}
-          {!edit.editing && (entry.favorite === true || entry.favorite === 'true') && <Chip tone="fav">Favorite</Chip>}
-          {!edit.editing && isMasterpiece && <Chip tone="mp">Masterpiece</Chip>}
-          {/* The third flag, missing from this row since the row was written.
-              Chip has carried a formative tone the whole time and nothing ever
-              passed it. */}
-          {!edit.editing && isFormative && <Chip tone="formative">Formative</Chip>}
+        <div
+          className={'ln-screen-one-chips' + (printing ? ' ln-print-line' : '') + (printing && !shown.chips && !shown.symbols ? ' ln-off' : '')}
+          onClick={printing ? cycleMarks : undefined}
+        >
+          {printing && shown.symbols ? (
+            /* The marks as the feed's symbols — the second of the three
+               states a tap cycles through while printing. */
+            <>
+              {(entry.favorite === true || entry.favorite === 'true') && <span className="ln-print-symbol" style={{ color: 'var(--fav, #f0484f)' }}><Heart size={34} weight="fill" aria-label="Favorite" /></span>}
+              {isMasterpiece && <span className="ln-print-symbol" style={{ color: 'var(--mp, #4a9bf0)' }}><SketchLogo size={34} weight="fill" aria-label="Masterpiece" /></span>}
+              {isFormative && <span className="ln-print-symbol" style={{ color: 'var(--formative, #3fa96b)' }}><Fingerprint size={34} weight="bold" aria-label="Formative" /></span>}
+              {listenLabel && <Chip>{listenLabel}</Chip>}
+            </>
+          ) : (
+            <>
+              {!edit.editing && listenLabel && <Chip>{listenLabel}</Chip>}
+              {!edit.editing && !printing && isSubmission && <Chip><Envelope size={10} weight="regular" aria-hidden="true" />Submission</Chip>}
+              {!edit.editing && (entry.favorite === true || entry.favorite === 'true') && <Chip tone="fav">Favorite</Chip>}
+              {!edit.editing && isMasterpiece && <Chip tone="mp">Masterpiece</Chip>}
+              {/* The third flag, missing from this row since the row was
+                  written. Chip has carried a formative tone the whole time
+                  and nothing ever passed it. */}
+              {!edit.editing && isFormative && <Chip tone="formative">Formative</Chip>}
+            </>
+          )}
         </div>
-        <div style={{ fontFamily: fonts.mono, fontSize: '9px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--ink-faint)' }}>
+        <div className="ln-screen-one-posted" style={{ fontFamily: fonts.mono, fontSize: '9px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--ink-faint)' }}>
           Posted {postedOn}
+        </div>
+        {printing && (horizonBars.length > 0 || parsedTracks.some(t => t.stars > 0)) && (
+          <div className={'ln-print-line ln-print-horizon' + (shown.horizon ? '' : ' ln-off')} onClick={() => leaveOff('horizon')} title="Tap to leave this off the print">
+            <HorizonChart
+              tracks={parsedTracks.map(t => ({ title: t.name, number: t.num, favorite: t.favorite }))}
+              trackRatings={parsedTracks.map(t => Number(t.stars) || 0)}
+              height={52}
+              color="color-mix(in srgb, var(--ink) 50%, transparent)"
+              emptyColor="color-mix(in srgb, var(--ink) 12%, transparent)"
+              animate={false}
+            />
+          </div>
+        )}
+        </div>
         </div>
         <div
           className="ln-scroll-cue"
@@ -638,6 +863,20 @@ export default function FullPostPage({ entry, references = [], authed = false, l
             <polyline points="6 9 12 15 18 9" />
           </svg>
         </div>
+        {printing && (
+          <PrintBar
+            grounds={GROUNDS}
+            ground={ground}
+            onGround={key => setPrintChoices(c => ({ ...c, ground: key }))}
+            size={size}
+            onSize={key => setPrintChoices(c => ({ ...c, size: key }))}
+            onSave={() => press.save(size)}
+            onDone={finishPrinting}
+            status={press.status || (learned || press.picture ? '' : PRINT_HINT)}
+            final={Boolean(press.picture)}
+            onBack={press.dismissPicture}
+          />
+        )}
       </section>
 
       {/* ── HERO ── Blurred album art background with metadata overlay.
