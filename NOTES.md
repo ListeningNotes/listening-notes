@@ -1460,7 +1460,9 @@ current.
 
 **2026-09-13 — the printer becomes a mode of the entry page, branch
 `printer-fit`, merged to main as 1.9.0 the same day (a new shape for the
-mode and two new files: the middle number); not yet pushed — Miyel's
+mode and two new files: the middle number), pushed, release v1.9.0 cut with
+the keeper's update steps (1.8.0 was never pushed on its own; v1.9.0 carries
+both) — Miyel's
 redirection after seeing the press on her phone: "the printer is the door
 into the app"**
 
@@ -1613,7 +1615,7 @@ saw and what changed (superseded above, kept for the lessons)**
 
 **2026-09-12 — the printer prints the record, branch `printer`, merged to
 main as 1.8.0 the same day (a route's behaviour and two files: the middle
-number); not yet pushed**
+number); superseded by 1.9.0 the next day and pushed with it**
 
 - [x] **`SharePrinter.js` brought back from `share-printer`.** Styles moved
       to forms.css under `.shp`; an `inline` mode so the press rises on the
