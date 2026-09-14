@@ -1535,6 +1535,13 @@ the press on her phone: "the printer is the door into the app"**
       the paper sets its own (a night paper turned the buttons dark, which
       Miyel called wrong), and it names the ground above the dots: Reflect
       (her word for the cover blurred behind the card), Day, Night.
+      Then: the bar's line moved to the TOP of the bar and darkened — on the
+      home screen a last line hung below the viewport unseen — and the
+      "reach the screen's foot" rule came out: the band below the installed
+      app's viewport cannot be painted by a page (a bar stretched into it
+      lost its own foot, "cut off at the bottom"), so the bar stays inside
+      the viewport and the band, showing the page's --bg, reads as its foot.
+      The same is true of the old press's rule; that one is gone with it.
       The header (the nav row: mark and light switch) stands down while
       printing — `html[data-printing] .sitenav-row` — and the paper takes
       its room; the card carries its own mark (Miyel, same day).

@@ -1122,8 +1122,9 @@
 .ln-print-size:hover { color: var(--ink); border-color: var(--ink-faint); }
 .ln-print-size--on { color: var(--bg); background: var(--ink); border-color: var(--ink); }
 .ln-print-said {
-  font-family: var(--font-label); font-size: 9px; letter-spacing: 0.08em;
-  color: var(--ink-faint); min-height: 11px; text-align: center; overflow-wrap: anywhere;
+  font-family: var(--font-label); font-size: 10px; letter-spacing: 0.08em;
+  color: var(--ink-soft); min-height: 12px; text-align: center; overflow-wrap: anywhere;
+  margin-bottom: 2px;
 }
 /* The sheet's own furniture stands down while printing: the carets to the
    neighbours (a pointer's version of the sideways swipe, which now turns
@@ -1136,15 +1137,9 @@ html[data-printing] .lay-step { display: none; }
 html[data-printing] .sitenav-row { display: none; }
 /* On the home screen iOS hands the page a viewport one status bar shorter
    than the screen, pinned under the clock (measured 2026-09-13: 812 of 874,
-   inset top 62), so a bar at the viewport's foot stops short of the
-   screen's. The bar reaches down by the top inset, and stands off by the
-   larger inset so its last row stays inside the page either way; the mode's
-   box grows by the same amount so the paper is centred in the real room. */
-@media (display-mode: standalone) {
-  .ln-printing { height: calc(100dvh + env(safe-area-inset-top, 0px)); }
-  .ln-print-bar {
-    bottom: calc(-1 * env(safe-area-inset-top, 0px));
-    padding-bottom: calc(10px + env(safe-area-inset-bottom, 0px));
-  }
-}
+   inset top 62). The band below the viewport is the phone's: nothing on a
+   page can paint there, and a bar stretched down into it only lost its own
+   foot (tried, 2026-09-13). So the bar stays inside the viewport and the
+   band, which shows the page's background, wears the bar's colour — the
+   same --bg — and reads as the bar's foot rather than as a gap. */
 @media (prefers-reduced-motion: reduce) { .ln-print-line { transition: none; } }
