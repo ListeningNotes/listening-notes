@@ -408,10 +408,17 @@ person's page the next (Complete). Left: the printer, and the chain.
       to the releases list, never to a tag that may not exist yet. (An
       earlier version of this item was lost in a NOTES edit on 2026-09-12
       and rewritten.)
-- [ ] **June's copy needs the workflow file added once** (README, Updating).
-      Copies deployed after this ships have it already. The one thing the
-      scratch copy could not prove is Vercel building from the bot's push,
-      since it is not connected to Vercel; his first press settles that.
+- [x] **June's copy updated by the button, 2026-09-14 — and Vercel built
+      from the bot's push, the last unproved step.** He created the workflow
+      file himself in GitHub's web editor (commit "Create update.yml",
+      identical to main's) but could not find it on the Actions tab from
+      his phone; he added `ListeningNotes` as a collaborator on
+      `josejunior770-spec/userone` (private) and the button was pressed from
+      here with `gh workflow run update.yml -R josejunior770-spec/userone`.
+      0.1.0 → 1.10.1 in one run, merge pushed by `github-actions[bot]`, the
+      summary listing the release notes 1.6.0–1.10.1; his site answered the
+      new routes about four minutes later. Nothing about the mechanism is
+      unproved now. He can remove the collaborator whenever he likes.
 - [ ] **The install page (`/get/install`) says nothing about updating.**
       The README does; the page is Miyel's copy's and can carry the same
       paragraph when the screenshots land.
