@@ -126,11 +126,15 @@ the square under it — portrait on the left, album in the centre, Start a
 listen on the right (2026-09-07; the desk is vertically centred today and
 does not yet sit on the line) — lands on the same line whichever pane you
 are on. That is what makes the swipe read as
-one object turning. On desktop the outer crowns are hidden, not removed: the
-box has to stay or the columns stop agreeing where a square starts.
+one object turning. A desk has no crown at all — the next entry.
 
-**Desktop is the same three components as three columns.** Not a second
-layout. The site already carried two homepage trees that had drifted apart.
+**Desktop is the same three components as three columns, at three widths,
+2026-09-13.** Not a second layout — the site already carried two homepage
+trees that drifted apart. The card and the desk are rails of about 196 and
+186px, draggable and remembered per browser, and the centre takes the rest:
+three equal columns were three phones parked side by side. Content starts at
+the top of each column; the mark is in the bar over the centre, as on every
+other page; the beacon is a band, the record blurred to the column's edges.
 
 **Prompts replace the free-text bio.** Nine openings in `library/bioprompt.js`;
 a keeper answers three, one line each, and the answer completes the sentence —
@@ -316,7 +320,9 @@ plain, on the tokens, 2026-09-06.** Inbox, Settings and the printer: the
 same sheet the send form uses, so reading what somebody sent, or changing a
 key, never feels like leaving the journal. Plain because the desk is plain.
 Each keeps its real address for a bookmark; signed out, Settings' sheet is
-the password gate.
+the password gate. **On a desk they open in the desk's own column,
+2026-09-13** — a panel at the right edge, the rail's width or 520px — because
+a desk can afford to share the screen; only a listen takes the whole of it.
 
 **The Share door and the Instagram exporter behind it are gone, 2026-09-06.**
 Sharing is an entry's own link and the card, not a page the owner exports
@@ -389,7 +395,9 @@ was three changes at once with the rail lock live; on its own the shape works.
 
 **An entry is a layer over the journal, not a fourth pane, 2026-08-29.** Left
 and right meaning different things depending on which row you are in is ruled
-out: that is a mode, and modes make gesture navigation unlearnable.
+out: that is a mode, and modes make gesture navigation unlearnable. **On a
+desk the layer covers the journal's column only, 2026-09-13,** with the card
+and the desk still beside it; the whole screen is the phone's shape.
 
 **An entry expands from its cover, and sideways means the next record,
 2026-09-02.** The sheet grows out of the tapped tile, the way a photo viewer
@@ -421,9 +429,12 @@ cover, title, artist, rating and date, so the tile hands them across
 (`library/handoff.js`) and the first screen draws at once; only the writing is
 waited for. The grey skeleton stays for every other way of arriving.
 
-**The layer has no close button.** A corner cross took the lights' place; a
-bottom caret sat on the entry's scroll cue. What is left is the pull down,
-Escape and back, which is what people reach for anyway.
+**The layer has no close button on a phone.** A corner cross took the lights'
+place; a bottom caret sat on the entry's scroll cue. What is left is the pull
+down, Escape and back, which is what people reach for anyway. **A desk gets a
+back caret at the layer's top-left, 2026-09-13:** with the journal in the
+dock there is no browser back, and Escape alone is a way out nobody is told
+about. Never on the phone.
 
 **The record stays at the head of the reading, 2026-08-30.** On a phone the
 second screen is a wall of text with the record a swipe away, so a strip

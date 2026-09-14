@@ -230,6 +230,31 @@ cannot be tested end to end.
       `pull_keeper_name` in settings_actions, `nameInBook` on the compare
       page, and the row's Not answering yet.
 
+**THE DESKTOP LAYOUT, 2026-09-13** — built on branch `desktop-columns`
+(Complete), not merged. To look at in Safari before merging:
+
+- [ ] **Both grips with a real mouse** — the browser tool's drag never
+      landed on the nine pixels; dispatched pointer events proved the hook
+      (196 → 300, remembered across a reload) and the trusted pointerdown
+      does reach the grip, so a mouse should simply work. And the arrow keys
+      on a focused grip.
+- [ ] **The desk panel at 520px.** The inbox, the address book, a person,
+      a report and Settings open there; their phone rules are viewport
+      queries and do not apply inside a panel in a wide window, so rows may
+      want a container query if anything overflows. Widen the desk's rail
+      past 520 and the panel is the rail exactly.
+- [ ] **The correction bar and the print bar inside an entry over the
+      journal**, and **a window under 860px** — at 900 the
+      rails still fit at rest (196 / 518 / 186 by script); below about 860
+      they give way in proportion, to 150 each at the least. Not seen by eye.
+- [ ] **Names to confirm, 2026-09-13 (the desktop)** — autonomous session,
+      rename freely: branch `desktop-columns`; `hooks/useColumnWidths.js`
+      with `useColumnWidths`, `fit` and `REST_WIDTHS`; the key `ln-columns`;
+      `.hn-band`, `.hn-band-ground`, `.hn-grip`, `.hn--dragging`,
+      `--hn-left`, `--hn-right`, `--hn-rail-top`; LayerEntry's `over`
+      (`"journal"` | `"desk"`), `.lay--over-journal`, `.lay--over-desk`,
+      `.lay-back`, `.lay-back-slot`, `--lay-desk-w`; the grips' labels
+      "Resize the card" and "Resize the desk".
 **THE ADDRESS BOOK, THE FEED, AND WHERE COMPARE LIVES** — briefed
 2026-09-12. The address book merged to main that day, the feed and the
 person's page the next (Complete). Left: the printer, and the chain.
@@ -1457,6 +1482,56 @@ current.
 ---
 
 ## Complete
+
+**2026-09-13 — the desktop layout, branch `desktop-columns`, UNMERGED:
+three columns at three widths, the beacon as a band, layers that share the
+screen** — from Miyel's brief, and three notes she sent while it was built.
+
+- [x] **Unequal columns.** The card about 196px, the desk about 186px, the
+      centre the rest; content from the top of every column; no crown on a
+      desk — the mark sits in the bar over the centre, the way every other
+      page's row carries it, and the bar earns its ground when the wall
+      scrolls. `hooks/useColumnWidths.js` keeps the two widths in
+      localStorage (`ln-columns`), clamps them (150–380 each, the centre
+      never under 480), fits them to a narrower window without overwriting
+      the preference, and writes them onto the document root as `--hn-left`
+      and `--hn-right`. The grips are the two dividers (`.hn-grip`): dragged
+      with a pointer, or nudged 16px with the arrow keys once focused.
+- [x] **The band.** `.hn-band` / `.hn-band-ground` in nav.css: the record
+      blurred 32px under a 52% wash of page colour, bled to the column's
+      edges; the cover at 118 with a soft shadow, the label, the title at
+      22px, the artist; the three recent covers at 28px at the far right on
+      the cover's baseline, with no line over them. The same ListeningBeacon
+      and recent row as the phone, restyled above 769px.
+- [x] **The card, the desk, the colophon and the feed at rail width** —
+      desktop blocks at the foot of nav.css and idcard.css. The desk's three
+      doors become rows; the pinned record takes the row under its label.
+- [x] **Layers share the screen on a desk (Miyel, mid-build).** `over` on
+      LayerEntry: `"journal"` for an entry, which covers the centre column
+      and leaves the card and the desk beside it; `"desk"` for the inbox,
+      the address book, a person, a report and Settings — a panel at the
+      right edge, `max(the rail, 520px)`, in from the right and out the same
+      way. A listen, the send form, /get's pages and the printer door stay
+      whole-screen. Everything the entry pins to the window (its header row
+      and band, the neighbour carets, the correction bar, the print bar) is
+      pinned to the column instead; the grow-from-the-tile animation
+      measures from the sheet's own corner now, so a person's page grows from
+      a feed face into the panel.
+- [x] **A back caret on every layer, desktop only (Miyel, mid-build).**
+      `.lay-back`, in a sticky slot of no height at the top of the sheet, so
+      it stays at the sheet's own corner whatever the sheet is and moves
+      with it while it grows. The owner's tools on an entry move 40px right
+      for it. The phone is untouched.
+- [x] **Verified in the Claude browser at 1280×800, signed in:** geometry by
+      script (196 / 898 / 186, grips astride both dividers, bar and mark
+      over the centre, both rails starting on one line at 68px); the inbox
+      panel opening at 520 and closing on its caret; an entry over the
+      journal with its header, carets and caret inside the column, closing
+      on Escape; a dragged width surviving a reload; dark mode (the band on
+      the dark wash, the wall on dark ground); the phone at 375 unchanged
+      (crown, 180 art, "Before that", carets; no band, grips or bar mark);
+      the signed-out colophon on 127.0.0.1 (server-rendered — that origin's
+      scripts do not load in the pane). See Pending for what is not yet seen.
 
 **2026-09-13 — the printer becomes a mode of the entry page, branch
 `printer-fit`, merged to main as 1.9.0 the same day (a new shape for the
