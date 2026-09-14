@@ -24,16 +24,20 @@ export default function PrintBar({ grounds, ground, onGround, size, onSize, onSa
   if (typeof document === 'undefined') return null;
   // The final picture is up: nothing to choose, only the way back. Holding
   // the picture is what saves it, and the line under the bar says so.
+  // What the bar says — the hint, Copied, hold-to-save — goes at the TOP of
+  // the bar: on the home screen the bar reaches below the viewport to meet
+  // the screen's foot, and a last line down there is a line nobody sees
+  // (Miyel's phone, 2026-09-13).
   if (final) {
     return createPortal(
       <div className="ln-print-bar" role="toolbar" aria-label="Your print">
+        <div className="ln-print-said" aria-live="polite">{status}</div>
         <div className="ln-print-row">
           <button type="button" className="ln-pin" onClick={onBack}>
             <CaretLeft size={13} weight="bold" aria-hidden="true" />
             <span>Back to the card</span>
           </button>
         </div>
-        <div className="ln-print-said" aria-live="polite">{status}</div>
       </div>,
       document.body,
     );
@@ -41,6 +45,7 @@ export default function PrintBar({ grounds, ground, onGround, size, onSize, onSa
   const current = grounds.find(g => g.key === ground);
   return createPortal(
     <div className="ln-print-bar" role="toolbar" aria-label="Printing">
+      <div className="ln-print-said" aria-live="polite">{status}</div>
       <div className="ln-print-look">{current?.label}</div>
       <div className="ln-print-grounds" role="tablist" aria-label="Ground">
         {grounds.map(g => (
@@ -83,8 +88,6 @@ export default function PrintBar({ grounds, ground, onGround, size, onSize, onSa
           <span>Done</span>
         </button>
       </div>
-
-      <div className="ln-print-said" aria-live="polite">{status}</div>
     </div>,
     document.body,
   );
