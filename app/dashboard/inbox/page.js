@@ -392,6 +392,18 @@ export default function Inbox({ layered = false }) {
                         </div>
 
                         <div className="ib-sent-said">
+                          {/* Who it is from, and when, before the record:
+                              a send is somebody handing you something, and
+                              the first thing you want is who (Miyel,
+                              2026-09-15). The date sits at the far end of
+                              the same line. */}
+                          <div className="ib-sent-from">
+                            <Sender sent={sent} me={me} filed={filed} />
+                            <span className="ib-sent-when">
+                              {new Date(sent.created_at).toLocaleDateString()}
+                            </span>
+                          </div>
+
                           <div className="ib-sent-album">{sent.album}</div>
                           <div className="ib-sent-artist">
                             {sent.artist}{sent.year ? ' · ' + sent.year : ''}
@@ -401,13 +413,6 @@ export default function Inbox({ layered = false }) {
                               on; once the deciding is done it belongs on the
                               entry, not in a list. */}
                           <p className="ib-sent-note">{sent.note}</p>
-
-                          <div className="ib-sent-from">
-                            <Sender sent={sent} me={me} filed={filed} />
-                            <span className="ib-sent-when">
-                              {new Date(sent.created_at).toLocaleDateString()}
-                            </span>
-                          </div>
 
                           <div className="ib-sent-row">
                             <button onClick={() => startListen(sent)} className="own-act own-act--solid">
