@@ -208,12 +208,17 @@
   font-weight: 400;
   color: var(--ink-faint);
 }
-/* One line, label then answer — not the three-row block it was on the card. */
+/* One line, label then answer — not the three-row block it was on the card.
+   Above the prompts rather than under them since 2026-09-15: it is a small
+   computed fact and it belongs with the other small computed facts, before
+   the writing starts, not trailing off the end of it. The rule sits under it
+   for the same reason it sat over it — it is the line between what is counted
+   and what was written. */
 .ab-genres {
   display: flex; align-items: baseline; flex-wrap: wrap; gap: 4px 12px;
-  margin: 0;
-  padding-top: 20px;
-  border-top: 1px solid var(--border);
+  margin: 0 0 22px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border);
 }
 .ab-genres-label {
   font-family: var(--font-label);
@@ -465,19 +470,24 @@
    and the pinned record above them already sit — three hairlines here would
    have been competing with the row directly above.
 
-   Two kinds of writing, in the two faces this site already has. The question
-   is in the label face, because the nine questions ship with the software and
-   are identical on every copy: this is the one place a voice that is not the
-   keeper's is honest, and DM Mono is already what the software sounds like
-   here — every label, every count's word, KEEPING SINCE, PINNED. The answer
-   is Nunito light, which is the person.
+   Set the way an album and its artist are set, which is this site's one
+   settled answer for a two-part thing (Miyel, 2026-09-15): the label face
+   small, in caps, for the part that names it, and the display face for the
+   part that is it. An entry does it as a title over an artist; the pinned
+   record directly above these cards does it as PINNED over an album. A prompt
+   is the same shape — the question names, the answer is the thing — so the
+   question is the small line and the answer is the large one.
+
+   That puts the emphasis where it belongs as a side effect. The question ships
+   with the software and is identical on every copy; the answer is the only
+   part anybody wrote. The first version had them the other way round, with a
+   sentence-length question set in mono, and a paragraph of monospace is a
+   thing to decode rather than read.
 
    MuseoModerno was asked for and is not available: the mark is drawn as SVG
    paths rather than set as type, so the face has never been loaded, and a
    third family fetched by every visitor to style nine short questions is the
-   Anton mistake again (app/layout.js has the note). The distinction the brief
-   wanted — the software's voice against the person's — is what the label face
-   already carries. */
+   Anton mistake again (app/layout.js has the note). */
 .ab-prompt {
   margin: 0;
   padding: 16px 18px 18px;
@@ -488,17 +498,19 @@
 .ab-prompt-ask {
   margin: 0;
   font-family: var(--font-label);
-  font-size: 12.5px; line-height: 1.55; letter-spacing: 0.02em;
-  color: var(--ink);
+  font-size: 10px; line-height: 1.5;
+  letter-spacing: 0.15em; text-transform: uppercase;
+  color: var(--ink-faint);
 }
 /* Indented behind a rule, like a pull quote: the answer is being quoted into
    the question's card, not continuing its sentence. */
 .ab-prompt-said {
-  margin: 13px 0 0;
+  margin: 10px 0 0;
   padding-left: 14px;
   border-left: 2px solid var(--border);
-  font-weight: 300;
-  font-size: 15px; line-height: 1.62;
+  font-family: var(--font-display);
+  font-weight: var(--font-display-weight);
+  font-size: 17px; line-height: 1.4; letter-spacing: -0.005em;
   color: var(--ink);
 }
 

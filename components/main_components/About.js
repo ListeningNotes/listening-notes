@@ -386,6 +386,19 @@ export default function About({ stamps, authed = false, pinned = null, entries =
           begins. */}
       {hasReading && (
       <div className="ab-below">
+        {/* Top genres, one line of them. They were three rows of a fact block
+            on the object above and they are neither a count nor something
+            somebody wrote — they are computed, and they belong down here with
+            the reading rather than up there with the photograph (Miyel's
+            brief, 2026-09-15). Computed, never chosen: it says what this
+            journal listens to, not what its keeper would claim. */}
+        {genres.length > 0 && (
+          <p className="ab-genres">
+            <span className="ab-genres-label">Top genres</span>
+            <span className="ab-genres-said">{genres.join(' · ')}</span>
+          </p>
+        )}
+
         {/* The prompts. Prompt and answer on one line, because they are one
             sentence: "I can never skip — Voodoo, side two" is a thought, and
             the same words as a label over a value are two things stacked. The
@@ -495,19 +508,6 @@ export default function About({ stamps, authed = false, pinned = null, entries =
               </div>
             ))}
           </section>
-        )}
-
-        {/* Top genres, one line of them. They were three rows of a fact block
-            on the object above and they are neither a count nor something
-            somebody wrote — they are computed, and they belong down here with
-            the reading rather than up there with the photograph (Miyel's
-            brief, 2026-09-15). Computed, never chosen: it says what this
-            journal listens to, not what its keeper would claim. */}
-        {genres.length > 0 && (
-          <p className="ab-genres">
-            <span className="ab-genres-label">Top genres</span>
-            <span className="ab-genres-said">{genres.join(' · ')}</span>
-          </p>
         )}
 
         {/* The free-text bio used to print here and does not. A blank box is a
