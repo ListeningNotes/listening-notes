@@ -1693,13 +1693,44 @@ current.
       eight-pixel gap. Start a listen keeps the left edge. Still 45px of
       target, taken in padding weighted left so the dots land on the edge
       and not the padding; full ink while the menu is open.
+- [x] **Built to Miyel's two mockups, 2026-09-15.** She drew the inbox and
+      said follow the look, with one correction: the album art square, not
+      the tall rectangles the drawing had. What changed:
+      - **One row of tabs, inside the panel, under an *Inbox* heading.**
+        New, Opened, Comments and Reports are four places at one level, in
+        the order they get dealt with. The folder tabs above the panel and
+        the filter row inside it are both gone, and with them the
+        two-level question of which row you were standing on. `FolderTab`
+        is deleted; `filter` state is gone and the tab *is* the view.
+      - **A tab is a word with a rule under it** while you stand on it —
+        no ground, no border, no folder — with its count after a middle
+        dot, and only where there is a count. On a phone the four fit by
+        giving up letter-spacing and the room between them (299px of
+        375), because a tab you have to drag to find is a tab nobody
+        presses.
+      - **New rows:** square art at 112px (84 on a phone), the album at
+        21px display, the message at reading size, then a round face, the
+        sender's name carrying the link's underline, and the date at the
+        right.
+      - **Opened rows:** square art at 56px, the album at 17px, the
+        subtitle now *artist · what became of it* rather than the state
+        and the sender's name, and the sender is a round face at the end
+        of the row. Dismissed still dimmed, with *put back* before the
+        face.
+      - **Square is enforced with `aspect-ratio`, not a matching height**,
+        on both — a fixed height is the one thing that could argue with it
+        and is exactly what made the drawing's art tall.
+      **The mockups said WAITING and HANDLED**; they are NEW and OPENED,
+      which is the rename she asked for after drawing them. The look was
+      the instruction, not the words.
 - [ ] **Names to confirm, 2026-09-15 (the redesign)** — rename freely:
-      `VIEWS`, `UNOPENED`, `unopened`, `became`, `Sender`, `resumeListen`,
+      `TABS`, `UNOPENED`, `unopened`, `became`, `Sender`, `resumeListen`,
       `menuFor`;
       the words *new*, *opened* (Miyel's, replacing waiting/handled),
       *in progress*, *logged 4 august*, *dismissed*, *Nothing new.*,
       *Nothing opened yet.*; the
-      `.ib-who*`, `.ib-more`, `.ib-menu*`, `.ib-done*` and `.ib-back`
+      `.ib-who*`, `.ib-more`, `.ib-menu*`, `.ib-done*`, `.ib-back`,
+      `.ib-head`, `.ib-title`, `.ib-tab-n`
       classes in forms.css; the words *put back*; and `lookup_key`
       keeping its name where it moved to.
 - [x] **Verified:** the build passes, the draft lookup was run against the
