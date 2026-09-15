@@ -734,6 +734,15 @@ abandoned listen claim to be logged. **Nothing ever matches a send to an
 entry automatically** — a person recognises the record and presses once,
 because a wrong guess writes a credit onto somebody's entry.
 
+**The inbox is two views and one decision per row, 2026-09-15.** Waiting and
+Handled: the four outcomes are a word in the row's subtitle, not four tabs
+to stand on. Waiting shows the one thing that happens to nearly every send,
+Start a listen, with the rare three behind a ··· that opens in the row.
+Handled has no buttons — it is a record of what happened, and the row itself
+opens the entry or resumes the listen. **A resumed listen must find its
+draft:** a send and a draft are separate rows joined only by album and
+artist, and starting fresh would upsert over the saved notes.
+
 **A send is a gift, not a form, 2026-08-29.** Three parts, in this order: the
 object, the note, and who it is from. The album is picked off covers, because
 a cover is what makes it read as something handed across rather than a title

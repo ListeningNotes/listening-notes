@@ -785,6 +785,106 @@ a.pp-name:hover svg { color: var(--ink); }
 /* A send that carried a journal, once filed, says so where the button was. */
 .ib-filed { align-self: center; }
 
+/* ── Who sent it ────────────────────────────────────────────────────────────
+   A face and a name, 2026-09-15, in place of a name plus a link plus a label
+   saying they were in the address book. The name being a link is what says
+   that; the label was a second line of type repeating it. */
+.ib-who { display: inline-flex; align-items: center; gap: 7px; min-width: 0; }
+.ib-who-face {
+  position: relative; width: 22px; height: 22px; border-radius: 6px; overflow: hidden; flex-shrink: 0;
+  background: var(--panel); border: 1px solid var(--border);
+  display: inline-flex; align-items: center; justify-content: center; color: var(--ink-faint);
+}
+.ib-who-face img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+
+/* ── The rare three ─────────────────────────────────────────────────────────
+   Start a listen is what happens to nearly every send, so it is the only
+   button on a row. The rest open under it — in the row, not over a darkened
+   page (DECISIONS: a control opens where it belongs). */
+.ib-more {
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--ink-faint);
+  font-family: var(--font-label);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  padding: 7px 12px 9px;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 0.15s, border-color 0.15s;
+}
+.ib-more:hover, .ib-more--on { color: var(--ink); border-color: var(--ink-faint); }
+.ib-menu {
+  display: flex; flex-direction: column; align-items: flex-start;
+  gap: 2px;
+  margin-top: 10px;
+  padding: 6px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg);
+}
+.ib-menu-act {
+  width: 100%;
+  text-align: left;
+  border: 0; border-radius: 8px;
+  background: transparent;
+  padding: 8px 10px;
+  font-family: var(--font-label);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  color: var(--ink-soft);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s, color 0.15s;
+}
+.ib-menu-act:hover { background: var(--panel); color: var(--ink); }
+/* The one destructive action, and the only one wearing a colour. */
+.ib-menu-act--danger { color: var(--fav, #f0484f); }
+.ib-menu-act--danger:hover { background: color-mix(in srgb, var(--fav, #f0484f) 10%, transparent); color: var(--fav, #f0484f); }
+
+/* ── Handled ────────────────────────────────────────────────────────────────
+   A record of what happened rather than a queue: cover, album, what became
+   of it, who sent it. No buttons — the row itself is the one tap target, and
+   it does the obvious thing. A dismissed send has nothing obvious to do, so
+   it is not pressable and sits back out of the way. */
+.ib-done {
+  display: flex; align-items: center; gap: 12px;
+  width: 100%;
+  padding: 10px 8px;
+  border: 0; border-bottom: 1px solid var(--border);
+  border-radius: 10px;
+  background: transparent;
+  text-align: left;
+  text-decoration: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s, opacity 0.15s;
+}
+.ib-done:last-child { border-bottom: none; }
+a.ib-done:hover, button.ib-done:hover { background: var(--panel); }
+div.ib-done { cursor: default; }
+.ib-done--gone { opacity: 0.45; }
+.ib-done-art {
+  width: 40px; height: 40px; border-radius: 7px; overflow: hidden; flex-shrink: 0;
+  background: var(--panel);
+  display: inline-flex; align-items: center; justify-content: center; color: var(--ink-faint);
+}
+.ib-done-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ib-done-said { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.ib-done-album {
+  font-size: 14px; color: var(--ink);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.ib-done-state {
+  font-family: var(--font-label); font-size: 10px; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--ink-faint);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+
 /* ── Which record it became ─────────────────────────────────────────────────
    Opened by "I've already logged this" on a send, 2026-09-15. It unfolds in
    the row rather than over the page — a control opens where it belongs

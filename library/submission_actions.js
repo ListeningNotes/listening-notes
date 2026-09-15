@@ -40,7 +40,8 @@ export async function pull_submissions() {
   return await database`
     SELECT s.id, s.album, s.artist, s.year, s.note, s.submitter_name,
            s.album_art, s.collection_id, s.sender_url, s.status, s.created_at,
-           s.entry_id, e.slug AS entry_slug, e.album AS entry_album
+           s.entry_id, e.slug AS entry_slug, e.album AS entry_album,
+           e.posted_at AS entry_posted_at
     FROM submissions s
     LEFT JOIN entries e ON e.id = s.entry_id
     ORDER BY s.created_at DESC

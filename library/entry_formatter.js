@@ -122,3 +122,23 @@ export function splitNotes(notesText) {
 export function entryTypeLabel(type) {
   return type === 'Personal Library' ? 'Library' : (type || '');
 }
+
+// ── One record, however it was typed ───────────────────────────────────────
+// The fold that `briefings` and `drafts` are keyed on. Album and artist as
+// typed vary — casing, punctuation, "and" versus "&" — so both tables store
+// this rather than the words, and there is one unfinished listen and one
+// cached briefing per record no matter how anybody spelled it.
+//
+// It lives here, with no imports, because two places need it and they are on
+// opposite sides of the wire: `library/database_actions.js` writes the key,
+// and the inbox has to compute it in the browser to find the draft a paused
+// listen left behind. Two copies of a key function is how a lookup silently
+// stops matching.
+//
+// Deliberately NOT `albumKey`/`foldKey` in hooks/useListeningBeacon.js, which
+// strips diacritics as well. These two folds disagree on every accented name
+// — Beyoncé folds to "beyonc" here and "beyonce" there — so a draft looked up
+// with the wrong one is a draft that is never found and then written over.
+export function lookup_key(album, artist) {
+  return `${album} ${artist}`.toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, ' ').trim();
+}
