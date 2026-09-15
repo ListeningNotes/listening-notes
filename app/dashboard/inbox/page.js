@@ -385,145 +385,148 @@ export default function Inbox({ layered = false }) {
                   <div className="ib-list">
                     {filtered.map(sent => (
                       <div key={sent.id} className="ib-sent">
-                        <div className="ib-sent-art">
-                          {sent.album_art
-                            ? <img src={sent.album_art} alt="" />
-                            : <span className="ib-sent-none" aria-hidden="true">&#9834;</span>}
+                        {/* Who it is from, across the top, 2026-09-15 — the
+                            record's own row starts under it, so the cover
+                            lines up with the album's name rather than with
+                            somebody's face. The ··· is the corner of the
+                            row: extra, and out of the way of everything
+                            that reads left to right. */}
+                        <div className="ib-sent-head">
+                          <span className="ib-sent-label">From:</span>
+                          <Sender sent={sent} me={me} filed={filed} />
+                          <span className="ib-sent-when">
+                            {new Date(sent.created_at).toLocaleDateString()}
+                          </span>
+                          <button
+                            onClick={() => { setMenuFor(m => (m === sent.id ? null : sent.id)); setNaming(null); setWhose(null); }}
+                            className={'ib-more' + (menuFor === sent.id ? ' ib-more--on' : '')}
+                            aria-expanded={menuFor === sent.id}
+                            aria-label={`More for ${sent.album}`}
+                          >
+                            <DotsThree size={22} weight="bold" aria-hidden="true" />
+                          </button>
                         </div>
 
-                        <div className="ib-sent-said">
-                          {/* Who it is from, and when, before the record:
-                              a send is somebody handing you something, and
-                              the first thing you want is who (Miyel,
-                              2026-09-15). The date sits at the far end of
-                              the same line. */}
-                          <div className="ib-sent-from">
-                            <Sender sent={sent} me={me} filed={filed} />
-                            <span className="ib-sent-when">
-                              {new Date(sent.created_at).toLocaleDateString()}
-                            </span>
+                        <div className="ib-sent-body">
+                          <div className="ib-sent-art">
+                            {sent.album_art
+                              ? <img src={sent.album_art} alt="" />
+                              : <span className="ib-sent-none" aria-hidden="true">&#9834;</span>}
                           </div>
-
-                          <div className="ib-sent-album">{sent.album}</div>
-                          <div className="ib-sent-artist">
-                            {sent.artist}{sent.year ? ' · ' + sent.year : ''}
-                          </div>
-
-                          {/* The message, and only here. It is what you decide
-                              on; once the deciding is done it belongs on the
-                              entry, not in a list. */}
-                          <p className="ib-sent-note">{sent.note}</p>
-
-                          <div className="ib-sent-row">
-                            <button onClick={() => startListen(sent)} className="own-act own-act--solid">
-                              Start a listen &#8594;
-                            </button>
-                            <button
-                              onClick={() => { setMenuFor(m => (m === sent.id ? null : sent.id)); setNaming(null); setWhose(null); }}
-                              className={'ib-more' + (menuFor === sent.id ? ' ib-more--on' : '')}
-                              aria-expanded={menuFor === sent.id}
-                              aria-label={`More for ${sent.album}`}
-                            >
-                              <DotsThree size={22} weight="bold" aria-hidden="true" />
-                            </button>
-                          </div>
-
-                          {menuFor === sent.id && (
-                            <div className="ib-menu">
-                              <button className="ib-menu-act" onClick={() => openNaming(sent)}>
-                                {naming === sent.id ? 'Never mind' : 'I’ve already logged this'}
-                              </button>
-                              {/* The two sender actions are opposite halves of
-                                  one question and never both apply: a send
-                                  that carried a journal can be filed, and one
-                                  that carried none can be joined to somebody
-                                  already in the book. Filing from the inbox is
-                                  a documented way in (DECISIONS, The network),
-                                  which is why it is here and not dropped. */}
-                              {sent.sender_url && tidyJournal(sent.sender_url) && !filed.has(tidyJournal(sent.sender_url)) && (
-                                <button className="ib-menu-act" onClick={() => { file(sent.sender_url); setMenuFor(null); }}>
-                                  Add to address book
-                                </button>
-                              )}
-                              {!sent.sender_url && people.length > 0 && (
-                                <button className="ib-menu-act" onClick={() => { setWhose(w => (w === sent.id ? null : sent.id)); setNaming(null); }}>
-                                  {whose === sent.id ? 'Never mind' : 'Link their journal'}
-                                </button>
-                              )}
-                              <button className="ib-menu-act ib-menu-act--danger" onClick={() => { updateStatus(sent.id, 'dismissed'); setMenuFor(null); }}>
-                                Dismiss
-                              </button>
-
-                          {/* Both panels open inside the menu, under the line
-                              that opened them, so the menu grows rather than
-                              a second box appearing below it unattached — the
-                              same reason the menu opens in the row at all. */}
-                          {whose === sent.id && (
-                            <MiniAddressBook
-                              tight
-                              people={people}
-                              linked={tidyJournal(sent.sender_url)}
-                              onPick={person => { nameSender(sent, person); setMenuFor(null); }}
-                              label={`Who sent ${sent.album}`}
-                            />
-                          )}
-
-                          {/* Which record it became. The likely one is already
-                              here — same album and artist — so the usual
-                              press is two taps and the field is for the
-                              case where it was logged under another name. */}
-                          {naming === sent.id && (
-                            <div className="ib-which">
-                              {mine === null ? (
-                                <div className="ib-which-none">Reading your journal&#8230;</div>
-                              ) : (
-                                <>
-                                  {/* The scan first, and the field under it.
-                                      It was the other way round and read as
-                                      a search box you had to type into
-                                      (Miyel, 2026-09-15) — which is what
-                                      every send in the inbox showed, because
-                                      not one of them had a record yet, so
-                                      the empty state was the only state
-                                      anybody ever saw. Every listen of the
-                                      album is offered, not the newest, since
-                                      picking *which* one is the whole
-                                      question when there is more than one. */}
-                                  {candidates(sent).map(entry => (
-                                    <button key={entry.id} className="ib-which-one" onClick={() => { alreadyLogged(sent, entry); setMenuFor(null); }}>
-                                      <span className="ib-which-art">
-                                        {entry.album_art && <img src={entry.album_art} alt="" loading="lazy" />}
-                                      </span>
-                                      <span className="ib-which-said">
-                                        <span className="ib-which-album">{entry.album}</span>
-                                        <span className="ib-which-artist">
-                                          {entry.listen_total > 1
-                                            ? `Listen ${entry.listen_number} of ${entry.listen_total}`
-                                            : entry.artist}
-                                          {entry.posted_at ? ` · ${new Date(entry.posted_at).toLocaleDateString()}` : ''}
-                                        </span>
-                                      </span>
-                                    </button>
-                                  ))}
-                                  {candidates(sent).length === 0 && (
-                                    <div className="ib-which-none">
-                                      {look.trim() ? 'Nothing under that name.' : 'Nothing in your journal for this album.'}
-                                    </div>
-                                  )}
-                                  <input
-                                    className="ib-which-field"
-                                    value={look}
-                                    onChange={e => setLook(e.target.value)}
-                                    placeholder={candidates(sent).length > 0 ? 'Logged under another name?' : 'Search your journal'}
-                                    aria-label="Find the record in your journal"
-                                  />
-                                </>
-                              )}
+                          <div className="ib-sent-said">
+                            <div className="ib-sent-album">{sent.album}</div>
+                            <div className="ib-sent-artist">
+                              {sent.artist}{sent.year ? ' \u00b7 ' + sent.year : ''}
                             </div>
-                          )}
-                            </div>
-                          )}
+                          </div>
                         </div>
+
+                        {/* The message, and only here. It is what you decide
+                            on; once the deciding is done it belongs on the
+                            entry, not in a list. */}
+                        <p className="ib-sent-note">{sent.note}</p>
+
+                        <div className="ib-sent-row">
+                          <button onClick={() => startListen(sent)} className="own-act own-act--solid">
+                            Start a listen &#8594;
+                          </button>
+                        </div>
+
+                        {menuFor === sent.id && (
+                          <div className="ib-menu">
+                            <button className="ib-menu-act" onClick={() => openNaming(sent)}>
+                              {naming === sent.id ? 'Never mind' : 'I’ve already logged this'}
+                            </button>
+                            {/* The two sender actions are opposite halves of
+                                one question and never both apply: a send
+                                that carried a journal can be filed, and one
+                                that carried none can be joined to somebody
+                                already in the book. Filing from the inbox is
+                                a documented way in (DECISIONS, The network),
+                                which is why it is here and not dropped. */}
+                            {sent.sender_url && tidyJournal(sent.sender_url) && !filed.has(tidyJournal(sent.sender_url)) && (
+                              <button className="ib-menu-act" onClick={() => { file(sent.sender_url); setMenuFor(null); }}>
+                                Add to address book
+                              </button>
+                            )}
+                            {!sent.sender_url && people.length > 0 && (
+                              <button className="ib-menu-act" onClick={() => { setWhose(w => (w === sent.id ? null : sent.id)); setNaming(null); }}>
+                                {whose === sent.id ? 'Never mind' : 'Link their journal'}
+                              </button>
+                            )}
+                            <button className="ib-menu-act ib-menu-act--danger" onClick={() => { updateStatus(sent.id, 'dismissed'); setMenuFor(null); }}>
+                              Dismiss
+                            </button>
+
+                        {/* Both panels open inside the menu, under the line
+                            that opened them, so the menu grows rather than
+                            a second box appearing below it unattached — the
+                            same reason the menu opens in the row at all. */}
+                        {whose === sent.id && (
+                          <MiniAddressBook
+                            tight
+                            people={people}
+                            linked={tidyJournal(sent.sender_url)}
+                            onPick={person => { nameSender(sent, person); setMenuFor(null); }}
+                            label={`Who sent ${sent.album}`}
+                          />
+                        )}
+
+                        {/* Which record it became. The likely one is already
+                            here — same album and artist — so the usual
+                            press is two taps and the field is for the
+                            case where it was logged under another name. */}
+                        {naming === sent.id && (
+                          <div className="ib-which">
+                            {mine === null ? (
+                              <div className="ib-which-none">Reading your journal&#8230;</div>
+                            ) : (
+                              <>
+                                {/* The scan first, and the field under it.
+                                    It was the other way round and read as
+                                    a search box you had to type into
+                                    (Miyel, 2026-09-15) — which is what
+                                    every send in the inbox showed, because
+                                    not one of them had a record yet, so
+                                    the empty state was the only state
+                                    anybody ever saw. Every listen of the
+                                    album is offered, not the newest, since
+                                    picking *which* one is the whole
+                                    question when there is more than one. */}
+                                {candidates(sent).map(entry => (
+                                  <button key={entry.id} className="ib-which-one" onClick={() => { alreadyLogged(sent, entry); setMenuFor(null); }}>
+                                    <span className="ib-which-art">
+                                      {entry.album_art && <img src={entry.album_art} alt="" loading="lazy" />}
+                                    </span>
+                                    <span className="ib-which-said">
+                                      <span className="ib-which-album">{entry.album}</span>
+                                      <span className="ib-which-artist">
+                                        {entry.listen_total > 1
+                                          ? `Listen ${entry.listen_number} of ${entry.listen_total}`
+                                          : entry.artist}
+                                        {entry.posted_at ? ` · ${new Date(entry.posted_at).toLocaleDateString()}` : ''}
+                                      </span>
+                                    </span>
+                                  </button>
+                                ))}
+                                {candidates(sent).length === 0 && (
+                                  <div className="ib-which-none">
+                                    {look.trim() ? 'Nothing under that name.' : 'Nothing in your journal for this album.'}
+                                  </div>
+                                )}
+                                <input
+                                  className="ib-which-field"
+                                  value={look}
+                                  onChange={e => setLook(e.target.value)}
+                                  placeholder={candidates(sent).length > 0 ? 'Logged under another name?' : 'Search your journal'}
+                                  aria-label="Find the record in your journal"
+                                />
+                              </>
+                            )}
+                          </div>
+                        )}
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
