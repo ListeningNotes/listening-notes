@@ -795,12 +795,14 @@ copy to phone home, producing a log of who is running one. A copy asks its
 own server, which reads the public releases at most once a day and says one
 line on the desk when a newer one exists — the only thing it can ever say.
 
-**A copy updates with one button on its own repository, 2026-09-11.** The
-deploy button makes a copy, not a fork, so GitHub offers no sync; the
-`Update this copy` workflow merges upstream main and pushes, on the keeper's
-account, with the token every workflow gets — no terminal, no prerequisite.
-The logic is fetched from upstream each run, because GitHub will not let a
-workflow rewrite workflow files.
+**A copy updates itself once an hour, and never crosses a major on its
+own, 2026-09-15.** The `Update this copy` workflow runs on a schedule as well
+as on its button: it merges upstream main and pushes, on the keeper's
+account, with the token every workflow gets — no terminal, nothing pressed.
+1.x to 2.0 waits for the button, because a major asks something of the
+keeper. The logic is fetched from upstream each run, because GitHub will not
+let a workflow rewrite workflow files — which is also why a copy from before
+the schedule pastes the file once more, and then never again.
 
 **The version moves with the merge; the release announces it,
 2026-09-12.** A fix moves the last number, something new the middle, a change

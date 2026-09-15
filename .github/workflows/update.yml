@@ -1,9 +1,16 @@
 # Update this copy of Listening Notes.
 #
-# Press "Run workflow" on the Actions tab of your own repository. This brings
-# in the latest Listening Notes, pushes it to your branch, and Vercel builds
-# it from there — your database is brought up to date by the build itself.
-# Nothing to install, nothing to type.
+# Once an hour, on its own, this checks for a newer Listening Notes and, if
+# there is one, brings it in, pushes it to your branch, and Vercel builds it
+# from there — your database is brought up to date by the build itself.
+# Nothing to install, nothing to press. The one thing it will not do on its
+# own is cross a major version (1.x to 2.0), because that is the kind of
+# update that asks something of you: for those, and whenever you would
+# rather not wait, press "Run workflow" on the Actions tab.
+#
+# GitHub switches the hourly check off in a repository that has had no
+# commits for two months, and emails you; pressing Run workflow once turns
+# it back on.
 #
 # Nothing here reports anywhere: it fetches the public code the way a
 # browser would and pushes to the repository it runs in, with the token
@@ -13,6 +20,8 @@
 name: Update this copy
 on:
   workflow_dispatch:
+  schedule:
+    - cron: '17 * * * *'
 permissions:
   contents: write
 jobs:

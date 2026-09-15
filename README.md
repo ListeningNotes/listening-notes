@@ -74,22 +74,26 @@ in the back of a book.
 
 ---
 
-**Updating.** Your copy does not update itself. When you want the latest,
-open your repository on GitHub, press **Actions**, choose **Update this
-copy** on the left, and press **Run workflow**. It brings in the newest
-Listening Notes, pushes it, and Vercel rebuilds; a couple of minutes later
-your journal is current, database included. It runs on your account and
-reports to nobody. If you have changed the code yourself and a change
-clashes, it stops without touching anything and tells you which files.
+**Updating.** Your copy keeps itself current. Once an hour it checks this
+repository and, if there is a newer version, brings it in, pushes it, and
+Vercel rebuilds; your journal is simply current the next time you open it,
+database included. It runs on your GitHub account and reports to nobody.
+The one thing it will not do on its own is cross a major version (1.x to
+2.0), because that is the kind of update that may ask something of you: the
+desk shows a line when one is waiting, and you take it by opening your
+repository on GitHub, pressing **Actions**, **Update this copy**, then
+**Run workflow**. The same button works any time you would rather not wait
+the hour. If you have changed the code yourself and a change clashes, it
+stops without touching anything and, when you press the button, tells you
+which files.
 
-A copy made before September 2026 does not have the button yet. Add it once:
+A copy made before mid-September 2026 does not have this yet. Add it once:
 on your repository press **Add file → Create new file**, name it
 `.github/workflows/update.yml`, paste in the contents of
 [that file](https://github.com/ListeningNotes/listening-notes/blob/main/.github/workflows/update.yml),
-and press **Commit changes**. The Actions tab has the button from then on.
-
-The journal itself tells you when there is something to take: one small
-line on the desk, read from this repository's public releases, once a day.
+and press **Commit changes**. A copy that has the older button already
+opens that file instead, presses the pencil, and replaces its contents with
+the same. Either way it is the last time the file needs touching.
 
 ## Licence
 

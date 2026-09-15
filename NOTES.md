@@ -1507,6 +1507,24 @@ current.
 
 ## Complete
 
+**2026-09-15 — copies update themselves, 1.12.0, on main**
+
+- [x] **The workflow runs hourly as well as on its button.** `schedule:
+      '17 * * * *'` in `update.yml`. On a scheduled run the script refuses
+      to cross a major version (says so on the summary, exits clean) and
+      turns a clash into a quiet summary rather than a failure, so GitHub
+      does not email the keeper every hour; the button, pressed by a
+      person, still fails properly with the files named. Tested locally
+      (a copy at 0.9.0 refused 1.11.1 on schedule and took it by hand).
+      **Existing copies paste the file once more** — the button cannot
+      change workflow files — through the pencil on the file this time;
+      new copies have it. June's link for that:
+      `https://github.com/josejunior770-spec/userone/edit/main/.github/workflows/update.yml`.
+      GitHub switches schedules off after 60 days without commits (the
+      file says so; one press turns it back on). The update check moved
+      to hourly in 1.11.1 the same evening, after June's desk showed
+      nothing for a release cut minutes before.
+
 **2026-09-14 — the send form knows who is sending, branch `sending-as`,
 not merged**
 
