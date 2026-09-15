@@ -917,17 +917,22 @@ div.ib-done { cursor: default; }
    the row rather than over the page — a control opens where it belongs
    (DECISIONS) — and it holds the likely record first, so the usual press is
    two taps and the field is only for a record logged under another name. */
+/* Inside the menu now, under the line that opened it, so it reads as the
+   menu growing rather than a second box arriving underneath. No border of
+   its own for the same reason — a box inside a box was the stiffness
+   (Miyel, 2026-09-15); what separates it is a hairline above and the room
+   around it. */
 .ib-which {
-  margin-top: 12px;
-  padding: 12px;
-  border: 1px solid var(--border);
-  border-radius: 12px;
-  background: var(--bg);
-  display: flex; flex-direction: column; gap: 8px;
+  margin: 2px 0 2px;
+  padding: 10px 10px 4px;
+  border-top: 1px solid var(--border);
+  display: flex; flex-direction: column; gap: 6px;
+  animation: ib-unfold 0.18s ease-out;
 }
+@keyframes ib-unfold { from { opacity: 0; transform: translateY(-3px); } }
 .ib-which-field {
   border: 0; border-bottom: 1px solid var(--border);
-  background: transparent; padding: 0 0 5px;
+  background: transparent; padding: 0 0 6px; margin-bottom: 2px;
   font-family: inherit; font-size: 13px; color: var(--ink);
 }
 .ib-which-field:focus { outline: none; border-bottom-color: var(--ink-faint); }
@@ -943,7 +948,10 @@ div.ib-done { cursor: default; }
   -webkit-tap-highlight-color: transparent;
   transition: background 0.15s;
 }
-.ib-which-one:hover { background: var(--panel); }
+.ib-which-one:hover { background: var(--bg); }
+/* The strip of faces, when the menu opens it, sits on the same hairline as
+   the record picker and under the same room. */
+.ib-menu .ln-sender-book { margin: 2px 0; padding-top: 10px; border-top: 1px solid var(--border); }
 .ib-which-art {
   width: 38px; height: 38px; border-radius: 6px; overflow: hidden; flex-shrink: 0;
   background: var(--panel); display: block;
@@ -1090,3 +1098,22 @@ a.pn-item-album:hover { text-decoration: underline; text-underline-offset: 3px; 
 .own-screen .kt-tool, .idc-tool { text-decoration: none; }
 .pr-main { width: 100%; max-width: 560px; align-self: center; box-sizing: border-box; padding: 60px 24px 120px; }
 .pr-title { font-family: var(--font-display); font-weight: var(--font-display-weight, 700); font-size: 28px; margin: 10px 0 14px; letter-spacing: -0.01em; }
+
+/* ── The address book, tightened for a row ──────────────────────────────────
+   MiniAddressBook's dense variant (`tight`), used by the inbox and nowhere
+   else, which is why it lives here rather than beside the strip itself in
+   base.css: a style goes where its surface is.
+
+   The strip was drawn for the entry's Sent by, which has the width of a
+   phone and sits centred under a centred field. An inbox row gives it about
+   240px beside the cover, where the same faces are three that fit, centred,
+   inside a list that is otherwise ranged left (Miyel, 2026-09-15: on mobile
+   this stuff looks off). Smaller faces, started at the left edge, and the
+   name up a step because at this size it does more of the recognising. */
+.ln-sender-book--tight { padding: 2px 0 4px; gap: 10px; }
+.ln-sender-book--tight .ln-sender-face:first-child { margin-left: 0; }
+.ln-sender-book--tight .ln-sender-face:last-child { margin-right: 0; }
+.ln-sender-book--tight .ln-sender-face { width: 52px; gap: 5px; }
+.ln-sender-book--tight .ln-sender-portrait { width: 40px; height: 40px; border-radius: 9px; }
+.ln-sender-book--tight .ln-sender-name { font-size: 9px; letter-spacing: 0.04em; }
+.ln-sender-book--tight .ln-sender-face--on .ln-sender-portrait { box-shadow: 0 0 0 2px var(--ink); }

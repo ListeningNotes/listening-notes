@@ -1006,18 +1006,32 @@ the saved notes on that same key. Match a draft with `lookup_key`, and
 compare against the row's stored `lookup_key` column rather than
 recomputing it, so a row written by an older fold still matches itself.
 
-**A no-op write to the end of `base.css` forces the dev server to recompile
-it, 2026-09-15.** Rules appended to base.css did not reach the served
-stylesheet — the documented staleness, and the note said only stop →
-`rm -rf .next` → start recovers it. It does not: `printf '\n/* touch */\n'
->> app/styles/base.css` and the rule is there a second later; delete the
-comment again and it stays. Cheaper than clearing `.next`, and safe when
-somebody else's dev server owns the folder. The other sheets (entry.css,
-forms.css) recompiled on their own the whole time — this is base.css only.
-**How to tell it is staleness and not your CSS:** fetch the sheet the page
-links and grep it, rather than trusting the page —
-`curl -s localhost:3000/archive | grep -o '/_next/static/[^"]*\.css'`, then
-curl that. Checking the production build's chunk proves the rule compiles.
+**`base.css` goes stale on the dev server, and it will cost somebody a bug
+report, 2026-09-15.** Rules added to base.css do not reach the served
+stylesheet. The other seven sheets recompile on their own the whole time;
+this is base.css only, and it bit three times in one day. The third time it
+reached Miyel: the address-book strip rendered as full-width stacked
+portraits with 24px names, she reported the picker as illegible, and the
+CSS was correct on disk the entire time.
+
+- **The fix is a no-op write, not a restart.** `printf '\n/* touch */\n' >>
+  app/styles/base.css`, and the rule is served a second later; delete the
+  comment again and it stays. An older note said only stop → `rm -rf .next`
+  → start recovers it. It does not need that, which matters when somebody
+  else's dev server owns the folder.
+- **How to tell staleness from your own bad CSS.** Never trust the page.
+  Fetch the sheet it links and grep it:
+  `curl -s localhost:3000/archive | grep -o '/_next/static/[^"]*\.css'`,
+  then curl that. On disk plus absent from the sheet is staleness every
+  time.
+- **Better: do not put a new rule in base.css while iterating.** Only what
+  genuinely belongs to every surface goes there. A variant used by one
+  surface — MiniAddressBook's `--tight`, which only the inbox asks for —
+  goes in that surface's sheet, which is the rule anyway (DECISIONS,
+  Structure) and sidesteps this entirely.
+- **Suspected trigger: running `npm run build` while the dev server is up.**
+  Both share `.next`, and base.css is the first sheet imported in
+  layout.js. Unproven, but every occurrence followed a build.
 
 **A `MediaRecorder` MP4 is fragmented, and Apple reads it as a 0.05-second
 video, 2026-09-12.** Chromium's recorder says `video/mp4;codecs=avc1` and
@@ -1633,6 +1647,23 @@ current.
       row grows by three pixels and the words stay quiet. It returns the
       send to New. No confirmation: putting one back destroys nothing,
       and the worst case is dismissing it again.
+- [x] **The menu's two panels open inside it, and the picker is tightened**
+      (Miyel on her phone: the dropdown is not legible, *I've already logged
+      this* is a little stiff). Most of the illegibility was base.css going
+      stale — see Gotchas — and the strip was correct on disk throughout.
+      What was genuinely wrong, once it rendered: the strip was drawn for
+      the entry's Sent by, which has a phone's full width and is centred
+      under a centred field, and an inbox row gives it 243px beside the
+      cover, where three faces fit, centred, inside a list ranged left. So
+      `MiniAddressBook` took a `tight` variant — 52px faces, 40px
+      portraits, the name up to 9px, started at the left edge, four fitting
+      — and it is still the same component the entry uses, which was the
+      point of pulling it out. Both it and the record picker now render
+      *inside* `.ib-menu` under a hairline, so the menu grows rather than a
+      second box arriving below it unattached; `.ib-which` lost its own
+      border and box for the same reason, which is what read as stiff.
+      **The `--tight` rules live in forms.css**, not beside the strip in
+      base.css: one surface asks for them, and it dodges the staleness.
 - [ ] **Names to confirm, 2026-09-15 (the redesign)** — rename freely:
       `VIEWS`, `UNOPENED`, `unopened`, `became`, `Sender`, `resumeListen`,
       `menuFor`;

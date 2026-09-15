@@ -459,3 +459,7 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 
+/* The dense variant `--tight` lives in forms.css, with the one surface
+   that asks for it — the inbox. Same rule as everywhere else: a style goes
+   where its surface is. */
+
