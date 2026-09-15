@@ -1211,7 +1211,7 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   .hn--dragging { user-select: none; -webkit-user-select: none; cursor: col-resize; }
   .hn--dragging .hn-pane { pointer-events: none; }
 
-  /* ── What turns the spine ── where it lands and a caret, at the spine's
+  /* ── What turns the spine ── both sides in one switch, at the spine's
      top right. The bar's own geometry, over the spine instead of over
      the journal — the same 22px down and the same 58px row — so this mark and
      the lights at the journal's right edge sit on one line, one at each
@@ -1233,11 +1233,36 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
     pointer-events: none;
   }
   .hn-turn-row > * { pointer-events: auto; }
-  /* The pill every other press on this site wears, a little tighter: one
-     word and a caret do not want a sentence's side padding. */
-  .hn-turn { gap: 7px; padding: 9px 16px; }
-  .hn-turn:hover { background: var(--bg-warm); }
-  .hn-turn:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 2px; }
+  /* Both sides in one control, the one you are on lit — the archive's
+     density switcher's recipe exactly (.gd in journal.css), which is this
+     site's way of drawing a small fixed set you are on one of. A single
+     press said "something happens here"; a switch says what the thing IS,
+     which is that the left page has two sides. */
+  .hn-turn {
+    display: flex; align-items: center; gap: 2px;
+    padding: 2px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 9px;
+  }
+  .hn-turn-side {
+    display: flex; align-items: center; justify-content: center;
+    height: 26px; padding: 0 12px;
+    border: none; border-radius: 7px;
+    background: transparent;
+    color: var(--ink-faint);
+    font-family: var(--font-label);
+    font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: color 0.15s, background 0.15s;
+  }
+  .hn-turn-side:hover { color: var(--ink-soft); }
+  /* The lit one is not pressable — it is where you already are — so it loses
+     the pointer as well as the hover. */
+  .hn-turn-side--on { color: var(--bg); background: var(--ink); cursor: default; }
+  .hn-turn-side--on:hover { color: var(--bg); }
+  .hn-turn-side:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: -2px; }
 
   /* ── The band ── the journal's first screen, as one row: the cover with a
      soft shadow, then the label, the title and the artist beside it, and what

@@ -279,27 +279,31 @@ cannot be tested end to end.
       `useSpineWidth`, `fit` and `restWidth`; the keys `ln-spine` and
       `ln-spine-face`; `--spine-w`, `--hn-turn-h`; `.hn-face`,
       `.hn-face--card`, `.hn-face--desk`, `.hn-face--colophon`,
-      `.hn--face-card` / `.hn--face-desk`, `.hn-turn`, `.hn-grip` (kept);
+      `.hn--face-card` / `.hn--face-desk`, `.hn-turn-row`, `.hn-turn`,
+      `.hn-turn-side`, `.hn-grip` (kept);
       LayerEntry's `over` values `"journal"` and `"spine"`,
       `.lay--over-journal` / `.lay--over-spine`; `.db-hero--lit` and
       `.db-hero-record`; the inbox's `.ib-holding`. The grip's label is
       "Resize the spine".
-- [ ] **What turns the spine took four passes on 2026-09-15 and landed on a
-      one-word pill at the top right.** The brief asked for a line at the
-      spine's foot; Miyel asked for a Phosphor mark on it rather than words,
-      with "destination with caret" named up front as the fallback. The mark
-      on a centred line at the foot was "not the right idea" — so it moved to
-      the top right, on the bar's own line, where it pairs with the lights
-      over the journal. The mark alone there was "too subtle", so it took the
-      words and the caret she had already named, in `.ln-pill` — the same
-      press as Send an album and Get one, which is what makes it read as
-      pressable. Then the pane's whole name was too much for a control at the
-      top of a page: **Bio / Desk / About**, her words, with the sentence
-      kept on the hover. Bio for the card either way, Desk or About for the
-      other side. `paneMarks` is untouched — those names are read out on a
-      swipe, where a sentence is right. One note for later: *bio* also names
-      the free-text field that was cut for the prompts and may come back
-      (DECISIONS), so if it does, these two meanings of the word will meet.
+- [ ] **What turns the spine is a two-sided switch, and it took five passes
+      on 2026-09-15 to get there.** The brief asked for a line at the spine's
+      foot; Miyel asked for a Phosphor mark on it rather than words, naming
+      "destination with caret" up front as the fallback. The mark on a line at
+      the foot was "not the right idea" — the foot should just read — so it
+      went to the top right, on the bar's line, where it pairs with the lights
+      over the journal. The mark alone there was "too subtle". A word and a
+      caret in `.ln-pill` was pressable but "I just don't like it, not sure if
+      this is it", which is the one worth listening to: every version so far
+      said *press this and something happens* and none of them said what the
+      thing IS. **A switch says it by being a switch** — both sides in one
+      control on the density switcher's recipe (`.gd`), the one you are on
+      lit, the lit one not pressable. **Card / Desk**, and Card / About signed
+      out; the pane's full name stays on the hover and `paneMarks` is
+      untouched, because those are read out on a swipe where a sentence is
+      right. Bio was tried for an hour and dropped — it also names the
+      free-text field the prompts replaced, which DECISIONS says may come
+      back. Still to see: the switch signed in, where the right-hand side
+      reads DESK.
 
 - [ ] **Where a record came from wants one pass of refinement, 2026-09-15.**
       Miyel's call at the end of the credit and inbox work, and it is
@@ -1781,19 +1785,20 @@ current.
       journal does not move when it turns — measured, 300 before and after.
       Signed out the far face is the colophon, which is the same side of the
       same leaf, so one remembered answer covers both.
-- [x] **What turns the spine (`.hn-turn`, in `.hn-turn-row`).** The mark of
-      the face it turns to — `paneMarks`' own three, so the vocabulary is the
-      phone's — at the spine's **top right**, on the bar's own geometry (22px
-      down, the same 58px row), so it and the lights over the journal sit on
-      one line: measured, both centred at 51px. It was a line across the foot
-      of the spine first, the way a book puts a page number; Miyel moved it
-      the same afternoon and she is right — the thing that turns the page is
-      a control, and every other control on this site is on that top row. The
-      row takes no clicks and the button takes its own back, the way the bar
-      over the journal does, so there is no dead band across the top of the
-      card. Stated `display: none` at the base so the phone never draws it,
-      which a button in the markup otherwise is, in the tab order and read
-      out, whether or not it can be seen.
+- [x] **What turns the spine (`.hn-turn` / `.hn-turn-side`, in
+      `.hn-turn-row`).** A two-sided switch — CARD and DESK, or CARD and
+      ABOUT signed out — on the archive density switcher's recipe (`.gd`),
+      the side you are on lit and not pressable. At the spine's **top right**,
+      on the bar's own geometry (22px down, the same 58px row), so it and the
+      lights over the journal sit on one line: measured, both centred at
+      51px. Five passes to get there and the reasoning is in Pending; the
+      short version is that a single press can only say *something happens
+      here*, and what needed saying is that the left page has two sides. The
+      row takes no clicks and the buttons take their own back, the way the
+      bar over the journal does, so there is no dead band across the top of
+      the card. Stated `display: none` at the base so the phone never draws
+      it, which a button in the markup otherwise is, in the tab order and
+      read out, whether or not it can be seen.
 - [x] **The colophon is the one thing centred.** `.hn-face--colophon`, a
       flex column with `justify-content: safe center` (safe, so a short
       window scrolls from the top instead of clipping the mark off it), and
