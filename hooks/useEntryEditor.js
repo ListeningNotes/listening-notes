@@ -39,12 +39,17 @@
 // nothing — the entry's own date is the ceiling, and ordering and hit rates
 // both work from that. Left out of the draft, it is left alone on save.
 //
-// source_entry_id is not here either, since the same day. It is the pointer
-// at the sender's own entry, written once and undone only in SQL; it was a
-// hand-editable field only because nothing set it yet, and with three
-// copies there was nothing to point at. The column stays, update_entry
-// still keeps its write-once rule, and a send flow can set it when both
-// people have copies — a person is not asked to.
+// source_entry_id is not here either, and as of 2026-09-15 it is not
+// anywhere: the column is parked and nothing writes it, because an
+// `entries.id` means nothing in another copy's database and a send has no
+// way to carry one anyway. The reasoning is kept in one place, above the
+// slugs in `library/database_actions.js`.
+//
+// It is still what tells this hook whose read came back. `withoutChain`
+// strips it from every public read, so a row that *has* the key — null or
+// not — is the keeper's own read and safe to seed the credit from. A row
+// without it is the visitor's, and seeding from that would save a blank
+// over what is stored.
 //
 // The sender is picked off the address book where possible (`book`, below),
 // so the credit resolves to a journal and not only a spelling; free text
