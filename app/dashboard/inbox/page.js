@@ -51,7 +51,13 @@ function became(sent) {
     return `logged${when}`;
   }
   if (sent.status === 'reviewed') return 'in progress';
-  return 'archived';
+  if (sent.status === ARCHIVED) return 'archived';
+  // Anything else is waiting on you, including a status nothing here knows
+  // about. The fallback used to be 'archived', which is how every new send
+  // in the inbox came up saying it had been put away (Miyel, 2026-09-15) —
+  // a fallthrough that names the rarest state is a fallthrough that lies
+  // about the commonest one.
+  return 'new';
 }
 // A folder tab that connects to the open panel when active. Module scope so
 // it keeps a stable identity across renders.

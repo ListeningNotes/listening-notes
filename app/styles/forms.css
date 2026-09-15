@@ -763,12 +763,18 @@ a.pp-name:hover svg { color: var(--ink); }
 }
 .ib-rhead:hover .ib-rttl { text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--border); }
 /* The dot keeps its room when it is not there, so titles line up down the
-   list whether or not a send is new. */
+   list whether or not a send is new.
+
+   The live green, the one the mark wears while something is playing
+   (Miyel, 2026-09-15) — the site's one colour for *right now*, which is
+   what a send nobody has opened is. It is a pale mint, so on the light
+   page it carries a hairline of its own ink to hold an edge. */
 .ib-newdot {
-  width: 6px; height: 6px; border-radius: 999px; flex-shrink: 0;
-  background: var(--ink);
+  width: 7px; height: 7px; border-radius: 999px; flex-shrink: 0;
+  background: var(--live);
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--live) 55%, #1a1a1a);
 }
-.ib-newdot--off { background: transparent; }
+.ib-newdot--off { background: transparent; box-shadow: none; }
 .ib-rart {
   width: 46px; aspect-ratio: 1 / 1; border-radius: 7px; overflow: hidden; flex-shrink: 0;
   background: var(--panel);
