@@ -543,6 +543,19 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
           </div>
         )}
 
+        {/* Top genres: one line, under the counts and over the pinned record
+            (Miyel, 2026-09-15). It is the last of the counted things — the
+            numbers say how somebody listens and this says to what — so it
+            belongs with them rather than down in the writing, which is where
+            it sat for an hour. Computed, never chosen: what this journal
+            listens to, not what its keeper would claim. */}
+        {genres.length > 0 && (
+          <p className="idc-genres">
+            <span className="idc-genres-label">Top genres</span>
+            <span className="idc-genres-said">{genres.join(' · ')}</span>
+          </p>
+        )}
+
         {/* ── The pinned record ────────────────────────────────────────────
             One album from the journal, as art, with its name beside it — the
             only image here besides the photograph (DECISIONS). On the same

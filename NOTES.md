@@ -2004,13 +2004,15 @@ lesson is in the entry below.**
       - Nunito 300 was added for the light answer and removed again when the
         answer became display weight. A weight nothing uses is the Anton waste
         at a smaller scale (app/layout.js has the note).
-- [x] **Top genres moved above the prompts, and centred with them.** A small
-      computed fact belongs with the other small computed facts, before the
-      writing starts, rather than trailing off the end of it — and on the same
-      axis as them: measured, it centres where the counts and the pinned
-      record do. The rule moved with it, from over to under: it is the line
-      between what is counted and what was written, and everything above that
-      line now reads down one centre.
+- [x] **Top genres is on the card, between the counts and the pinned record.**
+      It went from the card, to below the prompts, to above them, to here, and
+      here is right: it is the last of the counted things — the numbers say
+      how somebody listens and this says to what — so it belongs with them and
+      on their axis rather than down in the writing. Measured, it centres where
+      the counts and the pinned record do. The rule that marks the line between
+      what is counted and what was written moved with it, and is now the top of
+      `.ab-below` — the boundary is where the writing starts, not wherever the
+      genres happen to sit.
 - [x] **The em dash is gone from the printed question.** It was separating the
       opening from the answer on one line; on two lines in two faces it
       separates things that separate themselves. Stripped at the render rather
