@@ -69,7 +69,7 @@
 'use client';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { ArrowsClockwise, BookOpen, Broadcast, CaretDown, Gear, IdentificationCard, Info } from '@phosphor-icons/react';
+import { ArrowsClockwise, BookOpen, Broadcast, Gear, IdentificationCard, Info } from '@phosphor-icons/react';
 import { foldKey, useListeningBeacon } from '../../hooks/useListeningBeacon';
 import { useSpineWidth } from '../../hooks/useSpineWidth';
 import { useBookplate } from './Bookplate';
@@ -113,13 +113,10 @@ function paneMarks(authed, face) {
 // the other side.
 function paneFaces(authed) {
   return [
-    { key: 'card', word: 'Card', to: 'the card', label: 'About this journal' },
+    { key: 'card', word: 'Card', label: 'About this journal' },
     {
       key: 'desk',
       word: authed ? 'Desk' : 'About',
-      // "Turn to about this software" is not a sentence. The far face is the
-      // page about the software, so that is what it is called here.
-      to: authed ? 'the desk' : 'the software',
       label: authed ? 'Your desk' : 'About this software',
     },
   ];
@@ -621,77 +618,50 @@ export default function HomeNav() {
   );
 
   // ── What turns the pane ───────────────────────────────────────────────────
-  // Both faces in one control, the one you are on lit: the shape the archive's
-  // density switcher already has (.gd in journal.css), which is this site's
-  // way of saying "a small fixed set, and you are on one of them".
+  // At the left end of the header's own line, opposite the pencil, with the
+  // mark between them. DECISIONS has said since the header was drawn that it
+  // is a mark centred with one control each side; the left side has been empty
+  // ever since, and this is what goes in it (Miyel's brief, 2026-09-15).
   //
-  // Four goes at this on 2026-09-15, and the last one is the only one that
-  // does not have to be *learned*. A line at the foot of the spine (the
-  // brief), then a mark on it, then the mark at the top right, then a word
-  // and a caret there — every one of them said "press this and something
-  // happens", and none of them said what this actually is, which is that the
-  // left page has two sides and you are looking at one. A switch says it by
-  // being a switch. Miyel's read on each: the foot was "not the right idea",
-  // the mark alone was "too subtle", and the single press "I just don't like
-  // it" — the last one is the one worth listening to, because a control you
-  // cannot fault and still do not like is usually a control describing the
-  // wrong thing.
+  // A turn glyph and the name of the face it lands on — "Desk", "Card",
+  // "About" — which is enough to read as pressable without a label explaining
+  // it. It was a segmented CARD | DESK switch at the top of the spine and a
+  // band across the foot of the phone; one control in one place is both.
   //
-  // Centred over the spine, on the same line as the mark over the journal, so
-  // each page carries one thing on the top row centred on its own measure and
-  // the lights sit at the far right of the whole window. The row around it
-  // takes no clicks, the way the bar over the journal does not: it is a strip
-  // across the top of a scrolling page, and one that swallowed them would be
-  // a dead band across the top of the card.
-  //
-  // Card, and Desk or About. Miyel's words, and Card is what this project
-  // already calls that face everywhere — the identity card, DECISIONS, the
-  // code. Bio was tried for an hour and dropped: it is also the name of the
-  // free-text field the prompts replaced, which may yet come back. The pane's
-  // full name stays on the hover; the names in paneMarks are untouched,
-  // because those are read out on a swipe where a sentence is right.
+  // Fixed to the window rather than put inside either header, because there
+  // are two headers — the card's and the desk's — and one control that
+  // survives the turn cannot live inside the thing it turns. It lands on their
+  // line by construction: the page's 36px of padding plus 15, which is the 51
+  // the bar centres on.
   const faces = paneFaces(authed);
   const goingTo = faces.find(side => side.key !== face);
   const turnLine = (
     <div className="hn-turn-row">
-      {/* On a phone the band says where it goes in words — it is a whole line
-          across the foot of the pane and there is room for a sentence, and a
-          band that says "Turn to the desk" needs no learning at all. Above
-          769px the stylesheet hides this and shows the switch beside it, which
-          is the right shape for the top of a narrow spine. */}
-      {/* There is more down there, and on this pane the fold is where the
-          object stops — the photograph is the whole first screen by design,
-          so something has to say the writing exists. A hint, not an arrival:
-          it scrolls one screen, the way a thumb would, and it goes as soon as
-          the page has moved at all. Down is still not a gesture here. */}
-      {!down[0] && (
-        <button
-          type="button"
-          className="hn-more"
-          onClick={() => { const el = paneRefs[0].current; if (el) el.scrollTo({ top: el.clientHeight - 140, behavior: ease() }); }}
-          aria-label="Read on"
-        >
-          <CaretDown size={15} weight="regular" aria-hidden="true" />
-        </button>
-      )}
       <button type="button" className="hn-turn-say" onClick={turnPane}>
         <ArrowsClockwise size={13} weight="regular" aria-hidden="true" />
-        Turn to {goingTo.to}
+        {goingTo.word}
       </button>
-      <div className="hn-turn" role="group" aria-label="Which side of the page">
-        {faces.map(side => (
-          <button
-            key={side.key}
-            type="button"
-            className={'hn-turn-side' + (face === side.key ? ' hn-turn-side--on' : '')}
-            onClick={() => { if (face !== side.key) turnPane(); }}
-            aria-pressed={face === side.key}
-            title={side.label}
-          >
-            {side.word}
-          </button>
-        ))}
-      </div>
+    </div>
+  );
+
+  // ── Where you are on the rail ─────────────────────────────────────────────
+  // Two dots, filled for the pane you are on. They were ruled out while there
+  // were three panes and three carets: dots say *there are this many of these*
+  // and a caret says *there is something that way*, and pressing the caret is
+  // how the swipe gets learned — three of each was two vocabularies for one
+  // job. With two panes and the turn gone to the header they stop competing,
+  // because they are now describing different axes. The dots say where you are
+  // sideways; the caret says what is beside you; the down caret, on the beacon
+  // alone, says there is more underneath.
+  //
+  // An indicator and not a control. The caret next to them already goes to the
+  // other pane, and a dot that did the same thing would be the third
+  // vocabulary this row got rid of.
+  const dots = (
+    <div className="hn-dots" aria-hidden="true">
+      {marks.map((_, i) => (
+        <span key={i} className={'hn-dot' + (pane === i ? ' hn-dot--on' : '')} />
+      ))}
     </div>
   );
 
@@ -823,9 +793,11 @@ export default function HomeNav() {
 
       </div>
 
-      {/* The fold. Nothing on a phone: the stylesheet does not draw it
-          there. What turns the page is in the row at the foot, below. */}
+      {/* The fold, and the turn. Neither is drawn on a phone by the
+          stylesheet's own reckoning — the fold at all, the turn as a band at
+          the foot, which is where it used to be. */}
       {grip}
+      {turnLine}
 
       {/* ── The row along the bottom ────────────────────────────────────
           All three together rather than one on each edge. Pinned to the edges
@@ -859,26 +831,16 @@ export default function HomeNav() {
           hidden={pane <= 0 || down[pane]}
         />
 
-        {/* The turn, on the pane it turns. It sits in this row rather than
-            anywhere else because this row is the foot of the cross and the
-            foot is where it belongs on a phone — the one place a thumb
-            reaches without moving. Above 769px the stylesheet takes it out of
-            here and puts it at the top of the spine, where a pointer is.
+        {dots}
 
-            It is always in the markup and the stylesheet decides: on a phone
-            it is hidden while you are on home (there is nothing to turn
-            there), keyed on data-pane; on a desk `pane` never moves off its
-            initial value because the rail is a grid with nothing to scroll,
-            so a JS test would have hidden it on every desk.
-
-            It does not hide when the pane is scrolled, and the caret beside
-            it does not either. That rule is for being *inside* something —
-            down in the wall, where the only thing worth offering is more of
-            what you are in. A page that has merely been scrolled is not
-            inside anything, and taking the way out of it away would mean
-            scrolling back to the top to leave. */}
-        {turnLine}
-
+        {/* The one pane where nothing is visibly cut off: a full screen of
+            cover, art, title and what came before, with no partial content at
+            the fold, so something has to say there is more. The turning pane
+            needs none — it scrolls, and the writing running off the bottom
+            edge is the cue, which is how every page works. It is measured
+            rather than declared (`deep` answers false for anything but home),
+            so a copy with no beacon has no first screen to leave and nothing
+            points down at it. */}
         <EdgeCaret
           direction="down"
           onClick={() => goDown(pane)}
