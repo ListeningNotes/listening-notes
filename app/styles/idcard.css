@@ -96,21 +96,25 @@
 /* ── Three counts ───────────────────────────────────────────────────────────
    Records, masterpieces, formative — each in its own flag's colour, which is
    the first work those three tokens have had away from a mark on a record.
-   Evenly spread, the number large and the word small under it: typeset, not
-   stamped. A photograph that size above them is already the flourish.
+   Between two hairlines, evenly spread, the number large and the word small
+   under it: typeset, not stamped. A photograph that size above them is
+   already the flourish.
 
-   The only lines on this page are the two between the three of them (Miyel,
-   2026-09-15). They sat between two hairlines of their own and there was a
-   third under the pinned record below; four rules on a page whose whole
-   argument is that things are separated by tone. Two short verticals divide
-   the one thing here that is actually three things, and nothing else needs a
-   line at all. */
+   These two rules are the only ones on the page (Miyel, 2026-09-15). The
+   genres row carried one and another was drawn above the writing, and four
+   hairlines on a page whose argument is that things separate by tone is three
+   too many. This band is the exception because it is a band — three counts
+   reading across, which wants a top and a bottom to read as a row rather than
+   as three stray numbers. Verticals between them were tried in between and
+   are not it: the line goes round the set, not between its parts. */
 .idc-counts {
-  display: flex; align-items: stretch; justify-content: space-between;
-  gap: 0;
-  margin-top: 22px;
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 12px;
+  margin-top: 20px;
+  padding: 16px 0;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
 }
-.idc-count + .idc-count { border-left: 1px solid var(--border); }
 /* Each count is a press into the journal, filtered — so it wants to look
    pressable without becoming a button: the number lifts a little and the word
    under it comes up out of faint. */
