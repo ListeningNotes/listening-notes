@@ -736,18 +736,19 @@ abandoned listen claim to be logged. **Nothing ever matches a send to an
 entry automatically** — a person recognises the record and presses once,
 because a wrong guess writes a credit onto somebody's entry.
 
-**The inbox is two views and one decision per row, 2026-09-15.** New and
-Opened: the four outcomes are a word in the row's subtitle, not four tabs
-to stand on. New shows the one thing that happens to nearly every send,
-Start a listen, with the rare three behind a ··· that opens in the row, none
-of them coloured — red is the entry's delete, which is permanent, and
-archiving comes back with one press.
-Opened has no buttons — it is a record of what happened, and the row itself
-opens the entry or resumes the listen. **One exception: an archived row can
-be put back**, in the row's own faded ink at its far end, because otherwise
-archiving is a one-way door and a send filed by mistake is gone. **A resumed listen must find its
-draft:** a send and a draft are separate rows joined only by album and
-artist, and starting fresh would upsert over the saved notes.
+**The inbox is one list and a row opens where it sits, 2026-09-15.** New was
+never a place — it is a property of a row, the way unread is in mail — so
+there are no views to stand on: one list newest first, a dot for what is new,
+the state as a word in the subtitle, archived behind a line at the foot.
+**Pressing a row opens it, it does not navigate**; the listen is one of the
+things you can then choose. **The sender's actions are there whatever state a
+send is in**, which splitting the list had made impossible — a half-listened
+album whose sender has since made a journal had nowhere to say so. One
+primary action chosen by state, the rest as quiet rows under it; an archived
+row's primary is Put back, which is why archiving needs no undo of its own.
+**A resumed listen must find its draft:** a send and a draft are separate
+rows joined only by album and artist, and starting fresh would upsert over
+the saved notes.
 
 **A send is a gift, not a form, 2026-08-29.** Three parts, in this order: the
 object, the note, and who it is from. The album is picked off covers, because
