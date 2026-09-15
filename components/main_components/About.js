@@ -40,8 +40,10 @@
 // nothing.
 
 'use client';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowSquareOut, CaretDown, Check, GlobeSimple, LinkSimple, MagnifyingGlass, Plus, X } from '@phosphor-icons/react';
+import Link from 'next/link';
+import { arrivingAlone } from '../../library/handoff';
 import IdentityCard from './IdentityCard';
 import {
   DEFAULT_RIG_ICON, LINK_ICONS, RIG_ICONS, identify, readLink, rigIcon,
@@ -97,6 +99,47 @@ export default function About({ stamps, authed = false, pinned = null, entries =
   // thing it is covering.
   const [pinOpen, setPinOpen] = useState(false);
   const [pinQuery, setPinQuery] = useState('');
+
+  // ── The count windows ─────────────────────────────────────────────────────
+  // Which of the two flag counts is open, if either. A window of covers and
+  // nothing else — no search, no filter, no sort — because this is a glance
+  // and browsing is the wall's job (Miyel's brief, 2026-09-15). Owned here
+  // rather than in the card for the same reason the pin's search is: the sheet
+  // covers the pane, and a fixed panel drawn from inside the card would belong
+  // to the thing it is sitting on top of.
+  const [openCount, setOpenCount] = useState(null);
+  // The drag that puts it away, the shape the archive's filter sheet uses
+  // (JournalFilters): pointer events, so one pair of handlers drives a finger
+  // and a trackpad, and downward only — tracking upward would lift the sheet
+  // off the bottom of the screen and show the page behind it.
+  const countSheetRef = useRef(null);
+  const countFromRef = useRef(null);
+  const [countDrag, setCountDrag] = useState(0);
+  const [countSettling, setCountSettling] = useState(false);
+
+  const shutCount = useCallback(() => {
+    setOpenCount(null);
+    setCountDrag(0);
+    setCountSettling(false);
+  }, []);
+
+  // What is in the open window. The same two tests the wall filters on
+  // (Journal.js), so the window and the archive's filter can never disagree
+  // about what counts; masterpiece was a rating before it was a column, which
+  // is why the first one asks twice.
+  const inWindow = useMemo(() => {
+    if (!openCount) return [];
+    return entries.filter(e => (openCount === 'masterpieces'
+      ? (e.masterpiece === true || e.rating === 'Masterpiece')
+      : (e.formative === true || e.formative === 'true')));
+  }, [openCount, entries]);
+
+  useEffect(() => {
+    if (!openCount) return undefined;
+    const onKey = e => { if (e.key === 'Escape') shutCount(); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [openCount, shutCount]);
 
   // Which slot has its list of openings open, if any. One at a time, the same
   // way the card's mark chooser works — two lists of nine sentences open at
@@ -310,8 +353,85 @@ export default function About({ stamps, authed = false, pinned = null, entries =
           edit={edit}
           pinned={showingPin}
           onPickPin={() => { setPinQuery(''); setPinOpen(true); }}
+          openCount={openCount}
+          onOpenCount={next => { setCountDrag(0); setCountSettling(false); setOpenCount(next); }}
         />
       </div>
+
+      {/* ── A count's window ──────────────────────────────────────────────
+          Covers and nothing else: no bar, no search, no sort. The name and
+          the number are in the header, so nothing needs a label, and the
+          sheet is the height of what is in it — nine covers is three rows and
+          should open short, where a fixed sheet with empty space under nine
+          albums reads as something failing to load.
+
+          Pressing a cover closes the window before the entry opens. One layer
+          at a time: an entry arriving over an open sheet is the nesting
+          problem in Gotchas, where a fixed panel inside a layer measures
+          itself against the sheet rather than the window. And it opens alone —
+          this pane hands out no order to swipe through. */}
+      {openCount && (
+        <>
+          <div className="ab-count-scrim" onClick={shutCount} />
+          <div
+            className={'ab-count-sheet' + (countSettling ? ' ab-count-sheet--settling' : '')}
+            ref={countSheetRef}
+            style={countDrag ? { transform: `translateY(${countDrag}px)` } : undefined}
+            role="dialog"
+            aria-label={`${inWindow.length} ${openCount}`}
+          >
+            <button
+              type="button"
+              className="ab-count-grip"
+              aria-label="Close"
+              onClick={shutCount}
+              onPointerDown={e => {
+                countFromRef.current = e.clientY;
+                setCountSettling(false);
+                e.currentTarget.setPointerCapture(e.pointerId);
+              }}
+              onPointerMove={e => {
+                if (countFromRef.current === null) return;
+                setCountDrag(Math.max(0, e.clientY - countFromRef.current));
+              }}
+              onPointerUp={() => {
+                if (countFromRef.current === null) return;
+                countFromRef.current = null;
+                const height = countSheetRef.current?.offsetHeight ?? 400;
+                // A short sheet should not need a long pull and a tall one
+                // should not go on a twitch — whichever is smaller.
+                const closeAt = Math.min(120, height * 0.28);
+                setCountSettling(true);
+                if (countDrag > closeAt) { setCountDrag(height); setTimeout(shutCount, 180); }
+                else setCountDrag(0);
+              }}
+            />
+            <p className="ab-count-head">
+              <b>{inWindow.length}</b> {openCount}
+            </p>
+            {inWindow.length > 0 ? (
+              <div className="ab-count-grid">
+                {inWindow.map(row => (
+                  <Link
+                    key={row.id}
+                    href={`/entries/${row.slug}`}
+                    className="ab-count-cover"
+                    title={`${row.album} — ${row.artist}`}
+                    aria-label={`${row.album} — ${row.artist}`}
+                    onClick={() => { arrivingAlone(); shutCount(); }}
+                  >
+                    {row.album_art
+                      ? <img src={row.album_art} alt="" loading="lazy" />
+                      : <span aria-hidden="true">\u266a</span>}
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              <p className="ab-count-none">Nothing marked {openCount} yet.</p>
+            )}
+          </div>
+        </>
+      )}
 
       {/* ── The pin's search ──────────────────────────────────────────────
           A bottom sheet on a phone and a panel in the middle on a desktop,

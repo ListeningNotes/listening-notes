@@ -157,6 +157,22 @@ export function handOffNeighbour(entry) {
   passing = entry ? firstScreen(entry) : null;
 }
 
+// ── Opened from somewhere that does not browse ────────────────────────────
+// The wall's order is a module variable and it outlives the wall, which is
+// what lets a tapped cover know its neighbours. It also meant an entry opened
+// from the ID pane arrived with the wall's order behind it and could be
+// swiped through — the ID pane handing out an order it has no business
+// handing out (2026-09-15). You browse on the wall and nowhere else.
+//
+// A one-shot rather than clearing `order`, and that is the point: clearing it
+// would take the wall's neighbours away for good, because the wall only calls
+// handOffOrder when what it shows changes and it would not say it again. This
+// says "not this time" and is spent on the way in, the same shape as
+// arrivingBySwipe/tookASwipe below.
+let alone = false;
+export function arrivingAlone() { alone = true; }
+export function cameAlone() { const was = alone; alone = false; return was; }
+
 // ── How the layer arrived ─────────────────────────────────────────────────
 // Moving to a neighbour is a new address, and the framework builds the layer
 // afresh for it — so a layer cannot tell a swipe from a tap by looking at

@@ -20,11 +20,11 @@ import { fonts } from '../../library/sitewide_visuals';
 import SiteNav from '../../components/main_components/SiteNav';
 import Journal from '../../components/main_components/Journal';
 
-// `layered` is true when this is drawn on the sheet rather than at its own
-// address (app/@layer/(.)archive). The way out of a layer is the pull down,
-// the back caret and Escape, so the link at the foot — which would be a
-// navigation out of the cross, from inside a sheet the cross is still
-// underneath — is left off there.
+// `layered` survives from the hour /archive was intercepted as a sheet, for
+// the ID card's counts to open. The counts open a window of covers on their
+// own pane now and nothing intercepts this address, so nothing passes it —
+// kept because the next thing to open the wall on a sheet will want it, and
+// it costs one falsy default.
 export default function ArchivePage({ layered = false }) {
   return (
     <div className="arc-page" style={{ background: 'var(--bg)', minHeight: '100vh', color: 'var(--ink)', fontFamily: fonts.sans }}>

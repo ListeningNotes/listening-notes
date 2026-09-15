@@ -344,7 +344,8 @@ Still to look at:
       `.hn-face--card`, `.hn-face--desk`, `.hn-face--colophon`,
       `.hn--face-card` / `.hn--face-desk`, `.hn-turn-row`, `.hn-turn`,
       `.hn-turn-side`, `.hn-turn-say`, `.hn-more`, `.hn-grip` (kept); the
-      `?mark=` parameter on the wall, and `.idc-object`/`.idc-photo`/
+      `?mark=` parameter on the wall, `arrivingAlone`/`cameAlone` in
+      handoff.js, `.ab-count-*` for the window, and `.idc-object`/`.idc-photo`/
       `.idc-ident`/`.idc-keeping`/`.idc-acts`/`.idc-counts`/`.idc-pinned`
       on the card;
       LayerEntry's `over` values `"journal"` and `"spine"`,
@@ -1926,7 +1927,40 @@ lesson is in the entry below.**
       them the photo is already the flourish. `/api/public/stamps` counts the
       marks, which it used to before a swatch came off the card. A zero is
       left off.
-- [x] **And the counts are presses into the journal, filtered** (Miyel,
+- [x] **The two flag counts open a window of covers; Albums does not.** A
+      sheet from the foot with nothing in it but covers, three across, the
+      name and the number in its header so nothing needs a label, and the
+      height of what is in it — nine covers is three rows and opens at 467px
+      where four opens at 337, measured, because a fixed sheet with space
+      under nine albums reads as something failing to load. Pull the grip,
+      press the scrim or press Escape to close; the number it came from is
+      underlined while it is open. `.ab-count-*` in About, which owns it for
+      the same reason it owns the pin's search: the sheet covers the pane.
+      The window filters on the same two tests the wall does, so it and the
+      archive's filter can never disagree about what counts.
+- [x] **Nothing on the ID pane browses — and that was a bug, not a new rule.**
+      DECISIONS already said the layer takes a sideways drag only on an entry
+      with a record beside it on the wall. The pinned record was opening with
+      the wall's order behind it and letting you swipe through the journal:
+      the pane passing an order it has nothing to do with. `arrivingAlone()` /
+      `cameAlone()` in handoff.js, a one-shot in the same family as
+      `arrivingBySwipe`/`tookASwipe` — **not** a clear of the wall's order,
+      which would have taken the wall's own neighbours away for good, because
+      the wall only says the order when what it shows changes and would not
+      say it again. Measured after: the pinned record and a window's cover
+      open with zero neighbour carets, and a tile on the wall still opens
+      with one.
+- [x] **A cover closes its window before the entry opens.** One layer at a
+      time — an entry arriving over an open sheet is the nesting problem in
+      Gotchas, where a fixed panel inside a layer measures itself against the
+      sheet rather than the window.
+- [x] **`app/@layer/(.)archive` is gone.** It existed for the hour the counts
+      navigated to a filtered archive. Nothing links there from inside the app
+      now except `/key`'s Archive button, which wants the real page — an
+      interception left lying about changes what an ordinary link does.
+      `?mark=` stays on the archive: it costs eight lines and makes a filter
+      an address somebody can send.
+- [x] ~~**And the counts are presses into the journal, filtered**~~ (Miyel,
       2026-09-15: the way the pinned record takes you to that entry). Albums
       goes to `/archive`; masterpieces and formative go to
       `/archive?mark=masterpiece` and `?mark=formative`. `/archive` is the
