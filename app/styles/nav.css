@@ -740,11 +740,31 @@
      started reading as three separate things; at the gap they had before, the
      card and the cog were close enough to press by accident. */
   justify-content: center;
-  gap: 76px;
+  /* Nothing is laid out by this row any more: the dots are centred on the
+     window, each side caret is at its own edge, and the down caret is above
+     the dots. A flex row with a gap centred the dots as half of a pair with
+     whatever caret happened to be showing, which put them a third of the way
+     across the screen. */
+  gap: 0;
   /* The row is a transparent strip across the whole window; only the controls
      in it take a press, or it would swallow every tap along the bottom edge. */
   pointer-events: none;
   transition: opacity 0.3s ease, transform 0.3s ease;
+}
+.hn-dots {
+  position: absolute;
+  left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+}
+.hn-controls .edge-caret--left { position: absolute; left: 22px; top: 0; }
+.hn-controls .edge-caret--right { position: absolute; right: 22px; top: 0; }
+/* Above the dots, not beside them: it is the other axis, and the one pane it
+   appears on is the one with a whole screen and no edge to cut. */
+.hn-controls .edge-caret--down {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 14px);
+  transform: translateX(-50%);
 }
 .hn-controls > * { pointer-events: auto; }
 /* Out of the way while anything is moving. These sit over the page rather than
@@ -1188,22 +1208,35 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
 }
 
 /* ── What turns it ──────────────────────────────────────────────────────────
-   Both sides in one switch, the one you are on lit and not pressable — the
-   archive density switcher's recipe (.gd in journal.css), which is this
-   site's way of drawing a small fixed set you are on one of. A single press
-   could only say "something happens here"; a switch says what the thing IS,
-   which is that this pane has two sides.
+   At the left end of the header's line, opposite the pencil, with the mark
+   between them. DECISIONS has said since that header was drawn that it is a
+   mark centred with one control each side, and the left side had been empty
+   the whole time (Miyel, 2026-09-15).
 
-   On a phone it rides in the row at the foot of the cross, where a thumb
-   reaches. On a desk the block below lifts it to the top of the spine, where
-   a pointer is. */
-/* On a phone the band says it in words; the switch is the desk's shape. Each
-   is hidden where the other belongs. */
-.hn-turn { display: none; }
+   Fixed to the window rather than put inside a header, because there are two
+   headers — the card's and the desk's — and a control that survives the turn
+   cannot live inside the thing it turns. It lands on their line by
+   construction: the page's 36px of padding plus 15 is the 51 the bar centres
+   on, which is where the mark and the pencil sit too.
+
+   It was a segmented CARD | DESK switch at the top of the spine and a band
+   across the foot of the phone, at different times and then both at once. One
+   control in one place is both, and the foot is now free for navigation. */
+.hn-turn-row {
+  position: fixed;
+  /* 51, which is where the bar centres everything it carries: the page's 36px
+     of padding plus the 15 the header's mark is pinned at. Measured against
+     the mark and the pencil rather than guessed. */
+  top: calc(51px + var(--safe-top));
+  left: var(--page-gutter, 22px);
+  transform: translateY(-50%);
+  z-index: 96;
+  display: flex; align-items: center;
+}
 .hn-turn-say {
-  display: inline-flex; align-items: center; gap: 8px;
+  display: inline-flex; align-items: center; gap: 7px;
   padding: 0; border: 0; background: none;
-  color: var(--ink-soft);
+  color: var(--ink-faint);
   font-family: var(--font-label);
   font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase;
   cursor: pointer;
@@ -1211,48 +1244,25 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
 }
 .hn-turn-say:hover { color: var(--ink); }
 .hn-turn-say:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 4px; }
-/* The hint that there is more, just above the band. Faint, small, and gone
-   the moment the page has moved: it is there to say the writing exists, not
-   to be a control anybody uses twice. */
-.hn-more {
-  position: absolute;
-  bottom: calc(100% + 10px);
-  left: 50%;
-  transform: translateX(-50%);
-  display: inline-flex; align-items: center; justify-content: center;
-  width: 34px; height: 24px;
-  padding: 0; border: 0; background: none;
-  color: var(--ink-faint);
-  cursor: pointer;
-  transition: color 0.15s;
-}
-.hn-more:hover { color: var(--ink-soft); }
 
-.hn-turn {
-  align-items: center; gap: 2px;
-  padding: 2px;
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 9px;
+/* ── Where you are on the rail ──────────────────────────────────────────────
+   Two dots, filled for the pane you are on. They were ruled out while there
+   were three panes and three carets — dots say how many of these there are,
+   a caret says there is something that way, and three of each was two
+   vocabularies doing one job. With two panes and the turn gone to the header
+   they describe different axes: the dots are the horizontal one, the caret
+   beside them is what is next along it, and the down caret on the beacon is
+   the vertical one. An indicator, not a control: the caret already goes to
+   the other pane. */
+.hn-dots { display: flex; align-items: center; gap: 7px; }
+.hn-dot {
+  width: 5px; height: 5px;
+  border-radius: 50%;
+  background: var(--ink-faint);
+  opacity: 0.45;
+  transition: opacity 0.2s, background 0.2s;
 }
-.hn-turn-side {
-  display: flex; align-items: center; justify-content: center;
-  height: 26px; padding: 0 12px;
-  border: none; border-radius: 7px;
-  background: transparent;
-  color: var(--ink-faint);
-  font-family: var(--font-label);
-  font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
-  white-space: nowrap;
-  cursor: pointer;
-  transition: color 0.15s, background 0.15s;
-}
-.hn-turn-side:hover { color: var(--ink-soft); }
-/* The lit one is not pressable — it is where you already are — so it loses
-   the pointer as well as the hover. */
-.hn-turn-side--on { color: var(--bg); background: var(--ink); cursor: default; }
-.hn-turn-side--on:hover { color: var(--bg); }
-.hn-turn-side:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: -2px; }
+.hn-dot--on { background: var(--ink-soft); opacity: 1; }
 
 /* The one thing a desk has that a phone does not. Stated off by default and
    switched on in the desktop block below, so a phone never draws it. */
@@ -1263,32 +1273,6 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
 @media (max-width: 768px) {
   .hn-bar:not(.hn-bar--scrolled) .hn-bar-mark { display: none; }
 
-  /* ── The turn's band ──────────────────────────────────────────────────────
-     On the turning pane the foot of the cross is a band rather than glyphs
-     floating over the page — the switch was sitting on top of whatever the
-     writing had scrolled to, which is the one thing it must not do (Miyel,
-     2026-09-15). The page's own bottom padding keeps its last line above
-     this, so nothing passes under it at all.
-
-     Home keeps the floating row. There the controls sit over a wall of album
-     art on purpose, and a band across the bottom of a record's screen would
-     be a shelf under somebody's cover. */
-  .hn[data-pane="0"] .hn-controls {
-    position: fixed;
-    bottom: 0;
-    height: calc(58px + env(safe-area-inset-bottom));
-    padding-bottom: env(safe-area-inset-bottom);
-    align-items: center;
-    background: var(--bg);
-    border-top: 1px solid var(--border);
-  }
-  .hn[data-pane="0"] .edge-caret--right { top: auto; }
-  /* Nothing to turn on home — the switch belongs to the pane it turns, and
-     on home it would be a control for somewhere you are not. Keyed on the
-     cross's own data-pane rather than tested in JS: on a desk `pane` never
-     leaves its initial value, because the rail is a grid with nothing to
-     scroll, so a JS test would take the switch off every desk. */
-  .hn[data-pane="1"] .hn-turn-row { display: none; }
 }
 
 /* ── Desktop: an open book ────────────────────────────────────────────────
@@ -1411,33 +1395,12 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   .hn--dragging { user-select: none; -webkit-user-select: none; cursor: col-resize; }
   .hn--dragging .hn-pane { pointer-events: none; }
 
-  /* ── What turns the spine ── both sides in one switch, centred over the
-     spine. The bar's own geometry, over the spine instead of over the journal
-     — the same 22px down and the same 58px row — so the switch and the mark
-     over the journal sit on one line, each centred on its own page's measure,
-     with the lights at the far right of the whole window. It was a line
-     across the foot of the spine for an afternoon (Miyel, the same day: the
-     foot should just read), then right-aligned against the fold ("maybe it
-     can be centered").
-
-     Fixed to the window rather than to a face, so it holds still while either
-     of them scrolls and there is one of it rather than two. The row takes no
-     clicks — it is a strip across the top of a scrolling page, and one that
-     swallowed them would be a dead band across the top of the card — and the
-     buttons inside take their own back. */
-  .hn-turn-row {
-    display: flex; align-items: center; justify-content: center;
-    position: fixed; top: 0; left: 0; z-index: 96;
-    width: var(--spine-w, var(--spine-rest));
-    height: var(--hn-bar-h);
-    box-sizing: border-box;
-    padding: calc(22px + var(--safe-top)) var(--hn-gutter) 0;
-    pointer-events: none;
-  }
-  .hn-turn-row > * { pointer-events: auto; }
-  .hn-turn-say { display: none; }
-  .hn-more { display: none; }
-  .hn-turn { display: flex; }
+  /* ── What turns the spine ── the same control the phone has, at the left
+     end of the spine's own header line, opposite the pencil. It was a
+     segmented switch centred over the spine while the phone had a band at its
+     foot; one control in one place is both (Miyel, 2026-09-15). The spine's
+     gutter puts it where the card's header starts, and --hn-rail-top puts
+     that header under it. */
 
   /* ── The band ── the journal's first screen, as one row: the cover with a
      soft shadow, then the label, the title and the artist beside it, and what
@@ -1629,14 +1592,12 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   .hn[data-pane="0"] .edge-caret--left,
   .hn[data-pane="0"] .edge-caret--down,
   .hn[data-pane="1"] .edge-caret--right { display: none; }
-  /* And on the turning pane the switch is centred on the screen, not centred
-     as half of a pair with the caret beside it. The caret goes to the edge —
-     the bar over the journal has the same arrangement, a thing in the middle
-     and a control at the end of the line. */
-  .hn[data-pane="0"] .edge-caret--right {
-    display: flex;
-    position: absolute;
-    top: 0;
-    right: 22px;
-  }
+  /* And no turn on home. It belongs to the pane it turns, and on the beacon
+     it would be a control for a page you cannot see — the header it sits on
+     is not even there, because home's header is the bar. Keyed on the cross's
+     own data-pane and scoped to the phone: on a desk both panes are on screen
+     at once and the spine always has its header, and `pane` never leaves its
+     initial value there anyway, because the rail is a grid with nothing to
+     scroll. */
+  .hn[data-pane="1"] .hn-turn-row { display: none; }
 }

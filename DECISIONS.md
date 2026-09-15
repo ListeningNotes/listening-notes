@@ -108,9 +108,26 @@ somebody and a pane does not.
 same component the pane does: `/archive` → Journal, `/about` → About. One
 description of each thing, two places it can be reached.
 
-**Edge carets, not a dot indicator.** A swipe is invisible; a caret pinned to
-an edge says there is something that way, and pressing it does what swiping
-does — which is how the swipe gets learned.
+**Two dots and one caret, 2026-09-15.** Dots were ruled out against three
+panes and three carets: dots say how many of these there are, a caret says
+there is something that way, and three of each was two vocabularies doing one
+job. With two panes and the turn moved to the header they describe different
+axes — the dots are where you are sideways, the caret is what is next along,
+and the down caret is the vertical one. A swipe is still invisible, so the
+caret stays: pressing it is how the swipe gets learned.
+
+**The down caret is the beacon's alone, 2026-09-15.** It is the one pane where
+nothing is visibly cut off — a whole screen of cover, art, title and what came
+before, with no partial content at the fold — so something has to say there is
+more. The turning pane scrolls, and writing running off the bottom edge is the
+cue, which is how every page works. This is "down is a cover" said about the
+control rather than the gesture.
+
+**The turn is the header's left-hand control, 2026-09-15.** The header has
+been a centred mark with one control each side since it was drawn and the left
+side was empty; this is what goes in it. A turn glyph and the name of the face
+it lands on, in one place, replacing a segmented switch on a desk and a band
+across the foot of a phone. It leaves the foot to navigation.
 
 **The down caret is drawn by measuring the pane, never by being told.** A pane
 is deep when its scroller overflows, so a copy with no beacon has nothing

@@ -252,6 +252,16 @@ Left over:
       is where most of them land, no longer offers it. Worth a look at whether
       SiteNav's switch should follow it into Settings or stay as the public
       one.
+- [ ] **A left swipe at the wall turning the leaf — deliberately not built.**
+      Miyel's brief names it as later and sets the two conditions: it has to
+      show itself during the drag, because a threshold that flips on release
+      is one nobody trusts, and the header control stays whatever happens —
+      the gesture is for people who find it, never the way in. The known
+      collision is that `overscroll-behavior-x: contain` is load-bearing on
+      the rail (a swipe reaching the left end otherwise runs into Safari's own
+      back gesture), so the left wall is already contested and that is exactly
+      where the trigger would go. Gesture work at a boundary this file has
+      reverted twice; the header placement works completely without it.
 - [ ] **The visitor's Send and Add under a centred name.** The row changed
       shape when the head was centred and was only seen signed in, where the
       line is the name alone. It is a centred flex column, so it will centre;
@@ -343,7 +353,7 @@ Still to look at:
       `ln-spine-face`; `--spine-w`, `--hn-turn-h`; `.hn-face`,
       `.hn-face--card`, `.hn-face--desk`, `.hn-face--colophon`,
       `.hn--face-card` / `.hn--face-desk`, `.hn-turn-row`, `.hn-turn`,
-      `.hn-turn-side`, `.hn-turn-say`, `.hn-more`, `.hn-grip` (kept); the
+      `.hn-turn-say`, `.hn-dots`/`.hn-dot`, `.hn-grip` (kept); the
       `?mark=` parameter on the wall, `arrivingAlone`/`cameAlone` in
       handoff.js, `.ab-count-*` for the window, and `.idc-object`/`.idc-photo`/
       `.idc-ident`/`.idc-keeping`/`.idc-acts`/`.idc-counts`/`.idc-pinned`
