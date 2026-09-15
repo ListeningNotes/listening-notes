@@ -47,7 +47,7 @@
    photograph of somebody (Miyel, 2026-09-15). Seven-tenths of the page keeps
    it the object — nothing else on the pane comes near it — without it being
    the pane. */
-.ab-card .idc-photo { width: 70%; max-width: 300px; }
+.ab-card .idc-photo { width: 70%; max-width: 300px; margin: 0 auto; }
 .ab-card .idc-photo .idc-portrait {
   width: 100%;
   height: auto;
@@ -57,26 +57,34 @@
   box-shadow: none;
 }
 
-/* ── The name, and the two things a visitor can do ──────────────────────────
-   One line: the name and the date on the left, Send and Add on the right.
-   Send and Add rather than "Send an album" and "+ Add" — that shortening is
-   the whole reason they fit beside the name instead of taking a row of their
-   own. They wrap under it on a narrow phone rather than squeezing the name. */
+/* ── The name, the date, and the two things a visitor can do ────────────────
+   Centred under the photograph, which is centred too (Miyel, 2026-09-15). The
+   name and the date sat left with Send and Add opposite them on one line; a
+   centred name with two buttons hanging off the right edge is not a
+   composition, so the actions came under rather than beside. They still say
+   Send and Add and not "Send an album" and "+ Add" — that shortening is what
+   keeps them one short row instead of two long pills.
+
+   The counts below are already centred, each in its own third, so the head of
+   the pane now reads down one axis: picture, name, date, the two things you
+   can do, then the numbers. Only the pinned record is ranged left, because it
+   is a record and records are left-aligned everywhere on this site. */
 .idc-ident {
-  display: flex; align-items: flex-end; justify-content: space-between;
-  flex-wrap: wrap; gap: 10px 14px;
-  margin-top: 16px;
+  display: flex; flex-direction: column; align-items: center;
+  gap: 14px;
+  margin-top: 18px;
 }
-.idc-ident-said { min-width: 0; }
+.idc-ident-said { min-width: 0; text-align: center; }
 .ab-card .idc-name {
   margin: 0;
-  font-size: 30px; line-height: 1.05; text-align: left;
+  font-size: 30px; line-height: 1.05; text-align: center;
 }
 .idc-keeping {
   margin: 7px 0 0;
   font-family: var(--font-label);
   font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase;
   color: var(--ink-faint);
+  text-align: center;
 }
 .idc-acts { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
 .idc-act { padding: 11px 22px; letter-spacing: 0.16em; }
