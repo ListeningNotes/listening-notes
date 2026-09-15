@@ -252,6 +252,10 @@ Left over:
       is where most of them land, no longer offers it. Worth a look at whether
       SiteNav's switch should follow it into Settings or stay as the public
       one.
+- [ ] **The visitor's Send and Add under a centred name.** The row changed
+      shape when the head was centred and was only seen signed in, where the
+      line is the name alone. It is a centred flex column, so it will centre;
+      what is unseen is whether two pills under the date want more air than 14px.
 - [ ] **The counts on a fresh copy.** A journal with no masterpieces and
       nothing formative prints one count where there are normally three, and
       one number spread across the whole row may want a different treatment.
@@ -1891,13 +1895,18 @@ lesson is in the entry below.**
       their row, because a row's height is whatever the pencil or the gear
       happens to be and three pixels of drift is exactly what makes a mark
       look like it jumped.
-- [x] **Name and the two actions on one line.** *Send* and *Add*, not "Send an
-      album" and "+ Add": the shortening is the whole reason they sit beside
-      the name rather than taking a row of their own, which is what took a row
-      off the first screen. Send is filled, because it is what the pane is
-      for. Both are the visitor's — signed in the line is the name alone
-      (Miyel, 2026-09-14: there is nobody for the owner to send to but
-      themselves). "Keeping since March 2026" under the name.
+- [x] **The head of the pane is one centred column** (Miyel: centre the
+      photograph, the name and the keeping line). Mark, photograph, name,
+      date, then the two actions — all on one axis, measured at the screen's
+      centre. The actions moved *under* the name rather than beside it: they
+      were opposite it on one line, and a centred name with two buttons
+      hanging off the right edge is not a composition. They are still *Send*
+      and *Add* and not "Send an album" and "+ Add" — that shortening is what
+      keeps them one short row rather than two long pills. Send is filled,
+      because it is what the pane is for. Both are the visitor's; signed in it
+      is the name alone (Miyel, 2026-09-14: there is nobody for the owner to
+      send to but themselves). Only the pinned record is ranged left, because
+      it is a record and records are left-aligned everywhere on this site.
 - [x] **Three counts in the three flags' colours.** Albums in ink,
       masterpieces in `--mp`, formative in `--formative` — the first work those
       tokens have had away from a mark on a record. Between two hairlines,
