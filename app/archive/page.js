@@ -20,16 +20,21 @@ import { fonts } from '../../library/sitewide_visuals';
 import SiteNav from '../../components/main_components/SiteNav';
 import Journal from '../../components/main_components/Journal';
 
-export default function ArchivePage() {
+// `layered` is true when this is drawn on the sheet rather than at its own
+// address (app/@layer/(.)archive). The way out of a layer is the pull down,
+// the back caret and Escape, so the link at the foot — which would be a
+// navigation out of the cross, from inside a sheet the cross is still
+// underneath — is left off there.
+export default function ArchivePage({ layered = false }) {
   return (
     <div className="arc-page" style={{ background: 'var(--bg)', minHeight: '100vh', color: 'var(--ink)', fontFamily: fonts.sans }}>
       <SiteNav />
       <Journal
-        foot={
+        foot={layered ? null : (
           <div style={{ marginTop: 80, paddingTop: 32, borderTop: '1px solid var(--border)', textAlign: 'center' }}>
             <Link href="/" className="ln-pill">← Back home</Link>
           </div>
-        }
+        )}
       />
     </div>
   );
