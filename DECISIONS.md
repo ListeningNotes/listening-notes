@@ -739,7 +739,9 @@ because a wrong guess writes a credit onto somebody's entry.
 **The inbox is two views and one decision per row, 2026-09-15.** New and
 Opened: the four outcomes are a word in the row's subtitle, not four tabs
 to stand on. New shows the one thing that happens to nearly every send,
-Start a listen, with the rare three behind a ··· that opens in the row.
+Start a listen, with the rare three behind a ··· that opens in the row, none
+of them coloured — red is the entry's delete, which is permanent, and
+archiving comes back with one press.
 Opened has no buttons — it is a record of what happened, and the row itself
 opens the entry or resumes the listen. **One exception: an archived row can
 be put back**, in the row's own faded ink at its far end, because otherwise

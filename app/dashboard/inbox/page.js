@@ -469,7 +469,7 @@ export default function Inbox({ layered = false }) {
                                 {whose === sent.id ? 'Never mind' : 'Link their journal'}
                               </button>
                             )}
-                            <button className="ib-menu-act ib-menu-act--danger" onClick={() => { updateStatus(sent.id, ARCHIVED); setMenuFor(null); }}>
+                            <button className="ib-menu-act" onClick={() => { updateStatus(sent.id, ARCHIVED); setMenuFor(null); }}>
                               Archive
                             </button>
 

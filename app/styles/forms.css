@@ -895,9 +895,12 @@ a.pp-name:hover svg { color: var(--ink); }
   transition: background 0.15s, color 0.15s;
 }
 .ib-menu-act:hover { background: var(--panel); color: var(--ink); }
-/* The one destructive action, and the only one wearing a colour. */
-.ib-menu-act--danger { color: var(--fav, #f0484f); }
-.ib-menu-act--danger:hover { background: color-mix(in srgb, var(--fav, #f0484f) 10%, transparent); color: var(--fav, #f0484f); }
+/* No colour on any of them, 2026-09-15. Archive was red while it was called
+   Dismiss and was the one thing you could not undo; it is filing now, and it
+   comes back with one press, so red was claiming a weight it no longer has.
+   Red on this site means the delete at the foot of an entry, which really is
+   permanent — spending it on something reversible is how it stops meaning
+   anything. */
 
 /* ── Handled ────────────────────────────────────────────────────────────────
    A record of what happened rather than a queue: cover, album, what became
