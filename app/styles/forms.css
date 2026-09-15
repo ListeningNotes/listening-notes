@@ -72,6 +72,20 @@
 /* Red, not the site's gold: gold is the rating colour everywhere else,
    and a required-field mark is not a rating. */
 .sb-req { color: #e05555; }
+/* Who is sending, when the form already knows: one line where the two
+   fields would be, and a way to open them. */
+.sb-sender {
+  margin: 0; text-align: center;
+  font-size: 14px; line-height: 1.6; color: var(--ink-soft);
+}
+.sb-sender strong { color: var(--ink); font-weight: 600; }
+.sb-change {
+  margin-left: 10px; padding: 0; background: none; border: 0; cursor: pointer;
+  font-family: var(--font-label); font-size: 10px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--ink-faint);
+  border-bottom: 1px solid var(--border);
+}
+.sb-change:hover { color: var(--ink); }
 
 .sb-field {
   display: block; width: 100%; box-sizing: border-box;

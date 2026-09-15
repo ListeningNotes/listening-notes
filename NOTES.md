@@ -427,6 +427,19 @@ person's page the next (Complete). Left: the printer, and the chain.
       "Update this copy"; `scripts/update_copy.mjs`; `GET /api/update`;
       `.db-update`.
 
+- [ ] **The sender's line on a real phone.** The brief's question: does
+      `?from=`/`?as=` survive the sheet the address book opens on an
+      installed copy? The parameters are in the address, so the sheet has
+      them whatever it does with storage; the write and the send form's
+      read happen inside the same sheet. Unproved on an iPhone until Blue
+      or June updates and tries it — both their copy and Miyel's must be at
+      the version that writes and reads the link.
+- [ ] **The comment form still asks for a journal.** Same two shapes wanted
+      there: a keeper who arrived from their own copy is known; anyone
+      else is asked for a name only. Not in the brief; a small change in
+      `NewCommentForm.js` once the send form's shape has been seen on a
+      phone.
+
 **STRUCTURE** — see DECISIONS.md before starting any of these
 
 The cross is built and merged. What is left of it:
@@ -1493,6 +1506,26 @@ current.
 ---
 
 ## Complete
+
+**2026-09-14 — the send form knows who is sending, branch `sending-as`,
+not merged**
+
+- [x] **Links out carry the sender; the form has two shapes.** Blue
+      arrived at Miyel's journal from his own address book and was asked
+      for his name and his journal in two empty fields. Now every link out
+      of a copy to another journal — the address book's visit link, the
+      person's page's links, the feed's, the inbox's — carries `?from=` (the
+      keeper's journal) and `?as=` (their name), built by `carrySender` in
+      `library/return_address.js`; `Bookplate`, the one client component on
+      every page, reads them on landing with `noteArrival`, keeps them as
+      the return address, and takes them off the bar. The send form then
+      shows "Sending as Blue · blue-journal.vercel.app" with a Change button
+      that opens both fields filled; a visitor who arrived cold is asked
+      for a name only, and the journal field exists nowhere else. Tested on
+      the dev server both ways. **Both copies have to be at this version**:
+      the sender's writes the link, the recipient's reads it. Names to
+      confirm: `carrySender`, `noteArrival`, `?from=`/`?as=`, `.sb-sender`,
+      `.sb-change`.
 
 **2026-09-13 — setup fixes from the Peyton install, branch `setup-fixes`,
 MERGED to main as 1.10.1, pushed, release v1.10.1 cut** — from Miyel's brief: three
