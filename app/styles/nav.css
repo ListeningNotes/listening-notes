@@ -758,12 +758,17 @@
 }
 .hn-controls .edge-caret--left { position: absolute; left: 22px; top: 0; }
 .hn-controls .edge-caret--right { position: absolute; right: 22px; top: 0; }
-/* Above the dots, not beside them: it is the other axis, and the one pane it
-   appears on is the one with a whole screen and no edge to cut. */
+/* Under the dots, not beside or above them: it is the other axis, and the one
+   pane it appears on is the one with a whole screen and no edge to cut.
+
+   The row is lifted to make room for it. Sitting at the foot's own 14px the
+   caret hung below the window entirely — measured at 932 in a 932-tall
+   screen, which is a control nobody can see or press. */
+.hn-controls { bottom: max(40px, calc(env(safe-area-inset-bottom) + 26px)); }
 .hn-controls .edge-caret--down {
   position: absolute;
   left: 50%;
-  bottom: calc(100% + 14px);
+  top: calc(100% + 8px);
   transform: translateX(-50%);
 }
 .hn-controls > * { pointer-events: auto; }
@@ -1234,11 +1239,14 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   display: flex; align-items: center;
 }
 .hn-turn-say {
-  display: inline-flex; align-items: center; gap: 7px;
+  display: inline-flex; align-items: center; gap: 8px;
   padding: 0; border: 0; background: none;
   color: var(--ink-faint);
   font-family: var(--font-label);
-  font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase;
+  /* Sized to the pencil opposite it (Miyel, 2026-09-15): the glyph is the
+     pencil's 18 and the word is set to carry that glyph rather than to be a
+     caption under it, so the two ends of the header weigh the same. */
+  font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase;
   cursor: pointer;
   transition: color 0.15s;
 }
@@ -1256,13 +1264,15 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
    the other pane. */
 .hn-dots { display: flex; align-items: center; gap: 7px; }
 .hn-dot {
-  width: 5px; height: 5px;
-  border-radius: 50%;
+  width: 6px; height: 6px;
+  border-radius: 999px;
   background: var(--ink-faint);
-  opacity: 0.45;
-  transition: opacity 0.2s, background 0.2s;
+  opacity: 0.4;
+  transition: width 0.24s cubic-bezier(0.22, 0.61, 0.36, 1), opacity 0.2s, background 0.2s;
 }
-.hn-dot--on { background: var(--ink-soft); opacity: 1; }
+/* The one you are on widens rather than just darkening, which is what makes
+   two marks read as a position instead of a count (Miyel's reference). */
+.hn-dot--on { width: 20px; background: var(--ink-soft); opacity: 1; }
 
 /* The one thing a desk has that a phone does not. Stated off by default and
    switched on in the desktop block below, so a phone never draws it. */
@@ -1370,7 +1380,7 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
      to display: none would take the switch off the desk with the carets. */
   .hn-crown { display: none; }
   .hn-controls { display: contents; }
-  .hn-controls .edge-caret { display: none; }
+  .hn-controls .edge-caret, .hn-dots { display: none; }
 
   /* The bar belongs to the right page: the mark centred over the band, the
      lights at the page's right edge, and once the wall has scrolled the
@@ -1589,9 +1599,13 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
    the midpoint of a swipe, by which time the whole row has faded out on the
    first scroll event anyway. */
 @media (max-width: 768px) {
-  .hn[data-pane="0"] .edge-caret--left,
-  .hn[data-pane="0"] .edge-caret--down,
-  .hn[data-pane="1"] .edge-caret--right { display: none; }
+  /* The foot of the turning pane is clear — no dots and no caret. Anybody who
+     is there arrived by swiping or by pressing the turn, and either way they
+     know the way back. */
+  .hn[data-pane="0"] .hn-controls { display: none; }
+  /* And the light switch is the beacon's: on the card it would be a control
+     sitting over somebody's reading. */
+  .hn[data-pane="0"] .hn-lights { display: none; }
   /* And no turn on home. It belongs to the pane it turns, and on the beacon
      it would be a control for a page you cannot see — the header it sits on
      is not even there, because home's header is the bar. Keyed on the cross's
