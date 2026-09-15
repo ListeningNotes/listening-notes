@@ -43,9 +43,14 @@ export const colors_dark = {
 // Backwards-compatible alias — light is the primary identity of the site.
 export const colors = colors_light;
 
+// `museo` was a fourth key here and it said MuseoModerno while resolving to
+// Nunito — a slot for a face this site has never loaded. The mark is drawn as
+// SVG paths and not as type, so nothing was missing; what the entry did was
+// make MuseoModerno look like part of the system when it is only the shape of
+// the logo. Nothing read it. Removed 2026-09-15 so the next person reading
+// this file is not told about a typeface that is not here.
 export const fonts = {
   serif:  "'Nunito', sans-serif",
   mono:   "'Nunito', sans-serif",
   sans:   "'Nunito', sans-serif",
-  museo:  "'Nunito', sans-serif",
 };
