@@ -734,11 +734,11 @@ abandoned listen claim to be logged. **Nothing ever matches a send to an
 entry automatically** — a person recognises the record and presses once,
 because a wrong guess writes a credit onto somebody's entry.
 
-**The inbox is two views and one decision per row, 2026-09-15.** Waiting and
-Handled: the four outcomes are a word in the row's subtitle, not four tabs
-to stand on. Waiting shows the one thing that happens to nearly every send,
+**The inbox is two views and one decision per row, 2026-09-15.** New and
+Opened: the four outcomes are a word in the row's subtitle, not four tabs
+to stand on. New shows the one thing that happens to nearly every send,
 Start a listen, with the rare three behind a ··· that opens in the row.
-Handled has no buttons — it is a record of what happened, and the row itself
+Opened has no buttons — it is a record of what happened, and the row itself
 opens the entry or resumes the listen. **A resumed listen must find its
 draft:** a send and a draft are separate rows joined only by album and
 artist, and starting fresh would upsert over the saved notes.
