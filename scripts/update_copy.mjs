@@ -23,6 +23,16 @@
 // Leave the repository half-merged. A conflict aborts the merge, names the
 // files, and fails the run with a message a person can act on. It writes
 // nothing anywhere but the repository it runs in.
+//
+// ── On its own, once an hour ──────────────────────────────────────────────
+// The workflow also runs on a schedule (2026-09-15), so a copy stays current
+// without anyone pressing anything. Two things are different on a scheduled
+// run. It never crosses a major version: 1.x to 2.0 is the kind of update
+// that asks something of the keeper, so it waits for the button, and the
+// desk's line is what says so. And a clash does not fail the run — GitHub
+// would email the keeper every hour — it is written on the summary and the
+// run ends quietly; the button, pressed by a person, fails properly and
+// names the files.
 
 import { execFileSync, spawnSync } from 'node:child_process';
 import { appendFileSync } from 'node:fs';
@@ -93,6 +103,11 @@ async function releaseNotesBetween(before, after) {
 // notes-to-self are not things a keeper needs to read.
 const HOUSEKEEPING = /^(Merge |Version \d|NOTES\b|DECISIONS\b|ARCHITECTURE\b)/;
 
+// Whether this run was the hourly one rather than a person pressing the
+// button. GitHub says which in the environment.
+const ON_ITS_OWN = process.env.GITHUB_EVENT_NAME === 'schedule';
+const major = v => Number(String(v).replace(/^v/, '').split('.')[0]) || 0;
+
 git('config', 'user.name', 'github-actions[bot]');
 git('config', 'user.email', '41898282+github-actions[bot]@users.noreply.github.com');
 
@@ -146,10 +161,29 @@ if (tryGit('merge-base', 'HEAD', UPSTREAM_REF).status !== 0) {
 const base = git('merge-base', 'HEAD', UPSTREAM_REF);
 const before = versionAt('HEAD');
 const after = versionAt(UPSTREAM_REF);
+if (ON_ITS_OWN && major(after) > major(before)) {
+  say(
+    `## A new major version is waiting: ${after}`,
+    '',
+    `This copy is at ${before}. Version ${after} is the kind of update that may ask something of`,
+    'you, so it is not taken on its own. When you are ready, press Run workflow on this page.',
+  );
+  process.exit(0);
+}
 const merged = tryGit('merge', '--no-commit', '--no-ff', UPSTREAM_REF);
 if (merged.status !== 0) {
   const clashing = git('diff', '--name-only', '--diff-filter=U').split('\n').filter(Boolean);
   tryGit('merge', '--abort');
+  if (ON_ITS_OWN) {
+    say(
+      '## Could not update on its own: your changes clash with the new version',
+      '',
+      ...clashing.map(f => `- \`${f}\``),
+      '',
+      'Nothing has been changed. Press Run workflow to see what to do about it.',
+    );
+    process.exit(0);
+  }
   stop(
     '## Could not update: your changes clash with the new version',
     '',
