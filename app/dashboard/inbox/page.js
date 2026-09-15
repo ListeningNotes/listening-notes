@@ -23,9 +23,16 @@ import { lookup_key } from '../../../library/entry_formatter';
 // which of them it is becomes a word in the row's subtitle rather than a
 // tab you have to be standing on to see it. Four tabs asked somebody to
 // know the vocabulary before they could find anything.
-const VIEWS = [
+//
+// And they are top-level tabs beside Comments and Reports rather than a
+// second row of filters inside a folder: four places at one level, in the
+// order they get dealt with, so finding something is never a question of
+// which of two rows you are standing on.
+const TABS = [
   { value: 'new', label: 'new' },
   { value: 'opened', label: 'opened' },
+  { value: 'comments', label: 'comments' },
+  { value: 'reports', label: 'reports' },
 ];
 const UNOPENED = 'pending';
 
@@ -65,16 +72,6 @@ function Sender({ sent, me, filed }) {
   );
 }
 
-// A folder tab that connects to the open panel when active. Module scope so it
-// keeps a stable identity across renders.
-function FolderTab({ id, tab, onSelect, children }) {
-  return (
-    <button onClick={() => onSelect(id)} className={'ib-tab' + (tab === id ? ' ib-tab--on' : '')}>
-      {children}
-    </button>
-  );
-}
-
 // NoteModal is gone. It existed because the submissions view was a table with
 // no room in it for a paragraph, so the one part of a send that mattered — why
 // somebody sent it — was hidden behind a button marked "Note". The view is a
@@ -90,11 +87,10 @@ export default function Inbox({ layered = false }) {
 
   const [authed, setAuthed] = useState(false);
   const [checking, setChecking] = useState(true);
-  const [tab, setTab] = useState('submissions');
+  const [tab, setTab] = useState('new');
 
   const [submissions, setSubmissions] = useState([]);
   const [subLoading, setSubLoading] = useState(true);
-  const [filter, setFilter] = useState('new');
   // Which new row has its ··· open. One at a time: the menu is the rare
   // half of a decision, and two of them open at once is a list of controls
   // again, which is what this redesign took away.
@@ -305,10 +301,14 @@ export default function Inbox({ layered = false }) {
   }
 
   const unopened = s => s.status === UNOPENED;
-  const filtered = submissions.filter(s => (filter === 'new' ? unopened(s) : !unopened(s)));
-  const subCounts = {
+  const filtered = submissions.filter(s => (tab === 'new' ? unopened(s) : !unopened(s)));
+  // What each tab carries, and only shown where there is something to say.
+  // Reports counts the ones nobody has read; comments, the ones waiting.
+  const counts = {
     new: submissions.filter(unopened).length,
     opened: submissions.filter(s => !unopened(s)).length,
+    comments: comments.length,
+    reports: reports.filter(r => r.status === 'pending').length,
   };
 
   // What the picker offers on the open row: the likely record first, then
@@ -336,43 +336,42 @@ export default function Inbox({ layered = false }) {
       <SiteNav />
 
       <div className="own-body ib-body">
-        <div className="ib-tabs">
-          <FolderTab id="submissions" tab={tab} onSelect={setTab}>Submissions{subCounts.pending > 0 ? ` (${subCounts.pending})` : ''}</FolderTab>
-          <FolderTab id="comments" tab={tab} onSelect={setTab}>Comments{comments.length > 0 ? ` (${comments.length})` : ''}</FolderTab>
-          {(() => { const open = reports.filter(r => r.status === 'pending').length; return (
-            <FolderTab id="reports" tab={tab} onSelect={setTab}>Reports{open > 0 ? ` (${open})` : ''}</FolderTab>
-          ); })()}
-        </div>
-
-        {/* The open folder */}
         <div className="own-panel ib-panel">
+          {/* One row of tabs, 2026-09-15. The two views over sends used to be
+              a second row of filters inside a folder, which made finding
+              anything a question of which of two rows you were standing on.
+              New, Opened, Comments and Reports are four places, all at the
+              same level, in the order they are dealt with. */}
+          <div className="ib-head">
+            <h1 className="ib-title">Inbox</h1>
+            <div className="ib-tabs">
+              {TABS.map(t => (
+                <button
+                  key={t.value}
+                  onClick={() => { setTab(t.value); setMenuFor(null); setNaming(null); setWhose(null); }}
+                  className={'ib-tab' + (tab === t.value ? ' ib-tab--on' : '')}
+                >
+                  {t.label}
+                  {counts[t.value] > 0 && <span className="ib-tab-n">&#183; {counts[t.value]}</span>}
+                </button>
+              ))}
+            </div>
+          </div>
+
           <div className="ib-scroll">
 
-            {/* ── SUBMISSIONS ── */}
-            {tab === 'submissions' && (
+            {/* ── SENDS ── */}
+            {(tab === 'new' || tab === 'opened') && (
               <>
-                {/* Two views, not four, 2026-09-15. Started, logged and
-                    dismissed are one thing from the inbox's side — dealt
-                    with — so what state a send is in became a word in its
-                    subtitle rather than a tab you have to be standing on
-                    to see it. */}
-                <div className="ib-filters">
-                  {VIEWS.map(v => (
-                    <button key={v.value} onClick={() => { setFilter(v.value); setMenuFor(null); setNaming(null); setWhose(null); }} className={'ib-filter' + (filter === v.value ? ' ib-filter--on' : '')}>
-                      {v.label}{subCounts[v.value] > 0 ? ` ${subCounts[v.value]}` : ''}
-                    </button>
-                  ))}
-                </div>
-
                 {subLoading ? (
                   <div className="ib-list" style={{ gap: 10 }}>
                     {[...Array(4)].map((_, i) => <div key={i} className="own-skeleton" style={{ height: 46 }} />)}
                   </div>
                 ) : filtered.length === 0 ? (
                   <div className="own-empty">
-                    {filter === 'new' ? 'Nothing new.' : 'Nothing opened yet.'}
+                    {tab === 'new' ? 'Nothing new.' : 'Nothing opened yet.'}
                   </div>
-                ) : filter === 'new' ? (
+                ) : tab === 'new' ? (
                   // A shelf, not a spreadsheet. The cover is the first thing
                   // because a cover is what was handed over; the message is
                   // the body because it is the part doing the work; the name
@@ -530,6 +529,7 @@ export default function Inbox({ layered = false }) {
                   <div className="ib-list">
                     {filtered.map(sent => {
                       const gone = sent.status === 'dismissed';
+                      const host = tidyJournal(sent.sender_url);
                       const inside = (
                         <>
                           <span className="ib-done-art">
@@ -539,10 +539,16 @@ export default function Inbox({ layered = false }) {
                           </span>
                           <span className="ib-done-said">
                             <span className="ib-done-album">{sent.album}</span>
+                            {/* The artist, then what became of it. Who sent it
+                                is the face at the end of the row rather than a
+                                third clause of type. */}
                             <span className="ib-done-state">
-                              {became(sent)}
-                              {sent.submitter_name ? ` · from ${sent.submitter_name}` : ''}
+                              {sent.artist ? `${sent.artist} \u00b7 ` : ''}{became(sent)}
                             </span>
+                          </span>
+                          <span className="ib-done-face" title={sent.submitter_name || 'someone'} aria-hidden="true">
+                            <User size={15} weight="regular" />
+                            {host && <img src={`${journalUrl(host)}/api/portrait`} alt="" loading="lazy" onError={e => { e.currentTarget.style.display = 'none'; }} />}
                           </span>
                         </>
                       );
