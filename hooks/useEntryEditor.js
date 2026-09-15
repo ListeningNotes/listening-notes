@@ -20,23 +20,35 @@
 // only ever small, a mark saying it happened costs nothing. update_entry sets
 // them, one per piece of writing, and they print next to what changed.
 //
-// ── The discovery chain ─────────────────────────────────────────────────────
-// source_entry_id, received_from and received_date are private: withoutChain
-// strips all three before an entry reaches any page or the public feed, so no
-// visitor ever sees who sent somebody an album. Which means the page cannot
-// seed them — a field filled from a value the page was never given would save
-// a blank over what is stored.
+// ── Who sent it ─────────────────────────────────────────────────────────────
+// The credit — received_from and received_from_url — is public on a
+// Submission entry and stripped from everything else (withoutChain). So it
+// cannot be seeded from the entry the page was handed: a field filled from
+// a value the page was never given would save a blank over what is stored.
 //
-// So they are fetched on open, from GET /api/entries/[slug], which already
-// includes the chain when the caller has a wristband. Until they arrive the
-// three fields are simply absent from the draft, and update_entry only writes
-// a chain field when the key is actually present — so a save that lands before
-// the fetch does leaves them alone rather than clearing them.
+// It is fetched on open instead, from GET /api/entries/[slug], which
+// includes the whole row when the caller has a wristband. Until it arrives
+// the fields are simply absent from the draft, and update_entry only writes
+// one when its key is actually present — so a save that lands before the
+// fetch does leaves them alone rather than clearing them.
 //
-// source_entry_id points at the sender's entry for *the same album*. Walking it
-// upward gives the history of one record; that only holds because every hop is
-// the same album, which is why the picker offers nothing else and why
-// update_entry refuses anything else.
+// received_date is deliberately not here, 2026-09-14. The send flow stamps
+// it, where the moment is exact; a keeper crediting an old entry from memory
+// is not asked for one and nothing defaults it to today, because a confident
+// wrong date corrupts every statistic after it and a missing one costs
+// nothing — the entry's own date is the ceiling, and ordering and hit rates
+// both work from that. Left out of the draft, it is left alone on save.
+//
+// source_entry_id is not here either, since the same day. It is the pointer
+// at the sender's own entry, written once and undone only in SQL; it was a
+// hand-editable field only because nothing set it yet, and with three
+// copies there was nothing to point at. The column stays, update_entry
+// still keeps its write-once rule, and a send flow can set it when both
+// people have copies — a person is not asked to.
+//
+// The sender is picked off the address book where possible (`book`, below),
+// so the credit resolves to a journal and not only a spelling; free text
+// stays for anyone who sent something and keeps no copy.
 
 'use client';
 import { useCallback, useState } from 'react';
@@ -77,9 +89,10 @@ export function useEntryEditor(entry) {
   // reflex — this has to be read to be got past.
   const [asking, setAsking] = useState(false);
   const [removing, setRemoving] = useState(false);
-  // Other entries for this same album, which is the entire set of valid
-  // sources. Empty until asked for, and asked for only when an edit opens.
-  const [kin, setKin] = useState([]);
+  // The address book — the people a sender can be picked from. Owner-only
+  // on the server, which the editor is anyway; empty until it arrives, and
+  // empty means the field is plain text.
+  const [book, setBook] = useState([]);
 
   // Seeded on open rather than held permanently, so a draft abandoned an hour
   // ago is not what the fields come back showing.
@@ -88,29 +101,26 @@ export function useEntryEditor(entry) {
     setTrouble(null);
     setEditing(true);
 
-    // The private half, and the candidates for the one field that is a
-    // reference rather than a value. Both are fetched rather than waited for:
-    // the fields that do not need them are usable immediately.
+    // The credit and the address book. Both fetched rather than waited for:
+    // the fields that do not need them are usable immediately. A row with
+    // the private column on it is the keeper's read; anything else is the
+    // public one and must not seed the field.
     fetch(`/api/entries/${entry.slug}`)
       .then(r => (r.ok ? r.json() : null))
       .then(data => {
         const row = data?.entry;
-        if (!row || !('received_from' in row)) return;
+        if (!row || !('source_entry_id' in row)) return;
         setDraft(d => ({
           ...d,
-          source_entry_id: row.source_entry_id ?? '',
           received_from: row.received_from ?? '',
-          received_date: row.received_date ? String(row.received_date).slice(0, 10) : '',
+          received_from_url: row.received_from_url ?? '',
         }));
       })
       .catch(() => {});
 
-    fetch('/api/entries')
+    fetch('/api/people')
       .then(r => (r.ok ? r.json() : null))
-      .then(data => {
-        const all = data?.entries || [];
-        setKin(all.filter(e => e.album_key === entry.album_key && e.id !== entry.id));
-      })
+      .then(data => setBook(data?.people || []))
       .catch(() => {});
   }, [entry]);
 
@@ -178,6 +188,6 @@ export function useEntryEditor(entry) {
 
   return {
     editing, saving, trouble, draft, begin, cancel, set, setTrack, save,
-    asking, ask, unask, removing, remove, kin,
+    asking, ask, unask, removing, remove, book,
   };
 }

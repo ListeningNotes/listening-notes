@@ -389,7 +389,11 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
     const begin = event => {
       // Printing is a different mode: its sideways swipe turns the ground
       // under the card, and the pull down would take the flyer away.
-      if (event.touches.length !== 1 || sheet.querySelector('.ln-printing')) { pull = null; return; }
+      // Correcting is another, 2026-09-14: the row of faces under Sent by
+      // scrolls sideways, and a thumb going through it must not land on the
+      // next record with the draft gone. Nothing sideways or downward is
+      // the sheet's while a correction is open; Save and Cancel are.
+      if (event.touches.length !== 1 || sheet.querySelector('.ln-printing, .ln-editing')) { pull = null; return; }
       const touch = event.touches[0];
       pull = { x: touch.clientX, y: touch.clientY, at: event.timeStamp, lastX: touch.clientX, lastY: touch.clientY, lastAt: event.timeStamp, axis: null, top: atTop() };
     };

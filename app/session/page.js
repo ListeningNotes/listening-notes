@@ -298,7 +298,7 @@ export default function SessionPage() {
               album={s.albumInput} artist={s.artistName} year={s.year || s.brief?.year || ''} albumArt={s.albumArt} genre={s.genre || s.brief?.genre || ''}
               overallNotes={s.overallNotes}
               rating={s.rating} Masterpiece={s.Masterpiece} Favorite={s.Favorite} Formative={s.Formative}
-              entryType={s.entryType} receivedFrom={s.receivedFrom}
+              entryType={s.entryType} receivedFrom={s.receivedFrom} receivedFromUrl={s.receivedFromUrl}
               tracks={s.tracks} trackRatings={s.trackRatings} trackFavorites={s.trackFavorites} trackNotes={s.trackNotes}
               saving={s.saving} saved={s.saved} savedEntry={s.savedEntry}
               doSave={s.doSave}
