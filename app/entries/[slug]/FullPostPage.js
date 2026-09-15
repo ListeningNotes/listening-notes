@@ -30,7 +30,7 @@ import TrackThread from '../../../components/main_components/Slug_Page/TrackThre
 import CommentBubble from '../../../components/main_components/Slug_Page/CommentBubble';
 import MetadataLabel from '../../../components/main_components/Slug_Page/MetadataLabel';
 import Chip from '../../../components/main_components/Slug_Page/Chip';
-import Chain from '../../../components/main_components/Slug_Page/Chain';
+import SentBy, { creditOn, useTrail } from '../../../components/main_components/Slug_Page/SentBy';
 import MiniAddressBook from '../../../components/main_components/MiniAddressBook';
 import PrintBar from '../../../components/main_components/Slug_Page/PrintBar';
 import HorizonChart from '../../../components/main_components/HorizonChart';
@@ -179,10 +179,16 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   const entryUrl = host && entry.slug ? `https://${host}/entries/${entry.slug}` : '';
   const canTurnCover = Boolean(entryUrl && entry.album_art && !preview);
   const [coverCode, setCoverCode] = useState(false);
-  // Whether the chain behind a sent record is open under the chips — see
-  // Chain.js. Closed on arrival, and closed again on a swipe to the next
+  // Whether the trail behind a sent record is open under the Sent by line —
+  // see SentBy.js. Closed on arrival, and closed again on a swipe to the next
   // record, like the code.
-  const [chainOpen, setChainOpen] = useState(false);
+  const [trailOpen, setTrailOpen] = useState(false);
+  // And the trail itself, walked once here rather than once in each of the
+  // two copies of the card — the phone's first screen and the desk's hero —
+  // which would be the sender's journal, and every journal behind it, fetched
+  // twice for one reading. Nothing is walked for the session's preview: the
+  // record does not exist yet and there is nobody to ask.
+  const trail = useTrail(preview ? null : entry);
   // On the layer a swipe brings the next record into this same component,
   // and a record arrives on its cover, not on the last one's code. The slot
   // itself is keyed on the slug below, so its own state starts over too.
@@ -190,7 +196,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   if (codeFor !== entry.slug) {
     setCodeFor(entry.slug);
     setCoverCode(false);
-    setChainOpen(false);
+    setTrailOpen(false);
   }
   // The dots are the page's ink, so the page asks for the file that matches
   // it. The art's mark rides along so a corrected cover is never a day stale.
@@ -719,34 +725,43 @@ export default function FullPostPage({ entry, references = [], authed = false, l
     : null;
 
   const isSubmission = entry.entry_type === 'Submission';
-  // The Submission chip opens the chain, 2026-09-14: who sent it, whether
-  // they logged it, who sent it to them — read off their journals on the
-  // press (Chain.js). The chip says Submission and nothing more until then:
-  // a name printed on every sent entry by default was somebody else's name
-  // on the page as decoration. It wears a small caret so it reads as
-  // pressable, since closed by default is otherwise undiscoverable — the
-  // cover's corner mark, solved the same way. In the session's preview
-  // there is nothing to read yet, so the chip is a chip.
+  // Who sent a record is a line under the chips now rather than a panel
+  // behind them (SentBy.js, 2026-09-15), so the chip's only remaining job is
+  // the entries that line cannot draw: a credit the sender asked to keep
+  // quiet, and the Submissions logged before the inbox began filling the
+  // name in. Where a name is about to be printed, *Sent by Zach* already
+  // says the record was one, and the chip would be a third pill on the
+  // busiest row saying worse what the line below says. Both read the credit
+  // through creditOn, so the chip and the line can never both show, or both
+  // go missing and leave a sent record saying nothing.
   //
-  // No envelope in it, on Miyel's call the same day: the chips on the
-  // first screen are words, the marks are the strip's on screen two, and a
-  // chip carrying a mark the others do not was also the one thing that
-  // moved when an entry landed over the journal — the stand-in draws the
-  // chips without it (LayerWaiting). The caret is drawn in CSS, not an
-  // icon, for the same reason: the stand-in draws the identical chip.
-  const sentChip = !isSubmission ? null : preview
-    ? <Chip>Submission</Chip>
-    : (
-      <Chip onClick={() => setChainOpen(o => !o)} expanded={chainOpen} label={chainOpen ? 'Close where this record came from' : 'Where this record came from'}>
-        Submission
-        <span className={'ln-chain-caret' + (chainOpen ? ' ln-chain-caret--open' : '')} aria-hidden="true" />
-      </Chip>
-    );
-  // Keyed on the slug so a swipe to the next record starts its own read —
+  // No envelope in it, on Miyel's call 2026-09-14: the chips on the first
+  // screen are words, the marks are the strip's on screen two, and a chip
+  // carrying a mark the others do not was also the one thing that moved
+  // when an entry landed over the journal — the stand-in draws the chips
+  // without it (LayerWaiting). No caret either, since 2026-09-15: the chip
+  // no longer opens anything, and the one thing still behind a press is the
+  // trail, which wears its own on the pill that opens it.
+  const credit = creditOn(entry);
+  const sentChip = isSubmission && !credit ? <Chip>Submission</Chip> : null;
+  // Down while a correction or a print is open: the sender is a field being
+  // edited in one, and is not the record in the other. In the session's
+  // preview it draws but reads nobody's journal — there is no trail to find
+  // for an entry that does not exist yet.
+  //
+  // Keyed on the slug so a swipe to the next record starts its own walk —
   // with a prefix, because the cover beside it is keyed on the bare slug
   // and two siblings on one key had React drawing the cover twice.
-  const chainPanel = isSubmission && chainOpen && !preview && !edit.editing && !printing && (
-    <Chain key={`chain-${entry.slug}`} entry={entry} />
+  const sentLine = credit && !edit.editing && !printing && (
+    <SentBy
+      key={`sent-${entry.slug}`}
+      entry={entry}
+      keeper={keeperName}
+      mine={authed}
+      trail={trail}
+      open={trailOpen}
+      onOpen={setTrailOpen}
+    />
   );
   // The flag is the only source now. Nine older entries carried this as
   // relationship = 'Formative'; they were migrated onto the flag and the
@@ -816,7 +831,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
           desktop it has no height or overflow of its own, so everything below
           just falls back into normal document flow. */}
       <div
-        className={'ln-screens' + (edit.editing ? ' ln-editing' : '') + (printing ? ' ln-printing' : '') + (chainPanel ? ' ln-chain-open' : '')}
+        className={'ln-screens' + (edit.editing ? ' ln-editing' : '') + (printing ? ' ln-printing' : '') + (trailOpen ? ' ln-sent-open' : '')}
         data-ground={printing ? ground : undefined}
         data-size={printing ? size : undefined}
         onTouchStart={printing ? onGroundTouchStart : undefined}
@@ -954,7 +969,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
             </>
           )}
         </div>
-        {chainPanel}
+        {sentLine}
         <div className="ln-screen-one-posted" style={{ fontFamily: fonts.mono, fontSize: '9px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--ink-faint)' }}>
           Posted {postedOn}
         </div>
@@ -1060,6 +1075,14 @@ export default function FullPostPage({ entry, references = [], authed = false, l
                 {!edit.editing && sentChip}
                 {!edit.editing && (entry.favorite === true || entry.favorite === 'true') && <Chip tone="fav">Favorite</Chip>}
               </div>
+              {/* Under the chips here as on the phone. The panel this replaced
+                  could not sit in the hero — .ln-hero is a fixed 390px with
+                  its content anchored to the bottom and clipped, so a 90px
+                  card added in here grew upward and pushed the album title
+                  behind the mark, and it went under the hero instead. A line
+                  is the weight of the posted date already below it, and the
+                  column runs to about 150px of the 354 it has. */}
+              <div className="ln-sent-desk">{sentLine}</div>
               <div style={{ fontFamily: fonts.mono, fontSize: '9px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--ink-faint)', marginTop: '12px' }}>
                 Posted {postedOn}
               </div>
@@ -1067,12 +1090,12 @@ export default function FullPostPage({ entry, references = [], authed = false, l
           </div>
         </div>
       </div>
-      {/* Under the hero rather than inside it. .ln-hero is a fixed 390px with
-          its content anchored to the bottom, so a panel added in there grows
-          upward and pushes the album title up behind the header — which is
-          exactly what it did. Phones use the copy on screen one; this one is
-          hidden there, or both would show. */}
-      <div className="ln-cover-hero">{coverField}{chainPanel}</div>
+      {/* The cover's address field, under the hero rather than inside it.
+          .ln-hero is a fixed 390px with its content anchored to the bottom
+          and clipped, so anything added in there grows upward and pushes the
+          album title behind the header. Phones use the copy on screen one;
+          this one is hidden there, or both would show. */}
+      <div className="ln-cover-hero">{coverField}</div>
 
       {/* ── SCREEN TWO ── on phones this is the second snap screen: the header
           stays put at the top while everything below scrolls inside it, the
@@ -1220,8 +1243,8 @@ export default function FullPostPage({ entry, references = [], authed = false, l
         {/* No lineage picker here, and since 2026-09-15 no lineage rules
             behind it either: the column is parked, because an entry id
             means nothing in another copy's database. Who sent a record is
-            the credit at the head of this page, and the chain a reader
-            walks is Chain.js. See database_actions.js, above the slugs. */}
+            the credit at the head of this page, and the trail a reader
+            walks is SentBy.js. See database_actions.js, above the slugs. */}
         {edit.editing && (
           <div className="ln-danger">
             {!edit.asking ? (
