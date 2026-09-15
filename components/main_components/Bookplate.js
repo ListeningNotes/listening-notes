@@ -14,7 +14,8 @@
 
 'use client';
 
-import { createContext, useContext } from 'react';
+import { createContext, useContext, useEffect } from 'react';
+import { noteArrival } from '../../library/return_address';
 
 // The same blanks library/settings_actions.js falls back to. A component that
 // renders before the provider exists — a test, a stray import — should see an
@@ -70,6 +71,10 @@ export function useBookplate() {
 
 export function Bookplate({ settings, children }) {
   const value = { ...EMPTY, ...(settings || {}) };
+  // A visitor who arrived through their own copy's link is noted here,
+  // because this is the one client component on every page: a keeper may
+  // land on the card, on an entry, anywhere. See noteArrival.
+  useEffect(() => { noteArrival(value.site_address); }, [value.site_address]);
   return (
     <BookplateContext.Provider value={value}>
       {children}
