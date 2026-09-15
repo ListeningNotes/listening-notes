@@ -1994,10 +1994,13 @@ lesson is in the entry below.**
       - Nunito 300 was added for the light answer and removed again when the
         answer became display weight. A weight nothing uses is the Anton waste
         at a smaller scale (app/layout.js has the note).
-- [x] **Top genres moved above the prompts.** A small computed fact belongs
-      with the other small computed facts, before the writing starts, rather
-      than trailing off the end of it. The rule moved with it, from over to
-      under: it is the line between what is counted and what was written.
+- [x] **Top genres moved above the prompts, and centred with them.** A small
+      computed fact belongs with the other small computed facts, before the
+      writing starts, rather than trailing off the end of it — and on the same
+      axis as them: measured, it centres where the counts and the pinned
+      record do. The rule moved with it, from over to under: it is the line
+      between what is counted and what was written, and everything above that
+      line now reads down one centre.
 - [x] **The em dash is gone from the printed question.** It was separating the
       opening from the answer on one line; on two lines in two faces it
       separates things that separate themselves. Stripped at the render rather
