@@ -4,7 +4,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { User } from '@phosphor-icons/react';
+import { DotsThree, User } from '@phosphor-icons/react';
 import Link from 'next/link';
 import SiteNav from '../../../components/main_components/SiteNav';
 import MiniAddressBook from '../../../components/main_components/MiniAddressBook';
@@ -419,7 +419,7 @@ export default function Inbox({ layered = false }) {
                               aria-expanded={menuFor === sent.id}
                               aria-label={`More for ${sent.album}`}
                             >
-                              &#183;&#183;&#183;
+                              <DotsThree size={22} weight="bold" aria-hidden="true" />
                             </button>
                           </div>
 
