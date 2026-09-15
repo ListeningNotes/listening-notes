@@ -397,3 +397,65 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
     font-size: 16px !important;
   }
 }
+
+/* ── The address book as a strip of faces ───────────────────────────────────
+   MiniAddressBook. Shared, 2026-09-15: the entry editor asks who sent a
+   record under Sent by, and the inbox asks it again on a send that arrived
+   before its sender kept a journal. One row that scrolls sideways, so three
+   people and forty are the same shape and the difference is how far it
+   goes. */
+.ln-sender-book {
+  display: flex;
+  gap: 14px;
+  width: 100%;
+  max-width: 100%;
+  /* The row never asks for its content's width. Without this a wrapper
+     with no width of its own — a flex item up the chain, the hero's
+     column — is forced open to the faces' full width and the row lands
+     centred with its first faces off the left edge, unreachable. */
+  contain: inline-size;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  padding: 3px 16px 6px;
+  box-sizing: border-box;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.ln-sender-book::-webkit-scrollbar { display: none; }
+/* Centred while the faces fit and scrollable from the first face when they
+   do not: auto margins on the two ends do both. justify-content: center on
+   an overflowing row pushes the first faces off the left edge with no way
+   to scroll back to them. */
+.ln-sender-face:first-child { margin-left: auto; }
+.ln-sender-face:last-child { margin-right: auto; }
+.ln-sender-face {
+  flex: 0 0 auto;
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  width: 64px;
+  padding: 0; border: 0; background: transparent;
+  color: var(--ink-faint);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 0.15s;
+}
+.ln-sender-face:hover { color: var(--ink); }
+.ln-sender-face--on { color: var(--ink); }
+.ln-sender-portrait {
+  position: relative; width: 44px; height: 44px; border-radius: 10px; overflow: hidden;
+  background: var(--panel); border: 1px solid var(--border);
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.ln-sender-portrait img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.ln-sender-face--on .ln-sender-portrait { border-color: var(--ink); box-shadow: 0 0 0 2px var(--ink); }
+.ln-sender-face:focus-visible { outline: none; }
+.ln-sender-face:focus-visible .ln-sender-portrait { border-color: var(--ink-faint); box-shadow: 0 0 0 2px var(--ink-faint); }
+.ln-sender-name {
+  font-family: var(--font-label);
+  font-size: 8.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  max-width: 100%;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+

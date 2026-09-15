@@ -10,7 +10,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { CaretUp, Check, Fingerprint, Heart, SketchLogo, User, VinylRecord, X } from '@phosphor-icons/react';
+import { CaretUp, Check, Fingerprint, Heart, SketchLogo, VinylRecord, X } from '@phosphor-icons/react';
 import { BookOpen } from '@phosphor-icons/react';
 import { fonts } from '../../../library/sitewide_visuals';
 import { sizedAlbumArt, fetchAlbumArtUrl } from '../../../library/music_data_api';
@@ -31,11 +31,12 @@ import CommentBubble from '../../../components/main_components/Slug_Page/Comment
 import MetadataLabel from '../../../components/main_components/Slug_Page/MetadataLabel';
 import Chip from '../../../components/main_components/Slug_Page/Chip';
 import Chain from '../../../components/main_components/Slug_Page/Chain';
+import MiniAddressBook from '../../../components/main_components/MiniAddressBook';
 import PrintBar from '../../../components/main_components/Slug_Page/PrintBar';
 import HorizonChart from '../../../components/main_components/HorizonChart';
 import MiniCard from '../../../components/main_components/Slug_Page/MiniCard';
 import { handedOver } from '../../../library/handoff';
-import { tidyAddress, tidyJournal, journalUrl } from '../../../library/return_address';
+import { tidyAddress, tidyJournal } from '../../../library/return_address';
 import { useBookplate } from '../../../components/main_components/Bookplate';
 import { useTheme } from '../../../components/main_components/Lightswitch';
 import CodeSlot from '../../../components/main_components/CodeSlot';
@@ -285,12 +286,6 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   // so naming one turns that shelf on if it was not already.
   const linkedTo = tidyJournal(edit.draft.received_from_url || '');
   const senderText = String(edit.draft.received_from ?? '');
-  const senderChoices = edit.book.filter(p => {
-    if (p.address === linkedTo) return true;
-    const typed = senderText.trim().toLowerCase();
-    if (!typed) return true;
-    return String(p.name || '').toLowerCase().includes(typed) || p.address.includes(typed);
-  });
   const sendBy = p => {
     if (p.address === linkedTo) {
       edit.set('received_from_url', '');
@@ -323,31 +318,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
           aria-label="Sent by"
         />
       </label>
-      {senderChoices.length > 0 && (
-        <span className="ln-sender-book" aria-label="From your address book">
-          {senderChoices.map(p => {
-            const on = p.address === linkedTo;
-            return (
-              <button
-                key={p.id}
-                type="button"
-                className={'ln-sender-face' + (on ? ' ln-sender-face--on' : '')}
-                onClick={() => sendBy(p)}
-                aria-pressed={on}
-                title={on ? 'Linked to their journal — tap to unlink' : 'Link to their journal'}
-              >
-                {/* The plain mark behind the picture, for a journal with
-                    none or one that is out — the feed's Face, the book's. */}
-                <span className="ln-sender-portrait" aria-hidden="true">
-                  <User size={20} weight="regular" />
-                  <img src={`${journalUrl(p.address)}/api/portrait`} alt="" loading="lazy" onError={e => { e.currentTarget.style.display = 'none'; }} />
-                </span>
-                <span className="ln-sender-name">{p.name || p.address}</span>
-              </button>
-            );
-          })}
-        </span>
-      )}
+      <MiniAddressBook people={edit.book} linked={linkedTo} narrow={senderText} onPick={sendBy} />
     </span>
   );
 
