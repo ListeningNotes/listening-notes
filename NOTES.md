@@ -1637,7 +1637,17 @@ current.
       and dropping it would close that door. It and *Link their journal*
       are opposite halves of one question and never both apply, so at
       most three items show at once.
-- [x] **A dismissed row can be put back, very quietly** (Miyel, after the
+- [x] **Dismiss is Archive, and a dismissed row is an archived one**
+      (Miyel, 2026-09-15). A send you put aside has been filed, not
+      rejected, and it comes back with one press — so the menu says
+      Archive and the row's state reads *archived*. **The stored value is
+      still `dismissed`:** renaming it means rewriting rows on every copy
+      to say the same thing differently, and the column is not what
+      anybody reads. `ARCHIVED` is the constant the code uses, with the
+      string in one place. Reports and Comments keep their own Dismiss —
+      a comment's deletes it, which is a different act — and were left
+      alone rather than swept along.
+- [x] **An archived row can be put back, very quietly** (Miyel, after the
       redesign, closing the one-way door it had opened). Opened has no
       buttons by design and this is the exception that design made
       necessary: dismissing was unrecoverable from anywhere. *put back*

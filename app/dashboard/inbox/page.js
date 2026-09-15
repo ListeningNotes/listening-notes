@@ -16,10 +16,16 @@ import { lookup_key } from '../../../library/entry_formatter';
 // ── What became of a send ──────────────────────────────────────────────────
 // Four outcomes in the database: pending, reviewed (a listen was started
 // from the row, before any entry exists), logged (a record exists and the
-// send points at it), dismissed.
+// send points at it), and the one the inbox calls archived.
+//
+// Archived is stored as 'dismissed', 2026-09-15. The word on screen changed
+// — a send you put aside has been filed, not rejected, and it comes back
+// with one press — and the stored value did not, because renaming a value
+// means rewriting rows on every copy to say the same thing differently.
+// The constant is what the code reads; the string is what the column holds.
 //
 // Two views over them, 2026-09-15. From the inbox's side a send is either
-// new or opened, and started, logged and dismissed are all opened — so
+// new or opened, and started, logged and archived are all opened — so
 // which of them it is becomes a word in the row's subtitle rather than a
 // tab you have to be standing on to see it. Four tabs asked somebody to
 // know the vocabulary before they could find anything.
@@ -33,6 +39,7 @@ const VIEWS = [
   { value: 'opened', label: 'opened' },
 ];
 const UNOPENED = 'pending';
+const ARCHIVED = 'dismissed';
 
 // What the subtitle says on an opened row. A date only where there is one
 // worth printing: a logged send carries its record's own posted date, and
@@ -46,7 +53,7 @@ function became(sent) {
     return `logged${when}`;
   }
   if (sent.status === 'reviewed') return 'in progress';
-  return 'dismissed';
+  return 'archived';
 }
 // A folder tab that connects to the open panel when active. Module scope so
 // it keeps a stable identity across renders.
@@ -358,7 +365,7 @@ export default function Inbox({ layered = false }) {
             {tab === 'submissions' && (
               <>
                 {/* Two views, not four, 2026-09-15. Started, logged and
-                    dismissed are one thing from the inbox's side — dealt
+                    archived are one thing from the inbox's side — dealt
                     with — so what state a send is in is a word in its
                     subtitle rather than a tab you have to be standing on
                     to see it. They are views inside this folder and not
@@ -462,8 +469,8 @@ export default function Inbox({ layered = false }) {
                                 {whose === sent.id ? 'Never mind' : 'Link their journal'}
                               </button>
                             )}
-                            <button className="ib-menu-act ib-menu-act--danger" onClick={() => { updateStatus(sent.id, 'dismissed'); setMenuFor(null); }}>
-                              Dismiss
+                            <button className="ib-menu-act ib-menu-act--danger" onClick={() => { updateStatus(sent.id, ARCHIVED); setMenuFor(null); }}>
+                              Archive
                             </button>
 
                         {/* Both panels open inside the menu, under the line
@@ -544,7 +551,7 @@ export default function Inbox({ layered = false }) {
                   // does the obvious thing for the state it is in.
                   <div className="ib-list">
                     {filtered.map(sent => {
-                      const gone = sent.status === 'dismissed';
+                      const archived = sent.status === ARCHIVED;
                       const host = tidyJournal(sent.sender_url);
                       const inside = (
                         <>
@@ -587,20 +594,20 @@ export default function Inbox({ layered = false }) {
                           </button>
                         );
                       }
-                      // Dismissed, and the one way back, 2026-09-15. Opened
+                      // Archived, and the one way back, 2026-09-15. Opened
                       // has no buttons by design, and this is the exception
-                      // the design made necessary: dismissing was a one-way
-                      // door, and a send dismissed by mistake could not be
+                      // the design made necessary: archiving was a one-way
+                      // door, and a send filed by mistake could not be
                       // recovered from anywhere. It is as quiet as it can be
                       // and still be reachable — the row's own faded ink, at
                       // the far end, coming up only when you go for it — and
                       // it is not a confirmation, because putting a send back
-                      // is not destructive and the worst case is dismissing
+                      // is not destructive and the worst case is archiving
                       // it again.
                       return (
-                        <div key={sent.id} className={'ib-done' + (gone ? ' ib-done--gone' : '')}>
+                        <div key={sent.id} className={'ib-done' + (archived ? ' ib-done--gone' : '')}>
                           {inside}
-                          {gone && (
+                          {archived && (
                             <button
                               className="ib-back"
                               onClick={() => updateStatus(sent.id, UNOPENED)}
