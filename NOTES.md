@@ -1554,9 +1554,13 @@ merged (1.13.0 when it is: something new)**
       end 172px above the foot of an 812-tall phone, 54px on a 667.
       One rule for what leaves the building, `withoutChain`: the two
       credit fields on a Submission row on every read (entry, wall, feed);
-      `source_entry_id` and `received_date` private always. The lineage
-      picker stays at the foot under *Lineage · only you see this*, its
-      classes renamed `.ln-lineage-*`.
+      `source_entry_id` and `received_date` private always. **The lineage
+      picker is gone from the editor** (Miyel, same day): `source_entry_id`
+      is write-once and undone only in SQL, was hand-editable only because
+      nothing set it yet, and with three copies had nothing to point at.
+      The column stays, `update_entry` keeps its write-once rule, and a
+      send flow can set it when both people have copies. The `kin` fetch
+      that fed the picker went with it.
 - [x] **The sender opens, it doesn't display — Miyel's amendment, the
       same day.** The chip says *Submission* and wears a small caret;
       pressing it unfolds `Chain.js` under the chips on a phone (the
@@ -1595,7 +1599,7 @@ merged (1.13.0 when it is: something new)**
       `EACH_MS`, the hop states `asking / logged / unlogged / silent /
       nowhere` and `origin`; the `.ln-chain-*` classes for the panel
       (`-caret`, `-head`, `-hop`, `-face`, `-who`, `-name`, `-said`,
-      `-open` on the screens) and `.ln-lineage-*` for the foot block; the
+      `-open` on the screens); the
       `.ln-sender*` classes in entry.css (`-row`, `-label`, `-book` for
       the strip, `-face` for one person, `-portrait`, `-name`); the words
       *Sent by*, *Before that*, *Logged it too*, *Their own find*, *Not on

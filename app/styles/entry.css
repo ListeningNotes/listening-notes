@@ -661,51 +661,6 @@ a.ln-chain-name:hover { text-decoration: underline; text-underline-offset: 3px; 
   .ln-chain-open .ln-screen-one { height: auto; min-height: 100dvh; padding-bottom: 32px; }
 }
 
-/* ── Lineage ────────────────────────────────────────────────────────────────
-   The private half, shown only while its keeper is correcting the entry. It is
-   labelled as private on the page rather than only in the code: the pointer
-   at somebody else's entry is the one thing here a visitor never sees, now
-   that the sender is a credit the Submission chip opens. */
-.ln-lineage {
-  margin-top: 48px;
-  padding-top: 24px;
-  border-top: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  max-width: 34em;
-}
-.ln-lineage-head {
-  margin: 0;
-  font-family: var(--font-label);
-  font-size: 9px;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: var(--ink-faint);
-}
-.ln-lineage-row { display: flex; align-items: baseline; gap: 12px; }
-.ln-lineage-label {
-  flex: 0 0 84px;
-  font-family: var(--font-label);
-  font-size: 8.5px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--ink-faint);
-}
-.ln-lineage-row .ln-field { flex: 1; min-width: 0; font-size: 13px; }
-.ln-lineage-row select.ln-field { appearance: none; -webkit-appearance: none; }
-.ln-lineage-row select.ln-field:disabled { color: var(--ink-faint); }
-/* Once lineage points somewhere it is a fact rather than a field, so it stops
-   looking like one — no rule under it, nothing to press. */
-.ln-lineage-fixed { flex: 1; min-width: 0; font-size: 13px; color: var(--ink); }
-.ln-lineage-locked {
-  font-family: var(--font-label);
-  font-size: 8.5px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--ink-faint);
-}
-
 /* ── Deleting an entry ──────────────────────────────────────────────────────
    At the very foot of the page, and only while a correction is open. Not in
    the bar beside Save: they are not the same weight, and a destructive control

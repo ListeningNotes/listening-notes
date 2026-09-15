@@ -1217,57 +1217,11 @@ export default function FullPostPage({ entry, references = [], authed = false, l
           </button>
         </div>}
 
-        {/* ── Lineage ──────────────────────────────────────────────────────
-            The one part of the chain a visitor never sees — withoutChain
-            strips it before the page is rendered, which is why it arrives by
-            its own fetch when an edit opens rather than with the entry. Who
-            sent the record is up at the head with the other facts (2026-09-14);
-            this is the pointer behind that, for when both people have copies.
-            The source is the sender's entry for *this same album*, so the
-            picker offers exactly that and nothing else: walking the column
-            upward is what gives the history of one record, and it only holds
-            while every hop is the same album. */}
-        {edit.editing && (
-          <div className="ln-lineage">
-            <p className="ln-lineage-head">Lineage · only you see this</p>
-            {/* Written once. Where an entry sits in the tree is not an
-                opinion — either their entry led to yours or it did not — so it
-                can be set while it is empty and never again. Once it points
-                somewhere the picker is gone and the line simply says where.
-                See the note in update_entry, which enforces the same thing
-                where it cannot be got around. */}
-            {edit.draft.source_entry_id ? (
-              <div className="ln-lineage-row">
-                <span className="ln-lineage-label">Their entry</span>
-                <span className="ln-lineage-fixed">
-                  {edit.kin.find(k => String(k.id) === String(edit.draft.source_entry_id))?.album
-                    ?? 'Another entry for this album'}
-                  <span className="ln-lineage-locked"> · set once, not editable</span>
-                </span>
-              </div>
-            ) : (
-              <label className="ln-lineage-row">
-                <span className="ln-lineage-label">Their entry</span>
-                <select
-                  className="ln-field"
-                  value={edit.draft.source_entry_id ?? ''}
-                  onChange={e => edit.set('source_entry_id', e.target.value)}
-                  disabled={edit.kin.length === 0}
-                >
-                  <option value="">
-                    {edit.kin.length === 0 ? 'No other entry for this album' : 'None — this is the origin'}
-                  </option>
-                  {edit.kin.map(k => (
-                    <option key={k.id} value={k.id}>
-                      {k.album} · listen {k.listen_number}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            )}
-          </div>
-        )}
-
+        {/* No lineage picker here any more, 2026-09-14. source_entry_id —
+            the pointer at the sender's own entry — is written once and
+            undone only in SQL, and it was a field only because nothing set
+            it yet. The column and update_entry's write-once rule stay for
+            the send flow to use when both people have copies. */}
         {edit.editing && (
           <div className="ln-danger">
             {!edit.asking ? (
