@@ -172,8 +172,8 @@ export default function PersonPage({ layered = false }) {
 
   const there = person ? journalUrl(person.address) : '';
   // Every link to their journal carries who this copy belongs to.
-  const theirEntry = e => carrySender(`${there}/entries/${e.slug}`, me);
-  const theirJournal = carrySender(there, me);
+  const theirEntry = e => carrySender(`${there}/entries/${e.slug}`, me, { known: true });
+  const theirJournal = carrySender(there, me, { known: true });
 
   return (
     <div className={'own-screen' + (layered ? ' own-screen--layered' : '')}>

@@ -241,7 +241,7 @@ export default function Feed({ entries = [] }) {
           const key = `${person.address}/${entry.slug}`;
           const mine = mineByKey.get(entry.album_key);
           // Carrying who this copy belongs to — see carrySender.
-          const there = carrySender(`${journalUrl(person.address)}/entries/${entry.slug}`, { name: keeper_name, address: site_address });
+          const there = carrySender(`${journalUrl(person.address)}/entries/${entry.slug}`, { name: keeper_name, address: site_address }, { known: true });
           const rated = entry.rating_value !== null && entry.rating_value !== undefined && entry.rating_value !== '';
           return (
             <div key={key}>
