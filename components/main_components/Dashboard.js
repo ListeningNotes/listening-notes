@@ -56,7 +56,7 @@ const DOORS = [
 
 export default function Dashboard({ waiting }) {
   // Whether a newer Listening Notes exists. Asked once, of this copy's own
-  // server, which asks GitHub's public releases at most once a day (see
+  // server, which asks GitHub's public releases at most once an hour (see
   // app/api/update/route.js). The only thing this can ever say is that
   // there is a newer version, and where the button to take it is.
   const [update, setUpdate] = useState(null);
