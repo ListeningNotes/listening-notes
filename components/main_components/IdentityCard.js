@@ -355,7 +355,45 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
         ref={innerRef}
         className={'idc-inner' + (more ? ' idc-inner--more' : '')}
       >
+        {/* ── The header ───────────────────────────────────────────────────
+            One tool on each side of a centred mark, 2026-09-15 (Miyel): the
+            pencil on the left, the printer on the right, and the mark in the
+            middle where every other page on this site puts it. The window's
+            own light switch sits at the far right beyond the printer — it
+            belongs to the window and not to this page, which is why the row
+            leaves it room rather than containing it.
+
+            Signed out, both slots are empty and the mark is still the middle
+            of the row. Editing swaps the pair for Save and Cancel, which land
+            on the same two sides: the one that keeps what you did on the left,
+            the one that throws it away on the right. Nothing here is a
+            permission check — the writing endpoints check the wristband
+            whatever is drawn. */}
         <div className="idc-head">
+          <div className="idc-tools idc-tools--left">
+            {authed && (editing ? (
+              <button
+                type="button"
+                className="idc-tool idc-tool--keep"
+                onClick={edit.save}
+                disabled={edit.saving || edit.busy}
+                aria-label="Save this card"
+                title="Save"
+              >
+                <Check size={18} weight="regular" aria-hidden="true" />
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="idc-tool"
+                onClick={edit.begin}
+                aria-label="Edit this card"
+                title="Edit this card"
+              >
+                <Pencil size={18} weight="regular" aria-hidden="true" />
+              </button>
+            ))}
+          </div>
           {/* The site's own mark, small and in the corner. The dot on its
               period is lit while something is playing — the same fact the
               front of the cover carries, and the only thing on this side
@@ -377,54 +415,26 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
             />
           </svg>
 
-          {/* Signed in, the card has this and nothing else it did not have
-              before. Signed out it is not in the page at all, and the writing
-              endpoints check the wristband regardless of what is drawn here. */}
-          {authed && (
-            <div className="idc-tools">
-              {editing ? (
-                <>
-                  <button
-                    type="button"
-                    className="idc-tool idc-tool--keep"
-                    onClick={edit.save}
-                    disabled={edit.saving || edit.busy}
-                    aria-label="Save this card"
-                    title="Save"
-                  >
-                    <Check size={18} weight="regular" aria-hidden="true" />
-                  </button>
-                  <button
-                    type="button"
-                    className="idc-tool"
-                    onClick={edit.cancel}
-                    disabled={edit.saving}
-                    aria-label="Stop editing without saving"
-                    title="Cancel"
-                  >
-                    <X size={18} weight="regular" aria-hidden="true" />
-                  </button>
-                </>
-              ) : (
-                <>
-                  <button
-                    type="button"
-                    className="idc-tool"
-                    onClick={edit.begin}
-                    aria-label="Edit this card"
-                    title="Edit this card"
-                  >
-                    <Pencil size={18} weight="regular" aria-hidden="true" />
-                  </button>
-                  {/* The same printer an entry has, for the card: it opens
-                      /printer with no record, which means the profile. */}
-                  <Link href="/printer" className="idc-tool" aria-label="Print this card" title="Print this card">
-                    <Printer size={18} weight="regular" aria-hidden="true" />
-                  </Link>
-                </>
-              )}
-            </div>
-          )}
+          <div className="idc-tools idc-tools--right">
+            {authed && (editing ? (
+              <button
+                type="button"
+                className="idc-tool"
+                onClick={edit.cancel}
+                disabled={edit.saving}
+                aria-label="Stop editing without saving"
+                title="Cancel"
+              >
+                <X size={18} weight="regular" aria-hidden="true" />
+              </button>
+            ) : (
+              /* The same printer an entry has, for the card: it opens
+                 /printer with no record, which means the profile. */
+              <Link href="/printer" className="idc-tool" aria-label="Print this card" title="Print this card">
+                <Printer size={18} weight="regular" aria-hidden="true" />
+              </Link>
+            ))}
+          </div>
         </div>
 
         {/* ── The glance ───────────────────────────────────────────────────
@@ -434,6 +444,9 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
             it — which is the thing the card is for. As a row the whole glance
             fits above the fold: face, name, what has been logged, since when,
             and what somebody listens to. */}
+        <div className="idc-top">
+          {slot}
+          <div className="idc-said">
         {/* cover_name, not keeper_name: this is the one place a person is
             reading the name, so it is allowed to be the ornamented one. The
             input beside it still edits keeper_name — see the note in
@@ -459,9 +472,6 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
           </h1>
         )}
 
-        <div className="idc-top">
-          {slot}
-          <div className="idc-said">
 
         {/* The four facts, in one table. These two used to be a single small
             centred line under the name — "39 albums logged · Logging since
@@ -517,9 +527,6 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
           </p>
         )}
 
-          </div>
-        </div>
-
         {/* ── The pinned record ────────────────────────────────────────────
             One album from the journal, as art, with its name beside it. It is
             the only image on this card besides the portrait and the reason the
@@ -574,6 +581,9 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
           </p>
         )}
 
+          </div>
+        </div>
+
         {/* ── The one thing to do ──────────────────────────────────────────
             The rig's mark and the keeper's links used to stand in a row beside
             this button. Both have somewhere better to be: the rig is a section
@@ -582,20 +592,27 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
             might want to go and find them. What is left here is the single
             action the card is for, which is why it can have the row to
             itself. */}
-        <div className="idc-row" inert={editing ? true : undefined}>
-          {/* Never for the owner: there is nobody to send to but themselves
-              (Miyel, 2026-09-14), and /submit says so if reached anyway. */}
-          {!authed && <Link href="/submit" className="ln-pill idc-send">Send an album</Link>}
-          {/* The address, for the visitor's own address book. See pressAdd
-              above: it copies, because that is all a journal can do for a
-              copy it cannot see. "Add Miyel", not "Add to your address book"
-              (Miyel, 2026-09-13: shorter); Copied for a moment after. */}
-          {!authed && address && !known && (
-            <button type="button" className="ln-pill idc-send" onClick={pressAdd} aria-live="polite" title="Copy this journal's address for your address book">
-              {added ? 'Copied' : `Add ${String(keeper_name || '').trim() || 'me'}`}
-            </button>
-          )}
-        </div>
+        {/* Both of these are the visitor's — there is nobody for the owner to
+            send to but themselves (Miyel, 2026-09-14), and /submit says so if
+            reached anyway. So the row itself is the visitor's: gated on the
+            row rather than on each control inside it, because an empty row
+            still takes its margin, and the owner's card was carrying twenty
+            pixels of nothing under the pinned record. */}
+        {!authed && (
+          <div className="idc-row" inert={editing ? true : undefined}>
+            <Link href="/submit" className="ln-pill idc-send">Send an album</Link>
+            {/* The address, for the visitor's own address book. See pressAdd
+                above: it copies, because that is all a journal can do for a
+                copy it cannot see. "Add Miyel", not "Add to your address
+                book" (Miyel, 2026-09-13: shorter); Copied for a moment
+                after. */}
+            {address && !known && (
+              <button type="button" className="ln-pill idc-send" onClick={pressAdd} aria-live="polite" title="Copy this journal's address for your address book">
+                {added ? 'Copied' : `Add ${String(keeper_name || '').trim() || 'me'}`}
+              </button>
+            )}
+          </div>
+        )}
 
         {/* The link rows and the rig rows used to be here, under the button,
             while the card was the only surface an owner could edit. They are

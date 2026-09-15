@@ -20,7 +20,7 @@
    which is one big centred square with air around it; this is a page of type
    with a picture in it, and 68px of it given away to margins is a column of
    reading lost. */
-.ab-pane { --ab-gutter: 22px; padding: 0 var(--ab-gutter); }
+.ab-pane { padding: 0 var(--page-gutter); }
 /* .ab-card's own padding and .idc's max-width are set further down, where
    those rules already live — stated twice, the copy up here lost to the copy
    down there and the page kept an inset it was supposed to have given up. */
@@ -29,34 +29,37 @@
 .ab-card .idc-name { text-align: left; margin: 2px 0 16px; font-size: 28px; }
 .ab-card .idc-row { justify-content: flex-start; margin-top: 20px; }
 
-/* ── The glance runs to the edges ───────────────────────────────────────────
-   The one thing on this page that does (Miyel, 2026-09-15). It cancels the
-   page's gutter with a negative margin rather than the page giving its gutter
-   up, so everything else — the name over it, the pinned record under it, the
-   buttons, the writing — keeps the single left edge the page was just rebuilt
-   on. A picture that bleeds and type that does not is an old arrangement and
-   it reads: the photograph is the thing you meet, and nothing is set against
-   the screen's edge where it would be uncomfortable to read.
+/* ── The glance, as an identification card ─────────────────────────────────
+   A photograph on the left and everything that is written about the person on
+   the right of it: the name at the head of that column, then the facts, then
+   the record they are holding up. Miyel's shape, 2026-09-15 — "almost like an
+   ID card, with the name above the text not the photo."
 
-   The portrait takes its share of the width rather than the 118px square it
-   had, because it now has the edge to grow into, and it loses the left half
-   of its radius and its shadow: a picture flush to an edge is not sitting on
-   the page, so it casts nothing. */
+   It ran to the screen's edge for an hour and came back in: flush left, the
+   photograph read as cropped rather than as bled. It sits on the page's own
+   gutter with the rest of the page now, and keeps its radius and its shadow,
+   because it is on the page rather than off the side of it.
+
+   The name is in the column and not over both, which is what makes this a
+   card and not a page with a picture on it — the picture is beside what it is
+   a picture of. It was over both for an hour in between, when the column was
+   narrow enough that an ornamented name broke into three lines in it; the
+   photograph is a third of the width now and the column has the room. */
 .ab-card .idc-top {
-  margin-left: calc(var(--ab-gutter) * -1);
-  margin-right: calc(var(--ab-gutter) * -1);
-  gap: 18px;
-  align-items: center;
+  gap: 15px;
+  align-items: flex-start;
 }
 .ab-card .idc-top .idc-portrait {
-  width: 44%;
-  max-width: 210px;
+  width: 33%;
+  min-width: 104px;
+  max-width: 150px;
   height: auto;
   aspect-ratio: 1 / 1;
-  border-radius: 0 16px 16px 0;
-  box-shadow: none;
+  border-radius: 14px;
 }
-.ab-card .idc-said { padding-right: var(--ab-gutter); }
+/* The name at the head of the column: smaller than it was over the page, the
+   size a name is on a card rather than the size it is as a heading. */
+.ab-card .idc-top .idc-name { font-size: 21px; margin: 0 0 11px; letter-spacing: -0.01em; }
 
 /* ── The pin's search ───────────────────────────────────────────────────────
    A panel in the middle of a desktop screen and a bottom sheet on a phone,
@@ -206,10 +209,27 @@
 
    The mark is drawn here now for the same reason. The card lost the crown and
    the beacon kept it: a crown is for a cover, and the card is a page. */
+/* Three slots: a tool, the mark, a tool. The row bleeds to the window so the
+   mark can be centred on the *window* rather than on the page's measure — it
+   has to land where the mark over the journal lands, and the page's gutter
+   would put it a dozen pixels off. The right slot leaves 64px beyond itself
+   for the light switch, which is fixed to the window's edge and is not this
+   page's control. */
 .ab-card .idc-head {
-  min-height: 28px;
-  margin: 0 0 16px;
+  position: relative;
+  min-height: 30px;
+  margin: 0 calc(var(--page-gutter) * -1) 16px;
+  padding-left: var(--page-gutter);
+  padding-right: 74px;
 }
+.ab-card .idc-mark {
+  display: block;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.idc-tools--left, .idc-tools--right { display: flex; align-items: center; min-width: 30px; }
+.idc-tools--right { margin-left: auto; justify-content: flex-end; }
 .ab-card .idc-inner {
   min-height: 0;
   overflow: visible;
@@ -614,13 +634,23 @@ a.ab-rig-name:hover { text-decoration: underline; }
 }
 .idc-said { flex: 1; min-width: 0; }
 .idc-top .idc-portrait { flex-shrink: 0; width: 118px; height: 118px; margin: 0; border-radius: 14px; }
-.idc-top .idc-line { margin: 0 0 9px; max-width: none; flex-wrap: wrap; column-gap: 9px; row-gap: 5px; }
+/* Four facts in a column, set tight: label and answer on one line each,
+   wrapping between pairs and never inside one. Stacked loose they were four
+   paragraphs about somebody; set like this they are the rows of a card. */
+.idc-top .idc-line { margin: 0 0 7px; max-width: none; flex-wrap: wrap; column-gap: 8px; row-gap: 4px; font-size: 12.5px; }
 .idc-top .idc-line:last-child { margin-bottom: 0; }
 .idc-top .idc-line-label { width: auto; }
-.idc-pair { display: inline-flex; align-items: baseline; gap: 8px; min-width: 0; }
-/* The two counted pairs stack rather than running on: one fact to a line
-   reads as a fact, two on a line reads as a sentence that lost its verb. */
-.idc-top .idc-line--counted { flex-direction: column; align-items: flex-start; gap: 5px; }
+.idc-pair { display: inline-flex; align-items: baseline; gap: 7px; min-width: 0; }
+/* The two counted pairs share a line where the column can hold them, and fall
+   to two where it cannot — they are the same kind of small fact and reading
+   them across is quicker than reading them down. */
+.idc-top .idc-line--counted { column-gap: 14px; }
+/* The pinned record is the last row of the card, not a separate block under
+   it: its label sits with the others and its art is the size of a row. */
+.idc-top .idc-pin-row { margin-top: 11px; align-items: center; }
+.idc-top .idc-pin-row .idc-pin-art { width: 32px; height: 32px; }
+.idc-top .idc-pin-row .idc-pin-album { font-size: 12.5px; }
+.idc-top .idc-pin-row .idc-pin-artist { font-size: 10.5px; }
 @media (max-width: 340px) {
   .idc-top { flex-direction: column; }
 }
@@ -983,8 +1013,13 @@ a.ab-rig-name:hover { text-decoration: underline; }
   /* The page keeps one gutter here too, so the glance's bleed stays exactly
      as wide as it — the card only has to start under the switch's row on top
      of that. */
-  .ab-pane { --ab-gutter: var(--hn-gutter, 18px); }
   .ab-card { min-height: auto; padding: var(--hn-rail-top) 0 24px; }
+  /* One mark on a desk, and it is the one in the bar over the journal (see
+     the note in nav.css). The header stops bleeding and stops leaving room
+     for the light switch too: the lights are over the journal here, not over
+     the spine, so there is nothing on this page's line but its own tools. */
+  .ab-card .idc-mark { display: none; }
+  .ab-card .idc-head { margin: 0 0 16px; padding: 0; }
   .ab-below { padding: 0 0 40px; }
   .ab-card .idc { max-width: none; }
   .ab-card .idc-head { top: 22px; left: var(--hn-gutter, 18px); }
