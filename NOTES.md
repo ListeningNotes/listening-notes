@@ -265,9 +265,11 @@ person's page the next (Complete). Left: the printer, and the chain.
 
 - [ ] **The feed's two loose ends, 2026-09-13.** (a) The quiet toggle:
       DECISIONS promises a per-entry choice to credit a send privately, and
-      the feed now publishes the credit by default — the toggle is a
-      boolean on the entry, a control beside the received-from field in
-      edit mode, and a filter in `pull_public_entries`. (b) Track notes on
+      the feed — and since 2026-09-14 the entry page — publishes the credit
+      by default. The toggle is a boolean on the entry, a control beside
+      the Sent by field at the head of edit mode, and a filter in one place:
+      `withoutChain` in `database_actions.js`, which every read of the
+      credit now goes through. (b) Track notes on
       a row's Compare: the feed carries no writing, so the panel shows the
       two verdicts and the two horizons and links to both entries. Their
       track notes need their copy to serve an entry across origins — CORS
@@ -278,7 +280,9 @@ person's page the next (Complete). Left: the printer, and the chain.
       against `keeper_name`, and Miyel's own 18 Submission entries mostly
       carry no name at all (they predate the inbox filling it in). June's
       and Peyton's copies publish no `keeper_name` and no credit until they
-      press Update.
+      press Update. **Since 2026-09-14 the old ones can be backfilled by
+      hand:** open the entry, correct, tap the sender's pill under Sent by
+      — the address travels with the name, so the match is exact.
 - [ ] **The printer on the person's page — next.** The shape of the
       agreement without the writing — you and June agree on 34 records;
       you disagree hardest on these three — naming both people. The notes
@@ -329,8 +333,9 @@ person's page the next (Complete). Left: the printer, and the chain.
       rate with you — and what a hit is (logged and rated four or better);
       `ALIKE`, `HIT`, `OFFSET_NEEDS`; the section titles, and "the
       interesting column" kept from the old compare.
-- [ ] **The chain.** Tapping the Submission chip on an entry opens the
-      lineage upward. Backward only (DECISIONS).
+- [x] **The chain.** Tapping the Submission chip on an entry opens the
+      lineage upward. Backward only (DECISIONS). Built 2026-09-14 on
+      branch `credit` as `Chain.js` — see Complete.
 - [ ] **The cover's code on a real phone, 2026-09-12.** Built in the
       Claude browser. On the phone: tap a cover, scan the code with the
       camera from the light and the dark page, paste what was copied into
@@ -710,7 +715,7 @@ already exists.
       DECISIONS. The fallback was pointing at a repository that does not exist
       and now points at this one, and the deploy button asks for the variable
       so a fork can set it at install.
-- [ ] **Listen numbering** — an album has many listens, numbered, computed from `album_key` and never chosen.
+- [x] **Listen numbering** — built and confirmed 2026-09-14: `WITH_LISTEN_NUMBERS` in `database_actions.js` counts from `album_key` at read time, every listen has its own address (`in-rainbows`, then `in-rainbows-2`), and the chip says Listen 2 of 3. Was left ticked off here by nobody.
 - [ ] **Relationship field removal** — every value has dissolved into something else. Legacy data stays; the picker goes.
 
 **SCALING — BLOCKER. The archive loads every record on every page view**
@@ -1006,6 +1011,17 @@ matcher that wants an identical tree finds nothing and the update stops.
 The local rehearsal passed because it skipped the paste. Match the nearest
 commit — fewest differing files — and let the difference be the keeper's
 own change; the first run on GitHub was the one that caught it.
+
+**A row that scrolls sideways forces its ancestors open, 2026-09-14.**
+`overflow-x: auto` stops the row itself from growing, but the row still
+reports its content's width upward, so any wrapper with no width of its
+own — a flex item with the default `min-width: auto`, a shrink-to-fit
+column — is opened to the faces' full width and the row lands centred
+with its first faces off the left edge and no way to scroll to them.
+`contain: inline-size` on the row is the fix (`.ln-sender-book`): the row
+asks nothing of its content, so `width: 100%` means the parent's width.
+Seen with the Sent by faces stood into a plain `div`; the real markup was
+one wrapper away from it.
 
 **Next's loader wraps a package that exports a promise of itself into a
 module namespace whose `then` is not a promise's.** `@techstark/opencv-js`
@@ -1506,6 +1522,103 @@ current.
 ---
 
 ## Complete
+
+**2026-09-14 — credit the person who sent it, branch `credit`, not
+merged (1.13.0 when it is: something new)**
+
+- [x] **Sent by is picked off the address book, sits at the head, and
+      shows on the entry.** The three changes of the brief. In edit mode
+      the Sent by field moved from the foot (where a heading called it
+      private) up under the flags on the first screen; the address book's
+      people are faces beneath it — the portrait their journal serves in
+      the book's rounded square, the name under it — in one row that
+      scrolls sideways once there are more than fit (Miyel's call after
+      the first cut, which was name pills: "I had a hard time knowing Kai
+      was Kai", and forty friends as pills would be a wall). Typing
+      narrows the row; tapping a face fills the name and links the entry
+      to their journal (`received_from_url` — the editor now sends it, and
+      no longer sends `received_date` at all: no date on a backfill,
+      DECISIONS). Typing does not unlink, so his journal can say Zachin_Off
+      and the entry say from Zach; tapping the lit face unlinks and keeps
+      the name; emptying the name drops both; naming a sender turns the
+      Submission shelf on. The layer's sideways swipe stands down while a
+      correction is open (`.ln-editing`, beside `.ln-printing` in
+      LayerEntry), so thumbing the faces cannot land on the next record.
+      **The edit stack fits the first screen on a phone** (Miyel, second
+      round: the faces were just under the fold): while correcting, the
+      crown's margin comes down to 108px and the art steps back to
+      `min(24dvh, 50vw)` — it is a button to replace the cover in that
+      mode — and the screen grows past one viewport only if it still has
+      to; the desk's hero grows too (`height: auto` off its 390px band,
+      the pad in flow). Measured with the whole stack stood in: the faces
+      end 172px above the foot of an 812-tall phone, 54px on a 667.
+      One rule for what leaves the building, `withoutChain`: the two
+      credit fields on a Submission row on every read (entry, wall, feed);
+      `source_entry_id` and `received_date` private always. **The lineage
+      picker is gone from the editor** (Miyel, same day): `source_entry_id`
+      is write-once and undone only in SQL, was hand-editable only because
+      nothing set it yet, and with three copies had nothing to point at.
+      The column stays, `update_entry` keeps its write-once rule, and a
+      send flow can set it when both people have copies. The `kin` fetch
+      that fed the picker went with it.
+- [x] **The sender opens, it doesn't display — Miyel's amendment, the
+      same day.** The chip says *Submission* and wears a small caret;
+      pressing it unfolds `Chain.js` under the chips on a phone (the
+      screen grows, as while correcting) and under the hero on a desk (in
+      `.ln-cover-hero`, where the cover's address field already goes): who
+      sent it, with their face and a link to their journal when the credit
+      carries one; whether they logged it, read off their public feed on
+      the press and never on load; and the chain behind them, each hop
+      from the previous entry's own credit, up to eight, stopping in a
+      sentence — *Not on their journal*, *Their journal isn't answering*,
+      *No journal to read*, *The name wasn't kept*, *Their own find*. The
+      first cut printed *from Kailea* on every sent entry: somebody else's
+      name on the page by default, decoration rather than the network. This
+      absorbs the View chain control. Verified signed out on a desk and a
+      phone against Kai's live journal (Not on their journal) and with
+      stand-in feeds for Kai's and Zach's (Logged it too · Before that ·
+      Their own find). Chip is a button through `Chip`'s new `onClick`.
+      **No envelope in the chip, and the caret is CSS** (Miyel, later the
+      same day): the first screen's chips are words, alike, and the marks
+      are the strip's on screen two. What she saw as icons loading late
+      and shifting the page was the layer: `LayerWaiting` drew a plain
+      Submission chip and the entry landed with the envelope and an icon
+      caret inside it — and, measured, the larger part of the drop was
+      the stars: the real page wrapped them in a box that sat on a 38px
+      text line, the stand-in drew them bare at 24px, so the chips and
+      the date landed 15px lower. The wrapper is `display: flex` now, the
+      stand-in draws the identical inert button with the CSS chevron, and
+      the two screens measure the same line for line.
+- [x] **The person's page counts what they are credited on.** A record
+      credited to their address with no row in `submissions` — a Tumblr-era
+      listen backfilled by hand — is one more send in Sent you and the hit
+      rate, undated, falling in by the day it was logged. The brief's point:
+      Zach's page has a real record the moment he is on the entries.
+- [x] **Verified** in the Claude browser, signed out: the entry page (desk
+      and phone), `/api/entries`, `/api/public/entries` and
+      `/api/entries/lemonade` all carry the credit on Submission rows only,
+      with the date and the pointer absent. **Not yet driven by hand:** edit
+      mode (the pills, the save) and the person's page, both behind the
+      wristband — Miyel's review on the dev server. Nothing was written to
+      the live database.
+- [ ] **Names to confirm, 2026-09-14** — autonomous session, rename
+      freely: branch `credit`; `CREDIT_FIELDS` and `credited` in
+      `database_actions.js`; `book` on `useEntryEditor`; `senderField`,
+      `senderChoices`, `sendBy`, `writeSender`, `sentChip`, `chainOpen`,
+      `chainPanel` in `FullPostPage.js`; `Chain.js` (Miyel's pick) and
+      inside it `Hop`, `Face`, `firstHop`, `readJournal`, `MOST_HOPS`,
+      `EACH_MS`, the hop states `asking / logged / unlogged / silent /
+      nowhere` and `origin`; the `.ln-chain-*` classes for the panel
+      (`-caret`, `-head`, `-hop`, `-face`, `-who`, `-name`, `-said`,
+      `-open` on the screens); the
+      `.ln-sender*` classes in entry.css (`-row`, `-label`, `-book` for
+      the strip, `-face` for one person, `-portrait`, `-name`); the words
+      *Sent by*, *Before that*, *Logged it too*, *Their own find*, *Not on
+      their journal*, *Their journal isn't answering*, *No journal to
+      read*, *The name wasn't kept*, *Where this record came from* (the
+      chip's label), *Nobody — I found it*,
+      *Lineage · only you see this*; `credited-<id>` as the synthetic id on
+      the person's page.
 
 **2026-09-15 — copies update themselves, 1.12.0, on main**
 

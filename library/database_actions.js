@@ -29,17 +29,35 @@ function withSizedArt(row, px) {
   return { ...row, album_art: sizedAlbumArt(row.album_art, px), album_art_source: row.album_art };
 }
 
-// Who sent you an album is somebody else's name, and these reads all go out to
-// the public site — the entry page hands its whole row to the browser, so a
-// column nothing renders still ships in the HTML. The chain is private until
-// there's a considered decision about showing it, so it's dropped on the way
-// out unless the caller is holding a wristband and asks for it.
-const CHAIN_FIELDS = ['source_entry_id', 'received_from', 'received_date', 'received_from_url'];
+// Where a record came from is two different things, and they leave the
+// building on different terms.
+//
+// The credit — who sent it, and where their journal is — is public on a
+// Submission entry, 2026-09-14: the entry says "from Zach" and the name
+// takes a reader to his journal, the same two fields the public feed has
+// carried since 2026-09-13 (DECISIONS, The network: public credit is the
+// default; the quiet toggle is still owed). On anything else the two fields
+// are stripped, so a name typed onto a Library entry never ships in the HTML
+// by accident.
+//
+// The chain proper — the lineage pointer and the day the send arrived — is
+// private, dropped on the way out unless the caller is holding a wristband
+// and asks for it. The date in particular: a backfilled credit carries none,
+// on purpose, and a visitor has no use for the one the send flow stamped.
+const CREDIT_FIELDS = ['received_from', 'received_from_url'];
+const CHAIN_FIELDS = ['source_entry_id', 'received_date'];
+
+const credited = row => row?.entry_type === 'Submission';
 
 export function withoutChain(row) {
   if (!row) return row;
   const clean = { ...row };
   for (const field of CHAIN_FIELDS) delete clean[field];
+  if (credited(row)) {
+    for (const field of CREDIT_FIELDS) clean[field] = row[field] || null;
+  } else {
+    for (const field of CREDIT_FIELDS) delete clean[field];
+  }
   return clean;
 }
 
@@ -92,6 +110,12 @@ const WITH_LISTEN_NUMBERS = `
 //
 // listen_number and listen_total are computed by the window rather than
 // stored, which is why this selects from it rather than from entries.
+//
+// The credit rides along, 2026-09-14, under the same rule as everywhere
+// else (withoutChain): the two fields on a Submission row, nothing on the
+// rest. It is what lets the page about a person count the records they are
+// credited on — a backfilled send has no row in submissions, only a name on
+// the entry — and it is a few bytes on the rows that carry it.
 const WALL_FIELDS = [
   'id', 'slug', 'album', 'artist', 'year', 'genre', 'album_key',
   'rating', 'rating_value', 'entry_type', 'favorite', 'masterpiece',
@@ -144,11 +168,11 @@ export async function pull_random_slug() {
 
 export async function pull_wall_entries() {
   const rows = await database.query(
-    `SELECT ${WALL_FIELDS.map(f => `"${f}"`).join(', ')}
+    `SELECT ${[...WALL_FIELDS, ...CREDIT_FIELDS].map(f => `"${f}"`).join(', ')}
      FROM (${WITH_LISTEN_NUMBERS}) ranked
      ORDER BY posted_at DESC`
   );
-  return rows.map(row => withSizedArt(row, LIST_ART_PX));
+  return rows.map(row => withoutChain(withSizedArt(row, LIST_ART_PX)));
 }
 
 // ── The public feed ────────────────────────────────────────────────────────
@@ -183,7 +207,7 @@ export async function pull_public_entries() {
   // entry has crossed the wire. A feed that deliberately carries no writing
   // was reading every word of it and throwing it away.
   const rows = await database.query(
-    `SELECT ${PUBLIC_FIELDS.map(f => `"${f}"`).join(', ')}, "received_from", "received_from_url"
+    `SELECT ${[...PUBLIC_FIELDS, ...CREDIT_FIELDS].map(f => `"${f}"`).join(', ')}
      FROM (${WITH_LISTEN_NUMBERS}) ranked
      ORDER BY posted_at DESC`
   );
@@ -194,15 +218,14 @@ export async function pull_public_entries() {
   // record — the name the send carried and where their journal is. Public
   // credit is the default (DECISIONS, The network); it is what lets the
   // sender's own copy show, in its feed, that what they sent came back and
-  // how it landed. The chain stays off an entry's own read; this is the one
-  // place it leaves, and only the two fields the credit is.
+  // how it landed. The same rule the entry's own read applies, so a credit
+  // never shows in one place and not the other.
   return rows.map(row => {
     const out = {};
     for (const field of PUBLIC_FIELDS) out[field] = row[field];
     out.album_art = sizedAlbumArt(row.album_art, LIST_ART_PX);
-    if (row.entry_type === 'Submission') {
-      out.received_from = row.received_from || null;
-      out.received_from_url = row.received_from_url || null;
+    if (credited(row)) {
+      for (const field of CREDIT_FIELDS) out[field] = row[field] || null;
     }
     return out;
   });

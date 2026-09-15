@@ -10,7 +10,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { CaretUp, Check, Envelope, Fingerprint, Heart, SketchLogo, VinylRecord, X } from '@phosphor-icons/react';
+import { CaretUp, Check, Fingerprint, Heart, SketchLogo, User, VinylRecord, X } from '@phosphor-icons/react';
 import { BookOpen } from '@phosphor-icons/react';
 import { fonts } from '../../../library/sitewide_visuals';
 import { sizedAlbumArt, fetchAlbumArtUrl } from '../../../library/music_data_api';
@@ -30,11 +30,12 @@ import TrackThread from '../../../components/main_components/Slug_Page/TrackThre
 import CommentBubble from '../../../components/main_components/Slug_Page/CommentBubble';
 import MetadataLabel from '../../../components/main_components/Slug_Page/MetadataLabel';
 import Chip from '../../../components/main_components/Slug_Page/Chip';
+import Chain from '../../../components/main_components/Slug_Page/Chain';
 import PrintBar from '../../../components/main_components/Slug_Page/PrintBar';
 import HorizonChart from '../../../components/main_components/HorizonChart';
 import MiniCard from '../../../components/main_components/Slug_Page/MiniCard';
 import { handedOver } from '../../../library/handoff';
-import { tidyAddress } from '../../../library/return_address';
+import { tidyAddress, tidyJournal, journalUrl } from '../../../library/return_address';
 import { useBookplate } from '../../../components/main_components/Bookplate';
 import { useTheme } from '../../../components/main_components/Lightswitch';
 import CodeSlot from '../../../components/main_components/CodeSlot';
@@ -177,6 +178,10 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   const entryUrl = host && entry.slug ? `https://${host}/entries/${entry.slug}` : '';
   const canTurnCover = Boolean(entryUrl && entry.album_art && !preview);
   const [coverCode, setCoverCode] = useState(false);
+  // Whether the chain behind a sent record is open under the chips — see
+  // Chain.js. Closed on arrival, and closed again on a swipe to the next
+  // record, like the code.
+  const [chainOpen, setChainOpen] = useState(false);
   // On the layer a swipe brings the next record into this same component,
   // and a record arrives on its cover, not on the last one's code. The slot
   // itself is keyed on the slug below, so its own state starts over too.
@@ -184,6 +189,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   if (codeFor !== entry.slug) {
     setCodeFor(entry.slug);
     setCoverCode(false);
+    setChainOpen(false);
   }
   // The dots are the page's ink, so the page asks for the file that matches
   // it. The art's mark rides along so a corrected cover is never a day stale.
@@ -254,6 +260,96 @@ export default function FullPostPage({ entry, references = [], authed = false, l
     { value: 'Personal Library', label: 'Library' },
     { value: 'Submission', label: 'Submission' },
   ];
+
+  // ── Who sent it ───────────────────────────────────────────────────────────
+  // A fact about the record, so it sits up here with the title and the
+  // flags rather than at the foot of the page (it was there until
+  // 2026-09-14, under a heading that called it private — it is not, any
+  // more: a Submission entry says "from Zach" to everyone).
+  //
+  // The name is picked off the address book where the sender is in it, so
+  // the credit resolves to their journal and not only to a spelling: the
+  // book's people are faces under the field — the portrait their journal
+  // serves, the address book's rounded square, the name beneath — in one
+  // row that scrolls sideways once there are more than fit, the way the
+  // album strip does. A face is what a friend is recognised by (Miyel,
+  // 2026-09-14: a pill saying Kai was not obviously Kailea), and one row
+  // is what forty friends look like — a strip, not a wall. Typing narrows
+  // it; the lit one is the journal the entry links to. Free text stays for
+  // somebody who sent a record and keeps no copy.
+  //
+  // Typing does not unlink. His journal calls him Zachin_Off and the entry
+  // can still say from Zach — tap his face, then write the name you use.
+  // Tapping the lit face takes the link off and leaves the name; emptying
+  // the name takes both off. And a record with a sender is a submission,
+  // so naming one turns that shelf on if it was not already.
+  const linkedTo = tidyJournal(edit.draft.received_from_url || '');
+  const senderText = String(edit.draft.received_from ?? '');
+  const senderChoices = edit.book.filter(p => {
+    if (p.address === linkedTo) return true;
+    const typed = senderText.trim().toLowerCase();
+    if (!typed) return true;
+    return String(p.name || '').toLowerCase().includes(typed) || p.address.includes(typed);
+  });
+  const sendBy = p => {
+    if (p.address === linkedTo) {
+      edit.set('received_from_url', '');
+      return;
+    }
+    edit.set('received_from', p.name || p.address);
+    edit.set('received_from_url', p.address);
+    if (edit.draft.entry_type !== 'Submission') edit.set('entry_type', 'Submission');
+  };
+  const writeSender = value => {
+    edit.set('received_from', value);
+    if (!value.trim()) {
+      edit.set('received_from_url', '');
+    } else if (!senderText.trim() && edit.draft.entry_type !== 'Submission') {
+      edit.set('entry_type', 'Submission');
+    }
+  };
+  // Absent until the private fetch lands (useEntryEditor): a field drawn
+  // before then would show empty and save empty over what is stored.
+  const senderField = 'received_from' in edit.draft && (
+    <span className="ln-sender">
+      <label className="ln-sender-row">
+        <span className="ln-sender-label">Sent by</span>
+        <input
+          className="ln-field ln-field--sender"
+          value={senderText}
+          onChange={e => writeSender(e.target.value)}
+          placeholder="Nobody — I found it"
+          autoComplete="off"
+          aria-label="Sent by"
+        />
+      </label>
+      {senderChoices.length > 0 && (
+        <span className="ln-sender-book" aria-label="From your address book">
+          {senderChoices.map(p => {
+            const on = p.address === linkedTo;
+            return (
+              <button
+                key={p.id}
+                type="button"
+                className={'ln-sender-face' + (on ? ' ln-sender-face--on' : '')}
+                onClick={() => sendBy(p)}
+                aria-pressed={on}
+                title={on ? 'Linked to their journal — tap to unlink' : 'Link to their journal'}
+              >
+                {/* The plain mark behind the picture, for a journal with
+                    none or one that is out — the feed's Face, the book's. */}
+                <span className="ln-sender-portrait" aria-hidden="true">
+                  <User size={20} weight="regular" />
+                  <img src={`${journalUrl(p.address)}/api/portrait`} alt="" loading="lazy" onError={e => { e.currentTarget.style.display = 'none'; }} />
+                </span>
+                <span className="ln-sender-name">{p.name || p.address}</span>
+              </button>
+            );
+          })}
+        </span>
+      )}
+    </span>
+  );
 
   const typeField = (
     <span className="ln-flags-row">
@@ -470,6 +566,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
       ))}
       </span>
       {typeField}
+      {senderField}
     </span>
   );
 
@@ -632,6 +729,35 @@ export default function FullPostPage({ entry, references = [], authed = false, l
     : null;
 
   const isSubmission = entry.entry_type === 'Submission';
+  // The Submission chip opens the chain, 2026-09-14: who sent it, whether
+  // they logged it, who sent it to them — read off their journals on the
+  // press (Chain.js). The chip says Submission and nothing more until then:
+  // a name printed on every sent entry by default was somebody else's name
+  // on the page as decoration. It wears a small caret so it reads as
+  // pressable, since closed by default is otherwise undiscoverable — the
+  // cover's corner mark, solved the same way. In the session's preview
+  // there is nothing to read yet, so the chip is a chip.
+  //
+  // No envelope in it, on Miyel's call the same day: the chips on the
+  // first screen are words, the marks are the strip's on screen two, and a
+  // chip carrying a mark the others do not was also the one thing that
+  // moved when an entry landed over the journal — the stand-in draws the
+  // chips without it (LayerWaiting). The caret is drawn in CSS, not an
+  // icon, for the same reason: the stand-in draws the identical chip.
+  const sentChip = !isSubmission ? null : preview
+    ? <Chip>Submission</Chip>
+    : (
+      <Chip onClick={() => setChainOpen(o => !o)} expanded={chainOpen} label={chainOpen ? 'Close where this record came from' : 'Where this record came from'}>
+        Submission
+        <span className={'ln-chain-caret' + (chainOpen ? ' ln-chain-caret--open' : '')} aria-hidden="true" />
+      </Chip>
+    );
+  // Keyed on the slug so a swipe to the next record starts its own read —
+  // with a prefix, because the cover beside it is keyed on the bare slug
+  // and two siblings on one key had React drawing the cover twice.
+  const chainPanel = isSubmission && chainOpen && !preview && !edit.editing && !printing && (
+    <Chain key={`chain-${entry.slug}`} entry={entry} />
+  );
   // The flag is the only source now. Nine older entries carried this as
   // relationship = 'Formative'; they were migrated onto the flag and the
   // column is gone, so there is nothing else left to read.
@@ -700,7 +826,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
           desktop it has no height or overflow of its own, so everything below
           just falls back into normal document flow. */}
       <div
-        className={'ln-screens' + (edit.editing ? ' ln-editing' : '') + (printing ? ' ln-printing' : '')}
+        className={'ln-screens' + (edit.editing ? ' ln-editing' : '') + (printing ? ' ln-printing' : '') + (chainPanel ? ' ln-chain-open' : '')}
         data-ground={printing ? ground : undefined}
         data-size={printing ? size : undefined}
         onTouchStart={printing ? onGroundTouchStart : undefined}
@@ -803,7 +929,11 @@ export default function FullPostPage({ entry, references = [], authed = false, l
             been there all along; replaying the fill starts every star empty
             for a beat, which is the blink at the moment the entry lands. */}
         {!edit.editing && displayRating > 0 && (
-          <div className={(printing ? 'ln-print-line' : '') + (printing && !shown.stars ? ' ln-off' : '')} onClick={printing ? () => leaveOff('stars') : undefined}>
+          /* display: flex, so the box is the stars' 24px and not a 38px text
+             line with the stars sitting on it — the stand-in draws the
+             stars bare, and the 14px of slack was the chips and the date
+             dropping when the entry landed over the journal (2026-09-15). */
+          <div className={(printing ? 'ln-print-line' : '') + (printing && !shown.stars ? ' ln-off' : '')} style={{ display: 'flex', justifyContent: 'center' }} onClick={printing ? () => leaveOff('stars') : undefined}>
             <StarRating rating={displayRating} size={24} glow={isMasterpiece} animate={!alreadyShown} burst={isMasterpiece && !alreadyShown} />
           </div>
         )}
@@ -824,7 +954,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
           ) : (
             <>
               {!edit.editing && listenLabel && <Chip>{listenLabel}</Chip>}
-              {!edit.editing && !printing && isSubmission && <Chip><Envelope size={10} weight="regular" aria-hidden="true" />Submission</Chip>}
+              {!edit.editing && !printing && sentChip}
               {!edit.editing && (entry.favorite === true || entry.favorite === 'true') && <Chip tone="fav">Favorite</Chip>}
               {!edit.editing && isMasterpiece && <Chip tone="mp">Masterpiece</Chip>}
               {/* The third flag, missing from this row since the row was
@@ -834,6 +964,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
             </>
           )}
         </div>
+        {chainPanel}
         <div className="ln-screen-one-posted" style={{ fontFamily: fonts.mono, fontSize: '9px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--ink-faint)' }}>
           Posted {postedOn}
         </div>
@@ -936,7 +1067,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
                   ? flagFields
                   : displayRating > 0 && <StarRating rating={displayRating} size={15} glow={isMasterpiece} style={{ verticalAlign: 'middle' }} />}
                 {!edit.editing && listenLabel && <Chip>{listenLabel}</Chip>}
-                {!edit.editing && isSubmission && <Chip><Envelope size={10} weight="regular" aria-hidden="true" />Submission</Chip>}
+                {!edit.editing && sentChip}
                 {!edit.editing && (entry.favorite === true || entry.favorite === 'true') && <Chip tone="fav">Favorite</Chip>}
               </div>
               <div style={{ fontFamily: fonts.mono, fontSize: '9px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--ink-faint)', marginTop: '12px' }}>
@@ -951,7 +1082,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
           upward and pushes the album title up behind the header — which is
           exactly what it did. Phones use the copy on screen one; this one is
           hidden there, or both would show. */}
-      <div className="ln-cover-hero">{coverField}</div>
+      <div className="ln-cover-hero">{coverField}{chainPanel}</div>
 
       {/* ── SCREEN TWO ── on phones this is the second snap screen: the header
           stays put at the top while everything below scrolls inside it, the
@@ -1096,74 +1227,11 @@ export default function FullPostPage({ entry, references = [], authed = false, l
           </button>
         </div>}
 
-        {/* ── Where this came from ─────────────────────────────────────────
-            Private, and the only part of an entry a visitor never sees —
-            withoutChain strips all three before the page is rendered, which is
-            why they arrive by their own fetch when an edit opens rather than
-            with the entry.
-            The source is the sender's entry for *this same album*, so the
-            picker offers exactly that and nothing else: walking the column
-            upward is what gives the history of one record, and it only holds
-            while every hop is the same album. */}
-        {edit.editing && (
-          <div className="ln-chain">
-            <p className="ln-chain-head">Where this came from · only you see this</p>
-            <label className="ln-chain-row">
-              <span className="ln-chain-label">Sent by</span>
-              <input
-                className="ln-field"
-                value={edit.draft.received_from ?? ''}
-                onChange={e => edit.set('received_from', e.target.value)}
-                placeholder="Nobody — I found it"
-              />
-            </label>
-            <label className="ln-chain-row">
-              <span className="ln-chain-label">Received</span>
-              <input
-                className="ln-field"
-                type="date"
-                value={edit.draft.received_date ?? ''}
-                onChange={e => edit.set('received_date', e.target.value)}
-              />
-            </label>
-            {/* Written once. Where an entry sits in the tree is not an
-                opinion — either their entry led to yours or it did not — so it
-                can be set while it is empty and never again. Once it points
-                somewhere the picker is gone and the line simply says where.
-                See the note in update_entry, which enforces the same thing
-                where it cannot be got around. */}
-            {edit.draft.source_entry_id ? (
-              <div className="ln-chain-row">
-                <span className="ln-chain-label">Their entry</span>
-                <span className="ln-chain-fixed">
-                  {edit.kin.find(k => String(k.id) === String(edit.draft.source_entry_id))?.album
-                    ?? 'Another entry for this album'}
-                  <span className="ln-chain-locked"> · set once, not editable</span>
-                </span>
-              </div>
-            ) : (
-              <label className="ln-chain-row">
-                <span className="ln-chain-label">Their entry</span>
-                <select
-                  className="ln-field"
-                  value={edit.draft.source_entry_id ?? ''}
-                  onChange={e => edit.set('source_entry_id', e.target.value)}
-                  disabled={edit.kin.length === 0}
-                >
-                  <option value="">
-                    {edit.kin.length === 0 ? 'No other entry for this album' : 'None — this is the origin'}
-                  </option>
-                  {edit.kin.map(k => (
-                    <option key={k.id} value={k.id}>
-                      {k.album} · listen {k.listen_number}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            )}
-          </div>
-        )}
-
+        {/* No lineage picker here any more, 2026-09-14. source_entry_id —
+            the pointer at the sender's own entry — is written once and
+            undone only in SQL, and it was a field only because nothing set
+            it yet. The column and update_entry's write-once rule stay for
+            the send flow to use when both people have copies. */}
         {edit.editing && (
           <div className="ln-danger">
             {!edit.asking ? (

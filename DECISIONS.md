@@ -251,7 +251,10 @@ would need its own column, `prompted_by` — parked, not built.
 and `received_date` are corrections. `source_entry_id` is not: either their
 entry led to yours or it did not, and lineage anyone can rewrite is a record
 of nothing. Set while empty and never again — the `WRITE_ONCE` rule `serial`
-and `founded_at` use — and dropped silently if sent again.
+and `founded_at` use — and dropped silently if sent again. **And never by
+hand, 2026-09-14:** the editor does not offer it. A wrong value can only be
+undone in SQL, and it was a field only because nothing set it yet. The send
+flow sets it when both people have copies; the column waits.
 
 **Everything editable is edited where it prints.** Fields on the card for
 things a screen below it were a form filled in blind.
@@ -452,8 +455,11 @@ and Fingerprint in `--fav`, `--mp` and `--formative`. Worded chips are too
 wide for a strip that has to leave room for an album title. **A sent record
 wears an envelope, 2026-09-13**, in faint ink rather than a colour: it says
 where a record came from, not what the keeper thought of it. The same mark
-everywhere the others are drawn — the strip, the feed, the key, and inside
-the entry's Submission chip.
+everywhere the others are drawn — the strip, the feed, the key. **Not
+inside the entry's chips, 2026-09-14:** the first screen's chips are words,
+all of them alike, and the marks are the strip's on the screen below; a
+mark in one chip and not the others was also the row changing shape when
+an entry landed over the journal.
 
 ---
 
@@ -698,11 +704,27 @@ from anything being tracked. The Submission chip on an entry opens the chain.
 
 **`received_from` is published per entry**, with a per-entry toggle for
 private sends. Public credit is the default; quiet is a choice. **Built
-2026-09-13 as the feed's credit:** the public feed carries `received_from`
-and `received_from_url` on Submission entries and nowhere else — the
-entry's own read still keeps the chain off its row — and the address is
-what a sender's copy matches on, the name only for entries from before the
-address travelled. The quiet toggle is still owed (NOTES).
+2026-09-13 as the feed's credit, and on the entry itself 2026-09-14:** a
+Submission entry carries `received_from` and `received_from_url` on every
+read — the feed, the wall, the entry's own page — and on no other kind of
+entry. The address is what a sender's copy matches on; the name only for
+entries from before the address travelled. The quiet toggle is still owed.
+
+**The sender opens; it does not display, 2026-09-14.** The entry says
+*Submission* and the chip, wearing a small caret so it reads as pressable,
+opens the chain: who sent it (a link to their journal), whether they logged
+it, and who sent it to them, read off their journals on the press. A name
+printed on every sent entry was somebody else's name on the page by default
+— decoration, not the network. One thing to press; there is no separate
+View chain control.
+
+**The sender is picked off the address book, and a backfill carries no
+date, 2026-09-14.** Crediting an old entry links the name to a journal in
+the book, so the person's page counts it at once; free text stays for
+anyone without a copy. No date is asked for and none defaults to today: the
+entry's own date is the ceiling, ordering and hit rates work from it, and a
+confident wrong date corrupts every statistic after it. `received_date` is
+the send flow's, where the moment is exact.
 
 **A send is a gift, not a form, 2026-08-29.** Three parts, in this order: the
 object, the note, and who it is from. The album is picked off covers, because

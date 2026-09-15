@@ -503,49 +503,174 @@
   text-align: center;
 }
 
-/* ── Where an entry came from ───────────────────────────────────────────────
-   The private half, shown only while its keeper is correcting the entry. It is
-   labelled as private on the page rather than only in the code, because the
-   one thing somebody needs to know before typing a friend's name into a
-   journal is who else will see it. */
-.ln-chain {
-  margin-top: 48px;
-  padding-top: 24px;
-  border-top: 1px solid var(--border);
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  max-width: 34em;
+/* ── Who sent it ────────────────────────────────────────────────────────────
+   At the head of the entry with the other facts, 2026-09-14: the field, and
+   under it the address book as faces — the portrait each journal serves, in
+   the rounded square the book and the feed draw it in, the name beneath —
+   with the lit one the journal the credit links to. One row that scrolls
+   sideways when it must, so a long address book is a strip to thumb through
+   and never a wall of names on the first screen. */
+.ln-sender { display: flex; flex-direction: column; align-items: center; gap: 12px; width: 100%; min-width: 0; }
+.ln-sender-row { display: inline-flex; align-items: baseline; gap: 10px; }
+.ln-sender-label {
+  font-family: var(--font-label);
+  font-size: 8.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  white-space: nowrap;
 }
+.ln-field--sender { width: 13em; font-size: 13px; text-align: left; }
+.ln-sender-book {
+  display: flex;
+  gap: 14px;
+  width: 100%;
+  max-width: 100%;
+  /* The row never asks for its content's width. Without this a wrapper
+     with no width of its own — a flex item up the chain, the hero's
+     column — is forced open to the faces' full width and the row lands
+     centred with its first faces off the left edge, unreachable. */
+  contain: inline-size;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  padding: 3px 16px 6px;
+  box-sizing: border-box;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.ln-sender-book::-webkit-scrollbar { display: none; }
+/* Centred while the faces fit and scrollable from the first face when they
+   do not: auto margins on the two ends do both. justify-content: center on
+   an overflowing row pushes the first faces off the left edge with no way
+   to scroll back to them. */
+.ln-sender-face:first-child { margin-left: auto; }
+.ln-sender-face:last-child { margin-right: auto; }
+.ln-sender-face {
+  flex: 0 0 auto;
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  width: 64px;
+  padding: 0; border: 0; background: transparent;
+  color: var(--ink-faint);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 0.15s;
+}
+.ln-sender-face:hover { color: var(--ink); }
+.ln-sender-face--on { color: var(--ink); }
+.ln-sender-portrait {
+  position: relative; width: 44px; height: 44px; border-radius: 10px; overflow: hidden;
+  background: var(--panel); border: 1px solid var(--border);
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.ln-sender-portrait img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.ln-sender-face--on .ln-sender-portrait { border-color: var(--ink); box-shadow: 0 0 0 2px var(--ink); }
+.ln-sender-face:focus-visible { outline: none; }
+.ln-sender-face:focus-visible .ln-sender-portrait { border-color: var(--ink-faint); box-shadow: 0 0 0 2px var(--ink-faint); }
+.ln-sender-name {
+  font-family: var(--font-label);
+  font-size: 8.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  max-width: 100%;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+/* The fields at the head are taller than the facts they replace — the
+   score, the genre, the flags, the shelves, now the sender and the faces —
+   and neither box they sit in was built to grow: the phone's first screen
+   is exactly one viewport, the desk's hero a fixed band with its content
+   pinned to the foot. Both give while a correction is open (2026-09-14, the
+   faces tipped it), so nothing is clipped under screen two or pushed up
+   behind the mark. The phone's screen keeps its snap and scrolls inside
+   the sheet; the desk's hero keeps its blur and its floor. */
+.ln-editing .ln-hero { height: auto; min-height: 390px; }
+.ln-editing .ln-hero-pad { position: relative; padding-top: 112px; }
+@media (max-width: 768px) {
+  /* And on a phone the whole stack has to be on the first screen without a
+     scroll (Miyel, 2026-09-14: the faces were just under the fold). While
+     correcting, the crown's margin comes down and the art steps back — it
+     is a button to replace the cover in this mode, not the thing being
+     read — which puts the faces about a third of the screen up from the
+     foot on a 812-tall phone. The screen still grows if it has to. */
+  .ln-editing .ln-screen-one { height: auto; min-height: 100dvh; padding: 108px 24px 32px; gap: 12px; }
+  .ln-editing .ln-screen-one-art { height: min(24dvh, 50vw); }
+}
+
+/* ── The chain ──────────────────────────────────────────────────────────────
+   Opened by the Submission chip (Chain.js): under the chips on a phone's
+   first screen, under the hero on a desk — the place the cover's address
+   field already uses, since a panel inside the hero pushes the title up
+   behind the mark. Who sent the record, whether they logged it, and the
+   chain behind them, read off their journals on the press and never on
+   load. The chip wears a small caret so it reads as pressable; closed by
+   default is otherwise undiscoverable, the corner mark's problem again. */
+/* Drawn in CSS rather than as an icon: the stand-in that holds the first
+   screen while an entry lands draws the same chip, and an icon arriving
+   with the entry was the row changing shape under the eye. Two borders on
+   a small square, turned to point down; turned again to point up. */
+.ln-chain-caret {
+  display: inline-block;
+  width: 5px; height: 5px;
+  margin: 0 1px 2px 2px;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: rotate(45deg);
+  transition: transform 0.2s ease, margin 0.2s ease;
+}
+.ln-chain-caret--open { transform: rotate(225deg); margin: 2px 1px 0 2px; }
+.ln-chain {
+  width: 100%;
+  max-width: 34em;
+  box-sizing: border-box;
+  margin: 4px 0 0;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--panel);
+  text-align: left;
+  display: flex; flex-direction: column; gap: 12px;
+  animation: ln-chain-unfold 0.22s ease-out;
+}
+@keyframes ln-chain-unfold { from { opacity: 0; transform: translateY(-4px); } }
 .ln-chain-head {
   margin: 0;
   font-family: var(--font-label);
-  font-size: 9px;
+  font-size: 8.5px;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--ink-faint);
 }
-.ln-chain-row { display: flex; align-items: baseline; gap: 12px; }
-.ln-chain-label {
-  flex: 0 0 84px;
-  font-family: var(--font-label);
-  font-size: 8.5px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--ink-faint);
+.ln-chain-hop { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.ln-chain-face {
+  position: relative; width: 36px; height: 36px; border-radius: 10px; overflow: hidden; flex-shrink: 0;
+  background: var(--bg); border: 1px solid var(--border);
+  display: inline-flex; align-items: center; justify-content: center; color: var(--ink-faint);
 }
-.ln-chain-row .ln-field { flex: 1; min-width: 0; font-size: 13px; }
-.ln-chain-row select.ln-field { appearance: none; -webkit-appearance: none; }
-.ln-chain-row select.ln-field:disabled { color: var(--ink-faint); }
-/* Once lineage points somewhere it is a fact rather than a field, so it stops
-   looking like one — no rule under it, nothing to press. */
-.ln-chain-fixed { flex: 1; min-width: 0; font-size: 13px; color: var(--ink); }
-.ln-chain-locked {
+.ln-chain-face img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.ln-chain-who { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.ln-chain-name {
+  font-family: var(--font-display);
+  font-weight: var(--font-display-weight, 700);
+  font-size: 14px;
+  color: var(--ink);
+  text-decoration: none;
+  display: inline-flex; align-items: center; gap: 3px;
+}
+a.ln-chain-name:hover { text-decoration: underline; text-underline-offset: 3px; }
+.ln-chain-said {
   font-family: var(--font-label);
-  font-size: 8.5px;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--ink-faint);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  color: var(--ink-soft);
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+}
+.ln-chain-said a { color: var(--ink); text-decoration: none; display: inline-flex; align-items: center; gap: 2px; }
+.ln-chain-said a:hover { text-decoration: underline; text-underline-offset: 3px; }
+@media (max-width: 768px) {
+  /* The first screen is exactly one viewport; with the chain open under
+     the chips it grows and scrolls inside the sheet, as it does while
+     correcting. */
+  .ln-chain-open .ln-screen-one { height: auto; min-height: 100dvh; padding-bottom: 32px; }
 }
 
 /* ── Deleting an entry ──────────────────────────────────────────────────────
