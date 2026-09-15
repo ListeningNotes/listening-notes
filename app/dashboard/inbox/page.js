@@ -4,30 +4,67 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { User } from '@phosphor-icons/react';
 import Link from 'next/link';
 import SiteNav from '../../../components/main_components/SiteNav';
 import MiniAddressBook from '../../../components/main_components/MiniAddressBook';
 import { carrySender, journalUrl, tidyJournal } from '../../../library/return_address';
 import { useBookplate } from '../../../components/main_components/Bookplate';
 import { albumKey } from '../../../hooks/useListeningBeacon';
+import { lookup_key } from '../../../library/entry_formatter';
 
 // ── What became of a send ──────────────────────────────────────────────────
-// Four outcomes, and the third is new on 2026-09-15. A send was pending or
-// dismissed, and there was no way to say the thing that actually happens
-// most: the album was listened to and logged, but the listen started
-// somewhere other than this row's own Start a listen, so the send sat in
-// Pending looking ignored.
+// Four outcomes in the database: pending, reviewed (a listen was started
+// from the row, before any entry exists), logged (a record exists and the
+// send points at it), dismissed.
 //
-// 'reviewed' is older and keeps its own meaning rather than being folded in.
-// It is set the moment Start a listen is pressed, before any entry exists —
-// so it is a claim about an intention, and Started is what it should have
-// been called. 'logged' is a claim about a record, and carries the record.
-const OUTCOMES = [
-  { value: 'pending', label: 'pending' },
-  { value: 'reviewed', label: 'started' },
-  { value: 'logged', label: 'logged' },
-  { value: 'dismissed', label: 'dismissed' },
+// Two views over them, 2026-09-15. From the inbox's side a send is either
+// waiting on a decision or dealt with, and the other three are all dealt
+// with — so which one is a word in the row's subtitle rather than a tab you
+// have to be standing on to see it. Four tabs asked somebody to know the
+// vocabulary before they could find anything.
+const VIEWS = [
+  { value: 'waiting', label: 'waiting' },
+  { value: 'handled', label: 'handled' },
 ];
+const WAITING = 'pending';
+
+// What the subtitle says on a handled row. A date only where there is one
+// worth printing: a logged send carries its record's own posted date, and
+// the other two have nothing better than the day the send arrived, which is
+// already the row above it.
+function became(sent) {
+  if (sent.status === 'logged') {
+    const when = sent.entry_posted_at
+      ? ` ${new Date(sent.entry_posted_at).toLocaleDateString(undefined, { day: 'numeric', month: 'long' }).toLowerCase()}`
+      : '';
+    return `logged${when}`;
+  }
+  if (sent.status === 'reviewed') return 'in progress';
+  return 'dismissed';
+}
+// Who a send came from: a face and a name, 2026-09-15. Their name is the
+// link to their journal where the send carried one, which is the whole of
+// what the "IN YOUR ADDRESS BOOK" label used to say and says it without a
+// second line of type. Where it carried none the name is plain text and
+// nothing is missing — joining them up is an admin job and lives in the ···
+// menu, not in the middle of somebody's message.
+function Sender({ sent, me, filed }) {
+  const host = tidyJournal(sent.sender_url);
+  const name = sent.submitter_name || 'someone';
+  return (
+    <span className="ib-who">
+      <span className="ib-who-face" aria-hidden="true">
+        <User size={14} weight="regular" />
+        {host && <img src={`${journalUrl(host)}/api/portrait`} alt="" loading="lazy" onError={e => { e.currentTarget.style.display = 'none'; }} />}
+      </span>
+      {host
+        ? <a href={carrySender(journalUrl(host), me, { known: filed.has(host) })} target="_blank" rel="noopener noreferrer" className="own-link">{name}</a>
+        : <span>{name}</span>}
+    </span>
+  );
+}
+
 // A folder tab that connects to the open panel when active. Module scope so it
 // keeps a stable identity across renders.
 function FolderTab({ id, tab, onSelect, children }) {
@@ -57,7 +94,11 @@ export default function Inbox({ layered = false }) {
 
   const [submissions, setSubmissions] = useState([]);
   const [subLoading, setSubLoading] = useState(true);
-  const [filter, setFilter] = useState('pending');
+  const [filter, setFilter] = useState('waiting');
+  // Which waiting row has its ··· open. One at a time: the menu is the rare
+  // half of a decision, and two of them open at once is a list of controls
+  // again, which is what this redesign took away.
+  const [menuFor, setMenuFor] = useState(null);
 
   const [comments, setComments] = useState([]);
   const [comLoading, setComLoading] = useState(true);
@@ -153,6 +194,50 @@ export default function Inbox({ layered = false }) {
     if (d.submissions) setSubmissions(d.submissions);
   }
 
+  // ── Picking a listen back up ─────────────────────────────────────────────
+  // A send that is in progress and the draft it left behind are two things
+  // describing one listen, joined by nothing but the album and the artist:
+  // `submissions.status` says a listen was started, and `drafts` is its own
+  // table keyed on a fold of album + artist (library/database_actions.js,
+  // lookup_key). So this has to *find* the draft and hand it over.
+  //
+  // Starting a fresh session instead would look like it worked — the album
+  // screen would open on the right record — and then the first autosave
+  // would write over the draft, because save_draft is an upsert on that same
+  // key. Everything written into the paused listen would be gone.
+  //
+  // The session already knows how to be handed one: `beginListen` takes a
+  // `draft` on the record it is given, which is how the picker's Resume
+  // works. This is that path, reached from the inbox instead.
+  async function resumeListen(sent) {
+    let draft = null;
+    try {
+      const d = await fetch('/api/drafts').then(r => (r.ok ? r.json() : null));
+      // Against the column the draft was stored under, not a recomputation
+      // of it, so a row written by an older fold still matches itself.
+      const key = lookup_key(sent.album, sent.artist || '');
+      draft = (d?.drafts || []).find(row => (row.lookup_key || lookup_key(row.album, row.artist || '')) === key) || null;
+    } catch { /* the listen still opens; see below */ }
+    // With no draft found this is the same as Start a listen, which is the
+    // honest answer: there is nothing to resume, because nothing was saved.
+    localStorage.setItem('ln_pending_session', JSON.stringify({
+      album: draft?.album || sent.album,
+      artist: draft?.artist || sent.artist || '',
+      year: draft?.year || sent.year || '',
+      artUrl: draft?.album_art || sent.album_art || '',
+      collectionId: draft?.collection_id || sent.collection_id || null,
+      genre: draft?.genre || '',
+      entryType: draft?.entry_type || 'Submission',
+      receivedFrom: draft?.received_from || sent.submitter_name || '',
+      receivedFromUrl: sent.sender_url || '',
+      receivedDate: draft?.received_date
+        ? String(draft.received_date).slice(0, 10)
+        : (sent.created_at ? String(sent.created_at).slice(0, 10) : ''),
+      draft,
+    }));
+    router.push('/session');
+  }
+
   // Who sent it, once they have a copy. The name on the send stays as they
   // typed it — that is what they signed — and their journal is written
   // beside it, so the row's name becomes a link from here on.
@@ -214,10 +299,12 @@ export default function Inbox({ layered = false }) {
     setComments(prev => prev.filter(c => c.id !== id));
   }
 
-  const filtered = submissions.filter(s => s.status === filter);
-  const subCounts = Object.fromEntries(
-    OUTCOMES.map(o => [o.value, submissions.filter(s => s.status === o.value).length])
-  );
+  const waitingNow = s => s.status === WAITING;
+  const filtered = submissions.filter(s => (filter === 'waiting' ? waitingNow(s) : !waitingNow(s)));
+  const subCounts = {
+    waiting: submissions.filter(waitingNow).length,
+    handled: submissions.filter(s => !waitingNow(s)).length,
+  };
 
   // What the picker offers on the open row: the likely record first, then
   // whatever is typed. albumKey is the same fold two journals use to
@@ -259,10 +346,15 @@ export default function Inbox({ layered = false }) {
             {/* ── SUBMISSIONS ── */}
             {tab === 'submissions' && (
               <>
+                {/* Two views, not four, 2026-09-15. Started, logged and
+                    dismissed are one thing from the inbox's side — dealt
+                    with — so what state a send is in became a word in its
+                    subtitle rather than a tab you have to be standing on
+                    to see it. */}
                 <div className="ib-filters">
-                  {OUTCOMES.map(o => (
-                    <button key={o.value} onClick={() => setFilter(o.value)} className={'ib-filter' + (filter === o.value ? ' ib-filter--on' : '')}>
-                      {o.label}{subCounts[o.value] > 0 ? ` ${subCounts[o.value]}` : ''}
+                  {VIEWS.map(v => (
+                    <button key={v.value} onClick={() => { setFilter(v.value); setMenuFor(null); setNaming(null); }} className={'ib-filter' + (filter === v.value ? ' ib-filter--on' : '')}>
+                      {v.label}{subCounts[v.value] > 0 ? ` ${subCounts[v.value]}` : ''}
                     </button>
                   ))}
                 </div>
@@ -272,15 +364,20 @@ export default function Inbox({ layered = false }) {
                     {[...Array(4)].map((_, i) => <div key={i} className="own-skeleton" style={{ height: 46 }} />)}
                   </div>
                 ) : filtered.length === 0 ? (
-                  <div className="own-empty">No {OUTCOMES.find(o => o.value === filter)?.label} submissions.</div>
-                ) : (
+                  <div className="own-empty">
+                    {filter === 'waiting' ? 'Nothing waiting.' : 'Nothing handled yet.'}
+                  </div>
+                ) : filter === 'waiting' ? (
                   // A shelf, not a spreadsheet. The cover is the first thing
                   // because a cover is what was handed over; the message is
                   // the body because it is the part doing the work; the name
-                  // sits under it the way a signature does. The five-column
-                  // table this replaced reported the same facts in the shape
-                  // of a database row, which is the shape of the thing rather
-                  // than the shape of what happened.
+                  // sits under it the way a signature does.
+                  //
+                  // One decision per row: Start a listen, which is what
+                  // happens to nearly every send. The three rare actions are
+                  // behind the ···, which opens in the row rather than over
+                  // a darkened page (DECISIONS: a control opens where it
+                  // belongs).
                   <div className="ib-list">
                     {filtered.map(sent => (
                       <div key={sent.id} className="ib-sent">
@@ -293,95 +390,73 @@ export default function Inbox({ layered = false }) {
                         <div className="ib-sent-said">
                           <div className="ib-sent-album">{sent.album}</div>
                           <div className="ib-sent-artist">
-                            {sent.artist}{sent.year ? ' \u00b7 ' + sent.year : ''}
+                            {sent.artist}{sent.year ? ' · ' + sent.year : ''}
                           </div>
 
+                          {/* The message, and only here. It is what you decide
+                              on; once the deciding is done it belongs on the
+                              entry, not in a list. */}
                           <p className="ib-sent-note">{sent.note}</p>
 
                           <div className="ib-sent-from">
-                            <span>from {sent.submitter_name || 'someone'}</span>
-                            {/* Stored without a scheme on purpose - see the
-                                note in the submissions route - so the one
-                                journalUrl puts back is the only one there
-                                can be. The link carries who this copy
-                                belongs to, so their send form knows who is
-                                sending back (carrySender). */}
-                            {sent.sender_url ? (
-                              <a
-                                href={carrySender(journalUrl(sent.sender_url), me, { known: filed.has(tidyJournal(sent.sender_url)) })}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="own-link"
-                              >their journal &#8599;</a>
-                            ) : people.length > 0 && (
-                              /* Sends arrive before people have copies, and
-                                 that is the normal case rather than an edge
-                                 one: everybody who sent an album this week
-                                 had no journal then and has one now. So a
-                                 name with no address is not a dead end —
-                                 it is a person in the address book who has
-                                 not been joined up yet. */
-                              <button onClick={() => setWhose(w => (w === sent.id ? null : sent.id))} className="own-act">
-                                {whose === sent.id ? 'Never mind' : 'Link their journal'}
-                              </button>
-                            )}
+                            <Sender sent={sent} me={me} filed={filed} />
                             <span className="ib-sent-when">
                               {new Date(sent.created_at).toLocaleDateString()}
                             </span>
                           </div>
 
-                          {whose === sent.id && (
-                            <MiniAddressBook
-                              people={people}
-                              linked={tidyJournal(sent.sender_url)}
-                              onPick={person => nameSender(sent, person)}
-                              label={`Who sent ${sent.album}`}
-                            />
-                          )}
-
-                          {/* The record it became. A send that was logged
-                              says which one and goes there; the foreign key
-                              nulls itself if that record is ever deleted,
-                              so this simply stops being drawn rather than
-                              pointing at nothing. */}
-                          {sent.entry_slug && (
-                            <div className="ib-sent-from">
-                              <Link href={`/entries/${sent.entry_slug}`} className="own-link">
-                                Logged as {sent.entry_album || sent.album} &#8594;
-                              </Link>
-                            </div>
-                          )}
-
                           <div className="ib-sent-row">
                             <button onClick={() => startListen(sent)} className="own-act own-act--solid">
                               Start a listen &#8594;
                             </button>
-                            {/* The third outcome, on the row it belongs to.
-                                Not a reconciliation screen and not a sweep
-                                of the archive: one button, on a send that
-                                has not been settled, that says the thing
-                                the keeper already knows. */}
-                            {sent.status !== 'logged' && (
-                              <button onClick={() => openNaming(sent)} className="own-act">
-                                {naming === sent.id ? 'Never mind' : 'I’ve already logged this'}
-                              </button>
-                            )}
-                            {sent.status !== 'dismissed' && (
-                              <button onClick={() => updateStatus(sent.id, 'dismissed')} className="own-act own-act--danger">
-                                Dismiss
-                              </button>
-                            )}
-                            {/* A send that carried a journal is one of the
-                                ways into the address book. Once filed, the
-                                row says so and offers nothing. */}
-                            {sent.sender_url && tidyJournal(sent.sender_url) && (
-                              filed.has(tidyJournal(sent.sender_url))
-                                ? <span className="own-label ib-filed">In your address book</span>
-                                : <button onClick={() => file(sent.sender_url)} className="own-act">Add to address book</button>
-                            )}
+                            <button
+                              onClick={() => { setMenuFor(m => (m === sent.id ? null : sent.id)); setNaming(null); setWhose(null); }}
+                              className={'ib-more' + (menuFor === sent.id ? ' ib-more--on' : '')}
+                              aria-expanded={menuFor === sent.id}
+                              aria-label={`More for ${sent.album}`}
+                            >
+                              &#183;&#183;&#183;
+                            </button>
                           </div>
 
-                          {/* Which record it was. The likely one is already
+                          {menuFor === sent.id && (
+                            <div className="ib-menu">
+                              <button className="ib-menu-act" onClick={() => openNaming(sent)}>
+                                {naming === sent.id ? 'Never mind' : 'I’ve already logged this'}
+                              </button>
+                              {/* The two sender actions are opposite halves of
+                                  one question and never both apply: a send
+                                  that carried a journal can be filed, and one
+                                  that carried none can be joined to somebody
+                                  already in the book. Filing from the inbox is
+                                  a documented way in (DECISIONS, The network),
+                                  which is why it is here and not dropped. */}
+                              {sent.sender_url && tidyJournal(sent.sender_url) && !filed.has(tidyJournal(sent.sender_url)) && (
+                                <button className="ib-menu-act" onClick={() => { file(sent.sender_url); setMenuFor(null); }}>
+                                  Add to address book
+                                </button>
+                              )}
+                              {!sent.sender_url && people.length > 0 && (
+                                <button className="ib-menu-act" onClick={() => setWhose(w => (w === sent.id ? null : sent.id))}>
+                                  {whose === sent.id ? 'Never mind' : 'Link their journal'}
+                                </button>
+                              )}
+                              <button className="ib-menu-act ib-menu-act--danger" onClick={() => { updateStatus(sent.id, 'dismissed'); setMenuFor(null); }}>
+                                Dismiss
+                              </button>
+                            </div>
+                          )}
+
+                          {whose === sent.id && (
+                            <MiniAddressBook
+                              people={people}
+                              linked={tidyJournal(sent.sender_url)}
+                              onPick={person => { nameSender(sent, person); setMenuFor(null); }}
+                              label={`Who sent ${sent.album}`}
+                            />
+                          )}
+
+                          {/* Which record it became. The likely one is already
                               here — same album and artist — so the usual
                               press is two taps and the field is for the
                               case where it was logged under another name. */}
@@ -395,11 +470,11 @@ export default function Inbox({ layered = false }) {
                                 aria-label="Find the record in your journal"
                               />
                               {mine === null || (mine.length === 0)
-                                ? <div className="ib-which-none">Reading your journal…</div>
+                                ? <div className="ib-which-none">Reading your journal&#8230;</div>
                                 : candidates(sent).length === 0
                                   ? <div className="ib-which-none">{look.trim() ? 'Nothing under that name.' : 'No record for this album yet — search for it.'}</div>
                                   : candidates(sent).map(entry => (
-                                    <button key={entry.id} className="ib-which-one" onClick={() => alreadyLogged(sent, entry)}>
+                                    <button key={entry.id} className="ib-which-one" onClick={() => { alreadyLogged(sent, entry); setMenuFor(null); }}>
                                       <span className="ib-which-art">
                                         {entry.album_art && <img src={entry.album_art} alt="" loading="lazy" />}
                                       </span>
@@ -417,6 +492,55 @@ export default function Inbox({ layered = false }) {
                         </div>
                       </div>
                     ))}
+                  </div>
+                ) : (
+                  // Handled: a record of what happened, not a queue. No
+                  // buttons — the row itself is the one tap target, and it
+                  // does the obvious thing for the state it is in.
+                  <div className="ib-list">
+                    {filtered.map(sent => {
+                      const gone = sent.status === 'dismissed';
+                      const inside = (
+                        <>
+                          <span className="ib-done-art">
+                            {sent.album_art
+                              ? <img src={sent.album_art} alt="" loading="lazy" />
+                              : <span className="ib-sent-none" aria-hidden="true">&#9834;</span>}
+                          </span>
+                          <span className="ib-done-said">
+                            <span className="ib-done-album">{sent.album}</span>
+                            <span className="ib-done-state">
+                              {became(sent)}
+                              {sent.submitter_name ? ` · from ${sent.submitter_name}` : ''}
+                            </span>
+                          </span>
+                        </>
+                      );
+                      // Logged opens the record. In progress resumes the
+                      // listen from the draft it left behind — found here
+                      // rather than started fresh, because a submission and
+                      // a draft are two things describing one listen and a
+                      // fresh session would save over the notes.
+                      if (sent.status === 'logged' && sent.entry_slug) {
+                        return (
+                          <Link key={sent.id} href={`/entries/${sent.entry_slug}`} className="ib-done">
+                            {inside}
+                          </Link>
+                        );
+                      }
+                      if (sent.status === 'reviewed') {
+                        return (
+                          <button key={sent.id} className="ib-done" onClick={() => resumeListen(sent)}>
+                            {inside}
+                          </button>
+                        );
+                      }
+                      return (
+                        <div key={sent.id} className={'ib-done' + (gone ? ' ib-done--gone' : '')}>
+                          {inside}
+                        </div>
+                      );
+                    })}
                   </div>
                 )}
               </>

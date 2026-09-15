@@ -995,6 +995,17 @@ Project → Settings → Environment Variables.
 
 ## Gotchas
 
+**There are two album folds and they disagree on accents, 2026-09-15.**
+`lookup_key` (now in `library/entry_formatter.js`) keys `drafts` and
+`briefings`; `foldKey`/`albumKey` in `hooks/useListeningBeacon.js` keys
+everything that compares two journals. The second strips diacritics and the
+first does not, so *Beyoncé* folds to `beyonc` under one and `beyonce` under
+the other. Reaching for the wrong one to find a draft does not throw — it
+finds nothing, the session starts empty, and the first autosave upserts over
+the saved notes on that same key. Match a draft with `lookup_key`, and
+compare against the row's stored `lookup_key` column rather than
+recomputing it, so a row written by an older fold still matches itself.
+
 **A no-op write to the end of `base.css` forces the dev server to recompile
 it, 2026-09-15.** Rules appended to base.css did not reach the served
 stylesheet — the documented staleness, and the note said only stop →
@@ -1569,6 +1580,66 @@ current.
 ---
 
 ## Complete
+
+**2026-09-15 — the inbox redesigned before merging, same branch
+`inbox-logged`**
+
+- [x] **The check the brief asked for first: an in-progress send and a
+      draft are two things, not one.** `submissions.status = 'reviewed'`
+      says a listen was started; `drafts` is its own table keyed on a fold
+      of album + artist, with nothing joining the two. The inbox's Start a
+      listen never handed the session a draft, so resuming that way would
+      have opened on the right record, looked fine, and then written over
+      the saved notes on the first autosave (`save_draft` upserts on that
+      key). So Handled's *in progress* row finds the draft and hands it
+      over, which is the path the picker's Resume already uses
+      (`beginListen` takes `draft` on the record). With no draft found it
+      falls through to a fresh listen, which is honest: nothing was saved.
+      The fold moved to `entry_formatter.js` so the browser and the data
+      layer share one copy — see Gotchas for why the *other* fold would
+      have failed silently.
+- [x] **Two views, not four.** Waiting and Handled; started, logged and
+      dismissed are one thing from the inbox's side. What state a send is
+      in is a word in its subtitle (`became`) — *in progress*, *logged 4
+      august*, *dismissed* — rather than a tab you have to be standing on.
+      Comments and Reports keep their own folder tabs, untouched.
+- [x] **Waiting has one button.** Start a listen. The rare actions moved
+      behind a ··· that opens in the row (DECISIONS: a control opens where
+      it belongs): *I've already logged this*, the sender action, and
+      *Dismiss*, which is the only destructive one and the only one in a
+      colour.
+- [x] **The sender is a face and a name.** The "IN YOUR ADDRESS BOOK"
+      label and the row's *Link their journal* are gone. Their name is the
+      link when the send carried a journal, which is what the label was
+      saying with a second line of type; plain text when it did not.
+- [x] **Handled is a record, not a queue.** Cover, album, what became of
+      it, who sent it, no buttons, and no message — the note is for
+      deciding and belongs on the entry afterwards. Dismissed rows at
+      reduced opacity. One tap target: logged opens the record, in
+      progress resumes the listen.
+- [ ] **Two departures from the brief, both deliberate.**
+      **Add to address book stayed**, as a fourth menu item — DECISIONS
+      names the inbox's Add button as one of the documented ways an
+      address gets into the book, and dropping it would close that door.
+      It and *Link their journal* are opposite halves of one question and
+      never both apply, so at most three items show at once.
+      **And a dismissed send can no longer be recovered from the inbox**:
+      Handled has no buttons by design, so there is nothing to press to
+      put one back. It was recoverable before, from the dismissed tab's
+      Start a listen. Worth a decision if a send is ever dismissed by
+      accident; the row could be pressable back to waiting.
+- [ ] **Names to confirm, 2026-09-15 (the redesign)** — rename freely:
+      `VIEWS`, `WAITING`, `became`, `Sender`, `resumeListen`, `menuFor`;
+      the words *waiting*, *handled*, *in progress*, *logged 4 august*,
+      *dismissed*, *Nothing waiting.*, *Nothing handled yet.*; the
+      `.ib-who*`, `.ib-more`, `.ib-menu*` and `.ib-done*` classes in
+      forms.css; and `lookup_key` keeping its name where it moved to.
+- [x] **Verified:** the build passes, the draft lookup was run against the
+      five real drafts and found each one by album and artist (and the
+      wrong fold shown to miss), and both views were stood into a page to
+      check the CSS on a phone. **Not driven by hand:** the inbox is
+      behind the password, so the ···, the resume and the two views are
+      Miyel's review. Nothing was written to any real row.
 
 **2026-09-15 — the inbox needs a third outcome, branch `inbox-logged`, not
 merged (1.14.0 when it is: something new)**
