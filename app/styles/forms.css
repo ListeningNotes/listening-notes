@@ -733,6 +733,18 @@ a.pp-name:hover svg { color: var(--ink); }
   .ib-tab { padding-left: 12px; padding-right: 12px; white-space: nowrap; }
   .ib-tab--on { padding-left: 14px; padding-right: 14px; }
 }
+/* And on the spine, where the sheet is 300 to 520px in a window far wider
+   than either — so the rule above, which is a viewport query, never fires and
+   three tabs at their full padding run off the edge. Tighter than the phone's,
+   because the phone at its narrowest is still 320 of gutter-to-gutter and this
+   is 300 inside a panel with its own. */
+.lay--over-spine .ib-tabs { gap: 2px; padding-left: 6px; }
+.lay--over-spine .ib-tab {
+  font-size: 10px; letter-spacing: 0.08em;
+  padding-left: 9px; padding-right: 9px; white-space: nowrap;
+}
+.lay--over-spine .ib-tab--on { padding-left: 11px; padding-right: 11px; }
+.lay--over-spine .ib-scroll { padding: 18px 16px 24px; }
 .ib-panel { border-radius: 20px 20px 24px 24px; }
 .ib-scroll { position: relative; z-index: 1; flex: 1; padding: 22px 26px 28px; }
 @media (max-width: 640px) { .ib-scroll { padding: 18px 18px 24px; } }
@@ -841,6 +853,15 @@ a.pp-name:hover svg { color: var(--ink); }
 /* The rest, as rows rather than buttons: available, and plainly not the
    thing you came to do. */
 .ib-acts { display: flex; flex-direction: column; align-items: flex-start; margin-top: 10px; }
+/* ── The listen already open ── the panel a row opens when Start a listen
+   would replace a record with writing in it. Sits where the row's other two
+   panels sit, says what is open, and offers the harmless press first. */
+.ib-holding { margin-top: 10px; padding: 12px 14px; }
+.ib-holding-said { margin: 0 0 10px; font-size: 13px; line-height: 1.5; color: var(--ink-soft); }
+.ib-holding-said strong { color: var(--ink); font-weight: 600; }
+.ib-holding-acts { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; }
+.ib-holding-acts .ib-primary { margin: 0; }
+.ib-holding-acts .ib-primary:disabled { opacity: 0.6; cursor: default; }
 .ib-act {
   display: flex; align-items: center; gap: 9px; width: 100%;
   padding: 9px 0; border: 0; background: transparent;

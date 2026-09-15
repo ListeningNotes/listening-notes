@@ -128,13 +128,23 @@ does not yet sit on the line) — lands on the same line whichever pane you
 are on. That is what makes the swipe read as
 one object turning. A desk has no crown at all — the next entry.
 
-**Desktop is the same three components as three columns, at three widths,
-2026-09-13.** Not a second layout — the site already carried two homepage
-trees that drifted apart. The card and the desk are rails of about 196 and
-186px, draggable and remembered per browser, and the centre takes the rest:
-three equal columns were three phones parked side by side. Content starts at
-the top of each column; the mark is in the bar over the centre, as on every
-other page; the beacon is a band, the record blurred to the column's edges.
+**Desktop is an open book: the spine and the page, 2026-09-15.** Two pages,
+not three panes. The spine is a quarter of the window, draggable and
+remembered per browser, and turns between two faces — the card and the desk
+signed in, the card and the colophon signed out. Three columns gave the desk
+width whether or not anybody was at it. Still not a second layout: it is the
+cross's own three panes, two of them stacked in one column by the stylesheet.
+
+**The right page is what you are reading or writing, 2026-09-15.** An entry
+opens there and so does a listen, with the spine untouched beside it; the
+inbox, the address book, a person and Settings open on the *spine*. The rule
+is which of the two a thing belongs to, and it decides every case: put a
+lookup on the right and it is fighting a session for the same page.
+
+**Which face the spine was left on is remembered, and is not a setting,
+2026-09-15.** It is where somebody put their own left-hand page down, per
+device, like a composition book falling open where you left it. A settings
+row would make it a preference to administer rather than a thing you did.
 
 **Prompts replace the free-text bio.** Nine openings in `library/bioprompt.js`;
 a keeper answers three, one line each, and the answer completes the sentence —
@@ -321,9 +331,9 @@ plain, on the tokens, 2026-09-06.** Inbox, Settings and the printer: the
 same sheet the send form uses, so reading what somebody sent, or changing a
 key, never feels like leaving the journal. Plain because the desk is plain.
 Each keeps its real address for a bookmark; signed out, Settings' sheet is
-the password gate. **On a desk they open in the desk's own column,
-2026-09-13** — a panel at the right edge, the rail's width or 520px — because
-a desk can afford to share the screen; only a listen takes the whole of it.
+the password gate. **On a desk they open on the spine, 2026-09-15** — a
+shallow stack over the left page, with a way back to the desk — so looking
+one of them up never disturbs what is being written on the right.
 
 **The Share door and the Instagram exporter behind it are gone, 2026-09-06.**
 Sharing is an entry's own link and the card, not a page the owner exports
@@ -397,8 +407,8 @@ was three changes at once with the rail lock live; on its own the shape works.
 **An entry is a layer over the journal, not a fourth pane, 2026-08-29.** Left
 and right meaning different things depending on which row you are in is ruled
 out: that is a mode, and modes make gesture navigation unlearnable. **On a
-desk the layer covers the journal's column only, 2026-09-13,** with the card
-and the desk still beside it; the whole screen is the phone's shape.
+desk the layer is the right page, 2026-09-13, rewritten 2026-09-15,** with
+the spine still beside it; the whole screen is the phone's shape.
 
 **An entry expands from its cover, and sideways means the next record,
 2026-09-02.** The sheet grows out of the tapped tile, the way a photo viewer

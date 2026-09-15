@@ -22,7 +22,9 @@ Think of it like a house.
 **Public side** — what anyone visiting the site can see:
 - The homepage: three panes of one cross — the identity card, the listening
   beacon and the album strip, and either the desk (with the feed under it) or
-  the pitch
+  the pitch. On a desk the same three are an open book: the spine on the left,
+  a quarter of the window, turning between the card and the desk (or the
+  colophon); the journal across the rest
 - Individual entry pages where people can read your notes and leave comments
 - `/archive` — every entry, searchable and filterable
 - `/key` — what the stars and the three marks mean
@@ -46,7 +48,8 @@ publicly):
   tool at one address: a search field and a grid of covers, then four screens
   under a small persistent header — the album, the tracks one at a time, the
   score and note, the preview. Identical on a phone and a desk. From the desk
-  it opens as a layer, the way an entry does, and a swipe puts you back
+  it opens as a layer, the way an entry does, and a swipe puts you back — on a
+  desk that layer is the right page, so the spine stays beside it
 - `/dashboard/inbox` — sent albums, comments awaiting moderation, and problems
   keepers wrote in
 - `/dashboard/report` — report a problem: one box, sent to the copy the
@@ -134,12 +137,12 @@ The hooks — reusable logic shared across pages
     useListeningBeacon.js      Checks Last.fm every 15 seconds for what's playing
     useListeningSession.js     All session state — the record, tracks, notes, score, preview, saving; research on request
     useSessionDraft.js         The listen's draft — the browser's copy and the row in drafts — autosave, restore, cleanup
-    useColumnWidths.js         The cross's two side columns on a desk — how wide, remembered per browser, clamped, dragged by the grips
+    useSpineWidth.js           The spine — the left page of the open book on a desk: how wide, remembered per browser, clamped, dragged by the fold
 
 The furniture — visual pieces
   components/
     main_components/           Everything on the public side
-      HomeNav.js               The cross itself — three panes, the mark, the carets; on a desk three columns at three widths, the band, the grips
+      HomeNav.js               The cross itself — three panes, the mark, the carets; on a desk an open book — the spine on the left turning between two faces, the journal on the right, the band, the fold
       About.js                 The left pane: the card, then the writing under it
       IdentityCard.js          The identity card — this is the About page
       IdentificationCardEditor.js  Editing the card in place
@@ -161,7 +164,7 @@ The furniture — visual pieces
       AddToHomeScreen.js       The one step the software cannot do: the last screen of setup, and a Settings section
       AlbumFinder.js           Type, see covers, pick one — the send flow's search
       MiniAddressBook.js       The address book as a strip of faces, for picking one person — the entry editor's Sent by, and the inbox's send whose sender has since got a copy
-      LayerEntry.js            The sheet a page arrives on over the journal — from the side for forms, expanding from the cover for an entry, with swipes to the neighbours; on a desk it covers the journal's column or is the desk's panel, with a back caret
+      LayerEntry.js            The sheet a page arrives on over the journal — from the side for forms, expanding from the cover for an entry, with swipes to the neighbours; on a desk it is either the right page (an entry, a listen) or a sheet on the spine (the owner's rooms), with a back caret
       LayerWaiting.js          What stands in while that entry loads
       EdgeCaret.js             The chevrons that say there is more that way
       SiteNav.js               The nav row on pages that are not the cross

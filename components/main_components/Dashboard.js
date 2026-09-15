@@ -19,8 +19,9 @@
 // pane, so a visitor never sees a door they cannot open.
 
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { Headphones, Envelope, AddressBook, GearSix } from '@phosphor-icons/react';
 import { VERSION, RELEASE_URL } from '../../library/version';
 
@@ -54,7 +55,56 @@ const DOORS = [
   { href: '/settings',          label: 'Settings', note: 'Keys, password, Last.fm, the address', Icon: GearSix },
 ];
 
+// ── The record on the desk ──────────────────────────────────────────────────
+// A listen in progress is a key in the browser, not a thing the server knows,
+// so this is the honest question to ask. The key is written out rather than
+// imported from useListeningSession, which owns it: importing it would pull
+// the tracklist fetcher and the entry formatter into the front door's bundle
+// for the sake of one string, and the inbox writes the same key the same way
+// for the same reason.
+const PENDING_KEY = 'ln_pending_session';
+
+// Read as an external store, the way the wall reads its density and the cross
+// its spine width — a browser-only value read in an effect trips the lint rule
+// the project keeps, and this is the shape that rule wants. The snapshot is
+// kept against the raw string so the same render does not hand React a new
+// object every time and spin.
+let lastRaw = null;
+let lastHeld = null;
+function heldNow() {
+  let raw = null;
+  try { raw = localStorage.getItem(PENDING_KEY); } catch { /* storage off */ }
+  if (raw !== lastRaw) {
+    lastRaw = raw;
+    try {
+      const held = JSON.parse(raw);
+      lastHeld = held?.album ? held : null;
+    } catch { lastHeld = null; }
+  }
+  return lastHeld;
+}
+// Another tab putting a record down or picking one up. Within this tab there
+// is no event to listen for — the session writes the key straight — so the
+// re-read rides on the render the address change causes; see below.
+function subscribeHeld(listener) {
+  window.addEventListener('storage', listener);
+  return () => window.removeEventListener('storage', listener);
+}
+
 export default function Dashboard({ waiting }) {
+  // ── Whether a listen is open ──────────────────────────────────────────────
+  // On a desk the session is the right page and the desk stays beside it, so
+  // the door has to say what the page next to it is doing: Start a listen is
+  // Listening now, lit, for as long as there is a record in hand.
+  //
+  // The address is the re-read. usePathname renders this again on every
+  // navigation, which is every moment the answer can have changed — opening a
+  // listen, leaving one, saving the entry it became — and React asks the store
+  // for a fresh snapshot on any render. The desk never unmounts, so there is
+  // nothing else to hang it on. Null on the server, so the door renders as
+  // itself and lights a frame later rather than the other way round.
+  usePathname();
+  const inHand = useSyncExternalStore(subscribeHeld, heldNow, () => null);
   // Whether a newer Listening Notes exists. Asked once, of this copy's own
   // server, which asks GitHub's public releases at most once an hour (see
   // app/api/update/route.js). The only thing this can ever say is that
@@ -73,10 +123,21 @@ export default function Dashboard({ waiting }) {
         {/* The one big thing on the pane. It is a link and not a button
             because it goes somewhere — the listening flow is its own route
             with its own background, and pretending otherwise with a button
-            would only mean a navigation that looked like it failed. */}
-        <Link href="/session" className="ln-tile db-hero">
+            would only mean a navigation that looked like it failed.
+
+            With a record in hand it says so, and lights. The same address
+            either way: pressing it is how you get back to the listen, which
+            is what somebody who can see it is lit would expect it to do. The
+            record's name under the words, because "Listening now" without it
+            is a light with no subject. */}
+        <Link
+          href="/session"
+          className={'ln-tile db-hero' + (inHand ? ' db-hero--lit' : '')}
+          title={inHand ? `Back to ${inHand.album}` : undefined}
+        >
           <Headphones size={34} weight="regular" aria-hidden="true" />
-          <span className="db-hero-label">Start a listen</span>
+          <span className="db-hero-label">{inHand ? 'Listening now' : 'Start a listen'}</span>
+          {inHand && <span className="db-hero-record">{inHand.album}</span>}
         </Link>
 
         <div className="db-doors">

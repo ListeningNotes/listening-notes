@@ -199,40 +199,52 @@
   .lay-back:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 2px; }
   .lay .sitenav-side--left { padding-left: 40px; }
 
-  /* ── Where a layer opens, on a desk ── a desk can afford to share the
-     screen (Miyel, 2026-09-13), so only a listen takes the whole of it.
-     --hn-left and --hn-right are the cross's column widths, written on the
-     root by hooks/useColumnWidths.js while the cross is mounted; the
-     fallbacks are the rest widths, for a layer opened over another page.
+  /* ── Where a layer opens, on a desk ── the desktop is an open book, and
+     the rule under it is that the right page is what you are reading or
+     writing. --spine-w is the left page's width, written on the root by
+     hooks/useSpineWidth.js while the cross is mounted; the fallback is the
+     rest width, for a layer opened over another page.
 
-     An entry opens over the journal's column and leaves the card and the
-     desk beside it. Everything the entry pins to the window — its header
-     row and the band behind it, the carets to its neighbours, the print
-     bar — is pinned to the column instead. */
-  .lay--over-journal { left: var(--hn-left, 0px); right: var(--hn-right, 0px); }
+     An entry opens on the right page, and so does a listen — starting one
+     turns the journal into the session while the spine stays exactly where
+     it is. Everything the entry pins to the window — its header row and the
+     band behind it, the carets to its neighbours, the print bar — is pinned
+     to that page instead. */
+  .lay--over-journal { left: var(--spine-w, clamp(300px, 25vw, 420px)); right: 0; }
   .lay--over-journal .sitenav-row,
-  .lay--over-journal .sitenav-row::before { left: var(--hn-left, 0px); right: var(--hn-right, 0px); }
-  .lay--over-journal .lay-step--prev { left: calc(var(--hn-left, 0px) + 10px); }
-  .lay--over-journal .lay-step--next { right: calc(var(--hn-right, 0px) + 10px); }
+  .lay--over-journal .sitenav-row::before { left: var(--spine-w, clamp(300px, 25vw, 420px)); right: 0; }
+  .lay--over-journal .lay-step--prev { left: calc(var(--spine-w, clamp(300px, 25vw, 420px)) + 10px); }
+  .lay--over-journal .lay-step--next { right: 10px; }
   /* The correction's bar, its trouble line and the print bar are pinned to
      the window from wherever they are drawn (the print bar is portalled onto
-     the body), so they read the root's own numbers: the column's edges when
-     the cross is under them, the window's when the entry stands alone. */
-  .ln-editing-bar, .ln-print-bar { left: var(--hn-left, 0px); right: var(--hn-right, 0px); }
-  .ln-trouble { left: calc(var(--hn-left, 0px) + 16px); right: calc(var(--hn-right, 0px) + 16px); }
+     the body), so they read the root's own number: the right page's edge
+     when the cross is under them, the window's when the entry stands
+     alone. */
+  .ln-editing-bar, .ln-print-bar { left: var(--spine-w, 0px); right: 0; }
+  .ln-trouble { left: calc(var(--spine-w, 0px) + 16px); right: 16px; }
 
-  /* A desk page — the inbox, the address book, a person, a report, Settings
-     — is a panel at the right edge: the desk's own column, as wide as its
-     rail or 520px if the rail is narrower, with the wall still beside it.
-     In from the right, and LayerEntry takes it out the same way. */
-  .lay--over-desk {
-    --lay-desk-w: max(var(--hn-right, 186px), 520px);
-    left: auto;
-    width: var(--lay-desk-w);
-    border-left: 1px solid var(--border);
-    box-shadow: -14px 0 44px rgba(0, 0, 0, 0.1);
+  /* The owner's own rooms — the inbox, the address book, a person, a report,
+     Settings — open in the *spine*, as a shallow stack with a way back to the
+     desk. Not on the right, where they would be fighting a session for the
+     same page: the point of the layout is that looking something up does not
+     disturb what you are writing. In from the left, the way the page they
+     cover is on the left, and LayerEntry takes them out the same way. */
+  .lay--over-spine {
+    right: auto;
+    left: 0;
+    width: var(--spine-w, clamp(300px, 25vw, 420px));
+    border-right: 1px solid var(--border);
+    box-shadow: 14px 0 44px rgba(0, 0, 0, 0.1);
   }
-  .lay--over-desk.lay--rises { animation-name: layFromRight; }
+  .lay--over-spine.lay--rises { animation-name: layFromLeft; }
+  /* The spine is narrow — 300 to 520px, by the clamp. Everything that opens
+     on it was written for a phone and its tight rules are viewport queries,
+     which do not fire in a wide window, so a page that fits a phone can
+     overflow here. The fix is per page and lives with that page's own narrow
+     rules (forms.css), keyed on this class rather than on a container query:
+     container-type would make the sheet a containing block for every fixed
+     and absolute descendant in it, which is a large thing to take on for a
+     width that is never wide. */
 }
 @media (hover: hover) and (pointer: fine) { .lay-step { display: inline-flex; } }
 @media (prefers-reduced-motion: reduce) {

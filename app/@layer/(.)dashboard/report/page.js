@@ -9,7 +9,7 @@ import ReportPage from '../../../dashboard/report/page';
 
 export default function ReportOverTheDesk() {
   return (
-    <LayerEntry label="Report a problem" scrolls arrives="bottom" over="desk">
+    <LayerEntry label="Report a problem" scrolls arrives="bottom" over="spine">
       <ReportPage layered />
     </LayerEntry>
   );

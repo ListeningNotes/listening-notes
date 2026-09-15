@@ -495,3 +495,36 @@ the entry's art already turns into its photo code. The numbers above stand,
 for the day a physically printed flyer wants a code as a toggle. The current
 rule is in DECISIONS under Sharing, "Cards carry the mark only".
 
+
+---
+
+## Structure — the desktop as three columns, 2026-09-13 to 2026-09-15
+
+The rule that stood for two days, and why it was replaced by the open book
+(DECISIONS, "Desktop is an open book").
+
+**Desktop is the same three components as three columns, at three widths,
+2026-09-13.** The card and the desk were rails of about 196 and 186px,
+draggable and remembered per browser, with the centre taking the rest. That
+replaced three *equal* columns, which had been three phones parked side by
+side — no hierarchy, nowhere for the eye to land, everything floating in the
+vertical middle. Unequal columns fixed the hierarchy and kept the rest.
+
+What they did not fix, and what the brief that replaced them named: a wide
+screen still had a lot of air in it, because the answer to "what goes on the
+left" was *both things, always*. Two rails held the card and the desk whether
+or not anybody was reading either, and every pixel of that was taken from the
+journal. Nothing on the desktop was ever one thing at a time, so nothing on
+it could lead.
+
+And a listen had nowhere to go. An entry could cover the centre column, but
+the session took the whole screen — so every glance at the inbox while
+writing was a decision about the listen, which is exactly the thing a laptop
+is supposed to be better at than a phone. The open book's rule — the right
+page is what you are reading or writing, the spine is everything else — is
+the answer to that, and three columns had no place to put it.
+
+The old shape is in git on `desktop-columns` and at tag v1.10.0:
+`hooks/useColumnWidths.js` with two widths and the key `ln-columns`, the two
+grips, `--hn-left` / `--hn-right`, and `.lay--over-desk` as a panel at the
+right edge.
