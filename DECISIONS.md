@@ -132,12 +132,36 @@ small one in their own header instead, beside the pencil and the gear; on a
 desk even that goes, because the bar over the journal already has it and two
 marks on screen is two marks.
 
+**Every pane is an object, then the writing underneath, 2026-09-15.** The
+beacon is the record playing over the journal; the ID is who keeps this over
+their words; the desk is your tools over the feed; the entry is the record
+over the notes. The panes read as disjointed when the objects are not equally
+object-like — the structure was never the problem, the objects were.
+
+**The ID is a document, not a bordered card, 2026-09-15.** No box, no plate,
+no edge: the rigour comes from one rigid grid with one treatment for labels
+and one for values, which is how a licence carries a dozen fields without
+reading as cluttered. Draw a frame and the pane stops being one page.
+
+**The ID's stamps are counts, not labels, 2026-09-15.** Masterpieces, listens,
+formative — struck over the object at angles, outlined in ink and never
+filled. What somebody has called a masterpiece says more about how they listen
+than a genre list does, and it gives a stamp something true to mark. A
+machine-readable line was tried and cut: it references a passport rather than
+being one.
+
 **Down is a cover, not a gesture, 2026-09-15.** Down means cover-then-contents,
 and two things have that shape: the beacon, which is the journal's cover, and
 an entry's card, which is the entry's. The card and the desk are not covers of
 anything — they are pages, so no second floor, no arrival, no down caret. It
 settles the axis argument as a side effect: a vertical drag on a page is
 ordinary scrolling, and nothing has to choose between arriving and scrolling.
+
+**Light or dark is a setting, not a control on every screen, 2026-09-15.** It
+says how this device draws the site, which is a preference and not an action,
+and a switch in the corner of every pane is one somebody presses by accident.
+It lives in Settings; the nav row outside the cross still carries one, which
+is where a visitor finds it.
 
 **The cross is two panes. Sideways is you, down is the records, 2026-09-15.**
 Three made sideways mean two different things — left was about you, right was

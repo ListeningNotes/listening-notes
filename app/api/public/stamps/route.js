@@ -9,8 +9,14 @@
 // private — all of it is countable by scrolling the archive — so this answers
 // anyone.
 //
-// It counted the three marks too, for a swatch that has since come off the
-// card. Numbers nothing prints are numbers nobody has to keep true.
+// It counted the three marks once, for a swatch that came off the card, and
+// the counts were dropped with it — numbers nothing prints are numbers nobody
+// has to keep true. Two of them are back, 2026-09-15, because the card's
+// stamps print them: how many records somebody called a masterpiece and how
+// many were formative. The third, favourites, is not asked for and is not
+// counted. Counted here rather than from the entries the cross already holds,
+// for the reason below: the card is public and a visitor's copy of the
+// journal is not the place to work out a number about its keeper.
 //
 // Deliberately not derived on the client from /api/entries. That endpoint sends
 // every entry with its notes and its tracklist to draw a strip of album art;
@@ -23,8 +29,10 @@ export async function GET() {
   try {
     const [row] = await database`
       SELECT
-        COUNT(*)::int   AS records,
-        MIN(posted_at)  AS first_listen
+        COUNT(*)::int                                  AS records,
+        COUNT(*) FILTER (WHERE masterpiece)::int       AS masterpieces,
+        COUNT(*) FILTER (WHERE formative)::int         AS formative,
+        MIN(posted_at)                                 AS first_listen
       FROM entries
     `;
 
@@ -48,6 +56,8 @@ export async function GET() {
     // prints a month and a year from it.
     return Response.json({
       records: row?.records ?? 0,
+      masterpieces: row?.masterpieces ?? 0,
+      formative: row?.formative ?? 0,
       first_listen: row?.first_listen ?? null,
       genres: genres.map(g => g.name),
     });
@@ -55,6 +65,6 @@ export async function GET() {
     // A card with no numbers on it is a card. A card that fails to load is a
     // broken page, so the counts come back as zeros and the component leaves
     // those rows off rather than printing "0 records".
-    return Response.json({ records: 0, first_listen: null, genres: [] }, { status: 200 });
+    return Response.json({ records: 0, masterpieces: 0, formative: 0, first_listen: null, genres: [] }, { status: 200 });
   }
 }

@@ -145,7 +145,7 @@ The furniture — visual pieces
     main_components/           Everything on the public side
       HomeNav.js               The cross itself — two panes, the mark, the carets, the switch that turns the left one; on a desk an open book — the spine on the left, the journal on the right, the band, the fold
       About.js                 One face of the turning pane: the card, then the writing under it, in one scroll
-      IdentityCard.js          The identity card — this is the About page
+      IdentityCard.js          The ID: a document rather than a card — fields in one rigid grid on the left, a small desaturated photograph on the right, three counted stamps struck over it. This is the About page
       IdentificationCardEditor.js  Editing the card in place
       ListeningBeacon.js       The beacon — what is playing, or last played
       Journal.js               The wall of covers, with its search, filters and sort
