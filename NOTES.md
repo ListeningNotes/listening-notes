@@ -1523,8 +1523,9 @@ current.
 
 ## Complete
 
-**2026-09-14 — credit the person who sent it, branch `credit`, not
-merged (1.13.0 when it is: something new)**
+**2026-09-14 — credit the person who sent it, branch `credit`, merged to
+main and pushed 2026-09-15 as 1.13.0 (something new: the middle number).
+No release cut — Miyel's call; the desks say nothing until one is.**
 
 - [x] **Sent by is picked off the address book, sits at the head, and
       shows on the entry.** The three changes of the brief. In edit mode
