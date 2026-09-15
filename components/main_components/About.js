@@ -73,7 +73,7 @@ const PIN_RESULTS = 40;
 // should be solved together.
 export default function About({ stamps, authed = false, pinned = null, entries = [] }) {
   const settings = useBookplate();
-  const { bioanswers, keeper_name, rig: rigRows, rig_icon, social_links } = settings;
+  const { bioanswers, keeper_name, rig: rigRows, social_links } = settings;
 
   // Whose voice the answers are in, and what the journal actually listens to.
   // The name rather than a pronoun: every copy has a different somebody in it,
@@ -145,11 +145,12 @@ export default function About({ stamps, authed = false, pinned = null, entries =
   // Same filter the card applies, for the same reason: a row with no name is a
   // row somebody started and abandoned in the editor, and it should not print.
   const rigList = (Array.isArray(rigRows) ? rigRows : []).filter(r => r?.name?.trim());
-  const rig = rigIcon(rig_icon);
+  // rigIcon(rig_icon) resolved the keeper's chosen mark for the Rig setup
+  // heading, which no longer wears one. Nothing reads it now; the chooser in
+  // the editor still writes it. See the heading.
   // What the heading wears: the saved mark normally, the draft one while
   // editing, so pressing a new mark changes the heading under your thumb
   // rather than after a save.
-  const RigMark = edit.editing ? chosenRig.Icon : rig?.Icon;
 
   // Where else this person can be found. They used to be marks in the row
   // beside "Send an album" on the card, which put "here is somebody's Instagram"
@@ -532,10 +533,14 @@ export default function About({ stamps, authed = false, pinned = null, entries =
                 and what it does, and the rest is the journal. Hardcoded they
                 would also be one person's essay shipped inside everybody's
                 copy — see the note on the rig column in migrations/001_initial.sql. */}
-            <h2 className="ab-subhead">
-              {RigMark && <RigMark size={15} weight="regular" aria-hidden="true" />}
-              Rig setup
-            </h2>
+            {/* Two words and no glyph (Miyel, 2026-09-15). The mark that was
+                here was the rig's chosen one — see the note by `chosenRig`
+                below: choosing it is still offered in the editor and this was
+                the only place it printed, so that choice currently changes
+                nothing. It is left offered rather than quietly removed,
+                because taking a setting away is a decision and this was a
+                note about a glyph. */}
+            <h2 className="ab-subhead">Rig setup</h2>
             {edit.editing ? (
               <div className="idc-links">
                 {/* The rig, chosen the same way. It sits with the links because it
