@@ -1611,7 +1611,8 @@ current.
 ## Complete
 
 **2026-09-15 — the inbox, branch `inbox-logged`, merged to main and pushed
-as 1.14.0 (something new: the middle number), released the same day**
+as 1.14.0 (something new: the middle number), released the same day as
+[v1.14.0](https://github.com/ListeningNotes/listening-notes/releases/tag/v1.14.0)**
 
 - [x] **New was never a place.** It is a property of a row, the way unread
       is in mail, and nobody keeps a read tab and an unread tab. So the two
