@@ -251,7 +251,10 @@ would need its own column, `prompted_by` — parked, not built.
 and `received_date` are corrections. `source_entry_id` is not: either their
 entry led to yours or it did not, and lineage anyone can rewrite is a record
 of nothing. Set while empty and never again — the `WRITE_ONCE` rule `serial`
-and `founded_at` use — and dropped silently if sent again.
+and `founded_at` use — and dropped silently if sent again. **And never by
+hand, 2026-09-14:** the editor does not offer it. A wrong value can only be
+undone in SQL, and it was a field only because nothing set it yet. The send
+flow sets it when both people have copies; the column waits.
 
 **Everything editable is edited where it prints.** Fields on the card for
 things a screen below it were a form filled in blind.
