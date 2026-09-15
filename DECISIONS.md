@@ -108,20 +108,24 @@ somebody and a pane does not.
 same component the pane does: `/archive` → Journal, `/about` → About. One
 description of each thing, two places it can be reached.
 
-**Two dots and one caret, 2026-09-15.** Dots were ruled out against three
-panes and three carets: dots say how many of these there are, a caret says
-there is something that way, and three of each was two vocabularies doing one
-job. With two panes and the turn moved to the header they describe different
-axes — the dots are where you are sideways, the caret is what is next along,
-and the down caret is the vertical one. A swipe is still invisible, so the
-caret stays: pressing it is how the swipe gets learned.
+**Dots on the beacon, a clear foot on the turning pane, 2026-09-15.** Dots
+were ruled out against three panes and three carets — two vocabularies doing
+one job — and with two panes they are the only one left: the active dot widens
+rather than just darkening, which reads as a position instead of a count. No
+side carets at all now. On the turning pane the foot is empty: anybody who got
+there swiped or pressed the turn, and either way knows the way back.
 
-**The down caret is the beacon's alone, 2026-09-15.** It is the one pane where
-nothing is visibly cut off — a whole screen of cover, art, title and what came
-before, with no partial content at the fold — so something has to say there is
-more. The turning pane scrolls, and writing running off the bottom edge is the
-cue, which is how every page works. This is "down is a cover" said about the
-control rather than the gesture.
+**The down caret is the beacon's alone, under the dots, 2026-09-15.** It is
+the one pane where nothing is visibly cut off — a whole screen of cover, art,
+title and what came before — so something has to say there is more; the
+turning pane scrolls and its writing running off the edge is the cue. No mark
+over it: a side caret's mark named a destination worth knowing, and down has
+only one.
+
+**The light switch is the beacon's, top right, 2026-09-15.** It went to
+Settings as a preference rather than an action, which cost a visitor any way
+of changing it — Settings is behind the password. On the beacon it is public
+again and is the one pane where it is not sitting over somebody's reading.
 
 **The turn is the header's left-hand control, 2026-09-15.** The header has
 been a centred mark with one control each side since it was drawn and the left

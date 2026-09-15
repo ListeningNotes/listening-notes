@@ -69,9 +69,10 @@
 'use client';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { ArrowsClockwise, BookOpen, Broadcast, Gear, IdentificationCard, Info } from '@phosphor-icons/react';
+import { ArrowsClockwise, Broadcast, Gear, IdentificationCard, Info } from '@phosphor-icons/react';
 import { foldKey, useListeningBeacon } from '../../hooks/useListeningBeacon';
 import { useSpineWidth } from '../../hooks/useSpineWidth';
+import { useTheme } from './Lightswitch';
 import { useBookplate } from './Bookplate';
 import ListeningBeacon from './ListeningBeacon';
 import Journal from './Journal';
@@ -140,6 +141,7 @@ function secondFloorTop(pane) {
 
 export default function HomeNav() {
   const { cover_name, pinned_entry_id, beacon_available } = useBookplate();
+  const { theme, toggle: toggleTheme } = useTheme();
   const { isLive, recentAlbums } = useListeningBeacon();
   // How wide the spine is on a desk, and the grip that changes it. The hook
   // writes the width onto the document's root as --spine-w, which the
@@ -474,13 +476,13 @@ export default function HomeNav() {
     </svg>
   );
 
-  // The light switch used to sit at the right end of this row, on every pane.
-  // It is in Settings now (2026-09-15, Miyel's brief): it says how this device
-  // draws the site, which is a preference and not an action, and a control on
-  // every screen is a control somebody presses by accident. The nav row on the
-  // pages outside the cross still carries one, which is where a visitor finds
-  // it. What is left in this row is the mark and the tap that goes back to the
-  // top of a pane.
+  // The light switch is back in this row and only on the beacon (Miyel,
+  // 2026-09-15). It left for Settings on the argument that it is a preference
+  // and not an action, which is true and cost a visitor any way of changing
+  // it — Settings is behind the password. On the beacon it is public again,
+  // and on the one pane where it is not sitting over somebody's reading. The
+  // stylesheet hides it on the turning pane; on a desk this row is over the
+  // journal, which is the beacon, so it simply stays.
   const header = (
     <div className={'hn-bar' + (down[pane] ? ' hn-bar--scrolled' : '')}>
       {down[pane] && (
@@ -500,6 +502,13 @@ export default function HomeNav() {
           on: back to the top. */}
       <button type="button" className="hn-bar-mark" onClick={() => goUp(pane)} aria-label="Back to the top">
         {mark('hn-bar-svg')}
+      </button>
+      <button className="hp-icon-btn hn-lights" onClick={toggleTheme} aria-label="Toggle theme">
+        {theme === 'dark' ? (
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+        ) : (
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1111.21 3a7 7 0 109.79 9.79z"/></svg>
+        )}
       </button>
     </div>
   );
@@ -638,7 +647,7 @@ export default function HomeNav() {
   const turnLine = (
     <div className="hn-turn-row">
       <button type="button" className="hn-turn-say" onClick={turnPane}>
-        <ArrowsClockwise size={13} weight="regular" aria-hidden="true" />
+        <ArrowsClockwise size={18} weight="regular" aria-hidden="true" />
         {goingTo.word}
       </button>
     </div>
@@ -819,46 +828,27 @@ export default function HomeNav() {
           The swipe itself is untouched. Hiding a control is a hint; disabling
           a gesture halfway down a page is the thing that would actually read as
           broken. */}
+      {/* ── The row along the bottom ────────────────────────────────────
+          Dots, and under them the one caret that still means something.
+
+          The side carets are gone (Miyel, 2026-09-15). On the turning pane
+          the foot is clear: anybody who has got there arrived by swiping or
+          by pressing the turn, and either way they know how to go back. On
+          home the dots say where you are on the rail, which is what the caret
+          to the card was saying more loudly.
+
+          What is left pointing anywhere is down, and only on the beacon —
+          the one pane with a whole screen and nothing cut off at the fold, so
+          nothing else says there is more. No mark over it: the mark on a side
+          caret named a destination worth knowing, and down has only one
+          destination, which is the rest of this. */}
       <div className={'hn-controls' + (busy ? ' hn-controls--busy' : '')}>
-        <EdgeCaret
-          direction="left"
-          onClick={() => goTo(pane - 1)}
-          /* At the left end there is no pane to name. The control is hidden
-             and inert there, but a button whose only label is the word "null"
-             is still a button a screen reader could find. */
-          label={marks[pane - 1]?.label || 'Back'}
-          icon={marks[pane - 1]?.Icon}
-          hidden={pane <= 0 || down[pane]}
-        />
-
         {dots}
-
-        {/* The one pane where nothing is visibly cut off: a full screen of
-            cover, art, title and what came before, with no partial content at
-            the fold, so something has to say there is more. The turning pane
-            needs none — it scrolls, and the writing running off the bottom
-            edge is the cue, which is how every page works. It is measured
-            rather than declared (`deep` answers false for anything but home),
-            so a copy with no beacon has no first screen to leave and nothing
-            points down at it. */}
         <EdgeCaret
           direction="down"
           onClick={() => goDown(pane)}
           label="Read on"
-          icon={BookOpen}
           hidden={!deep[pane] || down[pane]}
-        />
-        <EdgeCaret
-          direction="right"
-          onClick={() => goTo(pane + 1)}
-          label={marks[pane + 1]?.label || 'Onward'}
-          icon={marks[pane + 1]?.Icon}
-          /* No `down` here, and that is the asymmetry the rule produces. This
-             caret only ever appears on the turning pane, where down is
-             ordinary scrolling; the left one only ever appears on home, where
-             down is being in the wall, and being in something is the case
-             that rule was written for. */
-          hidden={pane >= 1}
         />
       </div>
     </div>
