@@ -1714,12 +1714,15 @@ current.
         giving up letter-spacing and the room between them (299px of
         375), because a tab you have to drag to find is a tab nobody
         presses.
-      - **New rows:** who it is from at the head of the row — a round
-        face, the sender's name carrying the link's underline, the date at
-        the far end of the same line (Miyel, moved up after the first
-        pass: a send is somebody handing you something, so who comes
-        before what) — then square art at 112px (84 on a phone), the album
-        at 21px display, and the message at reading size.
+      - **New rows are three rows and a button** (Miyel, over two passes).
+        *From:* then a round face, the sender's name carrying the link's
+        underline, and the date, all across the top — a send is somebody
+        handing you something, so who comes before what. The record is its
+        own row under that, which is what puts the cover in line with the
+        album's name instead of with somebody's face; square at 84px, 68
+        on a phone. Then the message, full width. Then Start a listen.
+        The ··· left the button's line for the row's top right corner:
+        extra, and out of the way of everything that reads left to right.
       - **Opened rows:** square art at 56px, the album at 17px, the
         subtitle now *artist · what became of it* rather than the state
         and the sender's name, and the sender is a round face at the end
@@ -1738,7 +1741,8 @@ current.
       *in progress*, *logged 4 august*, *dismissed*, *Nothing new.*,
       *Nothing opened yet.*; the
       `.ib-who*`, `.ib-more`, `.ib-menu*`, `.ib-done*`, `.ib-back`,
-      `.ib-head`, `.ib-title`, `.ib-tab-n`
+      `.ib-head`, `.ib-title`, `.ib-tab-n`, `.ib-sent-head`,
+      `.ib-sent-label`, `.ib-sent-body`; the word *From:*
       classes in forms.css; the words *put back*; and `lookup_key`
       keeping its name where it moved to.
 - [x] **Verified:** the build passes, the draft lookup was run against the

@@ -763,14 +763,33 @@ a.pp-name:hover svg { color: var(--ink); }
 .ib-list { display: flex; flex-direction: column; gap: 6px; }
 /* One received album. Cover on the left at the size of a thing being handed
    over, everything said about it in a column to the right. */
-.ib-sent { display: flex; gap: 22px; align-items: flex-start; padding: 26px 4px; border-bottom: 1px solid var(--border); }
+/* Three rows and a button, 2026-09-15. Who it came from across the top, the
+   record under it, then the message — so the cover lines up with the album's
+   name rather than with somebody's face, which is what it did while the row
+   was one long column beside the art. */
+.ib-sent { display: flex; flex-direction: column; padding: 24px 4px; border-bottom: 1px solid var(--border); }
 .ib-sent:last-child { border-bottom: none; }
+.ib-sent-head {
+  display: flex; align-items: center; gap: 10px; min-width: 0;
+  /* The line's type lives here, so From:, the name and the date are one
+     voice — it used to be on the row this replaced, and without it the
+     name came back at body size. */
+  font-family: var(--font-label); font-size: 11px; letter-spacing: 0.06em;
+  color: var(--ink-soft);
+}
+/* The word that makes the line a sentence rather than a name floating over
+   a record. */
+.ib-sent-label {
+  font-family: var(--font-label); font-size: 11px; letter-spacing: 0.06em;
+  color: var(--ink-faint); flex-shrink: 0;
+}
+.ib-sent-body { display: flex; align-items: center; gap: 18px; margin-top: 14px; min-width: 0; }
 /* Square, and bigger than it was, 2026-09-15. A cover is what was handed
    across, so it is the first and largest thing in the row — and square,
    because a record is. aspect-ratio rather than a matching height, so a
    long album title can never stretch it into a tall rectangle. */
 .ib-sent-art {
-  flex-shrink: 0; width: 112px; aspect-ratio: 1 / 1; border-radius: 10px; overflow: hidden;
+  flex-shrink: 0; width: 84px; aspect-ratio: 1 / 1; border-radius: 10px; overflow: hidden;
   background: var(--panel); box-shadow: var(--shadow-soft);
   display: flex; align-items: center; justify-content: center;
 }
@@ -783,27 +802,23 @@ a.pp-name:hover svg { color: var(--ink); }
 .ib-sent-artist { font-family: var(--font-label); font-size: 11.5px; color: var(--ink-soft); margin-top: 4px; }
 /* The message. Set at reading size rather than table size, because it is the
    only thing here somebody wrote. */
-.ib-sent-note { font-size: 15px; color: var(--ink); line-height: 1.65; margin: 14px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; }
-/* At the head of the row since 2026-09-15: who handed it over, and when.
-   A send is somebody giving you something, so who comes before what. */
-.ib-sent-from {
-  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
-  margin-bottom: 13px;
-  font-family: var(--font-label); font-size: 11px; letter-spacing: 0.06em; color: var(--ink-soft);
+.ib-sent-note { font-size: 15px; color: var(--ink); line-height: 1.65; margin: 15px 0 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.ib-sent-when {
+  margin-left: auto; flex-shrink: 0;
+  font-family: var(--font-label); font-size: 11px; letter-spacing: 0.06em;
+  color: var(--ink-faint);
 }
-.ib-sent-when { margin-left: auto; color: var(--ink-faint); }
 /* Three pills since the address book (2026-09-12): they wrap onto a second
    line on a phone rather than folding their own words. */
-.ib-sent-row { display: flex; flex-wrap: nowrap; align-items: center; gap: 8px; margin-top: 16px; }
+.ib-sent-row { display: flex; flex-wrap: nowrap; align-items: center; gap: 8px; margin-top: 18px; }
 @media (max-width: 640px) {
-  .ib-sent { gap: 16px; padding: 20px 2px; }
+  .ib-sent { padding: 20px 2px; }
+  .ib-sent-body { gap: 14px; margin-top: 12px; }
   /* Height dropped: aspect-ratio keeps it square, and a fixed height here
      is the one thing that could argue with it. */
-  .ib-sent-art { width: 84px; }
+  .ib-sent-art { width: 68px; }
   .ib-sent-album { font-size: 18px; }
-  .ib-sent-note { font-size: 14.5px; margin: 12px 0 0; }
-  .ib-sent-from { margin-bottom: 11px; }
-  .ib-sent-when { margin-left: auto; }
+  .ib-sent-note { font-size: 14.5px; margin: 13px 0 0; }
   .ib-done { gap: 13px; padding: 12px 2px; }
   .ib-done-art { width: 48px; }
   .ib-done-album { font-size: 15px; }
@@ -828,6 +843,7 @@ a.pp-name:hover svg { color: var(--ink); }
    that; the label was a second line of type repeating it. */
 .ib-who { display: inline-flex; align-items: center; gap: 9px; min-width: 0; }
 /* Their name carries the link, so it wears the underline a link wears. */
+.ib-who a, .ib-who > span:last-child { color: var(--ink); }
 .ib-who a { text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--border); }
 .ib-who a:hover { text-decoration-color: var(--ink-faint); }
 .ib-who-face {
@@ -848,7 +864,7 @@ a.pp-name:hover svg { color: var(--ink); }
    ink, pushed to the far edge so there is room between them and the button
    rather than a gap of eight pixels. */
 .ib-more {
-  margin-left: auto;
+  margin-left: 6px; margin-right: -8px;
   flex-shrink: 0;
   border: 0;
   border-radius: 0;
@@ -859,10 +875,10 @@ a.pp-name:hover svg { color: var(--ink); }
      as punctuation somebody had left behind. An icon is one shape, drawn
      the way every other mark on the site is drawn. */
   line-height: 0;
-  /* A thumb's worth of target on a small mark, taken in padding, weighted
-     to the left so the dots sit on the row's right edge and not the
-     padding. */
-  padding: 12px 0 12px 16px;
+  /* A thumb's worth of target on a small mark, taken in padding. It sits in
+     the row's top corner, so the padding is even and the mark lands where
+     the corner is. */
+  padding: 11px 8px;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   transition: color 0.15s;
