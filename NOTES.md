@@ -256,6 +256,14 @@ Left over:
       shape when the head was centred and was only seen signed in, where the
       line is the name alone. It is a centred flex column, so it will centre;
       what is unseen is whether two pills under the date want more air than 14px.
+- [ ] **The rig's chosen mark now prints nowhere.** The glyph came off the
+      Rig setup heading (Miyel: no glyphs there) and that heading was the only
+      place `settings.rig_icon` was drawn in read mode. The chooser is still
+      in the card's editor — "The rig — headphones" with nine marks to pick
+      from — so it is a setting that writes a value nothing shows. Left
+      offered rather than quietly removed, because taking a setting away is
+      her call and this was a note about a glyph. Either it goes, or the mark
+      finds somewhere else to print.
 - [ ] **The counts on a fresh copy.** A journal with no masterpieces and
       nothing formative prints one count where there are normally three, and
       one number spread across the whole row may want a different treatment.
