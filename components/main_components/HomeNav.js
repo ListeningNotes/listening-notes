@@ -597,17 +597,26 @@ export default function HomeNav() {
   // grounds that those marks are already the vocabulary for these three
   // things; Miyel's verdict was that a mark on its own is too quiet for the
   // one control that says the page turns, and a control nobody notices does
-  // not exist. The words are her own, the ones the phone's carets already
-  // name these panes with.
+  // not exist.
+  //
+  // One word, not the pane's whole name (Miyel, 2026-09-15: "we can just do
+  // desk and bio"). The names in paneMarks are read out on a swipe, where a
+  // sentence is right because nothing is on screen to look at; this is a word
+  // on a control at the top of a page, where one is. The sentence is still
+  // the hover, so the short word never has to carry the whole explanation.
   //
   // The row around it takes no clicks, the way the bar over the journal does
   // not: it is a strip across the top of a scrolling page, and a strip that
   // swallowed them would be a dead band across the top of the card.
   const turnTo = face === 'card' ? marks[2] : marks[0];
+  // Bio for the card either way — signed in it is yours, signed out it is the
+  // keeper's, and the face is the same face. Desk or About for the other
+  // side, which is the desk for the owner and the colophon for everybody else.
+  const turnWord = face === 'card' ? (authed ? 'Desk' : 'About') : 'Bio';
   const turnLine = (
     <div className="hn-turn-row">
-      <button type="button" className="ln-pill hn-turn" onClick={turnSpine}>
-        {turnTo.label}
+      <button type="button" className="ln-pill hn-turn" onClick={turnSpine} title={turnTo.label}>
+        {turnWord}
         <CaretRight size={10} weight="bold" aria-hidden="true" />
       </button>
     </div>

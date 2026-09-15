@@ -284,18 +284,22 @@ cannot be tested end to end.
       `.lay--over-journal` / `.lay--over-spine`; `.db-hero--lit` and
       `.db-hero-record`; the inbox's `.ib-holding`. The grip's label is
       "Resize the spine".
-- [ ] **What turns the spine took three passes on 2026-09-15 and landed on
-      a pill at the top right.** The brief asked for a line at the spine's
-      foot; Miyel asked for a Phosphor mark on it rather than words, with
-      "destination with caret" named up front as the fallback. The mark on a
-      centred line at the foot was "not the right idea" — so it moved to the
-      top right, on the bar's own line, where it pairs with the lights over
-      the journal. The mark alone there was "too subtle", so it took the
+- [ ] **What turns the spine took four passes on 2026-09-15 and landed on a
+      one-word pill at the top right.** The brief asked for a line at the
+      spine's foot; Miyel asked for a Phosphor mark on it rather than words,
+      with "destination with caret" named up front as the fallback. The mark
+      on a centred line at the foot was "not the right idea" — so it moved to
+      the top right, on the bar's own line, where it pairs with the lights
+      over the journal. The mark alone there was "too subtle", so it took the
       words and the caret she had already named, in `.ln-pill` — the same
       press as Send an album and Get one, which is what makes it read as
-      pressable. The words are `paneMarks`' own, the ones the phone's carets
-      already name these panes with. Nothing invented. If it wants to be
-      quieter again, the pill class is the one thing to change.
+      pressable. Then the pane's whole name was too much for a control at the
+      top of a page: **Bio / Desk / About**, her words, with the sentence
+      kept on the hover. Bio for the card either way, Desk or About for the
+      other side. `paneMarks` is untouched — those names are read out on a
+      swipe, where a sentence is right. One note for later: *bio* also names
+      the free-text field that was cut for the prompts and may come back
+      (DECISIONS), so if it does, these two meanings of the word will meet.
 
 - [ ] **Where a record came from wants one pass of refinement, 2026-09-15.**
       Miyel's call at the end of the credit and inbox work, and it is
