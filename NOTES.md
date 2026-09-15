@@ -1958,12 +1958,40 @@ lesson is in the entry below.**
       was: it leans into the record it is pinning, because Phosphor draws it
       leaning the other way and it pointed off the edge of the row. The word
       survives in the row's label for anybody who cannot see the pin.
-- [x] **Below the fold, in the same scroll:** a quiet *In Miyel's own words*
-      over the three prompts — the name rather than a pronoun, because every
-      copy has a different somebody in it — then top genres as one line rather
-      than a three-row fact block, then the rig. About reads the genres off
-      `stamps` itself now; they are computed, not written, and they belong
-      with the reading.
+- [x] **Below the fold, in the same scroll:** the three prompts, then top
+      genres as one line rather than a three-row fact block, then the rig.
+      About reads the genres off `stamps` itself now; they are computed, not
+      written, and they belong with the reading. A quiet *In Miyel's own
+      words* stood over the prompts for an hour and came off — a question in
+      one voice with an answer in another already says which of the two you
+      are reading.
+- [x] **Each prompt is a card, and the two halves are in two faces.** A card
+      in `--panel` with no border: the box exists and does not announce
+      itself, so three in a row do not read as three rectangles, and they are
+      separated by tone the way the counts and the pinned record above them
+      are. Three hairlines would have competed with the row directly above.
+      The answer is indented behind a 2px rule, like a pull quote — it is
+      being quoted into the question's card, not continuing its sentence.
+- [x] **The question is DM Mono, the answer is Nunito 300.** The brief asked
+      for MuseoModerno on the grounds that it is the mark's own face and so
+      costs no typeface. It costs one: **the mark is drawn as SVG paths, not
+      set as type, and MuseoModerno has never been loaded** — what made it
+      look available was a `museo` key in `library/sitewide_visuals.js` that
+      said MuseoModerno and resolved to Nunito. Nothing read it; it is
+      deleted, because a font table that names a face this site does not have
+      is how that brief came to be written. The distinction it wanted — the
+      software's voice against the person's — is already what the label face
+      carries here, on every label, every count's word, KEEPING SINCE and
+      PINNED; the nine questions ship with the software and are identical on
+      every copy, which is exactly the case the label face is for. Nunito 300
+      is one more weight of a family already fetched, which is not the same
+      as a third family (see the Anton note in app/layout.js).
+- [x] **The em dash is gone from the printed question.** It was separating the
+      opening from the answer on one line; on two lines in two faces it
+      separates things that separate themselves. Stripped at the render rather
+      than out of the nine strings in `bioprompt.js` — it is the typography
+      that made it redundant, and the typography is the thing most likely to
+      change again.
 - [x] **A hint that there is more.** The fold is where the object stops by
       design, so a faint chevron sits above the band and scrolls one screen;
       it goes the moment the page has moved. Down is still not a gesture here

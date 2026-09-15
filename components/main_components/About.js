@@ -80,8 +80,6 @@ export default function About({ stamps, authed = false, pinned = null, entries =
   // and "In Miyel's own words" reads where "In their own words" has to cover
   // everyone. No name yet — a copy claimed an hour ago — and it falls back to
   // the pronoun, which is the one case where covering everyone is right.
-  const whose = String(keeper_name || '').trim();
-  const voice = whose ? `In ${whose}\u2019s own words` : 'In their own words';
   // Computed, never chosen: what this journal listens to, not what its keeper
   // would claim. It printed on the card until 2026-09-15 and belongs with the
   // reading — it is neither a count nor something anybody wrote.
@@ -479,18 +477,22 @@ export default function About({ stamps, authed = false, pinned = null, entries =
           </section>
         ) : answered.length > 0 && (
           <section className="ab-block ab-block--prompts">
-            {/* A quiet line saying whose voice the next three sentences are
-                in. The object above is facts about somebody, counted; this is
-                the part they wrote. Named rather than "In their own words",
-                because every copy of this software has a different somebody
-                in it and a possessive reads better than a pronoun that has to
-                cover everyone. */}
-            <h2 className="ab-voice">{voice}</h2>
+            {/* No heading. It said "In Miyel's own words" for an hour and did
+                not need to: a question in one voice with an answer in another
+                already says which of the two you are reading (Miyel,
+                2026-09-15). */}
+            {/* The opening carries its own trailing em dash (bioprompt.js),
+                which was there to separate the question from the answer on one
+                line. They are on two lines in two faces now, so the dash is
+                separating things that separate themselves — taken off at the
+                render rather than out of the nine strings, because it is the
+                typography that made it redundant and the typography is the
+                thing most likely to change again. */}
             {answered.map(row => (
-              <p className="ab-prompt" key={row.key}>
-                <span className="ab-prompt-ask">{row.text}</span>{' '}
-                <span className="ab-prompt-said">{row.answer}</span>
-              </p>
+              <div className="ab-prompt" key={row.key}>
+                <p className="ab-prompt-ask">{row.text.replace(/\s*[—–-]\s*$/, '')}</p>
+                <p className="ab-prompt-said">{row.answer}</p>
+              </div>
             ))}
           </section>
         )}

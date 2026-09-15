@@ -437,6 +437,8 @@
   box-sizing: border-box;
 }
 .ab-block { display: flex; flex-direction: column; gap: 12px; }
+/* Cards want air between them where hairline rows wanted none. */
+.ab-block--prompts { gap: 10px; }
 .ab-subhead {
   display: flex;
   align-items: center;
@@ -456,19 +458,49 @@
    what somebody said, and a prompt set at the same weight as its answer reads
    as a form rather than as a person talking. */
 .ab-block--prompts { gap: 0; }
+/* ── A prompt ───────────────────────────────────────────────────────────────
+   A card with no border: the box exists and does not announce itself, so
+   three of them in a row do not read as three rectangles (Miyel's brief,
+   2026-09-15). Separated by tone rather than by line, which is how the counts
+   and the pinned record above them already sit — three hairlines here would
+   have been competing with the row directly above.
+
+   Two kinds of writing, in the two faces this site already has. The question
+   is in the label face, because the nine questions ship with the software and
+   are identical on every copy: this is the one place a voice that is not the
+   keeper's is honest, and DM Mono is already what the software sounds like
+   here — every label, every count's word, KEEPING SINCE, PINNED. The answer
+   is Nunito light, which is the person.
+
+   MuseoModerno was asked for and is not available: the mark is drawn as SVG
+   paths rather than set as type, so the face has never been loaded, and a
+   third family fetched by every visitor to style nine short questions is the
+   Anton mistake again (app/layout.js has the note). The distinction the brief
+   wanted — the software's voice against the person's — is what the label face
+   already carries. */
 .ab-prompt {
   margin: 0;
-  padding: 13px 0;
-  border-bottom: 1px solid var(--border);
-  font-size: 15px;
-  line-height: 1.6;
-  /* balance, so a two-line answer breaks somewhere sensible rather than
-     leaving one word under the opening. */
+  padding: 16px 18px 18px;
+  border-radius: 14px;
+  background: var(--panel);
   text-wrap: pretty;
 }
-.ab-prompt:last-child { border-bottom: none; }
-.ab-prompt-ask { color: var(--ink-faint); }
-.ab-prompt-said { color: var(--ink); }
+.ab-prompt-ask {
+  margin: 0;
+  font-family: var(--font-label);
+  font-size: 12.5px; line-height: 1.55; letter-spacing: 0.02em;
+  color: var(--ink);
+}
+/* Indented behind a rule, like a pull quote: the answer is being quoted into
+   the question's card, not continuing its sentence. */
+.ab-prompt-said {
+  margin: 13px 0 0;
+  padding-left: 14px;
+  border-left: 2px solid var(--border);
+  font-weight: 300;
+  font-size: 15px; line-height: 1.62;
+  color: var(--ink);
+}
 
 /* ── Answering them ─────────────────────────────────────────────────────────
    The opening on its own line above the answer while editing, rather than

@@ -18,9 +18,14 @@ import { isSetUp, pull_settings, coverName, titleName } from '../library/setting
 import { hasDatabase, explainDatabaseError } from '../library/database_connection';
 import { isCurrentCode } from '../library/portrait_code';
 
+// 300 is here for the prompt answers, which are set light so the person's
+// writing reads differently from the software's question above it (2026-09-15).
+// One more weight of a family already being fetched, rather than a family: the
+// note about Anton below is the standing rule, and a third face for nine short
+// questions would be the same mistake with better reasons.
 const nunito = Nunito({
   subsets: ['latin'],
-  weight: ['400', '500', '600', '700', '800', '900'],
+  weight: ['300', '400', '500', '600', '700', '800', '900'],
   variable: '--font-nunito',
 });
 
