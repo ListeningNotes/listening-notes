@@ -1,7 +1,8 @@
 // Copyright (C) 2026 Miyel Brown
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // components/main_components/Pitch.js
-// The right pane of the cross, seen by everyone who is not the owner.
+// The far face of the cross's turning pane, seen by everyone who is not the
+// owner. Where the desk is for the keeper, this is for everybody else.
 //
 // This is the growth mechanic and it is deliberately the quietest thing on the
 // site. Somebody is holding the phone asking how you got this; the owner

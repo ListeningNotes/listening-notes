@@ -110,16 +110,16 @@
   @keyframes abPinSlide { from { transform: translateY(100%); } to { transform: none; } }
 }
 .ab-card {
-  min-height: calc(100dvh - var(--hn-crown));
+  /* No minimum height and nothing to fill, since 2026-09-15. The card was a
+     floor — one screen that held still, with the writing on a second floor
+     below it — and it is a page now: the glance at the top, the reading
+     continuing down the same scroll. Down is cover-then-contents and the card
+     is not a cover, so there is nothing here to arrive at. */
   box-sizing: border-box;
   display: flex;
-  /* flex-start, not centre. The card leads with the portrait now, and the
-     portrait has to sit directly under the crown to land on the same line as
-     the beacon's album art one pane over. Centred, it drifted by however much
-     shorter than a screen the card happened to be. */
   align-items: flex-start;
   justify-content: center;
-  padding: 0 16px 84px;
+  padding: 0 16px 0;
 }
 /* The card stops carrying its own scrollbar. It had one because it used to be
    a fixed-size object on a pane that did not scroll; the pane scrolls now, and
@@ -138,28 +138,22 @@
    mistake rather than as a colophon. The head keeps its height and its tools:
    only the logo goes, and the row is pushed right so the owner's edit controls
    stay in the corner they have always been in. */
-/* The owner's controls, pinned to the window opposite the lights rather than
-   to the corner of the card. Two controls that belong to the page rather than
-   to anything on it, one at each end of the same line — and the pencil stops
-   travelling up the screen with the card as the pane scrolls.
-   Fixed, so it also stops taking a row in the card's column: left in the flow
-   it put 44px of air between the crown and the portrait, which is 44px of
-   drift against the album art on the pane beside it. */
+/* ── The card's header ──────────────────────────────────────────────────────
+   The small mark, and the owner's two tools opposite it. In the flow at the
+   top of the page, 2026-09-15: it was fixed to the window, and the reasons
+   for that are both gone. One was that a header in the flow put 44px of air
+   between the crown and the portrait, which was 44px of drift against the
+   album art on the pane beside it — there is no crown here now and no line to
+   hold. The other was that a fixed pencil does not travel up the screen as
+   the pane scrolls, which is true and is also just what a page's header does.
+
+   The mark is drawn here now for the same reason. The card lost the crown and
+   the beacon kept it: a crown is for a cover, and the card is a page. */
 .ab-card .idc-head {
-  position: fixed;
-  top: max(12px, calc(env(safe-area-inset-top) - 12px));
-  left: 16px;
-  right: auto;
-  min-height: 0;
-  margin: 0;
-  z-index: 97;
+  min-height: 28px;
+  margin: 0 0 16px;
 }
-.ab-card .idc-mark { display: none; }
-/* The portrait's own margin becomes the shared offset, so the two squares
-   cannot drift apart by somebody editing one of them. */
-.ab-card .idc-portrait { margin-top: var(--hn-square-top); }
 .ab-card .idc-inner {
-  flex: none;
   min-height: 0;
   overflow: visible;
 }
@@ -412,11 +406,12 @@ a.ab-rig-name:hover { text-decoration: underline; }
    landing page is a fixed pair of snapped panes with no document scroll
    of its own, so anything taller than the pane has to carry its own
    scroller or its bottom is unreachable. */
+/* Not a scroller any more, 2026-09-15: the face it sits on is the scroller
+   and a second one inside it meant the card could be scrolled while the page
+   under it stayed put. The soft bottom edge went with it — there is nothing
+   below to hide, because the writing simply continues down the page. */
 .idc-inner {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
+  width: 100%;
   text-align: center;
   padding: 0 4px 24px;
 }
@@ -542,6 +537,31 @@ a.ab-rig-name:hover { text-decoration: underline; }
    this cover shows a record at that size in that frame; the back shows
    a person. Matching them is what makes the two sides read as one
    object turned over rather than as two designs. */
+/* ── The glance ── portrait left, the name and the counted facts beside it.
+   The portrait keeps a fixed square and the words take the rest; on anything
+   narrower than a small phone they stack, because 118px of picture beside
+   a name is a name two words to the line. */
+.idc-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  text-align: left;
+  width: 100%;
+}
+.idc-said { flex: 1; min-width: 0; }
+/* Beside a portrait there is no room for the card's fixed label column — an
+   84px label in a 178px measure leaves the answer four characters wide. The
+   labels take their own width here and the pair wraps where it has to. */
+.idc-top .idc-line-label { width: auto; }
+.idc-top .idc-line--counted { flex-wrap: wrap; column-gap: 7px; row-gap: 3px; }
+.idc-top .idc-portrait { flex-shrink: 0; width: 118px; height: 118px; margin: 0; border-radius: 14px; }
+.idc-top .idc-name { margin-top: 0; text-align: left; }
+.idc-top .idc-line { margin: 10px 0 0; max-width: none; }
+@media (max-width: 360px) {
+  .idc-top { flex-direction: column; align-items: center; text-align: center; }
+  .idc-top .idc-name { text-align: center; }
+}
+
 .idc-portrait {
   display: block;
   position: relative;
@@ -900,12 +920,21 @@ a.ab-rig-name:hover { text-decoration: underline; }
   .ab-card { min-height: auto; padding: var(--hn-rail-top) var(--hn-gutter, 18px) 24px; }
   .ab-card .idc { max-width: none; }
   .ab-card .idc-head { top: 22px; left: var(--hn-gutter, 18px); }
-  .ab-card .idc-portrait {
-    width: 100%; max-width: 208px; height: auto; aspect-ratio: 1 / 1;
-    margin-top: 0; border-radius: 14px;
+  /* The glance is a row here too — it is what made the whole card fit above
+     the fold on a phone and it does the same for a page a quarter of a window
+     wide. The portrait takes a share rather than a fixed square, because the
+     spine is draggable: 300px of page gives it about a hundred, 420 gives it
+     the better part of one-seventy, and the words beside it keep a measure
+     either way. A full-width portrait here was 208px of a 264px column, which
+     left the name four characters and a wrap. */
+  .idc-top { gap: 14px; }
+  .idc-top .idc-portrait {
+    width: 38%; min-width: 96px; max-width: 168px;
+    height: auto; aspect-ratio: 1 / 1;
+    margin: 0; border-radius: 14px;
   }
-  .ab-card .idc-name { font-size: 26px; margin-top: 18px; }
-  .ab-card .idc-line { flex-wrap: wrap; row-gap: 2px; max-width: none; margin-top: 13px; font-size: 12px; }
+  .ab-card .idc-name { font-size: 22px; margin-top: 0; }
+  .ab-card .idc-line { flex-wrap: wrap; row-gap: 2px; max-width: none; margin-top: 11px; font-size: 12px; }
   .ab-card .idc-line-label { width: auto; }
   /* The pinned record takes the row under its label rather than the sixty
      pixels beside it, where the album's name was three letters and dots. */

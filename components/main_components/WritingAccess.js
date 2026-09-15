@@ -35,7 +35,7 @@
 // cross; then, for an afternoon, three taps that went to Settings; then the
 // Sign in line, 2026-09-02, on the keeper's call — a login form does not
 // belong on the beacon page, and a mark that is secretly a door is a mark
-// somebody opens by accident. The way in is the right pane and nothing else.
+// somebody opens by accident. The way in is the colophon and nothing else.
 
 'use client';
 

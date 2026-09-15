@@ -1,17 +1,26 @@
 // Copyright (C) 2026 Miyel Brown
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // components/main_components/Dashboard.js
-// The right pane of the cross, seen only by whoever keeps the journal.
+// One face of the cross's turning pane, seen only by whoever keeps the journal.
+// The other face is the card; a switch at the foot of the pane turns between
+// them, and the journal does not move when it does.
 //
-// Four doors, laid out as a pane rather than as a grid of app icons on a
-// screensaver, which is what /dashboard used to draw. That address now
-// forwards here: one description of the desk, in one place.
+// One thing leads and the rest are a list. Starting a listen is the only thing
+// here that makes something which does not exist yet; the rest act on things
+// that already do, and a row of identical squares said they were equal choices
+// when they never have been. What you came to do is listen.
 //
-// One of the four leads and the other three are a list. Starting a listen is
-// the only thing here that makes something which does not exist yet; the rest
-// act on things that already do, and a row of four identical squares said they
-// were four equal choices when they never have been. What you came to do is
-// listen.
+// It is a band now, not a square, 2026-09-15. A 180px square is a third of a
+// phone screen spent on one door, and the doors under it were being pushed
+// off the first screen by it — the thing it was sized to be, the third square
+// of a cross whose other two were a portrait and an album, is not a shape this
+// layout has any more.
+//
+// The desk is a page and pages scroll: the feed follows straight on below,
+// with no second floor and nothing to arrive at. Down is cover-then-contents
+// and only two things on this site have that shape — the beacon and an
+// entry — so a vertical drag here is ordinary scrolling and nothing has to
+// decide between arriving and scrolling.
 //
 // There is no login control anywhere on this site and none here either. A
 // journal does not ask who you are — signed in, the cross simply has a pane it
@@ -22,7 +31,7 @@
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Headphones, Envelope, AddressBook, GearSix } from '@phosphor-icons/react';
+import { Headphones, Envelope, AddressBook, GearSix, NotePencil } from '@phosphor-icons/react';
 import { VERSION, RELEASE_URL } from '../../library/version';
 
 // Everything but the first: messages, which are what you open the journal to
@@ -44,16 +53,29 @@ import { VERSION, RELEASE_URL } from '../../library/version';
 // journal; a second one that only its owner could see was a CMS grown beside a
 // site that did not need one.
 const DOORS = [
-  { href: '/dashboard/inbox',   label: 'Inbox',   note: 'Submissions and comments waiting on you', Icon: Envelope, counted: true },
+  { href: '/dashboard/inbox',   label: 'Inbox',   note: 'Submissions and comments waiting on you', Icon: Envelope, count: w => w?.total },
   // The journals this keeper reads, by address. A place, not a filter
   // inside the feed: it is what the feed and comparing are built from, and
   // it exists before either does (2026-09-12).
   { href: '/dashboard/people',  label: 'Address book', note: 'The journals you read', Icon: AddressBook },
-  // The machinery: the keys, the password, Last.fm, the address. It is also
-  // reached from the gear beside the card's pencil; here because the desk is
-  // where the owner's things are, and the password form lives behind it.
-  { href: '/settings',          label: 'Settings', note: 'Keys, password, Last.fm, the address', Icon: GearSix },
+  // Unfinished listens. The address is the picker's, because the picker is
+  // already where they live — it lists them with a Resume and a discard, and
+  // a second page showing the same rows is the /dashboard/entries mistake
+  // again (Miyel's call, 2026-09-15). So this row is a signpost with a number
+  // on it and not an interface: the count is what it adds, because a listen
+  // you have forgotten is the one most likely to be lost.
+  //
+  // Only when there are drafts AND nothing is in hand. Absent is the same
+  // answer as a dead row without the press, and with a record in hand /session
+  // resumes *that* listen rather than showing the list, so the row would not
+  // do what it says.
+  { href: '/session', label: 'Drafts', note: 'Listens you started and have not finished', Icon: NotePencil, count: w => w?.drafts, needsDrafts: true },
 ];
+
+// Settings is not among them, 2026-09-15. It is the gear in the header now:
+// the machinery is not somewhere you go as often as the other three and it was
+// taking the same weight as them. The gear beside the card's pencil opens the
+// same address.
 
 // ── The record on the desk ──────────────────────────────────────────────────
 // A listen in progress is a key in the browser, not a thing the server knows,
@@ -91,7 +113,7 @@ function subscribeHeld(listener) {
   return () => window.removeEventListener('storage', listener);
 }
 
-export default function Dashboard({ waiting }) {
+export default function Dashboard({ waiting, mark = null }) {
   // ── Whether a listen is open ──────────────────────────────────────────────
   // On a desk the session is the right page and the desk stays beside it, so
   // the door has to say what the page next to it is doing: Start a listen is
@@ -120,6 +142,23 @@ export default function Dashboard({ waiting }) {
   return (
     <div className="db-pane">
       <div className="db-body">
+        {/* The header the card has, with the desk's own one tool in it. The
+            mark is small here and the beacon keeps the large one: a crown is
+            for a cover, and the desk is a page. It comes down from the cross
+            rather than being drawn again — see HomeNav, which owns the one
+            mark this site has. */}
+        <div className="db-head">
+          {mark}
+          <Link
+            href="/settings"
+            className="db-tool"
+            aria-label="Settings"
+            title="Keys, password, Last.fm, the address"
+          >
+            <GearSix size={18} weight="regular" aria-hidden="true" />
+          </Link>
+        </div>
+
         {/* The one big thing on the pane. It is a link and not a button
             because it goes somewhere — the listening flow is its own route
             with its own background, and pretending otherwise with a button
@@ -141,25 +180,25 @@ export default function Dashboard({ waiting }) {
         </Link>
 
         <div className="db-doors">
-          {DOORS.map(({ href, label, note, Icon, counted }) => (
-            <Link key={href} href={href} className="ln-tile db-door" title={note}>
-              <Icon size={26} weight="regular" aria-hidden="true" className="db-door-mark" />
-              <span className="db-door-text">
-                <span className="db-door-label">
-                  {label}
-                  {/* The one count on the whole site, and it earns its place
-                      by being the only thing you need to see without going to
-                      look. Everything else here is a door you open when you
-                      have decided to; this is the one that has to be able to
-                      tell you there is a reason to. Null until asked, so the
-                      row never flashes a zero on the way to a number. */}
-                  {counted && waiting?.total > 0 && (
-                    <span className="db-count">{waiting.total}</span>
-                  )}
+          {DOORS.map(({ href, label, note, Icon, count, needsDrafts }) => {
+            if (needsDrafts && (inHand || !(waiting?.drafts > 0))) return null;
+            const n = count ? count(waiting) : 0;
+            return (
+              <Link key={href} href={href} className="ln-tile db-door" title={note}>
+                <Icon size={22} weight="regular" aria-hidden="true" className="db-door-mark" />
+                <span className="db-door-text">
+                  <span className="db-door-label">{label}</span>
                 </span>
-              </span>
-            </Link>
-          ))}
+                {/* The counts, and they earn their place by being the only
+                    things you need to see without going to look. Everything
+                    else here is a door you open when you have decided to;
+                    these are the two that have to be able to tell you there
+                    is a reason to. Null until asked, so a row never flashes a
+                    zero on the way to a number. */}
+                {n > 0 && <span className="db-count">{n}</span>}
+              </Link>
+            );
+          })}
         </div>
 
         {/* The one line on the desk that is about the software rather than

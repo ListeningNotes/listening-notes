@@ -20,11 +20,12 @@ Think of it like a house.
 ## The Two Sides of the Site
 
 **Public side** — what anyone visiting the site can see:
-- The homepage: three panes of one cross — the identity card, the listening
-  beacon and the album strip, and either the desk (with the feed under it) or
-  the pitch. On a desk the same three are an open book: the spine on the left,
-  a quarter of the window, turning between the card and the desk (or the
-  colophon); the journal across the rest
+- The homepage: two panes of one cross — the beacon with the journal under it,
+  and beside it a pane that turns between the identity card and the desk (or,
+  signed out, the colophon). Sideways is you, down is the records: only the
+  beacon has a cover, so only it has two floors and a down caret. On a desk
+  the same two are an open book — the turning pane is the spine, a quarter of
+  the window; the journal takes the rest
 - Individual entry pages where people can read your notes and leave comments
 - `/archive` — every entry, searchable and filterable
 - `/key` — what the stars and the three marks mean
@@ -43,7 +44,7 @@ and nobody else had the address.
 
 **Private side** — only you can access this (password protected, never linked
 publicly):
-- `/dashboard` — forwards home; the desk is the right pane of the cross
+- `/dashboard` — forwards home; the desk is a face of the cross's turning pane
 - `/session` — find the album, log the listen. The picker and the note-taking
   tool at one address: a search field and a grid of covers, then four screens
   under a small persistent header — the album, the tracks one at a time, the
@@ -68,7 +69,7 @@ Editing an entry happens on the entry itself, not in a list. There used to be a
 `/dashboard/entries` table and it was retired: two interfaces for one job means
 neither is canonical.
 
-**Getting in.** The right pane. Signed out it is the pitch, with a small key
+**Getting in.** The turning pane's far face. Signed out it is the pitch, with a small key
 at its foot that opens the password field in place; signed in it is the desk,
 with a Settings door to `/settings`, which asks for the password when you are
 not wearing a wristband and is the machinery when you are. Nothing on the
@@ -142,8 +143,8 @@ The hooks — reusable logic shared across pages
 The furniture — visual pieces
   components/
     main_components/           Everything on the public side
-      HomeNav.js               The cross itself — three panes, the mark, the carets; on a desk an open book — the spine on the left turning between two faces, the journal on the right, the band, the fold
-      About.js                 The left pane: the card, then the writing under it
+      HomeNav.js               The cross itself — two panes, the mark, the carets, the switch that turns the left one; on a desk an open book — the spine on the left, the journal on the right, the band, the fold
+      About.js                 One face of the turning pane: the card, then the writing under it, in one scroll
       IdentityCard.js          The identity card — this is the About page
       IdentificationCardEditor.js  Editing the card in place
       ListeningBeacon.js       The beacon — what is playing, or last played
@@ -153,9 +154,9 @@ The furniture — visual pieces
       CodeSlot.js              A square that holds a picture and turns into that picture's code — the card's portrait and an entry's cover: the two faces, the copy and its pill, the corner mark, the wait
       AddressCode.js           A plain code for an address, drawn in the browser — what CodeSlot shows when no pressed picture can be had
       CodeScanner.js           The camera pointed at a code — the address book's way in for a card's or a cover's code
-      Dashboard.js             The right pane, for the owner — Listen, Inbox, Address book, Settings
-      Feed.js                  The desk's second floor — what the people in the address book logged, read off their public feeds; Submissions and Recent; Compare on a row you also have
-      Pitch.js                 The right pane, for everybody else
+      Dashboard.js             The other face, for the owner — Start a listen as a band, then Inbox, Address book and Drafts as rows; Settings is the gear in its header
+      Feed.js                  Under the desk on the same scroll — what the people in the address book logged, read off their public feeds; Submissions and Recent; Compare on a row you also have
+      Pitch.js                 The other face, for everybody else — the colophon
       KeeperTools.js           The owner's pencil and printer
       SharePrinter.js          The share printer — paper sizes, the looks you turn through, Save and Send; knows nothing about journals, prints whatever plate it is handed
       EntryPlate.js            A record cut as a plate — the entry page's first screen on the record's blurred colour: mark, keeper, cover, album, artist and year, stars, chips, date, horizon; no code, the press copies the address
@@ -236,7 +237,7 @@ The rooms — full pages assembled from furniture
     @layer/(.)dashboard/report/page.js  Report a problem, on the same sheet
     @layer/(.)printer/page.js  The printer, as a sheet over the entry or the card
     dashboard/
-      page.js                  Redirect to / — the desk is the right pane of the cross
+      page.js                  Redirect to / — the desk is a face of the cross's turning pane
       inbox/page.js            Comments and submissions in one place — plain, on the tokens, and a sheet over the desk
       people/page.js           The address book — the list, the field, the scanner
       people/[id]/page.js      Your page about one person — the whole-journal compare, and what they sent you

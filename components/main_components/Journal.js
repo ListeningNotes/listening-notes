@@ -4,7 +4,7 @@
 // The wall of covers, and everything for finding one on it.
 //
 // This was the whole of app/archive/page.js. It is a component now because two
-// places want it: the centre pane of the cross, under the beacon, and /archive
+// places want it: home, under the beacon, and /archive
 // at its own address — and an archive that existed twice would be two archives
 // that drifted, which is the mistake the homepage already made once with its
 // desktop and mobile trees.
