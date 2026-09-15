@@ -1227,11 +1227,11 @@ export default function FullPostPage({ entry, references = [], authed = false, l
           </button>
         </div>}
 
-        {/* No lineage picker here any more, 2026-09-14. source_entry_id —
-            the pointer at the sender's own entry — is written once and
-            undone only in SQL, and it was a field only because nothing set
-            it yet. The column and update_entry's write-once rule stay for
-            the send flow to use when both people have copies. */}
+        {/* No lineage picker here, and since 2026-09-15 no lineage rules
+            behind it either: the column is parked, because an entry id
+            means nothing in another copy's database. Who sent a record is
+            the credit at the head of this page, and the chain a reader
+            walks is Chain.js. See database_actions.js, above the slugs. */}
         {edit.editing && (
           <div className="ln-danger">
             {!edit.asking ? (

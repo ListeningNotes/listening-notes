@@ -1523,6 +1523,47 @@ current.
 
 ## Complete
 
+**2026-09-15 — the lineage machinery retired, branch `park-lineage`, not
+merged (1.13.1 when it is: nothing a keeper sees, so the last number)**
+
+- [x] **`source_entry_id` is parked and its guards are gone.** Briefed as
+      *wire the send flow to set it*, and that turned out not to be
+      buildable, so Miyel's call was to retire instead. Removed:
+      `wouldFormCycle` and its recursive query, the write-once rule, the
+      lookup and the same-`album_key` check, and the column from
+      `save_new_entry`'s insert and `update_entry`'s set — about seventy
+      lines out of `database_actions.js`. The column stays (additive-only)
+      and `withoutChain` still strips it, so a revival starts private.
+- [x] **Why the brief could not be built, kept because it will be asked
+      again.** Two independent reasons. **An `entries.id` is local to one
+      database** — June's 39 is not this journal's 39 — so a sender's id
+      arriving here is rejected by the album check nearly always, and in
+      the case where a local entry shares both the number and the album it
+      is stored pointing at *this* journal's own listen, a lineage record
+      claiming you got the record from yourself. **And a send has nothing
+      to carry it from:** the send form is served by the *recipient's*
+      copy, the album comes out of Apple's catalogue, and the sender is a
+      visitor whose own journal is at an origin their browser cannot read
+      from that page. Their copy contributes only the name and address it
+      wrote into the link (`carrySender`). Reviving this needs a reference
+      that means something in both places — their journal plus their
+      entry's slug — and a send that starts on the sender's own entry.
+      That is a feature, not a wiring job.
+- [x] **Nothing was lost.** `Chain.js` already walks lineage across copies
+      by following `received_from_url` and matching `album_key` in that
+      journal's public feed. An exact pointer would only have said *which*
+      listen, when somebody has more than one.
+- [x] **The delete sweep is kept** (`UPDATE entries SET source_entry_id =
+      NULL WHERE source_entry_id = …`). It can no longer match anything;
+      it costs one statement on the rarest action on the site and is the
+      difference between the column being revivable and its revival
+      carrying a silent bug.
+- [x] **The editor's sentinel still works.** `useEntryEditor` tells the
+      keeper's read from a visitor's by whether `source_entry_id` is a key
+      on the row at all, which `withoutChain` still decides. Left as it
+      is, and now said out loud in the comment, because it is not obvious
+      that a parked column is doing a job.
+
 **2026-09-14 — credit the person who sent it, branch `credit`, merged to
 main and pushed 2026-09-15 as 1.13.0 (something new: the middle number),
 released the same day as
