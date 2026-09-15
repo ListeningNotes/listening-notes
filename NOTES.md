@@ -1664,6 +1664,19 @@ current.
       border and box for the same reason, which is what read as stiff.
       **The `--tight` rules live in forms.css**, not beside the strip in
       base.css: one surface asks for them, and it dodges the staleness.
+- [x] **The scan comes first, the field second** (Miyel: can't the button
+      find the entry and let you click it, rather than typing). It always
+      did — `candidates` matches on `album_key` with nothing typed, and
+      offers *every* listen of that album, which is the whole point when
+      there is more than one. Nobody could tell, because the field was the
+      first thing in the panel and **not one of the six sends in New has a
+      record in the journal**, so the empty state was the only state ever
+      seen. Matches now render above the field; the field's placeholder
+      says what it is for (*Logged under another name?* when there are
+      matches, *Search your journal* when there are none); and a row for an
+      album with several listens reads *Listen 2 of 3 · date* instead of
+      repeating the artist on every line, since which listen is the
+      question being asked. Nothing about the matching changed.
 - [ ] **Names to confirm, 2026-09-15 (the redesign)** — rename freely:
       `VIEWS`, `UNOPENED`, `unopened`, `became`, `Sender`, `resumeListen`,
       `menuFor`;

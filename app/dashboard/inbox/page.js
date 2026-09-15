@@ -465,18 +465,22 @@ export default function Inbox({ layered = false }) {
                               case where it was logged under another name. */}
                           {naming === sent.id && (
                             <div className="ib-which">
-                              <input
-                                className="ib-which-field"
-                                value={look}
-                                onChange={e => setLook(e.target.value)}
-                                placeholder="Which record was it?"
-                                aria-label="Find the record in your journal"
-                              />
-                              {mine === null || (mine.length === 0)
-                                ? <div className="ib-which-none">Reading your journal&#8230;</div>
-                                : candidates(sent).length === 0
-                                  ? <div className="ib-which-none">{look.trim() ? 'Nothing under that name.' : 'No record for this album yet — search for it.'}</div>
-                                  : candidates(sent).map(entry => (
+                              {mine === null ? (
+                                <div className="ib-which-none">Reading your journal&#8230;</div>
+                              ) : (
+                                <>
+                                  {/* The scan first, and the field under it.
+                                      It was the other way round and read as
+                                      a search box you had to type into
+                                      (Miyel, 2026-09-15) — which is what
+                                      every send in the inbox showed, because
+                                      not one of them had a record yet, so
+                                      the empty state was the only state
+                                      anybody ever saw. Every listen of the
+                                      album is offered, not the newest, since
+                                      picking *which* one is the whole
+                                      question when there is more than one. */}
+                                  {candidates(sent).map(entry => (
                                     <button key={entry.id} className="ib-which-one" onClick={() => { alreadyLogged(sent, entry); setMenuFor(null); }}>
                                       <span className="ib-which-art">
                                         {entry.album_art && <img src={entry.album_art} alt="" loading="lazy" />}
@@ -484,12 +488,28 @@ export default function Inbox({ layered = false }) {
                                       <span className="ib-which-said">
                                         <span className="ib-which-album">{entry.album}</span>
                                         <span className="ib-which-artist">
-                                          {entry.artist}
+                                          {entry.listen_total > 1
+                                            ? `Listen ${entry.listen_number} of ${entry.listen_total}`
+                                            : entry.artist}
                                           {entry.posted_at ? ` · ${new Date(entry.posted_at).toLocaleDateString()}` : ''}
                                         </span>
                                       </span>
                                     </button>
                                   ))}
+                                  {candidates(sent).length === 0 && (
+                                    <div className="ib-which-none">
+                                      {look.trim() ? 'Nothing under that name.' : 'Nothing in your journal for this album.'}
+                                    </div>
+                                  )}
+                                  <input
+                                    className="ib-which-field"
+                                    value={look}
+                                    onChange={e => setLook(e.target.value)}
+                                    placeholder={candidates(sent).length > 0 ? 'Logged under another name?' : 'Search your journal'}
+                                    aria-label="Find the record in your journal"
+                                  />
+                                </>
+                              )}
                             </div>
                           )}
                             </div>
