@@ -46,13 +46,22 @@ function withSizedArt(row, px) {
 // on purpose, and a visitor has no use for the one the send flow stamped.
 const CREDIT_FIELDS = ['received_from', 'received_from_url'];
 const CHAIN_FIELDS = ['source_entry_id', 'received_date'];
+// Read to decide, never published itself — a reader has no use for knowing
+// that something was withheld, and saying so would leak the fact of it.
+const CREDIT_GUARD = 'credit_private';
 
-const credited = row => row?.entry_type === 'Submission';
+// A credit leaves only on a Submission entry, and only where nobody has
+// asked for it to stay in. The sender asks on the send form and the keeper
+// can ask on the entry (migrations/012_quiet_credit.sql); either way it is
+// the same column, and this is the one place it is honoured — the entry's
+// own read, the wall's, and the feed all come through here.
+const credited = row => row?.entry_type === 'Submission' && row?.credit_private !== true;
 
 export function withoutChain(row) {
   if (!row) return row;
   const clean = { ...row };
   for (const field of CHAIN_FIELDS) delete clean[field];
+  delete clean[CREDIT_GUARD];
   if (credited(row)) {
     for (const field of CREDIT_FIELDS) clean[field] = row[field] || null;
   } else {
@@ -168,7 +177,7 @@ export async function pull_random_slug() {
 
 export async function pull_wall_entries() {
   const rows = await database.query(
-    `SELECT ${[...WALL_FIELDS, ...CREDIT_FIELDS].map(f => `"${f}"`).join(', ')}
+    `SELECT ${[...WALL_FIELDS, ...CREDIT_FIELDS, CREDIT_GUARD].map(f => `"${f}"`).join(', ')}
      FROM (${WITH_LISTEN_NUMBERS}) ranked
      ORDER BY posted_at DESC`
   );
@@ -207,7 +216,7 @@ export async function pull_public_entries() {
   // entry has crossed the wire. A feed that deliberately carries no writing
   // was reading every word of it and throwing it away.
   const rows = await database.query(
-    `SELECT ${[...PUBLIC_FIELDS, ...CREDIT_FIELDS].map(f => `"${f}"`).join(', ')}
+    `SELECT ${[...PUBLIC_FIELDS, ...CREDIT_FIELDS, CREDIT_GUARD].map(f => `"${f}"`).join(', ')}
      FROM (${WITH_LISTEN_NUMBERS}) ranked
      ORDER BY posted_at DESC`
   );
@@ -227,6 +236,8 @@ export async function pull_public_entries() {
     if (credited(row)) {
       for (const field of CREDIT_FIELDS) out[field] = row[field] || null;
     }
+    // CREDIT_GUARD is never copied across: the allow-list above decides what
+    // leaves, and whether a credit was withheld is not a reader's business.
     return out;
   });
 }
@@ -355,7 +366,7 @@ export async function save_new_entry(body) {
     rating, favorite, masterpiece = false, formative = false, notes,
     track_notes, horizon, album_art, tracks = null,
     received_from = null, received_date = null,
-    received_from_url = null,
+    received_from_url = null, credit_private = false,
     user_id = null
   } = body;
 
@@ -366,7 +377,7 @@ export async function save_new_entry(body) {
       album, artist, year, genre, entry_type,
       rating, favorite, masterpiece, formative, notes, track_notes,
       horizon, album_art, slug, tracks,
-      received_from, received_date, received_from_url, user_id
+      received_from, received_date, received_from_url, credit_private, user_id
     ) VALUES (
       ${album}, ${artist}, ${year}, ${genre}, ${entry_type},
       ${rating}, ${favorite}, ${masterpiece}, ${formative}, ${notes},
@@ -375,6 +386,7 @@ export async function save_new_entry(body) {
       ${tracks ? JSON.stringify(tracks) : null},
       ${blankToNull(received_from)},
       ${blankToNull(received_date)}, ${blankToNull(tidyJournal(received_from_url))},
+      ${credit_private === true},
       COALESCE(${entryRef(user_id)}, (SELECT id FROM users ORDER BY id LIMIT 1))
     )
     RETURNING *
@@ -396,6 +408,7 @@ export async function update_entry(slug, fields) {
   const set_from = touched('received_from');
   const set_date = touched('received_date');
   const set_url = touched('received_from_url');
+  const set_quiet = touched('credit_private');
   // source_entry_id is not among them, 2026-09-15: nothing writes it and the
   // rules that used to guard it are gone (see the note above the slugs).
   // A caller sending the key is ignored rather than refused.
@@ -469,7 +482,8 @@ export async function update_entry(slug, fields) {
       edited_at = CASE WHEN ${noteChanged} THEN ${stampedAt}::timestamp ELSE edited_at END,
       received_from = CASE WHEN ${set_from} THEN ${set_from ? blankToNull(fields.received_from) : null}::text ELSE received_from END,
       received_date = CASE WHEN ${set_date} THEN ${set_date ? blankToNull(fields.received_date) : null}::date ELSE received_date END,
-      received_from_url = CASE WHEN ${set_url} THEN ${set_url ? blankToNull(tidyJournal(fields.received_from_url)) : null}::text ELSE received_from_url END
+      received_from_url = CASE WHEN ${set_url} THEN ${set_url ? blankToNull(tidyJournal(fields.received_from_url)) : null}::text ELSE received_from_url END,
+      credit_private = CASE WHEN ${set_quiet} THEN ${set_quiet ? fields.credit_private === true : false}::boolean ELSE credit_private END
     WHERE slug = ${slug}
     RETURNING *
   `;
@@ -573,6 +587,10 @@ export async function save_draft(body) {
     // being typed — would hold only for a listen finished in one sitting, and
     // drafts exist precisely because that is not the common case.
     received_from = '', received_date = '', received_from_url = '',
+    // And whether the sender asked not to be credited. Same reason: a listen
+    // paused halfway must not come back having lost the answer, because what
+    // it would lose it to is publishing a name somebody asked to keep off.
+    credit_private = false,
   } = body;
 
   if (!album) throw new Error('A draft needs an album');
@@ -581,14 +599,16 @@ export async function save_draft(body) {
     INSERT INTO drafts (
       lookup_key, album, artist, year, genre, entry_type,
       album_art, collection_id, step, elapsed, rating, masterpiece, formative,
-      favorite, notes, tracks, received_from, received_date, received_from_url
+      favorite, notes, tracks, received_from, received_date, received_from_url,
+      credit_private
     ) VALUES (
       ${lookup_key(album, artist)}, ${album}, ${artist}, ${year}, ${genre},
       ${entry_type}, ${album_art}, ${String(collection_id || '')},
       ${step}, ${elapsed}, ${rating}, ${masterpiece}, ${formative}, ${favorite}, ${notes},
       ${tracks ? JSON.stringify(tracks) : null},
       ${blankToNull(received_from)}, ${blankToNull(received_date)},
-      ${blankToNull(tidyJournal(received_from_url))}
+      ${blankToNull(tidyJournal(received_from_url))},
+      ${credit_private === true}
     )
     ON CONFLICT (lookup_key) DO UPDATE SET
       album = EXCLUDED.album, artist = EXCLUDED.artist, year = EXCLUDED.year,
@@ -601,6 +621,7 @@ export async function save_draft(body) {
       notes = EXCLUDED.notes, tracks = EXCLUDED.tracks,
       received_from = EXCLUDED.received_from, received_date = EXCLUDED.received_date,
       received_from_url = EXCLUDED.received_from_url,
+      credit_private = EXCLUDED.credit_private,
       updated_at = NOW()
     RETURNING *
   `;

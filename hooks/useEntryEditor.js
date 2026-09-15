@@ -119,6 +119,7 @@ export function useEntryEditor(entry) {
           ...d,
           received_from: row.received_from ?? '',
           received_from_url: row.received_from_url ?? '',
+          credit_private: row.credit_private === true,
         }));
       })
       .catch(() => {});

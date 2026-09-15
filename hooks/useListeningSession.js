@@ -53,6 +53,9 @@ export function useListeningSession({ step }) {
   // Where the sender's journal is, when the listen came out of the inbox —
   // the credit the public feed carries (migrations/008_received_from_url.sql).
   const [receivedFromUrl, setReceivedFromUrl] = useState('');
+  // Whether the sender asked not to be credited. Set by the send and never
+  // by the keeper here — the entry's own editor is where it can be changed.
+  const [creditPrivate, setCreditPrivate] = useState(false);
   const [receivedDate, setReceivedDate]   = useState('');
 
   // What gets written
@@ -116,7 +119,7 @@ export function useListeningSession({ step }) {
     step, saved, hasWriting,
     values: {
       albumInput, artistName, year, albumArt, genre, entryType, receivedFrom, receivedDate,
-      receivedFromUrl,
+      receivedFromUrl, creditPrivate,
       collectionIdRef, brief, tracks, overallNotes, trackNotes, trackRatings, trackFavorites,
       rating, Masterpiece, Favorite, Formative, elapsed,
     },
@@ -182,7 +185,8 @@ export function useListeningSession({ step }) {
     const {
       album, artist = '', year: yr = '', artUrl = '', collectionId = null,
       genre: gen = '', entryType: et = '', receivedFrom: from = '',
-      receivedDate: date = '', receivedFromUrl: fromUrl = '', draft: savedDraft = null,
+      receivedDate: date = '', receivedFromUrl: fromUrl = '',
+      creditPrivate: quiet = false, draft: savedDraft = null,
     } = record;
 
     collectionIdRef.current = collectionId || savedDraft?.collection_id || '';
@@ -195,6 +199,7 @@ export function useListeningSession({ step }) {
     setReceivedFrom(from || savedDraft?.received_from || '');
     setReceivedFromUrl(fromUrl || savedDraft?.received_from_url || '');
     setReceivedDate(date || (savedDraft?.received_date ? String(savedDraft.received_date).slice(0, 10) : ''));
+    setCreditPrivate(quiet === true || savedDraft?.credit_private === true);
 
     let rows = [];
     let openAt = 0;
@@ -393,6 +398,7 @@ export function useListeningSession({ step }) {
           received_from: receivedFrom,
           received_date: receivedDate,
           received_from_url: receivedFromUrl,
+          credit_private: creditPrivate,
         }),
       });
       const data = await res.json();
@@ -420,6 +426,7 @@ export function useListeningSession({ step }) {
     receivedFrom, setReceivedFrom,
     receivedDate, setReceivedDate,
     receivedFromUrl, setReceivedFromUrl,
+    creditPrivate,
     // Writing
     overallNotes, setOverallNotes,
     rating, setRating,

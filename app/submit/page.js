@@ -46,7 +46,7 @@ import { recallSender, keepSender } from '../../library/return_address';
 // visitor rather than to the owner's writing flow.
 const DRAFT_KEY = 'ln-send-draft';
 
-const BLANK = { pick: null, note: '', name: '', address: '' };
+const BLANK = { pick: null, note: '', name: '', address: '', quiet: false };
 
 // ── One screen, and no way out drawn on it ────────────────────────────────
 // There was a Back and an Archive pill at the foot. Both are gone, and the
@@ -96,6 +96,7 @@ export default function SubmitPage({ layered = false }) {
       note: kept?.note ?? '',
       name: kept?.name || known.name,
       address: kept?.address || known.address,
+      quiet: kept?.quiet === true,
     });
   }, []);
 
@@ -133,6 +134,7 @@ export default function SubmitPage({ layered = false }) {
           sender_url: form.address,
           album_art: form.pick.art,
           collection_id: form.pick.collectionId,
+          quiet: form.quiet,
         }),
       });
       const data = await res.json();
@@ -288,6 +290,22 @@ export default function SubmitPage({ layered = false }) {
                 )}
               </div>
             )}
+
+            {/* ── Whether to be named ──────────────────────────────────
+                The credit puts the sender's name on somebody else's public
+                journal, so the sender is the one asked, 2026-09-15. Off by
+                default, because public credit is the default and quiet is
+                the choice (DECISIONS) — and it says what it does rather
+                than what it feels like, since the person reading it has
+                just typed their name into the box above. */}
+            <label className="sb-quiet">
+              <input
+                type="checkbox"
+                checked={form.quiet}
+                onChange={e => setForm(f => ({ ...f, quiet: e.target.checked }))}
+              />
+              <span>Don&rsquo;t credit me publicly</span>
+            </label>
 
             {error && <div className="sb-error">{error}</div>}
 

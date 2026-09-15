@@ -52,7 +52,7 @@ export async function PATCH(request, { params }) {
     // on a different screen should not quietly overwrite what they wrote.
     if (Object.prototype.hasOwnProperty.call(body, 'entry_id')) {
       const [sent] = await database`
-        SELECT submitter_name, sender_url FROM submissions WHERE id = ${id} LIMIT 1`;
+        SELECT submitter_name, sender_url, quiet FROM submissions WHERE id = ${id} LIMIT 1`;
       if (!sent) return Response.json({ error: 'No such send.' }, { status: 404 });
 
       const [record] = await database`
@@ -70,6 +70,10 @@ export async function PATCH(request, { params }) {
           entry_type: 'Submission',
           received_from: sent.submitter_name || null,
           received_from_url: sent.sender_url || null,
+          // Whatever the sender asked for on the form travels with the
+          // credit; a send logged by hand must not publish a name its
+          // sender asked to keep off.
+          credit_private: sent.quiet === true,
         });
       }
       const submissions = await pull_submissions();
