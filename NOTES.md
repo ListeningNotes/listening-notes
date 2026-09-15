@@ -1577,9 +1577,12 @@ merged (1.14.0 when it is: something new)**
       `pull_submissions` join run read-only against the nine real rows,
       all three owner routes answering 401, the build passing, and the
       row's markup stood into a page to check the CSS on a phone.
-      **Not driven by hand:** the inbox is behind the password, so the
-      press itself, the two writes and the address-book link are Miyel's
-      review. Nothing was written to any real row.
+      **Link their journal is confirmed working** — Miyel pressed it on
+      the dev server the same day, on the Kailea send (#3), which now
+      carries `wizkailea.vercel.app` where it had nothing; Kai's page
+      counts that send as a result. **Still not driven by hand:** *I've
+      already logged this* and its two writes. Nothing I ran wrote to any
+      real row.
 - [x] **Three sends carried an email in `sender_url`, fixed the same
       day.** Submissions 4, 5 and 7 held `josejunior770@gmail.com`, from
       before the email field was retired, and `tidyAddress` read it as a
