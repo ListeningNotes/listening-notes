@@ -145,6 +145,26 @@ clouds around the shoulders do real work — and the writing starting below the
 fold is the accepted trade. A licence of typeset fields was tried the same day
 and it was a column of facts, not an object.
 
+**You browse on the wall and nowhere else, 2026-09-15.** The ID pane is a
+snapshot of a person, not a second journal, so an entry opened from it — the
+pinned record, a cover in a count's window — is handed no neighbours and
+closes back to the card. It had the wall's order behind it and let you swipe
+through the journal, which was the pane passing an order it has nothing to do
+with. One layer at a time, too: a cover closes its window before the entry
+opens.
+
+**Masterpieces and Formative open a window; Albums does not, 2026-09-15.** A
+window of covers, no bar and no search — a glance. Albums is the total, and a
+window of all of them would be the wall with its controls taken off, one swipe
+away. Only the two flag counts opening anything also says which of the numbers
+mean something.
+
+**No Favorites count, 2026-09-15.** Favourite applies to tracks as well as
+albums, so forty favourite tracks across twelve records is not a number you
+can set beside 14 masterpieces. Masterpiece and Formative are album-only,
+which is exactly why they work here — and three fits the row where four is
+cramped.
+
 **Three counts, in the three flags' colours, 2026-09-15.** Albums,
 masterpieces, formative — how somebody listens, which a genre list never says,
 and the first work those tokens have had away from a mark on a record.

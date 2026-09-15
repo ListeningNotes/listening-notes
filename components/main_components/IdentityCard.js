@@ -23,6 +23,7 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
+import { arrivingAlone } from '../../library/handoff';
 import { Check, Eye, EyeSlash, Pencil, Printer, PushPin, UploadSimple, User, X } from '@phosphor-icons/react';
 import { useRouter } from 'next/navigation';
 import { useTheme } from './Lightswitch';
@@ -64,7 +65,7 @@ const SLOT_LABELS = { toCode: 'Show the code for this address', toPicture: 'Show
 // `edit` is handed in rather than made here. The prompts print on the About
 // pane below this card and are edited there, and one edit session cannot be
 // two instances of the hook — so the pane owns it and the card is given it.
-export default function IdentityCard({ stamps, authed = false, edit, pinned = null, onPickPin }) {
+export default function IdentityCard({ stamps, authed = false, edit, pinned = null, onPickPin, onOpenCount, openCount = null }) {
   const settings = useBookplate();
   const {
     cover_name,
@@ -114,31 +115,18 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
     { word: 'masterpieces', n: stamps?.masterpieces ?? 0 },
     { word: 'formative', n: stamps?.formative ?? 0 },
   ].filter(m => m.n > 0);
-  // Each count is a way into the journal, the way the pinned record is a way
-  // into an entry (Miyel, 2026-09-15): a number about how somebody listens is
-  // worth pressing. /archive is the wall's own address and mounts the same
-  // component the cross's centre pane does, so the filter arrives with the
-  // page rather than having to be reached across two panes — and it is
-  // intercepted as a layer (app/@layer/(.)archive), so the wall pulls up over
-  // the card and a swipe down leaves you where you were.
+  // Two of the three open a window of covers; albums does not (Miyel's brief,
+  // 2026-09-15). Albums is the total, and a window of every record would be
+  // the wall with its controls taken off — the wall is one swipe away. Only
+  // the two flag counts open anything, which also says which of the numbers
+  // mean something.
   //
-  // The layer grows from the box marked `data-grows` for the path it is
-  // opening (library/handoff.js). All three counts open the same path, so the
-  // mark is put on at the moment of the press and taken off the other two —
-  // stamped in the markup they would all answer to it and the first one would
-  // always win, which is a wall that grows out of the wrong number.
-  const growFromPressed = event => {
-    const row = event.currentTarget.parentElement;
-    if (!row) return;
-    for (const el of row.children) el.removeAttribute('data-grows');
-    event.currentTarget.setAttribute('data-grows', '/archive');
-  };
+  // They used to link to /archive with a filter in the address. That is
+  // browsing, and nothing on this pane browses: the window is a glance, and
+  // anybody who wants to browse masterpieces has the archive's own filter.
   const counts = [
-    ...(records !== null ? [{ word: 'albums', n: records, to: '/archive' }] : []),
-    ...marks.map(m => ({
-      ...m,
-      to: `/archive?mark=${m.word === 'masterpieces' ? 'masterpiece' : 'formative'}`,
-    })),
+    ...(records !== null ? [{ word: 'albums', n: records, opens: false }] : []),
+    ...marks.map(m => ({ ...m, opens: true })),
   ];
   const genres = stamps?.genres ?? [];
 
@@ -528,16 +516,24 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
         {(records !== null || marks.length > 0) && (
           <div className={'idc-counts' + off('albums')}>
             {counts.map(c => (
-              <Link
-                key={c.word}
-                href={c.to}
-                className={'idc-count idc-count--' + c.word}
-                onClick={growFromPressed}
-                title={c.word === 'albums' ? 'Every record in this journal' : `Every record marked ${c.word === 'masterpieces' ? 'a masterpiece' : 'formative'}`}
-              >
-                <b className="idc-count-n">{c.n}</b>
-                <span className="idc-count-word">{c.word}</span>
-              </Link>
+              c.opens ? (
+                <button
+                  key={c.word}
+                  type="button"
+                  className={'idc-count idc-count--' + c.word + (openCount === c.word ? ' idc-count--open' : '')}
+                  onClick={() => onOpenCount(openCount === c.word ? null : c.word)}
+                  aria-expanded={openCount === c.word}
+                  title={`The ${c.n} records marked ${c.word === 'masterpieces' ? 'a masterpiece' : 'formative'}`}
+                >
+                  <b className="idc-count-n">{c.n}</b>
+                  <span className="idc-count-word">{c.word}</span>
+                </button>
+              ) : (
+                <div key={c.word} className={'idc-count idc-count--' + c.word}>
+                  <b className="idc-count-n">{c.n}</b>
+                  <span className="idc-count-word">{c.word}</span>
+                </div>
+              )
             ))}
             {eyeFor('albums')}
           </div>
@@ -587,7 +583,14 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
               </span>
             </button>
           ) : (
-            <Link href={`/entries/${pinned.slug}`} className="idc-pinned" aria-label={`Pinned: ${pinned.album} — ${pinned.artist}`}>
+            <Link
+              href={`/entries/${pinned.slug}`}
+              className="idc-pinned"
+              aria-label={`Pinned: ${pinned.album} — ${pinned.artist}`}
+              /* One record, and no wall behind it. This pane is a snapshot of
+                 a person, not a second journal — see handoff.js. */
+              onClick={() => arrivingAlone()}
+            >
               <PushPin size={15} weight="fill" className="idc-pinned-mark" aria-hidden="true" />
               <span className="idc-pinned-art">
                 {pinned.album_art

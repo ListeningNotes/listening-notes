@@ -120,12 +120,18 @@
    under it comes up out of faint. */
 .idc-count {
   flex: 1; min-width: 0;
+  border: 0; background: none; font: inherit;
   text-align: center;
   text-decoration: none; color: inherit;
   padding: 2px 0;
   border-radius: 8px;
   transition: background 0.15s;
 }
+/* The number that is open says so, so it is obvious what was pressed and
+   what closes it. */
+.idc-count--open { background: var(--bg-warm); }
+.idc-count--open .idc-count-word { color: var(--ink); }
+.idc-count--open .idc-count-n { text-decoration: underline; text-underline-offset: 5px; text-decoration-thickness: 2px; }
 .idc-count:hover { background: var(--bg-warm); }
 .idc-count:hover .idc-count-word { color: var(--ink-soft); }
 .idc-count-word { transition: color 0.15s; }
@@ -240,6 +246,120 @@
   color: var(--ink-faint);
 }
 
+
+/* ── A count's window ───────────────────────────────────────────────────────
+   What the two flag counts open: covers and nothing else. The sheet is the
+   height of what is in it, capped — nine covers is three rows and opens short,
+   where a fixed sheet with empty space under nine albums reads as something
+   that failed to load. Three across, which is what a phone holds and why
+   there are three counts and not four.
+
+   A bottom sheet on a phone and a panel in the middle on a desk, which is the
+   arrangement the pin's search below already uses and the archive's filters
+   before that. Opaque for the same reason that one is: it sits over a
+   photograph, and a portrait showing through a grid of covers is neither. */
+.ab-count-scrim {
+  position: fixed; inset: 0; z-index: 150;
+  background: rgba(0, 0, 0, 0.32);
+  animation: abCountFade 0.16s ease;
+}
+@keyframes abCountFade { from { opacity: 0; } to { opacity: 1; } }
+
+.ab-count-sheet {
+  position: fixed; z-index: 151;
+  left: 0; right: 0; bottom: 0;
+  max-height: min(78vh, 620px);
+  display: flex; flex-direction: column;
+  padding: 0 18px calc(22px + env(safe-area-inset-bottom));
+  background: var(--bg);
+  border-top: 1px solid var(--panel-border);
+  border-radius: 22px 22px 0 0;
+  box-shadow: var(--shadow-lift);
+  overflow-y: auto;
+  animation: abCountRise 0.22s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+@keyframes abCountRise { from { transform: translateY(14%); } to { transform: none; } }
+.ab-count-sheet--settling { transition: transform 0.18s cubic-bezier(0.22, 0.61, 0.36, 1); }
+
+/* The grip, and the whole of the pull. A press on it closes too, so the
+   gesture is never the only way out. */
+.ab-count-grip {
+  flex: none;
+  align-self: center;
+  width: 44px; height: 22px;
+  margin: 0 0 4px;
+  padding: 0;
+  border: 0; background: none;
+  cursor: grab;
+  touch-action: none;
+  position: sticky; top: 0;
+}
+.ab-count-grip::before {
+  content: '';
+  display: block;
+  width: 36px; height: 4px;
+  margin: 9px auto 0;
+  border-radius: 999px;
+  background: var(--ink-faint);
+  opacity: 0.5;
+}
+.ab-count-grip:active { cursor: grabbing; }
+
+/* The name and the number, so nothing in the grid needs a label. */
+.ab-count-head {
+  flex: none;
+  margin: 0 0 14px;
+  text-align: center;
+  font-family: var(--font-label);
+  font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.ab-count-head b {
+  font-family: var(--font-display);
+  font-weight: var(--font-display-weight);
+  font-size: 15px; letter-spacing: 0;
+  color: var(--ink);
+}
+
+.ab-count-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+.ab-count-cover {
+  display: block;
+  aspect-ratio: 1 / 1;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--bg-warm);
+  color: var(--ink-faint);
+  text-align: center;
+  line-height: 1;
+  transition: transform 0.15s;
+}
+.ab-count-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ab-count-cover:hover { transform: translateY(-2px); }
+.ab-count-none {
+  margin: 0 0 10px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--ink-faint);
+}
+
+/* On a desk it is a panel in the middle, like the pin's search — a bottom
+   sheet across a 1280px window to show nine covers is a drawer. */
+@media (min-width: 769px) {
+  .ab-count-sheet {
+    left: 50%; right: auto; bottom: auto; top: 50%;
+    transform: translate(-50%, -50%);
+    width: min(420px, calc(100vw - 48px));
+    border-radius: 18px;
+    border: 1px solid var(--panel-border);
+    padding: 0 18px 20px;
+    animation: none;
+  }
+  .ab-count-grip { display: none; }
+}
 
 /* ── The pin's search ───────────────────────────────────────────────────────
    A panel in the middle of a desktop screen and a bottom sheet on a phone,
