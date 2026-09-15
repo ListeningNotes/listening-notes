@@ -1870,13 +1870,27 @@ lesson is in the entry below.**
       over the feed, and the ID is who keeps this over their words. The panes
       read as disjointed because the objects were not equally object-like —
       two of them were squares and this one was a column of facts.
-- [x] **The object is the portrait: full width, square, the size an entry's
-      album art is.** A record in one pane and a person in the next, measured
-      the same. Both 4:3 crops lost against the real photograph — the clouds
-      around the shoulders do real work and a shallower crop takes them — and
-      the writing starting below the fold is the trade, taken on purpose. The
-      code stays in its corner, a little larger now it has a photograph to sit
-      on.
+- [x] **The object is the portrait, square and seven-tenths of the page.** It
+      was the full measure first, on the argument that it should be the size
+      an entry's album art is; at that size it was a lot of screen for a
+      photograph of somebody (Miyel, the same evening) and it came down to
+      70%. Still the object — nothing else on the pane comes near it — and now
+      the prompts start above the fold as well. Both 4:3 crops lost against
+      the real photograph: the clouds around the shoulders do real work and a
+      shallower crop takes them. The code stays in its corner, a little larger
+      now it has a photograph to sit on.
+- [x] **The mark is centred, 28px, and does not move.** Measured at three
+      moments — the card's header, the desk's header, and the bar's mark that
+      fades in once a face is scrolled — all three now land at the same size
+      on the same centre on the same line (28px, cx 215, cy 51 on a 430
+      phone). The bar's was 22px and the page's 28, which is why scrolling the
+      pane read as a header resizing itself rather than a mark that stays put
+      (Miyel). 28 is what every other mark on the site measures, so the bar's
+      was the odd one; raising it was going back to the standard, not away
+      from it. Both page marks are pinned 15px down rather than centred on
+      their row, because a row's height is whatever the pencil or the gear
+      happens to be and three pixels of drift is exactly what makes a mark
+      look like it jumped.
 - [x] **Name and the two actions on one line.** *Send* and *Add*, not "Send an
       album" and "+ Add": the shortening is the whole reason they sit beside
       the name rather than taking a row of their own, which is what took a row

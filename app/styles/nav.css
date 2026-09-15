@@ -504,7 +504,13 @@
   cursor: pointer;
   line-height: 0;
 }
-.hn-bar-svg { height: 22px; width: auto; display: block; }
+/* 28px, which is what .sitenav-logo-mark, .hp-logo-mark and the card's own
+   header mark are. It was 22 and was the only undersized copy on the site —
+   which showed on the ID pane, where the page's mark scrolls away and this
+   one fades in behind it: at two sizes it read as a header resizing itself
+   rather than a mark that stays put (Miyel, 2026-09-15). Same size and the
+   same centre now, so scrolling the pane leaves it where it was. */
+.hn-bar-svg { height: 28px; width: auto; display: block; }
 .hn-bar-svg path { fill: var(--ink); }
 
 .hn-mark-dot { fill: var(--ink); }
@@ -867,14 +873,24 @@
    (2026-09-15). */
 .db-head {
   position: relative;
-  display: flex; align-items: center;
-  gap: 12px; min-height: 30px; width: auto;
-  margin: 0 calc(var(--page-gutter) * -1) 16px;
-  padding-left: var(--page-gutter);
-  padding-right: 74px;
+  display: flex; align-items: center; justify-content: flex-end;
+  width: 100%;
+  min-height: 30px;
+  margin: 0 0 18px;
+  padding: 0;
 }
-.db-mark-svg { position: absolute; left: 50%; transform: translateX(-50%); }
-.db-head .db-tool { margin-left: auto; }
+/* Pinned rather than centred on the row, exactly as the card's is: the row's
+   height is whatever the gear happens to be, and the mark has to land on the
+   bar's line — the page's 36px of padding plus 15 — so that turning between
+   the two faces, and scrolling either of them, never moves it. It bled to the
+   window and left 74px for the light switch while that switch was still in
+   the corner of the cross; it is in Settings now and there is nothing on this
+   line but the page's own. */
+.db-mark-svg {
+  position: absolute;
+  left: 50%; top: 15px;
+  transform: translate(-50%, -50%);
+}
 .db-mark-svg { display: block; height: 28px; width: auto; }
 .db-mark-svg path { fill: var(--ink); }
 .db-tool {
@@ -1161,10 +1177,9 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   padding: calc(36px + var(--safe-top)) 0 calc(76px + env(safe-area-inset-bottom));
   box-sizing: border-box;
 }
-/* And the far end of that header stops short of the lights. The mark and the
-   tools are the page's; the lights are the window's, and they share a line. */
-.ab-card .idc-head,
-.db-head { padding-right: 52px; }
+/* The room these headers left at their right end was for the light switch,
+   which was fixed to the window's edge and shared their line. It is in
+   Settings now and they have the line to themselves. */
 .hn-face::-webkit-scrollbar { display: none; }
 .hn--face-card .hn-face--desk,
 .hn--face-desk .hn-face--card {
