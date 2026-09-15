@@ -3,7 +3,7 @@
 import database from './database_connection.js';
 import { tidyJournal } from './return_address.js';
 import { create_slug } from './slug_generator.js';
-import { serializeTracks } from './entry_formatter.js';
+import { serializeTracks, lookup_key } from './entry_formatter.js';
 import { sizedAlbumArt } from './music_data_api.js';
 
 // Album art is sized on the way out rather than on the way in, so the row
@@ -558,10 +558,11 @@ export async function delete_entry(slug) {
 // and only replaced when the user asks for fresh research.
 
 // Album and artist as typed vary — casing, punctuation, "and" vs "&" — so the
-// key is normalised the same way the iTunes lookups do it. Drafts key on the
-// same shape: one unfinished listen per record, no matter how it was typed.
-const lookup_key = (album, artist) =>
-  `${album} ${artist}`.toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, ' ').trim();
+// key is normalised. Drafts key on the same shape: one unfinished listen per
+// record, no matter how it was typed. The fold itself moved to
+// entry_formatter.js on 2026-09-15, because the inbox has to compute it in a
+// browser to find the draft behind a paused listen, and two copies of a key
+// function is how a lookup silently stops matching.
 
 export async function pull_briefing(album, artist) {
   const result = await database`

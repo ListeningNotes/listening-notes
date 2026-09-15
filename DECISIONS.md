@@ -726,6 +726,30 @@ entry's own date is the ceiling, ordering and hit rates work from it, and a
 confident wrong date corrupts every statistic after it. `received_date` is
 the send flow's, where the moment is exact.
 
+**A send has four outcomes, and two of them are not the same claim,
+2026-09-15.** Pending, started, logged, archived (stored as `dismissed`:
+the word on screen changed and the column did not, because renaming a value
+means rewriting rows on every copy to say the same thing differently). `reviewed` is set when
+Start a listen is pressed and means an intention; `logged` carries
+`entry_id` and means a record exists. Folding them would make a started and
+abandoned listen claim to be logged. **Nothing ever matches a send to an
+entry automatically** — a person recognises the record and presses once,
+because a wrong guess writes a credit onto somebody's entry.
+
+**The inbox is one list and a row opens where it sits, 2026-09-15.** New was
+never a place — it is a property of a row, the way unread is in mail — so
+there are no views to stand on: one list newest first, a dot for what is new,
+the state as a word in the subtitle, archived behind a line at the foot.
+**Pressing a row opens it, it does not navigate**; the listen is one of the
+things you can then choose. **The sender's actions are there whatever state a
+send is in**, which splitting the list had made impossible — a half-listened
+album whose sender has since made a journal had nowhere to say so. One
+primary action chosen by state, the rest as quiet rows under it; an archived
+row's primary is Put back, which is why archiving needs no undo of its own.
+**A resumed listen must find its draft:** a send and a draft are separate
+rows joined only by album and artist, and starting fresh would upsert over
+the saved notes.
+
 **A send is a gift, not a form, 2026-08-29.** Three parts, in this order: the
 object, the note, and who it is from. The album is picked off covers, because
 a cover is what makes it read as something handed across rather than a title

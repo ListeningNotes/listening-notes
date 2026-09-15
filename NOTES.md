@@ -259,10 +259,59 @@ cannot be tested end to end.
       (`"journal"` | `"desk"`), `.lay--over-journal`, `.lay--over-desk`,
       `.lay-back`, `.lay-back-slot`, `--lay-desk-w`; the grips' labels
       "Resize the card" and "Resize the desk".
+- [ ] **Where a record came from wants one pass of refinement, 2026-09-15.**
+      Miyel's call at the end of the credit and inbox work, and it is
+      fair. Eight columns now answer one question — `entries`:
+      `source_entry_id`, `received_from`, `received_date`,
+      `received_from_url`; `submissions`: `submitter_name`, `sender_url`,
+      `status`, `entry_id` — and three surfaces set one: the send form,
+      the entry editor, the inbox. Before redesigning any of it, the
+      honest accounting:
+      - **`source_entry_id` had no writer at all — settled 2026-09-15**,
+        on branch `park-lineage`: the machinery is retired and the column
+        parked. It was briefed as *wire the send flow to set it*, which
+        turned out not to be buildable — an `entries.id` is local to one
+        database, and a send is a visitor on this copy's form with their
+        journal at an origin their browser cannot read. Both reasons, and
+        what a revival would take, are in that branch's entry at the top
+        of Complete. Nothing else on the chain is waiting on this.
+      - **The credit being on the entry as well as on the send is not
+        waste.** `submissions.entry_id` is the inbox's; the entry's
+        `received_from`/`received_from_url` is what the public feed
+        publishes and what another copy matches on, and the feed reads
+        entries and must never read submissions. Two records of one fact,
+        both load-bearing. What is missing is anything that notices when
+        they disagree.
+      - **Two outcomes that sound alike.** `reviewed`/started and
+        `logged`. Kept apart deliberately (DECISIONS) because one is an
+        intention and one is a record — but if the session attached the
+        entry on save, started could go and there would be one word.
+        That is the simplification available, and it is a session's work,
+        not a tidy-up.
+      - **Three places name a sender** because they name it on three
+        different objects at three different moments. Worth one look at
+        whether the inbox's *Link their journal* and the editor's *Sent
+        by* should be the same press on the same object.
+
 **THE ADDRESS BOOK, THE FEED, AND WHERE COMPARE LIVES** — briefed
 2026-09-12. The address book merged to main that day, the feed and the
 person's page the next (Complete). Left: the printer, and the chain.
 
+- [ ] **`feed.xml` drops the credit — checked 2026-09-15, parked for its
+      own session.** Confirmed rather than assumed: `app/feed.xml/route.js`
+      already calls `pull_public_entries`, so the credit *reaches* it and
+      is never used — an item's description is built from artist, year,
+      rating and how it was heard, and `received_from` falls on the floor.
+      The word Kai appears nowhere in the whole feed; the same entry read
+      through `/api/public/entries` comes back with `received_from: "Kai"`
+      and her address. So the two public reads disagree, and the fix is one
+      line in one file, not a data problem.
+      **Decide the toggle in the same pass.** Four of the eighteen
+      Submission entries carry a credit today, so switching this on starts
+      naming Kai, Zacchy, Bluu and Peyton to anyone subscribed in a reader,
+      and the per-entry quiet choice DECISIONS promises is still owed
+      (below). Publishing to readers before it exists means a send can be
+      made public with no way back short of clearing the field.
 - [ ] **The feed's two loose ends, 2026-09-13.** (a) The quiet toggle:
       DECISIONS promises a per-entry choice to credit a send privately, and
       the feed — and since 2026-09-14 the entry page — publishes the credit
@@ -961,6 +1010,44 @@ Project → Settings → Environment Variables.
 
 ## Gotchas
 
+**There are two album folds and they disagree on accents, 2026-09-15.**
+`lookup_key` (now in `library/entry_formatter.js`) keys `drafts` and
+`briefings`; `foldKey`/`albumKey` in `hooks/useListeningBeacon.js` keys
+everything that compares two journals. The second strips diacritics and the
+first does not, so *Beyoncé* folds to `beyonc` under one and `beyonce` under
+the other. Reaching for the wrong one to find a draft does not throw — it
+finds nothing, the session starts empty, and the first autosave upserts over
+the saved notes on that same key. Match a draft with `lookup_key`, and
+compare against the row's stored `lookup_key` column rather than
+recomputing it, so a row written by an older fold still matches itself.
+
+**`base.css` goes stale on the dev server, and it will cost somebody a bug
+report, 2026-09-15.** Rules added to base.css do not reach the served
+stylesheet. The other seven sheets recompile on their own the whole time;
+this is base.css only, and it bit three times in one day. The third time it
+reached Miyel: the address-book strip rendered as full-width stacked
+portraits with 24px names, she reported the picker as illegible, and the
+CSS was correct on disk the entire time.
+
+- **The fix is a no-op write, not a restart.** `printf '\n/* touch */\n' >>
+  app/styles/base.css`, and the rule is served a second later; delete the
+  comment again and it stays. An older note said only stop → `rm -rf .next`
+  → start recovers it. It does not need that, which matters when somebody
+  else's dev server owns the folder.
+- **How to tell staleness from your own bad CSS.** Never trust the page.
+  Fetch the sheet it links and grep it:
+  `curl -s localhost:3000/archive | grep -o '/_next/static/[^"]*\.css'`,
+  then curl that. On disk plus absent from the sheet is staleness every
+  time.
+- **Better: do not put a new rule in base.css while iterating.** Only what
+  genuinely belongs to every surface goes there. A variant used by one
+  surface — MiniAddressBook's `--tight`, which only the inbox asks for —
+  goes in that surface's sheet, which is the rule anyway (DECISIONS,
+  Structure) and sidesteps this entirely.
+- **Suspected trigger: running `npm run build` while the dev server is up.**
+  Both share `.next`, and base.css is the first sheet imported in
+  layout.js. Unproven, but every occurrence followed a build.
+
 **A `MediaRecorder` MP4 is fragmented, and Apple reads it as a 0.05-second
 video, 2026-09-12.** Chromium's recorder says `video/mp4;codecs=avc1` and
 the file plays in a browser, but it is `moof`/`mdat` fragments, and
@@ -1522,6 +1609,305 @@ current.
 ---
 
 ## Complete
+
+**2026-09-15 — the inbox is one list, same branch `inbox-logged`**
+
+- [x] **New was never a place.** It is a property of a row, the way unread
+      is in mail, and nobody keeps a read tab and an unread tab. So the two
+      views are gone: one list newest first, a dot for what is new, and the
+      state as a word in the subtitle — *new*, *in progress*, *logged 4
+      august*, *archived*. Archived comes out of the order and sits behind
+      *Show N archived* at the foot; opened, it goes on the end rather than
+      back into the middle of what has not been dealt with. The folder tabs
+      are untouched: sends one place, comments another, reports a third.
+- [x] **Pressing a row opens it, it does not navigate.** That was the real
+      complaint — pressing Submarine went straight into a listening session
+      with no choice. It opens where it sits now (DECISIONS: a control opens
+      where it belongs) and the session is one of the things you can pick.
+      Open, the subtitle goes back to *artist · year*, because the state is
+      the actions underneath.
+- [x] **One primary, chosen by state.** New gets *Start a listen*, in
+      progress *Resume the listen* (which finds the draft and hands it
+      over — unchanged, and see Gotchas for the fold that makes it work),
+      logged *Open the entry*, archived *Put back*. An archived row's
+      primary being the way back is what lets archiving need no undo
+      control of its own, so the `put back` at the end of a row is gone.
+- [x] **The quiet actions are always there, whatever state a send is in.**
+      That is the whole point of the change and the Jr case exactly: an
+      album half-listened-to whose sender has since made a journal had
+      nowhere to record it, because in-progress rows had no actions at all.
+      They are plain rows under the primary rather than behind a second
+      press, so the ··· menu is gone with its styles, and so is `Sender` —
+      the open row writes its own *From* line, with the word in it.
+- [x] **Archive is red again and last** (the brief's call, reversing the
+      not-red of an hour earlier). It is still reversible; the colour is
+      marking the one action that takes a row out of the list.
+- [x] **Open the draft stays only where it is not the primary** (Miyel
+      confirmed). On an in-progress row *Resume the listen* is already that
+      act; the quiet row is for a new or logged send carrying a stray draft.
+- [x] **Every new send said *archived*.** `became` fell through to the
+      archived word for anything that was not logged or in progress, and
+      pending is everything else — so the commonest state in the inbox was
+      named after the rarest. Pending is *new* now and archived is matched
+      by its own value. A fallthrough that names the rare case is a
+      fallthrough that lies about the common one.
+- [x] **The new dot is plain ink.** The live green was tried the same day
+      and taken back out on Miyel's call: `--live` means something is
+      playing *now*, and an unopened send is not an event — it is the
+      unread dot mail has had for forty years. It keeps its room when
+      absent so titles line up down the list.
+- [x] **Verified:** the build passes and every row state was stood into a
+      page to check the CSS. Nothing is defined in the sheet that the page
+      no longer uses, and nothing used is undefined. **Not driven by hand**,
+      as ever: the inbox is behind the password.
+
+**2026-09-15 — the two-view redesign it replaced, same branch**
+
+- [x] **The check the brief asked for first: an in-progress send and a
+      draft are two things, not one.** `submissions.status = 'reviewed'`
+      says a listen was started; `drafts` is its own table keyed on a fold
+      of album + artist, with nothing joining the two. The inbox's Start a
+      listen never handed the session a draft, so resuming that way would
+      have opened on the right record, looked fine, and then written over
+      the saved notes on the first autosave (`save_draft` upserts on that
+      key). So Opened's *in progress* row finds the draft and hands it
+      over, which is the path the picker's Resume already uses
+      (`beginListen` takes `draft` on the record). With no draft found it
+      falls through to a fresh listen, which is honest: nothing was saved.
+      The fold moved to `entry_formatter.js` so the browser and the data
+      layer share one copy — see Gotchas for why the *other* fold would
+      have failed silently.
+- [x] **Two views, not four.** New and Opened; started, logged and
+      dismissed are one thing from the inbox's side. What state a send is
+      in is a word in its subtitle (`became`) — *in progress*, *logged 4
+      august*, *dismissed* — rather than a tab you have to be standing on.
+      Comments and Reports keep their own folder tabs, untouched.
+- [x] **New has one button.** Start a listen. The rare actions moved
+      behind a ··· that opens in the row (DECISIONS: a control opens where
+      it belongs): *I've already logged this*, the sender action, and
+      *Dismiss*, which is the only destructive one and the only one in a
+      colour.
+- [x] **The sender is a face and a name.** The "IN YOUR ADDRESS BOOK"
+      label and the row's *Link their journal* are gone. Their name is the
+      link when the send carried a journal, which is what the label was
+      saying with a second line of type; plain text when it did not.
+- [x] **Opened is a record, not a queue.** Cover, album, what became of
+      it, who sent it, no buttons, and no message — the note is for
+      deciding and belongs on the entry afterwards. Dismissed rows at
+      reduced opacity. One tap target: logged opens the record, in
+      progress resumes the listen.
+- [x] **One departure from the brief, deliberate.** **Add to address book
+      stayed**, as a fourth menu item — DECISIONS names the inbox's Add
+      button as one of the documented ways an address gets into the book,
+      and dropping it would close that door. It and *Link their journal*
+      are opposite halves of one question and never both apply, so at
+      most three items show at once.
+- [x] **Dismiss is Archive, and a dismissed row is an archived one**
+      (Miyel, 2026-09-15). A send you put aside has been filed, not
+      rejected, and it comes back with one press — so the menu says
+      Archive and the row's state reads *archived* — **and it is not red
+      any more** (same call, a moment later): red on this site means the
+      delete at the foot of an entry, which really is permanent, and
+      spending it on something reversible is how it stops meaning
+      anything. The three menu items are one voice now. **The stored value is
+      still `dismissed`:** renaming it means rewriting rows on every copy
+      to say the same thing differently, and the column is not what
+      anybody reads. `ARCHIVED` is the constant the code uses, with the
+      string in one place. Reports and Comments keep their own Dismiss —
+      a comment's deletes it, which is a different act — and were left
+      alone rather than swept along.
+- [x] **An archived row can be put back, very quietly** (Miyel, after the
+      redesign, closing the one-way door it had opened). Opened has no
+      buttons by design and this is the exception that design made
+      necessary: dismissing was unrecoverable from anywhere. *put back*
+      sits at the far end of the row in the row's own faded ink, in the
+      same small type the state is set in, and comes up when a pointer is
+      over it — 45px of target on 9.5px of type, taken in padding, so the
+      row grows by three pixels and the words stay quiet. It returns the
+      send to New. No confirmation: putting one back destroys nothing,
+      and the worst case is dismissing it again.
+- [x] **The menu's two panels open inside it, and the picker is tightened**
+      (Miyel on her phone: the dropdown is not legible, *I've already logged
+      this* is a little stiff). Most of the illegibility was base.css going
+      stale — see Gotchas — and the strip was correct on disk throughout.
+      What was genuinely wrong, once it rendered: the strip was drawn for
+      the entry's Sent by, which has a phone's full width and is centred
+      under a centred field, and an inbox row gives it 243px beside the
+      cover, where three faces fit, centred, inside a list ranged left. So
+      `MiniAddressBook` took a `tight` variant — 52px faces, 40px
+      portraits, the name up to 9px, started at the left edge, four fitting
+      — and it is still the same component the entry uses, which was the
+      point of pulling it out. Both it and the record picker now render
+      *inside* `.ib-menu` under a hairline, so the menu grows rather than a
+      second box arriving below it unattached; `.ib-which` lost its own
+      border and box for the same reason, which is what read as stiff.
+      **The `--tight` rules live in forms.css**, not beside the strip in
+      base.css: one surface asks for them, and it dodges the staleness.
+- [x] **The scan comes first, the field second** (Miyel: can't the button
+      find the entry and let you click it, rather than typing). It always
+      did — `candidates` matches on `album_key` with nothing typed, and
+      offers *every* listen of that album, which is the whole point when
+      there is more than one. Nobody could tell, because the field was the
+      first thing in the panel and **not one of the six sends in New has a
+      record in the journal**, so the empty state was the only state ever
+      seen. Matches now render above the field; the field's placeholder
+      says what it is for (*Logged under another name?* when there are
+      matches, *Search your journal* when there are none); and a row for an
+      album with several listens reads *Listen 2 of 3 · date* instead of
+      repeating the artist on every line, since which listen is the
+      question being asked. Nothing about the matching changed.
+- [x] **The menu's two panels are one at a time** (Miyel). Opening the
+      record picker closes the address book and the other way round, so the
+      menu never grows two panels asking different questions about the same
+      send — which is the stack of controls this redesign took off the row.
+      Every way in and out clears both now: the two openers, the ··· toggle,
+      and switching view. The last was invisible rather than harmless — the
+      menu is closed by then so nothing draws — but leaving one set means
+      the next menu opened on that row comes up with a panel already open.
+- [x] **The ··· is a mark, not a second button** (Miyel). It wore a pill
+      beside Start a listen, and two pills side by side read as two equal
+      choices — the opposite of the row's whole point. No border, no
+      ground, pushed to the far right edge, so what sits between it and
+      the button is room rather than an eight-pixel gap. Start a listen
+      keeps the left edge. Still a thumb's target, taken in padding
+      weighted left so the mark lands on the edge and not the padding;
+      full ink while the menu is open.
+      **And it is Phosphor's `DotsThree` now**, not three middle-dot
+      characters: the label face set those unevenly, at a size that read
+      as punctuation somebody had left behind. An icon is one shape, drawn
+      the way every other mark on the site is. Safe here where it was not
+      on the entry's first screen — the inbox has no stand-in rendering
+      the same row a beat earlier, so nothing can shift when it arrives.
+- [x] **Built to Miyel's two mockups, 2026-09-15.** She drew the inbox and
+      said follow the look, with one correction: the album art square, not
+      the tall rectangles the drawing had. What changed:
+      - **The folders are unchanged, and that was a mistake I made and
+        undid.** Following the drawing, I flattened the three folder tabs
+        and the two views into one row of four and added an *Inbox*
+        heading. Miyel had asked for what was *inside* New and Opened to
+        change, not the box holding it: sends are one place, comments
+        another, reports a third, and the two views belong inside the
+        first. Put back the same day — `FolderTab`, the `filter` state,
+        `.ib-filters` and the folder-tab styles are all as they were, and
+        the heading is gone. **Only the contents of a row are new.** When
+        a drawing implies a structural change that was not asked for,
+        take the look off it and leave the structure alone.
+      - **New rows are three rows and a button** (Miyel, over two passes).
+        *From:* then a round face, the sender's name carrying the link's
+        underline, and the date, all across the top — a send is somebody
+        handing you something, so who comes before what. The record is its
+        own row under that, which is what puts the cover in line with the
+        album's name instead of with somebody's face; square at 84px, 68
+        on a phone. Then the message, full width. Then Start a listen.
+        The ··· left the button's line for the row's top right corner:
+        extra, and out of the way of everything that reads left to right.
+      - **Opened rows:** square art at 56px, the album at 17px, the
+        subtitle now *artist · what became of it* rather than the state
+        and the sender's name, and the sender is a round face at the end
+        of the row. Dismissed still dimmed, with *put back* before the
+        face.
+      - **Square is enforced with `aspect-ratio`, not a matching height**,
+        on both — a fixed height is the one thing that could argue with it
+        and is exactly what made the drawing's art tall.
+      **The mockups said WAITING and HANDLED**; they are NEW and OPENED,
+      which is the rename she asked for after drawing them. The look was
+      the instruction, not the words.
+- [ ] **Names to confirm, 2026-09-15 (the redesign)** — rename freely:
+      `VIEWS`, `UNOPENED`, `unopened`, `became`, `Sender`, `resumeListen`,
+      `menuFor`;
+      the words *new*, *opened* (Miyel's, replacing waiting/handled),
+      *in progress*, *logged 4 august*, *dismissed*, *Nothing new.*,
+      *Nothing opened yet.*; the
+      `.ib-who*`, `.ib-more`, `.ib-menu*`, `.ib-done*`, `.ib-back`,
+      `.ib-sent-head`, `.ib-sent-label`, `.ib-sent-body`; the word *From:*
+      classes in forms.css; the words *put back*; and `lookup_key`
+      keeping its name where it moved to.
+- [x] **Verified:** the build passes, the draft lookup was run against the
+      five real drafts and found each one by album and artist (and the
+      wrong fold shown to miss), and both views were stood into a page to
+      check the CSS on a phone. **Not driven by hand:** the inbox is
+      behind the password, so the ···, the resume and the two views are
+      Miyel's review. Nothing was written to any real row.
+
+**2026-09-15 — the inbox needs a third outcome, branch `inbox-logged`, not
+merged (1.14.0 when it is: something new)**
+
+- [x] **A send can say it was already logged.** Migration 010 adds
+      `submissions.entry_id` (integer, `ON DELETE SET NULL` — the
+      `settings.pinned_entry_id` shape, deliberately not the
+      `comments.entry_slug` one) and `log_submission` in
+      `submission_actions.js` writes it with status `logged`. On a row,
+      *I've already logged this* opens a picker in place: the likely
+      record first, matched on `albumKey` so a send finds its entry
+      through either spelling, and a field for a record logged under
+      another name. One press does two writes — the send is marked and
+      pointed at the record, and that record gets `entry_type =
+      Submission` and the sender's name and journal — so the connection
+      exists in the data and not only in Miyel's head. The journal is
+      fetched the first time anybody presses, never on load.
+      **The credit is not overwritten** where the entry already carries
+      one: a button on another screen should not quietly replace what she
+      typed by hand.
+- [x] **A fourth tab, and `reviewed` keeps its own meaning.** The premise
+      of the brief was that the inbox had two outcomes; it had three —
+      `reviewed` was already being set, by Start a listen, and shown as a
+      tab. It is a claim about an intention (a listen was *started*,
+      before any entry exists) and `logged` is a claim about a record, so
+      they are not folded together. Tabs now read pending / started /
+      logged / dismissed, labels in `OUTCOMES` and the raw values
+      untouched, so no row is rewritten.
+- [x] **A send's sender resolves to the address book.** Sends arrive
+      before people have copies — that is the normal case, not an edge
+      one — so a row with a name and no address offers *Link their
+      journal*, and the same strip of faces the entry editor uses fills
+      in `sender_url`. The name they signed stays as they typed it.
+- [x] **The picker became its own file.** `MiniAddressBook.js` (Miyel's
+      name) in main_components, with its strip styles moved out of
+      entry.css into base.css, since two surfaces draw it now. The entry
+      editor renders it instead of its own copy.
+- [x] **Verified** without a wristband: migration applied to the live
+      database (column and foreign key both present), the new
+      `pull_submissions` join run read-only against the nine real rows,
+      all three owner routes answering 401, the build passing, and the
+      row's markup stood into a page to check the CSS on a phone.
+      **And both controls are confirmed on the dev server**, by Miyel the
+      same day, on the one real case there was — the Kailea send (#3),
+      which is the case the brief was written about. It carries
+      `wizkailea.vercel.app` where it had nothing, and it is `logged`
+      and attached to entry 39, `lemonade`, which reads as a Submission
+      credited to Kai at her address. The **don't overwrite** rule
+      showed its work: the entry already carried that credit from an
+      earlier correction, so the press set the status and the link and
+      left the writing alone. Nothing I ran wrote to any real row.
+      **No backlog behind it:** the other five open sends have no entry
+      in the journal under any spelling, so Pending is telling the truth
+      about every one of them, and the button is for the next send that
+      gets listened to outside the flow rather than for a queue.
+- [x] **Three sends carried an email in `sender_url`, fixed the same
+      day.** Submissions 4, 5 and 7 held `josejunior770@gmail.com`, from
+      before the email field was retired, and `tidyAddress` read it as a
+      host — something, a dot, something is the whole test — so each row
+      drew a *their journal* link to `https://josejunior770@gmail.com`,
+      which goes nowhere. Two halves: `LOOKS_LIKE_A_HOST` in
+      `return_address.js` now disqualifies an `@` (checked against every
+      real address in the book and in settings: only the two email cases
+      change, and `localhost:3000` was already rejected for having no
+      dot), and migration 011 clears the ones already stored. **Cleared
+      rather than converted** — the host after an `@` is a mail provider,
+      and filing somebody under gmail.com is worse than not knowing — and
+      the name on the send is untouched, so those rows now offer *Link
+      their journal* and the address book answers it. `people`,
+      `entries.received_from_url` and `comments.author_url` were checked
+      and held none. Jr is almost certainly June (the same account owns
+      `userone`, which is `userone-silk.vercel.app`), but that is an
+      identity call to make with one tap, not a guess to write into a row.
+- [ ] **Names to confirm, 2026-09-15** — autonomous session, rename
+      freely: branch `inbox-logged`; the words *I've already logged this*
+      (the brief's), *Link their journal*, *Which record was it?*, *Logged
+      as …*, and the tab word *started* for `reviewed`; `OUTCOMES`,
+      `openNaming`, `alreadyLogged`, `nameSender`, `candidates`, `naming`,
+      `whose`, `look`, `mine` in the inbox; `name_submission_sender` in
+      `submission_actions.js`; the `.ib-which*` classes in forms.css.
 
 **2026-09-14 — credit the person who sent it, branch `credit`, merged to
 main and pushed 2026-09-15 as 1.13.0 (something new: the middle number),

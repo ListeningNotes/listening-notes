@@ -713,7 +713,10 @@ a.pp-name:hover svg { color: var(--ink); }
 
 /* ── from app/dashboard/inbox/page.js ────────────────────────────────── */
 .ib-body { max-width: 940px; padding: 18px 24px 40px; }
-/* Folder tabs that connect to the open panel. */
+/* Folder tabs that connect to the open panel. Sends are one folder, comments
+   another, reports a third — the two views over sends live inside the first
+   rather than beside them (Miyel, 2026-09-15: the folders were not the thing
+   that needed changing). */
 .ib-tabs { display: flex; align-items: flex-end; gap: 5px; padding-left: 14px; position: relative; z-index: 2; flex-shrink: 0; }
 .ib-tab {
   font-family: var(--font-label); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
@@ -732,46 +735,140 @@ a.pp-name:hover svg { color: var(--ink); }
 }
 .ib-panel { border-radius: 20px 20px 24px 24px; }
 .ib-scroll { position: relative; z-index: 1; flex: 1; padding: 22px 26px 28px; }
-.ib-filters { display: flex; gap: 18px; margin-bottom: 18px; }
-.ib-filter {
-  font-family: var(--font-label); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
-  padding: 4px 4px; border: none; background: none; cursor: pointer;
-  color: var(--ink-faint); border-bottom: 1.5px solid transparent;
+@media (max-width: 640px) { .ib-scroll { padding: 18px 18px 24px; } }
+/* ── One list of sends ──────────────────────────────────────────────────────
+   No views to stand on, 2026-09-15. New is a property of a row, the way
+   unread is in mail, so it is a dot and a word in the subtitle rather than
+   a tab — and a row in progress keeps every action it has, which it did not
+   when the two were split. Newest first, archived behind a line at the foot.
+   Pressing a row opens it where it sits (DECISIONS: a control opens where it
+   belongs); it never takes you into a listen on its own. */
+.ib-count {
+  font-family: var(--font-label); font-size: 9.5px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--ink-faint); margin-bottom: 14px;
 }
-.ib-filter--on { color: var(--ink); border-bottom-color: var(--ink); }
-.ib-list { display: flex; flex-direction: column; gap: 6px; }
-/* One received album. Cover on the left at the size of a thing being handed
-   over, everything said about it in a column to the right. */
-.ib-sent { display: flex; gap: 18px; align-items: flex-start; padding: 20px 6px; border-bottom: 1px solid var(--border); }
-.ib-sent:last-child { border-bottom: none; }
-.ib-sent-art {
-  flex-shrink: 0; width: 96px; height: 96px; border-radius: 8px; overflow: hidden;
-  background: var(--panel); box-shadow: var(--shadow-soft);
-  display: flex; align-items: center; justify-content: center;
+.ib-list { display: flex; flex-direction: column; }
+.ib-r { border-bottom: 1px solid var(--border); }
+.ib-r:last-child { border-bottom: none; }
+/* Put away, and still readable — it opens like any other row, and its one
+   action is the way back. */
+.ib-r--arch { opacity: 0.45; transition: opacity 0.15s; }
+.ib-r--arch:hover, .ib-r--arch.ib-r--open { opacity: 0.85; }
+
+.ib-rhead {
+  display: flex; align-items: center; gap: 12px; width: 100%;
+  padding: 13px 2px; border: 0; background: transparent;
+  text-align: left; font: inherit; color: inherit; cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
-.ib-sent-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
-/* A send typed in by hand rather than picked off the shelf has no cover. The
-   frame stays so the column does not shift under the ones that do. */
-.ib-sent-none { font-size: 26px; color: var(--ink-faint); }
-.ib-sent-said { min-width: 0; flex: 1; }
-.ib-sent-album { font-family: var(--font-display); font-weight: var(--font-display-weight, 700); font-size: 16px; color: var(--ink); line-height: 1.25; }
-.ib-sent-artist { font-family: var(--font-label); font-size: 11px; color: var(--ink-soft); margin-top: 2px; }
-/* The message. Set at reading size rather than table size, because it is the
-   only thing here somebody wrote. */
-.ib-sent-note { font-size: 14px; color: var(--ink); line-height: 1.7; margin: 11px 0 10px; white-space: pre-wrap; overflow-wrap: anywhere; }
-.ib-sent-from {
-  display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap;
-  font-family: var(--font-label); font-size: 10px; letter-spacing: 0.08em; color: var(--ink-soft);
+.ib-rhead:hover .ib-rttl { text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--border); }
+/* The dot keeps its room when it is not there, so titles line up down the
+   list whether or not a send is new.
+
+   Plain ink, on Miyel's call. The live green was tried the same day and
+   taken back out: `--live` means something is playing *now*, and a send
+   that has not been opened is not an event — it is the unread dot mail has
+   had for forty years, and it reads as one in the page's own ink. */
+.ib-newdot {
+  width: 6px; height: 6px; border-radius: 999px; flex-shrink: 0;
+  background: var(--ink);
 }
-.ib-sent-when { margin-left: auto; color: var(--ink-faint); }
-/* Three pills since the address book (2026-09-12): they wrap onto a second
-   line on a phone rather than folding their own words. */
-.ib-sent-row { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 14px; }
+.ib-newdot--off { background: transparent; }
+.ib-rart {
+  width: 46px; aspect-ratio: 1 / 1; border-radius: 7px; overflow: hidden; flex-shrink: 0;
+  background: var(--panel);
+  display: inline-flex; align-items: center; justify-content: center; color: var(--ink-faint);
+}
+.ib-rart img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ib-rsaid { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.ib-rttl {
+  font-family: var(--font-display); font-weight: var(--font-display-weight, 700);
+  font-size: 15px; line-height: 1.2; color: var(--ink);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.ib-rsub {
+  font-family: var(--font-label); font-size: 9.5px; letter-spacing: 0.04em;
+  color: var(--ink-faint);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.ib-rface {
+  position: relative; width: 22px; aspect-ratio: 1 / 1; border-radius: 999px;
+  overflow: hidden; flex-shrink: 0;
+  background: var(--panel); border: 1px solid var(--border);
+  display: inline-flex; align-items: center; justify-content: center; color: var(--ink-faint);
+}
+.ib-rface img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+
+/* ── An open row ────────────────────────────────────────────────────────────
+   Who it came from, what they said, the one thing that happens next, and the
+   quiet ones under it. */
+.ib-open { padding: 2px 2px 18px 18px; animation: ib-unfold 0.18s ease-out; }
+.ib-from { display: flex; align-items: center; gap: 8px; padding-bottom: 10px; }
+.ib-from-face {
+  position: relative; width: 20px; aspect-ratio: 1 / 1; border-radius: 999px;
+  overflow: hidden; flex-shrink: 0;
+  background: var(--panel); border: 1px solid var(--border);
+  display: inline-flex; align-items: center; justify-content: center; color: var(--ink-faint);
+}
+.ib-from-face img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.ib-from-nm { font-size: 12.5px; color: var(--ink-soft); min-width: 0; }
+.ib-from-nm a, .ib-from-nm span { color: var(--ink); }
+.ib-from-nm a { text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--border); }
+.ib-from-nm a:hover { text-decoration-color: var(--ink-faint); }
+.ib-from-dt {
+  margin-left: auto; flex-shrink: 0;
+  font-family: var(--font-label); font-size: 9px; letter-spacing: 0.06em; color: var(--ink-faint);
+}
+/* The message, at reading size, and only here — it is what you read in order
+   to decide, so it is out while you are deciding and folded away after. */
+.ib-msg {
+  font-size: 14px; line-height: 1.65; color: var(--ink);
+  margin: 0 0 14px; white-space: pre-wrap; overflow-wrap: anywhere;
+}
+
+/* The one thing that happens next, chosen by the state the send is in. */
+.ib-primary {
+  display: inline-flex; align-items: center; width: fit-content;
+  padding: 10px 20px; border: 1px solid var(--ink); border-radius: 999px;
+  background: var(--ink); color: var(--bg); text-decoration: none;
+  font-family: var(--font-label); font-size: 9.5px; letter-spacing: 0.12em;
+  text-transform: uppercase; cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: opacity 0.15s;
+}
+.ib-primary:hover { opacity: 0.85; }
+
+/* The rest, as rows rather than buttons: available, and plainly not the
+   thing you came to do. */
+.ib-acts { display: flex; flex-direction: column; align-items: flex-start; margin-top: 10px; }
+.ib-act {
+  display: flex; align-items: center; gap: 9px; width: 100%;
+  padding: 9px 0; border: 0; background: transparent;
+  text-align: left; font-family: inherit; font-size: 13px; color: var(--ink);
+  cursor: pointer; -webkit-tap-highlight-color: transparent;
+  transition: color 0.15s;
+}
+.ib-act:hover { color: var(--ink-soft); }
+.ib-act-ic { display: inline-flex; width: 15px; justify-content: center; color: var(--ink-faint); flex-shrink: 0; }
+/* Archive keeps the colour, last in the list. */
+.ib-act--warn { color: var(--fav, #f0484f); }
+.ib-act--warn:hover { color: var(--fav, #f0484f); opacity: 0.8; }
+.ib-act--warn .ib-act-ic { color: var(--fav, #f0484f); }
+
+.ib-showarch {
+  display: block; width: 100%; margin-top: 14px; padding: 12px 0;
+  border: 0; border-top: 1px solid var(--border); background: transparent;
+  font-family: var(--font-label); font-size: 9px; letter-spacing: 0.13em;
+  text-transform: uppercase; color: var(--ink-faint); cursor: pointer;
+  -webkit-tap-highlight-color: transparent; transition: color 0.15s;
+}
+.ib-showarch:hover { color: var(--ink-soft); }
+
 @media (max-width: 640px) {
-  .ib-sent { gap: 14px; }
-  .ib-sent-art { width: 72px; height: 72px; }
-  .ib-sent-when { margin-left: 0; }
+  .ib-open { padding-left: 0; }
+  .ib-rart { width: 42px; }
 }
+
 /* A comment waiting: who, where, what they said, and the two buttons. */
 .ib-comment { padding: 18px 6px; border-bottom: 1px solid var(--border); }
 .ib-comment:last-child { border-bottom: none; }
@@ -784,6 +881,62 @@ a.pp-name:hover svg { color: var(--ink); }
 .ib-comment-row .own-link { font-family: var(--font-label); font-size: 10px; margin-left: auto; }
 /* A send that carried a journal, once filed, says so where the button was. */
 .ib-filed { align-self: center; }
+
+/* ── Which record it became ─────────────────────────────────────────────────
+   Opened by "I've already logged this" on a send, 2026-09-15. It unfolds in
+   the row rather than over the page — a control opens where it belongs
+   (DECISIONS) — and it holds the likely record first, so the usual press is
+   two taps and the field is only for a record logged under another name. */
+/* Inside the menu now, under the line that opened it, so it reads as the
+   menu growing rather than a second box arriving underneath. No border of
+   its own for the same reason — a box inside a box was the stiffness
+   (Miyel, 2026-09-15); what separates it is a hairline above and the room
+   around it. */
+.ib-which {
+  margin: 2px 0 2px;
+  padding: 10px 10px 4px;
+  border-top: 1px solid var(--border);
+  display: flex; flex-direction: column; gap: 6px;
+  animation: ib-unfold 0.18s ease-out;
+}
+@keyframes ib-unfold { from { opacity: 0; transform: translateY(-3px); } }
+/* Under the matches, not over them: what the scan found is the answer, and
+   this is the way out when it is not. */
+.ib-which-field {
+  border: 0; border-bottom: 1px solid var(--border);
+  background: transparent; padding: 0 0 6px; margin: 4px 0 2px;
+  font-family: inherit; font-size: 13px; color: var(--ink);
+}
+.ib-which-field:focus { outline: none; border-bottom-color: var(--ink-faint); }
+.ib-which-field::placeholder { color: var(--ink-faint); }
+.ib-which-none {
+  font-family: var(--font-label); font-size: 10px; letter-spacing: 0.06em;
+  color: var(--ink-faint); padding: 4px 0;
+}
+.ib-which-one {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  padding: 6px; border: 0; border-radius: 8px;
+  background: transparent; text-align: left; cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s;
+}
+.ib-which-one:hover { background: var(--bg); }
+/* The strip of faces, when the menu opens it, sits on the same hairline as
+   the record picker and under the same room. */
+/* The strip of faces, when an open row asks for it, sits on the same
+   hairline the record picker does. */
+.ib-open .ln-sender-book { margin: 4px 0 0; padding-top: 12px; border-top: 1px solid var(--border); }
+.ib-which-art {
+  width: 38px; height: 38px; border-radius: 6px; overflow: hidden; flex-shrink: 0;
+  background: var(--panel); display: block;
+}
+.ib-which-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ib-which-said { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.ib-which-album { font-size: 13px; color: var(--ink); }
+.ib-which-artist {
+  font-family: var(--font-label); font-size: 10px; color: var(--ink-soft);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
 
 /* ── from app/dashboard/people/page.js ───────────────────────────────── */
 /* The address book: the inbox's sheet and panel, one column of people. A
@@ -922,3 +1075,26 @@ a.pn-item-album:hover { text-decoration: underline; text-underline-offset: 3px; 
 .own-screen .kt-tool, .idc-tool { text-decoration: none; }
 .pr-main { width: 100%; max-width: 560px; align-self: center; box-sizing: border-box; padding: 60px 24px 120px; }
 .pr-title { font-family: var(--font-display); font-weight: var(--font-display-weight, 700); font-size: 28px; margin: 10px 0 14px; letter-spacing: -0.01em; }
+
+/* ── The address book, tightened for a row ──────────────────────────────────
+   MiniAddressBook's dense variant (`tight`), used by the inbox and nowhere
+   else, which is why it lives here rather than beside the strip itself in
+   base.css: a style goes where its surface is.
+
+   The strip was drawn for the entry's Sent by, which has the width of a
+   phone and sits centred under a centred field. An inbox row gives it about
+   240px beside the cover, where the same faces are three that fit, centred,
+   inside a list that is otherwise ranged left (Miyel, 2026-09-15: on mobile
+   this stuff looks off). Smaller faces, started at the left edge, and the
+   name up a step because at this size it does more of the recognising. */
+.ln-sender-book--tight { padding: 2px 0 4px; gap: 10px; }
+.ln-sender-book--tight .ln-sender-face:first-child { margin-left: 0; }
+.ln-sender-book--tight .ln-sender-face:last-child { margin-right: 0; }
+.ln-sender-book--tight .ln-sender-face { width: 52px; gap: 5px; }
+.ln-sender-book--tight .ln-sender-portrait { width: 40px; height: 40px; border-radius: 9px; }
+.ln-sender-book--tight .ln-sender-name { font-size: 9px; letter-spacing: 0.04em; }
+.ln-sender-book--tight .ln-sender-face--on .ln-sender-portrait { box-shadow: 0 0 0 2px var(--ink); }
+
+/* A send typed in by hand rather than picked off a shelf has no cover. The
+   frame stays so the column does not shift under the ones that do. */
+.ib-nocover { font-size: 18px; color: var(--ink-faint); }

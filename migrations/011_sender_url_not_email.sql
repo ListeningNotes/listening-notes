@@ -1,0 +1,32 @@
+-- Copyright (C) 2026 Miyel Brown
+-- SPDX-License-Identifier: AGPL-3.0-or-later
+-- migrations/011_sender_url_not_email.sql
+--
+-- Emails out of the column that holds a journal.
+--
+-- `submissions.sender_url` is where a sender's journal goes, and it is
+-- stored as a bare host. An email address passed the check that guards it —
+-- something, a dot, something is the whole test — so sends from before the
+-- email field was retired left one sitting there, and the inbox turned each
+-- into a link to `https://somebody@gmail.com`, which goes nowhere. The check
+-- now refuses an @ (library/return_address.js), which stops any more
+-- arriving; this is the ones already in.
+--
+-- A data migration rather than a hand fix in one console, because every copy
+-- inherits the same field, the same check and the same mistake — and a copy
+-- is a database on a machine nobody here can reach. On most it will match
+-- nothing.
+--
+-- Cleared rather than converted. There is no honest way to turn an email
+-- into a journal: the host after the @ is a mail provider, and filing
+-- somebody under gmail.com would be worse than not knowing. What is lost is
+-- a personal detail this software has a settled decision against holding at
+-- all (DECISIONS, The network: no email anywhere on the site) — it was never
+-- meant to be in the database, and nothing reads it. The name on the send is
+-- untouched, so the row still says who it came from, and the inbox now
+-- offers to link their journal from the address book, which is the answer
+-- for every send that arrived before its sender had a copy.
+--
+-- Additive in the sense that matters: no column, table or constraint moves,
+-- and the rows themselves stay. Only a value nothing can use is removed.
+UPDATE submissions SET sender_url = NULL WHERE sender_url LIKE '%@%';
