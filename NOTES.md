@@ -1642,12 +1642,20 @@ current.
 - [x] **Archive is red again and last** (the brief's call, reversing the
       not-red of an hour earlier). It is still reversible; the colour is
       marking the one action that takes a row out of the list.
-- [ ] **One judgement call to check.** The brief lists *Open the draft —
-      where one exists* among the quiet actions and draws it on an
-      in-progress row, where the primary is already *Resume the listen*.
-      Those are the same act, so it is drawn only where it is **not** the
-      primary — a new or logged send that has a stray draft. Say if it
-      should be there always.
+- [x] **Open the draft stays only where it is not the primary** (Miyel
+      confirmed). On an in-progress row *Resume the listen* is already that
+      act; the quiet row is for a new or logged send carrying a stray draft.
+- [x] **Every new send said *archived*.** `became` fell through to the
+      archived word for anything that was not logged or in progress, and
+      pending is everything else — so the commonest state in the inbox was
+      named after the rarest. Pending is *new* now and archived is matched
+      by its own value. A fallthrough that names the rare case is a
+      fallthrough that lies about the common one.
+- [x] **The new dot is the live green** (`--live`, the mint the mark wears
+      while something is playing) — the site's one colour for *right now*,
+      which is what an unopened send is. It is pale on the light page, so
+      it carries a hairline of its own ink to hold an edge, and it keeps
+      its room when it is absent so the titles line up down the list.
 - [x] **Verified:** the build passes and every row state was stood into a
       page to check the CSS. Nothing is defined in the sheet that the page
       no longer uses, and nothing used is undefined. **Not driven by hand**,
