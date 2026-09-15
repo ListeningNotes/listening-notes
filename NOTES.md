@@ -1651,11 +1651,11 @@ current.
       named after the rarest. Pending is *new* now and archived is matched
       by its own value. A fallthrough that names the rare case is a
       fallthrough that lies about the common one.
-- [x] **The new dot is the live green** (`--live`, the mint the mark wears
-      while something is playing) — the site's one colour for *right now*,
-      which is what an unopened send is. It is pale on the light page, so
-      it carries a hairline of its own ink to hold an edge, and it keeps
-      its room when it is absent so the titles line up down the list.
+- [x] **The new dot is plain ink.** The live green was tried the same day
+      and taken back out on Miyel's call: `--live` means something is
+      playing *now*, and an unopened send is not an event — it is the
+      unread dot mail has had for forty years. It keeps its room when
+      absent so titles line up down the list.
 - [x] **Verified:** the build passes and every row state was stood into a
       page to check the CSS. Nothing is defined in the sheet that the page
       no longer uses, and nothing used is undefined. **Not driven by hand**,

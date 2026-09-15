@@ -765,16 +765,15 @@ a.pp-name:hover svg { color: var(--ink); }
 /* The dot keeps its room when it is not there, so titles line up down the
    list whether or not a send is new.
 
-   The live green, the one the mark wears while something is playing
-   (Miyel, 2026-09-15) — the site's one colour for *right now*, which is
-   what a send nobody has opened is. It is a pale mint, so on the light
-   page it carries a hairline of its own ink to hold an edge. */
+   Plain ink, on Miyel's call. The live green was tried the same day and
+   taken back out: `--live` means something is playing *now*, and a send
+   that has not been opened is not an event — it is the unread dot mail has
+   had for forty years, and it reads as one in the page's own ink. */
 .ib-newdot {
-  width: 7px; height: 7px; border-radius: 999px; flex-shrink: 0;
-  background: var(--live);
-  box-shadow: 0 0 0 1px color-mix(in srgb, var(--live) 55%, #1a1a1a);
+  width: 6px; height: 6px; border-radius: 999px; flex-shrink: 0;
+  background: var(--ink);
 }
-.ib-newdot--off { background: transparent; box-shadow: none; }
+.ib-newdot--off { background: transparent; }
 .ib-rart {
   width: 46px; aspect-ratio: 1 / 1; border-radius: 7px; overflow: hidden; flex-shrink: 0;
   background: var(--panel);
