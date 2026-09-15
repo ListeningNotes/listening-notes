@@ -1580,14 +1580,24 @@ merged (1.14.0 when it is: something new)**
       **Not driven by hand:** the inbox is behind the password, so the
       press itself, the two writes and the address-book link are Miyel's
       review. Nothing was written to any real row.
-- [ ] **Worth knowing: three sends carry an email in `sender_url`.**
-      Submissions 4, 5 and 7 hold `josejunior770@gmail.com`, from before
-      the email field was retired. `tidyAddress` reads it as a host, so
-      those rows draw a *their journal* link to
-      `https://josejunior770@gmail.com`, which goes nowhere. Pre-existing
-      and out of this brief's scope. The fix is either a rule that an
-      address with an `@` in it is not a journal, or linking Jr's real
-      journal on those rows by hand once he has one.
+- [x] **Three sends carried an email in `sender_url`, fixed the same
+      day.** Submissions 4, 5 and 7 held `josejunior770@gmail.com`, from
+      before the email field was retired, and `tidyAddress` read it as a
+      host — something, a dot, something is the whole test — so each row
+      drew a *their journal* link to `https://josejunior770@gmail.com`,
+      which goes nowhere. Two halves: `LOOKS_LIKE_A_HOST` in
+      `return_address.js` now disqualifies an `@` (checked against every
+      real address in the book and in settings: only the two email cases
+      change, and `localhost:3000` was already rejected for having no
+      dot), and migration 011 clears the ones already stored. **Cleared
+      rather than converted** — the host after an `@` is a mail provider,
+      and filing somebody under gmail.com is worse than not knowing — and
+      the name on the send is untouched, so those rows now offer *Link
+      their journal* and the address book answers it. `people`,
+      `entries.received_from_url` and `comments.author_url` were checked
+      and held none. Jr is almost certainly June (the same account owns
+      `userone`, which is `userone-silk.vercel.app`), but that is an
+      identity call to make with one tap, not a guess to write into a row.
 - [ ] **Names to confirm, 2026-09-15** — autonomous session, rename
       freely: branch `inbox-logged`; the words *I've already logged this*
       (the brief's), *Link their journal*, *Which record was it?*, *Logged

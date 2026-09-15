@@ -46,7 +46,19 @@ const KEY = 'ln-return-address';
 // cost of keeping something that turns out not to resolve. A dot with
 // something either side of it is the whole test — enough to reject a name
 // typed into the wrong box, which is the mistake actually being caught.
-const LOOKS_LIKE_A_HOST = /^[^\s.\/]+(\.[^\s.\/]+)+$/;
+//
+// Except an @, 2026-09-15. An email address passes every other part of this
+// — something, a dot, something — so three sends from before the email field
+// was retired have `josejunior770@gmail.com` sitting in `sender_url`, and the
+// inbox turned each one into a link to `https://josejunior770@gmail.com`,
+// which goes nowhere. It is also the one mistake somebody makes at a field
+// asking where their journal is, because an email is the address people are
+// used to being asked for. Nothing here ever wants one (DECISIONS, The
+// network: no email anywhere on the site), so an @ disqualifies rather than
+// being stripped — a guess at the host after it would file somebody under
+// gmail.com. This is the only place the test lives, so the send form, the
+// address book, the comment form and every route reject it alike.
+const LOOKS_LIKE_A_HOST = /^[^\s.\/@]+(\.[^\s.\/@]+)+$/;
 
 // Everything is stored the way it will be shown: no scheme, no trailing
 // slash, lower case. A sender who types their address three different ways
