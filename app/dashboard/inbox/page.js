@@ -19,17 +19,17 @@ import { lookup_key } from '../../../library/entry_formatter';
 // send points at it), dismissed.
 //
 // Two views over them, 2026-09-15. From the inbox's side a send is either
-// waiting on a decision or dealt with, and the other three are all dealt
-// with — so which one is a word in the row's subtitle rather than a tab you
-// have to be standing on to see it. Four tabs asked somebody to know the
-// vocabulary before they could find anything.
+// new or opened, and started, logged and dismissed are all opened — so
+// which of them it is becomes a word in the row's subtitle rather than a
+// tab you have to be standing on to see it. Four tabs asked somebody to
+// know the vocabulary before they could find anything.
 const VIEWS = [
-  { value: 'waiting', label: 'waiting' },
-  { value: 'handled', label: 'handled' },
+  { value: 'new', label: 'new' },
+  { value: 'opened', label: 'opened' },
 ];
-const WAITING = 'pending';
+const UNOPENED = 'pending';
 
-// What the subtitle says on a handled row. A date only where there is one
+// What the subtitle says on an opened row. A date only where there is one
 // worth printing: a logged send carries its record's own posted date, and
 // the other two have nothing better than the day the send arrived, which is
 // already the row above it.
@@ -94,8 +94,8 @@ export default function Inbox({ layered = false }) {
 
   const [submissions, setSubmissions] = useState([]);
   const [subLoading, setSubLoading] = useState(true);
-  const [filter, setFilter] = useState('waiting');
-  // Which waiting row has its ··· open. One at a time: the menu is the rare
+  const [filter, setFilter] = useState('new');
+  // Which new row has its ··· open. One at a time: the menu is the rare
   // half of a decision, and two of them open at once is a list of controls
   // again, which is what this redesign took away.
   const [menuFor, setMenuFor] = useState(null);
@@ -299,11 +299,11 @@ export default function Inbox({ layered = false }) {
     setComments(prev => prev.filter(c => c.id !== id));
   }
 
-  const waitingNow = s => s.status === WAITING;
-  const filtered = submissions.filter(s => (filter === 'waiting' ? waitingNow(s) : !waitingNow(s)));
+  const unopened = s => s.status === UNOPENED;
+  const filtered = submissions.filter(s => (filter === 'new' ? unopened(s) : !unopened(s)));
   const subCounts = {
-    waiting: submissions.filter(waitingNow).length,
-    handled: submissions.filter(s => !waitingNow(s)).length,
+    new: submissions.filter(unopened).length,
+    opened: submissions.filter(s => !unopened(s)).length,
   };
 
   // What the picker offers on the open row: the likely record first, then
@@ -365,9 +365,9 @@ export default function Inbox({ layered = false }) {
                   </div>
                 ) : filtered.length === 0 ? (
                   <div className="own-empty">
-                    {filter === 'waiting' ? 'Nothing waiting.' : 'Nothing handled yet.'}
+                    {filter === 'new' ? 'Nothing new.' : 'Nothing opened yet.'}
                   </div>
-                ) : filter === 'waiting' ? (
+                ) : filter === 'new' ? (
                   // A shelf, not a spreadsheet. The cover is the first thing
                   // because a cover is what was handed over; the message is
                   // the body because it is the part doing the work; the name
@@ -494,7 +494,7 @@ export default function Inbox({ layered = false }) {
                     ))}
                   </div>
                 ) : (
-                  // Handled: a record of what happened, not a queue. No
+                  // Opened: a record of what happened, not a queue. No
                   // buttons — the row itself is the one tap target, and it
                   // does the obvious thing for the state it is in.
                   <div className="ib-list">

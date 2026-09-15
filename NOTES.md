@@ -1591,19 +1591,19 @@ current.
       listen never handed the session a draft, so resuming that way would
       have opened on the right record, looked fine, and then written over
       the saved notes on the first autosave (`save_draft` upserts on that
-      key). So Handled's *in progress* row finds the draft and hands it
+      key). So Opened's *in progress* row finds the draft and hands it
       over, which is the path the picker's Resume already uses
       (`beginListen` takes `draft` on the record). With no draft found it
       falls through to a fresh listen, which is honest: nothing was saved.
       The fold moved to `entry_formatter.js` so the browser and the data
       layer share one copy — see Gotchas for why the *other* fold would
       have failed silently.
-- [x] **Two views, not four.** Waiting and Handled; started, logged and
+- [x] **Two views, not four.** New and Opened; started, logged and
       dismissed are one thing from the inbox's side. What state a send is
       in is a word in its subtitle (`became`) — *in progress*, *logged 4
       august*, *dismissed* — rather than a tab you have to be standing on.
       Comments and Reports keep their own folder tabs, untouched.
-- [x] **Waiting has one button.** Start a listen. The rare actions moved
+- [x] **New has one button.** Start a listen. The rare actions moved
       behind a ··· that opens in the row (DECISIONS: a control opens where
       it belongs): *I've already logged this*, the sender action, and
       *Dismiss*, which is the only destructive one and the only one in a
@@ -1612,7 +1612,7 @@ current.
       label and the row's *Link their journal* are gone. Their name is the
       link when the send carried a journal, which is what the label was
       saying with a second line of type; plain text when it did not.
-- [x] **Handled is a record, not a queue.** Cover, album, what became of
+- [x] **Opened is a record, not a queue.** Cover, album, what became of
       it, who sent it, no buttons, and no message — the note is for
       deciding and belongs on the entry afterwards. Dismissed rows at
       reduced opacity. One tap target: logged opens the record, in
@@ -1624,14 +1624,16 @@ current.
       It and *Link their journal* are opposite halves of one question and
       never both apply, so at most three items show at once.
       **And a dismissed send can no longer be recovered from the inbox**:
-      Handled has no buttons by design, so there is nothing to press to
+      Opened has no buttons by design, so there is nothing to press to
       put one back. It was recoverable before, from the dismissed tab's
       Start a listen. Worth a decision if a send is ever dismissed by
       accident; the row could be pressable back to waiting.
 - [ ] **Names to confirm, 2026-09-15 (the redesign)** — rename freely:
-      `VIEWS`, `WAITING`, `became`, `Sender`, `resumeListen`, `menuFor`;
-      the words *waiting*, *handled*, *in progress*, *logged 4 august*,
-      *dismissed*, *Nothing waiting.*, *Nothing handled yet.*; the
+      `VIEWS`, `UNOPENED`, `unopened`, `became`, `Sender`, `resumeListen`,
+      `menuFor`;
+      the words *new*, *opened* (Miyel's, replacing waiting/handled),
+      *in progress*, *logged 4 august*, *dismissed*, *Nothing new.*,
+      *Nothing opened yet.*; the
       `.ib-who*`, `.ib-more`, `.ib-menu*` and `.ib-done*` classes in
       forms.css; and `lookup_key` keeping its name where it moved to.
 - [x] **Verified:** the build passes, the draft lookup was run against the
