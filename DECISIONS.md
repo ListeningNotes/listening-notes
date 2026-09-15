@@ -698,11 +698,20 @@ from anything being tracked. The Submission chip on an entry opens the chain.
 
 **`received_from` is published per entry**, with a per-entry toggle for
 private sends. Public credit is the default; quiet is a choice. **Built
-2026-09-13 as the feed's credit:** the public feed carries `received_from`
-and `received_from_url` on Submission entries and nowhere else — the
-entry's own read still keeps the chain off its row — and the address is
-what a sender's copy matches on, the name only for entries from before the
-address travelled. The quiet toggle is still owed (NOTES).
+2026-09-13 as the feed's credit, and on the entry itself 2026-09-14:** a
+Submission entry carries `received_from` and `received_from_url` on every
+read — the feed, the wall, the entry's own page, where it says *from Zach*
+and the name opens his journal — and on no other kind of entry. The address
+is what a sender's copy matches on; the name only for entries from before
+the address travelled. The quiet toggle is still owed (NOTES).
+
+**The sender is picked off the address book, and a backfill carries no
+date, 2026-09-14.** Crediting an old entry links the name to a journal in
+the book, so the person's page counts it at once; free text stays for
+anyone without a copy. No date is asked for and none defaults to today: the
+entry's own date is the ceiling, ordering and hit rates work from it, and a
+confident wrong date corrupts every statistic after it. `received_date` is
+the send flow's, where the moment is exact.
 
 **A send is a gift, not a form, 2026-08-29.** Three parts, in this order: the
 object, the note, and who it is from. The album is picked off covers, because

@@ -161,11 +161,33 @@ export default function PersonPage({ layered = false }) {
       const rating = logged ? num(logged.rating_value) : null;
       return { ...s, logged, rating, hit: rating !== null && rating >= HIT };
     });
+    // What they are credited on, 2026-09-14: entries whose sender resolves
+    // to this address — a record logged from the old Tumblr and credited to
+    // them later has no send row, only the name and journal on the entry.
+    // One per record, and never a second copy of a send already counted. It
+    // carries no send date on purpose (the brief: the entry's own date is
+    // the ceiling), so it falls in with the others by the day it was logged.
+    const address = tidyJournal(person?.address);
+    const counted = new Set(sends.map(s => albumKey(s.album, s.artist)));
+    if (address) {
+      for (const e of newestFirst(mine)) {
+        if (tidyJournal(e.received_from_url) !== address || counted.has(e.album_key)) continue;
+        counted.add(e.album_key);
+        const logged = mineLatest.get(e.album_key) || e;
+        const rating = num(logged.rating_value);
+        sends.push({
+          id: `credited-${e.id}`, album: e.album, artist: e.artist, year: e.year, album_art: e.album_art,
+          created_at: null, note: null, logged, rating, hit: rating !== null && rating >= HIT,
+        });
+      }
+    }
+    const when = s => new Date(s.created_at || s.logged?.posted_at || 0);
+    sends.sort((a, b) => when(b) - when(a));
     const loggedCount = sends.filter(s => s.logged).length;
     const hits = sends.filter(s => s.hit).length;
 
     return { pairs, rated, offset, alike, agree, disagree, sends, loggedCount, hits };
-  }, [mine, theirs, sent]);
+  }, [mine, theirs, sent, person]);
 
   if (checking) return <div style={{ minHeight: '100vh', background: 'var(--bg)' }} />;
   if (!authed) { if (typeof window !== 'undefined') window.location.replace('/login'); return null; }
@@ -270,7 +292,7 @@ export default function PersonPage({ layered = false }) {
                         {s.logged
                           ? <Link href={`/entries/${s.logged.slug}`} className="pn-item-album">{s.album}</Link>
                           : <span className="pn-item-album">{s.album}</span>}
-                        <div className="pn-item-artist">{s.artist}{s.year ? ` · ${s.year}` : ''} &middot; {new Date(s.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</div>
+                        <div className="pn-item-artist">{s.artist}{s.year ? ` · ${s.year}` : ''}{s.created_at && <> &middot; {new Date(s.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</>}</div>
                         {s.note && <p className="pn-item-note">{s.note.length > 140 ? s.note.slice(0, 140).trim() + '…' : s.note}</p>}
                       </div>
                       <div className="pn-item-tail">
