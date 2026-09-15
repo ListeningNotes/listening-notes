@@ -234,6 +234,28 @@ cannot be tested end to end.
       `pull_keeper_name` in settings_actions, `nameInBook` on the compare
       page, and the row's Not answering yet.
 
+**THE ID PANE AND THE DESK, 2026-09-15** — branch `card-and-desk` (Complete).
+Left over:
+
+- [ ] **The desk is the same job and has not been done.** Miyel's brief says
+      so in as many words: the objects have to be objects, and the desk is
+      still four buttons floating rather than an object over the feed. The ID
+      is the pattern to follow.
+- [ ] **The printer has no home.** It came off the card's header with the
+      light switch — the header is one control now — and its placement was
+      left unresolved on purpose. So `/printer` for the card is currently
+      unreachable from the card. It says "coming soon" for a profile anyway,
+      but this is a door that exists with nothing opening it.
+- [ ] **A visitor cannot change the theme on the cross any more.** The switch
+      is in Settings, which is behind the password. The nav row on an entry
+      page still has one, so a visitor is not stuck — but the homepage, which
+      is where most of them land, no longer offers it. Worth a look at whether
+      SiteNav's switch should follow it into Settings or stay as the public
+      one.
+- [ ] **The stamps on a fresh copy.** A journal with no masterpieces and
+      nothing formative stamps only LISTENS, and one stamp alone may want a
+      different placement from one of three. Not seen.
+
 **TWO PANES AND DOWN MEANS A COVER, 2026-09-15** — branch `card-and-desk`
 (Complete), on top of `open-book`. Still to look at:
 
@@ -1117,6 +1139,20 @@ Project → Settings → Environment Variables.
 
 ## Gotchas
 
+**Never replace a region of a file by two `index()` markers without bounding
+it, 2026-09-15.** Rewriting the card's styles, the start marker matched near
+the top of idcard.css and the end marker — `.idc-portrait {` — matched a base
+rule six hundred lines below it. The replacement ate 626 lines: the mark, the
+header, the name, the pin, the editor fields, the prompts, most of the sheet.
+Nothing errored. The braces still balanced, the file still parsed, eslint was
+clean, and the page simply rendered with half its stylesheet missing, which
+looked exactly like the stale-bundle gotcha and cost a dev-server restart
+before the real cause turned up in `git diff --stat`: *103 insertions, 635
+deletions*. Two habits from it. Assert the region's size before replacing it
+(`assert j - i < 3000`), and read `git diff --stat` after any scripted edit —
+a line count is the cheapest possible check that a change is the size it was
+meant to be.
+
 **A smooth `scrollTo` in the browser pane outlives the `await` after it, and
 scripted `scrollLeft` fires no scroll event at all, 2026-09-15.** Half an hour
 went on a phantom bug: the rail was read at 375 after pressing the caret that
@@ -1815,6 +1851,63 @@ current.
 ---
 
 ## Complete
+
+**2026-09-15 — the ID pane: an object, then the writing. Branch
+`card-and-desk`, version 1.19.0 — from Miyel's brief, whose first paragraph is
+the part worth keeping: every pane is an object over its writing, and the
+panes read as disjointed because the objects were not equally object-like.**
+
+- [x] **The object is a document, not a bordered card.** No box, no plate, no
+      edge: `.idc-object` is a flex row with `.idc-fields` as one rigid grid —
+      two columns, `max-content` for every label, each row `display: contents`
+      so its label and value are cells of the *one* grid and the values line
+      up down a single edge whatever the labels say. Labels in small caps,
+      values in mono. That is the half of a licence worth borrowing; the card
+      stock is not.
+- [x] **Fields left, photograph right.** KEEPER, SINCE, LOGGED, GENRES (one to
+      a line in the value column), PINNED. The name is a field now rather than
+      a heading — as a 28px display line it made the card a page with a title;
+      as KEEPER it is the first row of a document. The pinned record is a
+      field too, not a block underneath (it stays: DECISIONS).
+- [x] **The photograph is 104px and slightly desaturated** (88 on the spine),
+      a document photo rather than a profile picture. Still square, because
+      the same slot turns into this journal's code and a code is square.
+- [x] **Three stamps, and they are counts.** `4 masterpieces · 39 listens ·
+      9 formative`, outlined in ink and never filled, rotated a few degrees
+      each, at 62%, `multiply` — and `screen` in the dark, where multiplying
+      ink into a dark ground would simply delete them. `/api/public/stamps`
+      counts the marks again: it used to, the counts were dropped with a
+      swatch that came off the card, and the comment in that file said why —
+      numbers nothing prints are numbers nobody has to keep true. Something
+      prints them now. A zero is not stamped.
+- [x] **Struck down the photograph's side, not across the fields.** First
+      placement put all three over the value column and the name, the date and
+      the genres each had a box through them. A stamp does land on the type
+      under it — that is what the opacity and the multiply are for — but a
+      document nobody can read is not a document.
+- [x] **No machine-readable line.** Asked for and cut in the same brief.
+- [x] **A rule between the document and the writing,** so the page is not two
+      documents pretending to be one. The prompts and the rig continue down
+      the same scroll.
+- [x] **One control in the header: the pencil.** Editing puts Save where the
+      pencil was and Cancel opposite. The mark stays centred — "and nothing
+      else" read as being about controls, since the centred mark was asked for
+      by name the hour before; say the word and it goes.
+- [x] **Light or dark moved to Settings** (`Light or dark` → `This device`).
+      It is a preference, not a per-pane action. Out of the cross's bar
+      entirely; the nav row outside the cross still carries one, which is
+      where a visitor finds it now.
+- [x] **The turn sits on its own band and never floats over the writing.** On
+      the turning pane `.hn-controls` gets a ground, a hairline and the safe
+      area; the face's bottom padding clears it, so nothing passes under it at
+      all. Home keeps the floating row — there the controls sit over a wall of
+      album art on purpose.
+- [x] **Verified at 430×932 and 1280×860, signed in, light and dark:** the
+      grid with every value on one edge, the photograph at 104 and 88, the
+      three stamps legible with the fields still readable, `screen` in the
+      dark, the pencil alone, no light switch anywhere on the cross, the rule
+      above the writing, and the band at the foot with the last line of the
+      page above it.
 
 **2026-09-15 — two panes, and down means a cover. Branch `card-and-desk`,
 version 1.18.0 — from Miyel's brief, the one whose rule came first and whose

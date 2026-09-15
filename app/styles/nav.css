@@ -1156,7 +1156,9 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
      that began wherever the page did would run under them. 36px puts a 30px
      header's middle on 51, which is where the bar's row puts everything it
      carries (see .hn-bar). */
-  padding: calc(36px + var(--safe-top)) 0 96px;
+  /* The foot clearance is the band's height plus air: the turn sits on a
+     ground of its own down there and the writing must never run under it. */
+  padding: calc(36px + var(--safe-top)) 0 calc(76px + env(safe-area-inset-bottom));
   box-sizing: border-box;
 }
 /* And the far end of that header stops short of the lights. The mark and the
@@ -1214,6 +1216,26 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
    the small mark are never on screen together, so it is still one mark. */
 @media (max-width: 768px) {
   .hn-bar:not(.hn-bar--scrolled) .hn-bar-mark { display: none; }
+
+  /* ── The turn's band ──────────────────────────────────────────────────────
+     On the turning pane the foot of the cross is a band rather than glyphs
+     floating over the page — the switch was sitting on top of whatever the
+     writing had scrolled to, which is the one thing it must not do (Miyel,
+     2026-09-15). The page's own bottom padding keeps its last line above
+     this, so nothing passes under it at all.
+
+     Home keeps the floating row. There the controls sit over a wall of album
+     art on purpose, and a band across the bottom of a record's screen would
+     be a shelf under somebody's cover. */
+  .hn[data-pane="0"] .hn-controls {
+    bottom: 0;
+    height: calc(58px + env(safe-area-inset-bottom));
+    padding-bottom: env(safe-area-inset-bottom);
+    align-items: center;
+    background: var(--bg);
+    border-top: 1px solid var(--border);
+  }
+  .hn[data-pane="0"] .edge-caret--right { top: auto; }
   /* Nothing to turn on home — the switch belongs to the pane it turns, and
      on home it would be a control for somewhere you are not. Keyed on the
      cross's own data-pane rather than tested in JS: on a desk `pane` never

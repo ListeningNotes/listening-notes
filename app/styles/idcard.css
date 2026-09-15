@@ -29,37 +29,109 @@
 .ab-card .idc-name { text-align: left; margin: 2px 0 16px; font-size: 28px; }
 .ab-card .idc-row { justify-content: flex-start; margin-top: 20px; }
 
-/* ── The glance, as an identification card ─────────────────────────────────
-   A photograph on the left and everything that is written about the person on
-   the right of it: the name at the head of that column, then the facts, then
-   the record they are holding up. Miyel's shape, 2026-09-15 — "almost like an
-   ID card, with the name above the text not the photo."
+/* ── The object ─────────────────────────────────────────────────────────────
+   Fields on the left, photograph on the right, three stamps struck over the
+   middle. No box, no plate, no edge: a licence carries a dozen fields without
+   reading as cluttered because everything sits in one rigid grid with one
+   treatment for labels and one for values, and that is what is borrowed —
+   not the card stock (Miyel's brief, 2026-09-15). The pane stays one page.
 
-   It ran to the screen's edge for an hour and came back in: flush left, the
-   photograph read as cropped rather than as bled. It sits on the page's own
-   gutter with the rest of the page now, and keeps its radius and its shadow,
-   because it is on the page rather than off the side of it.
+   The grid is the rigour. Two columns and one label width for every row, so
+   the values line up down a single edge whatever the labels say. Each row is
+   `display: contents`, so its label and its value are cells of the one grid
+   rather than of a little grid each — that is what keeps GENRES' column under
+   LOGGED's. */
+.idc-object { position: relative; display: flex; align-items: flex-start; gap: 18px; width: 100%; min-height: 176px; }
+.idc-fields {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  column-gap: 16px;
+  row-gap: 9px;
+  align-items: baseline;
+}
+.idc-field { display: contents; }
+.idc-field-label {
+  font-family: var(--font-label);
+  font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--ink-faint);
+  white-space: nowrap;
+}
+/* Values in mono, which is the half of a licence that makes it read as one: a
+   typed answer under a printed label. */
+.idc-field-value {
+  font-family: var(--font-mono);
+  font-size: 12.5px; line-height: 1.5; color: var(--ink);
+  min-width: 0; overflow-wrap: anywhere;
+  display: flex; align-items: baseline; flex-wrap: wrap; gap: 0 8px;
+}
+.idc-field-value--name { font-size: 15px; letter-spacing: 0.01em; }
+/* One genre to a line, under each other in the value column. */
+.idc-field-value--stack { flex-direction: column; align-items: flex-start; gap: 3px; }
+.idc-field-value--pin { display: block; }
+.idc-field-value--pin .idc-pin { width: 100%; }
+.idc-field-value--pin .idc-pin-art { width: 34px; height: 34px; }
+.idc-field-value--pin .idc-pin-album { font-size: 12.5px; }
+.idc-field-value--pin .idc-pin-artist { font-size: 10.5px; }
 
-   The name is in the column and not over both, which is what makes this a
-   card and not a page with a picture on it — the picture is beside what it is
-   a picture of. It was over both for an hour in between, when the column was
-   narrow enough that an ornamented name broke into three lines in it; the
-   photograph is a third of the width now and the column has the room. */
-.ab-card .idc-top {
-  gap: 15px;
-  align-items: flex-start;
+/* A document photograph, not a hero. Fixed, small, and square — square
+   because the same slot turns into this journal's code and a code is square.
+   Desaturated a little so it reads as the picture on a document rather than
+   as somebody's profile picture: one number, and it is the one to turn if it
+   is wrong. */
+.idc-photo { flex: none; width: 104px; }
+.idc-photo .idc-portrait {
+  width: 104px; height: 104px;
+  margin: 0;
+  border-radius: 10px;
+  box-shadow: none;
+  filter: saturate(0.72) contrast(1.02);
 }
-.ab-card .idc-top .idc-portrait {
-  width: 33%;
-  min-width: 104px;
-  max-width: 150px;
-  height: auto;
-  aspect-ratio: 1 / 1;
-  border-radius: 14px;
+
+/* ── The stamps ─────────────────────────────────────────────────────────────
+   Three counts struck over the middle of the object, each rotated a few
+   degrees, outlined in ink and never filled, at 70%. Multiply, so they read
+   as ink on what is under them rather than as labels floating over it — and
+   screen in the dark, where multiplying ink into a dark ground would simply
+   delete them. They take no pointer events and are out of the reading order:
+   every number on them is either a field above or is in the journal itself.
+
+   Scattered rather than laid out in a row. A row of three is a legend; three
+   struck at angles across a document is a stamp.
+
+   Struck down the photograph's side rather than across the fields. A stamp
+   does land on the type under it — that is what the 70% and the multiply are
+   for — but three of them across the value column left the name, the date and
+   the genres all with a box through them, which is a document nobody can
+   read. On this side they cross the photograph, the air under it and the
+   right-hand ends of the last two rows, and every value stays legible. */
+.idc-stamps { position: absolute; inset: 0; pointer-events: none; z-index: 2; }
+.idc-stamp {
+  position: absolute;
+  display: inline-flex; align-items: baseline; gap: 5px;
+  padding: 5px 10px 4px;
+  border: 1.5px solid currentColor;
+  border-radius: 4px;
+  color: var(--ink);
+  opacity: 0.62;
+  mix-blend-mode: multiply;
+  font-family: var(--font-label);
+  font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase;
+  white-space: nowrap;
 }
-/* The name at the head of the column: smaller than it was over the page, the
-   size a name is on a card rather than the size it is as a heading. */
-.ab-card .idc-top .idc-name { font-size: 21px; margin: 0 0 11px; letter-spacing: -0.01em; }
+.idc-stamp b { font-size: 12px; font-weight: 700; letter-spacing: 0.04em; }
+.idc-stamp--masterpieces { top: 2%;  right: 1%;  transform: rotate(-8deg); }
+.idc-stamp--listens      { top: 44%; right: 7%;  transform: rotate(3.5deg); }
+.idc-stamp--formative    { top: 74%; right: 20%; transform: rotate(-4deg); }
+:root[data-theme="dark"] .idc-stamp { mix-blend-mode: screen; opacity: 0.62; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .idc-stamp { mix-blend-mode: screen; opacity: 0.62; }
+}
+
+/* A rule between the document and the writing under it, so the page is not
+   two documents pretending to be one. */
+.ab-below { border-top: 1px solid var(--border); margin-top: 26px; padding-top: 22px; }
 
 /* ── The pin's search ───────────────────────────────────────────────────────
    A panel in the middle of a desktop screen and a bottom sheet on a phone,
@@ -618,42 +690,8 @@ a.ab-rig-name:hover { text-decoration: underline; }
    this cover shows a record at that size in that frame; the back shows
    a person. Matching them is what makes the two sides read as one
    object turned over rather than as two designs. */
-/* ── The glance ── the portrait, with the facts beside it. The name is above
-   both and takes the page's width: an ornamented name in a column this narrow
-   broke into three ragged lines with its diacritics floating off the ends.
-
-   The facts are label-and-answer pairs, each pair one unbreakable unit, so a
-   wrap falls between pairs and never between a label and the thing it labels
-   — "ALBUMS LOGGED 39 SINCE / March 2026" was the version that did. */
-.idc-top {
-  display: flex;
-  align-items: flex-start;
-  gap: 16px;
-  text-align: left;
-  width: 100%;
-}
-.idc-said { flex: 1; min-width: 0; }
-.idc-top .idc-portrait { flex-shrink: 0; width: 118px; height: 118px; margin: 0; border-radius: 14px; }
-/* Four facts in a column, set tight: label and answer on one line each,
-   wrapping between pairs and never inside one. Stacked loose they were four
-   paragraphs about somebody; set like this they are the rows of a card. */
-.idc-top .idc-line { margin: 0 0 7px; max-width: none; flex-wrap: wrap; column-gap: 8px; row-gap: 4px; font-size: 12.5px; }
-.idc-top .idc-line:last-child { margin-bottom: 0; }
-.idc-top .idc-line-label { width: auto; }
-.idc-pair { display: inline-flex; align-items: baseline; gap: 7px; min-width: 0; }
-/* The two counted pairs share a line where the column can hold them, and fall
-   to two where it cannot — they are the same kind of small fact and reading
-   them across is quicker than reading them down. */
-.idc-top .idc-line--counted { column-gap: 14px; }
-/* The pinned record is the last row of the card, not a separate block under
-   it: its label sits with the others and its art is the size of a row. */
-.idc-top .idc-pin-row { margin-top: 11px; align-items: center; }
-.idc-top .idc-pin-row .idc-pin-art { width: 32px; height: 32px; }
-.idc-top .idc-pin-row .idc-pin-album { font-size: 12.5px; }
-.idc-top .idc-pin-row .idc-pin-artist { font-size: 10.5px; }
-@media (max-width: 340px) {
-  .idc-top { flex-direction: column; }
-}
+/* The old glance — a portrait beside a stack of label-and-answer lines —
+   is the object above now. */
 
 .idc-portrait {
   display: block;
@@ -1023,26 +1061,15 @@ a.ab-rig-name:hover { text-decoration: underline; }
   .ab-below { padding: 0 0 40px; }
   .ab-card .idc { max-width: none; }
   .ab-card .idc-head { top: 22px; left: var(--hn-gutter, 18px); }
-  /* The glance is a row here too — it is what made the whole card fit above
-     the fold on a phone and it does the same for a page a quarter of a window
-     wide. The portrait takes a share rather than a fixed square, because the
-     spine is draggable: 300px of page gives it about a hundred, 420 gives it
-     the better part of one-seventy, and the words beside it keep a measure
-     either way. A full-width portrait here was 208px of a 264px column, which
-     left the name four characters and a wrap. */
-  .ab-card .idc-top { gap: 14px; }
-  .ab-card .idc-top .idc-portrait {
-    width: 42%; min-width: 104px; max-width: 200px;
-    height: auto; aspect-ratio: 1 / 1;
-    margin: 0; border-radius: 0 14px 14px 0;
-  }
-  .ab-card .idc-name { font-size: 22px; margin-top: 0; }
-  .ab-card .idc-line { flex-wrap: wrap; row-gap: 2px; max-width: none; margin-top: 11px; font-size: 12px; }
-  .ab-card .idc-line-label { width: auto; }
-  /* The pinned record takes the row under its label rather than the sixty
-     pixels beside it, where the album's name was three letters and dots. */
-  .ab-card .idc-pin-row { flex-direction: column; align-items: flex-start; gap: 6px; }
-  .ab-card .idc-pin { width: 100%; }
+  /* The object on the spine: the phone's object at a narrower measure. The
+     photograph steps down, the fields keep their grid, and the stamps keep
+     their angles with less to strike across. */
+  .idc-object { gap: 14px; }
+  .idc-photo { width: 88px; }
+  .idc-photo .idc-portrait { width: 88px; height: 88px; }
+  .idc-fields { column-gap: 12px; row-gap: 8px; }
+  .idc-field-value { font-size: 12px; }
+  .idc-field-value--name { font-size: 14px; }
   .ab-card .idc-send { margin-top: 14px; }
   /* The writing under the card, on the same scroll rather than a floor of
      its own: on a desk the floors are plain wrappers and the page is the
