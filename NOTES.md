@@ -297,13 +297,47 @@ cannot be tested end to end.
 2026-09-12. The address book merged to main that day, the feed and the
 person's page the next (Complete). Left: the printer, and the chain.
 
-- [ ] **The chain says a quiet credit was lost, 2026-09-15.** Open the
-      Submission chip on a record whose sender asked not to be credited and
-      `Chain.js` reads *Somebody — the name wasn't kept*, which sounds like
-      data went missing rather than somebody choosing. It should say it was
-      withheld, and the chain should stop there on purpose. One string and
-      one branch; **for the chain brief to pick up** rather than a fix on
-      its own.
+- [x] **The chain says a quiet credit was lost, 2026-09-15.** Fixed the
+      same day by the `sent-by` rebuild, and not the way this asked. The
+      answer is not a better sentence: a withheld credit now draws nothing
+      at all and the Submission chip stands in, because saying a name was
+      withheld would leak the fact of the withholding — which is the thing
+      being asked for. See Complete.
+- [ ] **Names to confirm, 2026-09-15 (Sent by)** — rename freely. Miyel
+      picked `SentBy.js` and `Trail` and the `.ln-sent-` prefix; the rest
+      were chosen while building: `creditOn` (the one reading of a credit,
+      which decides both the line and the chip), `useTrail` (the walk, held
+      by the page so it runs once for two copies of the card), `walkBack`,
+      `firstHop`, `readJournal`, `Hop`, `Said`, `Face`, `Tick`; the props
+      `keeper`, `mine`, `open`/`onOpen`; the classes `.ln-sent`,
+      `.ln-sent-line`, `-lbl`, `-face`, `-face--bare`, `-name`, `-more`,
+      `-more--open`, `-caret`, `-trail`, `-rail`, `-rail--more`, `-step`,
+      `-hop`, `-hop--here`, `-hop--end`, `-who`, `-said`, `-tick`,
+      `-desk`, and `.ln-sent-open` on the screens; and the words on screen —
+      *Sent by*, *found it*, *the origin*, *logged 15 aug*, *no answer*,
+      *no journal*, *not logged*.
+
+- [ ] **The edit screen should collapse once a sender is picked,
+      2026-09-15.** Miyel's, on seeing the finished line: *when sent by is
+      chosen it should just show Sent by and the picture of the user*. The
+      editor still draws the whole strip — the label, a text field holding
+      the name, and `MiniAddressBook` with every face in it, lit one among
+      them — whether or not anybody has been chosen. Once one has, it should
+      read the way the entry reads: *Sent by*, their face, their name. The
+      strip is for choosing, and choosing is over. Presumably a press on the
+      collapsed row opens it again to change or clear it, and free text still
+      has to reach somebody who keeps no copy. Her call on the shape; she
+      said it can wait for its own session.
+
+- [ ] **The trail against a real chain, 2026-09-15.** It has only been
+      seen against a fixture: no chain exists to walk, because Zach's and
+      Kai's journals both publish zero entries, so every real credit ends
+      at *their journal answered and does not have it* and no pill is
+      drawn. What is still unseen with real data: the `+2` arriving, the
+      band, a hop whose journal does not answer, and how long the walk
+      takes over a phone connection. It will start working on its own as
+      soon as one of them logs a record.
+
 - [ ] **Sending from the address book, 2026-09-15.** Miyel's, raised while
       sending Junior an album: with somebody already in the book it is a
       long way round to open their journal and find the send page. A send
@@ -1048,6 +1082,36 @@ CSS was correct on disk the entire time.
 - **Suspected trigger: running `npm run build` while the dev server is up.**
   Both share `.next`, and base.css is the first sheet imported in
   layout.js. Unproven, but every occurrence followed a build.
+- **It is not base.css only — entry.css does it too, 2026-09-15.** New
+  `.ln-sent-*` rules were on disk and absent from the served sheet, so the
+  markup rendered against nothing and half an hour went on chasing a layout
+  bug that did not exist. The build-while-running trigger above is now
+  three for three: every occurrence today followed an `npm run build`
+  against a live dev server. **So do not build while the preview is up** —
+  stop it, build, then start it again — and when a rule you just wrote
+  seems not to apply, check the sheet before you believe the page.
+- **How to check from the page itself**, which is quicker than curl:
+  ```js
+  [...document.styleSheets].some(s => { try { return [...s.cssRules]
+    .some(r => (r.cssText||'').includes('your-class')); } catch { return false; } })
+  ```
+  False while the class is on the element and on disk is staleness.
+
+**`display: contents` makes `> *` miss everything, 2026-09-15.** The entry's
+first screen is a flex column, but its rows are wrapped in `.ln-print-stack`
+and `.ln-print-card`, which are `display: contents` until something is being
+printed. So the rows really are the flex items — and
+`.ln-screen-one > * { flex-shrink: 0 }` matches only the wrapper and changes
+nothing at all, silently. Name the rows, or check what the children actually
+are before reaching for a child selector on that section.
+
+**Flex only shrinks a child when the box has a height to stay inside,
+2026-09-15.** Spent a pass on the opposite: to stop the first screen growing
+past the viewport with the trail open, `height: auto` looked like the way to
+let it adapt — and it removed the only constraint making the art give up
+room, so the art stayed full size and the band went 76px below the fold. The
+fixed `height: 100dvh` is what does the shrinking. Leave it alone and let
+`flex-shrink` on the art do the work.
 
 **A `MediaRecorder` MP4 is fragmented, and Apple reads it as a 0.05-second
 video, 2026-09-12.** Chromium's recorder says `video/mp4;codecs=avc1` and
@@ -1610,6 +1674,74 @@ current.
 ---
 
 ## Complete
+
+**2026-09-15 — Sent by is a line on the entry, not a panel behind the chip,
+on branch `sent-by`**
+
+- [x] **The panel of the night before is gone.** It was a bordered, shadowed
+      card holding a SENT BY label, a 48px face, a name and a status line —
+      the least important fact on a page where nothing else is boxed, behind
+      a press, on a card whose whole job is the record. `Chain.js` is
+      deleted and `SentBy.js` replaces it.
+- [x] **One quiet line, always visible**, directly under the chips: a 21px
+      round face, the name, a link to their journal. No caret, no border, no
+      label, nothing to press to find it. The face is read off their journal
+      the way the inbox, the feed and the address book already read it.
+- [x] **No link to their entry, and nothing about what they thought.** That
+      was the panel's second state and it comes out: a second opinion, and
+      second opinions belong on their page in the address book, where the
+      sends, the overlap and the hit rate already live. *Not on their
+      journal.* is gone with it — it read as an error and answered a
+      question nobody had asked.
+- [x] **The Submission chip stands down where a name is printed.** Miyel's
+      call: *Sent by Zach* already says the record was sent, so the chip
+      would be a third pill saying worse what the line below says. It stays
+      on the entries the line cannot draw — a credit the sender asked to
+      keep quiet, and the 18 old Submissions with no name on them. One
+      reading of the credit (`creditOn`) decides both, so the chip and the
+      line can never both show, or both go missing.
+- [x] **The trail is the one thing behind a press.** A `+2` at the end of
+      the line means two people carried the record before the sender; it
+      opens a horizontal band, right to left, newest first, with this
+      journal at the left because it is where the record ended up. Each hop
+      is a face, a name linking to their journal, and their rating — the
+      ratings are why it belongs on the entry rather than in the address
+      book: it is the record's history, not somebody's opinion of it. The
+      last stop reads *found it* rather than naming nobody. Vertical would
+      have grown the card by a row a hop and pushed the record off screen.
+- [x] **No trail, no pill, which is most entries** — and that is what moved
+      the walk from the press to the open. Knowing there is nothing behind
+      somebody means having looked. One fetch of one public feed per hop, in
+      the reader's browser, as before; the sender's server sees a hit and
+      never learns who, and nothing is stored. The pill is drawn only once
+      the walk has settled, so no number counts upward beside the reading.
+- [x] **Walked once, not twice.** The entry draws its card twice — the
+      phone's first screen and the desk's hero — and hides one at each
+      width, so two copies of the line meant two walks, and the sender's
+      journal and every journal behind it fetched twice for one reading.
+      The panel had the same fault and nobody noticed, because it only
+      walked on a press. `useTrail` is called once by the page and handed to
+      both, the way the open-or-closed state already was. Confirmed in the
+      browser: two lines in the DOM, one read of Zach's feed.
+- [x] **The credit rides the hand-off**, so the stand-in that holds the
+      first screen while an entry lands draws the same line. Measured: the
+      name is on screen 729ms before the entry arrives and never goes
+      missing, so the row does not change shape underneath the eye — the
+      thing the rating and the flags were already on that list for.
+- [x] **Nothing at all where a name was withheld.** A quiet credit reaches
+      the page as no name, so the line does not draw and the chip stands in.
+      That closes the open thread from the day before: the chain used to say
+      *Somebody — the name wasn't kept*, which read as data lost rather than
+      as somebody's choice. Nothing now says a name was withheld, because
+      saying so would leak the fact of it.
+
+      **Seen in the browser** (light and dark, phone and desk) on
+      `im-in-your-mind-fuzz` and `lemonade` for the line, `donuts` for the
+      chip, and a fixture for the trail — no real chain exists yet, because
+      Zach's and Kai's journals both publish zero entries. **Not seen
+      signed in**, which leaves two things for Miyel: the first cell reads
+      *You* to the keeper and their name to everybody else, and the line
+      stands down while correcting and while printing.
 
 **2026-09-15 — the credit is published in the feed, and the sender decides
 whether there is one, on main as 1.15.0, released as

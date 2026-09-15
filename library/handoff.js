@@ -68,6 +68,14 @@ export function handOff(entry) {
     entry_type: entry.entry_type || '',
     listen_total: entry.listen_total ?? 0,
     posted_at: entry.posted_at || null,
+    // Who sent it, 2026-09-15: the first screen prints a Sent by line now
+    // rather than a chip that opened one, and a face and a name arriving a
+    // beat after the entry lands is the row moving under the eye — the same
+    // mistake the rating and the flags above were left out for. The wall's
+    // read already carries both (WALL_FIELDS + CREDIT_FIELDS), so this is two
+    // fields already in memory rather than a second request.
+    received_from: entry.received_from || '',
+    received_from_url: entry.received_from_url || '',
   };
 }
 
@@ -121,6 +129,9 @@ function firstScreen(entry) {
     entry_type: entry.entry_type || '',
     listen_total: entry.listen_total ?? 0,
     posted_at: entry.posted_at || null,
+    // The credit too, for the same reason handOff keeps it.
+    received_from: entry.received_from || '',
+    received_from_url: entry.received_from_url || '',
   };
 }
 
