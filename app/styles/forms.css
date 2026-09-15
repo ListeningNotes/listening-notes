@@ -713,53 +713,40 @@ a.pp-name:hover svg { color: var(--ink); }
 
 /* ── from app/dashboard/inbox/page.js ────────────────────────────────── */
 .ib-body { max-width: 940px; padding: 18px 24px 40px; }
-.ib-panel { border-radius: 24px; }
-
-/* ── The head of the panel ──────────────────────────────────────────────────
-   The inbox names itself and then says where you can stand, 2026-09-15. The
-   tabs used to be folder tabs above the panel with a second row of filters
-   inside it; they are one row now, inside, on the same line of the eye as
-   the heading. Four places at one level — new, opened, comments, reports —
-   in the order they get dealt with. */
-.ib-head { flex-shrink: 0; padding: 26px 30px 0; border-bottom: 1px solid var(--border); }
-.ib-title {
-  margin: 0 0 16px;
-  font-family: var(--font-display); font-weight: var(--font-display-weight, 700);
-  font-size: 30px; line-height: 1; color: var(--ink);
-}
-.ib-tabs { display: flex; align-items: flex-end; gap: 26px; overflow-x: auto; scrollbar-width: none; }
-.ib-tabs::-webkit-scrollbar { display: none; }
-/* A word with a rule under it while you are standing on it. No ground, no
-   border, no folder — the panel is one surface and the tabs are places in
-   it rather than things sitting on top. */
+/* Folder tabs that connect to the open panel. Sends are one folder, comments
+   another, reports a third — the two views over sends live inside the first
+   rather than beside them (Miyel, 2026-09-15: the folders were not the thing
+   that needed changing). */
+.ib-tabs { display: flex; align-items: flex-end; gap: 5px; padding-left: 14px; position: relative; z-index: 2; flex-shrink: 0; }
 .ib-tab {
-  flex-shrink: 0;
-  font-family: var(--font-label); font-size: 11px; letter-spacing: 0.14em;
-  text-transform: uppercase;
-  padding: 0 0 12px; border: 0; border-bottom: 2px solid transparent;
-  background: none; color: var(--ink-faint); cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-  transition: color 0.15s, border-color 0.15s;
+  font-family: var(--font-label); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 9px 22px 11px; border: 1px solid transparent; border-bottom: none; cursor: pointer;
+  border-radius: 16px 16px 0 0; background: none; color: var(--ink-faint);
+  position: relative; z-index: 1; transition: background 0.15s, color 0.15s, padding 0.12s;
 }
 .ib-tab:hover { color: var(--ink-soft); }
-.ib-tab--on { color: var(--ink); border-bottom-color: var(--ink); }
-/* The count rides after the word on a middle dot, and only when there is
-   one — a tab reading "comments · 0" is a tab reporting nothing. */
-.ib-tab-n { margin-left: 7px; color: var(--ink-faint); }
-.ib-tab--on .ib-tab-n { color: var(--ink-soft); }
+.ib-tab--on { padding: 11px 24px 13px; margin-bottom: -1px; background: var(--panel); border-color: var(--border); color: var(--ink); z-index: 2; }
+/* Three tabs since Reports (2026-09-13): on a phone they fit by giving up
+   side padding, not by folding their words. */
 @media (max-width: 640px) {
-  .ib-head { padding: 20px 18px 0; }
-  .ib-title { font-size: 24px; margin-bottom: 14px; }
-  /* Four words on a phone. They fit by giving up letter-spacing and the
-     room between them, not by folding or by being scrolled to — a tab you
-     have to discover by dragging is a tab nobody presses. The row still
-     scrolls if the type is set larger than the design assumed. */
-  .ib-tabs { gap: 13px; }
-  .ib-tab { font-size: 10px; letter-spacing: 0.08em; }
-  .ib-tab-n { margin-left: 5px; }
+  .ib-tabs { gap: 3px; padding-left: 8px; }
+  .ib-tab { padding-left: 12px; padding-right: 12px; white-space: nowrap; }
+  .ib-tab--on { padding-left: 14px; padding-right: 14px; }
 }
-.ib-scroll { position: relative; z-index: 1; flex: 1; padding: 6px 30px 28px; }
-@media (max-width: 640px) { .ib-scroll { padding: 4px 18px 24px; } }
+.ib-panel { border-radius: 20px 20px 24px 24px; }
+.ib-scroll { position: relative; z-index: 1; flex: 1; padding: 22px 26px 28px; }
+@media (max-width: 640px) { .ib-scroll { padding: 18px 18px 24px; } }
+/* New and opened, inside the folder. A word with a rule under it while you
+   are standing on it. */
+.ib-filters { display: flex; gap: 18px; margin-bottom: 18px; }
+.ib-filter {
+  font-family: var(--font-label); font-size: 10px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--ink-faint);
+  background: none; border: 0; border-bottom: 1px solid transparent;
+  padding: 0 0 4px; cursor: pointer; transition: color 0.15s, border-color 0.15s;
+}
+.ib-filter:hover { color: var(--ink-soft); }
+.ib-filter--on { color: var(--ink); border-bottom-color: var(--ink); }
 .ib-list { display: flex; flex-direction: column; gap: 6px; }
 /* One received album. Cover on the left at the size of a thing being handed
    over, everything said about it in a column to the right. */
