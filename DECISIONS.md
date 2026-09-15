@@ -721,12 +721,20 @@ journal if you keep one.
 localStorage under a single key owned by `return_address.js`, shared by the
 send form and the comment form — fill it in once on any journal and it is
 prefilled on every journal after. Nothing reads it to decide what a visitor
-is (2026-09-12, above).
+is (2026-09-12, above); the send form reads it to know who is sending.
 
 **It cannot be filled in from the sender's session, and that is the
 architecture working.** Cookies are scoped per origin, so no copy can see
 what another set — which is exactly what stops anyone being followed from one
 journal to the next. Per browser, not per person; the cost is one paste.
+
+**Who is sending travels in the link, and the send form takes its shape
+from how somebody got there, 2026-09-14.** Every link out of a copy to
+another journal carries the keeper's name and address (`?from=` and `?as=`,
+owner surfaces only); the journal landed on keeps them as the return
+address. A keeper who arrived that way sees *Sending as Blue · his journal*
+with a way to change it; anyone else is asked for a name and nothing else —
+no journal field, because somebody without a copy has nothing to put there.
 
 **Stored without a scheme, and normalised on the server as well as in the
 browser.** The inbox turns the value into a link, and a route cannot assume

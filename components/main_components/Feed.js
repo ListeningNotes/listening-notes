@@ -39,7 +39,7 @@ import { Envelope, Fingerprint, Heart, SketchLogo, User } from '@phosphor-icons/
 import { useBookplate } from './Bookplate';
 import StarRating from './StarRating';
 import { parseHorizon } from '../../library/entry_formatter';
-import { journalUrl, tidyJournal } from '../../library/return_address';
+import { carrySender, journalUrl, tidyJournal } from '../../library/return_address';
 
 // How much of a river a shelf may hold. Recent from everyone in the book
 // could be endless; forty is a look, not a scroll. Submissions is bounded
@@ -240,7 +240,8 @@ export default function Feed({ entries = [] }) {
         {shown.map(({ person, entry }) => {
           const key = `${person.address}/${entry.slug}`;
           const mine = mineByKey.get(entry.album_key);
-          const there = `${journalUrl(person.address)}/entries/${entry.slug}`;
+          // Carrying who this copy belongs to — see carrySender.
+          const there = carrySender(`${journalUrl(person.address)}/entries/${entry.slug}`, { name: keeper_name, address: site_address });
           const rated = entry.rating_value !== null && entry.rating_value !== undefined && entry.rating_value !== '';
           return (
             <div key={key}>

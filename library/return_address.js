@@ -127,3 +127,66 @@ export function keepSender({ name = '', address = '' } = {}) {
   }
   return kept;
 }
+
+// ── Arriving from your own copy ────────────────────────────────────────────
+// A keeper reading somebody else's journal is a stranger to it. This
+// browser, at this address, has never been told who they are — and their
+// own copy, which knows both their name and their journal, cannot say so
+// from where it stands: its storage is its origin's, like its cookies, and
+// nothing at another address can read it (DECISIONS, The network).
+//
+// So it says so in the link. Every link out of a copy to another journal —
+// the address book's, the person's page's, the feed's, the inbox's — carries
+// the keeper's own name and address; the journal landed on reads them once,
+// keeps them here as the return address, and takes them back off the
+// address bar. The send form then knows who is sending, and a keeper who
+// arrived through their own address book is never asked for a URL — which
+// was the one place the address book's promise broke (NOTES, 2026-09-14).
+//
+// Only surfaces the owner alone can reach may add them: a public link that
+// carried the journal's name would introduce every reader as its keeper.
+const FROM = 'from';
+const AS = 'as';
+
+// A link out, carrying who this copy belongs to. Given no address to carry,
+// or anything that is not a URL, the link comes back untouched — a link that
+// stops working is worse than a visitor who has to type once.
+export function carrySender(href, { name = '', address = '' } = {}) {
+  const journal = tidyJournal(address);
+  if (!href || !journal) return href;
+  try {
+    const url = new URL(href);
+    url.searchParams.set(FROM, journal);
+    const who = String(name || '').trim();
+    if (who) url.searchParams.set(AS, who);
+    return url.toString();
+  } catch {
+    return href;
+  }
+}
+
+// Read on landing, on every page. Keeps what the link carried as the return
+// address and clears the bar; returns what was kept, or null when the link
+// carried nothing, carried something that is not an address, or carried
+// this journal's own — a link back to itself must not introduce a visitor
+// as its keeper. A name held from before is kept when the link carries
+// none; an address is always the link's, which is the fresher fact.
+export function noteArrival(ownAddress) {
+  if (typeof window === 'undefined') return null;
+  let from = '';
+  let as = '';
+  try {
+    const url = new URL(window.location.href);
+    if (!url.searchParams.has(FROM)) return null;
+    from = tidyJournal(url.searchParams.get(FROM));
+    as = String(url.searchParams.get(AS) || '').trim();
+    url.searchParams.delete(FROM);
+    url.searchParams.delete(AS);
+    window.history.replaceState(window.history.state, '', url.toString());
+  } catch {
+    return null;
+  }
+  if (!from || from === tidyJournal(ownAddress)) return null;
+  const held = recallSender();
+  return keepSender({ name: as || held.name, address: from });
+}
