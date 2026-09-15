@@ -930,9 +930,11 @@ div.ib-done { cursor: default; }
   animation: ib-unfold 0.18s ease-out;
 }
 @keyframes ib-unfold { from { opacity: 0; transform: translateY(-3px); } }
+/* Under the matches, not over them: what the scan found is the answer, and
+   this is the way out when it is not. */
 .ib-which-field {
   border: 0; border-bottom: 1px solid var(--border);
-  background: transparent; padding: 0 0 6px; margin-bottom: 2px;
+  background: transparent; padding: 0 0 6px; margin: 4px 0 2px;
   font-family: inherit; font-size: 13px; color: var(--ink);
 }
 .ib-which-field:focus { outline: none; border-bottom-color: var(--ink-faint); }
@@ -959,7 +961,10 @@ div.ib-done { cursor: default; }
 .ib-which-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .ib-which-said { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
 .ib-which-album { font-size: 13px; color: var(--ink); }
-.ib-which-artist { font-family: var(--font-label); font-size: 10px; color: var(--ink-soft); }
+.ib-which-artist {
+  font-family: var(--font-label); font-size: 10px; color: var(--ink-soft);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
 
 /* ── from app/dashboard/people/page.js ───────────────────────────────── */
 /* The address book: the inbox's sheet and panel, one column of people. A
