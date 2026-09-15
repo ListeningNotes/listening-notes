@@ -168,8 +168,13 @@ export default function Inbox({ layered = false }) {
   // way two journals recognise one record — and everything else is behind
   // the field, because a send whose album is not in the journal under that
   // name is exactly the case a search is for.
+  // The menu's two panels are one at a time, like the menu itself. They ask
+  // different questions about the same send — which record it became, and
+  // who sent it — and both open at once is the stack of controls the
+  // redesign took off this row.
   function openNaming(sent) {
     setNaming(n => (n === sent.id ? null : sent.id));
+    setWhose(null);
     setLook('');
     if (mine === null) {
       setMine([]);
@@ -353,7 +358,7 @@ export default function Inbox({ layered = false }) {
                     to see it. */}
                 <div className="ib-filters">
                   {VIEWS.map(v => (
-                    <button key={v.value} onClick={() => { setFilter(v.value); setMenuFor(null); setNaming(null); }} className={'ib-filter' + (filter === v.value ? ' ib-filter--on' : '')}>
+                    <button key={v.value} onClick={() => { setFilter(v.value); setMenuFor(null); setNaming(null); setWhose(null); }} className={'ib-filter' + (filter === v.value ? ' ib-filter--on' : '')}>
                       {v.label}{subCounts[v.value] > 0 ? ` ${subCounts[v.value]}` : ''}
                     </button>
                   ))}
@@ -437,7 +442,7 @@ export default function Inbox({ layered = false }) {
                                 </button>
                               )}
                               {!sent.sender_url && people.length > 0 && (
-                                <button className="ib-menu-act" onClick={() => setWhose(w => (w === sent.id ? null : sent.id))}>
+                                <button className="ib-menu-act" onClick={() => { setWhose(w => (w === sent.id ? null : sent.id)); setNaming(null); }}>
                                   {whose === sent.id ? 'Never mind' : 'Link their journal'}
                                 </button>
                               )}
