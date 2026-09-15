@@ -1702,18 +1702,17 @@ current.
 - [x] **Built to Miyel's two mockups, 2026-09-15.** She drew the inbox and
       said follow the look, with one correction: the album art square, not
       the tall rectangles the drawing had. What changed:
-      - **One row of tabs, inside the panel, under an *Inbox* heading.**
-        New, Opened, Comments and Reports are four places at one level, in
-        the order they get dealt with. The folder tabs above the panel and
-        the filter row inside it are both gone, and with them the
-        two-level question of which row you were standing on. `FolderTab`
-        is deleted; `filter` state is gone and the tab *is* the view.
-      - **A tab is a word with a rule under it** while you stand on it —
-        no ground, no border, no folder — with its count after a middle
-        dot, and only where there is a count. On a phone the four fit by
-        giving up letter-spacing and the room between them (299px of
-        375), because a tab you have to drag to find is a tab nobody
-        presses.
+      - **The folders are unchanged, and that was a mistake I made and
+        undid.** Following the drawing, I flattened the three folder tabs
+        and the two views into one row of four and added an *Inbox*
+        heading. Miyel had asked for what was *inside* New and Opened to
+        change, not the box holding it: sends are one place, comments
+        another, reports a third, and the two views belong inside the
+        first. Put back the same day — `FolderTab`, the `filter` state,
+        `.ib-filters` and the folder-tab styles are all as they were, and
+        the heading is gone. **Only the contents of a row are new.** When
+        a drawing implies a structural change that was not asked for,
+        take the look off it and leave the structure alone.
       - **New rows are three rows and a button** (Miyel, over two passes).
         *From:* then a round face, the sender's name carrying the link's
         underline, and the date, all across the top — a send is somebody
@@ -1735,14 +1734,13 @@ current.
       which is the rename she asked for after drawing them. The look was
       the instruction, not the words.
 - [ ] **Names to confirm, 2026-09-15 (the redesign)** — rename freely:
-      `TABS`, `UNOPENED`, `unopened`, `became`, `Sender`, `resumeListen`,
+      `VIEWS`, `UNOPENED`, `unopened`, `became`, `Sender`, `resumeListen`,
       `menuFor`;
       the words *new*, *opened* (Miyel's, replacing waiting/handled),
       *in progress*, *logged 4 august*, *dismissed*, *Nothing new.*,
       *Nothing opened yet.*; the
       `.ib-who*`, `.ib-more`, `.ib-menu*`, `.ib-done*`, `.ib-back`,
-      `.ib-head`, `.ib-title`, `.ib-tab-n`, `.ib-sent-head`,
-      `.ib-sent-label`, `.ib-sent-body`; the word *From:*
+      `.ib-sent-head`, `.ib-sent-label`, `.ib-sent-body`; the word *From:*
       classes in forms.css; the words *put back*; and `lookup_key`
       keeping its name where it moved to.
 - [x] **Verified:** the build passes, the draft lookup was run against the
