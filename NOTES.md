@@ -1848,16 +1848,28 @@ layout fell out of it.**
       stopping 52px short so the tools do not sit under the moon. On a desk
       the header's mark is hidden: the bar over the journal has it, and two
       marks on screen is two marks whether or not they are seen together.
-- [x] **The card is a row.** Portrait left, name and the counted facts beside
-      it (`.idc-top` / `.idc-said`), which puts all three prompts and the
-      pinned record on the first screen — the portrait alone was taking half
-      of it. The labels take their own width beside the portrait instead of
-      the card's fixed 84px column, which in a 178px measure left the answer
-      four characters wide. `.idc-inner` stopped being a scroller: the face
-      is the scroller and a second one inside it meant the card could move
-      while the page under it stayed put. On a desk the portrait takes a
-      share (38%, 96–168px) rather than a fixed square, because the spine is
-      draggable.
+- [x] **The card is a row, on one measure.** Portrait left, the counted facts
+      beside it (`.idc-top` / `.idc-said`), which puts all three prompts and
+      the pinned record on the first screen — the portrait alone was taking
+      half of it. `.idc-inner` stopped being a scroller: the face is the
+      scroller and a second one inside it meant the card could move while the
+      page under it stayed put. On a desk the portrait takes a share (38%,
+      96–168px) rather than a fixed square, because the spine is draggable.
+- [x] **And then it was rebuilt on one left edge, after Miyel's phone look:
+      "balance. waaay off."** She was right and the cause was three measures
+      stacked on one page — the card object was a 340px column centred in the
+      pane, the label-and-answer lines were a 300px column centred inside
+      *that*, and the writing below was a 480px column centred in the pane.
+      Nothing lined up with anything. The gutter belongs to the page now
+      (`.ab-pane`, 22px, not the cross's 34 — that one was sized for the
+      beacon's big centred square) and nothing inside sets its own; measured,
+      every element on the page starts at the same pixel. Two more from the
+      same look: the name went **above** the row and across the whole width,
+      because an ornamented name in a 178px column broke into three ragged
+      lines with its diacritics floating off the ends; and each label-and-
+      answer became an unbreakable `.idc-pair`, because the wrap had been
+      falling between a label and the thing it labels — "ALBUMS LOGGED 39
+      SINCE / March 2026".
 - [x] **The desk is a band and three rows.** Start a listen is 92px of the
       width rather than a 180px square — it was the third square of a cross
       whose other two were a portrait and an album, and that cross is gone.
