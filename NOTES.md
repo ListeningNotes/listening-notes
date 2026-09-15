@@ -335,7 +335,10 @@ Still to look at:
       `ln-spine-face`; `--spine-w`, `--hn-turn-h`; `.hn-face`,
       `.hn-face--card`, `.hn-face--desk`, `.hn-face--colophon`,
       `.hn--face-card` / `.hn--face-desk`, `.hn-turn-row`, `.hn-turn`,
-      `.hn-turn-side`, `.hn-grip` (kept);
+      `.hn-turn-side`, `.hn-turn-say`, `.hn-more`, `.hn-grip` (kept); the
+      `?mark=` parameter on the wall, and `.idc-object`/`.idc-photo`/
+      `.idc-ident`/`.idc-keeping`/`.idc-acts`/`.idc-counts`/`.idc-pinned`
+      on the card;
       LayerEntry's `over` values `"journal"` and `"spine"`,
       `.lay--over-journal` / `.lay--over-spine`; `.db-hero--lit` and
       `.db-hero-record`; the inbox's `.ib-holding`. The grip's label is
@@ -1915,6 +1918,20 @@ lesson is in the entry below.**
       them the photo is already the flourish. `/api/public/stamps` counts the
       marks, which it used to before a swatch came off the card. A zero is
       left off.
+- [x] **And the counts are presses into the journal, filtered** (Miyel,
+      2026-09-15: the way the pinned record takes you to that entry). Albums
+      goes to `/archive`; masterpieces and formative go to
+      `/archive?mark=masterpiece` and `?mark=formative`. `/archive` is the
+      wall's own address and mounts the same component the cross's centre pane
+      does, so the filter arrives with the page rather than having to be
+      reached across two panes — a link from the card to the wall inside the
+      cross would be a same-route navigation the cross never remounts for.
+      Journal reads `?mark=` exactly as it reads `?q=`: through
+      `useSyncExternalStore`, derived as typed-or-linked, so the link's filter
+      holds until somebody changes it in the sheet. One parameter and not
+      three, because the three are one question. The card's count and the
+      wall's filtered count agree by construction — 4 of 39 and 9 of 39 —
+      because both read the same two columns.
 - [x] **Then the pinned record: centred, smaller, and a pin instead of the
       word.** It was ranged left for an hour on the argument that a record is
       left-aligned everywhere else on this site; on a pane whose whole head is
