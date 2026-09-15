@@ -1610,8 +1610,50 @@ current.
 
 ## Complete
 
-**2026-09-15 — the inbox redesigned before merging, same branch
-`inbox-logged`**
+**2026-09-15 — the inbox is one list, same branch `inbox-logged`**
+
+- [x] **New was never a place.** It is a property of a row, the way unread
+      is in mail, and nobody keeps a read tab and an unread tab. So the two
+      views are gone: one list newest first, a dot for what is new, and the
+      state as a word in the subtitle — *new*, *in progress*, *logged 4
+      august*, *archived*. Archived comes out of the order and sits behind
+      *Show N archived* at the foot; opened, it goes on the end rather than
+      back into the middle of what has not been dealt with. The folder tabs
+      are untouched: sends one place, comments another, reports a third.
+- [x] **Pressing a row opens it, it does not navigate.** That was the real
+      complaint — pressing Submarine went straight into a listening session
+      with no choice. It opens where it sits now (DECISIONS: a control opens
+      where it belongs) and the session is one of the things you can pick.
+      Open, the subtitle goes back to *artist · year*, because the state is
+      the actions underneath.
+- [x] **One primary, chosen by state.** New gets *Start a listen*, in
+      progress *Resume the listen* (which finds the draft and hands it
+      over — unchanged, and see Gotchas for the fold that makes it work),
+      logged *Open the entry*, archived *Put back*. An archived row's
+      primary being the way back is what lets archiving need no undo
+      control of its own, so the `put back` at the end of a row is gone.
+- [x] **The quiet actions are always there, whatever state a send is in.**
+      That is the whole point of the change and the Jr case exactly: an
+      album half-listened-to whose sender has since made a journal had
+      nowhere to record it, because in-progress rows had no actions at all.
+      They are plain rows under the primary rather than behind a second
+      press, so the ··· menu is gone with its styles, and so is `Sender` —
+      the open row writes its own *From* line, with the word in it.
+- [x] **Archive is red again and last** (the brief's call, reversing the
+      not-red of an hour earlier). It is still reversible; the colour is
+      marking the one action that takes a row out of the list.
+- [ ] **One judgement call to check.** The brief lists *Open the draft —
+      where one exists* among the quiet actions and draws it on an
+      in-progress row, where the primary is already *Resume the listen*.
+      Those are the same act, so it is drawn only where it is **not** the
+      primary — a new or logged send that has a stray draft. Say if it
+      should be there always.
+- [x] **Verified:** the build passes and every row state was stood into a
+      page to check the CSS. Nothing is defined in the sheet that the page
+      no longer uses, and nothing used is undefined. **Not driven by hand**,
+      as ever: the inbox is behind the password.
+
+**2026-09-15 — the two-view redesign it replaced, same branch**
 
 - [x] **The check the brief asked for first: an in-progress send and a
       draft are two things, not one.** `submissions.status = 'reviewed'`
