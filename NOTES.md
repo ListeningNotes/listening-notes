@@ -297,6 +297,28 @@ cannot be tested end to end.
 2026-09-12. The address book merged to main that day, the feed and the
 person's page the next (Complete). Left: the printer, and the chain.
 
+- [ ] **The chain says a quiet credit was lost, 2026-09-15.** Open the
+      Submission chip on a record whose sender asked not to be credited and
+      `Chain.js` reads *Somebody — the name wasn't kept*, which sounds like
+      data went missing rather than somebody choosing. It should say it was
+      withheld, and the chain should stop there on purpose. One string and
+      one branch; **for the chain brief to pick up** rather than a fix on
+      its own.
+- [ ] **Sending from the address book, 2026-09-15.** Miyel's, raised while
+      sending Junior an album: with somebody already in the book it is a
+      long way round to open their journal and find the send page. A send
+      could start from their row. Connects to the parked *send from your
+      own entry* idea (DECISIONS, `source_entry_id`) — both start a send
+      on your copy rather than on somebody's page, and a send that starts
+      here is the only shape that could ever carry which record of yours
+      it came from.
+- [ ] **The send form never explains whose choice is whose,
+      2026-09-15.** *Don't credit me publicly* is the sender's, but the
+      form is served by the recipient — so your own copy can never show
+      you the option for a send *you* are making, and Miyel went looking
+      for it on Junior's page and found his copy had not updated yet. The
+      asymmetry is right; it is just invisible. A line on the form, or
+      nothing, but decide rather than leave it to be rediscovered.
 - [ ] **The feed's remaining loose end, 2026-09-13.** Track notes on
       a row's Compare: the feed carries no writing, so the panel shows the
       two verdicts and the two horizons and links to both entries. Their
