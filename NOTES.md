@@ -2009,10 +2009,14 @@ lesson is in the entry below.**
       here is right: it is the last of the counted things — the numbers say
       how somebody listens and this says to what — so it belongs with them and
       on their axis rather than down in the writing. Measured, it centres where
-      the counts and the pinned record do. The rule that marks the line between
-      what is counted and what was written moved with it, and is now the top of
-      `.ab-below` — the boundary is where the writing starts, not wherever the
-      genres happen to sit.
+      the counts and the pinned record do.
+- [x] **Two lines on the page, and they are the two between the counts**
+      (Miyel). The counts sat between hairlines of their own, the genres row
+      carried one, and another was drawn above the writing — four rules on a
+      page whose whole argument is that things are separated by tone. All of
+      them are gone but the short verticals that divide the one element here
+      that is really three. Everything else is separated by space, which is
+      what the rest of the page was already doing.
 - [x] **The em dash is gone from the printed question.** It was separating the
       opening from the answer on one line; on two lines in two faces it
       separates things that separate themselves. Stripped at the render rather

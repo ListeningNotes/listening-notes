@@ -96,17 +96,21 @@
 /* ── Three counts ───────────────────────────────────────────────────────────
    Records, masterpieces, formative — each in its own flag's colour, which is
    the first work those three tokens have had away from a mark on a record.
-   Between two hairlines, evenly spread, the number large and the word small
-   under it: typeset, not stamped. A photograph that size above them is
-   already the flourish. */
+   Evenly spread, the number large and the word small under it: typeset, not
+   stamped. A photograph that size above them is already the flourish.
+
+   The only lines on this page are the two between the three of them (Miyel,
+   2026-09-15). They sat between two hairlines of their own and there was a
+   third under the pinned record below; four rules on a page whose whole
+   argument is that things are separated by tone. Two short verticals divide
+   the one thing here that is actually three things, and nothing else needs a
+   line at all. */
 .idc-counts {
-  display: flex; align-items: flex-start; justify-content: space-between;
-  gap: 12px;
-  margin-top: 20px;
-  padding: 16px 0;
-  border-top: 1px solid var(--border);
-  border-bottom: 1px solid var(--border);
+  display: flex; align-items: stretch; justify-content: space-between;
+  gap: 0;
+  margin-top: 22px;
 }
+.idc-count + .idc-count { border-left: 1px solid var(--border); }
 /* Each count is a press into the journal, filtered — so it wants to look
    pressable without becoming a button: the number lifts a little and the word
    under it comes up out of faint. */
@@ -212,10 +216,12 @@
 
 /* A rule between the document and the writing under it, so the page is not
    two documents pretending to be one. */
-/* The line between what is counted and what was written. It was under the
-   genres row while that row was the last counted thing on the page; the row
-   is on the card now, so the boundary is here, above the writing. */
-.ab-below { margin-top: 26px; padding-top: 24px; border-top: 1px solid var(--border); }
+/* No rule above the writing. There was one, on the argument that it is the
+   line between what is counted and what was written; the page separates
+   everything else by tone and space, and one hairline doing a job the rest of
+   the page does without it is a hairline that reads as leftover. Space is the
+   boundary. */
+.ab-below { margin-top: 34px; }
 
 /* ── Below the fold ─────────────────────────────────────────────────────────
    A quiet line saying whose voice the answers are in, then the answers, then
