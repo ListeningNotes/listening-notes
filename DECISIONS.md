@@ -726,6 +726,14 @@ entry's own date is the ceiling, ordering and hit rates work from it, and a
 confident wrong date corrupts every statistic after it. `received_date` is
 the send flow's, where the moment is exact.
 
+**A send has four outcomes, and two of them are not the same claim,
+2026-09-15.** Pending, started, logged, dismissed. `reviewed` is set when
+Start a listen is pressed and means an intention; `logged` carries
+`entry_id` and means a record exists. Folding them would make a started and
+abandoned listen claim to be logged. **Nothing ever matches a send to an
+entry automatically** — a person recognises the record and presses once,
+because a wrong guess writes a credit onto somebody's entry.
+
 **A send is a gift, not a form, 2026-08-29.** Three parts, in this order: the
 object, the note, and who it is from. The album is picked off covers, because
 a cover is what makes it read as something handed across rather than a title

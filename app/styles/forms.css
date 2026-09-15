@@ -785,6 +785,47 @@ a.pp-name:hover svg { color: var(--ink); }
 /* A send that carried a journal, once filed, says so where the button was. */
 .ib-filed { align-self: center; }
 
+/* ── Which record it became ─────────────────────────────────────────────────
+   Opened by "I've already logged this" on a send, 2026-09-15. It unfolds in
+   the row rather than over the page — a control opens where it belongs
+   (DECISIONS) — and it holds the likely record first, so the usual press is
+   two taps and the field is only for a record logged under another name. */
+.ib-which {
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--bg);
+  display: flex; flex-direction: column; gap: 8px;
+}
+.ib-which-field {
+  border: 0; border-bottom: 1px solid var(--border);
+  background: transparent; padding: 0 0 5px;
+  font-family: inherit; font-size: 13px; color: var(--ink);
+}
+.ib-which-field:focus { outline: none; border-bottom-color: var(--ink-faint); }
+.ib-which-field::placeholder { color: var(--ink-faint); }
+.ib-which-none {
+  font-family: var(--font-label); font-size: 10px; letter-spacing: 0.06em;
+  color: var(--ink-faint); padding: 4px 0;
+}
+.ib-which-one {
+  display: flex; align-items: center; gap: 10px; width: 100%;
+  padding: 6px; border: 0; border-radius: 8px;
+  background: transparent; text-align: left; cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.15s;
+}
+.ib-which-one:hover { background: var(--panel); }
+.ib-which-art {
+  width: 38px; height: 38px; border-radius: 6px; overflow: hidden; flex-shrink: 0;
+  background: var(--panel); display: block;
+}
+.ib-which-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ib-which-said { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.ib-which-album { font-size: 13px; color: var(--ink); }
+.ib-which-artist { font-family: var(--font-label); font-size: 10px; color: var(--ink-soft); }
+
 /* ── from app/dashboard/people/page.js ───────────────────────────────── */
 /* The address book: the inbox's sheet and panel, one column of people. A
    row is a face and a name, never the address — the row itself opens your

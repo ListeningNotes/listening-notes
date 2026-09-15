@@ -99,6 +99,7 @@ The library — logic, no visuals
     settings_actions.js        The settings row: read, write, the name, the beacon's narrow reader
     people_actions.js          The address book: the people table, and asking a journal its keeper's name
     report_actions.js          Problems keepers wrote in from their desks — the reports table
+    submission_actions.js      Albums other people sent you: saving one, its four outcomes, the record a send became, and naming its sender once they have a copy
     return_address.js          The back of the envelope — a sender's name and journal kept in their own browser — and the one spelling an address is kept in
     migrator.js                Brings the database up to date — from instrumentation.js on start, and from scripts/prepare_database.mjs at build
     version.js                 Which version this copy is running (from package.json), where its release notes are, and where a report goes — read by the pitch pane, the desk and the report sheet
@@ -159,6 +160,7 @@ The furniture — visual pieces
       ComingSoon.js            What a held copy shows instead of a site — unclaimed, no database, or database unreachable
       AddToHomeScreen.js       The one step the software cannot do: the last screen of setup, and a Settings section
       AlbumFinder.js           Type, see covers, pick one — the send flow's search
+      MiniAddressBook.js       The address book as a strip of faces, for picking one person — the entry editor's Sent by, and the inbox's send whose sender has since got a copy
       LayerEntry.js            The sheet a page arrives on over the journal — from the side for forms, expanding from the cover for an entry, with swipes to the neighbours; on a desk it covers the journal's column or is the desk's panel, with a back caret
       LayerWaiting.js          What stands in while that entry loads
       EdgeCaret.js             The chevrons that say there is more that way
@@ -297,7 +299,7 @@ than what anyone remembers building.
 | `secrets` | What must never reach a visitor: the session secret, the password hash, the claim code, the two API keys. One row; read only by `library/secrets.js`. |
 | `users` | The owner. One row, written at setup. |
 | `comments` | Replies on entries and on individual tracks, with a moderation queue. |
-| `submissions` | Albums other people have sent you. |
+| `submissions` | Albums other people have sent you. `status` is pending, reviewed (a listen was started from the row), logged, or dismissed; `entry_id` is the record a send became, set by hand on the row and never by matching. |
 | `drafts` | A listening session in progress, so closing the tab does not lose it. |
 | `briefings` | Cached album research, keyed by album, so the same record is not paid for twice. |
 

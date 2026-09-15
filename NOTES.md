@@ -961,6 +961,19 @@ Project → Settings → Environment Variables.
 
 ## Gotchas
 
+**A no-op write to the end of `base.css` forces the dev server to recompile
+it, 2026-09-15.** Rules appended to base.css did not reach the served
+stylesheet — the documented staleness, and the note said only stop →
+`rm -rf .next` → start recovers it. It does not: `printf '\n/* touch */\n'
+>> app/styles/base.css` and the rule is there a second later; delete the
+comment again and it stays. Cheaper than clearing `.next`, and safe when
+somebody else's dev server owns the folder. The other sheets (entry.css,
+forms.css) recompiled on their own the whole time — this is base.css only.
+**How to tell it is staleness and not your CSS:** fetch the sheet the page
+links and grep it, rather than trusting the page —
+`curl -s localhost:3000/archive | grep -o '/_next/static/[^"]*\.css'`, then
+curl that. Checking the production build's chunk proves the rule compiles.
+
 **A `MediaRecorder` MP4 is fragmented, and Apple reads it as a 0.05-second
 video, 2026-09-12.** Chromium's recorder says `video/mp4;codecs=avc1` and
 the file plays in a browser, but it is `moof`/`mdat` fragments, and
@@ -1522,6 +1535,66 @@ current.
 ---
 
 ## Complete
+
+**2026-09-15 — the inbox needs a third outcome, branch `inbox-logged`, not
+merged (1.14.0 when it is: something new)**
+
+- [x] **A send can say it was already logged.** Migration 010 adds
+      `submissions.entry_id` (integer, `ON DELETE SET NULL` — the
+      `settings.pinned_entry_id` shape, deliberately not the
+      `comments.entry_slug` one) and `log_submission` in
+      `submission_actions.js` writes it with status `logged`. On a row,
+      *I've already logged this* opens a picker in place: the likely
+      record first, matched on `albumKey` so a send finds its entry
+      through either spelling, and a field for a record logged under
+      another name. One press does two writes — the send is marked and
+      pointed at the record, and that record gets `entry_type =
+      Submission` and the sender's name and journal — so the connection
+      exists in the data and not only in Miyel's head. The journal is
+      fetched the first time anybody presses, never on load.
+      **The credit is not overwritten** where the entry already carries
+      one: a button on another screen should not quietly replace what she
+      typed by hand.
+- [x] **A fourth tab, and `reviewed` keeps its own meaning.** The premise
+      of the brief was that the inbox had two outcomes; it had three —
+      `reviewed` was already being set, by Start a listen, and shown as a
+      tab. It is a claim about an intention (a listen was *started*,
+      before any entry exists) and `logged` is a claim about a record, so
+      they are not folded together. Tabs now read pending / started /
+      logged / dismissed, labels in `OUTCOMES` and the raw values
+      untouched, so no row is rewritten.
+- [x] **A send's sender resolves to the address book.** Sends arrive
+      before people have copies — that is the normal case, not an edge
+      one — so a row with a name and no address offers *Link their
+      journal*, and the same strip of faces the entry editor uses fills
+      in `sender_url`. The name they signed stays as they typed it.
+- [x] **The picker became its own file.** `MiniAddressBook.js` (Miyel's
+      name) in main_components, with its strip styles moved out of
+      entry.css into base.css, since two surfaces draw it now. The entry
+      editor renders it instead of its own copy.
+- [x] **Verified** without a wristband: migration applied to the live
+      database (column and foreign key both present), the new
+      `pull_submissions` join run read-only against the nine real rows,
+      all three owner routes answering 401, the build passing, and the
+      row's markup stood into a page to check the CSS on a phone.
+      **Not driven by hand:** the inbox is behind the password, so the
+      press itself, the two writes and the address-book link are Miyel's
+      review. Nothing was written to any real row.
+- [ ] **Worth knowing: three sends carry an email in `sender_url`.**
+      Submissions 4, 5 and 7 hold `josejunior770@gmail.com`, from before
+      the email field was retired. `tidyAddress` reads it as a host, so
+      those rows draw a *their journal* link to
+      `https://josejunior770@gmail.com`, which goes nowhere. Pre-existing
+      and out of this brief's scope. The fix is either a rule that an
+      address with an `@` in it is not a journal, or linking Jr's real
+      journal on those rows by hand once he has one.
+- [ ] **Names to confirm, 2026-09-15** — autonomous session, rename
+      freely: branch `inbox-logged`; the words *I've already logged this*
+      (the brief's), *Link their journal*, *Which record was it?*, *Logged
+      as …*, and the tab word *started* for `reviewed`; `OUTCOMES`,
+      `openNaming`, `alreadyLogged`, `nameSender`, `candidates`, `naming`,
+      `whose`, `look`, `mine` in the inbox; `name_submission_sender` in
+      `submission_actions.js`; the `.ib-which*` classes in forms.css.
 
 **2026-09-14 — credit the person who sent it, branch `credit`, merged to
 main and pushed 2026-09-15 as 1.13.0 (something new: the middle number).
