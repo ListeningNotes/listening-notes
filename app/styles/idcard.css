@@ -25,9 +25,10 @@
    those rules already live — stated twice, the copy up here lost to the copy
    down there and the page kept an inset it was supposed to have given up. */
 .ab-card .idc-inner { text-align: left; padding: 0 0 22px; }
-.ab-card .idc-line { max-width: none; margin: 11px 0 0; }
-.ab-card .idc-name { text-align: left; margin: 2px 0 16px; font-size: 28px; }
-.ab-card .idc-row { justify-content: flex-start; margin-top: 20px; }
+/* .idc-line, .idc-row and a second .idc-name were stated here and are gone:
+   the first two describe elements this card no longer has, and the third was
+   a left-aligned 28px name competing with the centred 30px one further down
+   the file, decided by line number. */
 
 /* ── The object ─────────────────────────────────────────────────────────────
    The portrait, full width and square. It is the same object an entry's album
@@ -125,12 +126,21 @@
 .idc-count--formative .idc-count-n { color: var(--formative); }
 
 /* ── The pinned record ──────────────────────────────────────────────────────
-   Art, label, title, artist, on the same left edge as everything above it. It
-   was the one centred row on the pane. */
+   Art, label, title, artist — the group centred on the page with everything
+   above it, and a step smaller than it was. It sat against the left edge for
+   an hour on the argument that a record is left-aligned everywhere else on
+   this site; on a pane whose whole head is one centred column it was the only
+   thing off the axis (Miyel, 2026-09-15).
+
+   The group is centred, not its contents: the art stays left of the words,
+   because a cover above a title is a tile and this is a row. `width: auto`
+   with automatic side margins is what centres it — a full-width row with
+   `justify-content: center` would centre it too, and then a long album title
+   would push it off centre as it grew. */
 .idc-pinned {
-  display: flex; align-items: center; gap: 14px;
-  width: 100%;
-  margin-top: 18px;
+  display: flex; align-items: center; gap: 12px;
+  width: fit-content; max-width: 100%;
+  margin: 18px auto 0;
   padding: 0;
   border: 0; background: none;
   text-align: left; text-decoration: none; color: inherit;
@@ -138,26 +148,33 @@
 }
 .idc-pinned-art {
   flex: none;
-  width: 66px; height: 66px;
-  border-radius: 10px; overflow: hidden;
+  width: 50px; height: 50px;
+  border-radius: 8px; overflow: hidden;
   background: var(--bg-warm);
   display: flex; align-items: center; justify-content: center;
   color: var(--ink-faint);
 }
 .idc-pinned-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.idc-pinned-said { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
-.idc-pinned-label {
-  font-family: var(--font-label);
-  font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase;
+/* The pin, where the word PINNED was. Faint and small: it says what this row
+   is, and the row is already a cover with a title beside it — it does not
+   have to announce itself twice. */
+.idc-pinned-mark {
+  flex: none;
   color: var(--ink-faint);
+  /* Mirrored, so the pin leans into the record it is pinning rather than away
+     from it. It sits to the left of the art and Phosphor draws it leaning
+     left, which pointed it off the edge of the row. */
+  transform: scaleX(-1);
 }
+.idc-pinned:hover .idc-pinned-mark { color: var(--ink-soft); }
+.idc-pinned-said { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
 .idc-pinned-album {
   font-family: var(--font-display); font-weight: var(--font-display-weight);
-  font-size: 17px; line-height: 1.2; color: var(--ink);
+  font-size: 15px; line-height: 1.2; color: var(--ink);
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .idc-pinned-artist {
-  font-size: 13px; color: var(--ink-soft);
+  font-size: 12px; color: var(--ink-soft);
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .idc-pinned:hover .idc-pinned-album { text-decoration: underline; }

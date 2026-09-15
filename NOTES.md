@@ -1915,9 +1915,17 @@ lesson is in the entry below.**
       them the photo is already the flourish. `/api/public/stamps` counts the
       marks, which it used to before a swatch came off the card. A zero is
       left off.
-- [x] **Then the pinned record,** art and label and title and artist, on the
-      same left edge as everything above it. It was the one centred row on the
-      pane.
+- [x] **Then the pinned record: centred, smaller, and a pin instead of the
+      word.** It was ranged left for an hour on the argument that a record is
+      left-aligned everywhere else on this site; on a pane whose whole head is
+      one centred column it was the only thing off the axis. The group is
+      centred with `width: fit-content` and automatic margins rather than
+      `justify-content: center` on a full-width row — that would centre it too
+      and then let a long album title drag it off centre as it grew. The art
+      is 50px and a mirrored `PushPin` sits beside it where the word PINNED
+      was: it leans into the record it is pinning, because Phosphor draws it
+      leaning the other way and it pointed off the edge of the row. The word
+      survives in the row's label for anybody who cannot see the pin.
 - [x] **Below the fold, in the same scroll:** a quiet *In Miyel's own words*
       over the three prompts — the name rather than a pronoun, because every
       copy has a different somebody in it — then top genres as one line rather
