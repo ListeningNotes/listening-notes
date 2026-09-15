@@ -4,7 +4,7 @@
 // Is there a newer Listening Notes than this copy is running?
 //
 // Owner-only, and asked by the desk once per visit. This server asks GitHub
-// for the canonical repository's latest public release, at most once a day,
+// for the canonical repository's latest public release, at most once an hour,
 // and compares its tag with the version in this copy's package.json. That is
 // the whole of it: no copy tells anyone it exists, nothing is sent but a
 // request for a public page, and the only thing this can ever say is that
@@ -20,7 +20,10 @@ import { requireWristband } from '@/library/wristband';
 import pkg from '../../../package.json';
 
 const LATEST = 'https://api.github.com/repos/ListeningNotes/listening-notes/releases/latest';
-const A_DAY = 60 * 60 * 24;
+// An hour, not a day (2026-09-15): a keeper told by a friend that there is
+// an update opened the desk and saw nothing, because the day-old answer
+// still said otherwise. One request an hour per copy is nothing to GitHub.
+const A_WHILE = 60 * 60;
 
 // Semantic versions: major.minor.patch. Compared number by number, so
 // 1.10.0 is newer than 1.9.0, which a string comparison would get wrong.
@@ -43,7 +46,7 @@ export async function GET(request) {
   try {
     const res = await fetch(LATEST, {
       headers: { Accept: 'application/vnd.github+json', 'User-Agent': 'listening-notes' },
-      next: { revalidate: A_DAY },
+      next: { revalidate: A_WHILE },
     });
     if (!res.ok) return Response.json(quiet);
     const release = await res.json();
