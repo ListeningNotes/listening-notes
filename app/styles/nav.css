@@ -854,18 +854,27 @@
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  padding: 0 var(--hn-gutter) 0;
+  padding: 0 var(--page-gutter) 0;
 }
 
-/* ── The desk's header ── the small mark, and the desk's one tool opposite it.
-   The card's header, said again for this face: same height, same line, so
-   turning between the two does not move the mark. Settings is the gear here
-   rather than a fourth door — it is not somewhere you go as often as the
-   others and it was taking the same weight as them (2026-09-15). */
+/* ── The desk's header ── the mark centred, the desk's one tool at the right.
+   The card's header exactly (.ab-card .idc-head in idcard.css): the same
+   geometry, the same bleed to the window, the same 74px left for the light
+   switch — so the mark holds still when the page turns between the two faces,
+   which is the whole reason the turn reads as a turn and not as a jump.
+   Settings is the gear here rather than a fourth door: it is not somewhere
+   you go as often as the others and it was taking the same weight as them
+   (2026-09-15). */
 .db-head {
-  display: flex; align-items: center; justify-content: space-between;
-  gap: 12px; min-height: 28px; width: 100%; margin-bottom: 16px;
+  position: relative;
+  display: flex; align-items: center;
+  gap: 12px; min-height: 30px; width: auto;
+  margin: 0 calc(var(--page-gutter) * -1) 16px;
+  padding-left: var(--page-gutter);
+  padding-right: 74px;
 }
+.db-mark-svg { position: absolute; left: 50%; transform: translateX(-50%); }
+.db-head .db-tool { margin-left: auto; }
 .db-mark-svg { display: block; height: 28px; width: auto; }
 .db-mark-svg path { fill: var(--ink); }
 .db-tool {
@@ -881,7 +890,11 @@
   align-items: center;
   gap: 26px;
   width: 100%;
-  max-width: 380px;
+  /* No measure of its own. It had 380px, which centred the desk three pixels
+     inside the page's gutter — invisible on its own and not invisible at all
+     when you turn to the card and everything shifts by three. Both faces of
+     this pane use the page's measure. */
+  max-width: none;
 }
 /* The one big thing on the pane, and a band rather than a square since
    2026-09-15. It was 180px square — the third square of a cross whose other
@@ -988,7 +1001,10 @@
    What the people in the address book logged, as entry-shaped rows with a
    small face and a name. Two views switched by a word, no counts. A row's
    Compare opens a panel under it: two verdicts and two horizons. */
-.fd-wrap { width: 100%; max-width: 480px; margin: 0 auto; padding: 24px var(--hn-gutter) 40px; box-sizing: border-box; }
+/* The page's measure, like everything else on this face — it had 480px and
+   the cross's 34px gutter, which put the feed twelve pixels further in than
+   the doors above it on the same scroll. */
+.fd-wrap { width: 100%; max-width: none; margin: 0; padding: 24px var(--page-gutter) 40px; box-sizing: border-box; }
 /* On a phone the floor starts under the bar, the way the writing under the
    card does. */
 .hn-floor-scroll .fd-wrap { padding-top: calc(var(--hn-bar-h) + 24px); }
@@ -1127,6 +1143,12 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   overscroll-behavior-y: contain;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
+  /* The page's gutter, and both faces of this pane use it — the card and the
+     desk are two sides of one page and their left edges have to be the same
+     one, or turning between them shifts everything on screen. 22px, not the
+     cross's 34: that one was sized for the beacon's big centred square, and
+     these are pages of type. */
+  --page-gutter: 22px;
   /* Clear of the row at the foot, and starting on the bar's own line at the
      top. A page ends above its own controls; and the header it starts with —
      the small mark, with the pencil or the gear opposite it — sits on the same
@@ -1270,18 +1292,20 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   /* The faces pay nothing at either end here: the switch is at the top and
      there is no caret row at the foot. What the pages inside them start under
      is --hn-rail-top. */
-  .hn-face { padding: 0; }
+  .hn-face { padding: 0; --page-gutter: var(--hn-gutter); }
 
   /* One mark on a desk, and it is the one in the bar over the journal. The
      page header's own mark is the phone's — there the bar carries no mark
      until the crown has scrolled away, so the card and the desk have to say
      what they belong to themselves. Here it would be the second mark on
      screen, which DECISIONS rules out whether or not the two are ever visible
-     together. The tools stay, and take the line on their own. */
-  .ab-card .idc-mark,
+     together. The tool stays and takes the line on its own.
+
+     The card's half of this is in idcard.css, not here: that sheet is loaded
+     after this one, so a rule of this name written here loses to the base
+     rule written there whatever the media query says. */
   .db-mark-svg { display: none; }
-  .ab-card .idc-head,
-  .db-head { justify-content: flex-end; padding-right: 0; }
+  .db-head { margin: 0 0 16px; padding: 0; justify-content: flex-end; }
 
   /* No crown and no carets. The book is open — there is nothing to swipe to,
      and the mark is in the bar over the journal, the way every other page's
@@ -1429,7 +1453,7 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
      tile rather than a square: a square at the spine's width is a third of the
      page given to one door. The three under it are rows, mark then word, and
      the feed follows on the same scroll. */
-  .db-pane { min-height: auto; align-items: flex-start; padding: var(--hn-rail-top) var(--hn-gutter) 20px; }
+  .db-pane { min-height: auto; align-items: flex-start; padding: var(--hn-rail-top) var(--page-gutter) 20px; }
   .db-body { gap: 14px; }
   .db-hero { width: 100%; height: auto; aspect-ratio: auto; min-height: 128px; gap: 12px; }
   .db-hero-label { font-size: 0.72rem; }

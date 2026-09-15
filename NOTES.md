@@ -1137,7 +1137,10 @@ further down the same file at the same specificity. Everything read correctly
 and the page kept its old insets, which looked like the new rules had not been
 written at all. When a value already has a home in the file, change it there:
 a second statement of the same property somewhere else is a coin toss decided
-by line number, and the loser is invisible.
+by line number, and the loser is invisible. The third time was across files:
+nav.css's desktop block tried to hide the card's mark and lost to idcard.css's
+base rule, because layout.js loads idcard after nav and a media query buys no
+specificity. A rule about the card belongs in the card's sheet.
 
 The
 correction bar, its trouble line and the print bar were told to inset
@@ -1880,15 +1883,38 @@ layout fell out of it.**
       answer became an unbreakable `.idc-pair`, because the wrap had been
       falling between a label and the thing it labels — "ALBUMS LOGGED 39
       SINCE / March 2026".
-- [x] **And the glance runs to the edges** (Miyel, the same evening: "the card
-      should be edge to edge"). It cancels the page's gutter with a negative
-      margin rather than the page giving its gutter up, so the name over it,
-      the pinned record under it, the buttons and the writing all keep the
-      single edge the page had just been rebuilt on — a picture that bleeds
-      and type that does not. The portrait takes 44% of the width rather than
-      a 118px square now that it has an edge to grow into, and it loses the
-      left half of its radius and its shadow: a picture flush to an edge is
-      not sitting on the page, so it casts nothing.
+- [x] **The glance ran to the edges for an hour and came back in.** "The card
+      should be edge to edge" put the portrait flush left; seen on the phone it
+      read as cropped rather than bled, so it is back on the page's gutter with
+      its radius and its shadow. What the hour was worth: the page is on one
+      measure now and the bleed is gone from everything but the header.
+- [x] **And then the glance became an identification card** (Miyel: "almost
+      like an ID card, with the name above the text not the photo"). The
+      photograph is a third of the width on the left, and everything written
+      about the person is in one column beside it — the name at the head of
+      it, then the counted facts, then the genres, then the pinned record,
+      which used to be a full-width block underneath. Four facts set tight as
+      rows rather than four loose paragraphs. The name is 21px in the column
+      rather than 28 across the page: the size a name is on a card.
+- [x] **The header is three slots: a tool, the mark, a tool.** The pencil on
+      the left, the mark centred *on the window*, the printer on the right,
+      and the window's light switch beyond it with 74px left for it. The row
+      bleeds to the window to do that — centring on the page's measure would
+      put the mark a dozen pixels off the one over the journal. Editing swaps
+      the pair for Save and Cancel on the same two sides. The desk's header is
+      the same geometry for the same reason: the mark has to hold still when
+      the page turns, or the turn reads as a jump. Measured, both at the
+      window's centre.
+- [x] **Four measures went, not one.** `.idc`'s 320, `.ab-below`'s 480,
+      `.db-body`'s 380 and `.fd-wrap`'s 480 were each a centred column inside
+      a page that already had a gutter. The 380 was the instructive one: it
+      centred the desk three pixels inside the card's edge, which is invisible
+      on its own and not invisible at all when you turn between them and
+      everything shifts by three. Both faces share one `--page-gutter` now,
+      declared on `.hn-face`.
+- [x] **The owner's card stopped carrying an empty row.** Both controls in
+      `.idc-row` are the visitor's, so the row is the visitor's — gated once
+      rather than twice, because an empty row still takes its margin.
 - [x] **Three rules had to be edited where they already lived, not
       overridden.** `.ab-card`'s padding, `.idc`'s 320px measure and
       `.ab-below`'s 480px measure were each stated further down the file than
