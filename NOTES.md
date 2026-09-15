@@ -1640,7 +1640,11 @@ current.
 - [x] **Dismiss is Archive, and a dismissed row is an archived one**
       (Miyel, 2026-09-15). A send you put aside has been filed, not
       rejected, and it comes back with one press — so the menu says
-      Archive and the row's state reads *archived*. **The stored value is
+      Archive and the row's state reads *archived* — **and it is not red
+      any more** (same call, a moment later): red on this site means the
+      delete at the foot of an entry, which really is permanent, and
+      spending it on something reversible is how it stops meaning
+      anything. The three menu items are one voice now. **The stored value is
       still `dismissed`:** renaming it means rewriting rows on every copy
       to say the same thing differently, and the column is not what
       anybody reads. `ARCHIVED` is the constant the code uses, with the
