@@ -526,6 +526,11 @@
   gap: 14px;
   width: 100%;
   max-width: 100%;
+  /* The row never asks for its content's width. Without this a wrapper
+     with no width of its own — a flex item up the chain, the hero's
+     column — is forced open to the faces' full width and the row lands
+     centred with its first faces off the left edge, unreachable. */
+  contain: inline-size;
   overflow-x: auto;
   overscroll-behavior-x: contain;
   padding: 3px 16px 6px;
@@ -581,7 +586,14 @@
 .ln-editing .ln-hero { height: auto; min-height: 390px; }
 .ln-editing .ln-hero-pad { position: relative; padding-top: 112px; }
 @media (max-width: 768px) {
-  .ln-editing .ln-screen-one { height: auto; min-height: 100dvh; padding-bottom: 32px; }
+  /* And on a phone the whole stack has to be on the first screen without a
+     scroll (Miyel, 2026-09-14: the faces were just under the fold). While
+     correcting, the crown's margin comes down and the art steps back — it
+     is a button to replace the cover in this mode, not the thing being
+     read — which puts the faces about a third of the screen up from the
+     foot on a 812-tall phone. The screen still grows if it has to. */
+  .ln-editing .ln-screen-one { height: auto; min-height: 100dvh; padding: 108px 24px 32px; gap: 12px; }
+  .ln-editing .ln-screen-one-art { height: min(24dvh, 50vw); }
 }
 
 /* The credit on the page: the envelope chip, reading "from Zach", is a link

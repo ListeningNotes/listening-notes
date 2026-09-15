@@ -1011,6 +1011,17 @@ The local rehearsal passed because it skipped the paste. Match the nearest
 commit — fewest differing files — and let the difference be the keeper's
 own change; the first run on GitHub was the one that caught it.
 
+**A row that scrolls sideways forces its ancestors open, 2026-09-14.**
+`overflow-x: auto` stops the row itself from growing, but the row still
+reports its content's width upward, so any wrapper with no width of its
+own — a flex item with the default `min-width: auto`, a shrink-to-fit
+column — is opened to the faces' full width and the row lands centred
+with its first faces off the left edge and no way to scroll to them.
+`contain: inline-size` on the row is the fix (`.ln-sender-book`): the row
+asks nothing of its content, so `width: 100%` means the parent's width.
+Seen with the Sent by faces stood into a plain `div`; the real markup was
+one wrapper away from it.
+
 **Next's loader wraps a package that exports a promise of itself into a
 module namespace whose `then` is not a promise's.** `@techstark/opencv-js`
 did exactly that, and `await import(...)` inside a route handler died with
@@ -1532,6 +1543,14 @@ merged (1.13.0 when it is: something new)**
       Submission shelf on. The layer's sideways swipe stands down while a
       correction is open (`.ln-editing`, beside `.ln-printing` in
       LayerEntry), so thumbing the faces cannot land on the next record.
+      **The edit stack fits the first screen on a phone** (Miyel, second
+      round: the faces were just under the fold): while correcting, the
+      crown's margin comes down to 108px and the art steps back to
+      `min(24dvh, 50vw)` — it is a button to replace the cover in that
+      mode — and the screen grows past one viewport only if it still has
+      to; the desk's hero grows too (`height: auto` off its 390px band,
+      the pad in flow). Measured with the whole stack stood in: the faces
+      end 172px above the foot of an 812-tall phone, 54px on a 667.
       On the page the envelope chip reads *from Kailea* and, when the
       credit carries a journal, is a link to it (new window, plain, no
       `?from=` — a visitor's surface). One rule for what leaves the
