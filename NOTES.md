@@ -1979,7 +1979,9 @@ lesson is in the entry below.**
       the part that *is* it. An entry does it as a title over an artist; the
       pinned record directly above these cards does it as PINNED over an
       album. A prompt is the same shape, so the question is the small line and
-      the answer is the large one.
+      the answer is the large one — at the display size but **not** the display
+      weight (Miyel): three or four lines of bold is a headline rather than
+      something somebody wrote, and the size already says which half matters.
       - It went the other way first — a sentence-length question in mono over
         a light answer — and a paragraph of monospace is a thing to decode
         rather than read. Inverting it also put the emphasis where it belongs:
