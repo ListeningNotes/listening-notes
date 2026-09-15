@@ -1676,7 +1676,8 @@ current.
 ## Complete
 
 **2026-09-15 — Sent by is a line on the entry, not a panel behind the chip,
-on branch `sent-by`**
+on main as 1.16.0, released as
+[v1.16.0](https://github.com/ListeningNotes/listening-notes/releases/tag/v1.16.0)**
 
 - [x] **The panel of the night before is gone.** It was a bordered, shadowed
       card holding a SENT BY label, a 48px face, a name and a status line —
@@ -1738,10 +1739,15 @@ on branch `sent-by`**
       **Seen in the browser** (light and dark, phone and desk) on
       `im-in-your-mind-fuzz` and `lemonade` for the line, `donuts` for the
       chip, and a fixture for the trail — no real chain exists yet, because
-      Zach's and Kai's journals both publish zero entries. **Not seen
-      signed in**, which leaves two things for Miyel: the first cell reads
-      *You* to the keeper and their name to everybody else, and the line
-      stands down while correcting and while printing.
+      Zach's and Kai's journals both publish zero entries. **Miyel checked
+      it signed in** before the merge and it was good.
+
+      **Confirmed on the live site after the deploy:** the record from Zach
+      serves the line and no chip, `donuts` serves the chip and no line —
+      twice each, which is the card drawn for both widths as it always is.
+      **`listeningnotes.blog` answers 308 to `www.`**, so a curl check of
+      the live site wants `-L` or it reads a 15-byte redirect body as a
+      page that has not deployed yet.
 
 **2026-09-15 — the credit is published in the feed, and the sender decides
 whether there is one, on main as 1.15.0, released as
