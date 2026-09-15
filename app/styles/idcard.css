@@ -444,8 +444,6 @@
   box-sizing: border-box;
 }
 .ab-block { display: flex; flex-direction: column; gap: 12px; }
-/* Cards want air between them where hairline rows wanted none. */
-.ab-block--prompts { gap: 10px; }
 .ab-subhead {
   display: flex;
   align-items: center;
@@ -460,11 +458,12 @@
   margin: 0;
 }
 /* ── The prompts ────────────────────────────────────────────────────────────
-   An opening and its answer on one line, because they are one sentence. The
-   opening is quiet and the answer carries the ink: the interesting half is
-   what somebody said, and a prompt set at the same weight as its answer reads
-   as a form rather than as a person talking. */
-.ab-block--prompts { gap: 0; }
+   Air between them. It was 0 while they were rows separated by hairlines —
+   a gap there would have put space around the lines rather than between the
+   prompts — and they are cards now, so the space is the separation. At 10px
+   three rounded grounds nearly met and read as one run of bubbles; this is
+   enough that each is its own thing. */
+.ab-block--prompts { gap: 18px; }
 /* ── A prompt ───────────────────────────────────────────────────────────────
    A card with no border: the box exists and does not announce itself, so
    three of them in a row do not read as three rectangles (Miyel's brief,
@@ -492,8 +491,8 @@
    Anton mistake again (app/layout.js has the note). */
 .ab-prompt {
   margin: 0;
-  padding: 16px 18px 18px;
-  border-radius: 14px;
+  padding: 18px 20px 20px;
+  border-radius: 16px;
   background: var(--panel);
   text-wrap: pretty;
 }
@@ -510,9 +509,12 @@
   margin: 10px 0 0;
   padding-left: 14px;
   border-left: 2px solid var(--border);
-  font-family: var(--font-display);
-  font-weight: var(--font-display-weight);
-  font-size: 17px; line-height: 1.4; letter-spacing: -0.005em;
+  /* Not bold. The album-title treatment gave it the display weight, and at
+     three or four lines that is a headline rather than something somebody
+     wrote — the size is already doing the work of saying this is the part
+     that matters (Miyel, 2026-09-15). */
+  font-weight: 400;
+  font-size: 17px; line-height: 1.5; letter-spacing: -0.005em;
   color: var(--ink);
 }
 
