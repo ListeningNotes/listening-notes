@@ -10,7 +10,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { CaretDown, CaretUp, Check, Envelope, Fingerprint, Heart, SketchLogo, User, VinylRecord, X } from '@phosphor-icons/react';
+import { CaretUp, Check, Fingerprint, Heart, SketchLogo, User, VinylRecord, X } from '@phosphor-icons/react';
 import { BookOpen } from '@phosphor-icons/react';
 import { fonts } from '../../../library/sitewide_visuals';
 import { sizedAlbumArt, fetchAlbumArtUrl } from '../../../library/music_data_api';
@@ -737,13 +737,19 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   // pressable, since closed by default is otherwise undiscoverable — the
   // cover's corner mark, solved the same way. In the session's preview
   // there is nothing to read yet, so the chip is a chip.
+  //
+  // No envelope in it, on Miyel's call the same day: the chips on the
+  // first screen are words, the marks are the strip's on screen two, and a
+  // chip carrying a mark the others do not was also the one thing that
+  // moved when an entry landed over the journal — the stand-in draws the
+  // chips without it (LayerWaiting). The caret is drawn in CSS, not an
+  // icon, for the same reason: the stand-in draws the identical chip.
   const sentChip = !isSubmission ? null : preview
-    ? <Chip><Envelope size={10} weight="regular" aria-hidden="true" />Submission</Chip>
+    ? <Chip>Submission</Chip>
     : (
       <Chip onClick={() => setChainOpen(o => !o)} expanded={chainOpen} label={chainOpen ? 'Close where this record came from' : 'Where this record came from'}>
-        <Envelope size={10} weight="regular" aria-hidden="true" />
         Submission
-        <CaretDown size={8} weight="bold" aria-hidden="true" className={'ln-chain-caret' + (chainOpen ? ' ln-chain-caret--open' : '')} />
+        <span className={'ln-chain-caret' + (chainOpen ? ' ln-chain-caret--open' : '')} aria-hidden="true" />
       </Chip>
     );
   // Keyed on the slug so a swipe to the next record starts its own read —
@@ -923,7 +929,11 @@ export default function FullPostPage({ entry, references = [], authed = false, l
             been there all along; replaying the fill starts every star empty
             for a beat, which is the blink at the moment the entry lands. */}
         {!edit.editing && displayRating > 0 && (
-          <div className={(printing ? 'ln-print-line' : '') + (printing && !shown.stars ? ' ln-off' : '')} onClick={printing ? () => leaveOff('stars') : undefined}>
+          /* display: flex, so the box is the stars' 24px and not a 38px text
+             line with the stars sitting on it — the stand-in draws the
+             stars bare, and the 14px of slack was the chips and the date
+             dropping when the entry landed over the journal (2026-09-15). */
+          <div className={(printing ? 'ln-print-line' : '') + (printing && !shown.stars ? ' ln-off' : '')} style={{ display: 'flex', justifyContent: 'center' }} onClick={printing ? () => leaveOff('stars') : undefined}>
             <StarRating rating={displayRating} size={24} glow={isMasterpiece} animate={!alreadyShown} burst={isMasterpiece && !alreadyShown} />
           </div>
         )}

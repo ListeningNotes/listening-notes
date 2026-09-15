@@ -604,8 +604,20 @@
    chain behind them, read off their journals on the press and never on
    load. The chip wears a small caret so it reads as pressable; closed by
    default is otherwise undiscoverable, the corner mark's problem again. */
-.ln-chain-caret { margin-left: 1px; transition: transform 0.2s ease; }
-.ln-chain-caret--open { transform: rotate(180deg); }
+/* Drawn in CSS rather than as an icon: the stand-in that holds the first
+   screen while an entry lands draws the same chip, and an icon arriving
+   with the entry was the row changing shape under the eye. Two borders on
+   a small square, turned to point down; turned again to point up. */
+.ln-chain-caret {
+  display: inline-block;
+  width: 5px; height: 5px;
+  margin: 0 1px 2px 2px;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: rotate(45deg);
+  transition: transform 0.2s ease, margin 0.2s ease;
+}
+.ln-chain-caret--open { transform: rotate(225deg); margin: 2px 1px 0 2px; }
 .ln-chain {
   width: 100%;
   max-width: 34em;

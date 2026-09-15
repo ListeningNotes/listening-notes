@@ -107,7 +107,15 @@ export default function LayerWaiting({ slug, authed = false }) {
         )}
         <div className="ln-screen-one-chips">
           {listenLabel && <Chip>{listenLabel}</Chip>}
-          {known.entry_type === 'Submission' && <Chip>Submission</Chip>}
+          {/* The same button the entry draws, inert, so the chip does not
+              change shape when the entry lands — a plain chip here and a
+              button with a caret there was the row moving under the eye. */}
+          {known.entry_type === 'Submission' && (
+            <Chip onClick={() => {}} expanded={false} label="Where this record came from">
+              Submission
+              <span className="ln-chain-caret" aria-hidden="true" />
+            </Chip>
+          )}
           {known.favorite && <Chip tone="fav">Favorite</Chip>}
           {isMasterpiece && <Chip tone="mp">Masterpiece</Chip>}
         </div>
