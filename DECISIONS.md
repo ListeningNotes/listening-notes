@@ -455,8 +455,11 @@ and Fingerprint in `--fav`, `--mp` and `--formative`. Worded chips are too
 wide for a strip that has to leave room for an album title. **A sent record
 wears an envelope, 2026-09-13**, in faint ink rather than a colour: it says
 where a record came from, not what the keeper thought of it. The same mark
-everywhere the others are drawn — the strip, the feed, the key, and inside
-the entry's Submission chip.
+everywhere the others are drawn — the strip, the feed, the key. **Not
+inside the entry's chips, 2026-09-14:** the first screen's chips are words,
+all of them alike, and the marks are the strip's on the screen below; a
+mark in one chip and not the others was also the row changing shape when
+an entry landed over the journal.
 
 ---
 

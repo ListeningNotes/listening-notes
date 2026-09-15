@@ -1578,6 +1578,17 @@ merged (1.13.0 when it is: something new)**
       phone against Kai's live journal (Not on their journal) and with
       stand-in feeds for Kai's and Zach's (Logged it too · Before that ·
       Their own find). Chip is a button through `Chip`'s new `onClick`.
+      **No envelope in the chip, and the caret is CSS** (Miyel, later the
+      same day): the first screen's chips are words, alike, and the marks
+      are the strip's on screen two. What she saw as icons loading late
+      and shifting the page was the layer: `LayerWaiting` drew a plain
+      Submission chip and the entry landed with the envelope and an icon
+      caret inside it — and, measured, the larger part of the drop was
+      the stars: the real page wrapped them in a box that sat on a 38px
+      text line, the stand-in drew them bare at 24px, so the chips and
+      the date landed 15px lower. The wrapper is `display: flex` now, the
+      stand-in draws the identical inert button with the CSS chevron, and
+      the two screens measure the same line for line.
 - [x] **The person's page counts what they are credited on.** A record
       credited to their address with no row in `submissions` — a Tumblr-era
       listen backfilled by hand — is one more send in Sent you and the hit
