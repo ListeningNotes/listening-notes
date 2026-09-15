@@ -2010,13 +2010,15 @@ lesson is in the entry below.**
       how somebody listens and this says to what — so it belongs with them and
       on their axis rather than down in the writing. Measured, it centres where
       the counts and the pinned record do.
-- [x] **Two lines on the page, and they are the two between the counts**
-      (Miyel). The counts sat between hairlines of their own, the genres row
-      carried one, and another was drawn above the writing — four rules on a
-      page whose whole argument is that things are separated by tone. All of
-      them are gone but the short verticals that divide the one element here
-      that is really three. Everything else is separated by space, which is
-      what the rest of the page was already doing.
+- [x] **The counts keep their two hairlines, and they are the only ones**
+      (Miyel: keep the horizontal lines, just have them only there). The
+      genres row carried one and another was drawn above the writing — four
+      rules on a page whose argument is that things separate by tone. Those
+      two went; the band's stayed. Verticals *between* the three counts were
+      tried in between and are not it: the line goes round the set, not
+      between its parts, and the band needs a top and a bottom to read as a
+      row rather than as three stray numbers. Everything else on the page is
+      separated by space.
 - [x] **The em dash is gone from the printed question.** It was separating the
       opening from the answer on one line; on two lines in two faces it
       separates things that separate themselves. Stripped at the render rather
