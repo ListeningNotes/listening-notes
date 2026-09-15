@@ -1526,6 +1526,17 @@ not merged**
       the sender's writes the link, the recipient's reads it. Names to
       confirm: `carrySender`, `noteArrival`, `?from=`/`?as=`, `.sb-sender`,
       `.sb-change`.
+- [x] **Two small things from Miyel, same day.** Nobody sends themselves
+      an album: the card's Send pill is not drawn for the owner, and
+      `/submit` reached by address says "This is your journal" instead of
+      the form. And no "Add Miyel" pill for a visitor whose own copy said
+      on the way in that this journal is already in their book: the
+      address book's, the feed's and the person's page's links carry
+      `?known=1`, the inbox's carries it when the sender is filed, and the
+      card hides the pill on the flag (`knownHere`, `subscribeSender`).
+      Arriving cold the pill shows — the journal cannot know. Verified on
+      the dev server signed out; the owner's two (no Send pill, the
+      /submit line) are behind the password and unseen.
 
 **2026-09-13 — setup fixes from the Peyton install, branch `setup-fixes`,
 MERGED to main as 1.10.1, pushed, release v1.10.1 cut** — from Miyel's brief: three

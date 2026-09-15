@@ -213,7 +213,7 @@ export default function Inbox({ layered = false }) {
                                 sending back (carrySender). */}
                             {sent.sender_url && (
                               <a
-                                href={carrySender(journalUrl(sent.sender_url), me)}
+                                href={carrySender(journalUrl(sent.sender_url), me, { known: filed.has(tidyJournal(sent.sender_url)) })}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="own-link"
@@ -266,7 +266,7 @@ export default function Inbox({ layered = false }) {
                         <div className="ib-comment-head">
                           <span className="ib-comment-who">{r.keeper_name || 'Someone'}</span>
                           {r.journal && (
-                            <a href={carrySender(journalUrl(r.journal), me)} target="_blank" rel="noopener noreferrer" className="own-link ib-comment-where">
+                            <a href={carrySender(journalUrl(r.journal), me, { known: filed.has(tidyJournal(r.journal)) })} target="_blank" rel="noopener noreferrer" className="own-link ib-comment-where">
                               their journal &#8599;
                             </a>
                           )}
@@ -317,7 +317,7 @@ export default function Inbox({ layered = false }) {
                               : <button onClick={() => file(c.author_url)} className="own-act">Add to address book</button>
                           )}
                           {c.author_url && (
-                            <a href={carrySender(journalUrl(c.author_url), me)} target="_blank" rel="noopener noreferrer" className="own-link">
+                            <a href={carrySender(journalUrl(c.author_url), me, { known: filed.has(tidyJournal(c.author_url)) })} target="_blank" rel="noopener noreferrer" className="own-link">
                               their journal &#8599;
                             </a>
                           )}

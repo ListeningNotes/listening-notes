@@ -70,6 +70,12 @@ export default function SubmitPage({ layered = false }) {
   // shown when both the name and the journal are known — a keeper who
   // arrived through their own copy — and the fields only behind it.
   const [changing, setChanging] = useState(false);
+  // The owner, reached here by the address rather than the card (which no
+  // longer offers Send to them): there is nobody to send to but themselves.
+  const [owner, setOwner] = useState(false);
+  useEffect(() => {
+    fetch('/api/auth/check').then(r => r.json()).then(d => setOwner(!!d.authed)).catch(() => {});
+  }, []);
   const [sending, setSending] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState('');
@@ -174,7 +180,14 @@ export default function SubmitPage({ layered = false }) {
       </header>
 
       <main className="sb-main">
-        {done ? (
+        {owner ? (
+          <div className="sb-done">
+            <div className="sb-done-title">This is your journal.</div>
+            <p className="sb-done-body">
+              Sending is for people reading it. To log a record for yourself, start a listen from the desk.
+            </p>
+          </div>
+        ) : done ? (
           <>
             <div className="sb-done">
               <div className="sb-done-title">Sent.</div>

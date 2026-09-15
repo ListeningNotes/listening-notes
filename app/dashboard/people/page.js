@@ -186,7 +186,7 @@ export default function AddressBook({ layered = false }) {
                     {/* Visit leads and Remove barely shows: crossing somebody
                         out is the rare thing here, and a red pill beside
                         every name read as the row's main offer. */}
-                    <a href={carrySender(journalUrl(p.address), me)} target="_blank" rel="noopener noreferrer" className="own-act bk-visit" title="Open their journal">
+                    <a href={carrySender(journalUrl(p.address), me, { known: true })} target="_blank" rel="noopener noreferrer" className="own-act bk-visit" title="Open their journal">
                       Visit &#8599;
                     </a>
                     <button type="button" className="bk-remove" onClick={() => remove(p.id)} title="Cross them out">remove</button>
