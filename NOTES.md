@@ -333,8 +333,9 @@ person's page the next (Complete). Left: the printer, and the chain.
       rate with you — and what a hit is (logged and rated four or better);
       `ALIKE`, `HIT`, `OFFSET_NEEDS`; the section titles, and "the
       interesting column" kept from the old compare.
-- [ ] **The chain.** Tapping the Submission chip on an entry opens the
-      lineage upward. Backward only (DECISIONS).
+- [x] **The chain.** Tapping the Submission chip on an entry opens the
+      lineage upward. Backward only (DECISIONS). Built 2026-09-14 on
+      branch `credit` as `Chain.js` — see Complete.
 - [ ] **The cover's code on a real phone, 2026-09-12.** Built in the
       Claude browser. On the phone: tap a cover, scan the code with the
       camera from the light and the dark page, paste what was copied into
@@ -1551,13 +1552,28 @@ merged (1.13.0 when it is: something new)**
       to; the desk's hero grows too (`height: auto` off its 390px band,
       the pad in flow). Measured with the whole stack stood in: the faces
       end 172px above the foot of an 812-tall phone, 54px on a 667.
-      On the page the envelope chip reads *from Kailea* and, when the
-      credit carries a journal, is a link to it (new window, plain, no
-      `?from=` — a visitor's surface). One rule for what leaves the
-      building, `withoutChain`: the two credit fields on a Submission row
-      on every read (entry, wall, feed); `source_entry_id` and
-      `received_date` private always. The lineage picker stays at the foot
-      under *Lineage · only you see this*.
+      One rule for what leaves the building, `withoutChain`: the two
+      credit fields on a Submission row on every read (entry, wall, feed);
+      `source_entry_id` and `received_date` private always. The lineage
+      picker stays at the foot under *Lineage · only you see this*, its
+      classes renamed `.ln-lineage-*`.
+- [x] **The sender opens, it doesn't display — Miyel's amendment, the
+      same day.** The chip says *Submission* and wears a small caret;
+      pressing it unfolds `Chain.js` under the chips on a phone (the
+      screen grows, as while correcting) and under the hero on a desk (in
+      `.ln-cover-hero`, where the cover's address field already goes): who
+      sent it, with their face and a link to their journal when the credit
+      carries one; whether they logged it, read off their public feed on
+      the press and never on load; and the chain behind them, each hop
+      from the previous entry's own credit, up to eight, stopping in a
+      sentence — *Not on their journal*, *Their journal isn't answering*,
+      *No journal to read*, *The name wasn't kept*, *Their own find*. The
+      first cut printed *from Kailea* on every sent entry: somebody else's
+      name on the page by default, decoration rather than the network. This
+      absorbs the View chain control. Verified signed out on a desk and a
+      phone against Kai's live journal (Not on their journal) and with
+      stand-in feeds for Kai's and Zach's (Logged it too · Before that ·
+      Their own find). Chip is a button through `Chip`'s new `onClick`.
 - [x] **The person's page counts what they are credited on.** A record
       credited to their address with no row in `submissions` — a Tumblr-era
       listen backfilled by hand — is one more send in Sent you and the hit
@@ -1573,10 +1589,19 @@ merged (1.13.0 when it is: something new)**
 - [ ] **Names to confirm, 2026-09-14** — autonomous session, rename
       freely: branch `credit`; `CREDIT_FIELDS` and `credited` in
       `database_actions.js`; `book` on `useEntryEditor`; `senderField`,
-      `senderChoices`, `sendBy`, `writeSender`, `sentChip`, `envelopeChip`
-      in `FullPostPage.js`; the `.ln-sender*` classes in entry.css
-      (`-row`, `-label`, `-book` for the strip, `-face` for one person,
-      `-portrait`, `-name`) and `.ln-from`; the words *Sent by*, *Nobody — I found it*, *from Kailea*,
+      `senderChoices`, `sendBy`, `writeSender`, `sentChip`, `chainOpen`,
+      `chainPanel` in `FullPostPage.js`; `Chain.js` (Miyel's pick) and
+      inside it `Hop`, `Face`, `firstHop`, `readJournal`, `MOST_HOPS`,
+      `EACH_MS`, the hop states `asking / logged / unlogged / silent /
+      nowhere` and `origin`; the `.ln-chain-*` classes for the panel
+      (`-caret`, `-head`, `-hop`, `-face`, `-who`, `-name`, `-said`,
+      `-open` on the screens) and `.ln-lineage-*` for the foot block; the
+      `.ln-sender*` classes in entry.css (`-row`, `-label`, `-book` for
+      the strip, `-face` for one person, `-portrait`, `-name`); the words
+      *Sent by*, *Before that*, *Logged it too*, *Their own find*, *Not on
+      their journal*, *Their journal isn't answering*, *No journal to
+      read*, *The name wasn't kept*, *Where this record came from* (the
+      chip's label), *Nobody — I found it*,
       *Lineage · only you see this*; `credited-<id>` as the synthetic id on
       the person's page.
 

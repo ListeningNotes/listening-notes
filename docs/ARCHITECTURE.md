@@ -177,6 +177,7 @@ The furniture — visual pieces
         HorizonBar.js          The bar chart on the full entry page
         MetadataLabel.js       The small uppercase section labels
         Chip.js                The small pill tags (Favorite, Masterpiece, etc)
+        Chain.js               What the Submission chip opens — who sent the record, whether they logged it, the chain behind them, read off their journals on the press
     session_components/        Everything in the private dashboard
       PasswordGate.js          The password screen
       AlbumPicker.js           Type, see a grid of covers, tap one — the screen before a listen
