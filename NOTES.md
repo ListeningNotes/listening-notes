@@ -1590,7 +1590,8 @@ current.
 ## Complete
 
 **2026-09-15 — the credit is published in the feed, and the sender decides
-whether there is one, on main**
+whether there is one, on main as 1.15.0, released as
+[v1.15.0](https://github.com/ListeningNotes/listening-notes/releases/tag/v1.15.0)**
 
 - [x] **Confirmed first, then fixed.** `feed.xml` already received the
       credit — it calls `pull_public_entries` — and dropped it, so a reader
