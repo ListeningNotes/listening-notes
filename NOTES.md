@@ -252,9 +252,16 @@ Left over:
       is where most of them land, no longer offers it. Worth a look at whether
       SiteNav's switch should follow it into Settings or stay as the public
       one.
-- [ ] **The stamps on a fresh copy.** A journal with no masterpieces and
-      nothing formative stamps only LISTENS, and one stamp alone may want a
-      different placement from one of three. Not seen.
+- [ ] **The counts on a fresh copy.** A journal with no masterpieces and
+      nothing formative prints one count where there are normally three, and
+      one number spread across the whole row may want a different treatment.
+      Not seen.
+- [ ] **The source line at the foot of the ID pane.** Miyel's brief lists it
+      last in the reading; it is not built, because DECISIONS moved it off
+      this pane to the colophon on purpose — §13 is owed to visitors and the
+      colophon is the public page about the software. Both faces are public,
+      so a second one here breaks nothing; it is left out pending her call
+      rather than added against a written decision.
 
 **TWO PANES AND DOWN MEANS A COVER, 2026-09-15** — branch `card-and-desk`
 (Complete), on top of `open-book`. Still to look at:
@@ -1852,62 +1859,69 @@ current.
 
 ## Complete
 
-**2026-09-15 — the ID pane: an object, then the writing. Branch
-`card-and-desk`, version 1.19.0 — from Miyel's brief, whose first paragraph is
-the part worth keeping: every pane is an object over its writing, and the
-panes read as disjointed because the objects were not equally object-like.**
+**2026-09-15 — the ID pane: the portrait is the object. Branch
+`card-and-desk`, version 1.19.0 — from Miyel's second brief for this pane. The
+first one built it as a licence of typeset fields; that is in git and the
+lesson is in the entry below.**
 
-- [x] **The object is a document, not a bordered card.** No box, no plate, no
-      edge: `.idc-object` is a flex row with `.idc-fields` as one rigid grid —
-      two columns, `max-content` for every label, each row `display: contents`
-      so its label and value are cells of the *one* grid and the values line
-      up down a single edge whatever the labels say. Labels in small caps,
-      values in mono. That is the half of a licence worth borrowing; the card
-      stock is not.
-- [x] **Fields left, photograph right.** KEEPER, SINCE, LOGGED, GENRES (one to
-      a line in the value column), PINNED. The name is a field now rather than
-      a heading — as a 28px display line it made the card a page with a title;
-      as KEEPER it is the first row of a document. The pinned record is a
-      field too, not a block underneath (it stays: DECISIONS).
-- [x] **The photograph is 104px and slightly desaturated** (88 on the spine),
-      a document photo rather than a profile picture. Still square, because
-      the same slot turns into this journal's code and a code is square.
-- [x] **Three stamps, and they are counts.** `4 masterpieces · 39 listens ·
-      9 formative`, outlined in ink and never filled, rotated a few degrees
-      each, at 62%, `multiply` — and `screen` in the dark, where multiplying
-      ink into a dark ground would simply delete them. `/api/public/stamps`
-      counts the marks again: it used to, the counts were dropped with a
-      swatch that came off the card, and the comment in that file said why —
-      numbers nothing prints are numbers nobody has to keep true. Something
-      prints them now. A zero is not stamped.
-- [x] **Struck down the photograph's side, not across the fields.** First
-      placement put all three over the value column and the name, the date and
-      the genres each had a box through them. A stamp does land on the type
-      under it — that is what the opacity and the multiply are for — but a
-      document nobody can read is not a document.
-- [x] **No machine-readable line.** Asked for and cut in the same brief.
-- [x] **A rule between the document and the writing,** so the page is not two
-      documents pretending to be one. The prompts and the rig continue down
-      the same scroll.
-- [x] **One control in the header: the pencil.** Editing puts Save where the
-      pencil was and Cancel opposite. The mark stays centred — "and nothing
-      else" read as being about controls, since the centred mark was asked for
-      by name the hour before; say the word and it goes.
-- [x] **Light or dark moved to Settings** (`Light or dark` → `This device`).
-      It is a preference, not a per-pane action. Out of the cross's bar
-      entirely; the nav row outside the cross still carries one, which is
-      where a visitor finds it now.
-- [x] **The turn sits on its own band and never floats over the writing.** On
-      the turning pane `.hn-controls` gets a ground, a hairline and the safe
-      area; the face's bottom padding clears it, so nothing passes under it at
-      all. Home keeps the floating row — there the controls sit over a wall of
-      album art on purpose.
-- [x] **Verified at 430×932 and 1280×860, signed in, light and dark:** the
-      grid with every value on one edge, the photograph at 104 and 88, the
-      three stamps legible with the fields still readable, `screen` in the
-      dark, the pencil alone, no light switch anywhere on the cross, the rule
-      above the writing, and the band at the foot with the last line of the
-      page above it.
+- [x] **The pattern the brief opens with is the part to keep.** Every pane is
+      an object over its writing: the beacon is the record playing over the
+      journal, the entry is the record over the notes, the desk is your tools
+      over the feed, and the ID is who keeps this over their words. The panes
+      read as disjointed because the objects were not equally object-like —
+      two of them were squares and this one was a column of facts.
+- [x] **The object is the portrait: full width, square, the size an entry's
+      album art is.** A record in one pane and a person in the next, measured
+      the same. Both 4:3 crops lost against the real photograph — the clouds
+      around the shoulders do real work and a shallower crop takes them — and
+      the writing starting below the fold is the trade, taken on purpose. The
+      code stays in its corner, a little larger now it has a photograph to sit
+      on.
+- [x] **Name and the two actions on one line.** *Send* and *Add*, not "Send an
+      album" and "+ Add": the shortening is the whole reason they sit beside
+      the name rather than taking a row of their own, which is what took a row
+      off the first screen. Send is filled, because it is what the pane is
+      for. Both are the visitor's — signed in the line is the name alone
+      (Miyel, 2026-09-14: there is nobody for the owner to send to but
+      themselves). "Keeping since March 2026" under the name.
+- [x] **Three counts in the three flags' colours.** Albums in ink,
+      masterpieces in `--mp`, formative in `--formative` — the first work those
+      tokens have had away from a mark on a record. Between two hairlines,
+      number large and word small. Typeset, not stamped: stamps were built an
+      hour earlier and the answer is that with a photograph that size above
+      them the photo is already the flourish. `/api/public/stamps` counts the
+      marks, which it used to before a swatch came off the card. A zero is
+      left off.
+- [x] **Then the pinned record,** art and label and title and artist, on the
+      same left edge as everything above it. It was the one centred row on the
+      pane.
+- [x] **Below the fold, in the same scroll:** a quiet *In Miyel's own words*
+      over the three prompts — the name rather than a pronoun, because every
+      copy has a different somebody in it — then top genres as one line rather
+      than a three-row fact block, then the rig. About reads the genres off
+      `stamps` itself now; they are computed, not written, and they belong
+      with the reading.
+- [x] **A hint that there is more.** The fold is where the object stops by
+      design, so a faint chevron sits above the band and scrolls one screen;
+      it goes the moment the page has moved. Down is still not a gesture here
+      — this says the writing exists, it does not arrive anywhere.
+- [x] **The turn's band says where it goes.** On a phone it is a whole line
+      across the foot — *Turn to the desk*, *Turn to the card*, *Turn to the
+      software* — which needs no learning at all. The CARD/DESK switch is the
+      desk's shape and stays at the top of the spine, where a narrow column
+      has no room for a sentence.
+- [x] **One control in the header: the pencil, with the mark opposite it on
+      the left.** The light switch is a per-device preference and is in
+      Settings; the printer's placement is unresolved and it is off the card
+      until it has one.
+- [x] **The empty band closed.** Roughly 140px of nothing between the pinned
+      record and the writing; 26px now.
+- [x] **Verified at 430×932 and 1280×860, signed in and signed out:** the
+      portrait full width and square (386 and 284), the name row with Send
+      filled and Add outlined and both beside the name, the three counts in
+      their colours, the pinned record on the left edge, the band at the foot
+      with the page's last line above it, and the desktop spine carrying the
+      same object at its own width with the switch at the top.
 
 **2026-09-15 — two panes, and down means a cover. Branch `card-and-desk`,
 version 1.18.0 — from Miyel's brief, the one whose rule came first and whose

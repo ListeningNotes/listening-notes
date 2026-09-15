@@ -1182,8 +1182,39 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
    On a phone it rides in the row at the foot of the cross, where a thumb
    reaches. On a desk the block below lifts it to the top of the spine, where
    a pointer is. */
+/* On a phone the band says it in words; the switch is the desk's shape. Each
+   is hidden where the other belongs. */
+.hn-turn { display: none; }
+.hn-turn-say {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 0; border: 0; background: none;
+  color: var(--ink-soft);
+  font-family: var(--font-label);
+  font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+.hn-turn-say:hover { color: var(--ink); }
+.hn-turn-say:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 4px; }
+/* The hint that there is more, just above the band. Faint, small, and gone
+   the moment the page has moved: it is there to say the writing exists, not
+   to be a control anybody uses twice. */
+.hn-more {
+  position: absolute;
+  bottom: calc(100% + 10px);
+  left: 50%;
+  transform: translateX(-50%);
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 34px; height: 24px;
+  padding: 0; border: 0; background: none;
+  color: var(--ink-faint);
+  cursor: pointer;
+  transition: color 0.15s;
+}
+.hn-more:hover { color: var(--ink-soft); }
+
 .hn-turn {
-  display: flex; align-items: center; gap: 2px;
+  align-items: center; gap: 2px;
   padding: 2px;
   background: var(--panel);
   border: 1px solid var(--border);
@@ -1228,6 +1259,7 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
      art on purpose, and a band across the bottom of a record's screen would
      be a shelf under somebody's cover. */
   .hn[data-pane="0"] .hn-controls {
+    position: fixed;
     bottom: 0;
     height: calc(58px + env(safe-area-inset-bottom));
     padding-bottom: env(safe-area-inset-bottom);
@@ -1388,6 +1420,9 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
     pointer-events: none;
   }
   .hn-turn-row > * { pointer-events: auto; }
+  .hn-turn-say { display: none; }
+  .hn-more { display: none; }
+  .hn-turn { display: flex; }
 
   /* ── The band ── the journal's first screen, as one row: the cover with a
      soft shadow, then the label, the title and the artist beside it, and what

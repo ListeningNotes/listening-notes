@@ -73,7 +73,19 @@ const PIN_RESULTS = 40;
 // should be solved together.
 export default function About({ stamps, authed = false, pinned = null, entries = [] }) {
   const settings = useBookplate();
-  const { bioanswers, rig: rigRows, rig_icon, social_links } = settings;
+  const { bioanswers, keeper_name, rig: rigRows, rig_icon, social_links } = settings;
+
+  // Whose voice the answers are in, and what the journal actually listens to.
+  // The name rather than a pronoun: every copy has a different somebody in it,
+  // and "In Miyel's own words" reads where "In their own words" has to cover
+  // everyone. No name yet — a copy claimed an hour ago — and it falls back to
+  // the pronoun, which is the one case where covering everyone is right.
+  const whose = String(keeper_name || '').trim();
+  const voice = whose ? `In ${whose}\u2019s own words` : 'In their own words';
+  // Computed, never chosen: what this journal listens to, not what its keeper
+  // would claim. It printed on the card until 2026-09-15 and belongs with the
+  // reading — it is neither a count nor something anybody wrote.
+  const genres = stamps?.genres ?? [];
 
   // One edit session for the pane, owned here and handed to the card. The card
   // used to make its own, which was fine while everything editable was printed
@@ -467,6 +479,13 @@ export default function About({ stamps, authed = false, pinned = null, entries =
           </section>
         ) : answered.length > 0 && (
           <section className="ab-block ab-block--prompts">
+            {/* A quiet line saying whose voice the next three sentences are
+                in. The object above is facts about somebody, counted; this is
+                the part they wrote. Named rather than "In their own words",
+                because every copy of this software has a different somebody
+                in it and a possessive reads better than a pronoun that has to
+                cover everyone. */}
+            <h2 className="ab-voice">{voice}</h2>
             {answered.map(row => (
               <p className="ab-prompt" key={row.key}>
                 <span className="ab-prompt-ask">{row.text}</span>{' '}
@@ -474,6 +493,19 @@ export default function About({ stamps, authed = false, pinned = null, entries =
               </p>
             ))}
           </section>
+        )}
+
+        {/* Top genres, one line of them. They were three rows of a fact block
+            on the object above and they are neither a count nor something
+            somebody wrote — they are computed, and they belong down here with
+            the reading rather than up there with the photograph (Miyel's
+            brief, 2026-09-15). Computed, never chosen: it says what this
+            journal listens to, not what its keeper would claim. */}
+        {genres.length > 0 && (
+          <p className="ab-genres">
+            <span className="ab-genres-label">Top genres</span>
+            <span className="ab-genres-said">{genres.join(' · ')}</span>
+          </p>
         )}
 
         {/* The free-text bio used to print here and does not. A blank box is a

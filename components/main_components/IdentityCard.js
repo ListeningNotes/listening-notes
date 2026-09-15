@@ -106,14 +106,18 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
   const editing = edit.editing;
 
   const records = stamps?.records ?? null;
-  // What the stamps mark. Counted on the server with the records (see
-  // /api/public/stamps); a zero is left out rather than stamped, because an
-  // outline saying 0 is a mark with nothing to say.
+  // The three counts, in their flags' own colours. Counted on the server with
+  // the records (see /api/public/stamps). A zero is left off rather than
+  // printed: a fresh journal saying 0 masterpieces is a boast in reverse, and
+  // the row reads as two counts or one without complaint.
   const marks = [
     { word: 'masterpieces', n: stamps?.masterpieces ?? 0 },
-    { word: 'listens', n: stamps?.records ?? 0 },
     { word: 'formative', n: stamps?.formative ?? 0 },
   ].filter(m => m.n > 0);
+  const counts = [
+    ...(records !== null ? [{ word: 'albums', n: records }] : []),
+    ...marks,
+  ];
   const genres = stamps?.genres ?? [];
 
   // Rows the keeper would rather not publish. Counted off the entries and never
@@ -364,48 +368,17 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
         className={'idc-inner' + (more ? ' idc-inner--more' : '')}
       >
         {/* ── The header ───────────────────────────────────────────────────
-            The pencil, and the mark in the middle where every other page on
-            this site puts it. One control, not three: with no plate there is
-            no edge to hang anything off, so the header is where the one
-            control goes, and the other two have left it. The light switch is
-            a per-device preference and is in Settings now; the printer's
-            placement is unresolved and is deliberately left that way (Miyel's
-            brief, 2026-09-15) — it is off the card until it has a home.
+            The mark on the left, one control on the right. One, not three:
+            the light switch is a per-device preference and is in Settings
+            now, and the printer's placement is deliberately unresolved, so it
+            is off the card until it has somewhere to be (Miyel's brief,
+            2026-09-15).
 
-            Signed out, both slots are empty and the mark is still the middle
-            of the row. Editing puts Save on the left and Cancel on the right:
-            the one that keeps what you did where the pencil was, the one that
-            throws it away opposite. Nothing here is a permission check — the
+            Editing puts Save and Cancel in the same slot, which is where the
+            pencil was — the control that opened the correction is where the
+            two that close it live. Nothing here is a permission check: the
             writing endpoints check the wristband whatever is drawn. */}
         <div className="idc-head">
-          <div className="idc-tools idc-tools--left">
-            {authed && (editing ? (
-              <button
-                type="button"
-                className="idc-tool idc-tool--keep"
-                onClick={edit.save}
-                disabled={edit.saving || edit.busy}
-                aria-label="Save this card"
-                title="Save"
-              >
-                <Check size={18} weight="regular" aria-hidden="true" />
-              </button>
-            ) : (
-              <button
-                type="button"
-                className="idc-tool"
-                onClick={edit.begin}
-                aria-label="Edit this card"
-                title="Edit this card"
-              >
-                <Pencil size={18} weight="regular" aria-hidden="true" />
-              </button>
-            ))}
-          </div>
-          {/* The site's own mark, small and in the corner. The dot on its
-              period is lit while something is playing — the same fact the
-              front of the cover carries, and the only thing on this side
-              that moves. */}
           <svg
             viewBox={`${MARK_BOX.x} ${MARK_BOX.y} ${MARK_BOX.w} ${MARK_BOX.h}`}
             className="idc-mark"
@@ -423,190 +396,170 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
             />
           </svg>
 
-          <div className="idc-tools idc-tools--right">
+          <div className="idc-tools">
             {authed && (editing ? (
+              <>
+                <button
+                  type="button"
+                  className="idc-tool idc-tool--keep"
+                  onClick={edit.save}
+                  disabled={edit.saving || edit.busy}
+                  aria-label="Save this card"
+                  title="Save"
+                >
+                  <Check size={18} weight="regular" aria-hidden="true" />
+                </button>
+                <button
+                  type="button"
+                  className="idc-tool"
+                  onClick={edit.cancel}
+                  disabled={edit.saving}
+                  aria-label="Stop editing without saving"
+                  title="Cancel"
+                >
+                  <X size={18} weight="regular" aria-hidden="true" />
+                </button>
+              </>
+            ) : (
               <button
                 type="button"
                 className="idc-tool"
-                onClick={edit.cancel}
-                disabled={edit.saving}
-                aria-label="Stop editing without saving"
-                title="Cancel"
+                onClick={edit.begin}
+                aria-label="Edit this card"
+                title="Edit this card"
               >
-                <X size={18} weight="regular" aria-hidden="true" />
+                <Pencil size={18} weight="regular" aria-hidden="true" />
               </button>
-            ) : null)}
+            ))}
           </div>
         </div>
 
-        {/* ── The glance ───────────────────────────────────────────────────
-            Portrait on the left, the name and the counted facts beside it,
-            2026-09-15. Stacked and centred, the portrait alone was half the
-            first screen and the prompts and the pinned record were pushed off
-            it — which is the thing the card is for. As a row the whole glance
-            fits above the fold: face, name, what has been logged, since when,
-            and what somebody listens to. */}
         {/* ── The object ───────────────────────────────────────────────────
-            Fields on the left, photograph on the right, three stamps over the
-            middle of it. Not a bordered card and not a plate: there is no box
-            and no edge, and the rigour comes from the grid instead. A licence
-            carries a dozen fields without reading as cluttered because
-            everything sits in one rigid grid with one treatment for labels and
-            one for values — that is what is borrowed here, not the card stock,
-            so the pane stays one page (Miyel's brief, 2026-09-15).
+            The portrait, full width and square, which makes it the same
+            object an entry's album art is in the pane next door — a record
+            there, a person here, measured the same (Miyel's brief,
+            2026-09-15). The panes read as disjointed while the beacon and the
+            entry had a square and this had a column of facts.
 
-            The name is a field now rather than a heading. It was a 28px
-            display line over the whole measure, which made the card a page
-            with a title; as KEEPER it is the first row of the document, which
-            is what a document does with a name. */}
-        <div className="idc-object">
-          <div className="idc-fields">
+            Both 4:3 crops were tried against the real photograph and both
+            lose: the clouds around the shoulders are doing real work and a
+            shallower crop takes them. The photograph is the point and the
+            writing starting below the fold is the trade, taken on purpose.
+
+            The code stays in its corner, a little larger now that there is a
+            photograph to carry it. */}
+        <div className="idc-photo">{slot}</div>
+
+        {/* The name and the two things a visitor can do, on one line. Send and
+            Add, not "Send an album" and "+ Add" — the shortening is what lets
+            them sit beside the name instead of taking a line of their own.
+            Both are the visitor's: there is nobody for the owner to send to
+            but themselves, so signed in the line is the name alone. */}
+        <div className="idc-ident">
+          <div className="idc-ident-said">
             {(editing || cover_name) && (
-              <div className="idc-field">
-                <span className="idc-field-label">Keeper</span>
-                <span className="idc-field-value idc-field-value--name">
-                  {editing
-                    ? <input
-                        className="idc-name-input"
-                        type="text"
-                        value={edit.name}
-                        onChange={e => edit.setName(e.target.value)}
-                        placeholder="Your name"
-                        aria-label="Name"
-                      />
-                    : cover_name}
-                </span>
-              </div>
+              <h1 className="idc-name">
+                {editing
+                  ? <input
+                      className="idc-name-input"
+                      type="text"
+                      value={edit.name}
+                      onChange={e => edit.setName(e.target.value)}
+                      placeholder="Your name"
+                      aria-label="Name"
+                    />
+                  : cover_name}
+              </h1>
             )}
-
             {showSince && (
-              <div className="idc-field">
-                <span className={'idc-field-label' + off('since')}>Since</span>
-                <span className={'idc-field-value' + off('since')}>{since}{eyeFor('since')}</span>
-              </div>
-            )}
-
-            {showAlbums && (
-              <div className="idc-field">
-                <span className={'idc-field-label' + off('albums')}>Logged</span>
-                <span className={'idc-field-value' + off('albums')}>{records}{eyeFor('albums')}</span>
-              </div>
-            )}
-
-            {/* One genre to a line, in the value column. Run together on one
-                line they were a sentence; stacked they are a field with three
-                entries in it, which is what they are. */}
-            {genres.length > 0 && showing('genres') && (
-              <div className="idc-field">
-                <span className="idc-field-label">Genres</span>
-                <span className={'idc-field-value idc-field-value--stack' + off('genres')}>
-                  {genres.map(g => <span key={g}>{g}</span>)}
-                  {eyeFor('genres')}
-                </span>
-              </div>
-            )}
-
-            {/* ── The pinned record ────────────────────────────────────────
-                One album from the journal, as art, with its name beside it —
-                the only image here besides the photograph, and the reason the
-                object does not read as all type and numbers (DECISIONS). It
-                is a field like the rest now rather than a block under them.
-
-                While a correction is open the row is a button rather than a
-                link: the same art and the same two lines, but pressing it
-                opens the search instead of going to the album. And it prints
-                even when nothing is pinned, which it does not otherwise — an
-                empty row is how an owner finds out the card can hold one at
-                all. */}
-            {(pinned || editing) && (
-              <div className="idc-field">
-                <span className="idc-field-label">Pinned</span>
-                <span className="idc-field-value idc-field-value--pin">
-                  {editing ? (
-                    <button type="button" className="idc-pin idc-pin--pick" onClick={onPickPin}>
-                      <span className="idc-pin-art">
-                        {pinned?.album_art
-                          ? <img src={pinned.album_art} alt="" />
-                          : <span className="idc-pin-none" aria-hidden="true">♪</span>}
-                      </span>
-                      <span className="idc-pin-said">
-                        <span className="idc-pin-album">{pinned ? pinned.album : 'Choose a record'}</span>
-                        <span className="idc-pin-artist">{pinned ? pinned.artist : 'Nothing pinned'}</span>
-                      </span>
-                    </button>
-                  ) : (
-                    <Link
-                      href={`/entries/${pinned.slug}`}
-                      className="idc-pin"
-                      aria-label={`${pinned.album} — ${pinned.artist}`}
-                    >
-                      <span className="idc-pin-art">
-                        {pinned.album_art
-                          ? <img src={pinned.album_art} alt="" />
-                          : <span className="idc-pin-none" aria-hidden="true">♪</span>}
-                      </span>
-                      <span className="idc-pin-said">
-                        <span className="idc-pin-album">{pinned.album}</span>
-                        <span className="idc-pin-artist">{pinned.artist}</span>
-                      </span>
-                    </Link>
-                  )}
-                </span>
-              </div>
+              <p className={'idc-keeping' + off('since')}>
+                Keeping since {since}{eyeFor('since')}
+              </p>
             )}
           </div>
 
-          {/* A document photograph, not a hero: a fixed square at the top
-              right, slightly desaturated so it reads as the picture on a
-              document rather than as somebody's profile picture. It stays
-              square because it is also the slot that turns into this
-              journal's code (CodeSlot), and a code is square. */}
-          <div className="idc-photo">{slot}</div>
-
-          {/* ── The stamps ───────────────────────────────────────────────────
-              Counts, not labels. What somebody has called a masterpiece and
-              what was formative to them says more about how they listen than
-              three genre words do, and it gives a stamp something true to
-              mark. Outlined in ink, never a filled pill — the same treatment
-              the entry card's marks settled on — rotated a few degrees each,
-              and inked at 70% so what is under them stays readable.
-
-              A count of nothing is not stamped: a fresh journal has no
-              masterpieces and an empty outline saying 0 is a mark with
-              nothing to say. Hidden from the reading order — every number on
-              them is already a field or is in the journal itself. */}
-          {marks.length > 0 && (
-            <div className="idc-stamps" aria-hidden="true">
-              {marks.map(mark => (
-                <span key={mark.word} className={'idc-stamp idc-stamp--' + mark.word}>
-                  <b>{mark.n}</b> {mark.word}
-                </span>
-              ))}
+          {!authed && (
+            <div className="idc-acts" inert={editing ? true : undefined}>
+              <Link href="/submit" className="ln-pill idc-act idc-act--send">Send</Link>
+              {/* The address, for the visitor's own address book. See pressAdd
+                  above: it copies, because that is all a journal can do for a
+                  copy it cannot see. Copied for a moment after. */}
+              {address && !known && (
+                <button type="button" className="ln-pill idc-act" onClick={pressAdd} aria-live="polite" title="Copy this journal's address for your address book">
+                  {added ? 'Copied' : 'Add'}
+                </button>
+              )}
             </div>
           )}
         </div>
 
-        {/* Both of these are the visitor's — there is nobody for the owner to
-            send to but themselves (Miyel, 2026-09-14), and /submit says so if
-            reached anyway. So the row itself is the visitor's: gated on the
-            row rather than on each control inside it, because an empty row
-            still takes its margin, and the owner's card was carrying twenty
-            pixels of nothing under the pinned record. */}
-        {!authed && (
-          <div className="idc-row" inert={editing ? true : undefined}>
-            <Link href="/submit" className="ln-pill idc-send">Send an album</Link>
-            {/* The address, for the visitor's own address book. See pressAdd
-                above: it copies, because that is all a journal can do for a
-                copy it cannot see. "Add Miyel", not "Add to your address
-                book" (Miyel, 2026-09-13: shorter); Copied for a moment
-                after. */}
-            {address && !known && (
-              <button type="button" className="ln-pill idc-send" onClick={pressAdd} aria-live="polite" title="Copy this journal's address for your address book">
-                {added ? 'Copied' : `Add ${String(keeper_name || '').trim() || 'me'}`}
-              </button>
-            )}
+        {/* ── Three counts ─────────────────────────────────────────────────
+            How many records, how many were masterpieces, how many were
+            formative — each in its own flag's colour, which is the first job
+            those three tokens have had outside a mark on a record. Counts say
+            how somebody listens in a way a genre list never does; the genres
+            are still here, one line of them, below the fold.
+
+            Typeset, not stamped. Stamps were tried the hour before and the
+            answer is that with a photograph that size above them the photo is
+            already the flourish. */}
+        {(records !== null || marks.length > 0) && (
+          <div className={'idc-counts' + off('albums')}>
+            {counts.map(c => (
+              <div key={c.word} className={'idc-count idc-count--' + c.word}>
+                <b className="idc-count-n">{c.n}</b>
+                <span className="idc-count-word">{c.word}</span>
+              </div>
+            ))}
+            {eyeFor('albums')}
           </div>
         )}
+
+        {/* ── The pinned record ────────────────────────────────────────────
+            One album from the journal, as art, with its name beside it — the
+            only image here besides the photograph (DECISIONS). On the same
+            left edge as everything above it: it was the one centred row on
+            the pane.
+
+            While a correction is open it is a button rather than a link: the
+            same art and the same two lines, but pressing it opens the search
+            instead of going to the album. And it prints even when nothing is
+            pinned, which it does not otherwise — an empty row is how an owner
+            finds out the card can hold one at all. */}
+        {(pinned || editing) && (
+          editing ? (
+            <button type="button" className="idc-pinned idc-pinned--pick" onClick={onPickPin}>
+              <span className="idc-pinned-art">
+                {pinned?.album_art
+                  ? <img src={pinned.album_art} alt="" />
+                  : <span className="idc-pinned-none" aria-hidden="true">♪</span>}
+              </span>
+              <span className="idc-pinned-said">
+                <span className="idc-pinned-label">Pinned</span>
+                <span className="idc-pinned-album">{pinned ? pinned.album : 'Choose a record'}</span>
+                <span className="idc-pinned-artist">{pinned ? pinned.artist : 'Nothing pinned'}</span>
+              </span>
+            </button>
+          ) : (
+            <Link href={`/entries/${pinned.slug}`} className="idc-pinned" aria-label={`${pinned.album} — ${pinned.artist}`}>
+              <span className="idc-pinned-art">
+                {pinned.album_art
+                  ? <img src={pinned.album_art} alt="" />
+                  : <span className="idc-pinned-none" aria-hidden="true">♪</span>}
+              </span>
+              <span className="idc-pinned-said">
+                <span className="idc-pinned-label">Pinned</span>
+                <span className="idc-pinned-album">{pinned.album}</span>
+                <span className="idc-pinned-artist">{pinned.artist}</span>
+              </span>
+            </Link>
+          )
+        )}
+
+        {/* The two visitor controls used to be a row of pills down here, under
+            the pinned record. They are beside the name now — Send and Add,
+            short enough to share its line — which is what took a whole row off
+            the first screen. */}
 
         {/* The link rows and the rig rows used to be here, under the button,
             while the card was the only surface an owner could edit. They are

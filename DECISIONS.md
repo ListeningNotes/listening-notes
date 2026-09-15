@@ -138,17 +138,19 @@ their words; the desk is your tools over the feed; the entry is the record
 over the notes. The panes read as disjointed when the objects are not equally
 object-like — the structure was never the problem, the objects were.
 
-**The ID is a document, not a bordered card, 2026-09-15.** No box, no plate,
-no edge: the rigour comes from one rigid grid with one treatment for labels
-and one for values, which is how a licence carries a dozen fields without
-reading as cluttered. Draw a frame and the pane stops being one page.
+**The ID's object is the portrait: full width, square, the size an entry's
+album art is, 2026-09-15.** A record in one pane and a person in the next,
+measured the same. Both 4:3 crops lost against the real photograph — the
+clouds around the shoulders do real work — and the writing starting below the
+fold is the accepted trade. A licence of typeset fields was tried the same day
+and it was a column of facts, not an object.
 
-**The ID's stamps are counts, not labels, 2026-09-15.** Masterpieces, listens,
-formative — struck over the object at angles, outlined in ink and never
-filled. What somebody has called a masterpiece says more about how they listen
-than a genre list does, and it gives a stamp something true to mark. A
-machine-readable line was tried and cut: it references a passport rather than
-being one.
+**Three counts, in the three flags' colours, 2026-09-15.** Albums,
+masterpieces, formative — how somebody listens, which a genre list never says,
+and the first work those tokens have had away from a mark on a record.
+Typeset, not stamped: with a photograph that size above them the photo is the
+flourish. Top genres moved below the fold, one line. A machine-readable line
+was tried and cut — it references a passport rather than being one.
 
 **Down is a cover, not a gesture, 2026-09-15.** Down means cover-then-contents,
 and two things have that shape: the beacon, which is the journal's cover, and

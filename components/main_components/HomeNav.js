@@ -69,7 +69,7 @@
 'use client';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { BookOpen, Broadcast, Gear, IdentificationCard, Info } from '@phosphor-icons/react';
+import { ArrowsClockwise, BookOpen, Broadcast, CaretDown, Gear, IdentificationCard, Info } from '@phosphor-icons/react';
 import { foldKey, useListeningBeacon } from '../../hooks/useListeningBeacon';
 import { useSpineWidth } from '../../hooks/useSpineWidth';
 import { useBookplate } from './Bookplate';
@@ -113,8 +113,15 @@ function paneMarks(authed, face) {
 // the other side.
 function paneFaces(authed) {
   return [
-    { key: 'card', word: 'Card', label: 'About this journal' },
-    { key: 'desk', word: authed ? 'Desk' : 'About', label: authed ? 'Your desk' : 'About this software' },
+    { key: 'card', word: 'Card', to: 'the card', label: 'About this journal' },
+    {
+      key: 'desk',
+      word: authed ? 'Desk' : 'About',
+      // "Turn to about this software" is not a sentence. The far face is the
+      // page about the software, so that is what it is called here.
+      to: authed ? 'the desk' : 'the software',
+      label: authed ? 'Your desk' : 'About this software',
+    },
   ];
 }
 
@@ -643,10 +650,36 @@ export default function HomeNav() {
   // free-text field the prompts replaced, which may yet come back. The pane's
   // full name stays on the hover; the names in paneMarks are untouched,
   // because those are read out on a swipe where a sentence is right.
+  const faces = paneFaces(authed);
+  const goingTo = faces.find(side => side.key !== face);
   const turnLine = (
     <div className="hn-turn-row">
+      {/* On a phone the band says where it goes in words — it is a whole line
+          across the foot of the pane and there is room for a sentence, and a
+          band that says "Turn to the desk" needs no learning at all. Above
+          769px the stylesheet hides this and shows the switch beside it, which
+          is the right shape for the top of a narrow spine. */}
+      {/* There is more down there, and on this pane the fold is where the
+          object stops — the photograph is the whole first screen by design,
+          so something has to say the writing exists. A hint, not an arrival:
+          it scrolls one screen, the way a thumb would, and it goes as soon as
+          the page has moved at all. Down is still not a gesture here. */}
+      {!down[0] && (
+        <button
+          type="button"
+          className="hn-more"
+          onClick={() => { const el = paneRefs[0].current; if (el) el.scrollTo({ top: el.clientHeight - 140, behavior: ease() }); }}
+          aria-label="Read on"
+        >
+          <CaretDown size={15} weight="regular" aria-hidden="true" />
+        </button>
+      )}
+      <button type="button" className="hn-turn-say" onClick={turnPane}>
+        <ArrowsClockwise size={13} weight="regular" aria-hidden="true" />
+        Turn to {goingTo.to}
+      </button>
       <div className="hn-turn" role="group" aria-label="Which side of the page">
-        {paneFaces(authed).map(side => (
+        {faces.map(side => (
           <button
             key={side.key}
             type="button"
