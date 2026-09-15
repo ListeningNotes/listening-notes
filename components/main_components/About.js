@@ -1,7 +1,9 @@
 // Copyright (C) 2026 Miyel Brown
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // components/main_components/About.js
-// The left pane of the cross: who keeps this journal.
+// One face of the cross's turning pane: who keeps this journal. The other is
+// the desk, or the colophon signed out; a switch at the foot turns between
+// them, and the journal beside them does not move when it does.
 //
 // This is the about page. Not a link to one — the page itself, sitting where
 // the card used to have to be turned over to reach. The flip is gone: a card
@@ -69,7 +71,7 @@ const PIN_RESULTS = 40;
 // over a list that is already in memory. A journal large enough for that to be
 // the wrong shape is a journal whose archive has the same problem, and they
 // should be solved together.
-export default function About({ crown = null, stamps, authed = false, pinned = null, entries = [] }) {
+export default function About({ stamps, authed = false, pinned = null, entries = [] }) {
   const settings = useBookplate();
   const { bioanswers, rig: rigRows, rig_icon, social_links } = settings;
 
@@ -285,19 +287,19 @@ export default function About({ crown = null, stamps, authed = false, pinned = n
 
   return (
     <div className="ab-pane" ref={paneRef}>
-      {/* Floor one: the crown and the card, one screen that holds still. On a
-          desk the floor is a wrapper and the column scrolls — see nav.css. */}
-      <div className="hn-floor">
-        {crown}
-        <div className="ab-card">
-          <IdentityCard
-            stamps={stamps}
-            authed={authed}
-            edit={edit}
-            pinned={showingPin}
-            onPickPin={() => { setPinQuery(''); setPinOpen(true); }}
-          />
-        </div>
+      {/* No floors, and no crown, since 2026-09-15. The card is a page and
+          pages scroll: the glance is at the top, the reading continues down
+          the same scroll, and there is nothing to arrive at. Down means
+          cover-then-contents and only the beacon and an entry have that shape
+          — see HomeNav. The mark is small, in the card's own header. */}
+      <div className="ab-card">
+        <IdentityCard
+          stamps={stamps}
+          authed={authed}
+          edit={edit}
+          pinned={showingPin}
+          onPickPin={() => { setPinQuery(''); setPinOpen(true); }}
+        />
       </div>
 
       {/* ── The pin's search ──────────────────────────────────────────────
@@ -373,8 +375,6 @@ export default function About({ crown = null, stamps, authed = false, pinned = n
           until it is, this is just where one thing stops and the next
           begins. */}
       {hasReading && (
-      <div className="hn-floor">
-      <div className="hn-floor-scroll">
       <div className="ab-below">
         {/* The prompts. Prompt and answer on one line, because they are one
             sentence: "I can never skip — Voodoo, side two" is a thought, and
@@ -712,8 +712,6 @@ export default function About({ crown = null, stamps, authed = false, pinned = n
           </section>
         )}
 
-      </div>
-      </div>
       </div>
       )}
     </div>

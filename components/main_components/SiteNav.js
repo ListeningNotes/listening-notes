@@ -20,7 +20,7 @@
 // this row never cost a request of its own. The mark's live dot still reads
 // isLive, and still costs nothing.
 //
-// The mark goes home, which is the cross, which opens on the centre pane. It
+// The mark goes home, which is the cross, which opens on the beacon. It
 // used to need a sessionStorage flag to steer between two screens; there is
 // one home now, so there is nothing to steer.
 //
@@ -60,7 +60,7 @@ export default function SiteNav({ tools = null }) {
 
   // The mark used to steer the old two-screen cover, flagging sessionStorage
   // so a navigation home landed on screen two. Neither screen exists — home is
-  // the cross, and it always opens on the centre pane, which is what that was
+  // the cross, and it always opens on the beacon, which is what that was
   // reaching for. So it is a plain link again and the flag is gone with the
   // markup that read it.
 

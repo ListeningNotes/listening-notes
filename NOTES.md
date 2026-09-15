@@ -234,8 +234,30 @@ cannot be tested end to end.
       `pull_keeper_name` in settings_actions, `nameInBook` on the compare
       page, and the row's Not answering yet.
 
-**THE DESKTOP IS AN OPEN BOOK, 2026-09-15** — built on branch `open-book`
-(Complete). Replaced the three columns of 1.10.0 outright. Still to look at:
+**TWO PANES AND DOWN MEANS A COVER, 2026-09-15** — branch `card-and-desk`
+(Complete), on top of `open-book`. Still to look at:
+
+- [ ] **The desk and the card on a real phone.** Everything was seen at
+      375×812 in the browser pane, which is not a thumb. The switch at the
+      foot, the band, and whether the card's row wants the portrait bigger
+      than 118px are all eye-and-thumb questions.
+- [ ] **The drafts row against real drafts.** The count comes off
+      `/api/waiting`; the row was seen with a stubbed 2. Worth one pass
+      checking the number is right, that the row vanishes when the last
+      draft is finished, and that it is absent while a record is in hand.
+- [ ] **A tall phone and a short one.** The card is a page now and its first
+      screen is no longer a fixed floor, so what falls above the fold varies
+      with the device in a way it did not before. Worth a look at 667 and at
+      926.
+- [ ] **Names to confirm, 2026-09-15 (two panes)** — rename freely: branch
+      `card-and-desk`; `count_drafts` in database_actions and `drafts` on
+      `/api/waiting`; `paneFaces` in HomeNav; `.hn-pane--turn`, `.hn-face`
+      (kept), `.idc-top`, `.idc-said`, `.db-head`, `.db-mark-svg`,
+      `.db-tool`. The Drafts row's own word is Miyel's.
+
+**THE DESKTOP IS AN OPEN BOOK, 2026-09-15** — built on branch `open-book`,
+merged as 1.17.0 (Complete). Replaced the three columns of 1.10.0 outright.
+Still to look at:
 
 - [ ] **A real mouse on the grip, and the arrow keys on it.** The browser
       tool's drag DID land on it this time (360 → 506 → clamped at 300 and
@@ -1095,6 +1117,18 @@ Project → Settings → Environment Variables.
 
 ## Gotchas
 
+**A smooth `scrollTo` in the browser pane outlives the `await` after it, and
+scripted `scrollLeft` fires no scroll event at all, 2026-09-15.** Half an hour
+went on a phantom bug: the rail was read at 375 after pressing the caret that
+scrolls it to 0, `data-pane` did not follow, and it looked as if the cross had
+stopped tracking which pane it was on. It had not — the read simply landed
+mid-animation, and a second read a moment later had it right. The other half
+is real and worth knowing: setting `scrollLeft` from `javascript_tool` moved
+the rail but fired no `scroll` event, even to a listener added in the same
+script, so anything that reacts to scrolling looks dead. Drive the real
+control and read twice, or read the scroll position rather than the state it
+is supposed to produce.
+
 **A rule that has to beat a later one has to come after it, 2026-09-15.** The
 correction bar, its trouble line and the print bar were told to inset
 themselves to the journal's column on a desk — in the layer block near the top
@@ -1768,6 +1802,86 @@ current.
 ---
 
 ## Complete
+
+**2026-09-15 — two panes, and down means a cover. Branch `card-and-desk`,
+version 1.18.0 — from Miyel's brief, the one whose rule came first and whose
+layout fell out of it.**
+
+- [x] **The rule.** Down is cover-then-contents, and exactly two things have
+      that shape: the beacon, which is the journal's cover, and an entry's
+      card, which is the entry's. The card and the desk are not covers of
+      anything. Everything below is that sentence applied.
+- [x] **Two panes, not three.** The cross is the turning pane and home.
+      Sideways is you; down is the records. Three made sideways mean two
+      different things — left about you, right your tools, both you, in
+      opposite directions. The turning pane holds both faces at once, each
+      its own scroller (`.hn-face`, absolute, `visibility` never `display`),
+      so a face keeps where it was scrolled to and the feed and the inbox go
+      on working behind the card. `paneMarks` returns two now and names the
+      turning pane for the face it is showing.
+- [x] **No floors, no arrival, no down caret on the turning pane.** `measure`
+      answers false for anything but home, About's two `.hn-floor` wrappers
+      are gone, and the desk's are too — the feed follows the doors straight
+      down the same scroll. The phone's vertical snap moved from `.hn-pane` to
+      `.hn-pane--home`. That is most of the axis problem gone, and it went by
+      deciding what down *means* rather than by tuning a scroller.
+- [x] **The turn is the same switch the desktop has.** `.hn-turn` moved out of
+      the desktop block to the base and now rides in the row at the foot of
+      the cross on a phone — where a thumb reaches — and at the top of the
+      spine on a desk, where a pointer is. It is always in the markup and the
+      stylesheet hides it on home (`[data-pane="1"]`), because on a desk
+      `pane` never leaves its initial value: the rail is a grid with nothing
+      to scroll, so a JS test would have taken the switch off every desk.
+- [x] **The foot row, per pane.** What is permanently absent now leaves the
+      row instead of sitting in it at opacity 0 — that opacity is for a
+      control coming back, and a caret that cannot exist on this pane is a
+      hole that pushed the switch a third of the way across the screen. On
+      the turning pane the switch is centred on the screen and the one caret
+      is pinned to the edge, which is the bar's arrangement. The right caret
+      does not hide when the card is scrolled: that rule is for being inside
+      something, and a page that has merely been scrolled is not.
+- [x] **The crown shrinks.** The beacon keeps the large mark; the card and the
+      desk carry a small one in their own header, beside the pencil or the
+      gear. The card's header came out of `position: fixed` and into the flow
+      — both reasons for fixing it were the crown's, and there is no crown.
+      Header and lights share one line at 51px, measured, with the header
+      stopping 52px short so the tools do not sit under the moon. On a desk
+      the header's mark is hidden: the bar over the journal has it, and two
+      marks on screen is two marks whether or not they are seen together.
+- [x] **The card is a row.** Portrait left, name and the counted facts beside
+      it (`.idc-top` / `.idc-said`), which puts all three prompts and the
+      pinned record on the first screen — the portrait alone was taking half
+      of it. The labels take their own width beside the portrait instead of
+      the card's fixed 84px column, which in a 178px measure left the answer
+      four characters wide. `.idc-inner` stopped being a scroller: the face
+      is the scroller and a second one inside it meant the card could move
+      while the page under it stayed put. On a desk the portrait takes a
+      share (38%, 96–168px) rather than a fixed square, because the spine is
+      draggable.
+- [x] **The desk is a band and three rows.** Start a listen is 92px of the
+      width rather than a 180px square — it was the third square of a cross
+      whose other two were a portrait and an album, and that cross is gone.
+      Inbox, Address book and Drafts are rows with their counts at the far
+      end. Settings is the gear in the header. The feed follows on the same
+      scroll.
+- [x] **Drafts, with a count.** `count_drafts()` in database_actions and a
+      fourth number on `/api/waiting` — its own query, not `pull_drafts()
+      .length`, because that is a `SELECT *` over rows carrying a whole
+      tracklist each. Not in `total`: that number is the Inbox's. The row
+      goes to the picker, which already lists them (Miyel's call), and it is
+      absent when there are none or when a record is already in hand — with
+      one in hand `/session` resumes *that* listen rather than showing the
+      list, so the row would not do what it says.
+- [x] **Verified in the Claude browser at 375×812 and at desktop:** landing on
+      home with the rail at 375; one screen down to the wall; sideways to the
+      turning pane and the switch turning it, remembered; the card with the
+      glance as a row and the prompts following in the same scroll; the desk
+      with the band, three rows, counts of 3 and 2, the gear, and the feed
+      below; the colophon with its crown; no horizontal overflow at either
+      size; and the desktop spine still right, with the card's row
+      re-proportioned for it. The owner's half was seen by stubbing the
+      answer to `/api/auth/check` in the browser — no cookie, no secret,
+      nothing written.
 
 **2026-09-15 — the desktop is an open book, branch `open-book`, MERGED to
 main as 1.17.0 and pushed (merge a0dece3), built clean before the merge — from

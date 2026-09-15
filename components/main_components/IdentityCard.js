@@ -427,7 +427,16 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
           )}
         </div>
 
-        {slot}
+        {/* ── The glance ───────────────────────────────────────────────────
+            Portrait on the left, the name and the counted facts beside it,
+            2026-09-15. Stacked and centred, the portrait alone was half the
+            first screen and the prompts and the pinned record were pushed off
+            it — which is the thing the card is for. As a row the whole glance
+            fits above the fold: face, name, what has been logged, since when,
+            and what somebody listens to. */}
+        <div className="idc-top">
+          {slot}
+          <div className="idc-said">
 
         {/* cover_name, not keeper_name: this is the one place a person is
             reading the name, so it is allowed to be the ornamented one. The
@@ -501,6 +510,9 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
             {eyeFor('genres')}
           </p>
         )}
+
+          </div>
+        </div>
 
         {/* ── The pinned record ────────────────────────────────────────────
             One album from the journal, as art, with its name beside it. It is
