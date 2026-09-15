@@ -80,10 +80,10 @@ export default function About({ stamps, authed = false, pinned = null, entries =
   // and "In Miyel's own words" reads where "In their own words" has to cover
   // everyone. No name yet — a copy claimed an hour ago — and it falls back to
   // the pronoun, which is the one case where covering everyone is right.
-  // Computed, never chosen: what this journal listens to, not what its keeper
-  // would claim. It printed on the card until 2026-09-15 and belongs with the
-  // reading — it is neither a count nor something anybody wrote.
-  const genres = stamps?.genres ?? [];
+  // Top genres is the card's again (IdentityCard), under the counts: it is the
+  // last of the counted things, not part of the reading. It printed down here
+  // for an hour on the argument that it is neither a count nor something
+  // anybody wrote, and the first half of that is wrong — it is counted.
 
   // One edit session for the pane, owned here and handed to the card. The card
   // used to make its own, which was fine while everything editable was printed
@@ -387,19 +387,6 @@ export default function About({ stamps, authed = false, pinned = null, entries =
           begins. */}
       {hasReading && (
       <div className="ab-below">
-        {/* Top genres, one line of them. They were three rows of a fact block
-            on the object above and they are neither a count nor something
-            somebody wrote — they are computed, and they belong down here with
-            the reading rather than up there with the photograph (Miyel's
-            brief, 2026-09-15). Computed, never chosen: it says what this
-            journal listens to, not what its keeper would claim. */}
-        {genres.length > 0 && (
-          <p className="ab-genres">
-            <span className="ab-genres-label">Top genres</span>
-            <span className="ab-genres-said">{genres.join(' · ')}</span>
-          </p>
-        )}
-
         {/* The prompts. Prompt and answer on one line, because they are one
             sentence: "I can never skip — Voodoo, side two" is a thought, and
             the same words as a label over a value are two things stacked. The

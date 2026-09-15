@@ -138,6 +138,24 @@
 .idc-count--masterpieces .idc-count-n { color: var(--mp); }
 .idc-count--formative .idc-count-n { color: var(--formative); }
 
+/* ── Top genres ─────────────────────────────────────────────────────────────
+   One line, under the counts and over the pinned record. It is the last of
+   the counted things — the numbers say how somebody listens, this says to
+   what — so it sits with them and on their axis, not down in the writing
+   where it spent an hour. */
+.idc-genres {
+  display: flex; align-items: baseline; justify-content: center;
+  flex-wrap: wrap; gap: 4px 12px;
+  margin: 14px 0 0;
+  text-align: center;
+}
+.idc-genres-label {
+  font-family: var(--font-label);
+  font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.idc-genres-said { font-size: 14px; color: var(--ink); }
+
 /* ── The pinned record ──────────────────────────────────────────────────────
    Art, label, title, artist — the group centred on the page with everything
    above it, and a step smaller than it was. It sat against the left edge for
@@ -194,7 +212,10 @@
 
 /* A rule between the document and the writing under it, so the page is not
    two documents pretending to be one. */
-.ab-below { margin-top: 30px; }
+/* The line between what is counted and what was written. It was under the
+   genres row while that row was the last counted thing on the page; the row
+   is on the card now, so the boundary is here, above the writing. */
+.ab-below { margin-top: 26px; padding-top: 24px; border-top: 1px solid var(--border); }
 
 /* ── Below the fold ─────────────────────────────────────────────────────────
    A quiet line saying whose voice the answers are in, then the answers, then
@@ -208,26 +229,7 @@
   font-weight: 400;
   color: var(--ink-faint);
 }
-/* One line, label then answer — not the three-row block it was on the card.
-   Above the prompts rather than under them since 2026-09-15: it is a small
-   computed fact and it belongs with the other small computed facts, before
-   the writing starts, not trailing off the end of it. The rule sits under it
-   for the same reason it sat over it — it is the line between what is counted
-   and what was written. */
-.ab-genres {
-  display: flex; align-items: baseline; justify-content: center;
-  flex-wrap: wrap; gap: 4px 12px;
-  margin: 0 0 22px;
-  padding-bottom: 20px;
-  border-bottom: 1px solid var(--border);
-  text-align: center;
-}
-.ab-genres-label {
-  font-family: var(--font-label);
-  font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase;
-  color: var(--ink-faint);
-}
-.ab-genres-said { font-size: 14px; color: var(--ink); }
+
 
 /* ── The pin's search ───────────────────────────────────────────────────────
    A panel in the middle of a desktop screen and a bottom sheet on a phone,
