@@ -40,8 +40,14 @@
    Square, and both 4:3 crops lost against the real photograph: the clouds
    around the shoulders do real work and a shallower crop takes them. It is
    also what the code needs — the same slot turns into this journal's QR, and
-   a code is square. */
-.ab-card .idc-photo { width: 100%; }
+   a code is square.
+
+   Not the full measure, though. It was, on the argument that it should be the
+   size an entry's album art is; at that size it is a lot of screen for a
+   photograph of somebody (Miyel, 2026-09-15). Seven-tenths of the page keeps
+   it the object — nothing else on the pane comes near it — without it being
+   the pane. */
+.ab-card .idc-photo { width: 70%; max-width: 300px; }
 .ab-card .idc-photo .idc-portrait {
   width: 100%;
   height: auto;
@@ -326,17 +332,36 @@
 
    The mark is drawn here now for the same reason. The card lost the crown and
    the beacon kept it: a crown is for a cover, and the card is a page. */
-/* The mark on the left, one control on the right — the header of a page, not
-   a row of tools. It was centred with a tool on each side while the light
-   switch still sat beyond it at the window's edge; the switch is in Settings
-   now and there is nothing on this line but the page's own. */
+/* The mark centred, one control at the right — and centred is not a
+   preference here, it is what makes the header hold still. Scroll the pane
+   and this mark leaves while the bar's fades in behind it; at two sizes and
+   two positions that read as a header resizing itself, and at one size in one
+   place it reads as a mark that simply stays (Miyel, 2026-09-15). Both are
+   28px on the same line now, which is also what every other mark on the site
+   measures.
+
+   Absolutely centred rather than centred by the flex row, because the row has
+   a pencil at one end and nothing at the other: a row like that centres its
+   middle child on what is left over, not on the page. */
 .ab-card .idc-head {
-  display: flex; align-items: center; justify-content: space-between;
+  position: relative;
+  display: flex; align-items: center; justify-content: flex-end;
   min-height: 30px;
   margin: 0 0 18px;
   padding: 0;
 }
-.ab-card .idc-mark { display: block; }
+/* Pinned 15px down rather than centred on the row: the row's height is
+   whatever the pencil happens to be, and the mark has to land on the bar's
+   line — 36px of page padding plus 15 is the 51 the bar centres on — not on
+   the middle of whatever else is in the row. Three pixels of drift is exactly
+   what makes a mark look like it jumped. */
+.ab-card .idc-mark {
+  display: block;
+  position: absolute;
+  left: 50%;
+  top: 15px;
+  transform: translate(-50%, -50%);
+}
 .idc-tools { display: flex; align-items: center; gap: 2px; }
 .ab-card .idc-inner {
   min-height: 0;
