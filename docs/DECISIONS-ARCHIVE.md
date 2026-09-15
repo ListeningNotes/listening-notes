@@ -445,6 +445,38 @@ and the card's Compare with mine pill — is in git before 2026-09-12.
 
 ---
 
+## The network — the sender as a panel behind the chip, 2026-09-14 to 2026-09-15
+
+The rule now: the sender is a line on the entry and only the trail is behind
+a press (DECISIONS, The network). What it replaced, kept as written, one day
+old:
+
+**The sender opens; it does not display, 2026-09-14.** The entry says
+*Submission* and the chip, wearing a small caret so it reads as pressable,
+opens the chain: who sent it (a link to their journal), whether they logged
+it, and who sent it to them, read off their journals on the press. A name
+printed on every sent entry was somebody else's name on the page by default
+— decoration, not the network. One thing to press; there is no separate
+View chain control.
+
+Why it went, the next day. The reasoning was sound about *decoration* and
+wrong about what was being decorated. What shipped was a bordered, shadowed
+card holding a label, a 48px face, a name and a status line — the least
+important fact on a page where nothing else is boxed — and its second line,
+*Not on their journal.*, read as an error and answered a question nobody had
+asked. The name is not a disclosure to be opened; it is one quiet line. What
+somebody else made of the record is the part that does not belong, and that
+is now cut rather than hidden behind a press: it is their journal, and
+comparing the two is their page in the address book.
+
+Two things the reversal cost, both accepted. The walk moved from the press
+to the open, because *no trail, no pill* means having looked — so reading a
+sent entry now asks the sender's journal for its feed, which it did not
+before. And the chip lost its caret and most of its job. The code is in git
+as `components/main_components/Slug_Page/Chain.js` before 2026-09-15.
+
+---
+
 ## Sharing
 
 The current rules live in DECISIONS.md under Sharing.
