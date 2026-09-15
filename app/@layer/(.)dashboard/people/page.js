@@ -14,7 +14,7 @@ import AddressBook from '../../../dashboard/people/page';
 
 export default function AddressBookOverTheDesk() {
   return (
-    <LayerEntry label="Address book" scrolls arrives="bottom" over="desk">
+    <LayerEntry label="Address book" scrolls arrives="bottom" over="spine">
       <AddressBook layered />
     </LayerEntry>
   );

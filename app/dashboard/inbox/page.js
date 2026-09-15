@@ -125,6 +125,12 @@ export default function Inbox({ layered = false }) {
   // arrived before its sender kept a journal carries a name and no address;
   // this is where that gets closed, by hand, one row at a time.
   const [whose, setWhose] = useState(null);
+  // Which row is waiting on an answer about the listen already open, and what
+  // is open. See startListen: a row pressed with a record in hand asks before
+  // it replaces it. `keeping` is the moment between pressing Save it first and
+  // the session opening, which is a write to the drafts table and a page.
+  const [holding, setHolding] = useState(null);
+  const [keeping, setKeeping] = useState(false);
 
   useEffect(() => {
     fetch('/api/auth/check').then(r => r.json()).then(d => setAuthed(!!d.authed)).catch(() => {}).finally(() => setChecking(false));
@@ -296,7 +302,92 @@ export default function Inbox({ layered = false }) {
   // Marked reviewed before leaving, and awaited — a fetch left in flight while
   // the router navigates is a fetch that may never land, and the row would
   // still be sitting in Pending when the listen was finished.
+  // ── Starting a listen while one is already open ──────────────────────────
+  // On a desk the session is the right page and this is a sheet over the left
+  // one, so both are on screen at once and pressing Start a listen on a row
+  // is an easy thing to do with a record already in hand. Replacing it
+  // silently would look like it worked and then quietly eat what had been
+  // written: the browser holds one draft at a time (ln_session_draft), and the
+  // first autosave on the new record writes over it.
+  //
+  // So it asks, which is the care the resume path already takes — that one
+  // finds the draft and hands it over rather than starting fresh on top of it.
+  // Only when there is something to lose: the local draft is written only once
+  // a word has been typed, so its absence, or its being about a different
+  // record than the one in hand, means nothing has been written and there is
+  // nothing to ask about.
+  function openListen() {
+    try {
+      const held = JSON.parse(localStorage.getItem('ln_pending_session'));
+      if (!held?.album) return null;
+      const written = JSON.parse(localStorage.getItem('ln_session_draft'));
+      if (!written || written.album !== held.album) return null;
+      return { ...held, written };
+    } catch { return null; }
+  }
+
+  // What is on screen in the open listen, written to the drafts table. The
+  // same shape useSessionDraft.save posts, built from the browser's two keys
+  // instead of from React's state — the session is not mounted here. The row
+  // is an upsert on album + artist, so doing this when the automatic save has
+  // already run costs one write and changes nothing.
+  async function keepOpenListen(held) {
+    const w = held.written;
+    const rows = (Array.isArray(w.tracks) ? w.tracks : []).map((t, i) => ({
+      number: t.number || i + 1,
+      title: t.title,
+      duration: t.duration ?? null,
+      rating: (w.trackRatings || {})[i] || 0,
+      favorite: !!(w.trackFavorites || {})[i],
+      note: ((w.trackNotes || {})[i] || '').trim(),
+    }));
+    await fetch('/api/drafts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        album: w.album,
+        artist: w.artist || held.artist || '',
+        year: w.year || held.year || '',
+        genre: held.genre || '',
+        entry_type: w.entryType || held.entryType || 'Album',
+        album_art: w.albumArt || held.artUrl || '',
+        collection_id: held.collectionId || null,
+        step: w.step || 0,
+        elapsed: 0,
+        rating: w.rating || 0,
+        masterpiece: !!w.Masterpiece,
+        favorite: !!w.Favorite,
+        formative: !!w.Formative,
+        notes: w.overallNotes || '',
+        tracks: rows,
+        received_from: held.receivedFrom || '',
+        received_date: held.receivedDate || '',
+        received_from_url: held.receivedFromUrl || '',
+        credit_private: held.creditPrivate === true,
+      }),
+    });
+    // The browser's copy goes with it. Left behind, the new record's session
+    // would find a draft under somebody else's album at the next reload.
+    try { localStorage.removeItem('ln_session_draft'); } catch { /* storage off */ }
+  }
+
+  // Ask first, when there is a different record in hand with writing on it.
   async function startListen(sent) {
+    const held = openListen();
+    if (held && held.album !== sent.album) { setHolding({ id: sent.id, held }); return; }
+    await beginListen(sent);
+  }
+
+  // Save what is open, then start the new one.
+  async function keepThenStart(sent, held) {
+    setKeeping(true);
+    try { await keepOpenListen(held); } catch { /* the ask stays up; see below */ }
+    setKeeping(false);
+    setHolding(null);
+    await beginListen(sent);
+  }
+
+  async function beginListen(sent) {
     localStorage.setItem('ln_pending_session', JSON.stringify({
       album: sent.album,
       artist: sent.artist || '',
@@ -546,6 +637,33 @@ export default function Inbox({ layered = false }) {
                                     onPick={person => nameSender(sent, person)}
                                     label={`Who sent ${sent.album}`}
                                   />
+                                )}
+
+                                {/* ── The listen already open ──────────────
+                                    Not a dialog. The row asked the question,
+                                    so the row holds the answer, in the place
+                                    the other two panels on this row open.
+                                    Saving it first is the one offered as the
+                                    press, because it is the one that loses
+                                    nothing. */}
+                                {holding?.id === sent.id && (
+                                  <div className="own-panel ib-holding">
+                                    <p className="ib-holding-said">
+                                      You have <strong>{holding.held.album}</strong> open, with writing in it.
+                                    </p>
+                                    <div className="ib-holding-acts">
+                                      <button
+                                        className="ib-primary"
+                                        disabled={keeping}
+                                        onClick={() => keepThenStart(sent, holding.held)}
+                                      >
+                                        {keeping ? 'Saving the draft\u2026' : 'Save it as a draft, then start'}
+                                      </button>
+                                      <button className="ib-act" onClick={() => setHolding(null)}>
+                                        Never mind
+                                      </button>
+                                    </div>
+                                  </div>
                                 )}
 
                                 {naming === sent.id && (

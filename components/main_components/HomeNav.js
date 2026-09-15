@@ -37,22 +37,36 @@
 // card, so nothing points down at it — and it is why the pitch pane's missing
 // bottom edge is not a special case in this file.
 //
-// ── Desktop ─────────────────────────────────────────────────────────────────
-// The same three components, all visible at once in three columns, no gesture
-// and no carets. It is the same structure said out loud rather than a second
-// layout: the site already carried two separate homepage markup trees that
-// drifted apart, and a third would have been the same mistake twice.
+// ── Desktop: an open book ───────────────────────────────────────────────────
+// Two pages, not three panes. A narrow page on the left — the spine, about a
+// quarter of the window — and the journal across the rest. The spine holds one
+// thing at a time and turns between two faces: the card and the desk when you
+// are signed in, the card and the colophon when you are not. A line at its
+// foot says which way it turns, and which face you left it on is remembered in
+// this browser, because what goes on the left is the owner's choice and not
+// the layout's.
 //
-// The columns are not equal, since 2026-09-13. Three equal columns were three
-// phones parked side by side: no hierarchy, nowhere for the eye to land, and
-// everything floating in the vertical middle with air above and below. The
-// card and the desk are rails of about 196 and 186px and the centre takes the
-// rest; content starts at the top of every column; and the beacon is a band
-// across the top of the centre, the record's own colour bled to the column's
-// edges the way a print's ground is. The dividers are grips — drag one and
-// that rail widens, the centre giving way — and the widths are remembered per
-// browser (hooks/useColumnWidths.js). Hierarchy comes from width, and nothing
-// about the phone changes: the stylesheet does all of it above 769px.
+// The journal does not move when the spine turns. That is the whole of why it
+// reads as turning a page rather than navigating somewhere, and it is why the
+// two faces are both mounted at once with the stylesheet showing one: the feed
+// goes on updating and the inbox goes on counting while you are looking at the
+// card.
+//
+// The rule underneath is that the right page is what you are reading or
+// writing. An entry opens there, and so does a listen — starting one turns the
+// journal into the session while the spine stays exactly where it is. The
+// inbox, the address book, a person and Settings open in the *spine* instead,
+// as a shallow stack with a way back: on the right they would be fighting the
+// session for the same page.
+//
+// It replaced three columns at three widths (2026-09-13), which replaced three
+// equal columns before that. Three columns had no hierarchy and a lot of air
+// where a wide screen wants density. What has not changed is that this is the
+// same components said differently and not a second layout — the site already
+// carried two homepage markup trees that drifted apart, and a third would have
+// been the same mistake twice. The three panes are still the three panes; the
+// stylesheet puts two of them in one column above 769px and shows one at a
+// time. Nothing about the phone changes.
 
 'use client';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
@@ -60,7 +74,7 @@ import Link from 'next/link';
 import { IdentificationCard, BookOpen, Broadcast, Gear, Info } from '@phosphor-icons/react';
 import { useTheme } from './Lightswitch';
 import { foldKey, useListeningBeacon } from '../../hooks/useListeningBeacon';
-import { useColumnWidths } from '../../hooks/useColumnWidths';
+import { useSpineWidth } from '../../hooks/useSpineWidth';
 import { useBookplate } from './Bookplate';
 import ListeningBeacon from './ListeningBeacon';
 import Journal from './Journal';
@@ -73,6 +87,12 @@ import Pitch from './Pitch';
 // Left, centre, right. Centre is the one you land on, which is why it is not
 // index 0 — the rail is scrolled to it on mount before the first paint.
 const HOME = 1;
+
+// Which face the spine was left on, per browser. Not a setting and not on the
+// settings row: it is where somebody put their own left-hand page down, the
+// way a composition book falls open at the page you were last on, and it has
+// no business travelling to another device.
+const FACE_KEY = 'ln-spine-face';
 
 // What each pane is, as a mark and as a sentence. The controls at the foot of
 // the cross read out of this rather than out of their own direction, because
@@ -109,10 +129,10 @@ export default function HomeNav() {
   // `track` is for the band's ground on a desk — the record blurred across
   // the top of the centre column. The beacon draws the record itself.
   const { isLive, recentAlbums, track } = useListeningBeacon();
-  // The side columns' widths on a desk, and the grips that change them. The
-  // hook writes the widths onto the document's root as two custom
-  // properties the stylesheet reads above 769px and ignores below it.
-  const columns = useColumnWidths();
+  // How wide the spine is on a desk, and the grip that changes it. The hook
+  // writes the width onto the document's root as --spine-w, which the
+  // stylesheet reads above 769px and ignores below it.
+  const spine = useSpineWidth();
 
   // ── What the cross asks for ───────────────────────────────────────────────
   // Four requests, made once here rather than three times in three panes.
@@ -185,6 +205,33 @@ export default function HomeNav() {
     setAuthed(true);
     askWaiting();
   }, [askWaiting]);
+
+  // ── Which face the spine is showing ───────────────────────────────────────
+  // 'card' or 'desk'. Signed out the desk side is the colophon, which is the
+  // same side of the same leaf, so one remembered answer covers both states —
+  // an owner who signs out finds the page they left open, with the public
+  // thing on it.
+  //
+  // The server has no browser to ask and draws the card. What was remembered
+  // goes back before paint rather than after, so the first render matches the
+  // HTML the server sent — the class changes in the same frame and nothing
+  // flashes through the wrong face on the way.
+  //
+  // Nothing on a phone reads this. There are three panes there and a swipe
+  // between them, and the stylesheet ignores the class below 769px.
+  const [face, setFace] = useState('card');
+  useLayoutEffect(() => {
+    try {
+      if (window.localStorage.getItem(FACE_KEY) === 'desk') setFace('desk');
+    } catch { /* storage off — the card is the answer, every visit */ }
+  }, []);
+  const turnSpine = useCallback(() => {
+    setFace(prev => {
+      const next = prev === 'card' ? 'desk' : 'card';
+      try { window.localStorage.setItem(FACE_KEY, next); } catch { /* not remembered */ }
+      return next;
+    });
+  }, []);
 
   const railRef = useRef(null);
   // One ref per pane's own vertical scroller. Written as three rather than an
@@ -518,35 +565,70 @@ export default function HomeNav() {
 
   const marks = paneMarks(authed);
 
-  // The two dividers on a desk, as grips. Each is a separator the keyboard
-  // can hold too: an arrow key moves it a step in the arrow's direction.
-  const gripFor = side => (
+  // The one divider on a desk, as a grip: the fold between the two pages. A
+  // separator the keyboard can hold too — an arrow moves it a step in the
+  // arrow's own direction, which is the direction the fold goes.
+  const grip = (
     <div
-      className={'hn-grip hn-grip--' + side + (columns.dragging === side ? ' hn-grip--held' : '')}
+      className={'hn-grip' + (spine.dragging ? ' hn-grip--held' : '')}
       role="separator"
       aria-orientation="vertical"
-      aria-label={side === 'left' ? 'Resize the card' : 'Resize the desk'}
+      aria-label="Resize the spine"
       tabIndex={0}
-      onPointerDown={e => columns.grab(side, e)}
+      onPointerDown={spine.grab}
       onKeyDown={e => {
-        if (e.key === 'ArrowLeft') { e.preventDefault(); columns.nudge(side, -1); }
-        if (e.key === 'ArrowRight') { e.preventDefault(); columns.nudge(side, 1); }
+        if (e.key === 'ArrowLeft') { e.preventDefault(); spine.nudge(-1); }
+        if (e.key === 'ArrowRight') { e.preventDefault(); spine.nudge(1); }
       }}
     />
   );
 
+  // ── The line at the spine's foot ──────────────────────────────────────────
+  // The only thing on screen saying the left page turns at all, so it is drawn
+  // as a line across the foot of it rather than as a control floating on the
+  // page — a page number's position, which is where a book puts the thing that
+  // means "there is another one of these".
+  //
+  // What is on it is the mark of the face you would land on, out of the same
+  // three the cross already uses for its panes (paneMarks): the card's, and
+  // the desk's — a cog signed in, the software's ⓘ signed out. A mark rather
+  // than a word because the marks are already this site's vocabulary for these
+  // three things and the words under them on a phone say the same thing twice.
+  // The words are still there for anyone who needs them, on the hover and in
+  // the label.
+  const turnTo = face === 'card' ? marks[2] : marks[0];
+  const turnLine = (
+    <button
+      type="button"
+      className="hn-turn"
+      onClick={turnSpine}
+      aria-label={turnTo.label}
+      title={turnTo.label}
+    >
+      <turnTo.Icon size={19} weight="regular" aria-hidden="true" />
+    </button>
+  );
+
   return (
-    <div className={'hn' + (columns.dragging ? ' hn--dragging' : '')} data-pane={pane}>
+    <div
+      className={'hn hn--face-' + face + (spine.dragging ? ' hn--dragging' : '')}
+      data-pane={pane}
+    >
       {header}
 
       <div className="hn-rail" ref={railRef}>
-        <section className="hn-pane" ref={paneRefs[0]} aria-label="About this journal">
+        {/* The card. On a phone it is the pane left of the beacon; on a desk
+            it is one of the spine's two faces, in the same grid cell as the
+            desk with the stylesheet showing one. */}
+        <section className="hn-pane hn-face hn-face--card" ref={paneRefs[0]} aria-label="About this journal">
           {/* About draws its own two floors — the crown and the card on the
               first, the writing on the second — so the crown goes in as a
               prop rather than standing outside the floor it belongs to. */}
           <About crown={crown} stamps={stamps} authed={authed} pinned={pinned} entries={entries} />
         </section>
 
+        {/* The journal: the right page on a desk, and what does not move when
+            the spine turns. */}
         <section className="hn-pane hn-pane--home" ref={paneRefs[1]} aria-label={beacon_available ? 'Now listening' : 'The journal'}>
           {/* No Last.fm — no username, or no key to ask with — and there is
               no beacon screen at all: the journal is the first thing under
@@ -611,7 +693,15 @@ export default function HomeNav() {
           )}
         </section>
 
-        <section className="hn-pane" ref={paneRefs[2]} aria-label={authed ? 'Your desk' : 'About this software'}>
+        {/* The desk, or the colophon. The spine's other face. Kept mounted
+            behind the card rather than swapped out for it, which is what lets
+            the feed go on updating and the inbox go on counting while
+            somebody is looking at the other side. */}
+        <section
+          className={'hn-pane hn-face hn-face--desk' + (authed ? '' : ' hn-face--colophon')}
+          ref={paneRefs[2]}
+          aria-label={authed ? 'Your desk' : 'About this software'}
+        >
           {authed ? (
             <>
               {/* Floor one — the crown and the desk, one screen that holds
@@ -641,10 +731,10 @@ export default function HomeNav() {
         </section>
       </div>
 
-      {/* The grips, astride the two hairlines between the columns. Nothing
-          on a phone: the stylesheet does not draw them there. */}
-      {gripFor('left')}
-      {gripFor('right')}
+      {/* The fold, and the line that turns the page. Nothing on a phone: the
+          stylesheet does not draw either of them there. */}
+      {grip}
+      {turnLine}
 
       {/* ── The row along the bottom ────────────────────────────────────
           All three together rather than one on each edge. Pinned to the edges

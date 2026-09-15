@@ -181,7 +181,14 @@
 }
 .arc-bar {
   max-width: 1100px; margin: 0 auto;
-  display: flex; align-items: center; gap: 8px;
+  /* Wraps when it has to. On the open book the wall lives on the right page,
+     which at a small laptop's width is 520px — the least the layout will ever
+     give it — and everything in this row at once does not fit that. Left on
+     one line the search field was the thing that gave way, shrinking to the
+     magnifier and nothing, which is the one control here that has to stay
+     usable. A second row is the honest answer, and it costs nothing at any
+     width where the row already fitted. */
+  display: flex; align-items: center; flex-wrap: wrap; gap: 8px;
   padding: 8px 10px;
   background: var(--panel);
   backdrop-filter: var(--card-blur); -webkit-backdrop-filter: var(--card-blur);
@@ -192,7 +199,7 @@
 /* Search: a real field at rest so it reads as searchable, growing to
    take the whole bar while you type. flex-basis rather than width so
    it gives room back to the controls when it collapses. */
-.arc-search { position: relative; display: flex; align-items: center; flex: 0 1 240px; min-width: 0; transition: flex-basis 0.22s ease; }
+.arc-search { position: relative; display: flex; align-items: center; flex: 0 1 240px; min-width: 150px; transition: flex-basis 0.22s ease; }
 .arc-search svg { position: absolute; left: 10px; color: var(--ink-faint); pointer-events: none; }
 /* Translucent, but with no backdrop-filter of their own — the bar
    beneath has already blurred what's behind it, and these paint on
