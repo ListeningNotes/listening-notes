@@ -444,11 +444,14 @@ export default function Inbox({ layered = false }) {
                               <button className="ib-menu-act ib-menu-act--danger" onClick={() => { updateStatus(sent.id, 'dismissed'); setMenuFor(null); }}>
                                 Dismiss
                               </button>
-                            </div>
-                          )}
 
+                          {/* Both panels open inside the menu, under the line
+                              that opened them, so the menu grows rather than
+                              a second box appearing below it unattached — the
+                              same reason the menu opens in the row at all. */}
                           {whose === sent.id && (
                             <MiniAddressBook
+                              tight
                               people={people}
                               linked={tidyJournal(sent.sender_url)}
                               onPick={person => { nameSender(sent, person); setMenuFor(null); }}
@@ -487,6 +490,8 @@ export default function Inbox({ layered = false }) {
                                       </span>
                                     </button>
                                   ))}
+                            </div>
+                          )}
                             </div>
                           )}
                         </div>

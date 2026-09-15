@@ -37,7 +37,14 @@ import { journalUrl } from '../../library/return_address';
 // does not — and it hides nobody when it is empty. The linked person is
 // always shown, whatever has been typed, or the one face that says what the
 // current answer is would vanish as soon as somebody edited the name.
-export default function MiniAddressBook({ people = [], linked = '', narrow = '', onPick, label = 'From your address book' }) {
+// `tight` is for a dense context — a row in a list rather than a screen of
+// its own. The entry's Sent by has the whole width of a phone and is centred
+// under a centred field; an inbox row has about 240px of column beside the
+// cover, and the same faces there are three that fit, centred, in a list
+// that is otherwise left-aligned. Tight makes them smaller and starts them
+// at the left edge. Same component, same strip, one less thing to keep in
+// step than a second picker would be.
+export default function MiniAddressBook({ people = [], linked = '', narrow = '', onPick, label = 'From your address book', tight = false }) {
   const typed = String(narrow || '').trim().toLowerCase();
   const shown = people.filter(person => {
     if (person.address === linked) return true;
@@ -47,7 +54,7 @@ export default function MiniAddressBook({ people = [], linked = '', narrow = '',
   if (shown.length === 0) return null;
 
   return (
-    <span className="ln-sender-book" aria-label={label}>
+    <span className={'ln-sender-book' + (tight ? ' ln-sender-book--tight' : '')} aria-label={label}>
       {shown.map(person => {
         const on = person.address === linked;
         return (
