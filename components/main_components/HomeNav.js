@@ -71,7 +71,7 @@
 'use client';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { BookOpen, Broadcast, CaretRight, Gear, IdentificationCard, Info } from '@phosphor-icons/react';
+import { BookOpen, Broadcast, Gear, IdentificationCard, Info } from '@phosphor-icons/react';
 import { useTheme } from './Lightswitch';
 import { foldKey, useListeningBeacon } from '../../hooks/useListeningBeacon';
 import { useSpineWidth } from '../../hooks/useSpineWidth';
@@ -582,43 +582,54 @@ export default function HomeNav() {
   );
 
   // ── What turns the spine ──────────────────────────────────────────────────
+  // Both faces in one control, the one you are on lit: the shape the archive's
+  // density switcher already has (.gd in journal.css), which is this site's
+  // way of saying "a small fixed set, and you are on one of them".
+  //
+  // Four goes at this on 2026-09-15, and the last one is the only one that
+  // does not have to be *learned*. A line at the foot of the spine (the
+  // brief), then a mark on it, then the mark at the top right, then a word
+  // and a caret there — every one of them said "press this and something
+  // happens", and none of them said what this actually is, which is that the
+  // left page has two sides and you are looking at one. A switch says it by
+  // being a switch. Miyel's read on each: the foot was "not the right idea",
+  // the mark alone was "too subtle", and the single press "I just don't like
+  // it" — the last one is the one worth listening to, because a control you
+  // cannot fault and still do not like is usually a control describing the
+  // wrong thing.
+  //
   // At the spine's top right, on the same line as the lights over the journal
-  // — one small mark at each page's right edge, which is the row every other
-  // page on the site puts its controls on. It was a line across the foot of
-  // the spine for an afternoon, centred, the way a book puts a page number;
-  // Miyel's call the same day was that the foot is the wrong place, and she is
-  // right — the thing that turns a page is a control, and every other control
-  // on this site is on that top row.
+  // — the row every other page on this site puts its controls on. The row
+  // around it takes no clicks, the way the bar over the journal does not: it
+  // is a strip across the top of a scrolling page, and one that swallowed
+  // them would be a dead band across the top of the card.
   //
-  // It says where it lands and carries a caret, and it wears the pill every
-  // other press on this site wears (.ln-pill — Send an album, Get one), which
-  // is what makes it read as pressable at a glance. It was the mark alone
-  // first, out of the same three paneMarks the phone's carets use, on the
-  // grounds that those marks are already the vocabulary for these three
-  // things; Miyel's verdict was that a mark on its own is too quiet for the
-  // one control that says the page turns, and a control nobody notices does
-  // not exist.
-  //
-  // One word, not the pane's whole name (Miyel, 2026-09-15: "we can just do
-  // desk and bio"). The names in paneMarks are read out on a swipe, where a
-  // sentence is right because nothing is on screen to look at; this is a word
-  // on a control at the top of a page, where one is. The sentence is still
-  // the hover, so the short word never has to carry the whole explanation.
-  //
-  // The row around it takes no clicks, the way the bar over the journal does
-  // not: it is a strip across the top of a scrolling page, and a strip that
-  // swallowed them would be a dead band across the top of the card.
-  const turnTo = face === 'card' ? marks[2] : marks[0];
-  // Bio for the card either way — signed in it is yours, signed out it is the
-  // keeper's, and the face is the same face. Desk or About for the other
-  // side, which is the desk for the owner and the colophon for everybody else.
-  const turnWord = face === 'card' ? (authed ? 'Desk' : 'About') : 'Bio';
+  // Card, and Desk or About. Miyel's words, and Card is what this project
+  // already calls that face everywhere — the identity card, DECISIONS, the
+  // code. Bio was tried for an hour and dropped: it is also the name of the
+  // free-text field the prompts replaced, which may yet come back. The pane's
+  // full name stays on the hover; the names in paneMarks are untouched,
+  // because those are read out on a swipe where a sentence is right.
+  const sides = [
+    { key: 'card', word: 'Card', label: marks[0].label },
+    { key: 'desk', word: authed ? 'Desk' : 'About', label: marks[2].label },
+  ];
   const turnLine = (
     <div className="hn-turn-row">
-      <button type="button" className="ln-pill hn-turn" onClick={turnSpine} title={turnTo.label}>
-        {turnWord}
-        <CaretRight size={10} weight="bold" aria-hidden="true" />
-      </button>
+      <div className="hn-turn" role="group" aria-label="Which side of the page">
+        {sides.map(side => (
+          <button
+            key={side.key}
+            type="button"
+            className={'hn-turn-side' + (face === side.key ? ' hn-turn-side--on' : '')}
+            onClick={() => { if (face !== side.key) turnSpine(); }}
+            aria-pressed={face === side.key}
+            title={side.label}
+          >
+            {side.word}
+          </button>
+        ))}
+      </div>
     </div>
   );
 
