@@ -1677,6 +1677,14 @@ current.
       album with several listens reads *Listen 2 of 3 · date* instead of
       repeating the artist on every line, since which listen is the
       question being asked. Nothing about the matching changed.
+- [x] **The menu's two panels are one at a time** (Miyel). Opening the
+      record picker closes the address book and the other way round, so the
+      menu never grows two panels asking different questions about the same
+      send — which is the stack of controls this redesign took off the row.
+      Every way in and out clears both now: the two openers, the ··· toggle,
+      and switching view. The last was invisible rather than harmless — the
+      menu is closed by then so nothing draws — but leaving one set means
+      the next menu opened on that row comes up with a panel already open.
 - [ ] **Names to confirm, 2026-09-15 (the redesign)** — rename freely:
       `VIEWS`, `UNOPENED`, `unopened`, `became`, `Sender`, `resumeListen`,
       `menuFor`;
