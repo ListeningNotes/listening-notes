@@ -23,7 +23,7 @@
 
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
-import { Check, Eye, EyeSlash, Pencil, Printer, UploadSimple, User, X } from '@phosphor-icons/react';
+import { Check, Eye, EyeSlash, Pencil, Printer, PushPin, UploadSimple, User, X } from '@phosphor-icons/react';
 import { useRouter } from 'next/navigation';
 import { useTheme } from './Lightswitch';
 import { useListeningBeacon } from '../../hooks/useListeningBeacon';
@@ -529,26 +529,31 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
         {(pinned || editing) && (
           editing ? (
             <button type="button" className="idc-pinned idc-pinned--pick" onClick={onPickPin}>
+              {/* A pin rather than the word PINNED, beside the art (Miyel,
+                  2026-09-15). The label was a third line of small caps over
+                  an album and an artist, saying what the mark says in one
+                  glyph. The word survives where it is actually needed — in
+                  the row's own label, for anybody who cannot see the pin. */}
+              <PushPin size={15} weight="fill" className="idc-pinned-mark" aria-hidden="true" />
               <span className="idc-pinned-art">
                 {pinned?.album_art
                   ? <img src={pinned.album_art} alt="" />
                   : <span className="idc-pinned-none" aria-hidden="true">♪</span>}
               </span>
               <span className="idc-pinned-said">
-                <span className="idc-pinned-label">Pinned</span>
                 <span className="idc-pinned-album">{pinned ? pinned.album : 'Choose a record'}</span>
                 <span className="idc-pinned-artist">{pinned ? pinned.artist : 'Nothing pinned'}</span>
               </span>
             </button>
           ) : (
-            <Link href={`/entries/${pinned.slug}`} className="idc-pinned" aria-label={`${pinned.album} — ${pinned.artist}`}>
+            <Link href={`/entries/${pinned.slug}`} className="idc-pinned" aria-label={`Pinned: ${pinned.album} — ${pinned.artist}`}>
+              <PushPin size={15} weight="fill" className="idc-pinned-mark" aria-hidden="true" />
               <span className="idc-pinned-art">
                 {pinned.album_art
                   ? <img src={pinned.album_art} alt="" />
                   : <span className="idc-pinned-none" aria-hidden="true">♪</span>}
               </span>
               <span className="idc-pinned-said">
-                <span className="idc-pinned-label">Pinned</span>
                 <span className="idc-pinned-album">{pinned.album}</span>
                 <span className="idc-pinned-artist">{pinned.artist}</span>
               </span>
