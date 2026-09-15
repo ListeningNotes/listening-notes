@@ -1685,6 +1685,14 @@ current.
       and switching view. The last was invisible rather than harmless — the
       menu is closed by then so nothing draws — but leaving one set means
       the next menu opened on that row comes up with a panel already open.
+- [x] **The ··· is a mark, not a second button** (Miyel). It wore a pill
+      beside Start a listen, and two pills side by side read as two equal
+      choices — the opposite of the row's whole point. No border, no
+      ground, three dots in faint ink pushed to the far right edge, so
+      what sits between them and the button is room rather than an
+      eight-pixel gap. Start a listen keeps the left edge. Still 45px of
+      target, taken in padding weighted left so the dots land on the edge
+      and not the padding; full ink while the menu is open.
 - [ ] **Names to confirm, 2026-09-15 (the redesign)** — rename freely:
       `VIEWS`, `UNOPENED`, `unopened`, `became`, `Sender`, `resumeListen`,
       `menuFor`;

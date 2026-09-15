@@ -801,21 +801,33 @@ a.pp-name:hover svg { color: var(--ink); }
    Start a listen is what happens to nearly every send, so it is the only
    button on a row. The rest open under it — in the row, not over a darkened
    page (DECISIONS: a control opens where it belongs). */
+/* A mark, not a second button, 2026-09-15 (Miyel). It wore a pill beside
+   Start a listen and the two read as a pair of equal choices, which is the
+   opposite of what the row is for: one thing happens to nearly every send,
+   and this is the extra. So no border and no ground — three dots in faint
+   ink, pushed to the far edge so there is room between them and the button
+   rather than a gap of eight pixels. */
 .ib-more {
-  border: 1px solid var(--border);
-  border-radius: 999px;
+  margin-left: auto;
+  flex-shrink: 0;
+  border: 0;
+  border-radius: 0;
   background: transparent;
   color: var(--ink-faint);
   font-family: var(--font-label);
-  font-size: 12px;
-  letter-spacing: 0.08em;
+  font-size: 15px;
+  /* Spaced so the dots read as a mark rather than as punctuation. */
+  letter-spacing: 0.2em;
   line-height: 1;
-  padding: 7px 12px 9px;
+  /* A thumb's worth of target on a small mark, taken in padding, weighted
+     to the left so the dots sit on the row's right edge and not the
+     padding. */
+  padding: 14px 0 16px 16px;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
-  transition: color 0.15s, border-color 0.15s;
+  transition: color 0.15s;
 }
-.ib-more:hover, .ib-more--on { color: var(--ink); border-color: var(--ink-faint); }
+.ib-more:hover, .ib-more--on { color: var(--ink); }
 .ib-menu {
   display: flex; flex-direction: column; align-items: flex-start;
   gap: 2px;
