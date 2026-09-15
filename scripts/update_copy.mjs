@@ -38,7 +38,13 @@ import { execFileSync, spawnSync } from 'node:child_process';
 import { appendFileSync } from 'node:fs';
 
 const UPSTREAM = process.env.UPSTREAM_URL || 'https://github.com/ListeningNotes/listening-notes.git';
-const UPSTREAM_REF = 'refs/remotes/upstream/main';
+// What a copy takes is the latest release, never whatever main holds today
+// (2026-09-15, Miyel: cutting a release is the act that ships an update).
+// The release is found by listing upstream's tags — no API, nothing that
+// can be rate-limited — and merged from its own ref; main is only the
+// fallback for an upstream that has never cut one.
+const MAIN_REF = 'refs/remotes/upstream/main';
+const RELEASE_REF = 'refs/remotes/upstream/release';
 // The branch the workflow ran on — the keeper's default branch, normally
 // main. Locally, whatever is checked out.
 const BRANCH = process.env.GITHUB_REF_NAME || current();
@@ -111,8 +117,20 @@ const major = v => Number(String(v).replace(/^v/, '').split('.')[0]) || 0;
 git('config', 'user.name', 'github-actions[bot]');
 git('config', 'user.email', '41898282+github-actions[bot]@users.noreply.github.com');
 
-git('fetch', '--no-tags', UPSTREAM, `+main:${UPSTREAM_REF}`);
-const upstream = git('rev-parse', '--short', UPSTREAM_REF);
+git('fetch', '--no-tags', UPSTREAM, `+main:${MAIN_REF}`);
+// The newest release tag, by version rather than by date or by text: v1.10.0
+// is newer than v1.9.1, which a sort would get wrong.
+const tags = tryGit('ls-remote', '--tags', '--refs', UPSTREAM, 'refs/tags/v*').stdout
+  .split('\n').map(line => line.split('\t')[1] || '').filter(Boolean)
+  .map(ref => ref.replace('refs/tags/', ''))
+  .filter(tag => /^v\d+\.\d+\.\d+$/.test(tag));
+const latest = tags.reduce((best, tag) => (!best || isNewer(tag, best) ? tag : best), '');
+let UPSTREAM_REF = MAIN_REF;
+if (latest) {
+  git('fetch', '--no-tags', UPSTREAM, `+refs/tags/${latest}:${RELEASE_REF}`);
+  UPSTREAM_REF = RELEASE_REF;
+}
+const upstream = latest ? latest.replace(/^v/, '') : git('rev-parse', '--short', MAIN_REF);
 
 if (tryGit('merge-base', '--is-ancestor', UPSTREAM_REF, 'HEAD').status === 0) {
   say('## Already up to date', '', `This copy already has everything in Listening Notes (${upstream}).`);

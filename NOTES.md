@@ -1509,6 +1509,13 @@ current.
 
 **2026-09-15 — copies update themselves, 1.12.0, on main**
 
+- [x] **Copies take the latest release, not main, 2026-09-15 (Miyel).**
+      The script lists upstream's `v*` tags (`git ls-remote`, no API to be
+      rate-limited), picks the newest by version, fetches that tag and
+      merges it; main is the fallback only for an upstream with no
+      releases. The button does the same. Tested locally: a copy at 1.10.1
+      with main a commit past v1.12.0 lands on v1.12.0's commit. No file
+      change for copies — the script is fetched from main on every run.
 - [x] **The workflow runs hourly as well as on its button.** `schedule:
       '17 * * * *'` in `update.yml`. On a scheduled run the script refuses
       to cross a major version (says so on the summary, exits clean) and
