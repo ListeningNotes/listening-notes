@@ -319,6 +319,25 @@ export default function FullPostPage({ entry, references = [], authed = false, l
         />
       </label>
       <MiniAddressBook people={edit.book} linked={linkedTo} narrow={senderText} onPick={sendBy} />
+      {/* Whether to publish who it came from. The sender answers this on the
+          send form and it arrives already set (migrations/012), so this is
+          for the case the form could not reach: a credit added by hand from
+          the address book names somebody who was never asked, and somebody
+          may have said so in person. Off means credited, because public
+          credit is the default and quiet is the choice. */}
+      {senderText.trim() && (
+        <button
+          type="button"
+          className={'ln-flag' + (edit.draft.credit_private ? ' ln-flag--on' : '')}
+          onClick={() => edit.set('credit_private', !edit.draft.credit_private)}
+          aria-pressed={!!edit.draft.credit_private}
+          title={edit.draft.credit_private
+            ? 'Their name is kept off this record everywhere it is read'
+            : 'Their name is published on this record, as credit'}
+        >
+          Don&rsquo;t credit them
+        </button>
+      )}
     </span>
   );
 

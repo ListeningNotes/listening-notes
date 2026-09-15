@@ -297,28 +297,7 @@ cannot be tested end to end.
 2026-09-12. The address book merged to main that day, the feed and the
 person's page the next (Complete). Left: the printer, and the chain.
 
-- [ ] **`feed.xml` drops the credit — checked 2026-09-15, parked for its
-      own session.** Confirmed rather than assumed: `app/feed.xml/route.js`
-      already calls `pull_public_entries`, so the credit *reaches* it and
-      is never used — an item's description is built from artist, year,
-      rating and how it was heard, and `received_from` falls on the floor.
-      The word Kai appears nowhere in the whole feed; the same entry read
-      through `/api/public/entries` comes back with `received_from: "Kai"`
-      and her address. So the two public reads disagree, and the fix is one
-      line in one file, not a data problem.
-      **Decide the toggle in the same pass.** Four of the eighteen
-      Submission entries carry a credit today, so switching this on starts
-      naming Kai, Zacchy, Bluu and Peyton to anyone subscribed in a reader,
-      and the per-entry quiet choice DECISIONS promises is still owed
-      (below). Publishing to readers before it exists means a send can be
-      made public with no way back short of clearing the field.
-- [ ] **The feed's two loose ends, 2026-09-13.** (a) The quiet toggle:
-      DECISIONS promises a per-entry choice to credit a send privately, and
-      the feed — and since 2026-09-14 the entry page — publishes the credit
-      by default. The toggle is a boolean on the entry, a control beside
-      the Sent by field at the head of edit mode, and a filter in one place:
-      `withoutChain` in `database_actions.js`, which every read of the
-      credit now goes through. (b) Track notes on
+- [ ] **The feed's remaining loose end, 2026-09-13.** Track notes on
       a row's Compare: the feed carries no writing, so the panel shows the
       two verdicts and the two horizons and links to both entries. Their
       track notes need their copy to serve an entry across origins — CORS
@@ -1609,6 +1588,45 @@ current.
 ---
 
 ## Complete
+
+**2026-09-15 — the credit is published in the feed, and the sender decides
+whether there is one, on main**
+
+- [x] **Confirmed first, then fixed.** `feed.xml` already received the
+      credit — it calls `pull_public_entries` — and dropped it, so a reader
+      saw *(Submission)* where another copy saw a name. An item now reads
+      *Beyoncé · 2016 — 4 (from Kai)*: the name and never the address, since
+      a journal is shown by its keeper's name, and *from Kai* replaces the
+      shelf it came off because it is the same fact and more of it.
+- [x] **The sender decides, which was Miyel's question and the better
+      answer.** The credit puts *their* name on somebody else's public
+      journal, and until now they had no way to decline while the keeper
+      could already clear the field. The send form asks — *Don't credit me
+      publicly*, off by default — and the answer rides all the way: the
+      send holds it (`submissions.quiet`), a paused listen holds it
+      (`drafts.credit_private`, the same reason `received_from` is there),
+      and the entry holds it (`entries.credit_private`), because losing it
+      at any hop would publish a name somebody asked to keep off.
+      Migration 012; all three ship false, which is what every existing row
+      already is.
+- [x] **And the keeper can set it, for what the form cannot reach.** A
+      credit added by hand from the address book names somebody who was
+      never asked — Kai's Lemonade is exactly that — and somebody may have
+      said so in person. A pill in the flags row, *Don't credit them*,
+      drawn only once a sender is named.
+- [x] **One rule, one place.** `withoutChain` withholds it, so the entry's
+      own read, the wall's and the feed's cannot disagree; the flag itself
+      is never published, because whether something was withheld is not a
+      reader's business.
+- [x] **Verified end to end.** The rule tested directly — quiet withholds
+      both fields, a Library entry never publishes a name, the flag never
+      leaks — and then on the live row: flipped to quiet, the feed fell
+      back to *(Submission)* and both reads dropped the name together, then
+      restored. Nothing was left changed.
+- [ ] **Names to confirm, 2026-09-15** — rename freely: `credit_private`
+      and `submissions.quiet` (Miyel's), `CREDIT_GUARD`, `creditPrivate`;
+      the words *Don't credit me publicly* (the form) and *Don't credit
+      them* (the entry); `.sb-quiet` in forms.css.
 
 **2026-09-15 — the lineage machinery retired, branch `park-lineage`,
 merged to main and pushed as 1.14.1 — nothing a keeper sees, so the last

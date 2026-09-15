@@ -1,0 +1,33 @@
+-- Copyright (C) 2026 Miyel Brown
+-- SPDX-License-Identifier: AGPL-3.0-or-later
+-- migrations/012_quiet_credit.sql
+--
+-- Sending somebody a record without your name on it.
+--
+-- A Submission entry publishes who sent it — the name and their journal, on
+-- the entry, in the wall's read and in the feed another copy pulls. Public
+-- credit is the default and has been since 2026-09-13, and DECISIONS has
+-- always promised the other half of that sentence: quiet is a choice.
+--
+-- **Whose choice.** The sender's, 2026-09-15. The credit puts *their* name
+-- on somebody else's page, and until now they had no way to decline while
+-- the keeper could already do it crudely by clearing the field. So the send
+-- form asks — `submissions.quiet`, off by default — and the answer rides
+-- into the entry when the record is logged.
+--
+-- The keeper can set it too, on the entry, for the case the send form cannot
+-- reach: a credit added by hand from the address book names somebody who was
+-- never asked, and somebody may have said so in person. One flag, two ways in.
+--
+-- **Three columns, because the value has to survive the whole journey.** The
+-- send carries it (`submissions.quiet`); a listen paused halfway carries it
+-- (`drafts.credit_private`, the same reason `received_from` is there); and
+-- the entry is what actually gets read, so the entry holds it
+-- (`entries.credit_private`). Losing it at any hop would publish a name
+-- somebody asked to keep off.
+--
+-- All three ship false, which is the state every existing row is in: public
+-- credit stays the default and nothing already written changes meaning.
+ALTER TABLE entries     ADD COLUMN IF NOT EXISTS credit_private boolean DEFAULT false;
+ALTER TABLE drafts      ADD COLUMN IF NOT EXISTS credit_private boolean DEFAULT false;
+ALTER TABLE submissions ADD COLUMN IF NOT EXISTS quiet          boolean DEFAULT false;

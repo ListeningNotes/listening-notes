@@ -1098,3 +1098,16 @@ a.pn-item-album:hover { text-decoration: underline; text-underline-offset: 3px; 
 /* A send typed in by hand rather than picked off a shelf has no cover. The
    frame stays so the column does not shift under the ones that do. */
 .ib-nocover { font-size: 18px; color: var(--ink-faint); }
+
+/* ── Sending without your name on it ────────────────────────────────────────
+   The credit puts the sender's name on somebody else's public journal, so
+   the sender is the one asked (2026-09-15). Under the name and journal
+   fields, off by default, and set in the same quiet type the labels use so
+   it reads as a choice rather than as a warning. */
+.sb-quiet {
+  display: flex; align-items: center; gap: 9px; cursor: pointer;
+  font-family: var(--font-label); font-size: 11px; letter-spacing: 0.04em;
+  color: var(--ink-soft);
+}
+.sb-quiet input { width: 15px; height: 15px; accent-color: var(--ink); cursor: pointer; flex-shrink: 0; }
+.sb-quiet:hover { color: var(--ink); }

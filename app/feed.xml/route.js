@@ -8,7 +8,20 @@
 // and no way to know who is reading. Nothing to check, nothing to perform for.
 //
 // Deliberately carries only what an item needs to be recognised and clicked:
-// the record, how it was heard, and a link. The writing stays on the journal.
+// the record, how it was heard, who sent it, and a link. The writing stays on
+// the journal.
+//
+// The credit reached this route from the day it existed — pull_public_entries
+// has carried it since 2026-09-13 — and was dropped on the floor here until
+// 2026-09-15, so a reader saw "(Submission)" where another copy saw a name.
+// It says *from Kai* rather than the shelf it came off, because that is the
+// same fact and more of it. A name and never an address: a journal is shown
+// by its keeper's name (DECISIONS, Sharing), and a reader who wants the
+// person can follow the entry.
+//
+// Nothing decides here whether a credit may be published. pull_public_entries
+// has already withheld it where the sender asked to be quiet — one rule, in
+// one place, for the feed and the wall and the entry alike.
 
 import { pull_public_entries } from '@/library/database_actions';
 import { entryTypeLabel } from '@/library/entry_formatter';
@@ -45,7 +58,8 @@ export async function GET(request) {
     const link = `${origin}/entries/${e.slug}`;
     // posted_at is a real instant; RFC 822 is what a reader expects to parse.
     const date = e.posted_at ? new Date(e.posted_at).toUTCString() : null;
-    const heard = entryTypeLabel(e.entry_type);
+    const from = String(e.received_from || '').trim();
+    const heard = from ? `from ${from}` : entryTypeLabel(e.entry_type);
     const summary = [e.artist, e.year].filter(Boolean).join(' · ')
       + (e.rating ? ` — ${e.rating}` : '')
       + (heard ? ` (${heard})` : '');

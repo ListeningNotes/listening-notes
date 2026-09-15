@@ -703,8 +703,15 @@ address, not by id, 2026-09-15:** each hop follows `received_from_url` to
 that journal's public feed and finds their entry for the same album
 (`Chain.js`), which works across copies where an id cannot.
 
-**`received_from` is published per entry**, with a per-entry toggle for
-private sends. Public credit is the default; quiet is a choice. **Built
+**`received_from` is published per entry, and the sender decides,
+2026-09-15.** Public credit is the default; quiet is a choice — and it is the
+*sender's* choice, because the credit puts their name on somebody else's
+public journal and they had no way to decline while the keeper could already
+clear the field. The send form asks (`submissions.quiet`, off by default) and
+the answer rides into the entry. The keeper can set it too, for what the form
+cannot reach: a credit added by hand from the address book names somebody who
+was never asked. One flag, two ways in, honoured in one place — `withoutChain`,
+so the entry, the wall and the feed cannot disagree. **Built
 2026-09-13 as the feed's credit, and on the entry itself 2026-09-14:** a
 Submission entry carries `received_from` and `received_from_url` on every
 read — the feed, the wall, the entry's own page — and on no other kind of

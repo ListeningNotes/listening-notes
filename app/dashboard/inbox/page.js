@@ -257,6 +257,7 @@ export default function Inbox({ layered = false }) {
       receivedDate: draft?.received_date
         ? String(draft.received_date).slice(0, 10)
         : (sent.created_at ? String(sent.created_at).slice(0, 10) : ''),
+      creditPrivate: draft ? draft.credit_private === true : sent.quiet === true,
       draft,
     }));
     router.push('/session');
@@ -309,6 +310,9 @@ export default function Inbox({ layered = false }) {
       // (migrations/008_received_from_url.sql).
       receivedFromUrl: sent.sender_url || '',
       receivedDate: sent.created_at ? String(sent.created_at).slice(0, 10) : '',
+      // Whether they asked not to be credited, carried the whole way so the
+      // entry is written with the answer already in it.
+      creditPrivate: sent.quiet === true,
     }));
     await updateStatus(sent.id, 'reviewed');
     router.push('/session');

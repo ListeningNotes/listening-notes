@@ -21,7 +21,7 @@ export async function POST(request) {
   try {
     const {
       album, artist, year, note, submitter_name,
-      album_art, collection_id, sender_url,
+      album_art, collection_id, sender_url, quiet,
     } = await request.json();
 
     if (!album?.trim() || !artist?.trim() || !note?.trim()) {
@@ -45,6 +45,10 @@ export async function POST(request) {
       album, artist, year, note, submitter_name,
       album_art, collection_id,
       sender_url: tidyAddress(sender_url),
+      // Whether the sender asked not to be credited. Coerced rather than
+      // trusted: a route states its own rules, and anything that is not a
+      // clear yes is the default, which is public.
+      quiet: quiet === true,
     });
     return Response.json({ submission });
   } catch (error) {
