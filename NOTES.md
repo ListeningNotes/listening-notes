@@ -263,6 +263,12 @@ cannot be tested end to end.
       picker opens there and the spine stays put; the four screens under it
       were not seen. The note field's desktop floor is 168px and the track
       strip already flexes to one line — both want an eye.
+- [ ] **The correction bar and the print bar with a real edit open.** Their
+      inset rule was dead from 1.10.0 until today (see Gotchas) and is now at
+      the foot of entry.css where it can win. By script it is right in both
+      cases — pinned to the right page with the cross under it (300/0, and
+      the trouble line at 316/16), full width on an entry opened cold at its
+      own address. Neither was seen with a bar actually on screen.
 - [ ] **A window under 900px.** At 820 the spine is at its floor (300) and
       the journal at its own (520), and the wall's bar now wraps to two rows
       rather than crushing the search field to nothing. Seen by script and
@@ -1071,6 +1077,19 @@ Project → Settings → Environment Variables.
 ---
 
 ## Gotchas
+
+**A rule that has to beat a later one has to come after it, 2026-09-15.** The
+correction bar, its trouble line and the print bar were told to inset
+themselves to the journal's column on a desk — in the layer block near the top
+of entry.css, where the rest of that work lives. Each of those three also sets
+`left` and `right` in its own base rule several hundred lines further down, at
+the same specificity, so source order handed it to the base every time and the
+rule did nothing at all from 2026-09-13 until it was found today. It read
+correctly, it was in the right neighbourhood, and it had never once applied.
+Two things: a desktop override of a component belongs after that component's
+own rules, not with the layout work it belongs to conceptually; and when NOTES
+says a thing was "not seen by eye", that is the list to work through — this
+was on it.
 
 **`container-type: inline-size` makes the element a containing block for
 every `position: fixed` and `absolute` descendant, 2026-09-15.** It was the

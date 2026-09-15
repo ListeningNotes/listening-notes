@@ -209,20 +209,21 @@
      turns the journal into the session while the spine stays exactly where
      it is. Everything the entry pins to the window — its header row and the
      band behind it, the carets to its neighbours, the print bar — is pinned
-     to that page instead. */
-  .lay--over-journal { left: var(--spine-w, clamp(300px, 25vw, 420px)); right: 0; }
-  .lay--over-journal .sitenav-row,
-  .lay--over-journal .sitenav-row::before { left: var(--spine-w, clamp(300px, 25vw, 420px)); right: 0; }
-  .lay--over-journal .lay-step--prev { left: calc(var(--spine-w, clamp(300px, 25vw, 420px)) + 10px); }
-  .lay--over-journal .lay-step--next { right: 10px; }
-  /* The correction's bar, its trouble line and the print bar are pinned to
-     the window from wherever they are drawn (the print bar is portalled onto
-     the body), so they read the root's own number: the right page's edge
-     when the cross is under them, the window's when the entry stands
-     alone. */
-  .ln-editing-bar, .ln-print-bar { left: var(--spine-w, 0px); right: 0; }
-  .ln-trouble { left: calc(var(--spine-w, 0px) + 16px); right: 16px; }
+     to that page instead.
 
+     The fallback is --spine-rest, not 0: a layer only ever exists with the
+     cross under it, so the rest width is the right answer for the frame
+     before the hook writes the live number.
+
+     The three bars an entry pins to the window — the correction bar, its
+     trouble line and the print bar — are NOT here. They are at the foot of
+     this file, after their own base rules, because that is the only place
+     they can win; see the note there. */
+  .lay--over-journal { left: var(--spine-w, var(--spine-rest)); right: 0; }
+  .lay--over-journal .sitenav-row,
+  .lay--over-journal .sitenav-row::before { left: var(--spine-w, var(--spine-rest)); right: 0; }
+  .lay--over-journal .lay-step--prev { left: calc(var(--spine-w, var(--spine-rest)) + 10px); }
+  .lay--over-journal .lay-step--next { right: 10px; }
   /* The owner's own rooms — the inbox, the address book, a person, a report,
      Settings — open in the *spine*, as a shallow stack with a way back to the
      desk. Not on the right, where they would be fighting a session for the
@@ -232,7 +233,7 @@
   .lay--over-spine {
     right: auto;
     left: 0;
-    width: var(--spine-w, clamp(300px, 25vw, 420px));
+    width: var(--spine-w, var(--spine-rest));
     border-right: 1px solid var(--border);
     box-shadow: 14px 0 44px rgba(0, 0, 0, 0.1);
   }
@@ -1401,3 +1402,25 @@ html[data-printing] .sitenav-row { display: none; }
    band, which shows the page's background, wears the bar's colour — the
    same --bg — and reads as the bar's foot rather than as a gap. */
 @media (prefers-reduced-motion: reduce) { .ln-print-line { transition: none; } }
+
+/* ── The bars an entry pins to the window, on a desk ───────────────────────
+   The correction bar, its trouble line and the print bar (which is portalled
+   onto the body) are fixed to the window from wherever they are drawn. When
+   the entry is the right page of the open book they belong to that page; when
+   it is a whole standalone page at its own address they belong to the window.
+   --spine-w is written on the root by hooks/useSpineWidth.js and exists only
+   while the cross is mounted, so its absence is exactly the question "is
+   there a spine beside this" — which makes the fallback 0, and makes this
+   correct in both cases without either knowing about the other.
+
+   At the foot of the file, and that is not tidiness. This lived up in the
+   layer block with .lay--over-journal from 2026-09-13 to 2026-09-15 and did
+   nothing at all for those two days: .ln-editing-bar, .ln-trouble and
+   .ln-print-bar each set left and right in their own base rules further down,
+   at the same specificity, so source order gave it to the base every time and
+   the bars ran the full width of the window over the spine. A rule that has
+   to beat a later one has to come after it. */
+@media (min-width: 769px) {
+  .ln-editing-bar, .ln-print-bar { left: var(--spine-w, 0px); right: 0; }
+  .ln-trouble { left: calc(var(--spine-w, 0px) + 16px); right: 16px; }
+}
