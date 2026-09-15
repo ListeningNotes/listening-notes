@@ -1932,6 +1932,21 @@ lesson is in the entry below.**
       three, because the three are one question. The card's count and the
       wall's filtered count agree by construction — 4 of 39 and 9 of 39 —
       because both read the same two columns.
+- [x] **And the wall arrives on the sheet, growing from the number you
+      pressed** (Miyel: it should move the way the pinned record does — you
+      feel it pull up from where the journal would be, and a swipe down puts
+      it away and leaves you on the card). `app/@layer/(.)archive/page.js`
+      intercepts the address, so the cross never unmounts and closing returns
+      to the card face with its scroll intact; `over="journal"` puts it on the
+      right page on a desk. `arrives` is left at its default rather than
+      `bottom`, because rising from the foot of the screen loses the
+      connection to the number. It grows from `data-grows` (handoff.js,
+      `growBoxOf`), which is stamped on the pressed count at the moment of the
+      press and taken off the other two — stamped in the markup all three
+      would answer to the same path and the first would always win, which is a
+      wall growing out of the wrong number. The standalone `/archive` still
+      answers a bookmark or a shared filter, which is why the filter lives in
+      the address rather than in a hand-off.
 - [x] **Then the pinned record: centred, smaller, and a pin instead of the
       word.** It was ranged left for an hour on the argument that a record is
       left-aligned everywhere else on this site; on a pane whose whole head is

@@ -118,7 +118,21 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
   // into an entry (Miyel, 2026-09-15): a number about how somebody listens is
   // worth pressing. /archive is the wall's own address and mounts the same
   // component the cross's centre pane does, so the filter arrives with the
-  // page rather than having to be reached across two panes.
+  // page rather than having to be reached across two panes — and it is
+  // intercepted as a layer (app/@layer/(.)archive), so the wall pulls up over
+  // the card and a swipe down leaves you where you were.
+  //
+  // The layer grows from the box marked `data-grows` for the path it is
+  // opening (library/handoff.js). All three counts open the same path, so the
+  // mark is put on at the moment of the press and taken off the other two —
+  // stamped in the markup they would all answer to it and the first one would
+  // always win, which is a wall that grows out of the wrong number.
+  const growFromPressed = event => {
+    const row = event.currentTarget.parentElement;
+    if (!row) return;
+    for (const el of row.children) el.removeAttribute('data-grows');
+    event.currentTarget.setAttribute('data-grows', '/archive');
+  };
   const counts = [
     ...(records !== null ? [{ word: 'albums', n: records, to: '/archive' }] : []),
     ...marks.map(m => ({
@@ -518,6 +532,7 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
                 key={c.word}
                 href={c.to}
                 className={'idc-count idc-count--' + c.word}
+                onClick={growFromPressed}
                 title={c.word === 'albums' ? 'Every record in this journal' : `Every record marked ${c.word === 'masterpieces' ? 'a masterpiece' : 'formative'}`}
               >
                 <b className="idc-count-n">{c.n}</b>

@@ -230,6 +230,7 @@ The rooms — full pages assembled from furniture
     printer/page.js            The share printer — the press on a record for the keeper (?entry=slug); the sentence for everyone else and for the card, whose plate is still to come
     setup/page.js              Claiming a copy: the code, the name, three skippable screens, the password
     settings/page.js           The machinery, owner-only
+    @layer/(.)archive/page.js  The wall, opened as a layer over whatever you were on — what the ID card's counts press into, growing from the number pressed
     @layer/(.)session/page.js  The same listen, opened as a layer over the desk
     @layer/(.)dashboard/inbox/page.js  The inbox, opened as a sheet over the desk
     @layer/(.)dashboard/people/page.js  The address book, on the same sheet
