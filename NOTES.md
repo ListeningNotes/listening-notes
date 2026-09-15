@@ -297,6 +297,21 @@ cannot be tested end to end.
 2026-09-12. The address book merged to main that day, the feed and the
 person's page the next (Complete). Left: the printer, and the chain.
 
+- [ ] **`feed.xml` drops the credit — checked 2026-09-15, parked for its
+      own session.** Confirmed rather than assumed: `app/feed.xml/route.js`
+      already calls `pull_public_entries`, so the credit *reaches* it and
+      is never used — an item's description is built from artist, year,
+      rating and how it was heard, and `received_from` falls on the floor.
+      The word Kai appears nowhere in the whole feed; the same entry read
+      through `/api/public/entries` comes back with `received_from: "Kai"`
+      and her address. So the two public reads disagree, and the fix is one
+      line in one file, not a data problem.
+      **Decide the toggle in the same pass.** Four of the eighteen
+      Submission entries carry a credit today, so switching this on starts
+      naming Kai, Zacchy, Bluu and Peyton to anyone subscribed in a reader,
+      and the per-entry quiet choice DECISIONS promises is still owed
+      (below). Publishing to readers before it exists means a send can be
+      made public with no way back short of clearing the field.
 - [ ] **The feed's two loose ends, 2026-09-13.** (a) The quiet toggle:
       DECISIONS promises a per-entry choice to credit a send privately, and
       the feed — and since 2026-09-14 the entry page — publishes the credit
