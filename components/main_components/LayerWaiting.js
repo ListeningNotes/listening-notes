@@ -39,6 +39,7 @@ import KeeperTools from './KeeperTools';
 import { useLayerHeaderSlot } from './LayerEntry';
 import StarRating from './StarRating';
 import Chip from './Slug_Page/Chip';
+import SentBy, { creditOn } from './Slug_Page/SentBy';
 import { fonts } from '../../library/sitewide_visuals';
 
 export default function LayerWaiting({ slug, authed = false }) {
@@ -107,18 +108,21 @@ export default function LayerWaiting({ slug, authed = false }) {
         )}
         <div className="ln-screen-one-chips">
           {listenLabel && <Chip>{listenLabel}</Chip>}
-          {/* The same button the entry draws, inert, so the chip does not
-              change shape when the entry lands — a plain chip here and a
-              button with a caret there was the row moving under the eye. */}
-          {known.entry_type === 'Submission' && (
-            <Chip onClick={() => {}} expanded={false} label="Where this record came from">
-              Submission
-              <span className="ln-chain-caret" aria-hidden="true" />
-            </Chip>
-          )}
+          {/* The chip only where the line below cannot be drawn, which is the
+              rule the entry itself follows — both ask creditOn, so the two
+              can never disagree and the row cannot change shape when the
+              entry lands (SentBy.js, 2026-09-15). */}
+          {known.entry_type === 'Submission' && !creditOn(known) && <Chip>Submission</Chip>}
           {known.favorite && <Chip tone="fav">Favorite</Chip>}
           {isMasterpiece && <Chip tone="mp">Masterpiece</Chip>}
         </div>
+        {/* The real component, drawn from what the wall handed over. The face
+            and the name were already known; the trail behind them is handed no
+            walk here, because it belongs to the entry about to land. Which
+            leaves the +2 pill as the one thing on this screen that does arrive
+            late — it cannot be known without asking somebody's journal — and
+            it grows off the end of the line rather than reflowing anything. */}
+        <SentBy entry={known} />
         {postedOn && (
           <div style={{ fontFamily: fonts.mono, fontSize: '9px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--ink-faint)' }}>
             Posted {postedOn}
