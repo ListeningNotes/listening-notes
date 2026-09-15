@@ -1211,20 +1211,22 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   .hn--dragging { user-select: none; -webkit-user-select: none; cursor: col-resize; }
   .hn--dragging .hn-pane { pointer-events: none; }
 
-  /* ── What turns the spine ── both sides in one switch, at the spine's
-     top right. The bar's own geometry, over the spine instead of over
-     the journal — the same 22px down and the same 58px row — so this mark and
-     the lights at the journal's right edge sit on one line, one at each
-     page's outer corner. It was a line across the foot of the spine for an
-     afternoon (Miyel, the same day: the foot is the wrong place).
+  /* ── What turns the spine ── both sides in one switch, centred over the
+     spine. The bar's own geometry, over the spine instead of over the journal
+     — the same 22px down and the same 58px row — so the switch and the mark
+     over the journal sit on one line, each centred on its own page's measure,
+     with the lights at the far right of the whole window. It was a line
+     across the foot of the spine for an afternoon (Miyel, the same day: the
+     foot should just read), then right-aligned against the fold ("maybe it
+     can be centered").
 
      Fixed to the window rather than to a face, so it holds still while either
      of them scrolls and there is one of it rather than two. The row takes no
      clicks — it is a strip across the top of a scrolling page, and one that
      swallowed them would be a dead band across the top of the card — and the
-     button inside takes its own back. */
+     buttons inside take their own back. */
   .hn-turn-row {
-    display: flex; align-items: center; justify-content: flex-end;
+    display: flex; align-items: center; justify-content: center;
     position: fixed; top: 0; left: 0; z-index: 96;
     width: var(--spine-w, var(--spine-rest));
     height: var(--hn-bar-h);
