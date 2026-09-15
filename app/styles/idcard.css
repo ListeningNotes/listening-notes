@@ -892,24 +892,31 @@ a.ab-rig-name:hover { text-decoration: underline; }
    top-left, on the line the mark over the centre and the lights sit on, and
    the card starts under that line. The prompts and the rig follow on the
    same scroll, at the rail's measure. */
+/* The card on the spine — the left page of the open book, about a quarter of
+   the window. Wider than the 196px rail it used to be printed at, so the
+   portrait and the name can be the size they are on a phone rather than a
+   reduction of it, and the facts get a line each without wrapping. */
 @media (min-width: 769px) {
-  .ab-card { min-height: auto; padding: var(--hn-rail-top) 12px 24px; }
+  .ab-card { min-height: auto; padding: var(--hn-rail-top) var(--hn-gutter, 18px) 24px; }
   .ab-card .idc { max-width: none; }
-  .ab-card .idc-head { top: 22px; left: 12px; }
+  .ab-card .idc-head { top: 22px; left: var(--hn-gutter, 18px); }
   .ab-card .idc-portrait {
-    width: 100%; max-width: 180px; height: auto; aspect-ratio: 1 / 1;
+    width: 100%; max-width: 208px; height: auto; aspect-ratio: 1 / 1;
     margin-top: 0; border-radius: 14px;
   }
-  .ab-card .idc-name { font-size: 24px; margin-top: 16px; }
-  .ab-card .idc-line { flex-wrap: wrap; row-gap: 2px; max-width: none; margin-top: 12px; font-size: 12px; }
+  .ab-card .idc-name { font-size: 26px; margin-top: 18px; }
+  .ab-card .idc-line { flex-wrap: wrap; row-gap: 2px; max-width: none; margin-top: 13px; font-size: 12px; }
   .ab-card .idc-line-label { width: auto; }
   /* The pinned record takes the row under its label rather than the sixty
      pixels beside it, where the album's name was three letters and dots. */
   .ab-card .idc-pin-row { flex-direction: column; align-items: flex-start; gap: 6px; }
   .ab-card .idc-pin { width: 100%; }
   .ab-card .idc-send { margin-top: 14px; }
+  /* The writing under the card, on the same scroll rather than a floor of
+     its own: on a desk the floors are plain wrappers and the page is the
+     scroller, so the card leads and the answers follow it down the page. */
   .ab-below { padding-top: 0; gap: 22px; }
-  .ab-prompt { font-size: 13px; padding: 10px 0; }
+  .ab-prompt { font-size: 13.5px; padding: 11px 0; }
   .ab-subhead { font-size: 0.62rem; }
   .ab-rig-name { font-size: 0.85rem; }
   .ab-rig-row { padding: 9px 0; }

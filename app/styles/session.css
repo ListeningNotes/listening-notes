@@ -156,6 +156,12 @@
 /* 16px on touch, or Safari zooms the page in on focus and does not reliably
    zoom back out. See the longer note in app/submit/page.js. */
 @media (pointer: coarse) { .ses-input, .ses-textarea { font-size: 16px; } }
+/* On a desk the note is a real field and not a box you scroll. The width is
+   the same reading measure either way — it is the height that a phone cannot
+   give you, and having a paragraph's worth of room in front of you before you
+   start is most of the reason somebody writes a listen up on a laptop. It
+   still grows as you type; this is only where it begins. */
+@media (min-width: 769px) { .ses-textarea { min-height: 168px; } }
 .ses-field { display: flex; flex-direction: column; gap: 7px; }
 .ses-field--year { max-width: 150px; }
 
