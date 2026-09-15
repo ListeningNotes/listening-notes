@@ -284,13 +284,16 @@ cannot be tested end to end.
       `.lay--over-journal` / `.lay--over-spine`; `.db-hero--lit` and
       `.db-hero-record`; the inbox's `.ib-holding`. The grip's label is
       "Resize the spine".
-- [ ] **The turn line is a mark and not a word, on Miyel's call
-      (2026-09-15): "can we try a phosphor icon, if I don't like it we can
-      do destination with caret."** It is the mark of the face it turns to,
-      out of the same three `paneMarks` the phone's carets use — the card,
-      a cog for the desk, ⓘ for the colophon — with the words on the hover
-      and in the label. The fallback is one line in HomeNav: put
-      `{turnTo.label}` and a caret back beside the icon.
+- [ ] **What turns the spine is a mark, and it is at the top right.** Miyel
+      asked for the icon ("can we try a phosphor icon, if I don't like it we
+      can do destination with caret") and then moved it the same afternoon:
+      the centred line across the foot was "not the right idea". It is the
+      mark of the face it turns to — the card, a cog for the desk, ⓘ for the
+      colophon, out of the same three `paneMarks` the phone's carets use — on
+      the bar's own line, so it and the lights over the journal are one mark
+      at each page's outer corner. Words are on the hover and in the label.
+      If the mark alone still does not say "this turns", the fallback is one
+      line in HomeNav: `{turnTo.label}` and a caret beside it.
 
 - [ ] **Where a record came from wants one pass of refinement, 2026-09-15.**
       Miyel's call at the end of the credit and inbox work, and it is
@@ -1772,12 +1775,17 @@ current.
       journal does not move when it turns — measured, 300 before and after.
       Signed out the far face is the colophon, which is the same side of the
       same leaf, so one remembered answer covers both.
-- [x] **The line at the spine's foot (`.hn-turn`).** Fixed across the bottom
-      of the left page, the width of it, with the mark of the face it turns
-      to on it — `paneMarks`' own three, so the vocabulary is the phone's.
-      Miyel's call: try an icon first, fall back to the destination and a
-      caret if it does not read. The words are on the hover and in the
-      label. Stated `display: none` at the base so the phone never draws it,
+- [x] **What turns the spine (`.hn-turn`, in `.hn-turn-row`).** The mark of
+      the face it turns to — `paneMarks`' own three, so the vocabulary is the
+      phone's — at the spine's **top right**, on the bar's own geometry (22px
+      down, the same 58px row), so it and the lights over the journal sit on
+      one line: measured, both centred at 51px. It was a line across the foot
+      of the spine first, the way a book puts a page number; Miyel moved it
+      the same afternoon and she is right — the thing that turns the page is
+      a control, and every other control on this site is on that top row. The
+      row takes no clicks and the button takes its own back, the way the bar
+      over the journal does, so there is no dead band across the top of the
+      card. Stated `display: none` at the base so the phone never draws it,
       which a button in the markup otherwise is, in the tab order and read
       out, whether or not it can be seen.
 - [x] **The colophon is the one thing centred.** `.hn-face--colophon`, a

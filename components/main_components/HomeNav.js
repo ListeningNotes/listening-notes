@@ -583,30 +583,38 @@ export default function HomeNav() {
     />
   );
 
-  // ── The line at the spine's foot ──────────────────────────────────────────
-  // The only thing on screen saying the left page turns at all, so it is drawn
-  // as a line across the foot of it rather than as a control floating on the
-  // page — a page number's position, which is where a book puts the thing that
-  // means "there is another one of these".
+  // ── What turns the spine ──────────────────────────────────────────────────
+  // At the spine's top right, on the same line as the lights over the journal
+  // — one small mark at each page's right edge, which is the row every other
+  // page on the site puts its controls on. It was a line across the foot of
+  // the spine for an afternoon, centred, the way a book puts a page number;
+  // Miyel's call the same day was that the foot is the wrong place, and she is
+  // right — the thing that turns a page is a control, and every other control
+  // on this site is on that top row.
   //
   // What is on it is the mark of the face you would land on, out of the same
   // three the cross already uses for its panes (paneMarks): the card's, and
   // the desk's — a cog signed in, the software's ⓘ signed out. A mark rather
-  // than a word because the marks are already this site's vocabulary for these
-  // three things and the words under them on a phone say the same thing twice.
-  // The words are still there for anyone who needs them, on the hover and in
-  // the label.
+  // than a word, because the marks are already this site's vocabulary for
+  // these three things. The words are still there for anyone who needs them,
+  // on the hover and in the label.
+  //
+  // The row around it takes no clicks, the way the bar over the journal does
+  // not: it is a strip across the top of a scrolling page, and a strip that
+  // swallowed them would be a dead band across the top of the card.
   const turnTo = face === 'card' ? marks[2] : marks[0];
   const turnLine = (
-    <button
-      type="button"
-      className="hn-turn"
-      onClick={turnSpine}
-      aria-label={turnTo.label}
-      title={turnTo.label}
-    >
-      <turnTo.Icon size={19} weight="regular" aria-hidden="true" />
-    </button>
+    <div className="hn-turn-row">
+      <button
+        type="button"
+        className="hp-icon-btn hn-turn"
+        onClick={turnSpine}
+        aria-label={turnTo.label}
+        title={turnTo.label}
+      >
+        <turnTo.Icon size={18} weight="regular" aria-hidden="true" />
+      </button>
+    </div>
   );
 
   return (
@@ -731,7 +739,7 @@ export default function HomeNav() {
         </section>
       </div>
 
-      {/* The fold, and the line that turns the page. Nothing on a phone: the
+      {/* The fold, and what turns the page. Nothing on a phone: the
           stylesheet does not draw either of them there. */}
       {grip}
       {turnLine}
