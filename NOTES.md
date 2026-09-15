@@ -317,6 +317,18 @@ person's page the next (Complete). Left: the printer, and the chain.
       *Sent by*, *found it*, *the origin*, *logged 15 aug*, *no answer*,
       *no journal*, *not logged*.
 
+- [ ] **The edit screen should collapse once a sender is picked,
+      2026-09-15.** Miyel's, on seeing the finished line: *when sent by is
+      chosen it should just show Sent by and the picture of the user*. The
+      editor still draws the whole strip — the label, a text field holding
+      the name, and `MiniAddressBook` with every face in it, lit one among
+      them — whether or not anybody has been chosen. Once one has, it should
+      read the way the entry reads: *Sent by*, their face, their name. The
+      strip is for choosing, and choosing is over. Presumably a press on the
+      collapsed row opens it again to change or clear it, and free text still
+      has to reach somebody who keeps no copy. Her call on the shape; she
+      said it can wait for its own session.
+
 - [ ] **The trail against a real chain, 2026-09-15.** It has only been
       seen against a fixture: no chain exists to walk, because Zach's and
       Kai's journals both publish zero entries, so every real credit ends
