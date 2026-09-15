@@ -505,10 +505,12 @@
 
 /* ── Who sent it ────────────────────────────────────────────────────────────
    At the head of the entry with the other facts, 2026-09-14: the field, and
-   under it the address book as pills — the same pills the flags are — with
-   the lit one the journal the credit links to. The label is the lineage
-   block's label, one size, one face. */
-.ln-sender { display: flex; flex-direction: column; align-items: center; gap: 10px; width: 100%; }
+   under it the address book as faces — the portrait each journal serves, in
+   the rounded square the book and the feed draw it in, the name beneath —
+   with the lit one the journal the credit links to. One row that scrolls
+   sideways when it must, so a long address book is a strip to thumb through
+   and never a wall of names on the first screen. */
+.ln-sender { display: flex; flex-direction: column; align-items: center; gap: 12px; width: 100%; min-width: 0; }
 .ln-sender-row { display: inline-flex; align-items: baseline; gap: 10px; }
 .ln-sender-label {
   font-family: var(--font-label);
@@ -519,6 +521,68 @@
   white-space: nowrap;
 }
 .ln-field--sender { width: 13em; font-size: 13px; text-align: left; }
+.ln-sender-book {
+  display: flex;
+  gap: 14px;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  padding: 3px 16px 6px;
+  box-sizing: border-box;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+.ln-sender-book::-webkit-scrollbar { display: none; }
+/* Centred while the faces fit and scrollable from the first face when they
+   do not: auto margins on the two ends do both. justify-content: center on
+   an overflowing row pushes the first faces off the left edge with no way
+   to scroll back to them. */
+.ln-sender-face:first-child { margin-left: auto; }
+.ln-sender-face:last-child { margin-right: auto; }
+.ln-sender-face {
+  flex: 0 0 auto;
+  display: flex; flex-direction: column; align-items: center; gap: 6px;
+  width: 64px;
+  padding: 0; border: 0; background: transparent;
+  color: var(--ink-faint);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 0.15s;
+}
+.ln-sender-face:hover { color: var(--ink); }
+.ln-sender-face--on { color: var(--ink); }
+.ln-sender-portrait {
+  position: relative; width: 44px; height: 44px; border-radius: 10px; overflow: hidden;
+  background: var(--panel); border: 1px solid var(--border);
+  display: inline-flex; align-items: center; justify-content: center;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.ln-sender-portrait img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.ln-sender-face--on .ln-sender-portrait { border-color: var(--ink); box-shadow: 0 0 0 2px var(--ink); }
+.ln-sender-face:focus-visible { outline: none; }
+.ln-sender-face:focus-visible .ln-sender-portrait { border-color: var(--ink-faint); box-shadow: 0 0 0 2px var(--ink-faint); }
+.ln-sender-name {
+  font-family: var(--font-label);
+  font-size: 8.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  max-width: 100%;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+/* The fields at the head are taller than the facts they replace — the
+   score, the genre, the flags, the shelves, now the sender and the faces —
+   and neither box they sit in was built to grow: the phone's first screen
+   is exactly one viewport, the desk's hero a fixed band with its content
+   pinned to the foot. Both give while a correction is open (2026-09-14, the
+   faces tipped it), so nothing is clipped under screen two or pushed up
+   behind the mark. The phone's screen keeps its snap and scrolls inside
+   the sheet; the desk's hero keeps its blur and its floor. */
+.ln-editing .ln-hero { height: auto; min-height: 390px; }
+.ln-editing .ln-hero-pad { position: relative; padding-top: 112px; }
+@media (max-width: 768px) {
+  .ln-editing .ln-screen-one { height: auto; min-height: 100dvh; padding-bottom: 32px; }
+}
 
 /* The credit on the page: the envelope chip, reading "from Zach", is a link
    to his journal. It keeps the chip's own ink — a coloured underline would
