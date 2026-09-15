@@ -267,16 +267,14 @@ cannot be tested end to end.
       `status`, `entry_id` — and three surfaces set one: the send form,
       the entry editor, the inbox. Before redesigning any of it, the
       honest accounting:
-      - **`source_entry_id` has no writer at all**, since the editor's
-        picker came off. Nothing in the app can set it. Around it sit the
-        write-once rule, the same-`album_key` check and `wouldFormCycle`
-        with its recursive query — roughly forty lines guarding a column
-        that cannot be written. This is the Formative shape exactly (a
-        column, a definition, a token, and 0 of 39 rows), which DECISIONS
-        already records as a lesson. Either the send flow sets it when
-        both people have copies, or the machinery goes and the column
-        stays empty under additive-only. **Decide which before building
-        anything else on the chain.**
+      - **`source_entry_id` had no writer at all — settled 2026-09-15**,
+        on branch `park-lineage`: the machinery is retired and the column
+        parked. It was briefed as *wire the send flow to set it*, which
+        turned out not to be buildable — an `entries.id` is local to one
+        database, and a send is a visitor on this copy's form with their
+        journal at an origin their browser cannot read. Both reasons, and
+        what a revival would take, are in that branch's entry at the top
+        of Complete. Nothing else on the chain is waiting on this.
       - **The credit being on the entry as well as on the send is not
         waste.** `submissions.entry_id` is the inbox's; the entry's
         `received_from`/`received_from_url` is what the public feed
