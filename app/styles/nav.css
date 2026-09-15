@@ -1233,9 +1233,9 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
     pointer-events: none;
   }
   .hn-turn-row > * { pointer-events: auto; }
-  /* The pill every other press on this site wears, a little tighter, so the
-     longest of the three words still clears the spine at its narrowest. */
-  .hn-turn { gap: 8px; padding: 9px 15px; }
+  /* The pill every other press on this site wears, a little tighter: one
+     word and a caret do not want a sentence's side padding. */
+  .hn-turn { gap: 7px; padding: 9px 16px; }
   .hn-turn:hover { background: var(--bg-warm); }
   .hn-turn:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 2px; }
 
