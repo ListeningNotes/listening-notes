@@ -1084,7 +1084,7 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
    and a button left in the markup with nothing switching it off is still in
    the tab order and still read out, whether or not it can be seen. */
 .hn-grip { display: none; }
-.hn-turn { display: none; }
+.hn-turn-row { display: none; }
 .hn-band-ground { display: none; }
 /* The bar's small mark is always in the markup (a desk wants it there) and
    on a phone it shows only once the crown has scrolled away — the crown and
@@ -1151,9 +1151,6 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
        which is the 58px row every other page's header has, 22px down. The
        band's own row starts under the whole bar. */
     --hn-rail-top: 68px;
-    /* The line the page turns on, across the foot of the spine. Every face
-       clears it. */
-    --hn-turn-h: 54px;
   }
   .hn-rail {
     display: grid;
@@ -1171,7 +1168,6 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   .hn-face {
     grid-column: 1;
     grid-row: 1;
-    padding-bottom: var(--hn-turn-h);
   }
   .hn--face-card .hn-face--desk,
   .hn--face-desk .hn-face--card {
@@ -1216,27 +1212,31 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   .hn--dragging { user-select: none; -webkit-user-select: none; cursor: col-resize; }
   .hn--dragging .hn-pane { pointer-events: none; }
 
-  /* ── The line the page turns on ── across the foot of the spine, where a
-     book puts the thing that means there is another one of these. Fixed to
-     the window rather than to a face, so it holds still while either of them
-     scrolls and there is one of it rather than two. What is on it is the mark
-     of the face it turns to; the words are on the hover and in the label. */
-  .hn-turn {
-    display: flex; align-items: center; justify-content: center;
-    position: fixed; left: 0; bottom: 0; z-index: 96;
-    width: var(--spine-w, var(--spine-rest)); height: var(--hn-turn-h);
+  /* ── What turns the spine ── the mark of the face it turns to, at the
+     spine's top right. The bar's own geometry, over the spine instead of over
+     the journal — the same 22px down and the same 58px row — so this mark and
+     the lights at the journal's right edge sit on one line, one at each
+     page's outer corner. It was a line across the foot of the spine for an
+     afternoon (Miyel, the same day: the foot is the wrong place).
+
+     Fixed to the window rather than to a face, so it holds still while either
+     of them scrolls and there is one of it rather than two. The row takes no
+     clicks — it is a strip across the top of a scrolling page, and one that
+     swallowed them would be a dead band across the top of the card — and the
+     button inside takes its own back. */
+  .hn-turn-row {
+    display: flex; align-items: center; justify-content: flex-end;
+    position: fixed; top: 0; left: 0; z-index: 96;
+    width: var(--spine-w, var(--spine-rest));
+    height: var(--hn-bar-h);
     box-sizing: border-box;
-    margin: 0; padding: 0;
-    border: none;
-    border-top: 1px solid var(--border);
-    border-right: 1px solid var(--border);
-    background: var(--bg);
-    color: var(--ink-faint);
-    cursor: pointer;
-    transition: color 0.15s, background 0.15s;
+    padding: calc(22px + var(--safe-top)) var(--hn-gutter) 0;
+    pointer-events: none;
   }
-  .hn-turn:hover { color: var(--ink); background: var(--bg-warm); }
-  .hn-turn:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: -2px; }
+  .hn-turn-row > * { pointer-events: auto; }
+  .hn-turn { color: var(--ink-faint); background: none; border: 0; padding: 0; }
+  .hn-turn:hover { color: var(--ink-soft); background: var(--bg-warm); }
+  .hn-turn:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 2px; }
 
   /* ── The band ── the journal's first screen, as one row on the record's
      colour: the cover with a soft shadow, then the label, the title and the
