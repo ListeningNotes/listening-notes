@@ -259,6 +259,42 @@ cannot be tested end to end.
       (`"journal"` | `"desk"`), `.lay--over-journal`, `.lay--over-desk`,
       `.lay-back`, `.lay-back-slot`, `--lay-desk-w`; the grips' labels
       "Resize the card" and "Resize the desk".
+- [ ] **Where a record came from wants one pass of refinement, 2026-09-15.**
+      Miyel's call at the end of the credit and inbox work, and it is
+      fair. Eight columns now answer one question — `entries`:
+      `source_entry_id`, `received_from`, `received_date`,
+      `received_from_url`; `submissions`: `submitter_name`, `sender_url`,
+      `status`, `entry_id` — and three surfaces set one: the send form,
+      the entry editor, the inbox. Before redesigning any of it, the
+      honest accounting:
+      - **`source_entry_id` has no writer at all**, since the editor's
+        picker came off. Nothing in the app can set it. Around it sit the
+        write-once rule, the same-`album_key` check and `wouldFormCycle`
+        with its recursive query — roughly forty lines guarding a column
+        that cannot be written. This is the Formative shape exactly (a
+        column, a definition, a token, and 0 of 39 rows), which DECISIONS
+        already records as a lesson. Either the send flow sets it when
+        both people have copies, or the machinery goes and the column
+        stays empty under additive-only. **Decide which before building
+        anything else on the chain.**
+      - **The credit being on the entry as well as on the send is not
+        waste.** `submissions.entry_id` is the inbox's; the entry's
+        `received_from`/`received_from_url` is what the public feed
+        publishes and what another copy matches on, and the feed reads
+        entries and must never read submissions. Two records of one fact,
+        both load-bearing. What is missing is anything that notices when
+        they disagree.
+      - **Two outcomes that sound alike.** `reviewed`/started and
+        `logged`. Kept apart deliberately (DECISIONS) because one is an
+        intention and one is a record — but if the session attached the
+        entry on save, started could go and there would be one word.
+        That is the simplification available, and it is a session's work,
+        not a tidy-up.
+      - **Three places name a sender** because they name it on three
+        different objects at three different moments. Worth one look at
+        whether the inbox's *Link their journal* and the editor's *Sent
+        by* should be the same press on the same object.
+
 **THE ADDRESS BOOK, THE FEED, AND WHERE COMPARE LIVES** — briefed
 2026-09-12. The address book merged to main that day, the feed and the
 person's page the next (Complete). Left: the printer, and the chain.
