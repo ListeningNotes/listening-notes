@@ -727,7 +727,9 @@ confident wrong date corrupts every statistic after it. `received_date` is
 the send flow's, where the moment is exact.
 
 **A send has four outcomes, and two of them are not the same claim,
-2026-09-15.** Pending, started, logged, dismissed. `reviewed` is set when
+2026-09-15.** Pending, started, logged, archived (stored as `dismissed`:
+the word on screen changed and the column did not, because renaming a value
+means rewriting rows on every copy to say the same thing differently). `reviewed` is set when
 Start a listen is pressed and means an intention; `logged` carries
 `entry_id` and means a record exists. Folding them would make a started and
 abandoned listen claim to be logged. **Nothing ever matches a send to an
@@ -739,9 +741,9 @@ Opened: the four outcomes are a word in the row's subtitle, not four tabs
 to stand on. New shows the one thing that happens to nearly every send,
 Start a listen, with the rare three behind a ··· that opens in the row.
 Opened has no buttons — it is a record of what happened, and the row itself
-opens the entry or resumes the listen. **One exception: a dismissed row can
+opens the entry or resumes the listen. **One exception: an archived row can
 be put back**, in the row's own faded ink at its far end, because otherwise
-dismissing is a one-way door and a send binned by mistake is gone. **A resumed listen must find its
+archiving is a one-way door and a send filed by mistake is gone. **A resumed listen must find its
 draft:** a send and a draft are separate rows joined only by album and
 artist, and starting fresh would upsert over the saved notes.
 
