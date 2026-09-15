@@ -5,7 +5,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import SiteNav from '../../../components/main_components/SiteNav';
-import { journalUrl, tidyJournal } from '../../../library/return_address';
+import { carrySender, journalUrl, tidyJournal } from '../../../library/return_address';
+import { useBookplate } from '../../../components/main_components/Bookplate';
 // A folder tab that connects to the open panel when active. Module scope so it
 // keeps a stable identity across renders.
 function FolderTab({ id, tab, onSelect, children }) {
@@ -24,6 +25,11 @@ function FolderTab({ id, tab, onSelect, children }) {
 
 export default function Inbox({ layered = false }) {
   const router = useRouter();
+  // Who this copy belongs to, carried on every link out to another journal
+  // so the form there knows who is sending. See carrySender.
+  const { keeper_name: myName, site_address: myAddress } = useBookplate();
+  const me = { name: myName, address: myAddress };
+
   const [authed, setAuthed] = useState(false);
   const [checking, setChecking] = useState(true);
   const [tab, setTab] = useState('submissions');
@@ -202,13 +208,12 @@ export default function Inbox({ layered = false }) {
                             {/* Stored without a scheme on purpose - see the
                                 note in the submissions route - so the one
                                 journalUrl puts back is the only one there
-                                can be. A plain link: it used to carry this
-                                journal's address so theirs could offer
-                                Compare, and that is retired (DECISIONS, The
-                                network). */}
+                                can be. The link carries who this copy
+                                belongs to, so their send form knows who is
+                                sending back (carrySender). */}
                             {sent.sender_url && (
                               <a
-                                href={journalUrl(sent.sender_url)}
+                                href={carrySender(journalUrl(sent.sender_url), me, { known: filed.has(tidyJournal(sent.sender_url)) })}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="own-link"
@@ -261,7 +266,7 @@ export default function Inbox({ layered = false }) {
                         <div className="ib-comment-head">
                           <span className="ib-comment-who">{r.keeper_name || 'Someone'}</span>
                           {r.journal && (
-                            <a href={journalUrl(r.journal)} target="_blank" rel="noopener noreferrer" className="own-link ib-comment-where">
+                            <a href={carrySender(journalUrl(r.journal), me, { known: filed.has(tidyJournal(r.journal)) })} target="_blank" rel="noopener noreferrer" className="own-link ib-comment-where">
                               their journal &#8599;
                             </a>
                           )}
@@ -312,7 +317,7 @@ export default function Inbox({ layered = false }) {
                               : <button onClick={() => file(c.author_url)} className="own-act">Add to address book</button>
                           )}
                           {c.author_url && (
-                            <a href={journalUrl(c.author_url)} target="_blank" rel="noopener noreferrer" className="own-link">
+                            <a href={carrySender(journalUrl(c.author_url), me, { known: filed.has(tidyJournal(c.author_url)) })} target="_blank" rel="noopener noreferrer" className="own-link">
                               their journal &#8599;
                             </a>
                           )}

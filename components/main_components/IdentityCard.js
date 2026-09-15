@@ -21,7 +21,7 @@
 // the page's own colour, and turning something over should not change the
 // colour of the room.
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { Check, Eye, EyeSlash, Pencil, Printer, UploadSimple, User, X } from '@phosphor-icons/react';
 import { useRouter } from 'next/navigation';
@@ -29,6 +29,9 @@ import { useTheme } from './Lightswitch';
 import { useListeningBeacon } from '../../hooks/useListeningBeacon';
 import { useBookplate } from './Bookplate';
 import CodeSlot from './CodeSlot';
+import { knownHere, subscribeSender } from '../../library/return_address';
+
+const readNothing = () => false;
 
 // ── The Ln. mark ──────────────────────────────────────────────────────────
 // It sits at the top of the column, and it is the only mark on this side of the
@@ -138,6 +141,11 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
   // who has nothing to add themselves to.
   const [added, setAdded] = useState(false);
   const addedTimer = useRef(null);
+  // Not offered to a visitor whose own copy said, on the way in, that this
+  // journal is already in their book (the address book's, the feed's and
+  // the person's page's links say so). Arriving cold, the pill shows — the
+  // journal has no way to know, and it does not try to find out.
+  const known = useSyncExternalStore(subscribeSender, knownHere, readNothing);
   useEffect(() => () => clearTimeout(addedTimer.current), []);
   function pressAdd() {
     if (!address || !navigator.clipboard?.writeText) return;
@@ -557,12 +565,14 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
             action the card is for, which is why it can have the row to
             itself. */}
         <div className="idc-row" inert={editing ? true : undefined}>
-          <Link href="/submit" className="ln-pill idc-send">Send an album</Link>
+          {/* Never for the owner: there is nobody to send to but themselves
+              (Miyel, 2026-09-14), and /submit says so if reached anyway. */}
+          {!authed && <Link href="/submit" className="ln-pill idc-send">Send an album</Link>}
           {/* The address, for the visitor's own address book. See pressAdd
               above: it copies, because that is all a journal can do for a
               copy it cannot see. "Add Miyel", not "Add to your address book"
               (Miyel, 2026-09-13: shorter); Copied for a moment after. */}
-          {!authed && address && (
+          {!authed && address && !known && (
             <button type="button" className="ln-pill idc-send" onClick={pressAdd} aria-live="polite" title="Copy this journal's address for your address book">
               {added ? 'Copied' : `Add ${String(keeper_name || '').trim() || 'me'}`}
             </button>

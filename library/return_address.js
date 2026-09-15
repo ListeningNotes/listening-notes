@@ -125,5 +125,112 @@ export function keepSender({ name = '', address = '' } = {}) {
     // Private browsing, a full quota, storage switched off — none of them
     // worth a broken send. The fields simply start empty next time.
   }
+  tell();
+  return kept;
+}
+
+// ── Arriving from your own copy ────────────────────────────────────────────
+// A keeper reading somebody else's journal is a stranger to it. This
+// browser, at this address, has never been told who they are — and their
+// own copy, which knows both their name and their journal, cannot say so
+// from where it stands: its storage is its origin's, like its cookies, and
+// nothing at another address can read it (DECISIONS, The network).
+//
+// So it says so in the link. Every link out of a copy to another journal —
+// the address book's, the person's page's, the feed's, the inbox's — carries
+// the keeper's own name and address; the journal landed on reads them once,
+// keeps them here as the return address, and takes them back off the
+// address bar. The send form then knows who is sending, and a keeper who
+// arrived through their own address book is never asked for a URL — which
+// was the one place the address book's promise broke (NOTES, 2026-09-14).
+//
+// Only surfaces the owner alone can reach may add them: a public link that
+// carried the journal's name would introduce every reader as its keeper.
+const FROM = 'from';
+const AS = 'as';
+// Whether the journal landed on is already in the visitor's address book —
+// the address book's, the feed's and the person's page's links say so, and
+// the inbox's says so when the sender is filed. The card hides its Add pill
+// on the strength of it, which is the one thing a journal cannot otherwise
+// know about a visitor's book.
+const KNOWN = 'known';
+const KNOWN_KEY = 'ln-known-journal';
+
+// Who wants to know when what is held here changes. The card reads the
+// sender and the known flag through useSyncExternalStore, so nothing is set
+// into state from an effect to get there.
+const watchers = new Set();
+export function subscribeSender(listener) {
+  watchers.add(listener);
+  return () => watchers.delete(listener);
+}
+const tell = () => { for (const listener of watchers) listener(); };
+
+// Whether this journal is in the visitor's address book, as far as their
+// own copy said on the way in. Read off the address as well as storage,
+// because the card asks before the arrival has been noted — a child's
+// effect runs before its parent's — and the flag is still on the bar then.
+export function knownHere() {
+  if (typeof window === 'undefined') return false;
+  try {
+    if (new URL(window.location.href).searchParams.has(KNOWN)) return true;
+    return window.localStorage.getItem(KNOWN_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
+
+// A link out, carrying who this copy belongs to. Given no address to carry,
+// or anything that is not a URL, the link comes back untouched — a link that
+// stops working is worse than a visitor who has to type once.
+export function carrySender(href, { name = '', address = '' } = {}, { known = false } = {}) {
+  const journal = tidyJournal(address);
+  if (!href || !journal) return href;
+  try {
+    const url = new URL(href);
+    url.searchParams.set(FROM, journal);
+    const who = String(name || '').trim();
+    if (who) url.searchParams.set(AS, who);
+    if (known) url.searchParams.set(KNOWN, '1');
+    return url.toString();
+  } catch {
+    return href;
+  }
+}
+
+// Read on landing, on every page. Keeps what the link carried as the return
+// address and clears the bar; returns what was kept, or null when the link
+// carried nothing, carried something that is not an address, or carried
+// this journal's own — a link back to itself must not introduce a visitor
+// as its keeper. A name held from before is kept when the link carries
+// none; an address is always the link's, which is the fresher fact.
+export function noteArrival(ownAddress) {
+  if (typeof window === 'undefined') return null;
+  let from = '';
+  let as = '';
+  let known = false;
+  try {
+    const url = new URL(window.location.href);
+    if (!url.searchParams.has(FROM)) return null;
+    from = tidyJournal(url.searchParams.get(FROM));
+    as = String(url.searchParams.get(AS) || '').trim();
+    known = url.searchParams.has(KNOWN);
+    url.searchParams.delete(FROM);
+    url.searchParams.delete(AS);
+    url.searchParams.delete(KNOWN);
+    window.history.replaceState(window.history.state, '', url.toString());
+  } catch {
+    return null;
+  }
+  if (!from || from === tidyJournal(ownAddress)) return null;
+  // Set or cleared on every arrival from a copy: a person taken out of the
+  // book and reached again through the inbox should get the pill back.
+  try {
+    if (known) window.localStorage.setItem(KNOWN_KEY, '1');
+    else window.localStorage.removeItem(KNOWN_KEY);
+  } catch { /* storage off; the pill simply shows */ }
+  const held = recallSender();
+  const kept = keepSender({ name: as || held.name, address: from });
+  tell();
   return kept;
 }

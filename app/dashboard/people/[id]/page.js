@@ -31,7 +31,8 @@ import { CaretLeft, Printer, User } from '@phosphor-icons/react';
 import SiteNav from '../../../../components/main_components/SiteNav';
 import StarRating from '../../../../components/main_components/StarRating';
 import { albumKey } from '../../../../hooks/useListeningBeacon';
-import { journalUrl, tidyJournal } from '../../../../library/return_address';
+import { carrySender, journalUrl, tidyJournal } from '../../../../library/return_address';
+import { useBookplate } from '../../../../components/main_components/Bookplate';
 import { arrivingBack } from '../../../../library/handoff';
 
 // Half a star, after the offset, is the same opinion typed slightly
@@ -79,6 +80,10 @@ function Section({ title, note, rows, empty, children }) {
 export default function PersonPage({ layered = false }) {
   const { id } = useParams();
   const router = useRouter();
+  // Who this copy belongs to, carried on every link out to another journal
+  // so the form there knows who is sending. See carrySender.
+  const { keeper_name: myName, site_address: myAddress } = useBookplate();
+  const me = { name: myName, address: myAddress };
   // The way back, in the header's left slot: to the book or the feed this
   // opened from, or to the book when there is nothing behind it. The pull
   // down and Escape still work; this is the one that can be seen.
@@ -166,7 +171,9 @@ export default function PersonPage({ layered = false }) {
   if (!authed) { if (typeof window !== 'undefined') window.location.replace('/login'); return null; }
 
   const there = person ? journalUrl(person.address) : '';
-  const theirEntry = e => `${there}/entries/${e.slug}`;
+  // Every link to their journal carries who this copy belongs to.
+  const theirEntry = e => carrySender(`${there}/entries/${e.slug}`, me, { known: true });
+  const theirJournal = carrySender(there, me, { known: true });
 
   return (
     <div className={'own-screen' + (layered ? ' own-screen--layered' : '')}>
@@ -199,7 +206,7 @@ export default function PersonPage({ layered = false }) {
               <Face address={person.address} />
               <h1 className="pn-name">{name}</h1>
               <div className="pn-row">
-                <a href={there} target="_blank" rel="noopener noreferrer" className="own-act">Visit their journal &#8599;</a>
+                <a href={theirJournal} target="_blank" rel="noopener noreferrer" className="own-act">Visit their journal &#8599;</a>
               </div>
             </header>
 

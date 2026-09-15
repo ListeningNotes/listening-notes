@@ -34,7 +34,8 @@ import Link from 'next/link';
 import { Camera, User } from '@phosphor-icons/react';
 import SiteNav from '../../../components/main_components/SiteNav';
 import CodeScanner from '../../../components/main_components/CodeScanner';
-import { journalUrl, tidyJournal } from '../../../library/return_address';
+import { carrySender, journalUrl, tidyJournal } from '../../../library/return_address';
+import { useBookplate } from '../../../components/main_components/Bookplate';
 
 // The order the server keeps: by name, or by address for anyone without one.
 function inOrder(people) {
@@ -43,6 +44,10 @@ function inOrder(people) {
 }
 
 export default function AddressBook({ layered = false }) {
+  // Who this copy belongs to, carried on every link out to another journal
+  // so the form there knows who is sending. See carrySender.
+  const { keeper_name: myName, site_address: myAddress } = useBookplate();
+  const me = { name: myName, address: myAddress };
   const [authed, setAuthed] = useState(false);
   const [checking, setChecking] = useState(true);
   const [people, setPeople] = useState([]);
@@ -181,7 +186,7 @@ export default function AddressBook({ layered = false }) {
                     {/* Visit leads and Remove barely shows: crossing somebody
                         out is the rare thing here, and a red pill beside
                         every name read as the row's main offer. */}
-                    <a href={journalUrl(p.address)} target="_blank" rel="noopener noreferrer" className="own-act bk-visit" title="Open their journal">
+                    <a href={carrySender(journalUrl(p.address), me, { known: true })} target="_blank" rel="noopener noreferrer" className="own-act bk-visit" title="Open their journal">
                       Visit &#8599;
                     </a>
                     <button type="button" className="bk-remove" onClick={() => remove(p.id)} title="Cross them out">remove</button>

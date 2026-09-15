@@ -66,6 +66,16 @@ const BLANK = { pick: null, note: '', name: '', address: '' };
 // no mark on it.
 export default function SubmitPage({ layered = false }) {
   const [form, setForm] = useState(BLANK);
+  // Whether the sender's line has been opened to change it. The line is
+  // shown when both the name and the journal are known — a keeper who
+  // arrived through their own copy — and the fields only behind it.
+  const [changing, setChanging] = useState(false);
+  // The owner, reached here by the address rather than the card (which no
+  // longer offers Send to them): there is nobody to send to but themselves.
+  const [owner, setOwner] = useState(false);
+  useEffect(() => {
+    fetch('/api/auth/check').then(r => r.json()).then(d => setOwner(!!d.authed)).catch(() => {});
+  }, []);
   const [sending, setSending] = useState(false);
   const [done, setDone] = useState(false);
   const [error, setError] = useState('');
@@ -170,7 +180,14 @@ export default function SubmitPage({ layered = false }) {
       </header>
 
       <main className="sb-main">
-        {done ? (
+        {owner ? (
+          <div className="sb-done">
+            <div className="sb-done-title">This is your journal.</div>
+            <p className="sb-done-body">
+              Sending is for people reading it. To log a record for yourself, start a listen from the desk.
+            </p>
+          </div>
+        ) : done ? (
           <>
             <div className="sb-done">
               <div className="sb-done-title">Sent.</div>
@@ -237,23 +254,40 @@ export default function SubmitPage({ layered = false }) {
                 rule that used to divide them is gone with the stack, because
                 the asterisks already say which one can be skipped and a
                 divider cannot sit between two things in the same row. */}
-            <div className="sb-pair">
-              <div>
-                <span className="sb-label">Your name <span className="sb-req">*</span></span>
-                <input className="sb-field" value={form.name} onChange={set('name')} />
+            {/* Two shapes, by how somebody got here (2026-09-14). A keeper
+                who arrived through their own copy's link has both name and
+                journal known already, so the form says who is sending and
+                offers to change it. Anyone else — a text, a code, a card —
+                is asked for a name and nothing else: someone without a copy
+                has nothing to put in a journal field, and being asked for
+                one was the confusion the address book existed to end. The
+                journal field lives only behind Change. */}
+            {form.name.trim() && form.address && !changing ? (
+              <p className="sb-sender">
+                Sending as <strong>{form.name}</strong> · {form.address}
+                <button type="button" className="sb-change" onClick={() => setChanging(true)}>Change</button>
+              </p>
+            ) : (
+              <div className={changing ? 'sb-pair' : undefined}>
+                <div>
+                  <span className="sb-label">Your name <span className="sb-req">*</span></span>
+                  <input className="sb-field" value={form.name} onChange={set('name')} />
+                </div>
+                {changing && (
+                  <div>
+                    <span className="sb-label">Your Listening Notes</span>
+                    <input
+                      className="sb-field"
+                      value={form.address}
+                      onChange={set('address')}
+                      placeholder="yourname.example.com"
+                      autoComplete="off"
+                      inputMode="url"
+                    />
+                  </div>
+                )}
               </div>
-              <div>
-                <span className="sb-label">Do you have a Listening Notes?</span>
-                <input
-                  className="sb-field"
-                  value={form.address}
-                  onChange={set('address')}
-                  placeholder="yourname.example.com"
-                  autoComplete="off"
-                  inputMode="url"
-                />
-              </div>
-            </div>
+            )}
 
             {error && <div className="sb-error">{error}</div>}
 
