@@ -20,14 +20,43 @@
    which is one big centred square with air around it; this is a page of type
    with a picture in it, and 68px of it given away to margins is a column of
    reading lost. */
-.ab-pane { padding: 0 22px; }
-.ab-card { padding: 0; }
-.ab-card .idc { max-width: none; margin: 0; }
+.ab-pane { --ab-gutter: 22px; padding: 0 var(--ab-gutter); }
+/* .ab-card's own padding and .idc's max-width are set further down, where
+   those rules already live — stated twice, the copy up here lost to the copy
+   down there and the page kept an inset it was supposed to have given up. */
 .ab-card .idc-inner { text-align: left; padding: 0 0 22px; }
 .ab-card .idc-line { max-width: none; margin: 11px 0 0; }
 .ab-card .idc-name { text-align: left; margin: 2px 0 16px; font-size: 28px; }
 .ab-card .idc-row { justify-content: flex-start; margin-top: 20px; }
-.ab-below { max-width: none; margin: 0; padding: 4px 0 max(40px, env(safe-area-inset-bottom)); }
+
+/* ── The glance runs to the edges ───────────────────────────────────────────
+   The one thing on this page that does (Miyel, 2026-09-15). It cancels the
+   page's gutter with a negative margin rather than the page giving its gutter
+   up, so everything else — the name over it, the pinned record under it, the
+   buttons, the writing — keeps the single left edge the page was just rebuilt
+   on. A picture that bleeds and type that does not is an old arrangement and
+   it reads: the photograph is the thing you meet, and nothing is set against
+   the screen's edge where it would be uncomfortable to read.
+
+   The portrait takes its share of the width rather than the 118px square it
+   had, because it now has the edge to grow into, and it loses the left half
+   of its radius and its shadow: a picture flush to an edge is not sitting on
+   the page, so it casts nothing. */
+.ab-card .idc-top {
+  margin-left: calc(var(--ab-gutter) * -1);
+  margin-right: calc(var(--ab-gutter) * -1);
+  gap: 18px;
+  align-items: center;
+}
+.ab-card .idc-top .idc-portrait {
+  width: 44%;
+  max-width: 210px;
+  height: auto;
+  aspect-ratio: 1 / 1;
+  border-radius: 0 16px 16px 0;
+  box-shadow: none;
+}
+.ab-card .idc-said { padding-right: var(--ab-gutter); }
 
 /* ── The pin's search ───────────────────────────────────────────────────────
    A panel in the middle of a desktop screen and a bottom sheet on a phone,
@@ -141,7 +170,10 @@
   display: flex;
   align-items: flex-start;
   justify-content: center;
-  padding: 0 16px 0;
+  /* No side padding: the gutter is the page's, on .ab-pane, and it is the
+     only one — which is what lets the glance cancel it with a negative
+     margin and run to the edges. */
+  padding: 0;
 }
 /* The card stops carrying its own scrollbar. It had one because it used to be
    a fixed-size object on a pane that did not scroll; the pane scrolls now, and
@@ -150,10 +182,13 @@
 .ab-card .idc {
   height: auto;
   max-height: none;
-  /* 340 elsewhere. Twenty pixels narrower is not a change anybody reads as a
-     change, and it is what puts clear air between the card's edge and the
-     caret sitting on the edge of the window. */
-  max-width: 320px;
+  /* No measure of its own. It was 320 — twenty narrower than the card object's
+     340, to put air between the card's edge and the caret on the edge of the
+     window — and a centred 320px column inside a page that already has a
+     gutter is the second of the three measures this page was rebuilt to get
+     rid of. The page is the measure now. */
+  max-width: none;
+  margin: 0;
 }
 /* The mark, once. The bar across the top of the cross carries it on every
    pane now, and a card printed with the same mark 130px below it reads as a
@@ -201,9 +236,13 @@
   flex-direction: column;
   gap: 30px;
   width: 100%;
-  max-width: 480px;
-  margin: 0 auto;
-  padding: 8px var(--hn-gutter) max(40px, env(safe-area-inset-bottom));
+  /* No measure and no gutter of its own — both are the page's. This was a
+     480px column centred in the pane with the cross's 34px gutter inside it,
+     which is the third of the three measures the card was rebuilt to get rid
+     of: the writing sat 34px further in than the name above it. */
+  max-width: none;
+  margin: 0;
+  padding: 4px 0 max(40px, env(safe-area-inset-bottom));
   box-sizing: border-box;
 }
 .ab-block { display: flex; flex-direction: column; gap: 12px; }
@@ -941,12 +980,12 @@ a.ab-rig-name:hover { text-decoration: underline; }
    portrait and the name can be the size they are on a phone rather than a
    reduction of it, and the facts get a line each without wrapping. */
 @media (min-width: 769px) {
-  /* The page gutter is the pane's on a phone; here it is the spine's, and the
-     card also has to start under the switch's row, so both go back on the
-     card itself and the pane pays nothing. */
-  .ab-pane { padding: 0; }
-  .ab-card { min-height: auto; padding: var(--hn-rail-top) var(--hn-gutter, 18px) 24px; }
-  .ab-below { padding: 0 var(--hn-gutter, 18px) 40px; }
+  /* The page keeps one gutter here too, so the glance's bleed stays exactly
+     as wide as it — the card only has to start under the switch's row on top
+     of that. */
+  .ab-pane { --ab-gutter: var(--hn-gutter, 18px); }
+  .ab-card { min-height: auto; padding: var(--hn-rail-top) 0 24px; }
+  .ab-below { padding: 0 0 40px; }
   .ab-card .idc { max-width: none; }
   .ab-card .idc-head { top: 22px; left: var(--hn-gutter, 18px); }
   /* The glance is a row here too — it is what made the whole card fit above
@@ -956,11 +995,11 @@ a.ab-rig-name:hover { text-decoration: underline; }
      the better part of one-seventy, and the words beside it keep a measure
      either way. A full-width portrait here was 208px of a 264px column, which
      left the name four characters and a wrap. */
-  .idc-top { gap: 14px; }
-  .idc-top .idc-portrait {
-    width: 38%; min-width: 96px; max-width: 168px;
+  .ab-card .idc-top { gap: 14px; }
+  .ab-card .idc-top .idc-portrait {
+    width: 42%; min-width: 104px; max-width: 200px;
     height: auto; aspect-ratio: 1 / 1;
-    margin: 0; border-radius: 14px;
+    margin: 0; border-radius: 0 14px 14px 0;
   }
   .ab-card .idc-name { font-size: 22px; margin-top: 0; }
   .ab-card .idc-line { flex-wrap: wrap; row-gap: 2px; max-width: none; margin-top: 11px; font-size: 12px; }

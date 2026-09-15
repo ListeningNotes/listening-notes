@@ -1129,7 +1129,17 @@ script, so anything that reacts to scrolling looks dead. Drive the real
 control and read twice, or read the scroll position rather than the state it
 is supposed to produce.
 
-**A rule that has to beat a later one has to come after it, 2026-09-15.** The
+**A rule that has to beat a later one has to come after it, 2026-09-15.** Twice
+in one evening, in two different ways. The first is below. The second was the
+card's page rules — a new block near the top of idcard.css setting `.ab-card`'s
+padding and `.idc`'s and `.ab-below`'s measures, each of which was already set
+further down the same file at the same specificity. Everything read correctly
+and the page kept its old insets, which looked like the new rules had not been
+written at all. When a value already has a home in the file, change it there:
+a second statement of the same property somewhere else is a coin toss decided
+by line number, and the loser is invisible.
+
+The
 correction bar, its trouble line and the print bar were told to inset
 themselves to the journal's column on a desk — in the layer block near the top
 of entry.css, where the rest of that work lives. Each of those three also sets
@@ -1870,6 +1880,20 @@ layout fell out of it.**
       answer became an unbreakable `.idc-pair`, because the wrap had been
       falling between a label and the thing it labels — "ALBUMS LOGGED 39
       SINCE / March 2026".
+- [x] **And the glance runs to the edges** (Miyel, the same evening: "the card
+      should be edge to edge"). It cancels the page's gutter with a negative
+      margin rather than the page giving its gutter up, so the name over it,
+      the pinned record under it, the buttons and the writing all keep the
+      single edge the page had just been rebuilt on — a picture that bleeds
+      and type that does not. The portrait takes 44% of the width rather than
+      a 118px square now that it has an edge to grow into, and it loses the
+      left half of its radius and its shadow: a picture flush to an edge is
+      not sitting on the page, so it casts nothing.
+- [x] **Three rules had to be edited where they already lived, not
+      overridden.** `.ab-card`'s padding, `.idc`'s 320px measure and
+      `.ab-below`'s 480px measure were each stated further down the file than
+      the new page rules, so the new ones lost and the page kept insets it was
+      supposed to have given up. Twice in one evening; see Gotchas.
 - [x] **The desk is a band and three rows.** Start a listen is 92px of the
       width rather than a 180px square — it was the third square of a cross
       whose other two were a portrait and an album, and that cross is gone.
