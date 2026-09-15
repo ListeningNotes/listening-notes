@@ -1518,13 +1518,20 @@ merged (1.13.0 when it is: something new)**
       shows on the entry.** The three changes of the brief. In edit mode
       the Sent by field moved from the foot (where a heading called it
       private) up under the flags on the first screen; the address book's
-      people are pills beneath it, narrowed by what is typed, and tapping
-      one fills the name and links the entry to their journal
-      (`received_from_url` — the editor now sends it, and no longer sends
-      `received_date` at all: no date on a backfill, DECISIONS). Typing
-      does not unlink, so his journal can say Zachin_Off and the entry say
-      from Zach; tapping the lit pill unlinks and keeps the name; emptying
-      the name drops both; naming a sender turns the Submission shelf on.
+      people are faces beneath it — the portrait their journal serves in
+      the book's rounded square, the name under it — in one row that
+      scrolls sideways once there are more than fit (Miyel's call after
+      the first cut, which was name pills: "I had a hard time knowing Kai
+      was Kai", and forty friends as pills would be a wall). Typing
+      narrows the row; tapping a face fills the name and links the entry
+      to their journal (`received_from_url` — the editor now sends it, and
+      no longer sends `received_date` at all: no date on a backfill,
+      DECISIONS). Typing does not unlink, so his journal can say Zachin_Off
+      and the entry say from Zach; tapping the lit face unlinks and keeps
+      the name; emptying the name drops both; naming a sender turns the
+      Submission shelf on. The layer's sideways swipe stands down while a
+      correction is open (`.ln-editing`, beside `.ln-printing` in
+      LayerEntry), so thumbing the faces cannot land on the next record.
       On the page the envelope chip reads *from Kailea* and, when the
       credit carries a journal, is a link to it (new window, plain, no
       `?from=` — a visitor's surface). One rule for what leaves the
@@ -1548,8 +1555,9 @@ merged (1.13.0 when it is: something new)**
       freely: branch `credit`; `CREDIT_FIELDS` and `credited` in
       `database_actions.js`; `book` on `useEntryEditor`; `senderField`,
       `senderChoices`, `sendBy`, `writeSender`, `sentChip`, `envelopeChip`
-      in `FullPostPage.js`; the `.ln-sender*` and `.ln-from` classes in
-      entry.css; the words *Sent by*, *Nobody — I found it*, *from Kailea*,
+      in `FullPostPage.js`; the `.ln-sender*` classes in entry.css
+      (`-row`, `-label`, `-book` for the strip, `-face` for one person,
+      `-portrait`, `-name`) and `.ln-from`; the words *Sent by*, *Nobody — I found it*, *from Kailea*,
       *Lineage · only you see this*; `credited-<id>` as the synthetic id on
       the person's page.
 

@@ -10,7 +10,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { CaretUp, Check, Envelope, Fingerprint, Heart, SketchLogo, VinylRecord, X } from '@phosphor-icons/react';
+import { CaretUp, Check, Envelope, Fingerprint, Heart, SketchLogo, User, VinylRecord, X } from '@phosphor-icons/react';
 import { BookOpen } from '@phosphor-icons/react';
 import { fonts } from '../../../library/sitewide_visuals';
 import { sizedAlbumArt, fetchAlbumArtUrl } from '../../../library/music_data_api';
@@ -263,13 +263,18 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   //
   // The name is picked off the address book where the sender is in it, so
   // the credit resolves to their journal and not only to a spelling: the
-  // book's people are pills under the field, narrowed by what is typed, and
-  // the lit one is the journal the entry links to. Free text stays for
+  // book's people are faces under the field — the portrait their journal
+  // serves, the address book's rounded square, the name beneath — in one
+  // row that scrolls sideways once there are more than fit, the way the
+  // album strip does. A face is what a friend is recognised by (Miyel,
+  // 2026-09-14: a pill saying Kai was not obviously Kailea), and one row
+  // is what forty friends look like — a strip, not a wall. Typing narrows
+  // it; the lit one is the journal the entry links to. Free text stays for
   // somebody who sent a record and keeps no copy.
   //
   // Typing does not unlink. His journal calls him Zachin_Off and the entry
-  // can still say from Zach — tap his pill, then write the name you use.
-  // Tapping the lit pill takes the link off and leaves the name; emptying
+  // can still say from Zach — tap his face, then write the name you use.
+  // Tapping the lit face takes the link off and leaves the name; emptying
   // the name takes both off. And a record with a sender is a submission,
   // so naming one turns that shelf on if it was not already.
   const linkedTo = tidyJournal(edit.draft.received_from_url || '');
@@ -313,19 +318,28 @@ export default function FullPostPage({ entry, references = [], authed = false, l
         />
       </label>
       {senderChoices.length > 0 && (
-        <span className="ln-flags-row" aria-label="From your address book">
-          {senderChoices.map(p => (
-            <button
-              key={p.id}
-              type="button"
-              className={'ln-flag' + (p.address === linkedTo ? ' ln-flag--on' : '')}
-              onClick={() => sendBy(p)}
-              aria-pressed={p.address === linkedTo}
-              title={p.address === linkedTo ? 'Linked to their journal — tap to unlink' : 'Link to their journal'}
-            >
-              {p.name || p.address}
-            </button>
-          ))}
+        <span className="ln-sender-book" aria-label="From your address book">
+          {senderChoices.map(p => {
+            const on = p.address === linkedTo;
+            return (
+              <button
+                key={p.id}
+                type="button"
+                className={'ln-sender-face' + (on ? ' ln-sender-face--on' : '')}
+                onClick={() => sendBy(p)}
+                aria-pressed={on}
+                title={on ? 'Linked to their journal — tap to unlink' : 'Link to their journal'}
+              >
+                {/* The plain mark behind the picture, for a journal with
+                    none or one that is out — the feed's Face, the book's. */}
+                <span className="ln-sender-portrait" aria-hidden="true">
+                  <User size={20} weight="regular" />
+                  <img src={`${journalUrl(p.address)}/api/portrait`} alt="" loading="lazy" onError={e => { e.currentTarget.style.display = 'none'; }} />
+                </span>
+                <span className="ln-sender-name">{p.name || p.address}</span>
+              </button>
+            );
+          })}
         </span>
       )}
     </span>
