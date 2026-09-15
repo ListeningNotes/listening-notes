@@ -99,15 +99,18 @@ export function useLayerHeaderSlot() {
 // none — the entry) or 'bottom' (rise from the foot of the screen and sink
 // back on a pull — the send page, a form). Both close on the pull down.
 //
-// `over` is where the layer opens on a desk (2026-09-13, Miyel's call): a
-// desk can afford to share the screen, so only a listen takes the whole of
-// it. 'journal' — an entry — covers the journal's column and leaves the card
-// and the desk beside it. 'desk' — the inbox, the address book, a person, a
-// report, Settings — is a panel at the right edge, as wide as the desk's rail
-// or 520px if the rail is narrower, in from the right and out the same way.
-// Left out, the layer is the whole screen. On a phone `over` changes nothing:
-// the stylesheet reads it above 769px only (.lay--over-* in entry.css); this
-// file does the leaving and measures the growth from the sheet's own corner.
+// `over` is which page of the open book the layer opens on, on a desk
+// (2026-09-13, rewritten 2026-09-15). 'journal' is the right page — an entry,
+// and a listen: the rule of the layout is that the right page is what you are
+// reading or writing, and the spine stays exactly where it is while you do.
+// 'spine' is the left one — the inbox, the address book, a person, a report,
+// Settings — a shallow stack over the spine's own width, in from the left and
+// out the same way, so looking something up never disturbs a session on the
+// right. Left out, the layer is the whole screen; nothing uses that on a desk
+// any more, and /get and the printer are the pages that still could.
+// On a phone `over` changes nothing: the stylesheet reads it above 769px only
+// (.lay--over-* in entry.css); this file does the leaving and measures the
+// growth from the sheet's own corner.
 export default function LayerEntry({ children, label = 'Entry', scrolls = false, arrives = 'tile', over = null }) {
   const sheetRef = useRef(null);
   const [headerSlot] = useState(() => (typeof document === 'undefined' ? null : document.createElement('div')));
@@ -222,16 +225,16 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
     const box = slug && !reduced ? tileBoxOf(slug) : null;
     const onScreen = box && box.y > -box.h && box.y < window.innerHeight;
     if (!sheet) { goBack(); return; }
-    // A desk page on a desk is a panel at the right edge, and leaves the way
-    // it came: out to the right. The phone's shape is the rise below.
-    if (rises && over === 'desk' && window.matchMedia('(min-width: 769px)').matches) {
+    // A spine page on a desk is a sheet over the left page, and leaves the
+    // way it came: out to the left. The phone's shape is the rise below.
+    if (rises && over === 'spine' && window.matchMedia('(min-width: 769px)').matches) {
       let went = false;
       const back = () => { if (went) return; went = true; goBack(); };
       window.setTimeout(back, GROW_MS);
       const width = sheet.offsetWidth || window.innerWidth;
       const slide = sheet.animate([
         { transform: 'none' },
-        { transform: `translateX(${width}px)` },
+        { transform: `translateX(${-width}px)` },
       ], { duration: GROW_MS * 0.7, easing: GROW_EASE, fill: 'forwards' });
       slide.onfinish = back;
       slide.oncancel = back;

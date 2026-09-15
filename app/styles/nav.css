@@ -366,8 +366,9 @@
    why it is a rail and not three routes.
 
    On a phone the rail is a horizontal scroll-snap container and you swipe.
-   Above 769px it becomes three columns, all visible, no gesture — the same
-   components saying the same thing out loud.
+   Above 769px it becomes an open book: two of the three panes stacked in a
+   narrow left-hand column that turns between them — the spine — and the
+   journal across the rest. No gesture, the same components, said differently.
 
    The old .hp-mobile-screens / .hp-screen--one / .hp-screen--two rules were
    deleted on 2026-09-03: nothing had rendered those class names for a while.
@@ -875,6 +876,25 @@
   box-shadow: 0 18px 44px rgba(0,0,0,0.16);
 }
 .db-hero-label { color: var(--ink-soft); }
+/* Lit, while there is a record in hand. On a desk the session is the page
+   next to this one, so the door says what that page is doing rather than
+   offering to start a thing already going. The ink's own colour on a warmer
+   ground and a live dot beside the words: the same two signals the beacon
+   uses for the same fact, which is that something is happening right now. */
+.db-hero--lit {
+  background: color-mix(in srgb, var(--live, #4ade80) 12%, var(--panel));
+  border-color: color-mix(in srgb, var(--live, #4ade80) 40%, var(--border));
+  box-shadow: 0 18px 44px rgba(0,0,0,0.16);
+}
+.db-hero--lit .db-hero-label { color: var(--ink); }
+/* What is in hand, under the words. "Listening now" on its own is a light
+   with no subject. */
+.db-hero-record {
+  max-width: 100%;
+  font-size: 0.68rem;
+  color: var(--ink-faint);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
 /* Three doors under the square, in one row wider than it, each a hundred
    tall with the mark over the word. A base under the square rather than a
    tower: stacked at the square's width, the third door (2026-09-12) made
@@ -1060,9 +1080,11 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
 }
 
 /* The two things a desk has that a phone does not. Stated off by default and
-   switched on in the desktop block below, so a phone never draws either. */
+   switched on in the desktop block below, so a phone never draws either —
+   and a button left in the markup with nothing switching it off is still in
+   the tab order and still read out, whether or not it can be seen. */
 .hn-grip { display: none; }
-.hn-band-ground { display: none; }
+.hn-turn-row { display: none; }
 /* The bar's small mark is always in the markup (a desk wants it there) and
    on a phone it shows only once the crown has scrolled away — the crown and
    the small mark are never on screen together, so it is still one mark. */
@@ -1070,87 +1092,191 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   .hn-bar:not(.hn-bar--scrolled) .hn-bar-mark { display: none; }
 }
 
-/* ── Desktop: the same three, said out loud, at three widths ───────────────
-   No gesture, no carets, each column keeping its own scroll — the same
-   components, which is what makes this the same structure rather than a
-   second layout. What changed on 2026-09-13 is proportion. Three equal
-   columns were three phones parked side by side: no hierarchy, and
-   everything floating in the vertical middle. Now the card and the desk are
-   rails of about 196 and 186px and the centre takes the rest; content starts
-   at the top of every column; and the beacon is a band across the top of the
-   centre, the record's own colour bled to the column's edges, the way a
-   print's ground is.
+/* ── Desktop: an open book ────────────────────────────────────────────────
+   Two pages. A narrow one on the left — the spine, about a quarter of the
+   window — and the journal across the rest. Content starts at the top of
+   both, and nothing floats in the vertical middle except the colophon, which
+   is alone on its page and is the one thing here that should.
 
-   The dividers are grips: drag one and that rail widens or narrows, the
-   centre taking the remainder, and the widths are remembered in this browser
-   (hooks/useColumnWidths.js, which also clamps them so nothing can be dragged
-   into a shape that does not work). --hn-left and --hn-right are written on
-   the document's root by that hook — on the root rather than on .hn because
-   the panel a desk page opens in (entry.css, .lay--desk) sits beside the
-   cross and reads the desk's width too. The two numbers here are what the
-   server draws and what a browser with nothing remembered gets. */
+   The spine holds one face at a time and turns between two of them: the card
+   and the desk signed in, the card and the colophon signed out. Both faces
+   are the cross's own panes, put in one grid cell with the stylesheet showing
+   one — the same three components as the phone, arranged differently, rather
+   than a second markup tree. The hidden one keeps its scroll and keeps
+   running, which is what lets the feed go on updating and the inbox go on
+   counting behind the card.
+
+   The journal does not move when the spine turns, and that is the whole of
+   why it reads as turning a page. It is also the rule underneath the layout:
+   the right page is what you are reading or writing, so an entry opens there
+   and so does a listen, while the inbox, the address book, a person and
+   Settings open in the spine (entry.css, .lay--over-spine).
+
+   What changed on 2026-09-15 is the count. Three columns at three widths had
+   a card rail, a journal and a desk rail all at once: no leading page, the
+   desk taking width from the reading whether or not anybody was at it, and
+   nowhere for a session to go but over everything. What changed the time
+   before that (2026-09-13) was proportion, and the note is in the archive.
+
+   The fold is a grip: drag it and the spine widens, the journal taking the
+   remainder, and the width is remembered in this browser
+   (hooks/useSpineWidth.js, which also clamps it so nothing can be dragged
+   into a shape that does not work). --spine-w is written on the document's
+   root by that hook — on the root rather than on .hn because the sheet a
+   page opens on (entry.css) sits beside the cross and reads it too. The
+   clamp below is what the server draws and what a browser with nothing
+   remembered gets, and it is the same arithmetic the hook does. */
 @media (min-width: 769px) {
   :root {
-    --hn-left: 196px;
-    --hn-right: 186px;
+    /* About a quarter, floored so the card's portrait always fits and capped
+       so the spine stays the narrow page. Kept in step with restWidth() in
+       hooks/useSpineWidth.js — change one and change the other.
+
+       --spine-rest, not --spine-w. The live number is written on the root by
+       the hook and only exists while the cross is mounted, which is the whole
+       of how anything else on the page knows whether there is a spine beside
+       it — an entry opened cold at its own address has no cross under it, and
+       the bars it pins to the window (entry.css, .ln-editing-bar) have to
+       span the window rather than inset themselves by the width of a page
+       that is not there. Defining the rest width as --spine-w here would make
+       that variable true on every page in the site. */
+    --spine-rest: clamp(300px, 25vw, 420px);
   }
   .hn {
-    /* No carets on a desk, so nothing to keep clear of: the column's own
+    /* No carets on a desk, so nothing to keep clear of: the page's own
        padding is the gutter. */
-    --hn-gutter: 16px;
-    /* Where content starts in the two rails: under the line the tools and
-       the lights sit on, which is the 58px row every other page's header
-       has, 22px down. The band's own row starts under the whole bar. */
+    --hn-gutter: 18px;
+    /* Where content starts on the spine: under the line the lights sit on,
+       which is the 58px row every other page's header has, 22px down. The
+       band's own row starts under the whole bar. */
     --hn-rail-top: 68px;
   }
   .hn-rail {
     display: grid;
-    grid-template-columns: var(--hn-left) minmax(0, 1fr) var(--hn-right);
+    grid-template-columns: var(--spine-w, var(--spine-rest)) minmax(0, 1fr);
     overflow-x: hidden;
   }
   .hn-pane { width: auto; min-width: 0; }
-  .hn-pane + .hn-pane { border-left: 1px solid var(--border); }
-  /* No crown. The mark is in the bar over the centre column, always, the
-     way every other page's row carries it (SiteNav), so each column starts
-     with what it is for. The crown used to stay as an invisible box on the
-     outer columns to keep three squares on one line; the squares are
-     different sizes now by design — the cover is 118px in the band, the
-     portrait fills a rail — so there is no line to keep. */
+
+  /* ── The two faces, one cell ── both mounted, one shown. visibility rather
+     than display, on purpose: display:none takes a scroller's position with
+     it, so turning to the desk and back would put the card at the top again,
+     and it stops anything inside from measuring itself. Hidden this way the
+     face keeps where it was scrolled to, keeps its place out of the tab
+     order, and keeps working. */
+  .hn-face {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .hn--face-card .hn-face--desk,
+  .hn--face-desk .hn-face--card {
+    visibility: hidden;
+    pointer-events: none;
+  }
+  .hn-pane--home {
+    grid-column: 2;
+    grid-row: 1;
+    border-left: 1px solid var(--border);
+  }
+  /* The border between the panes was on every pair; there is one fold now. */
+  .hn-pane + .hn-pane { border-left: none; }
+
+  /* No crown and no carets. The book is open — there is nothing to swipe to,
+     and the mark is in the bar over the journal, the way every other page's
+     row carries it (SiteNav), so each page starts with what it is for. The
+     colophon keeps its own copy: see below. */
   .hn-crown { display: none; }
   .hn-controls { display: none; }
 
-  /* The bar belongs to the centre column: the mark centred over the band,
-     the lights at the column's right edge, and once the wall has scrolled
-     the page-colour band with its hairline — over the wall, never over the
-     card or the desk beside it. */
-  .hn-bar { left: var(--hn-left); right: var(--hn-right); }
+  /* The bar belongs to the right page: the mark centred over the band, the
+     lights at the page's right edge, and once the wall has scrolled the
+     page-colour band with its hairline — over the journal, never over the
+     spine beside it. */
+  .hn-bar { left: var(--spine-w, var(--spine-rest)); right: 0; }
 
-  /* ── The grips ── a hairline already marks each divider (the pane's
-     border); the grip is the nine pixels astride it, invisible until a
-     pointer is over it or holding it. While one is held the panes take no
-     pointer events, so a drag across the wall does not lift a cover. */
+  /* ── The fold ── a hairline already marks it (the journal's border); the
+     grip is the nine pixels astride that line, invisible until a pointer is
+     over it or holding it. While it is held the pages take no pointer
+     events, so a drag across the wall does not lift a cover. */
   .hn-grip {
     display: block;
     position: absolute; top: 0; bottom: 0; width: 9px; z-index: 90;
+    left: calc(var(--spine-w, var(--spine-rest)) - 4px);
     cursor: col-resize; touch-action: none;
     background: transparent;
     transition: background 0.15s;
   }
-  .hn-grip--left  { left: calc(var(--hn-left) - 4px); }
-  .hn-grip--right { right: calc(var(--hn-right) - 4px); }
   .hn-grip:hover, .hn-grip--held { background: color-mix(in srgb, var(--ink) 9%, transparent); }
   .hn-grip:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: -2px; }
   .hn--dragging { user-select: none; -webkit-user-select: none; cursor: col-resize; }
   .hn--dragging .hn-pane { pointer-events: none; }
 
-  /* ── The band ── the centre column's first screen, as one row on the
-     record's colour: the cover at 118px with a soft shadow, then the label,
-     the title and the artist beside it, and what came before at the far
-     right, all on the cover's baseline. The ground is the cover blurred
-     across the column under a wash of page colour — the print's recipe
-     (.ln-print-ground in entry.css), blurred further because this is a
-     band behind type rather than paper behind a card. It changes with every
-     record and asks nothing of anyone. */
+  /* ── What turns the spine ── both sides in one switch, centred over the
+     spine. The bar's own geometry, over the spine instead of over the journal
+     — the same 22px down and the same 58px row — so the switch and the mark
+     over the journal sit on one line, each centred on its own page's measure,
+     with the lights at the far right of the whole window. It was a line
+     across the foot of the spine for an afternoon (Miyel, the same day: the
+     foot should just read), then right-aligned against the fold ("maybe it
+     can be centered").
+
+     Fixed to the window rather than to a face, so it holds still while either
+     of them scrolls and there is one of it rather than two. The row takes no
+     clicks — it is a strip across the top of a scrolling page, and one that
+     swallowed them would be a dead band across the top of the card — and the
+     buttons inside take their own back. */
+  .hn-turn-row {
+    display: flex; align-items: center; justify-content: center;
+    position: fixed; top: 0; left: 0; z-index: 96;
+    width: var(--spine-w, var(--spine-rest));
+    height: var(--hn-bar-h);
+    box-sizing: border-box;
+    padding: calc(22px + var(--safe-top)) var(--hn-gutter) 0;
+    pointer-events: none;
+  }
+  .hn-turn-row > * { pointer-events: auto; }
+  /* Both sides in one control, the one you are on lit — the archive's
+     density switcher's recipe exactly (.gd in journal.css), which is this
+     site's way of drawing a small fixed set you are on one of. A single
+     press said "something happens here"; a switch says what the thing IS,
+     which is that the left page has two sides. */
+  .hn-turn {
+    display: flex; align-items: center; gap: 2px;
+    padding: 2px;
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 9px;
+  }
+  .hn-turn-side {
+    display: flex; align-items: center; justify-content: center;
+    height: 26px; padding: 0 12px;
+    border: none; border-radius: 7px;
+    background: transparent;
+    color: var(--ink-faint);
+    font-family: var(--font-label);
+    font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: color 0.15s, background 0.15s;
+  }
+  .hn-turn-side:hover { color: var(--ink-soft); }
+  /* The lit one is not pressable — it is where you already are — so it loses
+     the pointer as well as the hover. */
+  .hn-turn-side--on { color: var(--bg); background: var(--ink); cursor: default; }
+  .hn-turn-side--on:hover { color: var(--bg); }
+  .hn-turn-side:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: -2px; }
+
+  /* ── The band ── the journal's first screen, as one row: the cover with a
+     soft shadow, then the label, the title and the artist beside it, and what
+     came before at the far right, all on the cover's baseline.
+
+     On the page's own colour. From 2026-09-13 it stood on the record blurred
+     across the page under a 52% wash — the print's recipe (.ln-print-ground
+     in entry.css), blurred further because this was type on it rather than a
+     card. Miyel took it out on 2026-09-15: a panel of the record's colour
+     across the top of the journal read as something stuck on the page rather
+     than the head of it, and the wall of covers underneath already carries
+     every colour this journal has. The art is 88px away, in the cover. */
   .hn-band {
     position: relative;
     min-height: auto;
@@ -1160,90 +1286,88 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
     gap: 24px;
     padding: calc(var(--hn-bar-h) + 4px) 28px 24px;
   }
-  .hn-band-ground {
-    display: block;
-    position: absolute; inset: 0; z-index: 0;
-    overflow: hidden;
-    background: var(--bg-warm);
-  }
-  .hn-band-ground img {
-    position: absolute; inset: 0;
-    width: 100%; height: 100%;
-    object-fit: cover;
-    transform: scale(1.3);
-    filter: blur(32px) saturate(1.25);
-  }
-  .hn-band-ground::after {
-    content: '';
-    position: absolute; inset: 0;
-    background: color-mix(in srgb, var(--bg) 52%, transparent);
-  }
-  .hn-band > :not(.hn-band-ground) { position: relative; z-index: 1; }
   .hn-band .hp-dashboard { flex: 1 1 auto; min-width: 0; max-width: none; margin: 0; }
   .hn-band .hp-dash-beacon { justify-content: flex-start; }
   .hn .hn-band .beacon-stage { height: auto; }
   .hn-band .beacon-stage--quiet { justify-content: flex-start; }
   .hn-band .beacon-quiet { margin: 0; }
   .hn-band .beacon-card--main { position: static; transform: none; }
-  .hn-band .beacon-card { flex-direction: row; align-items: flex-end; gap: 22px; cursor: default; }
+  .hn-band .beacon-card { flex-direction: row; align-items: flex-end; gap: 20px; cursor: default; }
+  /* 88px, not the 118 the three-column band used. The journal is the wide
+     page now and the band is a header on it rather than the top of a column
+     — a cover big enough to read the art off, not big enough to be the
+     screen. */
   .hn-band .beacon-art-wrap {
-    width: 118px; height: 118px; flex-shrink: 0;
-    border-radius: 12px;
-    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.18);
+    width: 88px; height: 88px; flex-shrink: 0;
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
   }
-  .hn-band .beacon-card:hover .beacon-art-wrap { transform: none; box-shadow: 0 10px 28px rgba(0, 0, 0, 0.18); }
-  .hn-band .beacon-art-wrap--live { box-shadow: 0 14px 36px rgba(0, 0, 0, 0.22); }
-  .hn-band .beacon-meta { align-items: flex-start; text-align: left; gap: 5px; min-width: 0; padding-bottom: 6px; }
-  .hn-band .beacon-track { font-size: 22px; }
+  .hn-band .beacon-card:hover .beacon-art-wrap { transform: none; box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18); }
+  .hn-band .beacon-art-wrap--live { box-shadow: 0 12px 32px rgba(0, 0, 0, 0.22); }
+  .hn-band .beacon-meta { align-items: flex-start; text-align: left; gap: 5px; min-width: 0; padding-bottom: 4px; }
+  .hn-band .beacon-track { font-size: 21px; }
   .hn-band .beacon-track--wrap { max-width: none; margin: 0; text-wrap: pretty; }
   .hn-band .beacon-artist { font-size: 0.8rem; }
   .hn-band .beacon-idle-overlay { font-size: 0.5rem; letter-spacing: 0.14em; }
-  /* What came before: three small covers at the band's far right, on the
-     big cover's baseline, and no line over them — three small covers beside
-     a large one say what they are. */
-  .hn-band .hp-recent-set { margin-left: auto; align-self: flex-end; flex-shrink: 0; padding-bottom: 6px; }
+  /* What came before: three small covers at the band's far right, on the big
+     cover's baseline, and no line over them — three small covers beside a
+     large one say what they are. */
+  .hn-band .hp-recent-set { margin-left: auto; align-self: flex-end; flex-shrink: 0; padding-bottom: 4px; }
   .hn-band .hp-recent-head { display: none; }
   .hn-band .hp-recent { gap: 8px; }
   .hn-band .hp-recent-tile { width: 28px; height: 28px; border-radius: 6px; }
   .hn-band .hp-recent-none { font-size: 12px; }
 
-  /* The wall under the band: its bar sticks under the centre's bar once
-     the column has scrolled, and the covers follow it at once. The 96px the
-     phone spends clearing a bar that sits on the wall's own floor is not
-     spent here. */
+  /* The wall under the band: its bar sticks under the page's bar once the
+     column has scrolled, and the covers follow it at once. The 96px the phone
+     spends clearing a bar that sits on the wall's own floor is not spent
+     here. */
   .hn-under { --arc-nav-bottom: var(--hn-bar-h); }
   .hn-under .arc-main { padding-top: 4px; }
   .hn-under .arc-bar-wrap { margin-top: 14px; }
   /* No beacon, no band: the wall is the first thing, under the bar's row. */
   .hn-under--first { padding-top: var(--hn-bar-h); }
 
-  /* ── Right, signed out: the colophon ── at the top of its rail. The same
-     three sentences and the same button, at the rail's measure. */
-  .pt-pane { min-height: auto; align-items: flex-start; padding: var(--hn-rail-top) var(--hn-gutter) 40px; }
-  .pt-body { gap: 16px; }
-  .pt-title { font-size: 1.15rem; }
-  .pt-prose p { font-size: 0.82rem; line-height: 1.6; }
-  .pt-foot { margin-top: 28px; }
+  /* ── The colophon face ── the mark, three sentences, Get one, the key and
+     the source line, centred on an otherwise empty page and deliberately
+     quiet: a stranger presses it and somebody who already has a copy glances
+     past. The one place in this layout with vertical centring, because it is
+     the one page with nothing else on it.
 
-  /* ── Right, signed in: the desk ── Start a listen fills the rail's width
-     as the one square; the three doors are rows under it, mark then word,
-     because three tiles across 150px have no room for a word each. The
-     feed follows on the same scroll. */
+     It is also the only face that keeps the crown. Every other page carries
+     the mark in the bar over the journal; this one is a page about the
+     software rather than about the journal, and a colophon without the mark
+     on it is a paragraph. `safe` so a short window scrolls from the top
+     rather than clipping the mark off it. */
+  .hn-face--colophon { display: flex; flex-direction: column; justify-content: safe center; }
+  .hn-face--colophon .hn-crown { display: flex; min-height: 0; flex: none; padding: 0 16px 26px; }
+  .hn-face--colophon .hn-crown-svg { height: 52px; }
+  .pt-pane { min-height: auto; flex: none; align-items: center; padding: 0 var(--hn-gutter) 12px; }
+  .pt-body { gap: 16px; }
+  .pt-title { font-size: 1.2rem; }
+  .pt-prose p { font-size: 0.86rem; line-height: 1.62; }
+  .pt-foot { margin-top: 30px; }
+
+  /* ── The desk face ── Start a listen is the one large control and is a wide
+     tile rather than a square: a square at the spine's width is a third of the
+     page given to one door. The three under it are rows, mark then word, and
+     the feed follows on the same scroll. */
   .db-pane { min-height: auto; align-items: flex-start; padding: var(--hn-rail-top) var(--hn-gutter) 20px; }
   .db-body { gap: 14px; }
-  .db-hero { width: 100%; height: auto; aspect-ratio: 1 / 1; }
+  .db-hero { width: 100%; height: auto; aspect-ratio: auto; min-height: 128px; gap: 12px; }
+  .db-hero-label { font-size: 0.72rem; }
   .db-doors { flex-direction: column; gap: 8px; }
   .db-door {
     flex: none; flex-direction: row; align-items: center; justify-content: flex-start;
-    min-height: 0; gap: 12px; padding: 11px 14px;
-    text-align: left; font-size: 0.6rem;
+    min-height: 0; gap: 12px; padding: 12px 14px;
+    text-align: left; font-size: 0.62rem;
   }
-  .db-door-mark { width: 20px; height: 20px; }
+  .db-door-mark { width: 22px; height: 22px; }
   .db-door-text { align-items: flex-start; }
   .db-door-label { justify-content: flex-start; }
   .db-colophon { margin-top: 10px; justify-content: flex-start; text-align: left; }
 
-  /* ── The feed in the rail ── the same rows, at the rail's measure: the
+  /* ── The feed on the spine ── the same rows, at the spine's measure: the
      cover fills the width, the words under it ranged left. */
   .fd-wrap { padding: 6px var(--hn-gutter) 40px; }
   .hn-floor-scroll .fd-wrap { padding-top: 6px; }

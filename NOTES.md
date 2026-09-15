@@ -234,31 +234,81 @@ cannot be tested end to end.
       `pull_keeper_name` in settings_actions, `nameInBook` on the compare
       page, and the row's Not answering yet.
 
-**THE DESKTOP LAYOUT, 2026-09-13** — built on branch `desktop-columns`
-(Complete), merged and released as 1.10.0 before a Safari look — Miyel's call, to refine later. Still to look at:
+**THE DESKTOP IS AN OPEN BOOK, 2026-09-15** — built on branch `open-book`
+(Complete). Replaced the three columns of 1.10.0 outright. Still to look at:
 
-- [ ] **Both grips with a real mouse** — the browser tool's drag never
-      landed on the nine pixels; dispatched pointer events proved the hook
-      (196 → 300, remembered across a reload) and the trusted pointerdown
-      does reach the grip, so a mouse should simply work. And the arrow keys
-      on a focused grip.
-- [ ] **The desk panel at 520px.** The inbox, the address book, a person,
-      a report and Settings open there; their phone rules are viewport
-      queries and do not apply inside a panel in a wide window, so rows may
-      want a container query if anything overflows. Widen the desk's rail
-      past 520 and the panel is the rail exactly.
-- [ ] **The correction bar and the print bar inside an entry over the
-      journal**, and **a window under 860px** — at 900 the
-      rails still fit at rest (196 / 518 / 186 by script); below about 860
-      they give way in proportion, to 150 each at the least. Not seen by eye.
-- [ ] **Names to confirm, 2026-09-13 (the desktop)** — autonomous session,
-      rename freely: branch `desktop-columns`; `hooks/useColumnWidths.js`
-      with `useColumnWidths`, `fit` and `REST_WIDTHS`; the key `ln-columns`;
-      `.hn-band`, `.hn-band-ground`, `.hn-grip`, `.hn--dragging`,
-      `--hn-left`, `--hn-right`, `--hn-rail-top`; LayerEntry's `over`
-      (`"journal"` | `"desk"`), `.lay--over-journal`, `.lay--over-desk`,
-      `.lay-back`, `.lay-back-slot`, `--lay-desk-w`; the grips' labels
-      "Resize the card" and "Resize the desk".
+- [ ] **A real mouse on the grip, and the arrow keys on it.** The browser
+      tool's drag DID land on it this time (360 → 506 → clamped at 300 and
+      520, remembered across a reload), which is the thing that never worked
+      with the two 9px grips of `desktop-columns` — the fold sits at 25vw
+      now, where a coordinate lands squarely. A real pointer should simply
+      work. The arrow keys on a focused grip are untried.
+- [ ] **The draft guard on an inbox row is unverified against real sends.**
+      Pressing Start a listen with a different record in hand offers to save
+      it as a draft first (`openListen`, `keepOpenListen`, `keepThenStart`
+      in app/dashboard/inbox/page.js). The file compiles and the panel is
+      styled, but the inbox had nothing in it to press — this wants one
+      pass with a real submission and a half-written listen, checking that
+      the draft is in `drafts` afterwards and that the new record opens
+      clean.
+- [ ] **Settings and the address book on the spine, with real content.**
+      Geometry is right — all four owner pages open at the spine's width
+      with nothing overflowing — but they were seen empty behind a 401.
+      Their phone rules are viewport queries that do not fire in a wide
+      window; the inbox's three tabs needed their own `.lay--over-spine`
+      rule in forms.css and others may too. That class, not a container
+      query, is the pattern: `container-type` would make the sheet a
+      containing block for every fixed and absolute descendant.
+- [ ] **The session on the right page, with a record actually picked.** The
+      picker opens there and the spine stays put; the four screens under it
+      were not seen. The note field's desktop floor is 168px and the track
+      strip already flexes to one line — both want an eye.
+- [ ] **The correction bar and the print bar with a real edit open.** Their
+      inset rule was dead from 1.10.0 until today (see Gotchas) and is now at
+      the foot of entry.css where it can win. By script it is right in both
+      cases — pinned to the right page with the cross under it (300/0, and
+      the trouble line at 316/16), full width on an entry opened cold at its
+      own address. Neither was seen with a bar actually on screen.
+- [ ] **A window under 900px.** At 820 the spine is at its floor (300) and
+      the journal at its own (520), and the wall's bar now wraps to two rows
+      rather than crushing the search field to nothing. Seen by script and
+      in one screenshot; not lived in.
+- [ ] **Names to confirm, 2026-09-15 (the open book)** — Miyel named the
+      spine and the hook; the rest came out of the build and can be renamed
+      freely: branch `open-book`; `hooks/useSpineWidth.js` with
+      `useSpineWidth`, `fit` and `restWidth`; the keys `ln-spine` and
+      `ln-spine-face`; `--spine-w`, `--hn-turn-h`; `.hn-face`,
+      `.hn-face--card`, `.hn-face--desk`, `.hn-face--colophon`,
+      `.hn--face-card` / `.hn--face-desk`, `.hn-turn-row`, `.hn-turn`,
+      `.hn-turn-side`, `.hn-grip` (kept);
+      LayerEntry's `over` values `"journal"` and `"spine"`,
+      `.lay--over-journal` / `.lay--over-spine`; `.db-hero--lit` and
+      `.db-hero-record`; the inbox's `.ib-holding`. The grip's label is
+      "Resize the spine".
+- [ ] **What turns the spine is a two-sided switch, and it took five passes
+      on 2026-09-15 to get there.** The brief asked for a line at the spine's
+      foot; Miyel asked for a Phosphor mark on it rather than words, naming
+      "destination with caret" up front as the fallback. The mark on a line at
+      the foot was "not the right idea" — the foot should just read — so it
+      went to the top right, on the bar's line, where it pairs with the lights
+      over the journal. The mark alone there was "too subtle". A word and a
+      caret in `.ln-pill` was pressable but "I just don't like it, not sure if
+      this is it", which is the one worth listening to: every version so far
+      said *press this and something happens* and none of them said what the
+      thing IS. **A switch says it by being a switch** — both sides in one
+      control on the density switcher's recipe (`.gd`), the one you are on
+      lit, the lit one not pressable. **Card / Desk**, and Card / About signed
+      out; the pane's full name stays on the hover and `paneMarks` is
+      untouched, because those are read out on a swipe where a sentence is
+      right. Bio was tried for an hour and dropped — it also names the
+      free-text field the prompts replaced, which DECISIONS says may come
+      back. **Centred over the spine, sixth pass** (Miyel: "maybe it can be
+      centered") — on the column's own axis, directly over the portrait,
+      which is why it settles; the mark over the journal is centred on its
+      page the same way, and the lights stay at the far right of the window.
+      Still to see: the switch signed in, where the right-hand side reads
+      DESK.
+
 - [ ] **Where a record came from wants one pass of refinement, 2026-09-15.**
       Miyel's call at the end of the credit and inbox work, and it is
       fair. Eight columns now answer one question — `entries`:
@@ -1045,6 +1095,50 @@ Project → Settings → Environment Variables.
 
 ## Gotchas
 
+**A rule that has to beat a later one has to come after it, 2026-09-15.** The
+correction bar, its trouble line and the print bar were told to inset
+themselves to the journal's column on a desk — in the layer block near the top
+of entry.css, where the rest of that work lives. Each of those three also sets
+`left` and `right` in its own base rule several hundred lines further down, at
+the same specificity, so source order handed it to the base every time and the
+rule did nothing at all from 2026-09-13 until it was found today. It read
+correctly, it was in the right neighbourhood, and it had never once applied.
+Two things: a desktop override of a component belongs after that component's
+own rules, not with the layout work it belongs to conceptually; and when NOTES
+says a thing was "not seen by eye", that is the list to work through — this
+was on it.
+
+**`container-type: inline-size` makes the element a containing block for
+every `position: fixed` and `absolute` descendant, 2026-09-15.** It was the
+obvious tool for the owner's pages opening on the spine — they were written
+for a phone and their tight rules are viewport queries, which never fire in a
+wide window — and it would have quietly re-parented the entry's print bar,
+the correction bar and anything else pinned to the window from inside a
+sheet. A plain `.lay--over-spine` descendant rule does the same job with no
+side effect, because that sheet is never wide: it is 300 to 520px by the
+clamp. Reach for a container query when the width is genuinely unknown, not
+when it is merely not the viewport's.
+
+**A control left in the markup with nothing switching it off is still there,
+2026-09-15.** The spine's turn line is a `<button>` drawn only above 769px.
+With the desktop rule giving it `display: flex` and no base rule, a phone
+rendered it as an ordinary inline-block at the end of the page — invisible
+under `overflow: hidden`, and still in the tab order and still read out. The
+two other desk-only things beside it (`.hn-grip`, `.hn-band-ground`) were
+already stated off at the base; that is the pattern, and "you cannot see it"
+is not the same as "it is not there".
+
+**To see the owner's half without signing in, answer `/api/auth/check` in the
+browser and change a hook, 2026-09-15.** The cross decides between the desk
+and the colophon on that one request, so patching `window.fetch` to answer it
+`{authed:true}` draws the whole owner-side layout with no cookie, no secret
+and nothing written — but the patch is lost on a reload, and the check only
+runs on mount. Next's Fast Refresh preserves state through an edit unless the
+*hooks change*, so adding or removing one throwaway `useState` in HomeNav is
+what actually remounts it inside the patched fetch. A whitespace touch does
+nothing. Everything behind the wristband still 401s, so this shows layout and
+never data.
+
 **There are two album folds and they disagree on accents, 2026-09-15.**
 `lookup_key` (now in `library/entry_formatter.js`) keys `drafts` and
 `briefings`; `foldKey`/`albumKey` in `hooks/useListeningBeacon.js` keys
@@ -1674,6 +1768,129 @@ current.
 ---
 
 ## Complete
+
+**2026-09-15 — the desktop is an open book, branch `open-book`, version
+1.17.0 — from Miyel's brief. Replaces the three columns of 1.10.0 outright.**
+
+- [x] **Two pages, not three panes.** `.hn-rail` is a two-column grid on a
+      desk: the spine at `clamp(300px, 25vw, 420px)` and the journal taking
+      the rest. The card pane and the desk pane sit in the *same* grid cell
+      with the stylesheet showing one, so this is still the cross's own three
+      panes and not a second markup tree — the thing DECISIONS has warned
+      about since the two homepage trees drifted apart. `visibility: hidden`
+      on the face that is not showing, never `display: none`: the hidden one
+      keeps its scroll position, stays out of the tab order, and goes on
+      running, which is what lets the feed update and the inbox count behind
+      the card. Content starts at the top of both pages.
+- [x] **The spine turns, and which face it was left on is remembered.**
+      `hn--face-card` / `hn--face-desk` on the cross; the key is
+      `ln-spine-face`, put back in a layout effect so the first render still
+      matches the server's and nothing flashes through the wrong face. The
+      journal does not move when it turns — measured, 300 before and after.
+      Signed out the far face is the colophon, which is the same side of the
+      same leaf, so one remembered answer covers both.
+- [x] **What turns the spine (`.hn-turn` / `.hn-turn-side`, in
+      `.hn-turn-row`).** A two-sided switch — CARD and DESK, or CARD and
+      ABOUT signed out — on the archive density switcher's recipe (`.gd`),
+      the side you are on lit and not pressable. **Centred over the spine**,
+      on the bar's own geometry (22px down, the same 58px row), so it and the
+      mark over the journal sit on one line, each centred on its own page's
+      measure, with the lights at the far right of the window: measured, the
+      switch at 150 of 300 and everything on the row at 51px. Five passes to get there and the reasoning is in Pending; the
+      short version is that a single press can only say *something happens
+      here*, and what needed saying is that the left page has two sides. The
+      row takes no clicks and the buttons take their own back, the way the
+      bar over the journal does, so there is no dead band across the top of
+      the card. Stated `display: none` at the base so the phone never draws
+      it, which a button in the markup otherwise is, in the tab order and
+      read out, whether or not it can be seen.
+- [x] **The colophon is the one thing centred.** `.hn-face--colophon`, a
+      flex column with `justify-content: safe center` (safe, so a short
+      window scrolls from the top instead of clipping the mark off it), and
+      the only face that keeps its crown — a colophon without the mark on it
+      is a paragraph. The key stays: it is the only way in, and the brief was
+      describing what is on the face, not auditing the lock off it.
+- [x] **The fold is one grip, and the width is remembered.**
+      `hooks/useSpineWidth.js` — one number where `useColumnWidths` held two,
+      the key `ln-spine`, clamped 300–520 with the journal never under 520,
+      fitted to a narrower window without overwriting the preference, written
+      onto the root as `--spine-w`. The rest width is a *proportion*, and the
+      `clamp()` in nav.css is the same arithmetic as `restWidth()` so the
+      server's first paint and the hook agree to the pixel. The floor rose
+      from 240 to 300 because the spine now holds the inbox.
+- [x] **The right page is what you are reading or writing.** An entry was
+      already `over="journal"`; a listen is now too, so starting one turns
+      the journal into the session and the spine stays exactly where it is —
+      the feed still updating, the inbox still counting, the doors still
+      there to press. `.lay--over-journal` is `left: var(--spine-w); right:
+      0`, and so are the entry's header row, its neighbour carets, the
+      correction bar and the print bar.
+- [x] **The owner's rooms open on the spine.** `over="desk"` became
+      `over="spine"` for the inbox, the address book, a person, a report and
+      Settings: `left: 0`, the spine's width, in from the left and out the
+      same way (`layFromLeft`, which already existed for the swipe). A
+      shallow stack with the back caret as the way out; the sheet covers the
+      turn line while it is open, which is right — you go back, you do not
+      turn a page that is not there.
+- [x] **Start a listen becomes Listening now, lit.** `.db-hero--lit` with
+      the record's name under the words, because "Listening now" on its own
+      is a light with no subject. Read as an external store
+      (`useSyncExternalStore`, snapshot cached against the raw string) with
+      `usePathname()` as the re-read — the address moving is every moment the
+      answer can change, and the desk never unmounts so there is nothing else
+      to hang it on. Written first as `setState` in an effect, which the
+      project's lint rule refused; this is the shape that rule wants.
+- [x] **Pressing Start a listen on an inbox row with a record already in
+      hand now asks.** The browser holds one draft at a time, so replacing
+      the record silently would look like it worked and then eat what had
+      been written at the next autosave. `openListen` only asks when there is
+      something to lose — the local draft exists and is about the record in
+      hand — and `keepOpenListen` posts it to `drafts` in the shape
+      useSessionDraft posts, from the browser's two keys rather than from
+      React state, then clears the local copy. The same care the resume path
+      already took. Unverified against real sends; see Pending.
+- [x] **The band, at 88px, on the page colour.** The beacon stays at the top
+      of the journal with the last three small at the right; 118px was the
+      top of a column, this is a header on a wide page. The brief asked for
+      the art blurred to the page's edges and it was built that way; Miyel
+      took it out the same day — "it feels disjointed" — and that is right:
+      a panel of the record's colour across the top read as something stuck
+      on the page, and the wall under it already carries every colour this
+      journal has. The markup went with it (`hn-band-ground`, and `track`
+      out of the beacon's destructure), because a ground nothing draws is
+      still an image the browser fetches, including on the phone, where it
+      was never shown. See DECISIONS — it is the same call as the session's
+      dark glass over a blurred cover.
+- [x] **The card and the desk at the spine's measure.** The portrait to
+      208px and the name to 26px (196px of rail was a reduction of the card,
+      300–420 is the card); Start a listen is a wide tile with a floor of
+      128px rather than a square, which at the spine's width would be a third
+      of the page given to one door; the doors stay rows and the feed follows
+      on the same scroll.
+- [x] **The wall's bar wraps instead of crushing its search field.** On the
+      right page at its own minimum — 520px, which is what an 820px window
+      gives — everything in that row at once does not fit, and the thing that
+      gave way was the search box, shrinking to the magnifier and nothing.
+      `flex-wrap` on `.arc-bar` and a `min-width` on `.arc-search`; costs
+      nothing at any width where the row already fitted, and helps `/archive`
+      the same way.
+- [x] **The note is a real field on a desk** — a 168px floor on
+      `.ses-textarea`, which still grows as you type. The width is the same
+      reading measure either way; height is the thing a phone cannot give
+      you, and it is most of why a listen gets written up on a laptop.
+- [x] **Verified in the Claude browser, signed out at 1440×900, 1024×800,
+      820×800 and 375×812:** geometry by script (360/1080, 300/724, 300/520,
+      three 375px panes); the grip dragged with the tool's own pointer and
+      clamped at both ends, remembered across a reload; both faces and the
+      journal not moving between them; light and dark; an entry opening on
+      the right page with its carets inside it; no hydration warnings; the
+      phone unchanged — crown, 180px art, "Before that", three carets, no
+      grip, no turn line, no band. **The owner's half was seen by stubbing
+      only the answer to `/api/auth/check` in the browser** — no cookie, no
+      secret, nothing written — which drew the desk face, the lit hero, and
+      the inbox, the address book, a report and Settings all opening on the
+      spine with nothing overflowing. What that could not reach is in
+      Pending.
 
 **2026-09-15 — Sent by is a line on the entry, not a panel behind the chip,
 on main as 1.16.0, released as
