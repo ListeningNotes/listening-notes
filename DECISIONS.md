@@ -700,10 +700,17 @@ from anything being tracked. The Submission chip on an entry opens the chain.
 private sends. Public credit is the default; quiet is a choice. **Built
 2026-09-13 as the feed's credit, and on the entry itself 2026-09-14:** a
 Submission entry carries `received_from` and `received_from_url` on every
-read — the feed, the wall, the entry's own page, where it says *from Zach*
-and the name opens his journal — and on no other kind of entry. The address
-is what a sender's copy matches on; the name only for entries from before
-the address travelled. The quiet toggle is still owed (NOTES).
+read — the feed, the wall, the entry's own page — and on no other kind of
+entry. The address is what a sender's copy matches on; the name only for
+entries from before the address travelled. The quiet toggle is still owed.
+
+**The sender opens; it does not display, 2026-09-14.** The entry says
+*Submission* and the chip, wearing a small caret so it reads as pressable,
+opens the chain: who sent it (a link to their journal), whether they logged
+it, and who sent it to them, read off their journals on the press. A name
+printed on every sent entry was somebody else's name on the page by default
+— decoration, not the network. One thing to press; there is no separate
+View chain control.
 
 **The sender is picked off the address book, and a backfill carries no
 date, 2026-09-14.** Crediting an old entry links the name to a journal in
