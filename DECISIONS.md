@@ -146,6 +146,14 @@ lookup on the right and it is fighting a session for the same page.
 device, like a composition book falling open where you left it. A settings
 row would make it a preference to administer rather than a thing you did.
 
+**The beacon's band stands on the page colour, 2026-09-15.** The record was
+blurred across the top of the journal under a wash for two days and read as a
+panel stuck on the page rather than the head of it; the wall underneath
+already carries every colour this journal has, and the art is in the cover
+88px away. The same call as the session's dark glass over a blurred cover,
+which went for the same reason: a blurred ground under type is the thing this
+site keeps reaching for and keeps taking back out.
+
 **Prompts replace the free-text bio.** Nine openings in `library/bioprompt.js`;
 a keeper answers three, one line each, and the answer completes the sentence —
 `I can never skip — Voodoo, side two`. A blank box is a hard question badly

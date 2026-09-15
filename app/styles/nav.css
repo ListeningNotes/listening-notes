@@ -1079,13 +1079,12 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   a.hp-recent-tile:hover { transform: none; }
 }
 
-/* The three things a desk has that a phone does not. Stated off by default and
-   switched on in the desktop block below, so a phone never draws any of them —
+/* The two things a desk has that a phone does not. Stated off by default and
+   switched on in the desktop block below, so a phone never draws either —
    and a button left in the markup with nothing switching it off is still in
    the tab order and still read out, whether or not it can be seen. */
 .hn-grip { display: none; }
 .hn-turn-row { display: none; }
-.hn-band-ground { display: none; }
 /* The bar's small mark is always in the markup (a desk wants it there) and
    on a phone it shows only once the crown has scrolled away — the crown and
    the small mark are never on screen together, so it is still one mark. */
@@ -1212,8 +1211,8 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   .hn--dragging { user-select: none; -webkit-user-select: none; cursor: col-resize; }
   .hn--dragging .hn-pane { pointer-events: none; }
 
-  /* ── What turns the spine ── the mark of the face it turns to, at the
-     spine's top right. The bar's own geometry, over the spine instead of over
+  /* ── What turns the spine ── where it lands and a caret, at the spine's
+     top right. The bar's own geometry, over the spine instead of over
      the journal — the same 22px down and the same 58px row — so this mark and
      the lights at the journal's right edge sit on one line, one at each
      page's outer corner. It was a line across the foot of the spine for an
@@ -1234,18 +1233,23 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
     pointer-events: none;
   }
   .hn-turn-row > * { pointer-events: auto; }
-  .hn-turn { color: var(--ink-faint); background: none; border: 0; padding: 0; }
-  .hn-turn:hover { color: var(--ink-soft); background: var(--bg-warm); }
+  /* The pill every other press on this site wears, a little tighter, so the
+     longest of the three words still clears the spine at its narrowest. */
+  .hn-turn { gap: 8px; padding: 9px 15px; }
+  .hn-turn:hover { background: var(--bg-warm); }
   .hn-turn:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 2px; }
 
-  /* ── The band ── the journal's first screen, as one row on the record's
-     colour: the cover with a soft shadow, then the label, the title and the
-     artist beside it, and what came before at the far right, all on the
-     cover's baseline. The ground is the cover blurred across the page under a
-     wash of page colour — the print's recipe (.ln-print-ground in entry.css),
-     blurred further because this is a band behind type rather than paper
-     behind a card. It bleeds to the page's edges, changes with every record,
-     and asks nothing of anyone. */
+  /* ── The band ── the journal's first screen, as one row: the cover with a
+     soft shadow, then the label, the title and the artist beside it, and what
+     came before at the far right, all on the cover's baseline.
+
+     On the page's own colour. From 2026-09-13 it stood on the record blurred
+     across the page under a 52% wash — the print's recipe (.ln-print-ground
+     in entry.css), blurred further because this was type on it rather than a
+     card. Miyel took it out on 2026-09-15: a panel of the record's colour
+     across the top of the journal read as something stuck on the page rather
+     than the head of it, and the wall of covers underneath already carries
+     every colour this journal has. The art is 88px away, in the cover. */
   .hn-band {
     position: relative;
     min-height: auto;
@@ -1255,25 +1259,6 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
     gap: 24px;
     padding: calc(var(--hn-bar-h) + 4px) 28px 24px;
   }
-  .hn-band-ground {
-    display: block;
-    position: absolute; inset: 0; z-index: 0;
-    overflow: hidden;
-    background: var(--bg-warm);
-  }
-  .hn-band-ground img {
-    position: absolute; inset: 0;
-    width: 100%; height: 100%;
-    object-fit: cover;
-    transform: scale(1.3);
-    filter: blur(32px) saturate(1.25);
-  }
-  .hn-band-ground::after {
-    content: '';
-    position: absolute; inset: 0;
-    background: color-mix(in srgb, var(--bg) 52%, transparent);
-  }
-  .hn-band > :not(.hn-band-ground) { position: relative; z-index: 1; }
   .hn-band .hp-dashboard { flex: 1 1 auto; min-width: 0; max-width: none; margin: 0; }
   .hn-band .hp-dash-beacon { justify-content: flex-start; }
   .hn .hn-band .beacon-stage { height: auto; }

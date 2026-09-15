@@ -284,16 +284,18 @@ cannot be tested end to end.
       `.lay--over-journal` / `.lay--over-spine`; `.db-hero--lit` and
       `.db-hero-record`; the inbox's `.ib-holding`. The grip's label is
       "Resize the spine".
-- [ ] **What turns the spine is a mark, and it is at the top right.** Miyel
-      asked for the icon ("can we try a phosphor icon, if I don't like it we
-      can do destination with caret") and then moved it the same afternoon:
-      the centred line across the foot was "not the right idea". It is the
-      mark of the face it turns to — the card, a cog for the desk, ⓘ for the
-      colophon, out of the same three `paneMarks` the phone's carets use — on
-      the bar's own line, so it and the lights over the journal are one mark
-      at each page's outer corner. Words are on the hover and in the label.
-      If the mark alone still does not say "this turns", the fallback is one
-      line in HomeNav: `{turnTo.label}` and a caret beside it.
+- [ ] **What turns the spine took three passes on 2026-09-15 and landed on
+      a pill at the top right.** The brief asked for a line at the spine's
+      foot; Miyel asked for a Phosphor mark on it rather than words, with
+      "destination with caret" named up front as the fallback. The mark on a
+      centred line at the foot was "not the right idea" — so it moved to the
+      top right, on the bar's own line, where it pairs with the lights over
+      the journal. The mark alone there was "too subtle", so it took the
+      words and the caret she had already named, in `.ln-pill` — the same
+      press as Send an album and Get one, which is what makes it read as
+      pressable. The words are `paneMarks`' own, the ones the phone's carets
+      already name these panes with. Nothing invented. If it wants to be
+      quieter again, the pill class is the one thing to change.
 
 - [ ] **Where a record came from wants one pass of refinement, 2026-09-15.**
       Miyel's call at the end of the credit and inbox work, and it is
@@ -1833,10 +1835,18 @@ current.
       useSessionDraft posts, from the browser's two keys rather than from
       React state, then clears the local copy. The same care the resume path
       already took. Unverified against real sends; see Pending.
-- [x] **The band, at 88px.** The beacon stays at the top of the journal as a
-      band with the art blurred to the page's edges and the last three small
-      at the right — the three-column version at 118px was the top of a
-      column; this is a header on the wide page.
+- [x] **The band, at 88px, on the page colour.** The beacon stays at the top
+      of the journal with the last three small at the right; 118px was the
+      top of a column, this is a header on a wide page. The brief asked for
+      the art blurred to the page's edges and it was built that way; Miyel
+      took it out the same day — "it feels disjointed" — and that is right:
+      a panel of the record's colour across the top read as something stuck
+      on the page, and the wall under it already carries every colour this
+      journal has. The markup went with it (`hn-band-ground`, and `track`
+      out of the beacon's destructure), because a ground nothing draws is
+      still an image the browser fetches, including on the phone, where it
+      was never shown. See DECISIONS — it is the same call as the session's
+      dark glass over a blurred cover.
 - [x] **The card and the desk at the spine's measure.** The portrait to
       208px and the name to 26px (196px of rail was a reduction of the card,
       300–420 is the card); Start a listen is a wide tile with a floor of
