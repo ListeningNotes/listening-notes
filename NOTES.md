@@ -1972,20 +1972,32 @@ lesson is in the entry below.**
       are. Three hairlines would have competed with the row directly above.
       The answer is indented behind a 2px rule, like a pull quote — it is
       being quoted into the question's card, not continuing its sentence.
-- [x] **The question is DM Mono, the answer is Nunito 300.** The brief asked
-      for MuseoModerno on the grounds that it is the mark's own face and so
-      costs no typeface. It costs one: **the mark is drawn as SVG paths, not
-      set as type, and MuseoModerno has never been loaded** — what made it
-      look available was a `museo` key in `library/sitewide_visuals.js` that
-      said MuseoModerno and resolved to Nunito. Nothing read it; it is
-      deleted, because a font table that names a face this site does not have
-      is how that brief came to be written. The distinction it wanted — the
-      software's voice against the person's — is already what the label face
-      carries here, on every label, every count's word, KEEPING SINCE and
-      PINNED; the nine questions ship with the software and are identical on
-      every copy, which is exactly the case the label face is for. Nunito 300
-      is one more weight of a family already fetched, which is not the same
-      as a third family (see the Anton note in app/layout.js).
+- [x] **The two halves are set the way an album and its artist are** (Miyel,
+      after seeing the first attempt: use the setup we already have). That
+      pair is the site's one settled answer for a two-part thing — the label
+      face small and in caps for the part that names it, the display face for
+      the part that *is* it. An entry does it as a title over an artist; the
+      pinned record directly above these cards does it as PINNED over an
+      album. A prompt is the same shape, so the question is the small line and
+      the answer is the large one.
+      - It went the other way first — a sentence-length question in mono over
+        a light answer — and a paragraph of monospace is a thing to decode
+        rather than read. Inverting it also put the emphasis where it belongs:
+        the question ships with the software and is identical on every copy,
+        the answer is the only part anybody wrote.
+      - **MuseoModerno was asked for and does not exist here.** The mark is
+        drawn as SVG paths rather than set as type, so the face has never been
+        loaded; what made it look available was a `museo` key in
+        `library/sitewide_visuals.js` that said MuseoModerno and resolved to
+        Nunito. Nothing read it. Deleted — a font table naming a face the site
+        does not have is how that reasoning came to be written.
+      - Nunito 300 was added for the light answer and removed again when the
+        answer became display weight. A weight nothing uses is the Anton waste
+        at a smaller scale (app/layout.js has the note).
+- [x] **Top genres moved above the prompts.** A small computed fact belongs
+      with the other small computed facts, before the writing starts, rather
+      than trailing off the end of it. The rule moved with it, from over to
+      under: it is the line between what is counted and what was written.
 - [x] **The em dash is gone from the printed question.** It was separating the
       opening from the answer on one line; on two lines in two faces it
       separates things that separate themselves. Stripped at the render rather
