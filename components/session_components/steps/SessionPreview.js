@@ -30,7 +30,7 @@ import FullPostPage from '../../../app/entries/[slug]/FullPostPage';
 
 export default function SessionPreview({
   album, artist, year, albumArt, genre,
-  overallNotes, rating, Masterpiece, Favorite, Formative, entryType, receivedFrom,
+  overallNotes, rating, Masterpiece, Favorite, Formative, entryType, receivedFrom, receivedFromUrl,
   tracks, trackRatings, trackFavorites, trackNotes,
   saving, saved, savedEntry,
   doSave, onBack, onAnother,
@@ -58,12 +58,15 @@ export default function SessionPreview({
       tracks: structured,
       track_notes: derived.track_notes,
       horizon: derived.horizon,
+      // The credit as the saved entry will carry it, so the chip on the
+      // preview says from whom and links where the real page will.
       received_from: receivedFrom || null,
+      received_from_url: receivedFromUrl || null,
       posted_at: new Date().toISOString(),
       edited_at: null,
       listen_number: 1, listen_total: 1,
     };
-  }, [album, artist, year, genre, albumArt, entryType, rating, Masterpiece, Favorite, Formative, overallNotes, tracks, trackRatings, trackFavorites, trackNotes, receivedFrom]);
+  }, [album, artist, year, genre, albumArt, entryType, rating, Masterpiece, Favorite, Formative, overallNotes, tracks, trackRatings, trackFavorites, trackNotes, receivedFrom, receivedFromUrl]);
 
   // Escape is the way back here, and only here — the layer under this
   // listens for the same key, and stopping it keeps one press from closing

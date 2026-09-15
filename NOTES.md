@@ -265,9 +265,11 @@ person's page the next (Complete). Left: the printer, and the chain.
 
 - [ ] **The feed's two loose ends, 2026-09-13.** (a) The quiet toggle:
       DECISIONS promises a per-entry choice to credit a send privately, and
-      the feed now publishes the credit by default — the toggle is a
-      boolean on the entry, a control beside the received-from field in
-      edit mode, and a filter in `pull_public_entries`. (b) Track notes on
+      the feed — and since 2026-09-14 the entry page — publishes the credit
+      by default. The toggle is a boolean on the entry, a control beside
+      the Sent by field at the head of edit mode, and a filter in one place:
+      `withoutChain` in `database_actions.js`, which every read of the
+      credit now goes through. (b) Track notes on
       a row's Compare: the feed carries no writing, so the panel shows the
       two verdicts and the two horizons and links to both entries. Their
       track notes need their copy to serve an entry across origins — CORS
@@ -278,7 +280,9 @@ person's page the next (Complete). Left: the printer, and the chain.
       against `keeper_name`, and Miyel's own 18 Submission entries mostly
       carry no name at all (they predate the inbox filling it in). June's
       and Peyton's copies publish no `keeper_name` and no credit until they
-      press Update.
+      press Update. **Since 2026-09-14 the old ones can be backfilled by
+      hand:** open the entry, correct, tap the sender's pill under Sent by
+      — the address travels with the name, so the match is exact.
 - [ ] **The printer on the person's page — next.** The shape of the
       agreement without the writing — you and June agree on 34 records;
       you disagree hardest on these three — naming both people. The notes
@@ -710,7 +714,7 @@ already exists.
       DECISIONS. The fallback was pointing at a repository that does not exist
       and now points at this one, and the deploy button asks for the variable
       so a fork can set it at install.
-- [ ] **Listen numbering** — an album has many listens, numbered, computed from `album_key` and never chosen.
+- [x] **Listen numbering** — built and confirmed 2026-09-14: `WITH_LISTEN_NUMBERS` in `database_actions.js` counts from `album_key` at read time, every listen has its own address (`in-rainbows`, then `in-rainbows-2`), and the chip says Listen 2 of 3. Was left ticked off here by nobody.
 - [ ] **Relationship field removal** — every value has dissolved into something else. Legacy data stays; the picker goes.
 
 **SCALING — BLOCKER. The archive loads every record on every page view**
@@ -1506,6 +1510,48 @@ current.
 ---
 
 ## Complete
+
+**2026-09-14 — credit the person who sent it, branch `credit`, not
+merged (1.13.0 when it is: something new)**
+
+- [x] **Sent by is picked off the address book, sits at the head, and
+      shows on the entry.** The three changes of the brief. In edit mode
+      the Sent by field moved from the foot (where a heading called it
+      private) up under the flags on the first screen; the address book's
+      people are pills beneath it, narrowed by what is typed, and tapping
+      one fills the name and links the entry to their journal
+      (`received_from_url` — the editor now sends it, and no longer sends
+      `received_date` at all: no date on a backfill, DECISIONS). Typing
+      does not unlink, so his journal can say Zachin_Off and the entry say
+      from Zach; tapping the lit pill unlinks and keeps the name; emptying
+      the name drops both; naming a sender turns the Submission shelf on.
+      On the page the envelope chip reads *from Kailea* and, when the
+      credit carries a journal, is a link to it (new window, plain, no
+      `?from=` — a visitor's surface). One rule for what leaves the
+      building, `withoutChain`: the two credit fields on a Submission row
+      on every read (entry, wall, feed); `source_entry_id` and
+      `received_date` private always. The lineage picker stays at the foot
+      under *Lineage · only you see this*.
+- [x] **The person's page counts what they are credited on.** A record
+      credited to their address with no row in `submissions` — a Tumblr-era
+      listen backfilled by hand — is one more send in Sent you and the hit
+      rate, undated, falling in by the day it was logged. The brief's point:
+      Zach's page has a real record the moment he is on the entries.
+- [x] **Verified** in the Claude browser, signed out: the entry page (desk
+      and phone), `/api/entries`, `/api/public/entries` and
+      `/api/entries/lemonade` all carry the credit on Submission rows only,
+      with the date and the pointer absent. **Not yet driven by hand:** edit
+      mode (the pills, the save) and the person's page, both behind the
+      wristband — Miyel's review on the dev server. Nothing was written to
+      the live database.
+- [ ] **Names to confirm, 2026-09-14** — autonomous session, rename
+      freely: branch `credit`; `CREDIT_FIELDS` and `credited` in
+      `database_actions.js`; `book` on `useEntryEditor`; `senderField`,
+      `senderChoices`, `sendBy`, `writeSender`, `sentChip`, `envelopeChip`
+      in `FullPostPage.js`; the `.ln-sender*` and `.ln-from` classes in
+      entry.css; the words *Sent by*, *Nobody — I found it*, *from Kailea*,
+      *Lineage · only you see this*; `credited-<id>` as the synthetic id on
+      the person's page.
 
 **2026-09-15 — copies update themselves, 1.12.0, on main**
 

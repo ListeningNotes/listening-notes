@@ -503,11 +503,35 @@
   text-align: center;
 }
 
-/* ── Where an entry came from ───────────────────────────────────────────────
+/* ── Who sent it ────────────────────────────────────────────────────────────
+   At the head of the entry with the other facts, 2026-09-14: the field, and
+   under it the address book as pills — the same pills the flags are — with
+   the lit one the journal the credit links to. The label is the lineage
+   block's label, one size, one face. */
+.ln-sender { display: flex; flex-direction: column; align-items: center; gap: 10px; width: 100%; }
+.ln-sender-row { display: inline-flex; align-items: baseline; gap: 10px; }
+.ln-sender-label {
+  font-family: var(--font-label);
+  font-size: 8.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  white-space: nowrap;
+}
+.ln-field--sender { width: 13em; font-size: 13px; text-align: left; }
+
+/* The credit on the page: the envelope chip, reading "from Zach", is a link
+   to his journal. It keeps the chip's own ink — a coloured underline would
+   make one chip in the row read as a different kind of thing. The chip's
+   colours are inline, so the hover is on the link, not the chip. */
+.ln-from { text-decoration: none; color: inherit; display: inline-flex; transition: opacity 0.15s; }
+.ln-from:hover { opacity: 0.7; }
+
+/* ── Lineage ────────────────────────────────────────────────────────────────
    The private half, shown only while its keeper is correcting the entry. It is
-   labelled as private on the page rather than only in the code, because the
-   one thing somebody needs to know before typing a friend's name into a
-   journal is who else will see it. */
+   labelled as private on the page rather than only in the code: the pointer
+   at somebody else's entry is the one thing here a visitor never sees, now
+   that the sender's name is a public credit at the head of the page. */
 .ln-chain {
   margin-top: 48px;
   padding-top: 24px;

@@ -34,7 +34,7 @@ import PrintBar from '../../../components/main_components/Slug_Page/PrintBar';
 import HorizonChart from '../../../components/main_components/HorizonChart';
 import MiniCard from '../../../components/main_components/Slug_Page/MiniCard';
 import { handedOver } from '../../../library/handoff';
-import { tidyAddress } from '../../../library/return_address';
+import { tidyAddress, tidyJournal, journalUrl } from '../../../library/return_address';
 import { useBookplate } from '../../../components/main_components/Bookplate';
 import { useTheme } from '../../../components/main_components/Lightswitch';
 import CodeSlot from '../../../components/main_components/CodeSlot';
@@ -255,6 +255,82 @@ export default function FullPostPage({ entry, references = [], authed = false, l
     { value: 'Submission', label: 'Submission' },
   ];
 
+  // ── Who sent it ───────────────────────────────────────────────────────────
+  // A fact about the record, so it sits up here with the title and the
+  // flags rather than at the foot of the page (it was there until
+  // 2026-09-14, under a heading that called it private — it is not, any
+  // more: a Submission entry says "from Zach" to everyone).
+  //
+  // The name is picked off the address book where the sender is in it, so
+  // the credit resolves to their journal and not only to a spelling: the
+  // book's people are pills under the field, narrowed by what is typed, and
+  // the lit one is the journal the entry links to. Free text stays for
+  // somebody who sent a record and keeps no copy.
+  //
+  // Typing does not unlink. His journal calls him Zachin_Off and the entry
+  // can still say from Zach — tap his pill, then write the name you use.
+  // Tapping the lit pill takes the link off and leaves the name; emptying
+  // the name takes both off. And a record with a sender is a submission,
+  // so naming one turns that shelf on if it was not already.
+  const linkedTo = tidyJournal(edit.draft.received_from_url || '');
+  const senderText = String(edit.draft.received_from ?? '');
+  const senderChoices = edit.book.filter(p => {
+    if (p.address === linkedTo) return true;
+    const typed = senderText.trim().toLowerCase();
+    if (!typed) return true;
+    return String(p.name || '').toLowerCase().includes(typed) || p.address.includes(typed);
+  });
+  const sendBy = p => {
+    if (p.address === linkedTo) {
+      edit.set('received_from_url', '');
+      return;
+    }
+    edit.set('received_from', p.name || p.address);
+    edit.set('received_from_url', p.address);
+    if (edit.draft.entry_type !== 'Submission') edit.set('entry_type', 'Submission');
+  };
+  const writeSender = value => {
+    edit.set('received_from', value);
+    if (!value.trim()) {
+      edit.set('received_from_url', '');
+    } else if (!senderText.trim() && edit.draft.entry_type !== 'Submission') {
+      edit.set('entry_type', 'Submission');
+    }
+  };
+  // Absent until the private fetch lands (useEntryEditor): a field drawn
+  // before then would show empty and save empty over what is stored.
+  const senderField = 'received_from' in edit.draft && (
+    <span className="ln-sender">
+      <label className="ln-sender-row">
+        <span className="ln-sender-label">Sent by</span>
+        <input
+          className="ln-field ln-field--sender"
+          value={senderText}
+          onChange={e => writeSender(e.target.value)}
+          placeholder="Nobody — I found it"
+          autoComplete="off"
+          aria-label="Sent by"
+        />
+      </label>
+      {senderChoices.length > 0 && (
+        <span className="ln-flags-row" aria-label="From your address book">
+          {senderChoices.map(p => (
+            <button
+              key={p.id}
+              type="button"
+              className={'ln-flag' + (p.address === linkedTo ? ' ln-flag--on' : '')}
+              onClick={() => sendBy(p)}
+              aria-pressed={p.address === linkedTo}
+              title={p.address === linkedTo ? 'Linked to their journal — tap to unlink' : 'Link to their journal'}
+            >
+              {p.name || p.address}
+            </button>
+          ))}
+        </span>
+      )}
+    </span>
+  );
+
   const typeField = (
     <span className="ln-flags-row">
       {SHELVES.map(shelf => (
@@ -470,6 +546,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
       ))}
       </span>
       {typeField}
+      {senderField}
     </span>
   );
 
@@ -632,6 +709,19 @@ export default function FullPostPage({ entry, references = [], authed = false, l
     : null;
 
   const isSubmission = entry.entry_type === 'Submission';
+  // The envelope chip says who, when the entry knows: "from Zach", and the
+  // name is a link to his journal when the credit carries one. Public on a
+  // Submission entry — the row arrives with the two fields only then
+  // (withoutChain) — and a plain link out, in a new window like every link
+  // to another journal (DECISIONS, The model). Not carrySender: this is a
+  // visitor's surface, and a public link that carried the keeper's name
+  // would introduce every reader as its keeper.
+  const sender = isSubmission ? String(entry.received_from || '').trim() : '';
+  const senderJournal = isSubmission ? journalUrl(entry.received_from_url) : '';
+  const envelopeChip = <Chip><Envelope size={10} weight="regular" aria-hidden="true" />{sender ? `from ${sender}` : 'Submission'}</Chip>;
+  const sentChip = !isSubmission ? null : senderJournal
+    ? <a className="ln-from" href={senderJournal} target="_blank" rel="noopener noreferrer" title={`${sender || 'Their'} journal`}>{envelopeChip}</a>
+    : envelopeChip;
   // The flag is the only source now. Nine older entries carried this as
   // relationship = 'Formative'; they were migrated onto the flag and the
   // column is gone, so there is nothing else left to read.
@@ -824,7 +914,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
           ) : (
             <>
               {!edit.editing && listenLabel && <Chip>{listenLabel}</Chip>}
-              {!edit.editing && !printing && isSubmission && <Chip><Envelope size={10} weight="regular" aria-hidden="true" />Submission</Chip>}
+              {!edit.editing && !printing && sentChip}
               {!edit.editing && (entry.favorite === true || entry.favorite === 'true') && <Chip tone="fav">Favorite</Chip>}
               {!edit.editing && isMasterpiece && <Chip tone="mp">Masterpiece</Chip>}
               {/* The third flag, missing from this row since the row was
@@ -936,7 +1026,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
                   ? flagFields
                   : displayRating > 0 && <StarRating rating={displayRating} size={15} glow={isMasterpiece} style={{ verticalAlign: 'middle' }} />}
                 {!edit.editing && listenLabel && <Chip>{listenLabel}</Chip>}
-                {!edit.editing && isSubmission && <Chip><Envelope size={10} weight="regular" aria-hidden="true" />Submission</Chip>}
+                {!edit.editing && sentChip}
                 {!edit.editing && (entry.favorite === true || entry.favorite === 'true') && <Chip tone="fav">Favorite</Chip>}
               </div>
               <div style={{ fontFamily: fonts.mono, fontSize: '9px', letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--ink-faint)', marginTop: '12px' }}>
@@ -1096,36 +1186,19 @@ export default function FullPostPage({ entry, references = [], authed = false, l
           </button>
         </div>}
 
-        {/* ── Where this came from ─────────────────────────────────────────
-            Private, and the only part of an entry a visitor never sees —
-            withoutChain strips all three before the page is rendered, which is
-            why they arrive by their own fetch when an edit opens rather than
-            with the entry.
+        {/* ── Lineage ──────────────────────────────────────────────────────
+            The one part of the chain a visitor never sees — withoutChain
+            strips it before the page is rendered, which is why it arrives by
+            its own fetch when an edit opens rather than with the entry. Who
+            sent the record is up at the head with the other facts (2026-09-14);
+            this is the pointer behind that, for when both people have copies.
             The source is the sender's entry for *this same album*, so the
             picker offers exactly that and nothing else: walking the column
             upward is what gives the history of one record, and it only holds
             while every hop is the same album. */}
         {edit.editing && (
           <div className="ln-chain">
-            <p className="ln-chain-head">Where this came from · only you see this</p>
-            <label className="ln-chain-row">
-              <span className="ln-chain-label">Sent by</span>
-              <input
-                className="ln-field"
-                value={edit.draft.received_from ?? ''}
-                onChange={e => edit.set('received_from', e.target.value)}
-                placeholder="Nobody — I found it"
-              />
-            </label>
-            <label className="ln-chain-row">
-              <span className="ln-chain-label">Received</span>
-              <input
-                className="ln-field"
-                type="date"
-                value={edit.draft.received_date ?? ''}
-                onChange={e => edit.set('received_date', e.target.value)}
-              />
-            </label>
+            <p className="ln-chain-head">Lineage · only you see this</p>
             {/* Written once. Where an entry sits in the tree is not an
                 opinion — either their entry led to yours or it did not — so it
                 can be set while it is empty and never again. Once it points
