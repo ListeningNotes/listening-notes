@@ -107,7 +107,20 @@
   border-top: 1px solid var(--border);
   border-bottom: 1px solid var(--border);
 }
-.idc-count { flex: 1; min-width: 0; text-align: center; }
+/* Each count is a press into the journal, filtered — so it wants to look
+   pressable without becoming a button: the number lifts a little and the word
+   under it comes up out of faint. */
+.idc-count {
+  flex: 1; min-width: 0;
+  text-align: center;
+  text-decoration: none; color: inherit;
+  padding: 2px 0;
+  border-radius: 8px;
+  transition: background 0.15s;
+}
+.idc-count:hover { background: var(--bg-warm); }
+.idc-count:hover .idc-count-word { color: var(--ink-soft); }
+.idc-count-word { transition: color 0.15s; }
 .idc-count-n {
   display: block;
   font-family: var(--font-display);

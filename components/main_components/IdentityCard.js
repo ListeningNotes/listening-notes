@@ -114,9 +114,17 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
     { word: 'masterpieces', n: stamps?.masterpieces ?? 0 },
     { word: 'formative', n: stamps?.formative ?? 0 },
   ].filter(m => m.n > 0);
+  // Each count is a way into the journal, the way the pinned record is a way
+  // into an entry (Miyel, 2026-09-15): a number about how somebody listens is
+  // worth pressing. /archive is the wall's own address and mounts the same
+  // component the cross's centre pane does, so the filter arrives with the
+  // page rather than having to be reached across two panes.
   const counts = [
-    ...(records !== null ? [{ word: 'albums', n: records }] : []),
-    ...marks,
+    ...(records !== null ? [{ word: 'albums', n: records, to: '/archive' }] : []),
+    ...marks.map(m => ({
+      ...m,
+      to: `/archive?mark=${m.word === 'masterpieces' ? 'masterpiece' : 'formative'}`,
+    })),
   ];
   const genres = stamps?.genres ?? [];
 
@@ -506,10 +514,15 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
         {(records !== null || marks.length > 0) && (
           <div className={'idc-counts' + off('albums')}>
             {counts.map(c => (
-              <div key={c.word} className={'idc-count idc-count--' + c.word}>
+              <Link
+                key={c.word}
+                href={c.to}
+                className={'idc-count idc-count--' + c.word}
+                title={c.word === 'albums' ? 'Every record in this journal' : `Every record marked ${c.word === 'masterpieces' ? 'a masterpiece' : 'formative'}`}
+              >
                 <b className="idc-count-n">{c.n}</b>
                 <span className="idc-count-word">{c.word}</span>
-              </div>
+              </Link>
             ))}
             {eyeFor('albums')}
           </div>
