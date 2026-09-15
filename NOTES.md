@@ -1769,8 +1769,10 @@ current.
 
 ## Complete
 
-**2026-09-15 — the desktop is an open book, branch `open-book`, version
-1.17.0 — from Miyel's brief. Replaces the three columns of 1.10.0 outright.**
+**2026-09-15 — the desktop is an open book, branch `open-book`, MERGED to
+main as 1.17.0 and pushed (merge a0dece3), built clean before the merge — from
+Miyel's brief. Replaces the three columns of 1.10.0 outright. No release cut
+yet, so no copy's desk will offer the update until one is.**
 
 - [x] **Two pages, not three panes.** `.hn-rail` is a two-column grid on a
       desk: the spine at `clamp(300px, 25vw, 420px)` and the journal taking
