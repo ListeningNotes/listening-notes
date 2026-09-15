@@ -71,7 +71,7 @@
 'use client';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { IdentificationCard, BookOpen, Broadcast, Gear, Info } from '@phosphor-icons/react';
+import { BookOpen, Broadcast, CaretRight, Gear, IdentificationCard, Info } from '@phosphor-icons/react';
 import { useTheme } from './Lightswitch';
 import { foldKey, useListeningBeacon } from '../../hooks/useListeningBeacon';
 import { useSpineWidth } from '../../hooks/useSpineWidth';
@@ -126,9 +126,7 @@ function secondFloorTop(pane) {
 export default function HomeNav() {
   const { cover_name, pinned_entry_id, beacon_available } = useBookplate();
   const { theme, toggle: toggleTheme } = useTheme();
-  // `track` is for the band's ground on a desk — the record blurred across
-  // the top of the centre column. The beacon draws the record itself.
-  const { isLive, recentAlbums, track } = useListeningBeacon();
+  const { isLive, recentAlbums } = useListeningBeacon();
   // How wide the spine is on a desk, and the grip that changes it. The hook
   // writes the width onto the document's root as --spine-w, which the
   // stylesheet reads above 769px and ignores below it.
@@ -592,12 +590,15 @@ export default function HomeNav() {
   // right — the thing that turns a page is a control, and every other control
   // on this site is on that top row.
   //
-  // What is on it is the mark of the face you would land on, out of the same
-  // three the cross already uses for its panes (paneMarks): the card's, and
-  // the desk's — a cog signed in, the software's ⓘ signed out. A mark rather
-  // than a word, because the marks are already this site's vocabulary for
-  // these three things. The words are still there for anyone who needs them,
-  // on the hover and in the label.
+  // It says where it lands and carries a caret, and it wears the pill every
+  // other press on this site wears (.ln-pill — Send an album, Get one), which
+  // is what makes it read as pressable at a glance. It was the mark alone
+  // first, out of the same three paneMarks the phone's carets use, on the
+  // grounds that those marks are already the vocabulary for these three
+  // things; Miyel's verdict was that a mark on its own is too quiet for the
+  // one control that says the page turns, and a control nobody notices does
+  // not exist. The words are her own, the ones the phone's carets already
+  // name these panes with.
   //
   // The row around it takes no clicks, the way the bar over the journal does
   // not: it is a strip across the top of a scrolling page, and a strip that
@@ -605,14 +606,9 @@ export default function HomeNav() {
   const turnTo = face === 'card' ? marks[2] : marks[0];
   const turnLine = (
     <div className="hn-turn-row">
-      <button
-        type="button"
-        className="hp-icon-btn hn-turn"
-        onClick={turnSpine}
-        aria-label={turnTo.label}
-        title={turnTo.label}
-      >
-        <turnTo.Icon size={18} weight="regular" aria-hidden="true" />
+      <button type="button" className="ln-pill hn-turn" onClick={turnSpine}>
+        {turnTo.label}
+        <CaretRight size={10} weight="bold" aria-hidden="true" />
       </button>
     </div>
   );
@@ -652,18 +648,20 @@ export default function HomeNav() {
                   snap has one place to land; on a desk it is a wrapper. */}
               <div className="hn-floor">
                 {crown}
-                {/* The screen on a phone; the band on a desk, where the
-                    same children lie in one row on the record's colour —
-                    the cover and its words, and what came before at the far
-                    right on the cover's baseline. The ground is the record
-                    blurred to the column's edges, drawn only above 769px;
-                    it has no failure state because a picture that will not
-                    load leaves the page colour, which is what a band with
-                    no record has anyway. */}
+                {/* The screen on a phone; the band on a desk, where the same
+                    children lie in one row — the cover and its words, and
+                    what came before at the far right on the cover's baseline.
+
+                    On the page colour, and nothing behind it. The record was
+                    blurred across it under a wash of page colour from
+                    2026-09-13, bled to the page's edges the way a print's
+                    ground is, and Miyel took it out on 2026-09-15: a panel of
+                    somebody else's colour across the top of the journal reads
+                    as a thing stuck on rather than the head of the page. The
+                    art is 88px away in the cover, which is where it belongs.
+                    The markup went with the rule — a ground nothing draws is
+                    still an image the browser fetches. */}
                 <div className="hn-screen hn-band">
-                  <div className="hn-band-ground" aria-hidden="true">
-                    {track?.image && <img src={track.image} alt="" onError={e => { e.currentTarget.style.display = 'none'; }} />}
-                  </div>
                   <div className="hp-dashboard">
                     <div className="hp-dash-cell hp-dash-beacon">
                       <ListeningBeacon />
