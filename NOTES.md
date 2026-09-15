@@ -1577,12 +1577,19 @@ merged (1.14.0 when it is: something new)**
       `pull_submissions` join run read-only against the nine real rows,
       all three owner routes answering 401, the build passing, and the
       row's markup stood into a page to check the CSS on a phone.
-      **Link their journal is confirmed working** — Miyel pressed it on
-      the dev server the same day, on the Kailea send (#3), which now
-      carries `wizkailea.vercel.app` where it had nothing; Kai's page
-      counts that send as a result. **Still not driven by hand:** *I've
-      already logged this* and its two writes. Nothing I ran wrote to any
-      real row.
+      **And both controls are confirmed on the dev server**, by Miyel the
+      same day, on the one real case there was — the Kailea send (#3),
+      which is the case the brief was written about. It carries
+      `wizkailea.vercel.app` where it had nothing, and it is `logged`
+      and attached to entry 39, `lemonade`, which reads as a Submission
+      credited to Kai at her address. The **don't overwrite** rule
+      showed its work: the entry already carried that credit from an
+      earlier correction, so the press set the status and the link and
+      left the writing alone. Nothing I ran wrote to any real row.
+      **No backlog behind it:** the other five open sends have no entry
+      in the journal under any spelling, so Pending is telling the truth
+      about every one of them, and the button is for the next send that
+      gets listened to outside the flow rather than for a queue.
 - [x] **Three sends carried an email in `sender_url`, fixed the same
       day.** Submissions 4, 5 and 7 held `josejunior770@gmail.com`, from
       before the email field was retired, and `tidyAddress` read it as a
