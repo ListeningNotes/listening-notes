@@ -598,11 +598,12 @@ export default function HomeNav() {
   // cannot fault and still do not like is usually a control describing the
   // wrong thing.
   //
-  // At the spine's top right, on the same line as the lights over the journal
-  // — the row every other page on this site puts its controls on. The row
-  // around it takes no clicks, the way the bar over the journal does not: it
-  // is a strip across the top of a scrolling page, and one that swallowed
-  // them would be a dead band across the top of the card.
+  // Centred over the spine, on the same line as the mark over the journal, so
+  // each page carries one thing on the top row centred on its own measure and
+  // the lights sit at the far right of the whole window. The row around it
+  // takes no clicks, the way the bar over the journal does not: it is a strip
+  // across the top of a scrolling page, and one that swallowed them would be
+  // a dead band across the top of the card.
   //
   // Card, and Desk or About. Miyel's words, and Card is what this project
   // already calls that face everywhere — the identity card, DECISIONS, the

@@ -302,8 +302,12 @@ cannot be tested end to end.
       untouched, because those are read out on a swipe where a sentence is
       right. Bio was tried for an hour and dropped — it also names the
       free-text field the prompts replaced, which DECISIONS says may come
-      back. Still to see: the switch signed in, where the right-hand side
-      reads DESK.
+      back. **Centred over the spine, sixth pass** (Miyel: "maybe it can be
+      centered") — on the column's own axis, directly over the portrait,
+      which is why it settles; the mark over the journal is centred on its
+      page the same way, and the lights stay at the far right of the window.
+      Still to see: the switch signed in, where the right-hand side reads
+      DESK.
 
 - [ ] **Where a record came from wants one pass of refinement, 2026-09-15.**
       Miyel's call at the end of the credit and inbox work, and it is
@@ -1788,10 +1792,11 @@ current.
 - [x] **What turns the spine (`.hn-turn` / `.hn-turn-side`, in
       `.hn-turn-row`).** A two-sided switch — CARD and DESK, or CARD and
       ABOUT signed out — on the archive density switcher's recipe (`.gd`),
-      the side you are on lit and not pressable. At the spine's **top right**,
+      the side you are on lit and not pressable. **Centred over the spine**,
       on the bar's own geometry (22px down, the same 58px row), so it and the
-      lights over the journal sit on one line: measured, both centred at
-      51px. Five passes to get there and the reasoning is in Pending; the
+      mark over the journal sit on one line, each centred on its own page's
+      measure, with the lights at the far right of the window: measured, the
+      switch at 150 of 300 and everything on the row at 51px. Five passes to get there and the reasoning is in Pending; the
       short version is that a single press can only say *something happens
       here*, and what needed saying is that the left page has two sides. The
       row takes no clicks and the buttons take their own back, the way the
