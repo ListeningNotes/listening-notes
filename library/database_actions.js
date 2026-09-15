@@ -259,49 +259,53 @@ export async function pull_entry_by_slug(slug, { includeChain = false } = {}) {
 // are the same row; the difference is that this one is true everywhere.
 const OWNER_ROW = 'SELECT id FROM users ORDER BY id LIMIT 1';
 
-// ── Discovery chain ────────────────────────────────────────────────────
-// Where an album came from. source_entry_id points at the *sender's entry*,
-// not at the album — null means this was a find of your own. Walking the
-// column upward gives the whole lineage; that's the entire tree mechanic.
+// ── source_entry_id is parked, 2026-09-15 ──────────────────────────────────
+// The column is still on `entries` and nothing writes it. What used to stand
+// here — a write-once rule, a lookup, a same-`album_key` check and a
+// recursive cycle guard — is gone, because it was forty lines protecting a
+// column no surface could set. That is the Formative shape (a column, a
+// definition, a token and no writer), which this project has already paid
+// for once.
 //
-// Deliberately not a foreign key. An FK would either refuse to let you delete
-// a mis-logged entry that something descends from, or quietly null out its
-// children's source and rewrite their history. The chain is recorded fact, so
-// a pointer at a deleted entry stays a pointer at a deleted entry — and since
-// id is a serial that never reuses numbers, it can't drift onto a different
-// album later. Phase 2 can draw that as an unknown node.
+// **Why it cannot simply be wired to the send flow.** It was meant to point
+// at the *sender's* entry, and an `entries.id` is local to one database:
+// June's 39 is not this journal's 39. A sender's id arriving here would be
+// rejected by the album check nearly always and, where a local entry
+// happened to share both the number and the album, stored pointing at this
+// journal's own listen — a lineage record claiming you got the record from
+// yourself. And there is nothing to send it from: a send is a visitor
+// filling in *this* copy's form, picking the album out of Apple's
+// catalogue, with their own journal at an origin their browser cannot read
+// from that page. Their copy contributes only the name and address it wrote
+// into the link that brought them.
+//
+// **What it would take.** A reference that means something in both places —
+// their journal plus their entry's slug, not a bare id — and a send that
+// starts on the sender's own entry rather than on the recipient's form.
+// That is a feature, not a wiring job (NOTES, 2026-09-15).
+//
+// **Nothing is lost meanwhile.** The chain a reader sees
+// (components/main_components/Slug_Page/Chain.js) already walks across
+// copies without this: it follows `received_from_url` to the sender's
+// journal and finds their entry for the same album in their public feed.
+// The only thing an exact pointer would add is knowing *which* listen when
+// somebody has more than one.
+//
+// The column stays rather than being dropped — schema is additive-only —
+// and `withoutChain` still strips it from public reads, so if it is ever
+// revived it is private from the start.
 
 // Empty strings arrive from every text input on the form. The column means
 // "nothing recorded", and '' is not that.
 const blankToNull = v => (v === '' || v === undefined ? null : v);
 
-// A source is an entries.id or nothing. Anything unparseable is nothing —
-// better an unrecorded origin than a pointer at whatever row id 0 rounds to.
+// A row reference or nothing. Anything unparseable is nothing — better an
+// unrecorded owner than a pointer at whatever row id 0 rounds to. Kept for
+// `user_id` on a new entry, which is the only caller left.
 function entryRef(value) {
   if (value === null || value === undefined || value === '') return null;
   const n = parseInt(value, 10);
   return Number.isInteger(n) && n > 0 ? n : null;
-}
-
-// An album can't be sent back up its own chain. Walks from the proposed source
-// upward looking for the entry being edited, so both self-linking and the
-// longer A→B→C→A loops are caught. The depth guard is belt-and-braces: nothing
-// should be able to write a cycle, but a recursive CTE that meets one never
-// returns.
-async function wouldFormCycle(entry_id, source_entry_id) {
-  if (!entry_id || !source_entry_id) return false;
-  if (entry_id === source_entry_id) return true;
-  const hit = await database`
-    WITH RECURSIVE chain(id, source_entry_id, depth) AS (
-      SELECT id, source_entry_id, 1 FROM entries WHERE id = ${source_entry_id}
-      UNION ALL
-      SELECT e.id, e.source_entry_id, c.depth + 1
-        FROM entries e JOIN chain c ON e.id = c.source_entry_id
-       WHERE c.depth < 50
-    )
-    SELECT 1 FROM chain WHERE id = ${entry_id} LIMIT 1
-  `;
-  return hit.length > 0;
 }
 
 // masterpiece is a column, not a rating. The session used to write the word
@@ -350,7 +354,7 @@ export async function save_new_entry(body) {
     album, artist, year, genre = '', entry_type,
     rating, favorite, masterpiece = false, formative = false, notes,
     track_notes, horizon, album_art, tracks = null,
-    source_entry_id = null, received_from = null, received_date = null,
+    received_from = null, received_date = null,
     received_from_url = null,
     user_id = null
   } = body;
@@ -362,14 +366,14 @@ export async function save_new_entry(body) {
       album, artist, year, genre, entry_type,
       rating, favorite, masterpiece, formative, notes, track_notes,
       horizon, album_art, slug, tracks,
-      source_entry_id, received_from, received_date, received_from_url, user_id
+      received_from, received_date, received_from_url, user_id
     ) VALUES (
       ${album}, ${artist}, ${year}, ${genre}, ${entry_type},
       ${rating}, ${favorite}, ${masterpiece}, ${formative}, ${notes},
       ${track_notes},
       ${horizon}, ${album_art}, ${slug},
       ${tracks ? JSON.stringify(tracks) : null},
-      ${entryRef(source_entry_id)}, ${blankToNull(received_from)},
+      ${blankToNull(received_from)},
       ${blankToNull(received_date)}, ${blankToNull(tidyJournal(received_from_url))},
       COALESCE(${entryRef(user_id)}, (SELECT id FROM users ORDER BY id LIMIT 1))
     )
@@ -389,66 +393,21 @@ export async function update_entry(slug, fields) {
   // given a source but never stripped of one is a trap. So each is applied
   // only when the caller actually sent the key, and null then means null.
   const touched = key => Object.prototype.hasOwnProperty.call(fields, key);
-  let set_source = touched('source_entry_id');
   const set_from = touched('received_from');
   const set_date = touched('received_date');
   const set_url = touched('received_from_url');
-  const source_entry_id = set_source ? entryRef(fields.source_entry_id) : null;
+  // source_entry_id is not among them, 2026-09-15: nothing writes it and the
+  // rules that used to guard it are gone (see the note above the slugs).
+  // A caller sending the key is ignored rather than refused.
 
-  // The row as it stands, fetched once and used twice: to check the chain for
-  // cycles, and to work out which pieces of writing actually changed. The stamps
-  // cannot be done in SQL the way an entry-wide one could — a per-track answer
-  // needs the old and the new tracklists side by side in the same loop.
+  // The row as it stands, used to work out which pieces of writing actually
+  // changed. The stamps cannot be done in SQL the way an entry-wide one
+  // could — a per-track answer needs the old and the new tracklists side by
+  // side in the same loop.
   const [current] = await database`
-    SELECT id, notes, tracks, album_key, source_entry_id
+    SELECT id, notes, tracks, album_key
       FROM entries WHERE slug = ${slug} LIMIT 1
   `;
-
-  // ── Lineage is written once ─────────────────────────────────────────────
-  // received_from and received_date are corrections: you log something and
-  // remember a week later that Zach sent it, which is the same kind of fix as a
-  // typo. Where it sits in the tree is not. Either their entry led to yours or
-  // it did not, and a lineage anyone can rewrite is a record of nothing — the
-  // tree stops being evidence and becomes an opinion about the past.
-  //
-  // So it may be written while it is empty and never again. Same rule as
-  // `serial` and `founded_at` in settings_actions, and dropped silently for the
-  // same reason: the editor posts every field it knows about, and it should not
-  // fail because one of them was already settled.
-  //
-  // It can become null again, but only by the source entry being deleted — the
-  // foreign key's ON DELETE SET NULL does it. That is the one case where the
-  // lineage genuinely ended, and it reopens the field to be set correctly
-  // rather than leaving it pointing at nothing.
-  if (set_source && current?.source_entry_id != null) {
-    set_source = false;
-  }
-
-  if (set_source && source_entry_id) {
-    // A source is the entry somebody else wrote about *the same album* — that
-    // is the whole mechanic. Walking the column upward gives the history of one
-    // record, who found it first and who passed it to whom, and that only holds
-    // because every hop is the same album.
-    //
-    // The tempting misreading is association: they read your entry on one album
-    // and sent you a different one. That is a real relationship and not this
-    // column's — the album would change at every hop, so the trail could not be
-    // walked, because each step changes the subject. If it is ever wanted it
-    // wants a column of its own.
-    //
-    // Which makes this check the thing that keeps the two apart. It is
-    // impossible to state if one column carries both.
-    const [source] = await database`
-      SELECT id, album_key FROM entries WHERE id = ${source_entry_id} LIMIT 1
-    `;
-    if (!source) throw new Error('That entry no longer exists.');
-    if (source.album_key !== current?.album_key) {
-      throw new Error('A source has to be an entry for this same album.');
-    }
-    if (await wouldFormCycle(current?.id, source_entry_id)) {
-      throw new Error('That would send this album back up its own chain.');
-    }
-  }
 
   // ── Edit stamps ─────────────────────────────────────────────────────────
   // A stamp goes next to the thing that changed, not at the top of the entry.
@@ -508,7 +467,6 @@ export async function update_entry(slug, fields) {
       horizon = COALESCE(${fields.horizon ?? null}, horizon),
       album_art = COALESCE(${fields.album_art ?? null}, album_art),
       edited_at = CASE WHEN ${noteChanged} THEN ${stampedAt}::timestamp ELSE edited_at END,
-      source_entry_id = CASE WHEN ${set_source} THEN ${source_entry_id}::int ELSE source_entry_id END,
       received_from = CASE WHEN ${set_from} THEN ${set_from ? blankToNull(fields.received_from) : null}::text ELSE received_from END,
       received_date = CASE WHEN ${set_date} THEN ${set_date ? blankToNull(fields.received_date) : null}::date ELSE received_date END,
       received_from_url = CASE WHEN ${set_url} THEN ${set_url ? blankToNull(tidyJournal(fields.received_from_url)) : null}::text ELSE received_from_url END
@@ -536,6 +494,12 @@ export async function update_entry(slug, fields) {
 // So this clears both first. The alternative was a warning long enough to
 // explain the mess it was about to leave, which is a worse answer than not
 // leaving one.
+//
+// The source_entry_id sweep can no longer match anything — the column is
+// parked and nothing writes it (see the note above the slugs) — and it is
+// kept anyway, because it costs one statement on the rarest action on the
+// site and it is the difference between the column being revivable and its
+// revival carrying a silent bug.
 export async function delete_entry(slug) {
   const [row] = await database`SELECT id FROM entries WHERE slug = ${slug} LIMIT 1`;
   if (!row) return { deleted: false };

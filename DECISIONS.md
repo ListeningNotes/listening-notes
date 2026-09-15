@@ -241,20 +241,18 @@ that opens in place, not a dialog dismissed by reflex, and not beside Save.
 The delete cleans up after itself — comments, chain links, the pin — rather
 than warning about the mess; the warning is two sentences.
 
-**`source_entry_id` is lineage, not association.** It points at *the sender's
-entry for the same album*, never at the entry that prompted the send, so
-walking it upward gives one record's whole history; a valid value must share
-the entry's `album_key`, enforced on write. `null` means origin. Association
-would need its own column, `prompted_by` — parked, not built.
-
-**Lineage is written once; the rest of the chain is editable.** `received_from`
-and `received_date` are corrections. `source_entry_id` is not: either their
-entry led to yours or it did not, and lineage anyone can rewrite is a record
-of nothing. Set while empty and never again — the `WRITE_ONCE` rule `serial`
-and `founded_at` use — and dropped silently if sent again. **And never by
-hand, 2026-09-14:** the editor does not offer it. A wrong value can only be
-undone in SQL, and it was a field only because nothing set it yet. The send
-flow sets it when both people have copies; the column waits.
+**`source_entry_id` is parked, and its rules are gone, 2026-09-15.** It was
+meant to point at the sender's entry for the same album, guarded by a
+write-once rule, an `album_key` check and a cycle walk. Nothing could set
+it, so that was forty lines protecting an empty column — Formative again.
+**It cannot simply be wired to the send flow:** an `entries.id` is local to
+one database, so a sender's id here is wrong or dangerous, and a send is a
+visitor on *this* copy's form with their journal at an origin their browser
+cannot read. Reviving it needs a reference that means something in both
+places — their journal plus their entry's slug — and a send that starts on
+the sender's own entry. The column stays (additive-only) and is still
+stripped from public reads. Association would need its own column,
+`prompted_by` — parked, not built.
 
 **Everything editable is edited where it prints.** Fields on the card for
 things a screen below it were a form filled in blind.
@@ -696,11 +694,14 @@ Their journal is the thing you read; your page about them is where you
 think about them, and the feed's face is the way there.
 
 **Lineage runs backward only, and that is the feature, 2026-09-12.**
-Walking `source_entry_id` upward gives everyone who passed a record before
-you; nothing sees forward, because the link to the next person exists on
-their copy. The forward half arrives through the submissions feed when
-somebody in the book credits you — from them having written something, not
-from anything being tracked. The Submission chip on an entry opens the chain.
+Walking upward gives everyone who passed a record before you; nothing sees
+forward, because the link to the next person exists on their copy. The
+forward half arrives through the submissions feed when somebody in the book
+credits you — from them having written something, not from anything being
+tracked. The Submission chip on an entry opens the chain. **Walked by
+address, not by id, 2026-09-15:** each hop follows `received_from_url` to
+that journal's public feed and finds their entry for the same album
+(`Chain.js`), which works across copies where an id cannot.
 
 **`received_from` is published per entry**, with a per-entry toggle for
 private sends. Public credit is the default; quiet is a choice. **Built
