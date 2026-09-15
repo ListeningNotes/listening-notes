@@ -1688,11 +1688,17 @@ current.
 - [x] **The ··· is a mark, not a second button** (Miyel). It wore a pill
       beside Start a listen, and two pills side by side read as two equal
       choices — the opposite of the row's whole point. No border, no
-      ground, three dots in faint ink pushed to the far right edge, so
-      what sits between them and the button is room rather than an
-      eight-pixel gap. Start a listen keeps the left edge. Still 45px of
-      target, taken in padding weighted left so the dots land on the edge
-      and not the padding; full ink while the menu is open.
+      ground, pushed to the far right edge, so what sits between it and
+      the button is room rather than an eight-pixel gap. Start a listen
+      keeps the left edge. Still a thumb's target, taken in padding
+      weighted left so the mark lands on the edge and not the padding;
+      full ink while the menu is open.
+      **And it is Phosphor's `DotsThree` now**, not three middle-dot
+      characters: the label face set those unevenly, at a size that read
+      as punctuation somebody had left behind. An icon is one shape, drawn
+      the way every other mark on the site is. Safe here where it was not
+      on the entry's first screen — the inbox has no stand-in rendering
+      the same row a beat earlier, so nothing can shift when it arrives.
 - [x] **Built to Miyel's two mockups, 2026-09-15.** She drew the inbox and
       said follow the look, with one correction: the album art square, not
       the tall rectangles the drawing had. What changed:

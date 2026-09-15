@@ -850,15 +850,15 @@ a.pp-name:hover svg { color: var(--ink); }
   border-radius: 0;
   background: transparent;
   color: var(--ink-faint);
-  font-family: var(--font-label);
-  font-size: 15px;
-  /* Spaced so the dots read as a mark rather than as punctuation. */
-  letter-spacing: 0.2em;
-  line-height: 1;
+  /* Phosphor's DotsThree, 2026-09-15. It was three middle-dot characters
+     spaced apart, which the label face set unevenly and at a size that read
+     as punctuation somebody had left behind. An icon is one shape, drawn
+     the way every other mark on the site is drawn. */
+  line-height: 0;
   /* A thumb's worth of target on a small mark, taken in padding, weighted
      to the left so the dots sit on the row's right edge and not the
      padding. */
-  padding: 14px 0 16px 16px;
+  padding: 12px 0 12px 16px;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   transition: color 0.15s;
