@@ -7,6 +7,28 @@
 /* ── Left: About ────────────────────────────────────────────────────────── */
 .ab-pane { display: flex; flex-direction: column; }
 
+/* ── The card as a page: one measure, one left edge ─────────────────────────
+   Everything here starts at the same place — the portrait, the facts, the
+   pinned record, the buttons, and the writing under them. It did not, and
+   that was the whole of "balance, waaay off" (Miyel, 2026-09-15): the card
+   object was a 340px column centred in the pane, the label-and-answer lines
+   were a 300px column centred inside *that*, and the writing below was a
+   480px column centred in the pane. Three measures, three left edges, one
+   page. The gutter belongs to the page and nothing inside it sets its own.
+
+   22px, not the cross's 34. That gutter was sized for the beacon's screen,
+   which is one big centred square with air around it; this is a page of type
+   with a picture in it, and 68px of it given away to margins is a column of
+   reading lost. */
+.ab-pane { padding: 0 22px; }
+.ab-card { padding: 0; }
+.ab-card .idc { max-width: none; margin: 0; }
+.ab-card .idc-inner { text-align: left; padding: 0 0 22px; }
+.ab-card .idc-line { max-width: none; margin: 11px 0 0; }
+.ab-card .idc-name { text-align: left; margin: 2px 0 16px; font-size: 28px; }
+.ab-card .idc-row { justify-content: flex-start; margin-top: 20px; }
+.ab-below { max-width: none; margin: 0; padding: 4px 0 max(40px, env(safe-area-inset-bottom)); }
+
 /* ── The pin's search ───────────────────────────────────────────────────────
    A panel in the middle of a desktop screen and a bottom sheet on a phone,
    which is the arrangement the archive's filters already use. It is the same
@@ -537,10 +559,13 @@ a.ab-rig-name:hover { text-decoration: underline; }
    this cover shows a record at that size in that frame; the back shows
    a person. Matching them is what makes the two sides read as one
    object turned over rather than as two designs. */
-/* ── The glance ── portrait left, the name and the counted facts beside it.
-   The portrait keeps a fixed square and the words take the rest; on anything
-   narrower than a small phone they stack, because 118px of picture beside
-   a name is a name two words to the line. */
+/* ── The glance ── the portrait, with the facts beside it. The name is above
+   both and takes the page's width: an ornamented name in a column this narrow
+   broke into three ragged lines with its diacritics floating off the ends.
+
+   The facts are label-and-answer pairs, each pair one unbreakable unit, so a
+   wrap falls between pairs and never between a label and the thing it labels
+   — "ALBUMS LOGGED 39 SINCE / March 2026" was the version that did. */
 .idc-top {
   display: flex;
   align-items: flex-start;
@@ -549,17 +574,16 @@ a.ab-rig-name:hover { text-decoration: underline; }
   width: 100%;
 }
 .idc-said { flex: 1; min-width: 0; }
-/* Beside a portrait there is no room for the card's fixed label column — an
-   84px label in a 178px measure leaves the answer four characters wide. The
-   labels take their own width here and the pair wraps where it has to. */
-.idc-top .idc-line-label { width: auto; }
-.idc-top .idc-line--counted { flex-wrap: wrap; column-gap: 7px; row-gap: 3px; }
 .idc-top .idc-portrait { flex-shrink: 0; width: 118px; height: 118px; margin: 0; border-radius: 14px; }
-.idc-top .idc-name { margin-top: 0; text-align: left; }
-.idc-top .idc-line { margin: 10px 0 0; max-width: none; }
-@media (max-width: 360px) {
-  .idc-top { flex-direction: column; align-items: center; text-align: center; }
-  .idc-top .idc-name { text-align: center; }
+.idc-top .idc-line { margin: 0 0 9px; max-width: none; flex-wrap: wrap; column-gap: 9px; row-gap: 5px; }
+.idc-top .idc-line:last-child { margin-bottom: 0; }
+.idc-top .idc-line-label { width: auto; }
+.idc-pair { display: inline-flex; align-items: baseline; gap: 8px; min-width: 0; }
+/* The two counted pairs stack rather than running on: one fact to a line
+   reads as a fact, two on a line reads as a sentence that lost its verb. */
+.idc-top .idc-line--counted { flex-direction: column; align-items: flex-start; gap: 5px; }
+@media (max-width: 340px) {
+  .idc-top { flex-direction: column; }
 }
 
 .idc-portrait {
@@ -917,7 +941,12 @@ a.ab-rig-name:hover { text-decoration: underline; }
    portrait and the name can be the size they are on a phone rather than a
    reduction of it, and the facts get a line each without wrapping. */
 @media (min-width: 769px) {
+  /* The page gutter is the pane's on a phone; here it is the spine's, and the
+     card also has to start under the switch's row, so both go back on the
+     card itself and the pane pays nothing. */
+  .ab-pane { padding: 0; }
   .ab-card { min-height: auto; padding: var(--hn-rail-top) var(--hn-gutter, 18px) 24px; }
+  .ab-below { padding: 0 var(--hn-gutter, 18px) 40px; }
   .ab-card .idc { max-width: none; }
   .ab-card .idc-head { top: 22px; left: var(--hn-gutter, 18px); }
   /* The glance is a row here too — it is what made the whole card fit above

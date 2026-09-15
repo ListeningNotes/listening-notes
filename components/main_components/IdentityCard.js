@@ -434,14 +434,16 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
             it — which is the thing the card is for. As a row the whole glance
             fits above the fold: face, name, what has been logged, since when,
             and what somebody listens to. */}
-        <div className="idc-top">
-          {slot}
-          <div className="idc-said">
-
         {/* cover_name, not keeper_name: this is the one place a person is
             reading the name, so it is allowed to be the ornamented one. The
             input beside it still edits keeper_name — see the note in
-            IdentificationCardEditor. */}
+            IdentificationCardEditor.
+
+            Above the row and across the whole measure, 2026-09-15. It was
+            beside the portrait for an afternoon and an ornamented name in a
+            column that narrow broke into three ragged lines with the
+            diacritics floating off the ends of them. A name is the page's
+            heading; it gets the page's width. */}
         {(editing || cover_name) && (
           <h1 className="idc-name">
             {editing
@@ -456,6 +458,10 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
               : cover_name}
           </h1>
         )}
+
+        <div className="idc-top">
+          {slot}
+          <div className="idc-said">
 
         {/* The four facts, in one table. These two used to be a single small
             centred line under the name — "39 albums logged · Logging since
@@ -472,18 +478,18 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
         {(showAlbums || showSince) && (
           <p className="idc-line idc-line--counted">
             {showAlbums && (
-              <>
+              <span className="idc-pair">
                 <span className={'idc-line-label' + off('albums')}>Albums logged</span>
                 <span className={'idc-line-value' + off('albums')}>{records}</span>
-              </>
+              </span>
             )}
             {showSince && (
-              <>
+              <span className="idc-pair">
                 <span className={'idc-line-label' + (showAlbums ? ' idc-line-label--since' : '') + off('since')}>
                   {showAlbums ? 'since' : 'Logging since'}
                 </span>
                 <span className={'idc-line-value' + off('since')}>{since}</span>
-              </>
+              </span>
             )}
             {showAlbums && eyeFor('albums')}
             {showSince && eyeFor('since')}
