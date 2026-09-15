@@ -867,7 +867,34 @@ a.pp-name:hover svg { color: var(--ink); }
 .ib-done:last-child { border-bottom: none; }
 a.ib-done:hover, button.ib-done:hover { background: var(--panel); }
 div.ib-done { cursor: default; }
-.ib-done--gone { opacity: 0.45; }
+/* A dismissed send sits back out of the way, and comes up a little when a
+   pointer is over it — which is also what makes its one control readable at
+   the moment somebody is reaching for it. */
+.ib-done--gone { opacity: 0.45; transition: opacity 0.15s; }
+.ib-done--gone:hover, .ib-done--gone:focus-within { opacity: 0.8; }
+/* The way back from a dismissal. Quiet on purpose: no border, no colour, the
+   row's own faded ink at the far end, in the same small label type the state
+   is set in — so the row still reads as a record rather than a control with
+   something to press. */
+.ib-back {
+  margin-left: auto;
+  flex-shrink: 0;
+  border: 0;
+  background: transparent;
+  /* A thumb's worth of target on quiet type, taken in padding so the words
+     stay small and the row does not grow around them — the art beside it is
+     already taller than this. */
+  padding: 15px 6px;
+  font-family: var(--font-label);
+  font-size: 9.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 0.15s;
+}
+.ib-back:hover { color: var(--ink); }
 .ib-done-art {
   width: 40px; height: 40px; border-radius: 7px; overflow: hidden; flex-shrink: 0;
   background: var(--panel);

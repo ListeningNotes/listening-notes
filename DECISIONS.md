@@ -739,7 +739,9 @@ Opened: the four outcomes are a word in the row's subtitle, not four tabs
 to stand on. New shows the one thing that happens to nearly every send,
 Start a listen, with the rare three behind a ··· that opens in the row.
 Opened has no buttons — it is a record of what happened, and the row itself
-opens the entry or resumes the listen. **A resumed listen must find its
+opens the entry or resumes the listen. **One exception: a dismissed row can
+be put back**, in the row's own faded ink at its far end, because otherwise
+dismissing is a one-way door and a send binned by mistake is gone. **A resumed listen must find its
 draft:** a send and a draft are separate rows joined only by album and
 artist, and starting fresh would upsert over the saved notes.
 

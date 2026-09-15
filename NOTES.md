@@ -1617,25 +1617,31 @@ current.
       deciding and belongs on the entry afterwards. Dismissed rows at
       reduced opacity. One tap target: logged opens the record, in
       progress resumes the listen.
-- [ ] **Two departures from the brief, both deliberate.**
-      **Add to address book stayed**, as a fourth menu item — DECISIONS
-      names the inbox's Add button as one of the documented ways an
-      address gets into the book, and dropping it would close that door.
-      It and *Link their journal* are opposite halves of one question and
-      never both apply, so at most three items show at once.
-      **And a dismissed send can no longer be recovered from the inbox**:
-      Opened has no buttons by design, so there is nothing to press to
-      put one back. It was recoverable before, from the dismissed tab's
-      Start a listen. Worth a decision if a send is ever dismissed by
-      accident; the row could be pressable back to waiting.
+- [x] **One departure from the brief, deliberate.** **Add to address book
+      stayed**, as a fourth menu item — DECISIONS names the inbox's Add
+      button as one of the documented ways an address gets into the book,
+      and dropping it would close that door. It and *Link their journal*
+      are opposite halves of one question and never both apply, so at
+      most three items show at once.
+- [x] **A dismissed row can be put back, very quietly** (Miyel, after the
+      redesign, closing the one-way door it had opened). Opened has no
+      buttons by design and this is the exception that design made
+      necessary: dismissing was unrecoverable from anywhere. *put back*
+      sits at the far end of the row in the row's own faded ink, in the
+      same small type the state is set in, and comes up when a pointer is
+      over it — 45px of target on 9.5px of type, taken in padding, so the
+      row grows by three pixels and the words stay quiet. It returns the
+      send to New. No confirmation: putting one back destroys nothing,
+      and the worst case is dismissing it again.
 - [ ] **Names to confirm, 2026-09-15 (the redesign)** — rename freely:
       `VIEWS`, `UNOPENED`, `unopened`, `became`, `Sender`, `resumeListen`,
       `menuFor`;
       the words *new*, *opened* (Miyel's, replacing waiting/handled),
       *in progress*, *logged 4 august*, *dismissed*, *Nothing new.*,
       *Nothing opened yet.*; the
-      `.ib-who*`, `.ib-more`, `.ib-menu*` and `.ib-done*` classes in
-      forms.css; and `lookup_key` keeping its name where it moved to.
+      `.ib-who*`, `.ib-more`, `.ib-menu*`, `.ib-done*` and `.ib-back`
+      classes in forms.css; the words *put back*; and `lookup_key`
+      keeping its name where it moved to.
 - [x] **Verified:** the build passes, the draft lookup was run against the
       five real drafts and found each one by album and artist (and the
       wrong fold shown to miss), and both views were stood into a page to

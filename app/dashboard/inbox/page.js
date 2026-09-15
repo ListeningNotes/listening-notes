@@ -535,9 +535,28 @@ export default function Inbox({ layered = false }) {
                           </button>
                         );
                       }
+                      // Dismissed, and the one way back, 2026-09-15. Opened
+                      // has no buttons by design, and this is the exception
+                      // the design made necessary: dismissing was a one-way
+                      // door, and a send dismissed by mistake could not be
+                      // recovered from anywhere. It is as quiet as it can be
+                      // and still be reachable — the row's own faded ink, at
+                      // the far end, coming up only when you go for it — and
+                      // it is not a confirmation, because putting a send back
+                      // is not destructive and the worst case is dismissing
+                      // it again.
                       return (
                         <div key={sent.id} className={'ib-done' + (gone ? ' ib-done--gone' : '')}>
                           {inside}
+                          {gone && (
+                            <button
+                              className="ib-back"
+                              onClick={() => updateStatus(sent.id, UNOPENED)}
+                              aria-label={`Put ${sent.album} back`}
+                            >
+                              put back
+                            </button>
+                          )}
                         </div>
                       );
                     })}
