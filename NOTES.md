@@ -1610,7 +1610,8 @@ current.
 
 ## Complete
 
-**2026-09-15 — the inbox is one list, same branch `inbox-logged`**
+**2026-09-15 — the inbox, branch `inbox-logged`, merged to main and pushed
+as 1.14.0 (something new: the middle number), released the same day**
 
 - [x] **New was never a place.** It is a property of a row, the way unread
       is in mail, and nobody keeps a read tab and an unread tab. So the two
@@ -1829,8 +1830,8 @@ current.
       behind the password, so the ···, the resume and the two views are
       Miyel's review. Nothing was written to any real row.
 
-**2026-09-15 — the inbox needs a third outcome, branch `inbox-logged`, not
-merged (1.14.0 when it is: something new)**
+**2026-09-15 — the inbox needs a third outcome, the first half of that
+branch**
 
 - [x] **A send can say it was already logged.** Migration 010 adds
       `submissions.entry_id` (integer, `ON DELETE SET NULL` — the
