@@ -48,7 +48,7 @@ export default function FeedPage({ layered = false }) {
   if (!authed) { if (typeof window !== 'undefined') window.location.replace('/login'); return null; }
 
   return (
-    <div className={'own-screen' + (layered ? ' own-screen--layered' : '')}>
+    <div className={'own-screen fd-screen' + (layered ? ' own-screen--layered' : '')}>
       <SiteNav />
 
       <div className="own-body fd-page">

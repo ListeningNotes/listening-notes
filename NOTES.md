@@ -2158,6 +2158,15 @@ rounds on the beacon as she used it.
       does, which settles the send AND credits the entry, and it is not awaited
       — a send deleted while the listen was open answers 404, and that is not a
       reason to tell somebody their listen failed.
+- [x] **The feed's head holds still and its title is gone.** Everything passes
+      under the mark and under RECENT · SUBMISSIONS — two stacked sticky bands,
+      because the two belong to different components. In a layer the mark's row
+      is in the flow, so it is stuck at the top and takes the notch as padding
+      rather than margin, which keeps the whole 80px band put and the mark out
+      from under a dynamic island. The tabs stick at `--hn-bar-h`, the right
+      number in both shapes, which is most of why that was worth putting on
+      `:root`. The word FEED went with it: three lines of small caps to name
+      one page, over a row that labels itself.
 - [x] **The feed opens on Recent**, and Recent is the first tab. Submissions
       was the default while the feed was mostly empty; with a populated address
       book it is the narrower view.
