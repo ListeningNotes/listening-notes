@@ -98,6 +98,23 @@ Private Repository Name), `05-neon.png` (the Neon panel with the Auth toggle),
 (the name screen), `09-homescreen.png` (the last setup screen on a phone; the
 browser's add-to-Dock on a laptop).
 
+**Early copies cannot update themselves, and cannot be sent the thing that
+would let them — found 2026-09-16, when Miyel visited friends' journals and
+found them on old versions.** The updater landed as a button on 2026-09-11 and
+grew its hourly schedule on 2026-09-14. A copy made before 09-11 has no
+workflow at all, and the workflow can only arrive *by* an update, which is
+exactly what cannot run — so those copies are frozen until somebody puts the
+file in by hand. A copy made 09-11 to 09-13 has the button and no schedule, and
+one press of Run workflow brings in the scheduled version and fixes it
+permanently. From 09-14 on it is automatic.
+
+Worth doing: a short note somewhere a keeper will find it — `/get`, or a line
+in the README — saying how to catch an old copy up, since the software cannot
+tell them itself. And a check on whether this is why, rather than the other
+candidates that were not ruled out: Actions left on read-only tokens in a fresh
+repository would fail the push every hour, and a scheduled workflow only runs
+on the default branch.
+
 **A day on the numbers, charted — Miyel's, 2026-09-16.** What a copy costs at
 scale, drawn rather than argued, so a ceiling is visible before it is hit. What
 one afternoon's measuring already found, as a starting point: a beacon poll is
