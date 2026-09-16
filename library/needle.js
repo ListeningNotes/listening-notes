@@ -106,16 +106,17 @@ export async function set_needle({ album, artist = '', album_art = '', track = '
 // it, until something newer happens — which is the same rule the row under the
 // beacon already follows.
 //
-// Except for a record nobody opened a track on. That is browsing rather than
-// listening, and it is thrown away as before, so glancing at a cover in the
-// picker does not become the last thing you listened to.
+// There used to be a throw-it-away branch here for a record nobody opened a
+// track on — browsing rather than listening. It has nothing to catch since
+// 2026-09-16: a record being looked at on the album screen no longer writes a
+// needle at all, so every row that reaches this is a listen somebody sat
+// through, whether or not the tracklist had arrived.
 //
 // The expiry in the read covers every listen that never gets to call this at
 // all — a closed tab, a locked phone — and expiring is not the same as ending:
 // an expired needle stops being "now" AND stops being the last listen, because
 // nobody can say what happened to it.
 export async function lift_needle() {
-  await database`DELETE FROM needle WHERE id = 1 AND coalesce(track, '') = ''`;
   await database`UPDATE needle SET ended_at = now() WHERE id = 1 AND ended_at IS NULL`;
 }
 

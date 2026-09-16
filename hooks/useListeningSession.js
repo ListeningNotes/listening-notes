@@ -23,6 +23,19 @@ export const SESSION_STEPS = ['Album', 'Tracks', 'Notes', 'Preview'];
 // picker, the inbox — and read by /session as it opens.
 export const PENDING_KEY = 'ln_pending_session';
 
+// And what is shouted when it changes. A `storage` event fires in every tab
+// EXCEPT the one that wrote the key, and the desk and the listen are always
+// the same tab — the listen opens as a layer over the desk. So the desk only
+// learned a record had been picked up when something else caused it to render,
+// which on the picker is nothing at all: the picker and the listen are one
+// route, so choosing a draft changes no address. Miyel saw that as the door
+// not lighting until she clicked something else, 2026-09-16.
+export const PENDING_EVENT = 'ln-pending-session';
+
+export function saidSoAboutTheDesk() {
+  try { window.dispatchEvent(new Event(PENDING_EVENT)); } catch { /* no window */ }
+}
+
 export function useListeningSession({ step }) {
   // Research — optional, and only ever started by the button on the album screen
   const [brief, setBrief]                 = useState(null);
@@ -159,6 +172,12 @@ export function useListeningSession({ step }) {
   // is the one loophole this had to close.
   useEffect(() => {
     if (!albumInput || saved) return undefined;
+    // A record on the album screen with nothing opened and nothing written is
+    // somebody deciding whether to start, and the brief is clear that is not a
+    // beacon. Everything else is a listen: past the album screen, or a draft
+    // picked back up — which carries writing by definition, and which Miyel
+    // found did not light at all because it can reopen on the album screen.
+    if (step === 0 && !hasWriting) return undefined;
     const t = setTimeout(() => {
       fetch('/api/needle', {
         method: 'POST',
@@ -167,18 +186,15 @@ export function useListeningSession({ step }) {
           album: albumInput,
           artist: artistName,
           album_art: albumArt,
-          // Blank until a track has actually been opened. openTrack is 0 from
-          // the moment a record goes on the desk, so asking the tracklist
-          // alone would light the beacon while somebody is still reading the
-          // album screen deciding whether to start — and the beacon stays on
-          // the last record logged until there is a song to name.
-          //
-          // Past the tracks screen it keeps naming the last song reached,
-          // rather than going blank on Notes and Preview: the listen is still
-          // open, and a beacon that dropped back to "Last logged" while its
-          // keeper was writing the album note would be saying the wrong thing
-          // at the most deliberate moment of the whole listen.
-          track: step > 0 ? (tracks?.[openTrack]?.title || '') : '',
+          // Whatever song is open, and blank while the tracklist is still
+          // being fetched or a resumed draft is sitting on its album screen.
+          // Blank is no longer the same as no beacon — the gate above decides
+          // that — so a listen with no song yet says the record's name instead
+          // of going dark. It keeps naming the last song reached through Notes
+          // and Preview too: the listen is still open, and dropping to "Last
+          // logged" while its keeper writes the album note would be wrong at
+          // the most deliberate moment of the whole thing.
+          track: tracks?.[openTrack]?.title || '',
         }),
       }).then(() => { litRef.current = true; })
         .catch(() => { /* the beacon is not worth an alert */ });
@@ -186,7 +202,7 @@ export function useListeningSession({ step }) {
     return () => clearTimeout(t);
   }, [albumInput, artistName, albumArt, tracks, openTrack, saved,
       overallNotes, trackNotes, trackRatings, trackFavorites,
-      rating, Masterpiece, Favorite, Formative, step]);
+      rating, Masterpiece, Favorite, Formative, step, hasWriting]);
 
   // The needle lifts. Called when the record comes off the desk, when the
   // listen becomes an entry, and when the listen leaves the screen.
