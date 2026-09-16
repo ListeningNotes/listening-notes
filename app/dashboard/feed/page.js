@@ -52,10 +52,11 @@ export default function FeedPage({ layered = false }) {
       <SiteNav />
 
       <div className="own-body fd-page">
-        {/* Named, because arriving here by bookmark or by the back button
-            should not be arriving at an unlabelled row of small caps. The
-            desk's row says Feed and so does the page it opens. */}
-        <div className="own-label fd-page-label">Feed</div>
+        {/* No title, 2026-09-16. It said FEED over a row that says RECENT and
+            SUBMISSIONS, which is three words of small caps stacked to name one
+            page — and the tabs already say where you are. It was here so that
+            arriving by bookmark or back button did not land on an unlabelled
+            row; the row turns out to label itself. */}
         <Feed entries={entries} />
       </div>
     </div>
