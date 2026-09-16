@@ -306,12 +306,13 @@ Left over:
       box should never read as either, and the browser pane cannot tell us
       that. Worth checking the conveyor's speed on a real screen too: 320ms
       out, 300ms back, judged on a desk.
-- [ ] **The entry's ··· has not been seen in its own header.** It is behind
-      the wristband and this session had no cookie, so the row was measured
-      with the real markup injected into it instead. The geometry is right and
-      the mark-fade rule works; what has not been seen is React putting the
-      attribute on the row — the `closest('.sitenav-row')` effect — on a page
-      that actually renders the menu. First thing to check when signed in.
+- [x] **The entry's ··· seen in its own header, 2026-09-15.** It had only been
+      measured with markup injected into the row, because the session had no
+      wristband; the dev server handed one out later the same evening. Real
+      numbers: the door at 311 and Correct, Print and Delete filing out to 273,
+      235 and 197, `data-tooling` going on and off the row with the menu, and
+      the mark at opacity 0 while it is open and 1 again after. The
+      `closest('.sitenav-row')` effect does what it was written to do.
 - [ ] **Nobody outside the cross can change light or dark now.** A visitor
       reading an entry finds the switch by going to the beacon. That is what
       the brief asks for and it is worth a look on a real device before it
