@@ -44,6 +44,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowSquareOut, CaretDown, Check, GlobeSimple, LinkSimple, MagnifyingGlass, Plus, X } from '@phosphor-icons/react';
 import Link from 'next/link';
 import { arrivingAlone } from '../../library/handoff';
+import { useHoldStill } from '../../hooks/useHoldStill';
 import IdentityCard from './IdentityCard';
 import {
   DEFAULT_RIG_ICON, LINK_ICONS, RIG_ICONS, identify, readLink, rigIcon,
@@ -114,14 +115,46 @@ export default function About({ stamps, authed = false, pinned = null, entries =
   // off the bottom of the screen and show the page behind it.
   const countSheetRef = useRef(null);
   const countFromRef = useRef(null);
+  const countScrimRef = useRef(null);
   const [countDrag, setCountDrag] = useState(0);
   const [countSettling, setCountSettling] = useState(false);
+
+  // Nothing behind the window moves while it is open. It held nothing still
+  // at all until 2026-09-15, so the portrait and the writing under it carried
+  // on scrolling behind a grid of covers — see hooks/useHoldStill.js, which
+  // the archive's filter sheet shares.
+  useHoldStill(countScrimRef, !!openCount);
 
   const shutCount = useCallback(() => {
     setOpenCount(null);
     setCountDrag(0);
     setCountSettling(false);
   }, []);
+
+  // The pull that puts the window away. Out of the grip's markup since
+  // 2026-09-15 so the scrim can carry the same three handlers: with the page
+  // behind held still a downward drag over the portrait had nothing left to
+  // do, and putting the window away is plainly what it is reaching for.
+  function onCountDown(e) {
+    countFromRef.current = e.clientY;
+    setCountSettling(false);
+    e.currentTarget.setPointerCapture(e.pointerId);
+  }
+  function onCountMove(e) {
+    if (countFromRef.current === null) return;
+    setCountDrag(Math.max(0, e.clientY - countFromRef.current));
+  }
+  function onCountUp() {
+    if (countFromRef.current === null) return;
+    countFromRef.current = null;
+    const height = countSheetRef.current?.offsetHeight ?? 400;
+    // A short sheet should not need a long pull and a tall one should not go
+    // on a twitch — whichever is smaller.
+    const closeAt = Math.min(120, height * 0.28);
+    setCountSettling(true);
+    if (countDrag > closeAt) { setCountDrag(height); setTimeout(shutCount, 180); }
+    else setCountDrag(0);
+  }
 
   // What is in the open window. The same two tests the wall filters on
   // (Journal.js), so the window and the archive's filter can never disagree
@@ -372,7 +405,14 @@ export default function About({ stamps, authed = false, pinned = null, entries =
           this pane hands out no order to swipe through. */}
       {openCount && (
         <>
-          <div className="ab-count-scrim" onClick={shutCount} />
+          <div
+            ref={countScrimRef}
+            className="ab-count-scrim"
+            onClick={shutCount}
+            onPointerDown={onCountDown}
+            onPointerMove={onCountMove}
+            onPointerUp={onCountUp}
+          />
           <div
             className={'ab-count-sheet' + (countSettling ? ' ab-count-sheet--settling' : '')}
             ref={countSheetRef}
@@ -385,26 +425,9 @@ export default function About({ stamps, authed = false, pinned = null, entries =
               className="ab-count-grip"
               aria-label="Close"
               onClick={shutCount}
-              onPointerDown={e => {
-                countFromRef.current = e.clientY;
-                setCountSettling(false);
-                e.currentTarget.setPointerCapture(e.pointerId);
-              }}
-              onPointerMove={e => {
-                if (countFromRef.current === null) return;
-                setCountDrag(Math.max(0, e.clientY - countFromRef.current));
-              }}
-              onPointerUp={() => {
-                if (countFromRef.current === null) return;
-                countFromRef.current = null;
-                const height = countSheetRef.current?.offsetHeight ?? 400;
-                // A short sheet should not need a long pull and a tall one
-                // should not go on a twitch — whichever is smaller.
-                const closeAt = Math.min(120, height * 0.28);
-                setCountSettling(true);
-                if (countDrag > closeAt) { setCountDrag(height); setTimeout(shutCount, 180); }
-                else setCountDrag(0);
-              }}
+              onPointerDown={onCountDown}
+              onPointerMove={onCountMove}
+              onPointerUp={onCountUp}
             />
             <p className="ab-count-head">
               <b>{inWindow.length}</b> {openCount}
