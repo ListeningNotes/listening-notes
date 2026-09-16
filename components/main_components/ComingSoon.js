@@ -50,10 +50,10 @@
 // different sizing and different live-dot behaviour and lifting them into one
 // component would mean a component whose whole job is a prop.
 //
-// The dot is static here. Everywhere else it reads whether something is
-// playing; on a copy nobody has claimed there is no Last.fm account to ask,
-// so a dot that could go green would be a promise about a journal that does
-// not exist yet.
+// The dot is static here. Everywhere else it reads whether the beacon is live
+// — a listen being written, or a record playing; on a copy nobody has claimed
+// there is neither, so a dot that could light would be a promise about a
+// journal that does not exist yet.
 
 // Where to say it did not work. The same address the pitch pane offers the
 // source at, because the issues live beside the code, and a fork's owner can

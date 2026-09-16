@@ -197,7 +197,14 @@ const SETTINGS_FIELDS = [
 // second trip on every page.
 const SETTINGS_SELECT = SETTINGS_FIELDS.map(f => `"${f}"`).join(', ')
   + `, (SELECT anthropic_key IS NOT NULL FROM secrets WHERE id = 1) AS has_anthropic_key`
-  + `, (SELECT lastfm_key IS NOT NULL FROM secrets WHERE id = 1) AS has_lastfm_key`;
+  + `, (SELECT lastfm_key IS NOT NULL FROM secrets WHERE id = 1) AS has_lastfm_key`
+  // And whether anything has ever been listened to here, which since
+  // 2026-09-15 is most of what decides whether this copy has a beacon at all —
+  // the source is the listen now, not Last.fm, so a journal with records in it
+  // has one whether or not its keeper ever managed to connect a scrobbler.
+  // Drafts count, because an unfinished listen can hold the beacon. EXISTS
+  // stops at the first row; neither of these is a count.
+  + `, (EXISTS(SELECT 1 FROM entries) OR EXISTS(SELECT 1 FROM drafts)) AS has_listens`;
 
 export async function pull_settings() {
   try {

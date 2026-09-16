@@ -70,7 +70,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { ArrowsLeftRight } from '@phosphor-icons/react';
-import { foldKey, useListeningBeacon } from '../../hooks/useListeningBeacon';
+import { useListeningBeacon } from '../../hooks/useListeningBeacon';
 import { useSpineWidth } from '../../hooks/useSpineWidth';
 import { useTheme } from './Lightswitch';
 import { useBookplate } from './Bookplate';
@@ -145,7 +145,7 @@ function secondFloorTop(pane) {
 export default function HomeNav() {
   const { cover_name, pinned_entry_id, beacon_available } = useBookplate();
   const { theme, toggle: toggleTheme } = useTheme();
-  const { isLive, recentAlbums } = useListeningBeacon();
+  const { isLive, before } = useListeningBeacon();
   // How wide the spine is on a desk, and the grip that changes it. The hook
   // writes the width onto the document's root as --spine-w, which the
   // stylesheet reads above 769px and ignores below it.
@@ -572,39 +572,41 @@ export default function HomeNav() {
   );
 
   // ── What came before ──────────────────────────────────────────────────────
-  // The last three records, under the beacon. Unchanged from the cover it came
-  // off — records rather than tracks, dimmed because they are the past, and one
-  // tap opens the entry when the album is in the journal, which is what stops
-  // the row being decoration.
-  const recentRow = recentAlbums.length > 0 && (
+  // The last three records, under the beacon: records rather than tracks,
+  // dimmed because they are the past, and one tap opens the entry, which is
+  // what stops the row being decoration.
+  //
+  // **Real listens, published or not, 2026-09-15.** They used to be the last
+  // three albums off the Last.fm history, which meant they were whatever
+  // happened to autoplay and the listens that mattered got buried underneath
+  // it. They come out of this journal now — an entry is a listen that was
+  // posted and a draft is one that is still being written — so somebody who
+  // sent you a record can see you sat with it, which is the loop the send
+  // flow exists to close. A draft has no page to open yet and draws plain.
+  //
+  // Assembled on the server (library/needle.js) rather than matched here
+  // against the wall's entries: the drafts half is not in anything the
+  // browser holds, and the matching it replaces existed only to guess which
+  // entry a scrobble was about.
+  const recentRow = before.length > 0 && (
     <div className="hp-recent-set">
-      {/* Up to three distinct records from the Last.fm history, skipping the
-          one on the beacon — so "before that", not "the last three plays".
-          The line sits under the covers, not over them: over them it was a
+      {/* The line sits under the covers, not over them: over them it was a
           second heading between the record and its past. */}
       <div className="hp-recent">
-      {recentAlbums.map(album => {
-        const entry = entries.find(e => e.album_key === album.key)
-          || entries.find(e => foldKey(e.album) === album.title);
-        const label = `${album.album} — ${album.artist}`;
-        const cover = album.art || entry?.album_art;
-        // Last.fm's cover URLs fail one at a time. When one does, the journal's
-        // own cover stands in if the record is in the journal; otherwise the
-        // tile goes blank rather than wearing the browser's broken-picture mark.
-        const onBroken = e => {
-          const fallback = entry?.album_art;
-          if (fallback && e.currentTarget.src !== fallback) e.currentTarget.src = fallback;
-          else e.currentTarget.style.display = 'none';
-        };
-        const art = cover
-          ? <img src={cover} alt="" onError={onBroken} />
+      {before.map(record => {
+        const label = `${record.album} — ${record.artist}`;
+        // A cover URL can fail on its own. There is no second copy to fall
+        // back to here, so the tile goes blank rather than wearing the
+        // browser's broken-picture mark.
+        const art = record.art
+          ? <img src={record.art} alt="" onError={e => { e.currentTarget.style.display = 'none'; }} />
           : <span className="hp-recent-none" aria-hidden="true">♪</span>;
-        return entry ? (
-          <Link key={album.key} href={`/entries/${entry.slug}`} className="hp-recent-tile" title={label} aria-label={label}>
+        return record.slug ? (
+          <Link key={record.album} href={`/entries/${record.slug}`} className="hp-recent-tile" title={label} aria-label={label}>
             {art}
           </Link>
         ) : (
-          <span key={album.key} className="hp-recent-tile hp-recent-tile--plain" title={label} aria-label={label} role="img">
+          <span key={record.album} className="hp-recent-tile hp-recent-tile--plain" title={label} aria-label={label} role="img">
             {art}
           </span>
         );
@@ -750,9 +752,12 @@ export default function HomeNav() {
             caret. On a desk it is the right page and does not move when the
             spine turns. */}
         <section className="hn-pane hn-pane--home" ref={homeRef} aria-label={beacon_available ? 'Now listening' : 'The journal'}>
-          {/* No Last.fm — no username, or no key to ask with — and there is
-              no beacon screen at all: the journal is the first thing under
-              the crown, rather than a tile pretending something might play.
+          {/* Nothing for a beacon to say — nothing logged here yet and no
+              scrobbler either, which since 2026-09-15 means a copy on its
+              first afternoon rather than anybody who could not connect
+              Last.fm — and there is no beacon screen at all: the journal is
+              the first thing under the crown, rather than a tile pretending
+              something might play.
               The layout decides beacon_available on the server, so this is
               settled before the first paint and the pane never re-lays out.
               That copy keeps one long scroll: the two floors need a first

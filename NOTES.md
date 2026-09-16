@@ -75,8 +75,8 @@ Everything below it was built blind against one claimed database. Watch for:
 - the build log: is the claim code box visible on the deploy screen?
 - `/setup`: claim code at the gate, then five screens, Skip on each, password
   with confirm and an eye; does Safari offer to save the password?
-- the landing: no Last.fm → the wall of covers under the crown, saying
-  "Nothing logged yet."
+- the landing: nothing logged AND no Last.fm → the wall of covers under the
+  crown. The first saved listen gives that copy a beacon on its own
 - Settings: the Last.fm key pasted there reaches the beacon; the Anthropic
   key pasted there turns the Research button on (`research_available` reads
   `has_anthropic_key`).
@@ -97,6 +97,26 @@ Private Repository Name), `05-neon.png` (the Neon panel with the Auth toggle),
 `07-holding.png` (the "isn't ready yet" page with Set it up), `08-setup.png`
 (the name screen), `09-homescreen.png` (the last setup screen on a phone; the
 browser's add-to-Dock on a laptop).
+
+**The session beacon's writing half is untested, 2026-09-15.** Everything
+proved so far is the reading side. Start a real listen and watch the beacon:
+it should stay on *Last logged* through the album screen, light on the tracks
+screen, follow the track, stay lit through Notes and Preview, and land on the
+record just saved without flickering through a third state. `/api/needle` is
+behind the wristband, so none of it could be exercised from the command line.
+
+**There is no way to turn the beacon off, 2026-09-15.** It used to be opt-in
+by accident — you had to connect Last.fm — and it is on for everyone now.
+DECISIONS says presence is outbound and opt-in, so a switch in Settings may be
+owed. Not built, deliberately: the brief did not ask for one, and a setting
+nobody wants is worse than a setting added later.
+
+**Names to confirm, 2026-09-15** — the session beacon. Miyel named `needle`,
+`library/needle.js`, `/api/needle` and `set_needle` / `pull_needle` /
+`lift_needle`. The rest were chosen without asking and rename freely:
+`pull_recent_listens`, `sameRecord`, `liftNeedle` in the session hook, the
+`state` field and its four values (`logging` / `listening` / `logged` /
+`none`), the `before` field, and `has_listens`.
 
 **Names to confirm** — chosen without asking, because the session was
 autonomous. Rename freely: `secrets` (table), `library/secrets.js`,
@@ -1258,6 +1278,15 @@ Project → Settings → Environment Variables.
 
 ## Gotchas
 
+**A dev server can stop recompiling and go on answering, 2026-09-15.** The one
+on :3000 served a version of `library/needle.js` from half an hour earlier, for
+every request, with no error in the log and no warning anywhere — so a fix that
+was already correct looked broken three times running. The tell was a field the
+new code adds being absent from the JSON. If a change is not showing up, check
+for something only the new version can emit *before* touching the logic, and
+restart the server.
+
+
 **A rule inside a media query is not heavier for being in one, 2026-09-15.**
 `@media (min-width: 769px) { .idc-photo { width: 88px } }` never once applied:
 `.ab-card .idc-photo` at the top of the same file is one class heavier, and a
@@ -1996,6 +2025,62 @@ current.
 ---
 
 ## Complete
+
+**2026-09-15 — the session beacon. Branch `session-beacon`, from Miyel's
+brief. The beacon's default source becomes the listen you are writing;
+Last.fm becomes an optional extra. UNMERGED, and the writing half is
+untested on a real session — see Pending.**
+
+- [x] **Three states, decided on the server** (`app/api/public/beacon/route.js`).
+      *Now logging* from the open listen, *Now listening* from Last.fm, *Last
+      logged* from the most recent listen. The session wins when both are live.
+      A visitor's browser cannot know whether a listen is open, so the order is
+      resolved server-side and the client is handed one answer.
+- [x] **`needle` — one row, always id 1** (migration 013, `library/needle.js`,
+      `/api/needle`, all Miyel's names). Album, artist, cover, track, and the
+      moment it was last touched. Deliberately not the drafts row: a draft is
+      written once something has been *typed*, and the first four minutes of a
+      listen are a record picked and not a word yet, which is exactly when the
+      beacon should be lit. Writing empty drafts instead would have put phantom
+      listens in the resume picker.
+- [x] **The expiry lives in the read, not in a cleanup job.** Three hours since
+      the last touch, enforced by the `WHERE` clause, so a closed tab or a flat
+      battery expires with nothing having to run. The clock is *interaction* —
+      picking a record, turning to a track, writing a line — and never a
+      heartbeat, because a timer that pinged while the page merely sat open
+      would claim a listen all weekend, which is the loophole the brief named.
+- [x] **No track, no beacon.** `step > 0` gates it. `openTrack` is 0 from the
+      moment a record lands on the desk, so asking the tracklist alone would
+      have lit the beacon while somebody was still on the album screen deciding
+      whether to start. Past the tracks screen it keeps naming the last song
+      reached rather than going blank on Notes and Preview.
+- [x] **The dot lights for a session as well as for playback** — Miyel
+      overruled the brief mid-build, which had said green should mean playback
+      alone. `isLive` is now "the beacon is live", and the three marks that
+      read it (`HomeNav`, `SiteNav`, `IdentityCard`) needed no change.
+- [x] **"Before that" is this journal's own listens**, finished or not — also
+      Miyel's call, twice: first that drafts count, then that the beacon's own
+      third state counts them too. Entries and drafts in one time-ordered
+      union, deduped by album title, a draft borrowing an older entry's slug so
+      its tile still opens something. That deleted the `foldKey` matching in
+      `HomeNav` whose only job was guessing which entry a scrobble was about,
+      and dropped the Last.fm read from 25 rows to 5.
+- [x] **`beacon_available` now means "anything listened to here, or a
+      scrobbler"** rather than "Last.fm is set up", so every copy has a beacon
+      from its first listen. One seam left, noted in `app/layout.js`: the very
+      first listen on an empty journal lights nothing, and resolves as soon as
+      a line is typed.
+- [x] **Settings' Last.fm section is "Optional: Last.fm"** and says outright
+      that a copy without it is complete, naming the case it is optional for.
+      The LAST PLAYED stamp across the idle cover went with all this — the
+      caption below says which state this is, and the stamp was that sentence
+      twice, in the wrong tense.
+
+Proved against the live database by calling the route's own `GET` directly:
+nothing open → Last logged; a needle with a track → Now logging, beating the
+scrobbler; a needle with no track → Last logged; touched 2h59m ago → still
+logging; 3h01m → lifted. Then in the browser at 375 and at 1280, no console
+errors.
 
 **MERGED to main and pushed, 2026-09-15** (`6b1a868`), with `turn-and-swipe`
 under it. Built clean with the dev server stopped. Version stays at 1.19.0 and

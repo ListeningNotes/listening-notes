@@ -7,43 +7,43 @@ import { useListeningBeacon } from '../../hooks/useListeningBeacon';
 
 // One beacon, one size. There used to be a `compact` shape as well, drawn in
 // the nav row of every page — that row does not carry it any more, so the
-// second shape has nothing to draw and is gone with it. `statusAboveArt` went
-// at the same time: the status line it placed had already been reduced to
-// null, so it was a switch between nothing and nothing.
+// second shape has nothing to draw and is gone with it.
+
+// The three states, and what each one is called. The labels do double duty:
+// they say what is happening and what kind of beacon somebody runs, without
+// anything having to explain itself. Which one is showing is decided on the
+// server — see app/api/public/beacon/route.js — because a visitor's browser
+// has no way of knowing whether a listen is open.
+//
+// "Now logging" is not a fallback. It is the better of the two live states to
+// find on a journal: somebody sitting with a record and writing about it,
+// rather than music being on in a room.
+const CAPTION = {
+  logging: 'Now logging',
+  listening: 'Now listening',
+  logged: 'Last logged',
+};
+
 export default function ListeningBeacon() {
-  const { track: trackObj, isLive } = useListeningBeacon();
-  const trackName = trackObj?.name || '—';
-  const artistName = trackObj?.artist || '';
-  // Last.fm hands over a cover URL for every row, and some of them 404 — the
-  // image host is flaky per URL, not per record. An <img> that fails draws
-  // the browser's own broken-picture mark, the largest thing on the screen,
-  // so a URL that fails is remembered and the placeholder is drawn instead
-  // until the track changes.
+  const { state, album, artist, art, track, isLive } = useListeningBeacon();
+  // A song in the two live states; a whole record in the third, where what is
+  // being shown is an entry and an entry is an album.
+  const title = track || album;
+  // Cover URLs fail one at a time — the image host is flaky per URL, not per
+  // record. An <img> that fails draws the browser's own broken-picture mark,
+  // the largest thing on the screen, so a URL that fails is remembered and the
+  // placeholder is drawn instead until the record changes.
   const [failed, setFailed] = useState('');
-  const artUrl = trackObj?.image && trackObj.image !== failed ? trackObj.image : '';
+  const artUrl = art && art !== failed ? art : '';
 
-  // The recent listens used to be gathered here, in a second poll of the same
-  // endpoint, and fanned out around the beacon when you pressed it. They are a
-  // row of their own now, below the beacon and always visible — see the note in
-  // hooks/useListeningBeacon.js, which derives them from the poll this already
-  // makes. Pressing the beacon no longer does anything, so it stopped being a
-  // button.
-
-  // "Now listening" and "Not currently listening" are written out again, under
-  // the art (they came off on 2026-08-28 and came back on 2026-09-07; DECISIONS
-  // has both). The idle state still greys the art and prints "last played"
-  // across it.
-
-  // Nothing has ever been played. A Last.fm account that is connected and
-  // has no scrobbles yet, or one whose history could not be read. The tile
-  // used to draw itself anyway — a white square, a grey note and a dash, the
-  // largest thing on the landing page, looking broken — and a copy with no
-  // Last.fm at all no longer reaches this component (the cross lands on the
-  // journal instead). What is left is one quiet line.
-  if (!trackObj) {
+  // Nothing at all: a copy on its first afternoon, before a record has been
+  // picked up, with no scrobbler either. The tile used to draw itself anyway —
+  // a white square, a grey note and a dash, the largest thing on the landing
+  // page, looking broken. What is left is one quiet line.
+  if (!title) {
     return (
       <div className="beacon-stage beacon-stage--quiet">
-        <p className="beacon-quiet">Nothing played yet.</p>
+        <p className="beacon-quiet">Nothing logged yet.</p>
       </div>
     );
   }
@@ -53,18 +53,23 @@ export default function ListeningBeacon() {
       <div className="beacon-card beacon-card--main">
         <div className={'beacon-art-wrap' + (isLive ? ' beacon-art-wrap--live' : '')}>
           {artUrl
-            ? <img src={artUrl} alt={trackName} className={'beacon-art' + (!isLive ? ' beacon-art--idle' : '')} onError={() => setFailed(artUrl)} />
+            ? <img src={artUrl} alt={title} className={'beacon-art' + (!isLive ? ' beacon-art--idle' : '')} onError={() => setFailed(artUrl)} />
             : <div className="beacon-art-placeholder">♪</div>
           }
-          {!isLive && artUrl && <div className="beacon-idle-overlay"><span>Last played</span></div>}
+          {/* A "Last played" stamp used to sit across the idle cover. The
+              caption below says which of the three states this is, in words,
+              forty pixels away — so the stamp was the same sentence twice, and
+              in the wrong tense now that the idle state is a record that was
+              logged rather than one that was played. The art still greys,
+              which is the part that was doing the work. */}
         </div>
         <div className="beacon-meta">
           {/* The caption, back since 2026-09-07 on Miyel's call, and under the
               art rather than over it: the art is the first thing on the
               screen, and the line says what it is before the title says
               which. Never green — the dot on the mark is the one thing that
-              lights when something plays. */}
-          <div className="beacon-status">{isLive ? 'Now listening' : 'Not currently listening'}</div>
+              lights. */}
+          <div className="beacon-status">{CAPTION[state]}</div>
           {/* Two lines, not a marquee. The marquee is the right answer in the
               nav row, where the slot is a couple of hundred pixels wide and
               there is nowhere for a long title to go — but here the title has
@@ -72,8 +77,8 @@ export default function ListeningBeacon() {
               name is. A title that scrolls has to be waited for; one that
               wraps is read. Past two lines it still ellipsises, because a
               four-line song title would push the album art off the screen. */}
-          <div className="beacon-track beacon-track--wrap">{trackName || '—'}</div>
-          {artistName && <div className="beacon-artist">{artistName}</div>}
+          <div className="beacon-track beacon-track--wrap">{title}</div>
+          {artist && <div className="beacon-artist">{artist}</div>}
         </div>
       </div>
     </div>

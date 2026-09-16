@@ -160,8 +160,8 @@ export default function SettingsPage({ layered = false }) {
         </Section>
 
         <Section
-          title="Last.fm"
-          note={<>The beacon shows what you’re playing by reading Last.fm, and this is set up on a desktop computer — a Mac or a PC — which is how it is known to work. Make a free Last.fm account. Download the Last.fm desktop app, sign in, and connect it to whatever you play music with, such as Spotify or Apple Music, so every play is sent to Last.fm. Then get an API key at <a href="https://www.last.fm/api/account/create" target="_blank" rel="noopener noreferrer">last.fm/api</a> and paste it below with your Last.fm username. Plays from a phone alone will not reach the beacon.</>}
+          title="Optional: Last.fm"
+          note={<>Your beacon already works without this. It shows the track you’re on while you’re logging a listen, and the last record you logged when you’re not — so a copy with nothing in this section is a complete one. What Last.fm adds is a third thing it can say: <em>Now listening</em>, while music is actually playing, wherever you are playing it. Setting that up is a desktop job — a Mac or a PC — which is how it is known to work. Make a free Last.fm account. Download the Last.fm desktop app, sign in, and connect it to whatever you play music with, such as Spotify or Apple Music, so every play is sent to Last.fm. Then get an API key at <a href="https://www.last.fm/api/account/create" target="_blank" rel="noopener noreferrer">last.fm/api</a> and paste it below with your Last.fm username. Plays from a phone alone will not reach the beacon, and Apple Music on an iPhone cannot scrobble reliably at all — which is the case this is optional for.</>}
           onSave={async () => {
             await send('/api/settings', { lastfm_user: lastfmUser });
             if (lastfmKey.trim()) {
