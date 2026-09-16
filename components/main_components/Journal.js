@@ -27,7 +27,7 @@
 
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { parseRating } from '../../library/entry_formatter';
 import AlbumTile from './AlbumTile';
 import { handOffOrder } from '../../library/handoff';
@@ -79,7 +79,7 @@ const PER_PAGE = 50;
 // recent row and its counts, so on the homepage the wall is handed what has
 // already arrived rather than fetching the same list a second time; at
 // /archive nothing has asked yet, so it asks.
-export default function Journal({ entries: given, loading: givenLoading, scroller, foot = null }) {
+function Journal({ entries: given, loading: givenLoading, scroller, foot = null }) {
   const [ownEntries, setOwnEntries] = useState([]);
   const [ownLoading, setOwnLoading] = useState(true);
   const supplied = Array.isArray(given);
@@ -504,3 +504,19 @@ export default function Journal({ entries: given, loading: givenLoading, scrolle
     </>
   );
 }
+
+// ── Why this is memoised, 2026-09-16 ───────────────────────────────────────
+// The cross subscribes to the beacon, for the dot on its mark, so every change
+// the beacon publishes re-renders HomeNav — and this wall is inside it. That
+// cost nothing while the beacon was Last.fm's, which changes when a record
+// changes. It costs something now that the beacon follows the listen being
+// written: turning to the next track is a beacon change, and a listen opens as
+// a layer *over* the cross rather than in place of it, so every track turn was
+// reconciling forty covers on a wall nobody was looking at.
+//
+// The props are stable by construction — `entries` is state that changes when
+// the journal is refetched, `scroller` is a ref object made once — so this
+// holds rather than being a comparison paid on every render for nothing.
+// Context is unaffected: a memoised component still re-renders when a context
+// it reads changes, which is what keeps the theme and the bookplate honest.
+export default memo(Journal);
