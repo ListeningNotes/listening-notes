@@ -95,6 +95,13 @@ const HOME = 1;
 // no business travelling to another device.
 const FACE_KEY = 'ln-spine-face';
 
+// How long the leaf takes to turn. Matched to the entry layer's arrival (0.42s
+// there, and the same decelerating curve) rather than picked: the whole site
+// should move in one language, and a pane that turns faster than a record
+// arrives reads as a different piece of software. The number is stated in
+// nav.css too, on the keyframes; if one moves the other has to.
+const TURN_MS = 400;
+
 // What each pane is, as a mark and as a sentence. The carets at the foot of
 // the cross read out of this rather than out of their own direction, because
 // the useful thing to say is where a press lands and not which way it goes.
@@ -231,21 +238,36 @@ export default function HomeNav() {
   // HTML the server sent — the class changes in the same frame and nothing
   // flashes through the wrong face on the way.
   //
-  // Nothing on a phone reads this. There are three panes there and a swipe
-  // between them, and the stylesheet ignores the class below 769px.
+  // Both shapes read this. It was a desktop-only class when the spine was the
+  // desktop's alone; the phone has the same leaf now and turns it the same way.
   const [face, setFace] = useState('card');
   useLayoutEffect(() => {
     try {
       if (window.localStorage.getItem(FACE_KEY) === 'desk') setFace('desk');
     } catch { /* storage off — the card is the answer, every visit */ }
   }, []);
+  // ── The turn itself ───────────────────────────────────────────────────────
+  // The face changes at once; what takes four hundred milliseconds is the
+  // picture of it. `turning` names the face being arrived at and is the whole
+  // difference between the two directions — the leaf turns one way to the desk
+  // and the other way back, which is what makes it a leaf rather than two
+  // slides that happen to alternate.
+  //
+  // It is a moment and not a mode. Nothing waits for it, nothing is disabled
+  // during it, and pressing the control again mid-turn simply starts the turn
+  // back: the class is replaced, the animation restarts from where CSS says it
+  // starts, and the face underneath was already right.
+  const [turning, setTurning] = useState(null);
+  const turnTimer = useRef(null);
+  useEffect(() => () => clearTimeout(turnTimer.current), []);
   const turnPane = useCallback(() => {
-    setFace(prev => {
-      const next = prev === 'card' ? 'desk' : 'card';
-      try { window.localStorage.setItem(FACE_KEY, next); } catch { /* not remembered */ }
-      return next;
-    });
-  }, []);
+    const next = face === 'card' ? 'desk' : 'card';
+    try { window.localStorage.setItem(FACE_KEY, next); } catch { /* not remembered */ }
+    setFace(next);
+    setTurning(next);
+    clearTimeout(turnTimer.current);
+    turnTimer.current = setTimeout(() => setTurning(null), TURN_MS);
+  }, [face]);
 
   const railRef = useRef(null);
   // The scrollers. The home pane has one; the turning pane has two, one per
@@ -679,7 +701,11 @@ export default function HomeNav() {
 
   return (
     <div
-      className={'hn hn--face-' + face + (spine.dragging ? ' hn--dragging' : '')}
+      className={
+        'hn hn--face-' + face
+        + (turning ? ' hn--turning hn--turning-to-' + turning : '')
+        + (spine.dragging ? ' hn--dragging' : '')
+      }
       data-pane={pane}
     >
       {header}
@@ -695,6 +721,13 @@ export default function HomeNav() {
           className="hn-pane hn-pane--turn"
           aria-label={marks[0].label}
         >
+          {/* The leaf. One box holding both faces, which exists so there is
+              something to turn: the faces themselves cannot be it, because a
+              turn moves the pair and lands on the other one. Flat and
+              transformless at rest — see the note over hn-turn-to-desk in
+              nav.css for why the 3D is only ever four hundred milliseconds
+              long. */}
+          <div className="hn-leaf">
           <div className="hn-face hn-face--card" ref={cardRef}>
             <About stamps={stamps} authed={authed} pinned={pinned} entries={entries} />
           </div>
@@ -729,6 +762,7 @@ export default function HomeNav() {
                 <Pitch onSignedIn={letIn} />
               </>
             )}
+          </div>
           </div>
         </section>
 
