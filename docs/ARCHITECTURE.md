@@ -137,7 +137,7 @@ The front doors — receive requests, hand them off, send back responses
 
 The hooks — reusable logic shared across pages
   hooks/
-    useListeningBeacon.js      Checks Last.fm every 15 seconds for what's playing
+    useListeningBeacon.js      Asks this journal's own beacon every 15 seconds — logging, listening or last logged
     useListeningSession.js     All session state — the record, tracks, notes, score, preview, saving; research on request
     useSessionDraft.js         The listen's draft — the browser's copy and the row in drafts — autosave, restore, cleanup
     useSpineWidth.js           The spine — the left page of the open book on a desk: how wide, remembered per browser, clamped, dragged by the fold

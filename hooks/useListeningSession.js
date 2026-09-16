@@ -129,6 +129,59 @@ export function useListeningSession({ step }) {
     },
   });
 
+  // ── The needle ────────────────────────────────────────────────────────────
+  // What this listen tells the beacon. The record, and the track on screen —
+  // nothing that was written. See migrations/013_needle.sql for why this is
+  // not the drafts row: a draft is written once something has been typed, and
+  // the first four minutes of a listen are a record picked, track one open
+  // and not a word yet, which is exactly when the beacon should be lit.
+  //
+  // Debounced for the same reason the draft is — every keystroke is a change,
+  // and a request per keystroke is a flood. Two seconds is invisible against
+  // a beacon the world polls every fifteen.
+  //
+  // **It is keyed on interaction and never on a heartbeat.** The row expires
+  // three hours after its last write, so what keeps a beacon alive is somebody
+  // turning to a track or writing a line. A timer that pinged while the page
+  // merely sat open would keep the beacon claiming a listen all weekend, which
+  // is the one loophole this had to close.
+  useEffect(() => {
+    if (!albumInput || saved) return undefined;
+    const t = setTimeout(() => {
+      fetch('/api/needle', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          album: albumInput,
+          artist: artistName,
+          album_art: albumArt,
+          // Blank until a track has actually been opened. openTrack is 0 from
+          // the moment a record goes on the desk, so asking the tracklist
+          // alone would light the beacon while somebody is still reading the
+          // album screen deciding whether to start — and the beacon stays on
+          // the last record logged until there is a song to name.
+          //
+          // Past the tracks screen it keeps naming the last song reached,
+          // rather than going blank on Notes and Preview: the listen is still
+          // open, and a beacon that dropped back to "Last logged" while its
+          // keeper was writing the album note would be saying the wrong thing
+          // at the most deliberate moment of the whole listen.
+          track: step > 0 ? (tracks?.[openTrack]?.title || '') : '',
+        }),
+      }).catch(() => { /* the beacon is not worth an alert */ });
+    }, 2000);
+    return () => clearTimeout(t);
+  }, [albumInput, artistName, albumArt, tracks, openTrack, saved,
+      overallNotes, trackNotes, trackRatings, trackFavorites,
+      rating, Masterpiece, Favorite, Formative, step]);
+
+  // The needle lifts. Called when the record comes off the desk and when the
+  // listen becomes an entry; a listen that simply stops — a closed tab, a
+  // locked phone — never reaches either, and the read expires it instead.
+  function liftNeedle() {
+    fetch('/api/needle', { method: 'DELETE' }).catch(() => {});
+  }
+
   // Assemble the preview on arrival. Nothing here reaches a model — format_post
   // is a local join of what was written — so it is redone every time the
   // Preview opens, which is what keeps it honest about edits made on the way
@@ -177,6 +230,9 @@ export function useListeningSession({ step }) {
     collectionIdRef.current = '';
 
     if (!record?.album) {
+      // Back to the picker: there is no record on the desk, so the beacon
+      // should stop saying there is.
+      liftNeedle();
       setAlbumInput(''); setArtistName(''); setYear(''); setAlbumArt('');
       setGenre(''); setEntryType(''); setReceivedFrom(''); setReceivedDate(''); setReceivedFromUrl('');
       return 0;
@@ -405,7 +461,11 @@ export function useListeningSession({ step }) {
       if (data.error) throw new Error(data.error);
       setSaved(true);
       setSavedEntry(data.entry || null);
-      // The listen is an entry now; the draft — both copies — goes with it.
+      // The listen is an entry now; the draft — both copies — goes with it,
+      // and so does the needle. The beacon moves from "Now logging" to "Last
+      // logged" showing the record just finished, which is the same record it
+      // was already showing — so the line changes and the cover does not.
+      liftNeedle();
       await draft.finish();
     } catch (err) { alert('Save failed: ' + err.message); }
     finally { setSaving(false); }
