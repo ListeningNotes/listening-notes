@@ -161,54 +161,50 @@ three tools and a door reach into it on a 375px phone — so the row becomes the
 menu while the menu is open and the mark comes back when it shuts. The card
 has two tools and 29px to spare and keeps its mark.
 
-**The turn is a slide, not a flip, 2026-09-15.** The ID pane goes out to the
-left and the desk arrives from the right, both moving together as one motion;
-pressing again sends them back. 400ms on the site's own decelerating curve —
-the length and the easing the entry layer arrives on, because the whole site
-should move in one language. `prefers-reduced-motion` gets a cross-fade at the
-same length. The right pane never moves, not by a pixel, which is what makes it
-a page turning inside the leaf rather than a navigation.
+**The cross is three panes on a phone: ID, beacon, desk, 2026-09-15.** You
+land on the beacon. Three was tried before and failed, and neither reason was
+the count — the panes were the same shape as each other and nothing said where
+you were. Both are fixed: every pane is a different kind of thing now (a
+portrait over writing, a record over the journal, a hero over rows), and a band
+at the foot names all three all the time.
 
-A flip was built first and is reverted the same day. Three reasons, and the
-first is the one that matters: **a flip means two faces of one object, and a
-desk is not the back of your card** — it is a separate thing you open. Second,
-the slide inherits the language already here — the entry grows from its cover,
-the send page rises from the foot, the session arrives from the right; *things
-arrive from a direction* is the family, and turning over belonged to no family
-at all. Third, the flip read as a return to the two-sided cover this file
-already killed. It was not that mechanic and there were still two panes, but
-the motion invited the comparison and the slide does not.
+It replaced two panes and a button. Two existed because sideways meant two
+things — about you on the left, your tools on the right — and the button that
+resolved it never stopped feeling misplaced wherever it was put, through six
+placements. The gesture that would have replaced the button cannot exist: the
+left edge belongs to the rail (see the four ruled-out approaches above). Three
+is also the more balanced arrangement — the beacon centred, the person on one
+side, their tools on the other. With two, one page always carries more.
 
-**A transition on a translate, and no 3D anywhere, 2026-09-15.** What the flip
-cost and the slide does not: `preserve-3d` around two scrollers is a subtree a
-browser may flatten into one rasterised layer, which is the class of failure
-this cross has reverted twice, and avoiding it meant the leaf had to be flat at
-rest and three-dimensional only for the 400ms. All of that is gone. A
-transition rather than keyframes for a second reason as well — it reverses from
-wherever it has got to, so pressing twice inside the animation sends the pages
-back instead of snapping to an end state first.
+The book was an interpretation, not a rule. What it gave this project was an
+object and then the writing underneath, and that survives at any pane count.
 
-**The leaf is turned by its control and by nothing else, 2026-09-15.** A left
-swipe at the wall was built to turn it as well and is reverted — see the four
-ruled-out approaches above. The brief that asked for it put the control first
-for exactly this reason: it works completely on its own, so when the gesture
-failed there was nothing to unpick but the gesture.
+**The band at the foot: Card · Beacon · Desk, 2026-09-15.** A glyph over a
+word, the pane you are on in ink and the other two pale. It is the whole of
+what is down there — it replaced the dots, the edge carets and the mini beacon.
 
-**The control says Open, 2026-09-15.** *Open desk*, *Open card*, *Open about* —
-a verb, because the mechanic is opening something rather than turning something
-over, and the glyph is two arrows side by side rather than one going round. A
-rotation glyph on a control that slides is a small lie.
+Pressing a name moves the rail exactly as a swipe does, because it is the
+visible version of the gesture and not an alternative to it: somebody presses
+Desk once, watches it move, and swipes from then on. That was always what the
+carets were for, and a word does it better than a chevron — a chevron says
+there is something that way and a word says what.
 
-**The turn is the header's left-hand control, 2026-09-15.** The header has
-been a centred mark with one control each side since it was drawn and the left
-side was empty; this is what goes in it. A turn glyph and the name of the face
-it lands on, in one place, replacing a segmented switch on a desk and a band
-across the foot of a phone. It leaves the foot to navigation.
+The labels carry the meaning and the glyphs are decoration that has to earn
+17px. If one ever needs explaining, all three go and the words stay. An open
+book for the desk is wrong whatever else is: the book is the journal, and the
+journal is *down* from the beacon, not sideways.
+
+**A flip and then a slide were built for a two-pane cross and are both gone,
+2026-09-15.** The reasoning is in NOTES; what is worth keeping here is that
+0.4s on `cubic-bezier(0.22, 0.61, 0.36, 1)` — the entry layer's arrival — is
+the curve everything on this site moves on, and it is what drives the rail now.
 
 **The down caret is drawn by measuring the pane, never by being told.** A pane
 is deep when its scroller overflows, so a copy with no beacon has nothing
-pointing down at it, for free. Measured on home only, since 2026-09-15 — the
-turning pane overflows all the time and is not a cover.
+pointing down at it, for free. Measured on the beacon only — it is the one pane
+with a cover, meaning the one pane where something is cut off at a fold rather
+than simply running on. Everything else scrolls, and content running off the
+edge is its own cue.
 
 **No vertical snap on a one-long-scroll pane; the only vertical snap wanted
 is the entry's, 2026-09-07.** Proximity on the long pane argued with the thumb
@@ -272,26 +268,22 @@ anything — they are pages, so no second floor, no arrival, no down caret. It
 settles the axis argument as a side effect: a vertical drag on a page is
 ordinary scrolling, and nothing has to choose between arriving and scrolling.
 
-**The cross is two panes. Sideways is you, down is the records, 2026-09-15.**
-Three made sideways mean two different things — left was about you, right was
-your tools, both you, in opposite directions. One pane that turns between the
-card and the desk (the colophon, signed out) is one idea, and it is the same
-pane the desktop's spine is.
-
 **Desktop is an open book: the spine and the page, 2026-09-15.** The spine is
 a quarter of the window, draggable and remembered per browser, and turns
-between the same two faces the phone turns between. Three columns gave the
-desk width whether or not anybody was at it. Not a second layout: it is the
-phone's own two panes at another width.
+between the card and the desk with a control in its own header. Three columns
+gave the desk width whether or not anybody was at it. It kept that shape when
+the phone went to three panes (Miyel: don't touch desktop, this fits perfectly
+the way it is) — and it is still not a second markup tree. The two boxes that
+make a spine a spine go `display: contents` under 769px, which turns the same
+two pages into rail panes of their own.
 
-**The card leads with a row, not a centred square, 2026-09-15.** Portrait
-left, name and counts beside it. The portrait alone was half the first screen;
-as a row the prompts and the pinned record fit on it too, which is the whole
-of what a card is for — a glance at somebody before the reading starts.
-
-**Settings is the gear in the header, not a door, 2026-09-15.** It is not
-somewhere you go as often as the inbox, the address book or the drafts, and as
-a fourth tile it was taking the same weight as them.
+**The desk is a hero and its rows, and nothing under them, 2026-09-15.**
+*Start a listen* as the band, then Inbox, Feed, Address book and Settings. Each
+is a place you go; none is a tool you use on what is in front of you, which is
+the header rule's other half. Settings was a gear in the header for an hour and
+came back to a row — headers hold nothing. The feed ran on down this pane's own
+scroll and is a row and a page of its own now (`/dashboard/feed`), which is
+what lets the pane be a hero, its rows, and stop.
 
 **Drafts have no door of their own, 2026-09-15.** The picker lists unfinished
 listens with a resume and a discard the moment you start a listen, which is the

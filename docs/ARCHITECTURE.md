@@ -55,6 +55,8 @@ publicly):
   keepers wrote in
 - `/dashboard/report` — report a problem: one box, sent to the copy the
   software comes from
+- `/dashboard/feed` — what the journals in the address book have logged.
+  Ran on down the desk's own scroll until 2026-09-15
 - `/dashboard/people` — the address book: the journals you read, by address,
   and the ways one gets in — a paste, a scanned code, a send that carried one
 - `/dashboard/people/[id]` — your page about one person: what you both have,
@@ -143,7 +145,7 @@ The hooks — reusable logic shared across pages
 The furniture — visual pieces
   components/
     main_components/           Everything on the public side
-      HomeNav.js               The cross itself — two panes, the mark, the carets, the control that turns the left one; on a desk an open book — the spine on the left, the journal on the right, the band, the fold
+      HomeNav.js               The cross itself — three panes on a phone (ID, beacon, desk) with the band at the foot; on a desk an open book — the spine on the left, the journal on the right, the fold, and a control in the spine's header to turn between its two pages
       About.js                 One face of the turning pane: the card, then the writing under it, in one scroll
       IdentityCard.js          The ID: the portrait full width and square — the same object an entry's album art is — then the name with Send and Add, three counts in the flags' colours, and the pinned record. This is the About page
       IdentificationCardEditor.js  Editing the card in place
@@ -154,9 +156,10 @@ The furniture — visual pieces
       CodeSlot.js              A square that holds a picture and turns into that picture's code — the card's portrait and an entry's cover: the two faces, the copy and its pill, the corner mark, the wait
       AddressCode.js           A plain code for an address, drawn in the browser — what CodeSlot shows when no pressed picture can be had
       CodeScanner.js           The camera pointed at a code — the address book's way in for a card's or a cover's code
-      Dashboard.js             The other face, for the owner — Start a listen as a band, then Inbox, Address book and Settings as rows; the header holds the mark alone
-      Feed.js                  Under the desk on the same scroll — what the people in the address book logged, read off their public feeds; Submissions and Recent; Compare on a row you also have
+      Dashboard.js             The desk, for the owner — Start a listen as a band, then Inbox, Feed, Address book and Settings as rows; the header holds the mark alone
+      Feed.js                  What the people in the address book logged, read off their public feeds; Submissions and Recent; Compare on a row you also have. Its own page at /dashboard/feed since 2026-09-15
       Pitch.js                 The other face, for everybody else — the colophon
+      Footer.js                The band at the foot of the phone's cross — Card, Beacon, Desk, the one you are on in ink; presses move the rail exactly as a swipe does
       KeeperTools.js           The owner's ··· — top right on both, Edit/Print/Delete on an entry and Edit/Print on the ID pane; the door stays put and the tools file out of it
       SharePrinter.js          The share printer — paper sizes, the looks you turn through, Save and Send; knows nothing about journals, prints whatever plate it is handed
       EntryPlate.js            A record cut as a plate — the entry page's first screen on the record's blurred colour: mark, keeper, cover, album, artist and year, stars, chips, date, horizon; no code, the press copies the address
@@ -233,6 +236,7 @@ The rooms — full pages assembled from furniture
     @layer/(.)archive/page.js  The wall, opened as a layer over whatever you were on — what the ID card's counts press into, growing from the number pressed
     @layer/(.)session/page.js  The same listen, opened as a layer over the desk
     @layer/(.)dashboard/inbox/page.js  The inbox, opened as a sheet over the desk
+    @layer/(.)dashboard/feed/page.js  The feed, on the same sheet
     @layer/(.)dashboard/people/page.js  The address book, on the same sheet
     @layer/(.)dashboard/people/[id]/page.js  The page about a person, on the same sheet
     @layer/(.)dashboard/report/page.js  Report a problem, on the same sheet

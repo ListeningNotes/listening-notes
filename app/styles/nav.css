@@ -835,26 +835,17 @@
   pointer-events: none;
   transition: opacity 0.3s ease, transform 0.3s ease;
 }
-.hn-dots {
-  position: absolute;
-  left: 50%; top: 50%;
-  transform: translate(-50%, -50%);
-}
-.hn-controls .edge-caret--left { position: absolute; left: 22px; top: 0; }
-.hn-controls .edge-caret--right { position: absolute; right: 22px; top: 0; }
 /* Under the dots, not beside or above them: it is the other axis, and the one
    pane it appears on is the one with a whole screen and no edge to cut.
 
    The row is lifted to make room for it. Sitting at the foot's own 14px the
    caret hung below the window entirely — measured at 932 in a 932-tall
    screen, which is a control nobody can see or press. */
-.hn-controls { bottom: max(40px, calc(env(safe-area-inset-bottom) + 26px)); }
-.hn-controls .edge-caret--down {
-  position: absolute;
-  left: 50%;
-  top: calc(100% + 18px);
-  transform: translateX(-50%);
-}
+/* Above the band, not at the window's edge — the band owns the bottom now. */
+.hn-controls { bottom: calc(var(--hn-foot-h, 0px) + 12px); }
+/* In the row, not under it. It hung 18px below while the dots were in the
+   row with it and it had to clear them; the row holds nothing else now. */
+.hn-controls .edge-caret--down { position: static; transform: none; }
 .hn-controls > * { pointer-events: auto; }
 /* Out of the way while anything is moving. These sit over the page rather than
    beside it, and a wall of album art going past under three static glyphs is
@@ -1366,6 +1357,94 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
    three small fixed rows that are on screen the whole time anyway. */
 .hn-bar, .hn-controls, .hn-turn-row { will-change: transform; }
 
+/* ── The band at the foot ───────────────────────────────────────────────────
+   Card · Beacon · Desk. Three destinations, a glyph over a word, the one you
+   are on in ink and the other two pale. It is everything that is down there:
+   the dots, the side carets and the mini beacon all went into it.
+
+   Fixed over the rail and not repeated inside each pane, for the same reason
+   the bar at the top is: it belongs to none of them, and three copies of it
+   would slide past each other during a swipe.
+
+   A ground rather than a floating row of marks. The row it replaces was three
+   glyphs sitting on somebody's album art and it faded out whenever anything
+   moved, because that was the kindest thing it could do; a band along the
+   edge with a background of its own does not have to apologise for being
+   there, and a navigation that vanishes while you scroll is one you cannot
+   trust. The fade above it is what stops a wall of covers being cut off by a
+   hard line — the page dissolves into the band instead of hitting it.
+
+   Drawn on a phone only. A desk is an open book with both pages already on
+   screen and a control in the spine's header to turn between them; there is
+   nothing for a band of three to say there. */
+/* ── The feed on a page of its own ──────────────────────────────────────────
+   It ran on down the desk's own scroll until the desk became a hero and its
+   rows. Nothing about the feed changed; this is the room it stands in, which
+   is the same room the inbox and the address book stand in — clear of the
+   fixed nav row, and the page's name above it. */
+.fd-page { padding: calc(var(--hn-bar-h, 104px) + 8px) 0 64px; }
+.fd-page-label { align-self: center; margin-bottom: 18px; }
+
+.hn-foot { display: none; }
+@media (max-width: 768px) {
+  /* Stated on the cross so the panes can read it: every scroller inside has
+     to end above the band rather than under it. */
+  .hn { --hn-foot-h: calc(54px + env(safe-area-inset-bottom)); }
+  .hn-foot {
+    position: fixed;
+    left: 0; right: 0; bottom: 0;
+    z-index: 96;
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+    gap: 4px;
+    height: var(--hn-foot-h);
+    padding: 0 12px env(safe-area-inset-bottom);
+    box-sizing: border-box;
+    background: var(--bg);
+    will-change: transform;
+  }
+  /* The dissolve above it. Sized to the band so the two read as one object
+     with a soft top edge rather than a bar with a gradient stuck on. */
+  .hn-foot::before {
+    content: '';
+    position: absolute;
+    left: 0; right: 0; bottom: 100%;
+    height: 26px;
+    background: linear-gradient(to top, var(--bg), transparent);
+    pointer-events: none;
+  }
+  .hn-foot-stop {
+    flex: 1 1 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    padding: 0;
+    border: 0;
+    background: none;
+    cursor: pointer;
+    color: var(--ink-faint);
+    opacity: 0.55;
+    transition: color 0.2s, opacity 0.2s;
+  }
+  /* Ink and full weight for the pane you are on; the other two stay pale.
+     Both halves change together — a word that darkens while its mark does not
+     reads as two controls in one box. */
+  .hn-foot-stop--here { color: var(--ink); opacity: 1; }
+  .hn-foot-mark { display: block; }
+  .hn-foot-word {
+    font-family: var(--font-label);
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    line-height: 1;
+  }
+  .hn-foot-stop:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: -3px; border-radius: 10px; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   /* A cross-fade instead, at the same length, so the page still changes in a
      beat somebody can follow rather than blinking. Nothing slides, so the two
@@ -1431,17 +1510,6 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
    beside them is what is next along it, and the down caret on the beacon is
    the vertical one. An indicator, not a control: the caret already goes to
    the other pane. */
-.hn-dots { display: flex; align-items: center; gap: 7px; }
-.hn-dot {
-  width: 6px; height: 6px;
-  border-radius: 999px;
-  background: var(--ink-faint);
-  opacity: 0.4;
-  transition: width 0.24s cubic-bezier(0.22, 0.61, 0.36, 1), opacity 0.2s, background 0.2s;
-}
-/* The one you are on widens rather than just darkening, which is what makes
-   two marks read as a position instead of a count (Miyel's reference). */
-.hn-dot--on { width: 20px; background: var(--ink-soft); opacity: 1; }
 
 /* The one thing a desk has that a phone does not. Stated off by default and
    switched on in the desktop block below, so a phone never draws it. */
@@ -1452,6 +1520,51 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
 @media (max-width: 768px) {
   .hn-bar:not(.hn-bar--scrolled) .hn-bar-mark { display: none; }
 
+  /* ── Three panes on the rail ──────────────────────────────────────────
+     ID, beacon, desk, and the beacon is where you land. Three was tried once
+     and failed, and neither reason was the count: the panes were the same
+     shape as each other and nothing said where you were. The band at the foot
+     answers the second outright, and each pane is a different kind of thing
+     now — a portrait over writing, a record over the journal, a hero over
+     rows (Miyel's brief, 2026-09-15).
+
+     The two boxes that make a spine a spine stop existing at this width.
+     `display: contents` takes their boxes away without taking their children
+     out of the markup, so the ID and the desk become rail panes in their own
+     right — and because they are then siblings of the beacon, `order` can put
+     the beacon between them. One markup, two structures, and the desk keeps
+     every rule it had because all of this is inside a phone's media query. */
+  .hn-pane--turn, .hn-leaf { display: contents; }
+  .hn-face {
+    position: relative;
+    inset: auto;
+    flex: 0 0 100%;
+    width: 100%;
+    height: 100dvh;
+    scroll-snap-align: start;
+    scroll-snap-stop: always;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
+    -webkit-overflow-scrolling: touch;
+    /* Clear of the band, which has a ground and would otherwise cover the
+       last line of the page rather than letting it show through. */
+    padding: calc(36px + var(--safe-top)) 0 calc(var(--hn-foot-h) + 20px);
+  }
+  .hn-face--card { order: 1; }
+  .hn-pane--home { order: 2; }
+  .hn-face--desk { order: 3; }
+  /* Nothing is hidden and nothing is turning. Both of those belong to a spine
+     that shows one page at a time; here all three are panes and all three are
+     always there, a swipe away. */
+  .hn--face-card .hn-face--desk,
+  .hn--face-desk .hn-face--card,
+  .hn--turning .hn-face {
+    visibility: visible;
+    pointer-events: auto;
+  }
+  /* The turn is the spine's control and the spine is a desk. On a phone the
+     band at the foot is how you get between the three. */
+  .hn-turn-row { display: none; }
 }
 
 /* ── Desktop: an open book ────────────────────────────────────────────────
@@ -1549,7 +1662,7 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
      to display: none would take the switch off the desk with the carets. */
   .hn-crown { display: none; }
   .hn-controls { display: contents; }
-  .hn-controls .edge-caret, .hn-dots { display: none; }
+  .hn-controls .edge-caret { display: none; }
 
   /* The bar belongs to the right page: the mark centred over the band, the
      lights at the page's right edge, and once the wall has scrolled the
@@ -1768,19 +1881,9 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
    the midpoint of a swipe, by which time the whole row has faded out on the
    first scroll event anyway. */
 @media (max-width: 768px) {
-  /* The foot of the turning pane is clear — no dots and no caret. Anybody who
-     is there arrived by swiping or by pressing the turn, and either way they
-     know the way back. */
-  .hn[data-pane="0"] .hn-controls { display: none; }
-  /* And the light switch is the beacon's: on the card it would be a control
-     sitting over somebody's reading. */
-  .hn[data-pane="0"] .hn-lights { display: none; }
-  /* And no turn on home. It belongs to the pane it turns, and on the beacon
-     it would be a control for a page you cannot see — the header it sits on
-     is not even there, because home's header is the bar. Keyed on the cross's
-     own data-pane and scoped to the phone: on a desk both panes are on screen
-     at once and the spine always has its header, and `pane` never leaves its
-     initial value there anyway, because the rail is a grid with nothing to
-     scroll. */
-  .hn[data-pane="1"] .hn-turn-row { display: none; }
+  /* The light switch is the beacon's, and the beacon is the middle pane. On
+     either of the other two it would be a control sitting over somebody's
+     reading — and the bar it lives in belongs to the pane under it, not to
+     the cross. Keyed on the cross's own data-pane. */
+  .hn:not([data-pane="1"]) .hn-lights { display: none; }
 }

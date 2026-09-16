@@ -318,12 +318,22 @@ Left over:
       said so never worked, so the question has never actually been looked at.
       At 180px in a 300px spine the photograph is most of the column's width;
       at 520 it is a third of it. Her call, and it is one number.
-- [ ] **The desk arrives from the right, which is the direction the journal
-      sits in.** The journal staying still should be enough to keep it from
-      reading as movement *toward* the journal, and on a desk the spine clips
-      hard at its own edge so nothing crosses the fold — but it is the kind of
-      thing that only shows up on a device (Miyel's brief). One to feel on the
-      phone.
+- [ ] **Three panes on a real phone, and this is the whole test of it.** The
+      shape was measured at 375x812 in a browser pane, which is not a thumb.
+      What to feel: whether the band reads as navigation or as furniture, and
+      whether swiping between three panes is looser than two was — the rail's
+      snap is the same and the panes are the same width, but two is a toggle
+      and three is a place you can be in the middle of.
+- [ ] **The band against a home-screen install.** It is fixed to the bottom
+      with `env(safe-area-inset-bottom)` under it, which is the number that has
+      been wrong on every other fixed row in this project at least once. Worth
+      one look standing in the installed app rather than in Safari.
+- [ ] **`display: contents` on the two spine wrappers is load-bearing now.**
+      It is what lets one markup be a rail on a phone and a book on a desk. It
+      is well supported and the accessibility bugs it used to have were on
+      elements with semantics; these are a plain div and a div that was a
+      section until this brief. Worth knowing it is there if the phone ever
+      lays out strangely — that is the first thing to look at.
 - [ ] **Names to confirm, 2026-09-15 (two panes)** — rename freely: branch
       `card-and-desk`; `count_drafts` in database_actions and `drafts` on
       `/api/waiting`; `paneFaces` in HomeNav; `.hn-pane--turn`, `.hn-face`
@@ -1942,6 +1952,69 @@ current.
 ---
 
 ## Complete
+
+**2026-09-15 — three panes, with a named band at the foot. Branch
+`three-panes` — from Miyel's brief. Not a return to the original three: every
+decision made since stays, and the two things that made three fail the first
+time are both answered.**
+
+- [x] **ID, beacon, desk, landing on the beacon.** Three failed before because
+      the panes were the same shape and nothing said where you were. Neither
+      was the count. Each pane is a different kind of thing now — a portrait
+      over writing, a record over the journal, a hero over rows — and the band
+      names all three all the time.
+- [x] **One markup for two structures, and the desk is untouched** (Miyel:
+      don't touch desktop, this all fits perfectly the way it is). The two
+      boxes that make a spine a spine — `.hn-pane--turn` and `.hn-leaf` — go
+      `display: contents` under 769px. Their boxes stop existing without their
+      children leaving the markup, so the ID and the desk become rail panes in
+      their own right, and because they are then siblings of the beacon,
+      `order` can put the beacon between them. Measured: card at 0, beacon at
+      375, desk at 750, all three visible, all three scrollers. At 1280 the
+      spine is 0..320 and the journal 320..1280 with the faces still absolute,
+      one hidden, and the turn control still reading OPEN CARD — the desk is
+      the same page it was.
+- [x] **The band: Card · Beacon · Desk** (`Footer.js`, Miyel's name). A glyph
+      over a word, the pane you are on in ink at full opacity and the other two
+      pale. Pressing a name calls the same `scrollTo` a swipe ends in —
+      verified by spying on it: Card asks for left 0, Desk for left 750 — so it
+      is the visible version of the gesture rather than a second way in.
+- [x] **It does not fade while things move, where the row it replaces did.**
+      That row was three glyphs parked on somebody's album art and getting out
+      of the way was the kindest thing it could do. A band along the edge with
+      a ground of its own does not have to apologise for being there, and a
+      navigation that vanishes when you scroll is one you cannot trust. A
+      26px dissolve above it stops the page being cut off by a hard line.
+- [x] **The glyphs, and the one that was open.** Broadcast and the
+      identification card were already in use and mean what they draw. The
+      desk's is `Rows` — a stack of lines, which is what a desk of rows looks
+      like from above. An open book was the obvious one and is wrong: the book
+      is the journal and the journal is *down* from the beacon, not sideways.
+      The feed's row then had to move off `Rows` and on to `Cards`, because two
+      rows of a pane cannot wear the pane's own mark.
+- [x] **Down survives on the beacon and nowhere else.** Measured: opacity 0 on
+      the ID and the desk, 1 on the beacon. It is the one pane with a cover —
+      the one place something is cut off at a fold rather than running on.
+      Everything else scrolls and the edge is its own cue. It sits 12px above
+      the band; it used to hang 18px *below* its row, which was clearance for
+      dots that no longer exist.
+- [x] **The feed is a row and a page: `/dashboard/feed`** (Miyel's address).
+      It ran on down the desk's own scroll, which is what stopped the desk
+      being a hero and its rows and nothing else. Filed with the inbox, the
+      address book and report because it is the same kind of thing — behind the
+      wristband, about this journal's business. It has the sheet the others
+      have (`@layer/(.)dashboard/feed`), `over="spine"`, because a sheet that
+      covered the journal to show a feed would be taking away the thing the
+      feed sends you to.
+- [x] **Gone with it:** the turn control on a phone, the leaf's slide, the
+      dots, both side carets and `paneMarks`. The slide's own CSS stays for the
+      spine, which still turns.
+- [x] **Kept from the removed work, both deliberately:** 0.4s on
+      `cubic-bezier(0.22, 0.61, 0.36, 1)`, which is the entry layer's arrival
+      curve and now the rail's, and `will-change: transform` on the three fixed
+      rows — `translateZ(0)` there would beat `.hn-controls--busy` on source
+      order and silently stop the bottom row hiding on scroll, which is the
+      sixth time for that trap in this file.
 
 **2026-09-15 — drafts leave the desk.** The picker lists them the moment you
 start a listen, with a resume and a discard, so the row pointed at a place you
