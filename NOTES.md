@@ -339,23 +339,30 @@ Left over:
       interaction the same readout says innerHeight 874 and dvh 874, which is
       why a drag fixed it and a reload did not.
 
-      **The fix is `bottom: calc(100dvh - 100lvh)`**, standalone and phone only.
-      That difference is the lie and nothing else — the dynamic viewport minus
-      the largest it can be — so it is −62 while iOS is short and 0 once it has
-      re-measured, and the band does not move between the two. Arithmetic
-      rather than a number somebody typed, so it is right on any screen.
-      **Not in a browser:** there the same subtraction is the toolbar's height
-      and it would shove the band under Safari's own bar.
-- [ ] **The page still settles a beat after opening the installed app.** Same
-      root cause, other half: `--hn-crown` is `28dvh` and `--hn-square-top` is
-      `calc((100dvh - …) / 2)`, so while iOS is reporting 812 the whole beacon
-      screen is laid out 62px short and spreads when it re-measures. The band
-      no longer moves with it, which is what was actually being complained
-      about. Fixing the rest means the frame stops being sized in `dvh` — the
-      honest version is `--hn-h` on `.hn`, `100dvh` in a browser and `100lvh`
-      in standalone, with every full-screen height reading it. Not done,
-      because it touches the frame everything else measures from and the gap
-      was the thing on screen.
+      **The first fix pushed the band past the reported bottom** with a
+      negative `bottom`, and it went where it was told and was then clipped:
+      the glyphs showed and the words under them did not. Which is the useful
+      finding, and it is why the second fix is shaped the way it is — **iOS
+      will paint document content below the reported viewport but not a fixed
+      box.** The page's own background was already down there, so the room
+      exists; a `position: fixed` element simply may not use it.
+
+      **So the frame takes the real height and the band belongs to the frame.**
+      `--hn-h` on `.hn` is what every screen-height on the cross reads now, and
+      it is `100dvh` in a browser exactly as before and `100lvh` in standalone
+      — the largest the viewport can be, which in an installed app is the
+      screen and nothing else, because there are no toolbars for it to be
+      dynamic about. The band and the caret row go `position: absolute` inside
+      `.hn`, which is `position: relative; overflow: hidden`, so they land on
+      its bottom edge and are clipped to it. And `.hn` carries
+      `margin-bottom: calc(100dvh - 100lvh)` — −62 — so the taller frame does
+      not make the document scrollable: it paints 874 and measures 812, which
+      is the arrangement iOS is already drawing. Both numbers are 0 the moment
+      iOS re-measures, so nothing moves between the two states.
+
+      It also fixes the settle: the crown and the square's offset read `--hn-h`
+      too, so the beacon screen is laid out against the real height from the
+      first frame rather than spreading a beat later.
 - [ ] **`display: contents` on the two spine wrappers is load-bearing now.**
       It is what lets one markup be a rail on a phone and a book on a desk. It
       is well supported and the accessibility bugs it used to have were on
