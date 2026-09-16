@@ -405,11 +405,21 @@ An ended needle stands as the most recent listen, keeping the track that was
 open, until something newer happens. A record closed without a single track
 opened is deleted — that is browsing, not listening.
 
-**A stale listen lifts itself after three hours, and the clock is
-interaction, 2026-09-15.** Turning to a track or writing a line keeps a
-beacon alive; a tab merely sitting open does not, or walking away from an
-open listen would claim you were logging all weekend. The expiry is enforced
-in the read, so a closed tab or a flat battery needs nothing to run.
+**Closing a listen ends it, and an untouched one lifts itself after twenty
+minutes, 2026-09-16.** Leaving the screen puts the needle down and coming back
+lights it again; only posting and the picker did before, so a listen swiped
+away went on claiming the beacon. Three hours was the first answer and was
+excessive on first use — a beacon is a claim about right now. The clock is
+interaction, never a tab sitting open, or walking away would claim you were
+logging all weekend; and the expiry is enforced in the read, so a closed tab
+or a flat battery needs nothing to run.
+
+**The desk's door is green when the beacon is, not when a record is on the
+desk, 2026-09-16.** Two facts on one control, deliberately: the words follow
+the record, because pressing it is the way back to a listen; the green follows
+the beacon, because that is the one colour here that means live and this is
+where an owner sees it. They come apart — leave a listen and the door still
+says Listening now and stops being green, which is true on both counts.
 
 **Both "Last logged" and "Before that" are real listens, finished or not,
 2026-09-15.** They come out of this journal — entries, drafts and lifted

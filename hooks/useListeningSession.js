@@ -548,7 +548,17 @@ export function useListeningSession({ step }) {
       // was already showing — so the line changes and the cover does not.
       liftNeedle();
       await draft.finish();
-    } catch (err) { alert('Save failed: ' + err.message); }
+    } catch (err) {
+      // The frightening part of a failed save is not knowing whether an
+      // hour's writing just went, so the first line answers that and the
+      // reason comes second. It is true: the listen is untouched, `saved`
+      // stays false, and both copies of the draft are where they were — which
+      // matters most at the one moment this is likeliest to happen, a copy
+      // redeploying under a listen when an update lands (the workflow runs
+      // hourly, on its own).
+      alert('That did not save — but nothing is lost. Your listen is still here. '
+        + 'Press Save again.\n\nWhat went wrong: ' + err.message);
+    }
     finally { setSaving(false); }
   }
 
