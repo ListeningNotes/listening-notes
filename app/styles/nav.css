@@ -1395,6 +1395,25 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
 .fd-page { padding: calc(var(--hn-bar-h, 104px) + 8px) 0 64px; }
 .fd-page-label { align-self: center; margin-bottom: 18px; }
 
+/* TEMPORARY: the viewport readout. Delete with the <pre> in HomeNav. */
+.hn-measure {
+  position: fixed;
+  top: calc(env(safe-area-inset-top) + 4px);
+  left: 6px;
+  z-index: 300;
+  margin: 0;
+  padding: 6px 8px;
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.72);
+  color: #7cff9b;
+  font-family: ui-monospace, monospace;
+  font-size: 9px;
+  line-height: 1.45;
+  white-space: pre;
+  pointer-events: none;
+}
+@media (min-width: 769px) { .hn-measure { display: none; } }
+
 .hn-foot { display: none; }
 @media (max-width: 768px) {
   /* Stated on the cross so the panes can read it: every scroller inside has
