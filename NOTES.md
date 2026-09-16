@@ -1918,6 +1918,9 @@ current.
 
 ## Complete
 
+**MERGED to main and pushed, 2026-09-15** (`da39bff`). Built clean with the
+dev server stopped. No release cut — Miyel has more for this before one.
+
 **2026-09-15 — the ID pane: the portrait is the object. Branch
 `card-and-desk`, version 1.19.0 — from Miyel's second brief for this pane. The
 first one built it as a licence of typeset fields; that is in git and the
