@@ -43,18 +43,28 @@
    also what the code needs — the same slot turns into this journal's QR, and
    a code is square.
 
-   Not the full measure, though. It was, on the argument that it should be the
-   size an entry's album art is; at that size it is a lot of screen for a
-   photograph of somebody (Miyel, 2026-09-15). Seven-tenths of the page keeps
-   it the object — nothing else on the pane comes near it — without it being
-   the pane. */
-.ab-card .idc-photo { width: 70%; max-width: 300px; margin: 0 auto; }
+   180px, which is the beacon's album art exactly — same square, same corner
+   (Miyel, 2026-09-15). It went full-measure first, on the argument that it
+   should be the size an *entry's* album art is; that was a lot of screen for a
+   photograph of somebody, seven-tenths was the next try, and this is the
+   answer the other two were reaching for. The record playing is the object on
+   the beacon and the keeper is the object here, so they are the same object at
+   the same size — which is already true on a desk, where the band's art and
+   the spine's portrait have both been 88px since the spine was drawn.
+
+   It is still the object: nothing else on this pane is a square of anything,
+   and a 180px photograph over a column of type does not have to be big to be
+   the first thing you look at.
+
+   No shadow, where the beacon's art has one. That is not an oversight — the
+   beacon's card is lifted off the page and this is printed on it. */
+.ab-card .idc-photo { width: 180px; max-width: 100%; margin: 0 auto; }
 .ab-card .idc-photo .idc-portrait {
   width: 100%;
   height: auto;
   aspect-ratio: 1 / 1;
   margin: 0;
-  border-radius: 16px;
+  border-radius: 18px;
   box-shadow: none;
 }
 
@@ -1340,11 +1350,19 @@ a.ab-rig-name:hover { text-decoration: underline; }
   .ab-card .idc { max-width: none; }
   .ab-card .idc-head { top: 22px; left: var(--hn-gutter, 18px); }
   /* The object on the spine: the phone's object at a narrower measure. The
-     photograph steps down, the fields keep their grid, and the stamps keep
-     their angles with less to strike across. */
+     fields keep their grid and the stamps keep their angles with less to
+     strike across. */
   .idc-object { gap: 14px; }
-  .idc-photo { width: 88px; }
-  .idc-photo .idc-portrait { width: 88px; height: 88px; }
+  /* The photograph did NOT step down here, and two rules saying it should have
+     been inert since the spine was drawn: `.idc-photo { width: 88px }` and its
+     portrait at 88 square lost to `.ab-card .idc-photo` up at the top of this
+     file, which is one class heavier and does not care that this one is inside
+     a media query. Nothing ever rendered at 88. They are gone rather than
+     fixed, because what the spine has actually been showing all this time is
+     the card's own photograph, and that is what has been looked at and
+     approved. Whether it should step down on a narrow page is a live question
+     and it is in NOTES; it is not something to change by repairing a rule
+     nobody knew was broken. */
   .idc-fields { column-gap: 12px; row-gap: 8px; }
   .idc-field-value { font-size: 12px; }
   .idc-field-value--name { font-size: 14px; }
