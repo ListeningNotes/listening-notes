@@ -463,7 +463,8 @@ export default function HomeNav() {
         `safe top ${unit('env(safe-area-inset-top)')} bottom ${unit('env(safe-area-inset-bottom)')}`,
         `.hn h${hn ? Math.round(hn.getBoundingClientRect().height) : '?'}  home h${home ? Math.round(home.getBoundingClientRect().height) : '?'} scroll ${home ? home.scrollTop : '?'}`,
         `band pos ${foot ? getComputedStyle(foot).position : '?'} top ${f ? Math.round(f.top) : '?'} bottom ${f ? Math.round(f.bottom) : '?'}`,
-        `gap under band ${f ? Math.round(window.innerHeight - f.bottom) : '?'}`,
+        `gap vs viewport ${f ? Math.round(window.innerHeight - f.bottom) : '?'}`,
+        `gap vs SCREEN ${f ? Math.round(window.screen.height - f.bottom) : '?'}`,
       ].join('\n');
     };
     read('on load');

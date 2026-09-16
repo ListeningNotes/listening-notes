@@ -1422,6 +1422,8 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   .hn-foot {
     position: fixed;
     left: 0; right: 0; bottom: 0;
+    /* See the standalone block under this one for why that zero is not always
+       the bottom of the screen. */
     z-index: 96;
     display: flex;
     align-items: stretch;
@@ -1471,6 +1473,30 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
     line-height: 1;
   }
   .hn-foot-stop:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: -3px; border-radius: 10px; }
+}
+
+/* ── The installed app's missing 62 pixels ──────────────────────────────────
+   On a home-screen install, iOS paints the page over the whole screen — that
+   is what `viewport-fit=cover` buys — but it reports a viewport one status bar
+   shorter than the screen and anchors `position: fixed` to that. Measured on
+   Miyel's phone, 2026-09-15: screen 874, innerHeight 812, dvh 812, lvh 874,
+   safe-area top 62. 874 − 812 = 62 = the top inset exactly. So `bottom: 0`
+   landed 62px up and left a strip of page background under the band, and a
+   drag made iOS re-measure and the band drop into place. Nothing about the
+   band was wrong; it was obeying a viewport that was lying.
+
+   `100dvh − 100lvh` is that difference and nothing else: the dynamic viewport
+   minus the largest the viewport can be. It is −62px here, which pushes the
+   band's bottom edge 62px past the reported bottom and onto the real one. When
+   iOS re-measures and dvh becomes 874 it is 0, and the band does not move. It
+   is arithmetic rather than a number somebody typed, so it is right on any
+   screen and right at both moments.
+
+   Standalone only. In a browser the same subtraction is the toolbar's height,
+   and the band would be shoved underneath Safari's own bar. */
+@media (display-mode: standalone) and (max-width: 768px) {
+  .hn-foot { bottom: calc(100dvh - 100lvh); }
+  .hn-controls { bottom: calc(var(--hn-foot-h, 0px) + 12px + (100dvh - 100lvh)); }
 }
 
 @media (prefers-reduced-motion: reduce) {

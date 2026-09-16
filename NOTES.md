@@ -324,29 +324,38 @@ Left over:
       whether swiping between three panes is looser than two was — the rail's
       snap is the same and the panes are the same width, but two is a toggle
       and three is a place you can be in the middle of.
-- [ ] **The band rested a finger's width above the bottom edge on a real
-      phone, and came down when dragged** (Miyel, 2026-09-15, screenshots).
-      Diagnosed rather than reproduced — the browser pane cannot show it — and
-      half-fixed. What the screenshots say: the gap grows down the page. The
-      mark is 40px higher than it should be, the album art 65, the caret 137,
-      the band 170. That is not the page translated, it is the page
-      *compressed*, and the two things that compress it are `--hn-crown`
-      (`28dvh`) and `--hn-square-top` (`calc((100dvh - …) / 2)`). So `100dvh`
-      resolved short on load and correct after the drag.
-      **The half that is fixed:** the band carried `will-change: transform`,
-      which composites it, and a composited `position: fixed` element on iOS
-      is measured against the layout viewport rather than the visual one — the
-      short one, in that moment. Removed, along with the same promotion on the
-      bar and the caret row at phone width; the spine is the only thing left
-      that slides and it is a desk. Those three rows were fine without it for
-      weeks before the slide existed.
-      **The half that is not:** why `dvh` is short on first layout in the
-      installed app, where there are no toolbars for it to be dynamic about.
-      If the band is on the bottom edge now but the page still settles a beat
-      after load, that is what is left, and `.hn { height: 100dvh }` is where
-      it lives. Do not reach for `100lvh` without checking Safari — a visitor
-      on the homepage is not in the installed app and `lvh` puts the band
-      under Safari's toolbar.
+- [x] **The band rested a status bar above the bottom edge in the installed
+      app, and the readout said why** (Miyel, 2026-09-15). Two guesses missed
+      before a temporary green box on the phone printed the numbers, which is
+      the lesson as much as the bug: the browser pane reads 812 across the
+      board and cannot show this at all.
+
+      On load, standalone: **screen 874, innerHeight 812, dvh 812, lvh 874,
+      safe-area top 62**. 874 − 812 = 62 = the top inset exactly. iOS paints a
+      home-screen app over the whole screen — that is what `viewport-fit=cover`
+      buys — and then reports a viewport one status bar shorter and anchors
+      `position: fixed` to *that*. So `bottom: 0` was 62px up. Nothing about the
+      band was wrong; it was obeying a viewport that was lying. After any
+      interaction the same readout says innerHeight 874 and dvh 874, which is
+      why a drag fixed it and a reload did not.
+
+      **The fix is `bottom: calc(100dvh - 100lvh)`**, standalone and phone only.
+      That difference is the lie and nothing else — the dynamic viewport minus
+      the largest it can be — so it is −62 while iOS is short and 0 once it has
+      re-measured, and the band does not move between the two. Arithmetic
+      rather than a number somebody typed, so it is right on any screen.
+      **Not in a browser:** there the same subtraction is the toolbar's height
+      and it would shove the band under Safari's own bar.
+- [ ] **The page still settles a beat after opening the installed app.** Same
+      root cause, other half: `--hn-crown` is `28dvh` and `--hn-square-top` is
+      `calc((100dvh - …) / 2)`, so while iOS is reporting 812 the whole beacon
+      screen is laid out 62px short and spreads when it re-measures. The band
+      no longer moves with it, which is what was actually being complained
+      about. Fixing the rest means the frame stops being sized in `dvh` — the
+      honest version is `--hn-h` on `.hn`, `100dvh` in a browser and `100lvh`
+      in standalone, with every full-screen height reading it. Not done,
+      because it touches the frame everything else measures from and the gap
+      was the thing on screen.
 - [ ] **`display: contents` on the two spine wrappers is load-bearing now.**
       It is what lets one markup be a rail on a phone and a book on a desk. It
       is well supported and the accessibility bugs it used to have were on
