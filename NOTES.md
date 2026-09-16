@@ -1997,6 +1997,10 @@ current.
 
 ## Complete
 
+**MERGED to main and pushed, 2026-09-15** (`6b1a868`), with `turn-and-swipe`
+under it. Built clean with the dev server stopped. Version stays at 1.19.0 and
+no release cut — the number is Miyel's to move when she is ready.
+
 **2026-09-15 — three panes, with a named band at the foot. Branch
 `three-panes` — from Miyel's brief. Not a return to the original three: every
 decision made since stays, and the two things that made three fail the first
