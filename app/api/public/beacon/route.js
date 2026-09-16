@@ -125,10 +125,13 @@ export async function GET() {
     }
 
     // ── The session beacon ────────────────────────────────────────────────
-    // A listen is open. A record with no track chosen yet — the album screen,
-    // nothing picked — is not a beacon; it falls through to the quiet state
-    // until there is a track to name.
-    if (needle?.track) {
+    // A listen is open. Whether one IS open is decided where the listen lives
+    // (hooks/useListeningSession.js): a record being looked at on the album
+    // screen never writes a needle at all, so a row reaching here is always a
+    // listen. The song may still be blank — a resumed draft opens before its
+    // tracklist arrives — and then the beacon names the record instead of
+    // going dark, which is what it did for the whole of 2026-09-15.
+    if (needle) {
       return Response.json({
         state: 'logging',
         album: needle.album, artist: needle.artist, art: needle.art, track: needle.track,
