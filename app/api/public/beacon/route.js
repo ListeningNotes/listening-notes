@@ -42,6 +42,29 @@ const HISTORY = 5;         // enough to find what is playing and what just did
 const UPSTREAM_TTL = 10;   // seconds; the client polls every 15
 const BEFORE_THAT = 3;     // covers drawn under the beacon
 
+// ── And what the building used to do, and why it stopped ──────────────────
+// One reader cost one trip to the database every fifteen seconds. Ten people
+// with the journal open cost forty reads a minute, and none of them were
+// asking a different question — the beacon says the same thing to everybody,
+// with no cookie read and no owner's half, which is exactly the shape of an
+// answer that can be given once and handed out.
+//
+// So it is cached in front of the building rather than inside it. Vercel keeps
+// the answer for ten seconds and serves it to whoever asks in that time, which
+// takes ten watchers down to about one read every ten seconds however many of
+// them there are. For twenty seconds after that it may hand over the old
+// answer while it fetches a new one behind the reader's back — nobody waits on
+// a beacon, and a cover ten seconds out of date is not a wrong cover.
+//
+// The cost is that turning to a new track can take a few seconds longer than
+// the fifteen it already took to show up on somebody's screen. Writes are
+// untouched: the needle goes in through /api/needle, which is nobody's cache.
+const EDGE_TTL = 10;       // seconds Vercel may answer this without asking us
+const EDGE_STALE = 20;     // and seconds more it may serve the old answer while it does
+const CACHED = {
+  'Cache-Control': `public, s-maxage=${EDGE_TTL}, stale-while-revalidate=${EDGE_STALE}`,
+};
+
 // Last.fm answers "no cover" with a URL to a grey placeholder star rather than
 // with nothing, so a missing cover arrives looking exactly like a present one.
 // Every size of that star shares this hash.
@@ -121,7 +144,12 @@ export async function GET() {
     // to this with nothing to ask falls through to the session beacon below.
     if (settings.beacon_source === 'lastfm') {
       const heard = await fromLastfm(settings);
-      if (heard) return Response.json({ ...heard, before: beforeThat(recent, heard.album) });
+      if (heard) {
+        return Response.json(
+          { ...heard, before: beforeThat(recent, heard.album) },
+          { headers: CACHED },
+        );
+      }
     }
 
     // ── The session beacon ────────────────────────────────────────────────
@@ -136,7 +164,7 @@ export async function GET() {
         state: 'logging',
         album: needle.album, artist: needle.artist, art: needle.art, track: needle.track,
         before: beforeThat(recent, needle.album),
-      });
+      }, { headers: CACHED });
     }
 
     // Quiet: the last record sat down with. Finished or not, 2026-09-15,
@@ -149,13 +177,18 @@ export async function GET() {
     // The track comes with it when there is one, so shutting a record leaves
     // the song you were on up rather than falling back to the album title.
     const last = recent[0];
-    if (!last) return Response.json(NOTHING);
+    if (!last) return Response.json(NOTHING, { headers: CACHED });
     return Response.json({
       state: 'logged',
       album: last.album, artist: last.artist, art: last.art, track: last.track || '',
       before: recent.slice(1, 1 + BEFORE_THAT),
-    });
+    }, { headers: CACHED });
   } catch {
-    return Response.json(NOTHING);
+    // Cached like every other answer, deliberately. A database having a bad
+    // minute is the minute you least want every open tab asking it again, and
+    // the worst this costs is one more poll's wait before the beacon comes
+    // back — the stale window hands the old answer over and fetches a fresh
+    // one behind it.
+    return Response.json(NOTHING, { headers: CACHED });
   }
 }
