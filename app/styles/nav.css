@@ -1416,6 +1416,40 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
    .fd-page-label is gone with the title it drew — see app/dashboard/feed. */
 .fd-page { padding: 8px 0 64px; }
 
+/* ── The feed's head holds still ────────────────────────────────────────────
+   Everything passes under the mark and under RECENT · SUBMISSIONS (Miyel,
+   2026-09-16). Two stacked sticky bands rather than one, because the mark and
+   the tabs belong to different components and always have.
+
+   At the page's own address the row is already fixed and only the tabs need
+   doing. Inside a layer the row is in the flow — see .lay--scrolls
+   .sitenav-row — so it is stuck here instead, and takes the notch as padding
+   rather than margin so that the whole 80px band stays put and the mark is not
+   left sitting under a dynamic island once it has stuck. That is the same
+   geometry the fixed version has: a band of 80px plus the allowance, with the
+   58px row at the bottom of it.
+
+   The tabs then stick at exactly the height of that band, --hn-bar-h, which is
+   the right number in both shapes — which is most of why it was worth putting
+   on :root. */
+.lay--scrolls .fd-screen .sitenav-row {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  margin-top: 0;
+  min-height: var(--hn-bar-h);
+  padding-top: calc(22px + var(--safe-top));
+  background: var(--bg);
+}
+.fd-screen .fd-views {
+  position: sticky;
+  top: var(--hn-bar-h);
+  z-index: 99;
+  background: var(--bg);
+  margin: 0;
+  padding: 4px 0 14px;
+}
+
 .hn-foot { display: none; }
 @media (max-width: 768px) {
   /* Stated on the cross so the panes can read it: every scroller inside has
