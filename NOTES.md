@@ -1292,6 +1292,15 @@ Project → Settings → Environment Variables.
 
 ## Gotchas
 
+**Claude cannot run the session, so nothing about it ships unverified again,
+2026-09-16.** `/session` is behind the password and there is no way in from
+this side — the reading half of the beacon could be proved by calling the route
+directly, but anything that needs a listen open cannot be. Arrow keys through a
+listen were written on reasoning alone, looked right, and were dead on Miyel's
+first try; they came straight back out. **Anything that only happens inside a
+listen is hers to test before it is called done** — say so when handing it over
+rather than describing it as built.
+
 **A `.next` can rot, and it looks like your routes vanished, 2026-09-16.**
 After a few rounds of `npm run build` and `next dev` alternating in one
 session, every route but `/` started answering 404 — `/archive` and
