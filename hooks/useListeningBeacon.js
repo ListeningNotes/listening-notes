@@ -105,6 +105,16 @@ function publish(next) {
 }
 
 async function poll() {
+  // A tab nobody is looking at is a tab with no beacon on screen, and asking
+  // on its behalf spends a read on a picture in another window, another app,
+  // or a phone in a pocket. Every copy pays this, so it is worth more than the
+  // one journal it was noticed on: a laptop with six journals open in six tabs
+  // was six polls a quarter-minute for one visible beacon.
+  //
+  // Nothing is lost by skipping: `wake` below asks the moment the tab comes
+  // back, so what is on screen is never older than the moment it was looked at.
+  if (document.visibilityState === 'hidden') return;
+
   let data;
   try {
     const res = await fetch('/api/public/beacon');
@@ -132,9 +142,9 @@ async function poll() {
   // played" — greying its own cover — for a poll or two in the middle of a
   // record. The previous answer is held for a moment rather than flickering.
   //
-  // Only for Last.fm. A listen does not flicker: the needle stands for three
-  // hours and is ended deliberately (library/needle.js), so 'logging' needs no
-  // grace, and a journal runs one beacon or the other anyway.
+  // Only for Last.fm. A listen does not flicker: the needle stands until it is
+  // ended or goes twenty minutes untouched (library/needle.js), so 'logging'
+  // needs no grace, and a journal runs one beacon or the other anyway.
   if (state === 'listening') {
     beacon.lastLiveAt = Date.now();
     beacon.lastLiveData = snapshot;
@@ -146,19 +156,33 @@ async function poll() {
   publish(snapshot);
 }
 
+// Coming back to the tab. One ask straight away — somebody who has just looked
+// at the beacon should not be reading a record from before lunch — and then the
+// clock is restarted, so the next ask is a full fifteen seconds from this one
+// rather than whenever the old schedule happened to have landed.
+function wake() {
+  if (document.visibilityState !== 'visible' || !beacon.timer) return;
+  poll();
+  clearInterval(beacon.timer);
+  beacon.timer = setInterval(poll, REFRESH_MS);
+}
+
 // Starts the timer for the first component that asks and stops it when the last
-// one leaves, so a page with no beacon on it is not quietly polling.
+// one leaves, so a page with no beacon on it is not quietly polling. The
+// listener for coming back goes on and off with it, for the same reason.
 function subscribe(listener) {
   beacon.listeners.add(listener);
   if (beacon.listeners.size === 1) {
     poll();
     beacon.timer = setInterval(poll, REFRESH_MS);
+    document.addEventListener('visibilitychange', wake);
   }
   return () => {
     beacon.listeners.delete(listener);
     if (beacon.listeners.size === 0) {
       clearInterval(beacon.timer);
       beacon.timer = null;
+      document.removeEventListener('visibilitychange', wake);
     }
   };
 }

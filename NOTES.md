@@ -128,6 +128,51 @@ Vercel's four CPU-hours, since the 180–600ms a poll takes is nearly all waitin
 on the database and is not billed as active CPU. Bandwidth is a non-issue — a
 million polls is 1.2GB of 100, because the covers come from Apple's CDN.
 
+**The before-and-after for `quiet-beacon` is Miyel's to read.** The brief asked
+for Neon's transfer figure noted before the change and a day after, and Neon's
+dashboard is not reachable from here. Note the figure on the day the branch
+merges and again the day after. What to expect: the edge cache takes many
+watchers down to about one read every ten seconds between them, and the hidden
+tabs stop asking at all, so the figure should fall and then stop tracking how
+many people had the journal open. **Awake-hours will not move**, and that is
+the honest half — the wall is Neon Free's ~400 awake-hours against a month's
+730, and one person with the journal open still keeps the database awake
+however cheaply they ask.
+
+**If the beacon ever comes back stale on the phone, the missing event is
+`pageshow`.** Waking is hung on `visibilitychange`, which is what fires when
+you switch apps or tabs. A page restored from Safari's back-forward cache —
+coming back from another journal's sheet, say — is the one case that might not
+fire it. Not seen; written down so nobody debugs it twice.
+
+**FOUR TABS, SENDING FROM HOME, THE ENTRY'S TOOLS — briefed 2026-09-16.**
+Four features, one branch each, each tested by thumb on a real phone and merged
+before the next starts. Item 1, the quieter beacon, is in Complete. What is
+left, in order: **2. Send from home**, **3. The entry's five tools**, **4. Four
+tabs**. Phone layout only (`max-width: 768px`); desktop is untouched. Four of
+the decisions it makes amend or reverse 2026-09-15 entries and are recorded as
+each one merges, not before.
+
+*Item 2's three "check before building" questions, answered 2026-09-16 while
+item 1 was being built, so nobody has to look twice:*
+
+- **Does `POST /api/submissions` refuse a send with no browser Origin or
+  Referer? No.** There is no Origin or Referer check in the route or anywhere
+  above it — `proxy.js` decides nothing and the route's only gate is the
+  doorman. A server-to-server send is accepted today, as written.
+- **How does `library/doorman.js` key its limit? On the caller's IP**, via
+  `whoIsKnocking()`, which reads the front of `x-forwarded-for`. So the brief's
+  fear is real and specific: sends from home all leave from Vercel's shared
+  addresses, land in one bucket, and the `submission` door is 5 tries per 10
+  minutes — the sixth keeper to send inside ten minutes would be turned away by
+  the first five. Server sends need keying on the **sender's journal** instead,
+  confirmed against `/api/settings` the way filing an address already is.
+- **Will an older copy still accept the send? Yes.** The route destructures the
+  keys it knows off the JSON body and anything else falls on the floor, so new
+  fields cost an old copy nothing. What it loses is the carried entry — the
+  send lands, the credit lands, and the cross-copy reference is simply absent
+  rather than broken.
+
 **Settings' new beacon picker has not been LOOKED at, 2026-09-15.** The
 section is written and lints, and the column it writes round-trips, but
 `/settings` is behind the password and could not be opened from here. Check
@@ -2116,6 +2161,56 @@ current.
 ---
 
 ## Complete
+
+**2026-09-16 — the beacon got quieter. Branch `quiet-beacon`.** Item 1 of the
+four-tabs brief, done first because it is small, independent, and it protects
+every copy already out there rather than only this one. Every open tab asked
+the database every fifteen seconds whether anybody was looking or not: ten
+visitors cost forty reads a minute, and a laptop with six journals open in six
+tabs cost six polls a quarter-minute for one beacon actually on screen. Three
+changes, and none of them is visible while you are looking at the thing.
+
+- [x] **The answer is cached in front of the building for ten seconds.**
+      `app/api/public/beacon/route.js` sends `public, s-maxage=10,
+      stale-while-revalidate=20`, so Vercel answers the repeat asks and however
+      many people are watching cost about one read every ten seconds between
+      them. It is safe because the beacon says the same thing to everybody —
+      no cookie is read, there is no owner's half of the answer — and writes
+      are untouched, since the needle goes in through `/api/needle`, which is
+      nobody's cache. The empty answer in the `catch` carries the header too,
+      deliberately: a database having a bad minute is the minute you least want
+      every open tab asking it again. **Proved against a real production build
+      and not only the dev server** — Next leaves an explicitly set
+      `Cache-Control` alone on a route handler, which is what
+      `/api/entries/[slug]/code` and `/api/portrait` were already relying on.
+      The accepted cost: turning to a new track can take a few seconds longer
+      than the fifteen it already took to reach somebody's screen.
+- [x] **A hidden tab asks nothing.** `poll()` in `hooks/useListeningBeacon.js`
+      returns early on `document.visibilityState === 'hidden'`, and `wake()`
+      asks once the moment the tab comes back — then restarts the clock, so the
+      next ask is a full fifteen seconds after that one rather than whenever
+      the old schedule happened to have landed. The listener goes on and off
+      with the timer, for the same reason the timer goes on and off with the
+      last subscriber. Measured in the browser: 0 asks in 32 seconds hidden,
+      1 on waking, 1 more at fifteen seconds, and the beacon drew *Last logged*
+      correctly on the way back.
+- [x] **`/api` came off the proxy's list.** `proxy.js` runs on every request to
+      copy the pathname into a header, and the only thing that reads it is
+      `app/layout.js` — which a route handler never draws, and which returns
+      early for `/api/` in `holdTheDoor()` anyway. So the busiest path on the
+      site was waking a function to hand an address to nobody. `api/` goes in
+      the matcher's lookahead *with* its trailing slash, so `/apiary` still
+      matches; the regex was tested against thirteen paths rather than reasoned
+      about.
+- [x] **Nothing polls the inbox, so there was nothing to fix there.** The brief
+      asked for the same treatment for anything counting it. `/api/waiting` is
+      fetched once on mount and once when the lock opens
+      (`components/main_components/HomeNav.js`), never on a timer — and the
+      drafts `COUNT` that used to ride along went with the desk's drafts row.
+      Written down because the next person to look will look in the same place.
+
+Names chosen without asking, rename freely: `EDGE_TTL`, `EDGE_STALE` and
+`CACHED` in the beacon route, and `wake()` in `hooks/useListeningBeacon.js`.
 
 **2026-09-16 — the first real listen, and what it found. Branch
 `listen-fixes`.** Six notes off a session Miyel actually ran, then two more
