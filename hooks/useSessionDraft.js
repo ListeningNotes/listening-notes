@@ -25,10 +25,10 @@ export function useSessionDraft({ step, saved, hasWriting, values, setters }) {
     albumInput, artistName, year, albumArt, genre, entryType, receivedFrom, receivedDate,
     receivedFromUrl = '', creditPrivate = false,
     collectionIdRef, brief, tracks, overallNotes, trackNotes, trackRatings, trackFavorites,
-    rating, Masterpiece, Favorite, Formative, elapsed,
+    rating, Masterpiece, Favorite, Formative, elapsedRef,
   } = values;
   const {
-    setOverallNotes, setRating, setMasterpiece, setFavorite, setFormative, setElapsed,
+    setOverallNotes, setRating, setMasterpiece, setFavorite, setFormative,
     setTrackNotes, setTrackRatings, setTrackFavorites, setEntryType, setAlbumArt,
   } = setters;
 
@@ -43,8 +43,16 @@ export function useSessionDraft({ step, saved, hasWriting, values, setters }) {
   // Autosave to the browser whenever anything changes. The tracklist rides
   // along so a restored listen files every note under the song it was written
   // about — asking Apple again could hand the list back in a different order.
+  //
+  // **Held back a third of a second, since 2026-09-16.** It ran on every
+  // keystroke, and what it does on each one is serialise the whole listen —
+  // every track, every note — and write it to disk, synchronously, on the
+  // thread that is drawing the letter you just typed. A third of a second is
+  // far below the three the row takes and still lands long before a phone can
+  // lock, so it loses nothing and stops sitting inside the typing.
   useEffect(() => {
-    if (!albumInput || !hasWriting || saved) return;
+    if (!albumInput || !hasWriting || saved) return undefined;
+    const t = setTimeout(() => {
     try {
       localStorage.setItem(DRAFT_KEY, JSON.stringify({
         album: albumInput, artist: artistName, year, albumArt,
@@ -54,6 +62,8 @@ export function useSessionDraft({ step, saved, hasWriting, values, setters }) {
         savedAt: Date.now(),
       }));
     } catch { /* storage full or blocked — the draft button still works */ }
+    }, 300);
+    return () => clearTimeout(t);
   }, [albumInput, artistName, year, albumArt, tracks, overallNotes, trackNotes, trackRatings, trackFavorites, rating, Masterpiece, Favorite, Formative, entryType, step, hasWriting, saved]);
 
   // The row in `drafts` follows the writing. Debounced, because every keystroke
@@ -93,7 +103,7 @@ export function useSessionDraft({ step, saved, hasWriting, values, setters }) {
     setMasterpiece(!!draft.masterpiece);
     setFavorite(!!draft.favorite);
     setFormative(!!draft.formative);
-    setElapsed(draft.elapsed || 0);
+    elapsedRef.current = draft.elapsed || 0;
 
     const rows = Array.isArray(draft.tracks) ? draft.tracks : [];
     const notes = {}, ratings = {}, favourites = {};
@@ -153,7 +163,7 @@ export function useSessionDraft({ step, saved, hasWriting, values, setters }) {
           album_art: albumArt,
           collection_id: collectionIdRef.current,
           step,
-          elapsed,
+          elapsed: elapsedRef.current,
           rating,
           masterpiece: Masterpiece,
           favorite: Favorite,

@@ -1,7 +1,7 @@
 // Copyright (C) 2026 Miyel Brown
 // SPDX-License-Identifier: AGPL-3.0-or-later
 'use client';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { Heart, CaretLeft, CaretRight } from '@phosphor-icons/react';
 import { colors } from '../../../library/sitewide_visuals';
 import { TrackLength } from '../../../library/session_timers';
@@ -57,7 +57,18 @@ export default function TrackNotes({
 
   // Which way the last turn went, so the card slides in from the right going
   // forward and from the left coming back — the same language as the steps.
-  const [dir, setDir] = useState(1);
+  //
+  // Worked out from where the track just was rather than set by whoever turned
+  // the page, since 2026-09-16: the keyboard turns these pages too now, from
+  // the session's own handler, and a direction that only goTo knew about
+  // slid the card the wrong way for every turn that did not come through it.
+  const seenRef = useRef(i);
+  const dirRef = useRef(1);
+  if (i !== seenRef.current) {
+    dirRef.current = i > seenRef.current ? 1 : -1;
+    seenRef.current = i;
+  }
+  const dir = dirRef.current;
   const textRef = useRef(null);
   const touch = useRef(null);
 
@@ -65,7 +76,6 @@ export default function TrackNotes({
     if (n < 0) { onPrev?.(); return; }
     if (n >= count) { onNext(); return; }
     if (n === i) return;
-    setDir(n > i ? 1 : -1);
     setOpenTrack(n);
   }
 

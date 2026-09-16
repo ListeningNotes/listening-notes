@@ -144,9 +144,21 @@ export default function SessionPage() {
   // The listen is an entry now. Forgetting the pending record means a reload
   // opens the picker rather than a saved listen; the screen you are on keeps
   // its own copy until you leave.
+  //
+  // And then the desk clears itself, 2026-09-16, Miyel's, after the first real
+  // listen: posting and then being left on the thing you just posted is a
+  // screen with nothing left to do on it. Long enough to read the tick, then
+  // back to the picker, which is where the next record is chosen and where an
+  // unfinished one is waiting. The entry is on the wall; it does not need a
+  // link out of the room it was written in.
   useEffect(() => {
-    if (!s.saved) return;
+    if (!s.saved) return undefined;
     try { localStorage.removeItem(PENDING_KEY); } catch { /* nothing to clear */ }
+    const t = setTimeout(() => { leave(); }, 1100);
+    return () => clearTimeout(t);
+  // leave is remade every render and listing it would restart the beat on
+  // renders that changed nothing; the save is what this is waiting on.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [s.saved]);
 
   // From the picker: a record, and the box its cover was tapped in.
@@ -193,6 +205,55 @@ export default function SessionPage() {
   // No gate on the way forward: the preview is worth a look at any moment,
   // and saving is what waits for an album note.
   function forward() { goToStep(step + 1); }
+
+  // ── Left and right turn the pages, 2026-09-16 ─────────────────────────────
+  // Miyel's, after the first real listen: on a laptop there was no way through
+  // a record but the mouse. The arrows do exactly what the swipe does, which is
+  // why they call the same two functions and nothing else.
+  //
+  // **The caret has the first claim.** A track's note takes focus the moment
+  // the track opens on a machine with a pointer — that is deliberate, so you
+  // can start writing — which means the arrows are landing in a textarea where
+  // they already mean something. So they only turn the page when the caret has
+  // nowhere left to go that way: right at the end of what you have written,
+  // left at the start, and never while any of it is selected. An empty note is
+  // both at once, which is the common case and turns on the first press.
+  function caretFree(el, forward) {
+    if (!el) return true;
+    const typing = el.tagName === 'TEXTAREA' || el.tagName === 'INPUT' || el.isContentEditable;
+    if (!typing) return true;
+    if (el.isContentEditable) return false;      // no honest way to ask; leave it alone
+    const { selectionStart: from, selectionEnd: to, value } = el;
+    if (from === null || from !== to) return false;
+    return forward ? from >= value.length : from === 0;
+  }
+
+  useEffect(() => {
+    // Nothing to turn on the picker, and the reference's sheet is a
+    // conversation — arrows in it belong to whatever is being typed.
+    if (!pending?.album || asking) return undefined;
+    const onKey = e => {
+      if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      const forward_ = e.key === 'ArrowRight';
+      if (!caretFree(document.activeElement, forward_)) return;
+      e.preventDefault();
+      // On the tracks screen the pages are the songs, and the ends hand over
+      // to the steps either side — the same route the swipe takes through
+      // TrackNotes, rather than a second idea of what is next.
+      if (step === 1) {
+        const count = s.tracks?.length || 0;
+        const at = s.openTrack || 0;
+        const next = forward_ ? at + 1 : at - 1;
+        if (next >= 0 && next < count) { s.setOpenTrack(next); return; }
+        if (forward_) forward(); else goToStep(0);
+        return;
+      }
+      if (forward_) forward(); else goToStep(step - 1);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  });
 
   function swipeStart(e) {
     if (e.touches.length !== 1) return;
