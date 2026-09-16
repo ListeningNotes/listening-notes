@@ -268,9 +268,13 @@
    arrangement the pin's search below already uses and the archive's filters
    before that. Opaque for the same reason that one is: it sits over a
    photograph, and a portrait showing through a grid of covers is neither. */
+/* touch-action: none so a drag over the portrait cannot pan anything behind
+   the window. Belt to useHoldStill's braces — that stops the scrollers
+   outright, and this stops the browser starting a pan in the first place. */
 .ab-count-scrim {
   position: fixed; inset: 0; z-index: 150;
   background: rgba(0, 0, 0, 0.32);
+  touch-action: none;
   animation: abCountFade 0.16s ease;
 }
 @keyframes abCountFade { from { opacity: 0; } to { opacity: 1; } }

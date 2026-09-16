@@ -15,6 +15,7 @@
 // the sheet read them, and the sheet is what explains them.
 'use client';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useHoldStill } from '../../hooks/useHoldStill';
 
 export const SORTS = [
   { value: 'posted', label: 'Date posted',  defaultDir: 'desc', asc: 'Oldest first', desc: 'Newest first' },
@@ -39,6 +40,15 @@ export default function JournalFilters({
   const dragFromRef = useRef(null);
   const [drag, setDrag] = useState(0);
   const [settling, setSettling] = useState(false);
+  // The scrim is what useHoldStill walks up from: it is present for exactly
+  // as long as this sheet is, and it is inside whatever is behind it.
+  const scrimRef = useRef(null);
+
+  // Nothing behind the sheet moves while it is open. This used to lock one
+  // element — the wall's own scroller, guessed at from the prop below — and
+  // inside the cross there are two more above it, the pane and the rail, both
+  // of which went on scrolling under the sheet. See hooks/useHoldStill.js.
+  useHoldStill(scrimRef, isPhone);
 
   // Measured after the open commits, off the live layout — reading the rect
   // inside the click handler catches whatever the bar looked like before
@@ -60,25 +70,12 @@ export default function JournalFilters({
     const onKey = e => { if (e.key === 'Escape') onClose(); };
     window.addEventListener('keydown', onKey);
 
-    // The phone sheet covers the screen, so the grid scrolling behind it
-    // would drop you somewhere you didn't choose — lock it. The desktop
-    // popover is small and pinned to its button, so instead of locking the
-    // page (which pulls the scrollbar out and shifts the bar sideways
-    // underneath the panel it's anchored to) it just closes on scroll.
-    let cleanupScroll;
-    if (isPhone) {
-      // Locking the body does nothing when the body is not what moves — in the
-      // cross the pane is its own scroller and would carry on underneath the
-      // sheet. Lock the one that scrolls.
-      //
-      // A class rather than an inline style, because an inline style has to be
-      // put back exactly as it was found and this element belongs to somebody
-      // else — the pane is HomeNav's, and handing it back with an overflow it
-      // did not have is the kind of thing that shows up three screens later.
-      const port = scroller?.current || document.body;
-      port.classList.add('ln-locked');
-      cleanupScroll = () => port.classList.remove('ln-locked');
-    } else {
+    // The phone sheet holds the page still (useHoldStill, above). The desktop
+    // popover is small and pinned to its button, so locking the page would
+    // pull the scrollbar out and shift the bar sideways underneath the panel
+    // it is anchored to — it closes on scroll instead.
+    let cleanupScroll = () => {};
+    if (!isPhone) {
       // Whatever is moving, which on the cross is a pane and not the window.
       // Listening on window there would be listening to something that never
       // scrolls, and the popover would hang over the grid as it went past.
@@ -129,7 +126,21 @@ export default function JournalFilters({
 
   return (
     <>
-          <div className="arc-scrim" onClick={onClose} />
+          {/* A pull down anywhere over the covers puts the sheet away, on the
+              same handlers the grip uses rather than a second gesture written
+              out again: with the page behind held still, a downward drag over
+              the scrim had nothing left to do, and the thing somebody is
+              plainly reaching for when they do it is out. A tap still closes.
+              Phone only — on a desk this is an anchored popover and there is
+              no sheet to drag anywhere. */}
+          <div
+            ref={scrimRef}
+            className="arc-scrim"
+            onClick={onClose}
+            onPointerDown={isPhone ? onGripDown : undefined}
+            onPointerMove={isPhone ? onGripMove : undefined}
+            onPointerUp={isPhone ? onGripUp : undefined}
+          />
           <div
             ref={sheetRef}
             className={'arc-sheet'

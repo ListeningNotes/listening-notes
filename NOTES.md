@@ -1292,6 +1292,25 @@ Project → Settings → Environment Variables.
 
 ## Gotchas
 
+**Locking one scroller is not locking the page, 2026-09-15.** An overlay's
+scrim is fixed, so a touch on it cannot scroll the scrim — the scroll goes to
+the nearest scrollable ancestor instead, and inside the cross there are three
+stacked: the wall's floor, the pane, the rail. The filter sheet locked the
+innermost and the other two carried on underneath it. **And the page itself is
+invisible to the obvious test:** the root scrolls at `overflow: visible`, so
+asking it the same question every other element is asked answers no, which is
+why `/archive` locked nothing at all on the first attempt. `useHoldStill` asks
+the root by whether it has anywhere to go instead.
+
+**`touch-action: none` on a scrim is not a lock.** It was on `.arc-scrim`, with
+a comment saying it stopped the floors panning, and the page went on moving
+anyway. Keep it — it stops a pan being started — but the thing that actually
+holds is `overflow: hidden` on whatever scrolls.
+
+**Measure a lock with a real wheel, not with JavaScript.** `el.scrollTop = 0`
+moves an `overflow: hidden` element quite happily, so a scripted check says the
+lock failed when it is working. Only a real gesture answers the question.
+
 **Two things claiming the bottom of the screen, 2026-09-15.** The band at the
 foot of the cross is absolute on `.hn`; the wall's search-and-filter bar is
 sticky at `bottom: 0` inside the pane. They landed on the same 54 pixels, and
@@ -2049,6 +2068,18 @@ current.
 ---
 
 ## Complete
+
+**2026-09-15 — nothing behind an open overlay moves** (1.20.2, on main, from
+Miyel finding it on a phone). `hooks/useHoldStill.js`, her name: walks up from
+the scrim and stops every ancestor that is a scroller right now, plus the page
+itself. Shared by the archive's filter sheet and the card's Masterpieces /
+Formative window, which had no lock at all. A pull down over the scrim now puts
+either of them away, on the same handlers the grip already used — with the page
+held still that gesture had nothing left to do. Checked with real wheel
+gestures in all three shapes (cross floor, card pane, standalone `/archive`):
+nothing moves, nothing jumps on open or close, and the rail and pane come back
+exactly where they were, which was the one thing that could have made this
+unusable.
 
 **MERGED to main and pushed, 2026-09-15, as 1.20.0 — released as v1.20.0,
 which also carries 1.17.0, 1.18.0 and 1.19.0, none of which were ever cut.
