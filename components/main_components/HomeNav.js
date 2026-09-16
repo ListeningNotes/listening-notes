@@ -258,137 +258,20 @@ export default function HomeNav() {
   // back: the class is replaced, the animation restarts from where CSS says it
   // starts, and the face underneath was already right.
   const [turning, setTurning] = useState(null);
-  // True from the moment a pulled turn is recognised until its settle is over.
-  // It says the same thing to the stylesheet that `turning` does — both faces
-  // on screen, the leaf in three dimensions — without naming a direction,
-  // because a pull is drawn from the finger rather than from keyframes.
-  const [pulling, setPulling] = useState(false);
   const turnTimer = useRef(null);
   useEffect(() => () => clearTimeout(turnTimer.current), []);
-  // One timer for both kinds of turn, and it ends both. A pressed turn
-  // interrupted by a pulled one would otherwise cancel the timeout that clears
-  // it and leave the leaf turned over for good.
-  const startTheClock = useCallback(() => {
-    clearTimeout(turnTimer.current);
-    turnTimer.current = setTimeout(() => { setTurning(null); setPulling(false); }, TURN_MS);
-  }, []);
   const turnPane = useCallback(() => {
     const next = face === 'card' ? 'desk' : 'card';
     try { window.localStorage.setItem(FACE_KEY, next); } catch { /* not remembered */ }
     setFace(next);
     setTurning(next);
-    startTheClock();
-  }, [face, startTheClock]);
+    // Cleared rather than left on, so the leaf goes back to being a flat box
+    // with one face the moment it has finished being a leaf with two.
+    clearTimeout(turnTimer.current);
+    turnTimer.current = setTimeout(() => setTurning(null), TURN_MS);
+  }, [face]);
 
   const railRef = useRef(null);
-
-  // ── The swipe at the wall ─────────────────────────────────────────────────
-  // A left drag in a strip at the pane's left edge turns the leaf; the header
-  // control does the same thing and is still the way in. This is for people who
-  // find it (Miyel's brief, 2026-09-15).
-  //
-  // Left always means further left. At this wall the only thing further left is
-  // the leaf's other face, so left turns it whichever face is up — it is not a
-  // toggle that means two things, it is the one thing there is. Right is the
-  // beacon, here as everywhere, and is handled below rather than left to the
-  // rail: inside the strip the browser does not pan at all, so a right drag
-  // that started there would otherwise do nothing.
-  //
-  // The strip is the only part of this that touches the rail's problem, and it
-  // touches it the way the entry layer's back-pull did: 36px, touch-action
-  // none, gesture recognised nowhere else. DECISIONS rules out three other
-  // approaches at this exact boundary — touch-action on the rail, overflow-x,
-  // and a hand-rolled drag across the whole pane — and none of them is this.
-  // The cost is that the left 36px of the page does not scroll and does not
-  // take a tap, which is why the strip exists on touch devices only.
-  //
-  // It shows itself while the finger is down, because a threshold that flips on
-  // release is one nobody trusts. The leaf is written to directly rather than
-  // through state: a re-render per pointermove is the wrong instrument.
-  const leafRef = useRef(null);
-  const pull = useRef(null);
-  // Where the leaf sits at rest and where this turn is headed. The same two
-  // angles the keyframes in nav.css use, because it is the same turn.
-  const restDeg = face === 'card' ? 0 : -180;
-  const goneDeg = face === 'card' ? -180 : 0;
-  const putLeaf = useCallback((deg, settling) => {
-    const el = leafRef.current;
-    if (!el) return;
-    el.style.transition = settling
-      ? `transform ${TURN_MS}ms cubic-bezier(0.22, 0.61, 0.36, 1)`
-      : 'none';
-    el.style.transform = `perspective(1600px) rotateY(${deg}deg)`;
-  }, []);
-  // Cleared before paint rather than in the timeout beside the class, so the
-  // leaf never spends a frame flat with its far face still turned over.
-  useLayoutEffect(() => {
-    if (pulling) return;
-    const el = leafRef.current;
-    if (!el) return;
-    el.style.transition = '';
-    el.style.transform = '';
-  }, [pulling]);
-
-  const takeThePull = useCallback(event => {
-    if (event.pointerType === 'mouse' && event.button !== 0) return;
-    pull.current = {
-      id: event.pointerId,
-      x: event.clientX,
-      at: event.timeStamp,
-      // How far the finger travels for a whole turn. A share of the pane
-      // rather than a number, so the gesture is the same gesture on a small
-      // phone and a large one.
-      reach: Math.min(300, Math.max(150, (event.currentTarget.parentElement?.clientWidth || 375) * 0.75)),
-      going: false,
-    };
-    try { event.currentTarget.setPointerCapture(event.pointerId); } catch { /* gone */ }
-  }, []);
-
-  const followThePull = useCallback(event => {
-    const it = pull.current;
-    if (!it || it.id !== event.pointerId) return;
-    const dx = event.clientX - it.x;
-    // Nothing happens until the drag is plainly leftward. A press that goes
-    // nowhere must leave no trace, and a right drag is answered on release.
-    if (!it.going) {
-      if (dx > -6) return;
-      it.going = true;
-      setPulling(true);
-    }
-    const p = Math.min(1, Math.max(0, -dx / it.reach));
-    putLeaf(restDeg + (goneDeg - restDeg) * p, false);
-  }, [putLeaf, restDeg, goneDeg]);
-
-  const letGo = useCallback(event => {
-    const it = pull.current;
-    if (!it || it.id !== event.pointerId) return;
-    pull.current = null;
-    const dx = event.clientX - it.x;
-
-    // Right, at the wall, is the beacon — the same answer the rail gives
-    // everywhere else. A snap on release and not a drag: moving the rail under
-    // the finger is the hand-rolled horizontal drag DECISIONS rules out.
-    if (!it.going) {
-      if (dx > 40 && railRef.current) {
-        railRef.current.scrollTo({ left: railRef.current.clientWidth, behavior: 'smooth' });
-      }
-      return;
-    }
-
-    // Far enough, or fast enough. A flick that covers a third of the reach in
-    // under a fifth of a second is somebody who has already decided.
-    const p = Math.min(1, Math.max(0, -dx / it.reach));
-    const speed = -dx / Math.max(1, event.timeStamp - it.at);
-    const through = p >= 0.33 || (speed > 0.45 && p > 0.08);
-
-    putLeaf(through ? goneDeg : restDeg, true);
-    if (through) {
-      const next = face === 'card' ? 'desk' : 'card';
-      try { window.localStorage.setItem(FACE_KEY, next); } catch { /* not remembered */ }
-      setFace(next);
-    }
-    startTheClock();
-  }, [putLeaf, restDeg, goneDeg, face, startTheClock]);
 
   // The scrollers. The home pane has one; the turning pane has two, one per
   // face, because a face has to keep where it was scrolled to while the other
@@ -823,8 +706,7 @@ export default function HomeNav() {
     <div
       className={
         'hn hn--face-' + face
-        + (turning || pulling ? ' hn--turning' : '')
-        + (turning ? ' hn--turning-to-' + turning : '')
+        + (turning ? ' hn--turning hn--turning-to-' + turning : '')
         + (spine.dragging ? ' hn--dragging' : '')
       }
       data-pane={pane}
@@ -848,7 +730,7 @@ export default function HomeNav() {
               transformless at rest — see the note over hn-turn-to-desk in
               nav.css for why the 3D is only ever four hundred milliseconds
               long. */}
-          <div className="hn-leaf" ref={leafRef}>
+          <div className="hn-leaf">
           <div className="hn-face hn-face--card" ref={cardRef}>
             <About stamps={stamps} authed={authed} pinned={pinned} entries={entries} />
           </div>
@@ -885,20 +767,6 @@ export default function HomeNav() {
             )}
           </div>
           </div>
-
-          {/* The strip the turn can be pulled from. Invisible, full height, a
-              thumb's width, at the left edge — the same place and the same
-              idea as the system gesture it borrows from. Drawn on touch
-              devices only: on a mouse there is no swipe to make, and 36px of
-              a spine that is 300 wide is a lot of page to spend on nothing. */}
-          <div
-            className="hn-turn-strip"
-            aria-hidden="true"
-            onPointerDown={takeThePull}
-            onPointerMove={followThePull}
-            onPointerUp={letGo}
-            onPointerCancel={letGo}
-          />
         </section>
 
         {/* ── Home ──────────────────────────────────────────────────────

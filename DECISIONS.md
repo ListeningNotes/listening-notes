@@ -178,15 +178,11 @@ the perspective is a transform function on the leaf and not the `perspective`
 property on the pane: the property would make the pane a containing block for
 every fixed descendant for good, and the card has one.
 
-**A left swipe at the wall turns the leaf; right is always the beacon,
-2026-09-15.** Left means further left, and at this wall the only thing further
-left is the leaf's other face — so it turns whichever face is up. It shows
-itself under the finger, because a threshold that flips on release is one
-nobody trusts. It is an enhancement and never the way in: the header control
-does the same thing and stays. Touch devices only — a mouse has the control,
-and 36px of a 300px spine is too much page to spend on a gesture nobody can
-make. The cost, accepted: the left 36px of the page neither scrolls nor takes
-a tap.
+**The leaf is turned by its control and by nothing else, 2026-09-15.** A left
+swipe at the wall was built to turn it as well and is reverted — see the four
+ruled-out approaches above. The brief that asked for it put the control first
+for exactly this reason: it works completely on its own, so when the gesture
+failed there was nothing to unpick but the gesture.
 
 **The turn is the header's left-hand control, 2026-09-15.** The header has
 been a centred mark with one control each side since it was drawn and the left
@@ -553,18 +549,26 @@ browser finds still ships the buttons to everyone. Two icons, top left, drawn
 only for the owner; at a third the pencil becomes a menu. **Admin controls do
 not sit in the reading flow** — the chip row under the rating is the reader's.
 
-**The cross's gesture problem is unsolved, and three things are ruled out,
-2026-08-29.** Wanted: down should feel like arriving, and you should not slide
-sideways out of a pane's lower half. Do not try again: `touch-action` on the
-rail (Safari ignores it for the container's own axis); `overflow-x: hidden`
-while a pane is scrolled (stops the vertical scroll dead — the stutter); a
-hand-rolled horizontal drag (loses to native momentum). `scroll-snap-type: x
-mandatory` is load-bearing — proximity stops landing on a pane at all.
-**One gesture is in, and only because it never touches the rail, 2026-09-15:**
-the leaf's turn is pulled from a 36px strip at the pane's left edge with
-`touch-action: none` on the strip alone. Inside it the browser does not pan, so
-the gesture can only be the one thing; outside it nothing changed. That is the
-shape any future gesture here has to take.
+**The cross's gesture problem is unsolved, and four things are ruled out,
+2026-08-29, the fourth 2026-09-15.** Wanted: down should feel like arriving,
+and you should not slide sideways out of a pane's lower half. Do not try again:
+`touch-action` on the rail (Safari ignores it for the container's own axis);
+`overflow-x: hidden` while a pane is scrolled (stops the vertical scroll dead —
+the stutter); a hand-rolled horizontal drag (loses to native momentum); and a
+narrow edge strip with `touch-action: none` on the strip alone, which on a real
+device sent the reader to the beacon instead of turning the leaf — the rail took
+the leftward drag and did what a horizontal rail does with one, which is go to
+the pane on the right. `scroll-snap-type: x mandatory` is load-bearing —
+proximity stops landing on a pane at all.
+
+**The left edge belongs to the rail, and a trigger cannot live there,
+2026-09-15.** That is the lesson of all four. `touch-action` does not take the
+horizontal axis away from the rail from anywhere inside it — not on the rail,
+and not on a descendant of it either, which was the last idea standing. The
+edge strip was the approach that had worked for the entry layer's back-pull, so
+it was worth one try; it was written, it passed every synthesised test, and it
+failed the first real thumb. Anything sideways on the cross is the rail's, and a
+gesture that wants to mean something else has to be somewhere the rail is not.
 **A two-floor pane did not need the axis problem solved, 2026-09-07:** the
 pane is the snap container, `y mandatory` over two screen-tall floors with the
 reading in an inner scroller, rail untouched, no gesture code. The 08-29 run

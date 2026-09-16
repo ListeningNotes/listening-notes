@@ -1319,36 +1319,6 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
    the rail; on a desk it is the other half of a grid. Neither is inside this.
 */
 .hn-leaf { position: absolute; inset: 0; }
-
-/* The strip the turn can be pulled from. Invisible, full height, a thumb's
-   width, pinned to the left edge of the pane — the same place and the same
-   idea as the system gesture it borrows from.
-
-   touch-action: none is the whole point of it, and it is the one approach at
-   this boundary that has ever worked here: everywhere else on the cross the
-   browser owns both axes, which is what let a slightly diagonal drag scroll
-   while a handler was still deciding. In here the browser does not pan at all,
-   so a gesture that starts on this strip can only be the one thing. See the
-   note over .hn-rail for the three approaches this is not.
-
-   36px, because Apple's own edge gesture is about this wide and it sits inside
-   the thumb's arc on the side people hold.
-
-   The cost, stated plainly: the left 36px of the page neither scrolls nor
-   takes a tap. Which is why it is drawn for a coarse pointer only — a mouse
-   has the control in the header and no swipe to make, and on a spine 300px
-   wide this would be an eighth of the page spent on nothing. */
-.hn-turn-strip { display: none; }
-@media (pointer: coarse) {
-  .hn-turn-strip {
-    display: block;
-    position: absolute;
-    top: 0; bottom: 0; left: 0;
-    width: 36px;
-    z-index: 3;
-    touch-action: none;
-  }
-}
 .hn--turning .hn-leaf { transform-style: preserve-3d; }
 /* Both faces on screen at once, and neither of them takes a press while the
    leaf is moving — a tap landing on a face that is halfway edge-on is a tap
