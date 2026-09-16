@@ -362,7 +362,16 @@ Left over:
 
       It also fixes the settle: the crown and the square's offset read `--hn-h`
       too, so the beacon screen is laid out against the real height from the
-      first frame rather than spreading a beat later.
+      first frame rather than spreading a beat later. Confirmed on the phone
+      (Miyel: it looks great) and the readout is out.
+
+      **The readout is the part to remember.** The browser pane reads 812
+      everywhere and could not show any of this; two fixes were guessed at and
+      missed before a temporary green box on the phone printed `screen`,
+      `innerHeight`, all four viewport units, both insets and the band's own
+      box. It took one screenshot to end an argument that had already cost two
+      wrong commits. **When a phone does something a desktop browser cannot
+      reproduce, print the numbers on the phone before changing anything.**
 - [ ] **`display: contents` on the two spine wrappers is load-bearing now.**
       It is what lets one markup be a rail on a phone and a book on a desk. It
       is well supported and the accessibility bugs it used to have were on
