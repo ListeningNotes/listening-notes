@@ -324,10 +324,29 @@ Left over:
       whether swiping between three panes is looser than two was — the rail's
       snap is the same and the panes are the same width, but two is a toggle
       and three is a place you can be in the middle of.
-- [ ] **The band against a home-screen install.** It is fixed to the bottom
-      with `env(safe-area-inset-bottom)` under it, which is the number that has
-      been wrong on every other fixed row in this project at least once. Worth
-      one look standing in the installed app rather than in Safari.
+- [ ] **The band rested a finger's width above the bottom edge on a real
+      phone, and came down when dragged** (Miyel, 2026-09-15, screenshots).
+      Diagnosed rather than reproduced — the browser pane cannot show it — and
+      half-fixed. What the screenshots say: the gap grows down the page. The
+      mark is 40px higher than it should be, the album art 65, the caret 137,
+      the band 170. That is not the page translated, it is the page
+      *compressed*, and the two things that compress it are `--hn-crown`
+      (`28dvh`) and `--hn-square-top` (`calc((100dvh - …) / 2)`). So `100dvh`
+      resolved short on load and correct after the drag.
+      **The half that is fixed:** the band carried `will-change: transform`,
+      which composites it, and a composited `position: fixed` element on iOS
+      is measured against the layout viewport rather than the visual one — the
+      short one, in that moment. Removed, along with the same promotion on the
+      bar and the caret row at phone width; the spine is the only thing left
+      that slides and it is a desk. Those three rows were fine without it for
+      weeks before the slide existed.
+      **The half that is not:** why `dvh` is short on first layout in the
+      installed app, where there are no toolbars for it to be dynamic about.
+      If the band is on the bottom edge now but the page still settles a beat
+      after load, that is what is left, and `.hn { height: 100dvh }` is where
+      it lives. Do not reach for `100lvh` without checking Safari — a visitor
+      on the homepage is not in the installed app and `lvh` puts the band
+      under Safari's toolbar.
 - [ ] **`display: contents` on the two spine wrappers is load-bearing now.**
       It is what lets one markup be a rail on a phone and a book on a desk. It
       is well supported and the accessibility bugs it used to have were on
