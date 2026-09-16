@@ -15,15 +15,23 @@
 import database from './database_connection.js';
 import { sizedAlbumArt } from './music_data_api.js';
 
-// How long a listen can sit untouched before the needle lifts itself. The
-// brief said "a few hours"; three is a long album twice over and still short
-// of a working day, so a journal left open at lunch has stopped claiming
-// anything by mid-afternoon.
+// How long a listen can sit untouched before the needle lifts itself.
+//
+// **Twenty minutes, from 2026-09-16.** The brief said "a few hours" and three
+// was excessive on first use (Miyel): a beacon is a claim about right now, and
+// three hours is long enough that it stops being one. Twenty is longer than
+// any single track and short enough that a journal nobody is at reads as
+// nobody is at it.
+//
+// What keeps it alive is doing something — turning to a track, writing a line
+// — and never the page merely being open, which is the loophole the brief
+// named. So the only way to sit through twenty minutes and go idle is to play
+// a side and touch nothing, and the next thing you touch lights it again.
 //
 // It is enforced here, in the read, rather than by anything having to run on
 // a schedule. A closed tab, a flat battery or a browser killed by iOS all
 // leave the row exactly where it was, and all three expire the same way.
-const LIFTS_AFTER_MINUTES = 180;
+const LIFTS_AFTER_MINUTES = 20;
 
 // The covers under the beacon — "Before that". Three are drawn; a few more
 // are read because the one on the beacon is dropped from the list and the
