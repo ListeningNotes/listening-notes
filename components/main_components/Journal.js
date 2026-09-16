@@ -399,20 +399,30 @@ export default function Journal({ entries: given, loading: givenLoading, scrolle
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
               <circle cx="11" cy="11" r="7" /><line x1="16.5" y1="16.5" x2="21" y2="21" />
             </svg>
-            {/* The field still searches the writing as well; the placeholder
-                just stops claiming it. Three nouns did not fit on a phone — it
-                read "Search albums, artists, note" with the rest cut off,
-                which is a placeholder that looks broken rather than one that
-                lists what it covers. Two nouns fit, and finding a record by a
-                line you wrote about it is a thing you discover once and then
-                know. The full answer stays on the aria-label, where it is read
-                out rather than measured. */}
+            {/* Nouns only: the magnifier to the left is the verb, so the
+                words do not have to say Search as well. What it replaced read
+                "Search albums, artists, notes" and arrived on a phone as
+                "Search albums, artists, note" with the rest cut off — a
+                placeholder that looks broken rather than one that lists what
+                it covers.
+
+                Measured rather than guessed, at 375px: the field has 211px
+                once the filter and the three view buttons have their share of
+                the row, and this needs 203. The font cannot be made smaller to
+                buy room — 16px is what stops iOS zooming the page when the
+                field takes focus.
+
+                It still searches the writing as well; the placeholder just
+                stops claiming it, and the full answer stays on the aria-label,
+                where it is read out rather than measured. Finding a record by
+                a line you wrote about it is a thing you discover once and then
+                know. */}
             <input
               value={search}
               onChange={e => setSearch(e.target.value)}
               onFocus={() => setSearchOpen(true)}
               onBlur={() => { if (!search) setSearchOpen(false); }}
-              placeholder="Search albums or artists"
+              placeholder="Albums or artists"
               aria-label="Search albums, artists and notes"
             />
           </label>

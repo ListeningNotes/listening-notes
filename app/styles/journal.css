@@ -423,9 +423,17 @@
     box-shadow: none;
     padding: 8px 12px max(8px, env(safe-area-inset-bottom));
   }
-  /* 16px keeps iOS from zooming the page when the field takes focus. */
-  .arc-search input { font-size: 16px; padding: 6px 10px 6px 28px; }
-  .arc-search { flex: 1 1 auto; }
+  /* 16px keeps iOS from zooming the page when the field takes focus, which is
+     why the room for the placeholder had to be found everywhere except here.
+     Four of it came off the right padding, which holds nothing — the
+     magnifier is on the left — and is the difference between fitting and
+     clipping by a pixel on a 360px Android. */
+  .arc-search input { font-size: 16px; padding: 6px 6px 6px 28px; }
+  /* Takes what is left rather than everything. It was `1 1 auto`, which grew
+     the field until the density buttons had to wrap to a second row — two
+     rows of controls at the foot of a phone, for four small buttons that fit
+     beside the field once the placeholder stopped being three nouns long. */
+  .arc-search { flex: 1 1 0; }
   /* Typing gets the whole bar: the controls are still one tap away
      once the field gives focus back. */
   .arc-bar--searching .arc-ctl,
@@ -433,6 +441,11 @@
   .arc-bar--searching .arc-count { display: none; }
   .arc-ctl { padding: 7px 9px; }
   .arc-ctl-text { display: none; }
+  /* Two pixels off each view button, which is twelve across the group and the
+     difference between the search field having room and being cut off. They
+     are still 24px of touch inside a 40px-tall bar, which is the row's job to
+     provide and not each button's. */
+  .gd-btn { width: 26px; height: 24px; }
   .arc-count { display: none; }
 
   .arc-grid[data-density="large"]  { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
