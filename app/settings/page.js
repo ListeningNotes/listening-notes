@@ -104,6 +104,9 @@ export default function SettingsPage({ layered = false }) {
 
   const [address, setAddress] = useState('');
   const [lastfmUser, setLastfmUser] = useState('');
+  // Which beacon this journal runs. 'session' is the default and what a copy
+  // that never touches this row keeps.
+  const [beaconSource, setBeaconSource] = useState('session');
   const [lastfmKey, setLastfmKey] = useState('');
   const [anthropic, setAnthropic] = useState('');
   const [password, setPassword] = useState('');
@@ -119,6 +122,7 @@ export default function SettingsPage({ layered = false }) {
     setSecrets(k);
     setAddress(row.site_address || '');
     setLastfmUser(row.lastfm_user || '');
+    setBeaconSource(row.beacon_source === 'lastfm' ? 'lastfm' : 'session');
   }, []);
 
   useEffect(() => {
@@ -159,9 +163,46 @@ export default function SettingsPage({ layered = false }) {
           <input className="st-field" value={address} onChange={e => setAddress(e.target.value)} placeholder="yourname.example.com" inputMode="url" autoCapitalize="none" autoComplete="off" />
         </Section>
 
+        {/* Which beacon, above the Last.fm section it decides the use of.
+            The two choices are the two lines the cover actually prints, so
+            picking one is seeing what your journal will say rather than
+            learning a pair of words for it (Miyel, 2026-09-15).
+
+            One Save, like every other section — the choice is a field, not a
+            switch that acts the moment it is touched. */}
         <Section
-          title="Last.fm"
-          note={<>The beacon shows what you’re playing by reading Last.fm, and this is set up on a desktop computer — a Mac or a PC — which is how it is known to work. Make a free Last.fm account. Download the Last.fm desktop app, sign in, and connect it to whatever you play music with, such as Spotify or Apple Music, so every play is sent to Last.fm. Then get an API key at <a href="https://www.last.fm/api/account/create" target="_blank" rel="noopener noreferrer">last.fm/api</a> and paste it below with your Last.fm username. Plays from a phone alone will not reach the beacon.</>}
+          title="Your beacon"
+          note={<>The line on the front of your journal. You run one of these, not both. <strong>Now logging</strong> follows the listen you are writing: the track you are on while you are on it, and the last record you sat down with when you are not. <strong>Now listening</strong> follows your speakers instead, through Last.fm below, and shows what played last when nothing is playing. Everyone has the first one from their first listen; the second needs the account and key set up underneath.</>}
+          onSave={async () => { await send('/api/settings', { beacon_source: beaconSource }); }}
+        >
+          <div className="st-choice">
+            {[
+              { value: 'session', name: 'Now logging', said: 'the track you’re writing about' },
+              { value: 'lastfm', name: 'Now listening', said: 'what’s playing, through Last.fm' },
+            ].map(pick => (
+              <label key={pick.value} className={'st-pick' + (beaconSource === pick.value ? ' st-pick--on' : '')}>
+                <input
+                  type="radio"
+                  name="beacon_source"
+                  value={pick.value}
+                  checked={beaconSource === pick.value}
+                  onChange={() => setBeaconSource(pick.value)}
+                />
+                <span className="st-pick-name">{pick.name}</span>
+                <span className="st-pick-said">{pick.said}</span>
+              </label>
+            ))}
+          </div>
+          {beaconSource === 'lastfm' && !lastfmUser && (
+            <p className="st-status">
+              Nothing is set up below yet, so this will keep showing the session beacon until it is.
+            </p>
+          )}
+        </Section>
+
+        <Section
+          title="Optional: Last.fm"
+          note={<>Only needed if you chose <strong>Now listening</strong> above; a copy that never fills this in is a complete one. Setting it up is a desktop job — a Mac or a PC — which is how it is known to work. Make a free Last.fm account. Download the Last.fm desktop app, sign in, and connect it to whatever you play music with, such as Spotify or Apple Music, so every play is sent to Last.fm. Then get an API key at <a href="https://www.last.fm/api/account/create" target="_blank" rel="noopener noreferrer">last.fm/api</a> and paste it below with your Last.fm username. Plays from a phone alone will not reach the beacon, and Apple Music on an iPhone cannot scrobble reliably at all — which is why the journal does not depend on any of this.</>}
           onSave={async () => {
             await send('/api/settings', { lastfm_user: lastfmUser });
             if (lastfmKey.trim()) {

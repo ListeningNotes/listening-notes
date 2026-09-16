@@ -55,6 +55,10 @@ const EMPTY = {
   // environment, worked out on the server, so the session can leave the
   // Research button out rather than show one that fails.
   research_available: false,
+  // Whether this journal has a beacon: something logged, or a scrobbler set
+  // up. Also not a setting. It decides whether the cross draws a cover above
+  // its wall, and whether anything polls for what is on it.
+  beacon_available: false,
 };
 
 const BookplateContext = createContext(EMPTY);

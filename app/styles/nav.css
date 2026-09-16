@@ -348,23 +348,11 @@
   text-transform: uppercase; color: var(--ink-faint); margin: 24px 0 0;
 }
 
-.beacon-idle-overlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(0,0,0,0.35);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  /* Not green. That was the LED blue-white era's accent, kept alive here long
-     after the accent moved on — and green is the one colour on this site that
-     means "playing", which is precisely what this label is there to say is not
-     happening. Written on the scrim in the scrim's own colour instead. */
-  color: rgba(255,255,255,0.82);
-  font-family: var(--font-nunito), sans-serif;
-  font-size: 0.65rem;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-}
+/* The LAST PLAYED stamp across the idle cover is gone, 2026-09-15. With three
+   states the caption below the art has to name which one this is anyway, and
+   the stamp was that sentence a second time forty pixels higher — in the wrong
+   tense, since the idle state is now a record that was logged rather than one
+   that was played. The art still greys, which was the half doing the work. */
 
 /* The caption under the art: what the record is, before the title says
    which. Never green — see the dot on the mark. */
@@ -1791,7 +1779,6 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   .hn-band .beacon-track { font-size: 21px; }
   .hn-band .beacon-track--wrap { max-width: none; margin: 0; text-wrap: pretty; }
   .hn-band .beacon-artist { font-size: 0.8rem; }
-  .hn-band .beacon-idle-overlay { font-size: 0.5rem; letter-spacing: 0.14em; }
   /* What came before: three small covers at the band's far right, on the big
      cover's baseline, and no line over them — three small covers beside a
      large one say what they are. */
