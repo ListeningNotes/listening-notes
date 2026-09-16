@@ -39,7 +39,7 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import { useBookplate } from '../../components/main_components/Bookplate';
-import { useListeningSession, SESSION_STEPS, PENDING_KEY } from '../../hooks/useListeningSession';
+import { useListeningSession, SESSION_STEPS, PENDING_KEY, saidSoAboutTheDesk } from '../../hooks/useListeningSession';
 import AlbumPicker from '../../components/session_components/AlbumPicker';
 import SessionHeader from '../../components/session_components/SessionHeader';
 import AskSheet from '../../components/session_components/AskSheet';
@@ -144,14 +144,28 @@ export default function SessionPage() {
   // The listen is an entry now. Forgetting the pending record means a reload
   // opens the picker rather than a saved listen; the screen you are on keeps
   // its own copy until you leave.
+  //
+  // And then the desk clears itself, 2026-09-16, Miyel's, after the first real
+  // listen: posting and then being left on the thing you just posted is a
+  // screen with nothing left to do on it. Long enough to read the tick, then
+  // back to the picker, which is where the next record is chosen and where an
+  // unfinished one is waiting. The entry is on the wall; it does not need a
+  // link out of the room it was written in.
   useEffect(() => {
-    if (!s.saved) return;
+    if (!s.saved) return undefined;
     try { localStorage.removeItem(PENDING_KEY); } catch { /* nothing to clear */ }
+    saidSoAboutTheDesk();
+    const t = setTimeout(() => { leave(); }, 1100);
+    return () => clearTimeout(t);
+  // leave is remade every render and listing it would restart the beat on
+  // renders that changed nothing; the save is what this is waiting on.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [s.saved]);
 
   // From the picker: a record, and the box its cover was tapped in.
   function pick(record, from) {
     try { localStorage.setItem(PENDING_KEY, JSON.stringify(record)); } catch { /* the listen still opens */ }
+    saidSoAboutTheDesk();
     const still = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
     if (from && record.artUrl && !still) setLanding({ art: record.artUrl, from, to: null, go: false });
     show(record);
@@ -168,6 +182,10 @@ export default function SessionPage() {
       collectionId: draft.collection_id || null,
       genre: draft.genre || '',
       entryType: draft.entry_type || '',
+      // The send this listen answers, if it came out of one, so finishing it
+      // from the picker settles that send exactly as finishing it from the
+      // inbox does (migrations/015).
+      submissionId: draft.submission_id ?? null,
       draft,
     }, null);
   }
@@ -178,6 +196,7 @@ export default function SessionPage() {
   async function leave() {
     if (s.hasWriting && !s.saved) await s.saveDraft();
     try { localStorage.removeItem(PENDING_KEY); } catch { /* nothing to clear */ }
+    saidSoAboutTheDesk();
     setLanding(null);
     show(null);
   }

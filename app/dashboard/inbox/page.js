@@ -264,6 +264,11 @@ export default function Inbox({ layered = false }) {
         ? String(draft.received_date).slice(0, 10)
         : (sent.created_at ? String(sent.created_at).slice(0, 10) : ''),
       creditPrivate: draft ? draft.credit_private === true : sent.quiet === true,
+      // Which send this is, so posting the entry settles it rather than
+      // leaving it in the inbox offering to resume a listen that is finished
+      // (migrations/015). The draft's own answer first, for a listen that was
+      // started from here once already.
+      submissionId: draft?.submission_id ?? sent.id,
       draft,
     }));
     router.push('/session');
@@ -364,6 +369,7 @@ export default function Inbox({ layered = false }) {
         received_date: held.receivedDate || '',
         received_from_url: held.receivedFromUrl || '',
         credit_private: held.creditPrivate === true,
+        submission_id: held.submissionId ?? null,
       }),
     });
     // The browser's copy goes with it. Left behind, the new record's session
@@ -404,6 +410,9 @@ export default function Inbox({ layered = false }) {
       // Whether they asked not to be credited, carried the whole way so the
       // entry is written with the answer already in it.
       creditPrivate: sent.quiet === true,
+      // And which send it is, so posting the entry settles this row instead of
+      // leaving it pending (migrations/015).
+      submissionId: sent.id,
     }));
     await updateStatus(sent.id, 'reviewed');
     router.push('/session');

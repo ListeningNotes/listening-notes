@@ -23,6 +23,19 @@ export const SESSION_STEPS = ['Album', 'Tracks', 'Notes', 'Preview'];
 // picker, the inbox — and read by /session as it opens.
 export const PENDING_KEY = 'ln_pending_session';
 
+// And what is shouted when it changes. A `storage` event fires in every tab
+// EXCEPT the one that wrote the key, and the desk and the listen are always
+// the same tab — the listen opens as a layer over the desk. So the desk only
+// learned a record had been picked up when something else caused it to render,
+// which on the picker is nothing at all: the picker and the listen are one
+// route, so choosing a draft changes no address. Miyel saw that as the door
+// not lighting until she clicked something else, 2026-09-16.
+export const PENDING_EVENT = 'ln-pending-session';
+
+export function saidSoAboutTheDesk() {
+  try { window.dispatchEvent(new Event(PENDING_EVENT)); } catch { /* no window */ }
+}
+
 export function useListeningSession({ step }) {
   // Research — optional, and only ever started by the button on the album screen
   const [brief, setBrief]                 = useState(null);
@@ -57,6 +70,10 @@ export function useListeningSession({ step }) {
   // by the keeper here — the entry's own editor is where it can be changed.
   const [creditPrivate, setCreditPrivate] = useState(false);
   const [receivedDate, setReceivedDate]   = useState('');
+  // Which send this listen came out of, when it came out of one. Only the
+  // inbox ever sets it, and it rides on the draft row so a listen finished a
+  // day later still settles the send it answers (migrations/015).
+  const [submissionId, setSubmissionId]   = useState(null);
 
   // What gets written
   const [overallNotes, setOverallNotes]   = useState('');
@@ -99,10 +116,22 @@ export function useListeningSession({ step }) {
   const researchRunRef = useRef(0);
 
   // Session timer — runs while a record is open and stops once it is saved.
-  const [elapsed, setElapsed] = useState(0);
+  //
+  // **A ref, not state, since 2026-09-16.** Nothing on any screen shows this
+  // number. It exists to be written into the draft row and read back when a
+  // listen is resumed — and as state it was re-rendering the whole listen once
+  // a second, for an hour at a time, while somebody typed into a textarea
+  // inside it. That is sixty re-renders a minute of the record, the tracklist
+  // and the notes to change a value no eye ever meets. It is the answer to
+  // "why does typing lag" and most of the answer to "why is the laptop hot".
+  //
+  // A ref keeps the counting and drops the rendering. The save reads
+  // `.current` at the moment it writes, which is the only moment anything has
+  // ever needed it.
+  const elapsedRef = useRef(0);
   useEffect(() => {
     if (!albumInput || saved) return undefined;
-    const id = setInterval(() => setElapsed(e => e + 1), 1000);
+    const id = setInterval(() => { elapsedRef.current += 1; }, 1000);
     return () => clearInterval(id);
   }, [albumInput, saved]);
 
@@ -119,12 +148,12 @@ export function useListeningSession({ step }) {
     step, saved, hasWriting,
     values: {
       albumInput, artistName, year, albumArt, genre, entryType, receivedFrom, receivedDate,
-      receivedFromUrl, creditPrivate,
+      receivedFromUrl, creditPrivate, submissionId,
       collectionIdRef, brief, tracks, overallNotes, trackNotes, trackRatings, trackFavorites,
-      rating, Masterpiece, Favorite, Formative, elapsed,
+      rating, Masterpiece, Favorite, Formative, elapsedRef,
     },
     setters: {
-      setOverallNotes, setRating, setMasterpiece, setFavorite, setFormative, setElapsed,
+      setOverallNotes, setRating, setMasterpiece, setFavorite, setFormative,
       setTrackNotes, setTrackRatings, setTrackFavorites, setEntryType, setAlbumArt,
     },
   });
@@ -147,6 +176,12 @@ export function useListeningSession({ step }) {
   // is the one loophole this had to close.
   useEffect(() => {
     if (!albumInput || saved) return undefined;
+    // A record on the album screen with nothing opened and nothing written is
+    // somebody deciding whether to start, and the brief is clear that is not a
+    // beacon. Everything else is a listen: past the album screen, or a draft
+    // picked back up — which carries writing by definition, and which Miyel
+    // found did not light at all because it can reopen on the album screen.
+    if (step === 0 && !hasWriting) return undefined;
     const t = setTimeout(() => {
       fetch('/api/needle', {
         method: 'POST',
@@ -155,32 +190,51 @@ export function useListeningSession({ step }) {
           album: albumInput,
           artist: artistName,
           album_art: albumArt,
-          // Blank until a track has actually been opened. openTrack is 0 from
-          // the moment a record goes on the desk, so asking the tracklist
-          // alone would light the beacon while somebody is still reading the
-          // album screen deciding whether to start — and the beacon stays on
-          // the last record logged until there is a song to name.
-          //
-          // Past the tracks screen it keeps naming the last song reached,
-          // rather than going blank on Notes and Preview: the listen is still
-          // open, and a beacon that dropped back to "Last logged" while its
-          // keeper was writing the album note would be saying the wrong thing
-          // at the most deliberate moment of the whole listen.
-          track: step > 0 ? (tracks?.[openTrack]?.title || '') : '',
+          // Whatever song is open, and blank while the tracklist is still
+          // being fetched or a resumed draft is sitting on its album screen.
+          // Blank is no longer the same as no beacon — the gate above decides
+          // that — so a listen with no song yet says the record's name instead
+          // of going dark. It keeps naming the last song reached through Notes
+          // and Preview too: the listen is still open, and dropping to "Last
+          // logged" while its keeper writes the album note would be wrong at
+          // the most deliberate moment of the whole thing.
+          track: tracks?.[openTrack]?.title || '',
         }),
-      }).catch(() => { /* the beacon is not worth an alert */ });
+      }).then(() => { litRef.current = true; })
+        .catch(() => { /* the beacon is not worth an alert */ });
     }, 2000);
     return () => clearTimeout(t);
   }, [albumInput, artistName, albumArt, tracks, openTrack, saved,
       overallNotes, trackNotes, trackRatings, trackFavorites,
-      rating, Masterpiece, Favorite, Formative, step]);
+      rating, Masterpiece, Favorite, Formative, step, hasWriting]);
 
-  // The needle lifts. Called when the record comes off the desk and when the
-  // listen becomes an entry; a listen that simply stops — a closed tab, a
-  // locked phone — never reaches either, and the read expires it instead.
+  // The needle lifts. Called when the record comes off the desk, when the
+  // listen becomes an entry, and when the listen leaves the screen.
   function liftNeedle() {
     fetch('/api/needle', { method: 'DELETE' }).catch(() => {});
   }
+
+  // Whether this listen ever lit the beacon. Read by the cleanup below, and
+  // the reason it exists is React's development mode, which mounts an effect,
+  // tears it down and mounts it again to catch exactly the kind of cleanup
+  // written here. Without the flag that rehearsal put the beacon out for the
+  // two seconds before the write landed, every time a listen was opened — on
+  // the dev server only, which is where it would have been seen and believed.
+  const litRef = useRef(false);
+
+  // ── Closing the listen is closing the listen, 2026-09-16 ──────────────────
+  // Only two things used to put the needle down: posting, and going back to
+  // the picker. Swiping the layer away or pressing back left it standing,
+  // because a record was still on the desk — which is true, and is not what
+  // closing something feels like. Miyel shut a listen, watched the beacon go on
+  // claiming it, and was right to.
+  //
+  // So leaving the screen ends it, and coming back lights it again a couple of
+  // seconds later — the write effect above does that on its own, which is why
+  // this can be as blunt as it is. Switching tabs and locking a phone do not
+  // unmount anything, so those keep the beacon lit and the expiry above is
+  // still what catches a listen nobody ever comes back to.
+  useEffect(() => () => { if (litRef.current) liftNeedle(); }, []);
 
   // Assemble the preview on arrival. Nothing here reaches a model — format_post
   // is a local join of what was written — so it is redone every time the
@@ -215,7 +269,7 @@ export function useListeningSession({ step }) {
     setTrackRatings({});
     setTrackFavorites({});
     setOpenTrack(0);
-    setElapsed(0);
+    elapsedRef.current = 0;
     setOverallNotes('');
     setRating(0);
     setMasterpiece(false);
@@ -235,6 +289,7 @@ export function useListeningSession({ step }) {
       liftNeedle();
       setAlbumInput(''); setArtistName(''); setYear(''); setAlbumArt('');
       setGenre(''); setEntryType(''); setReceivedFrom(''); setReceivedDate(''); setReceivedFromUrl('');
+      setSubmissionId(null);
       return 0;
     }
 
@@ -242,7 +297,8 @@ export function useListeningSession({ step }) {
       album, artist = '', year: yr = '', artUrl = '', collectionId = null,
       genre: gen = '', entryType: et = '', receivedFrom: from = '',
       receivedDate: date = '', receivedFromUrl: fromUrl = '',
-      creditPrivate: quiet = false, draft: savedDraft = null,
+      creditPrivate: quiet = false, submissionId: sentId = null,
+      draft: savedDraft = null,
     } = record;
 
     collectionIdRef.current = collectionId || savedDraft?.collection_id || '';
@@ -256,6 +312,7 @@ export function useListeningSession({ step }) {
     setReceivedFromUrl(fromUrl || savedDraft?.received_from_url || '');
     setReceivedDate(date || (savedDraft?.received_date ? String(savedDraft.received_date).slice(0, 10) : ''));
     setCreditPrivate(quiet === true || savedDraft?.credit_private === true);
+    setSubmissionId(sentId ?? savedDraft?.submission_id ?? null);
 
     let rows = [];
     let openAt = 0;
@@ -461,6 +518,30 @@ export function useListeningSession({ step }) {
       if (data.error) throw new Error(data.error);
       setSaved(true);
       setSavedEntry(data.entry || null);
+
+      // ── The send that started this is settled ────────────────────────────
+      // A listen begun from the inbox marked its send `reviewed`, which means
+      // started. Posting is what makes it `logged`, pointed at the record —
+      // and nothing did that until 2026-09-16, so a record somebody sent could
+      // be written up and published while their send still sat in the inbox
+      // offering to resume a listen that no longer existed.
+      //
+      // The same route the "I've already logged this" button presses, doing
+      // both halves: it settles the send and credits the entry to the sender,
+      // and it credits only where the entry is not credited already — which
+      // here it always is, since the credit rode in with the record.
+      //
+      // Deliberately not awaited and deliberately silent. The entry is saved;
+      // a send that cannot be tidied — deleted from the inbox while this was
+      // open, so the route answers 404 — is not a reason to tell somebody
+      // their listen failed. The button is still there to press by hand.
+      if (submissionId && data.entry?.id) {
+        fetch(`/api/submissions/${submissionId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ entry_id: data.entry.id }),
+        }).catch(() => {});
+      }
       // The listen is an entry now; the draft — both copies — goes with it,
       // and so does the needle. The beacon moves from "Now logging" to "Last
       // logged" showing the record just finished, which is the same record it
@@ -513,8 +594,9 @@ export function useListeningSession({ step }) {
     saving,
     saved,
     savedEntry,
-    // Timer
-    elapsed,
+    // Timer. The ref itself, so a caller reads it at the moment it asks
+    // rather than being re-rendered every second to be told.
+    elapsedRef,
     // Functions
     beginListen,
     doResearch,

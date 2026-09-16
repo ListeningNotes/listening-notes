@@ -587,6 +587,9 @@ export async function save_draft(body) {
     // being typed — would hold only for a listen finished in one sitting, and
     // drafts exist precisely because that is not the common case.
     received_from = '', received_date = '', received_from_url = '',
+    // Which send this listen came out of, so posting it can settle that send
+    // even when the listen took two evenings. See migrations/015.
+    submission_id = null,
     // And whether the sender asked not to be credited. Same reason: a listen
     // paused halfway must not come back having lost the answer, because what
     // it would lose it to is publishing a name somebody asked to keep off.
@@ -600,7 +603,7 @@ export async function save_draft(body) {
       lookup_key, album, artist, year, genre, entry_type,
       album_art, collection_id, step, elapsed, rating, masterpiece, formative,
       favorite, notes, tracks, received_from, received_date, received_from_url,
-      credit_private
+      credit_private, submission_id
     ) VALUES (
       ${lookup_key(album, artist)}, ${album}, ${artist}, ${year}, ${genre},
       ${entry_type}, ${album_art}, ${String(collection_id || '')},
@@ -608,7 +611,8 @@ export async function save_draft(body) {
       ${tracks ? JSON.stringify(tracks) : null},
       ${blankToNull(received_from)}, ${blankToNull(received_date)},
       ${blankToNull(tidyJournal(received_from_url))},
-      ${credit_private === true}
+      ${credit_private === true},
+      ${Number.isInteger(submission_id) && submission_id > 0 ? submission_id : null}
     )
     ON CONFLICT (lookup_key) DO UPDATE SET
       album = EXCLUDED.album, artist = EXCLUDED.artist, year = EXCLUDED.year,
@@ -622,6 +626,9 @@ export async function save_draft(body) {
       received_from = EXCLUDED.received_from, received_date = EXCLUDED.received_date,
       received_from_url = EXCLUDED.received_from_url,
       credit_private = EXCLUDED.credit_private,
+      -- Kept rather than overwritten with a blank: a save from a screen that
+      -- never knew about the send must not cut the thread back to it.
+      submission_id = COALESCE(EXCLUDED.submission_id, drafts.submission_id),
       updated_at = NOW()
     RETURNING *
   `;

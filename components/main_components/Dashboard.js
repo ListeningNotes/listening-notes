@@ -31,7 +31,9 @@
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Headphones, Envelope, AddressBook, Cards, GearSix } from '@phosphor-icons/react';
+import { Broadcast, Envelope, AddressBook, Cards, GearSix } from '@phosphor-icons/react';
+import { useListeningBeacon } from '../../hooks/useListeningBeacon';
+import { PENDING_EVENT } from '../../hooks/useListeningSession';
 import { VERSION, RELEASE_URL } from '../../library/version';
 
 // Everything but the first: messages, which are what you open the journal to
@@ -113,19 +115,24 @@ function heldNow() {
   }
   return lastHeld;
 }
-// Another tab putting a record down or picking one up. Within this tab there
-// is no event to listen for — the session writes the key straight — so the
-// re-read rides on the render the address change causes; see below.
 function subscribeHeld(listener) {
+  // Another tab, and this one. `storage` fires everywhere except the tab that
+  // wrote the key, and the desk and the listen are always the same tab, so the
+  // second half is the one that matters here — see PENDING_EVENT.
   window.addEventListener('storage', listener);
-  return () => window.removeEventListener('storage', listener);
+  window.addEventListener(PENDING_EVENT, listener);
+  return () => {
+    window.removeEventListener('storage', listener);
+    window.removeEventListener(PENDING_EVENT, listener);
+  };
 }
 
 export default function Dashboard({ waiting, mark = null }) {
   // ── Whether a listen is open ──────────────────────────────────────────────
   // On a desk the session is the right page and the desk stays beside it, so
   // the door has to say what the page next to it is doing: Start a listen is
-  // Listening now, lit, for as long as there is a record in hand.
+  // Listening now for as long as there is a record in hand. Whether it is lit
+  // is a different question, answered below.
   //
   // The address is the re-read. usePathname renders this again on every
   // navigation, which is every moment the answer can have changed — opening a
@@ -135,6 +142,23 @@ export default function Dashboard({ waiting, mark = null }) {
   // itself and lights a frame later rather than the other way round.
   usePathname();
   const inHand = useSyncExternalStore(subscribeHeld, heldNow, () => null);
+  // ── Why this door is green, and when ──────────────────────────────────────
+  // Two different things, on one control, 2026-09-16 (Miyel).
+  //
+  // The WORDS are about the record on your desk: "Listening now" and its name,
+  // for as long as there is one, because pressing this is how you get back to
+  // it and a door you can return through has to say so.
+  //
+  // The GREEN is about the beacon. It is the one colour on this site that means
+  // live, and this is where an owner sees it — so it is lit exactly while the
+  // journal is telling the world something, and dark the moment it stops. That
+  // is what makes it readable as "you are broadcasting" rather than "you have
+  // something open", which is what Miyel was already reading it as.
+  //
+  // They come apart, deliberately. Leave the listen and walk away: the door
+  // still says Listening now, because the record is still on the desk and this
+  // is the way back to it — and the green goes out, because the beacon has.
+  const { isLive } = useListeningBeacon();
   // Whether a newer Listening Notes exists. Asked once, of this copy's own
   // server, which asks GitHub's public releases at most once an hour (see
   // app/api/update/route.js). The only thing this can ever say is that
@@ -172,10 +196,13 @@ export default function Dashboard({ waiting, mark = null }) {
             is a light with no subject. */}
         <Link
           href="/session"
-          className={'ln-tile db-hero' + (inHand ? ' db-hero--lit' : '')}
+          className={'ln-tile db-hero' + (isLive ? ' db-hero--lit' : '')}
           title={inHand ? `Back to ${inHand.album}` : undefined}
         >
-          <Headphones size={34} weight="regular" aria-hidden="true" />
+          {/* The beacon's own mark, so the door and the thing it lights are
+              plainly the same idea. It was a pair of headphones, which says
+              listening rather than broadcasting. */}
+          <Broadcast size={34} weight="regular" aria-hidden="true" />
           <span className="db-hero-label">{inHand ? 'Listening now' : 'Start a listen'}</span>
           {inHand && <span className="db-hero-record">{inHand.album}</span>}
         </Link>

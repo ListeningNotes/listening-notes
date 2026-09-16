@@ -30,6 +30,22 @@ const CAPTION = {
   played: 'Last played',
 };
 
+// And what is stamped across the art when neither beacon is live. Back on
+// 2026-09-16, Miyel's call after the first real listen: a record that has been
+// logged and left looked no different at a glance from one being written about
+// now, and the greying alone was not saying it.
+//
+// It is not the caption repeated. The caption under the art says what the
+// record is — the last one logged, the last one played — and the stamp says
+// the state is off, which is the split the Last.fm beacon had before any of
+// this ("Not currently listening" under, "Last played" over). Two sentences
+// about two different things; the same screen twice is what took the stamp off
+// in the first place.
+const STAMP = {
+  logged: 'Out of session',
+  played: 'Not listening',
+};
+
 export default function ListeningBeacon() {
   const { state, album, artist, art, track, isLive } = useListeningBeacon();
   // A song wherever there is one — including after a listen has been shut,
@@ -64,12 +80,13 @@ export default function ListeningBeacon() {
             ? <img src={artUrl} alt={title} className={'beacon-art' + (!isLive ? ' beacon-art--idle' : '')} onError={() => setFailed(artUrl)} />
             : <div className="beacon-art-placeholder">♪</div>
           }
-          {/* A "Last played" stamp used to sit across the idle cover. The
-              caption below says which of the three states this is, in words,
-              forty pixels away — so the stamp was the same sentence twice, and
-              in the wrong tense now that the idle state is a record that was
-              logged rather than one that was played. The art still greys,
-              which is the part that was doing the work. */}
+          {/* The stamp across the idle cover, over art that is already
+              greyed. Drawn only where there is art to draw it on: over the ♪
+              placeholder it would be a label on an empty square, and the
+              caption underneath is saying the same thing more quietly. */}
+          {!isLive && artUrl && STAMP[state] && (
+            <div className="beacon-idle-overlay"><span>{STAMP[state]}</span></div>
+          )}
         </div>
         <div className="beacon-meta">
           {/* The caption, back since 2026-09-07 on Miyel's call, and under the
