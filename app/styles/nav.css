@@ -1354,8 +1354,18 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
 
    Permanent rather than added for the turn: promotion needs a frame to take
    effect and the slide starts in the frame the class arrives in. These are
-   three small fixed rows that are on screen the whole time anyway. */
-.hn-bar, .hn-controls, .hn-turn-row { will-change: transform; }
+   three small fixed rows that are on screen the whole time anyway.
+
+   And a desk only, since 2026-09-15. The spine is the only thing left that
+   slides; a phone has three panes and nothing that transforms, so promoting
+   its fixed rows buys nothing — and a composited `position: fixed` element on
+   iOS is measured against the layout viewport rather than the visual one,
+   which is a row that will not sit on the bottom edge until something has
+   scrolled. These rows were fine without it for weeks before the slide
+   existed. Asking for a layer you do not need is not free. */
+@media (min-width: 769px) {
+  .hn-bar, .hn-controls, .hn-turn-row { will-change: transform; }
+}
 
 /* ── The band at the foot ───────────────────────────────────────────────────
    Card · Beacon · Desk. Three destinations, a glyph over a word, the one you
@@ -1402,7 +1412,6 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
     padding: 0 12px env(safe-area-inset-bottom);
     box-sizing: border-box;
     background: var(--bg);
-    will-change: transform;
   }
   /* The dissolve above it. Sized to the band so the two read as one object
      with a soft top edge rather than a bar with a gradient stuck on. */
