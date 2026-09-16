@@ -311,6 +311,11 @@ Left over:
       the brief asks for and it is worth a look on a real device before it
       counts as settled — a visitor who arrives on a shared entry link in the
       wrong theme has one more step than they used to.
+- [ ] **Should the spine's photograph step down on a narrow page?** It was
+      meant to — 88px, the size the band's art is on a desk — and the rule that
+      said so never worked, so the question has never actually been looked at.
+      At 180px in a 300px spine the photograph is most of the column's width;
+      at 520 it is a third of it. Her call, and it is one number.
 - [ ] **An interrupted turn jumps.** Press the control twice inside 400ms and
       the second turn starts from its own first keyframe rather than from where
       the leaf is — so it settles flat and then turns back, instead of
@@ -1198,6 +1203,19 @@ Project → Settings → Environment Variables.
 
 ## Gotchas
 
+**A rule inside a media query is not heavier for being in one, 2026-09-15.**
+`@media (min-width: 769px) { .idc-photo { width: 88px } }` never once applied:
+`.ab-card .idc-photo` at the top of the same file is one class heavier, and a
+media query adds nothing to specificity. So the spine's photograph was supposed
+to step down to 88px and has been showing the card's own size since the day the
+spine was drawn — no error, no warning, a deliberate design decision that
+silently did nothing for a week. This is the source-order trap's cousin and it
+reads even more like it should work, because the narrower rule *feels* more
+specific. Two habits: when a media query is meant to override a base rule,
+match or beat the base's selector (`.ab-card .idc-photo`, not `.idc-photo`);
+and when a responsive rule seems not to be doing anything, measure the element
+before assuming the sheet is stale.
+
 **A CSS animation only restarts when its NAME changes, 2026-09-15.** The ···
 opens by filing its tools out and shuts by filing them back in, and the
 closing half was first written as the same keyframes with
@@ -1990,6 +2008,26 @@ depends on the gesture working.**
       pull sprang back, a flick went through, and a right drag took the rail
       0 → 375. Synthesised pointer events prove arithmetic and prove nothing
       about a thumb. The code is in git on `turn-and-swipe`.
+- [x] **The portrait is the beacon's album art, 2026-09-15** (Miyel: make it
+      smaller, the same size as the beacon album art). 180px square with an
+      18px corner, which is `.beacon-art-wrap` exactly. It went full-measure
+      first on the argument that it should be the size an *entry's* album art
+      is, then seven-tenths of the page, and this is the answer both of those
+      were reaching for: the record playing is the object on the beacon and
+      the keeper is the object here, so they are the same object at the same
+      size. It costs nothing in standing — nothing else on the pane is a square
+      of anything — and it buys the fold: the portrait, the name, the counts,
+      the genres, the pinned record and the first prompt are all above it now.
+      No shadow, where the beacon's art has one, and that is not an oversight:
+      the beacon's card is lifted off the page and this is printed on it.
+- [x] **Two dead rules for the spine's photograph deleted, not repaired.**
+      Matching the corner on a desk turned up a rule that had never applied —
+      see the new entry at the top of Gotchas. What the spine has actually been
+      showing all along is the card's own photograph, which is what has been
+      looked at and approved, so the rules went and the rendering did not. One
+      knock-on, worth knowing: the spine's portrait was a percentage and grew
+      when the fold was dragged wider; it is a fixed 180 now, the same as the
+      beacon's, and widening the spine gives the room to the type instead.
 - [x] **The turn's own verification still stands:** the leaf reads -180, -73,
       -23, -4, 0 across the 400ms; it is `transform: none` and `transform-style:
       flat` at rest; the journal's box does not move by a pixel at any point of
