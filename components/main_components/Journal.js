@@ -399,13 +399,21 @@ export default function Journal({ entries: given, loading: givenLoading, scrolle
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round">
               <circle cx="11" cy="11" r="7" /><line x1="16.5" y1="16.5" x2="21" y2="21" />
             </svg>
+            {/* The field still searches the writing as well; the placeholder
+                just stops claiming it. Three nouns did not fit on a phone — it
+                read "Search albums, artists, note" with the rest cut off,
+                which is a placeholder that looks broken rather than one that
+                lists what it covers. Two nouns fit, and finding a record by a
+                line you wrote about it is a thing you discover once and then
+                know. The full answer stays on the aria-label, where it is read
+                out rather than measured. */}
             <input
               value={search}
               onChange={e => setSearch(e.target.value)}
               onFocus={() => setSearchOpen(true)}
               onBlur={() => { if (!search) setSearchOpen(false); }}
-              placeholder="Search albums, artists, notes"
-              aria-label="Search album or artist"
+              placeholder="Search albums or artists"
+              aria-label="Search albums, artists and notes"
             />
           </label>
 
