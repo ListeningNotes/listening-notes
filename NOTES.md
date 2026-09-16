@@ -316,22 +316,21 @@ Left over:
       said so never worked, so the question has never actually been looked at.
       At 180px in a 300px spine the photograph is most of the column's width;
       at 520 it is a third of it. Her call, and it is one number.
-- [ ] **An interrupted turn jumps.** Press the control twice inside 400ms and
-      the second turn starts from its own first keyframe rather than from where
-      the leaf is — so it settles flat and then turns back, instead of
-      reversing where it stands. Visible, not broken, and the fix is not free:
-      a transition would reverse from the current angle but would mean keeping
-      the transform, and the transform means keeping `preserve-3d` around two
-      scrollers at rest, which is the thing the design is built to avoid. The
-      pulled turn does not have this — a pull always starts from the resting
-      angle because the finger sets it.
+- [ ] **The desk arrives from the right, which is the direction the journal
+      sits in.** The journal staying still should be enough to keep it from
+      reading as movement *toward* the journal, and on a desk the spine clips
+      hard at its own edge so nothing crosses the fold — but it is the kind of
+      thing that only shows up on a device (Miyel's brief). One to feel on the
+      phone.
 - [ ] **Names to confirm, 2026-09-15 (two panes)** — rename freely: branch
       `card-and-desk`; `count_drafts` in database_actions and `drafts` on
       `/api/waiting`; `paneFaces` in HomeNav; `.hn-pane--turn`, `.hn-face`
       (kept), `.idc-top`, `.idc-said`, `.db-head`, `.db-mark-svg`,
       `.db-tool`. The Drafts row's own word is Miyel's. From the turn:
-      `.hn-leaf`, the `hn-turn-to-desk`/`hn-turn-to-card` keyframes, `TURN_MS`
-      — the strip's own names went with the strip. And
+      `.hn-leaf`, `TURN_MS`, the `hn-turn-arrive`/`hn-turn-leave` keyframes the
+      reduced-motion cross-fade uses, and `opens` on a face beside `word` — the
+      strip's names went with the strip and the flip's keyframes went with the
+      flip. And
       from the ···:
       `.kt-tools`, `.kt-tool--door`, `.kt-tool--out`, `.kt-door`, the
       `kt-file-out` keyframes, `--kt-dir`/`--kt-i`/`--kt-d`, `PACKING_UP`,
@@ -1947,8 +1946,39 @@ on top of a merged `card-and-desk` — from Miyel's brief, which set the order:
 the animation first and completely, then the gesture, so nothing shipped
 depends on the gesture working.**
 
-- [x] **A page turning, not a cross-fade.** The two faces go into one box,
-      `.hn-leaf`, which is the thing that turns — a horizontal rotation with
+- [x] ~~**A page turning, not a cross-fade**~~ — **a flip first, then a slide,
+      the same day.** The flip is in git and the reasons it went are in
+      DECISIONS; the first of them is the only one that needed saying, which is
+      that a flip means two faces of one object and a desk is not the back of
+      your card. Everything below about the curve, the fixed rows and the
+      journal holding still survived the change. What follows is the flip as
+      built, kept because it is where the reasoning came from.
+
+      **The slide, 2026-09-15.** The card sits at the leaf's left edge and the
+      desk at its right, each a full pane wide; the leaf translates one pane
+      and the pane clips. One transform, both pages moving together, which is
+      how pages move on a rail. A transition and not keyframes, for two
+      reasons: it is the right tool for a two-state toggle, and it reverses
+      from wherever it has got to — so the flip's one rough edge, a double
+      press settling flat before turning back, is gone. Proved: stopped at
+      x-277 mid-slide, pressed again, and the new transition's own frame 0 is
+      x-277. Measured at 375: card 0 → -375 and desk 375 → 0 across the 400ms,
+      journal Δ0/0 at every sample. At 1280 the leaf travels the spine's own
+      320 and the journal is Δ0/0 there too.
+
+      **And all the 3D went with it** — no perspective, no preserve-3d, no
+      backface, and none of the flat-at-rest care that existed only to stop a
+      3D subtree with two scrollers being flattened into one rasterised layer.
+      That was the most delicate thing in the file. `will-change` on the fixed
+      rows stays: it is about promotion of any kind, not about perspective.
+
+      **The control says Open** — *Open desk*, *Open card*, *Open about* — and
+      its glyph is two arrows side by side rather than one going round. Small
+      caps is what lets OPEN ABOUT read as a page's name rather than a sentence
+      with a word missing.
+
+- [x] **The flip, as built and reverted.** The two faces went into one box,
+      `.hn-leaf`, which was the thing that turned — a horizontal rotation with
       perspective, the outgoing face leaving as the incoming one arrives, on
       `cubic-bezier(0.22, 0.61, 0.36, 1)` at 0.4s. Both stated from the entry
       layer rather than picked: it arrives on that curve at 0.42s, and a pane
