@@ -31,7 +31,7 @@
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Headphones, Envelope, AddressBook, GearSix } from '@phosphor-icons/react';
+import { Headphones, Envelope, AddressBook, Cards, GearSix } from '@phosphor-icons/react';
 import { VERSION, RELEASE_URL } from '../../library/version';
 
 // Everything but the first: messages, which are what you open the journal to
@@ -54,6 +54,16 @@ import { VERSION, RELEASE_URL } from '../../library/version';
 // site that did not need one.
 const DOORS = [
   { href: '/dashboard/inbox',   label: 'Inbox',   note: 'Submissions and comments waiting on you', Icon: Envelope, count: w => w?.total },
+  // What the people in the address book logged. It ran on down this pane's own
+  // scroll until 2026-09-15, under the rows; the desk is a hero and its rows
+  // and stops there now, so the feed is a door like the others (Miyel's
+  // brief). Above the address book because it is the thing you come here to
+  // read — the book is how you change what is in it.
+  // Cards and not a stack of lines: the band at the foot took the stack for
+  // the desk itself, and two rows of this pane cannot wear the same mark as
+  // the pane. Cards is also the truer picture — the feed is records going
+  // past, one album-shaped thing after another, which is what it draws.
+  { href: '/dashboard/feed', label: 'Feed', note: 'What the journals you read have logged', Icon: Cards },
   // The journals this keeper reads, by address. A place, not a filter
   // inside the feed: it is what the feed and comparing are built from, and
   // it exists before either does (2026-09-12).
