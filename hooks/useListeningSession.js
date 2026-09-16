@@ -70,6 +70,10 @@ export function useListeningSession({ step }) {
   // by the keeper here — the entry's own editor is where it can be changed.
   const [creditPrivate, setCreditPrivate] = useState(false);
   const [receivedDate, setReceivedDate]   = useState('');
+  // Which send this listen came out of, when it came out of one. Only the
+  // inbox ever sets it, and it rides on the draft row so a listen finished a
+  // day later still settles the send it answers (migrations/015).
+  const [submissionId, setSubmissionId]   = useState(null);
 
   // What gets written
   const [overallNotes, setOverallNotes]   = useState('');
@@ -144,7 +148,7 @@ export function useListeningSession({ step }) {
     step, saved, hasWriting,
     values: {
       albumInput, artistName, year, albumArt, genre, entryType, receivedFrom, receivedDate,
-      receivedFromUrl, creditPrivate,
+      receivedFromUrl, creditPrivate, submissionId,
       collectionIdRef, brief, tracks, overallNotes, trackNotes, trackRatings, trackFavorites,
       rating, Masterpiece, Favorite, Formative, elapsedRef,
     },
@@ -285,6 +289,7 @@ export function useListeningSession({ step }) {
       liftNeedle();
       setAlbumInput(''); setArtistName(''); setYear(''); setAlbumArt('');
       setGenre(''); setEntryType(''); setReceivedFrom(''); setReceivedDate(''); setReceivedFromUrl('');
+      setSubmissionId(null);
       return 0;
     }
 
@@ -292,7 +297,8 @@ export function useListeningSession({ step }) {
       album, artist = '', year: yr = '', artUrl = '', collectionId = null,
       genre: gen = '', entryType: et = '', receivedFrom: from = '',
       receivedDate: date = '', receivedFromUrl: fromUrl = '',
-      creditPrivate: quiet = false, draft: savedDraft = null,
+      creditPrivate: quiet = false, submissionId: sentId = null,
+      draft: savedDraft = null,
     } = record;
 
     collectionIdRef.current = collectionId || savedDraft?.collection_id || '';
@@ -306,6 +312,7 @@ export function useListeningSession({ step }) {
     setReceivedFromUrl(fromUrl || savedDraft?.received_from_url || '');
     setReceivedDate(date || (savedDraft?.received_date ? String(savedDraft.received_date).slice(0, 10) : ''));
     setCreditPrivate(quiet === true || savedDraft?.credit_private === true);
+    setSubmissionId(sentId ?? savedDraft?.submission_id ?? null);
 
     let rows = [];
     let openAt = 0;
@@ -511,6 +518,30 @@ export function useListeningSession({ step }) {
       if (data.error) throw new Error(data.error);
       setSaved(true);
       setSavedEntry(data.entry || null);
+
+      // ── The send that started this is settled ────────────────────────────
+      // A listen begun from the inbox marked its send `reviewed`, which means
+      // started. Posting is what makes it `logged`, pointed at the record —
+      // and nothing did that until 2026-09-16, so a record somebody sent could
+      // be written up and published while their send still sat in the inbox
+      // offering to resume a listen that no longer existed.
+      //
+      // The same route the "I've already logged this" button presses, doing
+      // both halves: it settles the send and credits the entry to the sender,
+      // and it credits only where the entry is not credited already — which
+      // here it always is, since the credit rode in with the record.
+      //
+      // Deliberately not awaited and deliberately silent. The entry is saved;
+      // a send that cannot be tidied — deleted from the inbox while this was
+      // open, so the route answers 404 — is not a reason to tell somebody
+      // their listen failed. The button is still there to press by hand.
+      if (submissionId && data.entry?.id) {
+        fetch(`/api/submissions/${submissionId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ entry_id: data.entry.id }),
+        }).catch(() => {});
+      }
       // The listen is an entry now; the draft — both copies — goes with it,
       // and so does the needle. The beacon moves from "Now logging" to "Last
       // logged" showing the record just finished, which is the same record it

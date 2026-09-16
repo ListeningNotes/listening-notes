@@ -23,7 +23,7 @@ const DRAFT_KEY = 'ln_session_draft';
 export function useSessionDraft({ step, saved, hasWriting, values, setters }) {
   const {
     albumInput, artistName, year, albumArt, genre, entryType, receivedFrom, receivedDate,
-    receivedFromUrl = '', creditPrivate = false,
+    receivedFromUrl = '', creditPrivate = false, submissionId = null,
     collectionIdRef, brief, tracks, overallNotes, trackNotes, trackRatings, trackFavorites,
     rating, Masterpiece, Favorite, Formative, elapsedRef,
   } = values;
@@ -174,6 +174,7 @@ export function useSessionDraft({ step, saved, hasWriting, values, setters }) {
           received_date: receivedDate,
           received_from_url: receivedFromUrl,
           credit_private: creditPrivate,
+          submission_id: submissionId,
         }),
       });
       const data = await res.json();

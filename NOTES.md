@@ -2147,9 +2147,29 @@ rounds on the beacon as she used it.
       `/session` is behind the password and cannot be run from Claude's side, so
       it shipped on reasoning alone and failed on Miyel's first try.
 
+- [x] **Posting a listen settles the send it came from** (migration 015,
+      `drafts.submission_id`). Starting a listen from the inbox marked the send
+      `reviewed`, meaning started, and nothing ever moved it on — so a record
+      somebody sent could be written up and published while their send sat in
+      the inbox still offering to resume a listen that had become an entry. The
+      thread is on the draft row and not only in the browser, for the reason
+      `received_from` is: a listen paused overnight must not come back having
+      forgotten. It presses the same route the by-hand "already logged" button
+      does, which settles the send AND credits the entry, and it is not awaited
+      — a send deleted while the listen was open answers 404, and that is not a
+      reason to tell somebody their listen failed.
+- [x] **The feed opens on Recent**, and Recent is the first tab. Submissions
+      was the default while the feed was mostly empty; with a populated address
+      book it is the narrower view.
+- [x] **Every page clears the real bar.** `--hn-bar-h` was declared on `.hn`
+      alone, so the feed at its own address fell through to a hardcoded 104px
+      fallback — 24px taller than the bar actually is, and knowing nothing
+      about a notch. It is on `:root` now and there are no bogus fallbacks
+      left.
+
 Names chosen without asking, rename freely: `saidSoAboutTheDesk` and
 `PENDING_EVENT` (hooks/useListeningSession.js), `TYPE_PER_SECOND`, `litRef`,
-`elapsedRef`, and branch `listen-fixes`.
+`elapsedRef`, `drafts.submission_id`, and branch `listen-fixes`.
 
 **2026-09-16 — three dead branches deleted, `share-printer` kept.** They were
 local-only and had never been pushed, so this is the last word on them:

@@ -1,0 +1,31 @@
+-- Copyright (C) 2026 Miyel Brown
+-- SPDX-License-Identifier: AGPL-3.0-or-later
+-- migrations/015_draft_submission.sql
+--
+-- Which send a listen came out of.
+--
+-- Starting a listen from the inbox marks the send `reviewed`, which means
+-- started. Posting the entry was supposed to move it on to `logged` and point
+-- it at the record — the third outcome, migration 010 — and nothing did. So a
+-- record somebody sent could be listened to, written up and published, and
+-- their send sat in the inbox still offering to resume a listen that had
+-- already become an entry (Miyel, 2026-09-16, on the first real run).
+--
+-- The button for saying so by hand already existed and already does both
+-- halves: `log_submission` marks it, and the route credits the entry in the
+-- same press. What was missing is that the listen never knew which send it
+-- came from. This is that thread, kept where the rest of the send's details
+-- are already kept.
+--
+-- **On drafts and not only in the browser**, for exactly the reason
+-- `received_from` is here: a listen paused halfway and picked up tomorrow must
+-- not come back having forgotten. Drafts exist precisely because finishing in
+-- one sitting is not the common case, and losing this would lose the tidying
+-- for every listen that took two evenings.
+--
+-- No foreign key. A send can be deleted from the inbox while a listen about it
+-- is still open, and that is not a reason for the listen to fail to save —
+-- the id simply points at nothing and the PATCH after the save answers 404,
+-- which the session ignores. A row that cannot be tidied is not a row that
+-- should refuse to be written.
+ALTER TABLE drafts ADD COLUMN IF NOT EXISTS submission_id integer;

@@ -182,6 +182,10 @@ export default function SessionPage() {
       collectionId: draft.collection_id || null,
       genre: draft.genre || '',
       entryType: draft.entry_type || '',
+      // The send this listen answers, if it came out of one, so finishing it
+      // from the picker settles that send exactly as finishing it from the
+      // inbox does (migrations/015).
+      submissionId: draft.submission_id ?? null,
       draft,
     }, null);
   }
