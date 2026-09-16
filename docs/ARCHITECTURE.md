@@ -154,10 +154,10 @@ The furniture — visual pieces
       CodeSlot.js              A square that holds a picture and turns into that picture's code — the card's portrait and an entry's cover: the two faces, the copy and its pill, the corner mark, the wait
       AddressCode.js           A plain code for an address, drawn in the browser — what CodeSlot shows when no pressed picture can be had
       CodeScanner.js           The camera pointed at a code — the address book's way in for a card's or a cover's code
-      Dashboard.js             The other face, for the owner — Start a listen as a band, then Inbox, Address book and Drafts as rows; Settings is the gear in its header
+      Dashboard.js             The other face, for the owner — Start a listen as a band, then Inbox, Address book, Drafts, Your card and Settings as rows; the header holds the mark alone
       Feed.js                  Under the desk on the same scroll — what the people in the address book logged, read off their public feeds; Submissions and Recent; Compare on a row you also have
       Pitch.js                 The other face, for everybody else — the colophon
-      KeeperTools.js           The owner's pencil and printer
+      KeeperTools.js           The owner's ··· — Edit, Print and Delete on an entry, Edit and Print on the ID pane; the door stays put and the tools file out of it
       SharePrinter.js          The share printer — paper sizes, the looks you turn through, Save and Send; knows nothing about journals, prints whatever plate it is handed
       EntryPlate.js            A record cut as a plate — the entry page's first screen on the record's blurred colour: mark, keeper, cover, album, artist and year, stars, chips, date, horizon; no code, the press copies the address
       WritingAccess.js         The lock at the foot of the pitch pane — a key, and the password field it opens in place
@@ -173,7 +173,7 @@ The furniture — visual pieces
       StarRating.js            The star display (read only)
       HorizonChart.js          The listening-shape bar chart
       GridDensity.js           Archive tile sizing
-      Lightswitch.js           Manages light and dark mode
+      Lightswitch.js           Manages light and dark mode — the one switch that calls it is the beacon's, top right
       Slug_Page/
         MiniCard.js            The record, kept at the head of the notes
         CommentThread.js       A single comment and its replies

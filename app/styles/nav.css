@@ -133,6 +133,9 @@
 
 .sitenav-side { display: flex; align-items: center; gap: 2px; min-width: 0; }
 .sitenav-side--left { justify-content: flex-start; }
+/* Nothing in it. It is a spacer that keeps the mark on the middle of the row
+   now that the lights have gone to the beacon. */
+.sitenav-side--right { justify-content: flex-end; }
 
 /* The keeper's tools. Deliberately the same object as the About card's pencil
    — 36px box, 10px radius, faint until you go near it — because they are the
@@ -154,6 +157,65 @@
    everything destructive on this site wears. */
 .kt-tool--end { color: var(--fav); margin-left: 2px; }
 .kt-tool--end:hover { color: var(--fav); background: color-mix(in srgb, var(--fav) 12%, transparent); }
+
+/* ── The ··· and what comes out of it ──────────────────────────────────────
+   The door is the first child and never moves. --kt-dir says which way the
+   tools lie from it: 1 when they open to the right, which is the entry's
+   header, and -1 when they open to the left, which is the card's. That single
+   number is the only difference between the two surfaces — the markup, the
+   order and the timing are the same object in both places. */
+.kt-tools { --kt-dir: 1; display: flex; align-items: center; gap: 2px; }
+/* The door sits over the tools rather than under them, so the one still half
+   inside it is hidden by it instead of drawn on top of it. */
+.kt-tool--door { position: relative; z-index: 1; }
+.kt-door {
+  position: relative; display: inline-flex;
+  width: 22px; height: 22px; align-items: center; justify-content: center;
+}
+/* Both glyphs live here at once and turn past each other a quarter turn, so
+   the mark reads as one thing opening. A swap with no turn looks like two
+   different buttons in the same corner. */
+.kt-door > svg {
+  position: absolute;
+  transition: opacity 0.16s linear, transform 0.26s cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+.kt-door-x { opacity: 0; transform: rotate(-90deg); }
+.kt-tool--door[aria-expanded='true'] .kt-door-dots { opacity: 0; transform: rotate(90deg); }
+.kt-tool--door[aria-expanded='true'] .kt-door-x { opacity: 1; transform: rotate(0deg); }
+
+/* One box is 36px and the gap is 2, so a tool --kt-i boxes from the door
+   starts 38 × --kt-i away from where it lands — which is exactly on top of
+   the door. It grows out of a quarter of its size as it goes, because a box
+   that only slides looks like it was already there and moved. */
+@keyframes kt-file-out {
+  from { opacity: 0; transform: translateX(calc(var(--kt-i) * var(--kt-dir) * -38px)) scale(0.25); }
+  45%  { opacity: 1; }
+  to   { opacity: 1; transform: translateX(0) scale(1); }
+}
+.kt-tool--out {
+  animation-name: kt-file-out;
+  /* Everything leaves at one speed, so the far one is simply out longer. A
+     fixed duration would make it sprint and the near one crawl. */
+  animation-duration: calc(150ms + var(--kt-i) * 45ms);
+  animation-delay: calc(var(--kt-d) * 55ms);
+  animation-timing-function: cubic-bezier(0.18, 0.86, 0.28, 1);
+  animation-fill-mode: both;
+}
+/* Going back in, the near one goes first: it is the one in the doorway. Keep
+   the total under PACKING_UP in KeeperTools.js. */
+.kt-tools--back .kt-tool--out {
+  animation-direction: reverse;
+  animation-duration: calc(120ms + var(--kt-i) * 30ms);
+  animation-delay: calc((var(--kt-i) - 1) * 38ms);
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .kt-tool--out { animation: none; }
+  .kt-tools--back .kt-tool--out { animation: none; opacity: 0; }
+  .kt-door > svg { transition: opacity 0.16s linear; }
+  .kt-tool--door[aria-expanded='true'] .kt-door-dots { transform: none; }
+  .kt-door-x { transform: none; }
+}
 .sitenav-logo { display: block; justify-self: center; }
 .sitenav-logo-mark {
   height: 28px;
@@ -171,12 +233,6 @@
   50%      { opacity: 0.55; }
 }
 
-.sitenav-theme-btn {
-  justify-self: end;
-  width: 36px;
-  height: 36px;
-  flex-shrink: 0;
-}
 
 /* The mark on a phone: small enough to read as one navbar unit with the
    beacon art, and its live dot pulses. */
@@ -526,10 +582,6 @@
   animation: hp-logo-dot-pulse 2.5s ease-in-out infinite;
 }
 .hn-lights { color: var(--ink-faint); }
-/* The toggle slides rather than jumping, which is the one thing a real switch
-   does that an icon swap cannot. */
-.hn-switch-toggle { transition: y 0.18s cubic-bezier(0.22, 0.61, 0.36, 1); }
-@media (prefers-reduced-motion: reduce) { .hn-switch-toggle { transition: none; } }
 .hn-lights:hover { color: var(--ink-soft); }
 
 /* ── The rail ───────────────────────────────────────────────────────────────

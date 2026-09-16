@@ -30,6 +30,7 @@ import { useTheme } from './Lightswitch';
 import { useListeningBeacon } from '../../hooks/useListeningBeacon';
 import { useBookplate } from './Bookplate';
 import CodeSlot from './CodeSlot';
+import KeeperTools from './KeeperTools';
 import { knownHere, subscribeSender } from '../../library/return_address';
 
 const readNothing = () => false;
@@ -378,22 +379,22 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
         className={'idc-inner' + (more ? ' idc-inner--more' : '')}
       >
         {/* ── The header ───────────────────────────────────────────────────
-            The mark, and nothing else. No icons in a header (Miyel's brief,
-            2026-09-15): the mark is centred and the sides are for navigation
-            rather than controls — the turn sits at the left of this line and
-            is drawn by the cross, not by this card.
+            The mark in the middle, and one ··· at the right. No loose icons
+            in a header still holds — a pencil and a printer sitting in the
+            corner are what made this read as a toolbar — but a single mark
+            that opens is not a row of tools, it is a door, and the entry next
+            door already has exactly this one (Miyel, 2026-09-15). The same
+            component draws both: KeeperTools.js.
 
-            Which makes this pane identical for everybody: the keeper sees
-            exactly what a visitor sees, and nothing else on the site can say
-            that. Correcting the card is a row on the desk (*Your card*), with
-            a quiet shortcut at the foot of the page for the moment you are
-            reading your own card and notice something wrong.
+            A visitor still sees a header with nothing in it but the mark. The
+            ··· is the keeper's, and so is everything behind it.
 
-            Save and Cancel are the exception and are not tools: they belong
-            to a mode you entered on purpose and are gone the moment it ends,
-            and a correction with no visible way to keep or abandon it is
-            worse than a tidy header. Nothing here is a permission check — the
-            writing endpoints check the wristband whatever is drawn. */}
+            Save and Cancel are the exception and are not behind anything:
+            they belong to a mode you entered on purpose and are gone the
+            moment it ends, and a correction with no visible way to keep or
+            abandon it is worse than a tidy header. Nothing here is a
+            permission check — the writing endpoints check the wristband
+            whatever is drawn. */}
         <div className="idc-head">
           <svg
             viewBox={`${MARK_BOX.x} ${MARK_BOX.y} ${MARK_BOX.w} ${MARK_BOX.h}`}
@@ -413,7 +414,7 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
           </svg>
 
           <div className="idc-tools">
-            {authed && editing && (
+            {authed && (editing ? (
               <>
                 <button
                   type="button"
@@ -436,7 +437,9 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
                   <X size={18} weight="regular" aria-hidden="true" />
                 </button>
               </>
-            )}
+            ) : (
+              <KeeperTools what="card" onEdit={edit.begin} />
+            ))}
           </div>
         </div>
 
@@ -611,16 +614,13 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
             edited on the pane below now, inside the sections they actually
             print in — a field for something you cannot see while you type into
             it is a field you fill in blind. See About.js. */}
-        {/* The way in, quiet and at the foot. The structural door is a row on
-            the desk; this is the convenience one, for the moment you are
-            reading your own card and see something wrong. Two doors to one
-            mode is fine when one is structural and the other is where you
-            already are. */}
-        {authed && !editing && (
-          <button type="button" className="idc-correct" onClick={edit.begin}>
-            Edit your card
-          </button>
-        )}
+        {/* A quiet *Edit your card* used to sit here, because the header held
+            nothing and the only other way in was a row on the desk. The ···
+            at the top of the card is that way in now, in the corner every
+            other surface keeps its tools in, and a second door a screen below
+            it was one more line of writing on a page that is mostly writing
+            (Miyel, 2026-09-15). The desk row stays: that is the one you use
+            when you are not already here. */}
 
         {edit.trouble && <p className="idc-trouble">{edit.trouble}</p>}
       </div>

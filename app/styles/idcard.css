@@ -231,22 +231,6 @@
    everything else by tone and space, and one hairline doing a job the rest of
    the page does without it is a hairline that reads as leftover. Space is the
    boundary. */
-/* The quiet way into a correction, at the foot of the card. Set like the
-   labels rather than like a button: it is a shortcut for somebody already
-   reading their own page, not the door — the door is a row on the desk. */
-.idc-correct {
-  display: block;
-  margin: 26px auto 0;
-  padding: 6px 2px;
-  border: 0; background: none;
-  color: var(--ink-faint);
-  font-family: var(--font-label);
-  font-size: 9.5px; letter-spacing: 0.16em; text-transform: uppercase;
-  cursor: pointer;
-  transition: color 0.15s;
-}
-.idc-correct:hover { color: var(--ink); }
-
 .ab-below { margin-top: 34px; }
 
 /* ── Below the fold ─────────────────────────────────────────────────────────
@@ -555,7 +539,6 @@
   top: 15px;
   transform: translate(-50%, -50%);
 }
-.idc-tools { display: flex; align-items: center; gap: 2px; }
 .ab-card .idc-inner {
   min-height: 0;
   overflow: visible;
@@ -913,6 +896,13 @@ a.ab-rig-name:hover { text-decoration: underline; }
    simply starting further down the page. The header is corner
    furniture; space under it reads as air. */
 .idc-tools { display: flex; align-items: center; gap: 2px; }
+/* The ··· holds the corner and its tools come out to the left, because on
+   this card the header's right end is where they are and there is a mark in
+   the middle of the row they must not run into. Reversing the row is what
+   keeps the door still: the markup order is the same one the entry uses, so
+   the pencil is the first thing out of it on both surfaces. --kt-dir tells
+   the animation in nav.css which way that is. */
+.idc-tools .kt-tools { flex-direction: row-reverse; --kt-dir: -1; }
 /* The same box as the lights on the other end of the line — 36px,
    a 10px radius, an 18px glyph — so the two ends of the bar read as
    one row of controls rather than a big one and a small one. */
