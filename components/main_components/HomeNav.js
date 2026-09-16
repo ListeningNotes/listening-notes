@@ -1,25 +1,46 @@
 // Copyright (C) 2026 Miyel Brown
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // components/main_components/HomeNav.js
-// The cross. Three panes side by side, each one scrolling on its own.
+// The cross. Two panes side by side, each scrolling on its own.
 //
-//        About  ←  [ Home ]  →  Dashboard / Pitch
-//                     ↓
-//                  Journal
+//        [ You ]  ←→  [ Home ]
+//                        ↓
+//                     Journal
 //
-// Left is who keeps this journal, centre is what is playing, right is the desk
-// if you are the owner and the pitch if you are not. Down, from any of them,
-// is however much more that pane has — which for the centre is the whole
-// archive and for the pitch is nothing at all.
+// Sideways is you. Down is the records.
+//
+// ── Down is a cover, not a gesture ──────────────────────────────────────────
+// The rule the whole shape rests on, 2026-09-15. Down means cover-then-
+// contents, and exactly two things on this site have that shape: the beacon,
+// which is the journal's cover, and an entry's card, which is the entry's.
+// Both are the thing, and then what is inside it.
+//
+// The card and the desk are not covers of anything. They are pages, and pages
+// scroll. So they have no second floor, nothing to arrive at, and no down
+// caret — a vertical drag there is ordinary scrolling and nothing has to
+// arbitrate between arriving and scrolling. That is most of the axis problem
+// gone, and it went by deciding what down *means* rather than by tuning a
+// scroller.
+//
+// ── Why two panes and not three ─────────────────────────────────────────────
+// Three made sideways mean two different things: left was about you, right
+// was your tools, both you, in opposite directions. One pane that turns
+// between the two is one idea. Signed out it turns between the keeper's card
+// and the colophon, so the pitch survives without a pane of its own.
+//
+// The turn is a labelled control, never a hidden gesture, and which face you
+// left it on is remembered per browser.
 //
 // ── Why a rail and not routes ───────────────────────────────────────────────
-// The three panes are one page. They have to be: a swipe that triggered a
-// navigation would unmount the pane you were leaving, throw away where you had
-// scrolled to in it, and re-fetch it on the way back. Everything about the
-// gesture — that it is continuous, that it is reversible, that the pane you
-// return to is where you left it — depends on all three being mounted at once.
-// So this is a horizontal scroll container with three children and the browser
-// does the physics.
+// The panes are one page. They have to be: a swipe that triggered a navigation
+// would unmount the pane you were leaving, throw away where you had scrolled
+// to in it, and re-fetch it on the way back. Everything about the gesture —
+// that it is continuous, that it is reversible, that the pane you return to is
+// where you left it — depends on both being mounted at once. So this is a
+// horizontal scroll container with two children and the browser does the
+// physics. Both faces of the turning pane are mounted too, for the same
+// reason and one more: the feed goes on updating and the inbox goes on
+// counting while you are looking at the card.
 //
 // Entries are the exception and are real routes. Tapping a cover leaves the
 // cross, which is correct: an entry has an address you can send somebody, and
@@ -31,50 +52,27 @@
 // direction that has something in it is marked, the press does what the swipe
 // does, and the press is how the swipe gets learned.
 //
-// The down caret is drawn by measurement rather than by being told: a pane is
-// deep if its scroller overflows. That is what makes a fresh copy correct for
-// free — an install with no about paragraph and no rig has nothing under the
-// card, so nothing points down at it — and it is why the pitch pane's missing
-// bottom edge is not a special case in this file.
+// The down caret is drawn by measurement rather than by being told — a pane is
+// deep if its scroller overflows — and then only on the pane that has a cover.
+// That is what makes a fresh copy correct for free: an install with no beacon
+// has no first screen to leave, so nothing points down at it.
 //
 // ── Desktop: an open book ───────────────────────────────────────────────────
-// Two pages, not three panes. A narrow page on the left — the spine, about a
-// quarter of the window — and the journal across the rest. The spine holds one
-// thing at a time and turns between two faces: the card and the desk when you
-// are signed in, the card and the colophon when you are not. A line at its
-// foot says which way it turns, and which face you left it on is remembered in
-// this browser, because what goes on the left is the owner's choice and not
-// the layout's.
-//
-// The journal does not move when the spine turns. That is the whole of why it
-// reads as turning a page rather than navigating somewhere, and it is why the
-// two faces are both mounted at once with the stylesheet showing one: the feed
-// goes on updating and the inbox goes on counting while you are looking at the
-// card.
-//
-// The rule underneath is that the right page is what you are reading or
-// writing. An entry opens there, and so does a listen — starting one turns the
-// journal into the session while the spine stays exactly where it is. The
-// inbox, the address book, a person and Settings open in the *spine* instead,
-// as a shallow stack with a way back: on the right they would be fighting the
-// session for the same page.
-//
-// It replaced three columns at three widths (2026-09-13), which replaced three
-// equal columns before that. Three columns had no hierarchy and a lot of air
-// where a wide screen wants density. What has not changed is that this is the
-// same components said differently and not a second layout — the site already
-// carried two homepage markup trees that drifted apart, and a third would have
-// been the same mistake twice. The three panes are still the three panes; the
-// stylesheet puts two of them in one column above 769px and shows one at a
-// time. Nothing about the phone changes.
+// The same two panes, both visible. The turning one is the spine, a quarter of
+// the window, with the turn as a switch centred over it; the journal takes the
+// rest and does not move when the spine turns. The rule underneath is the same
+// one stated differently: the right page is what you are reading or writing,
+// so an entry opens there and so does a listen, while the inbox, the address
+// book, a person and Settings open on the spine. Nothing here is a second
+// layout — the stylesheet does all of it above 769px.
 
 'use client';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { BookOpen, Broadcast, Gear, IdentificationCard, Info } from '@phosphor-icons/react';
-import { useTheme } from './Lightswitch';
+import { ArrowsClockwise, Broadcast, Gear, IdentificationCard, Info } from '@phosphor-icons/react';
 import { foldKey, useListeningBeacon } from '../../hooks/useListeningBeacon';
 import { useSpineWidth } from '../../hooks/useSpineWidth';
+import { useTheme } from './Lightswitch';
 import { useBookplate } from './Bookplate';
 import ListeningBeacon from './ListeningBeacon';
 import Journal from './Journal';
@@ -84,8 +82,11 @@ import Dashboard from './Dashboard';
 import Feed from './Feed';
 import Pitch from './Pitch';
 
-// Left, centre, right. Centre is the one you land on, which is why it is not
-// index 0 — the rail is scrolled to it on mount before the first paint.
+// You, then home. Home is the one you land on, which is why it is not index
+// 0 — the rail is scrolled to it on mount before the first paint. A visitor
+// lands there too: they arrived from a card, a code or a link that already
+// said whose journal this is, so the record is the more interesting thing to
+// meet and the person is one swipe away.
 const HOME = 1;
 
 // Which face the spine was left on, per browser. Not a setting and not on the
@@ -94,16 +95,31 @@ const HOME = 1;
 // no business travelling to another device.
 const FACE_KEY = 'ln-spine-face';
 
-// What each pane is, as a mark and as a sentence. The controls at the foot of
+// What each pane is, as a mark and as a sentence. The carets at the foot of
 // the cross read out of this rather than out of their own direction, because
 // the useful thing to say is where a press lands and not which way it goes.
-// Pressing right from the card returns to the beacon; a cog over that arrow
-// would be describing a pane one further along that the press does not reach.
-function paneMarks(authed) {
+//
+// The turning pane is named for the face it is showing, since that is what
+// the press actually lands on. Its two faces keep their own names below, for
+// the switch's hover.
+function paneMarks(authed, face) {
+  const you = face === 'card'
+    ? { Icon: IdentificationCard, label: 'About this journal' }
+    : { Icon: authed ? Gear : Info, label: authed ? 'Your desk' : 'About this software' };
+  return [you, { Icon: Broadcast, label: 'Now listening' }];
+}
+
+// The two sides, for the switch. Card either way — signed in it is yours,
+// signed out it is the keeper's, and it is the same face. Desk or About for
+// the other side.
+function paneFaces(authed) {
   return [
-    { Icon: IdentificationCard, label: 'About this journal' },
-    { Icon: Broadcast, label: 'Now listening' },
-    { Icon: authed ? Gear : Info, label: authed ? 'Your desk' : 'About this software' },
+    { key: 'card', word: 'Card', label: 'About this journal' },
+    {
+      key: 'desk',
+      word: authed ? 'Desk' : 'About',
+      label: authed ? 'Your desk' : 'About this software',
+    },
   ];
 }
 
@@ -223,7 +239,7 @@ export default function HomeNav() {
       if (window.localStorage.getItem(FACE_KEY) === 'desk') setFace('desk');
     } catch { /* storage off — the card is the answer, every visit */ }
   }, []);
-  const turnSpine = useCallback(() => {
+  const turnPane = useCallback(() => {
     setFace(prev => {
       const next = prev === 'card' ? 'desk' : 'card';
       try { window.localStorage.setItem(FACE_KEY, next); } catch { /* not remembered */ }
@@ -232,10 +248,27 @@ export default function HomeNav() {
   }, []);
 
   const railRef = useRef(null);
-  // One ref per pane's own vertical scroller. Written as three rather than an
-  // array of refs because the panes are three different things, not three of
-  // the same thing, and a loop over them would be pretending otherwise.
-  const paneRefs = [useRef(null), useRef(null), useRef(null)];
+  // The scrollers. The home pane has one; the turning pane has two, one per
+  // face, because a face has to keep where it was scrolled to while the other
+  // one is showing — and because a single scroller round both would be as tall
+  // as the taller of them whichever you were looking at.
+  //
+  // What the rest of this file wants is "the pane's scroller", so the turning
+  // pane hands over whichever face is up, answered when asked rather than
+  // once. `face` goes into a ref for that: a getter closing over the state
+  // would answer with whatever face was current when the object was made.
+  const cardRef = useRef(null);
+  const deskRef = useRef(null);
+  const homeRef = useRef(null);
+  const faceNow = useRef('card');
+  const turnScroller = useRef({
+    get current() { return faceNow.current === 'card' ? cardRef.current : deskRef.current; },
+  }).current;
+  const paneRefs = useRef([turnScroller, homeRef]).current;
+  // Kept in step on every render, and read by the getter above. It has to be
+  // set here rather than beside the state it mirrors: the ref is declared in
+  // this block, and writing to it earlier in the body is the dead zone.
+  faceNow.current = face;
   // The wall's own scroller on a phone — floor two of the centre pane. On a
   // desk it is a plain wrapper and the pane column is what scrolls, so the
   // thing handed to Journal answers the question when asked rather than once:
@@ -260,8 +293,8 @@ export default function HomeNav() {
   const settle = useRef(null);
   // Whether each pane has anything below its first screen, and whether you are
   // already down there. Both are measured, never declared.
-  const [deep, setDeep] = useState([false, false, false]);
-  const [down, setDown] = useState([false, false, false]);
+  const [deep, setDeep] = useState([false, false]);
+  const [down, setDown] = useState([false, false]);
 
   // Called by every scroller on the page, horizontal and vertical alike.
   const stir = useCallback(() => {
@@ -320,8 +353,13 @@ export default function HomeNav() {
   // inside it could have changed size — entries landing, the card's portrait
   // loading, the window turning sideways — because a caret that appears a
   // second late is worse than one that was never there.
+  // Only the home pane can be deep. The turning pane overflows all the time —
+  // it is a page — and a down caret on it would be promising an arrival that
+  // this layout deliberately does not have. Down is a cover, and the card is
+  // not one.
   const measure = useCallback(() => {
-    setDeep(paneRefs.map(ref => {
+    setDeep(paneRefs.map((ref, i) => {
+      if (i !== HOME) return false;
       const el = ref.current;
       return !!el && el.scrollHeight - el.clientHeight > 8;
     }));
@@ -345,7 +383,7 @@ export default function HomeNav() {
     });
     return () => observer.disconnect();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [measure, entries, loading, authed, stamps]);
+  }, [measure, entries, loading, authed, stamps, face]);
 
   // Whether each pane is already scrolled. The down caret is a way in, not a
   // permanent fixture — once you are in the pane it has done its job and the
@@ -438,6 +476,13 @@ export default function HomeNav() {
     </svg>
   );
 
+  // The light switch is back in this row and only on the beacon (Miyel,
+  // 2026-09-15). It left for Settings on the argument that it is a preference
+  // and not an action, which is true and cost a visitor any way of changing
+  // it — Settings is behind the password. On the beacon it is public again,
+  // and on the one pane where it is not sitting over somebody's reading. The
+  // stylesheet hides it on the turning pane; on a desk this row is over the
+  // journal, which is the beacon, so it simply stays.
   const header = (
     <div className={'hn-bar' + (down[pane] ? ' hn-bar--scrolled' : '')}>
       {down[pane] && (
@@ -459,6 +504,9 @@ export default function HomeNav() {
         {mark('hn-bar-svg')}
       </button>
       <button className="hp-icon-btn hn-lights" onClick={toggleTheme} aria-label="Toggle theme">
+        {/* The sun and the moon. Drawn as a switch on a wall for an hour, on
+            the grounds that the component is called Lightswitch; the file name
+            was the whole argument and it was not enough (Miyel, 2026-09-15). */}
         {theme === 'dark' ? (
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
         ) : (
@@ -561,7 +609,7 @@ export default function HomeNav() {
   // something in memory.
   const pinned = entries.find(e => e.id === pinned_entry_id) || null;
 
-  const marks = paneMarks(authed);
+  const marks = paneMarks(authed, face);
 
   // The one divider on a desk, as a grip: the fold between the two pages. A
   // separator the keyboard can hold too — an arrow moves it a step in the
@@ -581,56 +629,51 @@ export default function HomeNav() {
     />
   );
 
-  // ── What turns the spine ──────────────────────────────────────────────────
-  // Both faces in one control, the one you are on lit: the shape the archive's
-  // density switcher already has (.gd in journal.css), which is this site's
-  // way of saying "a small fixed set, and you are on one of them".
+  // ── What turns the pane ───────────────────────────────────────────────────
+  // At the left end of the header's own line, opposite the pencil, with the
+  // mark between them. DECISIONS has said since the header was drawn that it
+  // is a mark centred with one control each side; the left side has been empty
+  // ever since, and this is what goes in it (Miyel's brief, 2026-09-15).
   //
-  // Four goes at this on 2026-09-15, and the last one is the only one that
-  // does not have to be *learned*. A line at the foot of the spine (the
-  // brief), then a mark on it, then the mark at the top right, then a word
-  // and a caret there — every one of them said "press this and something
-  // happens", and none of them said what this actually is, which is that the
-  // left page has two sides and you are looking at one. A switch says it by
-  // being a switch. Miyel's read on each: the foot was "not the right idea",
-  // the mark alone was "too subtle", and the single press "I just don't like
-  // it" — the last one is the one worth listening to, because a control you
-  // cannot fault and still do not like is usually a control describing the
-  // wrong thing.
+  // A turn glyph and the name of the face it lands on — "Desk", "Card",
+  // "About" — which is enough to read as pressable without a label explaining
+  // it. It was a segmented CARD | DESK switch at the top of the spine and a
+  // band across the foot of the phone; one control in one place is both.
   //
-  // Centred over the spine, on the same line as the mark over the journal, so
-  // each page carries one thing on the top row centred on its own measure and
-  // the lights sit at the far right of the whole window. The row around it
-  // takes no clicks, the way the bar over the journal does not: it is a strip
-  // across the top of a scrolling page, and one that swallowed them would be
-  // a dead band across the top of the card.
-  //
-  // Card, and Desk or About. Miyel's words, and Card is what this project
-  // already calls that face everywhere — the identity card, DECISIONS, the
-  // code. Bio was tried for an hour and dropped: it is also the name of the
-  // free-text field the prompts replaced, which may yet come back. The pane's
-  // full name stays on the hover; the names in paneMarks are untouched,
-  // because those are read out on a swipe where a sentence is right.
-  const sides = [
-    { key: 'card', word: 'Card', label: marks[0].label },
-    { key: 'desk', word: authed ? 'Desk' : 'About', label: marks[2].label },
-  ];
+  // Fixed to the window rather than put inside either header, because there
+  // are two headers — the card's and the desk's — and one control that
+  // survives the turn cannot live inside the thing it turns. It lands on their
+  // line by construction: the page's 36px of padding plus 15, which is the 51
+  // the bar centres on.
+  const faces = paneFaces(authed);
+  const goingTo = faces.find(side => side.key !== face);
   const turnLine = (
     <div className="hn-turn-row">
-      <div className="hn-turn" role="group" aria-label="Which side of the page">
-        {sides.map(side => (
-          <button
-            key={side.key}
-            type="button"
-            className={'hn-turn-side' + (face === side.key ? ' hn-turn-side--on' : '')}
-            onClick={() => { if (face !== side.key) turnSpine(); }}
-            aria-pressed={face === side.key}
-            title={side.label}
-          >
-            {side.word}
-          </button>
-        ))}
-      </div>
+      <button type="button" className="hn-turn-say" onClick={turnPane}>
+        <ArrowsClockwise size={18} weight="regular" aria-hidden="true" />
+        {goingTo.word}
+      </button>
+    </div>
+  );
+
+  // ── Where you are on the rail ─────────────────────────────────────────────
+  // Two dots, filled for the pane you are on. They were ruled out while there
+  // were three panes and three carets: dots say *there are this many of these*
+  // and a caret says *there is something that way*, and pressing the caret is
+  // how the swipe gets learned — three of each was two vocabularies for one
+  // job. With two panes and the turn gone to the header they stop competing,
+  // because they are now describing different axes. The dots say where you are
+  // sideways; the caret says what is beside you; the down caret, on the beacon
+  // alone, says there is more underneath.
+  //
+  // An indicator and not a control. The caret next to them already goes to the
+  // other pane, and a dot that did the same thing would be the third
+  // vocabulary this row got rid of.
+  const dots = (
+    <div className="hn-dots" aria-hidden="true">
+      {marks.map((_, i) => (
+        <span key={i} className={'hn-dot' + (pane === i ? ' hn-dot--on' : '')} />
+      ))}
     </div>
   );
 
@@ -642,19 +685,59 @@ export default function HomeNav() {
       {header}
 
       <div className="hn-rail" ref={railRef}>
-        {/* The card. On a phone it is the pane left of the beacon; on a desk
-            it is one of the spine's two faces, in the same grid cell as the
-            desk with the stylesheet showing one. */}
-        <section className="hn-pane hn-face hn-face--card" ref={paneRefs[0]} aria-label="About this journal">
-          {/* About draws its own two floors — the crown and the card on the
-              first, the writing on the second — so the crown goes in as a
-              prop rather than standing outside the floor it belongs to. */}
-          <About crown={crown} stamps={stamps} authed={authed} pinned={pinned} entries={entries} />
+        {/* ── The pane that turns ──────────────────────────────────────
+            Two faces in one pane, both mounted, one shown. Each is its own
+            scroller: a face has to keep where it was scrolled to while the
+            other is up, and one scroller round both would be as tall as the
+            taller of them whichever you were looking at. Neither has floors —
+            they are pages, and pages scroll. */}
+        <section
+          className="hn-pane hn-pane--turn"
+          aria-label={marks[0].label}
+        >
+          <div className="hn-face hn-face--card" ref={cardRef}>
+            <About stamps={stamps} authed={authed} pinned={pinned} entries={entries} />
+          </div>
+
+          {/* The desk, or the colophon. Kept mounted behind the card rather
+              than swapped out for it, which is what lets the feed go on
+              updating and the inbox go on counting while somebody is looking
+              at the other side. */}
+          <div
+            className={'hn-face hn-face--desk' + (authed ? '' : ' hn-face--colophon')}
+            ref={deskRef}
+          >
+            {authed ? (
+              <>
+                {/* The desk and then the feed, straight on down the same
+                    scroll. It was two floors with a snap between them until
+                    2026-09-15; the feed's two views are a line of small caps
+                    and not a journey, and arriving at them was ceremony. The
+                    small mark goes down from here — the cross owns the one
+                    mark this site has, and the beacon keeps the large one. */}
+                <Dashboard waiting={waiting} mark={mark('db-mark-svg')} />
+                <div className="hn-under">
+                  <Feed entries={entries} />
+                </div>
+              </>
+            ) : (
+              <>
+                {/* The colophon keeps the crown. Every other page carries the
+                    mark small; this one is the page *about* the mark, and a
+                    colophon without it is a paragraph. */}
+                {crown}
+                <Pitch onSignedIn={letIn} />
+              </>
+            )}
+          </div>
         </section>
 
-        {/* The journal: the right page on a desk, and what does not move when
-            the spine turns. */}
-        <section className="hn-pane hn-pane--home" ref={paneRefs[1]} aria-label={beacon_available ? 'Now listening' : 'The journal'}>
+        {/* ── Home ──────────────────────────────────────────────────────
+            The beacon, and the journal under it. The one pane with a cover,
+            which is why it is the one pane with two floors, a snap and a down
+            caret. On a desk it is the right page and does not move when the
+            spine turns. */}
+        <section className="hn-pane hn-pane--home" ref={homeRef} aria-label={beacon_available ? 'Now listening' : 'The journal'}>
           {/* No Last.fm — no username, or no key to ask with — and there is
               no beacon screen at all: the journal is the first thing under
               the crown, rather than a tile pretending something might play.
@@ -713,53 +796,18 @@ export default function HomeNav() {
                 <Journal
                   entries={entries}
                   loading={loading}
-                  scroller={paneRefs[1]}
+                  scroller={homeRef}
                 />
               </div>
             </>
           )}
         </section>
 
-        {/* The desk, or the colophon. The spine's other face. Kept mounted
-            behind the card rather than swapped out for it, which is what lets
-            the feed go on updating and the inbox go on counting while
-            somebody is looking at the other side. */}
-        <section
-          className={'hn-pane hn-face hn-face--desk' + (authed ? '' : ' hn-face--colophon')}
-          ref={paneRefs[2]}
-          aria-label={authed ? 'Your desk' : 'About this software'}
-        >
-          {authed ? (
-            <>
-              {/* Floor one — the crown and the desk, one screen that holds
-                  still. Floor two — the feed: what the people in the
-                  address book logged, in a scroller of its own, the same
-                  two-floor shape the beacon and the card have. The pane
-                  measures deep once there is a second floor, so the down
-                  caret draws itself (2026-09-13). */}
-              <div className="hn-floor">
-                {crown}
-                <Dashboard waiting={waiting} />
-              </div>
-              <div className="hn-floor">
-                <div className="hn-floor-scroll">
-                  <div className="hn-under">
-                    <Feed entries={entries} />
-                  </div>
-                </div>
-              </div>
-            </>
-          ) : (
-            <>
-              {crown}
-              <Pitch onSignedIn={letIn} />
-            </>
-          )}
-        </section>
       </div>
 
-      {/* The fold, and what turns the page. Nothing on a phone: the
-          stylesheet does not draw either of them there. */}
+      {/* The fold, and the turn. Neither is drawn on a phone by the
+          stylesheet's own reckoning — the fold at all, the turn as a band at
+          the foot, which is where it used to be. */}
       {grip}
       {turnLine}
 
@@ -783,30 +831,27 @@ export default function HomeNav() {
           The swipe itself is untouched. Hiding a control is a hint; disabling
           a gesture halfway down a page is the thing that would actually read as
           broken. */}
+      {/* ── The row along the bottom ────────────────────────────────────
+          Dots, and under them the one caret that still means something.
+
+          The side carets are gone (Miyel, 2026-09-15). On the turning pane
+          the foot is clear: anybody who has got there arrived by swiping or
+          by pressing the turn, and either way they know how to go back. On
+          home the dots say where you are on the rail, which is what the caret
+          to the card was saying more loudly.
+
+          What is left pointing anywhere is down, and only on the beacon —
+          the one pane with a whole screen and nothing cut off at the fold, so
+          nothing else says there is more. No mark over it: the mark on a side
+          caret named a destination worth knowing, and down has only one
+          destination, which is the rest of this. */}
       <div className={'hn-controls' + (busy ? ' hn-controls--busy' : '')}>
-        <EdgeCaret
-          direction="left"
-          onClick={() => goTo(pane - 1)}
-          /* At the left end there is no pane to name. The control is hidden
-             and inert there, but a button whose only label is the word "null"
-             is still a button a screen reader could find. */
-          label={marks[pane - 1]?.label || 'Back'}
-          icon={marks[pane - 1]?.Icon}
-          hidden={pane <= 0 || down[pane]}
-        />
+        {dots}
         <EdgeCaret
           direction="down"
           onClick={() => goDown(pane)}
           label="Read on"
-          icon={BookOpen}
           hidden={!deep[pane] || down[pane]}
-        />
-        <EdgeCaret
-          direction="right"
-          onClick={() => goTo(pane + 1)}
-          label={marks[pane + 1]?.label || 'Onward'}
-          icon={marks[pane + 1]?.Icon}
-          hidden={pane >= 2 || down[pane]}
         />
       </div>
     </div>

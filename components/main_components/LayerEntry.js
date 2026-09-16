@@ -51,7 +51,7 @@
 import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { CaretLeft, CaretRight } from '@phosphor-icons/react';
-import { tileBoxOf, neighboursOf, handOffNeighbour, arrivingBySwipe, tookASwipe, growBoxOf, arrivingBack, cameBack } from '../../library/handoff';
+import { tileBoxOf, neighboursOf, handOffNeighbour, arrivingBySwipe, tookASwipe, growBoxOf, arrivingBack, cameBack, cameAlone } from '../../library/handoff';
 
 // How long the sheet takes to grow to the screen. Unhurried, slowing as it
 // lands — the same curve the slide used.
@@ -145,13 +145,16 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
     // Returning to a sheet that was under another: draw it at rest. Read
     // first, before the arrival kind, because it applies to any of them.
     if (cameBack()) return { swiped: 0, growFrom: null, still: true };
-    if (arrives === 'bottom') return { swiped: 0, growFrom: null };
+    // Spent here, on the way in, whatever else this arrival turns out to be:
+    // an entry opened from a place that does not browse has no neighbours.
+    const alone = cameAlone();
+    if (arrives === 'bottom') return { swiped: 0, growFrom: null, alone };
     const swiped = tookASwipe();
-    if (swiped) return { swiped, growFrom: null };
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return { swiped: 0, growFrom: null };
+    if (swiped) return { swiped, growFrom: null, alone };
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return { swiped: 0, growFrom: null, alone };
     // An entry grows out of its tile; anything else grows out of whatever
     // declared this address in data-grows (a row, a face) — see handoff.js.
-    return { swiped: 0, growFrom: slug ? tileBoxOf(slug) : growBoxOf(pathname) };
+    return { swiped: 0, growFrom: slug ? tileBoxOf(slug) : growBoxOf(pathname), alone };
   });
   const rises = arrives === 'bottom';
   const growFrom = arrival.growFrom;
@@ -183,7 +186,11 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
   // The sideways position of the content while a finger has it.
   const [shift, setShift] = useState(0);
   const [settling, setSettling] = useState(false);
-  const neighbours = slug ? neighboursOf(slug) : { prev: null, next: null };
+  // No neighbours when this was opened from somewhere that does not browse —
+  // the ID pane's pinned record, a cover in one of its count windows. The
+  // wall's order is still there for the wall; this arrival simply does not
+  // read it (handoff.js, arrivingAlone).
+  const neighbours = slug && !arrival.alone ? neighboursOf(slug) : { prev: null, next: null };
   // Whether sideways means anything here. Only an entry with a record beside
   // it on the wall; everywhere else — a form, a cold-opened entry — a
   // sideways drag is the browser's, so a row that scrolls sideways can.

@@ -576,6 +576,19 @@ export async function pull_drafts() {
   `;
 }
 
+// How many unfinished listens are sitting there. Its own query rather than
+// pull_drafts().length, because that one is a SELECT * over a table whose
+// rows carry a whole tracklist each, and the desk asks this on every visit
+// only to print a number beside a door. The siblings are count_pending_*
+// in comment_actions, submission_actions and report_actions; this one has no
+// pending state to name — a draft is unfinished by existing.
+export async function count_drafts() {
+  const [row] = await database`
+    SELECT COUNT(*)::int AS n FROM drafts
+  `;
+  return row?.n ?? 0;
+}
+
 export async function save_draft(body) {
   const {
     album, artist, year = '', genre = '', entry_type = '',

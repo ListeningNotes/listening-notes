@@ -94,25 +94,83 @@ were rewritten the same day, while nobody else had a clone; see NOTES.
 ## Structure
 
 **Cross navigation.** Beacon is home. Down → journal (only from the beacon).
-Left → About. Right → the desk when logged in, the pitch pane when logged out.
+Left → the pane that turns: your card, or your desk (the colophon, signed out).
 
-**The cross is one route, not three.** A swipe that navigated would unmount
-the pane being left and lose its scroll. The gesture has to be continuous and
-reversible, so all three panes stay mounted: home is a horizontal scroll
-container and the browser does the physics. Entries stay real routes — an
-entry has an address you can send somebody and a pane does not.
+**The cross is one route, not two.** A swipe that navigated would unmount the
+pane being left and lose its scroll. The gesture has to be continuous and
+reversible, so both panes stay mounted — and both faces of the turning one,
+which is also what lets the feed go on updating and the inbox go on counting
+behind the card. Home is a horizontal scroll container and the browser does
+the physics. Entries stay real routes — an entry has an address you can send
+somebody and a pane does not.
 
 **Panes are named after the routes they absorb**, and those routes mount the
 same component the pane does: `/archive` → Journal, `/about` → About. One
 description of each thing, two places it can be reached.
 
-**Edge carets, not a dot indicator.** A swipe is invisible; a caret pinned to
-an edge says there is something that way, and pressing it does what swiping
-does — which is how the swipe gets learned.
+**Dots on the beacon, a clear foot on the turning pane, 2026-09-15.** Dots
+were ruled out against three panes and three carets — two vocabularies doing
+one job — and with two panes they are the only one left: the active dot widens
+rather than just darkening, which reads as a position instead of a count. No
+side carets at all now. On the turning pane the foot is empty: anybody who got
+there swiped or pressed the turn, and either way knows the way back.
+
+**The down caret is the beacon's alone, under the dots, 2026-09-15.** It is
+the one pane where nothing is visibly cut off — a whole screen of cover, art,
+title and what came before — so something has to say there is more; the
+turning pane scrolls and its writing running off the edge is the cue. No mark
+over it: a side caret's mark named a destination worth knowing, and down has
+only one.
+
+**The light switch is the beacon's, top right, and nowhere else,
+2026-09-15.** One home for it: the first screen of the journal, where it is
+public (Settings is behind the password) and not sitting over somebody's
+reading. It came off the entry pages' nav row and out of Settings the same
+day. A sun and a moon — drawn as a switch on a wall for an hour on the
+grounds that the component is called Lightswitch, and the file name was the
+whole argument.
+
+**No loose icons in headers, 2026-09-15.** The mark is centred and the sides
+are for navigation. A single ··· is not a row of tools, it is a door, and it
+is allowed. Anything that acts on the thing you are looking at goes behind
+that thing's ···; the desk's rows are for places you go, not tools you use on
+what is in front of you.
+
+**An owner's tools are one ···, top right, opened in the row, 2026-09-15.**
+On an entry: Edit, Print, Delete. On the ID pane: Edit and Print. Owner only,
+the same corner on both, and the same component draws them (KeeperTools.js).
+The card is corrected from the card and not from a desk row — everything
+editable is edited where it prints, which is a rule this repo already keeps
+for the name, the photo, the prompts, the links and the rig. Two glyphs in
+the corner were what made an entry read as a toolbar; a menu over the page
+would be a third surface on a sheet that already claims sideways for the next
+record and down for closing. Delete opens the correction's own confirmation
+rather than acting — a destructive thing does not get a shorter path for
+moving to a shorter menu. A visitor sees nothing there: sharing stays one
+path, the album art.
+
+**The ··· does not move when it opens, 2026-09-15.** The mark stays in its
+corner, turns into the ×, and the tools file out of it one at a time — the one
+that ends up furthest away leaves first — and file back in nearest-first. The
+first version put the × at the other end of the group, so the thing you had
+just pressed jumped across the row.
+
+**An open ··· takes the nav row's mark off the screen, 2026-09-15.** Only
+there. The sitewide row is 28px of padding either side of a centred mark, and
+three tools and a door reach into it on a 375px phone — so the row becomes the
+menu while the menu is open and the mark comes back when it shuts. The card
+has two tools and 29px to spare and keeps its mark.
+
+**The turn is the header's left-hand control, 2026-09-15.** The header has
+been a centred mark with one control each side since it was drawn and the left
+side was empty; this is what goes in it. A turn glyph and the name of the face
+it lands on, in one place, replacing a segmented switch on a desk and a band
+across the foot of a phone. It leaves the foot to navigation.
 
 **The down caret is drawn by measuring the pane, never by being told.** A pane
-is deep when its scroller overflows, so a fresh copy with nothing under the
-card has nothing pointing down at it, for free.
+is deep when its scroller overflows, so a copy with no beacon has nothing
+pointing down at it, for free. Measured on home only, since 2026-09-15 — the
+turning pane overflows all the time and is not a cover.
 
 **No vertical snap on a one-long-scroll pane; the only vertical snap wanted
 is the entry's, 2026-09-07.** Proximity on the long pane argued with the thumb
@@ -121,19 +179,87 @@ reader back to a screen edge halfway down the wall. The two-floor shape (NOTES)
 is different: mandatory over exactly two viewport-tall floors with the reading
 in an inner scroller, which is how the entry keeps its first screen still.
 
-**The mark is large and centred at the top of every pane, at one height,** so
-the square under it — portrait on the left, album in the centre, Start a
-listen on the right (2026-09-07; the desk is vertically centred today and
-does not yet sit on the line) — lands on the same line whichever pane you
-are on. That is what makes the swipe read as
-one object turning. A desk has no crown at all — the next entry.
+**The large mark is the beacon's alone, 2026-09-15.** It was on every pane at
+one height, so the square under it landed on the same line whichever pane you
+were on — and that reason went with the centred card: there is no third square
+and no line to keep. A crown is for a cover. The card and the desk carry a
+small one in their own header instead, beside the pencil and the gear; on a
+desk even that goes, because the bar over the journal already has it and two
+marks on screen is two marks.
 
-**Desktop is an open book: the spine and the page, 2026-09-15.** Two pages,
-not three panes. The spine is a quarter of the window, draggable and
-remembered per browser, and turns between two faces — the card and the desk
-signed in, the card and the colophon signed out. Three columns gave the desk
-width whether or not anybody was at it. Still not a second layout: it is the
-cross's own three panes, two of them stacked in one column by the stylesheet.
+**Every pane is an object, then the writing underneath, 2026-09-15.** The
+beacon is the record playing over the journal; the ID is who keeps this over
+their words; the desk is your tools over the feed; the entry is the record
+over the notes. The panes read as disjointed when the objects are not equally
+object-like — the structure was never the problem, the objects were.
+
+**The ID's object is the portrait: full width, square, the size an entry's
+album art is, 2026-09-15.** A record in one pane and a person in the next,
+measured the same. Both 4:3 crops lost against the real photograph — the
+clouds around the shoulders do real work — and the writing starting below the
+fold is the accepted trade. A licence of typeset fields was tried the same day
+and it was a column of facts, not an object.
+
+**You browse on the wall and nowhere else, 2026-09-15.** The ID pane is a
+snapshot of a person, not a second journal, so an entry opened from it — the
+pinned record, a cover in a count's window — is handed no neighbours and
+closes back to the card. It had the wall's order behind it and let you swipe
+through the journal, which was the pane passing an order it has nothing to do
+with. One layer at a time, too: a cover closes its window before the entry
+opens.
+
+**Masterpieces and Formative open a window; Albums does not, 2026-09-15.** A
+window of covers, no bar and no search — a glance. Albums is the total, and a
+window of all of them would be the wall with its controls taken off, one swipe
+away. Only the two flag counts opening anything also says which of the numbers
+mean something.
+
+**No Favorites count, 2026-09-15.** Favourite applies to tracks as well as
+albums, so forty favourite tracks across twelve records is not a number you
+can set beside 14 masterpieces. Masterpiece and Formative are album-only,
+which is exactly why they work here — and three fits the row where four is
+cramped.
+
+**Three counts, in the three flags' colours, 2026-09-15.** Albums,
+masterpieces, formative — how somebody listens, which a genre list never says,
+and the first work those tokens have had away from a mark on a record.
+Typeset, not stamped: with a photograph that size above them the photo is the
+flourish. Top genres moved below the fold, one line. A machine-readable line
+was tried and cut — it references a passport rather than being one.
+
+**Down is a cover, not a gesture, 2026-09-15.** Down means cover-then-contents,
+and two things have that shape: the beacon, which is the journal's cover, and
+an entry's card, which is the entry's. The card and the desk are not covers of
+anything — they are pages, so no second floor, no arrival, no down caret. It
+settles the axis argument as a side effect: a vertical drag on a page is
+ordinary scrolling, and nothing has to choose between arriving and scrolling.
+
+**The cross is two panes. Sideways is you, down is the records, 2026-09-15.**
+Three made sideways mean two different things — left was about you, right was
+your tools, both you, in opposite directions. One pane that turns between the
+card and the desk (the colophon, signed out) is one idea, and it is the same
+pane the desktop's spine is.
+
+**Desktop is an open book: the spine and the page, 2026-09-15.** The spine is
+a quarter of the window, draggable and remembered per browser, and turns
+between the same two faces the phone turns between. Three columns gave the
+desk width whether or not anybody was at it. Not a second layout: it is the
+phone's own two panes at another width.
+
+**The card leads with a row, not a centred square, 2026-09-15.** Portrait
+left, name and counts beside it. The portrait alone was half the first screen;
+as a row the prompts and the pinned record fit on it too, which is the whole
+of what a card is for — a glance at somebody before the reading starts.
+
+**Settings is the gear in the header, not a door, 2026-09-15.** It is not
+somewhere you go as often as the inbox, the address book or the drafts, and as
+a fourth tile it was taking the same weight as them.
+
+**Drafts are a row with a count, and the row goes to the picker, 2026-09-15.**
+The picker already lists unfinished listens with a resume and a discard, so a
+second page of the same rows is the `/dashboard/entries` mistake again. The
+count is the only thing the row adds, and it is the thing worth adding: a
+listen you have forgotten is the one most likely to be lost.
 
 **The right page is what you are reading or writing, 2026-09-15.** An entry
 opens there and so does a listen, with the spine untouched beside it; the

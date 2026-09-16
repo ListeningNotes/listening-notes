@@ -18,6 +18,10 @@ import { isSetUp, pull_settings, coverName, titleName } from '../library/setting
 import { hasDatabase, explainDatabaseError } from '../library/database_connection';
 import { isCurrentCode } from '../library/portrait_code';
 
+// 300 was added here for an hour, for prompt answers set light. They are set
+// the way an album title is now — display weight — so nothing reads 300 and it
+// is not fetched. The note about Anton below is the standing rule: a weight
+// nothing uses is the same waste as a family nothing uses, only smaller.
 const nunito = Nunito({
   subsets: ['latin'],
   weight: ['400', '500', '600', '700', '800', '900'],

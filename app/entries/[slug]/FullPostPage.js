@@ -487,7 +487,16 @@ export default function FullPostPage({ entry, references = [], authed = false, l
     return () => window.removeEventListener('keydown', onKey, true);
   }, [printing, finishPrinting]);
   const keeperTools = authed && !edit.editing && !printing && (
-    <KeeperTools onEdit={edit.begin} slug={entry.slug} onPrint={() => { setPrinting(true); setLearned(false); }} />
+    <KeeperTools
+      onEdit={edit.begin}
+      slug={entry.slug}
+      onPrint={() => { setPrinting(true); setLearned(false); }}
+      /* Delete opens the correction with its own confirmation already asking,
+         rather than deleting from a menu. The warning and the second press
+         live there and a destructive action does not get a shorter path for
+         having moved to a shorter menu. */
+      onDelete={() => { edit.begin(); edit.ask(); }}
+    />
   );
 
   // ── The fields at the head of the entry ───────────────────────────────────

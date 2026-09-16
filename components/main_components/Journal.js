@@ -4,7 +4,7 @@
 // The wall of covers, and everything for finding one on it.
 //
 // This was the whole of app/archive/page.js. It is a component now because two
-// places want it: the centre pane of the cross, under the beacon, and /archive
+// places want it: home, under the beacon, and /archive
 // at its own address — and an archive that existed twice would be two archives
 // that drifted, which is the mistake the homepage already made once with its
 // desktop and mobile trees.
@@ -110,15 +110,33 @@ export default function Journal({ entries: given, loading: givenLoading, scrolle
   const search = typedSearch ?? linkedQuery;
   const [searchOpened, setSearchOpen] = useState(null);
   const searchOpen = searchOpened ?? Boolean(linkedQuery);
+
+  // ?mark= — one of the three marks a record can carry, read the same way and
+  // for the same reason as ?q= above: a link asks for a filter and the filter
+  // holds until somebody changes it in the sheet, at which point what they
+  // set wins. One parameter and not three, because the three are one question
+  // — "which mark" — and a link that asked for two of them would be a link
+  // nothing on this site can produce.
+  //
+  // The counts on the ID card are what send people here (2026-09-15): 4
+  // masterpieces is a number you want to be able to press.
   const [sortBy, setSortBy] = useState('posted');
   const [sortDir, setSortDir] = useState('desc');
   const [genre, setGenre] = useState('');
   const [genresOpen, setGenresOpen] = useState(false);
-  const [favoritesOnly, setFavoritesOnly] = useState(false);
-  const [masterpiecesOnly, setMasterpiecesOnly] = useState(false);
+  const linkedMark = useSyncExternalStore(
+    () => () => {},
+    () => new URLSearchParams(window.location.search).get('mark') || '',
+    () => '',
+  );
+  const [favoritesTyped, setFavoritesOnly] = useState(null);
+  const favoritesOnly = favoritesTyped ?? (linkedMark === 'favorite');
+  const [masterpiecesTyped, setMasterpiecesOnly] = useState(null);
+  const masterpiecesOnly = masterpiecesTyped ?? (linkedMark === 'masterpiece');
   // Highlights had two of the three flags in it. The third was decided at the
   // same time as the other two and never given a way in here.
-  const [formativeOnly, setFormativeOnly] = useState(false);
+  const [formativeTyped, setFormativeOnly] = useState(null);
+  const formativeOnly = formativeTyped ?? (linkedMark === 'formative');
   // What the reader has set the handles to, or null for "every year" — which
   // is the full span once the entries have landed and nothing before that.
   const [yearPicked, setYearPicked] = useState(null);

@@ -132,7 +132,17 @@
 }
 
 .sitenav-side { display: flex; align-items: center; gap: 2px; min-width: 0; }
+/* Nothing in it. It is a spacer that keeps the mark on the middle of the row
+   now that the tools have gone to the other end. */
 .sitenav-side--left { justify-content: flex-start; }
+.sitenav-side--right { justify-content: flex-end; }
+/* An open ··· takes the row. Three tools and a door reach further back than
+   28px of padding leaves, and the mark is what they reach into — so it goes
+   while they are out, rather than being drawn on top of. KeeperTools puts the
+   attribute here; see the note in that file. */
+.sitenav-row[data-tooling] .sitenav-logo { opacity: 0; pointer-events: none; }
+.sitenav-logo { transition: opacity 0.18s linear; }
+
 
 /* The keeper's tools. Deliberately the same object as the About card's pencil
    — 36px box, 10px radius, faint until you go near it — because they are the
@@ -150,6 +160,86 @@
   transition: color 0.15s, background 0.15s;
 }
 .kt-tool:hover { color: var(--ink); background: var(--bg-warm); }
+/* Delete sits apart from the two that make something, and wears the colour
+   everything destructive on this site wears. */
+.kt-tool--end { color: var(--fav); margin-left: 2px; }
+.kt-tool--end:hover { color: var(--fav); background: color-mix(in srgb, var(--fav) 12%, transparent); }
+
+/* ── The ··· and what comes out of it ──────────────────────────────────────
+   The door is the first child in the markup and never moves on the screen.
+   Everywhere it appears it holds a top-right corner and opens leftwards, so
+   the row is reversed and --kt-dir is -1: the markup order is the same on
+   every surface, and the pencil is the first thing out of it on all of them.
+   Set --kt-dir to 1 and drop the reverse if a left-hand corner ever wants
+   one; nothing else would change. */
+.kt-tools {
+  --kt-dir: -1;
+  display: flex; flex-direction: row-reverse; align-items: center; gap: 2px;
+}
+/* The door sits over the tools rather than under them, so the one still half
+   inside it is hidden by it instead of drawn on top of it. */
+.kt-tool--door { position: relative; z-index: 1; }
+.kt-door {
+  position: relative; display: inline-flex;
+  width: 22px; height: 22px; align-items: center; justify-content: center;
+}
+/* Both glyphs live here at once and turn past each other a quarter turn, so
+   the mark reads as one thing opening. A swap with no turn looks like two
+   different buttons in the same corner. */
+.kt-door > svg {
+  position: absolute;
+  transition: opacity 0.16s linear, transform 0.26s cubic-bezier(0.2, 0.8, 0.3, 1);
+}
+.kt-door-x { opacity: 0; transform: rotate(-90deg); }
+.kt-tool--door[aria-expanded='true'] .kt-door-dots { opacity: 0; transform: rotate(90deg); }
+.kt-tool--door[aria-expanded='true'] .kt-door-x { opacity: 1; transform: rotate(0deg); }
+
+/* One box is 36px and the gap is 2, so a tool --kt-i boxes from the door
+   starts 38 × --kt-i away from where it lands — which is exactly on top of
+   the door. It grows out of a quarter of its size as it goes, because a box
+   that only slides looks like it was already there and moved. */
+@keyframes kt-file-out {
+  from { opacity: 0; transform: translateX(calc(var(--kt-i) * var(--kt-dir) * -38px)) scale(0.25); }
+  45%  { opacity: 1; }
+  to   { opacity: 1; transform: translateX(0) scale(1); }
+}
+.kt-tool--out {
+  animation-name: kt-file-out;
+  /* Everything leaves at one speed, so the far one is simply out longer. A
+     fixed duration would make it sprint and the near one crawl. */
+  animation-duration: calc(150ms + var(--kt-i) * 45ms);
+  animation-delay: calc(var(--kt-d) * 55ms);
+  animation-timing-function: cubic-bezier(0.18, 0.86, 0.28, 1);
+  animation-fill-mode: both;
+}
+/* Going back in, the near one goes first: it is the one in the doorway. Keep
+   the total under PACKING_UP in KeeperTools.js.
+
+   A second set of keyframes rather than `animation-direction: reverse` on the
+   first, and that is not a style preference. Changing direction and duration
+   on an animation that has already finished does not restart it — its elapsed
+   time is already past the new duration, so it jumps straight to the end and
+   the tools vanish instead of filing in. Only a change of animation-NAME
+   starts a fresh one. */
+@keyframes kt-file-in {
+  from { opacity: 1; transform: translateX(0) scale(1); }
+  55%  { opacity: 1; }
+  to   { opacity: 0; transform: translateX(calc(var(--kt-i) * var(--kt-dir) * -38px)) scale(0.25); }
+}
+.kt-tools--back .kt-tool--out {
+  animation-name: kt-file-in;
+  animation-duration: calc(120ms + var(--kt-i) * 30ms);
+  animation-delay: calc((var(--kt-i) - 1) * 38ms);
+  animation-timing-function: cubic-bezier(0.4, 0, 0.7, 0.2);
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .kt-tool--out { animation: none; }
+  .kt-tools--back .kt-tool--out { animation: none; opacity: 0; }
+  .kt-door > svg { transition: opacity 0.16s linear; }
+  .kt-tool--door[aria-expanded='true'] .kt-door-dots { transform: none; }
+  .kt-door-x { transform: none; }
+}
 .sitenav-logo { display: block; justify-self: center; }
 .sitenav-logo-mark {
   height: 28px;
@@ -167,12 +257,6 @@
   50%      { opacity: 0.55; }
 }
 
-.sitenav-theme-btn {
-  justify-self: end;
-  width: 36px;
-  height: 36px;
-  flex-shrink: 0;
-}
 
 /* The mark on a phone: small enough to read as one navbar unit with the
    beacon art, and its live dot pulses. */
@@ -504,7 +588,13 @@
   cursor: pointer;
   line-height: 0;
 }
-.hn-bar-svg { height: 22px; width: auto; display: block; }
+/* 28px, which is what .sitenav-logo-mark, .hp-logo-mark and the card's own
+   header mark are. It was 22 and was the only undersized copy on the site —
+   which showed on the ID pane, where the page's mark scrolls away and this
+   one fades in behind it: at two sizes it read as a header resizing itself
+   rather than a mark that stays put (Miyel, 2026-09-15). Same size and the
+   same centre now, so scrolling the pane leaves it where it was. */
+.hn-bar-svg { height: 28px; width: auto; display: block; }
 .hn-bar-svg path { fill: var(--ink); }
 
 .hn-mark-dot { fill: var(--ink); }
@@ -651,7 +741,9 @@
    only, as the entry's two screens are — on a desk the floors are plain
    wrappers in a column that scrolls, and the column is the scroller. */
 @media (max-width: 768px) {
-  .hn-pane { scroll-snap-type: y mandatory; }
+  /* Home only. It is the pane with a cover, so it is the pane with two
+     floors and a snap; the turning pane is a page and scrolls like one. */
+  .hn-pane--home { scroll-snap-type: y mandatory; }
   .hn-floor {
     /* min-height, not height: a floor is one screen, and on a phone too
        short for everything on it the floor grows and scrolls that overrun
@@ -669,8 +761,6 @@
      minimum of its own — the floor is the height now; on a short phone it is
      its content's height and the floor grows to fit. */
   .hn-floor .hn-screen { flex: 1 1 auto; min-height: auto; }
-  /* The writing under the card starts below the bar, the way the wall does. */
-  .hn-floor-scroll .ab-below { padding-top: calc(var(--hn-bar-h) + 24px); }
   .hn-floor-scroll {
     /* One screen, stated. The floor's height is a minimum, and a flex basis
        against a minimum resolves to the content — left to flex: 1 this grew
@@ -734,11 +824,36 @@
      started reading as three separate things; at the gap they had before, the
      card and the cog were close enough to press by accident. */
   justify-content: center;
-  gap: 76px;
+  /* Nothing is laid out by this row any more: the dots are centred on the
+     window, each side caret is at its own edge, and the down caret is above
+     the dots. A flex row with a gap centred the dots as half of a pair with
+     whatever caret happened to be showing, which put them a third of the way
+     across the screen. */
+  gap: 0;
   /* The row is a transparent strip across the whole window; only the controls
      in it take a press, or it would swallow every tap along the bottom edge. */
   pointer-events: none;
   transition: opacity 0.3s ease, transform 0.3s ease;
+}
+.hn-dots {
+  position: absolute;
+  left: 50%; top: 50%;
+  transform: translate(-50%, -50%);
+}
+.hn-controls .edge-caret--left { position: absolute; left: 22px; top: 0; }
+.hn-controls .edge-caret--right { position: absolute; right: 22px; top: 0; }
+/* Under the dots, not beside or above them: it is the other axis, and the one
+   pane it appears on is the one with a whole screen and no edge to cut.
+
+   The row is lifted to make room for it. Sitting at the foot's own 14px the
+   caret hung below the window entirely — measured at 932 in a 932-tall
+   screen, which is a control nobody can see or press. */
+.hn-controls { bottom: max(40px, calc(env(safe-area-inset-bottom) + 26px)); }
+.hn-controls .edge-caret--down {
+  position: absolute;
+  left: 50%;
+  top: calc(100% + 18px);
+  transform: translateX(-50%);
 }
 .hn-controls > * { pointer-events: auto; }
 /* Out of the way while anything is moving. These sit over the page rather than
@@ -844,37 +959,86 @@
 .pt-colophon-dot { font-family: var(--font-label); font-size: 0.62rem; color: var(--ink-faint); opacity: 0.6; }
 
 /* ── Right, logged in: Dashboard ────────────────────────────────────────── */
+/* A page, not a floor, since 2026-09-15: no minimum height and nothing to
+   fill, because the feed follows straight on below in the same scroll. It was
+   one screen that held still, sized so its square started where the portrait
+   and the album art started on the panes beside it — there are no three panes
+   and no three squares now. */
 .db-pane {
-  min-height: calc(100dvh - var(--hn-crown));
   box-sizing: border-box;
   display: flex;
-  /* A row box holding one column, so align-items is the vertical axis: from
-     the top, not centred, because the square has to start where the portrait
-     and the album art start on the panes beside it. */
   align-items: flex-start;
   justify-content: center;
-  padding: var(--hn-square-top) var(--hn-gutter) 84px;
+  padding: 0 var(--page-gutter) 0;
 }
+
+/* ── The desk's header ── the mark centred, the desk's one tool at the right.
+   The card's header exactly (.ab-card .idc-head in idcard.css): the same
+   geometry, the same bleed to the window, the same 74px left for the light
+   switch — so the mark holds still when the page turns between the two faces,
+   which is the whole reason the turn reads as a turn and not as a jump.
+   Settings is the gear here rather than a fourth door: it is not somewhere
+   you go as often as the others and it was taking the same weight as them
+   (2026-09-15). */
+.db-head {
+  position: relative;
+  display: flex; align-items: center; justify-content: center;
+  width: 100%;
+  min-height: 30px;
+  margin: 0 0 18px;
+  padding: 0;
+}
+/* Pinned rather than centred on the row, exactly as the card's is: the row's
+   height is whatever the gear happens to be, and the mark has to land on the
+   bar's line — the page's 36px of padding plus 15 — so that turning between
+   the two faces, and scrolling either of them, never moves it. It bled to the
+   window and left 74px for the light switch while that switch was still in
+   the corner of the cross; it is in Settings now and there is nothing on this
+   line but the page's own. */
+.db-mark-svg {
+  position: absolute;
+  left: 50%; top: 15px;
+  transform: translate(-50%, -50%);
+}
+.db-mark-svg { display: block; height: 28px; width: auto; }
+.db-mark-svg path { fill: var(--ink); }
+.db-tool {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 30px; height: 30px; border-radius: 8px;
+  color: var(--ink-faint); background: none; border: 0; cursor: pointer;
+  transition: color 0.15s, background 0.15s;
+}
+.db-tool:hover { color: var(--ink); background: var(--bg-warm); }
 .db-body {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 26px;
   width: 100%;
-  max-width: 380px;
+  /* No measure of its own. It had 380px, which centred the desk three pixels
+     inside the page's gutter — invisible on its own and not invisible at all
+     when you turn to the card and everything shifts by three. Both faces of
+     this pane use the page's measure. */
+  max-width: none;
 }
-/* The one big thing on the pane. What you came to do is listen. The third
-   square of the cross — the same 180px box, radius and shadow as the portrait
-   and the album art, on the same line. */
+/* The one big thing on the pane, and a band rather than a square since
+   2026-09-15. It was 180px square — the third square of a cross whose other
+   two were a portrait and an album, matched to them in size, radius and
+   shadow — and that cross is gone. A third of a phone screen spent on one
+   door was pushing the doors under it off the first screen, which is the
+   thing the desk is for. Wide and short, it still leads by a mile. */
 .db-hero {
-  width: 180px;
-  height: 180px;
-  flex-direction: column;
-  gap: 12px;
-  /* The square's own shadow, deeper than a tile's, because it is the third
-     square of the cross and has to weigh what the portrait and the art do. */
-  box-shadow: 0 18px 44px rgba(0,0,0,0.16);
+  width: 100%;
+  min-height: 92px;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 16px;
+  padding: 18px 20px;
+  text-align: left;
+  box-shadow: 0 10px 28px rgba(0,0,0,0.10);
 }
+.db-hero-label { font-size: 0.72rem; letter-spacing: 0.16em; }
 .db-hero-label { color: var(--ink-soft); }
 /* Lit, while there is a record in hand. On a desk the session is the page
    next to this one, so the door says what that page is doing rather than
@@ -904,7 +1068,10 @@
    with a line of explanation each before that; the explanation is the
    tile's title now, and a short pill read as a different kind of thing from
    the square. */
-.db-doors { display: flex; flex-direction: row; align-items: stretch; justify-content: center; gap: 12px; width: 100%; }
+/* Rows, not a plinth of tiles. Three tiles across a phone gave each label a
+   third of the width and two lines to say Address book in; a row gives it the
+   whole line and gives the count somewhere to sit at the end of it. */
+.db-doors { display: flex; flex-direction: column; align-items: stretch; gap: 8px; width: 100%; }
 /* The desk's colophon: the version, and — only when it is true — that a
    newer one exists. The smallest type on the desk, under the doors. */
 /* Three things can share the line — the version, a newer one, Report a
@@ -920,28 +1087,28 @@
    without being looked for. */
 .db-update--newer { color: var(--ink); border-bottom-color: var(--ink-faint); }
 .db-door {
-  flex: 1 1 0;
+  flex: none;
   min-width: 0;
-  min-height: 100px;
-  flex-direction: column;
-  /* From the top, not centred: the three marks then sit on one line
-     whatever their labels do underneath. */
+  min-height: 0;
+  flex-direction: row;
+  align-items: center;
   justify-content: flex-start;
-  gap: 10px;
-  padding: 22px 6px 18px;
-  /* A step smaller than the square's word, so Address book fits a third of
-     a phone's width on one line; on the narrowest it takes two, and the
-     tile is tall enough for that. */
-  font-size: 0.62rem;
+  gap: 13px;
+  padding: 13px 15px;
+  font-size: 0.64rem;
   letter-spacing: 0.14em;
-  text-align: center;
+  text-align: left;
 }
 .db-door-mark { flex-shrink: 0; color: var(--ink); }
-.db-door-text { display: flex; flex-direction: column; align-items: center; min-width: 0; }
-.db-door-label { display: inline-flex; align-items: center; justify-content: center; flex-wrap: wrap; color: var(--ink-soft); line-height: 1.3; }
+.db-door-text { display: flex; flex-direction: column; align-items: flex-start; min-width: 0; flex: 1; }
+.db-door-label { display: inline-flex; align-items: center; justify-content: flex-start; color: var(--ink-soft); line-height: 1.3; }
 /* The one count on the site, and the same red the favourite heart uses. */
+/* At the end of the row now rather than tucked against the label — the row
+   has a whole line and the number belongs at the far end of it, where a
+   number on a list of things always is. */
 .db-count {
-  margin-left: 8px;
+  margin-left: auto;
+  flex-shrink: 0;
   min-width: 16px;
   height: 16px;
   padding: 0 4px;
@@ -959,7 +1126,10 @@
    What the people in the address book logged, as entry-shaped rows with a
    small face and a name. Two views switched by a word, no counts. A row's
    Compare opens a panel under it: two verdicts and two horizons. */
-.fd-wrap { width: 100%; max-width: 480px; margin: 0 auto; padding: 24px var(--hn-gutter) 40px; box-sizing: border-box; }
+/* The page's measure, like everything else on this face — it had 480px and
+   the cross's 34px gutter, which put the feed twelve pixels further in than
+   the doors above it on the same scroll. */
+.fd-wrap { width: 100%; max-width: none; margin: 0; padding: 24px var(--page-gutter) 40px; box-sizing: border-box; }
 /* On a phone the floor starts under the bar, the way the writing under the
    card does. */
 .hn-floor-scroll .fd-wrap { padding-top: calc(var(--hn-bar-h) + 24px); }
@@ -1079,17 +1249,124 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   a.hp-recent-tile:hover { transform: none; }
 }
 
-/* The two things a desk has that a phone does not. Stated off by default and
-   switched on in the desktop block below, so a phone never draws either —
-   and a button left in the markup with nothing switching it off is still in
-   the tab order and still read out, whether or not it can be seen. */
+/* ── The pane that turns ────────────────────────────────────────────────────
+   Two faces in one pane, both mounted, one shown. Each is its own scroller,
+   absolutely placed over the other: a face has to keep where it was scrolled
+   to while the other is up, and one scroller round both would be as tall as
+   the taller of them whichever you were looking at.
+
+   visibility, never display: none. display takes a scroller's position with
+   it, so turning to the desk and back would put the card at the top again,
+   and it stops anything inside from measuring itself. Hidden this way the
+   face keeps its place, keeps out of the tab order, and keeps working — which
+   is what lets the feed update and the inbox count behind the card. */
+.hn-pane--turn { position: relative; overflow: hidden; }
+.hn-face {
+  position: absolute;
+  inset: 0;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  /* The page's gutter, and both faces of this pane use it — the card and the
+     desk are two sides of one page and their left edges have to be the same
+     one, or turning between them shifts everything on screen. 22px, not the
+     cross's 34: that one was sized for the beacon's big centred square, and
+     these are pages of type. */
+  --page-gutter: 22px;
+  /* Clear of the row at the foot, and starting on the bar's own line at the
+     top. A page ends above its own controls; and the header it starts with —
+     the small mark, with the pencil or the gear opposite it — sits on the same
+     line as the lights, because the lights are fixed over this and a header
+     that began wherever the page did would run under them. 36px puts a 30px
+     header's middle on 51, which is where the bar's row puts everything it
+     carries (see .hn-bar). */
+  /* The foot clearance is the band's height plus air: the turn sits on a
+     ground of its own down there and the writing must never run under it. */
+  padding: calc(36px + var(--safe-top)) 0 calc(76px + env(safe-area-inset-bottom));
+  box-sizing: border-box;
+}
+/* The room these headers left at their right end was for the light switch,
+   which was fixed to the window's edge and shared their line. It is in
+   Settings now and they have the line to themselves. */
+.hn-face::-webkit-scrollbar { display: none; }
+.hn--face-card .hn-face--desk,
+.hn--face-desk .hn-face--card {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* ── What turns it ──────────────────────────────────────────────────────────
+   At the left end of the header's line, opposite the pencil, with the mark
+   between them. DECISIONS has said since that header was drawn that it is a
+   mark centred with one control each side, and the left side had been empty
+   the whole time (Miyel, 2026-09-15).
+
+   Fixed to the window rather than put inside a header, because there are two
+   headers — the card's and the desk's — and a control that survives the turn
+   cannot live inside the thing it turns. It lands on their line by
+   construction: the page's 36px of padding plus 15 is the 51 the bar centres
+   on, which is where the mark and the pencil sit too.
+
+   It was a segmented CARD | DESK switch at the top of the spine and a band
+   across the foot of the phone, at different times and then both at once. One
+   control in one place is both, and the foot is now free for navigation. */
+.hn-turn-row {
+  position: fixed;
+  /* 51, which is where the bar centres everything it carries: the page's 36px
+     of padding plus the 15 the header's mark is pinned at. Measured against
+     the mark and the pencil rather than guessed. */
+  top: calc(51px + var(--safe-top));
+  left: var(--page-gutter, 22px);
+  transform: translateY(-50%);
+  z-index: 96;
+  display: flex; align-items: center;
+}
+.hn-turn-say {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 0; border: 0; background: none;
+  color: var(--ink-faint);
+  font-family: var(--font-label);
+  /* Sized to the pencil opposite it (Miyel, 2026-09-15): the glyph is the
+     pencil's 18 and the word is set to carry that glyph rather than to be a
+     caption under it, so the two ends of the header weigh the same. */
+  font-size: 12px; letter-spacing: 0.12em; text-transform: uppercase;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+.hn-turn-say:hover { color: var(--ink); }
+.hn-turn-say:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 4px; }
+
+/* ── Where you are on the rail ──────────────────────────────────────────────
+   Two dots, filled for the pane you are on. They were ruled out while there
+   were three panes and three carets — dots say how many of these there are,
+   a caret says there is something that way, and three of each was two
+   vocabularies doing one job. With two panes and the turn gone to the header
+   they describe different axes: the dots are the horizontal one, the caret
+   beside them is what is next along it, and the down caret on the beacon is
+   the vertical one. An indicator, not a control: the caret already goes to
+   the other pane. */
+.hn-dots { display: flex; align-items: center; gap: 7px; }
+.hn-dot {
+  width: 6px; height: 6px;
+  border-radius: 999px;
+  background: var(--ink-faint);
+  opacity: 0.4;
+  transition: width 0.24s cubic-bezier(0.22, 0.61, 0.36, 1), opacity 0.2s, background 0.2s;
+}
+/* The one you are on widens rather than just darkening, which is what makes
+   two marks read as a position instead of a count (Miyel's reference). */
+.hn-dot--on { width: 20px; background: var(--ink-soft); opacity: 1; }
+
+/* The one thing a desk has that a phone does not. Stated off by default and
+   switched on in the desktop block below, so a phone never draws it. */
 .hn-grip { display: none; }
-.hn-turn-row { display: none; }
 /* The bar's small mark is always in the markup (a desk wants it there) and
    on a phone it shows only once the crown has scrolled away — the crown and
    the small mark are never on screen together, so it is still one mark. */
 @media (max-width: 768px) {
   .hn-bar:not(.hn-bar--scrolled) .hn-bar-mark { display: none; }
+
 }
 
 /* ── Desktop: an open book ────────────────────────────────────────────────
@@ -1100,9 +1377,8 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
 
    The spine holds one face at a time and turns between two of them: the card
    and the desk signed in, the card and the colophon signed out. Both faces
-   are the cross's own panes, put in one grid cell with the stylesheet showing
-   one — the same three components as the phone, arranged differently, rather
-   than a second markup tree. The hidden one keeps its scroll and keeps
+   are the same two faces the phone has in the same one pane — this is not a
+   second markup tree, it is the phone's own structure at another width. The hidden one keeps its scroll and keeps
    running, which is what lets the feed go on updating and the inbox go on
    counting behind the card.
 
@@ -1146,10 +1422,11 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
     /* No carets on a desk, so nothing to keep clear of: the page's own
        padding is the gutter. */
     --hn-gutter: 18px;
-    /* Where content starts on the spine: under the line the lights sit on,
-       which is the 58px row every other page's header has, 22px down. The
-       band's own row starts under the whole bar. */
-    --hn-rail-top: 68px;
+    /* Where content starts on the spine: under the whole of the switch's row,
+       which is the bar's height. On a phone the page's own header shares that
+       line with the lights; here the switch has it, so the header goes below
+       — one line of window furniture, not two stacked. */
+    --hn-rail-top: 84px;
   }
   .hn-rail {
     display: grid;
@@ -1157,36 +1434,37 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
     overflow-x: hidden;
   }
   .hn-pane { width: auto; min-width: 0; }
+  .hn-pane--turn { grid-column: 1; }
+  .hn-pane--home { grid-column: 2; border-left: 1px solid var(--border); }
+  /* The faces pay nothing at either end here: the switch is at the top and
+     there is no caret row at the foot. What the pages inside them start under
+     is --hn-rail-top. */
+  .hn-face { padding: 0; --page-gutter: var(--hn-gutter); }
 
-  /* ── The two faces, one cell ── both mounted, one shown. visibility rather
-     than display, on purpose: display:none takes a scroller's position with
-     it, so turning to the desk and back would put the card at the top again,
-     and it stops anything inside from measuring itself. Hidden this way the
-     face keeps where it was scrolled to, keeps its place out of the tab
-     order, and keeps working. */
-  .hn-face {
-    grid-column: 1;
-    grid-row: 1;
-  }
-  .hn--face-card .hn-face--desk,
-  .hn--face-desk .hn-face--card {
-    visibility: hidden;
-    pointer-events: none;
-  }
-  .hn-pane--home {
-    grid-column: 2;
-    grid-row: 1;
-    border-left: 1px solid var(--border);
-  }
-  /* The border between the panes was on every pair; there is one fold now. */
-  .hn-pane + .hn-pane { border-left: none; }
+  /* One mark on a desk, and it is the one in the bar over the journal. The
+     page header's own mark is the phone's — there the bar carries no mark
+     until the crown has scrolled away, so the card and the desk have to say
+     what they belong to themselves. Here it would be the second mark on
+     screen, which DECISIONS rules out whether or not the two are ever visible
+     together. The tool stays and takes the line on its own.
+
+     The card's half of this is in idcard.css, not here: that sheet is loaded
+     after this one, so a rule of this name written here loses to the base
+     rule written there whatever the media query says. */
+  .db-mark-svg { display: none; }
+  .db-head { margin: 0 0 16px; padding: 0; }
 
   /* No crown and no carets. The book is open — there is nothing to swipe to,
      and the mark is in the bar over the journal, the way every other page's
      row carries it (SiteNav), so each page starts with what it is for. The
-     colophon keeps its own copy: see below. */
+     colophon keeps its own copy: see below.
+
+     The foot row itself stays in the tree as display: contents, rather than
+     being switched off: the switch rides in it on a phone, and a parent set
+     to display: none would take the switch off the desk with the carets. */
   .hn-crown { display: none; }
-  .hn-controls { display: none; }
+  .hn-controls { display: contents; }
+  .hn-controls .edge-caret, .hn-dots { display: none; }
 
   /* The bar belongs to the right page: the mark centred over the band, the
      lights at the page's right edge, and once the wall has scrolled the
@@ -1211,60 +1489,12 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   .hn--dragging { user-select: none; -webkit-user-select: none; cursor: col-resize; }
   .hn--dragging .hn-pane { pointer-events: none; }
 
-  /* ── What turns the spine ── both sides in one switch, centred over the
-     spine. The bar's own geometry, over the spine instead of over the journal
-     — the same 22px down and the same 58px row — so the switch and the mark
-     over the journal sit on one line, each centred on its own page's measure,
-     with the lights at the far right of the whole window. It was a line
-     across the foot of the spine for an afternoon (Miyel, the same day: the
-     foot should just read), then right-aligned against the fold ("maybe it
-     can be centered").
-
-     Fixed to the window rather than to a face, so it holds still while either
-     of them scrolls and there is one of it rather than two. The row takes no
-     clicks — it is a strip across the top of a scrolling page, and one that
-     swallowed them would be a dead band across the top of the card — and the
-     buttons inside take their own back. */
-  .hn-turn-row {
-    display: flex; align-items: center; justify-content: center;
-    position: fixed; top: 0; left: 0; z-index: 96;
-    width: var(--spine-w, var(--spine-rest));
-    height: var(--hn-bar-h);
-    box-sizing: border-box;
-    padding: calc(22px + var(--safe-top)) var(--hn-gutter) 0;
-    pointer-events: none;
-  }
-  .hn-turn-row > * { pointer-events: auto; }
-  /* Both sides in one control, the one you are on lit — the archive's
-     density switcher's recipe exactly (.gd in journal.css), which is this
-     site's way of drawing a small fixed set you are on one of. A single
-     press said "something happens here"; a switch says what the thing IS,
-     which is that the left page has two sides. */
-  .hn-turn {
-    display: flex; align-items: center; gap: 2px;
-    padding: 2px;
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: 9px;
-  }
-  .hn-turn-side {
-    display: flex; align-items: center; justify-content: center;
-    height: 26px; padding: 0 12px;
-    border: none; border-radius: 7px;
-    background: transparent;
-    color: var(--ink-faint);
-    font-family: var(--font-label);
-    font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
-    white-space: nowrap;
-    cursor: pointer;
-    transition: color 0.15s, background 0.15s;
-  }
-  .hn-turn-side:hover { color: var(--ink-soft); }
-  /* The lit one is not pressable — it is where you already are — so it loses
-     the pointer as well as the hover. */
-  .hn-turn-side--on { color: var(--bg); background: var(--ink); cursor: default; }
-  .hn-turn-side--on:hover { color: var(--bg); }
-  .hn-turn-side:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: -2px; }
+  /* ── What turns the spine ── the same control the phone has, at the left
+     end of the spine's own header line, opposite the pencil. It was a
+     segmented switch centred over the spine while the phone had a band at its
+     foot; one control in one place is both (Miyel, 2026-09-15). The spine's
+     gutter puts it where the card's header starts, and --hn-rail-top puts
+     that header under it. */
 
   /* ── The band ── the journal's first screen, as one row: the cover with a
      soft shadow, then the label, the title and the artist beside it, and what
@@ -1352,7 +1582,7 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
      tile rather than a square: a square at the spine's width is a third of the
      page given to one door. The three under it are rows, mark then word, and
      the feed follows on the same scroll. */
-  .db-pane { min-height: auto; align-items: flex-start; padding: var(--hn-rail-top) var(--hn-gutter) 20px; }
+  .db-pane { min-height: auto; align-items: flex-start; padding: var(--hn-rail-top) var(--page-gutter) 20px; }
   .db-body { gap: 14px; }
   .db-hero { width: 100%; height: auto; aspect-ratio: auto; min-height: 128px; gap: 12px; }
   .db-hero-label { font-size: 0.72rem; }
@@ -1437,12 +1667,35 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
 }
 .pt-lock-field .pg-go:hover { color: var(--ink); border-color: var(--border); }
 
-/* The card's pencil and printer are pinned to the window (see .ab-card
-   .idc-head in idcard.css), which on a phone means they stay on screen when
-   the pane beside the card is the one showing — a pencil for the card,
-   floating over the wall. The cross says which pane is on screen, and on a
-   phone the card's tools are drawn only while it is the card's. On a desk all
-   three panes are on screen and the card is always one of them. */
+/* The card's header used to be pinned to the window, which meant its pencil
+   floated over the wall while the pane beside it was showing — so it was
+   drawn only on the card's own pane. It is in the flow at the top of the card
+   now (idcard.css) and scrolls with it, so there is nothing to hide and
+   nothing for the cross to have an opinion about. */
+
+/* ── The row at the foot, per pane ──────────────────────────────────────────
+   What is permanently absent leaves the row rather than sitting in it at
+   opacity 0. The opacity is for a control that is *coming back* — the side
+   carets while a pane is scrolled — and holding the row's shape still while
+   it does. A caret that cannot exist on this pane at all is a 20px hole that
+   pushes everything else off centre, which is what put the turn switch a
+   third of the way across the screen. Keyed on data-pane, which changes at
+   the midpoint of a swipe, by which time the whole row has faded out on the
+   first scroll event anyway. */
 @media (max-width: 768px) {
-  .hn:not([data-pane="0"]) .ab-card .idc-head { display: none; }
+  /* The foot of the turning pane is clear — no dots and no caret. Anybody who
+     is there arrived by swiping or by pressing the turn, and either way they
+     know the way back. */
+  .hn[data-pane="0"] .hn-controls { display: none; }
+  /* And the light switch is the beacon's: on the card it would be a control
+     sitting over somebody's reading. */
+  .hn[data-pane="0"] .hn-lights { display: none; }
+  /* And no turn on home. It belongs to the pane it turns, and on the beacon
+     it would be a control for a page you cannot see — the header it sits on
+     is not even there, because home's header is the bar. Keyed on the cross's
+     own data-pane and scoped to the phone: on a desk both panes are on screen
+     at once and the spine always has its header, and `pane` never leaves its
+     initial value there anyway, because the rail is a grid with nothing to
+     scroll. */
+  .hn[data-pane="1"] .hn-turn-row { display: none; }
 }
