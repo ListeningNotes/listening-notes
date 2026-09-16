@@ -31,7 +31,6 @@ export async function PATCH(request) {
   try {
     const body = await request.json();
     const patch = {};
-    if ('lastfm_key' in body) patch.lastfm_key = String(body.lastfm_key || '').trim();
     if ('anthropic_key' in body) patch.anthropic_key = String(body.anthropic_key || '').trim();
     if ('password' in body) {
       const chosen = String(body.password || '');

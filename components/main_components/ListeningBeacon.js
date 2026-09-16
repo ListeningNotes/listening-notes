@@ -9,25 +9,22 @@ import { useListeningBeacon } from '../../hooks/useListeningBeacon';
 // the nav row of every page — that row does not carry it any more, so the
 // second shape has nothing to draw and is gone with it.
 
-// Two beacons, two states each, and a journal runs one of them — the choice
-// is in Settings and lives on `settings.beacon_source`.
+// One beacon, two states:
 //
-//   session   Now logging  →  Last logged
-//   lastfm    Now listening →  Last played
+//   Now logging  →  Last logged
 //
-// The labels do double duty: they say what is happening and what kind of
-// beacon somebody runs, without anything having to explain itself. Which one
-// is showing is decided on the server — see app/api/public/beacon/route.js —
-// because a visitor's browser has no way of knowing whether a listen is open.
+// Which one is showing is decided on the server — see
+// app/api/public/beacon/route.js — because a visitor's browser has no way of
+// knowing whether a listen is open.
 //
-// "Now logging" is not a fallback, and the session beacon is the default. It
-// is the better thing to find on a journal: somebody sitting with a record and
-// writing about it, rather than music being on in a room.
+// There were four until 2026-09-16, because there were two beacons and the
+// other one was Last.fm's ("Now listening" → "Last played"). It went while
+// nobody had one connected. What is left is the better thing to find on a
+// journal anyway: somebody sitting with a record and writing about it, rather
+// than music being on in a room.
 const CAPTION = {
   logging: 'Now logging',
   logged: 'Last logged',
-  listening: 'Now listening',
-  played: 'Last played',
 };
 
 // And what is stamped across the art when neither beacon is live. Back on
@@ -36,14 +33,11 @@ const CAPTION = {
 // now, and the greying alone was not saying it.
 //
 // It is not the caption repeated. The caption under the art says what the
-// record is — the last one logged, the last one played — and the stamp says
-// the state is off, which is the split the Last.fm beacon had before any of
-// this ("Not currently listening" under, "Last played" over). Two sentences
-// about two different things; the same screen twice is what took the stamp off
-// in the first place.
+// record is — the last one logged — and the stamp says the state is off. Two
+// sentences about two different things; the same screen twice is what took the
+// stamp off in the first place.
 const STAMP = {
   logged: 'Out of session',
-  played: 'Not listening',
 };
 
 export default function ListeningBeacon() {
@@ -61,9 +55,15 @@ export default function ListeningBeacon() {
   const artUrl = art && art !== failed ? art : '';
 
   // Nothing at all: a copy on its first afternoon, before a record has been
-  // picked up, with no scrobbler either. The tile used to draw itself anyway —
-  // a white square, a grey note and a dash, the largest thing on the landing
-  // page, looking broken. What is left is one quiet line.
+  // picked up — or a journal whose keeper has switched the beacon off, which
+  // says the same thing on purpose, because a visitor is owed neither.
+  //
+  // This is the stand-in Miyel asked for on 2026-09-16, and since that day it
+  // is seen far more often: the beacon screen used to be dropped entirely on a
+  // copy with nothing logged, and now the screen is always there and this line
+  // is what stands on it. The tile used to draw itself anyway — a white square,
+  // a grey note and a dash, the largest thing on the landing page, looking
+  // broken. What is left is one quiet line.
   if (!title) {
     return (
       <div className="beacon-stage beacon-stage--quiet">

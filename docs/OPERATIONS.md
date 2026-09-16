@@ -57,8 +57,10 @@ DATABASE_URL='postgres://...branch...' npm run restore -- <backup> --yes
 
 **Most of them live in the journal now, not in the environment.** The password
 is chosen during setup and changed in Settings (the gear beside the card's
-pencil). The Last.fm and Anthropic keys are pasted into Settings. The key that
-signs the login cookie mints itself on first start. All of it sits in the
+pencil). The Anthropic key is pasted into Settings — there were two until
+2026-09-16, when Last.fm came out of the software and its key went with it, and
+the `secrets.lastfm_key` column stays behind unread because the schema is
+additive-only. The key that signs the login cookie mints itself on first start. All of it sits in the
 `secrets` table, which nothing but `library/secrets.js` reads, and which the
 backup carries like any other table — so a restore brings the password back
 with the writing.

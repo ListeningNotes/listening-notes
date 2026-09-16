@@ -477,6 +477,59 @@ as `components/main_components/Slug_Page/Chain.js` before 2026-09-15.
 
 ---
 
+## The beacon — Last.fm, 2026-08 to 2026-09-16
+
+*Current rule: "The beacon is the listen, and Last.fm is gone" and "There is
+always a beacon screen" in DECISIONS.md.*
+
+**The journal's beacon was Last.fm's for most of its life.** The browser asked
+Last.fm directly at first, with the API key written into the source — so every
+copy of this software queried Last.fm as the same application and shared one
+rate limit. That moved server-side, each copy bringing its own key: `LASTFM_KEY`
+was never `NEXT_PUBLIC_` for exactly that reason, and the username stayed in
+settings because it is a choice rather than a secret.
+
+**Then the session beacon arrived and Last.fm was demoted, 2026-09-15.**
+*Now logging → Last logged* from the listen, or *Now listening → Last played*
+from Last.fm, chosen in Settings on `beacon_source`. You ran one, not both: a
+cover that switched between them by itself would be two different claims
+wearing one face. The session was the default, and a copy set to Last.fm with
+no key fell back to it — the setting was a preference, not a promise the
+journal could keep alone. The reasoning for the demotion was already the
+reasoning for the removal: two of two testers failed to connect a scrobbler,
+Apple Music on an iPhone cannot scrobble reliably at all, and what is going
+into the journal is the truer thing to broadcast than what the speakers are
+doing.
+
+**The argument for keeping it, which lost on 2026-09-16.** It was the ambient
+version — a journal that says something while its keeper is doing nothing —
+and Miyel liked it and used it while building. Against that: a second source
+nobody else could turn on, an API key and an account to set up, a flicker
+patch in the hook to hide Last.fm's gap between tracks, a join across two
+tables on the most-repeated query in the app, and a whole extra section of
+Settings. Miyel's call, and the reason is the product's rather than the code's
+— "ironically more accuracy for what the product is". It went at the one
+moment nothing was owed to anybody: no copy in the wild had one connected, so
+the removal asked nothing of any keeper and did not need a major version.
+
+**What could not go: the columns.** `settings.lastfm_user`,
+`secrets.lastfm_key` and migrations 001, 003 and 014 stay, because the schema
+is additive-only and a migration that has run is never edited.
+`settings.beacon_source` was kept in use rather than left dead — it carries the
+on/quiet switch now.
+
+**And what was reversed with it: no beacon, no beacon screen.** A copy with
+nothing logged and no scrobbler used to get no beacon floor at all — the wall
+straight under the crown, on the grounds that nothing should pretend something
+might play. Miyel reversed it the same day: a beacon showing a record from
+months ago is the signal, not a failure, and a brand new journal gets a blank
+one standing in. Two arguments carried it. A pane that changes shape on a fact
+about the journal is one a fixed band at the foot cannot afford; and asking
+the question cost two `EXISTS` subqueries over entries and drafts on every
+page render.
+
+---
+
 ## Sharing
 
 The current rules live in DECISIONS.md under Sharing.
