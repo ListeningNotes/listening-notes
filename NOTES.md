@@ -252,16 +252,9 @@ Left over:
       is where most of them land, no longer offers it. Worth a look at whether
       SiteNav's switch should follow it into Settings or stay as the public
       one.
-- [ ] **A left swipe at the wall turning the leaf — deliberately not built.**
-      Miyel's brief names it as later and sets the two conditions: it has to
-      show itself during the drag, because a threshold that flips on release
-      is one nobody trusts, and the header control stays whatever happens —
-      the gesture is for people who find it, never the way in. The known
-      collision is that `overscroll-behavior-x: contain` is load-bearing on
-      the rail (a swipe reaching the left end otherwise runs into Safari's own
-      back gesture), so the left wall is already contested and that is exactly
-      where the trigger would go. Gesture work at a boundary this file has
-      reverted twice; the header placement works completely without it.
+- [x] **The swipe at the wall was tried on a real phone and removed,
+      2026-09-15.** It lost to the rail at the first thumb. See the entry in
+      Complete and the four ruled-out approaches in DECISIONS.
 - [ ] **The visitor's Send and Add under a centred name.** The row changed
       shape when the head was centred and was only seen signed in, where the
       line is the name alone. It is a centred flex column, so it will centre;
@@ -292,10 +285,12 @@ Left over:
       375×812 in the browser pane, which is not a thumb. The switch at the
       foot, the band, and whether the card's row wants the portrait bigger
       than 118px are all eye-and-thumb questions.
-- [ ] **The drafts row against real drafts.** The count comes off
-      `/api/waiting`; the row was seen with a stubbed 2. Worth one pass
-      checking the number is right, that the row vanishes when the last
-      draft is finished, and that it is absent while a record is in hand.
+- [x] **The drafts row is gone, 2026-09-15** (Miyel: drafts show when you
+      start a listen). Checked against a real draft before removing it — one
+      row in the table, and the picker printing *In Rainbows · Radiohead ·
+      Tracks · 30m ago* with its discard beside it. The count went with the
+      row: it was a `COUNT` over the drafts table on every poll of
+      `/api/waiting`, answering a door that no longer exists.
 - [ ] **A tall phone and a short one.** The card is a page now and its first
       screen is no longer a fixed floor, so what falls above the fold varies
       with the device in a way it did not before. Worth a look at 667 and at
@@ -306,22 +301,93 @@ Left over:
       box should never read as either, and the browser pane cannot tell us
       that. Worth checking the conveyor's speed on a real screen too: 320ms
       out, 300ms back, judged on a desk.
-- [ ] **The entry's ··· has not been seen in its own header.** It is behind
-      the wristband and this session had no cookie, so the row was measured
-      with the real markup injected into it instead. The geometry is right and
-      the mark-fade rule works; what has not been seen is React putting the
-      attribute on the row — the `closest('.sitenav-row')` effect — on a page
-      that actually renders the menu. First thing to check when signed in.
+- [x] **The entry's ··· seen in its own header, 2026-09-15.** It had only been
+      measured with markup injected into the row, because the session had no
+      wristband; the dev server handed one out later the same evening. Real
+      numbers: the door at 311 and Correct, Print and Delete filing out to 273,
+      235 and 197, `data-tooling` going on and off the row with the menu, and
+      the mark at opacity 0 while it is open and 1 again after. The
+      `closest('.sitenav-row')` effect does what it was written to do.
 - [ ] **Nobody outside the cross can change light or dark now.** A visitor
       reading an entry finds the switch by going to the beacon. That is what
       the brief asks for and it is worth a look on a real device before it
       counts as settled — a visitor who arrives on a shared entry link in the
       wrong theme has one more step than they used to.
+- [ ] **Should the spine's photograph step down on a narrow page?** It was
+      meant to — 88px, the size the band's art is on a desk — and the rule that
+      said so never worked, so the question has never actually been looked at.
+      At 180px in a 300px spine the photograph is most of the column's width;
+      at 520 it is a third of it. Her call, and it is one number.
+- [ ] **Three panes on a real phone, and this is the whole test of it.** The
+      shape was measured at 375x812 in a browser pane, which is not a thumb.
+      What to feel: whether the band reads as navigation or as furniture, and
+      whether swiping between three panes is looser than two was — the rail's
+      snap is the same and the panes are the same width, but two is a toggle
+      and three is a place you can be in the middle of.
+- [x] **The band rested a status bar above the bottom edge in the installed
+      app, and the readout said why** (Miyel, 2026-09-15). Two guesses missed
+      before a temporary green box on the phone printed the numbers, which is
+      the lesson as much as the bug: the browser pane reads 812 across the
+      board and cannot show this at all.
+
+      On load, standalone: **screen 874, innerHeight 812, dvh 812, lvh 874,
+      safe-area top 62**. 874 − 812 = 62 = the top inset exactly. iOS paints a
+      home-screen app over the whole screen — that is what `viewport-fit=cover`
+      buys — and then reports a viewport one status bar shorter and anchors
+      `position: fixed` to *that*. So `bottom: 0` was 62px up. Nothing about the
+      band was wrong; it was obeying a viewport that was lying. After any
+      interaction the same readout says innerHeight 874 and dvh 874, which is
+      why a drag fixed it and a reload did not.
+
+      **The first fix pushed the band past the reported bottom** with a
+      negative `bottom`, and it went where it was told and was then clipped:
+      the glyphs showed and the words under them did not. Which is the useful
+      finding, and it is why the second fix is shaped the way it is — **iOS
+      will paint document content below the reported viewport but not a fixed
+      box.** The page's own background was already down there, so the room
+      exists; a `position: fixed` element simply may not use it.
+
+      **So the frame takes the real height and the band belongs to the frame.**
+      `--hn-h` on `.hn` is what every screen-height on the cross reads now, and
+      it is `100dvh` in a browser exactly as before and `100lvh` in standalone
+      — the largest the viewport can be, which in an installed app is the
+      screen and nothing else, because there are no toolbars for it to be
+      dynamic about. The band and the caret row go `position: absolute` inside
+      `.hn`, which is `position: relative; overflow: hidden`, so they land on
+      its bottom edge and are clipped to it. And `.hn` carries
+      `margin-bottom: calc(100dvh - 100lvh)` — −62 — so the taller frame does
+      not make the document scrollable: it paints 874 and measures 812, which
+      is the arrangement iOS is already drawing. Both numbers are 0 the moment
+      iOS re-measures, so nothing moves between the two states.
+
+      It also fixes the settle: the crown and the square's offset read `--hn-h`
+      too, so the beacon screen is laid out against the real height from the
+      first frame rather than spreading a beat later. Confirmed on the phone
+      (Miyel: it looks great) and the readout is out.
+
+      **The readout is the part to remember.** The browser pane reads 812
+      everywhere and could not show any of this; two fixes were guessed at and
+      missed before a temporary green box on the phone printed `screen`,
+      `innerHeight`, all four viewport units, both insets and the band's own
+      box. It took one screenshot to end an argument that had already cost two
+      wrong commits. **When a phone does something a desktop browser cannot
+      reproduce, print the numbers on the phone before changing anything.**
+- [ ] **`display: contents` on the two spine wrappers is load-bearing now.**
+      It is what lets one markup be a rail on a phone and a book on a desk. It
+      is well supported and the accessibility bugs it used to have were on
+      elements with semantics; these are a plain div and a div that was a
+      section until this brief. Worth knowing it is there if the phone ever
+      lays out strangely — that is the first thing to look at.
 - [ ] **Names to confirm, 2026-09-15 (two panes)** — rename freely: branch
       `card-and-desk`; `count_drafts` in database_actions and `drafts` on
       `/api/waiting`; `paneFaces` in HomeNav; `.hn-pane--turn`, `.hn-face`
       (kept), `.idc-top`, `.idc-said`, `.db-head`, `.db-mark-svg`,
-      `.db-tool`. The Drafts row's own word is Miyel's. And from the ···:
+      `.db-tool`. From the turn:
+      `.hn-leaf`, `TURN_MS`, the `hn-turn-arrive`/`hn-turn-leave` keyframes the
+      reduced-motion cross-fade uses, and `opens` on a face beside `word` — the
+      strip's names went with the strip and the flip's keyframes went with the
+      flip. And
+      from the ···:
       `.kt-tools`, `.kt-tool--door`, `.kt-tool--out`, `.kt-door`, the
       `kt-file-out` keyframes, `--kt-dir`/`--kt-i`/`--kt-d`, `PACKING_UP`,
       and the `what` prop on KeeperTools.
@@ -1192,6 +1258,19 @@ Project → Settings → Environment Variables.
 
 ## Gotchas
 
+**A rule inside a media query is not heavier for being in one, 2026-09-15.**
+`@media (min-width: 769px) { .idc-photo { width: 88px } }` never once applied:
+`.ab-card .idc-photo` at the top of the same file is one class heavier, and a
+media query adds nothing to specificity. So the spine's photograph was supposed
+to step down to 88px and has been showing the card's own size since the day the
+spine was drawn — no error, no warning, a deliberate design decision that
+silently did nothing for a week. This is the source-order trap's cousin and it
+reads even more like it should work, because the narrower rule *feels* more
+specific. Two habits: when a media query is meant to override a base rule,
+match or beat the base's selector (`.ab-card .idc-photo`, not `.idc-photo`);
+and when a responsive rule seems not to be doing anything, measure the element
+before assuming the sheet is stale.
+
 **A CSS animation only restarts when its NAME changes, 2026-09-15.** The ···
 opens by filing its tools out and shuts by filing them back in, and the
 closing half was first written as the same keyframes with
@@ -1918,6 +1997,202 @@ current.
 
 ## Complete
 
+**2026-09-15 — three panes, with a named band at the foot. Branch
+`three-panes` — from Miyel's brief. Not a return to the original three: every
+decision made since stays, and the two things that made three fail the first
+time are both answered.**
+
+- [x] **ID, beacon, desk, landing on the beacon.** Three failed before because
+      the panes were the same shape and nothing said where you were. Neither
+      was the count. Each pane is a different kind of thing now — a portrait
+      over writing, a record over the journal, a hero over rows — and the band
+      names all three all the time.
+- [x] **One markup for two structures, and the desk is untouched** (Miyel:
+      don't touch desktop, this all fits perfectly the way it is). The two
+      boxes that make a spine a spine — `.hn-pane--turn` and `.hn-leaf` — go
+      `display: contents` under 769px. Their boxes stop existing without their
+      children leaving the markup, so the ID and the desk become rail panes in
+      their own right, and because they are then siblings of the beacon,
+      `order` can put the beacon between them. Measured: card at 0, beacon at
+      375, desk at 750, all three visible, all three scrollers. At 1280 the
+      spine is 0..320 and the journal 320..1280 with the faces still absolute,
+      one hidden, and the turn control still reading OPEN CARD — the desk is
+      the same page it was.
+- [x] **The band: Card · Beacon · Desk** (`Footer.js`, Miyel's name). A glyph
+      over a word, the pane you are on in ink at full opacity and the other two
+      pale. Pressing a name calls the same `scrollTo` a swipe ends in —
+      verified by spying on it: Card asks for left 0, Desk for left 750 — so it
+      is the visible version of the gesture rather than a second way in.
+- [x] **It does not fade while things move, where the row it replaces did.**
+      That row was three glyphs parked on somebody's album art and getting out
+      of the way was the kindest thing it could do. A band along the edge with
+      a ground of its own does not have to apologise for being there, and a
+      navigation that vanishes when you scroll is one you cannot trust. A
+      26px dissolve above it stops the page being cut off by a hard line.
+- [x] **The glyphs, and the one that was open.** Broadcast and the
+      identification card were already in use and mean what they draw. The
+      desk's is `Rows` — a stack of lines, which is what a desk of rows looks
+      like from above. An open book was the obvious one and is wrong: the book
+      is the journal and the journal is *down* from the beacon, not sideways.
+      The feed's row then had to move off `Rows` and on to `Cards`, because two
+      rows of a pane cannot wear the pane's own mark.
+- [x] **Down survives on the beacon and nowhere else.** Measured: opacity 0 on
+      the ID and the desk, 1 on the beacon. It is the one pane with a cover —
+      the one place something is cut off at a fold rather than running on.
+      Everything else scrolls and the edge is its own cue. It sits 12px above
+      the band; it used to hang 18px *below* its row, which was clearance for
+      dots that no longer exist.
+- [x] **The feed is a row and a page: `/dashboard/feed`** (Miyel's address).
+      It ran on down the desk's own scroll, which is what stopped the desk
+      being a hero and its rows and nothing else. Filed with the inbox, the
+      address book and report because it is the same kind of thing — behind the
+      wristband, about this journal's business. It has the sheet the others
+      have (`@layer/(.)dashboard/feed`), `over="spine"`, because a sheet that
+      covered the journal to show a feed would be taking away the thing the
+      feed sends you to.
+- [x] **Gone with it:** the turn control on a phone, the leaf's slide, the
+      dots, both side carets and `paneMarks`. The slide's own CSS stays for the
+      spine, which still turns.
+- [x] **Kept from the removed work, both deliberately:** 0.4s on
+      `cubic-bezier(0.22, 0.61, 0.36, 1)`, which is the entry layer's arrival
+      curve and now the rail's, and `will-change: transform` on the three fixed
+      rows — `translateZ(0)` there would beat `.hn-controls--busy` on source
+      order and silently stop the bottom row hiding on scroll, which is the
+      sixth time for that trap in this file.
+
+**2026-09-15 — drafts leave the desk.** The picker lists them the moment you
+start a listen, with a resume and a discard, so the row pointed at a place you
+pass through on the way (Miyel). Verified against a real draft first: one row
+in the table, the picker printing *In Rainbows · Radiohead · Tracks · 30m ago*
+with its discard beside it. The desk is Start a listen, Inbox, Address book and
+Settings. `count_drafts()` and the `drafts` field on `/api/waiting` went with
+the row rather than being left running — a `COUNT` over a table on every poll,
+answering a door that no longer exists. Nothing else read either of them;
+`/api/drafts`, which the picker and the inbox's guard use, is untouched.
+
+**2026-09-15 — the turn, its animation, and the swipe. Branch `turn-and-swipe`,
+on top of a merged `card-and-desk` — from Miyel's brief, which set the order:
+the animation first and completely, then the gesture, so nothing shipped
+depends on the gesture working.**
+
+- [x] ~~**A page turning, not a cross-fade**~~ — **a flip first, then a slide,
+      the same day.** The flip is in git and the reasons it went are in
+      DECISIONS; the first of them is the only one that needed saying, which is
+      that a flip means two faces of one object and a desk is not the back of
+      your card. Everything below about the curve, the fixed rows and the
+      journal holding still survived the change. What follows is the flip as
+      built, kept because it is where the reasoning came from.
+
+      **The slide, 2026-09-15.** The card sits at the leaf's left edge and the
+      desk at its right, each a full pane wide; the leaf translates one pane
+      and the pane clips. One transform, both pages moving together, which is
+      how pages move on a rail. A transition and not keyframes, for two
+      reasons: it is the right tool for a two-state toggle, and it reverses
+      from wherever it has got to — so the flip's one rough edge, a double
+      press settling flat before turning back, is gone. Proved: stopped at
+      x-277 mid-slide, pressed again, and the new transition's own frame 0 is
+      x-277. Measured at 375: card 0 → -375 and desk 375 → 0 across the 400ms,
+      journal Δ0/0 at every sample. At 1280 the leaf travels the spine's own
+      320 and the journal is Δ0/0 there too.
+
+      **And all the 3D went with it** — no perspective, no preserve-3d, no
+      backface, and none of the flat-at-rest care that existed only to stop a
+      3D subtree with two scrollers being flattened into one rasterised layer.
+      That was the most delicate thing in the file. `will-change` on the fixed
+      rows stays: it is about promotion of any kind, not about perspective.
+
+      **The control says Open** — *Open desk*, *Open card*, *Open about* — and
+      its glyph is two arrows side by side rather than one going round. Small
+      caps is what lets OPEN ABOUT read as a page's name rather than a sentence
+      with a word missing.
+
+- [x] **The flip, as built and reverted.** The two faces went into one box,
+      `.hn-leaf`, which was the thing that turned — a horizontal rotation with
+      perspective, the outgoing face leaving as the incoming one arrives, on
+      `cubic-bezier(0.22, 0.61, 0.36, 1)` at 0.4s. Both stated from the entry
+      layer rather than picked: it arrives on that curve at 0.42s, and a pane
+      that turns faster than a record arrives is a different piece of software.
+      `TURN_MS` in HomeNav and the keyframes in nav.css have to agree.
+- [x] **One animation, both triggers.** The control and the pull run the same
+      turn between the same two angles — 0 for the card, -180 for the desk —
+      and the only difference is that the control plays keyframes and the pull
+      is written from the finger. Negative, so the right edge comes toward you
+      and the leaf turns leftwards, which is the direction the swipe means.
+- [x] **Flat at rest, and that is the safety of the whole thing.**
+      `preserve-3d` around two scrollers is a subtree the browser may rasterise
+      and scrolling inside one is the class of failure this file has reverted
+      twice at this boundary. So the 3D lasts 400ms: at rest the leaf is a
+      plain absolutely-positioned box and the face is still chosen by
+      `visibility`. Same reason the perspective is a transform *function* on
+      the leaf rather than the `perspective` property on the pane — the
+      property would make `.hn-pane--turn` a containing block for every fixed
+      descendant for good, and the card has one, the sheet the counts open.
+- [x] **The fixed rows were promoted before they were covered.** A turning
+      leaf is a composited layer and a composited layer paints over fixed
+      elements that are not — the archive's gotcha, found once already.
+      `will-change: transform` and **not** `transform: translateZ(0)`: the row
+      at the foot animates its own transform when it hides while something
+      scrolls, and a translateZ stated later in the file would have beaten
+      `.hn-controls--busy` on source order and stopped it moving. That is the
+      source-order trap, and it was nearly the sixth time.
+- [x] **Measured, because the pane it was tested in is hidden and hidden panes
+      freeze animation clocks** — which read as an animation that would not
+      run until `getAnimations()[0].currentTime` was stuck at 0 twice in a row.
+      Scrubbed instead: -180, -73, -23, -4, 0 across the 400ms, with the curve
+      plainly front-loaded. The journal's box does not move by a pixel at any
+      point of the turn on a desk. The turn's own control survives it.
+- [x] ~~**The swipe: a 36px strip at the pane's left edge**~~ — **built and
+      reverted the same day.** On a real device a left pull at the edge went to
+      the beacon instead of turning the leaf: the rail took the drag and did
+      what a horizontal rail does with a leftward one, which is go to the pane
+      on the right. `touch-action: none` on the strip alone did not take the
+      axis away from it. That is the fourth ruled-out approach at this boundary
+      and it is in DECISIONS with the other three, along with the line they all
+      add up to — the left edge belongs to the rail and a trigger cannot live
+      there.
+
+      What it cost and what it bought: about 160 lines, one evening, and the
+      end of a question that had been deferred twice. The brief put the
+      animation first and said plainly that nothing shipped should depend on
+      the gesture, which is why the revert was the strip and nothing else — the
+      control and the turn are untouched and were never wired through it. Two
+      pieces went with it because they only ever served it: the layout effect
+      that cleared the leaf's inline transform before paint, and the shared
+      timer that stopped a pressed turn and a pulled one cancelling each
+      other's clean-up.
+
+      Worth knowing if it is ever reopened: it passed every synthesised test.
+      A press that goes nowhere left no trace, the leaf followed the finger
+      1:1, past a third of the reach it turned and remembered, a slow short
+      pull sprang back, a flick went through, and a right drag took the rail
+      0 → 375. Synthesised pointer events prove arithmetic and prove nothing
+      about a thumb. The code is in git on `turn-and-swipe`.
+- [x] **The portrait is the beacon's album art, 2026-09-15** (Miyel: make it
+      smaller, the same size as the beacon album art). 180px square with an
+      18px corner, which is `.beacon-art-wrap` exactly. It went full-measure
+      first on the argument that it should be the size an *entry's* album art
+      is, then seven-tenths of the page, and this is the answer both of those
+      were reaching for: the record playing is the object on the beacon and
+      the keeper is the object here, so they are the same object at the same
+      size. It costs nothing in standing — nothing else on the pane is a square
+      of anything — and it buys the fold: the portrait, the name, the counts,
+      the genres, the pinned record and the first prompt are all above it now.
+      No shadow, where the beacon's art has one, and that is not an oversight:
+      the beacon's card is lifted off the page and this is printed on it.
+- [x] **Two dead rules for the spine's photograph deleted, not repaired.**
+      Matching the corner on a desk turned up a rule that had never applied —
+      see the new entry at the top of Gotchas. What the spine has actually been
+      showing all along is the card's own photograph, which is what has been
+      looked at and approved, so the rules went and the rendering did not. One
+      knock-on, worth knowing: the spine's portrait was a percentage and grew
+      when the fold was dragged wider; it is a fixed 180 now, the same as the
+      beacon's, and widening the spine gives the room to the type instead.
+- [x] **The turn's own verification still stands:** the leaf reads -180, -73,
+      -23, -4, 0 across the 400ms; it is `transform: none` and `transform-style:
+      flat` at rest; the journal's box does not move by a pixel at any point of
+      it on a desk; and the turn's control survives the turn. Measured again
+      after the strip came out.
+
 **MERGED to main and pushed, 2026-09-15** (`da39bff`). Built clean with the
 dev server stopped. No release cut — Miyel has more for this before one.
 
@@ -2311,7 +2586,9 @@ layout fell out of it.**
       Inbox, Address book and Drafts are rows with their counts at the far
       end. Settings is the gear in the header. The feed follows on the same
       scroll.
-- [x] **Drafts, with a count.** `count_drafts()` in database_actions and a
+- [x] ~~**Drafts, with a count**~~ — **the row lasted a day and is gone**
+      (see the newest entry in Complete). What it was: `count_drafts()` in
+      database_actions and a
       fourth number on `/api/waiting` — its own query, not `pull_drafts()
       .length`, because that is a `SELECT *` over rows carrying a whole
       tracklist each. Not in `total`: that number is the Inbox's. The row
