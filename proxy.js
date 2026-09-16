@@ -37,8 +37,15 @@ export function proxy(request) {
 }
 
 export const config = {
-  // Everything except Next's own assets and the files served straight from
-  // /public. Matching those would cost a function invocation per image for a
-  // header nothing reads.
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|icon-|apple-icon|.*\\.png$).*)'],
+  // Everything except Next's own assets, the files served straight from
+  // /public, and /api. Matching any of them would cost a function invocation
+  // for a header nothing reads.
+  //
+  // /api came off the list on 2026-09-16, with the beacon's cost. A route
+  // handler never draws the layout, so the one reader of this header is not
+  // even called — holdTheDoor() in app/layout.js says as much itself, in the
+  // line that returns early for /api/. The beacon is asked every fifteen
+  // seconds by every open tab, so it was the busiest path on the site running
+  // a function to hand an address to nobody.
+  matcher: ['/((?!api/|_next/static|_next/image|favicon.ico|icon-|apple-icon|.*\\.png$).*)'],
 };
