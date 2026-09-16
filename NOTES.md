@@ -252,16 +252,16 @@ Left over:
       is where most of them land, no longer offers it. Worth a look at whether
       SiteNav's switch should follow it into Settings or stay as the public
       one.
-- [ ] **A left swipe at the wall turning the leaf — deliberately not built.**
-      Miyel's brief names it as later and sets the two conditions: it has to
-      show itself during the drag, because a threshold that flips on release
-      is one nobody trusts, and the header control stays whatever happens —
-      the gesture is for people who find it, never the way in. The known
-      collision is that `overscroll-behavior-x: contain` is load-bearing on
-      the rail (a swipe reaching the left end otherwise runs into Safari's own
-      back gesture), so the left wall is already contested and that is exactly
-      where the trigger would go. Gesture work at a boundary this file has
-      reverted twice; the header placement works completely without it.
+- [ ] **The swipe at the wall on a real phone, and this is the whole test of
+      it.** Built 2026-09-15 and exercised only with synthesised pointer
+      events, which prove the arithmetic and prove nothing about Safari. Four
+      things to feel: a left pull turns the leaf and follows the thumb; a
+      short slow pull springs back; a flick goes through; a right drag started
+      inside the strip lands on the beacon. And the thing that decides whether
+      it stays — whether the 36px strip fights the system back-gesture at the
+      screen edge, which is the collision the brief named and the reason it was
+      deferred twice. If it fights, the strip goes and the control loses
+      nothing: it works completely without it.
 - [ ] **The visitor's Send and Add under a centred name.** The row changed
       shape when the head was centred and was only seen signed in, where the
       line is the name alone. It is a centred flex column, so it will centre;
@@ -317,11 +317,30 @@ Left over:
       the brief asks for and it is worth a look on a real device before it
       counts as settled — a visitor who arrives on a shared entry link in the
       wrong theme has one more step than they used to.
+- [ ] **An interrupted turn jumps.** Press the control twice inside 400ms and
+      the second turn starts from its own first keyframe rather than from where
+      the leaf is — so it settles flat and then turns back, instead of
+      reversing where it stands. Visible, not broken, and the fix is not free:
+      a transition would reverse from the current angle but would mean keeping
+      the transform, and the transform means keeping `preserve-3d` around two
+      scrollers at rest, which is the thing the design is built to avoid. The
+      pulled turn does not have this — a pull always starts from the resting
+      angle because the finger sets it.
+- [ ] **The left 36px of the leaf neither scrolls nor takes a tap on a phone.**
+      The strip's `touch-action: none` is what makes the gesture unambiguous
+      and it is the only approach that has ever worked at this boundary, so the
+      dead column is the price. Nothing on either face needs those 36px — the
+      page gutter is 22 and every target runs the full width — but it is a
+      thumb-feel question and belongs in the same real-phone pass as the swipe.
 - [ ] **Names to confirm, 2026-09-15 (two panes)** — rename freely: branch
       `card-and-desk`; `count_drafts` in database_actions and `drafts` on
       `/api/waiting`; `paneFaces` in HomeNav; `.hn-pane--turn`, `.hn-face`
       (kept), `.idc-top`, `.idc-said`, `.db-head`, `.db-mark-svg`,
-      `.db-tool`. The Drafts row's own word is Miyel's. And from the ···:
+      `.db-tool`. The Drafts row's own word is Miyel's. From the turn:
+      `.hn-leaf`, `.hn-turn-strip`, the `hn-turn-to-desk`/`hn-turn-to-card`
+      keyframes, `TURN_MS`, `startTheClock`, `putLeaf`, `takeThePull`,
+      `followThePull`, `letGo`, and `pulling` beside `turning`. And from the
+      ···:
       `.kt-tools`, `.kt-tool--door`, `.kt-tool--out`, `.kt-door`, the
       `kt-file-out` keyframes, `--kt-dir`/`--kt-i`/`--kt-d`, `PACKING_UP`,
       and the `what` prop on KeeperTools.
@@ -1917,6 +1936,79 @@ current.
 ---
 
 ## Complete
+
+**2026-09-15 — the turn, its animation, and the swipe. Branch `turn-and-swipe`,
+on top of a merged `card-and-desk` — from Miyel's brief, which set the order:
+the animation first and completely, then the gesture, so nothing shipped
+depends on the gesture working.**
+
+- [x] **A page turning, not a cross-fade.** The two faces go into one box,
+      `.hn-leaf`, which is the thing that turns — a horizontal rotation with
+      perspective, the outgoing face leaving as the incoming one arrives, on
+      `cubic-bezier(0.22, 0.61, 0.36, 1)` at 0.4s. Both stated from the entry
+      layer rather than picked: it arrives on that curve at 0.42s, and a pane
+      that turns faster than a record arrives is a different piece of software.
+      `TURN_MS` in HomeNav and the keyframes in nav.css have to agree.
+- [x] **One animation, both triggers.** The control and the pull run the same
+      turn between the same two angles — 0 for the card, -180 for the desk —
+      and the only difference is that the control plays keyframes and the pull
+      is written from the finger. Negative, so the right edge comes toward you
+      and the leaf turns leftwards, which is the direction the swipe means.
+- [x] **Flat at rest, and that is the safety of the whole thing.**
+      `preserve-3d` around two scrollers is a subtree the browser may rasterise
+      and scrolling inside one is the class of failure this file has reverted
+      twice at this boundary. So the 3D lasts 400ms: at rest the leaf is a
+      plain absolutely-positioned box and the face is still chosen by
+      `visibility`. Same reason the perspective is a transform *function* on
+      the leaf rather than the `perspective` property on the pane — the
+      property would make `.hn-pane--turn` a containing block for every fixed
+      descendant for good, and the card has one, the sheet the counts open.
+- [x] **The fixed rows were promoted before they were covered.** A turning
+      leaf is a composited layer and a composited layer paints over fixed
+      elements that are not — the archive's gotcha, found once already.
+      `will-change: transform` and **not** `transform: translateZ(0)`: the row
+      at the foot animates its own transform when it hides while something
+      scrolls, and a translateZ stated later in the file would have beaten
+      `.hn-controls--busy` on source order and stopped it moving. That is the
+      source-order trap, and it was nearly the sixth time.
+- [x] **Measured, because the pane it was tested in is hidden and hidden panes
+      freeze animation clocks** — which read as an animation that would not
+      run until `getAnimations()[0].currentTime` was stuck at 0 twice in a row.
+      Scrubbed instead: -180, -73, -23, -4, 0 across the 400ms, with the curve
+      plainly front-loaded. The journal's box does not move by a pixel at any
+      point of the turn on a desk. The turn's own control survives it.
+- [x] **The swipe: a 36px strip at the pane's left edge, `touch-action: none`,
+      and nothing else changed.** The rail keeps its `overscroll-behavior-x`
+      and its snap; no `touch-action` on the rail, no `overflow-x`, no
+      hand-rolled drag across the pane. Inside the strip the browser does not
+      pan at all, so a gesture starting there can only be the one thing — the
+      approach the brief named, and the only one that has worked here.
+- [x] **Left turns the leaf whichever face is up; right is the beacon.** Left
+      means further left and at this wall the leaf's other face is the only
+      thing there. Right is answered by a snap on release rather than by
+      dragging the rail under the finger: inside a `touch-action: none` strip
+      the browser cannot do it, and moving the rail by hand is the ruled-out
+      thing.
+- [x] **It shows itself under the finger.** The angle is written straight to
+      the leaf on every pointermove — a re-render per move is the wrong
+      instrument — and the settle is a transition on the same curve from
+      wherever the finger left it. Past a third of the reach, or a flick,
+      it goes through; otherwise it springs back and nothing is remembered.
+      The reach is three-quarters of the pane, so it is the same gesture on a
+      small phone and a large one.
+- [x] **The inline transform is cleared in a layout effect**, not in the
+      timeout beside the class, so the leaf never spends a frame flat with its
+      far face still turned over.
+- [x] **One timer for both kinds of turn, and it ends both.** A pressed turn
+      interrupted by a pulled one was cancelling the timeout that clears it,
+      which would have left the leaf turned over for good.
+- [x] **Verified with synthesised pointers at 375×812:** a press that goes
+      nowhere leaves no trace; -18px of drag recognises and puts the leaf at
+      -12°; the angle follows the finger 1:1; released past the third it turns
+      and remembers; a slow short pull springs back to -180 and remembers
+      nothing; a flick goes through; a right drag in the strip takes the rail
+      0 → 375. The strip is `display: none` on a fine pointer and the desktop
+      spine is untouched.
 
 **MERGED to main and pushed, 2026-09-15** (`da39bff`). Built clean with the
 dev server stopped. No release cut — Miyel has more for this before one.

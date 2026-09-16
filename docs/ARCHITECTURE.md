@@ -143,7 +143,7 @@ The hooks — reusable logic shared across pages
 The furniture — visual pieces
   components/
     main_components/           Everything on the public side
-      HomeNav.js               The cross itself — two panes, the mark, the carets, the switch that turns the left one; on a desk an open book — the spine on the left, the journal on the right, the band, the fold
+      HomeNav.js               The cross itself — two panes, the mark, the carets, the control that turns the left one and the strip it can be pulled from; on a desk an open book — the spine on the left, the journal on the right, the band, the fold
       About.js                 One face of the turning pane: the card, then the writing under it, in one scroll
       IdentityCard.js          The ID: the portrait full width and square — the same object an entry's album art is — then the name with Send and Add, three counts in the flags' colours, and the pinned record. This is the About page
       IdentificationCardEditor.js  Editing the card in place

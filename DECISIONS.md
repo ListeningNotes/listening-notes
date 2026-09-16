@@ -161,6 +161,33 @@ three tools and a door reach into it on a 375px phone — so the row becomes the
 menu while the menu is open and the mark comes back when it shuts. The card
 has two tools and 29px to spare and keeps its mark.
 
+**The turn is a page turning, and one animation serves both triggers,
+2026-09-15.** A horizontal rotation with perspective, 400ms on the site's own
+decelerating curve — the length and the easing the entry layer arrives on,
+because the whole site should move in one language. Not a cross-fade: the leaf
+is one pane with two faces and the motion has to say so. The right pane never
+moves, which is what makes it read as a turn rather than a navigation.
+`prefers-reduced-motion` gets a cross-fade at the same length.
+
+**The leaf is flat at rest and three-dimensional only while it turns,
+2026-09-15.** `preserve-3d` around two scrollers is a subtree a browser may
+rasterise, and scrolling inside a rasterised layer is the class of failure this
+cross has already reverted twice. So the 3D lasts 400ms and the resting state
+is what it always was — one face, chosen by `visibility`. For the same reason
+the perspective is a transform function on the leaf and not the `perspective`
+property on the pane: the property would make the pane a containing block for
+every fixed descendant for good, and the card has one.
+
+**A left swipe at the wall turns the leaf; right is always the beacon,
+2026-09-15.** Left means further left, and at this wall the only thing further
+left is the leaf's other face — so it turns whichever face is up. It shows
+itself under the finger, because a threshold that flips on release is one
+nobody trusts. It is an enhancement and never the way in: the header control
+does the same thing and stays. Touch devices only — a mouse has the control,
+and 36px of a 300px spine is too much page to spend on a gesture nobody can
+make. The cost, accepted: the left 36px of the page neither scrolls nor takes
+a tap.
+
 **The turn is the header's left-hand control, 2026-09-15.** The header has
 been a centred mark with one control each side since it was drawn and the left
 side was empty; this is what goes in it. A turn glyph and the name of the face
@@ -533,6 +560,11 @@ rail (Safari ignores it for the container's own axis); `overflow-x: hidden`
 while a pane is scrolled (stops the vertical scroll dead — the stutter); a
 hand-rolled horizontal drag (loses to native momentum). `scroll-snap-type: x
 mandatory` is load-bearing — proximity stops landing on a pane at all.
+**One gesture is in, and only because it never touches the rail, 2026-09-15:**
+the leaf's turn is pulled from a 36px strip at the pane's left edge with
+`touch-action: none` on the strip alone. Inside it the browser does not pan, so
+the gesture can only be the one thing; outside it nothing changed. That is the
+shape any future gesture here has to take.
 **A two-floor pane did not need the axis problem solved, 2026-09-07:** the
 pane is the snap container, `y mandatory` over two screen-tall floors with the
 reading in an inner scroller, rail untouched, no gesture code. The 08-29 run
