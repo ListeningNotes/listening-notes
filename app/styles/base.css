@@ -26,6 +26,13 @@
      homepage's screen two, which pads itself by the same amount and is the
      one screen that already felt right installed. */
   --safe-top: max(0px, calc(env(safe-area-inset-top) - 38px));
+  /* How tall the fixed bar over a page is: the band is 80px plus the notch
+     allowance. It lived on .hn alone, which is why every page outside the
+     cross — the feed, and anything else clearing the bar — fell back to a
+     hardcoded 104px that was 24px too tall and knew nothing about a notch.
+     Stated once, here, and .hn restates the same number for the floors that
+     read it off their own pane. */
+  --hn-bar-h: calc(80px + var(--safe-top));
 
   /* Redesign tokens — cream / frosted glass */
   --bg:           #eef0ec;  /* matches the private dashboard's base background */
