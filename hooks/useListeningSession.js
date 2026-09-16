@@ -99,10 +99,22 @@ export function useListeningSession({ step }) {
   const researchRunRef = useRef(0);
 
   // Session timer — runs while a record is open and stops once it is saved.
-  const [elapsed, setElapsed] = useState(0);
+  //
+  // **A ref, not state, since 2026-09-16.** Nothing on any screen shows this
+  // number. It exists to be written into the draft row and read back when a
+  // listen is resumed — and as state it was re-rendering the whole listen once
+  // a second, for an hour at a time, while somebody typed into a textarea
+  // inside it. That is sixty re-renders a minute of the record, the tracklist
+  // and the notes to change a value no eye ever meets. It is the answer to
+  // "why does typing lag" and most of the answer to "why is the laptop hot".
+  //
+  // A ref keeps the counting and drops the rendering. The save reads
+  // `.current` at the moment it writes, which is the only moment anything has
+  // ever needed it.
+  const elapsedRef = useRef(0);
   useEffect(() => {
     if (!albumInput || saved) return undefined;
-    const id = setInterval(() => setElapsed(e => e + 1), 1000);
+    const id = setInterval(() => { elapsedRef.current += 1; }, 1000);
     return () => clearInterval(id);
   }, [albumInput, saved]);
 
@@ -121,10 +133,10 @@ export function useListeningSession({ step }) {
       albumInput, artistName, year, albumArt, genre, entryType, receivedFrom, receivedDate,
       receivedFromUrl, creditPrivate,
       collectionIdRef, brief, tracks, overallNotes, trackNotes, trackRatings, trackFavorites,
-      rating, Masterpiece, Favorite, Formative, elapsed,
+      rating, Masterpiece, Favorite, Formative, elapsedRef,
     },
     setters: {
-      setOverallNotes, setRating, setMasterpiece, setFavorite, setFormative, setElapsed,
+      setOverallNotes, setRating, setMasterpiece, setFavorite, setFormative,
       setTrackNotes, setTrackRatings, setTrackFavorites, setEntryType, setAlbumArt,
     },
   });
@@ -215,7 +227,7 @@ export function useListeningSession({ step }) {
     setTrackRatings({});
     setTrackFavorites({});
     setOpenTrack(0);
-    setElapsed(0);
+    elapsedRef.current = 0;
     setOverallNotes('');
     setRating(0);
     setMasterpiece(false);
@@ -513,8 +525,9 @@ export function useListeningSession({ step }) {
     saving,
     saved,
     savedEntry,
-    // Timer
-    elapsed,
+    // Timer. The ref itself, so a caller reads it at the moment it asks
+    // rather than being re-rendered every second to be told.
+    elapsedRef,
     // Functions
     beginListen,
     doResearch,

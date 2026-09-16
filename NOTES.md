@@ -1292,6 +1292,15 @@ Project → Settings → Environment Variables.
 
 ## Gotchas
 
+**A `.next` can rot, and it looks like your routes vanished, 2026-09-16.**
+After a few rounds of `npm run build` and `next dev` alternating in one
+session, every route but `/` started answering 404 — `/archive` and
+`/api/entries` included, neither of which had been touched. No error in the
+log, nothing missing from git, the files all on disk. `rm -rf .next` and a
+restart fixed it whole. **Before believing you deleted something, check `git
+status` and `ls` the folder**; and when a 404 appears on a route nobody edited,
+suspect the cache rather than the code.
+
 **Locking one scroller is not locking the page, 2026-09-15.** An overlay's
 scrim is fixed, so a touch on it cannot scroll the scrim — the scroll goes to
 the nearest scrollable ancestor instead, and inside the cross there are three

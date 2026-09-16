@@ -45,6 +45,11 @@ const revealed = new Map();
 // Reveals a finished section a few characters at a time so it reads as though
 // it's being typed in. No caret — just the text arriving. A run's [n] citation
 // appears only once that run has fully landed.
+// Characters a second for the research type-out. It was three per 16ms tick,
+// which is what this works out to on a machine keeping up — the difference is
+// that it now holds that speed on one that is not.
+const TYPE_PER_SECOND = 180;
+
 function TypedRuns({ runs, cite, className }) {
   const full = runs.map(r => r.text).join('');
   const [shown, setShown] = useState(() => revealed.get(full) || 0);
@@ -52,16 +57,29 @@ function TypedRuns({ runs, cite, className }) {
   // A section only reaches this component once it's finished, so `full` is
   // fixed for the life of the instance. Picks up where it left off — a section
   // that finished comes straight back whole, one abandoned halfway resumes.
+  // Paced by the display rather than by a 16ms timer, since 2026-09-16. The
+  // timer asked for sixty state updates a second whatever the machine was
+  // doing, went on asking while the tab was in the background, and drew
+  // nothing between frames for its trouble. requestAnimationFrame stops when
+  // the tab does and never runs twice inside one painted frame.
+  //
+  // How much is revealed is worked out from the clock rather than counted per
+  // tick, so the text types at the same speed on a machine dropping frames as
+  // on one that is not — the old version simply typed slower when busy, which
+  // is exactly when it was most in the way.
   useEffect(() => {
-    let n = revealed.get(full) || 0;
-    if (n >= full.length) return undefined;   // already whole — the initialiser has it
-    const id = setInterval(() => {
-      n += 3;
+    const from = revealed.get(full) || 0;
+    if (from >= full.length) return undefined;   // already whole — the initialiser has it
+    let raf = 0;
+    const startedAt = performance.now();
+    const step = now => {
+      const n = Math.min(full.length, from + Math.round((now - startedAt) / 1000 * TYPE_PER_SECOND));
       revealed.set(full, n);
       setShown(n);
-      if (n >= full.length) clearInterval(id);
-    }, 16);
-    return () => clearInterval(id);
+      if (n < full.length) raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(raf);
   }, [full]);
 
   const parts = withOffsets(runs);
