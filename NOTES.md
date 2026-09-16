@@ -2040,10 +2040,15 @@ current.
 
 ## Complete
 
+**MERGED to main and pushed, 2026-09-15, as 1.20.0 — released as v1.20.0,
+which also carries 1.17.0, 1.18.0 and 1.19.0, none of which were ever cut.
+Built clean with the dev server stopped. Merged ahead of a real session test
+because somebody is getting a copy and will not have Last.fm; the writing half
+is still to be walked through (Pending).**
+
 **2026-09-15 — the session beacon. Branch `session-beacon`, from Miyel's
 brief. The beacon's default source becomes the listen you are writing;
-Last.fm becomes an optional extra. UNMERGED, and the writing half is
-untested on a real session — see Pending.**
+Last.fm becomes the other of two you pick between.**
 
 - [x] **Three states, decided on the server** (`app/api/public/beacon/route.js`).
       *Now logging* from the open listen, *Now listening* from Last.fm, *Last
