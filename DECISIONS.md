@@ -293,11 +293,13 @@ of what a card is for — a glance at somebody before the reading starts.
 somewhere you go as often as the inbox, the address book or the drafts, and as
 a fourth tile it was taking the same weight as them.
 
-**Drafts are a row with a count, and the row goes to the picker, 2026-09-15.**
-The picker already lists unfinished listens with a resume and a discard, so a
-second page of the same rows is the `/dashboard/entries` mistake again. The
-count is the only thing the row adds, and it is the thing worth adding: a
-listen you have forgotten is the one most likely to be lost.
+**Drafts have no door of their own, 2026-09-15.** The picker lists unfinished
+listens with a resume and a discard the moment you start a listen, which is the
+only place anybody goes looking for one. A row on the desk pointing at a place
+you pass through anyway is a signpost to a room you are already walking into —
+and it existed only to carry a number, which cost a `COUNT` over the drafts
+table on every poll of `/api/waiting`. Both are gone. A second *page* of the
+same rows was never on the table: that is the `/dashboard/entries` mistake.
 
 **The right page is what you are reading or writing, 2026-09-15.** An entry
 opens there and so does a listen, with the spine untouched beside it; the

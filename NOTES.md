@@ -285,10 +285,12 @@ Left over:
       375×812 in the browser pane, which is not a thumb. The switch at the
       foot, the band, and whether the card's row wants the portrait bigger
       than 118px are all eye-and-thumb questions.
-- [ ] **The drafts row against real drafts.** The count comes off
-      `/api/waiting`; the row was seen with a stubbed 2. Worth one pass
-      checking the number is right, that the row vanishes when the last
-      draft is finished, and that it is absent while a record is in hand.
+- [x] **The drafts row is gone, 2026-09-15** (Miyel: drafts show when you
+      start a listen). Checked against a real draft before removing it — one
+      row in the table, and the picker printing *In Rainbows · Radiohead ·
+      Tracks · 30m ago* with its discard beside it. The count went with the
+      row: it was a `COUNT` over the drafts table on every poll of
+      `/api/waiting`, answering a door that no longer exists.
 - [ ] **A tall phone and a short one.** The card is a page now and its first
       screen is no longer a fixed floor, so what falls above the fold varies
       with the device in a way it did not before. Worth a look at 667 and at
@@ -326,7 +328,7 @@ Left over:
       `card-and-desk`; `count_drafts` in database_actions and `drafts` on
       `/api/waiting`; `paneFaces` in HomeNav; `.hn-pane--turn`, `.hn-face`
       (kept), `.idc-top`, `.idc-said`, `.db-head`, `.db-mark-svg`,
-      `.db-tool`. The Drafts row's own word is Miyel's. From the turn:
+      `.db-tool`. From the turn:
       `.hn-leaf`, `TURN_MS`, the `hn-turn-arrive`/`hn-turn-leave` keyframes the
       reduced-motion cross-fade uses, and `opens` on a face beside `word` — the
       strip's names went with the strip and the flip's keyframes went with the
@@ -1941,6 +1943,16 @@ current.
 
 ## Complete
 
+**2026-09-15 — drafts leave the desk.** The picker lists them the moment you
+start a listen, with a resume and a discard, so the row pointed at a place you
+pass through on the way (Miyel). Verified against a real draft first: one row
+in the table, the picker printing *In Rainbows · Radiohead · Tracks · 30m ago*
+with its discard beside it. The desk is Start a listen, Inbox, Address book and
+Settings. `count_drafts()` and the `drafts` field on `/api/waiting` went with
+the row rather than being left running — a `COUNT` over a table on every poll,
+answering a door that no longer exists. Nothing else read either of them;
+`/api/drafts`, which the picker and the inbox's guard use, is untouched.
+
 **2026-09-15 — the turn, its animation, and the swipe. Branch `turn-and-swipe`,
 on top of a merged `card-and-desk` — from Miyel's brief, which set the order:
 the animation first and completely, then the gesture, so nothing shipped
@@ -2457,7 +2469,9 @@ layout fell out of it.**
       Inbox, Address book and Drafts are rows with their counts at the far
       end. Settings is the gear in the header. The feed follows on the same
       scroll.
-- [x] **Drafts, with a count.** `count_drafts()` in database_actions and a
+- [x] ~~**Drafts, with a count**~~ — **the row lasted a day and is gone**
+      (see the newest entry in Complete). What it was: `count_drafts()` in
+      database_actions and a
       fourth number on `/api/waiting` — its own query, not `pull_drafts()
       .length`, because that is a `SELECT *` over rows carrying a whole
       tracklist each. Not in `total`: that number is the Inbox's. The row

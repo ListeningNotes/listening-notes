@@ -31,7 +31,7 @@
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Headphones, Envelope, AddressBook, GearSix, NotePencil } from '@phosphor-icons/react';
+import { Headphones, Envelope, AddressBook, GearSix } from '@phosphor-icons/react';
 import { VERSION, RELEASE_URL } from '../../library/version';
 
 // Everything but the first: messages, which are what you open the journal to
@@ -58,18 +58,11 @@ const DOORS = [
   // inside the feed: it is what the feed and comparing are built from, and
   // it exists before either does (2026-09-12).
   { href: '/dashboard/people',  label: 'Address book', note: 'The journals you read', Icon: AddressBook },
-  // Unfinished listens. The address is the picker's, because the picker is
-  // already where they live — it lists them with a Resume and a discard, and
-  // a second page showing the same rows is the /dashboard/entries mistake
-  // again (Miyel's call, 2026-09-15). So this row is a signpost with a number
-  // on it and not an interface: the count is what it adds, because a listen
-  // you have forgotten is the one most likely to be lost.
-  //
-  // Only when there are drafts AND nothing is in hand. Absent is the same
-  // answer as a dead row without the press, and with a record in hand /session
-  // resumes *that* listen rather than showing the list, so the row would not
-  // do what it says.
-  { href: '/session', label: 'Drafts', note: 'Listens you started and have not finished', Icon: NotePencil, count: w => w?.drafts, needsDrafts: true },
+  // Drafts had a row here for a day. The picker is already where they live —
+  // it lists them with a Resume and a discard the moment you start a listen —
+  // so the row was a signpost to a place you pass through anyway (Miyel,
+  // 2026-09-15). It was never an interface, only a number, and the number was
+  // a database COUNT on every poll of /api/waiting; that went with it.
   // *Your card* was a row here for an evening, while the ID pane had no
   // control of its own. It has a ··· now, in the same corner an entry keeps
   // its own in, so the card is corrected on the card — which is the rule this
@@ -178,8 +171,7 @@ export default function Dashboard({ waiting, mark = null }) {
         </Link>
 
         <div className="db-doors">
-          {DOORS.map(({ href, label, note, Icon, count, needsDrafts }) => {
-            if (needsDrafts && (inHand || !(waiting?.drafts > 0))) return null;
+          {DOORS.map(({ href, label, note, Icon, count }) => {
             const n = count ? count(waiting) : 0;
             return (
               <Link key={href} href={href} className="ln-tile db-door" title={note}>

@@ -154,7 +154,7 @@ The furniture — visual pieces
       CodeSlot.js              A square that holds a picture and turns into that picture's code — the card's portrait and an entry's cover: the two faces, the copy and its pill, the corner mark, the wait
       AddressCode.js           A plain code for an address, drawn in the browser — what CodeSlot shows when no pressed picture can be had
       CodeScanner.js           The camera pointed at a code — the address book's way in for a card's or a cover's code
-      Dashboard.js             The other face, for the owner — Start a listen as a band, then Inbox, Address book, Drafts and Settings as rows; the header holds the mark alone
+      Dashboard.js             The other face, for the owner — Start a listen as a band, then Inbox, Address book and Settings as rows; the header holds the mark alone
       Feed.js                  Under the desk on the same scroll — what the people in the address book logged, read off their public feeds; Submissions and Recent; Compare on a row you also have
       Pitch.js                 The other face, for everybody else — the colophon
       KeeperTools.js           The owner's ··· — top right on both, Edit/Print/Delete on an entry and Edit/Print on the ID pane; the door stays put and the tools file out of it
