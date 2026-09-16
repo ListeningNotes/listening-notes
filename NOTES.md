@@ -2069,6 +2069,17 @@ current.
 
 ## Complete
 
+**2026-09-16 — three dead branches deleted, `share-printer` kept.** They were
+local-only and had never been pushed, so this is the last word on them:
+`album-exporter` (6b27774), `album-qr` (c50dafe) and `junior-install-old`
+(23a2a95). Checked before deleting rather than after: the slide drawing
+DECISIONS promises survives because `app/dashboard/share/page.js` is on
+`share-printer` too; `album-qr`'s idea shipped by another route as `cover-code`
+(1.2.0); `junior-install-old` is the earlier draft of `junior-install`, which
+merged. `share-printer` stays for `IdentityCardPlate.js` alone — the one plate
+the press on main has never been given. It is still the only unmerged branch
+and still exists nowhere but this laptop.
+
 **2026-09-15 — nothing behind an open overlay moves** (1.20.2, on main, from
 Miyel finding it on a phone). `hooks/useHoldStill.js`, her name: walks up from
 the scrim and stops every ancestor that is a scroller right now, plus the page
