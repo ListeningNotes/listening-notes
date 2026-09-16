@@ -9,25 +9,33 @@ import { useListeningBeacon } from '../../hooks/useListeningBeacon';
 // the nav row of every page — that row does not carry it any more, so the
 // second shape has nothing to draw and is gone with it.
 
-// The three states, and what each one is called. The labels do double duty:
-// they say what is happening and what kind of beacon somebody runs, without
-// anything having to explain itself. Which one is showing is decided on the
-// server — see app/api/public/beacon/route.js — because a visitor's browser
-// has no way of knowing whether a listen is open.
+// Two beacons, two states each, and a journal runs one of them — the choice
+// is in Settings and lives on `settings.beacon_source`.
 //
-// "Now logging" is not a fallback. It is the better of the two live states to
-// find on a journal: somebody sitting with a record and writing about it,
-// rather than music being on in a room.
+//   session   Now logging  →  Last logged
+//   lastfm    Now listening →  Last played
+//
+// The labels do double duty: they say what is happening and what kind of
+// beacon somebody runs, without anything having to explain itself. Which one
+// is showing is decided on the server — see app/api/public/beacon/route.js —
+// because a visitor's browser has no way of knowing whether a listen is open.
+//
+// "Now logging" is not a fallback, and the session beacon is the default. It
+// is the better thing to find on a journal: somebody sitting with a record and
+// writing about it, rather than music being on in a room.
 const CAPTION = {
   logging: 'Now logging',
-  listening: 'Now listening',
   logged: 'Last logged',
+  listening: 'Now listening',
+  played: 'Last played',
 };
 
 export default function ListeningBeacon() {
   const { state, album, artist, art, track, isLive } = useListeningBeacon();
-  // A song in the two live states; a whole record in the third, where what is
-  // being shown is an entry and an entry is an album.
+  // A song wherever there is one — including after a listen has been shut,
+  // which keeps the track that was open up rather than dropping back to the
+  // record's name. A whole record is what is left when the last thing logged
+  // is an entry, because an entry is an album.
   const title = track || album;
   // Cover URLs fail one at a time — the image host is flaky per URL, not per
   // record. An <img> that fails draws the browser's own broken-picture mark,

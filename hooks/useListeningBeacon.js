@@ -4,11 +4,14 @@
 // What the keeper is listening to.
 //
 // Returns:
-// - state: 'logging' | 'listening' | 'logged' | 'none' — which of the three
-//   states the beacon is in, and therefore which line it prints. The server
-//   decides; see app/api/public/beacon/route.js for the order they win in.
-// - album, artist, art, track — what to draw. `track` is empty in the
-//   'logged' state, where the beacon is a whole record rather than a song.
+// - state: which line the beacon prints. Two beacons, two states each, and a
+//   journal runs one of them — see app/api/public/beacon/route.js.
+//     session   'logging'   | 'logged'
+//     lastfm    'listening' | 'played'
+//   'none' is a journal with nothing to say at all. The server decides which:
+//   a visitor's browser cannot know whether a listen is open.
+// - album, artist, art, track — what to draw. `track` is empty when the last
+//   thing logged is a whole record rather than a song.
 // - isLive: whether anything is happening at all — a listen being written or
 //   a record playing. It is what lights the dot on the mark.
 // - before: up to three records listened to lately, most recent first, each
@@ -126,17 +129,16 @@ async function poll() {
 
   // Last.fm has a brief gap between one track being marked as stopped and the
   // next being marked as playing, so a scrobbling journal would drop to "Last
-  // logged" for a poll or two in the middle of a record. The previous answer
-  // is held for a moment rather than flickering.
+  // played" — greying its own cover — for a poll or two in the middle of a
+  // record. The previous answer is held for a moment rather than flickering.
   //
-  // Only for Last.fm. A listen does not flicker — the needle stands for three
-  // hours (library/needle.js) — so 'logging' needs no grace, and holding a
-  // stale 'listening' over a live 'logging' would let a scrobble outrank the
-  // thing being written, which is the one order this whole change settles.
+  // Only for Last.fm. A listen does not flicker: the needle stands for three
+  // hours and is ended deliberately (library/needle.js), so 'logging' needs no
+  // grace, and a journal runs one beacon or the other anyway.
   if (state === 'listening') {
     beacon.lastLiveAt = Date.now();
     beacon.lastLiveData = snapshot;
-  } else if (state === 'logged' && beacon.lastLiveData) {
+  } else if (state === 'played' && beacon.lastLiveData) {
     const elapsed = Date.now() - beacon.lastLiveAt;
     if (elapsed < LIVE_TIMEOUT) { publish(beacon.lastLiveData); return; }
   }

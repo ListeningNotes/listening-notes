@@ -1,0 +1,36 @@
+-- Copyright (C) 2026 Miyel Brown
+-- SPDX-License-Identifier: AGPL-3.0-or-later
+-- migrations/014_beacon_source.sql
+--
+-- Two things the session beacon needed once it met a real listen.
+--
+-- ── Which beacon this journal runs ────────────────────────────────────────
+-- You get one, not both (Miyel, 2026-09-15). A journal either broadcasts what
+-- is going into it or what its speakers are doing, and a cover that silently
+-- switched between the two would be two different claims wearing one face.
+--
+--   'session'  Now logging   →  Last logged     the default, and every copy
+--   'lastfm'   Now listening →  Last played     for whoever set a scrobbler up
+--
+-- Null means session, so every existing copy and every new one is on the
+-- default without a backfill. A copy set to 'lastfm' with no key falls back
+-- to the session beacon rather than showing nothing — the setting is a
+-- preference, not a promise the journal can keep on its own.
+ALTER TABLE settings ADD COLUMN IF NOT EXISTS beacon_source text;
+
+-- ── A listen that was closed is still a listen ────────────────────────────
+-- The needle used to be DELETEd when the record came off the desk, and the
+-- beacon fell straight past that listen to whatever was logged before it. But
+-- an evening spent clicking through a record IS the last thing you listened
+-- to, whether or not a word was written and whether or not it was published
+-- (Miyel, twice: first for the row under the beacon, then for the beacon).
+--
+-- So the needle lifts rather than being thrown away: `ended_at` is stamped,
+-- the row stops being "now", and it goes on standing as the most recent
+-- listen — keeping the track that was open, which is the part that was being
+-- lost — until something newer happens. A record put on the desk clears it
+-- again, because there is only ever one row.
+--
+-- The one thing not kept: a record opened and closed without a single track
+-- being opened. That is browsing, not listening, and it is deleted outright.
+ALTER TABLE needle ADD COLUMN IF NOT EXISTS ended_at timestamp with time zone;
