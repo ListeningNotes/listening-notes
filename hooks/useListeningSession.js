@@ -180,19 +180,41 @@ export function useListeningSession({ step }) {
           // at the most deliberate moment of the whole listen.
           track: step > 0 ? (tracks?.[openTrack]?.title || '') : '',
         }),
-      }).catch(() => { /* the beacon is not worth an alert */ });
+      }).then(() => { litRef.current = true; })
+        .catch(() => { /* the beacon is not worth an alert */ });
     }, 2000);
     return () => clearTimeout(t);
   }, [albumInput, artistName, albumArt, tracks, openTrack, saved,
       overallNotes, trackNotes, trackRatings, trackFavorites,
       rating, Masterpiece, Favorite, Formative, step]);
 
-  // The needle lifts. Called when the record comes off the desk and when the
-  // listen becomes an entry; a listen that simply stops — a closed tab, a
-  // locked phone — never reaches either, and the read expires it instead.
+  // The needle lifts. Called when the record comes off the desk, when the
+  // listen becomes an entry, and when the listen leaves the screen.
   function liftNeedle() {
     fetch('/api/needle', { method: 'DELETE' }).catch(() => {});
   }
+
+  // Whether this listen ever lit the beacon. Read by the cleanup below, and
+  // the reason it exists is React's development mode, which mounts an effect,
+  // tears it down and mounts it again to catch exactly the kind of cleanup
+  // written here. Without the flag that rehearsal put the beacon out for the
+  // two seconds before the write landed, every time a listen was opened — on
+  // the dev server only, which is where it would have been seen and believed.
+  const litRef = useRef(false);
+
+  // ── Closing the listen is closing the listen, 2026-09-16 ──────────────────
+  // Only two things used to put the needle down: posting, and going back to
+  // the picker. Swiping the layer away or pressing back left it standing,
+  // because a record was still on the desk — which is true, and is not what
+  // closing something feels like. Miyel shut a listen, watched the beacon go on
+  // claiming it, and was right to.
+  //
+  // So leaving the screen ends it, and coming back lights it again a couple of
+  // seconds later — the write effect above does that on its own, which is why
+  // this can be as blunt as it is. Switching tabs and locking a phone do not
+  // unmount anything, so those keep the beacon lit and the expiry above is
+  // still what catches a listen nobody ever comes back to.
+  useEffect(() => () => { if (litRef.current) liftNeedle(); }, []);
 
   // Assemble the preview on arrival. Nothing here reaches a model — format_post
   // is a local join of what was written — so it is redone every time the
