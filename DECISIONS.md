@@ -161,16 +161,50 @@ three tools and a door reach into it on a 375px phone — so the row becomes the
 menu while the menu is open and the mark comes back when it shuts. The card
 has two tools and 29px to spare and keeps its mark.
 
-**The turn is the header's left-hand control, 2026-09-15.** The header has
-been a centred mark with one control each side since it was drawn and the left
-side was empty; this is what goes in it. A turn glyph and the name of the face
-it lands on, in one place, replacing a segmented switch on a desk and a band
-across the foot of a phone. It leaves the foot to navigation.
+**The cross is three panes on a phone: ID, beacon, desk, 2026-09-15.** You
+land on the beacon. Three was tried before and failed, and neither reason was
+the count — the panes were the same shape as each other and nothing said where
+you were. Both are fixed: every pane is a different kind of thing now (a
+portrait over writing, a record over the journal, a hero over rows), and a band
+at the foot names all three all the time.
+
+It replaced two panes and a button. Two existed because sideways meant two
+things — about you on the left, your tools on the right — and the button that
+resolved it never stopped feeling misplaced wherever it was put, through six
+placements. The gesture that would have replaced the button cannot exist: the
+left edge belongs to the rail (see the four ruled-out approaches above). Three
+is also the more balanced arrangement — the beacon centred, the person on one
+side, their tools on the other. With two, one page always carries more.
+
+The book was an interpretation, not a rule. What it gave this project was an
+object and then the writing underneath, and that survives at any pane count.
+
+**The band at the foot: Card · Beacon · Desk, 2026-09-15.** A glyph over a
+word, the pane you are on in ink and the other two pale. It is the whole of
+what is down there — it replaced the dots, the edge carets and the mini beacon.
+
+Pressing a name moves the rail exactly as a swipe does, because it is the
+visible version of the gesture and not an alternative to it: somebody presses
+Desk once, watches it move, and swipes from then on. That was always what the
+carets were for, and a word does it better than a chevron — a chevron says
+there is something that way and a word says what.
+
+The labels carry the meaning and the glyphs are decoration that has to earn
+17px. If one ever needs explaining, all three go and the words stay. An open
+book for the desk is wrong whatever else is: the book is the journal, and the
+journal is *down* from the beacon, not sideways.
+
+**A flip and then a slide were built for a two-pane cross and are both gone,
+2026-09-15.** The reasoning is in NOTES; what is worth keeping here is that
+0.4s on `cubic-bezier(0.22, 0.61, 0.36, 1)` — the entry layer's arrival — is
+the curve everything on this site moves on, and it is what drives the rail now.
 
 **The down caret is drawn by measuring the pane, never by being told.** A pane
 is deep when its scroller overflows, so a copy with no beacon has nothing
-pointing down at it, for free. Measured on home only, since 2026-09-15 — the
-turning pane overflows all the time and is not a cover.
+pointing down at it, for free. Measured on the beacon only — it is the one pane
+with a cover, meaning the one pane where something is cut off at a fold rather
+than simply running on. Everything else scrolls, and content running off the
+edge is its own cue.
 
 **No vertical snap on a one-long-scroll pane; the only vertical snap wanted
 is the entry's, 2026-09-07.** Proximity on the long pane argued with the thumb
@@ -234,32 +268,30 @@ anything — they are pages, so no second floor, no arrival, no down caret. It
 settles the axis argument as a side effect: a vertical drag on a page is
 ordinary scrolling, and nothing has to choose between arriving and scrolling.
 
-**The cross is two panes. Sideways is you, down is the records, 2026-09-15.**
-Three made sideways mean two different things — left was about you, right was
-your tools, both you, in opposite directions. One pane that turns between the
-card and the desk (the colophon, signed out) is one idea, and it is the same
-pane the desktop's spine is.
-
 **Desktop is an open book: the spine and the page, 2026-09-15.** The spine is
 a quarter of the window, draggable and remembered per browser, and turns
-between the same two faces the phone turns between. Three columns gave the
-desk width whether or not anybody was at it. Not a second layout: it is the
-phone's own two panes at another width.
+between the card and the desk with a control in its own header. Three columns
+gave the desk width whether or not anybody was at it. It kept that shape when
+the phone went to three panes (Miyel: don't touch desktop, this fits perfectly
+the way it is) — and it is still not a second markup tree. The two boxes that
+make a spine a spine go `display: contents` under 769px, which turns the same
+two pages into rail panes of their own.
 
-**The card leads with a row, not a centred square, 2026-09-15.** Portrait
-left, name and counts beside it. The portrait alone was half the first screen;
-as a row the prompts and the pinned record fit on it too, which is the whole
-of what a card is for — a glance at somebody before the reading starts.
+**The desk is a hero and its rows, and nothing under them, 2026-09-15.**
+*Start a listen* as the band, then Inbox, Feed, Address book and Settings. Each
+is a place you go; none is a tool you use on what is in front of you, which is
+the header rule's other half. Settings was a gear in the header for an hour and
+came back to a row — headers hold nothing. The feed ran on down this pane's own
+scroll and is a row and a page of its own now (`/dashboard/feed`), which is
+what lets the pane be a hero, its rows, and stop.
 
-**Settings is the gear in the header, not a door, 2026-09-15.** It is not
-somewhere you go as often as the inbox, the address book or the drafts, and as
-a fourth tile it was taking the same weight as them.
-
-**Drafts are a row with a count, and the row goes to the picker, 2026-09-15.**
-The picker already lists unfinished listens with a resume and a discard, so a
-second page of the same rows is the `/dashboard/entries` mistake again. The
-count is the only thing the row adds, and it is the thing worth adding: a
-listen you have forgotten is the one most likely to be lost.
+**Drafts have no door of their own, 2026-09-15.** The picker lists unfinished
+listens with a resume and a discard the moment you start a listen, which is the
+only place anybody goes looking for one. A row on the desk pointing at a place
+you pass through anyway is a signpost to a room you are already walking into —
+and it existed only to carry a number, which cost a `COUNT` over the drafts
+table on every poll of `/api/waiting`. Both are gone. A second *page* of the
+same rows was never on the table: that is the `/dashboard/entries` mistake.
 
 **The right page is what you are reading or writing, 2026-09-15.** An entry
 opens there and so does a listen, with the spine untouched beside it; the
@@ -526,13 +558,26 @@ browser finds still ships the buttons to everyone. Two icons, top left, drawn
 only for the owner; at a third the pencil becomes a menu. **Admin controls do
 not sit in the reading flow** — the chip row under the rating is the reader's.
 
-**The cross's gesture problem is unsolved, and three things are ruled out,
-2026-08-29.** Wanted: down should feel like arriving, and you should not slide
-sideways out of a pane's lower half. Do not try again: `touch-action` on the
-rail (Safari ignores it for the container's own axis); `overflow-x: hidden`
-while a pane is scrolled (stops the vertical scroll dead — the stutter); a
-hand-rolled horizontal drag (loses to native momentum). `scroll-snap-type: x
-mandatory` is load-bearing — proximity stops landing on a pane at all.
+**The cross's gesture problem is unsolved, and four things are ruled out,
+2026-08-29, the fourth 2026-09-15.** Wanted: down should feel like arriving,
+and you should not slide sideways out of a pane's lower half. Do not try again:
+`touch-action` on the rail (Safari ignores it for the container's own axis);
+`overflow-x: hidden` while a pane is scrolled (stops the vertical scroll dead —
+the stutter); a hand-rolled horizontal drag (loses to native momentum); and a
+narrow edge strip with `touch-action: none` on the strip alone, which on a real
+device sent the reader to the beacon instead of turning the leaf — the rail took
+the leftward drag and did what a horizontal rail does with one, which is go to
+the pane on the right. `scroll-snap-type: x mandatory` is load-bearing —
+proximity stops landing on a pane at all.
+
+**The left edge belongs to the rail, and a trigger cannot live there,
+2026-09-15.** That is the lesson of all four. `touch-action` does not take the
+horizontal axis away from the rail from anywhere inside it — not on the rail,
+and not on a descendant of it either, which was the last idea standing. The
+edge strip was the approach that had worked for the entry layer's back-pull, so
+it was worth one try; it was written, it passed every synthesised test, and it
+failed the first real thumb. Anything sideways on the cross is the rail's, and a
+gesture that wants to mean something else has to be somewhere the rail is not.
 **A two-floor pane did not need the axis problem solved, 2026-09-07:** the
 pane is the snap container, `y mandatory` over two screen-tall floors with the
 reading in an inner scroller, rail untouched, no gesture code. The 08-29 run
