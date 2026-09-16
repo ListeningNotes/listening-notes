@@ -1406,7 +1406,12 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
    rows. Nothing about the feed changed; this is the room it stands in, which
    is the same room the inbox and the address book stand in — clear of the
    fixed nav row, and the page's name above it. */
-.fd-page { padding: calc(var(--hn-bar-h, 104px) + 8px) 0 64px; }
+/* Under the bar and no further. The fallback here was 104px, and it was what
+   was used: --hn-bar-h was declared on .hn and the feed at its own address has
+   no .hn over it, so the page cleared a bar 24px taller than the one actually
+   there and ignored the notch besides. The variable is on :root now and this
+   asks for it plainly. */
+.fd-page { padding: calc(var(--hn-bar-h) + 8px) 0 64px; }
 .fd-page-label { align-self: center; margin-bottom: 18px; }
 
 .hn-foot { display: none; }

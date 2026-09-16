@@ -10,11 +10,16 @@
 // Nothing central, nobody learns they were read, and nothing here is stored:
 // the book says whose feeds to ask and the feeds say the rest.
 //
-// Two views. Submissions is the default: who logged what you sent them, and
-// how they rated it — the entries whose credit names this journal. Smaller
-// and warmer, and it cannot become a scroll, because it only ever holds what
-// came back. Recent is everyone in the book, newest first, and capped: a
-// shelf, not a river. No counts, no badges, no unread state.
+// Two views. **Recent opens, from 2026-09-16** (Miyel, once the book had
+// enough people in it to fill one): it is everyone in the book, newest first,
+// and capped — a shelf, not a river. Submissions was the default while the
+// feed was mostly empty, when what came back from a send was the only thing
+// it reliably had; with a populated book that is the narrower of the two and
+// the quieter one, so it is now the second tab rather than the first.
+// Submissions is who logged what you sent them and how they rated it — the
+// entries whose credit names this journal — and it cannot become a scroll,
+// because it only ever holds what came back. No counts, no badges, no unread
+// state on either.
 //
 // A row offers Compare only when it is a record you also have: this album,
 // their rating against yours and the shape of the two listens, track by
@@ -152,7 +157,7 @@ export default function Feed({ entries = [] }) {
   // address → { entries, name, failed }. Filled as each journal answers, so
   // the first rows are on screen before the slowest journal has spoken.
   const [journals, setJournals] = useState({});
-  const [view, setView] = useState('submissions');
+  const [view, setView] = useState('recent');
   const [open, setOpen] = useState(null);
 
   useEffect(() => {
@@ -284,12 +289,14 @@ export default function Feed({ entries = [] }) {
 
   return (
     <div className="fd-wrap">
+      {/* Recent first in the row as well as first on open: a tab row that
+          starts on its second tab reads as something having been pressed. */}
       <div className="fd-views" role="tablist" aria-label="What to show">
-        <button type="button" role="tab" aria-selected={view === 'submissions'} className={'fd-view' + (view === 'submissions' ? ' fd-view--on' : '')} onClick={() => setView('submissions')}>
-          Submissions
-        </button>
         <button type="button" role="tab" aria-selected={view === 'recent'} className={'fd-view' + (view === 'recent' ? ' fd-view--on' : '')} onClick={() => setView('recent')}>
           Recent
+        </button>
+        <button type="button" role="tab" aria-selected={view === 'submissions'} className={'fd-view' + (view === 'submissions' ? ' fd-view--on' : '')} onClick={() => setView('submissions')}>
+          Submissions
         </button>
       </div>
       {body}
