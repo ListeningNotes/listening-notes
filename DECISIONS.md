@@ -122,10 +122,30 @@ turning pane scrolls and its writing running off the edge is the cue. No mark
 over it: a side caret's mark named a destination worth knowing, and down has
 only one.
 
-**The light switch is the beacon's, top right, 2026-09-15.** It went to
-Settings as a preference rather than an action, which cost a visitor any way
-of changing it — Settings is behind the password. On the beacon it is public
-again and is the one pane where it is not sitting over somebody's reading.
+**The light switch is the beacon's, top right, and in Settings, 2026-09-15.**
+On the beacon it is public — Settings is behind the password — and it is the
+one pane where it is not sitting over somebody's reading. In Settings as well,
+so somebody who lives on the ID pane can still find it. Drawn as a switch on a
+wall rather than a sun and a moon: those are the weather, and the component has
+been called Lightswitch since the day it was written.
+
+**No icons in headers, 2026-09-15.** The mark is centred and the sides are
+for navigation, not controls. An owner's tools live in one of two places: a
+row on the desk, or behind a ··· on the thing itself.
+
+**The ID pane is identical for a keeper and a visitor, 2026-09-15.** No owner
+control on it at all — correcting the card is a row on the desk, *Your card*,
+with a quiet shortcut at the foot of the page for the moment you are reading
+your own and notice something wrong. Nothing else on this site can say that
+about itself, and it is worth keeping.
+
+**The entry's tools are one ···, opened in the row, 2026-09-15.** Edit, Print
+and Delete, owner only. Two glyphs in the corner were what made an entry read
+as a toolbar; a menu over the page would be a third surface on a sheet that
+already claims sideways for the next record and down for closing. Delete opens
+the correction's own confirmation rather than acting — a destructive thing does
+not get a shorter path for moving to a shorter menu. A visitor sees nothing
+there: sharing stays one path, the album art.
 
 **The turn is the header's left-hand control, 2026-09-15.** The header has
 been a centred mark with one control each side since it was drawn and the left

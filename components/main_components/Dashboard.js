@@ -31,7 +31,7 @@
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Headphones, Envelope, AddressBook, GearSix, NotePencil } from '@phosphor-icons/react';
+import { Headphones, Envelope, AddressBook, GearSix, IdentificationCard, NotePencil } from '@phosphor-icons/react';
 import { VERSION, RELEASE_URL } from '../../library/version';
 
 // Everything but the first: messages, which are what you open the journal to
@@ -70,12 +70,17 @@ const DOORS = [
   // resumes *that* listen rather than showing the list, so the row would not
   // do what it says.
   { href: '/session', label: 'Drafts', note: 'Listens you started and have not finished', Icon: NotePencil, count: w => w?.drafts, needsDrafts: true },
+  // Correcting the card, as a row rather than a pencil on the card itself
+  // (2026-09-15). The owner's tools live on the desk, and this is one — which
+  // also makes the ID pane identical for a keeper and a visitor, the only
+  // page on the site that can say so. `?edit=card` is the cross's own way in:
+  // it lands on the card with the correction already open (HomeNav).
+  { href: '/?edit=card', label: 'Your card', note: 'Your portrait, name, prompts and pin', Icon: IdentificationCard },
+  // The machinery: the keys, the password, Last.fm, the address. A row again,
+  // and for the same reason — it was a gear in this pane's header for an hour
+  // and headers hold no icons.
+  { href: '/settings', label: 'Settings', note: 'Keys, password, Last.fm, the address', Icon: GearSix },
 ];
-
-// Settings is not among them, 2026-09-15. It is the gear in the header now:
-// the machinery is not somewhere you go as often as the other three and it was
-// taking the same weight as them. The gear beside the card's pencil opens the
-// same address.
 
 // ── The record on the desk ──────────────────────────────────────────────────
 // A listen in progress is a key in the browser, not a thing the server knows,
@@ -142,22 +147,15 @@ export default function Dashboard({ waiting, mark = null }) {
   return (
     <div className="db-pane">
       <div className="db-body">
-        {/* The header the card has, with the desk's own one tool in it. The
-            mark is small here and the beacon keeps the large one: a crown is
-            for a cover, and the desk is a page. It comes down from the cross
-            rather than being drawn again — see HomeNav, which owns the one
-            mark this site has. */}
-        <div className="db-head">
-          {mark}
-          <Link
-            href="/settings"
-            className="db-tool"
-            aria-label="Settings"
-            title="Keys, password, Last.fm, the address"
-          >
-            <GearSix size={18} weight="regular" aria-hidden="true" />
-          </Link>
-        </div>
+        {/* The mark, and nothing else. Headers hold no icons: the mark is
+            centred and the sides are for navigation, which here is the turn
+            the cross draws at the left of this line. Settings was a gear in
+            this slot for an hour and is a row below again. The mark is small
+            and the beacon keeps the large one — a crown is for a cover, and
+            the desk is a page — and it comes down from the cross rather than
+            being drawn again, since the cross owns the one mark this site
+            has. */}
+        <div className="db-head">{mark}</div>
 
         {/* The one big thing on the pane. It is a link and not a button
             because it goes somewhere — the listening flow is its own route

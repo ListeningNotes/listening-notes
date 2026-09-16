@@ -231,6 +231,22 @@
    everything else by tone and space, and one hairline doing a job the rest of
    the page does without it is a hairline that reads as leftover. Space is the
    boundary. */
+/* The quiet way into a correction, at the foot of the card. Set like the
+   labels rather than like a button: it is a shortcut for somebody already
+   reading their own page, not the door — the door is a row on the desk. */
+.idc-correct {
+  display: block;
+  margin: 26px auto 0;
+  padding: 6px 2px;
+  border: 0; background: none;
+  color: var(--ink-faint);
+  font-family: var(--font-label);
+  font-size: 9.5px; letter-spacing: 0.16em; text-transform: uppercase;
+  cursor: pointer;
+  transition: color 0.15s;
+}
+.idc-correct:hover { color: var(--ink); }
+
 .ab-below { margin-top: 34px; }
 
 /* ── Below the fold ─────────────────────────────────────────────────────────
