@@ -10,6 +10,9 @@
 // password, and the address. The starting theme and the wording of the key
 // were here for an afternoon and came off (2026-09-01) — parked, not
 // rejected; the theme column and the definitions column both still exist.
+// Light or dark came back for an hour on 2026-09-15 and went again the same
+// evening: it has one home, the top right of the beacon, and a preference
+// with two homes is a preference somebody has to find twice.
 //
 // The card's own fields — the name, the photo, the prompts, the links, the
 // rig, the pinned record — are not edited here. Everything editable is

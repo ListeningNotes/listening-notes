@@ -7,6 +7,360 @@
 /* ── Left: About ────────────────────────────────────────────────────────── */
 .ab-pane { display: flex; flex-direction: column; }
 
+/* ── The card as a page: one measure, one left edge ─────────────────────────
+   Everything here starts at the same place — the portrait, the facts, the
+   pinned record, the buttons, and the writing under them. It did not, and
+   that was the whole of "balance, waaay off" (Miyel, 2026-09-15): the card
+   object was a 340px column centred in the pane, the label-and-answer lines
+   were a 300px column centred inside *that*, and the writing below was a
+   480px column centred in the pane. Three measures, three left edges, one
+   page. The gutter belongs to the page and nothing inside it sets its own.
+
+   22px, not the cross's 34. That gutter was sized for the beacon's screen,
+   which is one big centred square with air around it; this is a page of type
+   with a picture in it, and 68px of it given away to margins is a column of
+   reading lost. */
+.ab-pane { padding: 0 var(--page-gutter); }
+/* .ab-card's own padding and .idc's max-width are set further down, where
+   those rules already live — stated twice, the copy up here lost to the copy
+   down there and the page kept an inset it was supposed to have given up. */
+.ab-card .idc-inner { text-align: left; padding: 0 0 22px; }
+/* .idc-line, .idc-row and a second .idc-name were stated here and are gone:
+   the first two describe elements this card no longer has, and the third was
+   a left-aligned 28px name competing with the centred 30px one further down
+   the file, decided by line number. */
+
+/* ── The object ─────────────────────────────────────────────────────────────
+   The portrait, full width and square. It is the same object an entry's album
+   art is one pane over — a record there, a person here — and the panes read
+   as disjointed for as long as one of them had a square and the other a
+   column of facts (Miyel's brief, 2026-09-15). No frame and no plate: the
+   photograph is the object, and everything under it is a line of the page
+   rather than a field of a card.
+
+   Square, and both 4:3 crops lost against the real photograph: the clouds
+   around the shoulders do real work and a shallower crop takes them. It is
+   also what the code needs — the same slot turns into this journal's QR, and
+   a code is square.
+
+   Not the full measure, though. It was, on the argument that it should be the
+   size an entry's album art is; at that size it is a lot of screen for a
+   photograph of somebody (Miyel, 2026-09-15). Seven-tenths of the page keeps
+   it the object — nothing else on the pane comes near it — without it being
+   the pane. */
+.ab-card .idc-photo { width: 70%; max-width: 300px; margin: 0 auto; }
+.ab-card .idc-photo .idc-portrait {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1 / 1;
+  margin: 0;
+  border-radius: 16px;
+  box-shadow: none;
+}
+
+/* ── The name, the date, and the two things a visitor can do ────────────────
+   Centred under the photograph, which is centred too (Miyel, 2026-09-15). The
+   name and the date sat left with Send and Add opposite them on one line; a
+   centred name with two buttons hanging off the right edge is not a
+   composition, so the actions came under rather than beside. They still say
+   Send and Add and not "Send an album" and "+ Add" — that shortening is what
+   keeps them one short row instead of two long pills.
+
+   The counts below are already centred, each in its own third, so the head of
+   the pane now reads down one axis: picture, name, date, the two things you
+   can do, then the numbers. Only the pinned record is ranged left, because it
+   is a record and records are left-aligned everywhere on this site. */
+.idc-ident {
+  display: flex; flex-direction: column; align-items: center;
+  gap: 14px;
+  margin-top: 18px;
+}
+.idc-ident-said { min-width: 0; text-align: center; }
+.ab-card .idc-name {
+  margin: 0;
+  font-size: 30px; line-height: 1.05; text-align: center;
+}
+.idc-keeping {
+  margin: 7px 0 0;
+  font-family: var(--font-label);
+  font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase;
+  color: var(--ink-faint);
+  text-align: center;
+}
+.idc-acts { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.idc-act { padding: 11px 22px; letter-spacing: 0.16em; }
+/* Send is the one the pane is for, so it is the one that is filled. */
+.idc-act--send { background: var(--ink); border-color: var(--ink); color: var(--bg); }
+.idc-act--send:hover { background: var(--ink); border-color: var(--ink); color: var(--bg); opacity: 0.85; }
+
+/* ── Three counts ───────────────────────────────────────────────────────────
+   Records, masterpieces, formative — each in its own flag's colour, which is
+   the first work those three tokens have had away from a mark on a record.
+   Between two hairlines, evenly spread, the number large and the word small
+   under it: typeset, not stamped. A photograph that size above them is
+   already the flourish.
+
+   These two rules are the only ones on the page (Miyel, 2026-09-15). The
+   genres row carried one and another was drawn above the writing, and four
+   hairlines on a page whose argument is that things separate by tone is three
+   too many. This band is the exception because it is a band — three counts
+   reading across, which wants a top and a bottom to read as a row rather than
+   as three stray numbers. Verticals between them were tried in between and
+   are not it: the line goes round the set, not between its parts. */
+.idc-counts {
+  display: flex; align-items: flex-start; justify-content: space-between;
+  gap: 12px;
+  margin-top: 20px;
+  padding: 16px 0;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+/* Each count is a press into the journal, filtered — so it wants to look
+   pressable without becoming a button: the number lifts a little and the word
+   under it comes up out of faint. */
+.idc-count {
+  flex: 1; min-width: 0;
+  border: 0; background: none; font: inherit;
+  text-align: center;
+  text-decoration: none; color: inherit;
+  padding: 2px 0;
+  border-radius: 8px;
+  transition: background 0.15s;
+}
+/* The number that is open says so, so it is obvious what was pressed and
+   what closes it. */
+.idc-count--open { background: var(--bg-warm); }
+.idc-count--open .idc-count-word { color: var(--ink); }
+.idc-count--open .idc-count-n { text-decoration: underline; text-underline-offset: 5px; text-decoration-thickness: 2px; }
+.idc-count:hover { background: var(--bg-warm); }
+.idc-count:hover .idc-count-word { color: var(--ink-soft); }
+.idc-count-word { transition: color 0.15s; }
+.idc-count-n {
+  display: block;
+  font-family: var(--font-display);
+  font-weight: var(--font-display-weight);
+  font-size: 26px; line-height: 1; letter-spacing: -0.01em;
+  color: var(--ink);
+}
+.idc-count-word {
+  display: block;
+  margin-top: 6px;
+  font-family: var(--font-label);
+  font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.idc-count--masterpieces .idc-count-n { color: var(--mp); }
+.idc-count--formative .idc-count-n { color: var(--formative); }
+
+/* ── Top genres ─────────────────────────────────────────────────────────────
+   One line, under the counts and over the pinned record. It is the last of
+   the counted things — the numbers say how somebody listens, this says to
+   what — so it sits with them and on their axis, not down in the writing
+   where it spent an hour. */
+.idc-genres {
+  display: flex; align-items: baseline; justify-content: center;
+  flex-wrap: wrap; gap: 4px 12px;
+  margin: 14px 0 0;
+  text-align: center;
+}
+.idc-genres-label {
+  font-family: var(--font-label);
+  font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.idc-genres-said { font-size: 14px; color: var(--ink); }
+
+/* ── The pinned record ──────────────────────────────────────────────────────
+   Art, label, title, artist — the group centred on the page with everything
+   above it, and a step smaller than it was. It sat against the left edge for
+   an hour on the argument that a record is left-aligned everywhere else on
+   this site; on a pane whose whole head is one centred column it was the only
+   thing off the axis (Miyel, 2026-09-15).
+
+   The group is centred, not its contents: the art stays left of the words,
+   because a cover above a title is a tile and this is a row. `width: auto`
+   with automatic side margins is what centres it — a full-width row with
+   `justify-content: center` would centre it too, and then a long album title
+   would push it off centre as it grew. */
+.idc-pinned {
+  display: flex; align-items: center; gap: 12px;
+  width: fit-content; max-width: 100%;
+  margin: 18px auto 0;
+  padding: 0;
+  border: 0; background: none;
+  text-align: left; text-decoration: none; color: inherit;
+  cursor: pointer;
+}
+.idc-pinned-art {
+  flex: none;
+  width: 50px; height: 50px;
+  border-radius: 8px; overflow: hidden;
+  background: var(--bg-warm);
+  display: flex; align-items: center; justify-content: center;
+  color: var(--ink-faint);
+}
+.idc-pinned-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* The pin, where the word PINNED was. Faint and small: it says what this row
+   is, and the row is already a cover with a title beside it — it does not
+   have to announce itself twice. */
+.idc-pinned-mark {
+  flex: none;
+  color: var(--ink-faint);
+  /* Mirrored, so the pin leans into the record it is pinning rather than away
+     from it. It sits to the left of the art and Phosphor draws it leaning
+     left, which pointed it off the edge of the row. */
+  transform: scaleX(-1);
+}
+.idc-pinned:hover .idc-pinned-mark { color: var(--ink-soft); }
+.idc-pinned-said { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.idc-pinned-album {
+  font-family: var(--font-display); font-weight: var(--font-display-weight);
+  font-size: 15px; line-height: 1.2; color: var(--ink);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.idc-pinned-artist {
+  font-size: 12px; color: var(--ink-soft);
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.idc-pinned:hover .idc-pinned-album { text-decoration: underline; }
+
+/* A rule between the document and the writing under it, so the page is not
+   two documents pretending to be one. */
+/* No rule above the writing. There was one, on the argument that it is the
+   line between what is counted and what was written; the page separates
+   everything else by tone and space, and one hairline doing a job the rest of
+   the page does without it is a hairline that reads as leftover. Space is the
+   boundary. */
+.ab-below { margin-top: 34px; }
+
+/* ── Below the fold ─────────────────────────────────────────────────────────
+   A quiet line saying whose voice the answers are in, then the answers, then
+   what the journal actually listens to. The heading is small caps and faint:
+   it is a caption for the section, not a title competing with the name at the
+   top of the page. */
+.ab-voice {
+  margin: 0 0 4px;
+  font-family: var(--font-label);
+  font-size: 9.5px; letter-spacing: 0.16em; text-transform: uppercase;
+  font-weight: 400;
+  color: var(--ink-faint);
+}
+
+
+/* ── A count's window ───────────────────────────────────────────────────────
+   What the two flag counts open: covers and nothing else. The sheet is the
+   height of what is in it, capped — nine covers is three rows and opens short,
+   where a fixed sheet with empty space under nine albums reads as something
+   that failed to load. Three across, which is what a phone holds and why
+   there are three counts and not four.
+
+   A bottom sheet on a phone and a panel in the middle on a desk, which is the
+   arrangement the pin's search below already uses and the archive's filters
+   before that. Opaque for the same reason that one is: it sits over a
+   photograph, and a portrait showing through a grid of covers is neither. */
+.ab-count-scrim {
+  position: fixed; inset: 0; z-index: 150;
+  background: rgba(0, 0, 0, 0.32);
+  animation: abCountFade 0.16s ease;
+}
+@keyframes abCountFade { from { opacity: 0; } to { opacity: 1; } }
+
+.ab-count-sheet {
+  position: fixed; z-index: 151;
+  left: 0; right: 0; bottom: 0;
+  max-height: min(78vh, 620px);
+  display: flex; flex-direction: column;
+  padding: 0 18px calc(22px + env(safe-area-inset-bottom));
+  background: var(--bg);
+  border-top: 1px solid var(--panel-border);
+  border-radius: 22px 22px 0 0;
+  box-shadow: var(--shadow-lift);
+  overflow-y: auto;
+  animation: abCountRise 0.22s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+@keyframes abCountRise { from { transform: translateY(14%); } to { transform: none; } }
+.ab-count-sheet--settling { transition: transform 0.18s cubic-bezier(0.22, 0.61, 0.36, 1); }
+
+/* The grip, and the whole of the pull. A press on it closes too, so the
+   gesture is never the only way out. */
+.ab-count-grip {
+  flex: none;
+  align-self: center;
+  width: 44px; height: 22px;
+  margin: 0 0 4px;
+  padding: 0;
+  border: 0; background: none;
+  cursor: grab;
+  touch-action: none;
+  position: sticky; top: 0;
+}
+.ab-count-grip::before {
+  content: '';
+  display: block;
+  width: 36px; height: 4px;
+  margin: 9px auto 0;
+  border-radius: 999px;
+  background: var(--ink-faint);
+  opacity: 0.5;
+}
+.ab-count-grip:active { cursor: grabbing; }
+
+/* The name and the number, so nothing in the grid needs a label. */
+.ab-count-head {
+  flex: none;
+  margin: 0 0 14px;
+  text-align: center;
+  font-family: var(--font-label);
+  font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.ab-count-head b {
+  font-family: var(--font-display);
+  font-weight: var(--font-display-weight);
+  font-size: 15px; letter-spacing: 0;
+  color: var(--ink);
+}
+
+.ab-count-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+.ab-count-cover {
+  display: block;
+  aspect-ratio: 1 / 1;
+  border-radius: 10px;
+  overflow: hidden;
+  background: var(--bg-warm);
+  color: var(--ink-faint);
+  text-align: center;
+  line-height: 1;
+  transition: transform 0.15s;
+}
+.ab-count-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ab-count-cover:hover { transform: translateY(-2px); }
+.ab-count-none {
+  margin: 0 0 10px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--ink-faint);
+}
+
+/* On a desk it is a panel in the middle, like the pin's search — a bottom
+   sheet across a 1280px window to show nine covers is a drawer. */
+@media (min-width: 769px) {
+  .ab-count-sheet {
+    left: 50%; right: auto; bottom: auto; top: 50%;
+    transform: translate(-50%, -50%);
+    width: min(420px, calc(100vw - 48px));
+    border-radius: 18px;
+    border: 1px solid var(--panel-border);
+    padding: 0 18px 20px;
+    animation: none;
+  }
+  .ab-count-grip { display: none; }
+}
+
 /* ── The pin's search ───────────────────────────────────────────────────────
    A panel in the middle of a desktop screen and a bottom sheet on a phone,
    which is the arrangement the archive's filters already use. It is the same
@@ -110,16 +464,19 @@
   @keyframes abPinSlide { from { transform: translateY(100%); } to { transform: none; } }
 }
 .ab-card {
-  min-height: calc(100dvh - var(--hn-crown));
+  /* No minimum height and nothing to fill, since 2026-09-15. The card was a
+     floor — one screen that held still, with the writing on a second floor
+     below it — and it is a page now: the glance at the top, the reading
+     continuing down the same scroll. Down is cover-then-contents and the card
+     is not a cover, so there is nothing here to arrive at. */
   box-sizing: border-box;
   display: flex;
-  /* flex-start, not centre. The card leads with the portrait now, and the
-     portrait has to sit directly under the crown to land on the same line as
-     the beacon's album art one pane over. Centred, it drifted by however much
-     shorter than a screen the card happened to be. */
   align-items: flex-start;
   justify-content: center;
-  padding: 0 16px 84px;
+  /* No side padding: the gutter is the page's, on .ab-pane, and it is the
+     only one — which is what lets the glance cancel it with a negative
+     margin and run to the edges. */
+  padding: 0;
 }
 /* The card stops carrying its own scrollbar. It had one because it used to be
    a fixed-size object on a pane that did not scroll; the pane scrolls now, and
@@ -128,38 +485,61 @@
 .ab-card .idc {
   height: auto;
   max-height: none;
-  /* 340 elsewhere. Twenty pixels narrower is not a change anybody reads as a
-     change, and it is what puts clear air between the card's edge and the
-     caret sitting on the edge of the window. */
-  max-width: 320px;
+  /* No measure of its own. It was 320 — twenty narrower than the card object's
+     340, to put air between the card's edge and the caret on the edge of the
+     window — and a centred 320px column inside a page that already has a
+     gutter is the second of the three measures this page was rebuilt to get
+     rid of. The page is the measure now. */
+  max-width: none;
+  margin: 0;
 }
 /* The mark, once. The bar across the top of the cross carries it on every
    pane now, and a card printed with the same mark 130px below it reads as a
    mistake rather than as a colophon. The head keeps its height and its tools:
    only the logo goes, and the row is pushed right so the owner's edit controls
    stay in the corner they have always been in. */
-/* The owner's controls, pinned to the window opposite the lights rather than
-   to the corner of the card. Two controls that belong to the page rather than
-   to anything on it, one at each end of the same line — and the pencil stops
-   travelling up the screen with the card as the pane scrolls.
-   Fixed, so it also stops taking a row in the card's column: left in the flow
-   it put 44px of air between the crown and the portrait, which is 44px of
-   drift against the album art on the pane beside it. */
+/* ── The card's header ──────────────────────────────────────────────────────
+   The small mark, and the owner's two tools opposite it. In the flow at the
+   top of the page, 2026-09-15: it was fixed to the window, and the reasons
+   for that are both gone. One was that a header in the flow put 44px of air
+   between the crown and the portrait, which was 44px of drift against the
+   album art on the pane beside it — there is no crown here now and no line to
+   hold. The other was that a fixed pencil does not travel up the screen as
+   the pane scrolls, which is true and is also just what a page's header does.
+
+   The mark is drawn here now for the same reason. The card lost the crown and
+   the beacon kept it: a crown is for a cover, and the card is a page. */
+/* The mark centred, one control at the right — and centred is not a
+   preference here, it is what makes the header hold still. Scroll the pane
+   and this mark leaves while the bar's fades in behind it; at two sizes and
+   two positions that read as a header resizing itself, and at one size in one
+   place it reads as a mark that simply stays (Miyel, 2026-09-15). Both are
+   28px on the same line now, which is also what every other mark on the site
+   measures.
+
+   Absolutely centred rather than centred by the flex row, because the row has
+   a pencil at one end and nothing at the other: a row like that centres its
+   middle child on what is left over, not on the page. */
 .ab-card .idc-head {
-  position: fixed;
-  top: max(12px, calc(env(safe-area-inset-top) - 12px));
-  left: 16px;
-  right: auto;
-  min-height: 0;
-  margin: 0;
-  z-index: 97;
+  position: relative;
+  display: flex; align-items: center; justify-content: flex-end;
+  min-height: 30px;
+  margin: 0 0 18px;
+  padding: 0;
 }
-.ab-card .idc-mark { display: none; }
-/* The portrait's own margin becomes the shared offset, so the two squares
-   cannot drift apart by somebody editing one of them. */
-.ab-card .idc-portrait { margin-top: var(--hn-square-top); }
+/* Pinned 15px down rather than centred on the row: the row's height is
+   whatever the pencil happens to be, and the mark has to land on the bar's
+   line — 36px of page padding plus 15 is the 51 the bar centres on — not on
+   the middle of whatever else is in the row. Three pixels of drift is exactly
+   what makes a mark look like it jumped. */
+.ab-card .idc-mark {
+  display: block;
+  position: absolute;
+  left: 50%;
+  top: 15px;
+  transform: translate(-50%, -50%);
+}
 .ab-card .idc-inner {
-  flex: none;
   min-height: 0;
   overflow: visible;
 }
@@ -185,9 +565,13 @@
   flex-direction: column;
   gap: 30px;
   width: 100%;
-  max-width: 480px;
-  margin: 0 auto;
-  padding: 8px var(--hn-gutter) max(40px, env(safe-area-inset-bottom));
+  /* No measure and no gutter of its own — both are the page's. This was a
+     480px column centred in the pane with the cross's 34px gutter inside it,
+     which is the third of the three measures the card was rebuilt to get rid
+     of: the writing sat 34px further in than the name above it. */
+  max-width: none;
+  margin: 0;
+  padding: 4px 0 max(40px, env(safe-area-inset-bottom));
   box-sizing: border-box;
 }
 .ab-block { display: flex; flex-direction: column; gap: 12px; }
@@ -205,24 +589,65 @@
   margin: 0;
 }
 /* ── The prompts ────────────────────────────────────────────────────────────
-   An opening and its answer on one line, because they are one sentence. The
-   opening is quiet and the answer carries the ink: the interesting half is
-   what somebody said, and a prompt set at the same weight as its answer reads
-   as a form rather than as a person talking. */
-.ab-block--prompts { gap: 0; }
+   Air between them. It was 0 while they were rows separated by hairlines —
+   a gap there would have put space around the lines rather than between the
+   prompts — and they are cards now, so the space is the separation. At 10px
+   three rounded grounds nearly met and read as one run of bubbles; this is
+   enough that each is its own thing. */
+.ab-block--prompts { gap: 18px; }
+/* ── A prompt ───────────────────────────────────────────────────────────────
+   A card with no border: the box exists and does not announce itself, so
+   three of them in a row do not read as three rectangles (Miyel's brief,
+   2026-09-15). Separated by tone rather than by line, which is how the counts
+   and the pinned record above them already sit — three hairlines here would
+   have been competing with the row directly above.
+
+   Set the way an album and its artist are set, which is this site's one
+   settled answer for a two-part thing (Miyel, 2026-09-15): the label face
+   small, in caps, for the part that names it, and the display face for the
+   part that is it. An entry does it as a title over an artist; the pinned
+   record directly above these cards does it as PINNED over an album. A prompt
+   is the same shape — the question names, the answer is the thing — so the
+   question is the small line and the answer is the large one.
+
+   That puts the emphasis where it belongs as a side effect. The question ships
+   with the software and is identical on every copy; the answer is the only
+   part anybody wrote. The first version had them the other way round, with a
+   sentence-length question set in mono, and a paragraph of monospace is a
+   thing to decode rather than read.
+
+   MuseoModerno was asked for and is not available: the mark is drawn as SVG
+   paths rather than set as type, so the face has never been loaded, and a
+   third family fetched by every visitor to style nine short questions is the
+   Anton mistake again (app/layout.js has the note). */
 .ab-prompt {
   margin: 0;
-  padding: 13px 0;
-  border-bottom: 1px solid var(--border);
-  font-size: 15px;
-  line-height: 1.6;
-  /* balance, so a two-line answer breaks somewhere sensible rather than
-     leaving one word under the opening. */
+  padding: 18px 20px 20px;
+  border-radius: 16px;
+  background: var(--panel);
   text-wrap: pretty;
 }
-.ab-prompt:last-child { border-bottom: none; }
-.ab-prompt-ask { color: var(--ink-faint); }
-.ab-prompt-said { color: var(--ink); }
+.ab-prompt-ask {
+  margin: 0;
+  font-family: var(--font-label);
+  font-size: 10px; line-height: 1.5;
+  letter-spacing: 0.15em; text-transform: uppercase;
+  color: var(--ink-faint);
+}
+/* Indented behind a rule, like a pull quote: the answer is being quoted into
+   the question's card, not continuing its sentence. */
+.ab-prompt-said {
+  margin: 10px 0 0;
+  padding-left: 14px;
+  border-left: 2px solid var(--border);
+  /* Not bold. The album-title treatment gave it the display weight, and at
+     three or four lines that is a headline rather than something somebody
+     wrote — the size is already doing the work of saying this is the part
+     that matters (Miyel, 2026-09-15). */
+  font-weight: 400;
+  font-size: 17px; line-height: 1.5; letter-spacing: -0.005em;
+  color: var(--ink);
+}
 
 /* ── Answering them ─────────────────────────────────────────────────────────
    The opening on its own line above the answer while editing, rather than
@@ -412,11 +837,12 @@ a.ab-rig-name:hover { text-decoration: underline; }
    landing page is a fixed pair of snapped panes with no document scroll
    of its own, so anything taller than the pane has to carry its own
    scroller or its bottom is unreachable. */
+/* Not a scroller any more, 2026-09-15: the face it sits on is the scroller
+   and a second one inside it meant the card could be scrolled while the page
+   under it stayed put. The soft bottom edge went with it — there is nothing
+   below to hide, because the writing simply continues down the page. */
 .idc-inner {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
+  width: 100%;
   text-align: center;
   padding: 0 4px 24px;
 }
@@ -542,6 +968,9 @@ a.ab-rig-name:hover { text-decoration: underline; }
    this cover shows a record at that size in that frame; the back shows
    a person. Matching them is what makes the two sides read as one
    object turned over rather than as two designs. */
+/* The old glance — a portrait beside a stack of label-and-answer lines —
+   is the object above now. */
+
 .idc-portrait {
   display: block;
   position: relative;
@@ -897,20 +1326,28 @@ a.ab-rig-name:hover { text-decoration: underline; }
    portrait and the name can be the size they are on a phone rather than a
    reduction of it, and the facts get a line each without wrapping. */
 @media (min-width: 769px) {
-  .ab-card { min-height: auto; padding: var(--hn-rail-top) var(--hn-gutter, 18px) 24px; }
+  /* The page keeps one gutter here too, so the glance's bleed stays exactly
+     as wide as it — the card only has to start under the switch's row on top
+     of that. */
+  .ab-card { min-height: auto; padding: var(--hn-rail-top) 0 24px; }
+  /* One mark on a desk, and it is the one in the bar over the journal (see
+     the note in nav.css). The header stops bleeding and stops leaving room
+     for the light switch too: the lights are over the journal here, not over
+     the spine, so there is nothing on this page's line but its own tools. */
+  .ab-card .idc-mark { display: none; }
+  .ab-card .idc-head { margin: 0 0 16px; padding: 0; }
+  .ab-below { padding: 0 0 40px; }
   .ab-card .idc { max-width: none; }
   .ab-card .idc-head { top: 22px; left: var(--hn-gutter, 18px); }
-  .ab-card .idc-portrait {
-    width: 100%; max-width: 208px; height: auto; aspect-ratio: 1 / 1;
-    margin-top: 0; border-radius: 14px;
-  }
-  .ab-card .idc-name { font-size: 26px; margin-top: 18px; }
-  .ab-card .idc-line { flex-wrap: wrap; row-gap: 2px; max-width: none; margin-top: 13px; font-size: 12px; }
-  .ab-card .idc-line-label { width: auto; }
-  /* The pinned record takes the row under its label rather than the sixty
-     pixels beside it, where the album's name was three letters and dots. */
-  .ab-card .idc-pin-row { flex-direction: column; align-items: flex-start; gap: 6px; }
-  .ab-card .idc-pin { width: 100%; }
+  /* The object on the spine: the phone's object at a narrower measure. The
+     photograph steps down, the fields keep their grid, and the stamps keep
+     their angles with less to strike across. */
+  .idc-object { gap: 14px; }
+  .idc-photo { width: 88px; }
+  .idc-photo .idc-portrait { width: 88px; height: 88px; }
+  .idc-fields { column-gap: 12px; row-gap: 8px; }
+  .idc-field-value { font-size: 12px; }
+  .idc-field-value--name { font-size: 14px; }
   .ab-card .idc-send { margin-top: 14px; }
   /* The writing under the card, on the same scroll rather than a floor of
      its own: on a desk the floors are plain wrappers and the page is the

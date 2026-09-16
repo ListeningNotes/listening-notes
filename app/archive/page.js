@@ -20,16 +20,21 @@ import { fonts } from '../../library/sitewide_visuals';
 import SiteNav from '../../components/main_components/SiteNav';
 import Journal from '../../components/main_components/Journal';
 
-export default function ArchivePage() {
+// `layered` survives from the hour /archive was intercepted as a sheet, for
+// the ID card's counts to open. The counts open a window of covers on their
+// own pane now and nothing intercepts this address, so nothing passes it —
+// kept because the next thing to open the wall on a sheet will want it, and
+// it costs one falsy default.
+export default function ArchivePage({ layered = false }) {
   return (
     <div className="arc-page" style={{ background: 'var(--bg)', minHeight: '100vh', color: 'var(--ink)', fontFamily: fonts.sans }}>
       <SiteNav />
       <Journal
-        foot={
+        foot={layered ? null : (
           <div style={{ marginTop: 80, paddingTop: 32, borderTop: '1px solid var(--border)', textAlign: 'center' }}>
             <Link href="/" className="ln-pill">← Back home</Link>
           </div>
-        }
+        )}
       />
     </div>
   );

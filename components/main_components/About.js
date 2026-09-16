@@ -1,7 +1,9 @@
 // Copyright (C) 2026 Miyel Brown
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // components/main_components/About.js
-// The left pane of the cross: who keeps this journal.
+// One face of the cross's turning pane: who keeps this journal. The other is
+// the desk, or the colophon signed out; a switch at the foot turns between
+// them, and the journal beside them does not move when it does.
 //
 // This is the about page. Not a link to one — the page itself, sitting where
 // the card used to have to be turned over to reach. The flip is gone: a card
@@ -38,8 +40,10 @@
 // nothing.
 
 'use client';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ArrowSquareOut, CaretDown, Check, GlobeSimple, LinkSimple, MagnifyingGlass, Plus, X } from '@phosphor-icons/react';
+import Link from 'next/link';
+import { arrivingAlone } from '../../library/handoff';
 import IdentityCard from './IdentityCard';
 import {
   DEFAULT_RIG_ICON, LINK_ICONS, RIG_ICONS, identify, readLink, rigIcon,
@@ -69,9 +73,19 @@ const PIN_RESULTS = 40;
 // over a list that is already in memory. A journal large enough for that to be
 // the wrong shape is a journal whose archive has the same problem, and they
 // should be solved together.
-export default function About({ crown = null, stamps, authed = false, pinned = null, entries = [] }) {
+export default function About({ stamps, authed = false, pinned = null, entries = [] }) {
   const settings = useBookplate();
-  const { bioanswers, rig: rigRows, rig_icon, social_links } = settings;
+  const { bioanswers, keeper_name, rig: rigRows, social_links } = settings;
+
+  // Whose voice the answers are in, and what the journal actually listens to.
+  // The name rather than a pronoun: every copy has a different somebody in it,
+  // and "In Miyel's own words" reads where "In their own words" has to cover
+  // everyone. No name yet — a copy claimed an hour ago — and it falls back to
+  // the pronoun, which is the one case where covering everyone is right.
+  // Top genres is the card's again (IdentityCard), under the counts: it is the
+  // last of the counted things, not part of the reading. It printed down here
+  // for an hour on the argument that it is neither a count nor something
+  // anybody wrote, and the first half of that is wrong — it is counted.
 
   // One edit session for the pane, owned here and handed to the card. The card
   // used to make its own, which was fine while everything editable was printed
@@ -85,6 +99,47 @@ export default function About({ crown = null, stamps, authed = false, pinned = n
   // thing it is covering.
   const [pinOpen, setPinOpen] = useState(false);
   const [pinQuery, setPinQuery] = useState('');
+
+  // ── The count windows ─────────────────────────────────────────────────────
+  // Which of the two flag counts is open, if either. A window of covers and
+  // nothing else — no search, no filter, no sort — because this is a glance
+  // and browsing is the wall's job (Miyel's brief, 2026-09-15). Owned here
+  // rather than in the card for the same reason the pin's search is: the sheet
+  // covers the pane, and a fixed panel drawn from inside the card would belong
+  // to the thing it is sitting on top of.
+  const [openCount, setOpenCount] = useState(null);
+  // The drag that puts it away, the shape the archive's filter sheet uses
+  // (JournalFilters): pointer events, so one pair of handlers drives a finger
+  // and a trackpad, and downward only — tracking upward would lift the sheet
+  // off the bottom of the screen and show the page behind it.
+  const countSheetRef = useRef(null);
+  const countFromRef = useRef(null);
+  const [countDrag, setCountDrag] = useState(0);
+  const [countSettling, setCountSettling] = useState(false);
+
+  const shutCount = useCallback(() => {
+    setOpenCount(null);
+    setCountDrag(0);
+    setCountSettling(false);
+  }, []);
+
+  // What is in the open window. The same two tests the wall filters on
+  // (Journal.js), so the window and the archive's filter can never disagree
+  // about what counts; masterpiece was a rating before it was a column, which
+  // is why the first one asks twice.
+  const inWindow = useMemo(() => {
+    if (!openCount) return [];
+    return entries.filter(e => (openCount === 'masterpieces'
+      ? (e.masterpiece === true || e.rating === 'Masterpiece')
+      : (e.formative === true || e.formative === 'true')));
+  }, [openCount, entries]);
+
+  useEffect(() => {
+    if (!openCount) return undefined;
+    const onKey = e => { if (e.key === 'Escape') shutCount(); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [openCount, shutCount]);
 
   // Which slot has its list of openings open, if any. One at a time, the same
   // way the card's mark chooser works — two lists of nine sentences open at
@@ -133,11 +188,12 @@ export default function About({ crown = null, stamps, authed = false, pinned = n
   // Same filter the card applies, for the same reason: a row with no name is a
   // row somebody started and abandoned in the editor, and it should not print.
   const rigList = (Array.isArray(rigRows) ? rigRows : []).filter(r => r?.name?.trim());
-  const rig = rigIcon(rig_icon);
+  // rigIcon(rig_icon) resolved the keeper's chosen mark for the Rig setup
+  // heading, which no longer wears one. Nothing reads it now; the chooser in
+  // the editor still writes it. See the heading.
   // What the heading wears: the saved mark normally, the draft one while
   // editing, so pressing a new mark changes the heading under your thumb
   // rather than after a save.
-  const RigMark = edit.editing ? chosenRig.Icon : rig?.Icon;
 
   // Where else this person can be found. They used to be marks in the row
   // beside "Send an album" on the card, which put "here is somebody's Instagram"
@@ -285,20 +341,97 @@ export default function About({ crown = null, stamps, authed = false, pinned = n
 
   return (
     <div className="ab-pane" ref={paneRef}>
-      {/* Floor one: the crown and the card, one screen that holds still. On a
-          desk the floor is a wrapper and the column scrolls — see nav.css. */}
-      <div className="hn-floor">
-        {crown}
-        <div className="ab-card">
-          <IdentityCard
-            stamps={stamps}
-            authed={authed}
-            edit={edit}
-            pinned={showingPin}
-            onPickPin={() => { setPinQuery(''); setPinOpen(true); }}
-          />
-        </div>
+      {/* No floors, and no crown, since 2026-09-15. The card is a page and
+          pages scroll: the glance is at the top, the reading continues down
+          the same scroll, and there is nothing to arrive at. Down means
+          cover-then-contents and only the beacon and an entry have that shape
+          — see HomeNav. The mark is small, in the card's own header. */}
+      <div className="ab-card">
+        <IdentityCard
+          stamps={stamps}
+          authed={authed}
+          edit={edit}
+          pinned={showingPin}
+          onPickPin={() => { setPinQuery(''); setPinOpen(true); }}
+          openCount={openCount}
+          onOpenCount={next => { setCountDrag(0); setCountSettling(false); setOpenCount(next); }}
+        />
       </div>
+
+      {/* ── A count's window ──────────────────────────────────────────────
+          Covers and nothing else: no bar, no search, no sort. The name and
+          the number are in the header, so nothing needs a label, and the
+          sheet is the height of what is in it — nine covers is three rows and
+          should open short, where a fixed sheet with empty space under nine
+          albums reads as something failing to load.
+
+          Pressing a cover closes the window before the entry opens. One layer
+          at a time: an entry arriving over an open sheet is the nesting
+          problem in Gotchas, where a fixed panel inside a layer measures
+          itself against the sheet rather than the window. And it opens alone —
+          this pane hands out no order to swipe through. */}
+      {openCount && (
+        <>
+          <div className="ab-count-scrim" onClick={shutCount} />
+          <div
+            className={'ab-count-sheet' + (countSettling ? ' ab-count-sheet--settling' : '')}
+            ref={countSheetRef}
+            style={countDrag ? { transform: `translateY(${countDrag}px)` } : undefined}
+            role="dialog"
+            aria-label={`${inWindow.length} ${openCount}`}
+          >
+            <button
+              type="button"
+              className="ab-count-grip"
+              aria-label="Close"
+              onClick={shutCount}
+              onPointerDown={e => {
+                countFromRef.current = e.clientY;
+                setCountSettling(false);
+                e.currentTarget.setPointerCapture(e.pointerId);
+              }}
+              onPointerMove={e => {
+                if (countFromRef.current === null) return;
+                setCountDrag(Math.max(0, e.clientY - countFromRef.current));
+              }}
+              onPointerUp={() => {
+                if (countFromRef.current === null) return;
+                countFromRef.current = null;
+                const height = countSheetRef.current?.offsetHeight ?? 400;
+                // A short sheet should not need a long pull and a tall one
+                // should not go on a twitch — whichever is smaller.
+                const closeAt = Math.min(120, height * 0.28);
+                setCountSettling(true);
+                if (countDrag > closeAt) { setCountDrag(height); setTimeout(shutCount, 180); }
+                else setCountDrag(0);
+              }}
+            />
+            <p className="ab-count-head">
+              <b>{inWindow.length}</b> {openCount}
+            </p>
+            {inWindow.length > 0 ? (
+              <div className="ab-count-grid">
+                {inWindow.map(row => (
+                  <Link
+                    key={row.id}
+                    href={`/entries/${row.slug}`}
+                    className="ab-count-cover"
+                    title={`${row.album} — ${row.artist}`}
+                    aria-label={`${row.album} — ${row.artist}`}
+                    onClick={() => { arrivingAlone(); shutCount(); }}
+                  >
+                    {row.album_art
+                      ? <img src={row.album_art} alt="" loading="lazy" />
+                      : <span aria-hidden="true">\u266a</span>}
+                  </Link>
+                ))}
+              </div>
+            ) : (
+              <p className="ab-count-none">Nothing marked {openCount} yet.</p>
+            )}
+          </div>
+        </>
+      )}
 
       {/* ── The pin's search ──────────────────────────────────────────────
           A bottom sheet on a phone and a panel in the middle on a desktop,
@@ -373,8 +506,6 @@ export default function About({ crown = null, stamps, authed = false, pinned = n
           until it is, this is just where one thing stops and the next
           begins. */}
       {hasReading && (
-      <div className="hn-floor">
-      <div className="hn-floor-scroll">
       <div className="ab-below">
         {/* The prompts. Prompt and answer on one line, because they are one
             sentence: "I can never skip — Voodoo, side two" is a thought, and
@@ -467,11 +598,22 @@ export default function About({ crown = null, stamps, authed = false, pinned = n
           </section>
         ) : answered.length > 0 && (
           <section className="ab-block ab-block--prompts">
+            {/* No heading. It said "In Miyel's own words" for an hour and did
+                not need to: a question in one voice with an answer in another
+                already says which of the two you are reading (Miyel,
+                2026-09-15). */}
+            {/* The opening carries its own trailing em dash (bioprompt.js),
+                which was there to separate the question from the answer on one
+                line. They are on two lines in two faces now, so the dash is
+                separating things that separate themselves — taken off at the
+                render rather than out of the nine strings, because it is the
+                typography that made it redundant and the typography is the
+                thing most likely to change again. */}
             {answered.map(row => (
-              <p className="ab-prompt" key={row.key}>
-                <span className="ab-prompt-ask">{row.text}</span>{' '}
-                <span className="ab-prompt-said">{row.answer}</span>
-              </p>
+              <div className="ab-prompt" key={row.key}>
+                <p className="ab-prompt-ask">{row.text.replace(/\s*[—–-]\s*$/, '')}</p>
+                <p className="ab-prompt-said">{row.answer}</p>
+              </div>
             ))}
           </section>
         )}
@@ -498,10 +640,14 @@ export default function About({ crown = null, stamps, authed = false, pinned = n
                 and what it does, and the rest is the journal. Hardcoded they
                 would also be one person's essay shipped inside everybody's
                 copy — see the note on the rig column in migrations/001_initial.sql. */}
-            <h2 className="ab-subhead">
-              {RigMark && <RigMark size={15} weight="regular" aria-hidden="true" />}
-              Rig setup
-            </h2>
+            {/* Two words and no glyph (Miyel, 2026-09-15). The mark that was
+                here was the rig's chosen one — see the note by `chosenRig`
+                below: choosing it is still offered in the editor and this was
+                the only place it printed, so that choice currently changes
+                nothing. It is left offered rather than quietly removed,
+                because taking a setting away is a decision and this was a
+                note about a glyph. */}
+            <h2 className="ab-subhead">Rig setup</h2>
             {edit.editing ? (
               <div className="idc-links">
                 {/* The rig, chosen the same way. It sits with the links because it
@@ -712,8 +858,6 @@ export default function About({ crown = null, stamps, authed = false, pinned = n
           </section>
         )}
 
-      </div>
-      </div>
       </div>
       )}
     </div>

@@ -1,66 +1,233 @@
 // Copyright (C) 2026 Miyel Brown
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // components/main_components/KeeperTools.js
-// The two things only this journal's keeper can do to the page they are on.
+// The things only this journal's keeper can do to the thing they are looking
+// at, behind one mark.
 //
-// Top left of the header, quiet, in the corner — the same place and the same
-// weight the About card gives its pencil, because they are the same kind of
-// thing and should not look like two different ideas. The card's version is
-// pinned to the card's own corner rather than drawn here; what matches is the
-// treatment, not the markup.
+// ── Why a menu now, when two glyphs were the argument against one ──────────
+// This file used to say: two glyphs read at a glance and a menu does not, and
+// a DotsThree would be one press to find out what is behind it, every time,
+// for a set of two. The note ended "if a third tool ever appears, the pencil
+// becomes the menu and nothing else moves." A third has — Delete, which was
+// reachable only from inside a correction — and the rule it was waiting for
+// is now the general one: no icons in headers, and an owner's tools live in a
+// row on the desk or behind a ··· on the thing itself (Miyel's brief,
+// 2026-09-15). Two glyphs in the corner were what made an entry read as a
+// toolbar rather than as a page.
 //
-// ── Why two and not a menu ────────────────────────────────────────────────
-// Two glyphs read at a glance and a menu does not. A `DotsThree` would be one
-// press to find out what is behind it, every time, for a set of two — and it
-// would be the second navigation on a page whose whole job is to be read. If a
-// third tool ever appears, the pencil becomes the menu and nothing else moves.
+// ── It opens in the row ───────────────────────────────────────────────────
+// Not as a panel over the page. An entry arrives on a sheet that claims
+// sideways for the next record and down for closing itself, and a floating
+// menu on top of that is a third surface competing for the same gestures —
+// the nesting problem in NOTES, where a fixed panel inside a layer measures
+// itself against the sheet rather than the window. Pressed, the mark stays
+// exactly where it is and the tools come out from under it. Pressed again,
+// they go back in.
 //
-// ── Why these two ─────────────────────────────────────────────────────────
-// The pencil corrects the writing. The printer makes something out of it — a
-// card, a picture, a code. They are the owner's half of a split that runs
-// through the whole site: the printer takes the *contents* somewhere, so it
-// is owner-only; copying a link passes along an *address*, so it belongs to
-// everybody and lives at the foot of the entry instead. The printer opens
-// the press in place over the entry when the page hands an `onPrint`
-// (FullPostPage does, 2026-09-13); without one it is a link to /printer,
-// the press's own address.
+// ── The door does not move ────────────────────────────────────────────────
+// The first version swapped the ··· for an × at the other end of the group,
+// so the thing you had just pressed jumped across the row before you could
+// let go. The mark is the door: it stays in its corner, it turns into the ×,
+// and the tools file out of it one at a time and file back in the same way
+// (Miyel, 2026-09-15).
 //
-// Nothing here decides whether it should be drawn. The page above does that on
-// the server and simply does not render this for a visitor — see
-// wristbandOnHand in library/wristband.js for why that is worth the trouble.
+// The corner is the top right on every surface that has one — the entry's
+// header and the card's — so the tools always come out leftwards, and this
+// file does not know or care which page it is on. `--kt-dir` in nav.css is
+// the knob if a left-hand corner ever wants one.
+//
+// One exception, and it is measured rather than felt: the entry's row is the
+// sitewide nav, which is 28px of padding either side of a centred mark, and
+// three tools and a door reach 197px back from the right on a 375px phone
+// while the mark ends at 212. So the row is told when the menu is open and
+// takes its mark off the screen for as long as it is — the row becomes the
+// menu, and comes back when it shuts. The card has two tools and 30px to
+// spare, and keeps its mark. This is a DOM write rather than a prop because
+// the row is two components away (FullPostPage builds the menu, SiteNav draws
+// the row) and threading a boolean through both to hide one logo is more
+// moving parts than the thing it moves.
+//
+// ── What is in it ─────────────────────────────────────────────────────────
+// On an entry: the pencil corrects the writing, the printer makes something
+// out of it, and Delete ends it — opening the correction's own confirmation
+// rather than doing anything itself, because the warning and the second press
+// already exist there and a destructive action should not get a shorter path
+// just because it moved to a shorter menu. On the card: the pencil and the
+// printer, and nothing that ends anything. You cannot delete the card; it is
+// the journal.
+//
+// A visitor sees none of this. Sharing stays one path — press the album art,
+// get the code and the address copied — and a second door to it here would
+// need explaining and does not earn a control. Nothing in this file decides
+// whether it is drawn: the page above does that on the server and simply does
+// not render it for a visitor (library/wristband.js, wristbandOnHand).
 'use client';
 
+import { cloneElement, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { Pencil, Printer } from '@phosphor-icons/react';
+import { DotsThree, Pencil, Printer, Trash, X } from '@phosphor-icons/react';
 
-export default function KeeperTools({ onEdit, slug, onPrint = null }) {
+// How long the tools take to file back in. It has to outlast the longest
+// kt-file-in in nav.css — delay plus duration, 286ms for three tools — or the
+// last one is unmounted mid-stride and vanishes, which is the exact thing the
+// animation exists to avoid. Deliberately quicker than opening: waiting for a
+// menu to finish leaving is the one thing nobody wants.
+const PACKING_UP = 320;
+
+const WORDS = {
+  entry: {
+    all:    'What you can do with this entry',
+    edit:   'Correct this entry',
+    print:  'Print this entry',
+    remove: 'Delete this entry',
+  },
+  card: {
+    all:    'What you can do with this card',
+    edit:   'Edit this card',
+    print:  'Print this card',
+    remove: null,
+  },
+};
+
+export default function KeeperTools({
+  what = 'entry',
+  onEdit,
+  slug = null,
+  onPrint = null,
+  onDelete = null,
+}) {
+  const words = WORDS[what] || WORDS.entry;
+  // 'shut' · 'out' — the tools are on their way out or already there · 'back'
+  // — they are on their way in and still on screen.
+  const [phase, setPhase] = useState('shut');
+  const open = phase === 'out';
+  const timer = useRef(null);
+
+  const shut = () => {
+    if (timer.current) clearTimeout(timer.current);
+    setPhase('back');
+    timer.current = setTimeout(() => setPhase('shut'), PACKING_UP);
+  };
+  const press = () => {
+    if (timer.current) clearTimeout(timer.current);
+    if (open) shut();
+    else setPhase('out');
+  };
+
+  // Nothing here sets state — it only makes sure a menu that is taken off the
+  // page mid-close does not come back to a component that has gone.
+  useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
+
+  // Tell the nav row, if this is in one, so it can get its mark out of the
+  // way. Nothing happens on a card: there is no .sitenav-row over it.
+  const mine = useRef(null);
+  useEffect(() => {
+    const row = mine.current && mine.current.closest('.sitenav-row');
+    if (!row) return undefined;
+    row.toggleAttribute('data-tooling', phase === 'out');
+    return () => row.removeAttribute('data-tooling');
+  }, [phase]);
+
+  // Escape closes it, and closing is all Escape does here — the sheet under
+  // this has its own Escape and would otherwise take the entry away with the
+  // menu still on screen.
+  useEffect(() => {
+    if (!open) return undefined;
+    const onKey = event => {
+      if (event.key !== 'Escape') return;
+      event.stopPropagation();
+      if (timer.current) clearTimeout(timer.current);
+      setPhase('back');
+      timer.current = setTimeout(() => setPhase('shut'), PACKING_UP);
+    };
+    window.addEventListener('keydown', onKey, true);
+    return () => window.removeEventListener('keydown', onKey, true);
+  }, [open]);
+
+  const tools = [];
+
+  tools.push(
+    <button
+      key="edit"
+      type="button"
+      className="kt-tool kt-tool--out"
+      onClick={() => { shut(); onEdit(); }}
+      aria-label={words.edit}
+      title={words.edit}
+    >
+      <Pencil size={18} weight="regular" aria-hidden="true" />
+    </button>
+  );
+
+  tools.push(
+    onPrint ? (
+      <button
+        key="print"
+        type="button"
+        className="kt-tool kt-tool--out"
+        onClick={() => { shut(); onPrint(); }}
+        aria-label={words.print}
+        title={words.print}
+      >
+        <Printer size={18} weight="regular" aria-hidden="true" />
+      </button>
+    ) : (
+      /* The slug travels so the printer opens on this record rather than on
+         whichever one happens to be first in the list. */
+      <Link
+        key="print"
+        href={slug ? `/printer?entry=${encodeURIComponent(slug)}` : '/printer'}
+        className="kt-tool kt-tool--out"
+        aria-label={words.print}
+        title={words.print}
+      >
+        <Printer size={18} weight="regular" aria-hidden="true" />
+      </Link>
+    )
+  );
+
+  if (onDelete && words.remove) {
+    tools.push(
+      <button
+        key="remove"
+        type="button"
+        className="kt-tool kt-tool--out kt-tool--end"
+        onClick={() => { shut(); onDelete(); }}
+        aria-label={words.remove}
+        title={words.remove}
+      >
+        <Trash size={18} weight="regular" aria-hidden="true" />
+      </button>
+    );
+  }
+
+  // Two numbers per tool, and they are the whole animation. --kt-i is how many
+  // boxes it is from the door, which is both how far it travels and how long
+  // it takes. --kt-d is its turn in the queue going out: the one that ends up
+  // furthest away leaves first and the rest stop short behind it, the way a
+  // line of people coming through a door fills a room from the back.
+  const filing = phase === 'shut' ? null : tools.map((tool, i) =>
+    cloneElement(tool, { style: { '--kt-i': i + 1, '--kt-d': tools.length - (i + 1) } })
+  );
+
   return (
-    <>
+    <div ref={mine} className={'kt-tools' + (phase === 'back' ? ' kt-tools--back' : '')}>
       <button
         type="button"
-        className="kt-tool"
-        onClick={onEdit}
-        aria-label="Correct this entry"
-        title="Correct this entry"
+        className="kt-tool kt-tool--door"
+        onClick={press}
+        aria-label={open ? 'Close' : words.all}
+        aria-expanded={open}
+        title={open ? 'Close' : words.all}
       >
-        <Pencil size={18} weight="regular" aria-hidden="true" />
+        {/* Both glyphs, stacked and turning past each other, because the mark
+            is one object that opens rather than two that swap. */}
+        <span className="kt-door">
+          <DotsThree className="kt-door-dots" size={22} weight="bold" aria-hidden="true" />
+          <X className="kt-door-x" size={17} weight="regular" aria-hidden="true" />
+        </span>
       </button>
-      {onPrint ? (
-        <button type="button" className="kt-tool" onClick={onPrint} aria-label="Print this entry" title="Print this entry">
-          <Printer size={18} weight="regular" aria-hidden="true" />
-        </button>
-      ) : (
-        /* The slug travels so the printer opens on this record rather than
-           on whichever one happens to be first in the list. */
-        <Link
-          href={slug ? `/printer?entry=${encodeURIComponent(slug)}` : '/printer'}
-          className="kt-tool"
-          aria-label="Print this entry"
-          title="Print this entry"
-        >
-          <Printer size={18} weight="regular" aria-hidden="true" />
-        </Link>
-      )}
-    </>
+      {filing}
+    </div>
   );
 }

@@ -1,7 +1,20 @@
 // Copyright (C) 2026 Miyel Brown
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // components/main_components/SiteNav.js
-// The sitewide nav row: the mark in the middle, one control on each side.
+// The sitewide nav row: the mark in the middle, and the owner's ··· at the
+// right on the pages that have one.
+//
+// The right, because that is where the card keeps its ··· and one site has one
+// place for a thing (Miyel, 2026-09-15). It was on the left for a day, which
+// was the turn's corner on the cross rather than anything this row had a
+// reason for.
+//
+// The left-hand side is empty now, and so was the right until this evening: it
+// held a sun and a moon on every page of the site, which made light-or-dark
+// something you could hit by accident while reaching for the mark. That lives
+// in one place, the top right of the beacon. Both empty columns stay, because
+// a three-column row with two columns in it does not hold the mark in the
+// middle.
 //
 // That shape is the whole point of this file. It is the arrangement the About
 // card uses, scaled down, and until now it was not what this row did — the
@@ -20,7 +33,7 @@
 // this row never cost a request of its own. The mark's live dot still reads
 // isLive, and still costs nothing.
 //
-// The mark goes home, which is the cross, which opens on the centre pane. It
+// The mark goes home, which is the cross, which opens on the beacon. It
 // used to need a sessionStorage flag to steer between two screens; there is
 // one home now, so there is nothing to steer.
 //
@@ -31,7 +44,6 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useTheme } from './Lightswitch';
 import { useListeningBeacon } from '../../hooks/useListeningBeacon';
 import { useBookplate } from './Bookplate';
 
@@ -42,12 +54,10 @@ import { useBookplate } from './Bookplate';
 // is an empty grid column, which is the thing holding the mark in the middle.
 export default function SiteNav({ tools = null }) {
   const { cover_name } = useBookplate();
-  const { theme, toggle } = useTheme();
   const { isLive } = useListeningBeacon();
 
   // This row and the dot-nav beneath it are fixed with no background of their
-  // own, so page text scrolled straight through the logo, the toggle and the
-  // dot labels. The backdrop that hides it (.sitenav-row::before) only fades
+  // own, so page text scrolled straight through the logo and the dot labels. The backdrop that hides it (.sitenav-row::before) only fades
   // in once the page has actually moved, so each page's hero art still runs
   // to the top of the screen while you're sitting at the top of it.
   const [scrolled, setScrolled] = useState(false);
@@ -60,16 +70,15 @@ export default function SiteNav({ tools = null }) {
 
   // The mark used to steer the old two-screen cover, flagging sessionStorage
   // so a navigation home landed on screen two. Neither screen exists — home is
-  // the cross, and it always opens on the centre pane, which is what that was
+  // the cross, and it always opens on the beacon, which is what that was
   // reaching for. So it is a plain link again and the flag is gone with the
   // markup that read it.
 
   return (
     <div className={'sitenav-row' + (scrolled ? ' sitenav-row--scrolled' : '')}>
-      {/* The left slot. Empty on most pages: it is where the owner's tools go
-          on the ones that have any, and an empty grid column is what holds the
-          mark in the middle when they do not. */}
-      <div className="sitenav-side sitenav-side--left">{tools}</div>
+      {/* The left slot, and there is nothing in it. It is a spacer that holds
+          the mark on the middle of the row. */}
+      <div className="sitenav-side sitenav-side--left" aria-hidden="true" />
 
       <Link href="/" className="sitenav-logo" aria-label={cover_name}>
         <svg viewBox="76 96 241 140" className="sitenav-logo-mark" xmlns="http://www.w3.org/2000/svg">
@@ -90,13 +99,9 @@ export default function SiteNav({ tools = null }) {
         </svg>
       </Link>
 
-      <button className="hp-icon-btn sitenav-theme-btn" onClick={toggle} aria-label="Toggle theme">
-        {theme === 'dark' ? (
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-        ) : (
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1111.21 3a7 7 0 109.79 9.79z"/></svg>
-        )}
-      </button>
+      {/* The right slot: the owner's ···, on the pages that have one, in the
+          corner the card keeps its own in. */}
+      <div className="sitenav-side sitenav-side--right">{tools}</div>
     </div>
   );
 }
