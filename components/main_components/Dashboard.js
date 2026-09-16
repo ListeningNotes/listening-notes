@@ -31,7 +31,7 @@
 import { useEffect, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Headphones, Envelope, AddressBook, GearSix, IdentificationCard, NotePencil } from '@phosphor-icons/react';
+import { Headphones, Envelope, AddressBook, GearSix, NotePencil } from '@phosphor-icons/react';
 import { VERSION, RELEASE_URL } from '../../library/version';
 
 // Everything but the first: messages, which are what you open the journal to
@@ -70,12 +70,12 @@ const DOORS = [
   // resumes *that* listen rather than showing the list, so the row would not
   // do what it says.
   { href: '/session', label: 'Drafts', note: 'Listens you started and have not finished', Icon: NotePencil, count: w => w?.drafts, needsDrafts: true },
-  // Correcting the card, as a row rather than a pencil on the card itself
-  // (2026-09-15). The owner's tools live on the desk, and this is one — which
-  // also makes the ID pane identical for a keeper and a visitor, the only
-  // page on the site that can say so. `?edit=card` is the cross's own way in:
-  // it lands on the card with the correction already open (HomeNav).
-  { href: '/?edit=card', label: 'Your card', note: 'Your portrait, name, prompts and pin', Icon: IdentificationCard },
+  // *Your card* was a row here for an evening, while the ID pane had no
+  // control of its own. It has a ··· now, in the same corner an entry keeps
+  // its own in, so the card is corrected on the card — which is the rule this
+  // repo keeps everywhere else: everything editable is edited where it prints
+  // (Miyel, 2026-09-15). `/?edit=card` still works and still lands on the card
+  // with the correction open; it is an address now rather than a door.
   // The machinery: the keys, the password, Last.fm, the address. A row again,
   // and for the same reason — it was a gear in this pane's header for an hour
   // and headers hold no icons.

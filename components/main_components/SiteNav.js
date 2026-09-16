@@ -2,13 +2,19 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // components/main_components/SiteNav.js
 // The sitewide nav row: the mark in the middle, and the owner's ··· at the
-// left on the pages that have one.
+// right on the pages that have one.
 //
-// The right-hand side is empty now. It held a sun and a moon on every page of
-// the site, which made light-or-dark something you could hit by accident while
-// reaching for the mark; it lives in one place, the top right of the beacon
-// (Miyel, 2026-09-15). The column stays because a three-column row with two
-// columns in it does not hold the mark in the middle.
+// The right, because that is where the card keeps its ··· and one site has one
+// place for a thing (Miyel, 2026-09-15). It was on the left for a day, which
+// was the turn's corner on the cross rather than anything this row had a
+// reason for.
+//
+// The left-hand side is empty now, and so was the right until this evening: it
+// held a sun and a moon on every page of the site, which made light-or-dark
+// something you could hit by accident while reaching for the mark. That lives
+// in one place, the top right of the beacon. Both empty columns stay, because
+// a three-column row with two columns in it does not hold the mark in the
+// middle.
 //
 // That shape is the whole point of this file. It is the arrangement the About
 // card uses, scaled down, and until now it was not what this row did — the
@@ -70,10 +76,9 @@ export default function SiteNav({ tools = null }) {
 
   return (
     <div className={'sitenav-row' + (scrolled ? ' sitenav-row--scrolled' : '')}>
-      {/* The left slot. Empty on most pages: it is where the owner's tools go
-          on the ones that have any, and an empty grid column is what holds the
-          mark in the middle when they do not. */}
-      <div className="sitenav-side sitenav-side--left">{tools}</div>
+      {/* The left slot, and there is nothing in it. It is a spacer that holds
+          the mark on the middle of the row. */}
+      <div className="sitenav-side sitenav-side--left" aria-hidden="true" />
 
       <Link href="/" className="sitenav-logo" aria-label={cover_name}>
         <svg viewBox="76 96 241 140" className="sitenav-logo-mark" xmlns="http://www.w3.org/2000/svg">
@@ -94,14 +99,9 @@ export default function SiteNav({ tools = null }) {
         </svg>
       </Link>
 
-      {/* The right slot, and it is empty on purpose. There was a sun and a
-          moon here on every page of the site, which made light-or-dark
-          something you could hit by accident while reaching for the mark. It
-          lives in one place now — the top right of the beacon, the first
-          screen of the journal (Miyel, 2026-09-15). The column stays, because
-          a three-column row with two columns in it does not hold the mark in
-          the middle. */}
-      <div className="sitenav-side sitenav-side--right" aria-hidden="true" />
+      {/* The right slot: the owner's ···, on the pages that have one, in the
+          corner the card keeps its own in. */}
+      <div className="sitenav-side sitenav-side--right">{tools}</div>
     </div>
   );
 }

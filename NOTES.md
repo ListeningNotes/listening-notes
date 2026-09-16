@@ -307,9 +307,11 @@ Left over:
       that. Worth checking the conveyor's speed on a real screen too: 320ms
       out, 300ms back, judged on a desk.
 - [ ] **The entry's ··· has not been seen in its own header.** It is behind
-      the wristband and this session had no cookie, so the leftward open was
-      read on the card with `--kt-dir` forced instead. The markup and the
-      timing are the same object; the header around it is not.
+      the wristband and this session had no cookie, so the row was measured
+      with the real markup injected into it instead. The geometry is right and
+      the mark-fade rule works; what has not been seen is React putting the
+      attribute on the row — the `closest('.sitenav-row')` effect — on a page
+      that actually renders the menu. First thing to check when signed in.
 - [ ] **Nobody outside the cross can change light or dark now.** A visitor
       reading an entry finds the switch by going to the beacon. That is what
       the brief asks for and it is worth a look on a real device before it
@@ -1189,6 +1191,19 @@ Project → Settings → Environment Variables.
 ---
 
 ## Gotchas
+
+**A CSS animation only restarts when its NAME changes, 2026-09-15.** The ···
+opens by filing its tools out and shuts by filing them back in, and the
+closing half was first written as the same keyframes with
+`animation-direction: reverse` and a shorter duration. It did not play. An
+animation that has already finished is still the same animation; changing its
+direction, duration or delay updates it in place, and its elapsed time is
+already past the new duration, so it jumps straight to the end — the tools
+vanished instead of retracting. Nothing errors and the computed styles all
+read correctly, which is what makes it hard to see. A second `@keyframes`
+block under its own name (`kt-file-in`) is a fresh animation and plays.
+Measured to confirm: 36px → 9px over four frames, into the door, nearest
+first.
 
 **Never replace a region of a file by two `index()` markers without bounding
 it, 2026-09-15.** Rewriting the card's styles, the start marker matched near
@@ -2145,12 +2160,43 @@ lesson is in the entry below.**
       of Settings, where it had been for an hour. And it is a sun and a moon
       again: it was redrawn as a switch on a wall on the grounds that the
       component is called Lightswitch, and a file name is not an argument.
-- [x] **Verified after: the card's ··· opens left and the entry's opens right**
-      — measured at 38px steps out of a door that stays at x=317 on a phone
-      and x=284 on the spine — the entry's nav row has no switch and its mark
-      is still centred to the pixel, and the beacon's sun flips the page to
-      dark. The entry's own ··· is behind the wristband and was read through
-      the same CSS path with `--kt-dir` forced, not through the real header.
+- [x] **Then the entry's ··· moved to the top right as well** (Miyel: so it is
+      unified across the site). It was at the left for a day, which was the
+      turn's corner on the cross rather than anything the nav row had a reason
+      for. `SiteNav`'s `tools` now go in the right slot and the left one is the
+      empty spacer; both columns stay or the mark stops being centred. Which
+      means every ··· on the site opens leftwards, so the reverse and
+      `--kt-dir: -1` moved onto `.kt-tools` itself and the two per-surface
+      overrides are gone — one rule, one behaviour, and the variable is still
+      the knob if a left-hand corner ever wants one.
+- [x] **An open ··· takes the nav row's mark, and this one was measured, not
+      felt.** The sitewide row is 28px of padding either side of a centred
+      mark; three tools and a door reach 197px back from the right on a 375px
+      phone and the mark ends at 212, so Delete landed *on* the N. Even at
+      430 it clears by three pixels. So the row is told when the menu is open
+      and its mark goes for as long as it is out. A DOM write from
+      KeeperTools (`closest('.sitenav-row')`) rather than a boolean threaded
+      through FullPostPage and SiteNav to hide one logo — and it is a no-op on
+      the card, which has two tools, 29px of clearance and no such row over it.
+- [x] **And *Your card* came off the desk** (Miyel). The card is corrected from
+      the card now, which is the rule the rest of this repo already keeps:
+      everything editable is edited where it prints. `/?edit=card` still works
+      and still lands on the card with the correction open — an address now
+      rather than a door. The desk is Start a listen, Inbox, Address book,
+      Drafts and Settings: places you go, not tools.
+- [x] **Verified after: every ··· opens leftwards out of a door that does not
+      move** — 38px steps, measured at x=317 on the phone's card, x=284 on the
+      spine, x=311 in the entry's nav row; the mark fades to 0 and back to 1
+      with the menu and does not move; the desk has four rows and no *Your
+      card*; the entry's row has no switch and its mark is still centred to
+      the pixel; the beacon's sun flips the page to dark. The entry's own ···
+      is behind the wristband and was read through the same CSS with the real
+      markup injected into the row, not through the real header.
+- [x] **And it files back in rather than disappearing** (Miyel, who asked
+      before seeing it — it would have disappeared). The close was the same
+      keyframes played backwards, which does not restart an animation; see the
+      new entry at the top of Gotchas. Measured after the fix: 36px to 9px
+      into the door over four frames, nearest tool first.
 
 **2026-09-15 — two panes, and down means a cover. Branch `card-and-desk`,
 version 1.18.0 — from Miyel's brief, the one whose rule came first and whose

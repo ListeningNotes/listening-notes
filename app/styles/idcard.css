@@ -896,13 +896,6 @@ a.ab-rig-name:hover { text-decoration: underline; }
    simply starting further down the page. The header is corner
    furniture; space under it reads as air. */
 .idc-tools { display: flex; align-items: center; gap: 2px; }
-/* The ··· holds the corner and its tools come out to the left, because on
-   this card the header's right end is where they are and there is a mark in
-   the middle of the row they must not run into. Reversing the row is what
-   keeps the door still: the markup order is the same one the entry uses, so
-   the pencil is the first thing out of it on both surfaces. --kt-dir tells
-   the animation in nav.css which way that is. */
-.idc-tools .kt-tools { flex-direction: row-reverse; --kt-dir: -1; }
 /* The same box as the lights on the other end of the line — 36px,
    a 10px radius, an 18px glyph — so the two ends of the bar read as
    one row of controls rather than a big one and a small one. */
