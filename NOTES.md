@@ -98,6 +98,19 @@ Private Repository Name), `05-neon.png` (the Neon panel with the Auth toggle),
 (the name screen), `09-homescreen.png` (the last setup screen on a phone; the
 browser's add-to-Dock on a laptop).
 
+**A day on the numbers, charted — Miyel's, 2026-09-16.** What a copy costs at
+scale, drawn rather than argued, so a ceiling is visible before it is hit. What
+one afternoon's measuring already found, as a starting point: a beacon poll is
+884 bytes, one Vercel invocation and two Postgres queries; the poll keeps Neon
+awake, and Neon Free sleeps only after five idle minutes and allows about 400
+awake-hours a month against a month's 730 — **so the wall is hours of
+somebody-having-the-journal-open, not the poll rate**. Vercel Hobby's million
+invocations then allow roughly ten people watching at once at the current
+fifteen seconds, or three and a half at five. Unverified and worth charting:
+Vercel's four CPU-hours, since the 180–600ms a poll takes is nearly all waiting
+on the database and is not billed as active CPU. Bandwidth is a non-issue — a
+million polls is 1.2GB of 100, because the covers come from Apple's CDN.
+
 **Settings' new beacon picker has not been LOOKED at, 2026-09-15.** The
 section is written and lints, and the column it writes round-trips, but
 `/settings` is behind the password and could not be opened from here. Check
@@ -2086,6 +2099,57 @@ current.
 ---
 
 ## Complete
+
+**2026-09-16 — the first real listen, and what it found. Branch
+`listen-fixes`.** Six notes off a session Miyel actually ran, then two more
+rounds on the beacon as she used it.
+
+- [x] **The session stopped re-rendering itself once a second.** `elapsed`
+      counted into state and nothing on any screen has ever shown it — it is
+      written into the draft row and read back on a resume, and that is all. As
+      state it re-rendered the record, the tracklist and the textarea being
+      typed into, sixty times a minute for the length of a listen. A ref now.
+      Most of the answer to "typing lags" and "the laptop is hot".
+- [x] **The research type-out is paced by frames**, not a 16ms interval that
+      went on running with the tab in the background. Time-based, so it types at
+      the same speed on a machine dropping frames — the old one typed *slower*
+      when busy, which is when it was most in the way.
+- [x] **The draft's browser copy is held back 300ms** instead of serialising the
+      whole listen to disk on every keystroke, synchronously, on the thread
+      drawing the letter.
+- [x] **The wall stops reconciling on every track turn.** The cross subscribes
+      to the beacon for the dot on its mark, and a listen is a layer *over* the
+      cross — so once the beacon followed the session, every track turn
+      re-rendered forty covers nobody was looking at. `Journal` is memoised.
+- [x] **Posting returns to the picker** after a beat on the tick.
+- [x] **OUT OF SESSION stamped over the idle art.** The stamp came off on
+      09-15 for repeating the caption; it says a different thing now — the
+      caption names the record, the stamp names the state.
+- [x] **Twenty minutes, not three hours**, and **leaving the screen ends the
+      listen.** Only posting and the picker put the needle down before, so a
+      listen swiped away went on claiming the beacon; Miyel watched hers do it
+      for six minutes. The guard on that cleanup is for development mode, which
+      rehearses mount/unmount and would otherwise blank the beacon for two
+      seconds every time a listen opened — on the dev server only, which is
+      exactly where it would have been believed.
+- [x] **The desk's door is the beacon's.** Green follows the beacon rather than
+      "a record is on the desk", so it reads as *you are broadcasting*; the
+      words still follow the record, because pressing it is the way back. The
+      mark is Broadcast, not Headphones. And the desk can hear itself now: a
+      `storage` event fires in every tab but the one that wrote the key, and the
+      desk and the listen are always the same tab — which is why picking a draft
+      lit nothing until you clicked elsewhere.
+- [x] **A resumed draft lights the beacon.** It can reopen on its album screen
+      and the gate was "past the album screen". The gate asks the honest
+      question now, and a listen whose tracklist has not arrived names the
+      record instead of going dark.
+- [x] **Arrow keys through a listen — written, dead, removed.** See Gotchas:
+      `/session` is behind the password and cannot be run from Claude's side, so
+      it shipped on reasoning alone and failed on Miyel's first try.
+
+Names chosen without asking, rename freely: `saidSoAboutTheDesk` and
+`PENDING_EVENT` (hooks/useListeningSession.js), `TYPE_PER_SECOND`, `litRef`,
+`elapsedRef`, and branch `listen-fixes`.
 
 **2026-09-16 — three dead branches deleted, `share-printer` kept.** They were
 local-only and had never been pushed, so this is the last word on them:
