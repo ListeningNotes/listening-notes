@@ -161,28 +161,43 @@ three tools and a door reach into it on a 375px phone — so the row becomes the
 menu while the menu is open and the mark comes back when it shuts. The card
 has two tools and 29px to spare and keeps its mark.
 
-**The turn is a page turning, and one animation serves both triggers,
-2026-09-15.** A horizontal rotation with perspective, 400ms on the site's own
-decelerating curve — the length and the easing the entry layer arrives on,
-because the whole site should move in one language. Not a cross-fade: the leaf
-is one pane with two faces and the motion has to say so. The right pane never
-moves, which is what makes it read as a turn rather than a navigation.
-`prefers-reduced-motion` gets a cross-fade at the same length.
+**The turn is a slide, not a flip, 2026-09-15.** The ID pane goes out to the
+left and the desk arrives from the right, both moving together as one motion;
+pressing again sends them back. 400ms on the site's own decelerating curve —
+the length and the easing the entry layer arrives on, because the whole site
+should move in one language. `prefers-reduced-motion` gets a cross-fade at the
+same length. The right pane never moves, not by a pixel, which is what makes it
+a page turning inside the leaf rather than a navigation.
 
-**The leaf is flat at rest and three-dimensional only while it turns,
-2026-09-15.** `preserve-3d` around two scrollers is a subtree a browser may
-rasterise, and scrolling inside a rasterised layer is the class of failure this
-cross has already reverted twice. So the 3D lasts 400ms and the resting state
-is what it always was — one face, chosen by `visibility`. For the same reason
-the perspective is a transform function on the leaf and not the `perspective`
-property on the pane: the property would make the pane a containing block for
-every fixed descendant for good, and the card has one.
+A flip was built first and is reverted the same day. Three reasons, and the
+first is the one that matters: **a flip means two faces of one object, and a
+desk is not the back of your card** — it is a separate thing you open. Second,
+the slide inherits the language already here — the entry grows from its cover,
+the send page rises from the foot, the session arrives from the right; *things
+arrive from a direction* is the family, and turning over belonged to no family
+at all. Third, the flip read as a return to the two-sided cover this file
+already killed. It was not that mechanic and there were still two panes, but
+the motion invited the comparison and the slide does not.
+
+**A transition on a translate, and no 3D anywhere, 2026-09-15.** What the flip
+cost and the slide does not: `preserve-3d` around two scrollers is a subtree a
+browser may flatten into one rasterised layer, which is the class of failure
+this cross has reverted twice, and avoiding it meant the leaf had to be flat at
+rest and three-dimensional only for the 400ms. All of that is gone. A
+transition rather than keyframes for a second reason as well — it reverses from
+wherever it has got to, so pressing twice inside the animation sends the pages
+back instead of snapping to an end state first.
 
 **The leaf is turned by its control and by nothing else, 2026-09-15.** A left
 swipe at the wall was built to turn it as well and is reverted — see the four
 ruled-out approaches above. The brief that asked for it put the control first
 for exactly this reason: it works completely on its own, so when the gesture
 failed there was nothing to unpick but the gesture.
+
+**The control says Open, 2026-09-15.** *Open desk*, *Open card*, *Open about* —
+a verb, because the mechanic is opening something rather than turning something
+over, and the glyph is two arrows side by side rather than one going round. A
+rotation glyph on a control that slides is a small lie.
 
 **The turn is the header's left-hand control, 2026-09-15.** The header has
 been a centred mark with one control each side since it was drawn and the left

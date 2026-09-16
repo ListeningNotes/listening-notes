@@ -69,7 +69,7 @@
 'use client';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { ArrowsClockwise, Broadcast, Gear, IdentificationCard, Info } from '@phosphor-icons/react';
+import { ArrowsLeftRight, Broadcast, Gear, IdentificationCard, Info } from '@phosphor-icons/react';
 import { foldKey, useListeningBeacon } from '../../hooks/useListeningBeacon';
 import { useSpineWidth } from '../../hooks/useSpineWidth';
 import { useTheme } from './Lightswitch';
@@ -95,11 +95,11 @@ const HOME = 1;
 // no business travelling to another device.
 const FACE_KEY = 'ln-spine-face';
 
-// How long the leaf takes to turn. Matched to the entry layer's arrival (0.42s
+// How long the leaf takes to move. Matched to the entry layer's arrival (0.42s
 // there, and the same decelerating curve) rather than picked: the whole site
-// should move in one language, and a pane that turns faster than a record
+// should move in one language, and a pane that moves faster than a record
 // arrives reads as a different piece of software. The number is stated in
-// nav.css too, on the keyframes; if one moves the other has to.
+// nav.css too, on the transition; if one moves the other has to.
 const TURN_MS = 400;
 
 // What each pane is, as a mark and as a sentence. The carets at the foot of
@@ -119,12 +119,18 @@ function paneMarks(authed, face) {
 // The two sides, for the switch. Card either way — signed in it is yours,
 // signed out it is the keeper's, and it is the same face. Desk or About for
 // the other side.
+// `opens` is what the control says, and it says a verb now: the pages slide
+// past each other rather than turning over, so the thing you are doing is
+// opening the other one (Miyel, 2026-09-15). The control is set in small caps,
+// which is what lets OPEN ABOUT read as a page's name rather than a sentence
+// with a word missing.
 function paneFaces(authed) {
   return [
-    { key: 'card', word: 'Card', label: 'About this journal' },
+    { key: 'card', word: 'Card', opens: 'Open card', label: 'About this journal' },
     {
       key: 'desk',
       word: authed ? 'Desk' : 'About',
+      opens: authed ? 'Open desk' : 'Open about',
       label: authed ? 'Your desk' : 'About this software',
     },
   ];
@@ -247,28 +253,28 @@ export default function HomeNav() {
     } catch { /* storage off — the card is the answer, every visit */ }
   }, []);
   // ── The turn itself ───────────────────────────────────────────────────────
-  // The face changes at once; what takes four hundred milliseconds is the
-  // picture of it. `turning` names the face being arrived at and is the whole
-  // difference between the two directions — the leaf turns one way to the desk
-  // and the other way back, which is what makes it a leaf rather than two
-  // slides that happen to alternate.
+  // The face changes at once; what takes four hundred milliseconds is the two
+  // pages sliding. The stylesheet does the whole motion off `hn--face-*`, so
+  // this flag says one thing only: both pages are on screen at the moment, let
+  // the hidden one be seen. Which direction, and how far along, is the
+  // transition's business.
   //
   // It is a moment and not a mode. Nothing waits for it, nothing is disabled
-  // during it, and pressing the control again mid-turn simply starts the turn
-  // back: the class is replaced, the animation restarts from where CSS says it
-  // starts, and the face underneath was already right.
-  const [turning, setTurning] = useState(null);
+  // during it, and pressing the control again mid-slide simply sends the pages
+  // back — a transition on a translate reverses from wherever it has got to,
+  // which is the whole reason the motion is a transition and not keyframes.
+  const [turning, setTurning] = useState(false);
   const turnTimer = useRef(null);
   useEffect(() => () => clearTimeout(turnTimer.current), []);
   const turnPane = useCallback(() => {
     const next = face === 'card' ? 'desk' : 'card';
     try { window.localStorage.setItem(FACE_KEY, next); } catch { /* not remembered */ }
     setFace(next);
-    setTurning(next);
-    // Cleared rather than left on, so the leaf goes back to being a flat box
-    // with one face the moment it has finished being a leaf with two.
+    setTurning(true);
+    // Restarted rather than left running, so an interrupted slide does not put
+    // the page it is bringing back out of sight halfway through.
     clearTimeout(turnTimer.current);
-    turnTimer.current = setTimeout(() => setTurning(null), TURN_MS);
+    turnTimer.current = setTimeout(() => setTurning(false), TURN_MS);
   }, [face]);
 
   const railRef = useRef(null);
@@ -675,8 +681,13 @@ export default function HomeNav() {
   const turnLine = (
     <div className="hn-turn-row">
       <button type="button" className="hn-turn-say" onClick={turnPane}>
-        <ArrowsClockwise size={18} weight="regular" aria-hidden="true" />
-        {goingTo.word}
+        {/* Two arrows side by side, not a rotation. The glyph turned in a
+            circle while the motion was a leaf turning over; the motion is two
+            pages sliding past each other now, and a glyph that says turn over
+            on a control that slides is the kind of small lie this site does
+            not tell. */}
+        <ArrowsLeftRight size={18} weight="regular" aria-hidden="true" />
+        {goingTo.opens}
       </button>
     </div>
   );
@@ -706,7 +717,7 @@ export default function HomeNav() {
     <div
       className={
         'hn hn--face-' + face
-        + (turning ? ' hn--turning hn--turning-to-' + turning : '')
+        + (turning ? ' hn--turning' : '')
         + (spine.dragging ? ' hn--dragging' : '')
       }
       data-pane={pane}

@@ -1297,63 +1297,60 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
 }
 
 /* ── The turn ───────────────────────────────────────────────────────────────
-   One box holding both faces, so there is something to turn. A page turning
-   and not a cross-fade: the leaf is one pane with two faces and the motion has
-   to say so, or the two sides read as two screens that swap.
+   Two pages side by side in one box, and the box slides. The card sits at the
+   leaf's left edge and the desk at its right, each a full pane wide, so moving
+   the leaf one pane to the left takes the card out and brings the desk in as
+   one motion. The pane clips, so only ever one of them is on screen.
 
-   Flat at rest, and that is the whole safety of it. preserve-3d around two
-   scrollers is a subtree the browser may rasterise, and scrolling inside a
-   rasterised layer is exactly the class of thing this file has reverted twice
-   at this boundary (see the note over .hn-rail). So the 3D exists for the four
-   hundred milliseconds of the turn and not one more: at rest the leaf is a
-   plain absolutely-positioned box and the face is chosen by visibility, the
-   way it was before any of this.
+   A slide and not a flip, and the difference is what it says. A flip means two
+   faces of one object, and a desk is not the back of your card — it is a
+   separate thing you open. The slide also inherits the language the rest of
+   the site already speaks: the entry grows from its cover, the send page rises
+   from the foot, the session arrives from the right. Things arrive from a
+   direction here. Turning over was a motion that existed nowhere else, and it
+   invited a comparison with the two-sided cover DECISIONS killed — a different
+   mechanic, but close enough in the eye to be worth not inviting (Miyel's
+   brief, 2026-09-15).
 
-   perspective() in the transform rather than the `perspective` property on the
-   pane, deliberately. The property would make .hn-pane--turn a containing
-   block for every fixed descendant, for good — and the card has one, the sheet
-   the counts open. As a transform function the perspective belongs to the leaf
-   and only while it is turning.
+   It also takes the whole three-dimensional apparatus out: no perspective, no
+   preserve-3d, no backface, and none of the flat-at-rest care that was there
+   to stop a 3D subtree with two scrollers in it being flattened into one
+   rasterised layer. That was the most delicate thing in this file and it is
+   simply gone.
+
+   A transition and not keyframes, deliberately: a transition on a translate
+   reverses from wherever it has got to, so pressing the control twice inside
+   the four hundred milliseconds sends the pages straight back instead of
+   snapping to an end state first. That was the one rough edge of the flip.
+
+   0.4s on the site's own decelerating curve — what the entry layer arrives on.
+   TURN_MS in HomeNav.js has to agree with this number.
 
    The right pane never moves. On a phone the journal is the next pane along
-   the rail; on a desk it is the other half of a grid. Neither is inside this.
-*/
-.hn-leaf { position: absolute; inset: 0; }
-.hn--turning .hn-leaf { transform-style: preserve-3d; }
-/* Both faces on screen at once, and neither of them takes a press while the
-   leaf is moving — a tap landing on a face that is halfway edge-on is a tap
-   nobody aimed. backface-visibility is what hides the one facing away, so the
-   resting visibility rules are simply overridden for the duration. */
-.hn--turning .hn-face {
-  visibility: visible;
-  pointer-events: none;
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
+   the rail; on a desk it is the other half of a grid. Neither is inside this,
+   and nothing here changes anything's width. */
+.hn-leaf {
+  position: absolute;
+  inset: 0;
+  transition: transform 0.4s cubic-bezier(0.22, 0.61, 0.36, 1);
 }
-/* The far side of the leaf, pre-turned so it reads the right way round when
-   the leaf has gone all the way over. */
-.hn--turning .hn-face--desk { transform: rotateY(180deg); }
+.hn--face-desk .hn-leaf { transform: translateX(-100%); }
+/* Laid out as a pair rather than stacked. `inset: 0` on .hn-face would put
+   both at the same place, so each is pinned by its left edge and given the
+   pane's width; the desk's left edge is one whole pane along. */
+.hn-face--card { left: 0; right: auto; width: 100%; }
+.hn-face--desk { left: 100%; right: auto; width: 100%; }
+/* The page that is off-screen is still hidden at rest — it is outside the
+   clip, so this is about the tab order and a screen reader rather than about
+   what is drawn. While the leaf is moving both are on screen and both are
+   visible, and neither takes a press: a tap landing on a page that is halfway
+   out of the window is a tap nobody aimed. */
+.hn--turning .hn-face { visibility: visible; pointer-events: none; }
 
-/* Negative, so the right edge comes toward you and the leaf turns leftwards —
-   the same direction the swipe at the left wall means, and the direction a
-   page turns. */
-@keyframes hn-turn-to-desk {
-  from { transform: perspective(1600px) rotateY(0deg); }
-  to   { transform: perspective(1600px) rotateY(-180deg); }
-}
-@keyframes hn-turn-to-card {
-  from { transform: perspective(1600px) rotateY(-180deg); }
-  to   { transform: perspective(1600px) rotateY(0deg); }
-}
-/* 0.4s and the site's own decelerating curve — what the entry layer arrives
-   on. TURN_MS in HomeNav.js has to agree with this number. */
-.hn--turning-to-desk .hn-leaf { animation: hn-turn-to-desk 0.4s cubic-bezier(0.22, 0.61, 0.36, 1) both; }
-.hn--turning-to-card .hn-leaf { animation: hn-turn-to-card 0.4s cubic-bezier(0.22, 0.61, 0.36, 1) both; }
-
-/* A turning leaf is a composited layer, and a composited layer paints over
+/* A moving leaf is a composited layer, and a composited layer paints over
    fixed elements that are not — found on the archive, where a band went over
    the top row (Gotchas). The three fixed things on the cross ask for layers of
-   their own so the turn cannot cover them: the bar, the turn's own control,
+   their own so the slide cannot cover them: the bar, the turn's own control,
    and the row at the foot.
 
    will-change and not `transform: translateZ(0)`, which is the usual way to
@@ -1361,19 +1358,21 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
    itself while something scrolls, and a translateZ stated down here would beat
    .hn-controls--busy on source order and stop it moving — the trap in Gotchas,
    twice in one file. will-change promotes without saying anything about the
-   transform, so nothing it belongs to is overwritten.
+   transform, so nothing it belongs to is overwritten. The reason survived the
+   3D coming out: it is about promotion of any kind, not about perspective.
 
    Permanent rather than added for the turn: promotion needs a frame to take
-   effect and the turn starts in the frame the class arrives in. These are
+   effect and the slide starts in the frame the class arrives in. These are
    three small fixed rows that are on screen the whole time anyway. */
 .hn-bar, .hn-controls, .hn-turn-row { will-change: transform; }
 
 @media (prefers-reduced-motion: reduce) {
   /* A cross-fade instead, at the same length, so the page still changes in a
-     beat somebody can follow rather than blinking. The arriving face is the
-     one the resting rules would show; the leaving face is the one they hide. */
-  .hn--turning .hn-leaf { animation: none; transform-style: flat; }
-  .hn--turning .hn-face--desk { transform: none; }
+     beat somebody can follow rather than blinking. Nothing slides, so the two
+     pages go back to being stacked, and the arriving one is the face the
+     resting rules would show. */
+  .hn-leaf, .hn--face-desk .hn-leaf { transition: none; transform: none; }
+  .hn-face--desk { left: 0; }
   .hn--face-card.hn--turning .hn-face--card,
   .hn--face-desk.hn--turning .hn-face--desk { animation: hn-turn-arrive 0.4s linear both; }
   .hn--face-card.hn--turning .hn-face--desk,
