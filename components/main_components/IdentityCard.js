@@ -24,7 +24,7 @@
 import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { arrivingAlone } from '../../library/handoff';
-import { Check, Eye, EyeSlash, Pencil, Printer, PushPin, UploadSimple, User, X } from '@phosphor-icons/react';
+import { Check, Eye, EyeSlash, PushPin, UploadSimple, User, X } from '@phosphor-icons/react';
 import { useRouter } from 'next/navigation';
 import { useTheme } from './Lightswitch';
 import { useListeningBeacon } from '../../hooks/useListeningBeacon';
@@ -378,15 +378,21 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
         className={'idc-inner' + (more ? ' idc-inner--more' : '')}
       >
         {/* ── The header ───────────────────────────────────────────────────
-            The mark on the left, one control on the right. One, not three:
-            the light switch is a per-device preference and is in Settings
-            now, and the printer's placement is deliberately unresolved, so it
-            is off the card until it has somewhere to be (Miyel's brief,
-            2026-09-15).
+            The mark, and nothing else. No icons in a header (Miyel's brief,
+            2026-09-15): the mark is centred and the sides are for navigation
+            rather than controls — the turn sits at the left of this line and
+            is drawn by the cross, not by this card.
 
-            Editing puts Save and Cancel in the same slot, which is where the
-            pencil was — the control that opened the correction is where the
-            two that close it live. Nothing here is a permission check: the
+            Which makes this pane identical for everybody: the keeper sees
+            exactly what a visitor sees, and nothing else on the site can say
+            that. Correcting the card is a row on the desk (*Your card*), with
+            a quiet shortcut at the foot of the page for the moment you are
+            reading your own card and notice something wrong.
+
+            Save and Cancel are the exception and are not tools: they belong
+            to a mode you entered on purpose and are gone the moment it ends,
+            and a correction with no visible way to keep or abandon it is
+            worse than a tidy header. Nothing here is a permission check — the
             writing endpoints check the wristband whatever is drawn. */}
         <div className="idc-head">
           <svg
@@ -407,7 +413,7 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
           </svg>
 
           <div className="idc-tools">
-            {authed && (editing ? (
+            {authed && editing && (
               <>
                 <button
                   type="button"
@@ -430,17 +436,7 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
                   <X size={18} weight="regular" aria-hidden="true" />
                 </button>
               </>
-            ) : (
-              <button
-                type="button"
-                className="idc-tool"
-                onClick={edit.begin}
-                aria-label="Edit this card"
-                title="Edit this card"
-              >
-                <Pencil size={18} weight="regular" aria-hidden="true" />
-              </button>
-            ))}
+            )}
           </div>
         </div>
 
@@ -615,6 +611,17 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
             edited on the pane below now, inside the sections they actually
             print in — a field for something you cannot see while you type into
             it is a field you fill in blind. See About.js. */}
+        {/* The way in, quiet and at the foot. The structural door is a row on
+            the desk; this is the convenience one, for the moment you are
+            reading your own card and see something wrong. Two doors to one
+            mode is fine when one is structural and the other is where you
+            already are. */}
+        {authed && !editing && (
+          <button type="button" className="idc-correct" onClick={edit.begin}>
+            Edit your card
+          </button>
+        )}
+
         {edit.trouble && <p className="idc-trouble">{edit.trouble}</p>}
       </div>
 

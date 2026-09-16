@@ -150,6 +150,10 @@
   transition: color 0.15s, background 0.15s;
 }
 .kt-tool:hover { color: var(--ink); background: var(--bg-warm); }
+/* Delete sits apart from the two that make something, and wears the colour
+   everything destructive on this site wears. */
+.kt-tool--end { color: var(--fav); margin-left: 2px; }
+.kt-tool--end:hover { color: var(--fav); background: color-mix(in srgb, var(--fav) 12%, transparent); }
 .sitenav-logo { display: block; justify-self: center; }
 .sitenav-logo-mark {
   height: 28px;
@@ -522,6 +526,10 @@
   animation: hp-logo-dot-pulse 2.5s ease-in-out infinite;
 }
 .hn-lights { color: var(--ink-faint); }
+/* The toggle slides rather than jumping, which is the one thing a real switch
+   does that an icon swap cannot. */
+.hn-switch-toggle { transition: y 0.18s cubic-bezier(0.22, 0.61, 0.36, 1); }
+@media (prefers-reduced-motion: reduce) { .hn-switch-toggle { transition: none; } }
 .hn-lights:hover { color: var(--ink-soft); }
 
 /* ── The rail ───────────────────────────────────────────────────────────────
@@ -768,7 +776,7 @@
 .hn-controls .edge-caret--down {
   position: absolute;
   left: 50%;
-  top: calc(100% + 8px);
+  top: calc(100% + 18px);
   transform: translateX(-50%);
 }
 .hn-controls > * { pointer-events: auto; }
@@ -898,7 +906,7 @@
    (2026-09-15). */
 .db-head {
   position: relative;
-  display: flex; align-items: center; justify-content: flex-end;
+  display: flex; align-items: center; justify-content: center;
   width: 100%;
   min-height: 30px;
   margin: 0 0 18px;
@@ -1368,7 +1376,7 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
      after this one, so a rule of this name written here loses to the base
      rule written there whatever the media query says. */
   .db-mark-svg { display: none; }
-  .db-head { margin: 0 0 16px; padding: 0; justify-content: flex-end; }
+  .db-head { margin: 0 0 16px; padding: 0; }
 
   /* No crown and no carets. The book is open — there is nothing to swipe to,
      and the mark is in the bar over the journal, the way every other page's
