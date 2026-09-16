@@ -98,25 +98,39 @@ Private Repository Name), `05-neon.png` (the Neon panel with the Auth toggle),
 (the name screen), `09-homescreen.png` (the last setup screen on a phone; the
 browser's add-to-Dock on a laptop).
 
-**The session beacon's writing half is untested, 2026-09-15.** Everything
-proved so far is the reading side. Start a real listen and watch the beacon:
-it should stay on *Last logged* through the album screen, light on the tracks
-screen, follow the track, stay lit through Notes and Preview, and land on the
-record just saved without flickering through a third state. `/api/needle` is
-behind the wristband, so none of it could be exercised from the command line.
+**Settings' new beacon picker has not been LOOKED at, 2026-09-15.** The
+section is written and lints, and the column it writes round-trips, but
+`/settings` is behind the password and could not be opened from here. Check
+the two rows draw, that the chosen one takes the border and the darker panel,
+and that Save sticks after a reload. `.st-choice` / `.st-pick` in forms.css.
+
+**A listen that wrote nothing survives only until the next one, 2026-09-15.**
+The needle is one row, so closing a record you sat through keeps it on the
+beacon until another record goes on the desk — then it is gone, because there
+is nowhere to keep it. A log of every cover ever opened is a different thing
+from a journal showing its work, so this is the cost being accepted rather
+than a bug. If it wants fixing, the fix is a second table, not a second row.
 
 **There is no way to turn the beacon off, 2026-09-15.** It used to be opt-in
 by accident — you had to connect Last.fm — and it is on for everyone now.
-DECISIONS says presence is outbound and opt-in, so a switch in Settings may be
-owed. Not built, deliberately: the brief did not ask for one, and a setting
-nobody wants is worse than a setting added later.
+DECISIONS says presence is outbound and opt-in, so an *off* alongside the two
+choices may be owed. Not built: the brief did not ask, and the picker is the
+obvious place to add one later.
 
 **Names to confirm, 2026-09-15** — the session beacon. Miyel named `needle`,
 `library/needle.js`, `/api/needle` and `set_needle` / `pull_needle` /
-`lift_needle`. The rest were chosen without asking and rename freely:
-`pull_recent_listens`, `sameRecord`, `liftNeedle` in the session hook, the
-`state` field and its four values (`logging` / `listening` / `logged` /
-`none`), the `before` field, and `has_listens`.
+`lift_needle`, `beacon_source`, and the "Now logging / Now listening" wording
+on the Settings picker. The rest were chosen without asking and rename freely:
+`pull_recent_listens`, `sameRecord`, `fromLastfm`, `beforeThat`, `liftNeedle`
+in the session hook, the `state` field and its five values (`logging` /
+`logged` / `listening` / `played` / `none`), the `before` field,
+`has_listens`, `needle.ended_at`, `migrations/014_beacon_source.sql`, and
+`.st-choice` / `.st-pick` in forms.css.
+
+The one word chosen outright rather than offered: **"Last played"** for the
+Last.fm beacon's quiet state. It read "Not currently listening" before, and
+the new one is parallel with "Last logged" and is what the old stamp across
+the idle cover said. Say if the old one was better.
 
 **Names to confirm** — chosen without asking, because the session was
 autonomous. Rename freely: `secrets` (table), `library/secrets.js`,
@@ -2070,6 +2084,22 @@ untested on a real session — see Pending.**
       from its first listen. One seam left, noted in `app/layout.js`: the very
       first listen on an empty journal lights nothing, and resolves as soon as
       a line is typed.
+- [x] **You run one beacon, not both** (migration 014, `settings.beacon_source`,
+      Miyel's name, and the picker under "Your beacon" in Settings). *Now
+      logging → Last logged* or *Now listening → Last played*. The two choices
+      on the form are the two lines the cover prints, so picking one is seeing
+      what your journal will say. A copy set to Last.fm with no key quietly
+      falls back to the session beacon. Replaces "the session wins when both
+      are live", which was the brief's rule and lasted an hour — Miyel's call
+      after testing it: you do not get both.
+- [x] **Closing a record keeps that listen** (migration 014, `needle.ended_at`).
+      The bug Miyel found on the first real run: clicking through an album and
+      shutting it erased the listen and the beacon fell back past it to what
+      was logged before. `lift_needle` now stamps the row instead of deleting
+      it, so the beacon keeps the track that was open and the older record
+      drops into "Before that" — which is what she expected to see. A record
+      closed without a single track opened is still deleted: browsing is not
+      listening.
 - [x] **Settings' Last.fm section is "Optional: Last.fm"** and says outright
       that a copy without it is complete, naming the case it is optional for.
       The LAST PLAYED stamp across the idle cover went with all this — the

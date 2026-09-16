@@ -264,11 +264,14 @@ export default async function RootLayout({ children, layer }) {
   // record has been picked up, and that copy still gets the wall straight
   // under its crown rather than an empty tile.
   //
-  // The one seam: the very first listen on an empty journal lights nothing,
-  // because this is decided before that listen has written anything down. It
-  // resolves as soon as the first line is typed — a draft counts — and the
-  // person it would affect is on the session screen rather than looking at
-  // their own cover.
+  // The one seam: on a journal with nothing in it at all, a listen that never
+  // writes a word lights nothing, because this asks after entries and drafts
+  // and a needle is neither. Asking after the needle too would mean naming a
+  // table added in migration 013 inside the read that decides whether this
+  // copy has been set up — and that read fails closed, so a copy that had not
+  // migrated would answer the holding page instead of a journal. The seam
+  // closes on the first line typed, and the person it would affect is on the
+  // session screen rather than looking at their own cover.
   settings.beacon_available = Boolean(
     all.has_listens || (all.lastfm_user && (all.has_lastfm_key || process.env.LASTFM_KEY))
   );

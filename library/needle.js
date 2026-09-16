@@ -52,6 +52,7 @@ export async function pull_needle() {
       SELECT album, artist, album_art, track
       FROM needle
       WHERE id = 1
+        AND ended_at IS NULL
         AND updated_at > now() - ${LIFTS_AFTER_MINUTES} * interval '1 minute'
     `;
     if (!row?.album) return null;
@@ -72,38 +73,69 @@ export async function pull_needle() {
 export async function set_needle({ album, artist = '', album_art = '', track = '' }) {
   if (!album) throw new Error('The needle needs a record');
   await database`
-    INSERT INTO needle (id, album, artist, album_art, track, updated_at)
-    VALUES (1, ${album}, ${artist}, ${album_art}, ${track}, now())
+    INSERT INTO needle (id, album, artist, album_art, track, updated_at, ended_at)
+    VALUES (1, ${album}, ${artist}, ${album_art}, ${track}, now(), NULL)
     ON CONFLICT (id) DO UPDATE SET
       album = EXCLUDED.album,
       artist = EXCLUDED.artist,
       album_art = EXCLUDED.album_art,
       track = EXCLUDED.track,
-      updated_at = now()
+      updated_at = now(),
+      -- A record on the desk is a listen happening, so a needle that had been
+      -- lifted is down again. Without this, resuming after a close would write
+      -- the new record into a row still stamped as finished.
+      ended_at = NULL
   `;
 }
 
 // The listen is finished, or the record has been taken off the desk. The
-// expiry above covers everything that never gets to call this.
+// needle lifts off the record; the record stays on the turntable.
+//
+// It used to be a DELETE, and that was the bug: closing a record you had spent
+// an evening clicking through erased it, and the beacon fell straight past
+// that listen to whatever had been logged before it. An ended needle goes on
+// standing as the most recent listen, with the track that was open still on
+// it, until something newer happens — which is the same rule the row under the
+// beacon already follows.
+//
+// Except for a record nobody opened a track on. That is browsing rather than
+// listening, and it is thrown away as before, so glancing at a cover in the
+// picker does not become the last thing you listened to.
+//
+// The expiry in the read covers every listen that never gets to call this at
+// all — a closed tab, a locked phone — and expiring is not the same as ending:
+// an expired needle stops being "now" AND stops being the last listen, because
+// nobody can say what happened to it.
 export async function lift_needle() {
-  await database`DELETE FROM needle WHERE id = 1`;
+  await database`DELETE FROM needle WHERE id = 1 AND coalesce(track, '') = ''`;
+  await database`UPDATE needle SET ended_at = now() WHERE id = 1 AND ended_at IS NULL`;
 }
 
 // ── What was on it before ─────────────────────────────────────────────────
-// Real listens, published or not — Miyel's call, 2026-09-15. An entry is a
-// listen that was posted and a draft is one that was not, and both were an
-// evening spent with a record, which is what the row is for. With Last.fm as
-// the source these three were whatever happened to autoplay, and the listens
-// that mattered got buried underneath it.
+// Real listens, finished or not — Miyel's call, 2026-09-15. An entry is a
+// listen that was posted, a draft is one that was written and not posted, and
+// a lifted needle is one that was sat through and not written. All three were
+// an evening with a record, which is what the row is for. With Last.fm as the
+// source these were whatever happened to autoplay, and the listens that
+// mattered got buried underneath it.
+//
+// The needle is only ever one row, so a listen that wrote nothing survives
+// exactly as long as no other record goes on the desk. That is the cost of
+// one row and it is the right one: a log of every cover ever opened is a
+// different thing from a journal showing its work.
 //
 // A draft carries no slug because there is no page to open yet, so the tile
 // draws plain. The notes in that row are not selected and never leave.
 export async function pull_recent_listens() {
   try {
     const rows = await database`
-      SELECT album, artist, album_art, slug, posted_at  AS at FROM entries
+      SELECT album, artist, album_art, slug, NULL  AS track, posted_at  AS at FROM entries
       UNION ALL
-      SELECT album, artist, album_art, NULL, updated_at AS at FROM drafts
+      SELECT album, artist, album_art, NULL, NULL  AS track, updated_at AS at FROM drafts
+      UNION ALL
+      SELECT album, artist, album_art, NULL, track AS track, updated_at AS at FROM needle
+        WHERE ended_at IS NOT NULL
+          AND updated_at > now() - ${LIFTS_AFTER_MINUTES} * interval '1 minute'
       ORDER BY at DESC
       LIMIT ${LOOK_BACK}
     `;
@@ -129,6 +161,11 @@ export async function pull_recent_listens() {
         artist: row.artist || '',
         art: sizedAlbumArt(row.album_art || '', TILE_PX),
         slug: row.slug || null,
+        // Only a closed listen has one. It is what lets the beacon go on
+        // naming the song you were last on after you shut the record, rather
+        // than falling back to the album title — which loses the one thing
+        // that said where in the record you had got to.
+        track: String(row.track || '').trim(),
       });
     }
     return listens;
