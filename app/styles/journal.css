@@ -170,14 +170,30 @@
 @media (max-width: 768px) {
   .arc-bar-wrap {
     top: auto;
-    /* On the bottom edge, not hovering above it. It sat 68px up to
-       clear the cross's row of carets — and the carets are hidden for
-       as long as a pane is scrolled, which is the only time this bar is
-       on screen at all, so there was never anything under it to clear.
-       A bar with a strip of page showing beneath reads as a thing
-       floating over the wall rather than the edge of the wall. */
-    bottom: 0;
+    /* On the floor — whichever floor this wall has.
+       At an address of its own (/archive) that is the bottom of the
+       screen: 0, and a bar with a strip of page showing beneath reads
+       as a thing floating over the wall rather than the edge of the
+       wall. Inside the cross the floor is the top of the band, because
+       the band is the site's navigation and a wall parked on top of it
+       leaves somebody in the journal with no way to the card or the
+       desk — which is what happened, the bar being z-index 101 against
+       the band's 96, so the band was not overlapped so much as covered.
+       --hn-foot-h is declared on .hn for exactly this ("every scroller
+       inside has to end above the band rather than under it") and is
+       the one number both sides have to agree on. The fallback is what
+       keeps the standalone wall right for free: no cross, no band, no
+       offset. It sat 68px up once, to clear a row of carets that faded
+       while you scrolled; the band never fades, so this is not that
+       rule coming back — it is the band being a permanent object where
+       the carets were a hint. */
+    bottom: var(--hn-foot-h, 0px);
   }
+  /* Standing on the band rather than on the screen, so the home
+     indicator's room is the band's to give and this must not give it a
+     second time — thirty-odd pixels of empty bar under the search field
+     on a phone with a notch. */
+  .hn .arc-bar { padding-bottom: 8px; }
 }
 .arc-bar {
   max-width: 1100px; margin: 0 auto;

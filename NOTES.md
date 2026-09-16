@@ -1292,6 +1292,16 @@ Project → Settings → Environment Variables.
 
 ## Gotchas
 
+**Two things claiming the bottom of the screen, 2026-09-15.** The band at the
+foot of the cross is absolute on `.hn`; the wall's search-and-filter bar is
+sticky at `bottom: 0` inside the pane. They landed on the same 54 pixels, and
+because the bar is `z-index: 101` against the band's `96` it did not overlap
+the band so much as cover it — from the journal there was no way to the card or
+the desk at all. The band already published `--hn-foot-h` for exactly this
+("every scroller inside has to end above the band"); nothing was reading it.
+**When something is added at the foot of the cross, grep for `bottom: 0`
+before believing it is alone down there.**
+
 **A dev server can stop recompiling and go on answering, 2026-09-15.** The one
 on :3000 served a version of `library/needle.js` from half an hour earlier, for
 every request, with no error in the log and no warning anywhere — so a fix that
