@@ -433,6 +433,51 @@ export default function HomeNav() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [stir]);
 
+  // ── TEMPORARY: the viewport readout ────────────────────────────────────
+  // Written straight to the node rather than into state, so it can re-read on
+  // every resize and on a beat after load without a render per sample.
+  const measureRef = useRef(null);
+  useLayoutEffect(() => {
+    const node = measureRef.current;
+    if (!node) return undefined;
+    const unit = value => {
+      const probe = document.createElement('div');
+      probe.style.cssText = `position:fixed;visibility:hidden;height:${value}`;
+      document.body.appendChild(probe);
+      const h = getComputedStyle(probe).height;
+      probe.remove();
+      return Math.round(parseFloat(h));
+    };
+    const read = when => {
+      const foot = document.querySelector('.hn-foot');
+      const hn = document.querySelector('.hn');
+      const home = document.querySelector('.hn-pane--home');
+      const f = foot ? foot.getBoundingClientRect() : null;
+      node.textContent = [
+        `${when}`,
+        `standalone ${window.navigator.standalone === undefined ? 'n/a' : window.navigator.standalone}`,
+        `display-mode ${window.matchMedia('(display-mode: standalone)').matches ? 'standalone' : 'browser'}`,
+        `screen ${window.screen.height}  inner ${window.innerHeight}`,
+        `visual ${window.visualViewport ? Math.round(window.visualViewport.height) : '?'} off ${window.visualViewport ? Math.round(window.visualViewport.offsetTop) : '?'}`,
+        `dvh ${unit('100dvh')} lvh ${unit('100lvh')} svh ${unit('100svh')} vh ${unit('100vh')}`,
+        `safe top ${unit('env(safe-area-inset-top)')} bottom ${unit('env(safe-area-inset-bottom)')}`,
+        `.hn h${hn ? Math.round(hn.getBoundingClientRect().height) : '?'}  home h${home ? Math.round(home.getBoundingClientRect().height) : '?'} scroll ${home ? home.scrollTop : '?'}`,
+        `band pos ${foot ? getComputedStyle(foot).position : '?'} top ${f ? Math.round(f.top) : '?'} bottom ${f ? Math.round(f.bottom) : '?'}`,
+        `gap under band ${f ? Math.round(window.innerHeight - f.bottom) : '?'}`,
+      ].join('\n');
+    };
+    read('on load');
+    const later = setTimeout(() => read('1s after load'), 1000);
+    const onResize = () => read('after resize');
+    window.addEventListener('resize', onResize);
+    window.visualViewport?.addEventListener('resize', onResize);
+    return () => {
+      clearTimeout(later);
+      window.removeEventListener('resize', onResize);
+      window.visualViewport?.removeEventListener('resize', onResize);
+    };
+  }, []);
+
   function goTo(index) {
     const el = railRef.current;
     if (!el) return;
@@ -854,6 +899,15 @@ export default function HomeNav() {
       </div>
 
       <Footer pane={pane} goTo={goTo} authed={authed} />
+
+      {/* ── TEMPORARY: the viewport readout ──────────────────────────────
+          Here to answer one question and then be deleted: the band rests
+          above the bottom edge on a real phone and comes down when dragged,
+          and the browser pane cannot reproduce it. Two guesses have not fixed
+          it, so this prints what the device actually thinks rather than a
+          third. Remove with the line in HomeNav that renders it and the
+          .hn-measure rules in nav.css. */}
+      <pre className="hn-measure" ref={measureRef} />
     </div>
   );
 }
