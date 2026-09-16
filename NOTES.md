@@ -300,11 +300,29 @@ Left over:
       screen is no longer a fixed floor, so what falls above the fold varies
       with the device in a way it did not before. Worth a look at 667 and at
       926.
+- [ ] **The ··· against a thumb, and against the layer's drag.** The menu
+      opens in the row on an entry's sheet, which is listening for a sideways
+      drag for the next record and a downward one for closing. A tap on a 36px
+      box should never read as either, and the browser pane cannot tell us
+      that. Worth checking the conveyor's speed on a real screen too: 320ms
+      out, 300ms back, judged on a desk.
+- [ ] **The entry's ··· has not been seen in its own header.** It is behind
+      the wristband and this session had no cookie, so the leftward open was
+      read on the card with `--kt-dir` forced instead. The markup and the
+      timing are the same object; the header around it is not.
+- [ ] **Nobody outside the cross can change light or dark now.** A visitor
+      reading an entry finds the switch by going to the beacon. That is what
+      the brief asks for and it is worth a look on a real device before it
+      counts as settled — a visitor who arrives on a shared entry link in the
+      wrong theme has one more step than they used to.
 - [ ] **Names to confirm, 2026-09-15 (two panes)** — rename freely: branch
       `card-and-desk`; `count_drafts` in database_actions and `drafts` on
       `/api/waiting`; `paneFaces` in HomeNav; `.hn-pane--turn`, `.hn-face`
       (kept), `.idc-top`, `.idc-said`, `.db-head`, `.db-mark-svg`,
-      `.db-tool`. The Drafts row's own word is Miyel's.
+      `.db-tool`. The Drafts row's own word is Miyel's. And from the ···:
+      `.kt-tools`, `.kt-tool--door`, `.kt-tool--out`, `.kt-door`, the
+      `kt-file-out` keyframes, `--kt-dir`/`--kt-i`/`--kt-d`, `PACKING_UP`,
+      and the `what` prop on KeeperTools.
 
 **THE DESKTOP IS AN OPEN BOOK, 2026-09-15** — built on branch `open-book`,
 merged as 1.17.0 (Complete). Replaced the three columns of 1.10.0 outright.
@@ -2078,10 +2096,9 @@ lesson is in the entry below.**
       software* — which needs no learning at all. The CARD/DESK switch is the
       desk's shape and stays at the top of the spine, where a narrow column
       has no room for a sentence.
-- [x] **One control in the header: the pencil, with the mark opposite it on
-      the left.** The light switch is a per-device preference and is in
-      Settings; the printer's placement is unresolved and it is off the card
-      until it has one.
+- [x] ~~**One control in the header: the pencil**~~ — then no control at all
+      for an hour, then the ··· that is there now. See the three entries at
+      the end of this block.
 - [x] **The empty band closed.** Roughly 140px of nothing between the pinned
       record and the writing; 26px now.
 - [x] **Verified at 430×932 and 1280×860, signed in and signed out:** the
@@ -2090,6 +2107,50 @@ lesson is in the entry below.**
       their colours, the pinned record on the left edge, the band at the foot
       with the page's last line above it, and the desktop spine carrying the
       same object at its own width with the switch at the top.
+- [x] **Headers hold nothing loose, and an owner's tools live in two places:**
+      a row on the desk, or behind a ··· on the thing itself (Miyel's brief).
+      So *Your card* and *Settings* are desk rows beside Start a listen, Inbox,
+      Address book and Drafts — Settings after an hour as a gear in a header,
+      which is the shape the brief was written against. The entry's pencil and
+      printer became one ··· holding Edit, Print and Delete, opening in the row
+      rather than as a panel: an entry's sheet already claims sideways for the
+      next record and down for closing, and a floating menu would be a third
+      surface on it. Delete opens the correction's own confirmation rather
+      than acting.
+- [x] **And then the ID pane got one too, at the top right** (Miyel: the three
+      dots are perfect, they need to be on the ID page as well). Edit and
+      Print, no Delete — you cannot delete the card, it is the journal. The
+      same component draws both surfaces, with one prop for the wording and
+      one CSS variable for which way it opens. Which means the pane is no
+      longer identical for a keeper and a visitor; that was worth saying for
+      the hour it was true, and a single mark that opens is a door rather than
+      a toolbar, which is the distinction the header rule was actually after.
+      The quiet *Edit your card* at the foot went with it — two doors to one
+      mode, a screen apart, on a page that is mostly writing. The desk row
+      stays: that is the one you use when you are not already on the card.
+- [x] **The tools file out of the ··· rather than appearing** (Miyel: can they
+      come out on a conveyor, like it comes from inside the button). The door
+      does not move — the mark stays in its corner and turns into the ×, and
+      the tools start scaled down on top of it and slide to their slots. The
+      one that ends up furthest away leaves first and the rest stop short
+      behind it, the way a line of people through a door fills a room from the
+      back; going in, the nearest goes first, because it is the one in the
+      doorway. Everything travels at one speed, so distance is duration —
+      `--kt-i` is how many 38px boxes a tool is from the door and it sets both.
+      The first version put the × at the far end of the group instead, so the
+      button you had just pressed jumped across the row before you let go.
+- [x] **The light switch is the beacon's and nowhere else** (Miyel: for now it
+      just lives on the beacon screen ONLY). It came off the entry pages' nav
+      row — the column stays, empty, or the mark stops being centred — and out
+      of Settings, where it had been for an hour. And it is a sun and a moon
+      again: it was redrawn as a switch on a wall on the grounds that the
+      component is called Lightswitch, and a file name is not an argument.
+- [x] **Verified after: the card's ··· opens left and the entry's opens right**
+      — measured at 38px steps out of a door that stays at x=317 on a phone
+      and x=284 on the spine — the entry's nav row has no switch and its mark
+      is still centred to the pixel, and the beacon's sun flips the page to
+      dark. The entry's own ··· is behind the wristband and was read through
+      the same CSS path with `--kt-dir` forced, not through the real header.
 
 **2026-09-15 — two panes, and down means a cover. Branch `card-and-desk`,
 version 1.18.0 — from Miyel's brief, the one whose rule came first and whose

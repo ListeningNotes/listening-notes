@@ -1,7 +1,14 @@
 // Copyright (C) 2026 Miyel Brown
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // components/main_components/SiteNav.js
-// The sitewide nav row: the mark in the middle, one control on each side.
+// The sitewide nav row: the mark in the middle, and the owner's ··· at the
+// left on the pages that have one.
+//
+// The right-hand side is empty now. It held a sun and a moon on every page of
+// the site, which made light-or-dark something you could hit by accident while
+// reaching for the mark; it lives in one place, the top right of the beacon
+// (Miyel, 2026-09-15). The column stays because a three-column row with two
+// columns in it does not hold the mark in the middle.
 //
 // That shape is the whole point of this file. It is the arrangement the About
 // card uses, scaled down, and until now it was not what this row did — the
@@ -31,7 +38,6 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useTheme } from './Lightswitch';
 import { useListeningBeacon } from '../../hooks/useListeningBeacon';
 import { useBookplate } from './Bookplate';
 
@@ -42,12 +48,10 @@ import { useBookplate } from './Bookplate';
 // is an empty grid column, which is the thing holding the mark in the middle.
 export default function SiteNav({ tools = null }) {
   const { cover_name } = useBookplate();
-  const { theme, toggle } = useTheme();
   const { isLive } = useListeningBeacon();
 
   // This row and the dot-nav beneath it are fixed with no background of their
-  // own, so page text scrolled straight through the logo, the toggle and the
-  // dot labels. The backdrop that hides it (.sitenav-row::before) only fades
+  // own, so page text scrolled straight through the logo and the dot labels. The backdrop that hides it (.sitenav-row::before) only fades
   // in once the page has actually moved, so each page's hero art still runs
   // to the top of the screen while you're sitting at the top of it.
   const [scrolled, setScrolled] = useState(false);
@@ -90,13 +94,14 @@ export default function SiteNav({ tools = null }) {
         </svg>
       </Link>
 
-      <button className="hp-icon-btn sitenav-theme-btn" onClick={toggle} aria-label="Toggle theme">
-        {theme === 'dark' ? (
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
-        ) : (
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1111.21 3a7 7 0 109.79 9.79z"/></svg>
-        )}
-      </button>
+      {/* The right slot, and it is empty on purpose. There was a sun and a
+          moon here on every page of the site, which made light-or-dark
+          something you could hit by accident while reaching for the mark. It
+          lives in one place now — the top right of the beacon, the first
+          screen of the journal (Miyel, 2026-09-15). The column stays, because
+          a three-column row with two columns in it does not hold the mark in
+          the middle. */}
+      <div className="sitenav-side sitenav-side--right" aria-hidden="true" />
     </div>
   );
 }

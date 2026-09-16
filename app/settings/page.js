@@ -10,6 +10,9 @@
 // password, and the address. The starting theme and the wording of the key
 // were here for an afternoon and came off (2026-09-01) — parked, not
 // rejected; the theme column and the definitions column both still exist.
+// Light or dark came back for an hour on 2026-09-15 and went again the same
+// evening: it has one home, the top right of the beacon, and a preference
+// with two homes is a preference somebody has to find twice.
 //
 // The card's own fields — the name, the photo, the prompts, the links, the
 // rig, the pinned record — are not edited here. Everything editable is
@@ -34,7 +37,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { fonts } from '../../library/sitewide_visuals';
 import SiteNav from '../../components/main_components/SiteNav';
-import { useTheme } from '../../components/main_components/Lightswitch';
 import PasswordGate from '../../components/session_components/PasswordGate';
 import AddToHomeScreen from '../../components/main_components/AddToHomeScreen';
 import { useJournalHost } from '../../hooks/useJournalHost';
@@ -95,10 +97,6 @@ function secretLine(status) {
 
 export default function SettingsPage({ layered = false }) {
   const host = useJournalHost();
-  // Light or dark, which lives here now rather than in the corner of the
-  // cross: it is how this device draws the site, not something you do to a
-  // pane. See the section at the foot of the page.
-  const { theme, toggle: toggleTheme } = useTheme();
   const [checking, setChecking] = useState(true);
   const [authed, setAuthed] = useState(false);
   const [settings, setSettings] = useState(null);
@@ -241,27 +239,6 @@ export default function SettingsPage({ layered = false }) {
             <input className="st-field" type="password" autoComplete="new-password" value={confirm} onChange={e => setConfirm(e.target.value)} />
           </div>
         </Section>
-
-        {/* Light or dark. It was a switch in the corner of the cross, on
-            every pane, and it is a preference rather than an action — it says
-            how this device draws the site and it says it once (Miyel's brief,
-            2026-09-15). A control that lives on every screen is a control you
-            press by accident; a setting is a thing you go and set.
-
-            Kept per device and not on the settings row: two people reading the
-            same journal on two phones do not have to agree about it, and
-            nothing here should reach across from one to the other. The nav row
-            on the entry pages still carries a switch, which is where a visitor
-            can still find one. */}
-        <div className="st-section">
-          <h2 className="st-h">Light or dark</h2>
-          <div className="st-row st-row--theme">
-            <span className="st-label">This device</span>
-            <button type="button" className="ln-pill st-theme" onClick={toggleTheme}>
-              {theme === 'dark' ? 'Dark' : 'Light'}
-            </button>
-          </div>
-        </div>
 
         <div className="st-section">
           <h2 className="st-h">On your home screen</h2>

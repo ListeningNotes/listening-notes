@@ -122,30 +122,35 @@ turning pane scrolls and its writing running off the edge is the cue. No mark
 over it: a side caret's mark named a destination worth knowing, and down has
 only one.
 
-**The light switch is the beacon's, top right, and in Settings, 2026-09-15.**
-On the beacon it is public — Settings is behind the password — and it is the
-one pane where it is not sitting over somebody's reading. In Settings as well,
-so somebody who lives on the ID pane can still find it. Drawn as a switch on a
-wall rather than a sun and a moon: those are the weather, and the component has
-been called Lightswitch since the day it was written.
+**The light switch is the beacon's, top right, and nowhere else,
+2026-09-15.** One home for it: the first screen of the journal, where it is
+public (Settings is behind the password) and not sitting over somebody's
+reading. It came off the entry pages' nav row and out of Settings the same
+day. A sun and a moon — drawn as a switch on a wall for an hour on the
+grounds that the component is called Lightswitch, and the file name was the
+whole argument.
 
-**No icons in headers, 2026-09-15.** The mark is centred and the sides are
-for navigation, not controls. An owner's tools live in one of two places: a
-row on the desk, or behind a ··· on the thing itself.
+**No loose icons in headers, 2026-09-15.** The mark is centred and the sides
+are for navigation. A single ··· is not a row of tools, it is a door, and it
+is allowed: an owner's tools live in one of two places, a row on the desk or
+behind a ··· on the thing itself.
 
-**The ID pane is identical for a keeper and a visitor, 2026-09-15.** No owner
-control on it at all — correcting the card is a row on the desk, *Your card*,
-with a quiet shortcut at the foot of the page for the moment you are reading
-your own and notice something wrong. Nothing else on this site can say that
-about itself, and it is worth keeping.
+**An owner's tools are one ···, opened in the row, 2026-09-15.** On an entry:
+Edit, Print, Delete. On the ID pane: Edit and Print. Owner only, and the same
+component draws both (KeeperTools.js). Two glyphs in the corner were what made
+an entry read as a toolbar; a menu over the page would be a third surface on a
+sheet that already claims sideways for the next record and down for closing.
+Delete opens the correction's own confirmation rather than acting — a
+destructive thing does not get a shorter path for moving to a shorter menu. A
+visitor sees nothing there: sharing stays one path, the album art.
 
-**The entry's tools are one ···, opened in the row, 2026-09-15.** Edit, Print
-and Delete, owner only. Two glyphs in the corner were what made an entry read
-as a toolbar; a menu over the page would be a third surface on a sheet that
-already claims sideways for the next record and down for closing. Delete opens
-the correction's own confirmation rather than acting — a destructive thing does
-not get a shorter path for moving to a shorter menu. A visitor sees nothing
-there: sharing stays one path, the album art.
+**The ··· does not move when it opens, 2026-09-15.** The mark stays in its
+corner, turns into the ×, and the tools file out of it one at a time — the one
+that ends up furthest away leaves first — and file back in nearest-first. The
+first version put the × at the other end of the group, so the thing you had
+just pressed jumped across the row. Which way they file out is one CSS
+variable (`--kt-dir`), not a second markup order: the entry's header holds
+them at the left and the card's at the right.
 
 **The turn is the header's left-hand control, 2026-09-15.** The header has
 been a centred mark with one control each side since it was drawn and the left
@@ -219,12 +224,6 @@ an entry's card, which is the entry's. The card and the desk are not covers of
 anything — they are pages, so no second floor, no arrival, no down caret. It
 settles the axis argument as a side effect: a vertical drag on a page is
 ordinary scrolling, and nothing has to choose between arriving and scrolling.
-
-**Light or dark is a setting, not a control on every screen, 2026-09-15.** It
-says how this device draws the site, which is a preference and not an action,
-and a switch in the corner of every pane is one somebody presses by accident.
-It lives in Settings; the nav row outside the cross still carries one, which
-is where a visitor finds it.
 
 **The cross is two panes. Sideways is you, down is the records, 2026-09-15.**
 Three made sideways mean two different things — left was about you, right was
