@@ -26,7 +26,7 @@ replaced.
 
 **Free software, self-hosted, one copy per person.** Nobody pays, ever. Free is
 what keeps API relationships simple — "commercial use" is the trigger clause in
-both Apple's and Last.fm's terms.
+Apple's terms, and was in Last.fm's while this used them.
 
 **Hosting other people is ruled out.** Every reason to host is solved without a
 server: the feed is pull-based, compare fetches a file, the address book is
@@ -385,19 +385,20 @@ the art, above the title, naming which of the three states below this is.
 Reverses 2026-08-28 (the archive has why it came off). The idle art still
 greys.
 
-**The beacon's source is the session, and Last.fm is an optional extra,
-2026-09-15.** Last.fm was treated as the missing piece for a week and two of
-two testers failed to connect one — Apple Music on an iPhone cannot at all.
-The session is also the truer thing to broadcast: what is going into the
-journal rather than what the speakers are doing, and every copy has a beacon
-from its first listen.
+**The beacon is the listen, and Last.fm is gone, 2026-09-16.** *Now logging →
+Last logged*, out of this journal's own sessions, on every copy. A scrobbler
+says a file was played; this says somebody sat down with a record and wrote
+about it, which is what the journal is for — and two of two testers failed to
+connect one, Apple Music on an iPhone being unable to at all. It went while it
+was still true that nobody had one set up, which is the cheapest moment a
+removal ever has. The argument for keeping it is in the archive.
 
-**You run one beacon, not both, and it is chosen in Settings
-(`beacon_source`), 2026-09-15.** *Now logging → Last logged* from the listen,
-or *Now listening → Last played* from Last.fm. A cover that switched between
-them by itself would be two different claims wearing one face. The session is
-the default, and a copy set to Last.fm with no key falls back to it — the
-setting is a preference, not a promise the journal can keep alone.
+**The beacon is switched on or quiet, in Settings, and `beacon_source` carries
+it, 2026-09-16.** Presence is opt-in and there was no way to decline. Quiet
+says nothing to anybody, owner included: a beacon that checked who was asking
+could not be answered once and handed round. The column used to say which of
+two beacons ran here; the schema is additive-only, so it carries the switch
+rather than sitting dead, and anything that is not `quiet` is on.
 
 **The needle lifts; it is not thrown away, 2026-09-15.** Closing a record you
 spent an evening with used to erase that listen and drop the beacon past it.
@@ -423,24 +424,24 @@ says Listening now and stops being green, which is true on both counts.
 
 **Both "Last logged" and "Before that" are real listens, finished or not,
 2026-09-15.** They come out of this journal — entries, drafts and lifted
-needles — rather
-than off the Last.fm history, where they were whatever happened to autoplay.
-Logged means sat down with, not published: anybody who wants the posts has
+needles — rather than off a scrobbler's history, where they were whatever
+happened to autoplay. Logged means sat down with, not published: anybody who wants the posts has
 the archive, and a listen written up over three evenings is still the thing
 that was on. Somebody who sent you a record can see you sat with it, which is
 the loop the send flow exists to close.
 
-**The dot lights for a listen as well as for playback, 2026-09-15.** The
-brief said green should mean playback alone and Miyel overruled it on the
-spot: the dot says the beacon is live, and both states are live. One
-mechanic, not two.
+**The dot says the beacon is live, 2026-09-15.** The brief said green should
+mean playback alone and Miyel overruled it on the spot — one mechanic, not
+two. With playback gone (2026-09-16) there is one thing left that lights it,
+and the rule is what survives: the dot follows the beacon, not any particular
+source of one.
 
-**The canonical instance must not become the reference, 2026-09-15.** Miyel
-keeps Last.fm connected because she likes the ambient version and because it
-is useful while building, so her copy shows a state nobody else's does. The
-default is what June sees, and a copy with no scrobbler is what a change gets
-checked against. This is exactly how the Last.fm setup screen survived two
-failed installs.
+**The canonical instance must not become the reference, 2026-09-15.** Miyel's
+copy is the one with everything connected, so it shows states nobody else's
+does — and a feature checked only against it is a feature checked against the
+best case. The default is what June sees. This is exactly how the Last.fm
+setup screen survived two failed installs, and how Last.fm itself survived a
+week past the point where nobody could connect one.
 
 **No fourth metric on the card.** The card is a glance and four rows is the
 most a glance holds. Ruled out rather than parked.
@@ -1083,14 +1084,12 @@ pinch-zoom from everyone who needs it.
 that mattered — why somebody sent it — behind a button marked "Note". Cover,
 message, name, in that order.
 
-**Each copy brings its own Last.fm key, read server-side.** `LASTFM_KEY` is
-never `NEXT_PUBLIC_`: the key identifies the application, so a hardcoded one
-means every copy shares one rate limit. The browser talks to
-`/api/public/beacon`. The username stays in settings — a choice, not a secret.
-
-**One beacon poll per page, shared, not one per component.** The timer lives
-in the module with components subscribed to it, and the server caches the
-upstream answer for ten seconds.
+**One beacon poll per page, shared, not one per component, and none at all
+from a tab nobody is looking at, 2026-09-16.** The timer lives in the module
+with components subscribed to it. The answer is the same for everybody, so it
+is cached at the edge for ten seconds and repeat asks never reach the
+database — which is what makes the cost stop growing with the number of
+people watching.
 
 **No banner or message system pushed into copies.** That would require every
 copy to phone home, producing a log of who is running one. A copy asks its
@@ -1250,8 +1249,8 @@ Everything downstream reads the owner as `ORDER BY id LIMIT 1`. **Setup does
 not reopen** once claimed, rather than showing a form that appears to save
 `serial` and `founded_at` and silently drops both.
 
-**Settings is the machinery, reached from the desk.** The address, Last.fm,
-the Anthropic key, the password, the home-screen step. The card's own fields
+**Settings is the machinery, reached from the desk.** The address, the
+beacon's switch, the Anthropic key, the password, the home-screen step. The card's own fields
 are *not* edited there: everything editable is edited where it prints, and
 two editors for one field means neither is canonical. No gear on the card;
 `/?edit=card` opens the card editing for anything that wants to point there.
@@ -1296,9 +1295,13 @@ what to check, in a sentence chosen from the driver's error
 link to the repository's issues. The setup invitation is still never shown on
 an error.
 
-**No Last.fm means the journal is the first screen.** No beacon screen at all;
-the wall sits directly under the crown. Nothing pretending something might
-play — which is why the empty-journal state was the first thing to write.
+**There is always a beacon screen, 2026-09-16, Miyel's call.** A journal
+showing a record it sat with months ago is not a beacon failing — that is the
+signal — and a copy on its first afternoon gets a blank one standing in. It
+reverses *no Last.fm means the journal is the first screen*, which dropped the
+whole floor when there was nothing to say: a pane that changes shape on a fact
+about the journal is one a fixed band at the foot cannot afford, and asking
+the question cost two `EXISTS` subqueries on every page render.
 
 **The holding page's door is a plain anchor.** A `<Link>` from a page the root
 layout draws is dead — layouts do not re-render on a client navigation. First
@@ -1577,5 +1580,7 @@ no file".
   about a second for four seconds of 1080×1920 (proved in Chromium, see
   NOTES). Still parked until a phone has posted one and a moving card
   earns it — motion that means something, not a screensaver.
-- Manual now-playing override — covers vinyl and iOS Apple Music, where
-  scrobbling is unreliable.
+- Manual now-playing override — say what is on without opening a listen. It
+  covered vinyl and iOS Apple Music while Last.fm was the other beacon; with
+  Last.fm gone it is the only way the beacon could ever mean *playing* rather
+  than *being written about*, which is a bigger question than it was.

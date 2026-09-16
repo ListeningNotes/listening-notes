@@ -32,7 +32,6 @@ const EMPTY = {
   // the card's editor to decide which column a name edit belongs in.
   display_name: null,
   portrait_url: null,
-  lastfm_user: null,
   site_address: null,
   founded_at: null,
   pinned_entry_id: null,
@@ -55,16 +54,22 @@ const EMPTY = {
   // environment, worked out on the server, so the session can leave the
   // Research button out rather than show one that fails.
   research_available: false,
-  // Whether this journal has a beacon: something logged, or a scrobbler set
-  // up. Also not a setting. It decides whether the cross draws a cover above
-  // its wall, and whether anything polls for what is on it.
-  beacon_available: false,
+  // Whether this journal broadcasts. Also not a setting in the ordinary sense
+  // — the layout works it out and hands it down. It does not decide whether
+  // there is a beacon *screen*: there always is one. It decides whether
+  // anything polls for what is on it, so a journal that has asked to be quiet
+  // never asks.
+  //
+  // True by default, unlike research_available below, because the default here
+  // is on: a copy that has never opened Settings broadcasts, and the falsy
+  // default would have every journal start silent until its settings arrived.
+  beacon_on: true,
 };
 
 const BookplateContext = createContext(EMPTY);
 
 // useBookplate — how a component reads the journal's details.
-//   const { lastfm_user } = useBookplate();
+//   const { keeper_name } = useBookplate();
 //
 // Every value can be null, and null means the owner said no. Components are
 // expected to render nothing at all rather than an empty link or a broken
