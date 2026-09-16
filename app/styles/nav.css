@@ -484,7 +484,7 @@
      and the slack pooling under the button. The ceiling is still the card —
      everything here is spending the same 290-odd pixels the crown, the square
      and the down caret have to share. */
-  --hn-crown: clamp(150px, 28dvh, 248px);
+  --hn-crown: clamp(150px, calc(var(--hn-h) * 0.28), 248px);
   /* The air between the mark and the square under it. One number for both
      panes: the card's portrait and the beacon's album art are the same 180px
      square in the same frame, and the whole point of a fixed crown is that
@@ -499,10 +499,15 @@
      the room for, and the card's last row ends up under the caret.
      It reads the crown rather than assuming it, so walking the mark down the
      screen spends the slack once instead of twice. */
-  --hn-square-top: clamp(16px, calc((100dvh - var(--hn-crown) - 568px) / 2), 80px);
+  --hn-square-top: clamp(16px, calc((var(--hn-h) - var(--hn-crown) - 568px) / 2), 80px);
+  /* ── One screen ──────────────────────────────────────────────────────────
+     Everything on the cross that means "one screen tall" reads this, and in a
+     browser it is 100dvh exactly as it always was. The installed app is where
+     it earns its keep — see the standalone block near the band. */
+  --hn-h: 100dvh;
   position: relative;
   width: 100%;
-  height: 100dvh;
+  height: var(--hn-h);
   overflow: hidden;
   /* How tall the fixed bar is — the entry header's band — read by the bar,
      by the wall's clearance under it and by the second floor's padding. */
@@ -615,7 +620,7 @@
 .hn-rail {
   display: flex;
   width: 100%;
-  height: 100dvh;
+  height: var(--hn-h);
   overflow-x: auto;
   overflow-y: hidden;
   scroll-snap-type: x mandatory;
@@ -640,7 +645,7 @@
 .hn-pane {
   flex: 0 0 100%;
   width: 100%;
-  height: 100dvh;
+  height: var(--hn-h);
   scroll-snap-align: start;
   scroll-snap-stop: always;
   overflow-y: auto;
@@ -698,7 +703,7 @@
 /* The centre pane's first screen. min-height rather than height, so a short
    phone gets a screen that fits and a long one gets a screen that fills. */
 .hn-screen {
-  min-height: calc(100dvh - var(--hn-crown));
+  min-height: calc(var(--hn-h) - var(--hn-crown));
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
@@ -715,7 +720,7 @@
 /* Everything under it. Not a snap point: a snap here would mean wanting three
    more lines of the wall got you a whole page of it instead. */
 .hn-under {
-  min-height: 100dvh;
+  min-height: var(--hn-h);
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
@@ -750,7 +755,7 @@
        natively before the snap — a snap area taller than the port allows
        any position that covers the port. A fixed height with the overrun
        clipped would cut the Send button off the card instead. */
-    min-height: 100dvh;
+    min-height: var(--hn-h);
     box-sizing: border-box;
     scroll-snap-align: start;
     scroll-snap-stop: always;
@@ -766,7 +771,7 @@
        against a minimum resolves to the content — left to flex: 1 this grew
        to the whole wall and stopped being a scroller, taking the sticky bar
        off the bottom of the screen with it. */
-    height: 100dvh;
+    height: var(--hn-h);
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
     /* auto, deliberately. contain would stop a pull at the top of the wall
@@ -843,6 +848,8 @@
    screen, which is a control nobody can see or press. */
 /* Above the band, not at the window's edge — the band owns the bottom now. */
 .hn-controls { bottom: calc(var(--hn-foot-h, 0px) + 12px); }
+/* And in the frame with it, for the same reason. */
+@media (max-width: 768px) { .hn-controls { position: absolute; } }
 /* In the row, not under it. It hung 18px below while the dots were in the
    row with it and it had to clear them; the row holds nothing else now. */
 .hn-controls .edge-caret--down { position: static; transform: none; }
@@ -903,7 +910,7 @@
 
 /* ── Right, logged out: Pitch ───────────────────────────────────────────── */
 .pt-pane {
-  min-height: calc(100dvh - var(--hn-crown));
+  min-height: calc(var(--hn-h) - var(--hn-crown));
   box-sizing: border-box;
   display: flex;
   align-items: center;
@@ -1419,11 +1426,14 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   /* Stated on the cross so the panes can read it: every scroller inside has
      to end above the band rather than under it. */
   .hn { --hn-foot-h: calc(54px + env(safe-area-inset-bottom)); }
+  /* Absolute inside .hn rather than fixed to the window. The frame is the
+     screen — see the standalone block below — and a box that belongs to the
+     document is painted everywhere the document is, which a fixed one is not.
+     .hn is position: relative and overflow: hidden, so this lands on its
+     bottom edge and is clipped to it. */
   .hn-foot {
-    position: fixed;
+    position: absolute;
     left: 0; right: 0; bottom: 0;
-    /* See the standalone block under this one for why that zero is not always
-       the bottom of the screen. */
     z-index: 96;
     display: flex;
     align-items: stretch;
@@ -1480,23 +1490,33 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
    is what `viewport-fit=cover` buys — but it reports a viewport one status bar
    shorter than the screen and anchors `position: fixed` to that. Measured on
    Miyel's phone, 2026-09-15: screen 874, innerHeight 812, dvh 812, lvh 874,
-   safe-area top 62. 874 − 812 = 62 = the top inset exactly. So `bottom: 0`
-   landed 62px up and left a strip of page background under the band, and a
-   drag made iOS re-measure and the band drop into place. Nothing about the
-   band was wrong; it was obeying a viewport that was lying.
+   safe-area top 62. 874 − 812 = 62 = the top inset exactly. So the band sat 62
+   pixels up with a strip of page background under it, and a drag made iOS
+   re-measure and drop it into place. Nothing about the band was wrong; it was
+   obeying a viewport that was lying.
 
-   `100dvh − 100lvh` is that difference and nothing else: the dynamic viewport
-   minus the largest the viewport can be. It is −62px here, which pushes the
-   band's bottom edge 62px past the reported bottom and onto the real one. When
-   iOS re-measures and dvh becomes 874 it is 0, and the band does not move. It
-   is arithmetic rather than a number somebody typed, so it is right on any
-   screen and right at both moments.
+   The first fix pushed the band *past* the reported bottom with a negative
+   `bottom`, and it went where it was told and was then clipped: the glyphs
+   showed and the words under them did not, because fixed content below the
+   reported viewport is not painted. Which is the useful finding — iOS will
+   paint document content down there (the page's own background proved it) but
+   not a fixed box.
 
-   Standalone only. In a browser the same subtraction is the toolbar's height,
-   and the band would be shoved underneath Safari's own bar. */
+   So the frame takes the real height and the band belongs to the frame. `lvh`
+   is the largest the viewport can be, which in a standalone app is the screen
+   and nothing else; there are no toolbars for it to be dynamic about. The
+   negative bottom margin is what stops the taller frame making the document
+   62px scrollable — the box paints 874 and measures 812, which is exactly the
+   arrangement iOS is already drawing. Both numbers become 0 the moment iOS
+   re-measures, so nothing moves between the two states.
+
+   Standalone only. In a browser `lvh` is the viewport with the toolbars
+   retracted, and the band would be under Safari's own bar. */
 @media (display-mode: standalone) and (max-width: 768px) {
-  .hn-foot { bottom: calc(100dvh - 100lvh); }
-  .hn-controls { bottom: calc(var(--hn-foot-h, 0px) + 12px + (100dvh - 100lvh)); }
+  .hn {
+    --hn-h: 100lvh;
+    margin-bottom: calc(100dvh - 100lvh);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1594,7 +1614,7 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
     inset: auto;
     flex: 0 0 100%;
     width: 100%;
-    height: 100dvh;
+    height: var(--hn-h);
     scroll-snap-align: start;
     scroll-snap-stop: always;
     overflow-y: auto;
