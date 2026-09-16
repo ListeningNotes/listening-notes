@@ -1296,6 +1296,92 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   pointer-events: none;
 }
 
+/* ── The turn ───────────────────────────────────────────────────────────────
+   One box holding both faces, so there is something to turn. A page turning
+   and not a cross-fade: the leaf is one pane with two faces and the motion has
+   to say so, or the two sides read as two screens that swap.
+
+   Flat at rest, and that is the whole safety of it. preserve-3d around two
+   scrollers is a subtree the browser may rasterise, and scrolling inside a
+   rasterised layer is exactly the class of thing this file has reverted twice
+   at this boundary (see the note over .hn-rail). So the 3D exists for the four
+   hundred milliseconds of the turn and not one more: at rest the leaf is a
+   plain absolutely-positioned box and the face is chosen by visibility, the
+   way it was before any of this.
+
+   perspective() in the transform rather than the `perspective` property on the
+   pane, deliberately. The property would make .hn-pane--turn a containing
+   block for every fixed descendant, for good — and the card has one, the sheet
+   the counts open. As a transform function the perspective belongs to the leaf
+   and only while it is turning.
+
+   The right pane never moves. On a phone the journal is the next pane along
+   the rail; on a desk it is the other half of a grid. Neither is inside this.
+*/
+.hn-leaf { position: absolute; inset: 0; }
+.hn--turning .hn-leaf { transform-style: preserve-3d; }
+/* Both faces on screen at once, and neither of them takes a press while the
+   leaf is moving — a tap landing on a face that is halfway edge-on is a tap
+   nobody aimed. backface-visibility is what hides the one facing away, so the
+   resting visibility rules are simply overridden for the duration. */
+.hn--turning .hn-face {
+  visibility: visible;
+  pointer-events: none;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+/* The far side of the leaf, pre-turned so it reads the right way round when
+   the leaf has gone all the way over. */
+.hn--turning .hn-face--desk { transform: rotateY(180deg); }
+
+/* Negative, so the right edge comes toward you and the leaf turns leftwards —
+   the same direction the swipe at the left wall means, and the direction a
+   page turns. */
+@keyframes hn-turn-to-desk {
+  from { transform: perspective(1600px) rotateY(0deg); }
+  to   { transform: perspective(1600px) rotateY(-180deg); }
+}
+@keyframes hn-turn-to-card {
+  from { transform: perspective(1600px) rotateY(-180deg); }
+  to   { transform: perspective(1600px) rotateY(0deg); }
+}
+/* 0.4s and the site's own decelerating curve — what the entry layer arrives
+   on. TURN_MS in HomeNav.js has to agree with this number. */
+.hn--turning-to-desk .hn-leaf { animation: hn-turn-to-desk 0.4s cubic-bezier(0.22, 0.61, 0.36, 1) both; }
+.hn--turning-to-card .hn-leaf { animation: hn-turn-to-card 0.4s cubic-bezier(0.22, 0.61, 0.36, 1) both; }
+
+/* A turning leaf is a composited layer, and a composited layer paints over
+   fixed elements that are not — found on the archive, where a band went over
+   the top row (Gotchas). The three fixed things on the cross ask for layers of
+   their own so the turn cannot cover them: the bar, the turn's own control,
+   and the row at the foot.
+
+   will-change and not `transform: translateZ(0)`, which is the usual way to
+   ask. The row at the foot already animates its own transform when it hides
+   itself while something scrolls, and a translateZ stated down here would beat
+   .hn-controls--busy on source order and stop it moving — the trap in Gotchas,
+   twice in one file. will-change promotes without saying anything about the
+   transform, so nothing it belongs to is overwritten.
+
+   Permanent rather than added for the turn: promotion needs a frame to take
+   effect and the turn starts in the frame the class arrives in. These are
+   three small fixed rows that are on screen the whole time anyway. */
+.hn-bar, .hn-controls, .hn-turn-row { will-change: transform; }
+
+@media (prefers-reduced-motion: reduce) {
+  /* A cross-fade instead, at the same length, so the page still changes in a
+     beat somebody can follow rather than blinking. The arriving face is the
+     one the resting rules would show; the leaving face is the one they hide. */
+  .hn--turning .hn-leaf { animation: none; transform-style: flat; }
+  .hn--turning .hn-face--desk { transform: none; }
+  .hn--face-card.hn--turning .hn-face--card,
+  .hn--face-desk.hn--turning .hn-face--desk { animation: hn-turn-arrive 0.4s linear both; }
+  .hn--face-card.hn--turning .hn-face--desk,
+  .hn--face-desk.hn--turning .hn-face--card { animation: hn-turn-leave 0.4s linear both; }
+}
+@keyframes hn-turn-arrive { from { opacity: 0; } to { opacity: 1; } }
+@keyframes hn-turn-leave  { from { opacity: 1; } to { opacity: 0; } }
+
 /* ── What turns it ──────────────────────────────────────────────────────────
    At the left end of the header's line, opposite the pencil, with the mark
    between them. DECISIONS has said since that header was drawn that it is a
