@@ -29,10 +29,23 @@
 // so the thing you had just pressed jumped across the row before you could
 // let go. The mark is the door: it stays in its corner, it turns into the ×,
 // and the tools file out of it one at a time and file back in the same way
-// (Miyel, 2026-09-15). Which end they file out towards is the surface's
-// business, not this file's — the entry's header holds them at the left and
-// the card holds them at the right, and the difference is one CSS line
-// (`--kt-dir`) rather than a second order in here.
+// (Miyel, 2026-09-15).
+//
+// The corner is the top right on every surface that has one — the entry's
+// header and the card's — so the tools always come out leftwards, and this
+// file does not know or care which page it is on. `--kt-dir` in nav.css is
+// the knob if a left-hand corner ever wants one.
+//
+// One exception, and it is measured rather than felt: the entry's row is the
+// sitewide nav, which is 28px of padding either side of a centred mark, and
+// three tools and a door reach 197px back from the right on a 375px phone
+// while the mark ends at 212. So the row is told when the menu is open and
+// takes its mark off the screen for as long as it is — the row becomes the
+// menu, and comes back when it shuts. The card has two tools and 30px to
+// spare, and keeps its mark. This is a DOM write rather than a prop because
+// the row is two components away (FullPostPage builds the menu, SiteNav draws
+// the row) and threading a boolean through both to hide one logo is more
+// moving parts than the thing it moves.
 //
 // ── What is in it ─────────────────────────────────────────────────────────
 // On an entry: the pencil corrects the writing, the printer makes something
@@ -55,9 +68,10 @@ import Link from 'next/link';
 import { DotsThree, Pencil, Printer, Trash, X } from '@phosphor-icons/react';
 
 // How long the tools take to file back in. It has to outlast the longest
-// animation in the closing half of kt-file-out (nav.css) or the last one
-// vanishes mid-stride; it is deliberately quicker than opening, because
-// waiting for a menu to finish leaving is the one thing nobody wants.
+// kt-file-in in nav.css — delay plus duration, 286ms for three tools — or the
+// last one is unmounted mid-stride and vanishes, which is the exact thing the
+// animation exists to avoid. Deliberately quicker than opening: waiting for a
+// menu to finish leaving is the one thing nobody wants.
 const PACKING_UP = 320;
 
 const WORDS = {
@@ -103,6 +117,16 @@ export default function KeeperTools({
   // Nothing here sets state — it only makes sure a menu that is taken off the
   // page mid-close does not come back to a component that has gone.
   useEffect(() => () => { if (timer.current) clearTimeout(timer.current); }, []);
+
+  // Tell the nav row, if this is in one, so it can get its mark out of the
+  // way. Nothing happens on a card: there is no .sitenav-row over it.
+  const mine = useRef(null);
+  useEffect(() => {
+    const row = mine.current && mine.current.closest('.sitenav-row');
+    if (!row) return undefined;
+    row.toggleAttribute('data-tooling', phase === 'out');
+    return () => row.removeAttribute('data-tooling');
+  }, [phase]);
 
   // Escape closes it, and closing is all Escape does here — the sheet under
   // this has its own Escape and would otherwise take the entry away with the
@@ -187,7 +211,7 @@ export default function KeeperTools({
   );
 
   return (
-    <div className={'kt-tools' + (phase === 'back' ? ' kt-tools--back' : '')}>
+    <div ref={mine} className={'kt-tools' + (phase === 'back' ? ' kt-tools--back' : '')}>
       <button
         type="button"
         className="kt-tool kt-tool--door"

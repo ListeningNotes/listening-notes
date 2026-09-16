@@ -132,25 +132,34 @@ whole argument.
 
 **No loose icons in headers, 2026-09-15.** The mark is centred and the sides
 are for navigation. A single ··· is not a row of tools, it is a door, and it
-is allowed: an owner's tools live in one of two places, a row on the desk or
-behind a ··· on the thing itself.
+is allowed. Anything that acts on the thing you are looking at goes behind
+that thing's ···; the desk's rows are for places you go, not tools you use on
+what is in front of you.
 
-**An owner's tools are one ···, opened in the row, 2026-09-15.** On an entry:
-Edit, Print, Delete. On the ID pane: Edit and Print. Owner only, and the same
-component draws both (KeeperTools.js). Two glyphs in the corner were what made
-an entry read as a toolbar; a menu over the page would be a third surface on a
-sheet that already claims sideways for the next record and down for closing.
-Delete opens the correction's own confirmation rather than acting — a
-destructive thing does not get a shorter path for moving to a shorter menu. A
-visitor sees nothing there: sharing stays one path, the album art.
+**An owner's tools are one ···, top right, opened in the row, 2026-09-15.**
+On an entry: Edit, Print, Delete. On the ID pane: Edit and Print. Owner only,
+the same corner on both, and the same component draws them (KeeperTools.js).
+The card is corrected from the card and not from a desk row — everything
+editable is edited where it prints, which is a rule this repo already keeps
+for the name, the photo, the prompts, the links and the rig. Two glyphs in
+the corner were what made an entry read as a toolbar; a menu over the page
+would be a third surface on a sheet that already claims sideways for the next
+record and down for closing. Delete opens the correction's own confirmation
+rather than acting — a destructive thing does not get a shorter path for
+moving to a shorter menu. A visitor sees nothing there: sharing stays one
+path, the album art.
 
 **The ··· does not move when it opens, 2026-09-15.** The mark stays in its
 corner, turns into the ×, and the tools file out of it one at a time — the one
 that ends up furthest away leaves first — and file back in nearest-first. The
 first version put the × at the other end of the group, so the thing you had
-just pressed jumped across the row. Which way they file out is one CSS
-variable (`--kt-dir`), not a second markup order: the entry's header holds
-them at the left and the card's at the right.
+just pressed jumped across the row.
+
+**An open ··· takes the nav row's mark off the screen, 2026-09-15.** Only
+there. The sitewide row is 28px of padding either side of a centred mark, and
+three tools and a door reach into it on a 375px phone — so the row becomes the
+menu while the menu is open and the mark comes back when it shuts. The card
+has two tools and 29px to spare and keeps its mark.
 
 **The turn is the header's left-hand control, 2026-09-15.** The header has
 been a centred mark with one control each side since it was drawn and the left

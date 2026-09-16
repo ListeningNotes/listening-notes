@@ -132,10 +132,17 @@
 }
 
 .sitenav-side { display: flex; align-items: center; gap: 2px; min-width: 0; }
-.sitenav-side--left { justify-content: flex-start; }
 /* Nothing in it. It is a spacer that keeps the mark on the middle of the row
-   now that the lights have gone to the beacon. */
+   now that the tools have gone to the other end. */
+.sitenav-side--left { justify-content: flex-start; }
 .sitenav-side--right { justify-content: flex-end; }
+/* An open ··· takes the row. Three tools and a door reach further back than
+   28px of padding leaves, and the mark is what they reach into — so it goes
+   while they are out, rather than being drawn on top of. KeeperTools puts the
+   attribute here; see the note in that file. */
+.sitenav-row[data-tooling] .sitenav-logo { opacity: 0; pointer-events: none; }
+.sitenav-logo { transition: opacity 0.18s linear; }
+
 
 /* The keeper's tools. Deliberately the same object as the About card's pencil
    — 36px box, 10px radius, faint until you go near it — because they are the
@@ -159,12 +166,16 @@
 .kt-tool--end:hover { color: var(--fav); background: color-mix(in srgb, var(--fav) 12%, transparent); }
 
 /* ── The ··· and what comes out of it ──────────────────────────────────────
-   The door is the first child and never moves. --kt-dir says which way the
-   tools lie from it: 1 when they open to the right, which is the entry's
-   header, and -1 when they open to the left, which is the card's. That single
-   number is the only difference between the two surfaces — the markup, the
-   order and the timing are the same object in both places. */
-.kt-tools { --kt-dir: 1; display: flex; align-items: center; gap: 2px; }
+   The door is the first child in the markup and never moves on the screen.
+   Everywhere it appears it holds a top-right corner and opens leftwards, so
+   the row is reversed and --kt-dir is -1: the markup order is the same on
+   every surface, and the pencil is the first thing out of it on all of them.
+   Set --kt-dir to 1 and drop the reverse if a left-hand corner ever wants
+   one; nothing else would change. */
+.kt-tools {
+  --kt-dir: -1;
+  display: flex; flex-direction: row-reverse; align-items: center; gap: 2px;
+}
 /* The door sits over the tools rather than under them, so the one still half
    inside it is hidden by it instead of drawn on top of it. */
 .kt-tool--door { position: relative; z-index: 1; }
@@ -202,11 +213,24 @@
   animation-fill-mode: both;
 }
 /* Going back in, the near one goes first: it is the one in the doorway. Keep
-   the total under PACKING_UP in KeeperTools.js. */
+   the total under PACKING_UP in KeeperTools.js.
+
+   A second set of keyframes rather than `animation-direction: reverse` on the
+   first, and that is not a style preference. Changing direction and duration
+   on an animation that has already finished does not restart it — its elapsed
+   time is already past the new duration, so it jumps straight to the end and
+   the tools vanish instead of filing in. Only a change of animation-NAME
+   starts a fresh one. */
+@keyframes kt-file-in {
+  from { opacity: 1; transform: translateX(0) scale(1); }
+  55%  { opacity: 1; }
+  to   { opacity: 0; transform: translateX(calc(var(--kt-i) * var(--kt-dir) * -38px)) scale(0.25); }
+}
 .kt-tools--back .kt-tool--out {
-  animation-direction: reverse;
+  animation-name: kt-file-in;
   animation-duration: calc(120ms + var(--kt-i) * 30ms);
   animation-delay: calc((var(--kt-i) - 1) * 38ms);
+  animation-timing-function: cubic-bezier(0.4, 0, 0.7, 0.2);
   pointer-events: none;
 }
 @media (prefers-reduced-motion: reduce) {
