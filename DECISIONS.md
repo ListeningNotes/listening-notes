@@ -380,11 +380,57 @@ asking them to leave.
 where they do not take the first hundred pixels of covers. Sticky, never
 fixed — the wall lives inside a pane of the cross.
 
-**The beacon captions itself again, 2026-09-07, on Miyel's call.** One line
-under the art, above the title: "Now listening" while something plays, "Not
-currently listening" when not. Reverses 2026-08-28 (the archive has why it
-came off). The idle art still greys, and nothing on the beacon is ever green
-unless something *is* playing.
+**The beacon captions itself, 2026-09-07, on Miyel's call.** One line under
+the art, above the title, naming which of the three states below this is.
+Reverses 2026-08-28 (the archive has why it came off). The idle art still
+greys.
+
+**The beacon's source is the session, and Last.fm is an optional extra,
+2026-09-15.** Last.fm was treated as the missing piece for a week and two of
+two testers failed to connect one — Apple Music on an iPhone cannot at all.
+The session is also the truer thing to broadcast: what is going into the
+journal rather than what the speakers are doing, and every copy has a beacon
+from its first listen.
+
+**You run one beacon, not both, and it is chosen in Settings
+(`beacon_source`), 2026-09-15.** *Now logging → Last logged* from the listen,
+or *Now listening → Last played* from Last.fm. A cover that switched between
+them by itself would be two different claims wearing one face. The session is
+the default, and a copy set to Last.fm with no key falls back to it — the
+setting is a preference, not a promise the journal can keep alone.
+
+**The needle lifts; it is not thrown away, 2026-09-15.** Closing a record you
+spent an evening with used to erase that listen and drop the beacon past it.
+An ended needle stands as the most recent listen, keeping the track that was
+open, until something newer happens. A record closed without a single track
+opened is deleted — that is browsing, not listening.
+
+**A stale listen lifts itself after three hours, and the clock is
+interaction, 2026-09-15.** Turning to a track or writing a line keeps a
+beacon alive; a tab merely sitting open does not, or walking away from an
+open listen would claim you were logging all weekend. The expiry is enforced
+in the read, so a closed tab or a flat battery needs nothing to run.
+
+**Both "Last logged" and "Before that" are real listens, finished or not,
+2026-09-15.** They come out of this journal — entries, drafts and lifted
+needles — rather
+than off the Last.fm history, where they were whatever happened to autoplay.
+Logged means sat down with, not published: anybody who wants the posts has
+the archive, and a listen written up over three evenings is still the thing
+that was on. Somebody who sent you a record can see you sat with it, which is
+the loop the send flow exists to close.
+
+**The dot lights for a listen as well as for playback, 2026-09-15.** The
+brief said green should mean playback alone and Miyel overruled it on the
+spot: the dot says the beacon is live, and both states are live. One
+mechanic, not two.
+
+**The canonical instance must not become the reference, 2026-09-15.** Miyel
+keeps Last.fm connected because she likes the ambient version and because it
+is useful while building, so her copy shows a state nobody else's does. The
+default is what June sees, and a copy with no scrobbler is what a change gets
+checked against. This is exactly how the Last.fm setup screen survived two
+failed installs.
 
 **No fourth metric on the card.** The card is a glance and four rows is the
 most a glance holds. Ruled out rather than parked.

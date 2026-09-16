@@ -28,6 +28,9 @@ const EMPTY = {
   keeper_name: null,
   portrait_url: null,
   lastfm_user: null,
+  // Which beacon this journal runs: 'session' or 'lastfm'. Null is session,
+  // which is the default and what every copy gets without choosing.
+  beacon_source: null,
   site_address: null,
   founded_at: null,
   pinned_entry_id: null,
@@ -61,7 +64,7 @@ const EMPTY = {
 // query — and so adding a setting is a deliberate act in this file.
 const WRITABLE = [
   'keeper_name', 'display_name', 'portrait_url',
-  'lastfm_user', 'site_address',
+  'lastfm_user', 'beacon_source', 'site_address',
   'founded_at', 'pinned_entry_id', 'social_links',
   'hidden_fields', 'portrait_position', 'rig_icon', 'rig',
   'bioanswers',
@@ -183,7 +186,7 @@ export function titleName(settings) {
 // silent type change or a silently missing page. Add new columns to this list.
 const SETTINGS_FIELDS = [
   'id', 'keeper_name', 'portrait_url',
-  'lastfm_user', 'site_address', 'founded_at',
+  'lastfm_user', 'beacon_source', 'site_address', 'founded_at',
   'pinned_entry_id', 'updated_at', 'why_essay',
   'why_date', 'definitions', 'social_links', 'hidden_fields',
   'portrait_mime', 'portrait_position', 'rig_icon', 'rig',
@@ -197,7 +200,14 @@ const SETTINGS_FIELDS = [
 // second trip on every page.
 const SETTINGS_SELECT = SETTINGS_FIELDS.map(f => `"${f}"`).join(', ')
   + `, (SELECT anthropic_key IS NOT NULL FROM secrets WHERE id = 1) AS has_anthropic_key`
-  + `, (SELECT lastfm_key IS NOT NULL FROM secrets WHERE id = 1) AS has_lastfm_key`;
+  + `, (SELECT lastfm_key IS NOT NULL FROM secrets WHERE id = 1) AS has_lastfm_key`
+  // And whether anything has ever been listened to here, which since
+  // 2026-09-15 is most of what decides whether this copy has a beacon at all —
+  // the source is the listen now, not Last.fm, so a journal with records in it
+  // has one whether or not its keeper ever managed to connect a scrobbler.
+  // Drafts count, because an unfinished listen can hold the beacon. EXISTS
+  // stops at the first row; neither of these is a count.
+  + `, (EXISTS(SELECT 1 FROM entries) OR EXISTS(SELECT 1 FROM drafts)) AS has_listens`;
 
 export async function pull_settings() {
   try {
@@ -280,15 +290,25 @@ export async function pull_keeper_name() {
 export async function pull_beacon_settings() {
   try {
     const [row] = await database`
-      SELECT s.lastfm_user, k.lastfm_key
+      SELECT s.lastfm_user, s.beacon_source, k.lastfm_key
       FROM settings s LEFT JOIN secrets k ON k.id = 1
       WHERE s.id = 1`;
     return {
       lastfm_user: row?.lastfm_user || null,
       lastfm_key: row?.lastfm_key || process.env.LASTFM_KEY || null,
+      // Which of the two beacons this journal runs. A third column on the
+      // hottest read in the app, and it is not the widening the paragraph
+      // above warns about: the beacon cannot decide which source to read
+      // without first knowing which one it is. One read, one question — the
+      // rule is intact and the next hot path still gets its own reader.
+      beacon_source: row?.beacon_source === 'lastfm' ? 'lastfm' : 'session',
     };
   } catch {
-    return { lastfm_user: null, lastfm_key: process.env.LASTFM_KEY || null };
+    return {
+      lastfm_user: null,
+      lastfm_key: process.env.LASTFM_KEY || null,
+      beacon_source: 'session',
+    };
   }
 }
 

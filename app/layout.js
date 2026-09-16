@@ -255,8 +255,26 @@ export default async function RootLayout({ children, layer }) {
   // environment second — the same order the vault resolves it in.
   settings.research_available = Boolean(all.has_anthropic_key || process.env.ANTHROPIC_API_KEY);
   // Same shape for the beacon: the cross lands on the journal when there is
-  // nothing to ask Last.fm with, and it needs to know that before paint.
-  settings.beacon_available = Boolean(all.lastfm_user && (all.has_lastfm_key || process.env.LASTFM_KEY));
+  // nothing for a beacon to say, and it needs to know that before paint.
+  //
+  // Which is now almost never. The beacon's default source is the listen
+  // itself (2026-09-15), so a journal with a single entry in it has one —
+  // "Last logged", at worst — and Last.fm only adds a second source on top.
+  // What is left without a beacon is a copy on its first afternoon, before a
+  // record has been picked up, and that copy still gets the wall straight
+  // under its crown rather than an empty tile.
+  //
+  // The one seam: on a journal with nothing in it at all, a listen that never
+  // writes a word lights nothing, because this asks after entries and drafts
+  // and a needle is neither. Asking after the needle too would mean naming a
+  // table added in migration 013 inside the read that decides whether this
+  // copy has been set up — and that read fails closed, so a copy that had not
+  // migrated would answer the holding page instead of a journal. The seam
+  // closes on the first line typed, and the person it would affect is on the
+  // session screen rather than looking at their own cover.
+  settings.beacon_available = Boolean(
+    all.has_listens || (all.lastfm_user && (all.has_lastfm_key || process.env.LASTFM_KEY))
+  );
 
   // The owner's chosen starting theme, on the document from the server so the
   // first paint is already the right colour. A reader who has pressed the
