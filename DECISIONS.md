@@ -1007,6 +1007,30 @@ row's primary is Put back, which is why archiving needs no undo of its own.
 rows joined only by album and artist, and starting fresh would upsert over
 the saved notes.
 
+**A send can start on the sender's own copy, and the visitor form stays,
+2026-09-16.** A keeper sends out of their own address book, through
+`/api/outbox` on their copy, which posts server-to-server to the recipient's
+`/api/submissions` — a browser cannot make that write and does not have to,
+because CORS is a rule browsers keep and not a rule of the internet. The form
+on a card is unchanged and is the way in for everybody without a copy, which
+is most people. This is not the phone-home ruled out elsewhere: nothing leaves
+unless somebody presses Send.
+
+**A server send is counted against the journal it names, never the address it
+arrives from, 2026-09-16.** Every copy on a platform leaves from the same few
+machines, so an IP-keyed limit counts every keeper in the world as one sender
+and refuses the sixth send in ten minutes whoever sent it. The recipient asks
+whether the named journal answers before believing it — the same question
+filing an address already asks — and a second, loose limit on the address
+exists only so one machine cannot make a copy fetch a thousand made-up
+journals. Do not put the IP keying back.
+
+**A cross-copy reference is a journal and a slug, never an id, 2026-09-16.**
+`submissions.sender_entry` holds the entry a send came from, beside the
+`sender_url` that holds the journal; together they are a URL, which is the one
+identifier that means the same thing in two databases. This is what
+`source_entry_id` could not be, and why it stays parked.
+
 **A send is a gift, not a form, 2026-08-29.** Three parts, in this order: the
 object, the note, and who it is from. The album is picked off covers, because
 a cover is what makes it read as something handed across rather than a title
