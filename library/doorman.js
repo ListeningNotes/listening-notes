@@ -99,6 +99,34 @@ export const DOORS = {
   // A problem written in from another copy's desk. A person writes one and
   // maybe a second; a script writing hundreds is the thing to stop.
   report:     { tries: 3,  windowMs: 10 * 60_000 },
+  // ── The two doors a send from home comes through, 2026-09-16 ────────────
+  // A keeper can now send a record from their own copy, which means the
+  // request arrives from their *server* rather than from their browser. That
+  // breaks the assumption every other door here rests on: the caller's address
+  // identifies the caller.
+  //
+  // Sends from home leave from a handful of shared platform addresses — every
+  // copy on Vercel looks like the same few machines — so `submission` keyed on
+  // the address would count every keeper in the world as one sender, and the
+  // sixth send to reach this journal in ten minutes would be refused whoever
+  // it came from. That is not a rate limit, it is a lottery.
+  //
+  // So a server send is counted against the journal it says it is from, which
+  // is the thing that actually identifies a sender here. Same generosity as a
+  // person filling in the form, because it is the same act.
+  send:       { tries: 5,  windowMs: 10 * 60_000 },
+  // And a claimed journal is only worth counting if it is real, so the
+  // recipient asks whether it answers before believing it (ask_journal_name).
+  // That is an outbound request this journal makes because somebody else asked
+  // it to, which is a thing to be careful with: a script sending a thousand
+  // made-up journals would have us fetch a thousand addresses.
+  //
+  // This is the door that stops that, and it is the only one here keyed on the
+  // address *and* deliberately loose. It is not trying to pace anybody — sixty
+  // a minute is far above any real traffic from one machine, and it exists
+  // solely so that one machine cannot make this one fetch faster than that.
+  // The counting that means anything is `send` above.
+  relay:      { tries: 60, windowMs: 60_000 },
 };
 
 // Ask whether this caller may try this door.
