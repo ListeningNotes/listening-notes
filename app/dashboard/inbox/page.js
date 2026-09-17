@@ -598,6 +598,29 @@ export default function Inbox({ layered = false }) {
                                     made a journal had nowhere to say so,
                                     which is what this whole change is for. */}
                                 <div className="ib-acts">
+                                  {/* Where they sent it from, when they sent
+                                      it from a record's own page on their own
+                                      copy (migrations/016_sender_entry.sql).
+                                      Their journal plus their slug is a URL,
+                                      which is the only kind of reference that
+                                      means the same thing in two databases —
+                                      and it is the one thing on this row that
+                                      is about what THEY thought of it, so it
+                                      leads out rather than doing anything
+                                      here. Absent for every send off the
+                                      visitor form, which is most of them. */}
+                                  {host && sent.sender_entry && (
+                                    <a
+                                      className="ib-act"
+                                      href={`${journalUrl(host)}/entries/${sent.sender_entry}`}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                    >
+                                      <span className="ib-act-ic" aria-hidden="true"><ArrowUpRight size={13} weight="bold" /></span>
+                                      Read {who}&rsquo;s listen
+                                    </a>
+                                  )}
+
                                   {unopened(sent) && (
                                     <button className="ib-act" onClick={() => openNaming(sent)}>
                                       <span className="ib-act-ic" aria-hidden="true"><Check size={13} weight="bold" /></span>

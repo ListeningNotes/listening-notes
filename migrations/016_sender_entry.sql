@@ -1,0 +1,41 @@
+-- Copyright (C) 2026 Miyel Brown
+-- SPDX-License-Identifier: AGPL-3.0-or-later
+-- migrations/016_sender_entry.sql
+--
+-- Which of the sender's own entries a send came out of.
+--
+-- ── The reference source_entry_id could never be ──────────────────────────
+-- `entries.source_entry_id` was meant to point at the sender's entry for the
+-- same album and was parked on 2026-09-15 with nothing able to set it. The
+-- reason is worth restating, because this column is the answer to it: an
+-- `entries.id` is local to one database. June's 39 is not this journal's 39,
+-- so a sender's id arriving here is wrong at best and, where a local entry
+-- happens to share both the number and the album, a lineage record claiming
+-- you got the record from yourself.
+--
+-- A reference that means something in both places needs the journal and
+-- something stable within it. The journal half already exists — `sender_url`,
+-- since migration 011 — so the only thing missing was the entry, and a slug
+-- is what an entry is called at an address somebody can open. Together they
+-- are a URL, which is the one kind of identifier this whole architecture
+-- already agrees on.
+--
+-- ── And the other half of why it could not be set ─────────────────────────
+-- A send used to be a visitor filling in *this* copy's form, picking the
+-- album out of Apple's catalogue, with their own journal at an origin their
+-- browser cannot read from that page. Nothing on that page knew of an entry.
+-- A send that starts on the sender's own copy, on the record's own page, knows
+-- exactly which one — which is what made this column worth adding and is why
+-- it arrives with the outbox rather than before it.
+--
+-- Null for every send that did not start on an entry: the visitor form on a
+-- card, which is unchanged, and a send from home where the record was picked
+-- out of a search rather than off a page. Null is the normal case and means
+-- only that there is no entry to point at.
+--
+-- No foreign key, and it could not have one even in principle: the row it
+-- names lives in somebody else's database. Nothing here is verified at write
+-- time either — the entry may be deleted, renamed or the journal moved, and a
+-- link that has rotted is a link that has rotted, not a send that should have
+-- been refused.
+ALTER TABLE submissions ADD COLUMN IF NOT EXISTS sender_entry text;

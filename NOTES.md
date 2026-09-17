@@ -148,8 +148,9 @@ fire it. Not seen; written down so nobody debugs it twice.
 **FOUR TABS, SENDING FROM HOME, THE ENTRY'S TOOLS — briefed 2026-09-16.**
 Four features, one branch each, each tested by thumb on a real phone and merged
 before the next starts. Item 1, the quieter beacon, is in Complete. What is
-left, in order: **2. Send from home**, **3. The entry's five tools**, **4. Four
-tabs**. Phone layout only (`max-width: 768px`); desktop is untouched. Four of
+left, in order: **3. The entry's five tools**, **4. Four tabs**. Item 2, Send
+from home, is in Complete on branch `send-from-home`; item 3's Send tool opens
+the sheet that branch built. Phone layout only (`max-width: 768px`); desktop is untouched. Four of
 the decisions it makes amend or reverse 2026-09-15 entries and are recorded as
 each one merges, not before.
 
@@ -172,6 +173,29 @@ item 1 was being built, so nobody has to look twice:*
   fields cost an old copy nothing. What it loses is the carried entry — the
   send lands, the credit lands, and the cross-copy reference is simply absent
   rather than broken.
+
+**The send from home has never actually been sent, 2026-09-16.** Everything
+around it is proved — the routes answer, the owner check turns a stranger away,
+migration 016 applied, the sheet was rendered and looked at, the build is clean
+— but a send needs a wristband and two journals, and neither is available from
+here. **What to try, in this order:** open `/dashboard/people` on the phone,
+press the send glyph on a row, pick a record, write a line, send it to June, and
+then look in her inbox. Watch for: the faces drawing (they are read off each
+journal, so one that is asleep shows the plain mark), the Send button naming the
+right person, and — the one worth being deliberate about — **pull the sheet away
+mid-sentence and open it again**, because keeping what was typed is a rule here
+and this is a new place it has to hold.
+
+**Owed at merge, not before (the brief says so):** the DECISIONS entry that a
+send can start on the sender's own copy, with the visitor form remaining for
+people without one. Worth recording beside it, on the six-line test: that a
+server send is counted against the journal it names rather than the address it
+came from, because the IP-keyed version is exactly the thing a future session
+would put back.
+
+**`one-beacon` and `send-from-home` both add to the top of Complete**, so
+whichever merges second will conflict there and in the Pending notes above.
+Both sides are wanted; it is a paste, not a decision.
 
 **Settings' new beacon picker has not been LOOKED at, 2026-09-15.** The
 section is written and lints, and the column it writes round-trips, but
@@ -2161,6 +2185,78 @@ current.
 ---
 
 ## Complete
+
+**2026-09-16 — a send can start at home. Branch `send-from-home`.** Item 2 of
+the four-tabs brief. A keeper picks somebody out of their own address book and
+hands them a record, instead of walking to that person's card and filling in a
+form that asks for a name and a journal their own copy already knows. The
+visitor form is untouched and is still the way in for everybody without a copy,
+which is most people.
+
+- [x] **`/api/outbox` and `send_record()`** (Miyel's names). The sheet posts to
+      the owner-only route on *this* copy; `library/outbox.js` posts
+      server-to-server to `https://<their address>/api/submissions` — the same
+      door the visitor form goes through. A browser could never do this: it is
+      a cross-origin write, and their route has never said it may be read
+      across origins. Servers do not keep CORS, so nothing had to change at
+      their end.
+- [x] **The rate limit is keyed on the sending journal, not the address it came
+      from.** This was the brief's real find and it is confirmed: every copy on
+      Vercel leaves from the same few machines, so `submission` keyed on IP
+      would have counted every keeper in the world as one sender and refused
+      the sixth send to arrive in ten minutes whoever it was from. Two new
+      doors — `send`, five per ten minutes per journal, the same generosity a
+      person filling the form gets; and `relay`, sixty a minute per address,
+      which is not pacing anybody and exists only so one machine cannot make
+      this copy fetch a thousand made-up journals.
+- [x] **The recipient asks whether the journal is real** before believing it,
+      with `ask_journal_name` — the same question, of the same public route,
+      that filing an address in the book already asks. A server send is spotted
+      by having no Origin and no Referer, which is a hint and does not need to
+      be a proof: claiming to be one buys nothing but being counted against the
+      journal you claim to be.
+- [x] **`submissions.sender_entry`** (migration 016, Miyel's name) — one
+      column, not several, because `sender_url` has carried the sender's
+      journal since migration 011 and a journal plus a slug is a URL. That is
+      the cross-copy reference the `source_entry_id` note asked for, and it is
+      why that column stays parked: an `entries.id` is local to one database
+      and a slug at an address is not.
+- [x] **It has a place it shows**, which is the difference between a column and
+      the Formative mistake: an opened inbox row whose send came from a
+      record's own page offers *Read their listen*, out to their journal.
+      Absent for every send off the visitor form, which is most of them.
+- [x] **The sheet** (`SendSheet.js`) — the record, To as a strip of faces, a
+      note, the quiet toggle, a line saying who it is from, and a Send button
+      that names the person. No name or journal fields: this copy knows both.
+      `AlbumFinder` and `MiniAddressBook` did the two hard halves already and
+      both took the right props; MiniAddressBook gained one optional `verb`, so
+      a face's tooltip can say *Send it to them* where the entry editor's says
+      *Link to their journal*.
+- [x] **Nothing typed is lost.** The message is kept in the browser under
+      `ln-outbox-draft` and put back when the sheet opens again; a send that
+      fails keeps everything and says plainly what happened, naming their copy
+      rather than a status code. Nothing is confirmed on the way out.
+- [x] **A send glyph on every row of the address book**, between the row's own
+      offer and Visit.
+
+**Seen, not reasoned about.** The sheet lives behind the password and could not
+be opened from here, which is the trap this file already records — the arrow
+keys shipped on reasoning alone and died on the first try. So it was rendered on
+a throwaway page instead, looked at on a 375px phone in both themes, and the
+page deleted: the layout matches the mockup's order, and dark mode is right.
+What a throwaway page cannot show is the send actually going, because that needs
+two journals and a wristband.
+
+**Not in the mockup, and deliberately:** the People rows in the sketch print
+each person's address under their name. No address is ever printed on a page
+(DECISIONS, 2026-09-12), so the rows stay a face and a name.
+
+Names chosen without asking, rename freely: `library/outbox.js`,
+`components/main_components/SendSheet.js`, the `.sn-*` and `.bk-send` classes,
+the `ln-outbox-draft` key, the `send` and `relay` doors, MiniAddressBook's
+`verb` prop, and the wordings *Send quietly — their entry won't name you*,
+*What should they listen for?* and *Read {name}'s listen*. Miyel named
+`/api/outbox`, `send_record()`, `submissions.sender_entry` and the branch.
 
 **2026-09-16 — the beacon got quieter. Branch `quiet-beacon`.** Item 1 of the
 four-tabs brief, done first because it is small, independent, and it protects

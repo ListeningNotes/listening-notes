@@ -1159,3 +1159,107 @@ a.pn-item-album:hover { text-decoration: underline; text-underline-offset: 3px; 
 .st-pick--on .st-pick-name { color: var(--ink); }
 .st-pick-said { display: block; margin-top: 5px; font-size: 13px; line-height: 1.5; color: var(--ink-soft); }
 .st-pick:focus-within { border-color: var(--ink-faint); }
+
+/* ── The send sheet ────────────────────────────────────────────────────────
+   Handing a record to somebody in the book, from a row in it or from a
+   record's own tools. components/main_components/SendSheet.js says why it is
+   allowed to be a sheet when almost nothing else here is.
+
+   It rises from the foot the way the owner's pages do, because that is what a
+   thing you summoned and will dismiss does on this site. It is never full
+   height: the record or the person the send is about stays visible above it,
+   which is what stops it reading as a page you navigated to. */
+.sn-scrim {
+  position: fixed; inset: 0; z-index: 260;
+  background: rgba(26, 26, 26, 0.38);
+  /* A drag on the dim must not pan whatever is behind the sheet. */
+  touch-action: none;
+  animation: snFade 0.18s ease;
+}
+@keyframes snFade { from { opacity: 0; } to { opacity: 1; } }
+.sn-sheet {
+  position: fixed; z-index: 261; left: 0; right: 0; bottom: 0;
+  max-height: min(88dvh, 760px);
+  box-sizing: border-box;
+  /* Room at the foot for the home bar in the installed app, and a floor of
+     24px on a browser that has none. */
+  padding: 8px 20px max(24px, calc(16px + env(safe-area-inset-bottom, 0px)));
+  background: var(--panel-solid);
+  border-top: 1px solid var(--border);
+  border-radius: 22px 22px 0 0;
+  box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.12);
+  display: flex; flex-direction: column;
+  /* The sheet itself scrolls when a long message or a small phone needs it to,
+     rather than clipping: the same trade the send page makes, and for the same
+     reason — a form that fits by clipping has an unreachable Send button. */
+  overflow-y: auto; overscroll-behavior: contain;
+  animation: snRise 0.4s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+@keyframes snRise { from { transform: translateY(100%); } to { transform: none; } }
+/* The grabber. It reads as the thing you pull and it is a real button, so it
+   is reachable by a keyboard and says what it does to a screen reader — a bare
+   decorative bar would be neither. */
+.sn-grip {
+  align-self: center; flex-shrink: 0;
+  width: 56px; min-height: 28px; margin-bottom: 6px; padding: 0;
+  display: flex; align-items: center; justify-content: center;
+  border: none; background: transparent; color: var(--ink-faint); cursor: pointer;
+}
+.sn-grip:hover { color: var(--ink-soft); }
+.sn-form { display: flex; flex-direction: column; gap: 18px; }
+.sn-group { display: flex; flex-direction: column; gap: 9px; }
+.sn-label {
+  font-family: var(--font-label); font-size: 10px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--ink-faint);
+}
+/* The record, when the send started on one. Small and to one side: you pressed
+   Send on this record and the sheet is reminding you, not asking. */
+.sn-record { display: flex; align-items: center; gap: 14px; }
+.sn-record-art {
+  width: 64px; height: 64px; flex-shrink: 0; border-radius: 6px; object-fit: cover;
+  box-shadow: inset 0 0 0 1px var(--border);
+}
+.sn-record-art--none { background: var(--panel); }
+.sn-record-who { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.sn-record-album { font-weight: var(--font-display-weight); font-size: 17px; }
+.sn-record-artist { font-size: 13px; color: var(--ink-soft); }
+.sn-empty { margin: 0; font-size: 13px; line-height: 1.5; color: var(--ink-soft); }
+/* 16px, like every other field on a touch screen: Safari zooms in on anything
+   smaller and does not reliably zoom back out. */
+.sn-note {
+  width: 100%; box-sizing: border-box; resize: none;
+  padding: 12px 14px; border-radius: 10px;
+  border: 1px solid var(--border); background: var(--panel);
+  font-family: inherit; font-size: 16px; line-height: 1.5; color: var(--ink);
+}
+.sn-note::placeholder { color: var(--ink-faint); }
+.sn-quiet { display: flex; align-items: center; gap: 10px; min-height: 44px; font-size: 14px; color: var(--ink-soft); }
+.sn-quiet input { width: 19px; height: 19px; margin: 0; accent-color: var(--ink); }
+.sn-error { margin: 0; font-size: 13px; line-height: 1.5; color: var(--fav); }
+.sn-foot { display: flex; flex-direction: column; gap: 11px; }
+/* Who it is from, said rather than asked. */
+.sn-from { margin: 0; text-align: center; font-size: 13px; color: var(--ink-soft); }
+.sn-send {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  min-height: 50px; border-radius: 999px;
+  border: 1px solid var(--ink); background: var(--ink); color: var(--bg);
+  font-family: inherit; font-size: 15px; font-weight: var(--font-display-weight);
+  cursor: pointer;
+}
+.sn-send:disabled { opacity: 0.55; cursor: default; }
+/* Landed. Not a tick that vanishes before it is read. */
+.sn-done { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 22px 8px 8px; text-align: center; }
+.sn-done-line { margin: 0; font-weight: var(--font-display-weight); font-size: 19px; }
+.sn-done-said { margin: 0; max-width: 34ch; font-size: 14px; line-height: 1.55; color: var(--ink-soft); }
+.sn-done-acts { display: flex; gap: 10px; margin-top: 6px; }
+
+/* The send glyph on a row of the address book. Quiet beside the name, which is
+   the row's own offer — the page about them — and louder than Remove, which is
+   the rare thing. */
+.bk-send {
+  width: 40px; height: 40px; flex-shrink: 0; padding: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid var(--border); border-radius: 999px;
+  background: var(--panel); color: var(--ink-soft); cursor: pointer;
+}
+.bk-send:hover { color: var(--ink); border-color: var(--ink-faint); }
