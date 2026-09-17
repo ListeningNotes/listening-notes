@@ -81,10 +81,11 @@ const DOORS = [
   // repo keeps everywhere else: everything editable is edited where it prints
   // (Miyel, 2026-09-15). `/?edit=card` still works and still lands on the card
   // with the correction open; it is an address now rather than a door.
-  // The machinery: the keys, the password, Last.fm, the address. A row again,
-  // and for the same reason — it was a gear in this pane's header for an hour
-  // and headers hold no icons.
-  { href: '/settings', label: 'Settings', note: 'Keys, password, Last.fm, the address', Icon: GearSix },
+  // The machinery: the key, the password, the beacon, the address. A row
+  // again, and for the same reason — it was a gear in this pane's header for
+  // an hour and headers hold no icons. Last.fm was named here until
+  // 2026-09-16, when it came out of the software.
+  { href: '/settings', label: 'Settings', note: 'The key, password, beacon, address', Icon: GearSix },
 ];
 
 // ── The record on the desk ──────────────────────────────────────────────────

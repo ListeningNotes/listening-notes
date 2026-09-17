@@ -4,16 +4,15 @@
 // What the keeper is listening to.
 //
 // Returns:
-// - state: which line the beacon prints. Two beacons, two states each, and a
-//   journal runs one of them — see app/api/public/beacon/route.js.
-//     session   'logging'   | 'logged'
-//     lastfm    'listening' | 'played'
-//   'none' is a journal with nothing to say at all. The server decides which:
-//   a visitor's browser cannot know whether a listen is open.
+// - state: which line the beacon prints — 'logging' while a listen is open,
+//   'logged' for the last record sat down with. 'none' is a journal with
+//   nothing to say at all: a copy on its first afternoon, or one that has asked
+//   to be quiet. The server decides which; a visitor's browser cannot know
+//   whether a listen is open. There were two more until 2026-09-16, when
+//   Last.fm came out — see app/api/public/beacon/route.js.
 // - album, artist, art, track — what to draw. `track` is empty when the last
 //   thing logged is a whole record rather than a song.
-// - isLive: whether anything is happening at all — a listen being written or
-//   a record playing. It is what lights the dot on the mark.
+// - isLive: whether a listen is open. It is what lights the dot on the mark.
 // - before: up to three records listened to lately, most recent first, each
 //   with a slug when it was published and none when it is still a draft.
 //
@@ -35,7 +34,6 @@ import { useMemo, useSyncExternalStore } from 'react';
 import { useBookplate } from '../components/main_components/Bookplate';
 
 const REFRESH_MS = 15000;  // ask our own server every 15 seconds
-const LIVE_TIMEOUT = 8000; // hold a scrobble for 8s after it stops reporting
 
 // The same key the database generates for every entry, written out in
 // JavaScript so a record can be matched against the journal without asking
@@ -79,9 +77,6 @@ const beacon = {
   snapshot: EMPTY,
   listeners: new Set(),
   timer: null,
-  // Carried across polls so the grace window below survives them.
-  lastLiveAt: null,
-  lastLiveData: null,
 };
 
 // Re-rendering four components every fifteen seconds to tell them the same
@@ -133,26 +128,17 @@ async function poll() {
     artist: data.artist || '',
     art: data.art || '',
     track: data.track || '',
-    isLive: state === 'logging' || state === 'listening',
+    isLive: state === 'logging',
     before: Array.isArray(data.before) ? data.before : [],
   };
 
-  // Last.fm has a brief gap between one track being marked as stopped and the
-  // next being marked as playing, so a scrobbling journal would drop to "Last
-  // played" — greying its own cover — for a poll or two in the middle of a
-  // record. The previous answer is held for a moment rather than flickering.
-  //
-  // Only for Last.fm. A listen does not flicker: the needle stands until it is
-  // ended or goes twenty minutes untouched (library/needle.js), so 'logging'
-  // needs no grace, and a journal runs one beacon or the other anyway.
-  if (state === 'listening') {
-    beacon.lastLiveAt = Date.now();
-    beacon.lastLiveData = snapshot;
-  } else if (state === 'played' && beacon.lastLiveData) {
-    const elapsed = Date.now() - beacon.lastLiveAt;
-    if (elapsed < LIVE_TIMEOUT) { publish(beacon.lastLiveData); return; }
-  }
-
+  // An eight-second grace window used to sit here. Last.fm leaves a gap between
+  // one track being marked as stopped and the next as playing, so a scrobbling
+  // journal dropped to "Last played" — greying its own cover — for a poll or
+  // two in the middle of a record, and the previous answer was held rather than
+  // flickering. It went with Last.fm on 2026-09-16 and nothing replaced it: a
+  // listen does not flicker, because the needle stands until it is ended or
+  // goes twenty minutes untouched (library/needle.js).
   publish(snapshot);
 }
 
@@ -187,17 +173,21 @@ function subscribe(listener) {
   };
 }
 
-// A journal with no beacon never subscribes, so nothing is ever polled and the
-// snapshot stays empty. That used to mean a copy with no Last.fm; it now means
-// a copy that has never logged anything and has no scrobbler either, which is
-// a copy on its first afternoon. Having no beacon is still a supported answer
-// — it is just no longer the answer for everyone who could not connect
-// Last.fm.
+// A journal that has asked to be quiet never subscribes, so nothing is ever
+// polled and the snapshot stays empty — which is exactly what its beacon screen
+// draws anyway.
+//
+// This used to be "does this copy have a beacon at all", answered by whether
+// anything had ever been logged here. It is not that question any more: there
+// is always a beacon screen, blank on a copy's first afternoon (Miyel,
+// 2026-09-16), so a new journal polls like any other and lights up the moment
+// it has something to say. The only journal that stays silent is one whose
+// keeper asked for it.
 const NEVER = () => () => {};
 
 export function useListeningBeacon() {
-  const { beacon_available } = useBookplate();
-  const subscribeIf = useMemo(() => (beacon_available ? subscribe : NEVER), [beacon_available]);
+  const { beacon_on } = useBookplate();
+  const subscribeIf = useMemo(() => (beacon_on ? subscribe : NEVER), [beacon_on]);
   return useSyncExternalStore(
     subscribeIf,
     () => beacon.snapshot,

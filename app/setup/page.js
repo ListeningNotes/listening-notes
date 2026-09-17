@@ -27,6 +27,11 @@
 // and the key is the same wall with a developer console and a card attached.
 // A copy without either works whole: the beacon shows the last record
 // logged, and the research button and the question mark are simply absent.
+//
+// Last.fm went the rest of the way on 2026-09-16 and is not in the software
+// at all now. The lesson it taught this screen outlives it, and is the reason
+// nothing was put back in its place: a step that sends somebody to another
+// company's sign-up is a step they stop at.
 // So setup is the name, the photo, the prompts, the rig and the password,
 // and everything with a sign-up in it is found later by whoever goes looking.
 //
@@ -71,7 +76,8 @@ import { useJournalHost } from '../../hooks/useJournalHost';
 // journal starts working is the moment somebody will actually do it.
 // Links used to sit after the rig and are retired from the whole site for
 // now — see About.js. Last.fm and the Anthropic key followed the rig until
-// 2026-09-13 and are asked in Settings now — the note at the top.
+// 2026-09-13 and were asked in Settings after that; Last.fm went altogether
+// on 2026-09-16 and the key is still there — the note at the top.
 const STEPS = ['name', 'photo', 'prompts', 'rig', 'password', 'homescreen'];
 const PASSWORD_FLOOR = 8;
 

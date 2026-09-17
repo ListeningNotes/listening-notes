@@ -153,6 +153,13 @@ tabs**. Phone layout only (`max-width: 768px`); desktop is untouched. Four of
 the decisions it makes amend or reverse 2026-09-15 entries and are recorded as
 each one merges, not before.
 
+**Scope changed the same day, 2026-09-16.** The brief listed *Removing
+Last.fm* under Out of scope; Miyel reversed that a few hours later, on the
+grounds that the in-house scrobbler is more true to the product and works the
+same — "ironically more accuracy for what the product is". It became branch
+`one-beacon`, out of order and before item 2, because the argument for going
+then was that nobody had one connected yet. The rest of the order stands.
+
 *Item 2's three "check before building" questions, answered 2026-09-16 while
 item 1 was being built, so nobody has to look twice:*
 
@@ -173,11 +180,18 @@ item 1 was being built, so nobody has to look twice:*
   send lands, the credit lands, and the cross-copy reference is simply absent
   rather than broken.
 
-**Settings' new beacon picker has not been LOOKED at, 2026-09-15.** The
-section is written and lints, and the column it writes round-trips, but
-`/settings` is behind the password and could not be opened from here. Check
-the two rows draw, that the chosen one takes the border and the darker panel,
-and that Save sticks after a reload. `.st-choice` / `.st-pick` in forms.css.
+**Settings' beacon switch has not been LOOKED at, 2026-09-15, still true
+2026-09-16.** It was a two-beacon picker and is now the on/quiet switch — same
+`.st-choice` / `.st-pick` shape, same two rows, different words. Written, lints
+and builds, and the column it writes round-trips, but `/settings` is behind the
+password and could not be opened from here. **Check on a phone:** the two rows
+draw, the chosen one takes the border and the darker panel, Save sticks after a
+reload — and then actually switch it to Quiet and look at the journal. The
+quiet path is the one thing on `one-beacon` that could not be exercised from
+here at all, because localhost writes to the production database and testing it
+would have meant taking the live beacon down and putting it back. What to
+expect: the beacon screen still there, the record and the line gone, "Nothing
+logged yet." in their place, and the dot on the mark unlit.
 
 **A listen that wrote nothing survives only until the next one, 2026-09-15.**
 The needle is one row, so closing a record you sat through keeps it on the
@@ -185,12 +199,6 @@ beacon until another record goes on the desk — then it is gone, because there
 is nowhere to keep it. A log of every cover ever opened is a different thing
 from a journal showing its work, so this is the cost being accepted rather
 than a bug. If it wants fixing, the fix is a second table, not a second row.
-
-**There is no way to turn the beacon off, 2026-09-15.** It used to be opt-in
-by accident — you had to connect Last.fm — and it is on for everyone now.
-DECISIONS says presence is outbound and opt-in, so an *off* alongside the two
-choices may be owed. Not built: the brief did not ask, and the picker is the
-obvious place to add one later.
 
 **Names to confirm, 2026-09-15** — the session beacon. Miyel named `needle`,
 `library/needle.js`, `/api/needle` and `set_needle` / `pull_needle` /
@@ -1583,6 +1591,16 @@ CSS was correct on disk the entire time.
     .some(r => (r.cssText||'').includes('your-class')); } catch { return false; } })
   ```
   False while the class is on the element and on disk is staleness.
+- **It is not stylesheets only — a route handler's HEADERS go stale the same
+  way, 2026-09-16.** `/api/public/beacon` was rewritten whole and the dev
+  server went on serving the *right body with no `Cache-Control` on it* —
+  which is the worst shape this can take, because the thing you are testing
+  looks like it is working. It followed the same trigger: `npm run build` had
+  been run, `.next` held a production build, and `next dev` was started over
+  it. **The fix that works when stopping and restarting is not enough is
+  `rm -rf .next`**, and it is cheap. Suspect it whenever a whole file has been
+  replaced rather than edited. Check with
+  `curl -s -D - -o /dev/null localhost:3000/api/... | grep -i cache-control`.
 
 **`display: contents` makes `> *` miss everything, 2026-09-15.** The entry's
 first screen is a flex column, but its rows are wrapped in `.ln-print-stack`
@@ -2161,6 +2179,65 @@ current.
 ---
 
 ## Complete
+
+**2026-09-16 — Last.fm came out, and the beacon is always on screen. Branch
+`one-beacon`.** Not in the brief — Miyel's call a few hours after it was
+written, reversing its own Out of scope line. The journal broadcasts what is
+going into it and nothing else now. It went at the one moment it was free: no
+copy in the wild had a scrobbler connected, so this asked nothing of any
+keeper and is the middle number rather than a major.
+
+- [x] **The Last.fm beacon, its key, its username and its settings section are
+      gone.** `fromLastfm()`, `HISTORY`, `UPSTREAM_TTL`, `NO_ART`, `art()`,
+      `lastfmKey()`, `has_lastfm_key`, `LASTFM_KEY` in `.env.example`, both
+      Settings fields and the whole *Optional: Last.fm* section. `CAPTION` and
+      `STAMP` in ListeningBeacon lost the two states that were its.
+- [x] **The eight-second flicker patch went with it.** It existed only because
+      Last.fm leaves a gap between one track stopping and the next starting.
+      A listen does not flicker — the needle stands until it is ended or goes
+      twenty minutes untouched — so nothing replaced it.
+- [x] **`pull_beacon_settings` is one column again.** It was three columns
+      joined across two tables on the most-repeated query in the app; it is
+      `SELECT beacon_source` now, about 30 bytes. Still three reads per poll,
+      not two as first estimated — the beacon has to ask whether it is quiet —
+      but the join is gone.
+- [x] **The switch: Now logging / Quiet.** Same `.st-choice` shape the
+      two-beacon picker had, so the top row is still the line the cover prints
+      (Miyel's 2026-09-15 rule). Stored in `beacon_source`, which the
+      additive-only schema would not let us drop and which now carries the
+      switch rather than sitting dead. Anything that is not `quiet` is on, so a
+      copy holding the retired `session` or `lastfm` needs no backfill.
+- [x] **There is always a beacon screen (Miyel).** "A beacon showing a last log
+      from a long time ago — that's the signal", and a brand new journal gets a
+      blank one standing in. The pane used to drop both floors when nothing had
+      been logged and put the wall straight under the crown. Reversed, and
+      recorded in DECISIONS.
+- [x] **`has_listens` came off the most-read query with it** — two `EXISTS`
+      subqueries over entries and drafts, on every page render, existing only
+      to answer whether the beacon floor drew. Nothing asks now.
+- [x] **`beacon_available` → `beacon_on`.** It no longer means "is there a
+      beacon screen" (there always is); it means "does this journal broadcast",
+      and it is what stops the hook subscribing at all on a quiet copy. Default
+      true, unlike `research_available`, because the default here is on.
+
+**What could not go, and is not a bug:** `settings.lastfm_user`,
+`secrets.lastfm_key` and migrations 001, 003 and 014. The schema is
+additive-only and a migration that has run is never edited. A copy that had a
+Last.fm key still holds it, unread and now unwritable — clearing it is one
+statement in a SQL console and nothing needs it done.
+
+**Not verified from here:** the quiet path, end to end. `/settings` is behind
+the password, and localhost writes to the production database, so proving it
+would have meant taking the live beacon down and putting it back. Everything
+around it was proved — the column takes any text (no CHECK in migration 014),
+`beacon_source` is in `WRITABLE` and in the read list, `beacon_on` reaches the
+browser as `true` in the served HTML, and the build is clean. See Pending.
+
+Names chosen without asking — Miyel was offered them twice and declined to
+pick, so these follow the house pattern and rename freely: **`quiet`** as the
+stored value and **Quiet** as the switch's second row, `beacon_on`, the
+`aria-label` "The beacon and the journal", and branch `one-beacon` (that one
+she picked).
 
 **2026-09-16 — the beacon got quieter. Branch `quiet-beacon`.** Item 1 of the
 four-tabs brief, done first because it is small, independent, and it protects

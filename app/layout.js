@@ -138,7 +138,7 @@ const BOOKPLATE_FIELDS = [
   // one. A short string, and the card is on the landing page.
   'display_name',
   'portrait_url',
-  'lastfm_user', 'site_address',
+  'site_address',
   'founded_at', 'pinned_entry_id',
   // A handful of URLs. Short enough to ride along, and the back of the card
   // is on the landing page, which every visitor lands on.
@@ -254,27 +254,23 @@ export default async function RootLayout({ children, layer }) {
   // that has no key rather than show one that fails. Settings first, the
   // environment second — the same order the vault resolves it in.
   settings.research_available = Boolean(all.has_anthropic_key || process.env.ANTHROPIC_API_KEY);
-  // Same shape for the beacon: the cross lands on the journal when there is
-  // nothing for a beacon to say, and it needs to know that before paint.
+  // Whether this journal broadcasts at all, which is the only question the
+  // beacon has left to ask before paint.
   //
-  // Which is now almost never. The beacon's default source is the listen
-  // itself (2026-09-15), so a journal with a single entry in it has one —
-  // "Last logged", at worst — and Last.fm only adds a second source on top.
-  // What is left without a beacon is a copy on its first afternoon, before a
-  // record has been picked up, and that copy still gets the wall straight
-  // under its crown rather than an empty tile.
+  // It is not whether there is a beacon *screen*: there always is one
+  // (Miyel, 2026-09-16). A beacon showing a record from months ago is not a
+  // beacon failing, it is the signal — and a journal on its first afternoon
+  // gets a blank one standing in rather than no screen at all. This used to
+  // ask whether anything had ever been listened to here, and hid the whole
+  // floor when nothing had; the wall went straight under the crown and the
+  // pane quietly changed shape. Two EXISTS subqueries over entries and drafts
+  // came off the most-read query in the app with that question.
   //
-  // The one seam: on a journal with nothing in it at all, a listen that never
-  // writes a word lights nothing, because this asks after entries and drafts
-  // and a needle is neither. Asking after the needle too would mean naming a
-  // table added in migration 013 inside the read that decides whether this
-  // copy has been set up — and that read fails closed, so a copy that had not
-  // migrated would answer the holding page instead of a journal. The seam
-  // closes on the first line typed, and the person it would affect is on the
-  // session screen rather than looking at their own cover.
-  settings.beacon_available = Boolean(
-    all.has_listens || (all.lastfm_user && (all.has_lastfm_key || process.env.LASTFM_KEY))
-  );
+  // What is left is the switch in Settings. A quiet journal still draws the
+  // screen and still says nothing on it — the same thing a new copy says —
+  // and this is what stops the hook subscribing at all, so a copy that has
+  // asked not to broadcast never polls.
+  settings.beacon_on = all.beacon_source !== 'quiet';
 
   // The owner's chosen starting theme, on the document from the server so the
   // first paint is already the right colour. A reader who has pressed the
