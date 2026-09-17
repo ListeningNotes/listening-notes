@@ -6,8 +6,9 @@
 // ── What belongs here and what does not ───────────────────────────────────
 // Setup offers to skip almost everything, and Skip has to mean later rather
 // than never — so every field it can skip needs a home. This is that home
-// for the things that are not printed anywhere: Last.fm, the two keys, the
-// password, and the address. The starting theme and the wording of the key
+// for the things that are not printed anywhere: the key, the password, the
+// address, and whether the beacon broadcasts. Last.fm was one of them until
+// 2026-09-16, when it came out of the software altogether. The starting theme and the wording of the key
 // were here for an afternoon and came off (2026-09-01) — parked, not
 // rejected; the theme column and the definitions column both still exist.
 // Light or dark came back for an hour on 2026-09-15 and went again the same
@@ -30,7 +31,7 @@
 // ── One Save per section ──────────────────────────────────────────────────
 // Rather than one at the foot of the page, so that "that did not save" can
 // say which part, and so that changing the password is its own act rather
-// than a side effect of correcting a Last.fm username.
+// than a side effect of correcting the address.
 
 'use client';
 
@@ -103,11 +104,12 @@ export default function SettingsPage({ layered = false }) {
   const [secrets, setSecrets] = useState(null);
 
   const [address, setAddress] = useState('');
-  const [lastfmUser, setLastfmUser] = useState('');
-  // Which beacon this journal runs. 'session' is the default and what a copy
-  // that never touches this row keeps.
-  const [beaconSource, setBeaconSource] = useState('session');
-  const [lastfmKey, setLastfmKey] = useState('');
+  // Whether this journal broadcasts. 'on' is the default and what a copy that
+  // never touches this row keeps; the column it saves to is `beacon_source`,
+  // which used to say which of two beacons ran here and carries the switch
+  // instead now that there is one — the schema is additive-only, so a column
+  // cannot be dropped, and it was that or leave it dead.
+  const [beaconSource, setBeaconSource] = useState('on');
   const [anthropic, setAnthropic] = useState('');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
@@ -121,8 +123,10 @@ export default function SettingsPage({ layered = false }) {
     setSettings(row);
     setSecrets(k);
     setAddress(row.site_address || '');
-    setLastfmUser(row.lastfm_user || '');
-    setBeaconSource(row.beacon_source === 'lastfm' ? 'lastfm' : 'session');
+    // Anything that is not 'quiet' is on, which is how a copy that never chose,
+    // and a copy still holding the retired 'session' or 'lastfm', both land on
+    // the same row without anything having to be rewritten.
+    setBeaconSource(row.beacon_source === 'quiet' ? 'quiet' : 'on');
   }, []);
 
   useEffect(() => {
@@ -163,22 +167,27 @@ export default function SettingsPage({ layered = false }) {
           <input className="st-field" value={address} onChange={e => setAddress(e.target.value)} placeholder="yourname.example.com" inputMode="url" autoCapitalize="none" autoComplete="off" />
         </Section>
 
-        {/* Which beacon, above the Last.fm section it decides the use of.
-            The two choices are the two lines the cover actually prints, so
-            picking one is seeing what your journal will say rather than
-            learning a pair of words for it (Miyel, 2026-09-15).
+        {/* Whether the journal broadcasts at all. The two rows keep the shape
+            the beacon picker had when there were two beacons to pick between:
+            the top one is the line the cover actually prints, so choosing is
+            seeing what your journal will say rather than learning a word for
+            it (Miyel, 2026-09-15).
+
+            The screen does not go anywhere when this is off — there is always
+            a beacon screen (Miyel, 2026-09-16) — it simply says nothing on it,
+            which is the same thing a copy on its first afternoon says.
 
             One Save, like every other section — the choice is a field, not a
             switch that acts the moment it is touched. */}
         <Section
           title="Your beacon"
-          note={<>The line on the front of your journal. You run one of these, not both. <strong>Now logging</strong> follows the listen you are writing: the track you are on while you are on it, and the last record you sat down with when you are not. <strong>Now listening</strong> follows your speakers instead, through Last.fm below, and shows what played last when nothing is playing. Everyone has the first one from their first listen; the second needs the account and key set up underneath.</>}
+          note={<>The line on the front of your journal. <strong>Now logging</strong> follows the listen you are writing: the track you are on while you are on it, and the last record you sat down with when you are not. <strong>Quiet</strong> says nothing to anybody — the screen is still there, it is simply blank, the way it is on a journal that has not logged anything yet. Everyone has this from their first listen; there is nothing to set up.</>}
           onSave={async () => { await send('/api/settings', { beacon_source: beaconSource }); }}
         >
           <div className="st-choice">
             {[
-              { value: 'session', name: 'Now logging', said: 'the track you’re writing about' },
-              { value: 'lastfm', name: 'Now listening', said: 'what’s playing, through Last.fm' },
+              { value: 'on', name: 'Now logging', said: 'the track you’re writing about' },
+              { value: 'quiet', name: 'Quiet', said: 'your journal says nothing' },
             ].map(pick => (
               <label key={pick.value} className={'st-pick' + (beaconSource === pick.value ? ' st-pick--on' : '')}>
                 <input
@@ -192,43 +201,6 @@ export default function SettingsPage({ layered = false }) {
                 <span className="st-pick-said">{pick.said}</span>
               </label>
             ))}
-          </div>
-          {beaconSource === 'lastfm' && !lastfmUser && (
-            <p className="st-status">
-              Nothing is set up below yet, so this will keep showing the session beacon until it is.
-            </p>
-          )}
-        </Section>
-
-        <Section
-          title="Optional: Last.fm"
-          note={<>Only needed if you chose <strong>Now listening</strong> above; a copy that never fills this in is a complete one. Setting it up is a desktop job — a Mac or a PC — which is how it is known to work. Make a free Last.fm account. Download the Last.fm desktop app, sign in, and connect it to whatever you play music with, such as Spotify or Apple Music, so every play is sent to Last.fm. Then get an API key at <a href="https://www.last.fm/api/account/create" target="_blank" rel="noopener noreferrer">last.fm/api</a> and paste it below with your Last.fm username. Plays from a phone alone will not reach the beacon, and Apple Music on an iPhone cannot scrobble reliably at all — which is why the journal does not depend on any of this.</>}
-          onSave={async () => {
-            await send('/api/settings', { lastfm_user: lastfmUser });
-            if (lastfmKey.trim()) {
-              setSecrets(await send('/api/secrets', { lastfm_key: lastfmKey.trim() }));
-              setLastfmKey('');
-            }
-          }}
-        >
-          <div>
-            <span className="st-label">Username</span>
-            <input className="st-field" value={lastfmUser} onChange={e => setLastfmUser(e.target.value)} autoCapitalize="none" autoComplete="off" />
-          </div>
-          <div>
-            <span className="st-label">API key</span>
-            <p className="st-status">
-              {secretLine(secrets?.lastfm_key)}
-              {secrets?.lastfm_key?.source === 'journal' && (
-                <button type="button" className="st-clear" onClick={async () => setSecrets(await send('/api/secrets', { lastfm_key: '' }))}>Clear</button>
-              )}
-            </p>
-            <input className="st-field" value={lastfmKey} onChange={e => setLastfmKey(e.target.value)} placeholder={secrets?.lastfm_key ? 'Replace it' : 'Paste it here'} autoCapitalize="none" autoComplete="off" spellCheck={false} />
-            <p className="st-status" style={{ marginTop: 8 }}>
-              The form asks for an application name and a description. Any name works — your
-              journal’s — and one line for the description. Leave the callback URL blank. You want
-              the API key, not the shared secret.
-            </p>
           </div>
         </Section>
 

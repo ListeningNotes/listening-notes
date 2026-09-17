@@ -29,7 +29,11 @@ const scrypt = promisify(scryptCallback);
 
 // Anything a caller sends that is not one of these is ignored — the same
 // allow-list shape save_settings uses, for the same reason.
-const WRITABLE = ['session_secret', 'password_hash', 'claim_code', 'lastfm_key', 'anthropic_key', 'setup_open_until'];
+// `lastfm_key` left this list on 2026-09-16 with Last.fm. The column stays —
+// the schema is additive-only — so a copy that had a key keeps holding it,
+// unread and now unwritable. Clearing it is one statement in a SQL console and
+// nothing needs it done.
+const WRITABLE = ['session_secret', 'password_hash', 'claim_code', 'anthropic_key', 'setup_open_until'];
 
 // Read the row. Catches, like pull_settings: a copy whose database is not
 // built yet still has to answer "is there a key" with no rather than a stack
@@ -37,7 +41,7 @@ const WRITABLE = ['session_secret', 'password_hash', 'claim_code', 'lastfm_key',
 export async function pull_secrets() {
   try {
     const [row] = await database`
-      SELECT session_secret, password_hash, claim_code, lastfm_key, anthropic_key, setup_open_until
+      SELECT session_secret, password_hash, claim_code, anthropic_key, setup_open_until
       FROM secrets WHERE id = 1`;
     return row || {};
   } catch {
@@ -65,13 +69,11 @@ export async function save_secrets(fields) {
   );
 }
 
-// ── The two API keys ──────────────────────────────────────────────────────
-// Database, then environment. Null when neither has one.
-export async function lastfmKey() {
-  const { lastfm_key } = await pull_secrets();
-  return lastfm_key || process.env.LASTFM_KEY || null;
-}
-
+// ── The API key ───────────────────────────────────────────────────────────
+// Database, then environment. Null when neither has one. There were two until
+// 2026-09-16; `lastfmKey()` went with Last.fm, and it had already stopped
+// having callers before it did — the beacon read the key straight out of its
+// own narrow reader.
 export async function anthropicKey() {
   const { anthropic_key } = await pull_secrets();
   return anthropic_key || process.env.ANTHROPIC_API_KEY || null;
@@ -220,9 +222,6 @@ export async function describe_secrets() {
   return {
     password: await passwordSource(),
     session_secret: process.env.SESSION_SECRET ? 'environment' : row.session_secret ? 'journal' : null,
-    lastfm_key: row.lastfm_key
-      ? { source: 'journal', tail: tail(row.lastfm_key) }
-      : process.env.LASTFM_KEY ? { source: 'environment', tail: tail(process.env.LASTFM_KEY) } : null,
     anthropic_key: row.anthropic_key
       ? { source: 'journal', tail: tail(row.anthropic_key) }
       : process.env.ANTHROPIC_API_KEY ? { source: 'environment', tail: tail(process.env.ANTHROPIC_API_KEY) } : null,

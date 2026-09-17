@@ -2,46 +2,45 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // What the keeper is listening to, asked once on behalf of everybody.
 //
-// ── Two beacons, and you get one ──────────────────────────────────────────
-// A journal either broadcasts what is going into it or what its speakers are
-// doing (Miyel, 2026-09-15). A cover that silently switched between the two
-// would be two different claims wearing one face, so it is a choice made in
-// Settings and `settings.beacon_source` holds it.
+// ── One beacon ────────────────────────────────────────────────────────────
+// A journal broadcasts what is going into it:
 //
-//   session   Now logging    the track being written about
-//             Last logged    the last record sat down with
+//   Now logging    the track being written about
+//   Last logged    the last record sat down with
 //
-//   lastfm    Now listening  what is playing
-//             Last played    what played last
+// There were two until 2026-09-16, and the other one was Last.fm — what your
+// speakers are doing, rather than what you are writing about. It came out on
+// Miyel's call while it was still true that nobody had one set up, which is
+// the cheapest moment a thing like this ever has.
 //
-// **The session is the default and Last.fm is the extra**, which reverses a
-// week of the other arrangement. Last.fm broadcasts what your speakers do;
-// this shows what is going into the journal, which is what the journal is
-// for. It also means every copy has a working beacon from its first listen,
-// where before a copy without Last.fm had no beacon at all — and two of two
-// testers failed to connect one, one of them on Apple Music on an iPhone,
-// which cannot scrobble reliably however hard anybody tries.
+// The argument for going: it was never the truer claim. A scrobbler says a
+// file was played; this says a person sat down with a record and wrote about
+// it, which is what the journal is *for*. And it was never reliable — two of
+// two testers failed to connect one, and Apple Music on an iPhone cannot
+// scrobble dependably at all. What is left is a beacon every copy has from
+// its first listen, made of the thing the copy is already doing.
 //
-// A copy set to 'lastfm' with no key falls through to the session beacon
-// rather than showing nothing: the setting is a preference, not a promise the
-// journal can keep on its own.
+// ── Quiet ─────────────────────────────────────────────────────────────────
+// A journal can decline to broadcast: Settings has the switch and it is the
+// same answer this route gives a copy on its first day, which is nothing. It
+// is deliberately the same answer for everybody, owner included — a beacon
+// that checked who was asking could not be cached, and a reader who is not
+// broadcasting has nothing to be told privately anyway.
+//
+// It is kept in `settings.beacon_source`, which is the column that used to
+// say which of the two beacons this journal ran. The schema is additive-only,
+// so that column could not go when Last.fm did; it carries the switch instead
+// of sitting dead, and no migration was needed.
 //
 // ── What the browser used to do, and why it stopped ───────────────────────
 // It asked Last.fm directly, which had two problems. The API key was written
 // into the source, so every copy of this software queried Last.fm as the same
 // application and shared one rate limit. And useListeningBeacon is called by
 // several components at once, each running its own fifteen-second timer —
-// sixteen requests a minute from one person sitting still. Both go away here:
-// the key is the copy's own, the answer is cached for ten seconds, and the
-// hook runs one timer for however many callers.
-
-import { pull_beacon_settings } from '@/library/settings_actions';
-import { pull_needle, pull_recent_listens, sameRecord } from '@/library/needle';
-
-const HISTORY = 5;         // enough to find what is playing and what just did
-const UPSTREAM_TTL = 10;   // seconds; the client polls every 15
-const BEFORE_THAT = 3;     // covers drawn under the beacon
-
+// sixteen requests a minute from one person sitting still. The first problem
+// left with Last.fm; the second is solved in the hook, which runs one timer
+// for however many callers.
+//
 // ── And what the building used to do, and why it stopped ──────────────────
 // One reader cost one trip to the database every fifteen seconds. Ten people
 // with the journal open cost forty reads a minute, and none of them were
@@ -59,71 +58,28 @@ const BEFORE_THAT = 3;     // covers drawn under the beacon
 // The cost is that turning to a new track can take a few seconds longer than
 // the fifteen it already took to show up on somebody's screen. Writes are
 // untouched: the needle goes in through /api/needle, which is nobody's cache.
+
+import { pull_beacon_settings } from '@/library/settings_actions';
+import { pull_needle, pull_recent_listens, sameRecord } from '@/library/needle';
+
+const BEFORE_THAT = 3;     // covers drawn under the beacon
 const EDGE_TTL = 10;       // seconds Vercel may answer this without asking us
 const EDGE_STALE = 20;     // and seconds more it may serve the old answer while it does
 const CACHED = {
   'Cache-Control': `public, s-maxage=${EDGE_TTL}, stale-while-revalidate=${EDGE_STALE}`,
 };
 
-// Last.fm answers "no cover" with a URL to a grey placeholder star rather than
-// with nothing, so a missing cover arrives looking exactly like a present one.
-// Every size of that star shares this hash.
-const NO_ART = '2a96cbd8b46e442fc41c2b86b821562f';
-const art = url => (url && !url.includes(NO_ART) ? url : '');
-
-// ── What Last.fm says ─────────────────────────────────────────────────────
-// The first row of the history and whether it is on. Null for every way of not
-// knowing: no account, no key, Last.fm unreachable, nothing ever scrobbled.
-// The caller treats them the same — a Last.fm beacon that cannot ask is a
-// journal that falls back to its own listens rather than a broken one.
-async function fromLastfm({ lastfm_user, lastfm_key: key }) {
-  if (!lastfm_user || !key) return null;
-
-  const url = `https://ws.audioscrobbler.com/2.0/?method=user.getrecenttracks`
-    + `&user=${encodeURIComponent(lastfm_user)}`
-    + `&api_key=${encodeURIComponent(key)}`
-    + `&limit=${HISTORY}&format=json`;
-
-  try {
-    // fetch is uncached by default in this version of Next, so the cache is
-    // asked for explicitly. The key is the URL, which is stable for a given
-    // copy, so every reader inside the same ten seconds gets the same answer
-    // without a second request leaving the building.
-    const res = await fetch(url, { next: { revalidate: UPSTREAM_TTL } });
-    if (!res.ok) return null;
-    const data = await res.json();
-    const rows = data?.recenttracks?.track;
-    // A user with exactly one scrobble comes back as an object rather than an
-    // array. Left alone, [0] on an object would read undefined and the beacon
-    // would go dark for whoever is newest to Last.fm.
-    const first = Array.isArray(rows) ? rows[0] : rows;
-    if (!first?.name) return null;
-    // The history behind it used to be read here to draw the covers under the
-    // beacon; those are real listens out of this journal now
-    // (library/needle.js), so five rows are asked for where twenty-five were
-    // and only the first is used.
-    return {
-      state: first['@attr']?.nowplaying === 'true' ? 'listening' : 'played',
-      track: first.name,
-      album: first.album?.['#text'] || '',
-      artist: first.artist?.['#text'] || '',
-      art: art(first.image?.[3]?.['#text']) || art(first.image?.[2]?.['#text']) || '',
-    };
-  } catch {
-    // Last.fm being unreachable is not this journal being broken.
-    return null;
-  }
-}
-
 // A journal with nothing to say. A copy on its first day, before a record has
-// been picked up: the client draws one quiet line rather than an error.
+// been picked up — and a journal that has asked to be quiet, which is the same
+// answer on purpose: there is no state that means "switched off" as distinct
+// from "nothing yet", because a visitor is owed neither.
 const NOTHING = { state: 'none', album: '', artist: '', art: '', track: '', before: [] };
 
 // "Before that" — never the record on the beacon, which is already the largest
 // thing on the page and does not need repeating underneath itself at a third
-// of the size. Used by the two states whose record does not come out of this
-// list; the quiet session state simply takes the three under its own head,
-// which is the same rule stated more cheaply.
+// of the size. Used by the state whose record does not come out of this list;
+// the quiet session state simply takes the three under its own head, which is
+// the same rule stated more cheaply.
 const beforeThat = (recent, album) => {
   const here = sameRecord(album);
   return recent.filter(row => !here || sameRecord(row.album) !== here).slice(0, BEFORE_THAT);
@@ -132,28 +88,23 @@ const beforeThat = (recent, album) => {
 export async function GET() {
   try {
     // All three at once. The covers under the beacon are wanted whichever
-    // state wins, and in the session beacon's quiet state the first of them IS
-    // the beacon, so one read answers both questions.
-    const [settings, needle, recent] = await Promise.all([
+    // state wins, and in the quiet state the first of them IS the beacon, so
+    // one read answers both questions.
+    //
+    // A journal that is switched off still pays for all three, because they
+    // leave together and one round trip beats three. Asking the switch first
+    // would save a quiet copy two reads and cost every other copy a trip, and
+    // the common case is the one to protect — especially now that the cache in
+    // front means this whole function runs at most six times a minute however
+    // many people are watching.
+    const [beacon, needle, recent] = await Promise.all([
       pull_beacon_settings(), pull_needle(), pull_recent_listens(),
     ]);
 
-    // ── The Last.fm beacon ────────────────────────────────────────────────
-    // Whole and separate: what is playing, or what played last. It never says
-    // Now logging, which is the whole of "you get one, not both". A copy set
-    // to this with nothing to ask falls through to the session beacon below.
-    if (settings.beacon_source === 'lastfm') {
-      const heard = await fromLastfm(settings);
-      if (heard) {
-        return Response.json(
-          { ...heard, before: beforeThat(recent, heard.album) },
-          { headers: CACHED },
-        );
-      }
-    }
+    if (beacon.quiet) return Response.json(NOTHING, { headers: CACHED });
 
-    // ── The session beacon ────────────────────────────────────────────────
-    // A listen is open. Whether one IS open is decided where the listen lives
+    // ── A listen is open ──────────────────────────────────────────────────
+    // Whether one IS open is decided where the listen lives
     // (hooks/useListeningSession.js): a record being looked at on the album
     // screen never writes a needle at all, so a row reaching here is always a
     // listen. The song may still be blank — a resumed draft opens before its

@@ -143,7 +143,7 @@ function secondFloorTop(pane) {
 }
 
 export default function HomeNav() {
-  const { cover_name, pinned_entry_id, beacon_available } = useBookplate();
+  const { cover_name, pinned_entry_id } = useBookplate();
   const { theme, toggle: toggleTheme } = useTheme();
   const { isLive, before } = useListeningBeacon();
   // How wide the spine is on a desk, and the grip that changes it. The hook
@@ -751,73 +751,59 @@ export default function HomeNav() {
             which is why it is the one pane with two floors, a snap and a down
             caret. On a desk it is the right page and does not move when the
             spine turns. */}
-        <section className="hn-pane hn-pane--home" ref={homeRef} aria-label={beacon_available ? 'Now listening' : 'The journal'}>
-          {/* Nothing for a beacon to say — nothing logged here yet and no
-              scrobbler either, which since 2026-09-15 means a copy on its
-              first afternoon rather than anybody who could not connect
-              Last.fm — and there is no beacon screen at all: the journal is
-              the first thing under the crown, rather than a tile pretending
-              something might play.
-              The layout decides beacon_available on the server, so this is
-              settled before the first paint and the pane never re-lays out.
-              That copy keeps one long scroll: the two floors need a first
-              screen that holds still, and a wall of covers is not one. */}
-          {beacon_available ? (
-            <>
-              {/* Floor one — the crown, the record with its caption, and what
-                  came before. On a phone it is exactly one screen tall, so the
-                  snap has one place to land; on a desk it is a wrapper. */}
-              <div className="hn-floor">
-                {crown}
-                {/* The screen on a phone; the band on a desk, where the same
-                    children lie in one row — the cover and its words, and
-                    what came before at the far right on the cover's baseline.
+        <section className="hn-pane hn-pane--home" ref={homeRef} aria-label="The beacon and the journal">
+          {/* Two floors, always. There is no version of this pane without a
+              beacon on it (Miyel, 2026-09-16): a journal showing a record it
+              sat with months ago is not a beacon failing, that IS the signal,
+              and a copy on its first afternoon gets a blank one standing in.
 
-                    On the page colour, and nothing behind it. The record was
-                    blurred across it under a wash of page colour from
-                    2026-09-13, bled to the page's edges the way a print's
-                    ground is, and Miyel took it out on 2026-09-15: a panel of
-                    somebody else's colour across the top of the journal reads
-                    as a thing stuck on rather than the head of the page. The
-                    art is 88px away in the cover, which is where it belongs.
-                    The markup went with the rule — a ground nothing draws is
-                    still an image the browser fetches. */}
-                <div className="hn-screen hn-band">
-                  <div className="hp-dashboard">
-                    <div className="hp-dash-cell hp-dash-beacon">
-                      <ListeningBeacon />
-                    </div>
-                  </div>
-                  {recentRow}
+              It used to ask whether anything had ever been logged here and, if
+              nothing had, drop the floors entirely and put the wall straight
+              under the crown. That made the pane change shape on a fact about
+              the journal, which is the thing a fixed band at the foot cannot
+              afford — and it cost two EXISTS subqueries on every page render
+              to ask. Both went. */}
+          {/* Floor one — the crown, the record with its caption, and what
+              came before. On a phone it is exactly one screen tall, so the
+              snap has one place to land; on a desk it is a wrapper. */}
+          <div className="hn-floor">
+            {crown}
+            {/* The screen on a phone; the band on a desk, where the same
+                children lie in one row — the cover and its words, and
+                what came before at the far right on the cover's baseline.
+
+                On the page colour, and nothing behind it. The record was
+                blurred across it under a wash of page colour from
+                2026-09-13, bled to the page's edges the way a print's
+                ground is, and Miyel took it out on 2026-09-15: a panel of
+                somebody else's colour across the top of the journal reads
+                as a thing stuck on rather than the head of the page. The
+                art is 88px away in the cover, which is where it belongs.
+                The markup went with the rule — a ground nothing draws is
+                still an image the browser fetches. */}
+            <div className="hn-screen hn-band">
+              <div className="hp-dashboard">
+                <div className="hp-dash-cell hp-dash-beacon">
+                  <ListeningBeacon />
                 </div>
               </div>
-              {/* Floor two — the wall, scrolling inside a box of its own, so
-                  the pane only ever has two stops. The entry's second screen,
-                  in the cross. */}
-              <div className="hn-floor">
-                <div className="hn-floor-scroll" ref={floorRef}>
-                  <div className="hn-under">
-                    <Journal
-                      entries={entries}
-                      loading={loading}
-                      scroller={wallScroller}
-                    />
-                  </div>
-                </div>
-              </div>
-            </>
-          ) : (
-            <>
-              {crown}
-              <div className="hn-under hn-under--first">
+              {recentRow}
+            </div>
+          </div>
+          {/* Floor two — the wall, scrolling inside a box of its own, so
+              the pane only ever has two stops. The entry's second screen,
+              in the cross. */}
+          <div className="hn-floor">
+            <div className="hn-floor-scroll" ref={floorRef}>
+              <div className="hn-under">
                 <Journal
                   entries={entries}
                   loading={loading}
-                  scroller={homeRef}
+                  scroller={wallScroller}
                 />
               </div>
-            </>
-          )}
+            </div>
+          </div>
         </section>
 
       </div>
