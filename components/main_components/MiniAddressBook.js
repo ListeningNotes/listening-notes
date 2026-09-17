@@ -44,7 +44,18 @@ import { journalUrl } from '../../library/return_address';
 // that is otherwise left-aligned. Tight makes them smaller and starts them
 // at the left edge. Same component, same strip, one less thing to keep in
 // step than a second picker would be.
-export default function MiniAddressBook({ people = [], linked = '', narrow = '', onPick, label = 'From your address book', tight = false }) {
+// `verb` is what picking a face means here, and it exists because a third
+// surface arrived on 2026-09-16 that means something else by it. Crediting an
+// entry or an inbox row *links* somebody to a journal; the send sheet is
+// choosing who a record goes to, and a tooltip offering to unlink them would
+// be answering a question nobody asked.
+const SAYS = {
+  link: { on: 'Linked to their journal — tap to unlink', off: 'Link to their journal' },
+  send: { on: 'Sending to them — tap to choose somebody else', off: 'Send it to them' },
+};
+
+export default function MiniAddressBook({ people = [], linked = '', narrow = '', onPick, label = 'From your address book', tight = false, verb = 'link' }) {
+  const says = SAYS[verb] || SAYS.link;
   const typed = String(narrow || '').trim().toLowerCase();
   const shown = people.filter(person => {
     if (person.address === linked) return true;
@@ -64,7 +75,7 @@ export default function MiniAddressBook({ people = [], linked = '', narrow = '',
             className={'ln-sender-face' + (on ? ' ln-sender-face--on' : '')}
             onClick={() => onPick(person)}
             aria-pressed={on}
-            title={on ? 'Linked to their journal — tap to unlink' : 'Link to their journal'}
+            title={on ? says.on : says.off}
           >
             {/* The plain mark behind the picture, for a journal with none or
                 one that is out — the feed's Face, the address book's. */}

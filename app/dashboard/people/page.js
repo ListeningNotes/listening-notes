@@ -31,9 +31,10 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Camera, User } from '@phosphor-icons/react';
+import { Camera, PaperPlaneTilt, User } from '@phosphor-icons/react';
 import SiteNav from '../../../components/main_components/SiteNav';
 import CodeScanner from '../../../components/main_components/CodeScanner';
+import SendSheet from '../../../components/main_components/SendSheet';
 import { carrySender, journalUrl, tidyJournal } from '../../../library/return_address';
 import { useBookplate } from '../../../components/main_components/Bookplate';
 
@@ -56,6 +57,10 @@ export default function AddressBook({ layered = false }) {
   const [filing, setFiling] = useState(false);
   const [said, setSaid] = useState('');
   const [scanning, setScanning] = useState(false);
+  // Who a send is being written to, or null for no sheet. The person rather
+  // than a boolean, because the sheet opens already knowing who — that is the
+  // whole difference between starting here and starting on a record.
+  const [sendingTo, setSendingTo] = useState(null);
 
   useEffect(() => {
     fetch('/api/auth/check').then(r => r.json()).then(d => setAuthed(!!d.authed)).catch(() => {}).finally(() => setChecking(false));
@@ -186,6 +191,20 @@ export default function AddressBook({ layered = false }) {
                     {/* Visit leads and Remove barely shows: crossing somebody
                         out is the rare thing here, and a red pill beside
                         every name read as the row's main offer. */}
+                    {/* Send sits between the row's own offer — the page
+                        about them — and Visit, which leads. It is a glyph
+                        because the row already carries two words and a third
+                        would be a sentence; the label is on it for anyone
+                        who cannot see it. */}
+                    <button
+                      type="button"
+                      className="bk-send"
+                      onClick={() => setSendingTo(p)}
+                      title={`Send ${p.name || 'them'} a record`}
+                      aria-label={`Send ${p.name || 'them'} a record`}
+                    >
+                      <PaperPlaneTilt size={18} weight="regular" />
+                    </button>
                     <a href={carrySender(journalUrl(p.address), me, { known: true })} target="_blank" rel="noopener noreferrer" className="own-act bk-visit" title="Open their journal">
                       Visit &#8599;
                     </a>
@@ -197,6 +216,15 @@ export default function AddressBook({ layered = false }) {
           </div>
         </div>
       </div>
+
+      {/* One sheet for the page, told who it is for. Mounted here rather than
+          inside a row so that closing it does not depend on the row surviving
+          a refresh of the book. */}
+      <SendSheet
+        open={Boolean(sendingTo)}
+        person={sendingTo}
+        onClose={() => setSendingTo(null)}
+      />
     </div>
   );
 }
