@@ -324,8 +324,6 @@ export function useListeningSession({ step }) {
     setSavedEntry(null);
     setOutput(null);
     draft.reset();
-    setChatMessages([]);
-    setChatInput('');
     collectionIdRef.current = '';
 
     if (!record?.album) {
