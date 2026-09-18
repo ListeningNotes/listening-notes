@@ -91,16 +91,29 @@
 .ses-btn:hover { color: var(--ink); border-color: var(--ink-faint); }
 /* The preview's foot: the way back and the save, over the entry page. */
 .ses-preview { z-index: 210; }
-/* The foot of the preview, hung where the cross hangs its controls: the
-   pencil-and-caret at the left edge, the save in the middle, over a soft
-   fade so the writing dissolves under them rather than ending on a line. */
+/* The foot of the preview: the way back and the way on, over a soft fade so
+   the writing dissolves under them rather than ending on a line.
+
+   Side by side and at opposite ends (Miyel, 2026-09-18). They were stacked,
+   one above the other, which puts a question with two answers in a column and
+   makes the lower one look like the consequence of the upper. They are two
+   directions out of the same moment — go back to it, or send it — and a row
+   with one at each end asks that outright. Still the quiet links they were:
+   no pills. */
 .ses-preview-bar {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 220;
-  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
   padding: 36px 24px max(18px, env(safe-area-inset-bottom, 0px));
   background: linear-gradient(to top, var(--bg) 55%, transparent 100%);
   pointer-events: none;
 }
+/* Saved, there are three: the tick, the way to the entry and the way to the
+   next record. Centred as a group, because none of them is a way back. */
+.ses-preview-bar--done { justify-content: center; gap: 18px; }
 .ses-preview-bar > * { pointer-events: auto; }
 .ses-preview-bar .ses-actions { justify-content: center; }
 .ses-quiet--lead { color: var(--ink-soft); border-bottom-color: var(--ink-faint); }
@@ -487,9 +500,15 @@
 }
 /* Headroom above a full bar for the heart a favourite carries. */
 .ses-strip-bars { position: relative; display: flex; align-items: flex-end; height: 100%; padding-top: 14px; box-sizing: border-box; }
+/* Red, like every other heart on this site (Miyel, 2026-09-18). It was ink
+   here on the argument that the strip should stay one colour while it is
+   being built — which is a nice idea about the strip and the wrong one about
+   the heart: --fav is what a favourite is, on an entry, on an archive card
+   and on the entry's own horizon, and a heart that is the right colour
+   everywhere except where you set it is the one place it needed to be. */
 .ses-strip-heart {
   position: absolute; left: 50%; transform: translateX(-50%);
-  display: inline-flex; line-height: 1; color: var(--ink); pointer-events: none;
+  display: inline-flex; line-height: 1; color: var(--fav); pointer-events: none;
 }
 .ses-strip-bar {
   display: block; width: 100%; border-radius: 3px 3px 0 0; background: var(--border);
