@@ -591,6 +591,10 @@
 .hn-bar {
   position: fixed;
   top: 0;
+  /* Pushed back down by however far iOS has scrolled the layout viewport to
+     make room for the keyboard — see the visualViewport effect in HomeNav.
+     0px whenever there is no keyboard, which is nearly always. */
+  transform: translateY(var(--hn-lift, 0px));
   left: 0;
   right: 0;
   z-index: 95;
