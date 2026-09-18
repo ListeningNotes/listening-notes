@@ -85,7 +85,7 @@ import AlbumPicker from '../session_components/AlbumPicker';
 // The same two the desk already reaches for, from the same module, so the
 // pane and the desk agree about what "a listen is open" means and say so the
 // same way. The hook itself is not called here.
-import { PENDING_KEY, saidSoAboutTheDesk } from '../../hooks/useListeningSession';
+import { PENDING_KEY, SAVED_EVENT, saidSoAboutTheDesk } from '../../hooks/useListeningSession';
 import Pitch from './Pitch';
 
 // You, then home. Home is the one you land on, which is why it is not index
@@ -127,6 +127,23 @@ const TURN_MS = 400;
 const LANDING_MS = 520;
 const ITS_MOMENT_MS = 620;
 
+// ── And the way back down ─────────────────────────────────────────────────
+// A listen becomes an entry, the layer closes, and the record falls out of
+// the beacon into the journal underneath it — which is a real place on this
+// same pane, one floor down, and the whole reason the fall is worth animating
+// at all (Miyel's beacon brief, item 4).
+//
+// 420 is the layer's own GROW_MS: the sheet leaves, and then the cover falls.
+// Overlapping them would be two things moving over each other with nothing
+// saying which to watch.
+//
+// 560 for the fall, a little longer than the 520 it took to rise. Things fall
+// further than they climb here — the beacon is near the top of the screen and
+// the wall is below the fold — and a fall that finished as quickly as the
+// climb read as the cover being snatched rather than let go.
+const LAYER_OUT_MS = 420;
+const FALL_MS = 560;
+
 // What each pane is, as a mark and as a sentence, used to live here for the
 // carets at the foot. The band names all three outright now and owns its own
 // list (Footer.js); the panes carry their labels in the markup.
@@ -158,6 +175,32 @@ function paneFaces(authed) {
 function ease() {
   if (typeof window === 'undefined') return 'auto';
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth';
+}
+
+// Where a falling cover is going: the first tile of the wall when it is on
+// screen, and the down caret when it is not. Null when neither is — a window
+// with no wall and no caret in it has nowhere to drop a record, and no
+// animation is better than one going nowhere.
+//
+// The caret's box is squared off around its centre, because the target is a
+// point to converge on rather than a tile to become.
+function wallLanding() {
+  const tile = document.querySelector('.hn-pane--home .ft');
+  if (tile) {
+    const r = tile.getBoundingClientRect();
+    if (r.width > 0 && r.top < window.innerHeight - 24 && r.bottom > 0) return { rect: r, land: true };
+  }
+  const caret = document.querySelector('.hn-controls');
+  if (caret) {
+    const r = caret.getBoundingClientRect();
+    if (r.width > 0 && r.height > 0) {
+      return {
+        rect: { left: r.left + r.width / 2 - 18, top: r.top, width: 36, height: 36 },
+        land: false,
+      };
+    }
+  }
+  return null;
 }
 
 // Where a pane's second floor begins: the top of its second .hn-floor when it
@@ -195,7 +238,10 @@ export default function HomeNav() {
   // shape of its number rows rather than flashing zeros into them.
   const [stamps, setStamps] = useState(null);
 
-  useEffect(() => {
+  // On mount, and again the moment a listen becomes an entry — the wall has
+  // to actually contain the record that is about to fall into it, or the
+  // cover lands on a tile that is not there yet.
+  const askEntries = useCallback(() => {
     fetch('/api/entries')
       .then(r => r.json())
       .then(data => {
@@ -205,6 +251,7 @@ export default function HomeNav() {
       })
       .catch(() => setLoading(false));
   }, []);
+  useEffect(() => { askEntries(); }, [askEntries]);
 
   // Fetched on mount rather than on first swipe: it is a few hundred bytes,
   // and a card that assembles itself while you are looking at it is a worse
@@ -419,6 +466,79 @@ export default function HomeNav() {
     }));
   }, [landing, openSession, router]);
 
+  // ── The drop ──────────────────────────────────────────────────────────────
+  // The listen is an entry. The layer closes, the cover leaves the beacon and
+  // falls into the journal on floor two, and the slot refills with the record
+  // just posted, captioned Last logged.
+  //
+  // Where it falls TO is measured and never assumed, which is the one rule
+  // this had to obey: the wall is below the fold unless somebody has scrolled
+  // down to it, and animating to coordinates off the bottom of the screen is
+  // an animation nobody sees and a cover that appears to be thrown away. So
+  // the first tile is used when it is actually on screen, and the down caret
+  // — which is pointing at the wall, and is the reader's own way to it —
+  // when it is not. The record still lands in the journal either way; only
+  // the drawing of it differs.
+  const [dropping, setDropping] = useState(null);
+  const dropTimers = useRef([]);
+  useEffect(() => () => {
+    dropTimers.current.forEach(id => { clearTimeout(id); cancelAnimationFrame(id); });
+  }, []);
+
+  useEffect(() => {
+    const onSaved = event => {
+      const record = event.detail || {};
+      // The wall first: it has to hold the entry before anything falls into it.
+      askEntries();
+      // And the listen is over, so the sheet goes. router.back() because the
+      // layer is open by virtue of the address and closing it is going back —
+      // see the note at the top of LayerEntry.
+      router.back();
+      const still = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+      if (!record.art || still) {
+        // No fall. The record is simply on the beacon and in the wall, which
+        // is the brief's own answer for reduced motion.
+        announce(record, 'logged');
+        return;
+      }
+      dropTimers.current.push(setTimeout(() => {
+        setDropping({ record, art: record.art, from: null, to: null, go: false, land: true });
+      }, LAYER_OUT_MS));
+    };
+    window.addEventListener(SAVED_EVENT, onSaved);
+    return () => window.removeEventListener(SAVED_EVENT, onSaved);
+  }, [askEntries, router]);
+
+  useEffect(() => {
+    if (!dropping || dropping.from) return;
+    dropTimers.current.push(requestAnimationFrame(() => {
+      const slot = document.querySelector('.beacon-art-wrap');
+      const from = slot?.getBoundingClientRect();
+      const there = wallLanding();
+      // Nothing to fall from, either. The rule about not animating to
+      // coordinates off the screen cuts both ways: with the pane scrolled
+      // down to the wall the beacon is above the top of it, and a cover
+      // dropping in from off-screen is a thing arriving rather than a thing
+      // being let go. In that case the record is simply in the wall and on
+      // the beacon, which is the same answer reduced motion gets.
+      const fromVisible = from && from.bottom > 0 && from.top < window.innerHeight;
+      if (!fromVisible || !there) {
+        announce(dropping.record, 'logged');
+        setDropping(null);
+        return;
+      }
+      setDropping(d => d && { ...d, from, to: there.rect, land: there.land });
+      dropTimers.current.push(requestAnimationFrame(() => setDropping(d => d && { ...d, go: true })));
+      dropTimers.current.push(setTimeout(() => {
+        // It has arrived. The slot refills with the record that just left it,
+        // captioned Last logged — the server will say the same thing on its
+        // next poll, and the owner should not have to wait for it.
+        announce(dropping.record, 'logged');
+        setDropping(null);
+      }, FALL_MS));
+    }));
+  }, [dropping]);
+
   // Where the flying cover is drawn this frame: at its start until it is told
   // to go, then translated and scaled onto the beacon's slot.
   let flightStyle = null;
@@ -432,6 +552,26 @@ export default function HomeNav() {
       left: from.left, top: from.top, width: from.width, height: from.height,
       transform: `translate(${dx}px, ${dy}px) scale(${k})`,
       transition: travelling ? `transform ${LANDING_MS}ms cubic-bezier(0.22, 0.61, 0.36, 1)` : 'none',
+    };
+  }
+
+  // And the same sum downwards. The one difference is what happens at the end
+  // of it: onto a tile, the cover simply becomes that tile and stays; toward
+  // the caret it fades as it goes, because there is nothing there to be — the
+  // caret is a signpost to the wall and not the wall.
+  let dropStyle = null;
+  if (dropping?.from && dropping.to) {
+    const { from, to, go, land } = dropping;
+    const dx = go ? to.left - from.left : 0;
+    const dy = go ? to.top - from.top : 0;
+    const k = go ? to.width / from.width : 1;
+    dropStyle = {
+      left: from.left, top: from.top, width: from.width, height: from.height,
+      transform: `translate(${dx}px, ${dy}px) scale(${k})`,
+      opacity: go && !land ? 0 : 1,
+      transition: go
+        ? `transform ${FALL_MS}ms cubic-bezier(0.4, 0, 0.3, 1), opacity ${FALL_MS}ms ease-in`
+        : 'none',
     };
   }
 
@@ -1033,7 +1173,7 @@ export default function HomeNav() {
                       turns it into the way floor one becomes the picker. A
                       visitor has no listen to start, and the writing routes
                       check the wristband for themselves whatever is drawn. */}
-                  <ListeningBeacon choosing={choosing}>
+                  <ListeningBeacon choosing={choosing} emptied={!!dropping}>
                     {authed && !choosing && (inHand ? (
                       /* A record already in hand: this is the way back to it,
                          and the way back is the session's own route. There is
@@ -1122,6 +1262,9 @@ export default function HomeNav() {
           the page and neither of them can hold it. */}
       {landing && flightStyle && (
         <img src={landing.art} alt="" aria-hidden="true" className="hn-flight" style={flightStyle} />
+      )}
+      {dropping && dropStyle && (
+        <img src={dropping.art} alt="" aria-hidden="true" className="hn-flight" style={dropStyle} />
       )}
 
       <Footer pane={pane} goTo={goTo} authed={authed} />

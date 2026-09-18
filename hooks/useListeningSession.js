@@ -36,6 +36,28 @@ export function saidSoAboutTheDesk() {
   try { window.dispatchEvent(new Event(PENDING_EVENT)); } catch { /* no window */ }
 }
 
+// ── And what is shouted when a listen becomes an entry ─────────────────────
+// The record leaves the beacon and falls into the journal underneath it
+// (Miyel's beacon brief, item 4). That is a thing the *cross* does, and the
+// cross is the page the listen is sitting on top of — it never unmounted, so
+// it is right there waiting to be told.
+//
+// A CustomEvent rather than the bare one above, because this one carries
+// something: the record that was just posted and its slug, so the pane can
+// drop that cover into the wall and put that record on the beacon without
+// asking the server what just happened.
+//
+// Nothing listens on the standalone /session page, which is correct: opened
+// cold from a bookmark there is no cross underneath and no journal to fall
+// into, and the page keeps the ending it already had.
+export const SAVED_EVENT = 'ln-listen-saved';
+
+export function saidSoAboutTheEntry(entry) {
+  try {
+    window.dispatchEvent(new CustomEvent(SAVED_EVENT, { detail: entry }));
+  } catch { /* no window */ }
+}
+
 export function useListeningSession({ step }) {
   // Research — optional, and only ever started by the button on the album screen
   const [brief, setBrief]                 = useState(null);
