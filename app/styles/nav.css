@@ -404,13 +404,35 @@
   text-transform: uppercase; color: var(--ink-faint); margin: 24px 0 0;
 }
 
-/* OUT OF SESSION came off the idle cover on 2026-09-17 (Miyel's beacon
-   brief) and .beacon-idle-overlay went with it. The caption under the art is
-   the state line — LAST LOGGED, NOW LOGGING — so the stamp was the same fact
-   in a second voice, written across somebody's album art. The art still
-   greys, which is the half that was working. DECISIONS retired the
-   Last-played stamp on 2026-09-15 on the same grounds; this one outlived it
-   by a day. */
+/* ── The caption, written on the greyed cover ──────────────────────────────
+   OUT OF SESSION was here and is gone; LAST LOGGED took its place (Miyel,
+   2026-09-17). The two of them together were one fact said twice — a stamp
+   over the art and a caption under it — and the half worth keeping turned out
+   to be this one. The scrim, the grey and the word are one object saying one
+   thing; a line under the picture repeating what the picture says is not.
+
+   Drawn only while the art is grey. Lit, the caption is under the record with
+   its dot, and there is no scrim over a cover that is meant to be in colour.
+
+   Set in the label face, because it *is* the caption now and not a stamp —
+   .beacon-status in another position, at the same size and tracking. It was
+   Nunito at 0.65rem while it was its own thing. */
+.beacon-idle-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  /* Not green. Green is the one colour on this site that means playing, which
+     is precisely what this word is here to say is not happening. Written on
+     the scrim in the scrim's own colour instead. */
+  color: rgba(255, 255, 255, 0.86);
+  font-family: var(--font-label);
+  font-size: 0.62rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
 
 
 /* The caption under the art: what the record is, before the title says
@@ -1879,6 +1901,7 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   .hn-band .beacon-track { font-size: 21px; }
   .hn-band .beacon-track--wrap { max-width: none; margin: 0; text-wrap: pretty; }
   .hn-band .beacon-artist { font-size: 0.8rem; }
+  .hn-band .beacon-idle-overlay { font-size: 0.5rem; letter-spacing: 0.14em; }
   /* What came before: three small covers at the band's far right, on the big
      cover's baseline, and no line over them — three small covers beside a
      large one say what they are. */
