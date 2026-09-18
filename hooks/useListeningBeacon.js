@@ -142,6 +142,37 @@ async function poll() {
   publish(snapshot);
 }
 
+// ── Lighting the beacon from here ─────────────────────────────────────────
+// The owner's own beacon must not lag behind the owner (Miyel's beacon brief,
+// 2026-09-17). Picking a record puts it on the beacon; the needle that tells
+// the server is debounced by two seconds and the answer is cached at the edge
+// for ten more, so left to the poll the keeper would watch their own pane sit
+// on the last record for a quarter of a minute after starting a listen — on
+// the one screen where the whole point is that the record has just arrived.
+//
+// So the record is published into the snapshot here, straight away, and the
+// poll confirms it a few seconds later with the same answer. It is not a
+// second request and it is not a separate view for the owner: it is this
+// view, told early. Everyone else sees it on their next poll, which is what
+// a beacon is.
+//
+// `before` is carried across rather than rebuilt — it is what came before
+// this record, and this record arriving does not change that list. The server
+// will put the departing record at its head on the next poll.
+export function announce({ album, artist, art }) {
+  publish({
+    state: 'logging',
+    album: album || '',
+    artist: artist || '',
+    art: art || '',
+    // No song yet: one has not been opened. The beacon names the record
+    // instead, which is what the route does for the same case.
+    track: '',
+    isLive: true,
+    before: beacon.snapshot.before || [],
+  });
+}
+
 // Coming back to the tab. One ask straight away — somebody who has just looked
 // at the beacon should not be reading a record from before lunch — and then the
 // clock is restarted, so the next ask is a full fifteen seconds from this one

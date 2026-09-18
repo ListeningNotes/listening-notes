@@ -1416,6 +1416,25 @@ Project → Settings → Environment Variables.
 
 ## Gotchas
 
+**Picking a record on localhost broadcasts on the live journal — 2026-09-18.**
+Localhost writes to the production database, and a listen is not a local
+thing: two seconds after the session opens, `useListeningSession` POSTs
+`/api/needle`, and that row *is* the public beacon. Testing the flight this
+way put a record Miyel never listened to on the live site.
+
+**Lifting the needle is not enough to undo it.** `DELETE /api/needle` sets
+`ended_at`; it does not remove the row, and `pull_recent_listens` counts an
+ended needle from the last `LIFTS_AFTER_MINUTES` as a real listen. So the
+beacon goes from "Now logging" to "Last logged" and still names the wrong
+record. What puts it back is deleting the row — it is a single upserted
+`id = 1` (`INSERT … ON CONFLICT (id) DO UPDATE`), so the next listen recreates
+it and nothing else is touched.
+
+**How to test a pick without broadcasting:** click through, then remove the
+row, not just end it. Or stop before the two seconds are up — the debounce is
+the only thing between a tap and the world.
+
+
 **The Claude browser pane reports `visibilityState: 'hidden'`, so the beacon
 never loads in it — 2026-09-17.** Since the quieter-beacon work,
 `hooks/useListeningBeacon.js` skips its poll on a hidden tab. The preview pane
