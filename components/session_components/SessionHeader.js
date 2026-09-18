@@ -5,14 +5,39 @@
 //
 // It is what makes one-thing-at-a-time possible. Every screen below it holds
 // exactly one job — the tracks, the note, the preview — and could not also
-// carry what you are logging without eating a phone's screen. So the title
-// and the artist sit here as a line and stay put while the screens turn
-// underneath. No small cover: the album screen is the art, large and centred,
-// and a thumbnail of it up here was the same picture twice.
+// carry what you are logging without eating a phone's screen. So what you are
+// logging sits here and stays put while the screens turn underneath.
 //
-// The back caret is the way to a different record. Leaving the listen
-// altogether is the layer's own gesture — swipe from the left edge, or the
-// browser's back — which puts you back on the desk you started from.
+// ── The header is the beacon now, 2026-09-18 ──────────────────────────────
+// The cover came off this row on 2026-09-15 with a good reason: the album
+// screen is the art, large and centred, and a thumbnail of it up here was the
+// same picture twice. That is no longer what this strip is. A listen begins
+// on the beacon now — the record flies into the beacon slot, the beacon
+// lights, and the session opens over it (Miyel's beacon brief) — so the row
+// at the top of the listen is the beacon, small, carried into the room. The
+// cover, the green dot and NOW LOGGING are the beacon's own three things,
+// which means the thing you were looking at a second ago is still on screen
+// rather than having been swapped for a caption about it.
+//
+// It also answers what a visitor is seeing while you write, which is the
+// thing this row could not say before and the one fact an owner might
+// actually want up there.
+//
+// The line under the dot is what the beacon is naming: the song you have
+// open, or the record itself while none is. That is `track || album`, which
+// is the beacon's own rule, stated once here and once in ListeningBeacon —
+// the two are showing the same thing and must not disagree about it.
+//
+// ── The cover is the way to a different record ────────────────────────────
+// It stands where the back caret stood and does its job. Two controls in that
+// corner — a caret and then a cover — is a toolbar in the one place this
+// layout cannot spare the room, and the caret was never the thing anybody was
+// looking at. Nothing is lost by pressing it: the listen is saved as a draft
+// first and is waiting under Unfinished.
+//
+// Leaving the listen altogether is still the layer's own gesture — swipe from
+// the left edge, or the browser's back — which puts you back where you
+// started.
 //
 // Top right, where every other screen keeps its day-and-night switch: the
 // switch, and beside it the question mark. That is the reference — something
@@ -22,29 +47,51 @@
 // broken. There is no Save draft button: the draft saves itself.
 
 'use client';
-import { CaretLeft } from '@phosphor-icons/react';
 import { SESSION_STEPS } from '../../hooks/useListeningSession';
 import { useTheme } from '../main_components/Lightswitch';
 
 export default function SessionHeader({
   album, artist, year,
+  art = '', track = '',
   step, onStep,
   onBack,
   canAsk, onAsk, asking,
 }) {
   const { theme, toggle } = useTheme();
+  // The beacon's own rule, and it has to be the same one: whatever song is
+  // open, and the record itself while none is.
+  //
+  // Nothing is open on the album screen, whatever `openTrack` happens to be
+  // pointing at — it defaults to the first track and the tracklist arrives
+  // before you have pressed anything, so this row read "15 Step" while the
+  // screen under it still said In Rainbows and offered to start. The same
+  // guard is on the needle, so the public beacon does not say it either.
+  const naming = (step > 0 && track) || album;
 
   return (
     <header className="ses-head">
       <div className="ses-head-in">
         <div className="ses-head-row">
-          <button type="button" className="ses-back" onClick={onBack} aria-label="Change album" title="Change album">
-            <CaretLeft size={16} weight="bold" aria-hidden="true" />
+          <button
+            type="button"
+            className="ses-cover"
+            onClick={onBack}
+            aria-label="Change album"
+            title={`${album}${artist ? ` · ${artist}` : ''}${year ? ` · ${year}` : ''} — change album`}
+          >
+            {art
+              ? <img src={art} alt="" />
+              : <span className="ses-cover-none" aria-hidden="true">♪</span>}
           </button>
 
           <div className="ses-head-text">
-            <span className="ses-head-album">{album}</span>
-            <span className="ses-head-artist">{artist}{year ? ` · ${year}` : ''}</span>
+            {/* The one green thing on the screen, and it means what it means
+                everywhere else on this site: somebody is being told. */}
+            <span className="ses-head-live">
+              <span className="ses-head-dot" aria-hidden="true" />
+              Now logging
+            </span>
+            <span className="ses-head-album">{naming}</span>
           </div>
 
           {canAsk && (

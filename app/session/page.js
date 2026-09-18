@@ -261,6 +261,11 @@ export default function SessionPage() {
             album={s.albumInput}
             artist={s.artistName}
             year={s.year || s.brief?.year || ''}
+            /* The beacon's two things, so the strip at the top of a listen is
+               the beacon rather than a caption about it. The same song the
+               needle is sending, read the same way. */
+            art={s.albumArt}
+            track={s.tracks?.[s.openTrack]?.title || ''}
             step={step}
             onStep={goToStep}
             onBack={leave}

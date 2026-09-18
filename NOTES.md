@@ -1430,9 +1430,24 @@ record. What puts it back is deleting the row — it is a single upserted
 `id = 1` (`INSERT … ON CONFLICT (id) DO UPDATE`), so the next listen recreates
 it and nothing else is touched.
 
-**How to test a pick without broadcasting:** click through, then remove the
-row, not just end it. Or stop before the two seconds are up — the debounce is
-the only thing between a tap and the world.
+**How to test a pick without broadcasting:** swallow the one request, in the
+page, before you start — the flight and the navigation are both client-side,
+so a patched `fetch` survives into the session:
+
+```js
+const real = window.fetch;
+window.fetch = function (u, o) {
+  const url = String(typeof u === 'string' ? u : u?.url || '');
+  if (url.includes('/api/needle') && (o?.method || 'GET') !== 'GET') {
+    return Promise.resolve(new Response('{}', { status: 200 }));
+  }
+  return real.apply(this, arguments);
+};
+```
+
+Everything else behaves exactly as it does for real. Check `SELECT * FROM
+needle` afterwards; it should be empty. If one did get through, remove the row
+rather than ending it.
 
 
 **The Claude browser pane reports `visibilityState: 'hidden'`, so the beacon

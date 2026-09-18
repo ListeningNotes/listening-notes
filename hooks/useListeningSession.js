@@ -223,7 +223,14 @@ export function useListeningSession({ step }) {
           // and Preview too: the listen is still open, and dropping to "Last
           // logged" while its keeper writes the album note would be wrong at
           // the most deliberate moment of the whole thing.
-          track: tracks?.[openTrack]?.title || '',
+          // Whatever song is open — and nothing is open on the album screen,
+          // whatever openTrack is pointing at. It defaults to the first
+          // track and the tracklist lands before anybody has pressed
+          // anything, so without this the beacon announced track one of a
+          // record still sitting on its own cover waiting to be started
+          // (2026-09-18). Blank is not the same as no beacon: the route
+          // names the record instead.
+          track: step > 0 ? (tracks?.[openTrack]?.title || '') : '',
         }),
       }).then(() => { litRef.current = true; })
         .catch(() => { /* the beacon is not worth an alert */ });
