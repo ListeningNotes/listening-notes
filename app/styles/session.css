@@ -534,6 +534,139 @@
   transition: background 0.2s, transform 0.2s, border-color 0.2s;
 }
 .ses-strip-col--done .ses-strip-dot { background: var(--ink-faint); }
+
+/* ── The contents screen ───────────────────────────────────────────────────
+   What the next forty minutes are: the strip, the facts, the tracklist. It
+   replaced the Overview, which was the cover and the title — the beacon one
+   row up, larger (Miyel's contents brief, 2026-09-18).
+
+   ── The strip, with slots ─────────────────────────────────────────────────
+   The same strip, drawn for a record nothing has been said about yet. An
+   unrated track is an empty box at full height with a hairline round it,
+   rather than the stub the track screen shows: there the bars are a picture
+   of how far you have got, and here they are the shape of the record waiting
+   to be filled. The rated look is identical in both, which is the point —
+   the boxes fill. */
+.ses-strip--slots .ses-strip-col { grid-template-rows: 56px; }
+.ses-strip--slots .ses-strip-bars { padding-top: 12px; }
+/* The diagonal titles and the written-in dot belong to the track screen,
+   where the strip is a way of moving between tracks. Here the titles are
+   underneath in full, in a list, so a second set of them on their sides is
+   the same words twice — and they fell across the facts. */
+.ses-strip--slots .ses-strip-label,
+.ses-strip--slots .ses-strip-dot { display: none; }
+/* Only the empty ones change. A rated slot keeps the height its rating gives
+   it, inline, and the fill from the base rule — which is the whole idea: the
+   boxes fill. */
+.ses-strip--slots .ses-strip-bar:not(.ses-strip-bar--rated) {
+  height: 100% !important;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  background: none;
+}
+.ses-strip--slots .ses-strip-col--waiting { pointer-events: none; }
+.ses-strip--slots .ses-strip-col--waiting::after {
+  content: '';
+  display: block; height: 56px;
+  border: 1px solid var(--border); border-radius: 3px;
+  opacity: 0.5;
+}
+
+/* Arriving: one slot at a time, left to right, as the tracklist lands. 40ms
+   apart — the brief's number — and it plays once a listen rather than every
+   time you come back to the step, which is what `arrived` in the component
+   is for. */
+.ses-contents--arriving .ses-strip-col {
+  animation: sesSlotIn 0.34s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+  animation-delay: calc(var(--slot-i, 0) * 40ms);
+}
+@keyframes sesSlotIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: none; }
+}
+/* The facts and the titles come up behind the slots rather than with them, so
+   the slots are what you watch. */
+.ses-contents--arriving .ses-facts,
+.ses-contents--arriving .ses-contents-list {
+  animation: sesFactsIn 0.4s ease 0.18s both;
+}
+@keyframes sesFactsIn { from { opacity: 0; } to { opacity: 1; } }
+@media (prefers-reduced-motion: reduce) {
+  .ses-contents--arriving .ses-strip-col,
+  .ses-contents--arriving .ses-facts,
+  .ses-contents--arriving .ses-contents-list { animation: none; }
+}
+
+/* The strip and the facts hold still while the list moves under them. Sticky
+   rather than a scroller of its own: a box that scrolls inside a sheet that
+   scrolls is two answers to one drag, and this session has that scar already
+   (see the rail lock note in nav.css). */
+.ses-contents-head {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  background: var(--bg);
+  padding-bottom: 6px;
+}
+
+/* ── The facts ─────────────────────────────────────────────────────────────
+   Label and value on one line with a hairline between, which is the shape a
+   record's back cover uses and the reason it reads at a glance. A row with
+   nothing behind it is not drawn — see the filter in the component. */
+.ses-facts { margin: 0; padding: 0; }
+.ses-fact {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 18px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--border);
+}
+.ses-fact:first-child { border-top: 1px solid var(--border); }
+.ses-fact dt { margin: 0; }
+.ses-fact-value {
+  margin: 0;
+  font-family: var(--font-label);
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  color: var(--ink);
+  text-align: right;
+}
+
+/* ── The tracklist ─────────────────────────────────────────────────────────
+   Number, title, and a hairline as long as that track is against the longest
+   on the record. A floor of 20px so a ninety-second interlude still draws
+   something rather than nothing. */
+.ses-contents-list { list-style: none; margin: 18px 0 0; padding: 0; }
+.ses-contents-disc {
+  display: block;
+  margin: 22px 0 6px;
+}
+.ses-contents-row {
+  display: flex; align-items: center; gap: 14px;
+  width: 100%; padding: 13px 0;
+  border: 0; background: none; cursor: pointer; text-align: left;
+  color: var(--ink);
+}
+.ses-contents-n {
+  flex: 0 0 auto; min-width: 16px;
+  font-family: var(--font-label); font-size: 11px; color: var(--ink-faint);
+}
+.ses-contents-title {
+  flex: 1 1 auto; min-width: 0;
+  font-family: var(--font-display); font-weight: var(--font-display-weight);
+  font-size: 15px; line-height: 1.3;
+}
+/* The bar is the one thing here that is not a word, so it gets the right-hand
+   third and nothing else does. Right-aligned, because a row of bars read
+   against a common edge is a comparison and one read against ragged text is
+   a decoration. */
+.ses-contents-bar {
+  flex: 0 0 auto;
+  height: 2px;
+  max-width: 33%;
+  border-radius: 1px;
+  background: var(--border);
+}
+.ses-contents-row:hover .ses-contents-bar { background: var(--ink-faint); }
+
 .ses-strip-col--now .ses-strip-dot { background: var(--ink); border-color: var(--ink); transform: scale(1.3); }
 .ses-strip-label { position: relative; display: block; height: 100%; }
 .ses-strip-title {

@@ -16,15 +16,19 @@ import { useSessionDraft } from './useSessionDraft';
 
 // The four screens of a listen, in order. The header draws them and the
 // picker names the one a draft was left on.
-// Overview · Tracks · Album · Preview (Miyel, 2026-09-18). "Notes" was never
-// accurate on the third screen — it is where the record gets its score, its
-// marks and the writing that is *about the album*, which is what the word
-// Album says. And the first screen could not keep that word once the third
-// had it: it is the cover, the facts and the way in, which is an overview.
+// Tracks · Album · Preview.
 //
-// The stored value is the index, not the word, so drafts written under the
-// old names reopen exactly where they were left.
-export const SESSION_STEPS = ['Overview', 'Tracks', 'Album', 'Preview'];
+// "Notes" became "Album" earlier on 2026-09-18 — that screen is where the
+// record gets its score, its marks and the writing that is *about the album*,
+// which is what the word Album says. Overview took the word for an hour and
+// then went entirely (Miyel's contents brief, the same day): it was the
+// cover, the title and the artist, which is the beacon one row up said again
+// larger. What replaced it is not a step but the front of this one — Tracks
+// opens on the record's contents now (steps/RecordContents.js).
+//
+// **The stored value is the index, not the word.** Dropping a step therefore
+// moved every draft's saved position by one, which migration 017 shifts once.
+export const SESSION_STEPS = ['Tracks', 'Album', 'Preview'];
 
 // Where the record being listened to is kept between the picker and the
 // session, and across a reload. Written by whoever starts a listen — the
@@ -407,6 +411,39 @@ export function useListeningSession({ step }) {
     return Math.min(Math.max(0, openAt), SESSION_STEPS.length - 1);
   }
 
+  // ── When there is no tracklist ────────────────────────────────────────────
+  // Two ways out, and neither of them is giving up on the record: ask again,
+  // or write it out yourself. iTunes misses plenty — a private press, a
+  // bootleg, a record filed under a name nobody would guess — and a listen
+  // with no tracklist is still a listen.
+  function lookAgain() {
+    const run = listenRunRef.current;
+    if (!albumInput || tracksLoading) return;
+    setTracksLoading(true);
+    fetchTracklist(albumInput, artistName, collectionIdRef.current || null).then(found => {
+      if (run !== listenRunRef.current) return;
+      setTracks(found?.tracks || []);
+      if (found?.facts) setFacts(found.facts);
+      setTracksLoading(false);
+    });
+  }
+
+  // One title a line, which is how anybody writes a tracklist out. No
+  // durations, so the contents screen draws no bars for them and the runtime
+  // row is simply absent — a record whose length nobody knows.
+  function takeHandTracks(text) {
+    const rows = String(text || '')
+      .split('\n')
+      .map(line => line.trim())
+      // A number somebody typed in front of the title is theirs to drop: the
+      // list is numbered on screen either way, and "1. 1. Bleak Bake" is what
+      // keeping it would produce.
+      .map(line => line.replace(/^\s*\d{1,3}\s*[.)\-–]\s*/, '').trim())
+      .filter(Boolean);
+    if (!rows.length) return;
+    setTracks(rows.map((title, i) => ({ number: i + 1, title, duration: null })));
+  }
+
   // ── The briefing and the question mark are gone, 2026-09-18 ────────────
   // Web-searched research on the album screen, and a reference you could ask
   // while writing. Both came out on Miyel's call: they were the only two
@@ -576,6 +613,8 @@ export function useListeningSession({ step }) {
     elapsedRef,
     // Functions
     beginListen,
+    lookAgain,
+    takeHandTracks,
     saveDraft: draft.save,
     doFormat,
     doSave,
