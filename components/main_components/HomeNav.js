@@ -394,7 +394,37 @@ export default function HomeNav() {
     if (!vv) return undefined;
     const root = railRef.current?.closest('.hn');
     if (!root) return undefined;
-    const sync = () => root.style.setProperty('--hn-lift', `${Math.round(vv.offsetTop)}px`);
+    // And the second half, which is the one that was actually moving the
+    // screen. The cross is 100dvh tall — the whole window — so with a keyboard
+    // over the bottom half of it, most of the pane is somewhere you cannot
+    // see. iOS answers that by scrolling the pane to bring the field into
+    // view, which takes the cover off the top (Miyel, 2026-09-18: "everything
+    // still is too high up when the keyboard is open").
+    //
+    // Telling it not to scroll is not an option worth having. What is: make
+    // the cross as tall as the part you can see, so the arrangement is laid
+    // out inside the keyboard's window and there is nothing to scroll *to*.
+    // The cover stays where it was, the field is already in view, and the
+    // grid scrolls inside the pane as it did before.
+    //
+    // Threshold rather than "has it changed at all": a phone's address bar
+    // growing and shrinking moves this by forty or fifty pixels all the time
+    // and is not a keyboard. Whatever iOS scrolled before the resize landed
+    // is undone once, on the way in — not on every resize, which would yank
+    // somebody back to the top while they scrolled results with the keyboard
+    // still up.
+    let wasOpen = false;
+    const sync = () => {
+      root.style.setProperty('--hn-lift', `${Math.round(vv.offsetTop)}px`);
+      const open = window.innerHeight - vv.height > 120;
+      if (open) root.style.setProperty('--hn-h', `${Math.round(vv.height)}px`);
+      else root.style.removeProperty('--hn-h');
+      if (open && !wasOpen) {
+        const pane = paneRefs[HOME].current;
+        if (pane) pane.scrollTop = 0;
+      }
+      wasOpen = open;
+    };
     sync();
     vv.addEventListener('scroll', sync);
     vv.addEventListener('resize', sync);
@@ -402,8 +432,9 @@ export default function HomeNav() {
       vv.removeEventListener('scroll', sync);
       vv.removeEventListener('resize', sync);
       root.style.removeProperty('--hn-lift');
+      root.style.removeProperty('--hn-h');
     };
-  }, []);
+  }, [paneRefs]);
 
   // Called by every scroller on the page, horizontal and vertical alike.
   const stir = useCallback(() => {
