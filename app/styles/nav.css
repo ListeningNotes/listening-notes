@@ -369,7 +369,23 @@
   border-radius: 18px;
   overflow: hidden;
   box-shadow: 0 18px 44px rgba(0,0,0,0.16);
-  transition: box-shadow 0.4s, transform 0.4s;
+  /* Size and opacity travel too, from 2026-09-18. Going in and out of
+     choosing takes this slot between 180px and 132px and between full and
+     0.45 opacity, and until now it did both in one frame — so the cover
+     finished its flight into a 132px slot and the slot then *popped* to full
+     size in the same instant the picker vanished underneath it. Three
+     movements, one of them instantaneous, which is the disjointed part.
+
+     0.52s is the pane rearranging, which is what this is: the beacon taking
+     the record back its full size while the list of records folds away. The
+     flight lands at 520ms and the session arrives 620ms after that, so the
+     growing has the gap to itself. */
+  transition:
+    box-shadow 0.4s,
+    transform 0.4s,
+    width 0.52s cubic-bezier(0.22, 0.61, 0.36, 1),
+    height 0.52s cubic-bezier(0.22, 0.61, 0.36, 1),
+    opacity 0.52s cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 .beacon-card:hover .beacon-art-wrap {
   transform: translateY(-4px);
@@ -1008,12 +1024,29 @@
 /* The gap between the cover and whatever is under it is 28px, which is right
    under a full-size record and too much under a 132px one with a search
    below it. */
+/* Transitioned for the same reason the slot is: this closes from 28px to
+   10px as the picker opens and back as it goes, and a gap that jumps is a
+   record that hops. */
+.beacon-card { transition: gap 0.52s cubic-bezier(0.22, 0.61, 0.36, 1); }
 .hn--choosing .beacon-card { gap: 10px; }
 .hn--choosing .hp-dashboard { flex: 0 0 auto; }
 .hn--choosing .beacon-art-wrap {
   width: 132px;
   height: 132px;
-  opacity: 0.45;
+  /* Full strength, and no shadow. The 0.45 was muting a cover that is not
+     there any more — the slot empties while you choose (ListeningBeacon) —
+     and at 0.45 over a tile already drawn at half opacity the place a record
+     is about to land was a smudge with a drop shadow under it. */
+  opacity: 1;
+  box-shadow: none;
+}
+/* Only while choosing. The drop leaves the same empty tile behind for half a
+   second on its way to refilling, and that moment is not this one: there the
+   tile is a record that has just left, here it is a space waiting for one. */
+.hn--choosing .beacon-art-empty {
+  opacity: 1;
+  border: 1px solid var(--border);
+  box-sizing: border-box;
 }
 .hn--choosing .beacon-meta { gap: 0; }
 /* The way out, in the corner the up-caret holds the rest of the time. Not
@@ -1037,6 +1070,7 @@
   .hn .beacon-stage,
   .beacon-art-wrap,
   .hn--choosing .beacon-art-wrap,
+  .beacon-card,
   .hn-crown,
   .hn--choosing .hn-crown,
   .hn-bar-mark { transition: none; }
