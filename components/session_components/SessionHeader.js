@@ -31,19 +31,28 @@
 // ── The × in the corner ───────────────────────────────────────────────────
 // The way to put the record down, and the one deliberate end a listen has.
 //
-// One press, from 2026-09-18. It was two — the mark opened a word and the
-// word did it — which was the right shape for a control that might throw
-// something away and the wrong one for a control that never can. Miyel,
-// after an afternoon of testing: "clicking the × should just draft, with no
-// option to just leave… if you're going through all this trouble to type in
-// an album, find it and click, you're probably wanting to listen. Let's just
-// let the drafts build."
+// Two presses: the mark opens a word out of itself and the word does it. It
+// went to one press for half an hour on 2026-09-18 and came back — "I miss
+// the × giving an option to be sure you're leaving, and the animated ×" —
+// and she is right about what was lost. This is the one deliberate end a
+// listen has, and a control that ends something should take a breath even
+// when it cannot lose anything.
 //
-// So there is nothing to confirm. The × ends the listen and the listen is
-// kept, every time, whether a word was written or not — a record you went and
-// found is a record you meant to play, and the picker is where it waits.
-// Drafts are a page you can clear out in a press each; a lost search is an
+// The word is **END & SAVE**, hers, and it is better than either word it
+// replaced. "Draft" and "Leave" described the two things this used to do
+// depending on whether anything had been written; it does one thing now, and
+// saying both halves of it out loud is what makes the second press safe to
+// make without thinking. Nothing is being decided — you are being told.
+//
+// What did not come back is the condition. The listen is kept every time,
+// written on or not: a record you went and found is a record you meant to
+// play. Drafts are a page you clear out in a press each; a lost search is an
 // afternoon you do again.
+//
+// ── The mark shuts what it opened ─────────────────────────────────────────
+// Two targets once it is open, and the *word* is what commits — the mark puts
+// it away again. The same × doing the same job at a smaller scale, which is
+// what the ··· does when it turns into an × and files the tools back in.
 //
 // ── The mark shuts what it opened ─────────────────────────────────────────
 // Two targets once it is open, and this is the part worth being exact about:
@@ -77,6 +86,7 @@
 // broken. There is no Save draft button: the draft saves itself.
 
 'use client';
+import { useState } from 'react';
 import { X } from '@phosphor-icons/react';
 import { SESSION_STEPS } from '../../hooks/useListeningSession';
 import { useTheme } from '../main_components/Lightswitch';
@@ -88,6 +98,8 @@ export default function SessionHeader({
   onEnd,
 }) {
   const { theme, toggle } = useTheme();
+  // Whether the × has been opened into its word.
+  const [ending, setEnding] = useState(false);
   // Whether the × has been pressed once and is now showing what it will do.
   // Reset on blur, the way the draft's discard is: a confirmation left armed
   // behind your back is a confirmation you did not give.
@@ -116,16 +128,39 @@ export default function SessionHeader({
             {/* Focus leaving the pair puts it away — but only when it has
                 actually left, or moving from the mark to the word would shut
                 the word on the way to pressing it. */}
-            <div className="ses-shut">
+            {/* Focus leaving the pair puts it away — but only when it has
+                actually left, or moving from the mark to the word would shut
+                the word on the way to pressing it. */}
+            <div
+              className={'ses-shut' + (ending ? ' ses-shut--sure' : '')}
+              onBlur={event => {
+                if (!event.currentTarget.contains(event.relatedTarget)) setEnding(false);
+              }}
+            >
               <button
                 type="button"
                 className="ses-shut-door"
-                onClick={onEnd}
-                aria-label="End this listen and keep it as a draft"
-                title="End this listen and keep it as a draft"
+                onClick={() => setEnding(open => !open)}
+                aria-expanded={ending}
+                aria-label={ending ? 'Keep listening' : 'End this listen'}
+                title={ending ? 'Keep listening' : 'End this listen'}
               >
                 <X size={18} weight="regular" aria-hidden="true" className="ses-shut-mark" />
               </button>
+              {/* Out of the tab order and out of reach while it is closed, so
+                  nothing can be pressed that cannot be read. */}
+              <span className="ses-shut-slot">
+                <button
+                  type="button"
+                  className="ses-shut-word"
+                  onClick={onEnd}
+                  tabIndex={ending ? 0 : -1}
+                  aria-hidden={!ending}
+                  title="End this listen and keep it as a draft"
+                >
+                  End &amp; save
+                </button>
+              </span>
             </div>
           </div>
 
