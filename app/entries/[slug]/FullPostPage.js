@@ -596,6 +596,26 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   const { albumNotes } = splitNotes(entry.notes);
   const parsedTracks = entryTracks(entry);
   const horizonBars = parseHorizon(entry.horizon);
+  // ── What was said, against what is on the record ────────────────────────
+  // An entry carries its whole tracklist from 2026-09-18, including the songs
+  // nothing was written about — the record's own contents, which nothing else
+  // holds. So the page has to draw the difference rather than the list.
+  //
+  // Reading, a row with no stars, no note and no heart is a row saying
+  // nothing, and sixteen of them under a heading called Track Notes is a
+  // wall of titles pretending to be writing. They are skipped.
+  //
+  // Correcting, they are exactly what you came for: Miyel opened a
+  // correction on a record she had logged bare and found the bottom screen
+  // "just fully blank". The whole list is there, the empty ones waiting to be
+  // filled — her "ghost tracks".
+  //
+  // Counted rather than filtered, on purpose: the index into parsedTracks is
+  // the track's identity everywhere on this page — its comments, its note,
+  // its link — so a filtered copy would renumber every song after the first
+  // unwritten one.
+  const said = t => t.stars > 0 || (t.note || '').trim() || t.favorite;
+  const saidTracks = parsedTracks.filter(said).length;
 
   // The index only changes when the archive does; the linker is rebuilt every
   // render on purpose. It carries the "first mention on this page" tally, so
@@ -635,7 +655,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   const nothingBelow = !edit.editing
     && !albumNotes
     && albumComments.length === 0
-    && parsedTracks.length === 0
+    && saidTracks === 0
     && horizonBars.length === 0;
   // The wobble. Held for as long as it plays and no longer.
   const [wobble, setWobble] = useState(false);
@@ -1219,7 +1239,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
         {/* Horizon lives under the Track Notes heading rather than on its own:
             it is a map of the tracks, and clicking a bar jumps to one, so it
             belongs to the same stretch of page they do. */}
-        {(parsedTracks.length > 0 || horizonBars.length > 0) && (
+        {(saidTracks > 0 || horizonBars.length > 0 || (edit.editing && parsedTracks.length > 0)) && (
           <section style={{ marginBottom: '48px' }}>
             <MetadataLabel sticky>Track Notes</MetadataLabel>
 
@@ -1241,7 +1261,11 @@ export default function FullPostPage({ entry, references = [], authed = false, l
             )}
 
             <div>
-              {parsedTracks.map((t, i) => (
+              {parsedTracks.map((t, i) => {
+                // Nothing said about it and nothing being corrected: the row
+                // is not drawn, and the index it would have had stays with it.
+                if (!edit.editing && !said(t)) return null;
+                return (
                 <TrackThread
                   key={i}
                   track={t}
@@ -1257,7 +1281,8 @@ export default function FullPostPage({ entry, references = [], authed = false, l
                   dialOpen={dialTrack === i}
                   preview={preview}
                 />
-              ))}
+                );
+              })}
             </div>
           </section>
         )}
