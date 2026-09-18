@@ -5,46 +5,52 @@
 // app/key/page.js
 // What the marks mean.
 //
-// Was the Index tab of /about. It is the legend for every score and every flag
-// on the site, so it is the one part of that page that had to survive the move
-// to a card: the diamond, the heart and the fingerprint appear on entries all
-// over the journal and a reader who has never seen one needs somewhere to look
-// it up. The swatch on the back of the card links straight here.
+// Was the Index tab of /about. It is the legend for the three marks this site
+// invented the meaning of: the diamond, the heart and the fingerprint appear
+// on entries all over the journal and a reader who has never seen one needs
+// somewhere to look it up.
+//
+// It was the legend for the rating scale too, until 2026-09-17 — a paragraph
+// each for 5.0 down to 1.0 and one for half stars. Miyel took them out and the
+// reason is a good one to keep: stars are ubiquitous, "I should assume that".
+// Explaining them was explaining something the reader learned elsewhere years
+// ago, and six rows of it buried the three that genuinely need saying.
 //
 // The marks below are the real components, not drawings of them — the same
-// StarRating every album is scored with and the same chips the archive draws —
-// so this reads as a key to those pages rather than a description of them.
-// What each row *says* belongs to whoever keeps the journal and comes from
-// their definitions, which is why the wording is fetched rather than written
-// into this file.
+// chips the archive draws — so this reads as a key to those pages rather than
+// a description of them. What each row *says* belongs to whoever keeps the
+// journal and comes from their definitions, which is why the wording is
+// fetched rather than written into this file.
+//
+// **Nothing links here.** The card's swatch used to and does not any more, so
+// this page is reachable only by typing the address — which for a page whose
+// whole job is teaching the vocabulary is most of the job undone. See NOTES.
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Envelope, Fingerprint, Heart, SketchLogo } from '@phosphor-icons/react';
+import { Fingerprint, Heart, SketchLogo } from '@phosphor-icons/react';
 import { fonts } from '../../library/sitewide_visuals';
 import SiteNav from '../../components/main_components/SiteNav';
 import Chip from '../../components/main_components/Slug_Page/Chip';
-import StarRating from '../../components/main_components/StarRating';
 import { DEFAULT_DEFINITIONS } from '../../library/definitions';
 
-const STAR_ROWS = [
-  { key: '5.0', rating: 5 },
-  { key: '4.0', rating: 4 },
-  { key: '3.0', rating: 3 },
-  { key: '2.0', rating: 2 },
-  { key: '1.0', rating: 1 },
-  { key: 'half', rating: 0.5 },
-  // Neither of these draws stars. A row of five in front of Masterpiece said
-  // "this is a score", and the diamond is exactly the thing that isn't one —
-  // same reason the heart leads the favourite row. A heart and a score answer
-  // different questions, and the pair only makes sense once you know they can
-  // disagree.
-  { key: 'masterpiece', masterpiece: true },
-  { key: 'favorite', favorite: true },
-  { key: 'formative', formative: true },
-  // The fourth mark, 2026-09-13: not a flag but where a record came from.
-  // Faint ink, an envelope — the same mark the strip and the feed draw.
-  { key: 'submission', sent: true },
+// ── Three marks, from 2026-09-17 ──────────────────────────────────────────
+// This page held the whole rating scale as well — a paragraph each for 5.0
+// down to 1.0, and one for half stars. They went on Miyel's call: stars are
+// ubiquitous and a site explaining what four of them means is explaining
+// something its reader learned somewhere else years ago. It also buried the
+// three that genuinely need saying under six rows that did not.
+//
+// The envelope went with them, which is the one I would argue about: it is the
+// least guessable mark on the site — a heart and a gem can be guessed at, a
+// faint envelope on a record cannot. One row brings it back.
+//
+// Each mark leads with itself and says its name in its own chip, because a
+// page about what marks mean should be made of the marks.
+const MARKS = [
+  { key: 'masterpiece', tone: 'mp', Icon: SketchLogo, weight: 'fill' },
+  { key: 'favorite', tone: 'fav', Icon: Heart, weight: 'fill' },
+  { key: 'formative', tone: 'formative', Icon: Fingerprint, weight: 'bold' },
 ];
 
 export default function KeyPage() {
@@ -71,29 +77,16 @@ export default function KeyPage() {
 
         <div className="pp-block">
           <div>
-            {STAR_ROWS.map(row => {
-              const def = definitions[row.key];
+            {MARKS.map(mark => {
+              const def = definitions[mark.key];
+              if (!def) return null;
               return (
-                <div key={row.key} className="pp-row">
+                <div key={mark.key} className="pp-row">
                   <div className="pp-row-head">
-                    {row.masterpiece
-                      ? <span className="ln-mark ln-mark--mp"><SketchLogo size={15} weight="fill" /></span>
-                      : row.favorite
-                        ? <span className="ln-mark ln-mark--fav"><Heart size={15} weight="fill" /></span>
-                        : row.formative
-                          ? <span className="ln-mark ln-mark--formative"><Fingerprint size={15} weight="bold" /></span>
-                          : row.sent
-                            ? <span className="ln-mark ln-mark--sent"><Envelope size={15} weight="regular" /></span>
-                            : <StarRating rating={row.rating} size={14} />}
-                    {row.masterpiece
-                      ? <span style={{ marginLeft: 'auto' }}><Chip tone="mp">{def.label}</Chip></span>
-                      : row.favorite
-                        ? <span style={{ marginLeft: 'auto' }}><Chip tone="fav">{def.label}</Chip></span>
-                        : row.formative
-                          ? <span style={{ marginLeft: 'auto' }}><Chip tone="formative">{def.label}</Chip></span>
-                          : row.sent
-                            ? <span style={{ marginLeft: 'auto' }}><Chip><Envelope size={10} weight="regular" aria-hidden="true" />{def.label}</Chip></span>
-                            : <span className="pp-row-tail">{def.label}</span>}
+                    <span className={`ln-mark ln-mark--${mark.tone}`}>
+                      <mark.Icon size={15} weight={mark.weight} />
+                    </span>
+                    <span style={{ marginLeft: 'auto' }}><Chip tone={mark.tone}>{def.label}</Chip></span>
                   </div>
                   <p className="pp-row-body">{def.body}</p>
                 </div>

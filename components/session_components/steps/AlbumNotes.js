@@ -4,7 +4,6 @@
 import { useState } from 'react';
 import { Heart, SketchLogo, Fingerprint } from '@phosphor-icons/react';
 import { colors } from '../../../library/sitewide_visuals';
-import { goldBurst } from '../../../library/gold_burst';
 import StarRating from '../StarRating';
 import HorizonChart from '../../main_components/HorizonChart';
 
@@ -26,7 +25,6 @@ export default function AlbumNotes({
   rating,
   setRating,
   Masterpiece,
-  setMasterpiece,
   Favorite,
   setFavorite,
   Formative,
@@ -40,14 +38,6 @@ export default function AlbumNotes({
 
   // A running average shouldn't steer the score before it's been decided.
   const [avgShown, setAvgShown] = useState(false);
-
-  // Marking a masterpiece fires the same burst as the Surprise dot, so it feels
-  // like the rest of the site rather than ticking a box.
-  function toggleMasterpiece(e) {
-    const next = !Masterpiece;
-    setMasterpiece(next);
-    if (next) goldBurst(e);
-  }
 
   const flag = (on, kind) => `ses-flag ses-flag--${kind}${on ? ' ses-flag--on' : ''}`;
 
@@ -80,10 +70,20 @@ export default function AlbumNotes({
           archive card carries, in the same three colours, which the pill takes
           on once the mark is set. */}
       <div className="ses-actions ses-actions--center" style={{ marginTop: 18, gap: 6 }}>
-        <button type="button" className={flag(Masterpiece, 'mp')} onClick={toggleMasterpiece} aria-pressed={Masterpiece}>
-          <SketchLogo size={12} weight="fill" color={Masterpiece ? colors.mp : 'currentColor'} aria-hidden="true" />
-          Masterpiece
-        </button>
+        {/* Masterpiece is not pressed here either, 2026-09-17. It is read off
+            the tracklist — every track rated, every rating five — so it turns
+            up when it is true and is simply absent when it is not. Nothing to
+            press, nothing refused: the software is not withholding a label, it
+            is reporting what the ratings say. It used to be a toggle with a
+            gold burst behind it, which was a lovely moment attached to the
+            wrong act — awarding yourself the mark rather than finding you had
+            earned it. The burst belongs to the arriving, if it comes back. */}
+        {Masterpiece && (
+          <span className={flag(true, 'mp')} title="Every track is five stars">
+            <SketchLogo size={12} weight="fill" color={colors.mp} aria-hidden="true" />
+            Masterpiece
+          </span>
+        )}
         <button type="button" className={flag(Favorite, 'fav')} onClick={() => setFavorite(!Favorite)} aria-pressed={Favorite}>
           <Heart size={12} weight={Favorite ? 'fill' : 'regular'} color={Favorite ? colors.fav : 'currentColor'} aria-hidden="true" />
           Favorite

@@ -403,7 +403,16 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
       // scrolls sideways, and a thumb going through it must not land on the
       // next record with the draft gone. Nothing sideways or downward is
       // the sheet's while a correction is open; Save and Cancel are.
-      if (event.touches.length !== 1 || sheet.querySelector('.ln-printing, .ln-editing')) { pull = null; return; }
+      //
+      // `.ln-busy` is the same rule for a panel that is not a correction,
+      // added 2026-09-17 when Credit became its own tool and took the row of
+      // faces out of the correction with it — which quietly took it out from
+      // behind this guard as well, so scrolling through your friends browsed
+      // to the next record instead (Miyel, on the first real try). It covers
+      // the send sheet too. The lesson is the general one: this list is not
+      // about *editing*, it is about anything of this entry's own being open
+      // over it, and a new one has to say so here.
+      if (event.touches.length !== 1 || sheet.querySelector('.ln-printing, .ln-editing, .ln-busy')) { pull = null; return; }
       const touch = event.touches[0];
       pull = { x: touch.clientX, y: touch.clientY, at: event.timeStamp, lastX: touch.clientX, lastY: touch.clientY, lastAt: event.timeStamp, axis: null, top: atTop() };
     };

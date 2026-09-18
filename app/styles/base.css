@@ -403,6 +403,15 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   select {
     font-size: 16px !important;
   }
+  /* Except a field that is already bigger than 16px, which needs no
+     protecting — Safari zooms when the text is *under* sixteen, never over.
+     The album's title is the heading of the page it is on, and forcing it to
+     16px was the loudest part of "the fonts change when I edit" (Miyel,
+     2026-09-17). max(16px, 1em) says: take the size of the thing you are
+     standing in, but never go below the floor. */
+  .ln-field--title {
+    font-size: max(16px, 1em) !important;
+  }
 }
 
 /* ── The address book as a strip of faces ───────────────────────────────────
@@ -470,3 +479,28 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
    that asks for it — the inbox. Same rule as everywhere else: a style goes
    where its surface is. */
 
+/* ── The switch ────────────────────────────────────────────────────────────
+   Two surfaces ask a yes/no about somebody's name — the send sheet's *send
+   quietly* and the entry's *show their name* — and they should not answer it
+   in two shapes. Here rather than in either sheet, for the reason
+   MiniAddressBook's styles are here: it belongs to both.
+
+   a checkbox — the label still works, the keyboard still works, and
+   role="switch" is what tells a screen reader it is on or off rather than
+   ticked. appearance: none is what lets the box become a track. */
+.ln-switch {
+  appearance: none; -webkit-appearance: none;
+  position: relative; flex-shrink: 0; margin: 0; cursor: pointer;
+  width: 46px; height: 28px; border-radius: 999px;
+  border: 1px solid var(--border); background: var(--panel);
+  transition: background 0.18s ease, border-color 0.18s ease;
+}
+.ln-switch::after {
+  content: ''; position: absolute; top: 3px; left: 3px;
+  width: 20px; height: 20px; border-radius: 999px;
+  background: var(--ink-faint);
+  transition: transform 0.18s cubic-bezier(0.22, 0.61, 0.36, 1), background 0.18s ease;
+}
+.ln-switch:checked { background: var(--ink); border-color: var(--ink); }
+.ln-switch:checked::after { transform: translateX(18px); background: var(--bg); }
+.ln-switch:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
