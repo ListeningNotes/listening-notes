@@ -14,12 +14,21 @@
 // entry failing to save, which is the one that matters.
 //
 // ── Two sentences, in that order ──────────────────────────────────────────
-// `says` is what it means for the person holding the phone, and it is the
-// only thing set in reading type: what has happened, and whether their
-// writing is safe. That second half is the whole job. The frightening part
-// of a failed save is never the failure, it is not knowing what it took with
-// it, and a message that answers that first can afford to be calm about the
-// rest.
+// `says` is what it means for the person reading it, and it is the only thing
+// set in reading type: what has happened, and whether their writing is safe.
+// That second half is the whole job — the frightening part of a failed save
+// is never the failure, it is not knowing what it took with it.
+//
+// Two sentences at most, and short ones. The first draft of this explained
+// itself — "your writing is safe on this phone, and it is what a finished
+// listen is built from" — and Miyel's answer was "cut the writing, I don't
+// think even I understand it." A sentence about how the software works is a
+// sentence somebody has to parse at the one moment they are least able to.
+// Whatever is left over goes in `because`, or it goes nowhere.
+//
+// "This device" rather than "this phone", 2026-09-18. A copy runs wherever
+// its keeper opens it, and telling somebody on a laptop that their writing is
+// safe on their phone is telling them it is somewhere else.
 //
 // `because` is the machine's own account, underneath, in the small label
 // face. Kept rather than swallowed, because it is what gets read out to
