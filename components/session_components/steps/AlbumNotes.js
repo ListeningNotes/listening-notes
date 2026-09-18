@@ -69,7 +69,7 @@ export default function AlbumNotes({
         </div>
       )}
 
-      <div className="ses-label" style={{ marginBottom: 16, textAlign: 'center' }}>Your score</div>
+      <div className="ses-label" style={{ marginBottom: 14, textAlign: 'center' }}>Your score</div>
       <div className="ses-center">
         <StarRating value={rating} onChange={setRating} size={38} />
       </div>

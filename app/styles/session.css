@@ -147,12 +147,18 @@
    Set, the mark fills and takes its own colour and the word goes to ink;
    unset, both are faint. So the difference between a record you marked and
    one you did not is a colour arriving, not a border changing weight. */
+/* Close under the stars, because they are one statement and not two. The row
+   read thin at 22px of air above it — two marks adrift in the middle of a
+   screen (Miyel, 2026-09-18: "it does look a little bit light"). The answer
+   was not a third mark to fill it out: what is above them is the score, and
+   what they are is the rest of the same sentence about the same record, so
+   they sit with it. Everything below still gets the rule and the full gap. */
 .ses-marks {
   display: flex;
   justify-content: center;
   align-items: flex-start;
   gap: 8px;
-  margin-top: 22px;
+  margin-top: 14px;
 }
 .ses-mark {
   display: inline-flex;
