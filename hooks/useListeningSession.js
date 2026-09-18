@@ -121,6 +121,10 @@ export function useListeningSession({ step }) {
   // What gets written
   const [overallNotes, setOverallNotes]   = useState('');
   const [rating, setRating]               = useState(0);
+  // What went wrong, if anything: { says, because }. Null the rest of the
+  // time. Three window.alert() calls fed into this on 2026-09-18 — see
+  // components/session_components/Trouble.js for why they left.
+  const [trouble, setTrouble]             = useState(null);
   // Masterpiece is not state and has no setter, 2026-09-17. It is what the
   // tracklist says — every track rated, every rating five — so it is read off
   // the ratings rather than kept beside them, where the two could disagree.
@@ -203,6 +207,9 @@ export function useListeningSession({ step }) {
     setters: {
       setOverallNotes, setRating, setFavorite, setFormative,
       setTrackNotes, setTrackRatings, setTrackFavorites, setEntryType, setAlbumArt,
+      // A failed save that was asked for out loud says so through this. The
+      // automatic one stays silent, which is the point of it.
+      setTrouble,
     },
   });
 
@@ -486,7 +493,13 @@ export function useListeningSession({ step }) {
       if (data.error) throw new Error(data.error);
       setOutput(data);
       return data;
-    } catch (err) { alert('Formatting failed: ' + err.message); return null; }
+    } catch (err) {
+      setTrouble({
+        says: 'The preview could not be built. Nothing you have written is affected — go back a step and come forward again.',
+        because: err.message,
+      });
+      return null;
+    }
     finally { setFormatting(false); }
   }
 
@@ -576,13 +589,18 @@ export function useListeningSession({ step }) {
       // matters most at the one moment this is likeliest to happen, a copy
       // redeploying under a listen when an update lands (the workflow runs
       // hourly, on its own).
-      alert('That did not save — but nothing is lost. Your listen is still here. '
-        + 'Press Save again.\n\nWhat went wrong: ' + err.message);
+      setTrouble({
+        says: 'That did not save — but nothing is lost. Your listen is still here. Press Save to journal again.',
+        because: err.message,
+      });
     }
     finally { setSaving(false); }
   }
 
   return {
+    // What went wrong, and the way to dismiss it
+    trouble, setTrouble,
+
     // The record
     albumArt, setAlbumArt,
     albumInput, setAlbumInput,

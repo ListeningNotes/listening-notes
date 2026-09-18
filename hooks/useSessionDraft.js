@@ -30,6 +30,7 @@ export function useSessionDraft({ step, saved, hasWriting, values, setters }) {
   const {
     setOverallNotes, setRating, setFavorite, setFormative,
     setTrackNotes, setTrackRatings, setTrackFavorites, setEntryType, setAlbumArt,
+    setTrouble,
   } = setters;
 
   // Draft — the row in `drafts` this listen is being kept in. It writes itself
@@ -145,11 +146,21 @@ export function useSessionDraft({ step, saved, hasWriting, values, setters }) {
 
   // Writes everything on screen to the drafts table. One row per record, so
   // writing twice in a listen updates rather than piles up. quiet:true is the
-  // automatic save — it does not raise an alert if it fails, because the next
+  // automatic save — it does not say anything if it fails, because the next
   // change will try again and the browser's copy is still there.
+  //
+  // Answers true when the row is written and false when it is not, which is
+  // how the ✕ knows whether it is allowed to leave (see endListen in
+  // app/session/page.js). It used to answer nothing at all, and got away with
+  // it only because the failure raised a window.alert — a blocking one, which
+  // held the leaving where it stood until the alert was closed. Take the
+  // blocking away and the listen would have shut over the top of its own bad
+  // news, 2026-09-18.
   async function save({ quiet = false } = {}) {
     const album = albumInput;
-    if (!album || saved) return;
+    // Nothing to write is not a failure: there is no reason to keep somebody
+    // on a screen because a record they touched and left had nothing on it.
+    if (!album || saved) return true;
     if (draftFlightRef.current) await draftFlightRef.current;
     setDraftState('saving');
     const flight = (async () => {
@@ -187,9 +198,22 @@ export function useSessionDraft({ step, saved, hasWriting, values, setters }) {
     try {
       await flight;
       setDraftState('saved');
+      return true;
     } catch (err) {
       setDraftState('error');
-      if (!quiet) alert('Saving the draft failed: ' + err.message);
+      // Only when it was asked for. The automatic save stays silent on
+      // purpose — the next change tries again and the browser's copy is
+      // still there — and pressing × to leave is not the automatic one, so
+      // this is what spoke on 2026-09-18 when a half star met an integer
+      // column. It said `invalid input syntax for type integer: "4.5"` in
+      // the browser's own black box, which is what this replaced.
+      if (!quiet) {
+        setTrouble?.({
+          says: 'That did not save to the server. Your writing is safe on this phone, and it is what a finished listen is built from.',
+          because: err.message,
+        });
+      }
+      return false;
     } finally {
       if (draftFlightRef.current === flight) draftFlightRef.current = null;
     }

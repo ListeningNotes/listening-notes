@@ -47,6 +47,7 @@ import RecordContents from '../../components/session_components/steps/RecordCont
 import TrackNotes from '../../components/session_components/steps/TrackNotes';
 import AlbumNotes from '../../components/session_components/steps/AlbumNotes';
 import SessionPreview from '../../components/session_components/steps/SessionPreview';
+import Trouble from '../../components/session_components/Trouble';
 
 // How long the picked cover takes to reach the header. The step body slides in
 // on the same curve at nearly the same length, so the two read as one move.
@@ -234,7 +235,12 @@ export default function SessionPage() {
   // than asking whether you are sure.
   const router = useRouter();
   async function endListen() {
-    if (s.hasWriting && !s.saved) await s.saveDraft();
+    // A draft that would not save keeps you here. The message is up, the
+    // listen is still on screen behind it, and nothing has been cleared — so
+    // pressing again after fixing whatever it was does the whole thing
+    // properly. Leaving anyway would have thrown away the one copy of the
+    // afternoon that is not on this phone (2026-09-18).
+    if (s.hasWriting && !s.saved && !(await s.saveDraft())) return;
     try { localStorage.removeItem(PENDING_KEY); } catch { /* nothing to clear */ }
     saidSoAboutTheDesk();
     // Over the cross the sheet goes and the pane is underneath, already
@@ -248,7 +254,12 @@ export default function SessionPage() {
   // writing on it is kept as a draft first, so it is waiting under Unfinished
   // when the picker comes back.
   async function leave() {
-    if (s.hasWriting && !s.saved) await s.saveDraft();
+    // A draft that would not save keeps you here. The message is up, the
+    // listen is still on screen behind it, and nothing has been cleared — so
+    // pressing again after fixing whatever it was does the whole thing
+    // properly. Leaving anyway would have thrown away the one copy of the
+    // afternoon that is not on this phone (2026-09-18).
+    if (s.hasWriting && !s.saved && !(await s.saveDraft())) return;
     try { localStorage.removeItem(PENDING_KEY); } catch { /* nothing to clear */ }
     saidSoAboutTheDesk();
     setLanding(null);
@@ -402,6 +413,17 @@ export default function SessionPage() {
       {landing && landingStyle && (
         <img src={landing.art} alt="" aria-hidden="true" className="ses-landing" style={landingStyle} />
       )}
+
+      {/* Outside the picker/listen split on purpose: something can go wrong on
+          either side of it, and the message is about the listen rather than
+          about the screen it happened on. Last in the tree so it is over the
+          preview's own sheet — the save that fails is pressed there, and an
+          answer underneath the button that asked for it is no answer. */}
+      <Trouble
+        says={s.trouble?.says}
+        because={s.trouble?.because}
+        onClose={() => s.setTrouble(null)}
+      />
     </div>
   );
 }
