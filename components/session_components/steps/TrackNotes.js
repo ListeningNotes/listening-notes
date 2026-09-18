@@ -222,24 +222,46 @@ export default function TrackNotes({
 
       {/* Keyed on the track so each one mounts fresh and slides in. */}
       <div key={i} className={`ses-turn${dir < 0 ? ' ses-turn--back' : ''}`}>
-        <h2 className="ses-title">{t.title}</h2>
+        {/* ── The title and its marks, on one line ────────────────────────
+            They were stacked until 2026-09-18 — the title, then the stars
+            under it — which is the one arrangement this site uses nowhere
+            else. An entry's tracklist, the archive, the contents screen: all
+            of them put the name at the left and what you made of it at the
+            right, and Miyel's note was exactly that ("that's the setup on
+            every other page of the site").
 
-        <div className="ses-track-marks">
-          <StarRating value={trackRatings[i] || 0} onChange={v => setTrackRatings(prev => ({ ...prev, [i]: v }))} size={32} />
-          {/* Favourite is deliberately separate from the rating — a song can
-              be the one you keep returning to without being the best on the
-              record. Filled once it is one, outline while it isn't. */}
-          <button
-            type="button"
-            className="ses-heart"
-            onClick={() => setTrackFavorites(prev => ({ ...prev, [i]: !prev[i] }))}
-            title={fav ? 'Remove from favourites' : 'Mark as a favourite song'}
-            aria-label={fav ? 'Remove from favourites' : 'Mark as a favourite song'}
-            aria-pressed={fav}
-            style={{ color: fav ? colors.fav : undefined }}
-          >
-            <Heart size={24} weight={fav ? 'fill' : 'regular'} />
-          </button>
+            What it costs is room. Five stars and a heart take a fixed 170-odd
+            pixels out of a phone's width whatever the song is called, so the
+            title lives in what is left and wraps when it has to. That is the
+            trade and it is the right way round: the marks are the thing you
+            came to this screen to set, and a long title reading over two
+            lines is a smaller price than a score that moves about.
+
+            So the stars are smaller than they were — 20px rather than 32 —
+            and `roomy` buys the height back: a 44px row to drag along,
+            drawn at 20. The drag is shorter than it was and every half step
+            is still about thirteen pixels, which is a thumb's width of
+            travel per half star. */}
+        <div className="ses-track-head">
+          <h2 className="ses-title ses-title--track">{t.title}</h2>
+
+          <div className="ses-track-marks">
+            <StarRating value={trackRatings[i] || 0} onChange={v => setTrackRatings(prev => ({ ...prev, [i]: v }))} size={20} roomy />
+            {/* Favourite is deliberately separate from the rating — a song can
+                be the one you keep returning to without being the best on the
+                record. Filled once it is one, outline while it isn't. */}
+            <button
+              type="button"
+              className="ses-heart"
+              onClick={() => setTrackFavorites(prev => ({ ...prev, [i]: !prev[i] }))}
+              title={fav ? 'Remove from favourites' : 'Mark as a favourite song'}
+              aria-label={fav ? 'Remove from favourites' : 'Mark as a favourite song'}
+              aria-pressed={fav}
+              style={{ color: fav ? colors.fav : undefined }}
+            >
+              <Heart size={20} weight={fav ? 'fill' : 'regular'} />
+            </button>
+          </div>
         </div>
 
         <textarea
@@ -256,18 +278,26 @@ export default function TrackNotes({
         />
       </div>
 
-      {/* The same small round caret the rest of the site turns pages with. */}
+      {/* The carets, bare. They sat in a bordered circle each until
+          2026-09-18 — the same pill the marks on the album screen were in
+          until the day before, and out for the same reason: a control is the
+          mark, not a mark in a container (DECISIONS, 2026-09-17). Miyel:
+          "also remove pill from around left and right carats." Bigger with
+          the circle gone, because the circle was doing the work of being
+          visible and now the glyph has to.
+
+          The right one is also how the tracks end: on the last track it is
+          the way on to the album notes, which is what the quiet "Album notes
+          →" under it used to be. That link went the same day — "i think its
+          intuitive enough that theyre not needed" — and it is not a loss,
+          because the forward swipe reaches the album notes too. */}
       <div className="ses-track-nav">
         <button type="button" className="ses-caret" onClick={() => goTo(i - 1)} aria-label={i === 0 ? 'Back to the album' : 'Previous track'}>
-          <CaretLeft size={16} weight="bold" aria-hidden="true" />
+          <CaretLeft size={22} weight="bold" aria-hidden="true" />
         </button>
         <button type="button" className="ses-caret" onClick={() => goTo(i + 1)} aria-label={last ? 'On to the album notes' : 'Next track'}>
-          <CaretRight size={16} weight="bold" aria-hidden="true" />
+          <CaretRight size={22} weight="bold" aria-hidden="true" />
         </button>
-      </div>
-
-      <div className="ses-center" style={{ marginTop: 22 }}>
-        <button type="button" className="ses-quiet" onClick={onNext}>Album notes →</button>
       </div>
     </div>
   );

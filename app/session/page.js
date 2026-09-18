@@ -269,6 +269,15 @@ export default function SessionPage() {
 
   function swipeStart(e) {
     if (e.touches.length !== 1) return;
+    // A drag that begins on a rating belongs to the rating. Setting the
+    // album's score is a horizontal drag of exactly the kind this listens
+    // for, so without this the last inch of a five-star drag turned the page
+    // to the preview (Miyel, 2026-09-18: "make sure scroll is frozen for
+    // rating album stars as well"). The same guard the tracks screen got the
+    // day before, and the same one the layer's pull-to-close uses: the row
+    // says what it is with role="slider", so nothing here has to know where
+    // the stars are.
+    if (e.target?.closest?.('[role="slider"]')) { swipe.current = null; return; }
     const t = e.touches[0];
     swipe.current = { x: t.clientX, y: t.clientY };
   }
@@ -361,7 +370,6 @@ export default function SessionPage() {
                   Masterpiece={s.Masterpiece}
                   Favorite={s.Favorite} setFavorite={s.setFavorite}
                   Formative={s.Formative} setFormative={s.setFormative}
-                  onNext={() => goToStep(3)}
                 />
               )}
             </div>

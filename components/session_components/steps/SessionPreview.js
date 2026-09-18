@@ -128,19 +128,21 @@ export default function SessionPreview({
           rather than patching a page built for the old text. */}
       <FullPostPage key={entry.notes.length + ':' + entry.tracks.length} entry={entry} references={[]} layered preview />
 
-      {/* The foot: two quiet links, the same ones every screen in the listen
-          moves on with — back to the session at one end, on to the journal at
-          the other. Two directions out of the same moment, so they sit at
-          opposite ends of a row rather than stacked in a column. */}
+      {/* The foot: two quiet links, a centred pair. "Go back" and "Save to
+          journal" — Miyel's words, 2026-09-18, and both shorter than what
+          they replaced ("← Return to session", "Save to journal →"). The
+          arrows went with the ones at the foot of the tracks and album
+          screens the same day: a button that says go back does not need to
+          be told which way that is. */}
       <div className={'ses-preview-bar' + (saved ? ' ses-preview-bar--done' : '')}>
         {!saved ? (
           <>
-            <button type="button" className="ses-quiet" onClick={onBack}>← Return to session</button>
+            <button type="button" className="ses-quiet" onClick={onBack}>Go back</button>
             {!overallNotes.trim()
               ? <span className="ses-label">Write an album note to save</span>
               : (
                 <button type="button" className="ses-quiet ses-quiet--lead" onClick={doSave} disabled={saving}>
-                  {saving ? 'Saving…' : 'Save to journal →'}
+                  {saving ? 'Saving…' : 'Save to journal'}
                 </button>
               )}
           </>
