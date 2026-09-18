@@ -148,10 +148,26 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
     // Spent here, on the way in, whatever else this arrival turns out to be:
     // an entry opened from a place that does not browse has no neighbours.
     const alone = cameAlone();
-    if (arrives === 'bottom') return { swiped: 0, growFrom: null, alone };
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    // ── Rising, unless something on screen says where it comes from ────────
+    // `arrives="bottom"` said both how a sheet leaves *and* that it has no
+    // origin, which held while the only thing with an origin was an entry and
+    // the only origin was its tile. A listen has one now: the beacon's cover
+    // is the thing you pressed to start it, and Miyel's note on the last of
+    // the beacon brief is that rising over it reads as arriving rather than
+    // as going in — "I want it to feel like going into something, maybe the
+    // session opens from the beacon artwork."
+    //
+    // So a bottom sheet still leaves downwards, and asks first whether
+    // anything on the page claims to be where it comes from. Nothing does
+    // except the beacon, which is why this changes only the listen.
+    if (arrives === 'bottom') {
+      const from = reduced ? null : growBoxOf(pathname);
+      return { swiped: 0, growFrom: from, alone };
+    }
     const swiped = tookASwipe();
     if (swiped) return { swiped, growFrom: null, alone };
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return { swiped: 0, growFrom: null, alone };
+    if (reduced) return { swiped: 0, growFrom: null, alone };
     // An entry grows out of its tile; anything else grows out of whatever
     // declared this address in data-grows (a row, a face) — see handoff.js.
     return { swiped: 0, growFrom: slug ? tileBoxOf(slug) : growBoxOf(pathname), alone };
@@ -574,7 +590,9 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
 
   return (
     <div
-      className={'lay' + (arrival.still ? ' lay--still' : rises ? ' lay--rises' : arrival.swiped ? ' lay--swiped' : growFrom ? ' lay--grows' : ' lay--fades') + (scrolls ? ' lay--scrolls' : '')
+      /* Growing beats rising: a sheet that knows where it came from opens
+         from there, whatever it does on the way out. */
+      className={'lay' + (arrival.still ? ' lay--still' : growFrom ? ' lay--grows' : rises ? ' lay--rises' : arrival.swiped ? ' lay--swiped' : ' lay--fades') + (scrolls ? ' lay--scrolls' : '')
         + (over ? ` lay--over-${over}` : '') + (settling ? ' lay--settling' : '') + (pulled ? ' lay--dragging' : '')}
       ref={sheetRef}
       style={pulled ? { transform: `translateY(${dragY}px)` } : undefined}
