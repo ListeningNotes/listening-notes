@@ -373,6 +373,38 @@ export default function HomeNav() {
   const [deep, setDeep] = useState([false, false, false]);
   const [down, setDown] = useState([false, false, false]);
 
+  // ── The bar, against the keyboard ─────────────────────────────────────────
+  // The row at the top is `position: fixed`, which on iOS means fixed to the
+  // *layout* viewport and not to the part of it you can actually see. Open the
+  // keyboard and Safari scrolls the layout viewport up to bring the field into
+  // view; the bar goes up with it, out from under the notch, and lands over
+  // the clock and the battery (Miyel, on a phone, 2026-09-17: "the logo is
+  // kind of blocked by the floating thing on my iPhone").
+  //
+  // visualViewport.offsetTop is exactly how far it has been pushed, so the bar
+  // is pushed back by the same amount. Zero when no keyboard is up, which is
+  // every other moment on this site, so this costs nothing the rest of the
+  // time. The alternative — hiding the bar while a field has focus — would
+  // take the × away at the one moment somebody is most likely to want out.
+  //
+  // Not a React state: it changes on every frame of the keyboard's slide, and
+  // a re-render per frame to move one box is a re-render of the whole cross.
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return undefined;
+    const root = railRef.current?.closest('.hn');
+    if (!root) return undefined;
+    const sync = () => root.style.setProperty('--hn-lift', `${Math.round(vv.offsetTop)}px`);
+    sync();
+    vv.addEventListener('scroll', sync);
+    vv.addEventListener('resize', sync);
+    return () => {
+      vv.removeEventListener('scroll', sync);
+      vv.removeEventListener('resize', sync);
+      root.style.removeProperty('--hn-lift');
+    };
+  }, []);
+
   // Called by every scroller on the page, horizontal and vertical alike.
   const stir = useCallback(() => {
     setBusy(true);
