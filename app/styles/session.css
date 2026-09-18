@@ -113,11 +113,11 @@
    .ln-pin on this bar is ever an anchor, so the underline is taken off here
    rather than on the shared class. */
 .ses-preview-bar a.ln-pin { text-decoration: none; }
-/* Both pins the same height. On the entry's bar every pin carries a glyph, so
-   the 13px icon sets the line box and they match without anyone asking; here
-   "Save to journal" has no glyph (Miyel, 2026-09-18: "remove the check mark,
-   the arrow on go back can stay") and its 9px label would otherwise sit two
-   pixels shorter than the button beside it. */
+/* The height a pin has on the entry's bar, kept by hand. There it comes free:
+   every pin carries a 13px glyph and the icon sets the line box. Nothing on
+   this bar carries one, so without this the pins come out two pixels shorter
+   and the band under them two pixels thinner than the identical band on an
+   entry — which is the one thing this whole borrowing was for. */
 .ses-preview-bar .ln-pin { line-height: 13px; }
 
 /* The reason the save is dim, placed the way .ln-trouble is over the editing
