@@ -96,9 +96,10 @@ export default function AlbumNotes({
           value={rating}
           onChange={setRating}
           size={38}
-          /* The tracks' average, faint, on an empty row — and only once it
-             has been asked for. */
-          ghost={avgShown && avg ? Math.round(Number(avg) * 2) / 2 : 0}
+          /* The tracks' average, once it has been asked for — and unrounded,
+             because it is being read rather than chosen. A 4.89 draws as very
+             nearly five and not as four and a half (Miyel, 2026-09-18). */
+          ghost={avgShown && avg ? Number(avg) : 0}
         />
       </div>
 
