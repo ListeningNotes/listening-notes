@@ -2563,6 +2563,11 @@ and a reader may well wonder why a mark appeared or vanished.
       asking for a second opinion, and it is the better answer than either of
       mine: not the software refusing you a label, but a fact about your
       ratings. Every track rated, every rating five. See DECISIONS.
+- [x] **And it is not in the editor at all until it is true** (Miyel, later the
+      same day). Unpressable was not enough: greyed out it still read as a
+      control somebody had disabled, a thing you would press if only you could.
+      It appears when the tracklist earns it and vanishes when a correction
+      takes it away — the same behaviour a session already had.
 
 **What the check found, before any of it was built.** `masterpiece` was a plain
 boolean nobody validated — the definition on `/key` has always said "an entire
