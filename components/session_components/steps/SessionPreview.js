@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { serializeTracks } from '../../../library/entry_formatter';
 import FullPostPage from '../../../app/entries/[slug]/FullPostPage';
+import { LayerHeaderSlot } from '../../main_components/LayerEntry';
 
 // Step 3 — the entry, exactly as the page will print it, and the button that
 // saves it. Not a rendering of its own: it is the entry page, handed a row
@@ -101,6 +102,18 @@ export default function SessionPreview({
   if (!host) return null;
 
   return createPortal(
+    /* The preview is not the listen's layer, and has to say so. An entry page
+       portals its nav row into whatever header slot it can find; from in here
+       that is the listen's, one layer out, so the mark went off the bottom of
+       the screen and the preview had no logo on it at all. Handing it null
+       puts the nav back in the flow of this sheet, at the top of the page it
+       is previewing — which is what Miyel asked for, and what the entry will
+       actually look like (2026-09-18).
+
+       The ··· is already absent: the tools are drawn on a wristband and the
+       preview passes none, because there is nothing here to correct, print or
+       send. It is a look at the thing, not the thing. */
+    <LayerHeaderSlot.Provider value={null}>
     <div
       ref={sheet}
       className="lay ses-preview"
@@ -116,8 +129,10 @@ export default function SessionPreview({
       <FullPostPage key={entry.notes.length + ':' + entry.tracks.length} entry={entry} references={[]} layered preview />
 
       {/* The foot: two quiet links, the same ones every screen in the listen
-          moves on with — back to the session, or on to the journal. */}
-      <div className="ses-preview-bar">
+          moves on with — back to the session at one end, on to the journal at
+          the other. Two directions out of the same moment, so they sit at
+          opposite ends of a row rather than stacked in a column. */}
+      <div className={'ses-preview-bar' + (saved ? ' ses-preview-bar--done' : '')}>
         {!saved ? (
           <>
             <button type="button" className="ses-quiet" onClick={onBack}>← Return to session</button>
@@ -139,7 +154,8 @@ export default function SessionPreview({
           </>
         )}
       </div>
-    </div>,
+    </div>
+    </LayerHeaderSlot.Provider>,
     host
   );
 }

@@ -45,7 +45,11 @@ export default function AlbumNotes({
     <div>
       {list.length > 0 && hasRatings && (
         <div style={{ marginBottom: 30 }}>
-          <div className="ses-label" style={{ marginBottom: 6 }}>Listening horizon</div>
+          {/* "Horizon" (Miyel, 2026-09-18). It read "Listening horizon" on a
+              screen inside a listen, which is one of the two words doing no
+              work. Centred over the chart it names, rather than tucked into
+              its left corner. */}
+          <div className="ses-label" style={{ marginBottom: 8, textAlign: 'center' }}>Horizon</div>
           <HorizonChart
             tracks={list} trackRatings={trackRatings} favorites={trackFavorites}
             height={56} color="var(--ink-soft)" emptyColor="var(--border)" labelColor="var(--ink-faint)"
