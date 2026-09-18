@@ -88,19 +88,23 @@
 /* The foot of the preview: the way back and the way on, over a soft fade so
    the writing dissolves under them rather than ending on a line.
 
-   Side by side and at opposite ends (Miyel, 2026-09-18). They were stacked,
-   one above the other, which puts a question with two answers in a column and
-   makes the lower one look like the consequence of the upper. They are two
-   directions out of the same moment — go back to it, or send it — and a row
-   with one at each end asks that outright. Still the quiet links they were:
-   no pills. */
+   Side by side, not stacked (Miyel, 2026-09-18). One above the other puts a
+   question with two answers in a column and makes the lower one look like the
+   consequence of the upper. They are two directions out of the same moment —
+   go back to it, or send it — and a row asks that outright. Still the quiet
+   links they were: no pills. */
 .ses-preview-bar {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 220;
   display: flex;
   flex-direction: row;
   align-items: center;
-  justify-content: space-between;
-  gap: 16px;
+  /* A centred pair rather than one at each end (Miyel, 2026-09-18: "those
+     save to journal and back to session can come in to the center more").
+     Opposite corners made them two separate decisions on one bar; a pair
+     with a gap in the middle is one decision with two answers, and it is
+     also where a thumb already is. */
+  justify-content: center;
+  gap: 36px;
   padding: 36px 24px max(18px, env(safe-area-inset-bottom, 0px));
   background: linear-gradient(to top, var(--bg) 55%, transparent 100%);
   pointer-events: none;
@@ -155,7 +159,9 @@
 .ses-reveal {
   display: flex;
   justify-content: center;
-  margin: 18px 0 4px;
+  /* 18 above, so the press clears the average's tick under the stars. Nothing
+     below: the gap down to the marks is .ses-marks' job alone. */
+  margin: 18px 0 0;
 }
 
 .ses-marks {
@@ -163,7 +169,10 @@
   justify-content: center;
   align-items: flex-start;
   gap: 8px;
-  margin-top: 14px;
+  /* The one gap between the score and the marks. It read as 48px until
+     2026-09-18 because three margins were stacking — this one, the reveal's,
+     and the horizon block's own bottom margin. */
+  margin-top: 26px;
 }
 .ses-mark {
   display: inline-flex;
@@ -667,19 +676,49 @@
 .ses-strip-col--now .ses-strip-title { color: var(--ink); }
 .ses-strip--dense .ses-strip-col { grid-template-rows: 52px 14px 70px; }
 .ses-strip--dense .ses-strip-title { max-width: 80px; font-size: 8.5px; }
-.ses-track-marks { display: flex; align-items: center; gap: 18px; margin: 20px 0 22px; }
+/* The title and its marks on one line (Miyel, 2026-09-18). The title takes
+   what is left and wraps into it; the marks never shrink, because a score
+   that changes width with the length of a song title is not a score you can
+   aim at. Centred against each other, so a two-line title keeps its stars in
+   the middle of it rather than hanging them off the first line. */
+.ses-track-head {
+  display: flex; align-items: center; gap: 14px;
+  margin: 0 0 22px;
+}
+.ses-track-head .ses-title { flex: 1 1 auto; min-width: 0; }
+/* Smaller than a title elsewhere in the listen, because it is now sharing a
+   line rather than owning one. */
+.ses-title--track {
+  font-size: clamp(1.05rem, 4.4vw, 1.35rem); line-height: 1.25;
+  /* A title with no space in it long enough to fill the column — a URL-ish
+     name, a run-on remix credit — would otherwise push the stars off the
+     right edge instead of wrapping. break-word only breaks when there is no
+     other way, so ordinary titles wrap at their spaces as before. */
+  overflow-wrap: break-word;
+}
+.ses-track-marks { display: flex; align-items: center; gap: 10px; flex: none; }
 .ses-heart {
   display: inline-flex; padding: 4px; background: none; border: none; cursor: pointer;
   color: var(--ink-faint); transition: color 0.15s;
 }
 .ses-track-nav { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 26px; }
+/* No circle. It was a 36px bordered disc until 2026-09-18 — "also remove pill
+   from around left and right carats" — and the rule it was breaking is the
+   one the album screen's marks were pulled out of a pill for the day before:
+   a control is the mark, not a mark in a container.
+
+   The glyph grew from 16 to 22 in the same move, because the disc was what
+   made a small arrow findable and there is no disc now. The padding is the
+   touch target the disc used to be, and the matching negative margin keeps
+   the ink flush with the column the title and the notes are in — otherwise
+   the arrows sit ten pixels inside every other edge on the screen. */
 .ses-caret {
-  width: 36px; height: 36px; border-radius: 50%; padding: 0;
+  padding: 8px 10px; margin: 0 -10px;
   display: flex; align-items: center; justify-content: center;
-  border: 1px solid var(--border); background: transparent; color: var(--ink-soft); cursor: pointer;
-  transition: color 0.15s, border-color 0.15s;
+  border: none; background: transparent; color: var(--ink-faint); cursor: pointer;
+  transition: color 0.15s;
 }
-.ses-caret:hover { color: var(--ink); border-color: var(--ink-faint); }
+.ses-caret:hover { color: var(--ink); }
 
 /* ── The picker ────────────────────────────────────────────────────────── */
 /* Room for the nav row. On the page it is fixed and floats over the top,

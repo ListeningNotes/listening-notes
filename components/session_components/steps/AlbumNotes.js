@@ -28,7 +28,6 @@ export default function AlbumNotes({
   setFavorite,
   Formative,
   setFormative,
-  onNext,
 }) {
   const list = tracks || [];
   const rated = Object.values(trackRatings || {}).filter(v => v > 0);
@@ -43,7 +42,12 @@ export default function AlbumNotes({
   return (
     <div>
       {list.length > 0 && hasRatings && (
-        <div style={{ marginBottom: 30 }}>
+        /* No bottom margin: the reveal is the last thing in here now, and
+           the gap down to the marks is set once, by .ses-marks, rather than
+           by this block's margin and that one's adding up to 48px of nothing
+           (Miyel, 2026-09-18: "gap between reveal average and tags too
+           wide"). */
+        <div>
           {/* "Horizon" (Miyel, 2026-09-18). It read "Listening horizon" on a
               screen inside a listen, which is one of the two words doing no
               work. Centred over the chart it names, rather than tucked into
@@ -192,10 +196,13 @@ export default function AlbumNotes({
       />
       <div className="ses-label" style={{ marginTop: 8, textAlign: 'right' }}>{overallNotes.length} chars</div>
 
-      {/* The same quiet link the tracks screen leaves with. */}
-      <div className="ses-center" style={{ marginTop: 30 }}>
-        <button type="button" className="ses-quiet" onClick={onNext}>Preview →</button>
-      </div>
+      {/* "Preview →" sat here until 2026-09-18. The left swipe has reached
+          the preview from this screen the whole time, and Miyel's call was
+          that the arrow under it was saying out loud what the gesture
+          already does: "i think its intuitive enough that theyre not
+          needed." The note field is the last thing on the screen now, which
+          is the right last thing — it can grow as far as it likes with
+          nothing underneath waiting to be pushed down. */}
     </div>
   );
 }
