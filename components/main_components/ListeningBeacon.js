@@ -148,7 +148,7 @@ export default function ListeningBeacon({ children = null, choosing = false, emp
               on it. See the note at the top: greyed art carries its own
               caption and this line would be the second copy of it. Never
               green; the dot beside it is the one thing that lights. */}
-          {!choosing && !emptied && (isLive || !artUrl) && <div className="beacon-status">{CAPTION[state]}</div>}
+          {!emptied && (isLive || !artUrl) && <div className="beacon-status">{CAPTION[state]}</div>}
           {/* Two lines, not a marquee. The marquee is the right answer in the
               nav row, where the slot is a couple of hundred pixels wide and
               there is nowhere for a long title to go — but here the title has
@@ -159,8 +159,14 @@ export default function ListeningBeacon({ children = null, choosing = false, emp
           {/* The record steps aside while something else is being said. The
               cover is still there, which is the whole point; what goes is the
               name of a record you are in the middle of replacing. */}
-          {!choosing && <div className="beacon-track beacon-track--wrap">{title}</div>}
-          {!choosing && artist && <div className="beacon-artist">{artist}</div>}
+          {/* Kept on the page while a record is being chosen, and collapsed by
+              the stylesheet on the same clock as everything else. They were
+              simply removed, which took 187px out of the card in one frame —
+              and a card that is suddenly shorter re-centres, so the cover
+              *dropped* 59px before it began climbing. Measured 2026-09-18,
+              and it is the last of what Miyel kept calling not fluid. */}
+          <div className="beacon-track beacon-track--wrap">{title}</div>
+          {artist && <div className="beacon-artist">{artist}</div>}
           {children}
         </div>
       </div>
