@@ -113,6 +113,42 @@
    .ln-pin on this bar is ever an anchor, so the underline is taken off here
    rather than on the shared class. */
 .ses-preview-bar a.ln-pin { text-decoration: none; }
+/* ── Trouble ───────────────────────────────────────────────────────────────
+   The same band, in the same place, when something has gone wrong — see
+   components/session_components/Trouble.js for what it replaced and why it is
+   a band rather than a box in the middle of the screen.
+
+   The red is the line across the top and nothing else. It was going to be the
+   message, and the message is half reassurance — your writing is safe — which
+   is not a sentence to set in the colour of alarm. So the signal is red and
+   the words are ink: you know what kind of thing it is before you have read
+   it, and then you read it calmly. Same red the hearts are, which is the only
+   red this software owns. */
+.ses-trouble {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 240;
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
+  padding: 18px 20px calc(16px + env(safe-area-inset-bottom, 0px));
+  background: var(--bg);
+  border-top: 1px solid var(--fav);
+}
+.ses-trouble-says {
+  margin: 0; max-width: 42ch; text-align: center;
+  font-size: 14px; line-height: 1.55; color: var(--ink);
+}
+/* The machine's own account, kept rather than swallowed: it is what gets read
+   out to somebody who can fix it, and `invalid input syntax for type integer:
+   "4.5"` is exactly how migration 019 was found. Selectable on purpose — on a
+   phone the way that sentence reaches anybody is a long press and a copy — and
+   allowed to break mid-word, because an error message is not language and will
+   not wrap where a word ends. */
+.ses-trouble-because {
+  margin: 0; max-width: 42ch; text-align: center;
+  font-family: var(--font-label); font-size: 9px; line-height: 1.6;
+  letter-spacing: 0.08em; color: var(--ink-faint);
+  overflow-wrap: anywhere; user-select: text; -webkit-user-select: text;
+}
+.ses-trouble .ln-pin { line-height: 13px; }
+
 /* The height a pin has on the entry's bar, kept by hand. There it comes free:
    every pin carries a 13px glyph and the icon sets the line box. Nothing on
    this bar carries one, so without this the pins come out two pixels shorter
