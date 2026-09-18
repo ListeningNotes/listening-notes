@@ -132,20 +132,62 @@
 }
 .ses-quiet:hover { color: var(--ink-soft); }
 
-/* Toggles for the three marks. Small enough that all three sit in one row
-   on a phone, and each takes its own colour once it is on — the same three
-   the archive card and the entry use. */
-.ses-flag {
-  display: inline-flex; align-items: center; gap: 6px;
-  padding: 8px 12px; border-radius: 999px;
-  border: 1px solid var(--border); background: transparent; color: var(--ink-faint);
-  font-family: var(--font-label); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase;
-  cursor: pointer; transition: color 0.15s, border-color 0.15s, background 0.15s;
+/* ── The three marks ───────────────────────────────────────────────────────
+   A glyph over a word, which is the one shape this software uses to mean
+   "here is something you can do" — an entry's ···, the address book's doors,
+   the band at the foot of the cross. They were pills at 12px until
+   2026-09-18, and a small glyph inside a bordered lozenge reads as a *tag*,
+   something describing the record, rather than as something to press. Miyel
+   was skipping them.
+
+   No container: a control is the mark, not a mark in a container (DECISIONS,
+   2026-09-17). What grew is the mark itself, from 12px to 24, and the row
+   still fits three on a 320px phone — 3 × 72 is 216 of 288. Measured.
+
+   Set, the mark fills and takes its own colour and the word goes to ink;
+   unset, both are faint. So the difference between a record you marked and
+   one you did not is a colour arriving, not a border changing weight. */
+.ses-marks {
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 22px;
 }
-.ses-flag--on { background: var(--panel-strong); }
-.ses-flag--mp.ses-flag--on { color: var(--mp); border-color: var(--mp); }
-.ses-flag--fav.ses-flag--on { color: var(--fav); border-color: var(--fav); }
-.ses-flag--formative.ses-flag--on { color: var(--formative); border-color: var(--formative); }
+.ses-mark {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  width: 72px;
+  padding: 6px 0;
+  border: 0;
+  background: none;
+  color: var(--ink-faint);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: color 0.18s;
+}
+.ses-mark-word {
+  font-family: var(--font-label);
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  line-height: 1;
+  transition: color 0.18s;
+}
+.ses-mark:hover { color: var(--ink-soft); }
+/* Masterpiece is not pressed — it is what the tracklist says. */
+.ses-mark--said { cursor: default; }
+.ses-mark--mp.ses-mark--on { color: var(--mp); }
+.ses-mark--fav.ses-mark--on { color: var(--fav); }
+.ses-mark--formative.ses-mark--on { color: var(--formative); }
+/* The word goes to ink when the mark is set, so the pair reads as one thing
+   turning on rather than a coloured glyph over a grey caption. */
+.ses-mark--on .ses-mark-word { color: var(--ink); }
+.ses-mark:focus-visible { outline: none; }
+.ses-mark:focus-visible .ses-mark-word { color: var(--ink); text-decoration: underline; }
+@media (max-width: 360px) { .ses-mark { width: 64px; } }
 
 /* The same frosted recipe every other input on the site uses. */
 .ses-input {

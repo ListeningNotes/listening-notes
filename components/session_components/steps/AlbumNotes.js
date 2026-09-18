@@ -3,7 +3,6 @@
 'use client';
 import { useState } from 'react';
 import { Heart, SketchLogo, Fingerprint } from '@phosphor-icons/react';
-import { colors } from '../../../library/sitewide_visuals';
 import StarRating from '../StarRating';
 import HorizonChart from '../../main_components/HorizonChart';
 
@@ -39,7 +38,7 @@ export default function AlbumNotes({
   // A running average shouldn't steer the score before it's been decided.
   const [avgShown, setAvgShown] = useState(false);
 
-  const flag = (on, kind) => `ses-flag ses-flag--${kind}${on ? ' ses-flag--on' : ''}`;
+  const flag = (on, kind) => `ses-mark ses-mark--${kind}${on ? ' ses-mark--on' : ''}`;
 
   return (
     <div>
@@ -75,10 +74,30 @@ export default function AlbumNotes({
         <StarRating value={rating} onChange={setRating} size={38} />
       </div>
 
-      {/* Phosphor's SketchLogo, Heart and Fingerprint — the same three marks an
-          archive card carries, in the same three colours, which the pill takes
-          on once the mark is set. */}
-      <div className="ses-actions ses-actions--center" style={{ marginTop: 18, gap: 6 }}>
+      {/* ── The marks ─────────────────────────────────────────────────────
+          Phosphor's SketchLogo, Heart and Fingerprint — the same three an
+          archive card carries, in the same three colours.
+
+          They were pills for a long time and Miyel's note on 2026-09-18 was
+          that they are easy to miss: "I feel like I might skip marking it as
+          formative or favorite… I do think they belong on this screen." Both
+          halves of that are right, and a pill was the reason for the first.
+          A 12px glyph inside a bordered lozenge reads as a tag — a label
+          describing the record — rather than as something to press, and a
+          row of tags under a score is furniture you scroll past.
+
+          So they are a glyph over a word now, at the size the rest of the
+          site says that to you in: an entry's ···, the address book's doors,
+          the band at the foot. It is the one shape this software uses to mean
+          *here is something you can do*, and it is four times the mark it was.
+          No container, which is the rule as well — a control is the mark, not
+          a mark in a container (DECISIONS, 2026-09-17) — so what grew is the
+          thing itself rather than a box around it.
+
+          Set, the mark fills and takes its own colour and the word goes to
+          ink. Unset, both are faint and the mark is an outline: an offer
+          rather than a claim. */}
+      <div className="ses-marks">
         {/* Masterpiece is not pressed here either, 2026-09-17. It is read off
             the tracklist — every track rated, every rating five — so it turns
             up when it is true and is simply absent when it is not. Nothing to
@@ -88,18 +107,30 @@ export default function AlbumNotes({
             wrong act — awarding yourself the mark rather than finding you had
             earned it. The burst belongs to the arriving, if it comes back. */}
         {Masterpiece && (
-          <span className={flag(true, 'mp')} title="Every track is five stars">
-            <SketchLogo size={12} weight="fill" color={colors.mp} aria-hidden="true" />
-            Masterpiece
+          <span className={flag(true, 'mp') + ' ses-mark--said'} title="Every track is five stars">
+            <SketchLogo size={24} weight="fill" aria-hidden="true" />
+            <span className="ses-mark-word">Masterpiece</span>
           </span>
         )}
-        <button type="button" className={flag(Favorite, 'fav')} onClick={() => setFavorite(!Favorite)} aria-pressed={Favorite}>
-          <Heart size={12} weight={Favorite ? 'fill' : 'regular'} color={Favorite ? colors.fav : 'currentColor'} aria-hidden="true" />
-          Favorite
+        <button
+          type="button"
+          className={flag(Favorite, 'fav')}
+          onClick={() => setFavorite(!Favorite)}
+          aria-pressed={Favorite}
+          title="A record you love"
+        >
+          <Heart size={24} weight={Favorite ? 'fill' : 'regular'} aria-hidden="true" />
+          <span className="ses-mark-word">Favorite</span>
         </button>
-        <button type="button" className={flag(Formative, 'formative')} onClick={() => setFormative(!Formative)} aria-pressed={Formative}>
-          <Fingerprint size={12} weight="bold" color={Formative ? colors.formative : 'currentColor'} aria-hidden="true" />
-          Formative
+        <button
+          type="button"
+          className={flag(Formative, 'formative')}
+          onClick={() => setFormative(!Formative)}
+          aria-pressed={Formative}
+          title="A record that made you"
+        >
+          <Fingerprint size={24} weight={Formative ? 'fill' : 'regular'} aria-hidden="true" />
+          <span className="ses-mark-word">Formative</span>
         </button>
       </div>
 
