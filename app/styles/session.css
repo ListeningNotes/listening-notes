@@ -666,12 +666,34 @@
    (.idc-counts, .idc-count, .idc-genres) rather than a copy of them, so the
    two cannot drift. What is below is the difference this screen needs and
    nothing else. */
-.ses-facts { margin: 0; padding: 0; }
-/* No line over it. On the card the band is in the middle of a page and needs
-   a rule at each end; here the step's own header is already a line across the
-   screen directly above, and two would read as a box. The lower rule stays —
-   it is what separates the numbers from the list they are about. */
-.ses-facts .idc-counts { margin-top: 0; padding-top: 0; border-top: none; }
+/* One rule, and it closes the whole block rather than sitting inside it.
+   On the card the band is in the middle of a page and is ruled at each end;
+   here the step's own header is already a line across the screen directly
+   above, so a second would read as a box — and the band's lower rule was
+   cutting the genre and label off from the numbers they belong with. Miyel:
+   "put the genre and label tags above that line, then a line and tracklist
+   under." So the rule moves to the foot of .ses-facts, under everything the
+   record has to say about itself and over the list of what is on it. */
+.ses-facts {
+  margin: 0;
+  padding: 0 0 16px;
+  border-bottom: 1px solid var(--border);
+}
+.ses-facts .idc-counts {
+  margin-top: 0; padding-top: 0;
+  border-top: none; border-bottom: none;
+}
+/* Digits at full size, their units small between them — see the note in
+   RecordContents.js. Not italic despite the <i>: that tag is here for the
+   fragment it is, not for a slant. */
+.ses-unit {
+  font-family: var(--font-label);
+  font-style: normal; font-weight: 400;
+  font-size: 11px; letter-spacing: 0.04em;
+  color: var(--ink-faint);
+  margin: 0 5px 0 2px;
+}
+.ses-unit:last-child { margin-right: 0; }
 /* A fact and its word travel together, so the line wraps as two things rather
    than four. The card's own line is one label and a run of genres, which has
    no such problem. */

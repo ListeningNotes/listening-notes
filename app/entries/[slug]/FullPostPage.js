@@ -615,6 +615,31 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   // handed the bucket back — until now nothing on the page ever asked for it,
   // so there was no way to leave one and nothing would have shown it.
   const albumComments = commentsByTrack['-1'] || [];
+  // ── When there is nothing under the fold ────────────────────────────────
+  // A listen can be a cover, a score and nothing else since 2026-09-18, and
+  // Miyel logged one and found what it does: "it scrolls down to a header
+  // with nothing. I don't even think there should be an option to scroll down
+  // on those entries. Maybe it just shakes on the screen to let people know
+  // there's no notes."
+  //
+  // Every section on screen two hides itself when it is empty, which was the
+  // right instinct one section at a time and adds up to a screen that is
+  // nothing but its own sticky header. So the screen itself goes, and the
+  // caret that pointed at it stays and wobbles — an answer rather than a
+  // journey to an empty room. Shown rather than removed, because a control
+  // that vanishes on some records and not others is a control nobody trusts.
+  //
+  // Never while a correction is open: the note field lives down there, and an
+  // entry with no note is exactly the one somebody would open a correction to
+  // write one on.
+  const nothingBelow = !edit.editing
+    && !albumNotes
+    && albumComments.length === 0
+    && parsedTracks.length === 0
+    && horizonBars.length === 0;
+  // The wobble. Held for as long as it plays and no longer.
+  const [wobble, setWobble] = useState(false);
+
 
   // Load the thread for this entry. Posts rather than gets, and sends along
   // whatever receipts this browser is holding: the reply carries the approved
@@ -788,6 +813,15 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   // snap screens and is what moves, and on a desktop the document does. The
   // test is whether .ln-screens actually overflows rather than a breakpoint,
   // so it answers the question it is really asking.
+  // Down to the notes. Nothing there means nothing happens except the caret
+  // saying so — a shake rather than a scroll to an empty room (Miyel,
+  // 2026-09-18). Guarded on `wobble` so holding the key down does not restart
+  // it into a permanent tremor.
+  function down() {
+    if (nothingBelow) { if (!wobble) setWobble(true); return; }
+    document.querySelector('.ln-screen-two')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
   function backToTheRecord() {
     const screens = document.querySelector('.ln-screens');
     const inner = document.querySelector('.ln-screen-two-scroll');
@@ -1004,13 +1038,19 @@ export default function FullPostPage({ entry, references = [], authed = false, l
         )}
         </div>
         </div>
+        {/* Down to the notes — or, when there are none, a wobble in place.
+            See `nothingBelow` above for why the screen it points at is not
+            drawn at all in that case. The answer is the same to a finger and
+            to a keyboard, so both go through `down`. */}
         <div
-          className="ln-scroll-cue"
+          className={'ln-scroll-cue' + (nothingBelow ? ' ln-scroll-cue--none' : '') + (wobble ? ' ln-scroll-cue--wobble' : '')}
           role="button"
           tabIndex={0}
-          aria-label="Scroll to the notes"
-          onClick={() => document.querySelector('.ln-screen-two')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
-          onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') document.querySelector('.ln-screen-two')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }}
+          aria-label={nothingBelow ? 'Nothing written about this listen' : 'Scroll to the notes'}
+          title={nothingBelow ? 'Nothing written about this listen' : undefined}
+          onClick={down}
+          onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); down(); } }}
+          onAnimationEnd={() => setWobble(false)}
         >
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="6 9 12 15 18 9" />
@@ -1118,6 +1158,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
           stays put at the top while everything below scrolls inside it, the
           way Recent Listens does on the homepage. On desktop it is a plain
           wrapper and the page scrolls normally. */}
+      {!nothingBelow && (
       <section className="ln-screen-two">
       {/* Between the header band and the notes, and outside the scroller, so
           it holds still while the writing moves under it. Hidden on desktop by
@@ -1265,7 +1306,8 @@ export default function FullPostPage({ entry, references = [], authed = false, l
       </div>
 
       </div>{/* .ln-screen-two-scroll */}
-      </section>{/* .ln-screen-two */}
+      </section>
+      )}{/* .ln-screen-two */}
 
       </div>{/* .ln-screens */}
 
