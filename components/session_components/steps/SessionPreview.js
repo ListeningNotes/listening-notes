@@ -3,6 +3,7 @@
 'use client';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { ArrowLeft, ArrowRight, Check, Plus } from '@phosphor-icons/react';
 import { serializeTracks } from '../../../library/entry_formatter';
 import FullPostPage from '../../../app/entries/[slug]/FullPostPage';
 import { LayerHeaderSlot } from '../../main_components/LayerEntry';
@@ -128,34 +129,69 @@ export default function SessionPreview({
           rather than patching a page built for the old text. */}
       <FullPostPage key={entry.notes.length + ':' + entry.tracks.length} entry={entry} references={[]} layered preview />
 
-      {/* The foot: two quiet links, a centred pair. "Go back" and "Save to
-          journal" — Miyel's words, 2026-09-18, and both shorter than what
-          they replaced ("← Return to session", "Save to journal →"). The
-          arrows went with the ones at the foot of the tracks and album
-          screens the same day: a button that says go back does not need to
-          be told which way that is. */}
+      {/* ── The foot ────────────────────────────────────────────────────
+          The editing bar, borrowed. When you open a correction on a real
+          entry, the two things you can do with it sit on a solid band at the
+          bottom of the page with a hairline over them — Save and Cancel, as
+          .ln-pin buttons. This is the same moment wearing different words,
+          so on 2026-09-18 it became the same bar: "maybe we can mimick the
+          edit screen for preview… unlike edit being cancel and save it will
+          be go back and save to journal."
+
+          It was two quiet underlined links over a gradient before that. The
+          gradient is the thing worth naming: it faded the writing out under
+          the buttons, which is right over album art and wrong over prose —
+          the last line of an album note read *through* the controls. A line
+          and the page's own colour is how the entry solved that, and there
+          was no reason for this screen to solve it twice.
+
+          Why "Go back" is not Cancel: cancelling an edit throws the change
+          away, and going back to the session throws nothing away at all. The
+          words have to differ because the acts do. */}
       <div className={'ses-preview-bar' + (saved ? ' ses-preview-bar--done' : '')}>
         {!saved ? (
           <>
-            <button type="button" className="ses-quiet" onClick={onBack}>Go back</button>
-            {!overallNotes.trim()
-              ? <span className="ses-label">Write an album note to save</span>
-              : (
-                <button type="button" className="ses-quiet ses-quiet--lead" onClick={doSave} disabled={saving}>
-                  {saving ? 'Saving…' : 'Save to journal'}
-                </button>
-              )}
+            <button type="button" className="ln-pin" onClick={onBack} disabled={saving}>
+              <ArrowLeft size={13} weight="bold" aria-hidden="true" />
+              <span>Go back</span>
+            </button>
+            {/* Disabled rather than absent while there is no album note. A
+                button that vanishes leaves you looking for it; one that is
+                there and dim tells you there is a condition, and the line
+                above the bar says what it is. */}
+            <button
+              type="button"
+              className="ln-pin ln-pin--on"
+              onClick={doSave}
+              disabled={saving || !overallNotes.trim()}
+            >
+              <Check size={13} weight="bold" aria-hidden="true" />
+              <span>{saving ? 'Saving' : 'Save to journal'}</span>
+            </button>
           </>
         ) : (
           <>
-            <span className="ses-label" style={{ color: 'var(--ink)' }}>✓ Saved</span>
+            <span className="ln-editing-label">Saved</span>
             {savedEntry?.slug && (
-              <a href={`/entries/${savedEntry.slug}`} className="ses-btn ses-btn--primary">Read it →</a>
+              <a href={`/entries/${savedEntry.slug}`} className="ln-pin ln-pin--on">
+                <ArrowRight size={13} weight="bold" aria-hidden="true" />
+                <span>Read it</span>
+              </a>
             )}
-            <button type="button" className="ses-btn" onClick={onAnother}>Log another</button>
+            <button type="button" className="ln-pin" onClick={onAnother}>
+              <Plus size={13} weight="bold" aria-hidden="true" />
+              <span>Log another</span>
+            </button>
           </>
         )}
       </div>
+      {/* Why you cannot save yet, over the bar rather than in it — the same
+          place and the same shape as the entry's .ln-trouble. In the bar it
+          would have to share a row with two buttons at 9px uppercase, which
+          on a phone is three things fighting for one line. */}
+      {!saved && !overallNotes.trim() && (
+        <p className="ses-preview-why">Write an album note to save</p>
+      )}
     </div>
     </LayerHeaderSlot.Provider>,
     host
