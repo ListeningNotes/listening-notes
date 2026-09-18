@@ -657,22 +657,26 @@
    Label and value on one line with a hairline between, which is the shape a
    record's back cover uses and the reason it reads at a glance. A row with
    nothing behind it is not drawn — see the filter in the component. */
+/* ── The facts ─────────────────────────────────────────────────────────────
+   Five label-and-value rows lived here until 2026-09-18, stacked above a
+   tracklist that is also stacked. Two lists on one screen and only one of them
+   is a list, which is Miyel's note exactly.
+
+   It is the identity card's counts band now, drawn with the card's own classes
+   (.idc-counts, .idc-count, .idc-genres) rather than a copy of them, so the
+   two cannot drift. What is below is the difference this screen needs and
+   nothing else. */
 .ses-facts { margin: 0; padding: 0; }
-.ses-fact {
-  display: flex; align-items: baseline; justify-content: space-between; gap: 18px;
-  padding: 11px 0;
-  border-bottom: 1px solid var(--border);
-}
-.ses-fact:first-child { border-top: 1px solid var(--border); }
-.ses-fact dt { margin: 0; }
-.ses-fact-value {
-  margin: 0;
-  font-family: var(--font-label);
-  font-size: 12px;
-  letter-spacing: 0.04em;
-  color: var(--ink);
-  text-align: right;
-}
+/* No line over it. On the card the band is in the middle of a page and needs
+   a rule at each end; here the step's own header is already a line across the
+   screen directly above, and two would read as a box. The lower rule stays —
+   it is what separates the numbers from the list they are about. */
+.ses-facts .idc-counts { margin-top: 0; padding-top: 0; border-top: none; }
+/* A fact and its word travel together, so the line wraps as two things rather
+   than four. The card's own line is one label and a run of genres, which has
+   no such problem. */
+.ses-said { display: inline-flex; align-items: baseline; gap: 7px; }
+.ses-facts .idc-genres { margin: 12px 0 0; gap: 4px 16px; }
 
 /* ── The tracklist ─────────────────────────────────────────────────────────
    Number, title, and a hairline as long as that track is against the longest

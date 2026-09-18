@@ -29,14 +29,13 @@ import StarRating from '../../main_components/StarRating';
 
 // `43 min`, and `1 hr 12 min` past an hour. Rounded to the minute because
 // nobody has ever wanted a record's length to the second.
+// Minutes, as a number on its own. It read "13 min" and then "1 hr 12 min"
+// until 2026-09-18, which was right for a row in a list and is wrong in a
+// band where every cell is one figure over one word. A long record says 72
+// rather than 1 hr 12 min, which is the same fact in the shape the band is.
 function runtimeOf(tracks) {
   const secs = (tracks || []).reduce((total, t) => total + (Number(t.duration) || 0), 0);
-  if (!secs) return '';
-  const mins = Math.round(secs / 60);
-  if (mins < 60) return `${mins} min`;
-  const hrs = Math.floor(mins / 60);
-  const rest = mins % 60;
-  return rest ? `${hrs} hr ${rest} min` : `${hrs} hr`;
+  return secs ? String(Math.round(secs / 60)) : '';
 }
 
 // The arrival plays once a listen, not every time you come back to the step.
@@ -113,14 +112,34 @@ export default function RecordContents({
     );
   }
 
-  const runtime = runtimeOf(list);
-  // Every row that has something behind it, and no row that has not. A blank
-  // value beside a label is worse than a missing line: it reads as a fact the
-  // record does not have rather than one nobody knows.
-  const rows = [
-    ['Tracks', String(list.length)],
-    ['Runtime', runtime],
-    ['Released', facts.released || ''],
+  // ── The facts, in the identity card's shape ──────────────────────────
+  // Five label-and-value rows until 2026-09-18, stacked one under another
+  // above a tracklist that is also stacked one under another. Two lists on
+  // one screen, and only one of them is a list. Miyel: "the tracklist should
+  // be the only thing that reads as a list. Maybe the other things are the
+  // number with what it is under, like albums, masterpieces and formative."
+  //
+  // That is the card's own counts band, and the classes below are literally
+  // its classes rather than a copy of them — a figure over a word, three
+  // across, in a ruled band. Nothing here can drift away from what the card
+  // does, because it is what the card does.
+  //
+  // The split is what each fact *is*. Three are numbers and belong in the
+  // band; genre and a label are words, and words set at 26px in a third of a
+  // phone's width are not a count, they are a headline. So they take the line
+  // the card gives its genres, underneath — which is the card's answer to the
+  // same problem, arrived at for the same reason.
+  //
+  // Every cell that has something behind it, and none that has not. A blank
+  // under a word is worse than a missing cell: it reads as a fact the record
+  // does not have rather than one nobody knows.
+  const counts = [
+    ['tracks', String(list.length)],
+    ['minutes', runtimeOf(list)],
+    ['released', facts.released || ''],
+  ].filter(([, value]) => value);
+
+  const said = [
     ['Genre', facts.genre || ''],
     ['Label', facts.label || ''],
   ].filter(([, value]) => value);
@@ -159,14 +178,28 @@ export default function RecordContents({
             heard it is a chart pretending to have data. The tracklist below
             says what is on the record, which is what this screen is for; the
             strip belongs to the track screen, where the bars mean something. */}
-        <dl className="ses-facts">
-          {rows.map(([label, value]) => (
-            <div className="ses-fact" key={label}>
-              <dt className="ses-label">{label}</dt>
-              <dd className="ses-fact-value">{value}</dd>
+        <div className="ses-facts">
+          {counts.length > 0 && (
+            <div className="idc-counts">
+              {counts.map(([word, n]) => (
+                <div className="idc-count" key={word}>
+                  <b className="idc-count-n">{n}</b>
+                  <span className="idc-count-word">{word}</span>
+                </div>
+              ))}
             </div>
-          ))}
-        </dl>
+          )}
+          {said.length > 0 && (
+            <p className="idc-genres">
+              {said.map(([label, value]) => (
+                <span className="ses-said" key={label}>
+                  <span className="idc-genres-label">{label}</span>
+                  <span className="idc-genres-said">{value}</span>
+                </span>
+              ))}
+            </p>
+          )}
+        </div>
       </div>
 
       <ol className="ses-contents-list">
