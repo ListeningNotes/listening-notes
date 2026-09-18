@@ -34,6 +34,10 @@ import { useMemo, useSyncExternalStore } from 'react';
 import { useBookplate } from '../components/main_components/Bookplate';
 
 const REFRESH_MS = 15000;  // ask our own server every 15 seconds
+// How long the owner's own hand outranks the server's answer. It has to clear
+// the ten seconds /api/public/beacon may be served from the edge cache, plus a
+// poll's own flight — see `announce` and the check in `poll`.
+const HOLD_MS = 12000;
 
 // The same key the database generates for every entry, written out in
 // JavaScript so a record can be matched against the journal without asking
@@ -77,6 +81,9 @@ const beacon = {
   snapshot: EMPTY,
   listeners: new Set(),
   timer: null,
+  // What the owner just did, and until when it beats anything the server says.
+  held: null,
+  heldUntil: 0,
 };
 
 // Re-rendering four components every fifteen seconds to tell them the same
@@ -120,9 +127,7 @@ async function poll() {
   }
 
   const state = data?.state || 'none';
-  if (state === 'none') { publish(EMPTY); return; }
-
-  const snapshot = {
+  const snapshot = state === 'none' ? EMPTY : {
     state,
     album: data.album || '',
     artist: data.artist || '',
@@ -131,6 +136,39 @@ async function poll() {
     isLive: state === 'logging',
     before: Array.isArray(data.before) ? data.before : [],
   };
+
+  // ── An answer from before the owner moved ────────────────────────────────
+  // Miyel, 2026-09-18, on saving a listen: "for some reason it came back
+  // (beacon) but then went right back off?" The drop had just put the record
+  // on the beacon captioned Last logged, correctly — and a second later it
+  // went live again, and fifteen seconds after that it went quiet again.
+  //
+  // Nothing was wrong with the needle. What lands is a poll that *left*
+  // before the save: these requests take three to seven hundred milliseconds,
+  // so one sent while the entry was being written comes back afterwards
+  // carrying the world as it was, and publishes it over the truth. In
+  // production it is worse than a request in flight — the answer may be
+  // served from the edge for ten seconds after the needle is already down.
+  //
+  // So `announce` does not just publish now, it *holds*: for twelve seconds
+  // the owner's own hand outranks the server, and any answer that disagrees
+  // with what they just did is dropped on the floor. The moment the server
+  // agrees the hold is released, so the usual case costs one poll.
+  //
+  // Only state and album are compared, because those are the two things
+  // `announce` actually asserts. Everything else on the snapshot — the song,
+  // the covers underneath — is the server's to know, and waiting for it to
+  // agree about those would hold every time.
+  //
+  // Twelve seconds is a ceiling, not a duration: it is what stops a hold
+  // wedging the beacon if the server genuinely disagrees, for instance
+  // because the same journal is being written in on another phone.
+  if (beacon.heldUntil > Date.now()) {
+    const caughtUp = snapshot.state === beacon.held.state
+      && snapshot.album === beacon.held.album;
+    if (!caughtUp) return;
+    beacon.heldUntil = 0;
+  }
 
   // An eight-second grace window used to sit here. Last.fm leaves a gap between
   // one track being marked as stopped and the next as playing, so a scrobbling
@@ -165,7 +203,7 @@ async function poll() {
 // slot refills with it, captioned Last logged, without waiting to be told
 // something it already knows.
 export function announce({ album, artist, art }, state = 'logging') {
-  publish({
+  const next = {
     state,
     album: album || '',
     artist: artist || '',
@@ -175,7 +213,12 @@ export function announce({ album, artist, art }, state = 'logging') {
     track: '',
     isLive: state === 'logging',
     before: beacon.snapshot.before || [],
-  });
+  };
+  // Held before it is published, so a poll that answers mid-publish is already
+  // being measured against this.
+  beacon.held = next;
+  beacon.heldUntil = Date.now() + HOLD_MS;
+  publish(next);
 }
 
 // Coming back to the tab. One ask straight away — somebody who has just looked
