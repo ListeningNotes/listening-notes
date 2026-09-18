@@ -130,11 +130,30 @@ day. A sun and a moon — drawn as a switch on a wall for an hour on the
 grounds that the component is called Lightswitch, and the file name was the
 whole argument.
 
+**A control is the mark, not a mark in a container, 2026-09-17.** Miyel
+generally does not like the look of pills, and they had started appearing
+wherever something needed to be pressable — a heart in a bordered lozenge, a
+tick in a filled circle. The rule: a thing with its own mark wears it plainly
+and earns its touch target from padding with a matching negative margin, so a
+thumb gets its 44px and the eye sees only the mark. `.ln-pill` keeps its jobs —
+navigation, and the one primary action a screen has — and stops being the
+default shape for everything else.
+
 **No loose icons in headers, 2026-09-15.** The mark is centred and the sides
 are for navigation. A single ··· is not a row of tools, it is a door, and it
 is allowed. Anything that acts on the thing you are looking at goes behind
 that thing's ···; the desk's rows are for places you go, not tools you use on
 what is in front of you.
+
+**The ··· carries six tools on an entry, each a glyph over a word,
+2026-09-17.** Share, Edit, Credit, Send, Relisten, Delete — Share nearest the
+door, because it is the shortest reach and the one most often wanted; Delete
+furthest and red. Words appear at four tools and not on a
+particular surface: three glyphs in a corner are learned in one press and six
+are not, so six say what they are, in the band's own glyph-over-a-word. The
+card's two stay bare. Measured, because it is the kind of rule that overflows
+quietly: 326px of a 375px row, 290px of a 320px one. This amends the three
+tools below.
 
 **An owner's tools are one ···, top right, opened in the row, 2026-09-15.**
 On an entry: Edit, Print, Delete. On the ID pane: Edit and Print. Owner only,
@@ -715,6 +734,20 @@ deliberate. **Considered and rejected as flags:** Unfinished (needs a rating
 exception and collides with "a journal of things worth writing about"), Live,
 Sleeper, Comfort.
 
+**Masterpiece is computed, not chosen, 2026-09-17.** Every track rated, every
+rating five, and the mark appears; anything else and it does not. Nothing
+presses it — not the session, not a correction — and the writer derives it
+wherever an entry is written, beside `track_notes` and the horizon. It is not a
+generated column, where it belongs on paper: `rating_value` is already
+generated and already reads `masterpiece`, and Postgres will not let one
+generated column depend on another. **Correcting a track from five to four
+takes the mark off**, which is the point rather than a hole — the entry scores
+what it scores. Favorite and Formative stay personal, and stay pressable;
+Masterpiece is the one flag with an objective definition, which is what lets
+the other two be subjective and what makes two journals comparable at all.
+Checked before shipping: the rule agreed with all 40 entries, so nothing
+gained or lost the mark.
+
 **Favorite applies to tracks and albums. Masterpiece and Formative are
 album-only.** Masterpiece is a full five-star tracklist, which cannot apply to
 a single track.
@@ -747,6 +780,14 @@ nearly always a wrong match. Outside a correction the cover is a picture.
 ---
 
 ## Sharing
+
+**The printer's word to a reader is Share, 2026-09-17.** *Print* described the
+mechanism and nobody prints anything; the tool makes a picture to post, which
+is what everybody calls sharing. It takes the phone's own share glyph with it.
+This softens the entry below rather than undoing it — the two things are still
+two, and the tool's whole sentence says which one it is ("Make a picture of
+this entry to share"). The address still travels by pressing the album art,
+which remains the only path to a link and gets no control of its own.
 
 **Two different things were sharing one word, 2026-08-28.** Addresses travel
 freely, contents do not. **The printer** makes an artifact out of the owner's

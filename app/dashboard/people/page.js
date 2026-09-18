@@ -31,7 +31,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
-import { Camera, PaperPlaneTilt, User } from '@phosphor-icons/react';
+import { Camera, EnvelopeSimple, User } from '@phosphor-icons/react';
 import SiteNav from '../../../components/main_components/SiteNav';
 import CodeScanner from '../../../components/main_components/CodeScanner';
 import SendSheet from '../../../components/main_components/SendSheet';
@@ -203,7 +203,7 @@ export default function AddressBook({ layered = false }) {
                       title={`Send ${p.name || 'them'} a record`}
                       aria-label={`Send ${p.name || 'them'} a record`}
                     >
-                      <PaperPlaneTilt size={18} weight="regular" />
+                      <EnvelopeSimple size={18} weight="regular" />
                     </button>
                     <a href={carrySender(journalUrl(p.address), me, { known: true })} target="_blank" rel="noopener noreferrer" className="own-act bk-visit" title="Open their journal">
                       Visit &#8599;

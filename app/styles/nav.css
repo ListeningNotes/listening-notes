@@ -165,6 +165,56 @@
 .kt-tool--end { color: var(--fav); margin-left: 2px; }
 .kt-tool--end:hover { color: var(--fav); background: color-mix(in srgb, var(--fav) 12%, transparent); }
 
+/* ── Five tools, each a glyph over a word, 2026-09-16 ──────────────────────
+   Three icons in a corner are learned in one press. Five are not, so at five
+   each says what it is — the same glyph-over-a-word the band at the foot of
+   the phone uses, which means nobody has to learn a second vocabulary. The
+   count decides it, not the surface: the card's two stay glyphs.
+
+   46px is what makes SIX of them plus the door fit a 375px row once the mark
+   is out of the way. It was 54px for five, measured at 318px with 47px to
+   spare; a sixth at that width came to 374px against 355px of room, so the
+   boxes lost 8px each rather than the row losing a tool. The words still hold
+   one line — "Correct" is the longest at 33px. Measured, not guessed. */
+.kt-tool--said {
+  --kt-box: 48px;
+  flex-direction: column; gap: 2px;
+  width: 46px; height: auto; min-height: 46px; padding: 5px 0;
+}
+.kt-word {
+  font-family: inherit; font-size: 9.5px; line-height: 1;
+  font-weight: var(--font-display-weight); letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+/* The longest word is what decides this, and it changed twice on 2026-09-17.
+   "Log again" measured 44px inside a 46px box — two pixels of slack across
+   both sides, which never wrapped (these never wrap) but would have touched
+   its neighbours on a device rendering Nunito a hair wider. "Revisit" is
+   about 32px, so the room came back and the half point with it. Keep an eye
+   on this if a longer word ever arrives. */
+/* The mark is already hidden while the tools are out; this takes its column
+   with it, so the row is not still holding a gap the width of a logo. The
+   side padding drops at the same time, because 28px either side is the
+   sitewide rhythm for a row with one control per end and not for a row that
+   has briefly become a menu. */
+.sitenav-row[data-tooling] {
+  padding: 0 10px;
+  /* And no gaps, because there is nothing left to put one between. The row is
+     three grid tracks and while the tools are out the first two are zero wide
+     — but the two 10px gaps were still being counted, which on a 320px phone
+     pushed the tools ten pixels past the padding and flush against the edge
+     of the screen. Measured there; it never showed at 375. */
+  column-gap: 0;
+}
+.sitenav-row[data-tooling] .sitenav-logo { width: 0; overflow: hidden; }
+/* A phone narrower than the 375 everything is measured against. Six tools and
+   a door do not fit there at 46px, so they lose six more each and the word
+   drops half a point with them. */
+@media (max-width: 360px) {
+  .kt-tool--said { --kt-box: 42px; width: 40px; }
+  .kt-word { font-size: 9px; }
+}
+
 /* ── The ··· and what comes out of it ──────────────────────────────────────
    The door is the first child in the markup and never moves on the screen.
    Everywhere it appears it holds a top-right corner and opens leftwards, so
@@ -174,6 +224,12 @@
    one; nothing else would change. */
 .kt-tools {
   --kt-dir: -1;
+  /* How far one tool is from the next, which is also how far it travels out
+     of the door. It was written into the keyframes as 38px when every tool
+     was a 36px square; a tool with a word under it is wider, so the number
+     is a variable the labelled ones raise. Get these two out of step and the
+     tools stop appearing to come from behind the mark. */
+  --kt-box: 38px;
   display: flex; flex-direction: row-reverse; align-items: center; gap: 2px;
 }
 /* The door sits over the tools rather than under them, so the one still half
@@ -199,7 +255,7 @@
    the door. It grows out of a quarter of its size as it goes, because a box
    that only slides looks like it was already there and moved. */
 @keyframes kt-file-out {
-  from { opacity: 0; transform: translateX(calc(var(--kt-i) * var(--kt-dir) * -38px)) scale(0.25); }
+  from { opacity: 0; transform: translateX(calc(var(--kt-i) * var(--kt-dir) * var(--kt-box) * -1)) scale(0.25); }
   45%  { opacity: 1; }
   to   { opacity: 1; transform: translateX(0) scale(1); }
 }
@@ -224,7 +280,7 @@
 @keyframes kt-file-in {
   from { opacity: 1; transform: translateX(0) scale(1); }
   55%  { opacity: 1; }
-  to   { opacity: 0; transform: translateX(calc(var(--kt-i) * var(--kt-dir) * -38px)) scale(0.25); }
+  to   { opacity: 0; transform: translateX(calc(var(--kt-i) * var(--kt-dir) * var(--kt-box) * -1)) scale(0.25); }
 }
 .kt-tools--back .kt-tool--out {
   animation-name: kt-file-in;

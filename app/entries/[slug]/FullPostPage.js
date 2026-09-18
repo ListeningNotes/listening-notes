@@ -14,7 +14,7 @@ import { CaretUp, Check, Fingerprint, Heart, SketchLogo, VinylRecord, X } from '
 import { BookOpen } from '@phosphor-icons/react';
 import { fonts } from '../../../library/sitewide_visuals';
 import { sizedAlbumArt, fetchAlbumArtUrl } from '../../../library/music_data_api';
-import { parseHorizon, entryTracks, splitNotes, entryTypeLabel, parseRating } from '../../../library/entry_formatter';
+import { parseHorizon, entryTracks, splitNotes, entryTypeLabel, parseRating, flawless } from '../../../library/entry_formatter';
 import { kept_receipts } from '../../../library/receipts';
 import { buildReferenceIndex, createReferenceLinker } from '../../../library/cross_references';
 import SiteNav from '../../../components/main_components/SiteNav';
@@ -31,6 +31,8 @@ import CommentBubble from '../../../components/main_components/Slug_Page/Comment
 import MetadataLabel from '../../../components/main_components/Slug_Page/MetadataLabel';
 import Chip from '../../../components/main_components/Slug_Page/Chip';
 import SentBy, { creditOn, useTrail } from '../../../components/main_components/Slug_Page/SentBy';
+import SenderTool from '../../../components/main_components/Slug_Page/SenderTool';
+import SendSheet from '../../../components/main_components/SendSheet';
 import MiniAddressBook from '../../../components/main_components/MiniAddressBook';
 import PrintBar from '../../../components/main_components/Slug_Page/PrintBar';
 import HorizonChart from '../../../components/main_components/HorizonChart';
@@ -241,127 +243,31 @@ export default function FullPostPage({ entry, references = [], authed = false, l
     </div>
   );
 
-  // ── Which shelf it came off ───────────────────────────────────────────────
-  // Whether this is something from the library or something somebody sent.
-  // It is the Submission chip, set rather than read, and it was one of the two
-  // things /dashboard/entries could do that this page could not.
+  // ── Which shelf it came off, and why it is not asked here ────────────────
+  // The Library / Submission buttons left this form on 2026-09-17. They asked
+  // a question the credit already answers: naming a sender has always forced
+  // Submission, and an entry is a submission exactly when somebody sent it.
+  // Two controls for one fact meant the two could disagree — and the shelf is
+  // barely a fact a reader ever sees. **An entry never prints "Library" at
+  // all**; the only shelf word on an entry is Submission, and only where no
+  // credit line is naming the sender instead. The answer moved to where the
+  // question is asked, in SenderTool, which sets the shelf from the name.
   //
-  // The other legacy field on that form was `relationship` — First Listen,
-  // Revisit, Study. It is not here and does not come back: DECISIONS retired
-  // it, every value having dissolved into something that says it better (a
-  // revisit is the listen number, a submission is `received_from`, formative
-  // is a flag). Old rows keep their values as legacy data. Retiring that route
-  // is what finally takes the last picker off the site.
-  //
-  // Two pills rather than a dropdown, and the reason is not taste. Every input,
-  // textarea and select on this site is forced to 16px on a phone, because iOS
-  // zooms the whole page in when you focus anything smaller — so a select here
-  // came out half again the size of the Favorite and Masterpiece chips sitting
-  // beside it, in a different colour, in a row that is otherwise one object
-  // repeated. A field with two possible answers was never a dropdown anyway.
-  //
-  // Pressing the one that is already on turns it off, because "neither" is a
-  // real answer: an entry from before the column existed has no shelf, and
-  // being unable to put it back would make this a one-way door.
-  const SHELVES = [
-    { value: 'Personal Library', label: 'Library' },
-    { value: 'Submission', label: 'Submission' },
-  ];
+  // The other legacy field on the old /dashboard/entries form was
+  // `relationship` — First Listen, Revisit, Study. It is not here and does not
+  // come back: DECISIONS retired it, every value having dissolved into
+  // something that says it better (a revisit is the listen number, a
+  // submission is `received_from`, formative is a flag). Old rows keep their
+  // values as legacy data.
 
   // ── Who sent it ───────────────────────────────────────────────────────────
-  // A fact about the record, so it sits up here with the title and the
-  // flags rather than at the foot of the page (it was there until
-  // 2026-09-14, under a heading that called it private — it is not, any
-  // more: a Submission entry says "from Zach" to everyone).
-  //
-  // The name is picked off the address book where the sender is in it, so
-  // the credit resolves to their journal and not only to a spelling: the
-  // book's people are faces under the field — the portrait their journal
-  // serves, the address book's rounded square, the name beneath — in one
-  // row that scrolls sideways once there are more than fit, the way the
-  // album strip does. A face is what a friend is recognised by (Miyel,
-  // 2026-09-14: a pill saying Kai was not obviously Kailea), and one row
-  // is what forty friends look like — a strip, not a wall. Typing narrows
-  // it; the lit one is the journal the entry links to. Free text stays for
-  // somebody who sent a record and keeps no copy.
-  //
-  // Typing does not unlink. His journal calls him Zachin_Off and the entry
-  // can still say from Zach — tap his face, then write the name you use.
-  // Tapping the lit face takes the link off and leaves the name; emptying
-  // the name takes both off. And a record with a sender is a submission,
-  // so naming one turns that shelf on if it was not already.
-  const linkedTo = tidyJournal(edit.draft.received_from_url || '');
-  const senderText = String(edit.draft.received_from ?? '');
-  const sendBy = p => {
-    if (p.address === linkedTo) {
-      edit.set('received_from_url', '');
-      return;
-    }
-    edit.set('received_from', p.name || p.address);
-    edit.set('received_from_url', p.address);
-    if (edit.draft.entry_type !== 'Submission') edit.set('entry_type', 'Submission');
-  };
-  const writeSender = value => {
-    edit.set('received_from', value);
-    if (!value.trim()) {
-      edit.set('received_from_url', '');
-    } else if (!senderText.trim() && edit.draft.entry_type !== 'Submission') {
-      edit.set('entry_type', 'Submission');
-    }
-  };
-  // Absent until the private fetch lands (useEntryEditor): a field drawn
-  // before then would show empty and save empty over what is stored.
-  const senderField = 'received_from' in edit.draft && (
-    <span className="ln-sender">
-      <label className="ln-sender-row">
-        <span className="ln-sender-label">Sent by</span>
-        <input
-          className="ln-field ln-field--sender"
-          value={senderText}
-          onChange={e => writeSender(e.target.value)}
-          placeholder="Nobody — I found it"
-          autoComplete="off"
-          aria-label="Sent by"
-        />
-      </label>
-      <MiniAddressBook people={edit.book} linked={linkedTo} narrow={senderText} onPick={sendBy} />
-      {/* Whether to publish who it came from. The sender answers this on the
-          send form and it arrives already set (migrations/012), so this is
-          for the case the form could not reach: a credit added by hand from
-          the address book names somebody who was never asked, and somebody
-          may have said so in person. Off means credited, because public
-          credit is the default and quiet is the choice. */}
-      {senderText.trim() && (
-        <button
-          type="button"
-          className={'ln-flag' + (edit.draft.credit_private ? ' ln-flag--on' : '')}
-          onClick={() => edit.set('credit_private', !edit.draft.credit_private)}
-          aria-pressed={!!edit.draft.credit_private}
-          title={edit.draft.credit_private
-            ? 'Their name is kept off this record everywhere it is read'
-            : 'Their name is published on this record, as credit'}
-        >
-          Don&rsquo;t credit them
-        </button>
-      )}
-    </span>
-  );
-
-  const typeField = (
-    <span className="ln-flags-row">
-      {SHELVES.map(shelf => (
-        <button
-          key={shelf.value}
-          type="button"
-          className={'ln-flag' + (edit.draft.entry_type === shelf.value ? ' ln-flag--on' : '')}
-          onClick={() => edit.set('entry_type', edit.draft.entry_type === shelf.value ? '' : shelf.value)}
-          aria-pressed={edit.draft.entry_type === shelf.value}
-        >
-          {shelf.label}
-        </button>
-      ))}
-    </span>
-  );
+  // Sent by left this form on 2026-09-16 and is its own tool on the ···
+  // (components/main_components/Slug_Page/SenderTool.js). It was a field
+  // among fifteen, which filed the one thing on an entry that is about
+  // somebody else under fixing your own typos — and it meant the page had to
+  // become a form to answer a question with one answer. Everything that was
+  // written here about *how* it works moved with it, including why the book
+  // is faces and why typing does not unlink.
 
   // Only the way in. Save and Cancel used to sit here too, and then again in
   // the bar at the foot of the page — the same pair twice on one screen, and
@@ -486,11 +392,69 @@ export default function FullPostPage({ entry, references = [], authed = false, l
     window.addEventListener('keydown', onKey, true);
     return () => window.removeEventListener('keydown', onKey, true);
   }, [printing, finishPrinting]);
+  // Which of the two new tools is open. Separate flags rather than one mode:
+  // they are different shapes — one unfolds in the page, one rises over it —
+  // and nothing sensible happens if both are true at once anyway.
+  const [sendering, setSendering] = useState(false);
+  const [sending, setSending] = useState(false);
+  // Where a panel of this entry's own hangs its footer bar. It has to be
+  // *inside the layer*: z-index is per stacking context, the layer is fixed at
+  // 200 and the bar is 140, so a bar rendered into the body competes with the
+  // layer and loses — it draws underneath and is simply not there (found
+  // 2026-09-17, after portalling it to document.body seemed to work on a page
+  // with no layer over it). Rendered here it is a sibling of .ln-screens, the
+  // same place the correction's bar is, where 140 means "above this layer's
+  // own content" and the fixed position still resolves against the window
+  // because nothing between here and the root is transformed while a panel is
+  // open.
+  const [barSlot, setBarSlot] = useState(null);
+  // Which track is up on its own screen, or null. The index rather than the
+  // row, so the dial always reads the live draft rather than a copy taken when
+  // it opened — a rating set in the dial has to be the same one the row shows
+  // behind it.
+  const [dialTrack, setDialTrack] = useState(null);
+
+  // ── Another listen of the same record ────────────────────────────────────
+  // An album has many listens and they are numbered from the entries that
+  // exist, never chosen; entries are never overwritten and a relisten is a new
+  // one (DECISIONS). So this does not touch what is on screen — it puts the
+  // record on the desk and opens a listen, which is exactly what the inbox
+  // does when a send is picked up, through the same key.
+  //
+  // What it deliberately does not carry: the type and the credit. Where a
+  // record is from is decided by how the listen started, and this one started
+  // in the library — nobody sent it to you a second time. The art, the year,
+  // the genre and the collection id do come, because they are facts about the
+  // record and re-finding them would be asking Apple for what is already here.
+  const revisit = () => {
+    try {
+      localStorage.setItem('ln_pending_session', JSON.stringify({
+        album: entry.album,
+        artist: entry.artist || '',
+        year: entry.year || '',
+        artUrl: entry.album_art || '',
+        collectionId: entry.collection_id || null,
+        genre: entry.genre || '',
+      }));
+    } catch { /* a private window still gets the picker, one tap further on */ }
+    router.push('/session');
+  };
+
   const keeperTools = authed && !edit.editing && !printing && (
     <KeeperTools
       onEdit={edit.begin}
       slug={entry.slug}
       onPrint={() => { setPrinting(true); setLearned(false); }}
+      /* Sent by unfolds where its answer prints, in the slot under the chips,
+         rather than turning the whole page into a form for one field. */
+      onSender={() => setSendering(true)}
+      /* And Send opens the same sheet a row in the address book opens, with
+         this record already in it — the two ways in differ only in which
+         half is answered before the sheet arrives. */
+      onSend={() => setSending(true)}
+      /* And another listen of the same record, which is a new entry and never
+         an edit of this one. */
+      onRelisten={revisit}
       /* Delete opens the correction with its own confirmation already asking,
          rather than deleting from a menu. The warning and the second press
          live there and a destructive action does not get a shorter path for
@@ -553,25 +517,48 @@ export default function FullPostPage({ entry, references = [], authed = false, l
         placeholder="Genre"
         aria-label="Genre"
       />
+      {/* The flags wear their own marks here, 2026-09-17. They were three
+          identical word-pills, which is the one shape this row should not be:
+          the marks are the site's vocabulary — Heart in --fav, SketchLogo in
+          --mp, Fingerprint in --formative, restated wherever a record is drawn
+          — and a keeper setting a flag was the only place on the site that did
+          not show the thing being set. The word stays beside the mark, because
+          this is the surface where you are choosing rather than reading, and
+          DECISIONS' "marks, not words" is about the strip where an album title
+          needs the room. */}
       <span className="ln-flags-row">
       {[
-        { key: 'favorite', label: 'Favorite' },
-        { key: 'masterpiece', label: 'Masterpiece' },
-        { key: 'formative', label: 'Formative' },
+        { key: 'favorite', label: 'Favorite', Icon: Heart, weight: 'fill', tone: 'fav' },
+        { key: 'formative', label: 'Formative', Icon: Fingerprint, weight: 'bold', tone: 'formative' },
       ].map(flag => (
         <button
           key={flag.key}
           type="button"
-          className={'ln-flag' + (edit.draft[flag.key] ? ' ln-flag--on' : '')}
+          className={`ln-flag ln-flag--mark ln-flag--${flag.tone}` + (edit.draft[flag.key] ? ' ln-flag--on' : '')}
           onClick={() => edit.set(flag.key, !edit.draft[flag.key])}
           aria-pressed={!!edit.draft[flag.key]}
         >
-          {flag.label}
+          <flag.Icon size={13} weight={flag.weight} aria-hidden="true" />
+          <span>{flag.label}</span>
         </button>
       ))}
+      {/* Masterpiece is not pressed, 2026-09-17. It is what the tracklist
+          says: every track rated, every rating five. So it is shown and not
+          offered — a fact about your ratings rather than a judgement you make
+          about yourself, which is also a nicer thing to discover at the end of
+          a listen than to award yourself at the start.
+          It moves while you are correcting, which is the point: take one track
+          from five to four and the mark goes, here, before you save. */}
+      <span
+        className={'ln-flag ln-flag--mark ln-flag--mp ln-flag--said' + (flawless(edit.draft.tracks) ? ' ln-flag--on' : '')}
+        title={flawless(edit.draft.tracks)
+          ? 'Every track is five stars'
+          : 'A masterpiece is an album with an entire five-star tracklist'}
+      >
+        <SketchLogo size={13} weight="fill" aria-hidden="true" />
+        <span>Masterpiece</span>
       </span>
-      {typeField}
-      {senderField}
+      </span>
     </span>
   );
 
@@ -761,7 +748,13 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   // Keyed on the slug so a swipe to the next record starts its own walk —
   // with a prefix, because the cover beside it is keyed on the bare slug
   // and two siblings on one key had React drawing the cover twice.
-  const sentLine = credit && !edit.editing && !printing && (
+  // The slot under the chips: the line normally, the tool while it is open.
+  // It takes the slot whether or not there is a line there yet, because the
+  // place the answer prints is the place to answer it — and an entry with no
+  // sender is exactly when somebody reaches for this.
+  const sentLine = sendering && authed ? (
+    <SenderTool key={`sender-${entry.slug}`} entry={entry} barSlot={barSlot} onDone={() => setSendering(false)} />
+  ) : credit && !edit.editing && !printing && (
     <SentBy
       key={`sent-${entry.slug}`}
       entry={entry}
@@ -834,13 +827,20 @@ export default function FullPostPage({ entry, references = [], authed = false, l
         </div>
       )}
       {edit.trouble && <p className="ln-trouble">{edit.trouble}</p>}
+      <div ref={setBarSlot} />
+
+      {/* The dial itself unfolds inside the track row it belongs to
+          (TrackThread → TrackDial). Nothing is rendered here for it — but the
+          page still has to know one is open, because a drag across the stars
+          is a horizontal gesture and the layer would read it as a swipe to the
+          next record. That is the .ln-busy below. */}
 
       {/* On phones this is the scroll container the two screens snap inside —
           the same arrangement as .hp-mobile-screens on the homepage. On
           desktop it has no height or overflow of its own, so everything below
           just falls back into normal document flow. */}
       <div
-        className={'ln-screens' + (edit.editing ? ' ln-editing' : '') + (printing ? ' ln-printing' : '') + (trailOpen ? ' ln-sent-open' : '')}
+        className={'ln-screens' + (edit.editing ? ' ln-editing' : '') + (printing ? ' ln-printing' : '') + (sendering || sending || dialTrack !== null ? ' ln-busy' : '') + (sendering ? ' ln-crediting' : '') + (trailOpen ? ' ln-sent-open' : '')}
         data-ground={printing ? ground : undefined}
         data-size={printing ? size : undefined}
         onTouchStart={printing ? onGroundTouchStart : undefined}
@@ -1204,6 +1204,8 @@ export default function FullPostPage({ entry, references = [], authed = false, l
                   editing={edit.editing}
                   draft={edit.draft.tracks[i]}
                   onField={(key, value) => edit.setTrack(i, key, value)}
+                  onOpenDial={setDialTrack}
+                  dialOpen={dialTrack === i}
                   preview={preview}
                 />
               ))}
@@ -1223,7 +1225,15 @@ export default function FullPostPage({ entry, references = [], authed = false, l
             sit here without crowding anything because it only exists at the
             very bottom of the reading, which is the one place nothing else
             wants. */}
-        {!preview && <div style={{ borderTop: '1px solid var(--border)', paddingTop: '28px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
+        {/* Only while a correction is open, from 2026-09-17. Reading, the
+            foot of an entry carried a way back to the journal and a caret to
+            the top, and Miyel took both off: "the foot of the archive is where
+            somebody has finished looking, and three links to elsewhere is the
+            site asking them to leave" is already the rule for the wall
+            (DECISIONS), and the phone gave up a close control on the layer for
+            the same reason — what is left is the pull down, Escape and back.
+            A reader who reaches the end of a listen has reached the end of it. */}
+        {!preview && edit.editing && <div style={{ borderTop: '1px solid var(--border)', paddingTop: '28px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
           {/* The way out of the entry, and — while a correction is open — the
               way to end it. Delete sits at the very foot rather than in the bar
               with Save: they are not the same weight, and a destructive control
@@ -1254,13 +1264,18 @@ export default function FullPostPage({ entry, references = [], authed = false, l
             means nothing in another copy's database. Who sent a record is
             the credit at the head of this page, and the trail a reader
             walks is SentBy.js. See database_actions.js, above the slugs. */}
-        {edit.editing && (
+        {/* The warning only, from 2026-09-17. *Delete this entry* used to sit
+            here as the way in, and it has not been the way in since Delete
+            became a tool on the ··· — two doors to the same destructive act,
+            one of them at the foot of a form somebody is scrolling through.
+            The tool opens a correction with this already asking (see
+            onDelete above), which is DECISIONS' rule intact: a destructive
+            thing does not get a shorter path for moving to a shorter menu,
+            and the confirmation still opens in place rather than as a dialog
+            dismissed by reflex. Nothing raises this but that press. */}
+        {edit.editing && edit.asking && (
           <div className="ln-danger">
-            {!edit.asking ? (
-              <button type="button" className="ln-danger-open" onClick={edit.ask}>
-                Delete this entry
-              </button>
-            ) : (
+            {(
               <div className="ln-danger-ask">
                 {/* Two sentences. It said four, and the other two were true
                     of the database rather than of anything a reader would
@@ -1297,6 +1312,22 @@ export default function FullPostPage({ entry, references = [], authed = false, l
       </section>{/* .ln-screen-two */}
 
       </div>{/* .ln-screens */}
+
+      {/* The send sheet, at the foot of the page rather than inside the tools
+          that opened it: the ··· files itself away the moment one is pressed,
+          and a sheet mounted inside it would go with it. */}
+      <SendSheet
+        open={sending}
+        onClose={() => setSending(false)}
+        record={{
+          album: entry.album,
+          artist: entry.artist,
+          year: entry.year || '',
+          album_art: entry.album_art || '',
+          collection_id: entry.collection_id || '',
+          slug: entry.slug,
+        }}
+      />
     </div>
   );
 }

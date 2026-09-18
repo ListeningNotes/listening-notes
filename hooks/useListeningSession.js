@@ -78,7 +78,12 @@ export function useListeningSession({ step }) {
   // What gets written
   const [overallNotes, setOverallNotes]   = useState('');
   const [rating, setRating]               = useState(0);
-  const [Masterpiece, setMasterpiece]     = useState(false);
+  // Masterpiece is not state and has no setter, 2026-09-17. It is what the
+  // tracklist says — every track rated, every rating five — so it is read off
+  // the ratings rather than kept beside them, where the two could disagree.
+  // Nothing presses it; it appears at the end of a listen as a fact about what
+  // you gave, rather than a judgement you award yourself at the start.
+  // Declared below the ratings it reads, with the other derived values.
   const [Favorite, setFavorite]           = useState(false);
   const [Formative, setFormative]         = useState(false);
 
@@ -88,6 +93,14 @@ export function useListeningSession({ step }) {
   const [trackNotes, setTrackNotes]       = useState({});
   const [trackRatings, setTrackRatings]   = useState({});
   const [trackFavorites, setTrackFavorites] = useState({});   // index -> true
+
+  // See the note where this used to be a useState. The same rule the writer
+  // enforces (library/entry_formatter.js, flawless) — stated here in the
+  // session's own terms, because the session holds its ratings in a map by
+  // index rather than on the tracks themselves, and a listen has to be able to
+  // show the mark before there is an entry to read it off.
+  const Masterpiece = Array.isArray(tracks) && tracks.length > 0
+    && tracks.every((_, i) => Number(trackRatings[i]) === 5);
   const [openTrack, setOpenTrack]         = useState(0);      // the track on screen
 
   // The reference — what has been asked of it this listen, and what it said.
@@ -153,7 +166,7 @@ export function useListeningSession({ step }) {
       rating, Masterpiece, Favorite, Formative, elapsedRef,
     },
     setters: {
-      setOverallNotes, setRating, setMasterpiece, setFavorite, setFormative,
+      setOverallNotes, setRating, setFavorite, setFormative,
       setTrackNotes, setTrackRatings, setTrackFavorites, setEntryType, setAlbumArt,
     },
   });
@@ -272,7 +285,7 @@ export function useListeningSession({ step }) {
     elapsedRef.current = 0;
     setOverallNotes('');
     setRating(0);
-    setMasterpiece(false);
+    // No setMasterpiece: clearing the ratings above clears it.
     setFavorite(false);
     setFormative(false);
     setSaved(false);
@@ -581,7 +594,7 @@ export function useListeningSession({ step }) {
     // Writing
     overallNotes, setOverallNotes,
     rating, setRating,
-    Masterpiece, setMasterpiece,
+    Masterpiece,
     Favorite, setFavorite,
     Formative, setFormative,
     hasWriting,

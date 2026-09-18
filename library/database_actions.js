@@ -3,7 +3,7 @@
 import database from './database_connection.js';
 import { tidyJournal } from './return_address.js';
 import { create_slug } from './slug_generator.js';
-import { serializeTracks, lookup_key } from './entry_formatter.js';
+import { serializeTracks, lookup_key, flawless } from './entry_formatter.js';
 import { sizedAlbumArt } from './music_data_api.js';
 
 // Album art is sized on the way out rather than on the way in, so the row
@@ -363,12 +363,18 @@ async function next_free_slug(album) {
 export async function save_new_entry(body) {
   const {
     album, artist, year, genre = '', entry_type,
-    rating, favorite, masterpiece = false, formative = false, notes,
+    rating, favorite, formative = false, notes,
     track_notes, horizon, album_art, tracks = null,
     received_from = null, received_date = null,
     received_from_url = null, credit_private = false,
     user_id = null
   } = body;
+
+  // Masterpiece is not taken from the caller, 2026-09-17. Every track rated,
+  // every rating five, and it is true; anything else and it is not. Whatever a
+  // caller sends under that key is ignored — a route states its own rules, and
+  // this one is the rule itself (library/entry_formatter.js, flawless).
+  const masterpiece = flawless(tracks);
 
   const slug = await next_free_slug(album);
 
@@ -461,6 +467,18 @@ export async function update_entry(slug, fields) {
     const derived = serializeTracks(fields.tracks);
     fields.track_notes = derived.track_notes;
     fields.horizon = derived.horizon;
+    // And the mark, for exactly the reason the two above are here: there must
+    // be no way to change a track's stars and leave the flag behind claiming
+    // something the tracklist no longer says. Correct one track from five to
+    // four and the mark goes — a hole Miyel named before it was built
+    // (2026-09-17), and the honest one: the entry simply scores what it scores.
+    fields.masterpiece = flawless(fields.tracks);
+  } else {
+    // Nothing may set it any other way. A correction that does not carry the
+    // tracklist leaves the mark exactly as it was, which the COALESCE below
+    // already does — but a caller passing the flag directly must not be
+    // believed, so the key is dropped rather than trusted.
+    delete fields.masterpiece;
   }
 
   const result = await database`

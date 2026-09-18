@@ -13,38 +13,27 @@
 // stored at all and keeps falling back to what is written here. A copy that
 // never touches them holds nothing in its database.
 //
-// The keys are fixed. Custom rating levels and custom relationship types are
-// deliberately not a feature — a scale everyone can redefine is a scale nobody
-// can compare across, and comparing is the point of two journals meeting.
+// The keys are fixed. Custom marks are deliberately not a feature — a
+// vocabulary everyone can redefine is a vocabulary nobody can compare across,
+// and comparing is the point of two journals meeting.
+//
+// ── Three, from 2026-09-17 ────────────────────────────────────────────────
+// It held the whole rating scale as well: a paragraph each for 5.0 down to
+// 1.0 and one for half stars. They went on Miyel's call, and the reason is
+// that stars are ubiquitous — "I should assume that". A paragraph explaining
+// what four stars means is a site explaining something its reader learned
+// somewhere else years ago, and it buried the three that genuinely need it.
+//
+// First listen, Revisit and Study went at the same time. They were values of
+// `relationship`, and that column is dropped — the note here claiming entries
+// still carried those words had outlived the data by months.
+//
+// What is left is the three marks this site invented the meaning of, and
+// Masterpiece is the one that most needs saying, now that nobody sets it by
+// hand (DECISIONS, 2026-09-17).
 
 export const DEFAULT_DEFINITIONS = {
-  // ── the scale ──────────────────────────────────────────────────────────
-  '5.0': {
-    label: '5.0',
-    body: 'A full-body yes. Complete and emotionally alive. Worth returning to willingly and often; even the rough edges feel necessary.',
-  },
-  '4.0': {
-    label: '4.0',
-    body: 'Strong and memorable. The core vision lands, even if a few moments don\u2019t. The highs are real. Earns repeat listens.',
-  },
-  '3.0': {
-    label: '3.0',
-    body: 'Interesting, but uneven. The ideas hold up better than the execution, or the experience better than the replay value. More compelling in theory than in feeling.',
-  },
-  '2.0': {
-    label: '2.0',
-    body: 'Respect more than attachment. Glad it exists, glad you heard it, not drawn back. Some good moments, but the immersion keeps breaking.',
-  },
-  '1.0': {
-    label: '1.0',
-    body: 'Not for you. Either uncomfortable to sit with or missing whatever it takes to stay engaged. This never means bad \u2014 only disconnected.',
-  },
-  half: {
-    label: 'Half stars',
-    body: 'When two ratings both feel true. Too strong to place lower, not quite enough to place higher. A decision to meet in the middle.',
-  },
-
-  // ── the two marks that are not scores ──────────────────────────────────
+  // ── the three marks ────────────────────────────────────────────────────
   masterpiece: {
     label: 'Masterpiece',
     body: 'An album with an entire five-star tracklist. Flawless.',
@@ -54,30 +43,9 @@ export const DEFAULT_DEFINITIONS = {
     body: 'A track or album you reach for, separate from how you rated it. Plenty of five-star listens aren\u2019t favorites, and some favorites sit lower than expected.',
   },
 
-  // ── how a listen happened ──────────────────────────────────────────────
-  // First listen, Revisit and Study are on their way out as things anyone
-  // picks — the listen number answers the first two and the third was barely
-  // used. They stay defined because entries already carry those words, and a
-  // reader looking at one of them still deserves to know what it meant.
-  first_listen: {
-    label: 'First listen',
-    body: 'Front to back with intention for the first time. A few tracks may already be familiar; the album as a whole is not.',
-  },
-  revisit: {
-    label: 'Revisit',
-    body: 'An album you\u2019ve lived with before, returned to with fresh attention. Often a new setup, or a different frame of mind.',
-  },
   formative: {
     label: 'Formative',
     body: 'An album that shaped how you listen, whenever you first found it. Usually one you\u2019ve spent years with.',
-  },
-  study: {
-    label: 'Study',
-    body: 'A listen rooted in history, influence, or research. The album matters culturally or technically, whether or not it\u2019s built for repeat play.',
-  },
-  submission: {
-    label: 'Submission',
-    body: 'An album someone sent you, listened to as a reply.',
   },
 };
 

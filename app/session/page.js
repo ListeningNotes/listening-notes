@@ -300,7 +300,7 @@ export default function SessionPage() {
                   tracks={s.tracks} trackRatings={s.trackRatings} trackFavorites={s.trackFavorites}
                   overallNotes={s.overallNotes} setOverallNotes={s.setOverallNotes}
                   rating={s.rating} setRating={s.setRating}
-                  Masterpiece={s.Masterpiece} setMasterpiece={s.setMasterpiece}
+                  Masterpiece={s.Masterpiece}
                   Favorite={s.Favorite} setFavorite={s.setFavorite}
                   Formative={s.Formative} setFormative={s.setFormative}
                   onNext={() => goToStep(3)}

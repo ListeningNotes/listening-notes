@@ -65,27 +65,49 @@
 
 import { cloneElement, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { DotsThree, Pencil, Printer, Trash, X } from '@phosphor-icons/react';
+import { DotsThree, EnvelopeSimple, Export, FilePlus, Pencil, Trash, UserCircle, X } from '@phosphor-icons/react';
 
 // How long the tools take to file back in. It has to outlast the longest
-// kt-file-in in nav.css — delay plus duration, 286ms for three tools — or the
-// last one is unmounted mid-stride and vanishes, which is the exact thing the
-// animation exists to avoid. Deliberately quicker than opening: waiting for a
-// menu to finish leaving is the one thing nobody wants.
-const PACKING_UP = 320;
+// kt-file-in in nav.css or the last one is unmounted mid-stride and vanishes,
+// which is the exact thing the animation exists to avoid.
+//
+// It was a flat 320ms, which was right for three tools and silently wrong for
+// five: the rule in nav.css is `120ms + i × 30ms` of duration after
+// `(i − 1) × 38ms` of delay, so the furthest of five finishes at 422ms and the
+// last two would have blinked out. Worked out from the rule now rather than
+// written down beside it, so adding a sixth cannot break it quietly.
+// Deliberately quicker than opening: waiting for a menu to finish leaving is
+// the one thing nobody wants.
+const packingUp = n => 82 + 68 * n + 40;
 
+// Two words per tool: the short one that prints under the glyph, and the whole
+// sentence a screen reader and a tooltip get. The short one is not a caption of
+// the long one — "Correct" under a pencil says the same thing in the space
+// there is.
+// Two words per tool: the short one that prints under the glyph, and the whole
+// sentence a screen reader and a tooltip get. The short one is not a caption of
+// the long one — "Correct" under a pencil says the same thing in the space
+// there is — but the long one has to be unambiguous on its own, which is where
+// Share earns its keep: the word is the one people reach for and the sentence
+// says which kind of sharing it is.
 const WORDS = {
   entry: {
     all:    'What you can do with this entry',
-    edit:   'Correct this entry',
-    print:  'Print this entry',
-    remove: 'Delete this entry',
+    edit:     ['Edit',      'Edit this entry'],
+    print:    ['Share',     'Make a picture of this entry to share'],
+    sender:   ['Credit',    'Say who sent you this record'],
+    send:     ['Send',      'Send this record to somebody in your address book'],
+    relisten: ['Relisten',  'Log another listen of this album'],
+    remove:   ['Delete',    'Delete this entry'],
   },
   card: {
     all:    'What you can do with this card',
-    edit:   'Edit this card',
-    print:  'Print this card',
-    remove: null,
+    edit:     ['Edit',  'Edit this card'],
+    print:    ['Share', 'Make a picture of this card to share'],
+    sender:   null,
+    send:     null,
+    relisten: null,
+    remove:   null,
   },
 };
 
@@ -94,6 +116,9 @@ export default function KeeperTools({
   onEdit,
   slug = null,
   onPrint = null,
+  onSender = null,
+  onSend = null,
+  onRelisten = null,
   onDelete = null,
 }) {
   const words = WORDS[what] || WORDS.entry;
@@ -102,11 +127,19 @@ export default function KeeperTools({
   const [phase, setPhase] = useState('shut');
   const open = phase === 'out';
   const timer = useRef(null);
+  // How many tools there will be, worked out before anything needs it, so the
+  // packing-up clock is the same number the animation uses. A plain value and
+  // not a ref: it is decided by the props and read while closing.
+  const count = 2
+    + (onSender && words.sender ? 1 : 0)
+    + (onSend && words.send ? 1 : 0)
+    + (onRelisten && words.relisten ? 1 : 0)
+    + (onDelete && words.remove ? 1 : 0);
 
   const shut = () => {
     if (timer.current) clearTimeout(timer.current);
     setPhase('back');
-    timer.current = setTimeout(() => setPhase('shut'), PACKING_UP);
+    timer.current = setTimeout(() => setPhase('shut'), packingUp(count));
   };
   const press = () => {
     if (timer.current) clearTimeout(timer.current);
@@ -138,66 +171,113 @@ export default function KeeperTools({
       event.stopPropagation();
       if (timer.current) clearTimeout(timer.current);
       setPhase('back');
-      timer.current = setTimeout(() => setPhase('shut'), PACKING_UP);
+      timer.current = setTimeout(() => setPhase('shut'), packingUp(count));
     };
     window.addEventListener('keydown', onKey, true);
     return () => window.removeEventListener('keydown', onKey, true);
-  }, [open]);
+  }, [open, count]);
+
+  // Nearest the door first, which is also the order they file out in:
+  // Share, Edit, Credit, Send, Relisten, Delete (Miyel, 2026-09-17). Share is
+  // nearest the door because it is the shortest reach and the most-used; the row
+  // is reversed in CSS, so markup order is distance from the ··· and nothing
+  // here has to know which corner it is in.
+  //
+  // A tool is a glyph, and a glyph over a word once there are more than three
+  // of them. That is the brief's rule, driven off the count rather than off
+  // which surface this is, so it cannot drift: two tools on a card stay
+  // glyphs, because a pencil and a printer in a corner are learned in one
+  // press and a word under each would be a toolbar. Five cannot be learned, so
+  // five say what they are — the same glyph-over-a-word the band at the foot
+  // uses, which means the pattern is familiar before anybody opens this.
+  //
+  // The word is drawn *and* the whole sentence stays on aria-label: "Print"
+  // under a glyph is enough to choose by and not enough to hear read out.
+  const withWords = count > 3;
+  const box = (word, whole, glyph, extra = '') => ({
+    className: 'kt-tool kt-tool--out' + (withWords ? ' kt-tool--said' : '') + extra,
+    'aria-label': whole,
+    title: whole,
+    children: (
+      <>
+        {glyph}
+        {withWords && <span className="kt-word">{word}</span>}
+      </>
+    ),
+  });
 
   const tools = [];
 
   tools.push(
-    <button
-      key="edit"
-      type="button"
-      className="kt-tool kt-tool--out"
-      onClick={() => { shut(); onEdit(); }}
-      aria-label={words.edit}
-      title={words.edit}
-    >
-      <Pencil size={18} weight="regular" aria-hidden="true" />
-    </button>
-  );
-
-  tools.push(
     onPrint ? (
-      <button
-        key="print"
-        type="button"
-        className="kt-tool kt-tool--out"
-        onClick={() => { shut(); onPrint(); }}
-        aria-label={words.print}
-        title={words.print}
-      >
-        <Printer size={18} weight="regular" aria-hidden="true" />
-      </button>
+      <button key="print" type="button" onClick={() => { shut(); onPrint(); }} {...box(...words.print, <Export size={22} weight="regular" aria-hidden="true" />)} />
     ) : (
       /* The slug travels so the printer opens on this record rather than on
          whichever one happens to be first in the list. */
-      <Link
-        key="print"
-        href={slug ? `/printer?entry=${encodeURIComponent(slug)}` : '/printer'}
-        className="kt-tool kt-tool--out"
-        aria-label={words.print}
-        title={words.print}
-      >
-        <Printer size={18} weight="regular" aria-hidden="true" />
-      </Link>
+      <Link key="print" href={slug ? `/printer?entry=${encodeURIComponent(slug)}` : '/printer'} {...box(...words.print, <Export size={22} weight="regular" aria-hidden="true" />)} />
     )
   );
 
+  tools.push(
+    <button key="edit" type="button" onClick={() => { shut(); onEdit(); }} {...box(...words.edit, <Pencil size={22} weight="regular" aria-hidden="true" />)} />
+  );
+
+  // Sent by left the correction on 2026-09-16 and is its own door now. It was
+  // a field among fifteen others, which meant saying who gave you a record —
+  // the one thing on an entry that is about somebody else — was filed under
+  // fixing your own typos. It asks for no date (DECISIONS, 2026-09-14) and it
+  // is the only tool here that is about a person.
+  if (onSender && words.sender) {
+    tools.push(
+      <button key="sender" type="button" onClick={() => { shut(); onSender(); }} {...box(...words.sender, <UserCircle size={22} weight="regular" aria-hidden="true" />)} />
+    );
+  }
+
+  // And Send, which opens the sheet a row in the address book opens, with this
+  // record already in it. The two ways in differ only in which half is
+  // answered before the sheet arrives.
+  //
+  // **An envelope, not a paper plane** (Miyel, 2026-09-17). The plane is what
+  // every chat app uses for "transmit this", and sitting beside Share it made
+  // both tools read as the same verb with no way to tell which object each
+  // meant. An envelope is a letter to one person, which sharing is not — and
+  // it is the mark this site already puts on a record that arrived this way
+  // (DECISIONS, 2026-09-13: a sent record wears an envelope). Pressing an
+  // envelope here is what makes one appear on their journal, which is as close
+  // to a tool explaining itself as this row gets.
+  //
+  // EnvelopeSimple rather than the Envelope those marks use, deliberately:
+  // Envelope is also the Inbox door on the desk, and a tool that sends should
+  // not wear the mark of the room things arrive in.
+  if (onSend && words.send) {
+    tools.push(
+      <button key="send" type="button" onClick={() => { shut(); onSend(); }} {...box(...words.send, <EnvelopeSimple size={22} weight="regular" aria-hidden="true" />)} />
+    );
+  }
+
+  // Another listen of the same record. An album has many listens and they are
+  // numbered from the entries that exist (DECISIONS): this never edits what is
+  // here, it starts a new one — which is why the glyph is a page with a plus
+  // on it (Miyel) rather than a repeat arrow. A repeat says the record is
+  // going round again; a new page says what is actually being made.
+  //
+  // **Relisten**, settled on 2026-09-17 after *Log again*, *Revisit* and
+  // *Relog*. It is the word DECISIONS already uses for exactly this — "a
+  // relisten is a new entry; rewriting an old one falsifies the encounter" —
+  // so the button and the rule it obeys are finally the same word. Revisit
+  // lost for being a listen *type* on /key rather than a thing you do, and
+  // Relog for being a coinage where a plain word existed — which is the whole reason it is a tool beside
+  // Correct rather than something inside it. Editing is for typos; a relisten
+  // is a new entry, and rewriting an old one falsifies the encounter.
+  if (onRelisten && words.relisten) {
+    tools.push(
+      <button key="relisten" type="button" onClick={() => { shut(); onRelisten(); }} {...box(...words.relisten, <FilePlus size={22} weight="regular" aria-hidden="true" />)} />
+    );
+  }
+
   if (onDelete && words.remove) {
     tools.push(
-      <button
-        key="remove"
-        type="button"
-        className="kt-tool kt-tool--out kt-tool--end"
-        onClick={() => { shut(); onDelete(); }}
-        aria-label={words.remove}
-        title={words.remove}
-      >
-        <Trash size={18} weight="regular" aria-hidden="true" />
-      </button>
+      <button key="remove" type="button" onClick={() => { shut(); onDelete(); }} {...box(...words.remove, <Trash size={22} weight="regular" aria-hidden="true" />, ' kt-tool--end')} />
     );
   }
 
@@ -206,9 +286,11 @@ export default function KeeperTools({
   // it takes. --kt-d is its turn in the queue going out: the one that ends up
   // furthest away leaves first and the rest stop short behind it, the way a
   // line of people coming through a door fills a room from the back.
-  const filing = phase === 'shut' ? null : tools.map((tool, i) =>
-    cloneElement(tool, { style: { '--kt-i': i + 1, '--kt-d': tools.length - (i + 1) } })
+  const drawn = tools.map((t, i) =>
+    cloneElement(t, { style: { '--kt-i': i + 1, '--kt-d': tools.length - (i + 1) } })
   );
+
+  const filing = phase === 'shut' ? null : drawn;
 
   return (
     <div ref={mine} className={'kt-tools' + (phase === 'back' ? ' kt-tools--back' : '')}>
