@@ -28,7 +28,7 @@ export function useSessionDraft({ step, saved, hasWriting, values, setters }) {
     rating, Masterpiece, Favorite, Formative, elapsedRef,
   } = values;
   const {
-    setOverallNotes, setRating, setMasterpiece, setFavorite, setFormative,
+    setOverallNotes, setRating, setFavorite, setFormative,
     setTrackNotes, setTrackRatings, setTrackFavorites, setEntryType, setAlbumArt,
   } = setters;
 
@@ -100,7 +100,9 @@ export function useSessionDraft({ step, saved, hasWriting, values, setters }) {
     draftIdRef.current = draft.id;
     setOverallNotes(draft.notes || '');
     setRating(draft.rating || 0);
-    setMasterpiece(!!draft.masterpiece);
+    // Masterpiece is not restored and has no setter: it is read off the track
+    // ratings, which are restored below, so putting a saved value back would be
+    // putting back an answer that may no longer match its own working.
     setFavorite(!!draft.favorite);
     setFormative(!!draft.formative);
     elapsedRef.current = draft.elapsed || 0;
@@ -134,7 +136,7 @@ export function useSessionDraft({ step, saved, hasWriting, values, setters }) {
     setTrackRatings(s.trackRatings || {});
     setTrackFavorites(s.trackFavorites || {});
     setRating(s.rating || 0);
-    setMasterpiece(!!s.Masterpiece);
+    // Same as above: the ratings restored two lines up already say it.
     setFavorite(!!s.Favorite);
     setFormative(!!s.Formative);
     if (s.entryType) setEntryType(s.entryType);

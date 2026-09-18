@@ -4,7 +4,7 @@
 import { Heart } from '@phosphor-icons/react';
 import { fonts } from '../../../library/sitewide_visuals';
 import StarRating from '../StarRating';
-import StarPicker from '../../session_components/StarRating';
+import TrackDial from './TrackDial';
 import CommentBubble from './CommentBubble';
 import { editStamp } from '../../../library/entry_formatter';
 
@@ -18,7 +18,7 @@ import { editStamp } from '../../../library/entry_formatter';
 // the stars once vanished the moment edit mode opened.
 export default function TrackThread({
   track, note, trackIndex, slug, commentsByTrack, onRefresh,
-  editing = false, draft, onField,
+  editing = false, draft, onField, onOpenDial, dialOpen = false,
   // The session's preview of an entry that is not saved yet: nothing to
   // comment on, so no bubble under the note.
   preview = false,
@@ -52,30 +52,61 @@ export default function TrackThread({
           {/* Editing, the heart is always there and is filled or not; reading,
               it appears only when it is filled. A row of empty hearts down a
               tracklist would be a column of controls nobody asked for. */}
+          {/* The heart is a door as well, 2026-09-17. It used to toggle in
+              place while the stars beside it opened somewhere else, so one row
+              held two different promises about what a press does. Both open
+              the track now, and the track is where a change happens. */}
           {editing ? (
             <button
               type="button"
               className={'ln-track-heart' + (draft?.favorite ? ' ln-track-heart--on' : '')}
-              onClick={() => onField?.('favorite', !draft?.favorite)}
-              aria-pressed={!!draft?.favorite}
-              aria-label={`Favourite ${track.name}`}
+              onClick={() => onOpenDial?.(dialOpen ? null : trackIndex)}
+              aria-expanded={dialOpen}
+              aria-label={`Rate ${track.name}`}
             >
-              <Heart size={13} weight={draft?.favorite ? 'fill' : 'regular'} />
+              <Heart size={15} weight={draft?.favorite ? 'fill' : 'regular'} />
             </button>
           ) : track.favorite ? (
             <span title="Favourite song" style={{ display: 'inline-flex', color: 'var(--fav, #f0484f)', lineHeight: 1 }}><Heart size={12} weight="fill" /></span>
           ) : null}
+          {/* Editing, the stars are a door rather than a control: pressing
+              anywhere along them opens the track on its own screen, where half
+              a star is the size of a thumbnail instead of seven pixels and the
+              number is printed underneath (TrackDial.js, 2026-09-17). Picking
+              in place was reachable after the targets grew and still asked you
+              to see a difference you cannot see at this size.
+
+              It shows what the track is worth, so the row still reads at a
+              glance — and says "Not rated" where nothing is set, because an
+              empty row of stars would be a control nobody asked for, and
+              nothing at all would leave no way in. */}
           {editing ? (
-            <StarPicker
-              value={draft?.rating || 0}
-              onChange={v => onField?.('rating', v)}
-              size={14}
-            />
+            <button
+              type="button"
+              className="ln-track-stars"
+              onClick={() => onOpenDial?.(dialOpen ? null : trackIndex)}
+              aria-expanded={dialOpen}
+              aria-label={`Rate ${track.name}`}
+            >
+              {(draft?.rating || 0) > 0
+                ? <StarRating rating={draft.rating} size={14} />
+                : <span className="ln-track-unrated">Not rated</span>}
+            </button>
           ) : track.stars > 0 ? (
-            <StarRating rating={track.stars} size={12} />
+            <StarRating rating={track.stars} size={14} />
           ) : null}
         </div>
       </div>
+
+      {editing && dialOpen && (
+        <TrackDial
+          track={track}
+          rating={draft?.rating || 0}
+          favorite={!!draft?.favorite}
+          onField={(key, value) => onField?.(key, value)}
+          onClose={() => onOpenDial?.(null)}
+        />
+      )}
 
       {/* The note carries no border of its own — the row's own bottom border
           already closes the track off, and having both drew two lines a few

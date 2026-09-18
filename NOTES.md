@@ -98,22 +98,50 @@ Private Repository Name), `05-neon.png` (the Neon panel with the Auth toggle),
 (the name screen), `09-homescreen.png` (the last setup screen on a phone; the
 browser's add-to-Dock on a laptop).
 
-**Early copies cannot update themselves, and cannot be sent the thing that
-would let them — found 2026-09-16, when Miyel visited friends' journals and
-found them on old versions.** The updater landed as a button on 2026-09-11 and
-grew its hourly schedule on 2026-09-14. A copy made before 09-11 has no
-workflow at all, and the workflow can only arrive *by* an update, which is
-exactly what cannot run — so those copies are frozen until somebody puts the
-file in by hand. A copy made 09-11 to 09-13 has the button and no schedule, and
-one press of Run workflow brings in the scheduled version and fixes it
-permanently. From 09-14 on it is automatic.
+**A copy with no updater is a copy whose keeper did not grant one permission —
+diagnosed 2026-09-17, and it replaces the date rule written here on
+2026-09-16.** That entry said copies made before 09-11 were frozen because they
+predate the updater. That is wrong, and the evidence is three copies:
 
-Worth doing: a short note somewhere a keeper will find it — `/get`, or a line
-in the README — saying how to catch an old copy up, since the software cannot
-tell them itself. And a check on whether this is why, rather than the other
-candidates that were not ruled out: Actions left on read-only tokens in a fresh
-repository would fail the push every hour, and a scheduled workflow only runs
-on the default branch.
+| copy | made | version | updater |
+|------|------|---------|---------|
+| June | 09-09, the oldest | 1.21.0 | yes — added by hand, a `Create update.yml` commit through GitHub's web editor |
+| Zach | 09-15 | 1.21.0 | yes, from the day it was made |
+| Blue | 09-14 | **1.10.1** | **none, and no `.github` at all** |
+
+The oldest copy is current and a newer one is frozen, so it was never a date.
+**What it is:** Vercel makes a keeper's repository for them, through GitHub, on
+the permissions that keeper granted when they authorised it. Writing anything
+under `.github/workflows/` needs the `workflow` permission specifically, because
+a workflow is code that runs on GitHub's machines. Without it GitHub refuses
+that one file — and `.github/` holds nothing else in this repository, so the
+whole folder silently disappears. Everything else copies, the journal works
+perfectly, and it can simply never update itself. Blue's repository is exactly
+that shape: not a fork, one `Initial commit`, no `.github`, frozen at the
+version he deployed.
+
+**This has not aged out. Any install today can land this way**, which is the
+part that matters and the reason the old entry was worse than nothing: it
+described a legacy problem that would fix itself, and this one will not.
+
+**Two candidates the old entry named are now ruled out.** A read-only Actions
+token cannot be it — the workflow declares `permissions: contents: write`,
+which overrides a repository's default. And "a scheduled workflow only runs on
+the default branch" is not it either: these copies have no workflow to run.
+
+**The fix for one copy is the fix June got:** put
+`.github/workflows/update.yml` in by hand and it self-heals from the next hour
+on. It cannot arrive any other way, because arriving is the thing that copy
+cannot do.
+
+**Still wanted, and now clearly worth it:**
+- A line where a keeper will find it — `/get/install`, or the README — saying
+  to check for the Actions tab after deploying, and what to do if it is not
+  there.
+- A second file in `.github/` would keep the folder alive when the workflow is
+  refused, which turns a silent disappearance into a visible gap. It does not
+  fix the copy, but it makes the failure legible.
+- Worth asking whether the deploy flow can request the permission outright.
 
 **A day on the numbers, charted — Miyel's, 2026-09-16.** What a copy costs at
 scale, drawn rather than argued, so a ceiling is visible before it is hit. What
@@ -148,9 +176,9 @@ fire it. Not seen; written down so nobody debugs it twice.
 **FOUR TABS, SENDING FROM HOME, THE ENTRY'S TOOLS — briefed 2026-09-16.**
 Four features, one branch each, each tested by thumb on a real phone and merged
 before the next starts. Item 1, the quieter beacon, is in Complete. What is
-left, in order: **3. The entry's five tools**, **4. Four tabs**. Item 2, Send
-from home, is in Complete on branch `send-from-home`; item 3's Send tool opens
-the sheet that branch built. Phone layout only (`max-width: 768px`); desktop is untouched. Four of
+left: **4. Four tabs**, the biggest change, which is why it is last. Items 1
+and 2 are merged (main is 1.23.0); item 3 is in Complete on branch
+`entry-tools`. Phone layout only (`max-width: 768px`); desktop is untouched. Four of
 the decisions it makes amend or reverse 2026-09-15 entries and are recorded as
 each one merges, not before.
 
@@ -2192,6 +2220,502 @@ current.
 ---
 
 ## Complete
+
+**2026-09-17 — the entry's six tools. Branch `entry-tools`.** Item 3 of the
+four-tabs brief, plus a sixth tool and four renames Miyel added while looking
+at it. The ··· carried Edit, Print and Delete; it carries **Share · Edit ·
+Credit · Send · Relisten · Delete** now, each a glyph over a word, Share
+nearest the door.
+
+- [x] **Six tools**, filing out nearest-first, the conveyor untouched. A menu over the page stays ruled
+      out (DECISIONS, 2026-09-15) — the row becomes the menu, as it already
+      did at three.
+- [x] **Words appear at four tools, not on a particular surface.** Driven off
+      the count, so it cannot drift: the card's two stay glyphs, because a
+      pencil and a printer in a corner are learned in one press. Five cannot
+      be, so five say what they are — the same glyph-over-a-word the band at
+      the foot uses, so nobody learns a second vocabulary.
+- [x] **Measured at every step, which is what the brief asked for, and it
+      caught two things reasoning would not have.** Five tools at 54px came to
+      318px of a 375px row; a sixth would have been 374px against 355px of
+      room, so the boxes went to 46px (40px under 360px) and six now span
+      326px with 10px clear, 290px with 10px clear on a 320px phone. Three
+      things had to move: the mark's column **collapses** rather than merely
+      fading, since it was still holding a logo's width; the row's 28px side
+      padding drops to 10px while the tools are out; and **the grid's two
+      column gaps had to go with it** — 0 + 10 + 0 + 10 + 290 is ten pixels
+      more than a 320px phone's content box, which put the row flush against
+      the edge of the screen. That one only ever showed at 320.
+- [x] **And the words were checked, not assumed.** *Log again* measured 44px
+      inside a 46px box — two pixels across both sides, which never wrapped
+      but would have touched its neighbours on a device rendering Nunito a
+      hair wider. *Relisten* is 36.7px, so the slack came back.
+- [x] **The travel distance is a variable now.** `--kt-box`, because the
+      keyframes had 38px written into them — right for a 36px square and wrong
+      for a labelled tool, which would have made the tools stop appearing to
+      come out from behind the mark.
+- [x] **The packing-up clock is worked out from the count.** It was a flat
+      320ms, right for three and silently wrong for five: the furthest of five
+      finishes at 422ms, so the last two would have blinked out mid-stride.
+      Derived from the same rule the animation uses, so a sixth cannot break
+      it quietly.
+- [x] **Relisten is new**, and it is the one tool here that makes something
+      rather than changing it: an album has many listens, numbered from the
+      entries that exist, and this starts another rather than editing this one
+      (DECISIONS). It writes the record to `ln_pending_session` and opens the
+      listen, the same key and the same way the inbox picks a send up. It
+      deliberately carries the art, year, genre and collection id but **not**
+      the type or the credit — where a record is from is decided by how the
+      listen started, and this one started in the library. The glyph is a page
+      with a plus on it (Miyel): a repeat arrow would say the record is going
+      round again, and a new page says what is actually being made.
+- [x] **Four renames, Miyel's, all on 2026-09-17.** *Correct* → **Edit**, now
+      that Relisten gives revising its own door and Edit stops inviting the
+      thing DECISIONS guards against. *Print* → **Share**, with the phone's own
+      share glyph, because Print described the mechanism and nobody prints
+      anything — recorded in DECISIONS as softening the 2026-08-28 split rather
+      than undoing it. *Sent by* → **Credit**, a verb among verbs and already
+      this site's word. And the new one went *Log again* → *Revisit* → *Relog*
+      → **Relisten**, which is the word DECISIONS already used for it.
+- [x] **The glyphs went up to 22px**, the ··· 's own size, once Relisten's
+      shorter word gave the room back. Miyel asked for the bigger marks.
+- [x] **Send's paper plane became an envelope**, and that was the real fix for
+      Miyel's worry that Send and Share would be confused — "how do people
+      know it means the album and not the album review?". The word was never
+      the problem: a paper plane is what every chat app uses for *transmit
+      this*, so beside the share glyph both tools read as the same verb with
+      no way to tell which object each meant. A gift is a thing given to one
+      person, which sharing is not — and it is already the mark this site puts
+      on a record that arrived that way (DECISIONS, 2026-09-13: a sent record
+      wears an envelope), so pressing it is what makes one appear on their
+      journal. `EnvelopeSimple` rather than the `Envelope` those marks use,
+      because Envelope is also the Inbox door and a tool that sends should not
+      wear the mark of the room things arrive in. A gift was tried first, on
+      the strength of "a send is a gift, not a form" (2026-08-29), and Miyel
+      picked the envelope. The same glyph goes on the sheet's own button and on
+      the address book's rows, because it is one act in three places.
+      **And the honest part of the answer:** people learn it from the sheet,
+      not from the row. Press Send and the screen is the album, faces, and
+      "What should they listen for?" — nothing about your writing. Guessing
+      wrong costs one dismissable tap, because the sheet does nothing until a
+      person is chosen and a button with their name on it is pressed.
+- [x] **Credit left the correction** and is `SenderTool.js`. It unfolds in
+      the slot its answer prints in, under the chips — DECISIONS says a form
+      belongs next to its subject, and that slot is the subject. It takes the
+      slot whether or not there is a line there yet, because an entry with no
+      sender is exactly when somebody reaches for it. It saves itself with a
+      partial patch rather than borrowing the editor's draft, which would have
+      put the whole page into correction mode to change one field. No date is
+      asked for (DECISIONS, 2026-09-14) and free text stays for somebody
+      without a copy.
+- [x] **Send opens the sheet `send-from-home` built**, with this record
+      already in it. The two ways in differ only in which half is answered
+      before the sheet arrives. Mounted at the foot of the page rather than
+      inside the tools, which file themselves away the moment one is pressed.
+- [x] **Delete still opens the correction's own confirmation** rather than
+      acting, unchanged.
+
+**Four things off Miyel's first real look at Credit, 2026-09-17, all fixed the
+same day:**
+
+- [x] **The layer was still browsing to the next record while Credit was
+      open** — "I can't scroll through my friends because it moves to the new
+      album". A real bug and the brief's own warning: the row of faces scrolls
+      sideways and the sheet under it took the drag. The guard already existed
+      and its comment already described this exact case, written for the row of
+      faces on 2026-09-14 — taking Credit out of the correction took it out
+      from behind `.ln-editing` and so out from behind the guard. `.ln-busy`
+      now covers it and the send sheet, and the lesson went into the comment:
+      that list is not about *editing*, it is about anything of this entry's
+      own being open over it.
+- [x] **The box is gone, and so is the motion.** "It doesn't need the box, and
+      the screen moves a lot when I click this" — one complaint, not two. A
+      bordered card is a second object arriving where a line used to be, and
+      the taller it is the further it shoves the reading below it; the arrival
+      animation was adding six pixels of travel on top of that.
+- [x] **An entry that already names somebody opens on the one question worth
+      asking about it** — a real checkbox reading *Show their name on this
+      entry* — rather than loading the book and putting a field and a row of
+      faces on screen to answer it. Changing who is a second press. That is
+      most of the height gone as well, which is most of the movement.
+      Note the toggle reads the way somebody thinks about it: the column is
+      `credit_private` and the stored value is the negative one, and the
+      question on screen is not.
+- [x] **The book stays open while you change who.** The faces narrow to what
+      has been typed, which was right while searching and wrong the moment the
+      picker opened on a name already there — it showed the one person already
+      chosen and hid the book you opened it to browse. It narrows on typing
+      now and never on what it was handed.
+
+**A track opens on its own screen to be rated — the dial, 2026-09-17.**
+Growing the hit areas (below) fixed the *missing* and left the other half of
+what Miyel named: "it's still really easy to mis-click a half star and not
+really see it." **A target you can hit is not a value you can see** — at 14px,
+three and a half stars and four are the same picture at arm's length, and the
+only way to check your own answer is to lean in.
+
+So the row stopped being the control. Pressing the stars **or the heart** opens
+`TrackDial.js` under that track: 44px stars where half of one is obvious, the
+number spelled out, and the heart above it as its own pill — a different
+question, and not one to answer on the way past. Both controls are doors now;
+one row used to hold two different promises about what a press does.
+
+**It unfolds in the row. It was a centred sheet over a dimmed page for about an
+hour** — Miyel: "is there an option that feels more seamless and built in other
+than a pop up modal?" — and DECISIONS had already answered it twice, the second
+time about this exact place: *"a control opens where it belongs, not floating
+in the middle of a darkened screen — twice in a week a popup was built and
+taken back out, so it is a rule"*, and *"pushing content down is not the
+problem to avoid. **A form unfolding in the tracklist shoves everything below
+it down.** That is what leaving room for something looks like."*
+
+The unfold is also simply less machinery: no scrim, no fixed position, no
+stacking context to fight. **Everything the modal needed to work around went
+with the modal** — the portal out of the scroll container, the z-index against
+the layer, the rendering beside `.ln-screens`. Only `.ln-busy` stayed, because
+a drag across stars is still a horizontal gesture. Measured: opening one row
+took it 145px → 352px and left its neighbours alone.
+
+**Nothing reaches the row until it is accepted.** Dragging used to rewrite the
+track live, which meant opening one to *look* at it was already editing it —
+Miyel: "I'm not actually trying to edit these, I'm trying to make sure I don't
+change anything." So two values sit on screen at once: what the track is, still
+up in its row, and what it would become, four times the size underneath. A
+tick and a cross, top right, settle it. Proved: dragged to 4.5 and unloved with
+the row still reading 3♥; the cross left it at 3♥; the tick wrote 4.5.
+
+**The tick is not Save, and must never read as one** — it settles this track's
+stars into the correction being written, and the entry is still saved by the
+bar at the foot like every other field. That is why the pair are small and
+quiet rather than a second Save competing with the real one.
+
+**It is the row magnified, not a new arrangement.** Heart, stars, and the two
+that settle it — all on one line, in the order they sit upstairs, with the
+cross and the tick pushed right and 14px apart because they do opposite things
+and a thumb should not be able to mean one and hit the other. No caption under
+the heart: "it's intuitive that clearly you click this to mark it". The heart
+is **red, not grey** — a grey heart reads as off *and* disabled — so it is
+always the favourite colour and fills when set, the two states that mark has
+everywhere else.
+
+**The star never filled its own box.** It read as smaller than the heart beside
+it and the cause was arithmetic: the glyph was `min(40px, 9vw)` — 33.75px
+inside a 39px square on a 375px phone — so a fifth of every star's space was
+empty. A star's ink is about seven tenths of its font size, so the two only
+match when the box is full. Settled at `min(41px, 9.8vw)` against a 32px heart.
+
+**The words under the stars are gone.** They printed "3 stars" beneath three
+lit stars, which is the same answer twice. The slider keeps them in
+`aria-valuetext`, where they are the only way a screen reader gets it at all.
+
+**And nothing wears a pill.** Miyel: "I generally don't like the look of
+pills", which is now a rule in DECISIONS — a control is the mark, not a mark in
+a container. Every target here earns its 44px from padding with a matching
+negative margin instead of from a box, so a thumb gets its room and the eye
+sees only the mark. Measured: 0px between the three vertical centres, targets
+44–47px, nothing overflowing a 375px row.
+
+**Dragging and pressing are the same gesture.** The row is one surface and the
+value is read off where the finger is, so a press is a drag of no distance —
+land anywhere, see what you got, slide until it says what you meant. The
+leftmost sliver reads zero, because taking a rating off should be as easy as
+putting one on. Checked: press at 22% → 1 star, drag to 88% → 4.5, far left →
+Not rated, and the draft follows live.
+
+**The trap that survived the rewrite: a drag across stars is a horizontal
+gesture**, which the layer reads as "next record". The page marks itself
+`.ln-busy` while a row is open, or rating a song would fling you to another
+album mid-drag. The other two traps — the layer's stacking context and the
+phone's scroll container — only ever existed because the thing floated.
+
+**Read-mode track stars went 12px → 14px** with it: Miyel on seeing the bigger
+row, "the new size looks better period, even for the actual entry."
+
+**The foot of an entry is empty while reading, 2026-09-17.** It carried a Back
+to the journal caret and an up-to-the-top arrow; both came off on Miyel's call,
+and DECISIONS had the argument twice already — "nothing sits at the foot of the
+wall... three links to elsewhere is the site asking them to leave", and the
+phone gave up a close control on the layer for the same reason, leaving the
+pull down, Escape and back. A reader who reaches the end of a listen has
+reached the end of it.
+
+**They are still there while a correction is open**, which is what was asked
+for ("outside edit mode") — but worth a look: that block's own comment says its
+editing job was Delete, and Delete moved to the ··· yesterday. A Back to the
+journal that only appears while you are editing is probably the wrong way
+round, and it is one condition to take off.
+
+**A track's stars and heart are pressable now, 2026-09-17.** "They are small
+for reading and visitors, but for editing they need to be easier to press."
+Measured, and it was worse than it looked: the picker splits each star down the
+middle so half ratings can be chosen, so the real target was **7 × 14px** — a
+seventh of a fingertip — and the heart was a bare 13px glyph with no padding at
+all, the smallest thing on the site anybody was expected to hit.
+
+**The glyphs did not grow**, because a tracklist of bigger marks is a column of
+controls. The hit areas did: each half now reaches well above and below its own
+star and a little into the gap beside it, and the heart carries a 43px box.
+Both on `padding` with a matching negative `margin`, and the star halves are
+absolutely positioned anyway, so **the row keeps exactly the height it had**.
+
+| | was | now |
+|---|-----|-----|
+| heart | 13 × 13 | 43 × 43 |
+| half star | 7 × 14 | 10 × 44 and 17 × 44 |
+| the star itself | 14 × 14 | 14 × 14 |
+
+Proved by tapping 20px above the glyph and watching the rating change. `roomy`
+is opt-in on the picker, so the session's own stars are untouched.
+
+**The edit screen, four things off Miyel's first real look, 2026-09-17.**
+
+- [x] **The fonts stop changing.** "The page should pretty much stay the same
+      as the entry page, just editable fields." Measured rather than guessed:
+      the title read at 25.6px and edited at 16px, the artist at 11px uppercase
+      grey and edited at 16px sentence-case ink. **The cause is a decision, not
+      a bug** — `base.css` forces every field on a phone to 16px `!important`,
+      because Safari zooms the page when you focus anything smaller and does
+      not reliably zoom back.
+      Which only protects fields *under* sixteen. So the title now takes
+      `max(16px, 1em)`: the size of the thing it stands in, never below the
+      floor — it matches the heading exactly. The artist cannot (11px would
+      zoom), but small caps, DM Mono and the soft ink are most of what that
+      line *is*, and those it can have. Verified: no field anywhere is below
+      16px afterwards.
+- [x] **A chosen flag is lit, not filled.** It took the ink as a background and
+      printed in the page colour, which read as three buttons in two states
+      rather than three marks on or off.
+- [x] **The foot's *Delete this entry* is gone**, the warning kept. It stopped
+      being the way in when Delete became a tool on the ···; two doors to one
+      destructive act, one of them at the foot of a form. The tool still opens
+      the correction with the confirmation already asking, so DECISIONS' rule
+      is intact.
+- [ ] **King Gizzard's stars are empty in the editor, and it is one row of bad
+      data.** `I'm In Your Mind Fuzz` has `rating = "Masterpiece"` — the literal
+      word — which is the exact historical bug `database_actions.js` warns
+      about above the slugs: the session used to write the word into `rating`
+      instead of setting the boolean, and `parseFloat('Masterpiece')` is NaN.
+      The entry page hides it because the masterpiece override draws five; the
+      editor has no override, so the truth shows. The other four masterpieces
+      are `"5"`, `"5"`, `"5 stars"`, `"5 stars"`.
+      **It matters more now that the mark is computed:** correct a track on
+      that entry and the mark goes, and the entry falls to *zero* stars rather
+      than the five Miyel expects. One statement fixes it and it is Miyel's to
+      run — it writes to the production database:
+      ```sql
+      UPDATE entries SET rating = '5 stars' WHERE rating = 'Masterpiece';
+      ```
+
+**base.css went stale a third time in one day**, and the pattern is worth
+stating plainly: **it is always base.css**, the first sheet `layout.js`
+imports. In the same pass, a rule added to `entry.css` applied and a rule added
+to `base.css` was absent from the served sheet entirely. The tell is not that
+the rule loses a specificity fight — it is that the rule **is not in the sheet
+at all**, which the recorded check finds in seconds.
+
+**`/key` is three marks now, 2026-09-17.** It held the whole rating scale — a
+paragraph each for 5.0 down to 1.0, plus half stars — and they went on Miyel's
+call: stars are ubiquitous, "I should assume that". Explaining them was
+explaining something a reader learned elsewhere years ago, and six rows of it
+buried the three that genuinely need saying. First listen, Revisit and Study
+went with them: they were values of `relationship`, and **that column is
+dropped** — the comment in `definitions.js` claiming entries still carried
+those words had outlived the data by months. `mergeDefinitions` already ignores
+a stored key that is not in the defaults, so a copy that had edited the old
+wording loses the row rather than growing a stray one.
+
+**The envelope went too, and it is the one worth arguing about.** It is the
+least guessable mark on the site — a heart and a gem can be guessed at, a faint
+envelope on a record cannot. One row in `MARKS` brings it back.
+
+**And the finding that matters more than the trim: nothing links to `/key`.**
+Not the card, not an entry, not the archive. It is reachable only by typing the
+address, which for the page whose whole job is teaching the vocabulary is most
+of that job undone — and it is the real answer to "maybe there can be some kind
+of guide somewhere", which was asked on the same day about a guide that already
+existed. **Worth deciding where its door is**, now that Masterpiece is computed
+and a reader may well wonder why a mark appeared or vanished.
+
+**The edit screen, 2026-09-17, and the Masterpiece question inside it.**
+
+- [x] **Library / Submission left the editor.** Miyel asked me to confirm they
+      were redundant and they are: **an entry never prints "Library" anywhere**
+      — the only shelf word a reader sees is *Submission*, and only where no
+      credit line is naming the sender instead. The shelf follows the credit
+      now, in SenderTool: naming a sender makes it a Submission, clearing the
+      name puts it back in the library. The old pair could disagree — you could
+      clear the name and leave an entry claiming to be a submission from
+      nobody.
+- [x] **The flags wear their own marks** — Heart in `--fav`, SketchLogo in
+      `--mp`, Fingerprint in `--formative`, the three restated wherever a record
+      is drawn. The place you *set* a flag was the only place on the site that
+      did not show the thing being set.
+- [x] **Masterpiece is computed and nobody presses it.** Miyel's call after
+      asking for a second opinion, and it is the better answer than either of
+      mine: not the software refusing you a label, but a fact about your
+      ratings. Every track rated, every rating five. See DECISIONS.
+
+**What the check found, before any of it was built.** `masterpiece` was a plain
+boolean nobody validated — the definition on `/key` has always said "an entire
+five-star tracklist" and nothing enforced it, and marking it also silently
+forced `rating_value` to five, so a three-star album marked Masterpiece
+*displayed* as five. But Miyel had kept it honest by hand: 5 of 5 were genuine
+full five-star tracklists and nothing qualified that was not marked. **Verified
+again after building: the new rule agrees with all 40 stored values, nothing
+gained, nothing lost.**
+
+**Two traps in the way, both worth knowing:**
+- **It cannot be a generated column**, which is where it belongs on paper and
+  where `album_key` and `rating_value` live. `rating_value` is already
+  generated and already reads `masterpiece`, and Postgres will not let one
+  generated column depend on another. So it is derived one layer up, in the
+  writer, and nothing else may set it — `update_entry` deletes the key rather
+  than trusting a caller who sends it.
+- **Removing the setter from the session hook left two live callers** in
+  `useSessionDraft`, restoring a saved draft. They would have thrown on the
+  first resumed listen. They are gone: the ratings are restored two lines
+  above and already say it.
+
+**A second look at Credit, same day, and it settled what the panel is.** Miyel:
+"if somebody sent it to you, they sent it to you... I think this should really
+be mostly a feature for albums that don't have a credit." That is the shape —
+**two situations, not one**, and the fix was to stop making them look alike:
+
+- **No credit yet** is the tool's real job, and it was already right. The
+  placeholder lost its joke (*Nobody — I found it*) for an instruction:
+  *Start typing a name*.
+- **A credit already there** is a fact, so it reads like one: the face their
+  journal serves, their name at 15px beside it, and the one question still open
+  — *Show credit?* — on the shared switch, the question and its answer centred
+  together rather than pushed to opposite ends of the panel. The name was 19px bold for a day and
+  read as a headline about somebody else on your own page.
+- **Done and undone moved to the foot, in the site's own editing bar**, saying
+  *Crediting* where a correction says *Editing* (Miyel, 2026-09-17). Two
+  reasons and the second is the better one: a panel carrying its own pair of
+  buttons is a form inside a page that already has somewhere to put them, and
+  a site with one editing chrome teaches it once. The pills went with it — "I
+  actually am not a fan of pills... not when they're overdone" — and they had
+  been giving a rare, quiet action the same weight as Save, which is the one
+  thing that bar exists to make unmistakable.
+
+  **It is portalled into a slot the entry page holds open**, and getting that
+  wrong is worth writing down because it failed silently. It cannot render
+  where the panel sits: the panel is inside `.ln-screens`, the phone's scroll
+  container, and a fixed element inside one measures itself against that box
+  rather than the window — the nesting trap already in this file. So it went to
+  `document.body`, which looked right on a probe page and **was invisible on a
+  real entry**: z-index is per stacking context, the layer is fixed at 200 and
+  the bar is 140, so a bar outside the layer competes with the layer and draws
+  underneath it. Miyel: "not seeing that footer."
+
+  The slot is an empty div beside `.ln-screens`, inside the layer — the one
+  place that is neither inside the scroller nor outside the layer, and exactly
+  where the correction's own bar has always been. **Proved rather than
+  reasoned:** with the bar in the slot, a hit-test at its centre lands inside
+  the bar; with the same markup on the body, it lands on something else.
+  `.ln-crediting` gives the scroller the same 96px of room under it; The panel lives
+  inside `.ln-screens`, which on a phone is the scroll container, and a fixed
+  element inside one measures itself against that box rather than the window —
+  deliberately not `.ln-busy`,
+  which also covers the send sheet, where padding would move the page at the
+  moment a sheet opens over it.
+- **The panel no longer flashes the wrong screen.** Opening Credit on an
+  already-credited album showed the address book for a split second and then
+  changed its mind (Miyel, 2026-09-17). It opened blank, read its own
+  blankness as "no credit yet", drew the picker, and corrected itself when the
+  fetch landed — doing the work twice and showing its working.
+
+  **It never had to guess, and the page already had the answer.** Three cases,
+  all knowable before a request: `withoutChain` puts `received_from` on the
+  public entry whenever the credit is public, so the common one is seeded and
+  correct in the first frame. A *quiet* credit is stripped from the public row
+  entirely, so the name cannot be seeded — but naming a sender always makes an
+  entry a Submission, so the type still says a sender exists, which is enough
+  to hold the credited shape while the name arrives. Neither present means
+  genuinely uncredited, and the picker draws at once with no wait.
+
+  The fetch still runs — it is the only read carrying `credit_private` — but it
+  confirms rather than decides. **Checked against a deliberately slowed fetch**
+  so any flash would be obvious: at first paint the public credit already says
+  Zach, the quiet one shows the credited shape with the name still coming, the
+  uncredited one shows the picker, and after the fetch the quiet one arrives
+  with *Show credit* correctly off.
+- **Edit sender went through three shapes** before landing: label-sized small
+  caps, which Miyel did not read as pressable at all; a pill, which gave a
+  rare quiet action the same weight as Save; and finally an underlined word,
+  which is what this site already gives text that leads somewhere. It stays,
+  because a credit can be added by hand from the address book and so can be
+  added *wrong*, and because a sender's name can change — locking it would make
+  deleting the entry the only fix.
+
+**Miyel asked whether the toggle is needed at all, and the answer is in
+DECISIONS.** Quiet is the sender's choice and the send form asks them; the
+keeper's version exists "for what the form cannot reach — a credit added by
+hand from the address book names somebody who was never asked". That is exactly
+what this tool makes: its main job is albums with no credit, which are the
+credits nobody was ever asked about. Somebody who told you about a record in a
+kitchen never chose to be named on your public page, and this is how a no said
+out loud is honoured. **The picker and the toggle justify each other.**
+
+The odd case is the other one: when a credit arrived through a send, the keeper
+flipping that switch overrides what the *sender* chose about their own name (DECISIONS, 2026-09-15: quiet is the
+sender's choice, because the credit puts their name on somebody else's public
+journal). Nothing on the entry distinguishes a sent credit from a hand-added
+one, so there is one behaviour, which is what "one flag, two ways in, honoured
+in one place" already says.
+
+**A small trap on the way:** the name was given `.ln-sender-name`, which is the
+faces strip's 8.5px uppercase label — so Zach came out as ZACH. A class that
+reads like a general name is not one; it belonged to a strip.
+
+**And four off the same look at the send sheet, 2026-09-17:**
+
+- [x] **A way to narrow the book.** "The mechanism for finding friends is
+      wonky and will get painful as you have more and more friends" — and the
+      sheet was the worse of the two, because Credit's name field doubles as a
+      filter and the sheet had nothing at all: one row that scrolls sideways,
+      so forty friends is forty friends of scrolling. A *Find someone* field
+      appears once there are more faces than the strip shows at once, so a copy
+      with three friends is not handed a search box for three friends.
+- [x] **The close moved to the corner.** Centred, it read as part of the
+      sheet's own content and sat over the record you came to look at.
+- [x] **The record is centred, art over its name**, and the art is larger. It
+      is the object being handed across; a cover in the left corner with its
+      name beside it reads as a row in a list.
+- [x] **The quiet control is a switch, and it says *credit*, not *name*** —
+      crediting is what the flag controls and the word the rest of the site
+      uses for it. The switch is `.ln-switch` in base.css rather than either
+      surface's sheet, because the entry's *Show their name* asks the same
+      yes/no and the two should not answer it in two shapes. Drawn out of a
+      real checkbox with `role="switch"`, so the label and the keyboard still
+      work and a screen reader hears on/off rather than ticked.
+
+**The base.css staleness caught it again, and the recorded check paid for
+itself.** `.ln-switch` went in and the switches drew 13px square — `appearance:
+none` applying and nothing else. Rather than hunting the CSS, the served sheet
+was checked first (Gotchas): `.ln-switch` absent from it, `.sn-shut` and
+`.sn-find` present from the same pass on a different file. `rm -rf .next` and a
+restart. **The diagnostic is worth more than the fix** — it turned what looks
+like a cascade bug into a thirty-second answer.
+
+**Seen, not reasoned about:** the five-tool row and the Sender panel were both
+rendered on a throwaway page, looked at, measured, and the page deleted. The
+screenshot matches the mockup — Delete in red, then Send, Sent by, Print,
+Correct, then the ×.
+
+**Not tested, and all three need a phone:** pressing Credit, Send or Relisten
+on a real entry
+(the tools are owner-only and the password cannot be reached from here), and
+the brief's own test — **a tap on a tool must never read as the layer's
+sideways or downward drag.** That one is open in NOTES already and is the
+reason five tools in a row on a sheet that claims both axes is worth a careful
+thumb.
+
+Names chosen without asking, rename freely:
+`components/main_components/Slug_Page/SenderTool.js`, the `.kt-word`,
+`.kt-tool--said` and `.ln-sender--tool` classes, and `--kt-box`. Miyel named
+the branch and every word in the row: **Edit, Share, Credit, Send, Relisten,
+Delete**.
 
 **2026-09-16 — a send can start at home. Branch `send-from-home`.** Item 2 of
 the four-tabs brief. A keeper picks somebody out of their own address book and

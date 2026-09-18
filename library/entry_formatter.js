@@ -54,6 +54,34 @@ export function parseTracksFromNotes(notesText) {
 // when it's there, and falls back to parsing the prose for anything not
 // migrated — so a new entry and a 2024 one look the same to a renderer.
 // Returns the shape the pages already use: { num, name, stars, note }.
+// ── Whether a tracklist is flawless ───────────────────────────────────────
+// Every track rated, every rating five. That is the whole of what Masterpiece
+// means — `/key` has said so all along ("An album with an entire five-star
+// tracklist. Flawless.") — and from 2026-09-17 it is the only thing that
+// decides it. Nobody sets the flag; it is derived wherever an entry is
+// written, like track_notes and the horizon beside it.
+//
+// **Why this is not a generated column**, which is where it belongs on paper
+// and where album_key and rating_value live: `rating_value` is already
+// generated and already reads `masterpiece` (a masterpiece scores five), and
+// Postgres will not let one generated column depend on another. So it is
+// derived one layer up, in the writer, and nothing else may set it.
+//
+// An empty tracklist is not flawless. That is the honest reading — a claim
+// about every track cannot be made about no tracks — and it is the one case
+// that can take the mark off an older entry, on the day that entry is next
+// saved.
+//
+// Half stars survive in `rating` as real numbers, so this compares against 5
+// rather than truthiness: 4.5 is not five.
+export function flawless(tracks) {
+  if (!Array.isArray(tracks) || tracks.length === 0) return false;
+  return tracks.every(t => {
+    const n = parseFloat(t?.rating);
+    return Number.isFinite(n) && n === 5;
+  });
+}
+
 export function entryTracks(entry) {
   if (Array.isArray(entry?.tracks) && entry.tracks.length) {
     return entry.tracks.map(t => ({

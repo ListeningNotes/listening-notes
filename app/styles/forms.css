@@ -1196,33 +1196,46 @@ a.pn-item-album:hover { text-decoration: underline; text-underline-offset: 3px; 
   animation: snRise 0.4s cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 @keyframes snRise { from { transform: translateY(100%); } to { transform: none; } }
-/* The grabber. It reads as the thing you pull and it is a real button, so it
-   is reachable by a keyboard and says what it does to a screen reader — a bare
-   decorative bar would be neither. */
-.sn-grip {
-  align-self: center; flex-shrink: 0;
-  width: 56px; min-height: 28px; margin-bottom: 6px; padding: 0;
+/* The close, in a corner. It was centred at the top for a day, which read as
+   part of the sheet's own content and sat over the record you came to look at
+   — every other close on this site is in a corner (Miyel, 2026-09-17). Right,
+   because that is the corner this site's tools live in. */
+.sn-shut {
+  align-self: flex-end; flex-shrink: 0;
+  width: 36px; height: 36px; margin: -2px -6px 2px 0; padding: 0;
   display: flex; align-items: center; justify-content: center;
-  border: none; background: transparent; color: var(--ink-faint); cursor: pointer;
+  border: none; border-radius: 10px; background: transparent;
+  color: var(--ink-faint); cursor: pointer;
 }
-.sn-grip:hover { color: var(--ink-soft); }
+.sn-shut:hover { color: var(--ink); background: var(--bg-warm); }
 .sn-form { display: flex; flex-direction: column; gap: 18px; }
 .sn-group { display: flex; flex-direction: column; gap: 9px; }
 .sn-label {
   font-family: var(--font-label); font-size: 10px; letter-spacing: 0.14em;
   text-transform: uppercase; color: var(--ink-faint);
 }
-/* The record, when the send started on one. Small and to one side: you pressed
-   Send on this record and the sheet is reminding you, not asking. */
-.sn-record { display: flex; align-items: center; gap: 14px; }
+/* The record, when the send started on one. Centred, with the art over its
+   name (Miyel, 2026-09-17): it is the object being handed across and the
+   subject of everything below it, and a cover pushed into the left corner with
+   its name beside it reads as a row in a list. The art is larger for the same
+   reason — it is the one picture on the sheet. */
+.sn-record { display: flex; flex-direction: column; align-items: center; gap: 10px; text-align: center; }
 .sn-record-art {
-  width: 64px; height: 64px; flex-shrink: 0; border-radius: 6px; object-fit: cover;
-  box-shadow: inset 0 0 0 1px var(--border);
+  width: 132px; height: 132px; flex-shrink: 0; border-radius: 8px; object-fit: cover;
+  box-shadow: inset 0 0 0 1px var(--border), var(--shadow-lift);
 }
-.sn-record-art--none { background: var(--panel); }
+.sn-record-art--none { background: var(--panel); box-shadow: inset 0 0 0 1px var(--border); }
 .sn-record-who { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
-.sn-record-album { font-weight: var(--font-display-weight); font-size: 17px; }
+.sn-record-album { font-weight: var(--font-display-weight); font-size: 18px; line-height: 1.2; }
 .sn-record-artist { font-size: 13px; color: var(--ink-soft); }
+/* Narrowing the book, once there are more faces than the strip shows at once. */
+.sn-find {
+  width: 100%; box-sizing: border-box;
+  padding: 10px 12px; border-radius: 10px;
+  border: 1px solid var(--border); background: var(--panel);
+  font-family: inherit; font-size: 16px; color: var(--ink);
+}
+.sn-find::placeholder { color: var(--ink-faint); }
 .sn-empty { margin: 0; font-size: 13px; line-height: 1.5; color: var(--ink-soft); }
 /* 16px, like every other field on a touch screen: Safari zooms in on anything
    smaller and does not reliably zoom back out. */
@@ -1233,8 +1246,11 @@ a.pn-item-album:hover { text-decoration: underline; text-underline-offset: 3px; 
   font-family: inherit; font-size: 16px; line-height: 1.5; color: var(--ink);
 }
 .sn-note::placeholder { color: var(--ink-faint); }
-.sn-quiet { display: flex; align-items: center; gap: 10px; min-height: 44px; font-size: 14px; color: var(--ink-soft); }
-.sn-quiet input { width: 19px; height: 19px; margin: 0; accent-color: var(--ink); }
+.sn-quiet {
+  display: flex; align-items: center; justify-content: space-between; gap: 14px;
+  min-height: 44px; font-size: 14px; color: var(--ink-soft); cursor: pointer;
+}
+/* The switch itself is shared — see .ln-switch in base.css. */
 .sn-error { margin: 0; font-size: 13px; line-height: 1.5; color: var(--fav); }
 .sn-foot { display: flex; flex-direction: column; gap: 11px; }
 /* Who it is from, said rather than asked. */
