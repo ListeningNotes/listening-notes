@@ -152,10 +152,19 @@ export default function RecordContents({
     ['released', facts.released || ''],
   ].filter(([, value]) => value);
 
-  const said = [
-    ['Genre', facts.genre || ''],
-    ['Label', facts.label || ''],
-  ].filter(([, value]) => value);
+  // Genre and a label sat on a line under the band for an hour on 2026-09-18
+  // and came off the same day. Miyel: "we can remove genre and label, it's not
+  // necessary right now. We don't even show the genre tag on entry posts — I
+  // think it's just for filtering your archive, let's just leave it only
+  // there."
+  //
+  // She is right about where it earns its place: `genre` is a column the
+  // archive filters on, and it goes on being fetched and saved by the same
+  // lookup this screen already makes. Nothing is lost by not printing it here.
+  // The label is still parsed (labelFrom in music_data_api.js, checked against
+  // eight real copyright strings) and now goes nowhere — parked rather than
+  // pulled out, because the parsing was the work and the fetch was happening
+  // anyway.
 
   // What has been said about each track so far — read once here rather than
   // twice inside the list.
@@ -211,16 +220,6 @@ export default function RecordContents({
                 </div>
               ))}
             </div>
-          )}
-          {said.length > 0 && (
-            <p className="idc-genres">
-              {said.map(([label, value]) => (
-                <span className="ses-said" key={label}>
-                  <span className="idc-genres-label">{label}</span>
-                  <span className="idc-genres-said">{value}</span>
-                </span>
-              ))}
-            </p>
           )}
         </div>
       </div>

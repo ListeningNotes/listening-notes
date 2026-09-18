@@ -77,9 +77,15 @@ export default function TrackThread({
               to see a difference you cannot see at this size.
 
               It shows what the track is worth, so the row still reads at a
-              glance — and says "Not rated" where nothing is set, because an
-              empty row of stars would be a control nobody asked for, and
-              nothing at all would leave no way in. */}
+              glance. Where nothing is set it said the words "Not rated" until
+              2026-09-18, on the reasoning that an empty row of stars is a
+              control nobody asked for — which was true while an entry only
+              ever held the tracks you had written on. It holds the whole
+              record now, so the rows with nothing on them are the point of
+              opening a correction at all, and two words are a worse invitation
+              than five empty stars. Miyel: "it should show an empty blank star
+              stand-in when editing, not just 'Not rated'." The row draws them
+              faint at rating 0 on its own. */}
           {editing ? (
             <button
               type="button"
@@ -88,9 +94,7 @@ export default function TrackThread({
               aria-expanded={dialOpen}
               aria-label={`Rate ${track.name}`}
             >
-              {(draft?.rating || 0) > 0
-                ? <StarRating rating={draft.rating} size={14} />
-                : <span className="ln-track-unrated">Not rated</span>}
+              <StarRating rating={draft?.rating || 0} size={14} />
             </button>
           ) : track.stars > 0 ? (
             <StarRating rating={track.stars} size={14} />
@@ -121,7 +125,7 @@ export default function TrackThread({
           onChange={e => onField?.('note', e.target.value)}
           onInput={e => { e.currentTarget.style.height = 'auto'; e.currentTarget.style.height = `${e.currentTarget.scrollHeight}px`; }}
           ref={el => { if (el) { el.style.height = 'auto'; el.style.height = `${el.scrollHeight}px`; } }}
-          placeholder="Nothing yet"
+          placeholder="No notes"
           aria-label={`Note on ${track.name}`}
         />
       ) : track.note ? (
