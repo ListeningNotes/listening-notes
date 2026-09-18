@@ -392,7 +392,7 @@ export default function SessionPage() {
           {step === 3 && (
             <SessionPreview
               album={s.albumInput} artist={s.artistName} year={s.year} albumArt={s.albumArt} genre={s.genre}
-              overallNotes={s.overallNotes}
+              overallNotes={s.overallNotes} hasWriting={s.hasWriting}
               rating={s.rating} Masterpiece={s.Masterpiece} Favorite={s.Favorite} Formative={s.Formative}
               entryType={s.entryType} receivedFrom={s.receivedFrom} receivedFromUrl={s.receivedFromUrl}
               tracks={s.tracks} trackRatings={s.trackRatings} trackFavorites={s.trackFavorites} trackNotes={s.trackNotes}

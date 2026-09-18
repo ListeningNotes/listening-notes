@@ -317,7 +317,7 @@ export function useListeningSession({ step }) {
   useEffect(() => {
     if (step !== SESSION_STEPS.length - 1 || saved) return;
     setOutput(null);
-    if (overallNotes.trim()) doFormat();
+    if (hasWriting) doFormat();
   // Keyed on the step alone, on purpose: the preview is rebuilt on arrival,
   // not on every keystroke behind it.
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -475,7 +475,16 @@ export function useListeningSession({ step }) {
   // Returns what it assembled as well as setting it, so a save that arrives
   // before the preview's own assembly has landed can assemble and go on.
   async function doFormat() {
-    if (!overallNotes.trim()) return null;
+    // Anything at all, not an album note in particular (2026-09-18). The
+    // album note used to be the one thing a listen could not be saved
+    // without, which made every other kind of entry impossible: a record
+    // rated and not written about, a record you only marked a favourite, a
+    // record with notes on three tracks and nothing to say about the whole.
+    // Miyel: "if someone wants to post just an overall album score with no
+    // album notes, track notes or stars, I guess that's fine." It is —
+    // hasWriting is the test, and it was already here, deciding whether a
+    // draft was worth keeping. The same question, asked once.
+    if (!hasWriting) return null;
     setFormatting(true);
     try {
       const res = await fetch('/api/format', {
