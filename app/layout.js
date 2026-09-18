@@ -249,11 +249,11 @@ export default async function RootLayout({ children, layer }) {
   // string. So the server answers it here, and the nav, the gate and the
   // wordmark just read it.
   settings.cover_name = coverName(all);
-  // Whether research is on. The key itself never leaves the server; a boolean
-  // does, so the session's album screen can leave the button out on a copy
-  // that has no key rather than show one that fails. Settings first, the
-  // environment second — the same order the vault resolves it in.
-  settings.research_available = Boolean(all.has_anthropic_key || process.env.ANTHROPIC_API_KEY);
+  // `research_available` was here until 2026-09-18 — a boolean saying whether
+  // this copy had an Anthropic key, so the album screen could leave the
+  // Research button out rather than show one that fails. Nothing asks any
+  // more: the research and the question mark came out of the software (see
+  // docs/RETIRED-PROMPTS.md), and the key they needed has no other reader.
   // Whether this journal broadcasts at all, which is the only question the
   // beacon has left to ask before paint.
   //

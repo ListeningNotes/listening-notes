@@ -63,7 +63,7 @@ publicly):
   where you agree and disagree hardest, what they sent you and how it landed
 - `/dashboard/submissions` — a redirect into the inbox, kept for old links
 - `/settings` — the machinery: address, the beacon's on/quiet switch, the
-  Anthropic key, the password, the home-screen step, and Sign out. Reached from the Settings door on
+  the password, the home-screen step, and Sign out. Reached from the Settings door on
   the desk. The card's own fields are
   edited on the card, behind its pencil
 
@@ -92,7 +92,6 @@ The library — logic, no visuals
     slug_generator.js          Turns "Pet Sounds" into "pet-sounds" for the URL
     entry_formatter.js         Parses entry data so it can be displayed correctly
     sitewide_visuals.js        All colors and fonts — change here, changes everywhere
-    ai_integration.js          The Claude AI calls: research, and the local assembly of a post
     music_data_api.js          Fetches album art and tracklists from iTunes
     card_links.js              The marks a card can wear — which shape stands for the rig, which logo a link gets
     portrait_code.js           The press: the portrait made into the journal's QR code on the server — a dot of ink in every photo module, proved by the strictest reader on both page colours
@@ -121,9 +120,7 @@ The front doors — receive requests, hand them off, send back responses
     entries/[slug]/code/route.js  GET: the entry's code, pressed out of its cover — public, rate-limited, cached a day
     comments/route.js          Load or submit comments
     comments/upvote/route.js   Upvote a comment
-    research/route.js          Ask Claude to research an album
     format/route.js            Assemble your notes into a post (local, no model)
-    ask/route.js               A question, answered with the album and your notes in context
     settings/route.js          The settings row — public to read, owner-only to write
     people/route.js            The address book — owner-only: the list, and filing an address
     people/[id]/route.js       One person: reading them, crossing them out
@@ -138,7 +135,7 @@ The front doors — receive requests, hand them off, send back responses
 The hooks — reusable logic shared across pages
   hooks/
     useListeningBeacon.js      Asks this journal's own beacon every 15 seconds — logging, listening or last logged
-    useListeningSession.js     All session state — the record, tracks, notes, score, preview, saving; research on request
+    useListeningSession.js     All session state — the record, tracks, notes, score, preview, saving
     useSessionDraft.js         The listen's draft — the browser's copy and the row in drafts — autosave, restore, cleanup
     useSpineWidth.js           The spine — the left page of the open book on a desk: how wide, remembered per browser, clamped, dragged by the fold
 
@@ -191,10 +188,9 @@ The furniture — visual pieces
       PasswordGate.js          The password screen
       AlbumPicker.js           Type, see a grid of covers, tap one — the screen before a listen
       SessionHeader.js         The title line, the glowing question mark and the theme switch, and the four steps
-      AskSheet.js              The reference — a bottom sheet on a phone, a column beside the writing on a desk
       StarRating.js            The interactive stars you click to rate
       steps/
-        AlbumScreen.js         Step 0 — the cover, large; Start or Resume session; Research as a button
+        AlbumScreen.js         Step 0 — the cover, large; Start or Resume session
         TrackNotes.js          Step 1 — one track per screen, under a strip of every track's bar, dot and title
         AlbumNotes.js          Step 2 — the horizon so far, the score, the three marks, then the album note
         SessionPreview.js      Step 3 — the real entry page (FullPostPage in preview mode) on its own sheet, with Return to session and Save to journal at its foot
@@ -256,8 +252,7 @@ The rooms — full pages assembled from furniture
 |------------------------|-------------|
 | The site's colors | library/sitewide_visuals.js |
 | The site's fonts | library/sitewide_visuals.js |
-| What Claude says during research | library/ai_integration.js, research_album |
-| How your notes are assembled into a post | library/ai_integration.js, format_post |
+| How your notes are assembled into a post | library/entry_formatter.js, format_post |
 | The nav row | components/main_components/SiteNav.js, and HomeNav.js on the cross |
 | The listening beacon | components/main_components/ListeningBeacon.js |
 | The row of recent covers under the beacon | components/main_components/HomeNav.js, recentRow |
@@ -268,7 +263,6 @@ The rooms — full pages assembled from furniture
 | The album picker | components/session_components/AlbumPicker.js |
 | The note-taking session | app/session/page.js, styles in app/styles/session.css |
 | The header above every session screen | components/session_components/SessionHeader.js |
-| The question mark's sheet, and what it is told | components/session_components/AskSheet.js and app/api/ask/route.js |
 | The session screens (album, tracks, notes, preview) | components/session_components/steps/ |
 | Editing an entry | hooks/useEntryEditor.js, drawn into app/entries/[slug]/FullPostPage.js |
 
@@ -310,7 +304,7 @@ than what anyone remembers building.
 | `comments` | Replies on entries and on individual tracks, with a moderation queue. |
 | `submissions` | Albums other people have sent you. `status` is pending, reviewed (a listen was started from the row), logged, or dismissed; `entry_id` is the record a send became, set by hand on the row and never by matching. |
 | `drafts` | A listening session in progress, so closing the tab does not lose it. |
-| `briefings` | Cached album research, keyed by album, so the same record is not paid for twice. |
+| `briefings` | Cached album research. Nothing reads or writes it since 2026-09-18 — the research came out of the software and the schema is additive-only, so the table stays with whatever is in it (docs/RETIRED-PROMPTS.md). |
 
 Two columns on `entries` are computed by Postgres and cannot be written to:
 `rating_value` (the numeric score, so sorting works) and `album_key` (a

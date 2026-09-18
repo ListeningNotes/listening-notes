@@ -170,3 +170,32 @@ export function entryTypeLabel(type) {
 export function lookup_key(album, artist) {
   return `${album} ${artist}`.toLowerCase().replace(/&/g, 'and').replace(/[^a-z0-9]+/g, ' ').trim();
 }
+
+// ── Assembling an entry out of what was written ───────────────────────────
+// This lived in library/ai_integration.js, which is gone with the research
+// (2026-09-18, docs/RETIRED-PROMPTS.md). It was already the odd one out in
+// there: nothing here reaches a model. The only generated thing was ever the
+// tag list, and tags went in 2026-08 — the archive searches the notes and the
+// genre is its own field — so it has been a local, instant, free assembly of
+// prose that was never round-tripped for a while now.
+//
+// Here rather than in a file of its own because this is what this file is:
+// the shapes an entry is written in, derived from the tracks.
+export async function format_post({ notes, trackNotes, trackRatings, tracks }) {
+  const trackNotesBlock = tracks?.length
+    ? tracks.map((t, i) => {
+        const note = trackNotes?.[i];
+        const stars = trackRatings?.[i];
+        if (!note && !stars) return null;
+        const starStr = stars ? ('★'.repeat(Math.floor(stars)) + (stars % 1 >= 0.5 ? '½' : '')) : '';
+        return (t.number || i + 1) + '. ' + t.title + (starStr ? ' — ' + starStr : '') + (note ? '\n' + note : '');
+      }).filter(Boolean).join('\n\n')
+    : '';
+
+  return {
+    album_notes: notes,        // exactly as written — never round-tripped
+    track_notes: trackNotesBlock,
+    // The same bar the album screen shows live during the session.
+    horizon: buildHorizon(tracks, trackRatings),
+  };
+}

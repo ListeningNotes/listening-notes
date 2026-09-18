@@ -11,7 +11,6 @@
     "restore": "node scripts/restore.mjs"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.80.0",
     "@neondatabase/serverless": "^1.0.2",
     "@phosphor-icons/react": "^2.1.10",
     "jose": "^6.2.2",

@@ -1,6 +1,6 @@
 // Copyright (C) 2026 Miyel Brown
 // SPDX-License-Identifier: AGPL-3.0-or-later
-import { format_post } from '@/library/ai_integration';
+import { format_post } from '@/library/entry_formatter';
 import { requireWristband } from '@/library/wristband';
 
 export async function POST(request) {

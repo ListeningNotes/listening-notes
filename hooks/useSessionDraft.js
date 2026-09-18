@@ -24,7 +24,7 @@ export function useSessionDraft({ step, saved, hasWriting, values, setters }) {
   const {
     albumInput, artistName, year, albumArt, genre, entryType, receivedFrom, receivedDate,
     receivedFromUrl = '', creditPrivate = false, submissionId = null,
-    collectionIdRef, brief, tracks, overallNotes, trackNotes, trackRatings, trackFavorites,
+    collectionIdRef, tracks, overallNotes, trackNotes, trackRatings, trackFavorites,
     rating, Masterpiece, Favorite, Formative, elapsedRef,
   } = values;
   const {
@@ -159,8 +159,8 @@ export function useSessionDraft({ step, saved, hasWriting, values, setters }) {
         body: JSON.stringify({
           album,
           artist: artistName || '',
-          year: year || brief?.year || '',
-          genre: genre || brief?.genre || '',
+          year,
+          genre,
           entry_type: entryType,
           album_art: albumArt,
           collection_id: collectionIdRef.current,
