@@ -1020,10 +1020,11 @@
    middle of it: it is as tall as the search is. */
 .hn--choosing .hn-screen {
   min-height: 0;
-  /* The crown is what normally holds the pane clear of the bar. With it gone
-     the screen has to do it itself, or the shrunken cover sits under the row
-     with the mark in it. */
-  padding-top: calc(var(--hn-bar-h) + 10px);
+  /* Clear of the bar — and the bar is shorter while choosing, because it has
+     taken the session header's shape (above). Reading --hn-bar-h here left
+     22px of nothing between the row and the search, which is 22px the drafts
+     could have had. */
+  padding-top: calc(env(safe-area-inset-top, 0px) + 80px);
   padding-bottom: 40px;
   gap: 14px;
 }
@@ -1104,6 +1105,56 @@
    "remove the line between the album art in the selector and the LN header,
    that will make it feel more like it morphs to this screen." */
 .hn--choosing .hn-bar--scrolled { border-bottom-color: transparent; }
+/* ── The bar becomes the session's header ─────────────────────────────────
+   Choosing a record, this row is the row the session is about to have, so it
+   takes the session's geometry rather than its own: the notch, then 10px,
+   then a 48px line — .ses-head / .ses-head-in / .ses-head-row in session.css,
+   number for number. Its own shape puts the line 51px below the notch
+   allowance and the session's puts it 34 below the notch itself, which is a
+   difference of about 17px on a flat screen and 21 on a notched one — small
+   enough to look like nothing and exactly big enough for the cover to hop at
+   the handoff, which is the one thing this must not do. */
+.hn--choosing .hn-bar {
+  height: calc(env(safe-area-inset-top, 0px) + 68px);
+  padding-top: env(safe-area-inset-top, 0px);
+}
+/* The record itself, in the middle of that line. .ses-cover's own numbers:
+   44px, 14px of radius, the same panel behind it and the same small shadow
+   under it. */
+.hn-bar-cover {
+  position: absolute;
+  left: 50%;
+  top: calc(env(safe-area-inset-top, 0px) + 12px);
+  transform: translateX(-50%);
+  width: 44px; height: 44px;
+  border-radius: 14px;
+  overflow: hidden;
+  background: var(--panel);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.14);
+}
+.hn-bar-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* And no LN mark beside it. Two marks in one row is the thing she asked to be
+   rid of — "without the small LN logo in between". */
+.hn--choosing .hn-bar-mark { display: none; }
+/* ── The card stands down entirely ────────────────────────────────────────
+   It shrank to 132px and held the middle of the screen while you searched,
+   which is the shape this had before the record moved into the bar. With the
+   record up there the card is a second copy of the same thing, and the room
+   it was keeping is room a list of drafts wants (Miyel, 2026-09-18: "then it
+   gives more room to have a list of drafts").
+   Collapsed on the same clock as everything else, so the picker opens into
+   the space as the card gives it up. */
+.hn--choosing .beacon-stage {
+  max-height: 0;
+  opacity: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+.beacon-stage {
+  transition: max-height 0.7s cubic-bezier(0.22, 0.61, 0.36, 1),
+              opacity 0.4s ease;
+  max-height: 900px;
+}
 .hn--choosing .beacon-art-wrap {
   width: 132px;
   height: 132px;

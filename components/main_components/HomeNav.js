@@ -255,7 +255,7 @@ function secondFloorTop(pane) {
 export default function HomeNav() {
   const { cover_name, pinned_entry_id } = useBookplate();
   const { theme, toggle: toggleTheme } = useTheme();
-  const { isLive, before } = useListeningBeacon();
+  const { isLive, before, art: onAir } = useListeningBeacon();
   // How wide the spine is on a desk, and the grip that changes it. The hook
   // writes the width onto the document's root as --spine-w, which the
   // stylesheet reads above 769px and ignores below it.
@@ -976,6 +976,23 @@ export default function HomeNav() {
           onClick={() => goUp(pane)}
           aria-label="Back to the top"
         />
+      )}
+      {/* ── The record, in the bar, while you are choosing one ─────────────
+          Miyel, 2026-09-18: "when you start a session the beacon automatically
+          becomes the mini without the small LN logo in between — the art
+          becomes the beacon. You choose an album or a draft, that takes the
+          place of the mini beacon and the session shows up. It cuts that
+          middle step of becoming chosen and moving to the header."
+          Placed in the session header's own coordinates rather than the bar's
+          — 44px, 14px of radius, twelve below the notch — because the whole
+          point is that when the session resolves over this, its cover is
+          already exactly here and nothing appears to move. The bar's own row
+          shifts up to meet it (.hn--choosing .hn-bar in nav.css), so the ×
+          and the lights sit on the line they will sit on in a moment. */}
+      {choosing && (
+        <span className="hn-bar-cover" aria-hidden="true">
+          {onAir ? <img src={onAir} alt="" /> : null}
+        </span>
       )}
       {/* The small mark. On a phone, only while the crown has scrolled away
           (the stylesheet hides it until then, so the crown and this are
