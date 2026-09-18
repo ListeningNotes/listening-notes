@@ -1466,6 +1466,14 @@ whatever a test writes over is gone.
 point a needle is written can be checked freely; the listen itself is Miyel's
 to test on her phone, against her own journal.
 
+**And never open `/session` directly.** A cold load has no block in it and
+writes a needle two seconds later — that is the third time it got through on
+2026-09-18, and the one that cannot be defended against from inside the page.
+Reach a listen the way a person does: load `/`, install the block, then press
+through. If the beacon has to be put back afterwards, deleting the row is the
+restore when what was there had already ended, and an UPDATE with the old
+values when it had not.
+
 
 **The Claude browser pane reports `visibilityState: 'hidden'`, so the beacon
 never loads in it — 2026-09-17.** Since the quieter-beacon work,
