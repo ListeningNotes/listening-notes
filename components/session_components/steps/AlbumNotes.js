@@ -57,6 +57,8 @@ export default function AlbumNotes({
             tracks={list} trackRatings={trackRatings} favorites={trackFavorites}
             height={56} color="var(--ink-soft)" emptyColor="var(--border)" labelColor="var(--ink-faint)"
           />
+        </div>
+      )}
 
 
       {/* No "Your score" over it. Five stars under a record you are in the
@@ -64,7 +66,15 @@ export default function AlbumNotes({
           type doing the work the stars already do (Miyel, 2026-09-18: "I
           don't think we need to have your score be labeled — we know what
           we're doing"). */}
-      <div className="ses-center ses-score" style={{ marginTop: 26 }}>
+      {/* ── Your score, always ────────────────────────────────────────────
+          This lived inside the block above until 2026-09-18, which meant the
+          album's own stars only existed once some *track* had been rated —
+          so a record you listened straight through and wanted to give four
+          stars to had nowhere to put them, and a record iTunes returned no
+          tracklist for had nowhere at all. Nothing decided that; it was a
+          side effect of the stars being parked under the chart. Miyel, on
+          being shown it: "I think we can take limitations off." */}
+      <div className="ses-center ses-score" style={{ marginTop: hasRatings ? 26 : 8 }}>
         <StarRating
           value={rating}
           onChange={setRating}
@@ -91,19 +101,19 @@ export default function AlbumNotes({
           blind on purpose — "sometimes I like to not see what my average is
           and just rate it and see if it matches up with what I thought" — so
           nothing is shown until it is asked for. */}
-          <div className="ses-reveal">
-            {avg && (
-              <button
-                type="button"
-                className="ses-quiet"
-                style={{ borderBottom: 'none' }}
-                onClick={() => setAvgShown(v => !v)}
-                aria-pressed={avgShown}
-              >
-                {avgShown ? 'hide average' : 'reveal average'}
-              </button>
-            )}
-          </div>
+      {/* Only when there is an average to reveal, which is the same thing as
+          some track having been rated. */}
+      {avg && (
+        <div className="ses-reveal">
+          <button
+            type="button"
+            className="ses-quiet"
+            style={{ borderBottom: 'none' }}
+            onClick={() => setAvgShown(v => !v)}
+            aria-pressed={avgShown}
+          >
+            {avgShown ? 'hide average' : 'reveal average'}
+          </button>
         </div>
       )}
 

@@ -31,7 +31,8 @@ import { LayerHeaderSlot } from '../../main_components/LayerEntry';
 
 export default function SessionPreview({
   album, artist, year, albumArt, genre,
-  overallNotes, rating, Masterpiece, Favorite, Formative, entryType, receivedFrom, receivedFromUrl,
+  overallNotes,
+  hasWriting, rating, Masterpiece, Favorite, Formative, entryType, receivedFrom, receivedFromUrl,
   tracks, trackRatings, trackFavorites, trackNotes,
   saving, saved, savedEntry,
   doSave, onBack, onAnother,
@@ -92,8 +93,6 @@ export default function SessionPreview({
   // The sheet takes the focus so Escape reaches it.
   const sheet = useRef(null);
   useEffect(() => { sheet.current?.focus({ preventScroll: true }); }, []);
-
-  const canSave = !!overallNotes.trim() && !saved;
 
   // The portal needs the document. This only ever renders in the browser —
   // the session page draws nothing until the door has been checked — so the
@@ -169,15 +168,22 @@ export default function SessionPreview({
             <button type="button" className="ln-pin" onClick={onBack} disabled={saving}>
               Go back
             </button>
-            {/* Disabled rather than absent while there is no album note. A
+            {/* Disabled rather than absent while the record is untouched. A
                 button that vanishes leaves you looking for it; one that is
                 there and dim tells you there is a condition, and the line
-                above the bar says what it is. */}
+                above the bar says what it is.
+                The condition was an album note until 2026-09-18 and is now
+                simply *anything* — a star, a mark, a heart, a word on one
+                track. It is `hasWriting`, the same test that decides whether
+                a listen is worth keeping as a draft, so the two can never
+                disagree about whether you have done something. What is left
+                is not a rule about what to write; it is what stops a press on
+                a record you opened and never touched becoming an entry. */}
             <button
               type="button"
               className="ln-pin ln-pin--on"
               onClick={doSave}
-              disabled={saving || !overallNotes.trim()}
+              disabled={saving || !hasWriting}
             >
               {saving ? 'Saving' : 'Save to journal'}
             </button>
@@ -196,8 +202,8 @@ export default function SessionPreview({
           place and the same shape as the entry's .ln-trouble. In the bar it
           would have to share a row with two buttons at 9px uppercase, which
           on a phone is three things fighting for one line. */}
-      {!saved && !overallNotes.trim() && (
-        <p className="ses-preview-why">Write an album note to save</p>
+      {!saved && !hasWriting && (
+        <p className="ses-preview-why">Nothing logged yet</p>
       )}
     </div>
     </LayerHeaderSlot.Provider>,
