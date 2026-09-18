@@ -67,9 +67,9 @@
 // layout — the stylesheet does all of it above 769px.
 
 'use client';
-import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
-import { ArrowsLeftRight } from '@phosphor-icons/react';
+import { ArrowRight, ArrowsLeftRight } from '@phosphor-icons/react';
 import { useListeningBeacon } from '../../hooks/useListeningBeacon';
 import { useSpineWidth } from '../../hooks/useSpineWidth';
 import { useTheme } from './Lightswitch';
@@ -79,7 +79,7 @@ import Journal from './Journal';
 import EdgeCaret from './EdgeCaret';
 import Footer from './Footer';
 import About from './About';
-import Dashboard from './Dashboard';
+import Dashboard, { heldNow, subscribeHeld } from './Dashboard';
 import Pitch from './Pitch';
 
 // You, then home. Home is the one you land on, which is why it is not index
@@ -306,6 +306,10 @@ export default function HomeNav() {
       return paneRefs[HOME].current;
     },
   }).current;
+
+  // Whether there is a record in hand — the same key the desk reads, read the
+  // same way, so the two can never disagree about whether a listen is open.
+  const inHand = useSyncExternalStore(subscribeHeld, heldNow, () => null);
 
   const [pane, setPane] = useState(HOME);
   // Whether anything is moving right now. The controls sit over the page
@@ -784,7 +788,33 @@ export default function HomeNav() {
             <div className="hn-screen hn-band">
               <div className="hp-dashboard">
                 <div className="hp-dash-cell hp-dash-beacon">
-                  <ListeningBeacon />
+                  {/* ── The owner's way in ──────────────────────────────
+                      Under the artist, inside the record's own block, so it
+                      reads as the last line of what is on the beacon rather
+                      than as a control parked underneath it (Miyel's beacon
+                      brief, 2026-09-17). Text and an arrow: no pill and no
+                      tile, the voice the session already uses to move you on.
+
+                      It says Back to the listen for as long as there is a
+                      record in hand, because that is what pressing it does —
+                      a door you can return through has to say so. The desk
+                      says "Listening now" in the same state and should: it is
+                      beside the session on a desktop and has to describe the
+                      page next to it. Here the beacon is one line up and has
+                      already said what is playing.
+
+                      Owner only, and it is a Link until item 2 of the brief
+                      turns it into the way floor one becomes the picker. A
+                      visitor has no listen to start, and the writing routes
+                      check the wristband for themselves whatever is drawn. */}
+                  <ListeningBeacon>
+                    {authed && (
+                      <Link href="/session" className="ln-onward" title={inHand ? `Back to ${inHand.album}` : undefined}>
+                        {inHand ? 'Back to the listen' : 'Start a listen'}
+                        <ArrowRight size={16} weight="regular" aria-hidden="true" />
+                      </Link>
+                    )}
+                  </ListeningBeacon>
                 </div>
               </div>
               {recentRow}

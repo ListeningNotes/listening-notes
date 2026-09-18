@@ -1416,6 +1416,26 @@ Project → Settings → Environment Variables.
 
 ## Gotchas
 
+**The Claude browser pane reports `visibilityState: 'hidden'`, so the beacon
+never loads in it — 2026-09-17.** Since the quieter-beacon work,
+`hooks/useListeningBeacon.js` skips its poll on a hidden tab. The preview pane
+is always hidden by that measure (`document.hidden === true`,
+`hasFocus() === false`), so every beacon there sits on "Nothing logged yet."
+for ever, whatever the database says. It is not a bug and it is not the
+stale-stylesheet trap: `/api/public/beacon` answers correctly the whole time.
+
+**To see the beacon in the pane**, lie to the page and knock:
+
+```js
+Object.defineProperty(document, 'visibilityState', { get: () => 'visible', configurable: true });
+Object.defineProperty(document, 'hidden', { get: () => false, configurable: true });
+document.dispatchEvent(new Event('visibilitychange'));
+```
+
+`wake()` polls immediately on that event and the beacon fills in. Real phones
+and real Safari are unaffected — a tab somebody is looking at is visible.
+
+
 **Claude cannot run the session, so nothing about it ships unverified again,
 2026-09-16.** `/session` is behind the password and there is no way in from
 this side — the reading half of the beacon could be proved by calling the route

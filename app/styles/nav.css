@@ -404,30 +404,14 @@
   text-transform: uppercase; color: var(--ink-faint); margin: 24px 0 0;
 }
 
-/* The stamp across the idle cover. It came off on 2026-09-15 for saying the
-   same thing as the caption, and came back on 2026-09-16 saying a different
-   one: the caption names the record (LAST LOGGED, LAST PLAYED) and this names
-   the state it is in (OUT OF SESSION, NOT LISTENING). Miyel's call after the
-   first real listen — a record logged and left looked, at a glance, no
-   different from one being written about at that moment, and greying the art
-   was not saying it on its own. */
-.beacon-idle-overlay {
-  position: absolute;
-  inset: 0;
-  background: rgba(0,0,0,0.35);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  /* Not green. That was the LED blue-white era's accent, kept alive here long
-     after the accent moved on — and green is the one colour on this site that
-     means "playing", which is precisely what this label is there to say is not
-     happening. Written on the scrim in the scrim's own colour instead. */
-  color: rgba(255,255,255,0.82);
-  font-family: var(--font-nunito), sans-serif;
-  font-size: 0.65rem;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-}
+/* OUT OF SESSION came off the idle cover on 2026-09-17 (Miyel's beacon
+   brief) and .beacon-idle-overlay went with it. The caption under the art is
+   the state line — LAST LOGGED, NOW LOGGING — so the stamp was the same fact
+   in a second voice, written across somebody's album art. The art still
+   greys, which is the half that was working. DECISIONS retired the
+   Last-played stamp on 2026-09-15 on the same grounds; this one outlived it
+   by a day. */
+
 
 /* The caption under the art: what the record is, before the title says
    which. Never green — see the dot on the mark. */
@@ -1895,7 +1879,6 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   .hn-band .beacon-track { font-size: 21px; }
   .hn-band .beacon-track--wrap { max-width: none; margin: 0; text-wrap: pretty; }
   .hn-band .beacon-artist { font-size: 0.8rem; }
-  .hn-band .beacon-idle-overlay { font-size: 0.5rem; letter-spacing: 0.14em; }
   /* What came before: three small covers at the band's far right, on the big
      cover's baseline, and no line over them — three small covers beside a
      large one say what they are. */

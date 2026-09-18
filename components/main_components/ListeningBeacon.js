@@ -27,20 +27,26 @@ const CAPTION = {
   logged: 'Last logged',
 };
 
-// And what is stamped across the art when neither beacon is live. Back on
-// 2026-09-16, Miyel's call after the first real listen: a record that has been
-// logged and left looked no different at a glance from one being written about
-// now, and the greying alone was not saying it.
+// OUT OF SESSION was stamped across the idle art from 2026-09-16 until
+// 2026-09-17, when Miyel took it off (this brief). It said the state was off
+// while the caption under it said which record this was, which is two
+// sentences about two different things — and that was the argument for it.
+// What beat it: the caption is already the state line (LAST LOGGED, and NOW
+// LOGGING when it is live), so the stamp was the same fact in a second voice
+// laid over somebody's album art. DECISIONS retired the Last-played stamp on
+// 2026-09-15 for exactly this reason and this one outlived it by a day.
 //
-// It is not the caption repeated. The caption under the art says what the
-// record is — the last one logged — and the stamp says the state is off. Two
-// sentences about two different things; the same screen twice is what took the
-// stamp off in the first place.
-const STAMP = {
-  logged: 'Out of session',
-};
+// The art still greys when nothing is open, which is the half that was doing
+// the work.
 
-export default function ListeningBeacon() {
+// `children` is the owner's line, and it belongs to whoever is drawing the
+// beacon rather than to the beacon: pressing it turns floor one into the
+// picker, which is a thing about the pane and not about this component (see
+// HomeNav). It lands under the artist, inside the meta stack, so it reads as
+// the last line of the record's own block rather than as furniture parked
+// underneath it. Drawn on the empty beacon too — a copy on its first
+// afternoon is exactly the one that needs a way to start.
+export default function ListeningBeacon({ children = null }) {
   const { state, album, artist, art, track, isLive } = useListeningBeacon();
   // A song wherever there is one — including after a listen has been shut,
   // which keeps the track that was open up rather than dropping back to the
@@ -68,6 +74,7 @@ export default function ListeningBeacon() {
     return (
       <div className="beacon-stage beacon-stage--quiet">
         <p className="beacon-quiet">Nothing logged yet.</p>
+        {children}
       </div>
     );
   }
@@ -80,13 +87,6 @@ export default function ListeningBeacon() {
             ? <img src={artUrl} alt={title} className={'beacon-art' + (!isLive ? ' beacon-art--idle' : '')} onError={() => setFailed(artUrl)} />
             : <div className="beacon-art-placeholder">♪</div>
           }
-          {/* The stamp across the idle cover, over art that is already
-              greyed. Drawn only where there is art to draw it on: over the ♪
-              placeholder it would be a label on an empty square, and the
-              caption underneath is saying the same thing more quietly. */}
-          {!isLive && artUrl && STAMP[state] && (
-            <div className="beacon-idle-overlay"><span>{STAMP[state]}</span></div>
-          )}
         </div>
         <div className="beacon-meta">
           {/* The caption, back since 2026-09-07 on Miyel's call, and under the
@@ -104,6 +104,7 @@ export default function ListeningBeacon() {
               four-line song title would push the album art off the screen. */}
           <div className="beacon-track beacon-track--wrap">{title}</div>
           {artist && <div className="beacon-artist">{artist}</div>}
+          {children}
         </div>
       </div>
     </div>
