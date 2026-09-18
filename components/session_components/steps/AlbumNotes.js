@@ -157,7 +157,14 @@ export default function AlbumNotes({
           aria-pressed={Formative}
           title="A record that made you"
         >
-          <Fingerprint size={24} weight={Formative ? 'fill' : 'regular'} aria-hidden="true" />
+          {/* Bold, not fill. Phosphor's filled Fingerprint is a solid pad with
+              the ridges knocked *out* of it, so turning it on painted the
+              background green and left the print itself as gaps — the
+              opposite of what the mark is (Miyel, 2026-09-18: "the
+              fingerprint should be the part that fills in green"). Weight is
+              what this glyph has instead of fill: thin grey lines unset,
+              thick green ones set. */}
+          <Fingerprint size={24} weight={Formative ? 'bold' : 'regular'} aria-hidden="true" />
           <span className="ses-mark-word">Formative</span>
         </button>
       </div>

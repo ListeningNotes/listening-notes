@@ -130,14 +130,17 @@ export default function StarRating({ value, onChange, size = 18, roomy = false, 
             {(filled || half) && (
               <span style={{ position: 'absolute', inset: 0, overflow: 'hidden', width: filled ? size : size / 2, color: '#E8B84B', fontSize: size, lineHeight: 1, userSelect: 'none' }}>★</span>
             )}
-            {/* The hint, in the same gold at a fifth of its weight — the same
-                colour so it is plainly the same measure, faint enough that
-                nobody reads it as a score already given. */}
+            {/* The hint, in the same gold at half weight — the same colour so
+                it is plainly the same measure, and plainly lighter than a
+                score that has been given. It was 0.28 for an hour and Miyel
+                could barely see it; the thing that keeps a hint from reading
+                as an answer is that you asked for it and that it leaves the
+                moment you rate, not that it is hard to make out. */}
             {!filled && !half && (n <= showing || (showing >= n - 0.5 && showing < n)) && (
               <span style={{
                 position: 'absolute', inset: 0, overflow: 'hidden',
                 width: n <= showing ? size : size / 2,
-                color: '#E8B84B', opacity: 0.28,
+                color: '#E8B84B', opacity: 0.5,
                 fontSize: size, lineHeight: 1, userSelect: 'none', pointerEvents: 'none',
               }}>★</span>
             )}
