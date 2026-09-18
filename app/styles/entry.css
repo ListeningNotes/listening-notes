@@ -983,7 +983,15 @@ a.ln-sent-who:hover { text-decoration: underline; text-underline-offset: 3px; }
 .ln-write:focus { outline: none; border-bottom-color: var(--ink-faint); }
 .ln-write::placeholder { color: var(--ink-faint); }
 /* A track's note is set smaller than the album's, and its field follows. */
-.ln-write--track { font-size: 13px; line-height: 1.8; color: var(--ink-soft); }
+/* No rule of its own, 2026-09-17. The track's own bottom border closes the row
+   off eighteen pixels below, so a border here drew a second line just above it
+   — which TrackThread's comment has claimed was fixed for some time without
+   this ever saying so. The album note keeps its rule: nothing else is
+   underlining that one. */
+.ln-write--track {
+  font-size: 13px; line-height: 1.8; color: var(--ink-soft);
+  border-bottom: 0; margin-bottom: 0;
+}
 
 /* An edit stamp, printed under the piece of writing it belongs to — a track's
    note, or the album note. Never at the top of an entry: one date on a post

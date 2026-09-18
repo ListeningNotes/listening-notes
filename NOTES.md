@@ -2431,6 +2431,15 @@ phone's scroll container — only ever existed because the thing floated.
 **Read-mode track stars went 12px → 14px** with it: Miyel on seeing the bigger
 row, "the new size looks better period, even for the actual entry."
 
+**Two lines between tracks while editing, and the comment saying otherwise had
+been wrong for a while.** `TrackThread` says "the note carries no border of its
+own — the row's own bottom border already closes the track off, and having both
+drew two lines a few pixels apart", and `.ln-write` has carried a
+`border-bottom` the whole time. So the fix was documented and never made, which
+is the worse of the two failures: a comment that describes an intention reads
+exactly like one that describes the code. Cleared on `.ln-write--track`; the
+album note keeps its rule, because nothing else underlines that one.
+
 **The foot of an entry is empty while reading, 2026-09-17.** It carried a Back
 to the journal caret and an up-to-the-top arrow; both came off on Miyel's call,
 and DECISIONS had the argument twice already — "nothing sits at the foot of the
