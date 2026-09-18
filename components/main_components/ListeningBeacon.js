@@ -111,7 +111,18 @@ export default function ListeningBeacon({ children = null, choosing = false, emp
     <div className="beacon-stage">
       <div className="beacon-card beacon-card--main">
         <div className={'beacon-art-wrap' + (isLive ? ' beacon-art-wrap--live' : '')}>
-          {emptied
+          {/* Empty while a record is being chosen, 2026-09-18. The slot went on
+              showing the last record the whole time the picker was open, so a
+              new cover flew out of the list and landed on top of a different
+              one — which is most of what Miyel meant by "the pass from
+              selecting an album to the session screen is still strange,
+              disjointed… start a fresh listen should maybe show a blank tile
+              when selecting. Not the beacon but the selection."
+              It is the beacon's own empty state, the same one the drop leaves
+              behind: a slot with nothing in it is a place for something to
+              arrive, and a slot with last week's record in it is a picture
+              being covered up. */}
+          {emptied || choosing
             ? <div className="beacon-art-empty" aria-hidden="true" />
             : artUrl
               ? <img src={artUrl} alt={title} className={'beacon-art' + (!isLive ? ' beacon-art--idle' : '')} onError={() => setFailed(artUrl)} />
