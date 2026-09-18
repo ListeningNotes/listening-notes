@@ -449,6 +449,15 @@ the archive, and a listen written up over three evenings is still the thing
 that was on. Somebody who sent you a record can see you sat with it, which is
 the loop the send flow exists to close.
 
+**Deleting an entry keeps the listen, 2026-09-18.** The beacon reads entries,
+drafts and the one live needle row, so a published listen's only lasting
+record was its entry, and deleting one took the evening with it. `delete_entry`
+now writes the album, artist, cover and the entry's own `posted_at` into
+`sat_with` (migration 020) and nothing else — no writing, no slug, so the cover
+draws plain and opens nothing, the way a draft's tile already does. Written
+only on a delete: this is not a log of everything played, which stays ruled out
+above.
+
 **The dot says the beacon is live, 2026-09-15.** The brief said green should
 mean playback alone and Miyel overruled it on the spot — one mechanic, not
 two. With playback gone (2026-09-16) there is one thing left that lights it,

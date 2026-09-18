@@ -5,6 +5,7 @@ import { tidyJournal } from './return_address.js';
 import { create_slug } from './slug_generator.js';
 import { serializeTracks, lookup_key, flawless } from './entry_formatter.js';
 import { sizedAlbumArt } from './music_data_api.js';
+import { keep_sat_with } from './needle.js';
 
 // Album art is sized on the way out rather than on the way in, so the row
 // keeps whatever URL it was saved with — the full-resolution master. That's
@@ -533,8 +534,17 @@ export async function update_entry(slug, fields) {
 // site and it is the difference between the column being revivable and its
 // revival carrying a silent bug.
 export async function delete_entry(slug) {
-  const [row] = await database`SELECT id FROM entries WHERE slug = ${slug} LIMIT 1`;
+  const [row] = await database`
+    SELECT id, album, artist, album_art, posted_at FROM entries WHERE slug = ${slug} LIMIT 1
+  `;
   if (!row) return { deleted: false };
+
+  // The listen outlives the post. Deleting used to take it with it, because
+  // the entry was the only lasting record that the evening happened — see
+  // keep_sat_with in needle.js, and migration 020. Four columns and no fifth:
+  // what the record was and when it was on. Written before the delete, so a
+  // delete that fails halfway has not already claimed a listen was taken down.
+  await keep_sat_with(row);
 
   const comments = await database`DELETE FROM comments WHERE entry_slug = ${slug} RETURNING id`;
   // The chain ends here rather than dangling: an album received from this one
