@@ -53,24 +53,41 @@ export default function AlbumNotes({
             tracks={list} trackRatings={trackRatings} favorites={trackFavorites}
             height={56} color="var(--ink-soft)" emptyColor="var(--border)" labelColor="var(--ink-faint)"
           />
-          {/* ── The average, drawn rather than written ──────────────────
-              "5 of 5 rated" was on the left of this row until 2026-09-18 —
-              the horizon above already says which tracks have a rating, so
-              the count was the picture written out in words.
 
-              And what the reveal reveals changed with it. It printed a line —
-              `avg 3.40 / 5` — which made this column three stacked pieces of
-              type saying three different things about the same record, one
-              under another (Miyel: "it's like reading a lot of text in a
-              column"). It draws the number into the stars below instead, as a
-              ghost on the empty row: the answer arrives where the question
-              is, and it goes as soon as there is a real score over it.
 
-              Still behind a press, which is the half worth keeping. Miyel
-              rates blind on purpose — "sometimes I like to not see what my
-              average is and just rate it and see if it matches up with what I
-              thought" — so nothing is shown until it is asked for. */}
-          <div className="ses-actions" style={{ justifyContent: 'center', marginTop: 8 }}>
+      {/* No "Your score" over it. Five stars under a record you are in the
+          middle of logging are not ambiguous, and the label was a line of
+          type doing the work the stars already do (Miyel, 2026-09-18: "I
+          don't think we need to have your score be labeled — we know what
+          we're doing"). */}
+      <div className="ses-center ses-score" style={{ marginTop: 26 }}>
+        <StarRating
+          value={rating}
+          onChange={setRating}
+          size={38}
+          /* The tracks' average, once it has been asked for — and unrounded,
+             because it is being read rather than chosen. A 4.89 draws as very
+             nearly five and not as four and a half (Miyel, 2026-09-18). */
+          ghost={avgShown && avg ? Number(avg) : 0}
+        />
+      </div>
+
+      {/* ── The average, under the stars it draws into ──────────────────
+          It sat under the horizon until 2026-09-18 and Miyel moved it here,
+          between the stars and the marks. That is where it belongs: what it
+          reveals is drawn *into* the stars, so the press and its answer were
+          a screen apart.
+
+          It printed a line before that — `avg 3.40 / 5` — which made the
+          column three stacked pieces of type saying three things about one
+          record. It draws the number into the row above instead: a ghost on
+          an empty one, and a tick under a rated one.
+
+          Still behind a press, which is the half worth keeping. Miyel rates
+          blind on purpose — "sometimes I like to not see what my average is
+          and just rate it and see if it matches up with what I thought" — so
+          nothing is shown until it is asked for. */}
+          <div className="ses-reveal">
             {avg && (
               <button
                 type="button"
@@ -85,23 +102,6 @@ export default function AlbumNotes({
           </div>
         </div>
       )}
-
-      {/* No "Your score" over it. Five stars under a record you are in the
-          middle of logging are not ambiguous, and the label was a line of
-          type doing the work the stars already do (Miyel, 2026-09-18: "I
-          don't think we need to have your score be labeled — we know what
-          we're doing"). */}
-      <div className="ses-center" style={{ marginTop: 26 }}>
-        <StarRating
-          value={rating}
-          onChange={setRating}
-          size={38}
-          /* The tracks' average, once it has been asked for — and unrounded,
-             because it is being read rather than chosen. A 4.89 draws as very
-             nearly five and not as four and a half (Miyel, 2026-09-18). */
-          ghost={avgShown && avg ? Number(avg) : 0}
-        />
-      </div>
 
       {/* ── The marks ─────────────────────────────────────────────────────
           Phosphor's SketchLogo, Heart and Fingerprint — the same three an

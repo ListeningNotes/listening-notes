@@ -2,6 +2,8 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 'use client';
 import { useEffect, useState } from 'react';
+import { Heart } from '@phosphor-icons/react';
+import StarRating from '../../main_components/StarRating';
 
 // What the next forty minutes are.
 //
@@ -45,6 +47,7 @@ const arrived = new Set();
 
 export default function RecordContents({
   tracks, tracksLoading, facts = {},
+  trackRatings = {}, trackFavorites = {},
   onPick, onNext, onLookAgain, onHandTracks,
 }) {
   const list = tracks || [];
@@ -122,6 +125,11 @@ export default function RecordContents({
     ['Label', facts.label || ''],
   ].filter(([, value]) => value);
 
+  // What has been said about each track so far — read once here rather than
+  // twice inside the list.
+  const rated = trackRatings || {};
+  const fav = trackFavorites || {};
+
   // The bar beside a title is that track against the longest on the record.
   const longest = list.reduce((most, t) => Math.max(most, Number(t.duration) || 0), 0);
   const barOf = t => {
@@ -180,7 +188,29 @@ export default function RecordContents({
               <div className="ses-contents-row">
                 <span className="ses-contents-n">{t.number || k + 1}</span>
                 <span className="ses-contents-title">{t.title}</span>
-                {width && <span className="ses-contents-bar" style={{ width }} aria-hidden="true" />}
+                {/* The right of a row is either how long the track is or what
+                    you made of it, and the second wins wherever there is one
+                    (Miyel, 2026-09-18: "almost looking like iTunes"). It is
+                    what makes this screen worth coming back to mid-listen: a
+                    draft picked up a week later says at a glance which tracks
+                    you have already been through.
+
+                    Nothing is drawn for an unrated track but the length,
+                    because an empty row of stars beside every title is a
+                    column of controls nobody asked for — the same rule the
+                    entry's tracklist keeps. */}
+                {rated[k] ? (
+                  <span className="ses-contents-said">
+                    {fav[k] && (
+                      <span className="ses-contents-heart" aria-hidden="true">
+                        <Heart size={11} weight="fill" />
+                      </span>
+                    )}
+                    <StarRating rating={rated[k]} size={12} />
+                  </span>
+                ) : width ? (
+                  <span className="ses-contents-bar" style={{ width }} aria-hidden="true" />
+                ) : null}
               </div>
             </li>
           );

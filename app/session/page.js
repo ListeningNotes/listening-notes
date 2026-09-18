@@ -335,6 +335,7 @@ export default function SessionPage() {
               {step === 0 && (
                 <RecordContents
                   tracks={s.tracks} tracksLoading={s.tracksLoading} facts={s.facts}
+                  trackRatings={s.trackRatings} trackFavorites={s.trackFavorites}
                   onPick={k => { s.setOpenTrack(k); goToStep(1); }}
                   onNext={() => goToStep(2)}
                   onLookAgain={s.lookAgain}
