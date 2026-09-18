@@ -879,7 +879,7 @@ export default function HomeNav() {
                       turns it into the way floor one becomes the picker. A
                       visitor has no listen to start, and the writing routes
                       check the wristband for themselves whatever is drawn. */}
-                  <ListeningBeacon saying={choosing ? 'Choosing a record' : ''}>
+                  <ListeningBeacon choosing={choosing}>
                     {authed && !choosing && (inHand ? (
                       /* A record already in hand: this is the way back to it,
                          and the way back is the session's own route. There is

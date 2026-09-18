@@ -55,17 +55,20 @@ const CAPTION = {
 // the last line of the record's own block rather than as furniture parked
 // underneath it. Drawn on the empty beacon too — a copy on its first
 // afternoon is exactly the one that needs a way to start.
-// `saying` replaces the caption and stands the record down: while a record is
-// being chosen the beacon is not reporting anything, it is a target waiting
-// for a cover to land in it (Miyel's beacon brief, 2026-09-17). The art stays
-// on screen, shrunk and dimmed by the pane — the page never goes blank, and
-// the small cover is the thing the picked record flies to.
+// `choosing` stands the whole record down: while one is being picked the
+// beacon is not reporting anything, it is a target waiting for a cover to
+// land in it (Miyel's beacon brief, 2026-09-17). The art stays on screen,
+// shrunk and dimmed by the pane — the page never goes blank, and the small
+// cover is the thing the picked record flies into.
+//
+// It said CHOOSING A RECORD under the cover for an hour and Miyel took it
+// off: the picker underneath, the shrunken cover and the × in the corner are
+// already three things saying it, and a fourth in small caps was a label on a
+// state nobody could be in by accident.
 //
 // It is passed in rather than worked out here for the same reason `children`
 // is: what the pane is doing is the pane's business.
-//
-// NAME: `saying` is a placeholder for Miyel (AGENTS.md).
-export default function ListeningBeacon({ children = null, saying = '' }) {
+export default function ListeningBeacon({ children = null, choosing = false }) {
   const { state, album, artist, art, track, isLive } = useListeningBeacon();
   // A song wherever there is one — including after a listen has been shut,
   // which keeps the track that was open up rather than dropping back to the
@@ -92,7 +95,7 @@ export default function ListeningBeacon({ children = null, saying = '' }) {
   if (!title) {
     return (
       <div className="beacon-stage beacon-stage--quiet">
-        <p className="beacon-quiet">{saying || 'Nothing logged yet.'}</p>
+        {!choosing && <p className="beacon-quiet">Nothing logged yet.</p>}
         {children}
       </div>
     );
@@ -110,7 +113,7 @@ export default function ListeningBeacon({ children = null, saying = '' }) {
               this would be writing on an empty square, and over lit art it
               would be a scrim across the one cover on this site that is
               meant to be in full colour. */}
-          {!saying && !isLive && artUrl && (
+          {!choosing && !isLive && artUrl && (
             <div className="beacon-idle-overlay"><span>{CAPTION[state]}</span></div>
           )}
         </div>
@@ -119,9 +122,7 @@ export default function ListeningBeacon({ children = null, saying = '' }) {
               on it. See the note at the top: greyed art carries its own
               caption and this line would be the second copy of it. Never
               green; the dot beside it is the one thing that lights. */}
-          {saying
-            ? <div className="beacon-status">{saying}</div>
-            : (isLive || !artUrl) && <div className="beacon-status">{CAPTION[state]}</div>}
+          {!choosing && (isLive || !artUrl) && <div className="beacon-status">{CAPTION[state]}</div>}
           {/* Two lines, not a marquee. The marquee is the right answer in the
               nav row, where the slot is a couple of hundred pixels wide and
               there is nowhere for a long title to go — but here the title has
@@ -132,8 +133,8 @@ export default function ListeningBeacon({ children = null, saying = '' }) {
           {/* The record steps aside while something else is being said. The
               cover is still there, which is the whole point; what goes is the
               name of a record you are in the middle of replacing. */}
-          {!saying && <div className="beacon-track beacon-track--wrap">{title}</div>}
-          {!saying && artist && <div className="beacon-artist">{artist}</div>}
+          {!choosing && <div className="beacon-track beacon-track--wrap">{title}</div>}
+          {!choosing && artist && <div className="beacon-artist">{artist}</div>}
           {children}
         </div>
       </div>
