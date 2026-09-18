@@ -468,48 +468,13 @@
    pixel or two of 36, so 42 is a hair past either and the opening is
    proportional for both. A longer word would want measuring again. */
 .ses-shut { position: relative; }
-.ses-shut-slot {
-  position: absolute;
-  left: 100%;
-  top: 50%;
-  transform: translateY(-50%);
-  display: block;
-  max-width: 0;
-  overflow: hidden;
-  padding-left: 0;
-  transition: max-width 0.34s cubic-bezier(0.22, 0.61, 0.36, 1),
-              padding-left 0.34s cubic-bezier(0.22, 0.61, 0.36, 1);
-}
-.ses-shut-word {
-  min-width: 0;
-  overflow: hidden;
-  padding: 8px 0;
-  border: 0;
-  background: none;
-  color: inherit;
-  font: inherit;
-  letter-spacing: inherit;
-  text-transform: inherit;
-  text-align: left;
-  cursor: pointer;
-  opacity: 0;
-  /* Nothing to press while there is nothing to read. */
-  pointer-events: none;
-  /* A beat behind the opening, so it reads as the word coming out rather than
-     appearing and then being made room for. */
-  transition: opacity 0.22s ease 0.08s;
-}
-.ses-shut--sure .ses-shut-word { pointer-events: auto; }
-.ses-shut-word:hover { color: var(--ink); }
-/* Armed. Ink rather than a filled shape: it is a save, not a delete, and
-   nothing here deserves a red button. */
-.ses-shut--sure { color: var(--ink); }
-.ses-shut--sure .ses-shut-mark { transform: rotate(90deg); }
-.ses-shut--sure .ses-shut-slot { max-width: 42px; padding-left: 2px; }
-.ses-shut--sure .ses-shut-word { opacity: 1; }
-@media (prefers-reduced-motion: reduce) {
-  .ses-shut-mark, .ses-shut-slot, .ses-shut-word { transition: none; }
-}
+/* The word that opened out of this mark — .ses-shut-slot, .ses-shut-word and
+   the --sure state that armed them — came out on 2026-09-18 with the second
+   press. A control that cannot throw anything away does not need confirming,
+   and the × now ends the listen and keeps it in one press. The note above
+   about measuring the gap the word opened into is kept for whoever needs to
+   open something out of a mark next; the arithmetic still holds. */
+
 /* The ? that opened a reference lived here (.ses-ask-door) and is gone with
    it, 2026-09-18 — see docs/RETIRED-PROMPTS.md. So is the sheet it opened,
    further down: .ses-ask and everything under it. */

@@ -235,12 +235,19 @@ export default function SessionPage() {
   // than asking whether you are sure.
   const router = useRouter();
   async function endListen() {
+    // Kept, always — not only when something has been written. A record you
+    // went and found is a record you meant to play, and losing the search
+    // because you closed the screen before typing a word is the one thing
+    // Miyel kept running into while testing (2026-09-18: "let's just let the
+    // drafts build"). Drafts are cleared in a press each; a lost search is an
+    // afternoon done twice.
+    //
     // A draft that would not save keeps you here. The message is up, the
     // listen is still on screen behind it, and nothing has been cleared — so
     // pressing again after fixing whatever it was does the whole thing
     // properly. Leaving anyway would have thrown away the one copy of the
-    // afternoon that is not on this phone (2026-09-18).
-    if (s.hasWriting && !s.saved && !(await s.saveDraft())) return;
+    // afternoon that is not on this device.
+    if (!s.saved && !(await s.saveDraft())) return;
     try { localStorage.removeItem(PENDING_KEY); } catch { /* nothing to clear */ }
     saidSoAboutTheDesk();
     // Over the cross the sheet goes and the pane is underneath, already
@@ -254,12 +261,19 @@ export default function SessionPage() {
   // writing on it is kept as a draft first, so it is waiting under Unfinished
   // when the picker comes back.
   async function leave() {
+    // Kept, always — not only when something has been written. A record you
+    // went and found is a record you meant to play, and losing the search
+    // because you closed the screen before typing a word is the one thing
+    // Miyel kept running into while testing (2026-09-18: "let's just let the
+    // drafts build"). Drafts are cleared in a press each; a lost search is an
+    // afternoon done twice.
+    //
     // A draft that would not save keeps you here. The message is up, the
     // listen is still on screen behind it, and nothing has been cleared — so
     // pressing again after fixing whatever it was does the whole thing
     // properly. Leaving anyway would have thrown away the one copy of the
-    // afternoon that is not on this phone (2026-09-18).
-    if (s.hasWriting && !s.saved && !(await s.saveDraft())) return;
+    // afternoon that is not on this device.
+    if (!s.saved && !(await s.saveDraft())) return;
     try { localStorage.removeItem(PENDING_KEY); } catch { /* nothing to clear */ }
     saidSoAboutTheDesk();
     setLanding(null);
