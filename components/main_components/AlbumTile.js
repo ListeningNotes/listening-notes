@@ -28,11 +28,14 @@
 import Link from 'next/link';
 import { handOff } from '../../library/handoff';
 
-export default function AlbumTile({ entry }) {
+export default function AlbumTile({ entry, going = false }) {
   return (
     <Link
       href={`/entries/${entry.slug}`}
-      className="ft"
+      /* `going` is this record being taken down: it shrinks where it stands
+         for a third of a second and then the tiles after it file across into
+         the space (closeTheGap in Journal.js). */
+      className={'ft' + (going ? ' ft--going' : '')}
       aria-label={entry.album + (entry.artist ? ' by ' + entry.artist : '')}
       data-tile-slug={entry.slug}
       /* On the way past, this leaves the cover and the two lines under it

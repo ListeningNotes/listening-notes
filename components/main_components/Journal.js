@@ -33,6 +33,32 @@ import AlbumTile from './AlbumTile';
 import { handOffOrder } from '../../library/handoff';
 import GridDensity, { DEFAULT_DENSITY, readStoredDensity, storeDensity } from './GridDensity';
 import JournalFilters, { SORTS, SortArrow } from './JournalFilters';
+import { DELETE_ENTRY } from '../../hooks/useEntryEditor';
+
+// ── A record coming off the wall ───────────────────────────────────────────
+// Miyel, 2026-09-18: "I think it should do an animation to show it deletes.
+// Like take you back to the journal and the post goes away, the others file to
+// fill its spot."
+//
+// Three beats, and the order is the whole thing:
+//
+//   1. Wait. The entry was open as a sheet over this wall and it is still
+//      sliding off. Closing the gap underneath it would be closing a gap
+//      nobody can see — the same reason the falling cover waits for the layer
+//      on the way in (LAYER_OUT_MS in HomeNav, the same 420).
+//   2. The tile goes. It shrinks into itself and fades where it stands, so
+//      the record is seen to leave rather than found to be missing.
+//   3. The others file across, and this is the part that has to be measured
+//      rather than described. A CSS grid reflows instantly and cannot be
+//      transitioned, so left alone every tile after the gap simply appears in
+//      its new place. So: measure where they all are, take the tile out, let
+//      the grid reflow, then put every tile back where it just was with a
+//      transform and let that transform go. They travel from the old position
+//      to the new one on the site's own curve. It is the standard trick and it
+//      is the only way this looks like anything.
+const SHEET_OUT_MS = 420;   // the sheet getting out of the way
+const TILE_OUT_MS  = 320;   // the tile shrinking where it stands
+const FILE_MS      = 420;   // the rest closing over it
 
 // Beyonce should find Beyoncé, and Bjork should find Bjork. Accents are a
 // spelling most people don't reach for and half the archive's artists have
@@ -240,10 +266,100 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
     yearBounds && yearRange && (yearRange[0] > yearBounds.min || yearRange[1] < yearBounds.max)
   );
 
+  // ── Records that have been taken down ──────────────────────────────────
+  // Held here rather than asked back from the server, because the whole
+  // animation happens between the delete landing and anybody refetching. The
+  // grid is what needs to know, and this is the grid.
+  //
+  // `going` is the one on its way out and is still drawn — shrinking in place.
+  // `gone` is every one that has finished leaving; a set rather than a single
+  // slug because two records can be deleted in a session and the first must
+  // not come back when the second goes.
+  const [going, setGoing] = useState(null);
+  const [gone, setGone] = useState(() => new Set());
+  const grid = useRef(null);
+  const clocks = useRef([]);
+  useEffect(() => () => {
+    clocks.current.forEach(id => { clearTimeout(id); cancelAnimationFrame(id); });
+  }, []);
+
+  // Where every tile is, right now, by slug.
+  const positions = () => {
+    const found = new Map();
+    const box = grid.current;
+    if (box) for (const tile of box.querySelectorAll('[data-tile-slug]')) {
+      found.set(tile.dataset.tileSlug, tile.getBoundingClientRect());
+    }
+    return found;
+  };
+
+  // Beat three: the rest close over the space. Called with where everything
+  // was before React took the tile out, immediately after it has.
+  const closeTheGap = useCallback(was => {
+    const box = grid.current;
+    if (!box) return;
+    const moved = [];
+    for (const tile of box.querySelectorAll('[data-tile-slug]')) {
+      const then = was.get(tile.dataset.tileSlug);
+      if (!then) continue;
+      const now = tile.getBoundingClientRect();
+      const dx = then.left - now.left;
+      const dy = then.top - now.top;
+      // A tile that has not moved is left entirely alone: everything before
+      // the gap in the grid, which is most of the wall.
+      if (!dx && !dy) continue;
+      tile.style.transition = 'none';
+      tile.style.transform = `translate(${dx}px, ${dy}px)`;
+      moved.push(tile);
+    }
+    if (!moved.length) return;
+    // One frame with them held in the old place, then let go. Without the
+    // wait the browser coalesces both styles into one paint and nothing
+    // moves — the transform is set and unset before anything is drawn.
+    clocks.current.push(requestAnimationFrame(() => {
+      for (const tile of moved) {
+        tile.style.transition = `transform ${FILE_MS}ms cubic-bezier(0.22, 0.61, 0.36, 1)`;
+        tile.style.transform = '';
+      }
+      // And the inline styles come off once they have arrived, so nothing
+      // here is still sitting on a tile the next time the grid reflows for
+      // an ordinary reason — a filter, a sort, the density.
+      clocks.current.push(setTimeout(() => {
+        for (const tile of moved) { tile.style.transition = ''; tile.style.transform = ''; }
+      }, FILE_MS + 40));
+    }));
+  }, []);
+
+  useEffect(() => {
+    const onDeleted = event => {
+      const slug = event.detail?.slug;
+      if (!slug || !entries.some(e => e.slug === slug)) return;
+
+      // Nothing to watch, so nothing to wait for: the record is simply off
+      // the wall. The same answer reduced motion gets everywhere else here.
+      const still = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+      if (still) { setGone(g => new Set(g).add(slug)); return; }
+
+      clocks.current.push(setTimeout(() => {
+        setGoing(slug);
+        clocks.current.push(setTimeout(() => {
+          const was = positions();
+          setGoing(null);
+          setGone(g => new Set(g).add(slug));
+          // After React has drawn the wall without it.
+          clocks.current.push(requestAnimationFrame(() => closeTheGap(was)));
+        }, TILE_OUT_MS));
+      }, SHEET_OUT_MS));
+    };
+    window.addEventListener(DELETE_ENTRY, onDeleted);
+    return () => window.removeEventListener(DELETE_ENTRY, onDeleted);
+  }, [entries, closeTheGap]);
+
   const filtered = useMemo(() => {
     const q = foldForSearch(search);
     const dir = sortDir === 'asc' ? 1 : -1;
     return entries
+      .filter(e => !gone.has(e.slug))
       .filter(e => {
         // Names only — the album and the artist, nothing else.
         //
@@ -282,7 +398,7 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
         if (sortBy === 'year')   return dir * ((releaseYear(a) || 0) - (releaseYear(b) || 0));
         return dir * (new Date(a.posted_at) - new Date(b.posted_at));
       });
-  }, [entries, search, sortBy, sortDir, genre, favoritesOnly, masterpiecesOnly, formativeOnly, yearActive, yearRange]);
+  }, [entries, gone, search, sortBy, sortDir, genre, favoritesOnly, masterpiecesOnly, formativeOnly, yearActive, yearRange]);
 
   // What is on the wall right now, in this order, left where the layer can
   // read it — so a swipe on an entry goes to the record beside it here, not
@@ -357,9 +473,9 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
         ) : filtered.length === 0 ? (
           <div className="arc-empty">No entries match these filters.</div>
         ) : (
-          <div className="arc-grid" data-density={density}>
+          <div className="arc-grid" data-density={density} ref={grid}>
             {shown.map(e => (
-              <AlbumTile key={e.slug} entry={e} density={density} />
+              <AlbumTile key={e.slug} entry={e} density={density} going={going === e.slug} />
             ))}
           </div>
         )}

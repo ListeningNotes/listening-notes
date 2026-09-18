@@ -128,7 +128,11 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   // note becomes one under that track. Same argument as the card's editor —
   // a field for something you cannot see while you type into it is a field you
   // fill in blind.
-  const edit = useEntryEditor(entry);
+  //
+  // `layered` goes in because deleting has to leave by the door it came in
+  // through: a sheet over the journal closes with back, and a push would hold
+  // the sheet up with nothing in it. See the note in `remove`.
+  const edit = useEntryEditor(entry, { layered });
 
   // ── The cover ─────────────────────────────────────────────────────────────
   // Whether the address under the art is showing. The art is the button: press
