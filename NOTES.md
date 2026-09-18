@@ -58,86 +58,22 @@ deploy a copy — and none of it is anything they need.
 
 ## Pending
 
-**The contents screen — built 2026-09-18 from Miyel's brief.** Tracks opens on
-the record's contents now: the strip, the facts, the tracklist. The Overview
-is gone with it, so the steps are **Tracks · Album · Preview**.
+**The album's own stars are hidden until a track is rated, 2026-09-18.** Found
+in passing and raised three times without an answer, so it is written down
+rather than lost: on the Album screen the star row sits inside the same
+conditional as the horizon chart (`list.length > 0 && hasRatings`). Log a
+record, rate no tracks, and there is no way to give the album a score at all.
+One line to pull the stars out of that block; the question is whether the
+horizon should keep its own gate.
 
-Names, hers: no heading on the screen; the foot reads `Start with <first
-track> →`; the file is `steps/RecordContents.js`.
+**Branch `four-tabs` is unmerged.** ID · Beacon · Friends · Inbox, Miyel's
+names, with the address book at the head of the Friends pane. Her verdict:
+*"now it's not good. I need it to be more of a page then the feed under"* —
+she is writing the brief for it herself.
 
-**Where the facts come from.** One iTunes lookup already carried both the
-songs and the album row; the album row is read now instead of thrown away.
-Released, genre and label come off it. The count and the runtime do *not* —
-they are the tracklist said another way, and a number kept in two places can
-disagree with itself. The label is parsed out of the `copyright` string, which
-is messier than it looks: King Krule's real one is `℗ 2011 King Krule under
-exclusive license to True Panther Sounds`, so everything before the licensing
-clause is the rights holder and the label is what follows. Checked against
-eight real strings; an unparseable one returns empty and the row is dropped.
-
-**Two deviations from the brief, both deliberate:**
-- The list does not scroll inside its own box. The strip and the facts are
-  `position: sticky` instead. A box that scrolls inside a sheet that scrolls
-  is two answers to one drag, which this session already has a scar from (the
-  rail lock note in nav.css).
-- The picked cover's flight lands in the header's mini beacon rather than a
-  cover on this screen, because the brief says there is no cover on this
-  screen and the old destination went with the Overview.
-
-**Overview went back to being a step an hour later**, and the reason is worth
-keeping because it is not about the shape: *"I do miss scrolling horizontally
-through tracks and between steps."* Folded into Tracks it was a face, and a
-face is not a step — a swipe cannot reach it, and a screen you can only get to
-by pressing its name is not on the same footing as the ones either side of it.
-
-**And the strip came off it.** The brief opened the screen with every track as
-an empty slot at full height; on the screen that read as a horizon chart with
-no data in it. Miyel: *"remove fake horizon from overview."* A horizon is a
-picture of what you thought of a record, and its empty frame drawn before you
-have heard a note is a chart pretending. The strip is back in TrackNotes with
-one caller.
-
-**Two migrations about the same number, and both belong.** `drafts.step` is an
-index into SESSION_STEPS; the count went four → three → four in two hours, so
-017 shifts every draft down and 018 shifts it back. A copy that receives both
-in one update nets out at no change, which is correct — nothing happened to
-those drafts. This copy got them an hour apart, which is also correct.
-
-**Still owed:** the arrival animation has not been seen — it plays once per
-record per session and every draft here had already arrived. Worth watching on
-a record picked fresh.
-
-
-**The research and the question mark are retired, 2026-09-18.** Miyel's call:
-*"I really like the research feature and asking questions while I listen, but
-I also just have a phone, and I guess I can just do that on my own."* Both
-prompts are in **docs/RETIRED-PROMPTS.md** with the reason — that file is the
-point of the retirement, because the prompts were the work.
-
-What went: `AskSheet`, the `?`, the briefing on the album screen and its
-typing reveal, `/api/ask`, `/api/research`, `library/ai_integration.js`, the
-research and chat state in `useListeningSession`, `research_available` on the
-bookplate, the Anthropic row in Settings, and the `@anthropic-ai/sdk`
-dependency.
-
-What stayed, and why: the `briefings` table and `secrets.anthropic_key`,
-because the schema is additive-only; `library/secrets.js` still resolves the
-key, which is what a retirement is — the plumbing stays and nothing is
-connected to it.
-
-**One trap in the way.** `format_post` lived in `ai_integration.js` and is not
-an AI call at all — it is the local assembly of an entry, and deleting the
-file took `/api/format` with it. It is in `library/entry_formatter.js` now,
-which is where it belonged: that file is the shapes an entry is written in.
-A build caught it; lint did not.
-
-
-- [x] **The stray database `ep-old-sea-am0rc38b`** — it was the `dev` branch; deleted in the Neon console 2026-09-06. What it was: A copy of the live one,
-      written to from localhost for four days. Find it in the Neon console —
-      likely a branch or a second project — and delete it once nothing there
-      is wanted. It holds the September 2 essay draft and possibly `secrets`
-      rows from a rehearsal. The live database has zero `secrets` rows, so
-      the live site still signs in with the environment's `SESSION_PASSWORD`.
+**Pinned for later, 2026-09-18:** merging `SiteNav` and `.idc-head` into one
+header, so the LN mark disappears the way it does on an entry. Miyel: *"is this
+a header that can replace site navigation? ok put a pin in it for later."*
 
 **Fresh-account test passed 2026-09-02** — see DECISIONS. What is left of
 this list is what to keep an eye on rather than what to prove:
@@ -1490,6 +1426,71 @@ Project → Settings → Environment Variables.
 
 ## Gotchas
 
+**`router.push` out of an open layer freezes the app — 2026-09-18.** Deleting
+an entry ended in `router.push('/')`, which is right on a page of its own and
+froze Miyel's phone over the journal; she had to reset it. The layer is a
+parallel route (`app/@layer`) and it is open because the address says so. A
+soft push to `/` matches nothing in that slot, and **a parallel-route slot with
+nothing to match holds the last thing it drew** — so the sheet stayed up with a
+deleted entry inside it, and the root kept the `ln-locked` class the layer adds
+to stop the journal scrolling behind it. Locked with nothing left to unlock it:
+the effect that removes the class runs on unmount, and it never unmounted.
+
+**The rule: a layer closes with `back()`, never a push.** Anything that
+navigates from inside one has to know whether it is in one. `FullPostPage`
+already had `layered` as a prop; it goes into `useEntryEditor` now for exactly
+this.
+
+**A poll already in flight lands after the thing it contradicts —
+2026-09-18.** The beacon "came back (beacon) but then went right back off"
+after a save. Nothing was wrong with the needle — the log shows the save's
+DELETE and the session's DELETE and no write after either. A poll *sent* before
+the save takes three to seven hundred milliseconds and comes back carrying the
+world as it was, straight over the top of what `announce` had just published.
+In production it is worse: the answer may be served from the edge for ten
+seconds after the needle is down.
+
+**The rule: publishing locally is not enough — it has to hold.** `announce`
+now outranks the server for twelve seconds and drops any answer that disagrees
+with what the owner just did, releasing the moment the server agrees. Twelve is
+a ceiling, not a duration: it is what stops a hold wedging if the server
+genuinely disagrees, because the journal is open on another phone.
+
+**A quiet save that fails is invisible twice over — 2026-09-18.** Every
+`POST /api/drafts` 500'd for a whole real listen. The cause was
+`drafts.rating` being an `integer` while the album score has been settable in
+halves for far longer than anybody noticed — proved against the live database
+rather than guessed at:
+
+```
+4   -> { rating: 4 }
+4.5 -> THROWS: invalid input syntax for type integer: "4.5"
+```
+
+Whole stars saved fine, which is what hid it: the failure starts mid-listen, at
+the moment a half is chosen. Nothing was lost — the browser keeps its own copy
+and that is what the entry is built from — but for that listen the only copy of
+an afternoon's writing was on one phone.
+
+**Two rules out of it.** A route that is *allowed* to fail quietly on screen
+has to be **loud in the log**, or there is nowhere left for it to be seen:
+`/api/drafts` caught the error, turned it into a response, and printed nothing,
+so the console was silent through sixty failures. And when widening a column
+for a JavaScript client, **`real` beats `numeric`** — the driver hands a
+numeric back as the *string* `"4.5"`, so every copy in the wild would need a
+code change to read its own rows, which is a migration that breaks a journal
+until its code catches up. A `real` comes back as a number and nothing else has
+to move. Halves are exact in binary.
+
+**A CSS grid cannot be transitioned — 2026-09-18.** Removing a tile reflows
+the wall instantly and no stylesheet can animate that, so every tile after the
+gap simply appears in its new place. The only way it looks like anything is to
+measure: record where every tile is, take one out, let the grid reflow, put
+them all back where they just were with a `transform`, then let the transform
+go. One frame has to pass between setting and clearing it or the browser
+coalesces both into a single paint and nothing moves. See `closeTheGap` in
+`Journal.js`.
+
 **`.focus()` from the console fires no focus events in the Claude browser
 pane — 2026-09-18.** The pane's document is not the focused document, so
 calling `focus()` sets `document.activeElement` and dispatches nothing: not
@@ -2425,6 +2426,157 @@ current.
 ---
 
 ## Complete
+
+**2026-09-18 — the beacon becomes the listen. Branch `beacon-listen`, 48
+commits.** Miyel's beacon brief, built from her phone against the dev server
+over one long session, plus everything the testing turned up. Version 1.25.0.
+
+### The brief's four items
+
+- [x] **The quiet line.** The beacon out of session is the last record sat
+      down with, greyed, with `LAST LOGGED` over the art rather than above it.
+      One state, not two.
+- [x] **Choosing on the pane.** A record flies out of the picker into the
+      beacon slot, lights, and the session opens over the top of it. The
+      deciding happens in the picker, so by the time a record is in hand the
+      choice is made — which reverses "a record with no track chosen yet is
+      not a beacon" (DECISIONS, 2026-09-15), as the brief said it would.
+- [x] **The live strip.** Every record in hand is a beacon now; the album
+      screen's needle gate is gone.
+- [x] **The drop.** Saving closes the layer, the cover falls out of the beacon
+      slot into the wall, and the slot refills captioned `LAST LOGGED`. Run
+      for real on 2026-09-18 and it worked first time: "the closing animation
+      was great! it said last logged perfectly."
+
+### Then the session itself
+
+- [x] **A × at the top left that becomes Save draft.** The second press says
+      what it will do rather than asking whether you are sure.
+- [x] **The stars are a drag, not an aim.** One row, slide along it, half
+      steps. Replaces five stars each split down the middle, where the real
+      target was seven pixels against the forty a fingertip covers. The
+      revealed average draws *into* the row — an unrounded ghost fill and an
+      exact tick — so a 4.89 reads as very nearly five instead of dwindling
+      to 4.5, which is the one reading that would have changed her mind.
+- [x] **A drag that begins on the stars belongs to the stars.** Both the
+      track swipe and the step swipe are locked while a rating is being set.
+      The row says what it is with `role="slider"`, so nothing has to know
+      where the stars are.
+- [x] **The keyboard stops throwing the screen about.** Insets applied
+      unconditionally rather than against a threshold Safari holds still and
+      a PWA does not, and the pull-to-close guarded on `document.activeElement`
+      so a swipe down to dismiss the keyboard no longer closes the listen.
+- [x] **The marks are a glyph over a word, not a pill.** Four times the mark
+      they were, and it is the thing itself that grew rather than a box around
+      it. Formative is `weight="bold"` — Phosphor's filled Fingerprint is a
+      solid pad with the ridges knocked *out*, so filling it painted the
+      background and left the print as gaps.
+- [x] **The foot of a step screen is bare.** The forward-arrow links went, the
+      carets came out of their pills, and the preview's two ways out became
+      the entry's own editing bar: `PREVIEWING · Go back · Save to journal`,
+      the same numbers, the same pins, no glyphs.
+- [x] **Trouble**, Miyel's name, replacing three `window.alert()` calls.
+- [x] **The track title shares its line with its marks**, title left and stars
+      right, the way every other page of the site lists a track.
+
+### And the entry page, from the same testing
+
+- [x] **Delete asks on the button.** First press turns it into `Sure?`, second
+      deletes. It used to open a correction with the warning at the foot of a
+      page-long form.
+- [x] **Deleting no longer freezes the app.**
+- [x] **A deleted record is watched off the wall** — the tile shrinks where it
+      stands and the rest file across.
+- [x] **The listen outlives the post** (`sat_with`, migration 020).
+- [x] **Masterpiece only shows when it is earned** — every track rated, every
+      rating five.
+
+### Migrations
+
+017 and 018 (`drafts.step`, down and back up), 019 (`drafts.rating` → `real`),
+020 (`sat_with`). All four applied here and verified.
+
+**The contents screen — built 2026-09-18 from Miyel's brief.** Tracks opens on
+the record's contents now: the strip, the facts, the tracklist. The Overview
+is gone with it, so the steps are **Tracks · Album · Preview**.
+
+Names, hers: no heading on the screen; the foot reads `Start with <first
+track> →`; the file is `steps/RecordContents.js`.
+
+**Where the facts come from.** One iTunes lookup already carried both the
+songs and the album row; the album row is read now instead of thrown away.
+Released, genre and label come off it. The count and the runtime do *not* —
+they are the tracklist said another way, and a number kept in two places can
+disagree with itself. The label is parsed out of the `copyright` string, which
+is messier than it looks: King Krule's real one is `℗ 2011 King Krule under
+exclusive license to True Panther Sounds`, so everything before the licensing
+clause is the rights holder and the label is what follows. Checked against
+eight real strings; an unparseable one returns empty and the row is dropped.
+
+**Two deviations from the brief, both deliberate:**
+- The list does not scroll inside its own box. The strip and the facts are
+  `position: sticky` instead. A box that scrolls inside a sheet that scrolls
+  is two answers to one drag, which this session already has a scar from (the
+  rail lock note in nav.css).
+- The picked cover's flight lands in the header's mini beacon rather than a
+  cover on this screen, because the brief says there is no cover on this
+  screen and the old destination went with the Overview.
+
+**Overview went back to being a step an hour later**, and the reason is worth
+keeping because it is not about the shape: *"I do miss scrolling horizontally
+through tracks and between steps."* Folded into Tracks it was a face, and a
+face is not a step — a swipe cannot reach it, and a screen you can only get to
+by pressing its name is not on the same footing as the ones either side of it.
+
+**And the strip came off it.** The brief opened the screen with every track as
+an empty slot at full height; on the screen that read as a horizon chart with
+no data in it. Miyel: *"remove fake horizon from overview."* A horizon is a
+picture of what you thought of a record, and its empty frame drawn before you
+have heard a note is a chart pretending. The strip is back in TrackNotes with
+one caller.
+
+**Two migrations about the same number, and both belong.** `drafts.step` is an
+index into SESSION_STEPS; the count went four → three → four in two hours, so
+017 shifts every draft down and 018 shifts it back. A copy that receives both
+in one update nets out at no change, which is correct — nothing happened to
+those drafts. This copy got them an hour apart, which is also correct.
+
+**Still owed:** the arrival animation has not been seen — it plays once per
+record per session and every draft here had already arrived. Worth watching on
+a record picked fresh.
+
+
+**The research and the question mark are retired, 2026-09-18.** Miyel's call:
+*"I really like the research feature and asking questions while I listen, but
+I also just have a phone, and I guess I can just do that on my own."* Both
+prompts are in **docs/RETIRED-PROMPTS.md** with the reason — that file is the
+point of the retirement, because the prompts were the work.
+
+What went: `AskSheet`, the `?`, the briefing on the album screen and its
+typing reveal, `/api/ask`, `/api/research`, `library/ai_integration.js`, the
+research and chat state in `useListeningSession`, `research_available` on the
+bookplate, the Anthropic row in Settings, and the `@anthropic-ai/sdk`
+dependency.
+
+What stayed, and why: the `briefings` table and `secrets.anthropic_key`,
+because the schema is additive-only; `library/secrets.js` still resolves the
+key, which is what a retirement is — the plumbing stays and nothing is
+connected to it.
+
+**One trap in the way.** `format_post` lived in `ai_integration.js` and is not
+an AI call at all — it is the local assembly of an entry, and deleting the
+file took `/api/format` with it. It is in `library/entry_formatter.js` now,
+which is where it belonged: that file is the shapes an entry is written in.
+A build caught it; lint did not.
+
+
+- [x] **The stray database `ep-old-sea-am0rc38b`** — it was the `dev` branch; deleted in the Neon console 2026-09-06. What it was: A copy of the live one,
+      written to from localhost for four days. Find it in the Neon console —
+      likely a branch or a second project — and delete it once nothing there
+      is wanted. It holds the September 2 essay draft and possibly `secrets`
+      rows from a rehearsal. The live database has zero `secrets` rows, so
+      the live site still signs in with the environment's `SESSION_PASSWORD`.
+
 
 **2026-09-17 — the entry's six tools. Branch `entry-tools`.** Item 3 of the
 four-tabs brief, plus a sixth tool and four renames Miyel added while looking
