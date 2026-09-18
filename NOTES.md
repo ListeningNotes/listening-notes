@@ -1445,9 +1445,26 @@ window.fetch = function (u, o) {
 };
 ```
 
-Everything else behaves exactly as it does for real. Check `SELECT * FROM
-needle` afterwards; it should be empty. If one did get through, remove the row
-rather than ending it.
+Everything else behaves exactly as it does for real.
+
+**A page load defeats it, and that is how it got through twice on
+2026-09-18.** The patch lives in the page; reloading throws it away and the
+session writes its needle two seconds later, before anything can be
+reinstalled. Both times it put a record Miyel had not listened to on the live
+beacon, and the second time it also wrote a test sentence into one of her
+drafts — the draft autosave matched an existing row by `lookup_key`, so
+picking a record she already had a draft for edited *that* draft rather than
+making a new one.
+
+**So: snapshot before, restore after.** `SELECT * FROM needle` and
+`SELECT id, album, step, notes FROM drafts` before touching a listen, and the
+same afterwards. The needle is a single upserted `id = 1`, so restoring it is
+an UPDATE with the values that were there; a draft has no history at all, and
+whatever a test writes over is gone.
+
+**The safest version is not to run the save flow here.** Everything up to the
+point a needle is written can be checked freely; the listen itself is Miyel's
+to test on her phone, against her own journal.
 
 
 **The Claude browser pane reports `visibilityState: 'hidden'`, so the beacon
