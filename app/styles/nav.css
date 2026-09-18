@@ -869,7 +869,54 @@
    was scrolled to; it is simply not something you can reach while the floor
    above it is a search. */
 .hn--choosing .hn-foot { display: none; }
-.hn--choosing .hn-crown { display: none; }
+/* ── The crown standing down ───────────────────────────────────────────────
+   Not display: none, which is what it was for an hour and is what Miyel meant
+   by "it just is really disjointed" (2026-09-17, on a phone): the big mark
+   blinked out, the cover jumped to the top of the screen, and the small mark
+   appeared in the bar with nothing joining the three events.
+
+   So it shrinks toward the bar and takes its own box with it. The min-height
+   is what the whole landing screen is measured off, so animating that is what
+   moves everything underneath — the cover rises into the room the crown is
+   giving up, at the same speed and on the same curve as the cover's own
+   shrink, which is what makes them read as one movement rather than three.
+
+   `visibility` rather than `display` at the end of it, so the mark is gone
+   from the page for a reader and from the tab order, without taking the
+   transition with it. */
+.hn-crown {
+  transition: min-height 0.28s cubic-bezier(0.22, 0.61, 0.36, 1),
+              height 0.28s cubic-bezier(0.22, 0.61, 0.36, 1),
+              padding 0.28s cubic-bezier(0.22, 0.61, 0.36, 1),
+              opacity 0.2s ease,
+              transform 0.28s cubic-bezier(0.22, 0.61, 0.36, 1);
+  transform-origin: top center;
+}
+.hn--choosing .hn-crown {
+  min-height: 0;
+  /* Its padding is the last 22px of the box and has to go with the rest of
+     it, or the cover stops 22px short of where the crown used to end and the
+     whole screen sits a little low for no reason anybody could name. */
+  padding-top: 0;
+  padding-bottom: 0;
+  /* min-height alone leaves the box as tall as the mark inside it — twenty
+     pixels of nothing, held by an element that is hidden. */
+  height: 0;
+  opacity: 0;
+  transform: scale(0.24);
+  overflow: hidden;
+  pointer-events: none;
+  visibility: hidden;
+  transition: min-height 0.28s cubic-bezier(0.22, 0.61, 0.36, 1),
+              opacity 0.16s ease,
+              transform 0.28s cubic-bezier(0.22, 0.61, 0.36, 1),
+              visibility 0s linear 0.28s;
+}
+/* And the small one arrives rather than appearing. It is hidden until the row
+   has a reason to carry it (the rule further down), so this only has to say
+   how it comes. */
+.hn-bar-mark { transition: opacity 0.22s ease 0.1s; }
+.hn--choosing .hn-bar-mark { opacity: 1; }
 .hn--choosing .hn-controls { display: none; }
 .hn--choosing .hn-pane--home { scroll-snap-type: none; }
 .hn--choosing .hn-pane--home > .hn-floor:nth-of-type(2) { display: none; }
@@ -925,7 +972,10 @@
 }
 .hn-shut:hover { color: var(--ink); }
 @media (prefers-reduced-motion: reduce) {
-  .hn--choosing .beacon-art-wrap { transition: none; }
+  .hn--choosing .beacon-art-wrap,
+  .hn-crown,
+  .hn--choosing .hn-crown,
+  .hn-bar-mark { transition: none; }
 }
 
 .hn .beacon-stage { height: 320px; }
