@@ -1440,6 +1440,23 @@ Project → Settings → Environment Variables.
 
 ## Gotchas
 
+**Nothing in this project catches a reference to a name that is not there —
+2026-09-18.** Not the build, and not the lint. Deleting a function and leaving
+its name in the object a hook returns passed `npm run build` clean and passed
+`npx eslint` clean, and turned up as a red overlay on Miyel's phone the moment
+the session opened: `Can't find variable: doResearch`.
+
+Proved rather than assumed — a file containing nothing but
+`const x = thisNameDoesNotExistAnywhere` lints without a word. `no-undef` is
+off in the Next config, which is the ordinary setting for it because the
+config assumes TypeScript is doing that job. This project is plain JavaScript,
+so nobody is.
+
+**So after removing anything, grep for its name before saying it is done.**
+The build only proves the imports resolve; a bare identifier inside a
+component or a returned object is never checked by anything until it runs.
+
+
 **Picking a record on localhost broadcasts on the live journal — 2026-09-18.**
 Localhost writes to the production database, and a listen is not a local
 thing: two seconds after the session opens, `useListeningSession` POSTs
