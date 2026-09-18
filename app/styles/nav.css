@@ -858,6 +858,76 @@
    padding is the only padding. */
 
 /* Restated from the old .hp-mobile-screens block (since deleted) — same values, new scope. */
+/* ── Choosing a record, on the pane ────────────────────────────────────────
+   Floor one becomes the picker and the rest of the cross stands down: the
+   band at the foot, the crown, the row of earlier covers and the snap between
+   floors (Miyel's beacon brief, 2026-09-17). What stays is the cover, shrunk
+   and dimmed, because the page must never go blank and that small square is
+   where the record you pick is about to land.
+
+   None of it unmounts. The wall below is still there and still holds where it
+   was scrolled to; it is simply not something you can reach while the floor
+   above it is a search. */
+.hn--choosing .hn-foot { display: none; }
+.hn--choosing .hn-crown { display: none; }
+.hn--choosing .hn-controls { display: none; }
+.hn--choosing .hn-pane--home { scroll-snap-type: none; }
+.hn--choosing .hn-pane--home > .hn-floor:nth-of-type(2) { display: none; }
+/* The screen stops being one screen tall and stops holding anything in the
+   middle of it: it is as tall as the search is. */
+.hn--choosing .hn-screen {
+  min-height: 0;
+  /* The crown is what normally holds the pane clear of the bar. With it gone
+     the screen has to do it itself, or the shrunken cover sits under the row
+     with the mark in it. */
+  padding-top: calc(var(--hn-bar-h) + 10px);
+  padding-bottom: 40px;
+  gap: 14px;
+}
+/* The stage is 320px tall because that is what a full-size cover and its
+   lines come to. The cover is 132px here, and a stage still reserving room
+   for the big one leaves a hole between the caption and the search. */
+/* The card is absolutely positioned inside a stage of fixed height, which is
+   what lets it slide left when the beacon opens. Choosing, it has nowhere to
+   slide and the picker needs the room it is holding, so the card goes back
+   into the flow and the stage becomes as tall as it is — the same pair of
+   rules the desktop band already uses for the same reason. */
+.hn.hn--choosing .beacon-stage { height: auto; }
+.hn--choosing .beacon-card--main { position: static; transform: none; }
+.hn--choosing .beacon-card { align-items: center; }
+.hn--choosing .hp-dashboard { flex: 0 0 auto; }
+/* 132px, the brief's number. The cover dims rather than vanishing, so the
+   page keeps its one object and the flight has somewhere to arrive. */
+.hn--choosing .beacon-art-wrap {
+  width: 132px;
+  height: 132px;
+  opacity: 0.45;
+  transition: width 0.28s cubic-bezier(0.22, 0.61, 0.36, 1),
+              height 0.28s cubic-bezier(0.22, 0.61, 0.36, 1),
+              opacity 0.28s ease;
+}
+.hn--choosing .beacon-meta { gap: 0; }
+/* The way out, in the corner the up-caret holds the rest of the time. Not
+   flex: 1 like the caret's own invisible strip — this one is a mark, and it
+   has to be where the mark is rather than centred in half a row. */
+.hn-shut {
+  flex: 0 0 auto;
+  /* The bar is justify-content: flex-end and the mark is absolutely centred,
+     so left is something this has to claim for itself. */
+  margin-right: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  min-height: 40px;
+  color: var(--ink-soft);
+  transition: color 0.15s;
+}
+.hn-shut:hover { color: var(--ink); }
+@media (prefers-reduced-motion: reduce) {
+  .hn--choosing .beacon-art-wrap { transition: none; }
+}
+
 .hn .beacon-stage { height: 320px; }
 .hn .hp-dashboard {
   background: none;
