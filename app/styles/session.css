@@ -694,11 +694,6 @@
   margin: 0 5px 0 2px;
 }
 .ses-unit:last-child { margin-right: 0; }
-/* A fact and its word travel together, so the line wraps as two things rather
-   than four. The card's own line is one label and a run of genres, which has
-   no such problem. */
-.ses-said { display: inline-flex; align-items: baseline; gap: 7px; }
-.ses-facts .idc-genres { margin: 12px 0 0; gap: 4px 16px; }
 
 /* ── The tracklist ─────────────────────────────────────────────────────────
    Number, title, and a hairline as long as that track is against the longest

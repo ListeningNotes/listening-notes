@@ -912,10 +912,9 @@ a.ln-sent-who:hover { text-decoration: underline; text-underline-offset: 3px; }
   -webkit-tap-highlight-color: transparent;
 }
 .ln-track-stars:hover { background: var(--bg-warm); }
-.ln-track-unrated {
-  font-family: var(--font-label); font-size: 9.5px; letter-spacing: 0.1em;
-  text-transform: uppercase; color: var(--ink-faint);
-}
+/* .ln-track-unrated printed the words "Not rated" in an editable row until
+   2026-09-18. Nothing draws it: the row shows five faint stars instead, which
+   is the same fact and also the control. */
 .ln-track-heart:hover { color: var(--fav); }
 .ln-track-heart--on { color: var(--fav); }
 

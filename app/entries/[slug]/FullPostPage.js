@@ -1205,8 +1205,15 @@ export default function FullPostPage({ entry, references = [], authed = false, l
             exactly as a track's hangs on the note about the track. Rendered
             when there are comments even if the notes are empty: an approved
             comment going invisible because the writing above it changed is the
-            failure this whole section exists to fix. */}
-        {(albumNotes || albumComments.length > 0) && (
+            failure this whole section exists to fix.
+            And always while a correction is open, from 2026-09-18 — "we need a
+            place to add album notes if someone decides in edit when saved
+            without any as well." A listen can be saved with nothing written
+            since this morning, so the one section that only existed once there
+            was writing had become the one you could never start. Same shape as
+            the ghost tracks below it: reading shows what was said, correcting
+            shows where it goes. */}
+        {(albumNotes || albumComments.length > 0 || edit.editing) && (
           <section style={{ marginBottom: '48px' }}>
             <MetadataLabel sticky>Album Notes</MetadataLabel>
             {/* 6px, the same gap a track note leaves under itself before its
