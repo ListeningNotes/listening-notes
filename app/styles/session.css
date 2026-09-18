@@ -609,7 +609,6 @@
 .ses-contents-row {
   display: flex; align-items: center; gap: 14px;
   width: 100%; padding: 13px 0;
-  border: 0; background: none; cursor: pointer; text-align: left;
   color: var(--ink);
 }
 .ses-contents-n {
@@ -632,7 +631,6 @@
   border-radius: 1px;
   background: var(--border);
 }
-.ses-contents-row:hover .ses-contents-bar { background: var(--ink-faint); }
 
 .ses-strip-col--now .ses-strip-dot { background: var(--ink); border-color: var(--ink); transform: scale(1.3); }
 .ses-strip-label { position: relative; display: block; height: 100%; }

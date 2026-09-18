@@ -222,37 +222,59 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
   // inset to match it, so it *is* the visible window: the header sticks to
   // the top of what you are looking at, the body scrolls inside, and nothing
   // has anywhere to scroll off to.
-  //
-  // `data-typing` while it holds, so a sheet's own furniture can stand down —
-  // see the session's ? for the first one.
-  //
-  // A threshold rather than "has it changed": a phone's address bar growing
-  // and shrinking moves this by forty or fifty pixels all the time and is not
-  // a keyboard.
-  const typing = useRef(false);
   useEffect(() => {
     const vv = window.visualViewport;
     const sheet = sheetRef.current;
     if (!vv || !sheet) return undefined;
+
+    // The insets, every time, with no test for whether a keyboard is up.
+    // They are the difference between the layout viewport and the part of it
+    // you can see, which is zero at every moment nothing is covering the
+    // screen — so applying them always is the same as applying them never,
+    // right up until it matters.
+    //
+    // It was behind a threshold on window.innerHeight for an hour, and that
+    // is what failed on Miyel's phone: Safari holds innerHeight still through
+    // a keyboard, a home-screen install does not always, and where it shrinks
+    // with the keyboard the difference is zero and nothing fires. The layout
+    // should not depend on guessing.
     const sync = () => {
-      const open = window.innerHeight - vv.height > 120;
-      typing.current = open;
-      if (open) {
-        sheet.style.setProperty('--lay-lift', `${Math.round(vv.offsetTop)}px`);
-        sheet.style.setProperty('--lay-bottom', `${Math.round(window.innerHeight - vv.offsetTop - vv.height)}px`);
-        sheet.setAttribute('data-typing', '');
-      } else {
-        sheet.style.removeProperty('--lay-lift');
-        sheet.style.removeProperty('--lay-bottom');
-        sheet.removeAttribute('data-typing');
-      }
+      const room = document.documentElement.clientHeight || window.innerHeight;
+      sheet.style.setProperty('--lay-lift', `${Math.round(vv.offsetTop)}px`);
+      sheet.style.setProperty('--lay-bottom', `${Math.max(0, Math.round(room - vv.offsetTop - vv.height))}px`);
     };
+
+    // And `data-typing` — which is only furniture standing down, never
+    // layout — off the focus, because that is the thing it is actually about.
+    //
+    // A tick behind the event, deliberately. `focusin` fires while the focus
+    // is still moving and `document.activeElement` can still be the element
+    // being left — reading it there said BODY with a textarea plainly
+    // focused. `focusout` has the same problem from the other end: the next
+    // element does not have it yet. A zero timeout lets it settle, and
+    // nothing here is urgent enough to care.
+    let settle = null;
+    const mark = () => {
+      clearTimeout(settle);
+      settle = setTimeout(() => {
+        const el = document.activeElement;
+        const into = el && (el.tagName === 'TEXTAREA' || el.tagName === 'INPUT' || el.isContentEditable);
+        sheet.toggleAttribute('data-typing', Boolean(into));
+      }, 0);
+    };
+
     sync();
+    mark();
     vv.addEventListener('resize', sync);
     vv.addEventListener('scroll', sync);
+    document.addEventListener('focusin', mark);
+    document.addEventListener('focusout', mark);
     return () => {
+      clearTimeout(settle);
       vv.removeEventListener('resize', sync);
       vv.removeEventListener('scroll', sync);
+      document.removeEventListener('focusin', mark);
+      document.removeEventListener('focusout', mark);
       sheet.style.removeProperty('--lay-lift');
       sheet.style.removeProperty('--lay-bottom');
       sheet.removeAttribute('data-typing');
@@ -464,12 +486,24 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
       // about *editing*, it is about anything of this entry's own being open
       // over it, and a new one has to say so here.
       //
-      // And not while a keyboard is up, 2026-09-18. A swipe down is how
-      // everybody puts a keyboard away, and here it was taking the whole
-      // session with it — so the only way out of the field was the tick on
-      // the keyboard's own bar, which is nobody's first instinct. While
-      // something is being typed into, down belongs to the keyboard.
-      if (event.touches.length !== 1 || typing.current
+      // And not while something is being written into, 2026-09-18. A swipe
+      // down is how everybody puts a keyboard away, and here it was taking
+      // the whole session with it — so the only way out of a field was the
+      // tick on the keyboard's own bar, which is nobody's first instinct.
+      //
+      // Asked of the focus rather than of the viewport. It was `typing`, the
+      // flag the keyboard measurement sets, and that flag turned out to
+      // depend on a number iOS does not report the same way everywhere — so
+      // on the one device it mattered on, the guard was never armed. What has
+      // focus is not a measurement. If a field has it, down belongs to the
+      // keyboard, and that is true whatever the viewport says.
+      const writing = document.activeElement;
+      const intoText = writing && (
+        writing.tagName === 'TEXTAREA'
+        || writing.tagName === 'INPUT'
+        || writing.isContentEditable
+      );
+      if (event.touches.length !== 1 || intoText
         || sheet.querySelector('.ln-printing, .ln-editing, .ln-busy')) { pull = null; return; }
       const touch = event.touches[0];
       pull = { x: touch.clientX, y: touch.clientY, at: event.timeStamp, lastX: touch.clientX, lastY: touch.clientY, lastAt: event.timeStamp, axis: null, top: atTop() };
