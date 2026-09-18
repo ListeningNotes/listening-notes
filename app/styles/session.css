@@ -291,20 +291,24 @@
    there while the animation runs on — "Leave" was open in 90ms of a 340ms
    turn. A track going 0fr → 1fr resolves to exactly the text's width, so
    both words take the whole turn and neither is told a number. */
+/* The pair: the mark, and the word that comes out of it. Not one button —
+   the mark shuts what it opened and the word is what commits, so they are two
+   things with two jobs sitting in one row. */
 .ses-shut {
   display: inline-flex;
   align-items: center;
-  padding: 8px;
   margin: -8px;
-  border: 0;
-  background: none;
-  cursor: pointer;
   color: var(--ink-soft);
   font-family: var(--font-label); font-size: 10px; letter-spacing: 0.1em;
   text-transform: uppercase; white-space: nowrap;
   transition: color 0.15s;
 }
-.ses-shut:hover { color: var(--ink); }
+.ses-shut-door {
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 8px; border: 0; background: none; cursor: pointer;
+  color: inherit;
+}
+.ses-shut-door:hover { color: var(--ink); }
 .ses-shut-mark {
   flex: 0 0 auto;
   transition: transform 0.34s cubic-bezier(0.22, 0.61, 0.36, 1);
@@ -319,11 +323,24 @@
 .ses-shut-word {
   min-width: 0;
   overflow: hidden;
+  padding: 8px 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  letter-spacing: inherit;
+  text-transform: inherit;
+  text-align: left;
+  cursor: pointer;
   opacity: 0;
+  /* Nothing to press while there is nothing to read. */
+  pointer-events: none;
   /* A beat behind the opening, so it reads as the word coming out rather than
      appearing and then being made room for. */
   transition: opacity 0.22s ease 0.08s;
 }
+.ses-shut--sure .ses-shut-word { pointer-events: auto; }
+.ses-shut-word:hover { color: var(--ink); }
 /* Armed. Ink rather than a filled shape: it is a save, not a delete, and
    nothing here deserves a red button. */
 .ses-shut--sure { color: var(--ink); }

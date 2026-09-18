@@ -30,11 +30,22 @@
 //
 // ── The × in the corner ───────────────────────────────────────────────────
 // The way to put the record down, and the one deliberate end a listen has
-// (Miyel, 2026-09-18). Two presses: the first turns it into what it will do,
-// the second does it. The same shape the discard on a draft has, and for the
-// same reason — it ends something — except that the second press says "Save
-// draft" rather than asking whether you are sure, because nothing here is
-// being thrown away.
+// (Miyel, 2026-09-18). Two presses: the first opens the word out of the mark,
+// the second does what the word says. It says "Save draft" rather than asking
+// whether you are sure, because nothing here is being thrown away.
+//
+// ── The mark shuts what it opened ─────────────────────────────────────────
+// Two targets once it is open, and this is the part worth being exact about:
+// the *word* is what commits, and the mark puts it away again. Miyel asked
+// for a way back out of it and wondered whether that meant a second glyph —
+// it does not, and the reason is next door. KeeperTools does this already:
+// the ··· turns into an × and pressing it files the tools back in. The door
+// stays the door; it opens and it shuts. An × that closes what it just opened
+// is the same × doing the same job at a smaller scale.
+//
+// Pressing the word is also the natural thing rather than the clever one: it
+// arrives under your thumb saying what will happen, and you press the thing
+// that says it.
 //
 // It is not the same as swiping the sheet down. Swiping is stepping away: the
 // record stays on the desk, the beacon goes quiet until you come back, and
@@ -92,24 +103,42 @@ export default function SessionHeader({
               middle child on what is left over rather than on the page
               (Miyel, 2026-09-18). */}
           <div className="ses-head-side">
-            <button
-              type="button"
+            {/* Focus leaving the pair puts it away — but only when it has
+                actually left, or moving from the mark to the word would shut
+                the word on the way to pressing it. */}
+            <div
               className={'ses-shut' + (ending ? ' ses-shut--sure' : '')}
-              onClick={() => (ending ? onEnd() : setEnding(true))}
-              onBlur={() => setEnding(false)}
-              aria-label={ending ? (hasWriting ? 'Save as a draft and close' : 'Close this listen') : 'Close this listen'}
-              title={ending ? undefined : 'Close this listen'}
+              onBlur={event => {
+                if (!event.currentTarget.contains(event.relatedTarget)) setEnding(false);
+              }}
             >
-              {/* The mark stays. The word comes out of it, and the mark
-                  turns as it goes — one control changing its mind rather
-                  than two swapping places. The word is always here so it has
-                  something to unfurl from; it is a closed box until the
-                  first press. */}
-              <X size={18} weight="regular" aria-hidden="true" className="ses-shut-mark" />
-              <span className="ses-shut-slot" aria-hidden="true">
-                <span className="ses-shut-word">{hasWriting ? 'Save draft' : 'Leave'}</span>
+              {/* The mark opens the word and shuts it again. It is always
+                  the same ×, and it turns as it goes. */}
+              <button
+                type="button"
+                className="ses-shut-door"
+                onClick={() => setEnding(open => !open)}
+                aria-expanded={ending}
+                aria-label={ending ? 'Keep listening' : 'Close this listen'}
+                title={ending ? 'Keep listening' : 'Close this listen'}
+              >
+                <X size={18} weight="regular" aria-hidden="true" className="ses-shut-mark" />
+              </button>
+              {/* And the word is what does it. Out of the tab order and out of
+                  reach while it is closed, so nothing can be pressed that
+                  cannot be read. */}
+              <span className="ses-shut-slot">
+                <button
+                  type="button"
+                  className="ses-shut-word"
+                  onClick={onEnd}
+                  tabIndex={ending ? 0 : -1}
+                  aria-hidden={!ending}
+                >
+                  {hasWriting ? 'Save draft' : 'Leave'}
+                </button>
               </span>
-            </button>
+            </div>
           </div>
 
           <div className="ses-head-beacon">
