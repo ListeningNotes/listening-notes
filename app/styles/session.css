@@ -98,26 +98,34 @@
   display: flex;
   flex-direction: row;
   align-items: center;
-  /* A centred pair rather than one at each end (Miyel, 2026-09-18: "those
-     save to journal and back to session can come in to the center more").
-     Opposite corners made them two separate decisions on one bar; a pair
-     with a gap in the middle is one decision with two answers, and it is
-     also where a thumb already is. */
   justify-content: center;
-  gap: 36px;
-  padding: 36px 24px max(18px, env(safe-area-inset-bottom, 0px));
-  background: linear-gradient(to top, var(--bg) 55%, transparent 100%);
-  pointer-events: none;
+  /* .ln-editing-bar's numbers, not numbers of its own — see the note in
+     SessionPreview.js. Saving a listen and saving a correction are the same
+     act on two screens, so they are the same bar. */
+  gap: 10px;
+  padding: 10px 16px calc(10px + env(safe-area-inset-bottom, 0px));
+  background: var(--bg);
+  border-top: 1px solid var(--border);
 }
-/* Saved, there are three: the tick, the way to the entry and the way to the
-   next record. Centred as a group, because none of them is a way back. */
-.ses-preview-bar--done { justify-content: center; gap: 18px; }
-.ses-preview-bar > * { pointer-events: auto; }
-.ses-preview-bar .ses-actions { justify-content: center; }
+/* Saved, there are three: the word, the way to the entry and the way to the
+   next record. Nothing else changes — same bar, same spacing. */
+/* "Read it" is a link rather than a button, because it goes somewhere. Only
+   .ln-pin on this bar is ever an anchor, so the underline is taken off here
+   rather than on the shared class. */
+.ses-preview-bar a.ln-pin { text-decoration: none; }
+
+/* The reason the save is dim, placed the way .ln-trouble is over the editing
+   bar: above it, centred, in the label face. */
+.ses-preview-why {
+  position: fixed; left: 16px; right: 16px; bottom: calc(58px + env(safe-area-inset-bottom, 0px));
+  z-index: 221; margin: 0; text-align: center; pointer-events: none;
+  font-family: var(--font-label); font-size: 9px;
+  letter-spacing: 0.16em; text-transform: uppercase; color: var(--ink-faint);
+}
 .ses-quiet--lead { color: var(--ink-soft); border-bottom-color: var(--ink-faint); }
 .ses-quiet:disabled { opacity: 0.4; cursor: default; }
 /* Room under the entry for the bar, so the last note is never under it. */
-.ses-preview .ln-content { padding-bottom: 140px !important; }
+.ses-preview .ln-content { padding-bottom: 96px !important; }
 
 .ses-btn--primary { background: var(--ink); color: var(--bg); border-color: var(--ink); }
 .ses-btn--primary:hover { color: var(--bg); opacity: 0.86; }
@@ -159,9 +167,13 @@
 .ses-reveal {
   display: flex;
   justify-content: center;
-  /* 18 above, so the press clears the average's tick under the stars. Nothing
+  /* The tick hangs 7px under the star row, and that is the whole clearance
+     this needs — 12 leaves five clear pixels and nothing has ever touched.
+     It was 18 for an hour on the strength of a worry rather than a
+     collision (Miyel, 2026-09-18: "i think that breathing room was more me
+     worried about overlapping the tick which doesn't happen"). Nothing
      below: the gap down to the marks is .ses-marks' job alone. */
-  margin: 18px 0 0;
+  margin: 12px 0 0;
 }
 
 .ses-marks {
@@ -171,8 +183,11 @@
   gap: 8px;
   /* The one gap between the score and the marks. It read as 48px until
      2026-09-18 because three margins were stacking — this one, the reveal's,
-     and the horizon block's own bottom margin. */
-  margin-top: 26px;
+     and the horizon block's own bottom margin — then 26 for an hour, which
+     was still a held breath. The three of them are one thought: this is what
+     I gave it, this is what the tracks said, this is what it was to me. They
+     sit as one block. */
+  margin-top: 14px;
 }
 .ses-mark {
   display: inline-flex;
