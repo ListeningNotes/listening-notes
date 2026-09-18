@@ -885,11 +885,11 @@
    from the page for a reader and from the tab order, without taking the
    transition with it. */
 .hn-crown {
-  transition: min-height 0.28s cubic-bezier(0.22, 0.61, 0.36, 1),
-              height 0.28s cubic-bezier(0.22, 0.61, 0.36, 1),
-              padding 0.28s cubic-bezier(0.22, 0.61, 0.36, 1),
-              opacity 0.2s ease,
-              transform 0.28s cubic-bezier(0.22, 0.61, 0.36, 1);
+  transition: min-height 0.52s cubic-bezier(0.22, 0.61, 0.36, 1),
+              height 0.52s cubic-bezier(0.22, 0.61, 0.36, 1),
+              padding 0.52s cubic-bezier(0.22, 0.61, 0.36, 1),
+              opacity 0.34s ease,
+              transform 0.52s cubic-bezier(0.22, 0.61, 0.36, 1);
   transform-origin: top center;
 }
 .hn--choosing .hn-crown {
@@ -907,15 +907,17 @@
   overflow: hidden;
   pointer-events: none;
   visibility: hidden;
-  transition: min-height 0.28s cubic-bezier(0.22, 0.61, 0.36, 1),
-              opacity 0.16s ease,
-              transform 0.28s cubic-bezier(0.22, 0.61, 0.36, 1),
-              visibility 0s linear 0.28s;
+  transition: min-height 0.52s cubic-bezier(0.22, 0.61, 0.36, 1),
+              height 0.52s cubic-bezier(0.22, 0.61, 0.36, 1),
+              padding 0.52s cubic-bezier(0.22, 0.61, 0.36, 1),
+              opacity 0.3s ease,
+              transform 0.52s cubic-bezier(0.22, 0.61, 0.36, 1),
+              visibility 0s linear 0.52s;
 }
 /* And the small one arrives rather than appearing. It is hidden until the row
    has a reason to carry it (the rule further down), so this only has to say
    how it comes. */
-.hn-bar-mark { transition: opacity 0.22s ease 0.1s; }
+.hn-bar-mark { transition: opacity 0.3s ease 0.16s; }
 .hn--choosing .hn-bar-mark { opacity: 1; }
 .hn--choosing .hn-controls { display: none; }
 .hn--choosing .hn-pane--home { scroll-snap-type: none; }
@@ -931,27 +933,42 @@
   padding-bottom: 40px;
   gap: 14px;
 }
-/* The stage is 320px tall because that is what a full-size cover and its
-   lines come to. The cover is 132px here, and a stage still reserving room
-   for the big one leaves a hole between the caption and the search. */
-/* The card is absolutely positioned inside a stage of fixed height, which is
-   what lets it slide left when the beacon opens. Choosing, it has nowhere to
-   slide and the picker needs the room it is holding, so the card goes back
-   into the flow and the stage becomes as tall as it is — the same pair of
-   rules the desktop band already uses for the same reason. */
-.hn.hn--choosing .beacon-stage { height: auto; }
-.hn--choosing .beacon-card--main { position: static; transform: none; }
-.hn--choosing .beacon-card { align-items: center; }
-.hn--choosing .hp-dashboard { flex: 0 0 auto; }
-/* 132px, the brief's number. The cover dims rather than vanishing, so the
-   page keeps its one object and the flight has somewhere to arrive. */
+/* ── The cover goes straight up, and gets smaller on the way ───────────────
+   The card is absolutely positioned inside a stage of fixed height, which is
+   what lets it slide sideways when the beacon opens. For an hour the card was
+   put back into the flow while choosing and the stage was told to be `auto`,
+   and that is what Miyel saw as "this like round motion up to the top"
+   (2026-09-17): a box changing from absolute to static changes what it is
+   measured against, instantly and mid-transition, so the cover left along a
+   curve nobody asked for and `auto` could not be animated to in the first
+   place.
+
+   So nothing changes position. The card stays pinned to the top of the stage
+   and centred on it, and two plain numbers animate: the stage's height and
+   the cover's size. The cover's top edge therefore never moves sideways and
+   never moves down — it rises as the stage shrinks under it, in a straight
+   line, getting smaller as it goes. Everything below rises with it, for the
+   same reason and at the same rate.
+
+   0.52s, on the curve everything on this site moves on. The entry's arrival
+   is 0.42s and this is deliberately a shade behind it: that one is a page
+   arriving and this is a screen rearranging itself around you, which wants
+   to be followed rather than kept up with (Miyel: "a little bit slower, I
+   want it to feel fluid"). */
+.hn .beacon-stage { transition: height 0.52s cubic-bezier(0.22, 0.61, 0.36, 1); }
+.hn.hn--choosing .beacon-stage { height: 148px; }
+/* 132px, the brief's number, and dimmed rather than gone: the page keeps its
+   one object and the record about to be picked has somewhere to land. */
+.beacon-art-wrap {
+  transition: width 0.52s cubic-bezier(0.22, 0.61, 0.36, 1),
+              height 0.52s cubic-bezier(0.22, 0.61, 0.36, 1),
+              opacity 0.4s ease,
+              box-shadow 0.4s ease;
+}
 .hn--choosing .beacon-art-wrap {
   width: 132px;
   height: 132px;
   opacity: 0.45;
-  transition: width 0.28s cubic-bezier(0.22, 0.61, 0.36, 1),
-              height 0.28s cubic-bezier(0.22, 0.61, 0.36, 1),
-              opacity 0.28s ease;
 }
 .hn--choosing .beacon-meta { gap: 0; }
 /* The way out, in the corner the up-caret holds the rest of the time. Not
@@ -972,6 +989,8 @@
 }
 .hn-shut:hover { color: var(--ink); }
 @media (prefers-reduced-motion: reduce) {
+  .hn .beacon-stage,
+  .beacon-art-wrap,
   .hn--choosing .beacon-art-wrap,
   .hn-crown,
   .hn--choosing .hn-crown,
