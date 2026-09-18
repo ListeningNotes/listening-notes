@@ -28,16 +28,24 @@
 // is the beacon's own rule, stated once here and once in ListeningBeacon —
 // the two are showing the same thing and must not disagree about it.
 //
-// ── The cover is the way to a different record ────────────────────────────
-// It stands where the back caret stood and does its job. Two controls in that
-// corner — a caret and then a cover — is a toolbar in the one place this
-// layout cannot spare the room, and the caret was never the thing anybody was
-// looking at. Nothing is lost by pressing it: the listen is saved as a draft
-// first and is waiting under Unfinished.
+// ── The × in the corner ───────────────────────────────────────────────────
+// The way to put the record down, and the one deliberate end a listen has
+// (Miyel, 2026-09-18). Two presses: the first turns it into what it will do,
+// the second does it. The same shape the discard on a draft has, and for the
+// same reason — it ends something — except that the second press says "Save
+// draft" rather than asking whether you are sure, because nothing here is
+// being thrown away.
 //
-// Leaving the listen altogether is still the layer's own gesture — swipe from
-// the left edge, or the browser's back — which puts you back where you
-// started.
+// It is not the same as swiping the sheet down. Swiping is stepping away: the
+// record stays on the desk, the beacon goes quiet until you come back, and
+// coming back lands you on the step you left with everything you wrote. That
+// gesture should stay as easy as it is, because it does not end anything —
+// what was worth making deliberate is the ending, and this is it.
+//
+// The cover was this corner's control for a day, as "change album". It is not
+// a control any more: it is the beacon, and you change record by putting this
+// one down. One thing in the corner, and it is the one that ends the mode you
+// are in.
 //
 // Top right, where every other screen keeps its day-and-night switch: the
 // switch, and beside it the question mark. That is the reference — something
@@ -47,6 +55,8 @@
 // broken. There is no Save draft button: the draft saves itself.
 
 'use client';
+import { useState } from 'react';
+import { X } from '@phosphor-icons/react';
 import { SESSION_STEPS } from '../../hooks/useListeningSession';
 import { useTheme } from '../main_components/Lightswitch';
 
@@ -54,9 +64,13 @@ export default function SessionHeader({
   album, artist, year,
   art = '', track = '',
   step, onStep,
-  onBack,
+  onEnd, hasWriting = false,
 }) {
   const { theme, toggle } = useTheme();
+  // Whether the × has been pressed once and is now showing what it will do.
+  // Reset on blur, the way the draft's discard is: a confirmation left armed
+  // behind your back is a confirmation you did not give.
+  const [ending, setEnding] = useState(false);
   // The beacon's own rule, and it has to be the same one: whatever song is
   // open, and the record itself while none is.
   //
@@ -77,20 +91,27 @@ export default function SessionHeader({
               row with controls at one end and nothing at the other centres its
               middle child on what is left over rather than on the page
               (Miyel, 2026-09-18). */}
-          <div className="ses-head-side" aria-hidden="true" />
+          <div className="ses-head-side">
+            <button
+              type="button"
+              className={'ses-shut' + (ending ? ' ses-shut--sure' : '')}
+              onClick={() => (ending ? onEnd() : setEnding(true))}
+              onBlur={() => setEnding(false)}
+              aria-label={ending ? (hasWriting ? 'Save as a draft and close' : 'Close this listen') : 'Close this listen'}
+              title={ending ? undefined : 'Close this listen'}
+            >
+              {ending
+                ? (hasWriting ? 'Save draft' : 'Leave')
+                : <X size={18} weight="regular" aria-hidden="true" />}
+            </button>
+          </div>
 
           <div className="ses-head-beacon">
-          <button
-            type="button"
-            className="ses-cover"
-            onClick={onBack}
-            aria-label="Change album"
-            title={`${album}${artist ? ` · ${artist}` : ''}${year ? ` · ${year}` : ''} — change album`}
-          >
+          <span className="ses-cover" aria-hidden="true">
             {art
               ? <img src={art} alt="" />
-              : <span className="ses-cover-none" aria-hidden="true">♪</span>}
-          </button>
+              : <span className="ses-cover-none">♪</span>}
+          </span>
 
           <div className="ses-head-text">
             {/* The one green thing on the screen, and it means what it means

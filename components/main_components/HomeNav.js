@@ -1175,46 +1175,18 @@ export default function HomeNav() {
                       check the wristband for themselves whatever is drawn. */}
                   <ListeningBeacon choosing={choosing} emptied={!!dropping}>
                     {authed && !choosing && (inHand ? (
-                      /* ── A record already in hand ──────────────────────
-                         The way back to it, and under that the way out of
-                         it. Both, because one was a dead end: with a record
-                         on the desk the only door on this pane said "Back to
-                         the listen", so there was no way to start a
-                         different one and no way to reach your drafts, which
-                         live in the picker (Miyel, 2026-09-18: "sometimes I
-                         close it and I want to start a new listen but the
-                         only options I have are to go back to the listen").
-
-                         Putting it down costs nothing and the second line
-                         does not warn about it, because there is nothing to
-                         warn about: a listen with writing on it is already a
-                         draft — saved to the server every three seconds and
-                         to the browser on every keystroke — and it is
-                         waiting under Unfinished in the picker this opens.
-                         One with no writing on it was never anything.
-
-                         The needle is already down, too: closing the layer
-                         ends the listen (useListeningSession), so by the
-                         time anybody is reading this line the beacon has
-                         stopped claiming it. */
-                      <>
-                        <Link href="/session" className="ln-onward" title={`Back to ${inHand.album}`}>
-                          Back to the listen
-                          <ArrowRight size={16} weight="regular" aria-hidden="true" />
-                        </Link>
-                        <button
-                          type="button"
-                          className="ln-onward ln-onward--aside"
-                          onClick={() => {
-                            try { localStorage.removeItem(PENDING_KEY); } catch { /* the picker still opens */ }
-                            saidSoAboutTheDesk();
-                            setChoosing(true);
-                          }}
-                          title={`Put ${inHand.album} down and choose another record`}
-                        >
-                          or choose another
-                        </button>
-                      </>
+                      /* A record already in hand: the way back to it, and
+                         only that. There was a second, quieter line under
+                         this one for an hour — the way *out* of the listen —
+                         and Miyel took it off on 2026-09-18: ending a listen
+                         belongs in the listen, and this screen's whole job is
+                         one record, not two lines of words about what you
+                         could do with it. The × in the session's own corner
+                         is where a record is put down now. */
+                      <Link href="/session" className="ln-onward" title={`Back to ${inHand.album}`}>
+                        Back to the listen
+                        <ArrowRight size={16} weight="regular" aria-hidden="true" />
+                      </Link>
                     ) : (
                       /* And with nothing in hand it opens the picker here,
                          rather than going anywhere. A button and not a link,
