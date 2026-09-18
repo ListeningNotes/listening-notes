@@ -3,7 +3,7 @@
 'use client';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { ArrowLeft, ArrowRight, Check, Plus } from '@phosphor-icons/react';
+import { ArrowLeft, ArrowRight, Plus } from '@phosphor-icons/react';
 import { serializeTracks } from '../../../library/entry_formatter';
 import FullPostPage from '../../../app/entries/[slug]/FullPostPage';
 import { LayerHeaderSlot } from '../../main_components/LayerEntry';
@@ -151,7 +151,17 @@ export default function SessionPreview({
       <div className={'ses-preview-bar' + (saved ? ' ses-preview-bar--done' : '')}>
         {!saved ? (
           <>
+            {/* The word for what you are in the middle of, in the slot the
+                bar keeps for it — "Editing" on an entry, "Crediting" on a
+                send, "Previewing" here (Miyel, 2026-09-18). It is the one
+                thing on a bar that is not a button, and it is what stops
+                three borrowed controls reading as a toolbar that follows you
+                everywhere. */}
+            <span className="ln-editing-label">Previewing</span>
             <button type="button" className="ln-pin" onClick={onBack} disabled={saving}>
+              {/* The arrow stays. Back is a direction and the glyph says it
+                  faster than the word; saving is not a direction, so the tick
+                  that used to sit on it was decoration. */}
               <ArrowLeft size={13} weight="bold" aria-hidden="true" />
               <span>Go back</span>
             </button>
@@ -165,8 +175,7 @@ export default function SessionPreview({
               onClick={doSave}
               disabled={saving || !overallNotes.trim()}
             >
-              <Check size={13} weight="bold" aria-hidden="true" />
-              <span>{saving ? 'Saving' : 'Save to journal'}</span>
+              {saving ? 'Saving' : 'Save to journal'}
             </button>
           </>
         ) : (
