@@ -45,12 +45,27 @@ function valueAt(clientX, row) {
 // `roomy` is the same stars with a thumb-sized row under them: the height
 // comes from padding with a matching negative margin, so the row still
 // occupies what it did and the stars stay the size they were.
-// `ghost` is a value drawn faintly *behind* an unset rating — the average of
-// the track ratings, shown where the score is about to go rather than written
-// out as a line of type above it (Miyel, 2026-09-18). It disappears the moment
-// there is a real score, because it was only ever a suggestion about an empty
-// row; and it is never what the control reports, so nothing can mistake a
-// hint for an answer.
+// `ghost` is the average of the track ratings, drawn into the row rather than
+// written out as a line of type above it (Miyel, 2026-09-18). Two things, and
+// they are two because one of them is easy to read and the other is exact:
+//
+//   the fill — pale gold up to the average, on an empty row. What it is at a
+//   glance.
+//   the tick — a hairline under the row at the average's own position. Where
+//   it is precisely, and the only thing left once a score is set over it.
+//
+// **The fill is not rounded to half stars.** It was, for an hour, and Miyel
+// caught what that costs: an average of 4.89 drew as four and a half, which
+// is the one reading that would have changed her mind about giving it a five.
+// A score snaps to halves because it is being *chosen*; an average does not,
+// because it is being *read* — so 4.89 draws as very nearly five and says so
+// without a decimal point.
+//
+// The tick stays after a rating because the reveal has to keep meaning
+// something. It did not, for an hour: the fill only ever showed on an empty
+// row, so pressing reveal with a score already given did nothing at all, and
+// Miyel found it. Rating blind and then checking whether it matched is the
+// whole reason this is behind a press.
 export default function StarRating({ value, onChange, size = 18, roomy = false, ghost = 0 }) {
   const row = useRef(null);
   const [dragging, setDragging] = useState(false);
@@ -59,8 +74,9 @@ export default function StarRating({ value, onChange, size = 18, roomy = false, 
   // itself.
   const [hover, setHover] = useState(null);
   const display = hover ?? value;
-  // Only on an empty row, and only when nothing is being pointed at: the
-  // moment there is something real to draw, the hint is in the way.
+  // The fill goes the moment there is something real in the row — a hint
+  // under an answer is in the way. The tick stays, because a hairline under a
+  // row of stars is a second fact beside them rather than a smudge on them.
   const showing = !display && ghost > 0 ? ghost : 0;
 
   const reach = roomy ? Math.max(10, Math.round((44 - size) / 2)) : 0;
@@ -98,8 +114,8 @@ export default function StarRating({ value, onChange, size = 18, roomy = false, 
       aria-valuemax={5}
       aria-valuenow={value}
       aria-valuetext={value
-        ? `${value} out of 5`
-        : showing ? `Not rated. Your tracks average ${showing} out of 5.` : 'Not rated'}
+        ? `${value} out of 5${ghost ? `. Your tracks average ${ghost}.` : ''}`
+        : ghost ? `Not rated. Your tracks average ${ghost} out of 5.` : 'Not rated'}
       onPointerDown={down}
       onPointerMove={move}
       onPointerUp={up}
@@ -111,6 +127,7 @@ export default function StarRating({ value, onChange, size = 18, roomy = false, 
         if (e.key === 'ArrowLeft') { e.preventDefault(); onChange(Math.max(0, (value || 0) - 0.5)); }
       }}
       style={{
+        position: 'relative',
         display: 'flex',
         gap: roomy ? 7 : 1,
         touchAction: 'none',
@@ -121,6 +138,25 @@ export default function StarRating({ value, onChange, size = 18, roomy = false, 
         outline: 'none',
       }}
     >
+      {/* The tick. Placed by the same sum `valueAt` reads a drag with — the
+          average over five, along the row — so it stands exactly where
+          dragging to that number would put your thumb. */}
+      {ghost > 0 && (
+        <span
+          aria-hidden="true"
+          style={{
+            position: 'absolute',
+            left: `${(ghost / 5) * 100}%`,
+            bottom: -7,
+            width: 2,
+            height: 7,
+            marginLeft: -1,
+            borderRadius: 1,
+            background: '#E8B84B',
+            pointerEvents: 'none',
+          }}
+        />
+      )}
       {[1, 2, 3, 4, 5].map(n => {
         const filled = n <= display;
         const half = !filled && display >= n - 0.5 && display < n;
@@ -136,10 +172,11 @@ export default function StarRating({ value, onChange, size = 18, roomy = false, 
                 could barely see it; the thing that keeps a hint from reading
                 as an answer is that you asked for it and that it leaves the
                 moment you rate, not that it is hard to make out. */}
-            {!filled && !half && (n <= showing || (showing >= n - 0.5 && showing < n)) && (
+            {!filled && !half && showing > n - 1 && (
               <span style={{
                 position: 'absolute', inset: 0, overflow: 'hidden',
-                width: n <= showing ? size : size / 2,
+                /* Exactly as far as the average reaches into this star. */
+                width: Math.min(1, showing - (n - 1)) * size,
                 color: '#E8B84B', opacity: 0.5,
                 fontSize: size, lineHeight: 1, userSelect: 'none', pointerEvents: 'none',
               }}>★</span>
