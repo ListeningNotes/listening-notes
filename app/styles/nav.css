@@ -862,6 +862,28 @@
    padding is the only padding. */
 
 /* Restated from the old .hp-mobile-screens block (since deleted) — same values, new scope. */
+/* ── The cover in the air ──────────────────────────────────────────────────
+   Fixed to the window and over everything: it is travelling between a tile in
+   the picker and the beacon's slot, and neither of those boxes can hold it.
+   The same shape and the same shadow the session's own landing uses, because
+   it is the same journey — a cover leaving a tile you tapped — arriving in a
+   different room. Written here rather than borrowed from session.css: the
+   cross has no business reaching into the session's stylesheet, which is the
+   rule the brief set for the quiet line and holds for this too.
+
+   transform-origin at the top left because the flight is computed as a
+   translate from one box's corner to another's plus a scale; any other origin
+   and the scale would fight the translate. */
+.hn-flight {
+  position: fixed;
+  z-index: 120;
+  pointer-events: none;
+  object-fit: cover;
+  border-radius: 14px;
+  transform-origin: top left;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.28);
+}
+
 /* ── Choosing a record, on the pane ────────────────────────────────────────
    Floor one becomes the picker and the rest of the cross stands down: the
    band at the foot, the crown, the row of earlier covers and the snap between

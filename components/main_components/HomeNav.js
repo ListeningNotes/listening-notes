@@ -71,7 +71,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState, useSyncExter
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ArrowRight, ArrowsLeftRight, X } from '@phosphor-icons/react';
-import { useListeningBeacon } from '../../hooks/useListeningBeacon';
+import { announce, useListeningBeacon } from '../../hooks/useListeningBeacon';
 import { useSpineWidth } from '../../hooks/useSpineWidth';
 import { useTheme } from './Lightswitch';
 import { useBookplate } from './Bookplate';
@@ -107,6 +107,25 @@ const FACE_KEY = 'ln-spine-face';
 // arrives reads as a different piece of software. The number is stated in
 // nav.css too, on the transition; if one moves the other has to.
 const TURN_MS = 400;
+
+// ── The flight, and what happens either side of it ────────────────────────
+// The cover leaves the tile it was tapped in and lands in the beacon; the
+// beacon lights; then the session opens over a beacon already showing the
+// record (Miyel's beacon brief, 2026-09-17: "I do want the chosen album to
+// have its moment in the beacon").
+//
+// 520ms is the session's own landing, which flies a cover from the same tiles
+// into the same-shaped slot — the two are the same journey to two different
+// rooms and have no business moving at different speeds.
+//
+// Then the beacon has its moment — 620ms of being lit, full size, with the
+// record's name under it — before the listen arrives on top. That number is
+// the only one here that is a feel rather than a measurement: long enough to
+// read the title, short enough that nobody taps twice thinking it did not
+// work. The beacon is still growing for the first 520ms of it, which is the
+// point — you watch it take the record.
+const LANDING_MS = 520;
+const ITS_MOMENT_MS = 620;
 
 // What each pane is, as a mark and as a sentence, used to live here for the
 // carets at the foot. The band names all three outright now and owns its own
@@ -329,20 +348,92 @@ export default function HomeNav() {
   const [choosing, setChoosing] = useState(false);
   const router = useRouter();
 
-  // Off the picker and into the listen. The record goes in the browser under
-  // the key the session reads once on mount, so the listen opens on it — the
-  // same handover the session's own picker does, and the same event after it,
-  // so the desk's row and the line under the beacon both change in the same
-  // frame rather than on the next poll.
+  // ── Off the picker and into the listen ────────────────────────────────────
+  // The record goes in the browser under the key the session reads once on
+  // mount, so the listen opens on it — the same handover the session's own
+  // picker does, and the same event after it, so the desk's row and the line
+  // under the beacon change in the same frame rather than on the next poll.
   //
-  // The cover's flight into the beacon is the second half of this item and is
-  // not here yet: for now the record is chosen and the listen opens.
-  const beginListen = useCallback(record => {
-    try { localStorage.setItem(PENDING_KEY, JSON.stringify(record)); } catch { /* the listen still opens */ }
-    saidSoAboutTheDesk();
+  // `from` is the box the tapped cover was in, handed over by AlbumPicker. It
+  // is the start of the flight; the beacon slot is the end.
+  const [landing, setLanding] = useState(null);
+  const flightTimers = useRef([]);
+  useEffect(() => () => {
+    flightTimers.current.forEach(id => { clearTimeout(id); cancelAnimationFrame(id); });
+  }, []);
+
+  const openSession = useCallback(() => {
     setChoosing(false);
     router.push('/session');
   }, [router]);
+
+  const beginListen = useCallback((record, from = null) => {
+    try { localStorage.setItem(PENDING_KEY, JSON.stringify(record)); } catch { /* the listen still opens */ }
+    saidSoAboutTheDesk();
+    const still = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    // No flight: the record is simply on the beacon and the listen opens. The
+    // same answer the session's own picker gives, and the brief's.
+    if (!from || !record.artUrl || still) {
+      announce(record);
+      openSession();
+      return;
+    }
+    setLanding({ record, art: record.artUrl, from, to: null, go: false });
+  }, [openSession]);
+
+  // The journey. Measured on the next frame rather than worked out, because
+  // the slot's box is whatever the pane's arrangement has made it — 132px
+  // while the picker is open, and that is where the record lands. The growing
+  // happens afterwards, with the record already in the slot, which is what
+  // makes it read as the beacon taking the record rather than the record
+  // chasing a box that is moving.
+  //
+  // The timers live in a ref and not in this effect's cleanup: the effect runs
+  // again the moment the target is written, and a cleanup there would cancel
+  // the journey it had just started.
+  useEffect(() => {
+    if (!landing || landing.to) return;
+    flightTimers.current.push(requestAnimationFrame(() => {
+      const slot = document.querySelector('.beacon-art-wrap');
+      if (!slot) { setLanding(null); announce(landing.record); openSession(); return; }
+      const to = slot.getBoundingClientRect();
+      setLanding(l => l && { ...l, to });
+      flightTimers.current.push(requestAnimationFrame(() => setLanding(l => l && { ...l, go: true })));
+      // It has arrived. Three things in one commit, which is the whole reason
+      // they are written together: the beacon takes the record, the pane comes
+      // out of choosing, and the flown copy is removed. React batches them, so
+      // the cover that was in the air and the cover in the slot are never two
+      // different pictures in the same frame — and the image is the one the
+      // browser has just finished flying, so it is in the cache and paints
+      // without a beat of nothing.
+      flightTimers.current.push(setTimeout(() => {
+        announce(landing.record);
+        setChoosing(false);
+        setLanding(null);
+      }, LANDING_MS));
+      // And then the listen, over a beacon that has had its moment: full size,
+      // lit, with the record's name under it.
+      flightTimers.current.push(setTimeout(() => {
+        router.push('/session');
+      }, LANDING_MS + ITS_MOMENT_MS));
+    }));
+  }, [landing, openSession, router]);
+
+  // Where the flying cover is drawn this frame: at its start until it is told
+  // to go, then translated and scaled onto the beacon's slot.
+  let flightStyle = null;
+  if (landing) {
+    const { from, to, go } = landing;
+    const travelling = go && to;
+    const dx = travelling ? to.left - from.left : 0;
+    const dy = travelling ? to.top - from.top : 0;
+    const k = travelling ? to.width / from.width : 1;
+    flightStyle = {
+      left: from.left, top: from.top, width: from.width, height: from.height,
+      transform: `translate(${dx}px, ${dy}px) scale(${k})`,
+      transition: travelling ? `transform ${LANDING_MS}ms cubic-bezier(0.22, 0.61, 0.36, 1)` : 'none',
+    };
+  }
 
   // A saved draft travels whole, so the session can put its notes back without
   // a second round trip — the shape is the session's own `resume`.
@@ -1025,6 +1116,13 @@ export default function HomeNav() {
           hidden={!deep[pane] || down[pane]}
         />
       </div>
+
+      {/* The cover in the air. Fixed to the window and over everything, because
+          it is travelling between two boxes that belong to different parts of
+          the page and neither of them can hold it. */}
+      {landing && flightStyle && (
+        <img src={landing.art} alt="" aria-hidden="true" className="hn-flight" style={flightStyle} />
+      )}
 
       <Footer pane={pane} goTo={goTo} authed={authed} />
     </div>
