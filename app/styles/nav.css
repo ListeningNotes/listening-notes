@@ -931,7 +931,20 @@
    None of it unmounts. The wall below is still there and still holds where it
    was scrolled to; it is simply not something you can reach while the floor
    above it is a search. */
-.hn--choosing .hn-foot { display: none; }
+/* ── Standing down, not disappearing ──────────────────────────────────────
+   These were `display: none` while a record was being chosen, which is a cut
+   in the middle of a shot: the slot above them spends 0.7s changing shape and
+   the furniture around it blinks out in one frame. Miyel, 2026-09-18: "it's
+   not fluid, especially going from picker back to beacon, but it's also very
+   noticeable going into the picker."
+   Opacity and pointer-events instead, on the slot's own clock, so the whole
+   pane settles as one thing. `display` cannot be transitioned; these can. */
+.hn--choosing .hn-foot,
+.hn--choosing .hn-controls {
+  opacity: 0;
+  pointer-events: none;
+}
+.hn-foot, .hn-controls { transition: opacity 0.7s cubic-bezier(0.22, 0.61, 0.36, 1); }
 /* ── The crown standing down ───────────────────────────────────────────────
    Not display: none, which is what it was for an hour and is what Miyel meant
    by "it just is really disjointed" (2026-09-17, on a phone): the big mark
@@ -982,7 +995,7 @@
    how it comes. */
 .hn-bar-mark { transition: opacity 0.3s ease 0.16s; }
 .hn--choosing .hn-bar-mark { opacity: 1; }
-.hn--choosing .hn-controls { display: none; }
+
 .hn--choosing .hn-pane--home { scroll-snap-type: none; }
 .hn--choosing .hn-pane--home > .hn-floor:nth-of-type(2) { display: none; }
 /* The screen stops being one screen tall and stops holding anything in the
@@ -1051,12 +1064,14 @@
 }
 /* Only while choosing. The drop leaves the same empty tile behind for half a
    second on its way to refilling, and that moment is not this one: there the
-   tile is a record that has just left, here it is a space waiting for one. */
-.hn--choosing .beacon-art-empty {
-  opacity: 1;
-  border: 1px solid var(--border);
-  box-sizing: border-box;
-}
+   tile is a record that has just left, here it is a space waiting for one.
+   No border. It had one for half an hour on 2026-09-18 and Miyel could see it
+   from across the room — "remove the shadow around the empty card, it's
+   showing a hard line between the header and the page." A hairline drawn
+   around a placeholder directly under a bar that has just given up its own
+   hairline puts the line back one row down. The fill alone says where the
+   record goes. */
+.hn--choosing .beacon-art-empty { opacity: 1; }
 .hn--choosing .beacon-meta { gap: 0; }
 /* The way out, in the corner the up-caret holds the rest of the time. Not
    flex: 1 like the caret's own invisible strip — this one is a mark, and it
@@ -1082,7 +1097,9 @@
   .beacon-card,
   .hn-crown,
   .hn--choosing .hn-crown,
-  .hn-bar-mark { transition: none; }
+  .hn-bar-mark,
+  .hn-foot,
+  .hn-controls { transition: none; }
 }
 
 /* ── The stage measures itself on the cross ────────────────────────────────
