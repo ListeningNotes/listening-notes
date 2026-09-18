@@ -542,22 +542,25 @@ export default function FullPostPage({ entry, references = [], authed = false, l
           <span>{flag.label}</span>
         </button>
       ))}
-      {/* Masterpiece is not pressed, 2026-09-17. It is what the tracklist
-          says: every track rated, every rating five. So it is shown and not
-          offered — a fact about your ratings rather than a judgement you make
-          about yourself, which is also a nicer thing to discover at the end of
-          a listen than to award yourself at the start.
-          It moves while you are correcting, which is the point: take one track
-          from five to four and the mark goes, here, before you save. */}
-      <span
-        className={'ln-flag ln-flag--mark ln-flag--mp ln-flag--said' + (flawless(edit.draft.tracks) ? ' ln-flag--on' : '')}
-        title={flawless(edit.draft.tracks)
-          ? 'Every track is five stars'
-          : 'A masterpiece is an album with an entire five-star tracklist'}
-      >
-        <SketchLogo size={13} weight="fill" aria-hidden="true" />
-        <span>Masterpiece</span>
-      </span>
+      {/* Masterpiece is not pressed, and it is not there at all until it is
+          true (Miyel, 2026-09-17). It is what the tracklist says: every track
+          rated, every rating five. Shown greyed it read as a control somebody
+          had disabled — a thing you would press if only you could — where the
+          truth is that it is not a control and never was. Arriving is the
+          whole gesture: a fact about your ratings rather than a judgement you
+          award yourself, and the same way it behaves in a session.
+
+          It moves while you correct, which is the point: take one track from
+          five to four and it goes, here, before you save. */}
+      {flawless(edit.draft.tracks) && (
+        <span
+          className="ln-flag ln-flag--mark ln-flag--mp ln-flag--said ln-flag--on"
+          title="Every track is five stars"
+        >
+          <SketchLogo size={13} weight="fill" aria-hidden="true" />
+          <span>Masterpiece</span>
+        </span>
+      )}
       </span>
     </span>
   );
