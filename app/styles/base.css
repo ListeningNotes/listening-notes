@@ -200,6 +200,46 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
    and Compare. These were four near-copies of the same inline style that had
    already drifted apart on font and size; this is the version they agree on.
    Works as either a <Link> or a <button> — nothing here assumes which. */
+/* ── A line that takes you somewhere ───────────────────────────────────────
+   Text and an arrow. No pill, no tile, no border — the quiet way onward, the
+   voice the session already uses on Album notes → and Preview → (Miyel's
+   beacon brief, 2026-09-17, where it is "the quiet line").
+
+   It is here and not in session.css because the beacon pane needs it now and
+   a pane has no business reaching into the session's stylesheet. The session's
+   own .ses-quiet is still its 10px uppercase label and has not been touched:
+   the mockups draw this one bolder and in sentence case, which is what is
+   built here. If the two are meant to be identical, .ses-quiet wants the same
+   treatment and five call sites change with it — flagged, not assumed.
+
+   NAME: .ln-onward is a placeholder for Miyel to overrule (AGENTS.md). It is
+   what the thing does — a word and an arrow, and you are somewhere else. */
+.ln-onward {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-weight: var(--font-display-weight);
+  font-size: 1.05rem;
+  letter-spacing: 0.01em;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: opacity 0.15s;
+}
+.ln-onward:hover { opacity: 0.66; }
+/* The arrow leans in as you press it, which is the only thing this control
+   has to say for itself. */
+.ln-onward svg { transition: transform 0.2s cubic-bezier(0.22, 0.61, 0.36, 1); }
+.ln-onward:hover svg { transform: translateX(3px); }
+@media (prefers-reduced-motion: reduce) {
+  .ln-onward:hover svg { transform: none; }
+}
+
 .ln-pill {
   display: inline-flex;
   align-items: center;

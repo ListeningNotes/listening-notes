@@ -97,6 +97,12 @@ const DOORS = [
 // for the same reason.
 const PENDING_KEY = 'ln_pending_session';
 
+// Exported because the beacon pane asks the same question. The desk answers it
+// for a row and the beacon answers it for the line under the record, and a
+// second reader of the same key written a second way is how the two would come
+// to disagree about whether there is a listen open. If a third surface ever
+// wants it, this pair has outgrown the desk and wants a file of its own.
+
 // Read as an external store, the way the wall reads its density and the cross
 // its spine width — a browser-only value read in an effect trips the lint rule
 // the project keeps, and this is the shape that rule wants. The snapshot is
@@ -104,7 +110,7 @@ const PENDING_KEY = 'ln_pending_session';
 // object every time and spin.
 let lastRaw = null;
 let lastHeld = null;
-function heldNow() {
+export function heldNow() {
   let raw = null;
   try { raw = localStorage.getItem(PENDING_KEY); } catch { /* storage off */ }
   if (raw !== lastRaw) {
@@ -116,7 +122,7 @@ function heldNow() {
   }
   return lastHeld;
 }
-function subscribeHeld(listener) {
+export function subscribeHeld(listener) {
   // Another tab, and this one. `storage` fires everywhere except the tab that
   // wrote the key, and the desk and the listen are always the same tab, so the
   // second half is the one that matters here — see PENDING_EVENT.
