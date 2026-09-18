@@ -53,25 +53,53 @@ export default function AlbumNotes({
             tracks={list} trackRatings={trackRatings} favorites={trackFavorites}
             height={56} color="var(--ink-soft)" emptyColor="var(--border)" labelColor="var(--ink-faint)"
           />
-          {/* "5 of 5 rated" was on the left of this row until 2026-09-18. The
-              horizon above it already says which tracks have a rating and
-              which do not — that is the whole of what it draws — so the count
-              was the picture written out in words (Miyel: "cleaner look").
-              What is left is the one thing the chart cannot say, which is the
-              number, and it stays hidden until it is asked for. */}
+          {/* ── The average, drawn rather than written ──────────────────
+              "5 of 5 rated" was on the left of this row until 2026-09-18 —
+              the horizon above already says which tracks have a rating, so
+              the count was the picture written out in words.
+
+              And what the reveal reveals changed with it. It printed a line —
+              `avg 3.40 / 5` — which made this column three stacked pieces of
+              type saying three different things about the same record, one
+              under another (Miyel: "it's like reading a lot of text in a
+              column"). It draws the number into the stars below instead, as a
+              ghost on the empty row: the answer arrives where the question
+              is, and it goes as soon as there is a real score over it.
+
+              Still behind a press, which is the half worth keeping. Miyel
+              rates blind on purpose — "sometimes I like to not see what my
+              average is and just rate it and see if it matches up with what I
+              thought" — so nothing is shown until it is asked for. */}
           <div className="ses-actions" style={{ justifyContent: 'center', marginTop: 8 }}>
             {avg && (
-              <button type="button" className="ses-quiet" style={{ borderBottom: 'none' }} onClick={() => setAvgShown(v => !v)}>
-                {avgShown ? `avg ${avg} / 5` : 'reveal average'}
+              <button
+                type="button"
+                className="ses-quiet"
+                style={{ borderBottom: 'none' }}
+                onClick={() => setAvgShown(v => !v)}
+                aria-pressed={avgShown}
+              >
+                {avgShown ? 'hide average' : 'reveal average'}
               </button>
             )}
           </div>
         </div>
       )}
 
-      <div className="ses-label" style={{ marginBottom: 14, textAlign: 'center' }}>Your score</div>
-      <div className="ses-center">
-        <StarRating value={rating} onChange={setRating} size={38} />
+      {/* No "Your score" over it. Five stars under a record you are in the
+          middle of logging are not ambiguous, and the label was a line of
+          type doing the work the stars already do (Miyel, 2026-09-18: "I
+          don't think we need to have your score be labeled — we know what
+          we're doing"). */}
+      <div className="ses-center" style={{ marginTop: 26 }}>
+        <StarRating
+          value={rating}
+          onChange={setRating}
+          size={38}
+          /* The tracks' average, faint, on an empty row — and only once it
+             has been asked for. */
+          ghost={avgShown && avg ? Math.round(Number(avg) * 2) / 2 : 0}
+        />
       </div>
 
       {/* ── The marks ─────────────────────────────────────────────────────

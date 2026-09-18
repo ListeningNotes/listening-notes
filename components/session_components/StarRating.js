@@ -45,7 +45,13 @@ function valueAt(clientX, row) {
 // `roomy` is the same stars with a thumb-sized row under them: the height
 // comes from padding with a matching negative margin, so the row still
 // occupies what it did and the stars stay the size they were.
-export default function StarRating({ value, onChange, size = 18, roomy = false }) {
+// `ghost` is a value drawn faintly *behind* an unset rating — the average of
+// the track ratings, shown where the score is about to go rather than written
+// out as a line of type above it (Miyel, 2026-09-18). It disappears the moment
+// there is a real score, because it was only ever a suggestion about an empty
+// row; and it is never what the control reports, so nothing can mistake a
+// hint for an answer.
+export default function StarRating({ value, onChange, size = 18, roomy = false, ghost = 0 }) {
   const row = useRef(null);
   const [dragging, setDragging] = useState(false);
   // What a mouse is pointing at, for the preview a pointer can afford and a
@@ -53,6 +59,9 @@ export default function StarRating({ value, onChange, size = 18, roomy = false }
   // itself.
   const [hover, setHover] = useState(null);
   const display = hover ?? value;
+  // Only on an empty row, and only when nothing is being pointed at: the
+  // moment there is something real to draw, the hint is in the way.
+  const showing = !display && ghost > 0 ? ghost : 0;
 
   const reach = roomy ? Math.max(10, Math.round((44 - size) / 2)) : 0;
 
@@ -88,7 +97,9 @@ export default function StarRating({ value, onChange, size = 18, roomy = false }
       aria-valuemin={0}
       aria-valuemax={5}
       aria-valuenow={value}
-      aria-valuetext={value ? `${value} out of 5` : 'Not rated'}
+      aria-valuetext={value
+        ? `${value} out of 5`
+        : showing ? `Not rated. Your tracks average ${showing} out of 5.` : 'Not rated'}
       onPointerDown={down}
       onPointerMove={move}
       onPointerUp={up}
@@ -118,6 +129,17 @@ export default function StarRating({ value, onChange, size = 18, roomy = false }
             <span style={{ position: 'absolute', inset: 0, color: '#d0ccc5', fontSize: size, lineHeight: 1, userSelect: 'none' }}>★</span>
             {(filled || half) && (
               <span style={{ position: 'absolute', inset: 0, overflow: 'hidden', width: filled ? size : size / 2, color: '#E8B84B', fontSize: size, lineHeight: 1, userSelect: 'none' }}>★</span>
+            )}
+            {/* The hint, in the same gold at a fifth of its weight — the same
+                colour so it is plainly the same measure, faint enough that
+                nobody reads it as a score already given. */}
+            {!filled && !half && (n <= showing || (showing >= n - 0.5 && showing < n)) && (
+              <span style={{
+                position: 'absolute', inset: 0, overflow: 'hidden',
+                width: n <= showing ? size : size / 2,
+                color: '#E8B84B', opacity: 0.28,
+                fontSize: size, lineHeight: 1, userSelect: 'none', pointerEvents: 'none',
+              }}>★</span>
             )}
           </span>
         );
