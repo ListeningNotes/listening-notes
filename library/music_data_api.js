@@ -67,17 +67,82 @@ const norm = s => String(s || '').toLowerCase().normalize('NFD').replace(/[\u030
 
     const lookupRes = await fetch(`https://itunes.apple.com/lookup?id=${id}&entity=song&limit=300`);
     const lookupData = await lookupRes.json();
-    const songs = (lookupData.results || []).filter(r => r.wrapperType === 'track' && r.kind === 'song');
+    const rows = lookupData.results || [];
+    const songs = rows.filter(r => r.wrapperType === 'track' && r.kind === 'song');
     if (!songs.length) return null;
 
-    return songs
-      .sort((a, b) => (a.discNumber || 1) - (b.discNumber || 1) || (a.trackNumber || 0) - (b.trackNumber || 0))
-      .map((s, i) => ({
-        number: i + 1,
-        title: s.trackName,
-        duration: s.trackTimeMillis ? Math.round(s.trackTimeMillis / 1000) : null,
-      }));
+    // The same response carries the album row. It is what the contents screen
+    // prints its facts from, so it is read here rather than fetched again —
+    // one lookup, both halves (Miyel's contents brief, 2026-09-18).
+    const album = rows.find(r => r.wrapperType === 'collection') || null;
+
+    return {
+      tracks: songs
+        .sort((a, b) => (a.discNumber || 1) - (b.discNumber || 1) || (a.trackNumber || 0) - (b.trackNumber || 0))
+        .map((s, i) => ({
+          number: i + 1,
+          title: s.trackName,
+          duration: s.trackTimeMillis ? Math.round(s.trackTimeMillis / 1000) : null,
+          // Only where a record actually has more than one, so a draft saved
+          // before this existed reads the same as one saved after.
+          disc: s.discNumber && s.discNumber > 1 ? s.discNumber : undefined,
+        })),
+      facts: factsFrom(album),
+    };
   } catch { return null; }
+}
+
+// The label, out of the copyright line. It reads like `P 2011 True Panther
+// Sounds` — sometimes with a © instead, sometimes with the year elsewhere,
+// sometimes with neither. The mark and the year come off and what is left is
+// the label; if that is nothing, there is no label and the row is dropped
+// rather than printed blank (Miyel's brief).
+//
+// ── The licensing clause ─────────────────────────────────────────────────
+// A good half of them are not that simple. King Krule's reads `P 2011 King
+// Krule under exclusive license to True Panther Sounds`, and stripping only
+// the mark and the year leaves a sentence rather than a label. What is before
+// the clause is the rights holder — usually the artist — and the label is
+// what comes after. Checked against real copyright strings rather than
+// guessed, including both spellings of licence, which Apple carries.
+const HANDED_OVER = /\b(?:under (?:an? )?exclusive licen[cs]e(?: to)?|under licen[cs]e to|issued under licen[cs]e to|distributed by|marketed by)\b/i;
+
+export function labelFrom(copyright) {
+  let text = String(copyright || '');
+  const parts = text.split(HANDED_OVER);
+  if (parts.length > 1) text = parts[parts.length - 1];
+  const bare = text
+    .replace(/[℗©]/g, ' ')
+    .replace(/\b(19|20)\d{2}\b/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
+    // A comma, dash or stop left at either end by what was removed.
+    .replace(/^[-–,.\s]+|[-–,.\s]+$/g, '');
+  return bare.length > 1 ? bare : '';
+}
+
+// What the contents screen prints. Everything here is already in the album
+// row of an iTunes lookup; nothing is inferred and nothing is fetched twice.
+function factsFrom(album) {
+  if (!album) return {};
+  return {
+    released: album.releaseDate ? String(album.releaseDate).slice(0, 4) : '',
+    genre: album.primaryGenreName || '',
+    label: labelFrom(album.copyright),
+  };
+}
+
+// The facts on their own, for a listen resumed from a draft — the tracks come
+// back with the row and nothing re-fetches them, so this is the one thing the
+// contents screen would otherwise have no way of knowing. One lookup, and
+// only when there is a collection id to ask about.
+export async function fetchAlbumFacts(collectionId) {
+  if (!collectionId) return {};
+  try {
+    const res = await fetch(`https://itunes.apple.com/lookup?id=${collectionId}`);
+    const data = await res.json();
+    return factsFrom((data.results || []).find(r => r.wrapperType === 'collection'));
+  } catch { return {}; }
 }
 
 export async function fetchAlbumArtUrl(albumName, artistName, year) {

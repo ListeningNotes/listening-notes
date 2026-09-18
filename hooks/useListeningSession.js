@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 'use client';
 import { useState, useEffect, useRef } from 'react';
-import { fetchTracklist, fetchAlbumArtUrl } from '../library/music_data_api';
+import { fetchTracklist, fetchAlbumFacts, fetchAlbumArtUrl } from '../library/music_data_api';
 import { serializeTracks } from '../library/entry_formatter';
 import { useSessionDraft } from './useSessionDraft';
 
@@ -68,6 +68,11 @@ export function saidSoAboutTheEntry(entry) {
 
 export function useListeningSession({ step }) {
   // The record
+  // What the contents screen prints about the record: released, genre, label.
+  // The count and the runtime are not here because they are the tracklist
+  // said another way, and a number kept in two places is a number that can
+  // disagree with itself.
+  const [facts, setFacts]                 = useState({});
   const [albumArt, setAlbumArt]           = useState('');
   const [albumInput, setAlbumInput]       = useState('');
   const [artistName, setArtistName]       = useState('');
@@ -309,6 +314,7 @@ export function useListeningSession({ step }) {
     const run = ++listenRunRef.current;
 
     setTracks(null);
+    setFacts({});
     setTracksLoading(false);
     setTrackNotes({});
     setTrackRatings({});
@@ -373,12 +379,21 @@ export function useListeningSession({ step }) {
     }
 
     if (rows.length) {
-      setTracks(rows.map(t => ({ number: t.number, title: t.title, duration: t.duration ?? null })));
+      setTracks(rows.map(t => ({ number: t.number, title: t.title, duration: t.duration ?? null, disc: t.disc })));
+      // A resumed draft brings its tracks back with it and nothing re-fetches
+      // them, so this is the one thing the contents screen would otherwise
+      // have no way of knowing. One lookup, and only on a resume.
+      if (collectionIdRef.current) {
+        fetchAlbumFacts(collectionIdRef.current).then(f => {
+          if (run === listenRunRef.current) setFacts(f || {});
+        });
+      }
     } else {
       setTracksLoading(true);
-      fetchTracklist(album, artist, collectionIdRef.current || null).then(t => {
+      fetchTracklist(album, artist, collectionIdRef.current || null).then(found => {
         if (run !== listenRunRef.current) return;
-        setTracks(t || []);
+        setTracks(found?.tracks || []);
+        setFacts(found?.facts || {});
         setTracksLoading(false);
       });
     }
@@ -543,6 +558,7 @@ export function useListeningSession({ step }) {
     // Tracks
     tracks,
     tracksLoading,
+    facts,
     trackNotes, setTrackNotes,
     trackRatings, setTrackRatings,
     trackFavorites, setTrackFavorites,
