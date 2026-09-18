@@ -500,15 +500,15 @@
 }
 /* Headroom above a full bar for the heart a favourite carries. */
 .ses-strip-bars { position: relative; display: flex; align-items: flex-end; height: 100%; padding-top: 14px; box-sizing: border-box; }
-/* Red, like every other heart on this site (Miyel, 2026-09-18). It was ink
-   here on the argument that the strip should stay one colour while it is
-   being built — which is a nice idea about the strip and the wrong one about
-   the heart: --fav is what a favourite is, on an entry, on an archive card
-   and on the entry's own horizon, and a heart that is the right colour
-   everywhere except where you set it is the one place it needed to be. */
+/* A favourite wears its heart above the bar — the entry's horizon does the
+   same — in ink here rather than red, so the strip stays one colour while it
+   is being built. It was red for half an hour on 2026-09-18 and Miyel put it
+   back: the strip is a drawing of the record taking shape, and one red mark
+   in a grey drawing is a mark you look at instead of the shape. The red heart
+   is on the entry, where the record is finished. */
 .ses-strip-heart {
   position: absolute; left: 50%; transform: translateX(-50%);
-  display: inline-flex; line-height: 1; color: var(--fav); pointer-events: none;
+  display: inline-flex; line-height: 1; color: var(--ink); pointer-events: none;
 }
 .ses-strip-bar {
   display: block; width: 100%; border-radius: 3px 3px 0 0; background: var(--border);

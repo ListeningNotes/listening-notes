@@ -16,7 +16,15 @@ import { useSessionDraft } from './useSessionDraft';
 
 // The four screens of a listen, in order. The header draws them and the
 // picker names the one a draft was left on.
-export const SESSION_STEPS = ['Album', 'Tracks', 'Notes', 'Preview'];
+// Overview · Tracks · Album · Preview (Miyel, 2026-09-18). "Notes" was never
+// accurate on the third screen — it is where the record gets its score, its
+// marks and the writing that is *about the album*, which is what the word
+// Album says. And the first screen could not keep that word once the third
+// had it: it is the cover, the facts and the way in, which is an overview.
+//
+// The stored value is the index, not the word, so drafts written under the
+// old names reopen exactly where they were left.
+export const SESSION_STEPS = ['Overview', 'Tracks', 'Album', 'Preview'];
 
 // Where the record being listened to is kept between the picker and the
 // session, and across a reload. Written by whoever starts a listen — the

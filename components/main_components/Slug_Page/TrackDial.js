@@ -95,7 +95,10 @@ export default function TrackDial({ track, rating = 0, favorite = false, onField
   // finger leaves the row — which it will, because a thumb overshoots.
   const down = e => {
     e.preventDefault();
-    e.currentTarget.setPointerCapture?.(e.pointerId);
+    // Wrapped for the reason the session's stars are: capture can throw on a
+    // pointer that has already gone, and an exception here would take the
+    // press with it.
+    try { e.currentTarget.setPointerCapture?.(e.pointerId); } catch { /* the drag still works */ }
     setDragging(true);
     setStars(valueAt(e.clientX, row.current));
   };
