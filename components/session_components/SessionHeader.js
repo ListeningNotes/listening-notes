@@ -72,6 +72,15 @@ export default function SessionHeader({
     <header className="ses-head">
       <div className="ses-head-in">
         <div className="ses-head-row">
+          {/* The left slot, and there is nothing in it. It is a spacer that
+              holds the beacon on the middle of the row — the same three-slot
+              row SiteNav and the ID card's header are, for the same reason: a
+              row with controls at one end and nothing at the other centres its
+              middle child on what is left over rather than on the page
+              (Miyel, 2026-09-18). */}
+          <div className="ses-head-side" aria-hidden="true" />
+
+          <div className="ses-head-beacon">
           <button
             type="button"
             className="ses-cover"
@@ -93,7 +102,9 @@ export default function SessionHeader({
             </span>
             <span className="ses-head-album">{naming}</span>
           </div>
+          </div>
 
+          <div className="ses-head-side ses-head-side--right">
           {canAsk && (
             <button
               type="button"
@@ -113,6 +124,7 @@ export default function SessionHeader({
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1111.21 3a7 7 0 109.79 9.79z"/></svg>
             )}
           </button>
+          </div>
         </div>
 
         {/* Every step is a button. The preview in particular is worth a look
