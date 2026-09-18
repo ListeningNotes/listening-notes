@@ -27,17 +27,26 @@ const CAPTION = {
   logged: 'Last logged',
 };
 
-// OUT OF SESSION was stamped across the idle art from 2026-09-16 until
-// 2026-09-17, when Miyel took it off (this brief). It said the state was off
-// while the caption under it said which record this was, which is two
-// sentences about two different things — and that was the argument for it.
-// What beat it: the caption is already the state line (LAST LOGGED, and NOW
-// LOGGING when it is live), so the stamp was the same fact in a second voice
-// laid over somebody's album art. DECISIONS retired the Last-played stamp on
-// 2026-09-15 for exactly this reason and this one outlived it by a day.
+// ── Where the caption is ──────────────────────────────────────────────────
+// On the cover while the cover is grey, and under it once it lights.
 //
-// The art still greys when nothing is open, which is the half that was doing
-// the work.
+// There were two lines for a day: OUT OF SESSION stamped across the idle art
+// and LAST LOGGED under it. The brief took the stamp off on the grounds that
+// they were one fact said twice, which was right — and Miyel's answer on
+// 2026-09-17 was to keep the half I had thrown away. She liked the writing on
+// the greyed cover; what was redundant was having it in both places. So the
+// caption moved up onto the art and the line underneath went instead.
+//
+// It reads better as well as costing less: the scrim, the grey and the word
+// are one object saying one thing — this record is not playing, here is when
+// it was — where before the picture said it and then a line under the picture
+// said it again.
+//
+// Lit, there is no scrim to write on and the art is in full colour, so the
+// caption is under the record with its dot beside it, which is where the
+// mockup puts it. And where there is no art at all — the ♪ placeholder — it
+// is under the record too, because a label floating on an empty square is a
+// label on nothing.
 
 // `children` is the owner's line, and it belongs to whoever is drawing the
 // beacon rather than to the beacon: pressing it turns floor one into the
@@ -87,14 +96,20 @@ export default function ListeningBeacon({ children = null }) {
             ? <img src={artUrl} alt={title} className={'beacon-art' + (!isLive ? ' beacon-art--idle' : '')} onError={() => setFailed(artUrl)} />
             : <div className="beacon-art-placeholder">♪</div>
           }
+          {/* Only on art, and only while it is grey. Over the ♪ placeholder
+              this would be writing on an empty square, and over lit art it
+              would be a scrim across the one cover on this site that is
+              meant to be in full colour. */}
+          {!isLive && artUrl && (
+            <div className="beacon-idle-overlay"><span>{CAPTION[state]}</span></div>
+          )}
         </div>
         <div className="beacon-meta">
-          {/* The caption, back since 2026-09-07 on Miyel's call, and under the
-              art rather than over it: the art is the first thing on the
-              screen, and the line says what it is before the title says
-              which. Never green — the dot on the mark is the one thing that
-              lights. */}
-          <div className="beacon-status">{CAPTION[state]}</div>
+          {/* The caption, under the record — but only where it is not already
+              on it. See the note at the top: greyed art carries its own
+              caption and this line would be the second copy of it. Never
+              green; the dot beside it is the one thing that lights. */}
+          {(isLive || !artUrl) && <div className="beacon-status">{CAPTION[state]}</div>}
           {/* Two lines, not a marquee. The marquee is the right answer in the
               nav row, where the slot is a couple of hundred pixels wide and
               there is nowhere for a long title to go — but here the title has
