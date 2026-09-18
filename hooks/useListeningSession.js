@@ -416,6 +416,8 @@ export function useListeningSession({ step }) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          // `brief` was the researched briefing; it is the record's own three
+          // facts now and the name is kept only because /api/format reads it.
           brief: { album: albumInput, artist: artistName, year },
           notes: overallNotes, rating, Masterpiece, Favorite, Formative, entryType,
           trackNotes, trackRatings, tracks: tracks || [],
@@ -560,10 +562,8 @@ export function useListeningSession({ step }) {
     elapsedRef,
     // Functions
     beginListen,
-    doResearch,
     saveDraft: draft.save,
     doFormat,
     doSave,
-    sendChat,
   };
 }

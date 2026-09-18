@@ -308,7 +308,7 @@ export default function SessionPage() {
           <SessionHeader
             album={s.albumInput}
             artist={s.artistName}
-            year={s.year || s.brief?.year || ''}
+            year={s.year}
             /* The beacon's two things, so the strip at the top of a listen is
                the beacon rather than a caption about it. The same song the
                needle is sending, read the same way. */
@@ -362,7 +362,7 @@ export default function SessionPage() {
               underneath, so the way back is instant. */}
           {step === 3 && (
             <SessionPreview
-              album={s.albumInput} artist={s.artistName} year={s.year || s.brief?.year || ''} albumArt={s.albumArt} genre={s.genre || s.brief?.genre || ''}
+              album={s.albumInput} artist={s.artistName} year={s.year} albumArt={s.albumArt} genre={s.genre}
               overallNotes={s.overallNotes}
               rating={s.rating} Masterpiece={s.Masterpiece} Favorite={s.Favorite} Formative={s.Formative}
               entryType={s.entryType} receivedFrom={s.receivedFrom} receivedFromUrl={s.receivedFromUrl}
