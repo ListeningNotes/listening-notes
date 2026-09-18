@@ -463,6 +463,12 @@
   transition: color 0.15s, border-color 0.15s, background 0.15s, bottom 0.2s;
 }
 .ses-ask-door:hover { color: var(--ink); border-color: var(--ink-faint); }
+/* Not while something is being typed into. It is a fixed circle in the
+   bottom right and the note fills that corner, so with the keyboard up it
+   sat on the words (Miyel's screenshot, 2026-09-18). Nothing is lost: the
+   sheet it opens is one tap away again the moment the keyboard is down, and
+   asking a question is not what you are in the middle of. */
+.lay[data-typing] .ses-ask-door { display: none; }
 /* The preview is the one step whose foot is already spoken for: the save bar
    is fixed across the bottom of it. */
 .ses-ask-door--lifted { bottom: calc(104px + env(safe-area-inset-bottom, 0px)); }

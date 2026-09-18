@@ -107,6 +107,14 @@
 .lay {
   position: fixed;
   inset: 0;
+  /* And inset to the part of the screen you can actually see, while a
+     keyboard is up — LayerEntry writes both from visualViewport and takes
+     them away again afterwards, so these are 0 at every other moment. A
+     fixed sheet is otherwise as tall as the layout viewport, which includes
+     the half the keyboard is standing on, and iOS answers that by scrolling
+     the whole thing up to find the field. */
+  top: var(--lay-lift, 0px);
+  bottom: var(--lay-bottom, 0px);
   z-index: 200;
   background: var(--bg);
   /* On a wide screen the entry flows down the document, so this is what

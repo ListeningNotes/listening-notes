@@ -208,6 +208,57 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
   // to mean anything; otherwise the sheet fades alone. The browser's own
   // back button cannot be intercepted and simply removes the sheet, which
   // is the platform's habit and fine.
+  // ── The keyboard, and the sheet that has to fit round it ──────────────────
+  // A sheet is `position: fixed; inset: 0`, which on iOS means the *layout*
+  // viewport — the whole screen, including the half a keyboard is standing
+  // on. So with a field focused, the bottom of the sheet is behind the
+  // keyboard, and iOS answers that by scrolling the layout viewport to bring
+  // the field into view: the sheet goes up, and its sticky header with it,
+  // off the top of the screen. Miyel, 2026-09-18: "the moment that you click
+  // on the text, everything moves out of view… you lose the beautiful track
+  // list, you lose the beacon."
+  //
+  // visualViewport says exactly where the part you can see is. The sheet is
+  // inset to match it, so it *is* the visible window: the header sticks to
+  // the top of what you are looking at, the body scrolls inside, and nothing
+  // has anywhere to scroll off to.
+  //
+  // `data-typing` while it holds, so a sheet's own furniture can stand down —
+  // see the session's ? for the first one.
+  //
+  // A threshold rather than "has it changed": a phone's address bar growing
+  // and shrinking moves this by forty or fifty pixels all the time and is not
+  // a keyboard.
+  const typing = useRef(false);
+  useEffect(() => {
+    const vv = window.visualViewport;
+    const sheet = sheetRef.current;
+    if (!vv || !sheet) return undefined;
+    const sync = () => {
+      const open = window.innerHeight - vv.height > 120;
+      typing.current = open;
+      if (open) {
+        sheet.style.setProperty('--lay-lift', `${Math.round(vv.offsetTop)}px`);
+        sheet.style.setProperty('--lay-bottom', `${Math.round(window.innerHeight - vv.offsetTop - vv.height)}px`);
+        sheet.setAttribute('data-typing', '');
+      } else {
+        sheet.style.removeProperty('--lay-lift');
+        sheet.style.removeProperty('--lay-bottom');
+        sheet.removeAttribute('data-typing');
+      }
+    };
+    sync();
+    vv.addEventListener('resize', sync);
+    vv.addEventListener('scroll', sync);
+    return () => {
+      vv.removeEventListener('resize', sync);
+      vv.removeEventListener('scroll', sync);
+      sheet.style.removeProperty('--lay-lift');
+      sheet.style.removeProperty('--lay-bottom');
+      sheet.removeAttribute('data-typing');
+    };
+  }, []);
+
   const leaving = useRef(false);
   // A page turn waiting to change the address — see go() below.
   const pendingTurn = useRef(null);
@@ -412,7 +463,14 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
       // the send sheet too. The lesson is the general one: this list is not
       // about *editing*, it is about anything of this entry's own being open
       // over it, and a new one has to say so here.
-      if (event.touches.length !== 1 || sheet.querySelector('.ln-printing, .ln-editing, .ln-busy')) { pull = null; return; }
+      //
+      // And not while a keyboard is up, 2026-09-18. A swipe down is how
+      // everybody puts a keyboard away, and here it was taking the whole
+      // session with it — so the only way out of the field was the tick on
+      // the keyboard's own bar, which is nobody's first instinct. While
+      // something is being typed into, down belongs to the keyboard.
+      if (event.touches.length !== 1 || typing.current
+        || sheet.querySelector('.ln-printing, .ln-editing, .ln-busy')) { pull = null; return; }
       const touch = event.touches[0];
       pull = { x: touch.clientX, y: touch.clientY, at: event.timeStamp, lastX: touch.clientX, lastY: touch.clientY, lastAt: event.timeStamp, axis: null, top: atTop() };
     };
