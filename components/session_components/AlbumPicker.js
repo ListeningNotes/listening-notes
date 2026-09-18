@@ -200,7 +200,24 @@ export default function AlbumPicker({ onPick, onResume, inline = false }) {
               onChange={e => type(e.target.value)}
               placeholder="Search an artist or an album"
               autoComplete="off"
-              autoFocus
+              /* Not inline, and this is the whole of Miyel's "it goes off the
+                 screen and everything goes way too high" on a real phone,
+                 2026-09-17. On a page of its own the picker IS the screen, so
+                 opening the keyboard the moment it arrives is right: there is
+                 nothing else to look at and the field is the one thing to do.
+
+                 On the pane there is: a cover that has just shrunk into place
+                 and a caption saying what is happening. iOS answers a focused
+                 field by scrolling it up the visual viewport, which took the
+                 cover off the top of the screen and the fixed bar with it —
+                 fixed elements do not stay fixed against the visual viewport
+                 while the keyboard is up. Nothing was broken; everything had
+                 simply been shoved up by half a screen before she could look
+                 at it.
+
+                 So inline it waits to be tapped. One tap, and the arrangement
+                 she just watched assemble is still there underneath it. */
+              autoFocus={!inline}
             />
           </label>
 
