@@ -125,6 +125,9 @@ export default function KeeperTools({
   // 'shut' · 'out' — the tools are on their way out or already there · 'back'
   // — they are on their way in and still on screen.
   const [phase, setPhase] = useState('shut');
+  // Whether Delete has been pressed once. The first press arms it and changes
+  // its word; the second does it. See the tool itself, below.
+  const [sure, setSure] = useState(false);
   const open = phase === 'out';
   const timer = useRef(null);
   // How many tools there will be, worked out before anything needs it, so the
@@ -138,6 +141,10 @@ export default function KeeperTools({
 
   const shut = () => {
     if (timer.current) clearTimeout(timer.current);
+    // Closing the drawer disarms Delete. An armed button that is still armed
+    // when the drawer is opened again an hour later is a trap: you press the
+    // one you meant to press first and it goes off.
+    setSure(false);
     setPhase('back');
     timer.current = setTimeout(() => setPhase('shut'), packingUp(count));
   };
@@ -275,9 +282,43 @@ export default function KeeperTools({
     );
   }
 
+  // ── Delete, twice ────────────────────────────────────────────────────────
+  // The first press arms it and the word under the bin becomes "Sure?"; the
+  // second press deletes. Miyel, 2026-09-18: "delete button on an entry post
+  // just takes you to edit. this should turn into the ask, are you sure? then
+  // when clicked again it deletes."
+  //
+  // It used to open a correction with a warning already showing at the foot of
+  // it — which meant pressing Delete put you in edit mode, on a page-long form,
+  // with the thing you asked for somewhere below the fold. The intent was
+  // right and DECISIONS still holds: a destructive act does not get a shorter
+  // path for moving to a shorter menu, and the confirmation opens in place
+  // rather than as a dialog dismissed by reflex. Two presses on the button
+  // itself is that, and it is the same shape a draft is discarded with in the
+  // picker — × then "discard?" — so it is not a new thing to learn either.
+  //
+  // What it costs is the sentence that used to stand in front of this: that
+  // the only way back is a backup. A word under a bin cannot say that. The
+  // whole sentence is on the title and read out by a screen reader, the bin
+  // fills and the box goes red, and the press is deliberate rather than
+  // reflexive — which was the thing the warning was really buying.
   if (onDelete && words.remove) {
     tools.push(
-      <button key="remove" type="button" onClick={() => { shut(); onDelete(); }} {...box(...words.remove, <Trash size={22} weight="regular" aria-hidden="true" />, ' kt-tool--end')} />
+      <button
+        key="remove"
+        type="button"
+        onClick={() => {
+          if (!sure) { setSure(true); return; }
+          shut();
+          onDelete();
+        }}
+        {...box(
+          sure ? 'Sure?' : words.remove[0],
+          sure ? 'Press again to delete this entry for good' : words.remove[1],
+          <Trash size={22} weight={sure ? 'fill' : 'regular'} aria-hidden="true" />,
+          ' kt-tool--end' + (sure ? ' kt-tool--sure' : ''),
+        )}
+      />
     );
   }
 
