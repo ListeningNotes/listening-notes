@@ -1456,6 +1456,22 @@ so nobody is.
 The build only proves the imports resolve; a bare identifier inside a
 component or a returned object is never checked by anything until it runs.
 
+**It bit twice in twenty minutes.** The first was `doResearch` in the hook's
+return, which broke the session outright and was obvious. The second was
+`setChatMessages([])` and `setChatInput('')` left inside `beginListen`, which
+was worse: `beginListen` threw *after* clearing the old record and *before*
+setting the new one, so a listen opened with no cover, no tracklist — "No
+tracklist found for this record" — and an empty note where a draft's writing
+should have been. Miyel reasonably read that as her draft having been wiped.
+It had not been: every character was in the row the whole time, and the sweep
+below is what found it.
+
+```bash
+for n in <every name you removed>; do grep -rn "\b$n\b" app components hooks library; done
+```
+
+A removal is not finished until that prints nothing.
+
 
 **Picking a record on localhost broadcasts on the live journal — 2026-09-18.**
 Localhost writes to the production database, and a listen is not a local
