@@ -38,6 +38,7 @@
 
 'use client';
 import { useState, useEffect, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import { useBookplate } from '../../components/main_components/Bookplate';
 import { useListeningSession, SESSION_STEPS, PENDING_KEY, saidSoAboutTheDesk, saidSoAboutTheEntry } from '../../hooks/useListeningSession';
 import AlbumPicker from '../../components/session_components/AlbumPicker';
@@ -214,6 +215,33 @@ export default function SessionPage() {
     }, null);
   }
 
+  // ── Putting the record down ───────────────────────────────────────────────
+  // The × in the corner, on its second press (Miyel, 2026-09-18). Ending a
+  // listen belongs in the listen: it lived on the beacon for an hour as a
+  // second line under "Back to the listen" and that was two lines of words on
+  // a screen whose whole job is one record.
+  //
+  // It is not the same thing as swiping the sheet away. Swiping is stepping
+  // away — the record stays on the desk, the beacon says Last logged until
+  // you come back, and coming back lands you on the step you left. This is
+  // putting it down: the draft is saved, the desk is cleared, and the pane
+  // you land on offers a new record rather than the old one.
+  //
+  // Two presses because it ends something, which is the same rule the discard
+  // on a draft follows — and the second press says what it will do rather
+  // than asking whether you are sure.
+  const router = useRouter();
+  async function endListen() {
+    if (s.hasWriting && !s.saved) await s.saveDraft();
+    try { localStorage.removeItem(PENDING_KEY); } catch { /* nothing to clear */ }
+    saidSoAboutTheDesk();
+    // Over the cross the sheet goes and the pane is underneath, already
+    // showing a beacon with no record in hand. Opened cold there is no cross,
+    // and the picker on this same page is where you land.
+    if (document.querySelector('.hn')) router.back();
+    else leave();
+  }
+
   // Back to the picker. Nothing is confirmed and nothing is lost: a listen with
   // writing on it is kept as a draft first, so it is waiting under Unfinished
   // when the picker comes back.
@@ -292,7 +320,8 @@ export default function SessionPage() {
             track={s.tracks?.[s.openTrack]?.title || ''}
             step={step}
             onStep={goToStep}
-            onBack={leave}
+            onEnd={endListen}
+            hasWriting={s.hasWriting}
           />
 
           <main className="ses-body" onTouchStart={swipeStart} onTouchEnd={swipeEnd}>

@@ -273,6 +273,26 @@
 }
 .ses-cover:hover { box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2); transform: translateY(-1px); }
 .ses-cover-none { font-size: 18px; line-height: 1; }
+
+/* ── The × that ends the listen ────────────────────────────────────────────
+   In the corner the row keeps empty the rest of the time. One press turns it
+   into what it will do and the second does it, so it grows from a 34px box
+   into a word — the width animates rather than the row reflowing under it,
+   which is what makes the two states read as one control changing its mind
+   rather than two controls swapping places. */
+.ses-shut {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-width: 34px; height: 34px; padding: 0 10px;
+  border: 1px solid var(--border); border-radius: 999px;
+  background: transparent; color: var(--ink-soft);
+  font-family: var(--font-label); font-size: 10px; letter-spacing: 0.1em;
+  text-transform: uppercase; white-space: nowrap; cursor: pointer;
+  transition: color 0.15s, border-color 0.15s, background 0.15s;
+}
+.ses-shut:hover { color: var(--ink); border-color: var(--ink-faint); }
+/* Armed. Ink on the page colour rather than a filled shape: it is a save, not
+   a delete, and nothing here deserves a red button. */
+.ses-shut--sure { color: var(--ink); border-color: var(--ink); }
 /* ── The question mark, at the foot ────────────────────────────────────────
    It sat beside the day-and-night switch until 2026-09-18 (.ses-ask-btn, now
    gone). The header is the beacon and Miyel wanted it clean; this is the
