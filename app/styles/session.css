@@ -275,24 +275,64 @@
 .ses-cover-none { font-size: 18px; line-height: 1; }
 
 /* ── The × that ends the listen ────────────────────────────────────────────
-   In the corner the row keeps empty the rest of the time. One press turns it
-   into what it will do and the second does it, so it grows from a 34px box
-   into a word — the width animates rather than the row reflowing under it,
-   which is what makes the two states read as one control changing its mind
-   rather than two controls swapping places. */
+   In the corner the row keeps empty the rest of the time, and it is the mark
+   and nothing else. No pill: a control is the mark, not a mark in a container
+   (DECISIONS, 2026-09-17), and it earns its 34px from padding with a matching
+   negative margin so the thumb gets the box and the eye gets the ×.
+
+   Pressed, the mark turns and the word comes out of it (Miyel, 2026-09-18) —
+   one control changing its mind rather than two swapping places. The turn is
+   90°, which on an × lands exactly where it started: what you see is the
+   motion, and what it settles as is still a close.
+
+   The word opens on a grid track rather than a max-width. A width cannot be
+   animated to a word, and a max-width big enough for the longest one means
+   the shortest reaches its own size a third of the way through and then sits
+   there while the animation runs on — "Leave" was open in 90ms of a 340ms
+   turn. A track going 0fr → 1fr resolves to exactly the text's width, so
+   both words take the whole turn and neither is told a number. */
 .ses-shut {
-  display: inline-flex; align-items: center; justify-content: center;
-  min-width: 34px; height: 34px; padding: 0 10px;
-  border: 1px solid var(--border); border-radius: 999px;
-  background: transparent; color: var(--ink-soft);
+  display: inline-flex;
+  align-items: center;
+  padding: 8px;
+  margin: -8px;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  color: var(--ink-soft);
   font-family: var(--font-label); font-size: 10px; letter-spacing: 0.1em;
-  text-transform: uppercase; white-space: nowrap; cursor: pointer;
-  transition: color 0.15s, border-color 0.15s, background 0.15s;
+  text-transform: uppercase; white-space: nowrap;
+  transition: color 0.15s;
 }
-.ses-shut:hover { color: var(--ink); border-color: var(--ink-faint); }
-/* Armed. Ink on the page colour rather than a filled shape: it is a save, not
-   a delete, and nothing here deserves a red button. */
-.ses-shut--sure { color: var(--ink); border-color: var(--ink); }
+.ses-shut:hover { color: var(--ink); }
+.ses-shut-mark {
+  flex: 0 0 auto;
+  transition: transform 0.34s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.ses-shut-slot {
+  display: grid;
+  grid-template-columns: 0fr;
+  padding-left: 0;
+  transition: grid-template-columns 0.34s cubic-bezier(0.22, 0.61, 0.36, 1),
+              padding-left 0.34s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.ses-shut-word {
+  min-width: 0;
+  overflow: hidden;
+  opacity: 0;
+  /* A beat behind the opening, so it reads as the word coming out rather than
+     appearing and then being made room for. */
+  transition: opacity 0.22s ease 0.08s;
+}
+/* Armed. Ink rather than a filled shape: it is a save, not a delete, and
+   nothing here deserves a red button. */
+.ses-shut--sure { color: var(--ink); }
+.ses-shut--sure .ses-shut-mark { transform: rotate(90deg); }
+.ses-shut--sure .ses-shut-slot { grid-template-columns: 1fr; padding-left: 9px; }
+.ses-shut--sure .ses-shut-word { opacity: 1; }
+@media (prefers-reduced-motion: reduce) {
+  .ses-shut-mark, .ses-shut-slot, .ses-shut-word { transition: none; }
+}
 /* ── The question mark, at the foot ────────────────────────────────────────
    It sat beside the day-and-night switch until 2026-09-18 (.ses-ask-btn, now
    gone). The header is the beacon and Miyel wanted it clean; this is the

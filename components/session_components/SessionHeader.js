@@ -100,9 +100,15 @@ export default function SessionHeader({
               aria-label={ending ? (hasWriting ? 'Save as a draft and close' : 'Close this listen') : 'Close this listen'}
               title={ending ? undefined : 'Close this listen'}
             >
-              {ending
-                ? (hasWriting ? 'Save draft' : 'Leave')
-                : <X size={18} weight="regular" aria-hidden="true" />}
+              {/* The mark stays. The word comes out of it, and the mark
+                  turns as it goes — one control changing its mind rather
+                  than two swapping places. The word is always here so it has
+                  something to unfurl from; it is a closed box until the
+                  first press. */}
+              <X size={18} weight="regular" aria-hidden="true" className="ses-shut-mark" />
+              <span className="ses-shut-slot" aria-hidden="true">
+                <span className="ses-shut-word">{hasWriting ? 'Save draft' : 'Leave'}</span>
+              </span>
             </button>
           </div>
 
