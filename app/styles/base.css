@@ -232,6 +232,21 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
   transition: opacity 0.15s;
 }
 .ln-onward:hover { opacity: 0.66; }
+/* The second line, where there is one. Quiet on purpose: it is the way out of
+   something you are in the middle of, and it should be findable without ever
+   competing with the way back in. The label face and no arrow — the arrow is
+   what says "this takes you onward", and this one turns you round. */
+.ln-onward--aside {
+  margin-top: -4px;
+  padding: 6px 0;
+  font-family: var(--font-label);
+  font-weight: 400;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.ln-onward--aside:hover { opacity: 1; color: var(--ink-soft); }
 /* The arrow leans in as you press it, which is the only thing this control
    has to say for itself. */
 .ln-onward svg { transition: transform 0.2s cubic-bezier(0.22, 0.61, 0.36, 1); }

@@ -974,29 +974,19 @@
   gap: 14px;
 }
 /* ── The cover goes straight up, and gets smaller on the way ───────────────
-   The card is absolutely positioned inside a stage of fixed height, which is
-   what lets it slide sideways when the beacon opens. For an hour the card was
-   put back into the flow while choosing and the stage was told to be `auto`,
-   and that is what Miyel saw as "this like round motion up to the top"
-   (2026-09-17): a box changing from absolute to static changes what it is
-   measured against, instantly and mid-transition, so the cover left along a
-   curve nobody asked for and `auto` could not be animated to in the first
-   place.
-
-   So nothing changes position. The card stays pinned to the top of the stage
-   and centred on it, and two plain numbers animate: the stage's height and
-   the cover's size. The cover's top edge therefore never moves sideways and
-   never moves down — it rises as the stage shrinks under it, in a straight
-   line, getting smaller as it goes. Everything below rises with it, for the
-   same reason and at the same rate.
+   Nothing changes position and no box is told a number. The cover's own
+   width and height animate, the stage above measures whatever is in it, and
+   everything below rises as the stage shrinks — one move, driven by one
+   thing. The cover's centre never shifts sideways and it never drops: that
+   was measured frame by frame after it went round a curve once (2026-09-17),
+   which it did because the card was switching between absolute and static
+   *during* the move, changing what it was measured against mid-flight.
 
    0.52s, on the curve everything on this site moves on. The entry's arrival
    is 0.42s and this is deliberately a shade behind it: that one is a page
    arriving and this is a screen rearranging itself around you, which wants
    to be followed rather than kept up with (Miyel: "a little bit slower, I
    want it to feel fluid"). */
-.hn .beacon-stage { transition: height 0.52s cubic-bezier(0.22, 0.61, 0.36, 1); }
-.hn.hn--choosing .beacon-stage { height: 148px; }
 /* 132px, the brief's number, and dimmed rather than gone: the page keeps its
    one object and the record about to be picked has somewhere to land. */
 .beacon-art-wrap {
@@ -1005,6 +995,11 @@
               opacity 0.4s ease,
               box-shadow 0.4s ease;
 }
+/* The gap between the cover and whatever is under it is 28px, which is right
+   under a full-size record and too much under a 132px one with a search
+   below it. */
+.hn--choosing .beacon-card { gap: 10px; }
+.hn--choosing .hp-dashboard { flex: 0 0 auto; }
 .hn--choosing .beacon-art-wrap {
   width: 132px;
   height: 132px;
@@ -1037,7 +1032,28 @@
   .hn-bar-mark { transition: none; }
 }
 
-.hn .beacon-stage { height: 320px; }
+/* ── The stage measures itself on the cross ────────────────────────────────
+   The card is absolutely positioned inside a stage of a fixed height, left
+   over from a layout where the beacon slid sideways when it opened. It means
+   the stage has to be told in pixels how tall its contents are — and every
+   line the beacon grows lands on the covers underneath instead of pushing
+   them down. That happened twice on 2026-09-18: once when the owner's line
+   arrived under the artist, and again when a record in hand added a second
+   one. Both times the fix was a bigger number, and the next state would have
+   broken it again.
+
+   So the card goes back into the flow here and the stage is as tall as what
+   is in it — which is exactly what the desktop band does, further down, for
+   the same reason.
+
+   It costs the picker nothing. Height cannot be animated to `auto`, and does
+   not have to be: the cover's own width and height are animating and the
+   cover is what the stage is measuring, so the stage follows it frame by
+   frame and everything below rises with it. The curve that appeared once
+   (2026-09-17) came from the card switching between absolute and static
+   *during* the move; nothing switches now. */
+.hn .beacon-stage { height: auto; }
+.hn .beacon-card--main { position: static; transform: none; }
 .hn .hp-dashboard {
   background: none;
   border: none;
