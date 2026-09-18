@@ -58,6 +58,30 @@ deploy a copy — and none of it is anything they need.
 
 ## Pending
 
+**The research and the question mark are retired, 2026-09-18.** Miyel's call:
+*"I really like the research feature and asking questions while I listen, but
+I also just have a phone, and I guess I can just do that on my own."* Both
+prompts are in **docs/RETIRED-PROMPTS.md** with the reason — that file is the
+point of the retirement, because the prompts were the work.
+
+What went: `AskSheet`, the `?`, the briefing on the album screen and its
+typing reveal, `/api/ask`, `/api/research`, `library/ai_integration.js`, the
+research and chat state in `useListeningSession`, `research_available` on the
+bookplate, the Anthropic row in Settings, and the `@anthropic-ai/sdk`
+dependency.
+
+What stayed, and why: the `briefings` table and `secrets.anthropic_key`,
+because the schema is additive-only; `library/secrets.js` still resolves the
+key, which is what a retirement is — the plumbing stays and nothing is
+connected to it.
+
+**One trap in the way.** `format_post` lived in `ai_integration.js` and is not
+an AI call at all — it is the local assembly of an entry, and deleting the
+file took `/api/format` with it. It is in `library/entry_formatter.js` now,
+which is where it belonged: that file is the shapes an entry is written in.
+A build caught it; lint did not.
+
+
 - [x] **The stray database `ep-old-sea-am0rc38b`** — it was the `dev` branch; deleted in the Neon console 2026-09-06. What it was: A copy of the live one,
       written to from localhost for four days. Find it in the Neon console —
       likely a branch or a second project — and delete it once nothing there

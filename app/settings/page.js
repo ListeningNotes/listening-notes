@@ -110,7 +110,6 @@ export default function SettingsPage({ layered = false }) {
   // instead now that there is one — the schema is additive-only, so a column
   // cannot be dropped, and it was that or leave it dead.
   const [beaconSource, setBeaconSource] = useState('on');
-  const [anthropic, setAnthropic] = useState('');
   const [password, setPassword] = useState('');
   const [confirm, setConfirm] = useState('');
 
@@ -204,26 +203,17 @@ export default function SettingsPage({ layered = false }) {
           </div>
         </Section>
 
-        <Section
-          title="Optional: AI assistance"
-          note={<>If you add an Anthropic key, two things appear during a listening session. Research looks the album up and cites its sources, so you can read the background before you start. And a question mark you can open at any point, which already knows the record and what you’ve written so far — useful for asking questions during a listen, or for finding a common thread through multiple track notes. Nothing it says goes into your entry. You read it, then you write what you write. Get a key at <a href="https://console.anthropic.com" target="_blank" rel="noopener noreferrer">console.anthropic.com</a>. You pay your own usage, and most people spend under a dollar a month. Note that it draws from an API balance, which is separate from a Claude.ai subscription. Everything else works without it.</>}
-          onSave={async () => {
-            if (!anthropic.trim()) return;
-            setSecrets(await send('/api/secrets', { anthropic_key: anthropic.trim() }));
-            setAnthropic('');
-          }}
-        >
-          <div>
-            <span className="st-label">Anthropic API key</span>
-            <p className="st-status">
-              {secretLine(secrets?.anthropic_key)}
-              {secrets?.anthropic_key?.source === 'journal' && (
-                <button type="button" className="st-clear" onClick={async () => setSecrets(await send('/api/secrets', { anthropic_key: '' }))}>Clear</button>
-              )}
-            </p>
-            <input className="st-field" value={anthropic} onChange={e => setAnthropic(e.target.value)} placeholder={secrets?.anthropic_key ? 'Replace it' : 'Paste it here'} autoCapitalize="none" autoComplete="off" spellCheck={false} />
-          </div>
-        </Section>
+        {/* "Optional: AI assistance" was here until 2026-09-18 — an Anthropic
+            key, and a paragraph describing the two things it turned on inside
+            a listen. Both came out of the software that day (see
+            docs/RETIRED-PROMPTS.md), and a settings row asking for a key that
+            nothing reads is worse than no row: it would have had June, Zach
+            and Blue pasting in a key and paying for nothing.
+
+            The vault still knows the column and library/secrets.js still
+            resolves it, because the schema is additive-only and because that
+            is what a retirement is — the plumbing stays, nothing is connected
+            to it. */}
 
         <Section
           title="Password"

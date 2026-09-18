@@ -50,19 +50,15 @@ const EMPTY = {
   // three one-line answers, which is a few hundred bytes and belongs in the
   // context the way the rig rows do.
   bioanswers: null,
-  // Whether this copy has an Anthropic key. Not a setting — a fact about the
-  // environment, worked out on the server, so the session can leave the
-  // Research button out rather than show one that fails.
-  research_available: false,
   // Whether this journal broadcasts. Also not a setting in the ordinary sense
   // — the layout works it out and hands it down. It does not decide whether
   // there is a beacon *screen*: there always is one. It decides whether
   // anything polls for what is on it, so a journal that has asked to be quiet
   // never asks.
   //
-  // True by default, unlike research_available below, because the default here
-  // is on: a copy that has never opened Settings broadcasts, and the falsy
-  // default would have every journal start silent until its settings arrived.
+  // True by default, deliberately: a copy that has never opened Settings
+  // broadcasts, and a falsy default would have every journal start silent
+  // until its settings arrived.
   beacon_on: true,
 };
 

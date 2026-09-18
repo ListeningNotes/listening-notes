@@ -29,12 +29,6 @@
 }
 .ses-prose { font-size: 15px; line-height: 1.85; color: var(--ink); white-space: pre-wrap; margin: 0; }
 .ses-prose a { color: inherit; }
-.ses-cite { line-height: 0; white-space: nowrap; }
-.ses-cite a {
-  font-family: var(--font-label); font-size: 9.5px; padding: 0 1px;
-  color: var(--ink-faint); text-decoration: none;
-}
-.ses-cite a:hover { color: var(--ink); }
 .ses-source {
   display: flex; align-items: baseline; gap: 8px;
   font-size: 13px; line-height: 1.5; color: var(--ink-soft); text-decoration: none;
@@ -439,44 +433,9 @@
 @media (prefers-reduced-motion: reduce) {
   .ses-shut-mark, .ses-shut-slot, .ses-shut-word { transition: none; }
 }
-/* ── The question mark, at the foot ────────────────────────────────────────
-   It sat beside the day-and-night switch until 2026-09-18 (.ses-ask-btn, now
-   gone). The header is the beacon and Miyel wanted it clean; this is the
-   corner the sheet it opens rises from, and the corner a thumb is already in.
-
-   Still lit the way the step markers used to be — a slow breath — so it reads
-   as a door and not a decoration. Fixed, so it is the same door on every
-   screen of the listen, and above the safe area so it clears the home bar.
-
-   40px rather than the 32 it was: it is on its own out here, with no row
-   around it to make it obviously pressable. */
-.ses-ask-door {
-  position: fixed;
-  right: 18px;
-  bottom: calc(18px + env(safe-area-inset-bottom, 0px));
-  z-index: 40;
-  width: 40px; height: 40px; border-radius: 50%; padding: 0;
-  display: flex; align-items: center; justify-content: center;
-  background: var(--bg); border: 1px solid var(--border); color: var(--ink-soft);
-  font-family: var(--font-label); font-size: 15px; line-height: 1; cursor: pointer;
-  animation: sesGlow 2.6s ease-in-out infinite;
-  transition: color 0.15s, border-color 0.15s, background 0.15s, bottom 0.2s;
-}
-.ses-ask-door:hover { color: var(--ink); border-color: var(--ink-faint); }
-/* Not while something is being typed into. It is a fixed circle in the
-   bottom right and the note fills that corner, so with the keyboard up it
-   sat on the words (Miyel's screenshot, 2026-09-18). Nothing is lost: the
-   sheet it opens is one tap away again the moment the keyboard is down, and
-   asking a question is not what you are in the middle of. */
-.lay[data-typing] .ses-ask-door { display: none; }
-/* The preview is the one step whose foot is already spoken for: the save bar
-   is fixed across the bottom of it. */
-.ses-ask-door--lifted { bottom: calc(104px + env(safe-area-inset-bottom, 0px)); }
-@keyframes sesGlow {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(0,0,0,0); border-color: var(--border); }
-  50%      { box-shadow: 0 0 12px 2px var(--panel-border); border-color: var(--ink-faint); }
-}
-@media (prefers-reduced-motion: reduce) { .ses-ask-door { animation: none; } }
+/* The ? that opened a reference lived here (.ses-ask-door) and is gone with
+   it, 2026-09-18 — see docs/RETIRED-PROMPTS.md. So is the sheet it opened,
+   further down: .ses-ask and everything under it. */
 .ses-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .ses-head-text { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
 /* NOW LOGGING, with the one green thing on the screen beside it. Green means
@@ -533,7 +492,6 @@
 }
 .ses-album-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .ses-actions--center { justify-content: center; }
-.ses-album-brief { width: 100%; text-align: left; }
 
 /* ── Tracks, one at a time ─────────────────────────────────────────────── */
 .ses-track { touch-action: pan-y; }
@@ -686,79 +644,3 @@
   transition: background 0.15s, color 0.15s;
 }
 .ses-draft-x--sure { background: var(--ink); color: var(--bg); padding: 0 12px; }
-
-/* ── The reference ─────────────────────────────────────────────────────────
-   A bottom sheet on a phone; a column beside the writing on a desk. */
-.ses-ask-scrim {
-  position: fixed; inset: 0; z-index: 40;
-  background: rgba(0, 0, 0, 0.14); animation: sesFade 0.18s ease;
-}
-@keyframes sesFade { from { opacity: 0; } to { opacity: 1; } }
-.ses-ask {
-  position: fixed; left: 0; right: 0; z-index: 41;
-  /* Both written from visualViewport while the sheet is open — how much of
-     the bottom the keyboard covers, and how much screen is left above it.
-     The fallbacks are the no-keyboard case. 96px stays clear at the top so
-     the session header is still on screen. */
-  bottom: var(--ask-lift, 0px);
-  max-height: calc(min(var(--ask-room, 100dvh), 100dvh) - 96px);
-  display: flex; flex-direction: column;
-  background: var(--bg);
-  border-top: 1px solid var(--panel-border); border-radius: 20px 20px 0 0;
-  box-shadow: var(--shadow-lift);
-  padding: 10px 16px calc(14px + env(safe-area-inset-bottom, 0px));
-  box-sizing: border-box;
-  animation: sesSlideUp 0.24s cubic-bezier(0.22, 0.61, 0.36, 1);
-}
-@keyframes sesSlideUp { from { transform: translateY(100%); } to { transform: none; } }
-.ses-ask--dragging { animation: none; transition: none; }
-.ses-ask--settling { animation: none; transition: transform 0.22s cubic-bezier(0.22, 0.61, 0.36, 1); }
-.ses-ask-head {
-  position: relative; flex-shrink: 0;
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 12px 0 10px; touch-action: none;
-}
-.ses-ask-grab {
-  position: absolute; top: 0; left: 50%; transform: translateX(-50%);
-  width: 36px; height: 4px; border-radius: 2px; background: var(--border);
-}
-.ses-ask-x {
-  display: flex; align-items: center; justify-content: center;
-  width: 28px; height: 28px; border-radius: 50%; padding: 0;
-  background: transparent; border: 1px solid var(--border); color: var(--ink-faint); cursor: pointer;
-}
-.ses-ask-x:hover { color: var(--ink); border-color: var(--ink-faint); }
-.ses-ask-list {
-  flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain;
-  display: flex; flex-direction: column; gap: 10px; padding: 2px 0 12px;
-}
-.ses-ask-msg {
-  max-width: 88%; padding: 10px 14px; border-radius: 14px;
-  font-size: 14px; line-height: 1.6; white-space: pre-wrap;
-}
-.ses-ask-msg--you { align-self: flex-end; background: var(--ink); color: var(--bg); }
-.ses-ask-msg--ref { align-self: flex-start; background: var(--panel-strong); border: 1px solid var(--border); color: var(--ink); }
-.ses-ask-row {
-  flex-shrink: 0; display: flex; gap: 8px; align-items: center;
-  padding-top: 10px; border-top: 1px solid var(--border);
-}
-.ses-ask-input { flex: 1; min-width: 0; }
-.ses-ask-row .ses-btn { padding: 12px 18px; }
-
-@media (min-width: 900px) {
-  .ses-ask-scrim { display: none; }
-  .ses-ask {
-    top: 0; bottom: 0; left: auto; right: 0; width: 380px; max-height: none;
-    border-radius: 0; border-top: none; border-left: 1px solid var(--border);
-    box-shadow: none; padding: 18px 20px 20px;
-    background: var(--panel-strong);
-    backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
-    animation: sesSlideIn 0.28s cubic-bezier(0.22, 0.61, 0.36, 1);
-  }
-  @keyframes sesSlideIn { from { transform: translateX(100%); } to { transform: none; } }
-  .ses-ask--dragging, .ses-ask--settling { transform: none !important; }
-  .ses-ask-grab { display: none; }
-  .ses-ask-head { touch-action: auto; padding-top: 0; }
-  /* The writing moves over rather than going dark. */
-  .ses--ask .ses-body, .ses--ask .ses-head-in { margin-left: auto; margin-right: 400px; }
-}

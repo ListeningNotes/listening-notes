@@ -67,19 +67,14 @@ export function saidSoAboutTheEntry(entry) {
 }
 
 export function useListeningSession({ step }) {
-  // Research — optional, and only ever started by the button on the album screen
-  const [brief, setBrief]                 = useState(null);
-  const [researchState, setResearchState] = useState('idle');   // idle | loading | done | error
-  const [researchError, setResearchError] = useState('');
-
   // The record
   const [albumArt, setAlbumArt]           = useState('');
   const [albumInput, setAlbumInput]       = useState('');
   const [artistName, setArtistName]       = useState('');
   const [year, setYear]                   = useState('');
-  // Apple's genre for the record, carried from the picker. Falls back to the
-  // briefing's, which is prose rather than a category, so it only stands in
-  // when the record was typed in by hand and then researched.
+  // Apple's genre for the record, carried from the picker. It fell back to
+  // the briefing's until the research came out on 2026-09-18; a record typed
+  // in by hand now simply has no genre until the entry is corrected.
   const [genre, setGenre]                 = useState('');
   // Nothing asks for this any more. Blank means Personal Library, and the
   // inbox sets Submission on a listen it starts. The entry editor is where it
@@ -133,12 +128,6 @@ export function useListeningSession({ step }) {
     && tracks.every((_, i) => Number(trackRatings[i]) === 5);
   const [openTrack, setOpenTrack]         = useState(0);      // the track on screen
 
-  // The reference — what has been asked of it this listen, and what it said.
-  // Lives and dies with the record on the desk; nothing here is stored.
-  const [chatMessages, setChatMessages] = useState([]);
-  const [chatInput, setChatInput]       = useState('');
-  const [chatLoading, setChatLoading]   = useState(false);
-
   // The draft — the browser's copy and the row in `drafts` — is kept by
   // useSessionDraft, below the timer, once everything it watches exists.
   const collectionIdRef = useRef('');
@@ -152,11 +141,9 @@ export function useListeningSession({ step }) {
   // made rather than only saying it worked.
   const [savedEntry, setSavedEntry] = useState(null);
 
-  // Which listen and which research request are the live ones. A tracklist or
-  // a briefing that arrives after the record was changed must not land on the
-  // new one.
+  // Which listen is the live one. A tracklist that arrives after the record
+  // was changed must not land on the new one.
   const listenRunRef   = useRef(0);
-  const researchRunRef = useRef(0);
 
   // Session timer — runs while a record is open and stops once it is saved.
   //
@@ -192,7 +179,7 @@ export function useListeningSession({ step }) {
     values: {
       albumInput, artistName, year, albumArt, genre, entryType, receivedFrom, receivedDate,
       receivedFromUrl, creditPrivate, submissionId,
-      collectionIdRef, brief, tracks, overallNotes, trackNotes, trackRatings, trackFavorites,
+      collectionIdRef, tracks, overallNotes, trackNotes, trackRatings, trackFavorites,
       rating, Masterpiece, Favorite, Formative, elapsedRef,
     },
     setters: {
@@ -320,11 +307,7 @@ export function useListeningSession({ step }) {
   // more before the phone locked used to lose that little more.
   function beginListen(record) {
     const run = ++listenRunRef.current;
-    researchRunRef.current++;
 
-    setBrief(null);
-    setResearchState('idle');
-    setResearchError('');
     setTracks(null);
     setTracksLoading(false);
     setTrackNotes({});
@@ -411,103 +394,17 @@ export function useListeningSession({ step }) {
     return Math.min(Math.max(0, openAt), SESSION_STEPS.length - 1);
   }
 
-  // Asks for the briefing. Streams in as NDJSON — one whole brief per line,
-  // each superseding the last — so the album screen fills in as it is written.
-  // A record already in the briefings table comes back in one line and costs
-  // nothing; refresh:true throws that copy away and researches again.
-  async function doResearch({ refresh = false } = {}) {
-    if (!albumInput || researchState === 'loading') return;
-    const run = ++researchRunRef.current;
-    setResearchState('loading');
-    setResearchError('');
-    setBrief(null);
-    try {
-      const res = await fetch('/api/research', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ album: albumInput, artist: artistName, refresh }),
-      });
-      if (!res.ok) {
-        throw new Error(res.status === 401 ? 'Signed out — log in again.' : `Research failed (${res.status})`);
-      }
-      const reader  = res.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = '';
-      for (;;) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split('\n');
-        buffer = lines.pop();   // hold back the partial line
-        for (const line of lines) {
-          if (!line.trim()) continue;
-          const data = JSON.parse(line);
-          if (data.error) throw new Error(data.error);
-          if (run !== researchRunRef.current) return;
-          setBrief(data);
-          // Fills a gap, never overwrites: a record typed in by hand has no
-          // year until the briefing finds one.
-          if (data.year) setYear(prev => prev || String(data.year));
-        }
-      }
-      if (run === researchRunRef.current) setResearchState('done');
-    } catch (err) {
-      if (run !== researchRunRef.current) return;
-      setResearchError(err.message || 'Research failed.');
-      setResearchState('error');
-    }
-  }
-
-  // Every track that has anything on it, as one line the reference can read:
-  // the title, what it scored, and what was written. Bare note text stripped
-  // off which song each thought belonged to.
-  function trackContextLines() {
-    const list = tracks || [];
-    return list.map((t, i) => {
-      const note = (trackNotes[i] || '').trim();
-      const stars = trackRatings[i] || 0;
-      const fav = !!trackFavorites[i];
-      if (!note && !stars && !fav) return null;
-      const marks = [];
-      if (stars) marks.push(`${stars}★`);
-      if (fav) marks.push('favourite');
-      return `${t.number || i + 1}. ${t.title}${marks.length ? ` (${marks.join(', ')})` : ''}${note ? ` — ${note}` : ''}`;
-    }).filter(Boolean);
-  }
-
-  // Asks the reference. What it knows is whatever is on the desk right now —
-  // the record, the track on screen, every note so far — sent fresh each
-  // time, so a question asked on track nine knows about track eight.
-  async function sendChat(msg) {
-    if (chatLoading) return;
-    const message = (msg || chatInput).trim();
-    if (!message) return;
-    setChatInput('');
-    setChatMessages(prev => [...prev, { role: 'user', text: message }]);
-    setChatLoading(true);
-    try {
-      const res = await fetch('/api/ask', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message,
-          history: chatMessages,
-          context: {
-            album: albumInput, artist: artistName, year: year || brief?.year || '',
-            currentTrack: tracks?.[openTrack]?.title || '',
-            rating: rating ? `${rating} stars` : '',
-            trackNotes: trackContextLines(),
-            albumNotes: overallNotes.trim(),
-          },
-        }),
-      });
-      const data = await res.json();
-      if (data.error) throw new Error(data.error);
-      setChatMessages(prev => [...prev, { role: 'ref', text: data.reply }]);
-    } catch (err) {
-      setChatMessages(prev => [...prev, { role: 'ref', text: 'Something went wrong: ' + err.message }]);
-    } finally { setChatLoading(false); }
-  }
+  // ── The briefing and the question mark are gone, 2026-09-18 ────────────
+  // Web-searched research on the album screen, and a reference you could ask
+  // while writing. Both came out on Miyel's call: they were the only two
+  // things in this software that spent somebody's money per press, the only
+  // two that needed a key before they worked, and neither is something she
+  // could not do on a phone beside the record. The prompts — which were the
+  // work — are kept in docs/RETIRED-PROMPTS.md with the reason.
+  //
+  // The `briefings` table stays where it is: the schema is additive-only, and
+  // a brief already researched is somebody's record of what they read.
+  // Nothing writes to it now.
 
   // Returns what it assembled as well as setting it, so a save that arrives
   // before the preview's own assembly has landed can assemble and go on.
@@ -519,7 +416,7 @@ export function useListeningSession({ step }) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          brief: brief || { album: albumInput, artist: artistName, year },
+          brief: { album: albumInput, artist: artistName, year },
           notes: overallNotes, rating, Masterpiece, Favorite, Formative, entryType,
           trackNotes, trackRatings, tracks: tracks || [],
         }),
@@ -553,8 +450,8 @@ export function useListeningSession({ step }) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          album: albumInput, artist: artistName, year: year || brief?.year || '',
-          genre: genre || brief?.genre || '',
+          album: albumInput, artist: artistName, year,
+          genre,
           entry_type: entryType || 'Personal Library',
           // The score and the mark are two different things and travel in two
           // different columns. A masterpiece with no stars set is five; that's
@@ -625,10 +522,6 @@ export function useListeningSession({ step }) {
   }
 
   return {
-    // Research
-    brief,
-    researchState,
-    researchError,
     // The record
     albumArt, setAlbumArt,
     albumInput, setAlbumInput,
@@ -656,10 +549,6 @@ export function useListeningSession({ step }) {
     openTrack, setOpenTrack,
     // Draft
     draftState: draft.state,
-    // The reference
-    chatMessages,
-    chatInput, setChatInput,
-    chatLoading,
     // Preview
     formatting,
     output,

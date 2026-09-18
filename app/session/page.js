@@ -43,7 +43,6 @@ import { useBookplate } from '../../components/main_components/Bookplate';
 import { useListeningSession, SESSION_STEPS, PENDING_KEY, saidSoAboutTheDesk, saidSoAboutTheEntry } from '../../hooks/useListeningSession';
 import AlbumPicker from '../../components/session_components/AlbumPicker';
 import SessionHeader from '../../components/session_components/SessionHeader';
-import AskSheet from '../../components/session_components/AskSheet';
 import AlbumScreen from '../../components/session_components/steps/AlbumScreen';
 import TrackNotes from '../../components/session_components/steps/TrackNotes';
 import AlbumNotes from '../../components/session_components/steps/AlbumNotes';
@@ -54,7 +53,6 @@ import SessionPreview from '../../components/session_components/steps/SessionPre
 const LANDING_MS = 520;
 
 export default function SessionPage() {
-  const { research_available } = useBookplate();
   const [authed, setAuthed]     = useState(false);
   const [checking, setChecking] = useState(true);
 
@@ -75,7 +73,6 @@ export default function SessionPage() {
   const [stepDir, setStepDir] = useState(1);   // 1 forward, -1 back — drives the slide
 
   // The reference's sheet. Closed on every change of record.
-  const [asking, setAsking] = useState(false);
 
 
   // The cover in flight from the grid to the album screen: where it started,
@@ -97,7 +94,6 @@ export default function SessionPage() {
     setStep(at);
     setMaxStep(at);
     setStepDir(1);
-    setAsking(false);
     setPending(record?.album ? record : null);
   }
 
@@ -303,7 +299,7 @@ export default function SessionPage() {
   }
 
   return (
-    <div className={'ses' + (asking ? ' ses--ask' : '')}>
+    <div className="ses">
 
       {!open ? (
         <AlbumPicker onPick={pick} onResume={resume} />
@@ -333,9 +329,6 @@ export default function SessionPage() {
                   entryType={s.entryType} receivedFrom={s.receivedFrom} albumArt={s.albumArt}
                   resuming={s.hasWriting || maxStep > 0}
                   coverRef={coverRef} coverHidden={!!landing}
-                  brief={s.brief} researchState={s.researchState} researchError={s.researchError}
-                  onResearch={() => s.doResearch()}
-                  onRefresh={() => s.doResearch({ refresh: true })}
                   onNext={() => goToStep(1)}
                 />
               )}
@@ -381,47 +374,10 @@ export default function SessionPage() {
             />
           )}
 
-          {/* ── The way to ask, at the foot of the screen ─────────────────
-              It was a ? beside the day-and-night switch until 2026-09-18, and
-              Miyel wanted the header clean: that row is the beacon now, and a
-              beacon with a control stuck to it is a beacon with a control
-              stuck to it.
-
-              Here because the sheet it opens rises from this edge. A door in
-              the top right that produces a thing from the bottom is a door
-              that has to be learned; one in the corner the sheet comes out of
-              is one you learn by using it once. It is also the corner a thumb
-              is already in on a phone, which is where every chat anybody has
-              ever used keeps this.
-
-              Lifted on the preview, where the save bar owns the bottom of the
-              screen — the only step whose foot is already spoken for.
-
-              Hidden while the sheet is open, because the sheet has its own way
-              out and two of them in one corner is a choice nobody asked to
-              make. Absent on a copy with no key rather than present and
-              broken. */}
-          {research_available && !asking && (
-            <button
-              type="button"
-              className={'ses-ask-door' + (step === SESSION_STEPS.length - 1 ? ' ses-ask-door--lifted' : '')}
-              onClick={() => setAsking(true)}
-              aria-label="Ask about this album"
-              title="Ask about this album"
-            >
-              ?
-            </button>
-          )}
-
-          <AskSheet
-            open={asking}
-            onClose={() => setAsking(false)}
-            messages={s.chatMessages}
-            input={s.chatInput}
-            setInput={s.setChatInput}
-            loading={s.chatLoading}
-            onSend={() => s.sendChat()}
-          />
+          {/* The ? that opened a reference, and the sheet it opened, came out
+              on 2026-09-18. See docs/RETIRED-PROMPTS.md: it was one of the two
+              things here that spent money per press, and Miyel's call is that
+              a phone beside the record does the same job. */}
         </>
       )}
 
