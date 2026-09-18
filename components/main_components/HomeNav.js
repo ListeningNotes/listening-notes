@@ -143,27 +143,21 @@ const TURN_MS = 400;
 // press. It simply is not watched doing it: by the time anybody sees the pane
 // again the listen is over.
 //
-// ── One record, two legs, and it never blinks ─────────────────────────────
-// Straight from the picker to the session's header was the version before
-// this one, and Miyel's look at it: "the chosen record still needs to take
-// that empty card's place, then that should go up and replace the LN for the
-// header, bringing up the session."
+// ── One record, one move ──────────────────────────────────────────────────
+// It went in two legs for an hour on 2026-09-18 — across to the beacon's card,
+// then up to the session's header — because the card was where a chosen record
+// was put while you looked at it. The card does not stand there any more: the
+// bar carries the record the whole time you are choosing, in the session
+// header's own coordinates, so there is one destination and it is the one the
+// record is going to live in. Miyel: "that takes the place of the mini beacon
+// and the session shows up. It cuts that middle step."
 //
-// She is right, and the reason is that the empty card is a promise. The slot
-// stands there the whole time you are choosing, waiting; a record that flies
-// past it to somewhere else leaves the promise unkept and the eye with two
-// places to look. So it lands there first, fills the card — and *then* the
-// card's worth of record travels up to the header and the session comes up
-// under it.
-//
-// One image for both legs. It is set down at the end of the first exactly
-// where it stood — same box, no transition — and pushed off again a frame
-// later, so nothing is removed and nothing re-appears: from the picker to the
-// header it is one object that never stops being on screen. That is what
-// "one motion" has to mean here, because a copy handed to a second copy is
-// two objects however well they line up.
-const TO_THE_CARD_MS = 700;    // across the screen, into the empty card
-const TO_THE_HEADER_MS = 560;  // up to the header, shrinking, session rising
+// The session is pushed as the record leaves, so its own settling and the
+// record's journey are the same 620ms. The record lands in the bar slot at the
+// moment the session finishes resolving over it — and the session's cover is
+// already in that exact box, so letting go of the flown copy is a frame with
+// nothing in it to notice.
+const TO_THE_BAR_MS = 620;
 // How long the session takes to resolve over the pane. It has to agree with
 // .lay--over-journal's own duration in entry.css — the picker folds away
 // behind it on this clock.
@@ -474,14 +468,17 @@ export default function HomeNav() {
     // No flight: the record is simply on the beacon and the listen opens. The
     // same answer the session's own picker gives, and the brief's.
     if (!from || !record.artUrl || still) { openSession(); return; }
-    setLanding({ record, art: record.artUrl, from, to: null, go: false, ms: TO_THE_CARD_MS });
+    setLanding({ record, art: record.artUrl, from, to: null, go: false, ms: TO_THE_BAR_MS });
+    // The session comes up as the record leaves, not after it lands.
+    router.push('/session');
     // And the picker folds away once the sheet is over it — unseen, which is
     // the point. Doing it now would empty the screen behind a sheet that has
     // not covered it yet.
-    flightTimers.current.push(setTimeout(() => setChoosing(false), TO_THE_CARD_MS + RISE_MS));
-  }, [openSession]);
+    flightTimers.current.push(setTimeout(() => setChoosing(false), RISE_MS + 120));
+  }, [openSession, router]);
 
-  // The journey: out of the picker and into the session's own header.
+  // The journey: out of the picker and into the bar's slot, which is the
+  // session header's slot.
   //
   // The target is measured rather than worked out, and it is measured from
   // where the sheet will be *at rest* rather than where it is this frame —
@@ -498,62 +495,58 @@ export default function HomeNav() {
   // the journey it had just started.
   useEffect(() => {
     if (!landing || landing.to) return;
-    flightTimers.current.push(requestAnimationFrame(() => {
-      // ── Leg one: into the empty card ──────────────────────────────────
-      const card = document.querySelector('.beacon-art-wrap');
-      if (!card) { setLanding(null); openSession(); return; }
-      const at = card.getBoundingClientRect();
-      const to = { left: at.left, top: at.top, width: at.width, height: at.height };
-      setLanding(l => l && { ...l, to });
+    // ── The one destination ─────────────────────────────────────────────
+    // The session's own cover, not the bar's. The bar's is centred, because
+    // while you are choosing there is nothing beside it; the session's sits
+    // left of centre with the record's name to its right, which on a 375px
+    // phone is 52px apart. Measured 2026-09-18 with the flight aimed at the
+    // bar's: the record landed at x=164 while the session's own cover was
+    // already drawn at x=112, so for one frame there were two of the same
+    // record in two places. The bar's cover stands down for the length of the
+    // flight (see the markup) so there is only ever one.
+    //
+    // Waited for rather than assumed: the session is pushed as the record
+    // leaves and draws its header on its first frame, but a first frame is
+    // not this frame.
+    const lookFor = (tries = 0) => {
+      const slot = document.querySelector('.ses-cover');
+      if (!slot && tries < 40) {
+        flightTimers.current.push(requestAnimationFrame(() => lookFor(tries + 1)));
+        return;
+      }
+      if (!slot) { setLanding(null); return; }
+      // Measured back out of the settle. The session arrives at scale(1.04)
+      // and eases to rest, so its header's box this frame is 4% wrong and
+      // shrinking — aiming at that lands the record somewhere the cover is
+      // only passing through. Undoing the scale about the sheet's own centre
+      // gives the box it is coming to rest in.
+      const sheet = document.querySelector('.lay');
+      const at = slot.getBoundingClientRect();
+      let to = { left: at.left, top: at.top, width: at.width, height: at.height };
+      if (sheet) {
+        const k = new DOMMatrixReadOnly(getComputedStyle(sheet).transform).a || 1;
+        if (Math.abs(k - 1) > 0.001) {
+          const box = sheet.getBoundingClientRect();
+          const cx = box.left + box.width / 2;
+          const cy = box.top + box.height / 2;
+          to = {
+            left: cx + (at.left - cx) / k,
+            top: cy + (at.top - cy) / k,
+            width: at.width / k,
+            height: at.height / k,
+          };
+        }
+      }
+      setLanding(l => l && ({ ...l, to }));
       flightTimers.current.push(requestAnimationFrame(() => setLanding(l => l && { ...l, go: true })));
-
-      flightTimers.current.push(setTimeout(() => {
-        // ── Leg two: up to the header, with the session coming under it ──
-        // The push first, so the sheet is rising while the record travels.
-        router.push('/session');
-        // Waited for, not assumed. Two frames was the guess and it was wrong:
-        // the session spends a few hundred milliseconds checking the
-        // wristband, and until 2026-09-18 it drew nothing at all while it
-        // did — so the header this record is flying to did not exist yet,
-        // the flight gave up, and the record was set down at the placeholder
-        // while the session rose with its cover already in place. The page
-        // draws the header on its first frame now, so this normally finds it
-        // straight away; the wait is what makes that a fact rather than a
-        // hope, on a cold morning or a slow phone.
-        const lookFor = (tries = 0) => {
-          const head = document.querySelector('.ses-cover');
-          if (!head && tries < 40) {
-            flightTimers.current.push(requestAnimationFrame(() => lookFor(tries + 1)));
-            return;
-          }
-          if (!head) { setLanding(null); return; }
-          {
-            const box = head.getBoundingClientRect();
-            const sheet = document.querySelector('.lay');
-            const lift = sheet ? Math.max(0, sheet.getBoundingClientRect().top) : 0;
-            // Set down where it stands — same box, no transition, nothing to
-            // see — and pushed off again on the next frame. The record is
-            // never removed and never redrawn; it simply gets a new
-            // destination.
-            setLanding(l => l && ({
-              ...l,
-              from: l.to,
-              to: { left: box.left, top: box.top - lift, width: box.width, height: box.height },
-              go: false,
-              ms: TO_THE_HEADER_MS,
-            }));
-            flightTimers.current.push(requestAnimationFrame(() => setLanding(l => l && { ...l, go: true })));
-            // Arrived. The header's own cover is already underneath it — same
-            // image, same box, in the browser's cache because this is the
-            // copy it has just finished flying — so letting go of the flown
-            // one is a frame with nothing in it to notice.
-            flightTimers.current.push(setTimeout(() => setLanding(null), TO_THE_HEADER_MS));
-          }
-        };
-        flightTimers.current.push(requestAnimationFrame(() => lookFor()));
-      }, TO_THE_CARD_MS));
-    }));
-  }, [landing, openSession, router]);
+      // Arrived, and the session's own cover is already in that box — same
+      // image, same place, and in the browser's cache because this is the copy
+      // it has just finished flying. Letting go of the flown one is a frame
+      // with nothing in it to notice.
+      flightTimers.current.push(setTimeout(() => setLanding(null), TO_THE_BAR_MS));
+    };
+    flightTimers.current.push(requestAnimationFrame(() => lookFor()));
+  }, [landing]);
 
   // ── The drop ──────────────────────────────────────────────────────────────
   // The listen is an entry. The layer closes, the cover leaves the beacon and
@@ -989,7 +982,7 @@ export default function HomeNav() {
           already exactly here and nothing appears to move. The bar's own row
           shifts up to meet it (.hn--choosing .hn-bar in nav.css), so the ×
           and the lights sit on the line they will sit on in a moment. */}
-      {choosing && (
+      {choosing && !landing && (
         <span className="hn-bar-cover" aria-hidden="true">
           {onAir ? <img src={onAir} alt="" /> : null}
         </span>
