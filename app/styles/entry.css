@@ -419,6 +419,12 @@
 .ln-field--year { width: 5.5em; }
 .ln-field--genre { width: 9em; }
 .ln-byline-fields { display: inline-flex; gap: 10px; align-items: baseline; flex-wrap: wrap; justify-content: center; }
+/* The byline reads as the byline while it is being edited. It cannot match on
+   size — the artist line is 11px and a field under 16px makes Safari zoom the
+   page — but everything else about it can, and the small caps are most of what
+   the line *is*. Before this it was full-ink sentence case: correct text in the
+   wrong voice, which is the half of "the fonts change" that was not the floor. */
+.ln-screen-one-artist .ln-field { text-transform: uppercase; color: var(--ink-soft); }
 
 /* The flags are the chips they stand in for, pressed rather than read. Off is
    the same chip with the ink taken out, so the row does not change shape when
@@ -442,7 +448,13 @@
   transition: color 0.15s, border-color 0.15s, background 0.15s;
 }
 .ln-flag:hover { color: var(--ink); border-color: var(--ink-faint); }
-.ln-flag--on { color: var(--bg); background: var(--ink); border-color: var(--ink); }
+/* Lit, not filled (Miyel, 2026-09-17). A chosen flag used to take the ink as a
+   background and print in the page colour, which made a row of three read as
+   three buttons in two states rather than three marks that are on or off. Its
+   own colour and a border in the same hue is enough to say chosen — and it is
+   what the mark looks like everywhere else on the site, which is the point of
+   giving them their marks in the first place. */
+.ln-flag--on { color: var(--ink); border-color: var(--ink-faint); }
 
 /* ── Replacing the cover ────────────────────────────────────────────────────
    The art is the control. Press it while a correction is open and the address
@@ -524,6 +536,66 @@
    sideways when it must, so a long address book is a strip to thumb through
    and never a wall of names on the first screen. */
 .ln-sender { display: flex; flex-direction: column; align-items: center; gap: 12px; width: 100%; min-width: 0; }
+/* ── The same block, standing on its own ───────────────────────────────────
+   Sent by is its own tool now and unfolds in the slot its answer prints in.
+   It had a panel around it for a day and lost it on 2026-09-17: Miyel — "it
+   doesn't need the box, and the screen moves a lot when I click this". Both
+   complaints were the same complaint. A bordered card is a second object
+   arriving where a line used to be, and the taller it is the further it shoves
+   the reading below it; the arrival animation was adding six pixels of travel
+   on top. So no border, no ground, no motion — it is the line it replaces,
+   with the controls that belong to it, and the only movement left is the
+   height the controls genuinely need.
+
+   Which is also why the picker is a second press when somebody is already
+   named: a field and a row of faces is most of that height, and an entry that
+   already says who sent it is not asking who sent it. */
+.ln-sender--tool { gap: 14px; }
+/* Who sent it: a face and a name at the size a name is said at. It was the
+   label over a 19px bold name for a day and read as a headline about somebody
+   else on your own page (Miyel, 2026-09-17). The portrait is the one their
+   journal serves, the same <img> the address book and the strip of faces draw,
+   with the plain mark behind it for a journal with none or one that is out. */
+/* ── A flag that wears its own mark, 2026-09-17 ────────────────────────────
+   Three identical word-pills was the one shape this row should not have been:
+   these three marks are the site's vocabulary and are restated wherever a
+   record is drawn, and the place you *set* one was the only place that did not
+   show it. Lit, each takes its own colour — the same three the strip, the feed
+   and the key use — so choosing a flag looks like the thing you are choosing. */
+.ln-flag--mark { display: inline-flex; align-items: center; gap: 6px; }
+/* Shown rather than offered: no pointer, no hover, and it does not take the
+   ink fill a pressed flag takes — a thing you cannot press should not look
+   pressed. It reads as a reading of the tracklist, which is what it is. */
+.ln-flag--said { cursor: default; }
+.ln-flag--said.ln-flag--on { color: var(--mp); }
+.ln-flag--mark svg { flex-shrink: 0; opacity: 0.45; transition: opacity 0.15s, color 0.15s; }
+.ln-flag--mark.ln-flag--on svg { opacity: 1; }
+.ln-flag--fav.ln-flag--on { color: var(--fav); border-color: color-mix(in srgb, var(--fav) 45%, transparent); }
+.ln-flag--mp.ln-flag--on { color: var(--mp); border-color: color-mix(in srgb, var(--mp) 45%, transparent); }
+.ln-flag--formative.ln-flag--on { color: var(--formative); border-color: color-mix(in srgb, var(--formative) 45%, transparent); }
+.ln-sender-who { margin: 0; display: inline-flex; align-items: center; gap: 9px; font-size: 15px; }
+.ln-sender-who .ln-sender-portrait { width: 28px; height: 28px; }
+.ln-sender-who strong { font-weight: var(--font-display-weight); }
+/* Quiet, because changing who sent you a record is the rare thing — but
+   visibly pressable, which small caps were not and a pill was too much of.
+   The underline is what this site already gives text that leads somewhere. */
+.ln-sender-change {
+  padding: 0; border: 0; border-bottom: 1px solid var(--border);
+  background: none; cursor: pointer;
+  font-family: inherit; font-size: 13px; color: var(--ink-soft);
+}
+.ln-sender-change:hover { color: var(--ink); border-bottom-color: var(--ink-faint); }
+/* A real checkbox and a real label, the way the send sheet's quiet toggle is,
+   rather than the pill the correction used: a pill that is on or off has to be
+   read twice to know which, and a question with a tick beside it does not. */
+/* Centred, and the two parts together. It was pushed to the two ends of the
+   panel, which put a question on one side of the screen and its answer on the
+   other and read as two unrelated things (Miyel, 2026-09-17). */
+.ln-sender-toggle {
+  display: inline-flex; align-items: center; justify-content: center; gap: 12px;
+  min-height: 44px; font-size: 14px; color: var(--ink-soft); cursor: pointer;
+}
+.ln-sender-trouble { margin: 0; font-size: 13px; line-height: 1.5; color: var(--fav); text-align: center; }
 .ln-sender-row { display: inline-flex; align-items: baseline; gap: 10px; }
 .ln-sender-label {
   font-family: var(--font-label);
@@ -549,14 +621,23 @@
 .ln-editing .ln-hero { height: auto; min-height: 390px; }
 .ln-editing .ln-hero-pad { position: relative; padding-top: 112px; }
 @media (max-width: 768px) {
-  /* And on a phone the whole stack has to be on the first screen without a
-     scroll (Miyel, 2026-09-14: the faces were just under the fold). While
-     correcting, the crown's margin comes down and the art steps back — it
-     is a button to replace the cover in this mode, not the thing being
-     read — which puts the faces about a third of the screen up from the
-     foot on a 812-tall phone. The screen still grows if it has to. */
-  .ln-editing .ln-screen-one { height: auto; min-height: 100dvh; padding: 108px 24px 32px; gap: 12px; }
-  .ln-editing .ln-screen-one-art { height: min(24dvh, 50vw); }
+  /* Correcting looks like reading, 2026-09-17. The first screen keeps its own
+     padding, its own gap and its own art — the only difference is that the
+     words have become fields.
+
+     It used to shrink: 108px of crown instead of 172, a tighter gap, and the
+     art down from min(40dvh, 78vw) to min(24dvh, 50vw). That was bought for a
+     specific thing — "the whole stack has to be on the first screen without a
+     scroll (Miyel, 2026-09-14: the faces were just under the fold)" — and the
+     faces are the row under Sent by, which **left the correction on
+     2026-09-16** when Credit became its own tool. The Library and Submission
+     buttons went the next day. So the stack that would not fit is two controls
+     shorter, and the art that stepped back for it can come forward.
+
+     `height: auto` stays, and is not cosmetic: a fixed 100dvh would clip a
+     form that runs longer than the screen on a small phone or at large type.
+     The screen grows and scrolls, which is what it did before. */
+  .ln-editing .ln-screen-one { height: auto; min-height: 100dvh; padding: 172px 24px 32px; gap: 16px; }
 }
 
 /* ── Sent by ────────────────────────────────────────────────────────────────
@@ -817,6 +898,11 @@ a.ln-sent-who:hover { text-decoration: underline; text-underline-offset: 3px; }
    straight past — the last track's note went on being written underneath the
    bar that saves it. */
 .ln-editing .ln-screen-two-scroll { padding-bottom: 96px; }
+/* Crediting raises the same bar, so it needs the same room under it. Only
+   crediting: `.ln-busy` also covers the send sheet, which has a scrim over the
+   whole screen and no bar, and padding it would move the page at the moment a
+   sheet opens over it — which is the thing this panel was just fixed for. */
+.ln-crediting .ln-screen-two-scroll { padding-bottom: 96px; }
 .ln-editing-label {
   font-family: var(--font-label);
   font-size: 9px;
@@ -842,11 +928,32 @@ a.ln-sent-who:hover { text-decoration: underline; text-underline-offset: 3px; }
    rather than edited, an empty heart on every track would be a column of
    controls nobody asked for — so it only appears filled. */
 .ln-track-field { flex: 1; min-width: 0; font-size: 13px; }
+/* The heart is only drawn while a correction is open, so this is the editing
+   size and there is no reading version to keep small. It carries a thumb-sized
+   target on padding with a matching negative margin (2026-09-17): the hit area
+   is about 43px square and the row keeps the height it had, the same trick the
+   roomy star picker beside it uses. It was a bare 13px glyph with no padding
+   at all — the smallest thing on the site you were expected to hit. */
 .ln-track-heart {
   display: inline-flex; align-items: center; justify-content: center;
-  padding: 0; border: 0; background: none;
+  padding: 14px; margin: -14px -6px; border: 0; background: none;
   color: var(--ink-faint); cursor: pointer;
   transition: color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+/* The stars while a correction is open: a door to the dial, sized like the
+   heart beside it so the pair are one row of targets rather than a button and
+   a hazard. The negative margin keeps the row's height. */
+.ln-track-stars {
+  display: inline-flex; align-items: center; justify-content: flex-end;
+  min-width: 86px; min-height: 44px; padding: 0 6px; margin: -12px -6px;
+  border: 0; border-radius: 10px; background: none; cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.ln-track-stars:hover { background: var(--bg-warm); }
+.ln-track-unrated {
+  font-family: var(--font-label); font-size: 9.5px; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--ink-faint);
 }
 .ln-track-heart:hover { color: var(--fav); }
 .ln-track-heart--on { color: var(--fav); }
@@ -1424,3 +1531,89 @@ html[data-printing] .sitenav-row { display: none; }
   .ln-editing-bar, .ln-print-bar { left: var(--spine-w, 0px); right: 0; }
   .ln-trouble { left: calc(var(--spine-w, 0px) + 16px); right: 16px; }
 }
+
+/* ── The track dial ────────────────────────────────────────────────────────
+   One track opening in its own row to be rated — see the note at the top of
+   TrackDial.js for why it unfolds rather than floating, and why nothing it
+   shows reaches the row until the tick.
+
+   It is the row above, magnified: the same heart and the same stars, in the
+   same order, on one line. */
+.td-open {
+  position: relative;
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  padding: 10px 0 6px;
+  animation: tdUnfold 0.26s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+@keyframes tdUnfold {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) { .td-open { animation: none; } }
+
+.td-controls {
+  display: flex; align-items: center; gap: 6px;
+  width: 100%;
+}
+
+/* Red, not grey (Miyel, 2026-09-17). A grey heart reads as a heart that is
+   off *and* disabled; this one is always the favourite colour and fills when
+   it is set, which is the same two states the mark has everywhere else.
+   No box around it: the target is padding with a matching negative margin, so
+   a thumb has 44px to land on and the eye sees only the heart. */
+.td-heart {
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 8px; margin: -8px 0; flex-shrink: 0;
+  border: 0; background: transparent;
+  color: var(--fav); opacity: 0.4; cursor: pointer;
+  transition: opacity 0.15s, transform 0.12s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.td-heart:hover { opacity: 0.65; }
+.td-heart--on { opacity: 1; }
+.td-heart:active { transform: scale(0.9); }
+
+/* One surface. touch-action: none so a drag across it is the dial's and never
+   the page's — and the layer under it is held off by .ln-busy besides, or a
+   sideways drag would be read as a swipe to the next record. */
+.td-row {
+  display: flex; align-items: center; gap: 0;
+  flex: 1 1 auto; min-width: 0; min-height: 52px;
+  touch-action: none; cursor: pointer; user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.td-row:focus-visible { outline: 2px solid var(--ink); outline-offset: 3px; border-radius: 10px; }
+.td-row--held .td-star { transform: scale(1.04); }
+.td-star {
+  position: relative; display: block;
+  flex: 1 1 0; min-width: 0; aspect-ratio: 1; max-width: 40px;
+  line-height: 1;
+  transition: transform 0.12s ease;
+}
+.td-star-off, .td-star-on {
+  position: absolute; inset: 0; overflow: hidden;
+  /* The glyph fills its own box. It was min(40px, 9vw) — 33.75px inside a
+     39px square on a 375px phone — so a star never quite filled the space it
+     occupied and read as smaller than the heart beside it (Miyel,
+     2026-09-17). A star's ink is about seven tenths of its font size, so the
+     two only match when the box is full. */
+  font-size: min(41px, 9.8vw); line-height: 1;
+}
+.td-star-off { color: var(--border); }
+.td-star-on { color: #e8b84b; }
+
+/* Right of the stars, and apart: they do opposite things, so the gap between
+   them is doing real work. No pill on either — the mark is the control. */
+.td-acts { display: inline-flex; align-items: center; gap: 14px; margin-left: auto; flex-shrink: 0; }
+.td-act {
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 14px 8px; margin: -14px 0; border: 0; background: transparent;
+  color: var(--ink-faint); cursor: pointer;
+  transition: color 0.15s, transform 0.12s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+.td-act:hover { color: var(--ink-soft); }
+.td-act:active { transform: scale(0.9); }
+.td-act--yes { color: var(--ink); }
+.td-act--yes:hover { color: var(--ink); opacity: 0.75; }
+

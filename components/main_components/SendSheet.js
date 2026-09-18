@@ -39,7 +39,7 @@
 // accident. A send that fails keeps everything too, and says so.
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { PaperPlaneTilt, X } from '@phosphor-icons/react';
+import { EnvelopeSimple, X } from '@phosphor-icons/react';
 import AlbumFinder from './AlbumFinder';
 import MiniAddressBook from './MiniAddressBook';
 import { useBookplate } from './Bookplate';
@@ -59,6 +59,14 @@ export default function SendSheet({ open, onClose, person = null, record = null 
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState('');
   const [error, setError] = useState('');
+  // Narrowing the book. The strip alone is fine for the three people a new
+  // copy knows and gets painful at forty (Miyel, 2026-09-17) — it is one row
+  // that scrolls sideways, so the shape never changes as the book grows and
+  // neither does the work of getting to the end of it. Credit has always had a
+  // way to narrow, because its name field doubles as one; this had none at
+  // all. It appears only once there are more faces than fit, so a copy with
+  // three friends is not handed a search box for three friends.
+  const [findWho, setFindWho] = useState('');
   const noteRef = useRef(null);
 
   // The book, once, the first time the sheet is opened. It is the owner's own
@@ -167,7 +175,11 @@ export default function SendSheet({ open, onClose, person = null, record = null 
       {/* touch-action: none so a drag on the dim cannot pan the page behind it. */}
       <div className="sn-scrim" onClick={shut} aria-hidden="true" />
       <section className="sn-sheet" role="dialog" aria-modal="true" aria-label="Send this record">
-        <button type="button" className="sn-grip" onClick={shut} aria-label="Close">
+        {/* A corner, not the middle (Miyel, 2026-09-17). A centred × reads as
+            part of the sheet's own content and sits over the thing you came to
+            look at; every close on this site is in a corner and this one was
+            the exception. */}
+        <button type="button" className="sn-shut" onClick={shut} aria-label="Close">
           <X size={16} weight="bold" />
         </button>
 
@@ -175,7 +187,7 @@ export default function SendSheet({ open, onClose, person = null, record = null 
           // Not a page of its own and not a tick that vanishes: the sheet says
           // what happened and offers the only two things anybody wants next.
           <div className="sn-done">
-            <PaperPlaneTilt size={28} weight="light" />
+            <EnvelopeSimple size={28} weight="light" />
             <p className="sn-done-line">Sent to {sent}.</p>
             <p className="sn-done-said">It is in their inbox. You will see what they make of it in your feed, if they log it.</p>
             <div className="sn-done-acts">
@@ -210,13 +222,26 @@ export default function SendSheet({ open, onClose, person = null, record = null 
               {people.length === 0 ? (
                 <p className="sn-empty">Nobody in your address book yet. Add somebody first — then you can send to them from here.</p>
               ) : (
-                <MiniAddressBook
-                  people={people}
-                  linked={form.to}
-                  onPick={p => setForm(f => ({ ...f, to: p.address === f.to ? '' : p.address }))}
-                  label="Who it is for"
-                  verb="send"
-                />
+                <>
+                  {people.length > 6 && (
+                    <input
+                      className="sn-find"
+                      value={findWho}
+                      onChange={e => setFindWho(e.target.value)}
+                      placeholder="Find someone"
+                      aria-label="Find someone in your address book"
+                      autoComplete="off"
+                    />
+                  )}
+                  <MiniAddressBook
+                    people={people}
+                    linked={form.to}
+                    narrow={findWho}
+                    onPick={p => setForm(f => ({ ...f, to: p.address === f.to ? '' : p.address }))}
+                    label="Who it is for"
+                    verb="send"
+                  />
+                </>
               )}
             </div>
 
@@ -236,12 +261,20 @@ export default function SendSheet({ open, onClose, person = null, record = null 
                 public credit is the default and quiet is the choice. Worded as
                 what it does to their page rather than how it feels here. */}
             <label className="sn-quiet">
+              <span>Send quietly — their entry won&rsquo;t credit you</span>
+              {/* A switch rather than a tick (Miyel, 2026-09-17), and *credit*
+                  rather than *name*: crediting is what the flag actually
+                  controls, and it is the word the rest of the site uses for
+                  it — quiet credit, don't credit them. role="switch" on a real
+                  checkbox, so the label and the keyboard still work and a
+                  screen reader hears on/off rather than ticked. */}
               <input
                 type="checkbox"
+                role="switch"
+                className="ln-switch"
                 checked={form.quiet}
                 onChange={e => setForm(f => ({ ...f, quiet: e.target.checked }))}
               />
-              <span>Send quietly — their entry won&rsquo;t name you</span>
             </label>
 
             {error && <p className="sn-error">{error}</p>}
@@ -252,7 +285,7 @@ export default function SendSheet({ open, onClose, person = null, record = null 
                   can get wrong. */}
               <p className="sn-from">From {from}{site_address ? `, ${site_address}` : ''}</p>
               <button type="submit" className="sn-send" disabled={sending}>
-                <PaperPlaneTilt size={18} weight="fill" />
+                <EnvelopeSimple size={18} weight="fill" />
                 <span>{sending ? 'Sending…' : to ? `Send to ${to.name || 'them'}` : 'Send'}</span>
               </button>
             </div>
