@@ -110,7 +110,18 @@ export default function ListeningBeacon({ children = null, choosing = false, emp
   return (
     <div className="beacon-stage">
       <div className="beacon-card beacon-card--main">
-        <div className={'beacon-art-wrap' + (isLive ? ' beacon-art-wrap--live' : '')}>
+        {/* Where a listen comes from. The layer at /session reads this on the
+            way in and grows out of it, so the session opens from the cover
+            rather than rising over it (handoff.js → growBoxOf, and the
+            arrival in LayerEntry). Miyel, 2026-09-18: "I want it to feel like
+            going into something — maybe the session opens from the beacon
+            artwork."
+            On the slot rather than on the card, because the cover is what the
+            sheet becomes; the caption under it is not part of the record. */}
+        <div
+          className={'beacon-art-wrap' + (isLive ? ' beacon-art-wrap--live' : '')}
+          data-grows="/session"
+        >
           {/* Empty while a record is being chosen, 2026-09-18. The slot went on
               showing the last record the whole time the picker was open, so a
               new cover flew out of the list and landed on top of a different
