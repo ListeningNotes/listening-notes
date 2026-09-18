@@ -273,22 +273,38 @@
 }
 .ses-cover:hover { box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2); transform: translateY(-1px); }
 .ses-cover-none { font-size: 18px; line-height: 1; }
-/* The question mark. Lit the way the step markers used to be — a slow
-   breath of light — so it reads as a door and not a decoration. */
-.ses-ask-btn {
-  flex-shrink: 0; width: 32px; height: 32px; border-radius: 50%; padding: 0;
+/* ── The question mark, at the foot ────────────────────────────────────────
+   It sat beside the day-and-night switch until 2026-09-18 (.ses-ask-btn, now
+   gone). The header is the beacon and Miyel wanted it clean; this is the
+   corner the sheet it opens rises from, and the corner a thumb is already in.
+
+   Still lit the way the step markers used to be — a slow breath — so it reads
+   as a door and not a decoration. Fixed, so it is the same door on every
+   screen of the listen, and above the safe area so it clears the home bar.
+
+   40px rather than the 32 it was: it is on its own out here, with no row
+   around it to make it obviously pressable. */
+.ses-ask-door {
+  position: fixed;
+  right: 18px;
+  bottom: calc(18px + env(safe-area-inset-bottom, 0px));
+  z-index: 40;
+  width: 40px; height: 40px; border-radius: 50%; padding: 0;
   display: flex; align-items: center; justify-content: center;
-  background: transparent; border: 1px solid var(--border); color: var(--ink-soft);
-  font-family: var(--font-label); font-size: 13px; line-height: 1; cursor: pointer;
+  background: var(--bg); border: 1px solid var(--border); color: var(--ink-soft);
+  font-family: var(--font-label); font-size: 15px; line-height: 1; cursor: pointer;
   animation: sesGlow 2.6s ease-in-out infinite;
-  transition: color 0.15s, border-color 0.15s, background 0.15s;
+  transition: color 0.15s, border-color 0.15s, background 0.15s, bottom 0.2s;
 }
+.ses-ask-door:hover { color: var(--ink); border-color: var(--ink-faint); }
+/* The preview is the one step whose foot is already spoken for: the save bar
+   is fixed across the bottom of it. */
+.ses-ask-door--lifted { bottom: calc(104px + env(safe-area-inset-bottom, 0px)); }
 @keyframes sesGlow {
   0%, 100% { box-shadow: 0 0 0 0 rgba(0,0,0,0); border-color: var(--border); }
   50%      { box-shadow: 0 0 12px 2px var(--panel-border); border-color: var(--ink-faint); }
 }
-.ses-ask-btn:hover, .ses-ask-btn--on { color: var(--bg); background: var(--ink); border-color: var(--ink); animation: none; }
-@media (prefers-reduced-motion: reduce) { .ses-ask-btn { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .ses-ask-door { animation: none; } }
 .ses-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .ses-head-text { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
 /* NOW LOGGING, with the one green thing on the screen beside it. Green means

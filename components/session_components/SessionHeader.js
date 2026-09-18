@@ -55,7 +55,6 @@ export default function SessionHeader({
   art = '', track = '',
   step, onStep,
   onBack,
-  canAsk, onAsk, asking,
 }) {
   const { theme, toggle } = useTheme();
   // The beacon's own rule, and it has to be the same one: whatever song is
@@ -105,19 +104,7 @@ export default function SessionHeader({
           </div>
 
           <div className="ses-head-side ses-head-side--right">
-          {canAsk && (
-            <button
-              type="button"
-              className={'ses-ask-btn' + (asking ? ' ses-ask-btn--on' : '')}
-              onClick={onAsk}
-              aria-label="Ask about this album"
-              title="Ask about this album"
-              aria-pressed={!!asking}
-            >
-              ?
-            </button>
-          )}
-          <button type="button" className="hp-icon-btn ses-theme" onClick={toggle} aria-label="Toggle theme">
+            <button type="button" className="hp-icon-btn ses-theme" onClick={toggle} aria-label="Toggle theme">
             {theme === 'dark' ? (
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
             ) : (
