@@ -158,9 +158,26 @@
    expects. RISE_MS in HomeNav.js is this number — the picker folds away
    behind it on the same clock. */
 .lay--rises.lay--over-journal {
-  animation-name: layFade;
+  animation-name: laySettle;
   animation-duration: 0.62s;
-  animation-timing-function: ease-out;
+  animation-timing-function: cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+/* A plain cross-fade was the first answer and this is the second: it starts
+   four per cent too big for the screen and settles to rest as it resolves.
+   Four per cent, not ten — the difference between a screen coming to rest and
+   a screen zooming, and past about six it stops being a settle and starts
+   being an effect. Reads as stepping toward the thing rather than the thing
+   coming at you, which is Miyel's own words for what this was always meant to
+   be: "I want it to feel like going into something."
+   Nothing translates. A surface that moves in a direction is a surface
+   arriving from somewhere, and this one is not arriving — it is what the
+   beacon turns into. */
+@keyframes laySettle {
+  from { opacity: 0; transform: scale(1.04); }
+  to   { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lay--rises.lay--over-journal { animation-name: layFade; }
 }
 @keyframes layRise { from { transform: translateY(100%); } to { transform: none; } }
 
