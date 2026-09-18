@@ -120,6 +120,36 @@ export async function lift_needle() {
   await database`UPDATE needle SET ended_at = now() WHERE id = 1 AND ended_at IS NULL`;
 }
 
+// ── A listen whose post was deleted ───────────────────────────────────────
+// Deleting an entry used to take the listen with it, because the entry was
+// the only lasting record that it happened — the needle is one row and a
+// draft is gone the moment a listen is published. Miyel deleted a test post
+// on 2026-09-18 and watched the record leave the beacon: "that's not
+// necessary, the beacon isn't just about posts but also listens."
+//
+// So delete_entry leaves this behind first. Four columns and no fifth: what
+// the record was, and when it was on. Nothing written, nothing rated, no
+// slug — there is no page any more, so the cover draws plain and opens
+// nothing, which is what a draft's tile already does and is the honest
+// picture of a listen with nothing written about it.
+//
+// `at` is the entry's own posted_at, not the moment of deletion. A record
+// heard in June and deleted in September belongs in June, and the beacon's
+// order is the only thing this row is for.
+//
+// Silent on failure on purpose: the entry is already gone by the time anybody
+// would be told, and a delete that reports a failure it did not have is worse
+// than a beacon missing one cover.
+export async function keep_sat_with({ album, artist, album_art, at }) {
+  if (!album) return;
+  try {
+    await database`
+      INSERT INTO sat_with (album, artist, album_art, at)
+      VALUES (${album}, ${artist || ''}, ${album_art || ''}, ${at || new Date()})
+    `;
+  } catch { /* the record leaving the beacon is not worth failing a delete */ }
+}
+
 // ── What was on it before ─────────────────────────────────────────────────
 // Real listens, finished or not — Miyel's call, 2026-09-15. An entry is a
 // listen that was posted, a draft is one that was written and not posted, and
@@ -145,6 +175,9 @@ export async function pull_recent_listens() {
       SELECT album, artist, album_art, NULL, track AS track, updated_at AS at FROM needle
         WHERE ended_at IS NOT NULL
           AND updated_at > now() - ${LIFTS_AFTER_MINUTES} * interval '1 minute'
+      UNION ALL
+      -- And the listens whose posts were deleted. No slug, by definition.
+      SELECT album, artist, album_art, NULL, NULL  AS track, at         AS at FROM sat_with
       ORDER BY at DESC
       LIMIT ${LOOK_BACK}
     `;
