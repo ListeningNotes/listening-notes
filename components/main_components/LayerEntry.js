@@ -497,6 +497,10 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
       // on the one device it mattered on, the guard was never armed. What has
       // focus is not a measurement. If a field has it, down belongs to the
       // keyboard, and that is true whatever the viewport says.
+      // And not off the stars, for the reason the track screen gives: a drag
+      // that begins on a rating belongs to the rating. A diagonal one would
+      // otherwise start closing the sheet under it.
+      if (event.target?.closest?.('[role="slider"]')) { pull = null; return; }
       const writing = document.activeElement;
       const intoText = writing && (
         writing.tagName === 'TEXTAREA'

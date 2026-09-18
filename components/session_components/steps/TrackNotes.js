@@ -143,7 +143,17 @@ export default function TrackNotes({
     if (window.matchMedia?.('(pointer: fine)').matches) el.focus({ preventScroll: true });
   }, [i, count]);
 
+  // Sideways here means the next track — except on the stars, where sideways
+  // means the rating (Miyel, 2026-09-18). They are the same gesture on the
+  // same axis a centimetre apart, and `touch-action: none` on the star row
+  // only stops the *browser* panning: these handlers still fire, so dragging
+  // from three stars to four also landed you on track four.
+  //
+  // Asked of where the finger went down rather than of any flag, because that
+  // is the whole question: a drag that begins on the stars belongs to the
+  // stars until it is let go.
   function onTouchStart(e) {
+    if (e.target.closest?.('[role="slider"]')) { touch.current = null; return; }
     const p = e.touches[0];
     touch.current = { x: p.clientX, y: p.clientY };
   }
