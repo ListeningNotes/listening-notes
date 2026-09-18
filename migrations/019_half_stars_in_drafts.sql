@@ -1,0 +1,29 @@
+-- A draft can hold a half star (Miyel, 2026-09-18).
+--
+-- `drafts.rating` has been an integer since 001, and the album score has been
+-- settable in halves for far longer than anybody noticed. The two met the
+-- first time a real listen was given 4.5: every autosave from that moment
+-- answered 500 — `invalid input syntax for type integer: "4.5"` — and went on
+-- answering 500 for the rest of the listen. Nothing was lost, because the
+-- browser keeps its own copy of a draft and that is what the entry is built
+-- from, but for the length of that listen the only copy of somebody's writing
+-- was the one on their phone. A locked phone or a cleared Safari and it would
+-- have been.
+--
+-- Whole stars saved fine throughout, which is what hid it: the failure begins
+-- mid-listen, at the moment a half is chosen, and the tracks' own ratings were
+-- never affected because they ride in the `tracks` jsonb where nothing checks
+-- a type.
+--
+-- `real` rather than `numeric`, on purpose. The driver hands a numeric back as
+-- a string — "4.5" — and every copy in the wild would then need the JavaScript
+-- that reads a draft to coerce it, which is a migration that breaks a journal
+-- until its code catches up. A real comes back as a number and the existing
+-- `setRating(draft.rating || 0)` keeps working untouched. Halves are exact in
+-- binary floating point, so there is nothing to lose by it.
+--
+-- This is a widening, not a rename or a drop, so it sits inside the
+-- additive-only rule (DECISIONS, 2026-09-06): integer -> real casts
+-- implicitly, every existing value survives it, and no copy receiving this
+-- can fail to open.
+ALTER TABLE drafts ALTER COLUMN rating TYPE real;
