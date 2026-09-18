@@ -209,7 +209,7 @@ export function useSessionDraft({ step, saved, hasWriting, values, setters }) {
       // the browser's own black box, which is what this replaced.
       if (!quiet) {
         setTrouble?.({
-          says: 'That did not save to the server. Your writing is safe on this phone, and it is what a finished listen is built from.',
+          says: 'That did not save to the server. Your writing is safe on this device.',
           because: err.message,
         });
       }
