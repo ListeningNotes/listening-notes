@@ -10,8 +10,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { CaretUp, Check, Fingerprint, Heart, SketchLogo, VinylRecord, X } from '@phosphor-icons/react';
-import { BookOpen } from '@phosphor-icons/react';
+import { Check, Fingerprint, Heart, SketchLogo, VinylRecord, X } from '@phosphor-icons/react';
 import { fonts } from '../../../library/sitewide_visuals';
 import { sizedAlbumArt, fetchAlbumArtUrl } from '../../../library/music_data_api';
 import { parseHorizon, entryTracks, splitNotes, entryTypeLabel, parseRating, flawless } from '../../../library/entry_formatter';
@@ -20,7 +19,6 @@ import { buildReferenceIndex, createReferenceLinker } from '../../../library/cro
 import SiteNav from '../../../components/main_components/SiteNav';
 import { createPortal } from 'react-dom';
 import { useLayerHeaderSlot } from '../../../components/main_components/LayerEntry';
-import EdgeCaret from '../../../components/main_components/EdgeCaret';
 import KeeperTools from '../../../components/main_components/KeeperTools';
 import { entryPlate } from '../../../components/main_components/EntryPlate';
 import { usePress } from '../../../hooks/usePress';
@@ -455,11 +453,14 @@ export default function FullPostPage({ entry, references = [], authed = false, l
       /* And another listen of the same record, which is a new entry and never
          an edit of this one. */
       onRelisten={revisit}
-      /* Delete opens the correction with its own confirmation already asking,
-         rather than deleting from a menu. The warning and the second press
-         live there and a destructive action does not get a shorter path for
-         having moved to a shorter menu. */
-      onDelete={() => { edit.begin(); edit.ask(); }}
+      /* Straight to it, because the tool does the asking itself now: the
+         first press turns Delete into "Sure?" and the second one deletes
+         (KeeperTools). It used to run `edit.begin(); edit.ask()` — open a
+         correction with the warning waiting at the foot of it — so pressing
+         Delete put you in edit mode on a page-long form with the thing you
+         asked for below the fold. Miyel, 2026-09-18: "delete button on an
+         entry post just takes you to edit." */
+      onDelete={edit.remove}
     />
   );
 
@@ -1228,86 +1229,34 @@ export default function FullPostPage({ entry, references = [], authed = false, l
             sit here without crowding anything because it only exists at the
             very bottom of the reading, which is the one place nothing else
             wants. */}
-        {/* Only while a correction is open, from 2026-09-17. Reading, the
-            foot of an entry carried a way back to the journal and a caret to
-            the top, and Miyel took both off: "the foot of the archive is where
-            somebody has finished looking, and three links to elsewhere is the
-            site asking them to leave" is already the rule for the wall
-            (DECISIONS), and the phone gave up a close control on the layer for
-            the same reason — what is left is the pull down, Escape and back.
-            A reader who reaches the end of a listen has reached the end of it. */}
-        {!preview && edit.editing && <div style={{ borderTop: '1px solid var(--border)', paddingTop: '28px', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-          {/* The way out of the entry, and — while a correction is open — the
-              way to end it. Delete sits at the very foot rather than in the bar
-              with Save: they are not the same weight, and a destructive control
-              beside the one you press every time is a control you will
-              eventually press by accident. */}
-          <EdgeCaret
-            direction="left"
-            onClick={() => (layered ? router.back() : router.push('/archive'))}
-            label="Back to the journal"
-            icon={BookOpen}
-          />
-          <button
-            onClick={backToTheRecord}
-            className="ln-totop"
-            aria-label="Back to the top"
-            title="Back to the top"
-          >
-            {/* An arrow and nothing else. Every other control in this family
-                carries a mark for where it lands, and this one lands where you
-                already are — the top of the thing you are reading. There is no
-                second place to name. */}
-            <CaretUp size={14} weight="bold" aria-hidden="true" />
-          </button>
-        </div>}
+        {/* The foot of an entry is bare while it is being corrected too, from
+            2026-09-18. It had a rule across it, a caret back to the journal
+            and an arrow to the top — kept for editing on 2026-09-17 when they
+            came off the reading view, on the reasoning that a correction
+            needs a way to end it.
+
+            It does not: the editing bar is fixed at the foot of the screen
+            with Save and Cancel on it, and it follows you down the page, so
+            those two were a second way out placed where you would only find
+            it by scrolling past everything. Miyel, from her phone: "in edit
+            mode there are some stale carats, glyphs, and extra lines at the
+            bottom of the entry." Stale is the word — they were left behind by
+            a decision that had already been made. */}
 
         {/* No lineage picker here, and since 2026-09-15 no lineage rules
             behind it either: the column is parked, because an entry id
             means nothing in another copy's database. Who sent a record is
             the credit at the head of this page, and the trail a reader
             walks is SentBy.js. See database_actions.js, above the slugs. */}
-        {/* The warning only, from 2026-09-17. *Delete this entry* used to sit
-            here as the way in, and it has not been the way in since Delete
-            became a tool on the ··· — two doors to the same destructive act,
-            one of them at the foot of a form somebody is scrolling through.
-            The tool opens a correction with this already asking (see
-            onDelete above), which is DECISIONS' rule intact: a destructive
-            thing does not get a shorter path for moving to a shorter menu,
-            and the confirmation still opens in place rather than as a dialog
-            dismissed by reflex. Nothing raises this but that press. */}
-        {edit.editing && edit.asking && (
-          <div className="ln-danger">
-            {(
-              <div className="ln-danger-ask">
-                {/* Two sentences. It said four, and the other two were true
-                    of the database rather than of anything a reader would
-                    recognise — what happens to comment rows, and what a broken
-                    source link means. Nobody should have to understand the
-                    schema to be warned about losing an album.
-                    Both of those are handled by delete_entry now anyway, which
-                    is the better place for a consequence than a paragraph. */}
-                <p className="ln-danger-warn">
-                  This deletes <strong>{entry.album}</strong> permanently. It can only be
-                  undone by restoring a backed up copy.
-                </p>
-                <div className="ln-danger-row">
-                  <button
-                    type="button"
-                    className="ln-danger-go"
-                    onClick={edit.remove}
-                    disabled={edit.removing}
-                  >
-                    {edit.removing ? 'Deleting…' : 'Delete permanently'}
-                  </button>
-                  <button type="button" className="ln-pill" onClick={edit.unask} disabled={edit.removing}>
-                    Keep it
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
+        {/* The delete warning stood here until 2026-09-18 and nothing raises
+            it any more: Delete asks on the ··· itself now, in two presses,
+            rather than opening a correction with this waiting at the foot of
+            it (see onDelete above, and the note on the tool in
+            KeeperTools.js). What went with it is the sentence — that the only
+            way back is a restored backup. That is a real loss and it is
+            recorded here rather than pretended away; what the two presses
+            keep is the part that was doing the work, which is that the act
+            cannot be reached by reflex. */}
 
       </div>
 

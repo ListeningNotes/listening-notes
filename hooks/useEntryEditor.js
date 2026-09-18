@@ -88,11 +88,11 @@ export function useEntryEditor(entry) {
   const [saving, setSaving] = useState(false);
   const [trouble, setTrouble] = useState(null);
   const [draft, setDraft] = useState(() => draftFrom(entry));
-  // Whether the delete has been asked for once. It is not a modal and not a
-  // browser confirm: the first press opens the warning in place, under the
-  // button, and the second one does it. A dialog would be dismissed by
-  // reflex — this has to be read to be got past.
-  const [asking, setAsking] = useState(false);
+  // `asking` lived here until 2026-09-18 — whether the delete had been pressed
+  // once, which raised a warning at the foot of the correction. The two
+  // presses are on the ··· itself now and never open a correction at all, so
+  // nothing sets this and nothing read it. See the note on the tool in
+  // KeeperTools.js.
   const [removing, setRemoving] = useState(false);
   // The address book — the people a sender can be picked from. Owner-only
   // on the server, which the editor is anyway; empty until it arrives, and
@@ -132,12 +132,8 @@ export function useEntryEditor(entry) {
 
   const cancel = useCallback(() => {
     setEditing(false);
-    setAsking(false);
     setTrouble(null);
   }, []);
-
-  const ask = useCallback(() => setAsking(true), []);
-  const unask = useCallback(() => setAsking(false), []);
 
   // There is no undo. delete_entry is a hard DELETE, and the only copies are
   // the nightly backup and whatever Neon's six hours still hold — so the
@@ -194,6 +190,6 @@ export function useEntryEditor(entry) {
 
   return {
     editing, saving, trouble, draft, begin, cancel, set, setTrack, save,
-    asking, ask, unask, removing, remove, book,
+    removing, remove, book,
   };
 }

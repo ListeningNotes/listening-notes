@@ -164,6 +164,16 @@
    everything destructive on this site wears. */
 .kt-tool--end { color: var(--fav); margin-left: 2px; }
 .kt-tool--end:hover { color: var(--fav); background: color-mix(in srgb, var(--fav) 12%, transparent); }
+/* Delete, pressed once. The word under the bin is "Sure?" and the box behind
+   it is filled rather than outlined — the second press has to look like a
+   different button from the first, or two presses is only one press repeated
+   (Miyel, 2026-09-18). It disarms when the drawer shuts, so this is never
+   found waiting. */
+.kt-tool--sure {
+  color: #fff;
+  background: var(--fav);
+}
+.kt-tool--sure:hover { color: #fff; background: var(--fav); }
 
 /* ── Five tools, each a glyph over a word, 2026-09-16 ──────────────────────
    Three icons in a corner are learned in one press. Five are not, so at five
