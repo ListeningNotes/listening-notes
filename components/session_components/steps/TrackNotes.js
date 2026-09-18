@@ -3,6 +3,7 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
 import { Heart, CaretLeft, CaretRight } from '@phosphor-icons/react';
+import { ContentsStrip } from './RecordContents';
 import { colors } from '../../../library/sitewide_visuals';
 import StarRating from '../StarRating';
 
@@ -133,46 +134,18 @@ export default function TrackNotes({
           about the record rather than anything you are deciding. Miyel:
           "it's intuitive… it will look cleaner." */}
 
-      {/* The strip. Each column is a button: the bar is the rating so far,
-          the dot says whether anything has been written, the title says which
-          song. The current track is lit. */}
-      <div className={'ses-strip' + (count > 18 ? ' ses-strip--dense' : '')} role="tablist" aria-label="Tracks">
-        {list.map((tr, k) => {
-          const r = trackRatings[k] || 0;
-          const fav = !!trackFavorites?.[k];
-          const covered = !!(trackNotes[k]?.trim()) || r > 0 || fav;
-          const pct = Math.max(5, (r / 5) * 100);
-          const cls = ['ses-strip-col', covered && 'ses-strip-col--done', k === i && 'ses-strip-col--now'].filter(Boolean).join(' ');
-          return (
-            <button
-              key={k}
-              type="button"
-              role="tab"
-              aria-selected={k === i}
-              aria-label={`${tr.number || k + 1}. ${tr.title}${r ? ` — ${r} / 5` : ''}`}
-              title={`${tr.number || k + 1}. ${tr.title}`}
-              className={cls}
-              onClick={() => goTo(k)}
-            >
-              <span className="ses-strip-bars">
-                {/* A favourite wears its heart above the bar — the entry's
-                    horizon does the same — in ink here rather than red, so
-                    the strip stays one colour while it is being built. */}
-                {fav && (
-                  <span className="ses-strip-heart" style={{ bottom: `calc(${pct}% + 3px)` }}>
-                    <Heart size={9} weight="fill" aria-hidden="true" />
-                  </span>
-                )}
-                <span className={'ses-strip-bar' + (r ? ' ses-strip-bar--rated' : '')} style={{ height: `${pct}%` }} />
-              </span>
-              <span className="ses-strip-dot" aria-hidden="true" />
-              <span className="ses-strip-label" aria-hidden="true">
-                <span className="ses-strip-title">{tr.title}</span>
-              </span>
-            </button>
-          );
-        })}
-      </div>
+      {/* The strip, shared with the contents screen — the same picture of
+          the record, and the same taps. Unrated tracks are stubs here rather
+          than empty slots: there the bars are an invitation, here they are a
+          picture of how far you have got. */}
+      <ContentsStrip
+        tracks={list}
+        trackRatings={trackRatings}
+        trackFavorites={trackFavorites}
+        trackNotes={trackNotes}
+        current={i}
+        onPick={goTo}
+      />
 
       {/* Keyed on the track so each one mounts fresh and slides in. */}
       <div key={i} className={`ses-turn${dir < 0 ? ' ses-turn--back' : ''}`}>

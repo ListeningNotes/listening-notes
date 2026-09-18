@@ -43,7 +43,7 @@ import { useBookplate } from '../../components/main_components/Bookplate';
 import { useListeningSession, SESSION_STEPS, PENDING_KEY, saidSoAboutTheDesk, saidSoAboutTheEntry } from '../../hooks/useListeningSession';
 import AlbumPicker from '../../components/session_components/AlbumPicker';
 import SessionHeader from '../../components/session_components/SessionHeader';
-import AlbumScreen from '../../components/session_components/steps/AlbumScreen';
+import RecordContents from '../../components/session_components/steps/RecordContents';
 import TrackNotes from '../../components/session_components/steps/TrackNotes';
 import AlbumNotes from '../../components/session_components/steps/AlbumNotes';
 import SessionPreview from '../../components/session_components/steps/SessionPreview';
@@ -70,6 +70,10 @@ export default function SessionPage() {
 
   const [step, setStep]       = useState(0);
   const [maxStep, setMaxStep] = useState(0);
+  // Which track is open, or null for the record's contents. It is a face of
+  // the Tracks step rather than a step of its own (Miyel's contents brief),
+  // so it lives here beside `step` and not in SESSION_STEPS.
+  const [onTrack, setOnTrack] = useState(null);
   const [stepDir, setStepDir] = useState(1);   // 1 forward, -1 back — drives the slide
 
   // The reference's sheet. Closed on every change of record.
@@ -78,7 +82,6 @@ export default function SessionPage() {
   // The cover in flight from the grid to the album screen: where it started,
   // where it is going, and whether it has been told to go.
   const [landing, setLanding] = useState(null);
-  const coverRef = useRef(null);
 
   // A finger travelling across a screen. The tracks screen turns its own
   // pages and hands over at either end; everywhere else this turns the step.
@@ -92,6 +95,7 @@ export default function SessionPage() {
   function show(record) {
     const at = s.beginListen(record?.album ? record : null);
     setStep(at);
+    setOnTrack(null);
     setMaxStep(at);
     setStepDir(1);
     setPending(record?.album ? record : null);
@@ -126,7 +130,14 @@ export default function SessionPage() {
   useEffect(() => {
     if (!landing || landing.to) return;
     landingTimers.current.push(requestAnimationFrame(() => {
-      const slot = coverRef.current;
+      // The header's own cover — the mini beacon. It used to be the album
+      // screen's large one, and that screen is gone with the Overview; the
+      // contents screen deliberately has no cover on it, because the beacon
+      // already does (Miyel's contents brief, 2026-09-18). Queried rather
+      // than handed down a ref, the way the cross measures the beacon it
+      // flies a record into: the destination belongs to the header, not to
+      // whichever screen happens to be underneath it.
+      const slot = document.querySelector('.ses-cover');
       if (!slot) { setLanding(null); return; }
       const to = slot.getBoundingClientRect();
       setLanding(l => l && { ...l, to });
@@ -250,8 +261,13 @@ export default function SessionPage() {
   }
 
   // Every step change goes through here so the slide knows which way to travel.
+  // Pressing Tracks in the steps row comes back to the contents rather than to
+  // the track you left, which is what makes that screen the map: somewhere to
+  // return to on purpose and jump around the record from. The carets inside a
+  // track screen are untouched — those are for going along.
   function goToStep(n) {
     if (n < 0 || n >= SESSION_STEPS.length) return;
+    if (n === 0) setOnTrack(null);
     setStepDir(n >= step ? 1 : -1);
     setStep(n);
     setMaxStep(m => Math.max(m, n));
@@ -323,27 +339,32 @@ export default function SessionPage() {
           <main className="ses-body" onTouchStart={swipeStart} onTouchEnd={swipeEnd}>
             {/* Keyed on step so each screen mounts fresh and slides in. */}
             <div key={step} className={'ses-step' + (landing ? ' ses-step--fade' : stepDir < 0 ? ' ses-step--back' : '')}>
-              {step === 0 && (
-                <AlbumScreen
-                  album={s.albumInput} artist={s.artistName} year={s.year} genre={s.genre}
-                  entryType={s.entryType} receivedFrom={s.receivedFrom} albumArt={s.albumArt}
-                  resuming={s.hasWriting || maxStep > 0}
-                  coverRef={coverRef} coverHidden={!!landing}
+              {/* ── Tracks ──────────────────────────────────────────
+                  Two faces on one step, which is why `onTrack` is here and
+                  not a fourth entry in SESSION_STEPS: the contents, and a
+                  track opened out of them. Nothing about the one-per-screen
+                  flow changes — this is the way in to it. */}
+              {step === 0 && (onTrack === null ? (
+                <RecordContents
+                  tracks={s.tracks} tracksLoading={s.tracksLoading} facts={s.facts}
+                  trackRatings={s.trackRatings} trackFavorites={s.trackFavorites} trackNotes={s.trackNotes}
+                  onPick={k => { s.setOpenTrack(k); setOnTrack(k); }}
                   onNext={() => goToStep(1)}
+                  onLookAgain={s.lookAgain}
+                  onHandTracks={s.takeHandTracks}
                 />
-              )}
-              {step === 1 && (
+              ) : (
                 <TrackNotes
                   tracks={s.tracks} tracksLoading={s.tracksLoading}
                   trackNotes={s.trackNotes} setTrackNotes={s.setTrackNotes}
                   trackRatings={s.trackRatings} setTrackRatings={s.setTrackRatings}
                   trackFavorites={s.trackFavorites} setTrackFavorites={s.setTrackFavorites}
                   openTrack={s.openTrack} setOpenTrack={s.setOpenTrack}
-                  onPrev={() => goToStep(0)}
-                  onNext={() => goToStep(2)}
+                  onPrev={() => setOnTrack(null)}
+                  onNext={() => goToStep(1)}
                 />
-              )}
-              {step === 2 && (
+              ))}
+              {step === 1 && (
                 <AlbumNotes
                   tracks={s.tracks} trackRatings={s.trackRatings} trackFavorites={s.trackFavorites}
                   overallNotes={s.overallNotes} setOverallNotes={s.setOverallNotes}
@@ -351,7 +372,7 @@ export default function SessionPage() {
                   Masterpiece={s.Masterpiece}
                   Favorite={s.Favorite} setFavorite={s.setFavorite}
                   Formative={s.Formative} setFormative={s.setFormative}
-                  onNext={() => goToStep(3)}
+                  onNext={() => goToStep(2)}
                 />
               )}
             </div>

@@ -1,0 +1,15 @@
+-- The Overview screen is gone and Tracks is the first step, so every stored
+-- step index moves down by one (Miyel's contents brief, 2026-09-18).
+--
+-- `drafts.step` is an index into SESSION_STEPS, not a name. It was
+-- Overview · Tracks · Album · Preview and is now Tracks · Album · Preview, so
+-- a draft saved on Tracks reads as Album unless it is shifted — a listen
+-- reopening two screens further on than it was left.
+--
+-- GREATEST so a draft on the old Overview lands on Tracks, which is where it
+-- would have gone anyway: that screen no longer exists.
+--
+-- Runs once. The ledger in schema_migrations is what makes that true, and it
+-- is why this is a migration and not a translation in the reader — shifting
+-- at read time would go on shifting drafts written after today.
+UPDATE drafts SET step = GREATEST(step - 1, 0);

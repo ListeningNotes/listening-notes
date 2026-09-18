@@ -58,6 +58,41 @@ deploy a copy — and none of it is anything they need.
 
 ## Pending
 
+**The contents screen — built 2026-09-18 from Miyel's brief.** Tracks opens on
+the record's contents now: the strip, the facts, the tracklist. The Overview
+is gone with it, so the steps are **Tracks · Album · Preview**.
+
+Names, hers: no heading on the screen; the foot reads `Start with <first
+track> →`; the file is `steps/RecordContents.js`.
+
+**Where the facts come from.** One iTunes lookup already carried both the
+songs and the album row; the album row is read now instead of thrown away.
+Released, genre and label come off it. The count and the runtime do *not* —
+they are the tracklist said another way, and a number kept in two places can
+disagree with itself. The label is parsed out of the `copyright` string, which
+is messier than it looks: King Krule's real one is `℗ 2011 King Krule under
+exclusive license to True Panther Sounds`, so everything before the licensing
+clause is the rights holder and the label is what follows. Checked against
+eight real strings; an unparseable one returns empty and the row is dropped.
+
+**Two deviations from the brief, both deliberate:**
+- The list does not scroll inside its own box. The strip and the facts are
+  `position: sticky` instead. A box that scrolls inside a sheet that scrolls
+  is two answers to one drag, which this session already has a scar from (the
+  rail lock note in nav.css).
+- The picked cover's flight lands in the header's mini beacon rather than a
+  cover on this screen, because the brief says there is no cover on this
+  screen and the old destination went with the Overview.
+
+**Migration 017 shifts `drafts.step` down by one**, once, because the stored
+value is an index into SESSION_STEPS and dropping a step moved every draft two
+screens on from where it was left.
+
+**Still owed:** the arrival animation has not been seen — it plays once per
+record per session and every draft here had already arrived. Worth watching on
+a record picked fresh.
+
+
 **The research and the question mark are retired, 2026-09-18.** Miyel's call:
 *"I really like the research feature and asking questions while I listen, but
 I also just have a phone, and I guess I can just do that on my own."* Both
