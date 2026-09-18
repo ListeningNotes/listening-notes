@@ -1490,6 +1490,25 @@ Project → Settings → Environment Variables.
 
 ## Gotchas
 
+**`.focus()` from the console fires no focus events in the Claude browser
+pane — 2026-09-18.** The pane's document is not the focused document, so
+calling `focus()` sets `document.activeElement` and dispatches nothing: not
+`focus`, not `focusin`, not even to a listener added a line earlier. A whole
+round of "the focus handler is broken" came out of that, and the handler was
+fine.
+
+**To test one:** set the focus, then dispatch the event yourself.
+
+```js
+el.focus();
+document.dispatchEvent(new FocusEvent('focusin', { bubbles: true }));
+```
+
+`document.activeElement` itself is reliable in the pane, which is why a guard
+that *reads* the focus at the moment it needs it — the layer's pull-to-close —
+can be checked here and one that *listens* for it cannot.
+
+
 **Nothing in this project catches a reference to a name that is not there —
 2026-09-18.** Not the build, and not the lint. Deleting a function and leaving
 its name in the object a hook returns passed `npm run build` clean and passed

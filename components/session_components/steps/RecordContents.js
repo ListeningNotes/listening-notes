@@ -170,11 +170,18 @@ export default function RecordContents({
           return (
             <li key={k}>
               {newDisc && <span className="ses-label ses-contents-disc">Disc {t.disc}</span>}
-              <button type="button" className="ses-contents-row" onClick={() => onPick?.(k)}>
+              {/* Not a button, 2026-09-18. Every row opened its track for an
+                  hour and Miyel took it off: this screen is what the record
+                  *is*, and a list you can read without deciding anything is a
+                  different thing from a menu. Reading a tracklist and being
+                  one mistaken tap from starting at track nine are not the
+                  same posture. The way in is the one line at the foot, which
+                  says where it puts you. */}
+              <div className="ses-contents-row">
                 <span className="ses-contents-n">{t.number || k + 1}</span>
                 <span className="ses-contents-title">{t.title}</span>
                 {width && <span className="ses-contents-bar" style={{ width }} aria-hidden="true" />}
-              </button>
+              </div>
             </li>
           );
         })}
