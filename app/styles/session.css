@@ -536,63 +536,30 @@
 .ses-strip-col--done .ses-strip-dot { background: var(--ink-faint); }
 
 /* ── The contents screen ───────────────────────────────────────────────────
-   What the next forty minutes are: the strip, the facts, the tracklist. It
-   replaced the Overview, which was the cover and the title — the beacon one
-   row up, larger (Miyel's contents brief, 2026-09-18).
+   What the next forty minutes are: the facts, and the tracklist. It replaced
+   the old Overview, which was the cover and the title — the beacon one row
+   up, larger (Miyel's contents brief, 2026-09-18).
 
-   ── The strip, with slots ─────────────────────────────────────────────────
-   The same strip, drawn for a record nothing has been said about yet. An
-   unrated track is an empty box at full height with a hairline round it,
-   rather than the stub the track screen shows: there the bars are a picture
-   of how far you have got, and here they are the shape of the record waiting
-   to be filled. The rated look is identical in both, which is the point —
-   the boxes fill. */
-.ses-strip--slots .ses-strip-col { grid-template-rows: 56px; }
-.ses-strip--slots .ses-strip-bars { padding-top: 12px; }
-/* The diagonal titles and the written-in dot belong to the track screen,
-   where the strip is a way of moving between tracks. Here the titles are
-   underneath in full, in a list, so a second set of them on their sides is
-   the same words twice — and they fell across the facts. */
-.ses-strip--slots .ses-strip-label,
-.ses-strip--slots .ses-strip-dot { display: none; }
-/* Only the empty ones change. A rated slot keeps the height its rating gives
-   it, inline, and the fill from the base rule — which is the whole idea: the
-   boxes fill. */
-.ses-strip--slots .ses-strip-bar:not(.ses-strip-bar--rated) {
-  height: 100% !important;
-  border: 1px solid var(--border);
-  border-radius: 3px;
-  background: none;
-}
-.ses-strip--slots .ses-strip-col--waiting { pointer-events: none; }
-.ses-strip--slots .ses-strip-col--waiting::after {
-  content: '';
-  display: block; height: 56px;
-  border: 1px solid var(--border); border-radius: 3px;
-  opacity: 0.5;
-}
+   The brief opened it with the strip, every track an empty slot at full
+   height, and that came off the same day: on the screen it read as a horizon
+   chart with no data in it. A horizon is a picture of what you thought of a
+   record; its empty frame, drawn before you have heard a note, is a chart
+   pretending. The strip is back on the track screen with one caller, where
+   the bars mean something. The rules that drew slots went with it.
 
-/* Arriving: one slot at a time, left to right, as the tracklist lands. 40ms
-   apart — the brief's number — and it plays once a listen rather than every
-   time you come back to the step, which is what `arrived` in the component
-   is for. */
-.ses-contents--arriving .ses-strip-col {
-  animation: sesSlotIn 0.34s cubic-bezier(0.22, 0.61, 0.36, 1) both;
-  animation-delay: calc(var(--slot-i, 0) * 40ms);
+   Arriving: the facts and the list come up together as the tracklist lands.
+   Once a listen rather than every time you come back to the step — see
+   `arrived` in the component. */
+.ses-contents--arriving .ses-facts,
+.ses-contents--arriving .ses-contents-list {
+  animation: sesFactsIn 0.42s cubic-bezier(0.22, 0.61, 0.36, 1) both;
 }
-@keyframes sesSlotIn {
+.ses-contents--arriving .ses-contents-list { animation-delay: 0.1s; }
+@keyframes sesFactsIn {
   from { opacity: 0; transform: translateY(6px); }
   to   { opacity: 1; transform: none; }
 }
-/* The facts and the titles come up behind the slots rather than with them, so
-   the slots are what you watch. */
-.ses-contents--arriving .ses-facts,
-.ses-contents--arriving .ses-contents-list {
-  animation: sesFactsIn 0.4s ease 0.18s both;
-}
-@keyframes sesFactsIn { from { opacity: 0; } to { opacity: 1; } }
 @media (prefers-reduced-motion: reduce) {
-  .ses-contents--arriving .ses-strip-col,
   .ses-contents--arriving .ses-facts,
   .ses-contents--arriving .ses-contents-list { animation: none; }
 }
