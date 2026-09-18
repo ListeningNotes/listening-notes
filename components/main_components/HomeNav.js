@@ -143,10 +143,27 @@ const TURN_MS = 400;
 // press. It simply is not watched doing it: by the time anybody sees the pane
 // again the listen is over.
 //
-// 760ms rather than 520. The cover crosses most of a screen and changes size
-// by a factor of five on the way; at 520 that was a thing that had happened
-// rather than a thing you watched happen.
-const LANDING_MS = 760;
+// ── One record, two legs, and it never blinks ─────────────────────────────
+// Straight from the picker to the session's header was the version before
+// this one, and Miyel's look at it: "the chosen record still needs to take
+// that empty card's place, then that should go up and replace the LN for the
+// header, bringing up the session."
+//
+// She is right, and the reason is that the empty card is a promise. The slot
+// stands there the whole time you are choosing, waiting; a record that flies
+// past it to somewhere else leaves the promise unkept and the eye with two
+// places to look. So it lands there first, fills the card — and *then* the
+// card's worth of record travels up to the header and the session comes up
+// under it.
+//
+// One image for both legs. It is set down at the end of the first exactly
+// where it stood — same box, no transition — and pushed off again a frame
+// later, so nothing is removed and nothing re-appears: from the picker to the
+// header it is one object that never stops being on screen. That is what
+// "one motion" has to mean here, because a copy handed to a second copy is
+// two objects however well they line up.
+const TO_THE_CARD_MS = 700;    // across the screen, into the empty card
+const TO_THE_HEADER_MS = 560;  // up to the header, shrinking, session rising
 // How long the sheet takes to rise. It has to agree with .lay--over-journal's
 // own duration in entry.css — the picker folds away behind it on this clock.
 const RISE_MS = 660;
@@ -448,16 +465,12 @@ export default function HomeNav() {
     // No flight: the record is simply on the beacon and the listen opens. The
     // same answer the session's own picker gives, and the brief's.
     if (!from || !record.artUrl || still) { openSession(); return; }
-    setLanding({ record, art: record.artUrl, from, to: null, go: false });
-    // The sheet starts rising in the same breath as the press. The cover is
-    // fixed to the window and the pane never unmounts, so it goes on flying
-    // over the top of a session that is already arriving.
-    router.push('/session');
+    setLanding({ record, art: record.artUrl, from, to: null, go: false, ms: TO_THE_CARD_MS });
     // And the picker folds away once the sheet is over it — unseen, which is
     // the point. Doing it now would empty the screen behind a sheet that has
     // not covered it yet.
-    flightTimers.current.push(setTimeout(() => setChoosing(false), RISE_MS));
-  }, [openSession, router]);
+    flightTimers.current.push(setTimeout(() => setChoosing(false), TO_THE_CARD_MS + RISE_MS));
+  }, [openSession]);
 
   // The journey: out of the picker and into the session's own header.
   //
@@ -477,25 +490,51 @@ export default function HomeNav() {
   useEffect(() => {
     if (!landing || landing.to) return;
     flightTimers.current.push(requestAnimationFrame(() => {
-      flightTimers.current.push(requestAnimationFrame(() => {
-        // The mini beacon in the session's header — the square this cover is
-        // going to be for the rest of the listen.
-        const slot = document.querySelector('.ses-cover');
-        if (!slot) { setLanding(null); return; }
-        const box = slot.getBoundingClientRect();
-        const sheet = document.querySelector('.lay');
-        const lift = sheet ? Math.max(0, sheet.getBoundingClientRect().top) : 0;
-        const to = { left: box.left, top: box.top - lift, width: box.width, height: box.height };
-        setLanding(l => l && { ...l, to });
-        flightTimers.current.push(requestAnimationFrame(() => setLanding(l => l && { ...l, go: true })));
-        // It has arrived, and the header's own cover is already underneath it
-        // — same image, same box, in the browser's cache because this is the
-        // copy it has just finished flying. Removing the flown one is a
-        // single frame with nothing in it to notice.
-        flightTimers.current.push(setTimeout(() => setLanding(null), LANDING_MS));
-      }));
+      // ── Leg one: into the empty card ──────────────────────────────────
+      const card = document.querySelector('.beacon-art-wrap');
+      if (!card) { setLanding(null); openSession(); return; }
+      const at = card.getBoundingClientRect();
+      const to = { left: at.left, top: at.top, width: at.width, height: at.height };
+      setLanding(l => l && { ...l, to });
+      flightTimers.current.push(requestAnimationFrame(() => setLanding(l => l && { ...l, go: true })));
+
+      flightTimers.current.push(setTimeout(() => {
+        // ── Leg two: up to the header, with the session coming under it ──
+        // The push first, so the sheet is rising while the record travels.
+        router.push('/session');
+        flightTimers.current.push(requestAnimationFrame(() => {
+          flightTimers.current.push(requestAnimationFrame(() => {
+            // The mini beacon in the session's own header, measured where it
+            // will be *at rest*: the sheet is still on its way up, so its own
+            // top is what it has left to travel and taking that off gives the
+            // box this record is actually aiming at.
+            const head = document.querySelector('.ses-cover');
+            if (!head) { setLanding(null); return; }
+            const box = head.getBoundingClientRect();
+            const sheet = document.querySelector('.lay');
+            const lift = sheet ? Math.max(0, sheet.getBoundingClientRect().top) : 0;
+            // Set down where it stands — same box, no transition, nothing to
+            // see — and pushed off again on the next frame. The record is
+            // never removed and never redrawn; it simply gets a new
+            // destination.
+            setLanding(l => l && ({
+              ...l,
+              from: l.to,
+              to: { left: box.left, top: box.top - lift, width: box.width, height: box.height },
+              go: false,
+              ms: TO_THE_HEADER_MS,
+            }));
+            flightTimers.current.push(requestAnimationFrame(() => setLanding(l => l && { ...l, go: true })));
+            // Arrived. The header's own cover is already underneath it — same
+            // image, same box, in the browser's cache because this is the
+            // copy it has just finished flying — so letting go of the flown
+            // one is a frame with nothing in it to notice.
+            flightTimers.current.push(setTimeout(() => setLanding(null), TO_THE_HEADER_MS));
+          }));
+        }));
+      }, TO_THE_CARD_MS));
     }));
-  }, [landing]);
+  }, [landing, openSession, router]);
 
   // ── The drop ──────────────────────────────────────────────────────────────
   // The listen is an entry. The layer closes, the cover leaves the beacon and
@@ -582,7 +621,7 @@ export default function HomeNav() {
     flightStyle = {
       left: from.left, top: from.top, width: from.width, height: from.height,
       transform: `translate(${dx}px, ${dy}px) scale(${k})`,
-      transition: travelling ? `transform ${LANDING_MS}ms cubic-bezier(0.22, 0.61, 0.36, 1)` : 'none',
+      transition: travelling ? `transform ${landing.ms}ms cubic-bezier(0.22, 0.61, 0.36, 1)` : 'none',
     };
   }
 
