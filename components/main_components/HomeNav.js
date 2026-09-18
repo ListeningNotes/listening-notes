@@ -124,8 +124,32 @@ const TURN_MS = 400;
 // read the title, short enough that nobody taps twice thinking it did not
 // work. The beacon is still growing for the first 520ms of it, which is the
 // point — you watch it take the record.
-const LANDING_MS = 520;
-const ITS_MOMENT_MS = 620;
+// ── The pass from choosing a record to writing about it ────────────────────
+// It used to be three moves in a row: the cover flew from the picker into the
+// beacon's slot (520ms), the beacon had a moment of being the beacon again
+// (620ms), and then the session rose over the top of it. Miyel, 2026-09-18:
+// "it goes to the correct spot, then it shows the beacon again, then it opens
+// the session from the art… first it's all happening way too fast, this
+// should feel like slow morphs so we can actually appreciate the animation."
+//
+// It is one move now, and it goes where the record is actually going. Press a
+// record and the session rises immediately while its cover flies out of the
+// picker into the small square in the session's own header — the mini beacon,
+// which is where that cover lives for the rest of the listen. Her words: "the
+// art should just go directly to a mini beacon, replacing the LN logo, then
+// the session just rises to meet it. No going back to the beacon page again."
+//
+// The beacon is told about the record all the same, at the moment of the
+// press. It simply is not watched doing it: by the time anybody sees the pane
+// again the listen is over.
+//
+// 760ms rather than 520. The cover crosses most of a screen and changes size
+// by a factor of five on the way; at 520 that was a thing that had happened
+// rather than a thing you watched happen.
+const LANDING_MS = 760;
+// How long the sheet takes to rise. It has to agree with .lay--over-journal's
+// own duration in entry.css — the picker folds away behind it on this clock.
+const RISE_MS = 660;
 
 // ── And the way back down ─────────────────────────────────────────────────
 // A listen becomes an entry, the layer closes, and the record falls out of
@@ -417,23 +441,35 @@ export default function HomeNav() {
   const beginListen = useCallback((record, from = null) => {
     try { localStorage.setItem(PENDING_KEY, JSON.stringify(record)); } catch { /* the listen still opens */ }
     saidSoAboutTheDesk();
+    // The beacon is told now, whichever way this goes. Behind the sheet, but
+    // true — and the pane is what you come back to when the listen ends.
+    announce(record);
     const still = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
     // No flight: the record is simply on the beacon and the listen opens. The
     // same answer the session's own picker gives, and the brief's.
-    if (!from || !record.artUrl || still) {
-      announce(record);
-      openSession();
-      return;
-    }
+    if (!from || !record.artUrl || still) { openSession(); return; }
     setLanding({ record, art: record.artUrl, from, to: null, go: false });
-  }, [openSession]);
+    // The sheet starts rising in the same breath as the press. The cover is
+    // fixed to the window and the pane never unmounts, so it goes on flying
+    // over the top of a session that is already arriving.
+    router.push('/session');
+    // And the picker folds away once the sheet is over it — unseen, which is
+    // the point. Doing it now would empty the screen behind a sheet that has
+    // not covered it yet.
+    flightTimers.current.push(setTimeout(() => setChoosing(false), RISE_MS));
+  }, [openSession, router]);
 
-  // The journey. Measured on the next frame rather than worked out, because
-  // the slot's box is whatever the pane's arrangement has made it — 132px
-  // while the picker is open, and that is where the record lands. The growing
-  // happens afterwards, with the record already in the slot, which is what
-  // makes it read as the beacon taking the record rather than the record
-  // chasing a box that is moving.
+  // The journey: out of the picker and into the session's own header.
+  //
+  // The target is measured rather than worked out, and it is measured from
+  // where the sheet will be *at rest* rather than where it is this frame —
+  // the sheet is rising while this runs, so its header is still on its way up
+  // and a cover aimed at that would land below the slot and then have to
+  // shuffle. The sheet's own top is how far it still has to go, so taking it
+  // off gives the resting box.
+  //
+  // Two frames, not one: the first lets the push render the layer, the second
+  // measures a header that now exists.
   //
   // The timers live in a ref and not in this effect's cleanup: the effect runs
   // again the moment the target is written, and a cleanup there would cancel
@@ -441,30 +477,25 @@ export default function HomeNav() {
   useEffect(() => {
     if (!landing || landing.to) return;
     flightTimers.current.push(requestAnimationFrame(() => {
-      const slot = document.querySelector('.beacon-art-wrap');
-      if (!slot) { setLanding(null); announce(landing.record); openSession(); return; }
-      const to = slot.getBoundingClientRect();
-      setLanding(l => l && { ...l, to });
-      flightTimers.current.push(requestAnimationFrame(() => setLanding(l => l && { ...l, go: true })));
-      // It has arrived. Three things in one commit, which is the whole reason
-      // they are written together: the beacon takes the record, the pane comes
-      // out of choosing, and the flown copy is removed. React batches them, so
-      // the cover that was in the air and the cover in the slot are never two
-      // different pictures in the same frame — and the image is the one the
-      // browser has just finished flying, so it is in the cache and paints
-      // without a beat of nothing.
-      flightTimers.current.push(setTimeout(() => {
-        announce(landing.record);
-        setChoosing(false);
-        setLanding(null);
-      }, LANDING_MS));
-      // And then the listen, over a beacon that has had its moment: full size,
-      // lit, with the record's name under it.
-      flightTimers.current.push(setTimeout(() => {
-        router.push('/session');
-      }, LANDING_MS + ITS_MOMENT_MS));
+      flightTimers.current.push(requestAnimationFrame(() => {
+        // The mini beacon in the session's header — the square this cover is
+        // going to be for the rest of the listen.
+        const slot = document.querySelector('.ses-cover');
+        if (!slot) { setLanding(null); return; }
+        const box = slot.getBoundingClientRect();
+        const sheet = document.querySelector('.lay');
+        const lift = sheet ? Math.max(0, sheet.getBoundingClientRect().top) : 0;
+        const to = { left: box.left, top: box.top - lift, width: box.width, height: box.height };
+        setLanding(l => l && { ...l, to });
+        flightTimers.current.push(requestAnimationFrame(() => setLanding(l => l && { ...l, go: true })));
+        // It has arrived, and the header's own cover is already underneath it
+        // — same image, same box, in the browser's cache because this is the
+        // copy it has just finished flying. Removing the flown one is a
+        // single frame with nothing in it to notice.
+        flightTimers.current.push(setTimeout(() => setLanding(null), LANDING_MS));
+      }));
     }));
-  }, [landing, openSession, router]);
+  }, [landing]);
 
   // ── The drop ──────────────────────────────────────────────────────────────
   // The listen is an entry. The layer closes, the cover leaves the beacon and

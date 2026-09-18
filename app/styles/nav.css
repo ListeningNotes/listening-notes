@@ -906,7 +906,14 @@
    and the scale would fight the translate. */
 .hn-flight {
   position: fixed;
-  z-index: 120;
+  /* Over the layer, which is 200. It was 120 — under it — and that was fine
+     while the flight finished before the session was pushed. It does not any
+     more: from 2026-09-18 the sheet rises at the moment of the press and the
+     cover crosses the screen over the top of it, into the header the sheet is
+     bringing with it. At 120 the record would have slid behind the rising
+     session and been seen no more. 300 is the number the entry's own closing
+     flyer uses for the same reason, and the two never share a screen. */
+  z-index: 300;
   pointer-events: none;
   object-fit: cover;
   border-radius: 14px;
@@ -1005,11 +1012,16 @@
    want it to feel fluid"). */
 /* 132px, the brief's number, and dimmed rather than gone: the page keeps its
    one object and the record about to be picked has somewhere to land. */
+/* 0.7s, up from 0.52 on 2026-09-18 — "this should feel like slow morphs so we
+   can actually appreciate the animation… even the transition to the selector."
+   The slot halves in size and empties as the picker opens, which is the
+   largest single change of shape anywhere on this site and was over before it
+   read as a change of shape at all. */
 .beacon-art-wrap {
-  transition: width 0.52s cubic-bezier(0.22, 0.61, 0.36, 1),
-              height 0.52s cubic-bezier(0.22, 0.61, 0.36, 1),
-              opacity 0.4s ease,
-              box-shadow 0.4s ease;
+  transition: width 0.7s cubic-bezier(0.22, 0.61, 0.36, 1),
+              height 0.7s cubic-bezier(0.22, 0.61, 0.36, 1),
+              opacity 0.5s ease,
+              box-shadow 0.5s ease;
 }
 /* The gap between the cover and whatever is under it is 28px, which is right
    under a full-size record and too much under a 132px one with a search
@@ -1017,9 +1029,16 @@
 /* Transitioned for the same reason the slot is: this closes from 28px to
    10px as the picker opens and back as it goes, and a gap that jumps is a
    record that hops. */
-.beacon-card { transition: gap 0.52s cubic-bezier(0.22, 0.61, 0.36, 1); }
+.beacon-card { transition: gap 0.7s cubic-bezier(0.22, 0.61, 0.36, 1); }
 .hn--choosing .beacon-card { gap: 10px; }
 .hn--choosing .hp-dashboard { flex: 0 0 auto; }
+/* No line across the top while a record is being chosen. The bar wears
+   .hn-bar--scrolled the whole time the picker is open, and its hairline sat
+   between the LN mark and the cover directly under it — two boxes with a rule
+   between them rather than one surface changing shape. Miyel, 2026-09-18:
+   "remove the line between the album art in the selector and the LN header,
+   that will make it feel more like it morphs to this screen." */
+.hn--choosing .hn-bar--scrolled { border-bottom-color: transparent; }
 .hn--choosing .beacon-art-wrap {
   width: 132px;
   height: 132px;
