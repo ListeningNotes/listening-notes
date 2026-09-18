@@ -16,19 +16,28 @@ import { useSessionDraft } from './useSessionDraft';
 
 // The four screens of a listen, in order. The header draws them and the
 // picker names the one a draft was left on.
-// Tracks · Album · Preview.
+// Overview · Tracks · Album · Preview.
 //
-// "Notes" became "Album" earlier on 2026-09-18 — that screen is where the
-// record gets its score, its marks and the writing that is *about the album*,
-// which is what the word Album says. Overview took the word for an hour and
-// then went entirely (Miyel's contents brief, the same day): it was the
-// cover, the title and the artist, which is the beacon one row up said again
-// larger. What replaced it is not a step but the front of this one — Tracks
-// opens on the record's contents now (steps/RecordContents.js).
+// "Notes" became "Album" on 2026-09-18: that screen is where the record gets
+// its score, its marks and the writing that is *about the album*, which is
+// what the word Album says.
 //
-// **The stored value is the index, not the word.** Dropping a step therefore
-// moved every draft's saved position by one, which migration 017 shifts once.
-export const SESSION_STEPS = ['Tracks', 'Album', 'Preview'];
+// Overview is a different screen behind the same word. It was the cover, the
+// title and the artist — the beacon one row up, said larger — and it is the
+// record's contents now: the facts and the tracklist
+// (steps/RecordContents.js). It was folded into Tracks for an hour, as one
+// step with two faces, and Miyel put it back the same day for a reason that
+// is about the gesture rather than the shape: "I do miss scrolling
+// horizontally through tracks and between steps." A face is not a step, so a
+// swipe could not reach it, and a screen you can only arrive at by pressing
+// its name is not on the same footing as the ones either side of it.
+//
+// **The stored value is the index, not the word.** The count went four → three
+// → four across two hours, which is why there are two migrations about it:
+// 017 shifted every draft down, 018 shifts it back. A copy that gets both at
+// once nets out at nothing, which is correct; this one got them an hour apart,
+// which is also correct.
+export const SESSION_STEPS = ['Overview', 'Tracks', 'Album', 'Preview'];
 
 // Where the record being listened to is kept between the picker and the
 // session, and across a reload. Written by whoever starts a listen — the

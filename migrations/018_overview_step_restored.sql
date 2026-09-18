@@ -1,0 +1,14 @@
+-- Overview is a step again, so the shift 017 made comes back off
+-- (Miyel, 2026-09-18: "I think it does need a tab name, overview is fine,
+-- because I do miss scrolling horizontally through tracks and between
+-- steps").
+--
+-- `drafts.step` is an index into SESSION_STEPS. 017 moved every draft down by
+-- one when Overview was folded into Tracks; this moves it back now that it is
+-- a step of its own again. A copy that receives both files in the same update
+-- applies them in order and nets out at no change, which is right — nothing
+-- happened to those drafts. This copy got them an hour apart, and this is
+-- what puts its own drafts back.
+--
+-- LEAST against the last index, so nothing can be shifted past Preview.
+UPDATE drafts SET step = LEAST(step + 1, 3);

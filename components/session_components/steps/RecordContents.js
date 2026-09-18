@@ -2,7 +2,6 @@
 // SPDX-License-Identifier: AGPL-3.0-or-later
 'use client';
 import { useEffect, useState } from 'react';
-import { Heart } from '@phosphor-icons/react';
 
 // What the next forty minutes are.
 //
@@ -26,72 +25,6 @@ import { Heart } from '@phosphor-icons/react';
 // place to return to on purpose and jump around the record from. The carets
 // inside a track screen are unaffected — those are for going along.
 
-// ── The strip ─────────────────────────────────────────────────────────────
-// Shared with the track screen, which is the only reason it lives in this
-// file rather than that one: the strip *is* the record's contents drawn
-// small, and this is the screen about the record's contents.
-//
-// `slots` is the difference between the two. Here every unrated track is an
-// empty box at full height with a hairline round it — the shape of a record
-// with nothing in it yet, which is what you are looking at before you start.
-// On the track screen an unrated track is a stub at the foot of the row,
-// because there the bars are a picture of progress rather than an invitation.
-// The rated look is identical in both, which is the point: the boxes fill.
-export function ContentsStrip({
-  tracks, trackRatings = {}, trackFavorites = {}, trackNotes = {},
-  current = -1, onPick, slots = false, arriving = false,
-}) {
-  const list = tracks || [];
-  return (
-    <div
-      className={'ses-strip' + (list.length > 18 ? ' ses-strip--dense' : '') + (slots ? ' ses-strip--slots' : '')}
-      role="tablist"
-      aria-label="Tracks"
-    >
-      {list.map((tr, k) => {
-        const r = trackRatings[k] || 0;
-        const fav = !!trackFavorites?.[k];
-        const covered = !!(trackNotes?.[k]?.trim()) || r > 0 || fav;
-        const pct = Math.max(5, (r / 5) * 100);
-        const cls = ['ses-strip-col', covered && 'ses-strip-col--done', k === current && 'ses-strip-col--now']
-          .filter(Boolean).join(' ');
-        return (
-          <button
-            key={k}
-            type="button"
-            role="tab"
-            aria-selected={k === current}
-            aria-label={`${tr.number || k + 1}. ${tr.title}${r ? ` — ${r} / 5` : ''}`}
-            title={`${tr.number || k + 1}. ${tr.title}`}
-            className={cls}
-            onClick={() => onPick?.(k)}
-            /* The arrival, one slot at a time, left to right. A custom
-               property rather than a class per column so the stylesheet owns
-               the timing and this owns only the order. */
-            style={arriving ? { '--slot-i': k } : undefined}
-          >
-            <span className="ses-strip-bars">
-              {/* A favourite wears its heart above the bar — the entry's
-                  horizon does the same — in ink here rather than red, so the
-                  strip stays one colour while it is being built. */}
-              {fav && (
-                <span className="ses-strip-heart" style={{ bottom: `calc(${pct}% + 3px)` }}>
-                  <Heart size={9} weight="fill" aria-hidden="true" />
-                </span>
-              )}
-              <span className={'ses-strip-bar' + (r ? ' ses-strip-bar--rated' : '')} style={{ height: `${pct}%` }} />
-            </span>
-            <span className="ses-strip-dot" aria-hidden="true" />
-            <span className="ses-strip-label" aria-hidden="true">
-              <span className="ses-strip-title">{tr.title}</span>
-            </span>
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
 // `43 min`, and `1 hr 12 min` past an hour. Rounded to the minute because
 // nobody has ever wanted a record's length to the second.
 function runtimeOf(tracks) {
@@ -112,7 +45,6 @@ const arrived = new Set();
 
 export default function RecordContents({
   tracks, tracksLoading, facts = {},
-  trackRatings, trackFavorites, trackNotes,
   onPick, onNext, onLookAgain, onHandTracks,
 }) {
   const list = tracks || [];
@@ -140,8 +72,10 @@ export default function RecordContents({
   if (tracksLoading && !tracks) {
     return (
       <div className="ses-contents">
-        <div className="ses-strip ses-strip--slots" aria-hidden="true">
-          {[...Array(6)].map((_, k) => <span key={k} className="ses-strip-col ses-strip-col--waiting" />)}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }} aria-hidden="true">
+          {[...Array(6)].map((_, k) => (
+            <div key={k} className="ses-skel" style={{ animationDelay: `${k * 0.06}s` }} />
+          ))}
         </div>
       </div>
     );
@@ -209,16 +143,14 @@ export default function RecordContents({
           a sheet that scrolls is two answers to one drag, which is a mistake
           this session has made before. */}
       <div className="ses-contents-head">
-        <ContentsStrip
-          tracks={list}
-          trackRatings={trackRatings}
-          trackFavorites={trackFavorites}
-          trackNotes={trackNotes}
-          onPick={onPick}
-          slots
-          arriving={arriving}
-        />
-
+        {/* No strip here, 2026-09-18. It was the brief's opening move — every
+            track as an empty slot at full height — and on the screen it read
+            as a horizon chart with nothing in it. Miyel: "remove fake horizon
+            from overview." She is right: a horizon is a picture of what you
+            thought of a record, and drawing its empty frame before you have
+            heard it is a chart pretending to have data. The tracklist below
+            says what is on the record, which is what this screen is for; the
+            strip belongs to the track screen, where the bars mean something. */}
         <dl className="ses-facts">
           {rows.map(([label, value]) => (
             <div className="ses-fact" key={label}>

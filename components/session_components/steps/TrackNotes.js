@@ -3,7 +3,6 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
 import { Heart, CaretLeft, CaretRight } from '@phosphor-icons/react';
-import { ContentsStrip } from './RecordContents';
 import { colors } from '../../../library/sitewide_visuals';
 import StarRating from '../StarRating';
 
@@ -35,6 +34,70 @@ import StarRating from '../StarRating';
 // drifts a few pixels sideways and must not change the track.
 const SWIPE_PX = 56;
 const SWIPE_RATIO = 1.5;
+
+// ── The strip ─────────────────────────────────────────────────────────────
+// Every track as a bar, the one you are on lit, the ones you have said
+// something about marked underneath. It lived in RecordContents.js for an
+// hour, shared: the contents screen drew it with every track as an empty slot
+// at full height, which is what the brief asked for and which read on the
+// screen as a horizon chart with no data in it (Miyel, 2026-09-18: "remove
+// fake horizon from overview").
+//
+// So it is back where it started, with one caller. The bars mean something
+// here — they are a picture of how far through the record you are and what
+// you thought of it as you went — and they meant nothing on a screen you
+// reach before hearing a note.
+function Strip({
+  tracks, trackRatings = {}, trackFavorites = {}, trackNotes = {},
+  current = -1, onPick,
+}) {
+  const list = tracks || [];
+  return (
+    <div
+      className={'ses-strip' + (list.length > 18 ? ' ses-strip--dense' : '')}
+      role="tablist"
+      aria-label="Tracks"
+    >
+      {list.map((tr, k) => {
+        const r = trackRatings[k] || 0;
+        const fav = !!trackFavorites?.[k];
+        const covered = !!(trackNotes?.[k]?.trim()) || r > 0 || fav;
+        const pct = Math.max(5, (r / 5) * 100);
+        const cls = ['ses-strip-col', covered && 'ses-strip-col--done', k === current && 'ses-strip-col--now']
+          .filter(Boolean).join(' ');
+        return (
+          <button
+            key={k}
+            type="button"
+            role="tab"
+            aria-selected={k === current}
+            aria-label={`${tr.number || k + 1}. ${tr.title}${r ? ` — ${r} / 5` : ''}`}
+            title={`${tr.number || k + 1}. ${tr.title}`}
+            className={cls}
+            onClick={() => onPick?.(k)}
+          >
+            <span className="ses-strip-bars">
+              {/* A favourite wears its heart above the bar — the entry's
+                  horizon does the same — in ink here rather than red, so the
+                  strip stays one colour while it is being built. */}
+              {fav && (
+                <span className="ses-strip-heart" style={{ bottom: `calc(${pct}% + 3px)` }}>
+                  <Heart size={9} weight="fill" aria-hidden="true" />
+                </span>
+              )}
+              <span className={'ses-strip-bar' + (r ? ' ses-strip-bar--rated' : '')} style={{ height: `${pct}%` }} />
+            </span>
+            <span className="ses-strip-dot" aria-hidden="true" />
+            <span className="ses-strip-label" aria-hidden="true">
+              <span className="ses-strip-title">{tr.title}</span>
+            </span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 
 export default function TrackNotes({
   tracks,
@@ -138,7 +201,7 @@ export default function TrackNotes({
           the record, and the same taps. Unrated tracks are stubs here rather
           than empty slots: there the bars are an invitation, here they are a
           picture of how far you have got. */}
-      <ContentsStrip
+      <Strip
         tracks={list}
         trackRatings={trackRatings}
         trackFavorites={trackFavorites}

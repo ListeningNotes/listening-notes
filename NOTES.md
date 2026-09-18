@@ -84,9 +84,24 @@ eight real strings; an unparseable one returns empty and the row is dropped.
   cover on this screen, because the brief says there is no cover on this
   screen and the old destination went with the Overview.
 
-**Migration 017 shifts `drafts.step` down by one**, once, because the stored
-value is an index into SESSION_STEPS and dropping a step moved every draft two
-screens on from where it was left.
+**Overview went back to being a step an hour later**, and the reason is worth
+keeping because it is not about the shape: *"I do miss scrolling horizontally
+through tracks and between steps."* Folded into Tracks it was a face, and a
+face is not a step — a swipe cannot reach it, and a screen you can only get to
+by pressing its name is not on the same footing as the ones either side of it.
+
+**And the strip came off it.** The brief opened the screen with every track as
+an empty slot at full height; on the screen that read as a horizon chart with
+no data in it. Miyel: *"remove fake horizon from overview."* A horizon is a
+picture of what you thought of a record, and its empty frame drawn before you
+have heard a note is a chart pretending. The strip is back in TrackNotes with
+one caller.
+
+**Two migrations about the same number, and both belong.** `drafts.step` is an
+index into SESSION_STEPS; the count went four → three → four in two hours, so
+017 shifts every draft down and 018 shifts it back. A copy that receives both
+in one update nets out at no change, which is correct — nothing happened to
+those drafts. This copy got them an hour apart, which is also correct.
 
 **Still owed:** the arrival animation has not been seen — it plays once per
 record per session and every draft here had already arrived. Worth watching on
