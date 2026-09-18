@@ -3,7 +3,6 @@
 'use client';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { ArrowLeft, ArrowRight, Plus } from '@phosphor-icons/react';
 import { serializeTracks } from '../../../library/entry_formatter';
 import FullPostPage from '../../../app/entries/[slug]/FullPostPage';
 import { LayerHeaderSlot } from '../../main_components/LayerEntry';
@@ -147,7 +146,16 @@ export default function SessionPreview({
 
           Why "Go back" is not Cancel: cancelling an edit throws the change
           away, and going back to the session throws nothing away at all. The
-          words have to differ because the acts do. */}
+          words have to differ because the acts do.
+
+          No glyphs, which is where this differs from the bar it borrows.
+          Editing an entry is a thing you can be in the middle of and stop,
+          so a tick and a cross on that bar are two shapes you learn once and
+          then read at a glance. This bar has one of each state and you meet
+          it at the end of a listen, having read a whole entry to get here —
+          the words are what you want, and a glyph beside two of them is one
+          more thing on a screen already full of somebody's writing. Miyel
+          took them off one at a time, 2026-09-18. */}
       <div className={'ses-preview-bar' + (saved ? ' ses-preview-bar--done' : '')}>
         {!saved ? (
           <>
@@ -159,11 +167,7 @@ export default function SessionPreview({
                 everywhere. */}
             <span className="ln-editing-label">Previewing</span>
             <button type="button" className="ln-pin" onClick={onBack} disabled={saving}>
-              {/* The arrow stays. Back is a direction and the glyph says it
-                  faster than the word; saving is not a direction, so the tick
-                  that used to sit on it was decoration. */}
-              <ArrowLeft size={13} weight="bold" aria-hidden="true" />
-              <span>Go back</span>
+              Go back
             </button>
             {/* Disabled rather than absent while there is no album note. A
                 button that vanishes leaves you looking for it; one that is
@@ -182,15 +186,9 @@ export default function SessionPreview({
           <>
             <span className="ln-editing-label">Saved</span>
             {savedEntry?.slug && (
-              <a href={`/entries/${savedEntry.slug}`} className="ln-pin ln-pin--on">
-                <ArrowRight size={13} weight="bold" aria-hidden="true" />
-                <span>Read it</span>
-              </a>
+              <a href={`/entries/${savedEntry.slug}`} className="ln-pin ln-pin--on">Read it</a>
             )}
-            <button type="button" className="ln-pin" onClick={onAnother}>
-              <Plus size={13} weight="bold" aria-hidden="true" />
-              <span>Log another</span>
-            </button>
+            <button type="button" className="ln-pin" onClick={onAnother}>Log another</button>
           </>
         )}
       </div>
