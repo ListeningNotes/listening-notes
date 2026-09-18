@@ -29,10 +29,21 @@
 // the two are showing the same thing and must not disagree about it.
 //
 // ── The × in the corner ───────────────────────────────────────────────────
-// The way to put the record down, and the one deliberate end a listen has
-// (Miyel, 2026-09-18). Two presses: the first opens the word out of the mark,
-// the second does what the word says. It says "Save draft" rather than asking
-// whether you are sure, because nothing here is being thrown away.
+// The way to put the record down, and the one deliberate end a listen has.
+//
+// One press, from 2026-09-18. It was two — the mark opened a word and the
+// word did it — which was the right shape for a control that might throw
+// something away and the wrong one for a control that never can. Miyel,
+// after an afternoon of testing: "clicking the × should just draft, with no
+// option to just leave… if you're going through all this trouble to type in
+// an album, find it and click, you're probably wanting to listen. Let's just
+// let the drafts build."
+//
+// So there is nothing to confirm. The × ends the listen and the listen is
+// kept, every time, whether a word was written or not — a record you went and
+// found is a record you meant to play, and the picker is where it waits.
+// Drafts are a page you can clear out in a press each; a lost search is an
+// afternoon you do again.
 //
 // ── The mark shuts what it opened ─────────────────────────────────────────
 // Two targets once it is open, and this is the part worth being exact about:
@@ -66,7 +77,6 @@
 // broken. There is no Save draft button: the draft saves itself.
 
 'use client';
-import { useState } from 'react';
 import { X } from '@phosphor-icons/react';
 import { SESSION_STEPS } from '../../hooks/useListeningSession';
 import { useTheme } from '../main_components/Lightswitch';
@@ -75,13 +85,13 @@ export default function SessionHeader({
   album, artist, year,
   art = '', track = '',
   step, onStep,
-  onEnd, hasWriting = false,
+  onEnd,
 }) {
   const { theme, toggle } = useTheme();
   // Whether the × has been pressed once and is now showing what it will do.
   // Reset on blur, the way the draft's discard is: a confirmation left armed
   // behind your back is a confirmation you did not give.
-  const [ending, setEnding] = useState(false);
+
   // The beacon's own rule, and it has to be the same one: whatever song is
   // open, and the record itself while none is.
   //
@@ -106,39 +116,16 @@ export default function SessionHeader({
             {/* Focus leaving the pair puts it away — but only when it has
                 actually left, or moving from the mark to the word would shut
                 the word on the way to pressing it. */}
-            <div
-              className={'ses-shut' + (ending ? ' ses-shut--sure' : '')}
-              onBlur={event => {
-                if (!event.currentTarget.contains(event.relatedTarget)) setEnding(false);
-              }}
-            >
-              {/* The mark opens the word and shuts it again. It is always
-                  the same ×, and it turns as it goes. */}
+            <div className="ses-shut">
               <button
                 type="button"
                 className="ses-shut-door"
-                onClick={() => setEnding(open => !open)}
-                aria-expanded={ending}
-                aria-label={ending ? 'Keep listening' : 'Close this listen'}
-                title={ending ? 'Keep listening' : 'Close this listen'}
+                onClick={onEnd}
+                aria-label="End this listen and keep it as a draft"
+                title="End this listen and keep it as a draft"
               >
                 <X size={18} weight="regular" aria-hidden="true" className="ses-shut-mark" />
               </button>
-              {/* And the word is what does it. Out of the tab order and out of
-                  reach while it is closed, so nothing can be pressed that
-                  cannot be read. */}
-              <span className="ses-shut-slot">
-                <button
-                  type="button"
-                  className="ses-shut-word"
-                  onClick={onEnd}
-                  tabIndex={ending ? 0 : -1}
-                  aria-hidden={!ending}
-                  title={hasWriting ? 'Save this listen as a draft and close it' : 'Close this listen'}
-                >
-                  {hasWriting ? 'Draft' : 'Leave'}
-                </button>
-              </span>
             </div>
           </div>
 
