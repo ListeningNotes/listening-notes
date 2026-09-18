@@ -450,6 +450,14 @@ export default function HomeNav() {
     flightTimers.current.forEach(id => { clearTimeout(id); cancelAnimationFrame(id); });
   }, []);
 
+  // A FLIP on the beacon's card lived here for ten minutes on 2026-09-18 and
+  // came out again. It was the wrong tool: the card's position is not a thing
+  // that jumps, it is a thing that is *dragged* by the crown above it
+  // collapsing, and the crown was already animating — on its own clock. Two
+  // animations for one movement, one of them measuring the other mid-flight
+  // and re-flipping off its own transform. The fix is one clock, below and in
+  // nav.css, not a second animation on top.
+
   const openSession = useCallback(() => {
     setChoosing(false);
     router.push('/session');
@@ -1244,7 +1252,16 @@ export default function HomeNav() {
                       visitor has no listen to start, and the writing routes
                       check the wristband for themselves whatever is drawn. */}
                   <ListeningBeacon choosing={choosing} emptied={!!dropping}>
-                    {authed && !choosing && (inHand ? (
+                    {/* Kept on the page while a record is being chosen, and
+                        collapsed with the rest of the meta around it. It used
+                        to be removed the instant it was pressed — which took
+                        43px of link plus its gap out of the card in one frame,
+                        and a card that is suddenly shorter re-centres, so the
+                        cover *dropped* 44px before it began climbing. Pressing
+                        a button and watching the thing you pressed it on lurch
+                        downwards is the last of what Miyel kept calling not
+                        fluid, measured out of it on 2026-09-18. */}
+                    {authed && (inHand ? (
                       /* A record already in hand: the way back to it, and
                          only that. There was a second, quieter line under
                          this one for an hour — the way *out* of the listen —

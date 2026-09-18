@@ -961,11 +961,11 @@
    from the page for a reader and from the tab order, without taking the
    transition with it. */
 .hn-crown {
-  transition: min-height 0.52s cubic-bezier(0.22, 0.61, 0.36, 1),
-              height 0.52s cubic-bezier(0.22, 0.61, 0.36, 1),
-              padding 0.52s cubic-bezier(0.22, 0.61, 0.36, 1),
+  transition: min-height 0.7s cubic-bezier(0.22, 0.61, 0.36, 1),
+              height 0.7s cubic-bezier(0.22, 0.61, 0.36, 1),
+              padding 0.7s cubic-bezier(0.22, 0.61, 0.36, 1),
               opacity 0.34s ease,
-              transform 0.52s cubic-bezier(0.22, 0.61, 0.36, 1);
+              transform 0.7s cubic-bezier(0.22, 0.61, 0.36, 1);
   transform-origin: top center;
 }
 .hn--choosing .hn-crown {
@@ -983,12 +983,12 @@
   overflow: hidden;
   pointer-events: none;
   visibility: hidden;
-  transition: min-height 0.52s cubic-bezier(0.22, 0.61, 0.36, 1),
-              height 0.52s cubic-bezier(0.22, 0.61, 0.36, 1),
-              padding 0.52s cubic-bezier(0.22, 0.61, 0.36, 1),
+  transition: min-height 0.7s cubic-bezier(0.22, 0.61, 0.36, 1),
+              height 0.7s cubic-bezier(0.22, 0.61, 0.36, 1),
+              padding 0.7s cubic-bezier(0.22, 0.61, 0.36, 1),
               opacity 0.3s ease,
-              transform 0.52s cubic-bezier(0.22, 0.61, 0.36, 1),
-              visibility 0s linear 0.52s;
+              transform 0.7s cubic-bezier(0.22, 0.61, 0.36, 1),
+              visibility 0s linear 0.7s;
 }
 /* And the small one arrives rather than appearing. It is hidden until the row
    has a reason to carry it (the rule further down), so this only has to say
@@ -998,6 +998,24 @@
 
 .hn--choosing .hn-pane--home { scroll-snap-type: none; }
 .hn--choosing .hn-pane--home > .hn-floor:nth-of-type(2) { display: none; }
+/* On the one clock with everything else. Choosing hands this screen a 90px
+   padding-top where it had none — the room the bar needs once the crown is
+   not holding it — and it arrived in a single frame, which put the cover 59px
+   DOWN before any transition had started and made the crown's collapse drag
+   it back up past where it began. Measured 2026-09-18:
+
+     t=0    card y=243   w=180
+     t=24   card y=302   w=177     the padding, and nothing else yet
+
+   That dip is the lurch. Padding and min-height are both lengths and both
+   animate; on the same curve and the same 0.7s, the room the bar takes opens
+   at exactly the rate the crown gives it up. */
+.hn-screen {
+  transition: min-height 0.7s cubic-bezier(0.22, 0.61, 0.36, 1),
+              padding 0.7s cubic-bezier(0.22, 0.61, 0.36, 1),
+              gap 0.7s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+@media (prefers-reduced-motion: reduce) { .hn-screen { transition: none; } }
 /* The screen stops being one screen tall and stops holding anything in the
    middle of it: it is as tall as the search is. */
 .hn--choosing .hn-screen {
@@ -1025,11 +1043,22 @@
    want it to feel fluid"). */
 /* 132px, the brief's number, and dimmed rather than gone: the page keeps its
    one object and the record about to be picked has somewhere to land. */
-/* 0.7s, up from 0.52 on 2026-09-18 — "this should feel like slow morphs so we
-   can actually appreciate the animation… even the transition to the selector."
-   The slot halves in size and empties as the picker opens, which is the
-   largest single change of shape anywhere on this site and was over before it
-   read as a change of shape at all. */
+/* ── One clock ─────────────────────────────────────────────────────────────
+   Everything that moves when the picker opens moves for 0.7s on this curve:
+   this slot's size, the crown's collapse above it, the card's gap, the foot
+   and the caret fading. Measured on 2026-09-18 with the three of them on
+   different clocks — 0.7s, 0.52s and an instant — and the cover's position is
+   the sum of all of them, so it lurched down 54px and then climbed 207 while
+   its own width eased placidly through the middle of it:
+
+     t=0    crown 227   card y=243
+     t=30   crown 193   card y=297
+     t=100  crown  26   card y=149
+     t=200  crown   0   card y=90
+
+   The card has no animation of its own and does not want one — its position
+   IS the crown giving up its room. They only have to agree about how long
+   that takes. */
 .beacon-art-wrap {
   transition: width 0.7s cubic-bezier(0.22, 0.61, 0.36, 1),
               height 0.7s cubic-bezier(0.22, 0.61, 0.36, 1),
@@ -1045,6 +1074,29 @@
 .beacon-card { transition: gap 0.7s cubic-bezier(0.22, 0.61, 0.36, 1); }
 .hn--choosing .beacon-card { gap: 10px; }
 .hn--choosing .hp-dashboard { flex: 0 0 auto; }
+/* ── The picker opens rather than appearing ────────────────────────────────
+   It mounted at its full height in one frame, under a cover that is centred
+   with it — so before a single transition had started, the card was shoved
+   74px DOWN, and the crown's collapse then had to drag it back up past where
+   it began. Measured 2026-09-18:
+
+     t=0    card y=243   meta 112   w=180
+     t=24   card y=317   meta 112   w=180     nothing has moved but this
+
+   That dip is what reads as the thing lurching. So it grows into the room
+   over the same 0.7s everything else is using, and the cover's whole journey
+   becomes one climb. Only in the cross: the session's own picker is the whole
+   screen and has nothing to push. */
+.hn .ses-picker {
+  overflow: hidden;
+  animation: hnPickerOpen 0.7s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+@keyframes hnPickerOpen {
+  from { max-height: 0; opacity: 0; }
+  /* Far past anything it can be, so nothing is ever clipped once it is open. */
+  to   { max-height: 200vh; opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) { .hn .ses-picker { animation: none; } }
 /* No line across the top while a record is being chosen. The bar wears
    .hn-bar--scrolled the whole time the picker is open, and its hairline sat
    between the LN mark and the cover directly under it — two boxes with a rule
@@ -1072,7 +1124,31 @@
    hairline puts the line back one row down. The fill alone says where the
    record goes. */
 .hn--choosing .beacon-art-empty { opacity: 1; }
-.hn--choosing .beacon-meta { gap: 0; }
+/* Collapsed rather than gone — see the note in ListeningBeacon.js. max-height
+   because the real height is a wrapped title and cannot be written down; 220
+   clears the tallest this ever is (a status line, two lines of title and an
+   artist) and anything over the true height simply spends the first part of
+   the transition doing nothing, which the crown above is covering anyway. */
+.beacon-meta {
+  overflow: hidden;
+  /* Near the real height, not wildly above it. The content is 112px at rest
+     — a title, an artist and the way in — and a title that wraps adds one
+     line, so 170 covers it. Set much higher and the first half of the
+     transition is max-height falling through air with the layout unmoved,
+     and the collapse then happens all at once at the end. */
+  max-height: 170px;
+  transition: max-height 0.7s cubic-bezier(0.22, 0.61, 0.36, 1),
+              opacity 0.34s ease,
+              gap 0.7s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.hn--choosing .beacon-meta {
+  gap: 0;
+  max-height: 0;
+  opacity: 0;
+  /* Collapsed to nothing and still in the tree, so the way in must not be
+     pressable through it. */
+  pointer-events: none;
+}
 /* The way out, in the corner the up-caret holds the rest of the time. Not
    flex: 1 like the caret's own invisible strip — this one is a mark, and it
    has to be where the mark is rather than centred in half a row. */
@@ -1099,7 +1175,8 @@
   .hn--choosing .hn-crown,
   .hn-bar-mark,
   .hn-foot,
-  .hn-controls { transition: none; }
+  .hn-controls,
+  .beacon-meta { transition: none; }
 }
 
 /* ── The stage measures itself on the cross ────────────────────────────────
