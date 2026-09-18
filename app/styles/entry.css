@@ -1114,6 +1114,34 @@ a.ln-sent-who:hover { text-decoration: underline; text-underline-offset: 3px; }
     animation: ln-cue-bob 2.2s ease-in-out infinite;
   }
 
+  /* ── When there is nothing under the fold ────────────────────────────────
+     A listen can be a cover and a score and nothing else, and on one of those
+     screen two is not drawn at all — see `nothingBelow` in FullPostPage.js.
+     The caret stays, because a control that vanishes on some records and not
+     others is a control nobody trusts, but it stops bobbing: the bob is what
+     says there is more down there, and there is not.
+
+     Pressed, it shakes its head. Horizontal on purpose — a down arrow nudged
+     downwards reads as trying, and this is not trying, it is answering
+     (Miyel, 2026-09-18: "maybe it just shakes on the screen to let people
+     know there's no notes"). */
+  .ln-scroll-cue--none { animation: none; }
+  .ln-scroll-cue--wobble { animation: ln-cue-wobble 0.45s ease-in-out; }
+  @keyframes ln-cue-wobble {
+    0%, 100% { transform: translateX(0); }
+    15%      { transform: translateX(-5px); }
+    35%      { transform: translateX(4px); }
+    55%      { transform: translateX(-3px); }
+    75%      { transform: translateX(2px); }
+  }
+  /* No movement where movement is not wanted. The press then does nothing
+     visible and the control's own label — "Nothing written about this
+     listen" — is what carries it, which is what a screen reader was getting
+     all along. */
+  @media (prefers-reduced-motion: reduce) {
+    .ln-scroll-cue--wobble { animation: none; }
+  }
+
   /* ── SCREEN TWO ── the band behind the logo row ends exactly where the
      record strip below it begins, and it is solid: the strip is opaque and
      the notes scroll under the strip, so there is nothing for a fade to

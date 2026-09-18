@@ -29,13 +29,26 @@ import StarRating from '../../main_components/StarRating';
 
 // `43 min`, and `1 hr 12 min` past an hour. Rounded to the minute because
 // nobody has ever wanted a record's length to the second.
-// Minutes, as a number on its own. It read "13 min" and then "1 hr 12 min"
-// until 2026-09-18, which was right for a row in a list and is wrong in a
-// band where every cell is one figure over one word. A long record says 72
-// rather than 1 hr 12 min, which is the same fact in the shape the band is.
+// Hours and minutes, not a count of minutes. It was a bare number for an hour
+// on 2026-09-18, on the reasoning that a band of figures wants one figure per
+// cell — and Miyel put the hours back for the reason that actually matters:
+// "I think 1 hr 12 min is a better idea of how long a record is. I don't know
+// off the top of my head what a 72 min long record feels like." A unit you
+// have to convert in your head is not a fact you have been told. The band
+// sets the digits large and the units small instead (.ses-unit), so the
+// figure still reads as a figure.
+//
+// H and M rather than hr and min, Miyel's, the same day: two letters carry it
+// and four take room the cell has not got on a 320px phone. `1 H 12 M` is not
+// ambiguous next to the word RUNTIME.
 function runtimeOf(tracks) {
   const secs = (tracks || []).reduce((total, t) => total + (Number(t.duration) || 0), 0);
-  return secs ? String(Math.round(secs / 60)) : '';
+  if (!secs) return '';
+  const mins = Math.round(secs / 60);
+  if (mins < 60) return `${mins} M`;
+  const hrs = Math.floor(mins / 60);
+  const rest = mins % 60;
+  return rest ? `${hrs} H ${rest} M` : `${hrs} H`;
 }
 
 // The arrival plays once a listen, not every time you come back to the step.
@@ -135,7 +148,7 @@ export default function RecordContents({
   // does not have rather than one nobody knows.
   const counts = [
     ['tracks', String(list.length)],
-    ['minutes', runtimeOf(list)],
+    ['runtime', runtimeOf(list)],
     ['released', facts.released || ''],
   ].filter(([, value]) => value);
 
@@ -183,7 +196,17 @@ export default function RecordContents({
             <div className="idc-counts">
               {counts.map(([word, n]) => (
                 <div className="idc-count" key={word}>
-                  <b className="idc-count-n">{n}</b>
+                  {/* A value carrying its own units — only the runtime does —
+                      is set as digits at full size with the units small
+                      between them. `runtimeOf` builds the string one space at
+                      a time, so the odd pieces are always the units. */}
+                  <b className="idc-count-n">
+                    {/[a-z]/i.test(n)
+                      ? n.split(' ').map((bit, i) => (
+                          i % 2 ? <i className="ses-unit" key={i}>{bit}</i> : bit
+                        ))
+                      : n}
+                  </b>
                   <span className="idc-count-word">{word}</span>
                 </div>
               ))}
