@@ -134,8 +134,9 @@ export default function SessionHeader({
                   onClick={onEnd}
                   tabIndex={ending ? 0 : -1}
                   aria-hidden={!ending}
+                  title={hasWriting ? 'Save this listen as a draft and close it' : 'Close this listen'}
                 >
-                  {hasWriting ? 'Save draft' : 'Leave'}
+                  {hasWriting ? 'Draft' : 'Leave'}
                 </button>
               </span>
             </div>

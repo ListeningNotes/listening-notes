@@ -313,11 +313,39 @@
   flex: 0 0 auto;
   transition: transform 0.34s cubic-bezier(0.22, 0.61, 0.36, 1);
 }
+/* ── The word opens into the room that was already empty ───────────────────
+   Out of the flow, deliberately (Miyel, 2026-09-18: "the spacing does feel a
+   little strange… when it's open it's like right next to the beacon"). In the
+   flow it grew the row's left track, and a grid with a centred middle answers
+   that by moving the middle — so opening the × shoved the beacon sideways and
+   then let it back. Absolute, it opens across the gap between the mark and
+   the cover, which is empty at every other moment, and nothing on the row
+   moves at all.
+
+   That gap is what decides the word. The mark ends at 44px and the beacon's
+   cover starts at 112 on a 375px phone, so there are about 68 to open into.
+   "Save draft" is 70 and would have run under the cover; one word is 30 to
+   36 and clears it with room to spare. The × already says close — the word
+   only has to say what closing does with it.
+
+   And a max-width rather than the 0fr → 1fr track it opened on while it was
+   in the flow. An `fr` needs a definite width to resolve against, and an
+   absolutely positioned box is sized by its contents, so the track collapsed
+   to nothing and the word never appeared. The number is fine here for the
+   reason it was not before: both words are five letters and land within a
+   pixel or two of 36, so 42 is a hair past either and the opening is
+   proportional for both. A longer word would want measuring again. */
+.ses-shut { position: relative; }
 .ses-shut-slot {
-  display: grid;
-  grid-template-columns: 0fr;
+  position: absolute;
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  display: block;
+  max-width: 0;
+  overflow: hidden;
   padding-left: 0;
-  transition: grid-template-columns 0.34s cubic-bezier(0.22, 0.61, 0.36, 1),
+  transition: max-width 0.34s cubic-bezier(0.22, 0.61, 0.36, 1),
               padding-left 0.34s cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 .ses-shut-word {
@@ -345,7 +373,7 @@
    nothing here deserves a red button. */
 .ses-shut--sure { color: var(--ink); }
 .ses-shut--sure .ses-shut-mark { transform: rotate(90deg); }
-.ses-shut--sure .ses-shut-slot { grid-template-columns: 1fr; padding-left: 9px; }
+.ses-shut--sure .ses-shut-slot { max-width: 42px; padding-left: 2px; }
 .ses-shut--sure .ses-shut-word { opacity: 1; }
 @media (prefers-reduced-motion: reduce) {
   .ses-shut-mark, .ses-shut-slot, .ses-shut-word { transition: none; }
