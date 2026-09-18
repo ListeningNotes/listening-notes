@@ -1,43 +1,120 @@
 // Copyright (C) 2026 Miyel Brown
 // SPDX-License-Identifier: AGPL-3.0-or-later
 'use client';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 
-// `roomy` is the same stars with a thumb-sized target under them, 2026-09-17.
+// The stars inside a listen: the album's score, and a track's.
 //
-// Each star is split down the middle so half ratings can be picked, which makes
-// the real target half a star wide — seven pixels across in a tracklist at
-// size 14, against the ~44 a fingertip actually covers. Reading it was fine;
-// pressing it was aiming.
+// ── Drag, not aim ─────────────────────────────────────────────────────────
+// It was five stars each split down the middle, with a click handler on every
+// half. Reading that was fine; pressing it was aiming — the real target is
+// half a star wide, seven pixels at the size a tracklist uses, against the
+// forty-odd a fingertip covers. The halves grew invisible hit areas to cope,
+// which helped and left the underlying problem: picking three and a half
+// stars meant landing on a specific sliver.
 //
-// The glyphs do not grow to fix that, or a tracklist becomes a column of
-// controls. The *hit areas* grow instead: each half reaches well above and
-// below its star and a little into the gap beside it, on `padding` with a
-// matching negative `margin`, so the row keeps the height it had. The stars
-// look the same and the target is four times the size.
+// So the row is one control now and you slide along it, which is the dial the
+// entry's editor got on 2026-09-17 and the thing Miyel asked for here —
+// "the same mechanics as the track editing we did before where you can drag
+// them if you need to. I liked that. I think it was clean."
+//
+// The maths is `valueAt` from that dial, deliberately identical: half steps,
+// and the sliver left of the first half reads as none, so the way to clear a
+// rating is to drag off the left end of it. That replaces the old press-the-
+// same-star-again, which nobody could have guessed at and which a drag makes
+// unnecessary.
+//
+// ── Pointer events, and why ───────────────────────────────────────────────
+// One set of handlers covers a finger, a trackpad and a mouse, and
+// setPointerCapture keeps the drag alive once the finger leaves the row —
+// which it will, because a thumb overshoots. `touch-action: none` because a
+// horizontal drag on a phone is otherwise the page deciding to scroll.
+//
+// A tap still works, and always did: pointerdown sets the value where you
+// pressed, so a press with no movement is a press.
+
+// What the row is worth at this point along it.
+function valueAt(clientX, row) {
+  if (!row) return 0;
+  const box = row.getBoundingClientRect();
+  const along = (clientX - box.left) / box.width;
+  const raw = Math.round(along * 10) / 2;
+  return Math.min(5, Math.max(0, raw));
+}
+
+// `roomy` is the same stars with a thumb-sized row under them: the height
+// comes from padding with a matching negative margin, so the row still
+// occupies what it did and the stars stay the size they were.
 export default function StarRating({ value, onChange, size = 18, roomy = false }) {
+  const row = useRef(null);
+  const [dragging, setDragging] = useState(false);
+  // What a mouse is pointing at, for the preview a pointer can afford and a
+  // finger cannot. Null on a touch screen, where the only preview is the drag
+  // itself.
   const [hover, setHover] = useState(null);
   const display = hover ?? value;
-  // How far each half reaches past its own star. Enough to clear 44px of
-  // height at the sizes this is used at, and half the gap either side.
+
   const reach = roomy ? Math.max(10, Math.round((44 - size) / 2)) : 0;
-  const grip = roomy
-    ? { padding: `${reach}px ${Math.round(reach / 3)}px`, margin: `-${reach}px -${Math.round(reach / 3)}px` }
-    : null;
+
+  const set = clientX => {
+    const next = valueAt(clientX, row.current);
+    if (next !== value) onChange(next);
+  };
+
+  const down = e => {
+    e.preventDefault();
+    // Capture is an improvement, not a requirement: it keeps the drag alive
+    // when the finger leaves the row. It can throw — a pointer that is
+    // already gone by the time this runs has no id to capture — and an
+    // exception here would take the press with it, so a rating that missed
+    // its capture would not register at all.
+    try { e.currentTarget.setPointerCapture?.(e.pointerId); } catch { /* the drag still works */ }
+    setDragging(true);
+    setHover(null);
+    set(e.clientX);
+  };
+  const move = e => {
+    if (dragging) { set(e.clientX); return; }
+    if (e.pointerType === 'mouse') setHover(valueAt(e.clientX, row.current));
+  };
+  const up = () => setDragging(false);
 
   return (
-    <div style={{ display: 'flex', gap: roomy ? 7 : 1 }} onMouseLeave={() => setHover(null)}>
-      {[1,2,3,4,5].map(n => {
+    <div
+      ref={row}
+      role="slider"
+      tabIndex={0}
+      aria-label="Rating"
+      aria-valuemin={0}
+      aria-valuemax={5}
+      aria-valuenow={value}
+      aria-valuetext={value ? `${value} out of 5` : 'Not rated'}
+      onPointerDown={down}
+      onPointerMove={move}
+      onPointerUp={up}
+      onPointerCancel={up}
+      onPointerLeave={() => setHover(null)}
+      onKeyDown={e => {
+        // The keyboard gets the same half steps the finger does.
+        if (e.key === 'ArrowRight') { e.preventDefault(); onChange(Math.min(5, (value || 0) + 0.5)); }
+        if (e.key === 'ArrowLeft') { e.preventDefault(); onChange(Math.max(0, (value || 0) - 0.5)); }
+      }}
+      style={{
+        display: 'flex',
+        gap: roomy ? 7 : 1,
+        touchAction: 'none',
+        cursor: 'pointer',
+        padding: roomy ? `${reach}px ${Math.round(reach / 3)}px` : 0,
+        margin: roomy ? `-${reach}px -${Math.round(reach / 3)}px` : 0,
+        width: 'fit-content',
+        outline: 'none',
+      }}
+    >
+      {[1, 2, 3, 4, 5].map(n => {
         const filled = n <= display;
         const half = !filled && display >= n - 0.5 && display < n;
         return (
-          <span key={n} style={{ position: 'relative', display: 'inline-block', width: size, height: size, cursor: 'pointer', flexShrink: 0 }}>
-            <span style={{ position: 'absolute', inset: 0, width: '50%', zIndex: 10, ...grip }}
-              onMouseEnter={() => setHover(n - 0.5)}
-              onClick={() => onChange(value === n - 0.5 ? 0 : n - 0.5)} />
-            <span style={{ position: 'absolute', left: '50%', top: 0, right: 0, bottom: 0, zIndex: 10, ...grip }}
-              onMouseEnter={() => setHover(n)}
-              onClick={() => onChange(value === n ? 0 : n)} />
+          <span key={n} style={{ position: 'relative', display: 'inline-block', width: size, height: size, flexShrink: 0 }}>
             <span style={{ position: 'absolute', inset: 0, color: '#d0ccc5', fontSize: size, lineHeight: 1, userSelect: 'none' }}>★</span>
             {(filled || half) && (
               <span style={{ position: 'absolute', inset: 0, overflow: 'hidden', width: filled ? size : size / 2, color: '#E8B84B', fontSize: size, lineHeight: 1, userSelect: 'none' }}>★</span>

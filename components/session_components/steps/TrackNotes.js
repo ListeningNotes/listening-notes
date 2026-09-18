@@ -4,7 +4,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Heart, CaretLeft, CaretRight } from '@phosphor-icons/react';
 import { colors } from '../../../library/sitewide_visuals';
-import { TrackLength } from '../../../library/session_timers';
 import StarRating from '../StarRating';
 
 // Step 1 — one track at a time. The name and number at the top, the stars,
@@ -127,10 +126,12 @@ export default function TrackNotes({
 
   return (
     <div className="ses-track" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
-      <div className="ses-track-top">
-        <span className="ses-label">Track {t.number || i + 1} of {count}</span>
-        {t.duration ? <span className="ses-label">{TrackLength(t.duration)}</span> : null}
-      </div>
+      {/* "Track 3 of 10" and the running time were here until 2026-09-18.
+          Both went for the same reason: the strip under them already draws
+          every track with the one you are on lit, so the count is a sentence
+          about a picture you are looking at — and a song's length is a fact
+          about the record rather than anything you are deciding. Miyel:
+          "it's intuitive… it will look cleaner." */}
 
       {/* The strip. Each column is a button: the bar is the rating so far,
           the dot says whether anything has been written, the title says which

@@ -54,8 +54,13 @@ export default function AlbumNotes({
             tracks={list} trackRatings={trackRatings} favorites={trackFavorites}
             height={56} color="var(--ink-soft)" emptyColor="var(--border)" labelColor="var(--ink-faint)"
           />
-          <div className="ses-actions" style={{ justifyContent: 'space-between', marginTop: 8 }}>
-            <span className="ses-label">{rated.length} of {list.length} rated</span>
+          {/* "5 of 5 rated" was on the left of this row until 2026-09-18. The
+              horizon above it already says which tracks have a rating and
+              which do not — that is the whole of what it draws — so the count
+              was the picture written out in words (Miyel: "cleaner look").
+              What is left is the one thing the chart cannot say, which is the
+              number, and it stays hidden until it is asked for. */}
+          <div className="ses-actions" style={{ justifyContent: 'center', marginTop: 8 }}>
             {avg && (
               <button type="button" className="ses-quiet" style={{ borderBottom: 'none' }} onClick={() => setAvgShown(v => !v)}>
                 {avgShown ? `avg ${avg} / 5` : 'reveal average'}
