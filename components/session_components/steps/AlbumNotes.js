@@ -194,7 +194,11 @@ export default function AlbumNotes({
         placeholder="How does this album feel as a whole? Themes, impressions, context…"
         rows={7}
       />
-      <div className="ses-label" style={{ marginTop: 8, textAlign: 'right' }}>{overallNotes.length} chars</div>
+      {/* A character count sat under here until 2026-09-18. Nothing in this
+          software has ever had a limit to count towards, so it was a number
+          that only ever went up — and a number going up beside something you
+          are writing reads as a target whether or not one exists. Miyel:
+          "remove character count on the album screen." */}
 
       {/* "Preview →" sat here until 2026-09-18. The left swipe has reached
           the preview from this screen the whole time, and Miyel's call was
