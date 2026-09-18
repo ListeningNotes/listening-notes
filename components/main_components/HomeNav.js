@@ -69,7 +69,8 @@
 'use client';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
-import { ArrowRight, ArrowsLeftRight } from '@phosphor-icons/react';
+import { useRouter } from 'next/navigation';
+import { ArrowRight, ArrowsLeftRight, X } from '@phosphor-icons/react';
 import { useListeningBeacon } from '../../hooks/useListeningBeacon';
 import { useSpineWidth } from '../../hooks/useSpineWidth';
 import { useTheme } from './Lightswitch';
@@ -80,6 +81,11 @@ import EdgeCaret from './EdgeCaret';
 import Footer from './Footer';
 import About from './About';
 import Dashboard, { heldNow, subscribeHeld } from './Dashboard';
+import AlbumPicker from '../session_components/AlbumPicker';
+// The same two the desk already reaches for, from the same module, so the
+// pane and the desk agree about what "a listen is open" means and say so the
+// same way. The hook itself is not called here.
+import { PENDING_KEY, saidSoAboutTheDesk } from '../../hooks/useListeningSession';
 import Pitch from './Pitch';
 
 // You, then home. Home is the one you land on, which is why it is not index
@@ -311,6 +317,49 @@ export default function HomeNav() {
   // same way, so the two can never disagree about whether a listen is open.
   const inHand = useSyncExternalStore(subscribeHeld, heldNow, () => null);
 
+  // ── Choosing a record, on the pane ────────────────────────────────────────
+  // Floor one becomes the picker without leaving the page (Miyel's beacon
+  // brief, 2026-09-17). The beacon does not go: it shrinks and dims, so the
+  // page never blanks and the small cover is a target for the record that is
+  // about to land in it.
+  //
+  // The state is here and not in the beacon because it is about the whole
+  // floor — the band goes, the crown goes, the row of earlier covers goes,
+  // and the snap between floors stops while the picker is what the pane is.
+  const [choosing, setChoosing] = useState(false);
+  const router = useRouter();
+
+  // Off the picker and into the listen. The record goes in the browser under
+  // the key the session reads once on mount, so the listen opens on it — the
+  // same handover the session's own picker does, and the same event after it,
+  // so the desk's row and the line under the beacon both change in the same
+  // frame rather than on the next poll.
+  //
+  // The cover's flight into the beacon is the second half of this item and is
+  // not here yet: for now the record is chosen and the listen opens.
+  const beginListen = useCallback(record => {
+    try { localStorage.setItem(PENDING_KEY, JSON.stringify(record)); } catch { /* the listen still opens */ }
+    saidSoAboutTheDesk();
+    setChoosing(false);
+    router.push('/session');
+  }, [router]);
+
+  // A saved draft travels whole, so the session can put its notes back without
+  // a second round trip — the shape is the session's own `resume`.
+  const resumeDraft = useCallback(draft => {
+    beginListen({
+      album: draft.album,
+      artist: draft.artist || '',
+      year: draft.year || '',
+      artUrl: draft.album_art || '',
+      collectionId: draft.collection_id || null,
+      genre: draft.genre || '',
+      entryType: draft.entry_type || '',
+      submissionId: draft.submission_id ?? null,
+      draft,
+    });
+  }, [beginListen]);
+
   const [pane, setPane] = useState(HOME);
   // Whether anything is moving right now. The controls sit over the page
   // rather than beside it, so while a wall of covers is going past underneath
@@ -369,7 +418,14 @@ export default function HomeNav() {
     if (!el) return;
     const onScroll = () => {
       const width = el.clientWidth || 1;
-      setPane(Math.round(el.scrollLeft / width));
+      const here = Math.round(el.scrollLeft / width);
+      setPane(here);
+      // Swiping off the beacon is backing out of the picker. It is the same
+      // answer the × gives, and it has to be: the picker is what floor one
+      // *is* while it is open, so leaving the pane leaves the picker, and
+      // coming back to a page still holding a half-typed search would be a
+      // mode nobody chose to still be in.
+      if (here !== HOME) setChoosing(false);
       stir();
     };
     el.addEventListener('scroll', onScroll, { passive: true });
@@ -512,8 +568,23 @@ export default function HomeNav() {
   // stylesheet hides it on the turning pane; on a desk this row is over the
   // journal, which is the beacon, so it simply stays.
   const header = (
-    <div className={'hn-bar' + (down[pane] ? ' hn-bar--scrolled' : '')}>
-      {down[pane] && (
+    <div className={'hn-bar' + (down[pane] || choosing ? ' hn-bar--scrolled' : '')}>
+      {/* The way out of the picker, in the corner the up-caret holds the rest
+          of the time — the two never want the row at once, because while the
+          picker is open there is no pane under it to go back to the top of.
+          The crown goes with it and the small mark takes over, which is what
+          gives the grid its screen (Miyel's mockup). */}
+      {choosing ? (
+        <button
+          type="button"
+          className="hn-totop hn-shut"
+          onClick={() => setChoosing(false)}
+          aria-label="Stop choosing"
+          title="Stop choosing"
+        >
+          <X size={20} weight="regular" aria-hidden="true" />
+        </button>
+      ) : down[pane] && (
         <button
           type="button"
           className="hn-totop"
@@ -696,6 +767,7 @@ export default function HomeNav() {
         'hn hn--face-' + face
         + (turning ? ' hn--turning' : '')
         + (spine.dragging ? ' hn--dragging' : '')
+        + (choosing ? ' hn--choosing' : '')
       }
       data-pane={pane}
     >
@@ -807,17 +879,34 @@ export default function HomeNav() {
                       turns it into the way floor one becomes the picker. A
                       visitor has no listen to start, and the writing routes
                       check the wristband for themselves whatever is drawn. */}
-                  <ListeningBeacon>
-                    {authed && (
-                      <Link href="/session" className="ln-onward" title={inHand ? `Back to ${inHand.album}` : undefined}>
-                        {inHand ? 'Back to the listen' : 'Start a listen'}
+                  <ListeningBeacon saying={choosing ? 'Choosing a record' : ''}>
+                    {authed && !choosing && (inHand ? (
+                      /* A record already in hand: this is the way back to it,
+                         and the way back is the session's own route. There is
+                         nothing to choose. */
+                      <Link href="/session" className="ln-onward" title={`Back to ${inHand.album}`}>
+                        Back to the listen
                         <ArrowRight size={16} weight="regular" aria-hidden="true" />
                       </Link>
-                    )}
+                    ) : (
+                      /* And with nothing in hand it opens the picker here,
+                         rather than going anywhere. A button and not a link,
+                         because it does not navigate — which is the whole
+                         idea of this brief. */
+                      <button type="button" className="ln-onward" onClick={() => setChoosing(true)}>
+                        Start a listen
+                        <ArrowRight size={16} weight="regular" aria-hidden="true" />
+                      </button>
+                    ))}
                   </ListeningBeacon>
                 </div>
               </div>
-              {recentRow}
+              {/* What came before, or what comes next. The row of earlier
+                  covers is about the journal's past and has nothing to say
+                  while a record is being chosen; the picker takes its room. */}
+              {choosing
+                ? <AlbumPicker inline onPick={beginListen} onResume={resumeDraft} />
+                : recentRow}
             </div>
           </div>
           {/* Floor two — the wall, scrolling inside a box of its own, so

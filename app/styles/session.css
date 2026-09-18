@@ -143,6 +143,50 @@
   outline: none; transition: border-color 0.15s;
 }
 .ses-input::placeholder { color: var(--ink-faint); }
+
+/* ── The field, inline on the beacon pane ──────────────────────────────────
+   A hairline and a magnifier, no border but the underline (Miyel's beacon
+   brief, 2026-09-17). A box round a search field is right on a page that is
+   *only* the picker, where the box is what says "this is the thing to use".
+   On the beacon pane the whole floor has just become the picker and said it
+   already, and a panel there would be a second object on a screen whose one
+   object is a cover.
+
+   The label is the row, so the magnifier and the rule are part of the tap
+   target — which is what a field with no box round it otherwise loses. */
+.ses-search { display: block; }
+.ses-search--hair {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 4px 0 10px;
+  border-bottom: 1px solid var(--border);
+  color: var(--ink-faint);
+  transition: border-color 0.15s, color 0.15s;
+}
+.ses-search--hair:focus-within { border-bottom-color: var(--ink-faint); color: var(--ink-soft); }
+.ses-search--hair .ses-input {
+  background: none;
+  border: 0;
+  border-radius: 0;
+  padding: 0;
+  /* 16px is the floor: Safari zooms the page for any field under it, and a
+     page that zooms when you tap the search box has moved the covers you
+     were about to tap. */
+  font-size: max(16px, 1rem);
+}
+.ses-search--hair .ses-input:focus { border: 0; }
+
+/* Three covers to a row, the mockup's count, and said outright rather than
+   left to auto-fill. The session's own picker fills to a 96px minimum, which
+   on the pane's 34px gutters works out at two — 3 × 96 plus two gaps is 316
+   against 307 of room, so it drops a column by nine pixels. Three is the
+   right number here: the grid is under a cover rather than filling a page,
+   and a row of two reads as a list of big things instead of a shelf. */
+.ses-picker--inline .ses-grid {
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px 10px;
+}
 .ses-input:focus { border-color: var(--ink-faint); }
 .ses-textarea {
   display: block; width: 100%; box-sizing: border-box;
@@ -318,6 +362,21 @@
   padding: calc(104px + var(--safe-top)) 20px calc(48px + env(safe-area-inset-bottom, 0px));
 }
 .lay--scrolls .ses-picker { padding-top: 18px; }
+/* Inline, the picker is not a page and has no fixed header to clear: the
+   pane supplies the screen, the crown has stood down and the small mark is
+   in the bar. All that is left for this to do is start where the beacon
+   above it stopped, at the pane's own gutter. */
+.ses-picker--inline {
+  max-width: none;
+  /* The screen it sits in is a centred flex column, which sizes its children
+     to their contents rather than stretching them — the picker came out two
+     covers wide on a phone that had room for three. It has to claim the
+     width, and the gutter is already the screen's, so this adds none of its
+     own. */
+  align-self: stretch;
+  width: 100%;
+  padding: 10px 0 0;
+}
 .ses-under { display: flex; align-items: baseline; gap: 14px; min-height: 1.2em; margin-top: 10px; }
 .ses-under .ses-quiet { margin-left: auto; }
 .ses-grid {

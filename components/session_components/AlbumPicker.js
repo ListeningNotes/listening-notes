@@ -32,6 +32,7 @@
 
 'use client';
 import { useEffect, useRef, useState } from 'react';
+import { MagnifyingGlass } from '@phosphor-icons/react';
 import SiteNav from '../main_components/SiteNav';
 import { searchAlbums } from '../../library/music_data_api';
 import { SESSION_STEPS } from '../../hooks/useListeningSession';
@@ -52,7 +53,20 @@ function sinceLabel(iso) {
   return days === 1 ? 'yesterday' : `${days}d ago`;
 }
 
-export default function AlbumPicker({ onPick, onResume }) {
+// `inline` is the picker inside something that is already a screen — the
+// beacon pane, where choosing a record happens on the page you are already on
+// rather than on a page of its own (Miyel's beacon brief, 2026-09-17). It
+// changes three things and nothing else: no nav row, because the cross
+// already has one; the wrapper loses the padding it needed to clear a fixed
+// header; and the field is a hairline with a magnifier rather than a box.
+//
+// It is a shape and not a fork. The search, the debounce, the stale-answer
+// guard, the grid, the by-hand fallback and the drafts are the same code
+// running in a different box — a second search on this site would be two
+// places for one bug to live, and the brief said so outright.
+//
+// NAME: `inline` is a placeholder for Miyel (AGENTS.md).
+export default function AlbumPicker({ onPick, onResume, inline = false }) {
   const [typed, setTyped]       = useState('');
   const [results, setResults]   = useState([]);
   const [looking, setLooking]   = useState(false);
@@ -141,12 +155,15 @@ export default function AlbumPicker({ onPick, onResume }) {
   const nothing = asked && !looking && results.length === 0 && typed.trim();
 
   return (
-    <div className="ses-picker">
+    <div className={'ses-picker' + (inline ? ' ses-picker--inline' : '')}>
       {/* The same row every other page carries — the mark in the middle, the
           day-and-night switch top right. It goes home; there is no dashboard
           door here, because the desk is where this opened from and the way
-          back to it is the layer's own swipe. */}
-      <SiteNav />
+          back to it is the layer's own swipe.
+
+          Not inline: the cross has its own bar and its own mark, and a second
+          logo under the first is the one thing a pane must not do. */}
+      {!inline && <SiteNav />}
 
       {byHand ? (
         <div className="ses-hand">
@@ -171,14 +188,21 @@ export default function AlbumPicker({ onPick, onResume }) {
         </div>
       ) : (
         <>
-          <input
-            className="ses-input"
-            value={typed}
-            onChange={e => type(e.target.value)}
-            placeholder="Search an artist or an album"
-            autoComplete="off"
-            autoFocus
-          />
+          {/* A hairline and a magnifier when it is inline — no border but the
+              underline (the mockup). The glyph is inside the label so the
+              whole line is the tap target, which is what a rule with no box
+              round it otherwise loses. */}
+          <label className={'ses-search' + (inline ? ' ses-search--hair' : '')}>
+            {inline && <MagnifyingGlass size={18} weight="regular" aria-hidden="true" />}
+            <input
+              className="ses-input"
+              value={typed}
+              onChange={e => type(e.target.value)}
+              placeholder="Search an artist or an album"
+              autoComplete="off"
+              autoFocus
+            />
+          </label>
 
           <div className="ses-under">
             {looking && <span className="ses-label">Looking…</span>}
@@ -187,7 +211,7 @@ export default function AlbumPicker({ onPick, onResume }) {
                 back empty: somebody who already knows the record is not on
                 Apple Music should not have to prove it first. */}
             <button type="button" className="ses-quiet" onClick={() => setByHand(true)}>
-              Can’t find it? Type it in →
+              Type it in yourself →
             </button>
           </div>
 
@@ -212,7 +236,7 @@ export default function AlbumPicker({ onPick, onResume }) {
 
           {drafts.length > 0 && !typed.trim() && (
             <div className="ses-drafts">
-              <span className="ses-label">Drafts</span>
+              <span className="ses-label">Unfinished</span>
               {drafts.map(draft => {
                 const at = Math.min(draft.step || 0, SESSION_STEPS.length - 1);
                 return (

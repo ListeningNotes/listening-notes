@@ -55,7 +55,17 @@ const CAPTION = {
 // the last line of the record's own block rather than as furniture parked
 // underneath it. Drawn on the empty beacon too — a copy on its first
 // afternoon is exactly the one that needs a way to start.
-export default function ListeningBeacon({ children = null }) {
+// `saying` replaces the caption and stands the record down: while a record is
+// being chosen the beacon is not reporting anything, it is a target waiting
+// for a cover to land in it (Miyel's beacon brief, 2026-09-17). The art stays
+// on screen, shrunk and dimmed by the pane — the page never goes blank, and
+// the small cover is the thing the picked record flies to.
+//
+// It is passed in rather than worked out here for the same reason `children`
+// is: what the pane is doing is the pane's business.
+//
+// NAME: `saying` is a placeholder for Miyel (AGENTS.md).
+export default function ListeningBeacon({ children = null, saying = '' }) {
   const { state, album, artist, art, track, isLive } = useListeningBeacon();
   // A song wherever there is one — including after a listen has been shut,
   // which keeps the track that was open up rather than dropping back to the
@@ -82,7 +92,7 @@ export default function ListeningBeacon({ children = null }) {
   if (!title) {
     return (
       <div className="beacon-stage beacon-stage--quiet">
-        <p className="beacon-quiet">Nothing logged yet.</p>
+        <p className="beacon-quiet">{saying || 'Nothing logged yet.'}</p>
         {children}
       </div>
     );
@@ -100,7 +110,7 @@ export default function ListeningBeacon({ children = null }) {
               this would be writing on an empty square, and over lit art it
               would be a scrim across the one cover on this site that is
               meant to be in full colour. */}
-          {!isLive && artUrl && (
+          {!saying && !isLive && artUrl && (
             <div className="beacon-idle-overlay"><span>{CAPTION[state]}</span></div>
           )}
         </div>
@@ -109,7 +119,9 @@ export default function ListeningBeacon({ children = null }) {
               on it. See the note at the top: greyed art carries its own
               caption and this line would be the second copy of it. Never
               green; the dot beside it is the one thing that lights. */}
-          {(isLive || !artUrl) && <div className="beacon-status">{CAPTION[state]}</div>}
+          {saying
+            ? <div className="beacon-status">{saying}</div>
+            : (isLive || !artUrl) && <div className="beacon-status">{CAPTION[state]}</div>}
           {/* Two lines, not a marquee. The marquee is the right answer in the
               nav row, where the slot is a couple of hundred pixels wide and
               there is nowhere for a long title to go — but here the title has
@@ -117,8 +129,11 @@ export default function ListeningBeacon({ children = null }) {
               name is. A title that scrolls has to be waited for; one that
               wraps is read. Past two lines it still ellipsises, because a
               four-line song title would push the album art off the screen. */}
-          <div className="beacon-track beacon-track--wrap">{title}</div>
-          {artist && <div className="beacon-artist">{artist}</div>}
+          {/* The record steps aside while something else is being said. The
+              cover is still there, which is the whole point; what goes is the
+              name of a record you are in the middle of replacing. */}
+          {!saying && <div className="beacon-track beacon-track--wrap">{title}</div>}
+          {!saying && artist && <div className="beacon-artist">{artist}</div>}
           {children}
         </div>
       </div>
