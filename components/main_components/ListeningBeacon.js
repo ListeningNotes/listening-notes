@@ -68,7 +68,13 @@ const CAPTION = {
 //
 // It is passed in rather than worked out here for the same reason `children`
 // is: what the pane is doing is the pane's business.
-export default function ListeningBeacon({ children = null, choosing = false }) {
+// `emptied` takes the picture out of the slot and leaves the slot. It is the
+// middle of the drop: the cover has left the beacon and is on its way down
+// into the journal, and for those few hundred milliseconds the beacon is
+// holding a space rather than showing a record (Miyel's beacon brief, item
+// 4). Everything else stays where it is, so nothing on the screen moves while
+// one thing falls across it.
+export default function ListeningBeacon({ children = null, choosing = false, emptied = false }) {
   const { state, album, artist, art, track, isLive } = useListeningBeacon();
   // A song wherever there is one — including after a listen has been shut,
   // which keeps the track that was open up rather than dropping back to the
@@ -105,15 +111,17 @@ export default function ListeningBeacon({ children = null, choosing = false }) {
     <div className="beacon-stage">
       <div className="beacon-card beacon-card--main">
         <div className={'beacon-art-wrap' + (isLive ? ' beacon-art-wrap--live' : '')}>
-          {artUrl
-            ? <img src={artUrl} alt={title} className={'beacon-art' + (!isLive ? ' beacon-art--idle' : '')} onError={() => setFailed(artUrl)} />
-            : <div className="beacon-art-placeholder">♪</div>
+          {emptied
+            ? <div className="beacon-art-empty" aria-hidden="true" />
+            : artUrl
+              ? <img src={artUrl} alt={title} className={'beacon-art' + (!isLive ? ' beacon-art--idle' : '')} onError={() => setFailed(artUrl)} />
+              : <div className="beacon-art-placeholder">♪</div>
           }
           {/* Only on art, and only while it is grey. Over the ♪ placeholder
               this would be writing on an empty square, and over lit art it
               would be a scrim across the one cover on this site that is
               meant to be in full colour. */}
-          {!choosing && !isLive && artUrl && (
+          {!choosing && !emptied && !isLive && artUrl && (
             <div className="beacon-idle-overlay"><span>{CAPTION[state]}</span></div>
           )}
         </div>
@@ -122,7 +130,7 @@ export default function ListeningBeacon({ children = null, choosing = false }) {
               on it. See the note at the top: greyed art carries its own
               caption and this line would be the second copy of it. Never
               green; the dot beside it is the one thing that lights. */}
-          {!choosing && (isLive || !artUrl) && <div className="beacon-status">{CAPTION[state]}</div>}
+          {!choosing && !emptied && (isLive || !artUrl) && <div className="beacon-status">{CAPTION[state]}</div>}
           {/* Two lines, not a marquee. The marquee is the right answer in the
               nav row, where the slot is a couple of hundred pixels wide and
               there is nowhere for a long title to go — but here the title has

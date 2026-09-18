@@ -159,16 +159,21 @@ async function poll() {
 // `before` is carried across rather than rebuilt — it is what came before
 // this record, and this record arriving does not change that list. The server
 // will put the departing record at its head on the next poll.
-export function announce({ album, artist, art }) {
+// `state` is 'logging' while a record is in hand and 'logged' once the listen
+// has become an entry — the two things this beacon has ever said. The second
+// is the end of the drop (HomeNav): the record falls into the journal and the
+// slot refills with it, captioned Last logged, without waiting to be told
+// something it already knows.
+export function announce({ album, artist, art }, state = 'logging') {
   publish({
-    state: 'logging',
+    state,
     album: album || '',
     artist: artist || '',
     art: art || '',
     // No song yet: one has not been opened. The beacon names the record
     // instead, which is what the route does for the same case.
     track: '',
-    isLive: true,
+    isLive: state === 'logging',
     before: beacon.snapshot.before || [],
   });
 }

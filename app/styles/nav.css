@@ -862,6 +862,20 @@
    padding is the only padding. */
 
 /* Restated from the old .hp-mobile-screens block (since deleted) — same values, new scope. */
+/* The slot with nothing in it, for the few hundred milliseconds between the
+   cover leaving the beacon and the record it became arriving back in it. The
+   box keeps its size and its corner so nothing on the screen moves while one
+   thing falls across it; what it loses is the picture. Faint rather than
+   blank — a hole the shape of a record reads as somewhere a record goes,
+   where a blank one reads as a cover that failed to load. */
+.beacon-art-empty {
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--panel);
+  opacity: 0.5;
+}
+
 /* ── The cover in the air ──────────────────────────────────────────────────
    Fixed to the window and over everything: it is travelling between a tile in
    the picker and the beacon's slot, and neither of those boxes can hold it.

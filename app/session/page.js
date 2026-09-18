@@ -39,7 +39,7 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import { useBookplate } from '../../components/main_components/Bookplate';
-import { useListeningSession, SESSION_STEPS, PENDING_KEY, saidSoAboutTheDesk } from '../../hooks/useListeningSession';
+import { useListeningSession, SESSION_STEPS, PENDING_KEY, saidSoAboutTheDesk, saidSoAboutTheEntry } from '../../hooks/useListeningSession';
 import AlbumPicker from '../../components/session_components/AlbumPicker';
 import SessionHeader from '../../components/session_components/SessionHeader';
 import AskSheet from '../../components/session_components/AskSheet';
@@ -155,6 +155,30 @@ export default function SessionPage() {
     if (!s.saved) return undefined;
     try { localStorage.removeItem(PENDING_KEY); } catch { /* nothing to clear */ }
     saidSoAboutTheDesk();
+
+    // ── Over the cross, the ending belongs to the cross ────────────────────
+    // A listen opened from the beacon is a layer over the home pane, and the
+    // pane never unmounted. So the record does not end here: it is handed
+    // back, and the cross closes this layer, drops the cover into the journal
+    // underneath and puts the record on the beacon captioned Last logged
+    // (Miyel's beacon brief, item 4). Read it → and Log another are gone with
+    // that, because the journal is where you have just landed and the picker
+    // is one press of the beacon away.
+    //
+    // Asked of the page rather than passed in: the cross is either underneath
+    // us or it is not, and that is exactly the question. Opened cold from a
+    // bookmark there is no cross, no journal to fall into, and this keeps the
+    // ending it already had — the tick, then the picker.
+    if (document.querySelector('.hn')) {
+      saidSoAboutTheEntry({
+        slug: s.savedEntry?.slug || '',
+        album: s.albumInput,
+        artist: s.artistName,
+        art: s.albumArt,
+      });
+      return undefined;
+    }
+
     const t = setTimeout(() => { leave(); }, 1100);
     return () => clearTimeout(t);
   // leave is remade every render and listing it would restart the beat on
