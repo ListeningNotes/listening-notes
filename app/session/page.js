@@ -303,8 +303,23 @@ export default function SessionPage() {
     if (dx < 0) forward(); else goToStep(step - 1);
   }
 
-  if (checking) return <div style={{ minHeight: '100dvh', background: 'var(--bg)' }} />;
-  if (!authed) { if (typeof window !== 'undefined') window.location.replace('/login'); return null; }
+  // ── Nothing blank where a record is already in hand ─────────────────────
+  // This returned an empty box for the whole of the wristband check — a few
+  // hundred milliseconds — which is invisible when you arrive at an address
+  // and ruinous when you arrive by pressing a record. The cover is in the air
+  // at that moment, flying toward the header this screen has not drawn yet:
+  // it looks for `.ses-cover`, finds a blank box, and is set down where it
+  // is. Which is precisely what Miyel kept seeing and I kept failing to
+  // explain — "the album art you choose goes to the placeholder, good, then
+  // the session screen just opens from the bottom and the art is at the mini
+  // beacon from that." The second half of the move was never running.
+  //
+  // So a listen that already has a record on the desk draws while the check
+  // happens. There is nothing to hide: the record came out of this browser's
+  // own storage, every route it will ask for checks the wristband itself, and
+  // the redirect below still fires the moment the answer says no.
+  if (checking && !pending?.album) return <div style={{ minHeight: '100dvh', background: 'var(--bg)' }} />;
+  if (!checking && !authed) { if (typeof window !== 'undefined') window.location.replace('/login'); return null; }
 
   const open = !!pending?.album;
 

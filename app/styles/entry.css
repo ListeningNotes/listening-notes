@@ -143,12 +143,25 @@
 /* A form rises from the foot of the screen, so a pull down to close is the
    same movement in reverse. */
 .lay--rises { animation: layRise 0.42s cubic-bezier(0.22, 0.61, 0.36, 1); }
-/* The listen rises more slowly than a form does, because something is
-   travelling with it: the record's cover is crossing most of the screen into
-   the header of this very sheet, and the two have to read as one move. 0.66s
-   — and RISE_MS in HomeNav.js is this number, because the picker folds away
-   behind the sheet on the same clock. */
-.lay--rises.lay--over-journal { animation-duration: 0.66s; }
+/* ── The listen does not rise. The beacon becomes it. ──────────────────────
+   Miyel, 2026-09-18, after everything else had been measured straight: "I
+   don't want it to feel like the session is just on top of the beacon — it's
+   like the beacon becomes the session."
+   A sheet that slides up is a second thing arriving over the first, and no
+   amount of timing makes it read as the first thing changing. So the listen
+   resolves in place instead, over the pane it came from, while the record's
+   own cover travels from the placeholder into the header. Both surfaces are
+   the page's colour, so what you see cross-fading is their contents — and the
+   one thing that never fades is the record, which is what makes it the same
+   screen becoming something else rather than two screens swapping.
+   The way out is untouched: it still sinks, which is what the pull down
+   expects. RISE_MS in HomeNav.js is this number — the picker folds away
+   behind it on the same clock. */
+.lay--rises.lay--over-journal {
+  animation-name: layFade;
+  animation-duration: 0.62s;
+  animation-timing-function: ease-out;
+}
 @keyframes layRise { from { transform: translateY(100%); } to { transform: none; } }
 
 /* ── Browsing sideways ──

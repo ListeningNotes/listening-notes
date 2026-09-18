@@ -164,9 +164,10 @@ const TURN_MS = 400;
 // two objects however well they line up.
 const TO_THE_CARD_MS = 700;    // across the screen, into the empty card
 const TO_THE_HEADER_MS = 560;  // up to the header, shrinking, session rising
-// How long the sheet takes to rise. It has to agree with .lay--over-journal's
-// own duration in entry.css — the picker folds away behind it on this clock.
-const RISE_MS = 660;
+// How long the session takes to resolve over the pane. It has to agree with
+// .lay--over-journal's own duration in entry.css — the picker folds away
+// behind it on this clock.
+const RISE_MS = 620;
 
 // ── And the way back down ─────────────────────────────────────────────────
 // A listen becomes an entry, the layer closes, and the record falls out of
@@ -510,14 +511,23 @@ export default function HomeNav() {
         // ── Leg two: up to the header, with the session coming under it ──
         // The push first, so the sheet is rising while the record travels.
         router.push('/session');
-        flightTimers.current.push(requestAnimationFrame(() => {
-          flightTimers.current.push(requestAnimationFrame(() => {
-            // The mini beacon in the session's own header, measured where it
-            // will be *at rest*: the sheet is still on its way up, so its own
-            // top is what it has left to travel and taking that off gives the
-            // box this record is actually aiming at.
-            const head = document.querySelector('.ses-cover');
-            if (!head) { setLanding(null); return; }
+        // Waited for, not assumed. Two frames was the guess and it was wrong:
+        // the session spends a few hundred milliseconds checking the
+        // wristband, and until 2026-09-18 it drew nothing at all while it
+        // did — so the header this record is flying to did not exist yet,
+        // the flight gave up, and the record was set down at the placeholder
+        // while the session rose with its cover already in place. The page
+        // draws the header on its first frame now, so this normally finds it
+        // straight away; the wait is what makes that a fact rather than a
+        // hope, on a cold morning or a slow phone.
+        const lookFor = (tries = 0) => {
+          const head = document.querySelector('.ses-cover');
+          if (!head && tries < 40) {
+            flightTimers.current.push(requestAnimationFrame(() => lookFor(tries + 1)));
+            return;
+          }
+          if (!head) { setLanding(null); return; }
+          {
             const box = head.getBoundingClientRect();
             const sheet = document.querySelector('.lay');
             const lift = sheet ? Math.max(0, sheet.getBoundingClientRect().top) : 0;
@@ -538,8 +548,9 @@ export default function HomeNav() {
             // copy it has just finished flying — so letting go of the flown
             // one is a frame with nothing in it to notice.
             flightTimers.current.push(setTimeout(() => setLanding(null), TO_THE_HEADER_MS));
-          }));
-        }));
+          }
+        };
+        flightTimers.current.push(requestAnimationFrame(() => lookFor()));
       }, TO_THE_CARD_MS));
     }));
   }, [landing, openSession, router]);
@@ -655,7 +666,9 @@ export default function HomeNav() {
 
   // A saved draft travels whole, so the session can put its notes back without
   // a second round trip — the shape is the session's own `resume`.
-  const resumeDraft = useCallback(draft => {
+  // `from` is the box of the cover on the pressed row, so a resumed listen
+  // travels exactly as a new one does.
+  const resumeDraft = useCallback((draft, from = null) => {
     beginListen({
       album: draft.album,
       artist: draft.artist || '',
@@ -666,7 +679,7 @@ export default function HomeNav() {
       entryType: draft.entry_type || '',
       submissionId: draft.submission_id ?? null,
       draft,
-    });
+    }, from);
   }, [beginListen]);
 
   const [pane, setPane] = useState(HOME);
