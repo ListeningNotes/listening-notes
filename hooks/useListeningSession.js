@@ -520,13 +520,33 @@ export function useListeningSession({ step }) {
       // Tracks are saved as data, and the two text shapes are derived from that
       // same list — so the stars in the prose and the bars in the horizon can't
       // disagree the way they used to.
+      //
+      // ── The whole record, not the part you wrote on ────────────────────
+      // There was a `.filter(t => t.rating > 0 || t.note || t.favorite)` on
+      // the end of this until 2026-09-18, and it is what made Miyel's blank
+      // In Rainbows an entry with no tracklist at all: nothing was rated, so
+      // every track was dropped, so the record it was about had no contents.
+      // "Can we save the tracklist even when nothing is rated? It will also
+      // help with editing — right now when hitting edit you can go to the
+      // bottom screen and it's just fully blank."
+      //
+      // The filter was answering a question about *drawing* in the place that
+      // decides what is *kept*, which is the wrong place for it twice over.
+      // It threw away the record's own contents, which nothing else has,
+      // rather than an opinion, which the reader can see is absent. And it
+      // quietly lied about Masterpiece: three tracks rated five out of
+      // sixteen used to be every track five stars, because the other thirteen
+      // were not in the list to disagree.
+      //
+      // The reading view does the filtering now, where it belongs and where
+      // being wrong costs a row rather than a record (FullPostPage).
       const structuredTracks = (tracks || []).map((t, i) => ({
         number: t.number || i + 1,
         title: t.title,
         rating: trackRatings[i] || 0,
         favorite: !!trackFavorites[i],
         note: (trackNotes[i] || '').trim(),
-      })).filter(t => t.rating > 0 || t.note || t.favorite);
+      }));
       const derived = serializeTracks(structuredTracks);
 
       const res = await fetch('/api/entries', {

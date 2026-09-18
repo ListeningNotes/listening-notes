@@ -11,6 +11,13 @@ export function parseRating(rating) {
 // buildHorizon and parseHorizon are inverses — keep the block set in step.
 export function buildHorizon(tracks, trackRatings) {
   if (!tracks?.length) return '';
+  // A record nobody rated has no horizon. It could draw one — every track as
+  // the lowest block — but a flat row of stubs is a chart saying every song
+  // was worth nothing rather than a chart saying nothing was said. This only
+  // began to matter on 2026-09-18, when the entry save stopped dropping
+  // unrated tracks: before that a list with no ratings was an empty list and
+  // never reached here.
+  if (!tracks.some((_, i) => (trackRatings?.[i] || 0) > 0)) return '';
   const bars = ['▁','▂','▃','▄','▅','▆','▇','█'];
   return tracks.map((_, i) => {
     const r = trackRatings?.[i] || 0;
