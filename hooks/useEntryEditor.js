@@ -82,7 +82,18 @@ function draftFrom(entry) {
   };
 }
 
-export function useEntryEditor(entry) {
+// `layered` is whether this entry is open as a sheet over the journal rather
+// than as a page of its own. It only matters to `remove` — see the note
+// there — and it defaults to the standalone case, which is the safe one.
+// An entry has just been deleted, and the wall is still on screen underneath.
+// Miyel named this on 2026-09-18: DeleteEntry. It carries the slug, which is
+// all the journal needs — the tiles are keyed by it and each one writes it on
+// itself as data-tile-slug. Sits beside SAVED_EVENT in useListeningSession,
+// which is the same idea in the other direction: a listen telling the wall to
+// make room rather than to close a gap.
+export const DELETE_ENTRY = 'ln-delete-entry';
+
+export function useEntryEditor(entry, { layered = false } = {}) {
   const router = useRouter();
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -146,13 +157,38 @@ export function useEntryEditor(entry) {
       const res = await fetch(`/api/entries/${entry.slug}`, { method: 'DELETE' });
       const data = await res.json();
       if (!res.ok || data.error) throw new Error(data.error || 'That didn’t delete. Try again.');
-      // Home rather than back: back is this entry, and it is gone.
-      router.push('/');
+
+      // ── Leaving, and why it is not a push ───────────────────────────────
+      // This was always `router.push('/')`, on the reasoning that back is this
+      // entry and this entry is gone. True on a page of its own. Over the
+      // journal it froze the app — Miyel, 2026-09-18, "deleting froze my app,
+      // I had to reset."
+      //
+      // The layer is a parallel route (app/@layer) and it is open because the
+      // address says so. A soft push to `/` does not match anything in that
+      // slot, and a slot with nothing to match holds the last thing it drew —
+      // so the sheet stayed up over the homepage with a deleted entry inside
+      // it, and the document stayed `ln-locked`, which is the class the layer
+      // puts on the root to stop the journal scrolling behind it. Locked with
+      // nothing left to unlock it: the effect that removes the class runs when
+      // the layer unmounts, and it never unmounted.
+      //
+      // So a layer closes the way a layer closes, which is back — and back is
+      // the journal, which is where somebody who has just deleted a record
+      // wants to be anyway.
+      // The wall hears it before the sheet is off, and waits out the sheet
+      // itself — see closeTheGap in Journal.js. Announced rather than left to
+      // a refetch, because a refetch would make the tile blink out of
+      // existence and the point is to watch the others close over it.
+      window.dispatchEvent(new CustomEvent(DELETE_ENTRY, { detail: { slug: entry.slug } }));
+
+      if (layered) router.back();
+      else router.push('/');
     } catch (err) {
       setTrouble(err.message);
       setRemoving(false);
     }
-  }, [entry.slug, router]);
+  }, [entry.slug, router, layered]);
 
   const set = useCallback((key, value) => {
     setDraft(d => ({ ...d, [key]: value }));

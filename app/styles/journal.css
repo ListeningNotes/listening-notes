@@ -23,6 +23,17 @@
   color: inherit;
   -webkit-tap-highlight-color: transparent;
 }
+/* A record on its way off the wall: it shrinks into itself and goes, rather
+   than being found missing on the next visit. The tiles after it close the gap
+   once this has finished — that part is measured in Journal.js, because a grid
+   reflows instantly and no stylesheet can animate it. */
+.ft--going {
+  transform: scale(0.82);
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 320ms cubic-bezier(0.22, 0.61, 0.36, 1), opacity 320ms ease-out;
+}
+@media (prefers-reduced-motion: reduce) { .ft--going { transition: none; } }
 .ft-inner { position: absolute; inset: 0; }
 
 .ft-face {
