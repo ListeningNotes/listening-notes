@@ -253,12 +253,32 @@ export default function AlbumPicker({ onPick, onResume, inline = false }) {
 
           {drafts.length > 0 && !typed.trim() && (
             <div className="ses-drafts">
-              <span className="ses-label">Unfinished</span>
+              {/* "Drafts", Miyel 2026-09-18. Unfinished described them
+                  accurately and named them as a state of failure; a draft is
+                  a thing you have, and it is the word the rest of the
+                  software already uses — the table, the route, the button
+                  that makes one. */}
+              <span className="ses-label">Drafts</span>
               {drafts.map(draft => {
                 const at = Math.min(draft.step || 0, SESSION_STEPS.length - 1);
                 return (
                   <div key={draft.id} className="ses-draft">
-                    <button type="button" className="ses-draft-open" onClick={() => onResume(draft)}>
+                    {/* The cover's own box travels with it, exactly as a
+                        search result's does in `take` above. It did not until
+                        2026-09-18, so resuming a draft had no `from` and
+                        `beginListen` took its no-flight branch: the session
+                        simply appeared, with the record already in the header
+                        and nothing having moved. Miyel: "choosing from draft
+                        OR starting new, it's not working." Half of that was
+                        this, and it was one missing argument. */}
+                    <button
+                      type="button"
+                      className="ses-draft-open"
+                      onClick={e => {
+                        const img = e.currentTarget.querySelector('img');
+                        onResume(draft, img ? img.getBoundingClientRect() : null);
+                      }}
+                    >
                       {draft.album_art
                         ? <img src={draft.album_art} alt="" className="ses-draft-art" />
                         : <span className="ses-draft-art" aria-hidden="true" />}
