@@ -460,12 +460,7 @@
    the record you logged last night sitting in the row while you choose
    tonight's, and it should not be claiming to be tonight's. */
 .ses-cover--idle img { filter: grayscale(80%) brightness(0.7); }
-/* The words on the idle cover, at this size. Four pixels: far too small to
-   read, which is what Miyel asked for — "it's ok if it's too small to see,
-   this is just to show it is a replicated beacon." The cover says the same
-   thing the card's cover says, in the same place, and at 44px what carries is
-   that something is written there at all. */
-.ses-cover .beacon-idle-overlay { font-size: 4px; letter-spacing: 0.1em; }
+
 .ses-cover-none { font-size: 18px; line-height: 1; }
 
 /* ── The × that ends the listen ────────────────────────────────────────────
@@ -597,37 +592,41 @@
   text-align: center;
   gap: 3px;
 }
-/* ── The live line ────────────────────────────────────────────────────────
-   NOW LOGGING with a green dot stood at the top of the beacon until
-   2026-09-18, and it was the tallest third of a beacon saying the one thing
-   you could already see: the cover is in full colour, and an idle one is grey.
-   Miyel took the words off both sizes on the same look — "the green dot and
-   the coloured album is enough of an indication" — which left the session
-   needing its own signal, since a session has no mark to light.
+/* ── The live row ─────────────────────────────────────────────────────────
+   A green dot and one word, centred over the record. Drawn only where a listen
+   is actually open: always in the session's header, and in the nav bar once a
+   record has been chosen. An idle beacon shows nothing here — the greyed cover
+   is what says the listen is over, and it says it before you have read
+   anything.
 
-   The header's own hairline is it. One green line across the top of the
-   screen, breathing on the mark's dot's clock and off its keyframes, so the
-   two lit things on this site share a pulse. Her list was "a green line
-   somewhere that moves, or the header turns soft green, anything"; a line that
-   travels is the livelier answer and the wrong one to put at the top of a page
-   somebody is writing on — a thing crossing the corner of the eye every few
-   seconds is a thing you keep looking up at. This one stays where it is.
+   The large beacon has no row like this. It has the mark beside it and the
+   mark's dot lights, so a second dot would be the same fact twice; the small
+   one is on its own and carries its own.
 
-   On .ses-head rather than inside the beacon because it is about the session,
-   not the record: the record is the same object here as it is in the bar and
-   on the pane, and only one of those three is a listen in progress. */
+   This was a green hairline under the header for an hour — the header itself
+   going live rather than the beacon in it — and Miyel's read was the whole
+   argument against it: "I don't like the line, it's not instantly
+   recognisable." A line at the edge of a band is a border until you are told
+   otherwise. A green dot on this site is one thing only.
+
+   Green means live everywhere here, and it breathes, so the two lit things on
+   the site share a pulse. */
+.ses-head-live {
+  display: flex; align-items: center; gap: 7px;
+  font-family: var(--font-label); font-size: 9.5px; letter-spacing: 0.16em;
+  text-transform: uppercase; color: var(--ink-soft);
+}
+.ses-head-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--live);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--live) 22%, transparent);
+  animation: ses-dot-breathe 2.5s ease-in-out infinite;
+}
 @keyframes ses-dot-breathe {
   0%, 100% { opacity: 1; }
   50%      { opacity: 0.5; }
 }
-.ses-head--live { border-bottom-color: var(--live); }
-.ses-head--live::after {
-  content: '';
-  position: absolute; left: 0; right: 0; bottom: -1px; height: 1px;
-  background: var(--live);
-  animation: ses-dot-breathe 2.5s ease-in-out infinite;
-}
-@media (prefers-reduced-motion: reduce) { .ses-head--live::after { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .ses-head-dot { animation: none; } }
 .ses-head-album {
   font-family: var(--font-display); font-weight: 700; font-size: 15px; line-height: 1.2;
   color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;

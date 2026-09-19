@@ -2538,23 +2538,21 @@ restructure: the three drawings of the beacon were made into one.
 - [x] **All three say the same four things.** Cover, caption, record, artist.
       The bar had no caption and the session had no artist, so a record
       crossing between them lost a line each way.
-- [x] **No caption anywhere, in the end.** The status spent the evening being
-      moved — into the text column, out to a row of its own centred over the
-      whole beacon (which made it 64px tall in a 48px header), back beside the
-      art — and then Miyel deleted the question: "there doesn't need to be a
-      Now logging line. The green dot and the coloured album is enough." It
-      is. The live beacon says it in colour: full-colour art, deeper shadow,
-      the dot on the mark lit. The idle one says it in words on the cover,
-      where it always did.
-- [x] **The mini keeps the words on its cover**, at 4px, far too small to
-      read. That is the ask: "it's ok if it's too small to see, this is just
-      to show it is a replicated beacon." Same class as the card's overlay.
-- [x] **The session has its own signal: the header's hairline is green**, and
-      breathes on the mark's dot's clock, off its keyframes. The bar wears the
-      same line once the record on it is live, so it is already green and
-      already breathing when the sheet's header takes over. A *travelling*
-      line was the other option on her list and is the wrong thing to put at
-      the top of a page somebody is writing on.
+- [x] **No caption on the large beacon while it is live.** "There doesn't need
+      to be a Now logging line. The green dot and the coloured album is enough."
+      It is: full-colour art, deeper shadow, the lit dot on the mark. Idle, it
+      keeps its words on the cover where they always were.
+- [x] **`Logging`, not `Now logging`.** One word beside a dot that already
+      means now.
+- [x] **The small beacon carries its own dot**, because it has no mark beside
+      it to light: a green breathing dot and one word, `LOGGING`, centred over
+      the record. Two dead ends first — the words at 4px on the mini's cover
+      ("that's gotta go"), and a green hairline under the header, which she
+      read exactly right: "I don't like the line, it's not instantly
+      recognisable." A line at the edge of a band is a border until somebody
+      tells you otherwise; a green dot here is one thing only.
+- [x] **Idle, the small beacon shows nothing but the greyed cover.** No dot,
+      no words. It says the listen is over before you have read anything.
 - [x] **Nothing floats up from the picker.** "It simply turns on with the
       selection." The mini changes record and lights where it stands. Same
       reasoning as the return journey: a record in a grid of a dozen is not

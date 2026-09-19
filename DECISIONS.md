@@ -464,13 +464,15 @@ already drifted into three different objects, one missing the artist, one
 missing the caption, one captioning `NOW LOGGING` whether or not it was. Cover,
 record, artist, in both sizes, 0.625 apart on the type.
 
-**A live beacon says it in colour, not in words, 2026-09-18.** No `NOW LOGGING`
-line at either size: full-colour art against a greyed one, a deeper shadow, and
-the lit dot on the mark. The idle beacon keeps its words, on the cover, at both
-sizes — 4px in the small one, unreadable on purpose, because what carries there
-is that something is written at all. A session has no mark to light, so its
-signal is the header's own hairline in `--live`, breathing on the dot's clock.
-Not a line that travels: this is the top of a page somebody is writing on.
+**How each size says it is live, 2026-09-18.** The large beacon says it in
+colour and says nothing in words — full-colour art against a greyed one, a
+deeper shadow, and the lit dot on the mark beside it. The small one has no mark,
+so it carries its own: a green breathing dot and the word `LOGGING`, centred
+over the record. Idle, the small beacon shows neither — the greyed cover is the
+whole signal, and the words that go on the large one's cover are illegible at
+44px. A green hairline under the header was tried as the session's signal and
+rejected: a line at the edge of a band reads as a border, where a green dot on
+this site reads as one thing only.
 
 **Deleting an entry keeps the listen, 2026-09-18.** The beacon reads entries,
 drafts and the one live needle row, so a published listen's only lasting
