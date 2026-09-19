@@ -965,7 +965,11 @@
   padding: 10px 0 0;
 }
 .ses-under { display: flex; align-items: baseline; gap: 14px; min-height: 1.2em; margin-top: 10px; }
-.ses-under .ses-quiet { margin-left: auto; }
+/* The way round the search — Manual entry — sits at the far end of this row
+   and is the one quiet button on the site that is smaller than the rest. It is
+   an escape hatch, not an offer: somebody who needs it is already looking for
+   it, and it should not be competing with the search field above it. */
+.ses-under .ses-quiet { margin-left: auto; font-size: 9px; }
 .ses-grid {
   display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
   gap: 18px 14px; margin-top: 24px;
