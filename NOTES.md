@@ -1549,6 +1549,22 @@ Project → Settings → Environment Variables.
 
 ## Gotchas
 
+**A widened press must be on the thing that is pressed, 2026-09-19.** A 24px
+tag was given an invisible `::after` reaching past its edges so a thumb could
+find it — put on the wrapper round the control rather than on the control.
+A real click eight pixels above the tag registered *zero* handlers: the box
+belonged to a span with nothing bound to it. Measured, not guessed, and only
+because the test used real pointer input; `element.click()` would have passed,
+the same way it did for the dead × in the picker.
+
+**`min-width: 0` down the whole chain, or a name does not fold, 2026-09-19.**
+A flex item's default `min-width: auto` means "never narrower than my
+contents", so a long keeper's name grew the calling card's row to 537px inside
+a 375px phone and ran off the right edge — the ellipsis never reached the
+screen. Every ancestor between the text and the box that has a width needs the
+zero, not just the text. Miyel's name is short; the other copies each have
+their own, which is how this kind of thing ships unseen.
+
 **Every `closest()` in the repo, audited 2026-09-18.** After the one below bit,
 all five were checked and the other four resolve correctly today:
 `slot.closest('.lay')` (HomeNav) asks the *target* whether it is in a sheet,
@@ -2616,6 +2632,43 @@ current.
 ---
 
 ## Complete
+
+**2026-09-19 — the calling card. Branch `beacon-shapes`.** A visitor landed on
+the beacon floor and found a quarter of the screen empty: the only thing that
+ever stood under the record was the owner's way in. Measured at 189px of 812.
+That slot is the floor's one question — what now — and it now holds whichever
+answer fits whoever is looking.
+
+- [x] **`CallingCard.js`, at the foot of the beacon, visitors only.** The face,
+      the name, `+ ADD` and `✈ SEND`, on one line, in the way in's own
+      `.ln-onward` class a size down. It draws from `useBookplate()`, so no new
+      fetch, no route and no column. Pressing the face or the name goes to the
+      card, through the same `goTo(0)` the Card door uses.
+- [x] **It lines up with the composition above it.** The face sits on the
+      record's left edge and Send on the right edge of the past column, because
+      the row is a grid item of the same grid. Measured, both exact.
+- [x] **Send and Add are off the identity card.** Its name line is the name and
+      *Keeping since*; `.idc-acts`, `.idc-act` and `.idc-act--send` are gone.
+      One pair of controls, in the place a stranger actually lands.
+- [x] **The public send page asks about credit with the shared switch.**
+      `.ln-switch`, the one the send sheet and the entry already use. base.css
+      has said since that switch was drawn that the surfaces asking a yes/no
+      about somebody's name must not answer it in two shapes, and it named two
+      — this page was the third, and the only one a stranger sees.
+- [x] **Send it on that page is the entry's squared tag.** `Chip` took a `type`
+      so a form can own one; every caller that passes none draws as before.
+      **Open:** the beacon no longer has a tag on it, so that button is now
+      matching something that moved. Walk the path before deciding.
+
+**What was tried and is not there.** Four box shapes in a day, in order: the
+card's filled pill, two bare mono lines, the entry editor's round `.ln-flag`,
+the entry's squared `Chip`, and a hairline divider between the two words. All
+out. See DECISIONS — nothing on that floor is a box. The `.ln-flag` promotion
+to base.css was reverted with them; it is an entry's again.
+
+**Also tried and out:** the taller centred signature — face over name over
+words. Better-looking and it does not fit: 143px against the row's 44, and on
+a 375x667 phone both words fall 55px below the screen.
 
 **2026-09-18 — one beacon, two sizes. Branch `nothing-required`.** The first
 half of the header brief below, taken on its own because it needed no

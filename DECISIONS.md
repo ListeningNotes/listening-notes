@@ -240,6 +240,19 @@ small one in their own header instead, beside the pencil and the gear; on a
 desk even that goes, because the bar over the journal already has it and two
 marks on screen is two marks.
 
+**A visitor's two controls stand at the foot of the beacon, 2026-09-19.**
+Send and Add were beside the name on the identity card from the day it was
+built. They are on the landing floor now, in the slot the owner's way in
+stands in — a stranger lands on the beacon and reaches the card by choosing to
+— and the card carries no copy of them. One pair of controls, one place;
+`CallingCard.js`.
+
+**Nothing on the beacon floor is a box, 2026-09-19.** Every control there is a
+glyph and a mono capital, a visitor's included. Four shapes were tried in one
+day — a filled pill, the entry editor's round flag, an entry's squared tag, a
+hairline between two words — and each was a box in a room that has none. The
+tag shapes are an entry's and stay an entry's.
+
 **Every pane is an object, then the writing underneath, 2026-09-15.** The
 beacon is the record playing over the journal; the ID is who keeps this over
 their words; the desk is your tools over the feed; the entry is the record

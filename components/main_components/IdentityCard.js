@@ -21,7 +21,7 @@
 // the page's own colour, and turning something over should not change the
 // colour of the room.
 
-import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { arrivingAlone } from '../../library/handoff';
 import { Check, Eye, EyeSlash, PushPin, UploadSimple, User, X } from '@phosphor-icons/react';
@@ -31,9 +31,6 @@ import { useListeningBeacon } from '../../hooks/useListeningBeacon';
 import { useBookplate } from './Bookplate';
 import CodeSlot from './CodeSlot';
 import KeeperTools from './KeeperTools';
-import { knownHere, subscribeSender } from '../../library/return_address';
-
-const readNothing = () => false;
 
 // ── The Ln. mark ──────────────────────────────────────────────────────────
 // It sits at the top of the column, and it is the only mark on this side of the
@@ -152,33 +149,18 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
 
   const address = site_address ? site_address.replace(/^https?:\/\//, '') : null;
 
-  // ── Add, for a visitor who keeps a journal ──────────────────────────────
-  // The one thing a journal can do for a visitor's address book is hand over
-  // its own address, which it knows: it is the page on screen. It cannot
-  // write to their copy from here, and it does not try to find out whether
-  // they have one — a journal never learns who is reading it. So the press
-  // puts the address on the clipboard and says so, the way the code does,
-  // and their own copy's address book is where it lands. Everything social
-  // lives on the visitor's copy (DECISIONS, The network); this is the
-  // whole of what the journal being read contributes. Never for the owner,
-  // who has nothing to add themselves to.
-  const [added, setAdded] = useState(false);
-  const addedTimer = useRef(null);
-  // Not offered to a visitor whose own copy said, on the way in, that this
-  // journal is already in their book (the address book's, the feed's and
-  // the person's page's links say so). Arriving cold, the pill shows — the
-  // journal has no way to know, and it does not try to find out.
-  const known = useSyncExternalStore(subscribeSender, knownHere, readNothing);
-  useEffect(() => () => clearTimeout(addedTimer.current), []);
-  function pressAdd() {
-    if (!address || !navigator.clipboard?.writeText) return;
-    navigator.clipboard.writeText(address).then(() => {
-      setAdded(true);
-      clearTimeout(addedTimer.current);
-      addedTimer.current = setTimeout(() => setAdded(false), 2600);
-    }).catch(() => {});
-  }
-
+  // ── Send and Add are not here any more ─────────────────────────────────
+  // They were beside the name from the day the card was built: a filled Send
+  // and an outlined Add, the two things a visitor can do about whose journal
+  // this is. They moved to the foot of the beacon on 2026-09-19, where a
+  // visitor lands, and Miyel's call the same hour was that keeping them here
+  // as well is the same two controls one swipe apart — which is the argument
+  // this project has already made twice, about the desk's copy of Start a
+  // listen and about the row of pills that used to sit under the pinned
+  // record. So the line is the name alone now, for everybody, which is the
+  // shape the owner always saw. See CallingCard.js, which carries the press
+  // that used to live here and the reason a journal can only ever copy its
+  // own address rather than write into somebody else's book.
   // The square is a CodeSlot — the same one an entry's cover turns in. It
   // owns the turn, the copy and its pill, the corner mark and the wait; the
   // card owns which face is up. A card with no photograph starts on its
@@ -459,11 +441,10 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
             photograph to carry it. */}
         <div className="idc-photo">{slot}</div>
 
-        {/* The name and the two things a visitor can do, on one line. Send and
-            Add, not "Send an album" and "+ Add" — the shortening is what lets
-            them sit beside the name instead of taking a line of their own.
-            Both are the visitor's: there is nobody for the owner to send to
-            but themselves, so signed in the line is the name alone. */}
+        {/* The name, and under it how long. It shared this line with Send and
+            Add until 2026-09-19; both are at the foot of the beacon now, where
+            a visitor lands, and the note above pressAdd's old home says why
+            they are not in two places. */}
         <div className="idc-ident">
           <div className="idc-ident-said">
             {(editing || cover_name) && (
@@ -487,19 +468,6 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
             )}
           </div>
 
-          {!authed && (
-            <div className="idc-acts" inert={editing ? true : undefined}>
-              <Link href="/submit" className="ln-pill idc-act idc-act--send">Send</Link>
-              {/* The address, for the visitor's own address book. See pressAdd
-                  above: it copies, because that is all a journal can do for a
-                  copy it cannot see. Copied for a moment after. */}
-              {address && !known && (
-                <button type="button" className="ln-pill idc-act" onClick={pressAdd} aria-live="polite" title="Copy this journal's address for your address book">
-                  {added ? 'Copied' : 'Add'}
-                </button>
-              )}
-            </div>
-          )}
         </div>
 
         {/* ── Three counts ─────────────────────────────────────────────────
@@ -603,11 +571,6 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
             </Link>
           )
         )}
-
-        {/* The two visitor controls used to be a row of pills down here, under
-            the pinned record. They are beside the name now — Send and Add,
-            short enough to share its line — which is what took a whole row off
-            the first screen. */}
 
         {/* The link rows and the rig rows used to be here, under the button,
             while the card was the only surface an owner could edit. They are

@@ -77,6 +77,7 @@ import { useSpineWidth } from '../../hooks/useSpineWidth';
 import { useTheme } from './Lightswitch';
 import { useBookplate } from './Bookplate';
 import ListeningBeacon from './ListeningBeacon';
+import CallingCard from './CallingCard';
 import Journal from './Journal';
 import EdgeCaret from './EdgeCaret';
 import Footer from './Footer';
@@ -1507,6 +1508,20 @@ export default function HomeNav() {
     </button>
   ));
 
+  // ── And the other answer to the same question ────────────────────────────
+  // The slot the way in stands in is the floor's one question — what now — and
+  // until today it had an answer for the keeper and nothing at all for anybody
+  // else, which left a quarter of a visitor's screen empty (measured
+  // 2026-09-18, 189px of 812). A visitor's answer is whose journal this is and
+  // the two things they can do about it, which is the card's own row at the
+  // size this floor can afford. See CallingCard.js.
+  //
+  // The face goes to the card, through the same `goTo` the Card door at the
+  // foot of the screen uses, and to the same place: the rail's first pane.
+  // Nobody ever sees both this and the way in — one is `authed`, the other is
+  // not — so the slot holds exactly one thing whoever is looking at it.
+  const theCallingCard = !authed && <CallingCard onOpenCard={() => goTo(0)} />;
+
   // "+ Start a listen" and "Messages" used to sit under the beacon, from when
   // the cover was the only screen an owner had and the writing had to be
   // reachable from it. The desk is one swipe right and carries both, with the
@@ -1708,6 +1723,7 @@ export default function HomeNav() {
                 : <>
                     {recentRow}
                     {theWayIn}
+                    {theCallingCard}
                   </>}
             </div>
           </div>

@@ -2709,6 +2709,26 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
      caret, which is not clearance, it is a coincidence. */
   margin: clamp(16px, calc(var(--hn-h) * 0.047), 38px) auto 0;
 }
+/* The visitor's answer stands in the keeper's slot — same row, same column
+   span, and never on screen at the same time as it. Its own margin because it
+   is two lines rather than one and the same 38 under a taller object puts it
+   into the down caret on a short phone. */
+.hn-pane--home .calling {
+  grid-column: 1 / -1;
+  grid-row: 3;
+  /* The row runs the width of the composition above it: the face lines up
+     with the record's left edge and Send with the right edge of the past
+     column, which is what makes it read as the foot of the same object rather
+     than a thing floating under it.
+
+     Capped against the screen as well as the row. The row spans two auto
+     columns sized by the record and the past beside it, and a name longer
+     than both would widen them rather than folding — so the cap is the
+     viewport less this screen's two 24px gutters. */
+  width: 100%;
+  max-width: min(100%, calc(100vw - 48px));
+  margin: clamp(12px, calc(var(--hn-h) * 0.032), 26px) auto 0;
+}
 /* The empty beacon has neither a cover nor a name — it has one quiet line, and
    it spans. */
 .hn-pane--home .beacon-quiet { grid-column: 1 / -1; grid-row: 1; }

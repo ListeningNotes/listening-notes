@@ -121,15 +121,13 @@ textarea.sb-field {
 
 .sb-error { font-size: 13px; color: #e05555; }
 
-.sb-send {
-  display: inline-flex; align-items: center; justify-content: center;
-  padding: 13px 40px; border-radius: 999px;
-  background: var(--ink); color: var(--bg); border: 1px solid var(--ink);
-  font-family: var(--font-mono); font-size: 10px;
-  letter-spacing: 0.14em; text-transform: uppercase;
-  cursor: pointer; transition: opacity 0.18s;
-}
-.sb-send:disabled { opacity: 0.5; cursor: not-allowed; }
+/* `.sb-send` was here: a filled black lozenge, 40px of padding either side.
+   The send is a tag now — the same Chip an entry's marks are drawn with — so
+   what is left is the row that centres it, and the widened press that keeps a
+   24px tag a thumb's target. See app/submit/page.js. */
+.sb-go { display: flex; justify-content: center; }
+.sb-go button { position: relative; }
+.sb-go button::after { content: ''; position: absolute; inset: -12px -16px; }
 
 .sb-done {
   background: var(--panel);
@@ -1126,11 +1124,14 @@ a.pn-item-album:hover { text-decoration: underline; text-underline-offset: 3px; 
    fields, off by default, and set in the same quiet type the labels use so
    it reads as a choice rather than as a warning. */
 .sb-quiet {
-  display: flex; align-items: center; gap: 9px; cursor: pointer;
+  display: flex; align-items: center; justify-content: space-between; gap: 14px;
+  min-height: 44px; cursor: pointer;
   font-family: var(--font-label); font-size: 11px; letter-spacing: 0.04em;
   color: var(--ink-soft);
 }
-.sb-quiet input { width: 15px; height: 15px; accent-color: var(--ink); cursor: pointer; flex-shrink: 0; }
+/* The switch itself is shared — see .ln-switch in base.css. It was a 15px tick
+   here until 2026-09-19, which made this the one surface of three asking about
+   a name in a different shape, and the one a stranger sees. */
 .sb-quiet:hover { color: var(--ink); }
 
 /* ── Which beacon this journal runs ─────────────────────────────────────────

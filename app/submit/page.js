@@ -39,6 +39,7 @@ import { useState, useEffect } from 'react';
 import { fonts } from '../../library/sitewide_visuals';
 import SiteNav from '../../components/main_components/SiteNav';
 import AlbumFinder from '../../components/main_components/AlbumFinder';
+import Chip from '../../components/main_components/Slug_Page/Chip';
 import { recallSender, keepSender } from '../../library/return_address';
 
 // What has been typed and not yet sent. Named alongside ln-dog-ear rather than
@@ -299,20 +300,44 @@ export default function SubmitPage({ layered = false }) {
                 than what it feels like, since the person reading it has
                 just typed their name into the box above. */}
             <label className="sb-quiet">
+              <span>Don&rsquo;t credit me publicly</span>
+              {/* The same switch the send sheet and the entry use, not a tick
+                  (Miyel, 2026-09-19). base.css's note above `.ln-switch` has
+                  said since it was drawn that the surfaces asking a yes/no
+                  about somebody's name should not answer it in two shapes —
+                  and it listed two of them. This page was the third, and the
+                  only one a stranger ever sees.
+
+                  The word goes first and the switch to the end of the row, as
+                  it does in the sheet: a switch you are reaching for is easier
+                  to find in the same place every time than beside a sentence
+                  whose length changes. */}
               <input
                 type="checkbox"
+                role="switch"
+                className="ln-switch"
                 checked={form.quiet}
                 onChange={e => setForm(f => ({ ...f, quiet: e.target.checked }))}
               />
-              <span>Don&rsquo;t credit me publicly</span>
             </label>
 
             {error && <div className="sb-error">{error}</div>}
 
-            <div style={{ display: 'flex', justifyContent: 'center' }}>
-              <button type="submit" className="sb-send" disabled={sending}>
+            {/* ── Send it ──────────────────────────────────────────────
+                A tag, not a filled pill (Miyel, 2026-09-19). It was a black
+                lozenge 40px wide of padding, which is the loudest object on a
+                page that is otherwise a column of quiet fields — and it is the
+                far end of a journey that now begins with a tag: SEND ALBUM at
+                the foot of somebody's beacon. Pressing a small grey tag and
+                arriving at a large black button is two different doors for one
+                errand.
+
+                The same Chip an entry's Masterpiece and Submission are drawn
+                with, given `type` so a form can own it. */}
+            <div className="sb-go">
+              <Chip type="submit" disabled={sending}>
                 {sending ? 'Sending…' : 'Send it'}
-              </button>
+              </Chip>
             </div>
           </form>
         )}
