@@ -249,7 +249,7 @@ function secondFloorTop(pane) {
 export default function HomeNav() {
   const { cover_name, pinned_entry_id } = useBookplate();
   const { theme, toggle: toggleTheme } = useTheme();
-  const { isLive, before, art: onAir } = useListeningBeacon();
+  const { isLive, before, art: onAir, album: onAirAlbum, artist: onAirArtist } = useListeningBeacon();
   // How wide the spine is on a desk, and the grip that changes it. The hook
   // writes the width onto the document's root as --spine-w, which the
   // stylesheet reads above 769px and ignores below it.
@@ -463,13 +463,34 @@ export default function HomeNav() {
     saidSoAboutTheDesk();
     // The beacon is told now, whichever way this goes. Behind the sheet, but
     // true — and the pane is what you come back to when the listen ends.
-    announce(record);
+    // `art`, not `artUrl` — announce names its fields the way the beacon's
+    // snapshot does and a record names them the way the picker does, so
+    // handing the record over whole dropped the cover silently and the
+    // owner's own beacon announced a blank square until the next poll caught
+    // up. Invisible until 2026-09-18, when the bar's mini started drawing
+    // from this the moment it is published.
+    announce({ album: record.album, artist: record.artist, art: record.artUrl });
     const still = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
     // No flight: the record is simply on the beacon and the listen opens. The
     // same answer the session's own picker gives, and the brief's.
     if (!from || !record.artUrl || still) { openSession(); return; }
-    setLanding({ record, art: record.artUrl, from, to: null, go: false, ms: TO_THE_BAR_MS, into: '.ses-cover' });
-    // The session comes up as the record leaves, not after it lands.
+    // ── No flight on the way in ─────────────────────────────────────────
+    // The record flew from the picker's tile into the header for an hour on
+    // 2026-09-18 and Miyel took it off: "it's too much for the album to float
+    // from picker to beacon. Maybe it just updates in the beacon without
+    // that — the beacon updates the art and the album title and artist while
+    // the session page comes up."
+    //
+    // She is right, and the reason is that there is nothing to follow. Going
+    // *into* the picker the record is the thing you are already looking at
+    // and it has somewhere to be, so watching it go is the move. Coming back
+    // out, the record is one of a dozen in a list you were reading: a cover
+    // detaching from a row and sailing up is a fourth thing happening on top
+    // of a session arriving and a picker folding away.
+    //
+    // announce() above has already put it on the beacon, so the bar's mini
+    // simply is the new record on the very next frame — art, album and
+    // artist — and the session resolves over it.
     router.push('/session');
     // And the picker folds away once the sheet is over it — unseen, which is
     // the point. Doing it now would empty the screen behind a sheet that has
@@ -986,8 +1007,16 @@ export default function HomeNav() {
           shifts up to meet it (.hn--choosing .hn-bar in nav.css), so the ×
           and the lights sit on the line they will sit on in a moment. */}
       {choosing && (
-        <span className={'hn-bar-cover' + (landing ? ' hn-bar-cover--flying' : '')} aria-hidden="true">
-          {onAir ? <img src={onAir} alt="" /> : null}
+        <span className={'hn-bar-beacon' + (landing ? ' hn-bar-beacon--flying' : '')} aria-hidden="true">
+          <span className="hn-bar-cover">
+            {onAir ? <img src={onAir} alt="" /> : null}
+          </span>
+          {onAirAlbum && (
+            <span className="hn-bar-said">
+              <span className="hn-bar-album">{onAirAlbum}</span>
+              {onAirArtist && <span className="hn-bar-artist">{onAirArtist}</span>}
+            </span>
+          )}
         </span>
       )}
       {/* The small mark. On a phone, only while the crown has scrolled away
