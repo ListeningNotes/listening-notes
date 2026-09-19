@@ -1105,22 +1105,6 @@
   to   { max-height: 200vh; opacity: 1; }
 }
 @media (prefers-reduced-motion: reduce) { .hn .ses-picker { animation: none; } }
-/* ── And leaves downward as the record closes ─────────────────────────────
-   "When the album art goes away (close in) the selections and drafts leave
-   the screen down." They used to be there and then not be, at the moment
-   `choosing` went false. They go the way they came now, over the first half
-   of the blink, so by the turn the screen is the bar and nothing else — which
-   is what makes the second half read as an arrival rather than a swap.
-   Down and out, not down and stopping: the fade is what stops it looking like
-   a list that has merely scrolled. */
-.hn--blinking .ses-picker {
-  animation: hnPickerLeave 650ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
-}
-@keyframes hnPickerLeave {
-  from { transform: none; opacity: 1; }
-  to   { transform: translateY(38vh); opacity: 0; }
-}
-@media (prefers-reduced-motion: reduce) { .hn--blinking .ses-picker { animation: none; } }
 /* No line across the top while a record is being chosen. The bar wears
    .hn-bar--scrolled the whole time the picker is open, and its hairline sat
    between the LN mark and the cover directly under it — two boxes with a rule
@@ -1185,33 +1169,37 @@
    flight measures the box it is aiming at, and it cannot be showing the same
    record at the same time. */
 .hn-bar-beacon--flying { opacity: 0; }
-/* ── A line, travelling the way the session travels ──────────────────────
-   Miyel, 2026-09-18: "maybe we do a horizontal erase from top to bottom of
-   art and text, then it loads horizontally back up — that will match the
-   motion of the session rising, they should both hit the top at the same
-   time."
+/* ── Everything on screen leaves by the floor ─────────────────────────────
+   Miyel, 2026-09-18, and it is the simplification everything else was
+   circling: "what about the whole session goes down, then comes up with the
+   new album — instead of the beacon leaving and coming back and the session
+   separate, they happen all as one motion. There will just be a blank screen
+   for a moment. That's fine."
 
-   That is the thing the circle could not do. A circle has no direction, so it
-   had nothing to say to a sheet coming up from the floor; a horizontal line
-   has one, and it is the same one. The beacon is erased downward while the
-   picker goes down, and drawn back upward while the session comes up — one
-   edge on the bar and one edge on the sheet, moving together and reaching
-   the top at the same moment.
+   So there is no erase, no reveal and no held header. What is on screen when
+   you pick — the bar with the record in it, and the list you picked from —
+   goes down together as one surface and off the bottom. A moment of nothing.
+   Then the session comes up from the same floor, its own header and its own
+   record with it.
 
-   Art and name in one clip, so the line crosses both. `inset` with a growing
-   top: the region keeps its bottom edge and loses its top, which is a line
-   sweeping down. The other half is the same inset in reverse — see layLidOpen
-   in entry.css, which carries the rise's own curve so the two edges keep
-   pace.
+   The bar and the picker share this animation exactly, which is what makes
+   them read as one thing rather than two things that happen to be leaving.
+   Accelerating away: unhurried at first and then gone.
 
-   1300ms, the two halves of it, hinged on the turn. */
-.hn-bar-beacon--blink { animation: hnLidShut 1300ms both; }
-@keyframes hnLidShut {
-  /* Accelerating away: the line leaves unhurried and is gone. */
-  0%       { clip-path: inset(0 0 0 0); animation-timing-function: cubic-bezier(0.4, 0, 1, 1); }
-  50%,100% { clip-path: inset(100% 0 0 0); }
+   Behind it is the pane, and it is blank — `.hn--choosing` holds everything
+   under the bar collapsed until the session has landed (see the timer in
+   HomeNav.js), so the blank moment is blank and not the beacon screen. */
+.hn--blinking .hn-bar,
+.hn--blinking .ses-picker {
+  animation: hnLeaveDown 650ms cubic-bezier(0.4, 0, 1, 1) both;
 }
-@media (prefers-reduced-motion: reduce) { .hn-bar-beacon--blink { animation: none; } }
+@keyframes hnLeaveDown {
+  from { transform: translateY(0); }
+  to   { transform: translateY(100dvh); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hn--blinking .hn-bar, .hn--blinking .ses-picker { animation: none; opacity: 0; }
+}
 /* And the card's own cover steps aside at once rather than fading with the
    rest of the card. The stage takes 0.4s to go and the flight takes 620ms, so
    without this there would be four hundred milliseconds of the record in two
