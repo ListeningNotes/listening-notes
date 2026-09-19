@@ -2654,23 +2654,13 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
    is taller than its contents — the rows were being grown to fill it, 362px of
    row for 299px of record, which put 93px of nothing between the artist and
    the way in where 30 was asked for. */
-/* The two numbers the whole composition leans on, said once. The record's
-   axis is the screen's centre shifted left by half of what the column and its
-   gap take up, and three separate rules need to know that — so none of them
-   gets to carry its own copy of 58 or 16. */
-.hn-pane--home {
-  --past: 58px;
-  --past-gap: 16px;
-  --off-axis: calc((var(--past) + var(--past-gap)) / -2);
-}
-
 .hn-pane--home .hn-screen {
   display: grid;
   grid-template-columns: auto auto;
   justify-content: center;
   align-content: start;
   align-items: start;
-  column-gap: var(--past-gap);
+  column-gap: 16px;
   /* Scaled, like the record and the crown above it. A tall phone gets the 22
      this was drawn at; a short one gets less, which is how the whole screen
      gives a little rather than one thing giving a lot. */
@@ -2705,24 +2695,14 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
      covers against 220px it left the column looking dropped in at the top. */
   align-self: center;
 }
-/* ── Everything the record owns shares the record's axis ──────────────────
-   Centred on the screen, the name sat 37px right of the cover it names: the
-   block is centred correctly and its margins are even, but the record is far
-   heavier than the little column beside it, so the weight leans left while the
-   type runs down the middle. Three axes, none of them agreeing.
-
-   So the name takes the record's column rather than both, and the mark and the
-   way in come across to meet it. The composition leans left on purpose, which
-   is the interesting thing about this shape — half-committing to it is what
-   made it feel unresolved. */
-.hn-pane--home .beacon-meta { grid-column: 1; grid-row: 2; }
+.hn-pane--home .beacon-meta { grid-column: 1 / -1; grid-row: 2; }
 /* The way in sits well below the record rather than tucked under its artist
    line (Miyel, 2026-09-18: "make start listen be lower, further from the
    beacon"). The row gap above it is the screen's 22; this is the rest, and it
    is on the control rather than in the gap because the gap is also what holds
    the name off the cover, which wants to stay where it is. */
 .hn-pane--home .ln-onward {
-  grid-column: 1;
+  grid-column: 1 / -1;
   grid-row: 3;
   /* 38 on a phone the size of hers, less on a short one. At 667 the record,
      the crown and this were between them leaving eight pixels above the down
@@ -2758,10 +2738,5 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
 /* The past, larger with the record. Three of these plus their gaps come to
    190, which is still shorter than the record they stand beside, so the column
    never sets the height of the row. */
-.hn-pane--home .hp-recent-tile { width: var(--past); height: var(--past); border-radius: 12px; }
+.hn-pane--home .hp-recent-tile { width: 58px; height: 58px; border-radius: 12px; }
 .hn-pane--home .hp-recent-set { align-items: flex-start; gap: 8px; }
-
-/* And the mark, which is not in the grid at all — it stands above the screen
-   in the floor. It is moved rather than re-centred, by exactly the distance
-   that separates the record's axis from the screen's. */
-.hn-pane--home .hn-crown { transform: translateX(var(--off-axis)); }
