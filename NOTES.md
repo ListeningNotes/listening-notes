@@ -58,6 +58,21 @@ deploy a copy — and none of it is anything they need.
 
 ## Pending
 
+**MANUAL ENTRY — pinned 2026-09-18, not crucial.** Miyel, having looked at what
+is built: "we will have to return to working out manual entry — I don't think
+it works the way I envision, but it's not crucial right now."
+
+What is on disk is a form (album, artist, year, album art URL) that hands the
+record straight to a listen, and a listen that finds no tracklist offers a
+textarea, one title a line. It works end to end — the typed URL becomes the
+cover, and the tracklist screen is the one the form promises. It is not wrong,
+it is just not hers, and **nobody has said what hers is**. Do not guess at it
+and do not polish this in the meantime: ask.
+
+What it is *for* is settled and worth keeping: records nowhere has. Small
+presses, Bandcamp releases, tapes — "smaller indie projects, or maybe albums
+not on iTunes".
+
 **THE HEADER IS THE BEACON — briefed 2026-09-18.** One surface, three
 states. Not an animation job: an evening of animation work proved that.
 
