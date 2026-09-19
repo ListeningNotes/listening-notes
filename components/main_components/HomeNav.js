@@ -1377,8 +1377,10 @@ export default function HomeNav() {
   // entry a scrobble was about.
   const recentRow = before.length > 0 && (
     <div className="hp-recent-set">
-      {/* The line sits under the covers, not over them: over them it was a
-          second heading between the record and its past. */}
+      {/* No label over or under them. It read "Before that" until 2026-09-18
+          and went with the side-by-side layout: a column of covers standing
+          beside the record is already what came before it, and a caption
+          saying so was a third voice on a screen with two. */}
       <div className="hp-recent">
       {before.map(record => {
         const label = `${record.album} — ${record.artist}`;
@@ -1399,7 +1401,6 @@ export default function HomeNav() {
         );
       })}
       </div>
-      <p className="hp-recent-head">Before that</p>
     </div>
   );
 
