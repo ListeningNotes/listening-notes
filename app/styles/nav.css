@@ -1181,12 +1181,11 @@
    without this there would be four hundred milliseconds of the record in two
    places — the real one shrinking away and the copy climbing past it. */
 .hn--flying .beacon-art-wrap { visibility: hidden; }
-/* The mark is what the bar carries while you are choosing and have not chosen
-   — it is the crown, shrunk into the row, and it is what this bar carries on
-   every other screen with nothing to say. It hides the moment a record takes
-   its place, which is what makes the beacon read as something you made rather
-   than something that was already there (Miyel, 2026-09-18: "the beacon goes
-   away, and then when you choose your album it makes the beacon").
+/* The mark is the fallback, not the rule. The bar carries the beacon while you
+   choose — the record shrinks into it from the card below (Miyel, 2026-09-18:
+   "I liked the beacon shrinking mini when you enter session") — and the mark
+   is what is left when there is no record to carry at all, which is a copy on
+   its first afternoon.
 
    A sibling selector and not :has(), which this build silently drops (see
    NOTES). It works because the beacon is written before the mark in the bar,
