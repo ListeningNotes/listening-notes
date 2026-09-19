@@ -58,9 +58,18 @@ deploy a copy — and none of it is anything they need.
 
 ## Pending
 
-**MANUAL ENTRY — pinned 2026-09-18, not crucial.** Miyel, having looked at what
-is built: "we will have to return to working out manual entry — I don't think
-it works the way I envision, but it's not crucial right now."
+**MANUAL ENTRY — pinned 2026-09-18, and the door is shut.** Miyel, having
+looked at what is built: "we will have to return to working out manual entry —
+I don't think it works the way I envision, but it's not crucial right now."
+And then: "let's remove the manual entry button from the session, juuuust until
+I build it correctly — I don't want people using it messed up. We'll keep it to
+what currently works."
+
+So the button is gone from the picker and everything behind it is untouched.
+`BY_HAND_OFFERED` in AlbumPicker is the whole of the switch: turn it on and the
+form is back, unchanged. **What it costs while it is off, plainly: there is no
+way to log a record Apple Music does not have.** That is the trade, made
+knowingly, for not shipping a way in that does the wrong thing.
 
 What is on disk is a form (album, artist, year, album art URL) that hands the
 record straight to a listen, and a listen that finds no tracklist offers a
