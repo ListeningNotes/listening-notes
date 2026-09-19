@@ -1079,8 +1079,7 @@ export default function HomeNav() {
   // stylesheet hides it on the turning pane; on a desk this row is over the
   // journal, which is the beacon, so it simply stays.
   const header = (
-    <div className={'hn-bar' + (down[pane] || choosing ? ' hn-bar--scrolled' : '')
-      + (choosing && onTheBar?.live ? ' hn-bar--live' : '')}>
+    <div className={'hn-bar' + (down[pane] || choosing ? ' hn-bar--scrolled' : '')}>
       {/* The way out of the picker, in the corner the up-caret holds the rest
           of the time — the two never want the row at once, because while the
           picker is open there is no pane under it to go back to the top of.
@@ -1146,19 +1145,20 @@ export default function HomeNav() {
             {onTheBar?.art
               ? <img src={onTheBar.art} alt="" />
               : <span className="ses-cover-none">♪</span>}
-            {/* The card's own idle overlay, at this size — .beacon-idle-overlay
-                from nav.css, the same class on the same greyed cover. It is
-                far too small to read at 44px and that is the point: the words
-                are not the job here, being visibly the same object is.
-                Miyel, 2026-09-18: "keep the tiny last logged text on the art
-                when the mini is idle — it's ok if it's too small to see, this
-                is just to show it is a replicated beacon." */}
-            {!onTheBar.live && onTheBar?.art && (
-              <span className="beacon-idle-overlay"><span>{CAPTION.logged}</span></span>
-            )}
           </span>
           {onTheBar?.title && (
             <span className="ses-head-text">
+              {/* The live row, and nothing when it is not live — the greyed
+                  cover is what says that, and it says it the instant you look
+                  at it. A green line under the bar was the signal for an hour
+                  and Miyel's read was that it is not one: "I don't like the
+                  line, it's not instantly recognisable." A dot is. */}
+              {onTheBar.live && (
+                <span className="ses-head-live">
+                  <span className="ses-head-dot" aria-hidden="true" />
+                  {CAPTION.logging}
+                </span>
+              )}
               <span className="ses-head-album">{onTheBar.title}</span>
               {onTheBar.artist && <span className="ses-head-artist">{onTheBar.artist}</span>}
             </span>

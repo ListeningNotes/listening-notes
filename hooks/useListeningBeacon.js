@@ -46,7 +46,13 @@ import { useBookplate } from '../components/main_components/Bookplate';
 // journal anyway: somebody sitting with a record and writing about it, rather
 // than music being on in a room.
 export const CAPTION = {
-  logging: 'Now logging',
+  // One word. The large beacon says nothing at all while it is live — colour,
+  // shadow and the lit dot on the mark are the signal there — so this is the
+  // small beacon's line only, and the small beacon has no mark beside it to
+  // carry a dot. "Now logging" was two thirds of a 44px row saying what the
+  // dot in front of it already said (Miyel, 2026-09-18: "it only needs to say
+  // logging, it doesn't need to say now logging").
+  logging: 'Logging',
   logged: 'Last logged',
 };
 
