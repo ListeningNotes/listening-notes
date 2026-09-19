@@ -1449,12 +1449,22 @@ export default function HomeNav() {
           // picker feel like the same screen rather than a new
           // one. The mark is what it falls back to when there
           // is no record to carry at all.
-          const art = event.currentTarget
-            .closest('.beacon-card')?.querySelector('img.beacon-art');
+          // Found on the pane, not walked up to from the press. This was
+          // `event.currentTarget.closest('.beacon-card')` and it worked for
+          // exactly as long as this control lived inside the beacon's own
+          // meta stack — moving it out from under the artist on 2026-09-18
+          // made `closest` return null, which made `box` undefined, which made
+          // the guard below return, which took the whole flight off without a
+          // word. Miyel: "the animation from the beacon shrinking to mini
+          // seemed smoother before — did something outside of that change?"
+          // It had: this.
+          //
+          // Scoped to the pane because the beacon is drawn once there and the
+          // card is what the cover is leaving.
+          const card = document.querySelector('.hn-pane--home .beacon-card');
+          const art = card?.querySelector('img.beacon-art');
           const box = art?.getBoundingClientRect();
-          const meta = event.currentTarget
-            .closest('.beacon-card')?.querySelector('.beacon-meta');
-          const said = meta?.getBoundingClientRect();
+          const said = card?.querySelector('.beacon-meta')?.getBoundingClientRect();
           // A copy of what the card is showing this second,
           // state and all — Miyel, 2026-09-18: "it's gonna
           // have to either have a live dot saying now logging,
