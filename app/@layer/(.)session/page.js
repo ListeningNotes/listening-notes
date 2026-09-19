@@ -24,6 +24,14 @@
 // cold — a bookmark, a home-screen icon — and there is no interception; the
 // browser lands on app/session/page.js and gets the standalone page.
 //
+// byHand, because this is the one sheet on the site that does not close on a
+// pull down. Everywhere else that gesture closes something you were reading;
+// here it would end a listen, and Miyel's read on 2026-09-18 was that it is far
+// too easy for that: "from beacon to session the swipe down feels too easy to
+// close — we should keep it gated behind an ×." So the × in the session's own
+// header is the way out, and it is a two-press one. Escape and the desk's back
+// caret still work, and both go through the same save.
+//
 // scrolls, because the session is one ordinary column under a sticky header
 // and wants the sheet to scroll it. The nav row on the picker goes into the
 // sheet's flow for the reason .lay--scrolls .sitenav-row gives in styles/nav.css.
@@ -33,7 +41,7 @@ import SessionPage from '../../session/page';
 
 export default function ListenOverThePage() {
   return (
-    <LayerEntry label="Listen" scrolls arrives="bottom" over="journal">
+    <LayerEntry label="Listen" scrolls arrives="bottom" over="journal" byHand>
       <SessionPage />
     </LayerEntry>
   );
