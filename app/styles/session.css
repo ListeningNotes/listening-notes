@@ -286,7 +286,31 @@
 
    The label is the row, so the magnifier and the rule are part of the tap
    target — which is what a field with no box round it otherwise loses. */
-.ses-search { display: block; }
+/* The box IS the row. It was `display: block` with the magnifier an inline
+   thing before the field, which was fine while the box lived on the field and
+   the row was only a hairline — and became a glyph adrift above the box when
+   the box came back on 2026-09-18 ("the search bar got weird with the search
+   glyph placement"). The border, the fill and the radius move up here and the
+   field inside is bare, so the mark sits in the box with the words. */
+.ses-search {
+  display: flex; align-items: center; gap: 10px;
+  padding: 0 12px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--ink-faint);
+  transition: border-color 0.15s, color 0.15s;
+}
+.ses-search:focus-within { border-color: var(--ink-faint); color: var(--ink-soft); }
+.ses-search .ses-input {
+  background: none; border: 0; border-radius: 0;
+  padding: 12px 0;
+  /* 16px is the floor: Safari zooms the page for any field under it, and a
+     page that zooms when you tap the search box has moved the covers you were
+     about to tap. */
+  font-size: max(16px, 1rem);
+}
+.ses-search .ses-input:focus { border: 0; }
 .ses-search--hair {
   display: flex;
   align-items: center;
@@ -351,18 +375,17 @@
 /* ── Header ────────────────────────────────────────────────────────────── */
 .ses-head {
   position: sticky; top: 0; z-index: 20;
-  /* The page's own colour, not a frosted white panel. --panel-strong is
-     rgba(255,255,255,0.86) and over this site's cream it reads as white —
-     which made the one screen you type into feel like a different application
-     from the one you chose the record in. Miyel, 2026-09-18: "I don't know
-     why the header in the actual session is so bright white and it's not
-     matching the muted colours we use site-wide… it doesn't need to be white
-     on off-white, it should just be our site colour all the way through."
-     The blur goes with it: there is nothing to see through an opaque header,
-     and a backdrop filter that filters nothing is a compositing layer for
-     free. The hairline stays and is now the only thing saying where the
-     header ends, which is enough — it is what says it everywhere else. */
-  background: var(--bg);
+  /* The frosted panel, and it stays. It was flattened to --bg for half an
+     hour on 2026-09-18 on the theory that a near-white header was what made
+     the session read as a different place, and Miyel's look at both: "go back
+     to the session that does have the brighter header — it needs it, looked
+     better." It does: this is the one band on the site that has a whole
+     screen of writing scrolling under it, and a header the same colour as the
+     page cannot say where it ends without leaning on a hairline. The hand-over
+     between two beacons was the real complaint and it is a structural one —
+     see the brief in NOTES. */
+  background: var(--panel-strong);
+  backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
   border-bottom: 1px solid var(--border);
   padding-top: env(safe-area-inset-top, 0px);
 }
@@ -884,24 +907,40 @@
    everything else. What is left is the one thing a draft has that a record
    has not — a way to throw it away — and it lives on the art so the tile
    measures the same. See the note in AlbumPicker.js. */
-.ses-tile--draft { position: relative; }
+.ses-tile--draft {
+  position: relative;
+  /* The gesture is ours: no iOS callout menu and no text selection starting
+     under the finger halfway through a hold. */
+  -webkit-touch-callout: none;
+  user-select: none; -webkit-user-select: none;
+}
+/* ── Armed by a long press ────────────────────────────────────────────────
+   Red, and the record goes under it rather than beside it — the tile becomes
+   the question instead of growing a control that asks one. The line that said
+   how long ago says what the next press does, because that is the only thing
+   worth knowing while this is up. Miyel, 2026-09-18: "maybe they turn red or
+   something."
+   Pressing any other tile answers no, so this can be loud without being a
+   trap. */
+.ses-tile--armed .ses-tile-art { box-shadow: 0 4px 18px color-mix(in srgb, var(--fav) 40%, transparent); }
+.ses-tile--armed .ses-tile-art img { filter: grayscale(70%) brightness(0.55); }
+.ses-tile--armed .ses-tile-name { color: var(--fav); }
+.ses-tile--armed .ses-tile-year { color: var(--fav); }
+.ses-tile-sure {
+  position: absolute; inset: 0; z-index: 2;
+  display: flex; align-items: center; justify-content: center;
+  background: color-mix(in srgb, var(--fav) 72%, transparent);
+  color: #fff;
+  font-family: var(--font-label); font-size: 10px;
+  letter-spacing: 0.16em; text-transform: uppercase;
+  border-radius: inherit;
+}
 .ses-tile-open {
   display: flex; flex-direction: column; gap: 2px; min-width: 0; width: 100%;
   background: none; border: none; padding: 0; text-align: left; cursor: pointer;
   color: inherit;
 }
-/* On the art, top right, and small. A tile is mostly album art and the only
-   thing that may sit on somebody's artwork is the one control that is about
-   the tile rather than about the record. */
-.ses-tile-x {
-  position: absolute; top: 6px; right: 6px; z-index: 2;
-  height: 22px; min-width: 22px; padding: 0 7px; border-radius: 999px;
-  border: none; cursor: pointer;
-  background: color-mix(in srgb, var(--bg) 82%, transparent);
-  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
-  color: var(--ink-soft);
-  font-family: var(--font-label); font-size: 10px; letter-spacing: 0.06em; line-height: 1;
-  transition: background 0.15s, color 0.15s;
-}
-.ses-tile-x:hover { color: var(--ink); }
-.ses-tile-x--sure { background: var(--ink); color: var(--bg); padding: 0 10px; }
+/* .ses-tile-x was the × in the corner of every draft. It went on 2026-09-18
+   for a press and hold: a grid of album art is a wall of somebody's record
+   covers, and a row of little crosses over them is the software asking, on
+   every one, whether you meant to keep it. */

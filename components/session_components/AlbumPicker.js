@@ -77,6 +77,33 @@ export default function AlbumPicker({ onPick, onResume, inline = false }) {
   const [drafts, setDrafts]                 = useState([]);
   const [confirmDiscard, setConfirmDiscard] = useState(null);   // draft id
 
+  // ── Press and hold to throw a draft away ────────────────────────────────
+  // There was an × in the corner of every tile. Miyel, 2026-09-18: "make the
+  // albums not have an x on them, but instead long press to delete them, with
+  // an option to make sure you want to delete — maybe they turn red."
+  //
+  // She is right that the × had to go: a grid of album art is a wall of
+  // somebody's record covers, and a row of little crosses over them is the
+  // software asking, on every single one, whether you meant to keep it. A
+  // long press asks nothing until you ask it.
+  //
+  // Held for 480ms. Long enough that a scroll or a decisive tap never trips
+  // it, short enough that you are not waiting — and the press that ends the
+  // hold is swallowed, or letting go would open the record you were about to
+  // throw away.
+  const held = useRef(false);
+  const holding = useRef(null);
+  function hold(id) {
+    held.current = false;
+    clearTimeout(holding.current);
+    holding.current = setTimeout(() => {
+      held.current = true;
+      setConfirmDiscard(id);
+    }, 480);
+  }
+  function letGo() { clearTimeout(holding.current); }
+  useEffect(() => () => clearTimeout(holding.current), []);
+
   // Which search the results on screen belong to. A slow answer to "rad"
   // arriving after a fast one to "radiohead" would otherwise replace the good
   // results with the stale ones.
@@ -200,7 +227,7 @@ export default function AlbumPicker({ onPick, onResume, inline = false }) {
               rather than a list: a grid of album art looks the same whether
               or not you may type at it, and the box is what says you may. */}
           <label className="ses-search">
-            {inline && <MagnifyingGlass size={18} weight="regular" aria-hidden="true" />}
+            <MagnifyingGlass size={18} weight="regular" aria-hidden="true" />
             <input
               className="ses-input"
               value={typed}
@@ -283,36 +310,56 @@ export default function AlbumPicker({ onPick, onResume, inline = false }) {
                Only the discard is extra, and it sits on the art, so the tile's
                footprint is a search result's to the pixel. */
             <div className="ses-grid">
-              {drafts.map(draft => (
-                <div key={draft.id} className="ses-tile ses-tile--draft">
-                  <button
-                    type="button"
-                    className="ses-tile-open"
-                    onClick={e => {
-                      const img = e.currentTarget.querySelector('img');
-                      onResume(draft, img ? img.getBoundingClientRect() : null);
-                    }}
-                  >
-                    <span className="ses-tile-art">
-                      {draft.album_art ? <img src={draft.album_art} alt="" loading="lazy" /> : null}
-                    </span>
-                    <span className="ses-tile-name">{draft.album}</span>
-                    <span className="ses-tile-year">
-                      {draft.artist}{draft.artist ? ' · ' : ''}{sinceLabel(draft.updated_at)}
-                    </span>
-                  </button>
-                  <button
-                    type="button"
-                    className={`ses-tile-x${confirmDiscard === draft.id ? ' ses-tile-x--sure' : ''}`}
-                    onClick={() => discardDraft(draft.id)}
-                    onBlur={() => setConfirmDiscard(c => (c === draft.id ? null : c))}
-                    title="Discard this draft"
-                    aria-label={`Discard the draft of ${draft.album}`}
-                  >
-                    {confirmDiscard === draft.id ? 'discard?' : '×'}
-                  </button>
-                </div>
-              ))}
+              {drafts.map(draft => {
+                const armed = confirmDiscard === draft.id;
+                return (
+                  <div key={draft.id} className={'ses-tile ses-tile--draft' + (armed ? ' ses-tile--armed' : '')}>
+                    <button
+                      type="button"
+                      className="ses-tile-open"
+                      onPointerDown={() => hold(draft.id)}
+                      onPointerUp={letGo}
+                      onPointerLeave={letGo}
+                      onPointerCancel={letGo}
+                      /* iOS offers its own menu on a long press and Safari
+                         starts selecting text; both are the gesture being
+                         taken away from us. */
+                      onContextMenu={e => e.preventDefault()}
+                      onClick={e => {
+                        // The press that ends a long press is not a tap.
+                        if (held.current) { held.current = false; e.preventDefault(); return; }
+                        // Armed, this one is the yes. Armed elsewhere, this
+                        // one is the no, and nothing else happens — pressing
+                        // past a question should answer it, not act on it.
+                        if (armed) { discardDraft(draft.id); return; }
+                        if (confirmDiscard !== null) { setConfirmDiscard(null); return; }
+                        const img = e.currentTarget.querySelector('img');
+                        onResume(draft, img ? img.getBoundingClientRect() : null);
+                      }}
+                      aria-label={armed
+                        ? `Delete the draft of ${draft.album}`
+                        : `${draft.album}. Press and hold to delete.`}
+                    >
+                      <span className="ses-tile-art">
+                        {draft.album_art ? <img src={draft.album_art} alt="" loading="lazy" /> : null}
+                        {armed && <span className="ses-tile-sure">Delete</span>}
+                      </span>
+                      <span className="ses-tile-name">{draft.album}</span>
+                      <span className="ses-tile-year">
+                        {/* Two words. The line is 96px wide at 9px and
+                            ellipsises anything longer — "press again to
+                            delete" came back as "press again to d…", which is
+                            a sentence about deleting cut off mid-word on a
+                            tile that has just turned red. The overlay above it
+                            says what; this only has to say how. */}
+                        {armed
+                          ? 'press again'
+                          : <>{draft.artist}{draft.artist ? ' · ' : ''}{sinceLabel(draft.updated_at)}</>}
+                      </span>
+                    </button>
+                  </div>
+                );
+              })}
             </div>
           )}
         </>
