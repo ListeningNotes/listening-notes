@@ -1233,9 +1233,15 @@
   top: calc(env(safe-area-inset-top, 0px) + 10px);
   transform: translateX(-50%);
   /* One width, and it is the widest corner's. This has to clear the left
-     corner at its widest — which is not the mark but END?, the word the mark
+     corner at its widest — which is not the mark but END, the word the mark
      turns into — and it is centred on the screen, so it pays for that on both
-     sides. 210 is the word's 86 plus a 19px gap, doubled.
+     sides. 190 is the word's 76 plus a 19px gap, doubled.
+
+     It was 210 while the word was END?. Miyel dropped the question mark on
+     2026-09-18 for exactly this: "drop the ? so it scrolls less." Four
+     characters to three is ten pixels off the corner, twenty off the doubling,
+     and twenty onto the title's slot — which at 375px is the difference
+     between 109px of room and 129.
 
      It was 150, then 170 with a second rule narrowing it to 230 only while the
      word was up. That second rule is gone: it made the beacon *condense on
@@ -1248,7 +1254,7 @@
      rest than it needs to be, so a long title marquees all the time rather
      than only while the question is up. A still row is worth more than a still
      title. */
-  max-width: calc(100% - 210px);
+  max-width: calc(100% - 190px);
   /* 150 is the two corners: the mark's 64 on the left and the lights' on the
      right, doubled because this is centred on the screen and has to clear the
      wider of them on both sides. Centred on the *screen* and not in the space

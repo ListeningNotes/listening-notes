@@ -2684,18 +2684,23 @@ restructure: the three drawings of the beacon were made into one.
       hairline of clearance but visibly empty space to be clipped against.
       **One width, not two.** The first fix narrowed the beacon only while the
       word was up, and that made it *condense on itself* the moment the × was
-      pressed — the one thing this row must not do. So the room for END? is
-      always there whether the word is or not: `100% - 210px`, which is the
-      word's 86 plus a 19px gap, doubled because the beacon is centred on the
-      screen and pays for its widest corner on both sides. `END?` goes 17px →
-      15px with it. Measured at 375px: the beacon is `[105, 270]` resting and
-      `[105, 270]` armed — identical, cover and all.
+      pressed — the one thing this row must not do. So the room for the word is
+      always there whether the word is or not: `100% - 190px`, which is the
+      word's 76 plus a 19px gap, doubled because the beacon is centred on the
+      screen and pays for its widest corner on both sides. The widest corner
+      was never the mark; it is the word the mark turns into, which is what the
+      original 150 never accounted for. Measured at 375px: the beacon is
+      `[95, 280]` resting and `[95, 280]` armed — identical, cover and all.
+      **A still row is worth more than a still title.**
 
-      What it costs, and it is worth writing down: the slot is narrower at rest
-      than it needs to be, so a long title marquees all the time rather than
-      only while the question is up. **A still row is worth more than a still
-      title** — and the title now starts from its beginning rather than sitting
-      mid-scroll, which is most of what made it look like a collision.
+      The word is `END`, 15px, no question mark. It read `END?` at 17px for an
+      hour; dropping the mark was Miyel's own answer to the scrolling — "drop
+      the ? so it scrolls less" — and it is ten pixels off the corner, twenty
+      off the doubling, and twenty onto the title's slot: 129px of room at
+      375px rather than 109. A long title still marquees, with a shorter lap
+      and a longer hold, and it now shows from its beginning rather than
+      sitting mid-scroll — which was most of what made it look like a collision
+      in the first place.
 - [x] **`ListeningBeacon` lost its `children`.** That was how the control got
       under the artist; nothing passes it now, so the prop and the two places
       it was drawn are gone. The component draws a record and nothing else.
