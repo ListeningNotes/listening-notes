@@ -204,17 +204,18 @@
    opens over the second half. Two elements, one movement — the swap happens
    while the lid is closed, so nothing has to line up and nothing is seen to
    change hands. See hnBlink in nav.css for the other half. */
-/* The other half of the one circle — see hnLidShut in nav.css. The same
-   radius, the same centre, the same curve: this opens out of the record where
-   that one closed into it, so the record arrives first and its name comes out
-   of the record's own edge as the circle passes over it. One motion for both,
-   which is what the art doing a circle while the words slid sideways was not. */
+/* The other half of the line — see hnLidShut in nav.css. The bar's beacon was
+   erased downward over the first half; this draws back upward over the second,
+   on layRiseTall's own curve, so the edge crossing the record and the top edge
+   of the sheet climbing the screen keep pace and reach the top together. A
+   record being drawn in by the same motion that is bringing the page it
+   belongs to. */
 .lay--rises.lay--over-journal .ses-head-beacon {
-  animation: layLidOpen 1300ms ease-in-out both;
+  animation: layLidOpen 1300ms both;
 }
 @keyframes layLidOpen {
-  0%, 50% { clip-path: circle(0 at 22px 50%); }
-  100%    { clip-path: circle(150% at 22px 50%); }
+  0%, 50% { clip-path: inset(100% 0 0 0); animation-timing-function: cubic-bezier(0.22, 0.61, 0.36, 1); }
+  100%    { clip-path: inset(0 0 0 0); }
 }
 @media (prefers-reduced-motion: reduce) {
   .lay--rises.lay--over-journal .ses-head,

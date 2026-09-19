@@ -1185,40 +1185,31 @@
    flight measures the box it is aiming at, and it cannot be showing the same
    record at the same time. */
 .hn-bar-beacon--flying { opacity: 0; }
-/* ── One circle, closing into the record ──────────────────────────────────
-   Miyel, 2026-09-18: "the blink animation for the beacon art should be coming
-   in to a point (circle) then coming back out to fill the cube again. Slowly."
-   An aperture rather than an eyelid — a lid shutting is a thing happening *to*
-   the record, and an aperture closing is the record itself going, which is
-   what this moment is.
+/* ── A line, travelling the way the session travels ──────────────────────
+   Miyel, 2026-09-18: "maybe we do a horizontal erase from top to bottom of
+   art and text, then it loads horizontally back up — that will match the
+   motion of the session rising, they should both hit the top at the same
+   time."
 
-   And one circle rather than two animations. The record closed radially while
-   the name slid sideways for twenty minutes, which is two grammars for one
-   event: "I want something that is fluid, because that doing a circle and the
-   text moving horizontal feels disjointed." So the whole mini beacon is inside
-   a single circle centred on the record. Closing, it draws in until the name
-   has been swallowed and then the record itself is a point. Opening, the
-   record appears first because the circle reaches it first and the name comes
-   out of its edge as the circle passes over it — which is what the text
-   filing in and out of the art was always meant to be, done by the art's own
-   motion rather than beside it.
+   That is the thing the circle could not do. A circle has no direction, so it
+   had nothing to say to a sheet coming up from the floor; a horizontal line
+   has one, and it is the same one. The beacon is erased downward while the
+   picker goes down, and drawn back upward while the session comes up — one
+   edge on the bar and one edge on the sheet, moving together and reaching
+   the top at the same moment.
 
-   22px is the record's own centre: 44 wide, and the first thing in the row.
-   150% of a box this shape is a radius of about 220, which clears the far end
-   of the longest name.
+   Art and name in one clip, so the line crosses both. `inset` with a growing
+   top: the region keeps its bottom edge and loses its top, which is a line
+   sweeping down. The other half is the same inset in reverse — see layLidOpen
+   in entry.css, which carries the rise's own curve so the two edges keep
+   pace.
 
-   1300ms, slow on purpose — "much slower. Intentional." At 720 it read as a
-   transition between two screens; at this length it is a record being put
-   away and another brought out.
-
-   This half closes and stays closed. The other half is the session's own
-   header opening on the new record (layLidOpen in entry.css) — two elements,
-   one movement, and the hand-over happens while both are a point, so neither
-   has to know where the other is. */
-.hn-bar-beacon--blink { animation: hnLidShut 1300ms ease-in-out both; }
+   1300ms, the two halves of it, hinged on the turn. */
+.hn-bar-beacon--blink { animation: hnLidShut 1300ms both; }
 @keyframes hnLidShut {
-  0%       { clip-path: circle(150% at 22px 50%); }
-  50%,100% { clip-path: circle(0 at 22px 50%); }
+  /* Accelerating away: the line leaves unhurried and is gone. */
+  0%       { clip-path: inset(0 0 0 0); animation-timing-function: cubic-bezier(0.4, 0, 1, 1); }
+  50%,100% { clip-path: inset(100% 0 0 0); }
 }
 @media (prefers-reduced-motion: reduce) { .hn-bar-beacon--blink { animation: none; } }
 /* And the card's own cover steps aside at once rather than fading with the
