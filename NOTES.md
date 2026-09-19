@@ -2686,7 +2686,17 @@ restructure: the three drawings of the beacon were made into one.
       at 10px in the gap beside the mark. Only the size changed. It rendered
       sentence case for ten minutes because browsers reset `text-transform` on
       form controls in their own stylesheet, so the row's `uppercase` reached
-      it or did not depending on the browser.
+      it or did not depending on the browser. The word is `--ink-soft`, the
+      mark's own colour — full ink at 17px is a heavy thing to put in the
+      corner of a screen you are choosing a record on.
+- [x] **The beacon gives the corner up while the word is showing.** `END?` is
+      92px wide against the mark's 64, and the bar's beacon is centred on the
+      screen with a `100% - 150px` cap — so at 375px a record with a long name
+      put its cover at x=75, under a word ending at 92, with the beacon
+      painting over it because it is the positioned one. While `--sure` the cap
+      is `100% - 208px`, which is the word's 92 plus a 12px gap, doubled
+      because it is centred. Costs nothing the rest of the time and only moves
+      a record already at the cap. Measured: cover at 104 armed, 75 idle.
       **The word is sentence case on purpose** (`text-transform: none`, set
       explicitly): browsers reset text-transform on form controls in their own
       stylesheet, so it was inheriting the row's `uppercase` or not depending
