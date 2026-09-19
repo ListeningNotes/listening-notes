@@ -1549,6 +1549,22 @@ Project → Settings → Environment Variables.
 
 ## Gotchas
 
+**Moving a control breaks whatever was measuring from it, 2026-09-18.** The
+beacon's shrink-into-the-bar stopped happening the moment the way-in moved out
+from under the artist, because the flight found the cover by walking *up* from
+the press — `event.currentTarget.closest('.beacon-card')`. Out of the beacon,
+`closest` returns null, `box` is undefined, the guard returns, and the whole
+animation goes without an error, a warning or a line in the console. Miyel
+noticed it as "the animation seemed smoother before"; nothing else could have.
+
+The lesson is the pattern, not the bug: a handler that finds something by
+climbing its own ancestors is quietly coupled to where it is rendered, and
+moving it is a refactor of both. Query the thing itself — scoped — and moving
+the control is just moving the control. Worth grepping for `closest(` after any
+change that moves a button.
+
+
+
 **`.click()` does not prove a control works, 2026-09-18.** The picker's × was
 dead on arrival — an invisible positioned box (`.ses-shut-slot`) sat exactly on
 top of it and swallowed every press — and every test said it was fine, because
