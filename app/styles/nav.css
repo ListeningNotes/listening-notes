@@ -1184,31 +1184,19 @@
 }
 
 /* ── A short phone ────────────────────────────────────────────────────────
-   The way in is 44px of thumb plus the 26 above it, and on a 667px screen —
-   an SE, the shortest thing this has to fit — that is what puts the floor over
-   its own footer. Measured 2026-09-18: the control ran 594 to 638 against
-   carets at 590 and a footer at 613.
+   There was a block here that tightened the gaps and shrank the crown below
+   700px, because the old centred column did not fit an SE once the way in had
+   44px of thumb under it. Every one of its four declarations was being
+   overridden by the side-by-side layout further down this file, which sets the
+   same four properties at the same specificity and later — so it was a rule
+   that looked like it was doing something and was not.
 
-   The brief says where to take it from: "if it's tight, take the gap out above
-   BEFORE THAT rather than shrinking the art." So the screen's column gap and
-   the recents' own gap both close up, and the art, the type and the crown are
-   all left alone. */
-@media (max-height: 700px) {
-  .hn-pane--home .hn-screen { gap: 8px; }
-  .hn-pane--home .hp-recent-set { gap: 4px; }
-  .hn-pane--home .ln-onward { margin-top: 2px; }
-  /* And the crown gives the last of it. The gaps alone got the control off the
-     footer and left it sitting *on* the down-caret — ink at 591 against a
-     caret at 590 — so the rest has to come from somewhere, and the choice is
-     the logo or the record. The record stays: "rather than shrinking the art"
-     is the brief's own instruction and the art is the whole screen.
+   The new shape does not need it: the record and its past stand side by side
+   instead of one under the other, which is shorter, and the crown is 0.19 of
+   the screen at every height rather than 0.28. Measured at 375x667 with the
+   way in pushed down: it ends at 570 against carets at 590 and a footer at
+   613. */
 
-     A quarter of the height instead of 0.28, which is twenty pixels on an SE
-     and nothing at all on anything taller, because this only applies here.
-     --hn-crown is already a clamp that scales with the screen; this is the
-     same idea one notch further down for the one size where it has to be. */
-  .hn { --hn-crown: clamp(140px, calc(var(--hn-h) * 0.24), 248px); }
-}
 
 /* ── The mini beacon, in the bar ──────────────────────────────────────────
    The record, its album and its artist — .ses-head-beacon's own shape, so
@@ -2695,7 +2683,16 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   align-self: center;
 }
 .hn-pane--home .beacon-meta { grid-column: 1 / -1; grid-row: 2; }
-.hn-pane--home .ln-onward { grid-column: 1 / -1; grid-row: 3; margin: 0 auto; }
+/* The way in sits well below the record rather than tucked under its artist
+   line (Miyel, 2026-09-18: "make start listen be lower, further from the
+   beacon"). The row gap above it is the screen's 22; this is the rest, and it
+   is on the control rather than in the gap because the gap is also what holds
+   the name off the cover, which wants to stay where it is. */
+.hn-pane--home .ln-onward {
+  grid-column: 1 / -1;
+  grid-row: 3;
+  margin: 38px auto 0;
+}
 /* The empty beacon has neither a cover nor a name — it has one quiet line, and
    it spans. */
 .hn-pane--home .beacon-quiet { grid-column: 1 / -1; grid-row: 1; }
