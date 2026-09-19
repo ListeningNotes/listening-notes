@@ -429,6 +429,22 @@ export default function HomeNav() {
   // floor — the band goes, the crown goes, the row of earlier covers goes,
   // and the snap between floors stops while the picker is what the pane is.
   const [choosing, setChoosing] = useState(false);
+  // ── What the bar's mini shows while you choose ──────────────────────────
+  // The record that was on the beacon when the picker opened, held still for
+  // as long as it is open — not the live beacon.
+  //
+  // It followed the beacon for half an hour on 2026-09-18, so picking a record
+  // snapped the bar to it and the session then resolved over the top carrying
+  // the same record. Measured: the bar's cover at x=134 and the session's at
+  // x=112, because the bar says the album and the session says the open track
+  // and a different word is a different width. Two copies of one record, 22px
+  // apart, sliding into each other for the length of a cross-fade — which is
+  // exactly what Miyel meant by "now the cross-fade doesn't work."
+  //
+  // They cannot be made to line up: the bar cannot know which track the
+  // session will open on. So the bar does not change. The session arriving IS
+  // the beacon updating, and there is one thing moving instead of two.
+  const [onTheBar, setOnTheBar] = useState(null);
   const router = useRouter();
 
   // ── Off the picker and into the listen ────────────────────────────────────
@@ -1009,12 +1025,12 @@ export default function HomeNav() {
       {choosing && (
         <span className={'hn-bar-beacon' + (landing ? ' hn-bar-beacon--flying' : '')} aria-hidden="true">
           <span className="hn-bar-cover">
-            {onAir ? <img src={onAir} alt="" /> : null}
+            {onTheBar?.art ? <img src={onTheBar.art} alt="" /> : null}
           </span>
-          {onAirAlbum && (
+          {onTheBar?.album && (
             <span className="hn-bar-said">
-              <span className="hn-bar-album">{onAirAlbum}</span>
-              {onAirArtist && <span className="hn-bar-artist">{onAirArtist}</span>}
+              <span className="hn-bar-album">{onTheBar.album}</span>
+              {onTheBar.artist && <span className="hn-bar-artist">{onTheBar.artist}</span>}
             </span>
           )}
         </span>
@@ -1350,6 +1366,8 @@ export default function HomeNav() {
                           const art = event.currentTarget
                             .closest('.beacon-card')?.querySelector('img.beacon-art');
                           const box = art?.getBoundingClientRect();
+                          // Taken now and held: see onTheBar above.
+                          setOnTheBar({ art: onAir, album: onAirAlbum, artist: onAirArtist });
                           setChoosing(true);
                           if (!box || !onAir) return;
                           if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
