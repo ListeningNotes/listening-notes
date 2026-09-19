@@ -193,21 +193,23 @@
    while the lid is closed, so nothing has to line up and nothing is seen to
    change hands. See hnBlink in nav.css for the other half. */
 .lay--rises.lay--over-journal .ses-cover {
-  animation: layLidOpen 720ms ease-in-out both;
+  animation: layLidOpen 1300ms ease-in-out both;
 }
 .lay--rises.lay--over-journal .ses-head-text {
-  animation: layLidSpeak 720ms ease-in-out both;
+  animation: layLidSpeak 1300ms ease-in-out both;
 }
 @keyframes layLidOpen {
   0%, 50% { clip-path: circle(0% at 50% 50%); }
   100%    { clip-path: circle(75% at 50% 50%); }
 }
-/* The name arrives a little behind the picture, the way the old one left a
-   little ahead of it — so the turn is one point of nothing rather than two
-   things changing at once. */
+/* And the name files out of the picture, the way the old one filed into it —
+   sliding right from behind the record's edge while a wipe lets it out.
+   Nothing on this screen appears; everything arrives from somewhere. It
+   starts at 60%, a beat after the record has begun opening, so the order
+   reads as the record first and then what it is called. */
 @keyframes layLidSpeak {
-  0%, 62% { opacity: 0; }
-  100%    { opacity: 1; }
+  0%, 60% { transform: translateX(-14px); clip-path: inset(0 100% 0 0); }
+  100%    { transform: translateX(0); clip-path: inset(0 0 0 0); }
 }
 @media (prefers-reduced-motion: reduce) {
   .lay--rises.lay--over-journal .ses-head,
