@@ -72,6 +72,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ArrowRight, ArrowsLeftRight, X } from '@phosphor-icons/react';
 import { CAPTION, announce, useListeningBeacon } from '../../hooks/useListeningBeacon';
+import MarqueeTitle from './MarqueeTitle';
 import { useSpineWidth } from '../../hooks/useSpineWidth';
 import { useTheme } from './Lightswitch';
 import { useBookplate } from './Bookplate';
@@ -1159,7 +1160,7 @@ export default function HomeNav() {
                   {CAPTION.logging}
                 </span>
               )}
-              <span className="ses-head-album">{onTheBar.title}</span>
+              <MarqueeTitle text={onTheBar.title} textClassName="ses-head-album" />
               {onTheBar.artist && <span className="ses-head-artist">{onTheBar.artist}</span>}
             </span>
           )}

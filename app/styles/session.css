@@ -586,8 +586,15 @@
    read as sitting left of centre. Miyel saw it at once. There is no cross-fade
    to line up any more: the session rises and the bar's mini blinks, and
    neither needs the other to be anywhere in particular. */
+/* ── How wide the small beacon gets ──────────────────────────────────────
+   190px, which is the cap the compact beacon in the old nav row used before
+   2026-08-28 and is back for the same reason it was chosen then: the column is
+   free to be as wide as the record's name up to this, and past it the art gets
+   pushed too far off centre, so a longer title scrolls inside the cap instead
+   of widening the row. Some of Visions is well past it. */
 .ses-head-text {
   min-width: 0;
+  max-width: 190px;
   display: flex; flex-direction: column; align-items: center;
   text-align: center;
   gap: 3px;
@@ -627,10 +634,33 @@
   50%      { opacity: 0.5; }
 }
 @media (prefers-reduced-motion: reduce) { .ses-head-dot { animation: none; } }
+/* No overflow of its own any more: the clip around it does that, and a title
+   that is allowed to be its full width is the thing the marquee measures. */
 .ses-head-album {
   font-family: var(--font-display); font-weight: 700; font-size: 15px; line-height: 1.2;
-  color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  color: var(--ink); white-space: nowrap; flex-shrink: 0;
 }
+/* ── The marquee ─────────────────────────────────────────────────────────
+   The clip is as wide as the title up to the column's cap, and centres it
+   while it fits. Once it does not, the title has to start at its first
+   character rather than at its visual middle, which is what is-marqueeing
+   does — and the second copy comes out of hiding, so the lap ends on a frame
+   identical to the one it started on. See components/main_components/
+   MarqueeTitle.js. */
+.marquee-clip {
+  max-width: 100%; min-width: 0;
+  overflow: hidden;
+  display: flex; justify-content: center;
+}
+.marquee-clip.is-marqueeing { justify-content: flex-start; }
+.marquee-track { display: flex; align-items: center; white-space: nowrap; }
+.marquee-track-gap { width: 48px; flex-shrink: 0; }
+/* Hidden until there is a lap to make. Without this a short title would show
+   its own echo 48px to the right, inside the clip. */
+.marquee-track-gap,
+.marquee-clip > .marquee-track > :last-child { display: none; }
+.marquee-clip.is-marqueeing .marquee-track-gap,
+.marquee-clip.is-marqueeing > .marquee-track > :last-child { display: block; }
 /* ── The beacon's own type, at five eighths ───────────────────────────────
    The record and the artist are the card's, reduced by 0.625: 24px becomes 15,
    13.6 becomes 8.5. Two reasons, and they are the same reason.

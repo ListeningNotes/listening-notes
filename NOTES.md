@@ -2553,6 +2553,15 @@ restructure: the three drawings of the beacon were made into one.
       tells you otherwise; a green dot here is one thing only.
 - [x] **Idle, the small beacon shows nothing but the greyed cover.** No dot,
       no words. It says the listen is over before you have read anything.
+- [x] **Long titles scroll again.** `MarqueeTitle` is back — restored from
+      before 2026-08-28, not rebuilt — on the small beacon's title line, in a
+      190px slot (the old compact beacon's own cap). Seven seconds on the first
+      character, then one lap of the title plus a 48px gap at 18px/s, at which
+      point the second copy is standing exactly where the first started, so the
+      cycle restarts on an identical frame and there is no return journey to
+      watch. Measured on a 407px title: 7.0s hold, 455px lap, 32.3s cycle,
+      identical in the bar and the session. The large beacon still wraps to two
+      lines and always should — it has a whole screen to be tall in.
 - [x] **Nothing floats up from the picker.** "It simply turns on with the
       selection." The mini changes record and lights where it stands. Same
       reasoning as the return journey: a record in a grid of a dozen is not
