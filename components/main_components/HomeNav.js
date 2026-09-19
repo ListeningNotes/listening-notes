@@ -161,18 +161,12 @@ const TO_THE_BAR_MS = 620;
 // The aperture, closing and opening. Slow on purpose — long enough that it
 // reads as the record being put away and another brought out, rather than as
 // a screen changing. The body's rise is shorter and finishes inside it.
-const BLINK_MS = 1300;
-// The turn: the moment the record is a point and nothing is on screen but the
-// bar. Everything before it leaves, everything after it arrives, and the two
-// halves are the same length. Miyel's whole sequence, 2026-09-18: "when the
-// album art goes away (close in) the selections and drafts leave the screen
-// down; as the album opens (blink open) the new session rises from the bottom.
-// Timed together, intentional."
-const THE_TURN_MS = BLINK_MS / 2;
-// The body's rise, which is the second half and nothing else: it waits out
-// the closing, then comes up as the record opens. entry.css carries the same
-// number as a delay and a duration on .lay--over-journal.
-const RISE_MS = 620;
+// BLINK_MS, THE_TURN_MS and RISE_MS lived here. The aperture that closed on
+// one record and opened on another, the turn it hinged on, and the two-half
+// clock the whole screen left and arrived on all went on 2026-09-18 — see the
+// note on the Start a listen button for what replaced them. What is left is
+// the flight, which is the one movement this pane has ever needed: a record
+// travelling from where it was pressed to where it is going.
 
 // ── And the way back down ─────────────────────────────────────────────────
 // A listen becomes an entry, the layer closes, and the record falls out of
@@ -456,20 +450,6 @@ export default function HomeNav() {
   // session will open on. So the bar does not change. The session arriving IS
   // the beacon updating, and there is one thing moving instead of two.
   const [onTheBar, setOnTheBar] = useState(null);
-  // ── The blink ───────────────────────────────────────────────────────────
-  // Miyel, 2026-09-18, after three goes at dissolving one surface into
-  // another: "I think the issue now is that I don't like cross-fades. Maybe
-  // the beacon art can blink closed slowly then re-open with the new album
-  // and titles. While that's happening the session comes up from the bottom."
-  //
-  // It is a better mechanic than any of the fades, and the reason is that it
-  // is the *beacon's* change rather than a transition between two screens.
-  // Nothing has to line up with anything: the record closes like an eyelid,
-  // the new one is put behind it while it is shut, and it opens on the new
-  // one. The session rises from the foot of the screen at the same time,
-  // which also gives the ending its shape — everything leaves by the way it
-  // came in rather than fading out where it stands.
-  const [blinking, setBlinking] = useState(false);
   const router = useRouter();
 
   // ── Off the picker and into the listen ────────────────────────────────────
@@ -529,37 +509,26 @@ export default function HomeNav() {
     // detaching from a row and sailing up is a fourth thing happening on top
     // of a session arriving and a picker folding away.
     //
-    // ── The least that is still a change ────────────────────────────────
-    // The record in the bar becomes the one just pressed, and the session
-    // comes up over the picker it was pressed in. Two things, and only one of
-    // them moves. Miyel, 2026-09-18, on the version where the whole screen
-    // left by the floor first: "it looks like too much motion. It's too
-    // dramatic."
-    // The bar's beacon hands over rather than being joined. It is the beacon
-    // right up to the press; from the press it is the session's, which is
-    // rising with the record already in it. Both on screen at once is the
-    // doubling Miyel keeps seeing — they are the same record in two places
-    // twenty pixels apart, because each is centred on its own words and the
-    // session's has a line the bar's has not.
-    setBlinking(true);
-    router.push('/session');
+    // ── Up to the mini beacon, and then the work ────────────────────────
+    // "When you choose an album from this state it just needs to move up and
+    // make the mini beacon." So the record leaves the square you pressed and
+    // goes to the one place it is going to live, and the session follows it
+    // rather than arriving beside it.
+    setLanding({ record, art: record.artUrl, from, to: null, go: false, ms: TO_THE_BAR_MS, into: '.hn-bar-cover' });
+    // The mini becomes this record as the flight lands on it, and the session
+    // comes up under a bar that is already right.
+    flightTimers.current.push(setTimeout(() => {
+      setOnTheBar({ art: record.artUrl, album: record.album, artist: record.artist });
+      router.push('/session');
+    }, TO_THE_BAR_MS));
     // And the picker folds away once the sheet is over it — unseen, which is
     // the point. Doing it now would empty the screen behind a sheet that has
     // not covered it yet.
-    // ── Not until the session has covered it ────────────────────────────
-    // This fired at the turn for twenty minutes, which put the whole beacon
-    // screen back — crown, card, foot, caret — while the session was still
-    // only halfway up. Miyel: "we see the background (big beacon screen)
-    // between the search leaving and the session rising. We shouldn't see
-    // behind during that sequence."
-    //
-    // Nothing needs it earlier. The picker has already gone down and stayed
-    // down (its leaving animation holds its end state), the bar's record is a
-    // point, and `.hn--choosing` is what keeps everything under the bar
-    // collapsed — so holding it to the end of the blink is what makes the
-    // screen blank for the whole of the second half. The pane comes back
-    // behind a session that is already covering it.
-    flightTimers.current.push(setTimeout(() => { setChoosing(false); setBlinking(false); }, RISE_MS + 120));
+// The picker is not put away. `choosing` stays true for as long as the
+    // session is open, so closing the session lands back on the drafts it was
+    // started from — "being in a session needs to take me back to drafts."
+    // Nothing has to tell this pane the session has closed; the pane never
+    // stopped being where it was.
   }, [openSession, router]);
 
   // The journey: out of the picker and into the bar's slot, which is the
@@ -1070,7 +1039,7 @@ export default function HomeNav() {
           already exactly here and nothing appears to move. The bar's own row
           shifts up to meet it (.hn--choosing .hn-bar in nav.css), so the ×
           and the lights sit on the line they will sit on in a moment. */}
-      {choosing && !blinking && (
+      {choosing && (
         <span
           className={'hn-bar-beacon' + (landing ? ' hn-bar-beacon--flying' : '')}
           aria-hidden="true"
@@ -1263,7 +1232,6 @@ export default function HomeNav() {
         + (spine.dragging ? ' hn--dragging' : '')
         + (choosing ? ' hn--choosing' : '')
         + (landing ? ' hn--flying' : '')
-        + (blinking ? ' hn--blinking' : '')
       }
       data-pane={pane}
     >
@@ -1406,20 +1374,35 @@ export default function HomeNav() {
                       <button
                         type="button"
                         className="ln-onward"
-                        onClick={() => {
-                          // ── Straight into the session ───────────────────
-                          // The picker was drawn on this pane and the session
-                          // opened over it once a record was chosen, which is
-                          // the "three layers" Miyel kept feeling: "everything
-                          // from here should feel fluid, like going between
-                          // different states — I need it to not feel like it's
-                          // just another layer on top."
-                          // It is one layer now. The session opens on its own
-                          // picker, the record flies from the tile into the
-                          // session's own beacon, and the × in a listen lands
-                          // back on that picker. The pane's job ends at the
-                          // press.
-                          openSession();
+                        onClick={event => {
+                          // ── The beacon comes up and the drafts appear ────
+                          // Miyel, 2026-09-18, comparing this with what is
+                          // live: "I do like the beacon coming from the beacon
+                          // on the page and making itself a part of the
+                          // session when you're in your drafts — it makes it
+                          // feel like the beacon comes alive. I like clicking
+                          // start a listen and the old beacon moves up, you
+                          // see your drafts."
+                          //
+                          // It pushed straight into the session for half an
+                          // hour and she is right about what that cost: the
+                          // sheet slid up with no way back — "it swipes up
+                          // from the bottom, but I have to go swipe back,
+                          // that's not intuitive." The picker belongs on this
+                          // pane, where the × in the bar is the way out and
+                          // the beacon is the thing that travels.
+                          const art = event.currentTarget
+                            .closest('.beacon-card')?.querySelector('img.beacon-art');
+                          const box = art?.getBoundingClientRect();
+                          setOnTheBar({ art: onAir, album: onAirAlbum, artist: onAirArtist });
+                          setChoosing(true);
+                          if (!box || !onAir) return;
+                          if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+                          setLanding({
+                            art: onAir,
+                            from: { left: box.left, top: box.top, width: box.width, height: box.height },
+                            to: null, go: false, ms: TO_THE_BAR_MS, into: '.hn-bar-cover',
+                          });
                         }}
                       >
                         Start a listen

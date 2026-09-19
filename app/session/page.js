@@ -382,11 +382,13 @@ export default function SessionPage() {
                back to drafts. I'm tired of going in and then closing and
                having to restart a listen. When you're in session you might be
                listening to multiple albums."
-               So the × in a listen puts the record down and lands on the
-               picker — same sheet, other state — and it is the × on the
-               picker that leaves. `leave` already did exactly this and
-               nothing had ever called it from here. */
-            onEnd={leave}
+               Out to the cross, where the picker is. The picker belongs on
+               the pane again (see the Start a listen button in HomeNav) and
+               that pane never stopped choosing while this was open, so
+               closing this lands on the drafts it was started from. `leave`
+               is the answer when a session was opened cold at this address
+               and there is no pane under it — endListen asks which. */
+            onEnd={endListen}
             hasWriting={s.hasWriting}
           />
 
