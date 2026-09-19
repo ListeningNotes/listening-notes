@@ -1037,6 +1037,22 @@ export default function HomeNav() {
     return () => document.removeEventListener('pointerdown', away, true);
   }, [ending]);
 
+  // ── EXPERIMENT (branch beacon-shapes) ────────────────────────────────────
+  // /?beside turns on the side-by-side beacon, so the two shapes can be put in
+  // front of a real phone one after the other.
+  //
+  // Put on the node after mount rather than worked into the className: the
+  // server renders with no window, React keeps the server's attribute through
+  // hydration, and a class read during render never arrives. Nothing here is a
+  // setting and none of it survives the branch.
+  useEffect(() => {
+    if (!window.location.search.includes('beside')) return undefined;
+    const root = railRef.current?.closest('.hn');
+    if (!root) return undefined;
+    root.classList.add('hn--beside');
+    return () => root.classList.remove('hn--beside');
+  }, []);
+
   // ── Measuring depth ───────────────────────────────────────────────────────
   // A pane is deep when its scroller overflows. Re-measured whenever the thing
   // inside it could have changed size — entries landing, the card's portrait
