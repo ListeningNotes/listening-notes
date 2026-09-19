@@ -35,7 +35,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { MagnifyingGlass, Trash } from '@phosphor-icons/react';
 import SiteNav from '../main_components/SiteNav';
 import { searchAlbums } from '../../library/music_data_api';
-import { PENDING_EVENT } from '../../hooks/useListeningSession';
+import { PENDING_EVENT, SAVED_EVENT } from '../../hooks/useListeningSession';
 
 // How long the grid takes to shuffle over, and how long the newcomer waits
 // before growing into the slot the others are clearing.
@@ -135,7 +135,19 @@ export default function AlbumPicker({ onPick, onResume, inline = false }) {
     };
     ask();
     window.addEventListener(PENDING_EVENT, ask);
-    return () => { alive = false; window.removeEventListener(PENDING_EVENT, ask); };
+    // And when a listen becomes an entry. Publishing deletes the draft — both
+    // copies, see finish() in useSessionDraft — but it shouts SAVED_EVENT and
+    // not PENDING_EVENT, so this list never heard about it and the record you
+    // had just posted was still sitting here under Unfinished when the cutaway
+    // put you back (Miyel, 2026-09-18: "make sure the draft deletes since it's
+    // posted"). It was gone from the server the whole time; it was this that
+    // had not been told.
+    window.addEventListener(SAVED_EVENT, ask);
+    return () => {
+      alive = false;
+      window.removeEventListener(PENDING_EVENT, ask);
+      window.removeEventListener(SAVED_EVENT, ask);
+    };
   }, []);
 
   // ── Anywhere else is the no ──────────────────────────────────────────────
