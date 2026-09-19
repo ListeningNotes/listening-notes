@@ -3,29 +3,15 @@
 'use client';
 
 import { useState } from 'react';
-import { useListeningBeacon } from '../../hooks/useListeningBeacon';
+import { CAPTION, useListeningBeacon } from '../../hooks/useListeningBeacon';
 
 // One beacon, one size. There used to be a `compact` shape as well, drawn in
 // the nav row of every page — that row does not carry it any more, so the
 // second shape has nothing to draw and is gone with it.
 
-// One beacon, two states:
-//
-//   Now logging  →  Last logged
-//
-// Which one is showing is decided on the server — see
-// app/api/public/beacon/route.js — because a visitor's browser has no way of
-// knowing whether a listen is open.
-//
-// There were four until 2026-09-16, because there were two beacons and the
-// other one was Last.fm's ("Now listening" → "Last played"). It went while
-// nobody had one connected. What is left is the better thing to find on a
-// journal anyway: somebody sitting with a record and writing about it, rather
-// than music being on in a room.
-const CAPTION = {
-  logging: 'Now logging',
-  logged: 'Last logged',
-};
+// The two captions live with the two states, in the hook — the small beacon in
+// the bar and the one in the session's header say the same two words and are
+// not in this file.
 
 // ── Where the caption is ──────────────────────────────────────────────────
 // On the cover while the cover is grey, and under it once it lights.

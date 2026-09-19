@@ -33,6 +33,23 @@
 import { useMemo, useSyncExternalStore } from 'react';
 import { useBookplate } from '../components/main_components/Bookplate';
 
+// ── The two words ─────────────────────────────────────────────────────────
+// What each state is called, wherever the beacon is drawn. Here rather than in
+// the component because the beacon is drawn in three places and only one of
+// them is that component: the small copy in the nav bar and the one in the
+// session's header say these same two words, and a caption that lived with one
+// drawing of the beacon is a caption the other two have to guess at.
+//
+// There were four until 2026-09-16, because there were two beacons and the
+// other one was Last.fm's ("Now listening" → "Last played"). It went while
+// nobody had one connected. What is left is the better thing to find on a
+// journal anyway: somebody sitting with a record and writing about it, rather
+// than music being on in a room.
+export const CAPTION = {
+  logging: 'Now logging',
+  logged: 'Last logged',
+};
+
 const REFRESH_MS = 15000;  // ask our own server every 15 seconds
 // How long the owner's own hand outranks the server's answer. It has to clear
 // the ten seconds /api/public/beacon may be served from the edge cache, plus a

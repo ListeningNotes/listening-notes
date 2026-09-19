@@ -2526,6 +2526,38 @@ current.
 
 ## Complete
 
+**2026-09-18 — one beacon, two sizes. Branch `nothing-required`.** The first
+half of the header brief below, taken on its own because it needed no
+restructure: the three drawings of the beacon were made into one.
+
+- [x] **The small beacon is the session's, drawn in the nav bar.** Not a
+      lookalike. The bar renders `.ses-head-beacon` in the session's own
+      classes, so there is one set of styles and the two cannot drift. The
+      `.hn-bar-cover / -said / -album / -artist` set is gone; what is left in
+      nav.css is where it stands.
+- [x] **All three say the same four things.** Cover, caption, record, artist.
+      The bar had no caption and the session had no artist, so a record
+      crossing between them lost a line each way.
+- [x] **The caption tells the truth in the bar.** Dull with `LAST LOGGED` when
+      the record up there is last night's, lit with a dot and `NOW LOGGING`
+      once one has been chosen. It said nothing at all before. The session's
+      is hard-coded to `NOW LOGGING` on purpose — a session *is* a listen.
+- [x] **CAPTION lives in `hooks/useListeningBeacon.js`**, with the states it
+      names, rather than in one of the three components that draws them.
+- [x] **The artist scales instead of changing voice.** DM Mono 10px in the
+      small beacon and Nunito 13.6 on the card; now Nunito 8.5, which is the
+      card's 0.625. The caption above it does not scale — a label is DM Mono
+      at 9–10px everywhere on this site, and five eighths of that is 6px.
+- [x] **The handoff is exact.** Measured with both on screen: cover
+      `[229.8, 14.4, 44, 44]` in the bar and `[229.8, 14.4, 44, 44]` in the
+      session, same caption, same record, same artist. It was two pixels out
+      vertically because the bar hard-coded the 12px inset that
+      `.ses-head-in` only uses on a desk — it is 10 on a phone.
+
+Still open from the evening: the words do not yet travel with the cover into
+the session (deferred — "it's fine for now, we can figure that out later"),
+and the restructure below.
+
 **2026-09-18 — the beacon becomes the listen. Branch `beacon-listen`, 48
 commits.** Miyel's beacon brief, built from her phone against the dev server
 over one long session, plus everything the testing turned up. Version 1.25.0.

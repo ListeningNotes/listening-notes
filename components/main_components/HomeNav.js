@@ -71,7 +71,7 @@ import { useCallback, useEffect, useLayoutEffect, useRef, useState, useSyncExter
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ArrowRight, ArrowsLeftRight, X } from '@phosphor-icons/react';
-import { announce, useListeningBeacon } from '../../hooks/useListeningBeacon';
+import { CAPTION, announce, useListeningBeacon } from '../../hooks/useListeningBeacon';
 import { useSpineWidth } from '../../hooks/useSpineWidth';
 import { useTheme } from './Lightswitch';
 import { useBookplate } from './Bookplate';
@@ -254,7 +254,7 @@ function secondFloorTop(pane) {
 export default function HomeNav() {
   const { cover_name, pinned_entry_id } = useBookplate();
   const { theme, toggle: toggleTheme } = useTheme();
-  const { isLive, before, art: onAir, album: onAirAlbum, artist: onAirArtist } = useListeningBeacon();
+  const { isLive, before, art: onAir, album: onAirAlbum, artist: onAirArtist, track: onAirTrack } = useListeningBeacon();
   // How wide the spine is on a desk, and the grip that changes it. The hook
   // writes the width onto the document's root as --spine-w, which the
   // stylesheet reads above 769px and ignores below it.
@@ -471,7 +471,7 @@ export default function HomeNav() {
     const from = wordsFrom.current;
     if (!from || !choosing) return;
     wordsFrom.current = null;
-    const said = document.querySelector('.hn-bar-said');
+    const said = document.querySelector('.hn-bar-beacon .ses-head-text');
     if (!said) return;
     const to = said.getBoundingClientRect();
     if (!to.width) return;
@@ -568,8 +568,13 @@ export default function HomeNav() {
     // on, and it is drawn but not shown for the length of the journey — the
     // record is in the air and must not also be sitting where it is going.
     // The mark goes in the same commit: one thing in that space, always.
-    setOnTheBar({ art: record.artUrl, album: record.album, artist: record.artist });
-    setLanding({ record, art: record.artUrl, from, to: null, go: false, ms: TO_THE_BAR_MS, into: '.hn-bar-cover' });
+    // A record just chosen is a listen just opened, so it goes up lit and
+    // captioned Now logging — and nothing about it changes when the session
+    // resolves over the top, because the session draws this same beacon.
+    // No song: nothing is open yet, and the beacon's rule is the record until
+    // one is.
+    setOnTheBar({ art: record.artUrl, title: record.album, artist: record.artist, live: true });
+    setLanding({ record, art: record.artUrl, from, to: null, go: false, ms: TO_THE_BAR_MS, into: '.hn-bar-beacon .ses-cover' });
     // And the session comes up under a bar that is already right.
     flightTimers.current.push(setTimeout(() => router.push('/session'), TO_THE_BAR_MS));
     // And the picker folds away once the sheet is over it — unseen, which is
@@ -1098,13 +1103,41 @@ export default function HomeNav() {
           className={'hn-bar-beacon' + (landing ? ' hn-bar-beacon--flying' : '')}
           aria-hidden="true"
         >
-          <span className="hn-bar-cover">
-            {onTheBar?.art ? <img src={onTheBar.art} alt="" /> : null}
+          {/* ── One beacon, two sizes ────────────────────────────────────
+              Miyel, 2026-09-18: "it should be one beacon, two sizes. The
+              search/draft beacon is the same as the session beacon."
+
+              So this is not a small beacon of its own: it is the session's
+              header beacon, drawn here, in the session's own classes. There
+              was a matching set of .hn-bar-* rules for a day — the same three
+              lines at the same three sizes, kept in step by hand — and they
+              had already drifted apart by the time she looked at them. The
+              bar said the record and the artist with no caption at all; the
+              session said the open song with no artist and NOW LOGGING
+              whether or not anything was. Three drawings of one thing, none
+              of them agreeing.
+
+              Drawn in .ses-head-beacon's own classes there is nothing left to
+              keep in step, and the handoff is free: the session resolving
+              over this row puts the identical beacon in the identical place,
+              so there is nothing to see at the seam. */}
+          <span className={'ses-cover' + (onTheBar.live ? '' : ' ses-cover--idle')}>
+            {onTheBar?.art
+              ? <img src={onTheBar.art} alt="" />
+              : <span className="ses-cover-none">♪</span>}
           </span>
-          {onTheBar?.album && (
-            <span className="hn-bar-said">
-              <span className="hn-bar-album">{onTheBar.album}</span>
-              {onTheBar.artist && <span className="hn-bar-artist">{onTheBar.artist}</span>}
+          {onTheBar?.title && (
+            <span className="ses-head-text">
+              {/* Dull and captioned Last logged when the record up here is
+                  last night's, lit and captioned Now logging once one has
+                  been chosen. The dot is the only green thing in the row and
+                  it means what it means everywhere else on this site. */}
+              <span className="ses-head-live">
+                {onTheBar.live && <span className="ses-head-dot" aria-hidden="true" />}
+                {CAPTION[onTheBar.live ? 'logging' : 'logged']}
+              </span>
+              <span className="ses-head-album">{onTheBar.title}</span>
+              {onTheBar.artist && <span className="ses-head-artist">{onTheBar.artist}</span>}
             </span>
           )}
         </span>
@@ -1451,7 +1484,19 @@ export default function HomeNav() {
                           const meta = event.currentTarget
                             .closest('.beacon-card')?.querySelector('.beacon-meta');
                           const said = meta?.getBoundingClientRect();
-                          setOnTheBar(onAirAlbum ? { art: onAir, album: onAirAlbum, artist: onAirArtist } : null);
+                          // A copy of what the card is showing this second,
+                          // state and all — Miyel, 2026-09-18: "it's gonna
+                          // have to either have a live dot saying now logging,
+                          // or it's gonna have to be dull and say last logged.
+                          // It is a copy of the real beacon." Including the
+                          // open song, because that is what the card says: the
+                          // record's name only while nothing is playing.
+                          setOnTheBar(onAirAlbum ? {
+                            art: onAir,
+                            title: onAirTrack || onAirAlbum,
+                            artist: onAirArtist,
+                            live: isLive,
+                          } : null);
                           setChoosing(true);
                           if (!box || !onAir) return;
                           if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
@@ -1461,7 +1506,7 @@ export default function HomeNav() {
                           setLanding({
                             art: onAir,
                             from: { left: box.left, top: box.top, width: box.width, height: box.height },
-                            to: null, go: false, ms: TO_THE_BAR_MS, into: '.hn-bar-cover',
+                            to: null, go: false, ms: TO_THE_BAR_MS, into: '.hn-bar-beacon .ses-cover',
                           });
                         }}
                       >
