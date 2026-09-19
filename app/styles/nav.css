@@ -1185,54 +1185,40 @@
    flight measures the box it is aiming at, and it cannot be showing the same
    record at the same time. */
 .hn-bar-beacon--flying { opacity: 0; }
-/* ── The blink ─────────────────────────────────────────────────────────────
-   An eyelid, not a fade. The record closes to a line, the new one is put
-   behind it while it is shut, and it opens on the new one — see the note in
-   HomeNav.js for why this is a better mechanic than dissolving one screen
-   into another. Miyel: "maybe the beacon art can blink closed slowly then
-   re-open with the new album and titles."
+/* ── One circle, closing into the record ──────────────────────────────────
+   Miyel, 2026-09-18: "the blink animation for the beacon art should be coming
+   in to a point (circle) then coming back out to fill the cube again. Slowly."
+   An aperture rather than an eyelid — a lid shutting is a thing happening *to*
+   the record, and an aperture closing is the record itself going, which is
+   what this moment is.
 
-   scaleY about the middle, so it shuts the way a shutter does. 0.02 rather
-   than 0 at the turn: a box scaled to nothing is a box the browser may stop
-   compositing, and coming back from it can snap. Ease in and out of the shut
-   rather than the site's usual curve — a lid accelerates closed and
-   decelerates open, and the site's curve is front-loaded for things that
-   travel. */
-/* ── The record closes to a point ─────────────────────────────────────────
-   Not an eyelid. Miyel, 2026-09-18: "the blink animation for the beacon art
-   should be coming in to a point (circle) then coming back out to fill the
-   cube again. Slowly." A lid shutting is a thing happening *to* the record;
-   an aperture closing on it is the record itself going, which is what this
-   moment is.
+   And one circle rather than two animations. The record closed radially while
+   the name slid sideways for twenty minutes, which is two grammars for one
+   event: "I want something that is fluid, because that doing a circle and the
+   text moving horizontal feels disjointed." So the whole mini beacon is inside
+   a single circle centred on the record. Closing, it draws in until the name
+   has been swallowed and then the record itself is a point. Opening, the
+   record appears first because the circle reaches it first and the name comes
+   out of its edge as the circle passes over it — which is what the text
+   filing in and out of the art was always meant to be, done by the art's own
+   motion rather than beside it.
 
-   75% rather than 50%: a circle has to reach the corners of the square to
-   cover it, and half the diagonal is 70.7% of half the side. Anything less
-   and the square's corners are clipped off before it starts.
+   22px is the record's own centre: 44 wide, and the first thing in the row.
+   150% of a box this shape is a radius of about 220, which clears the far end
+   of the longest name.
+
+   1300ms, slow on purpose — "much slower. Intentional." At 720 it read as a
+   transition between two screens; at this length it is a record being put
+   away and another brought out.
 
    This half closes and stays closed. The other half is the session's own
    header opening on the new record (layLidOpen in entry.css) — two elements,
-   one movement, and the hand-over happens while it is shut, so neither has to
-   know where the other is.
-
-   1300ms, and slow on purpose: "make the shrink and open to new art slower,
-   much slower. Intentional." It was 720 and read as a transition between two
-   screens; at this length it reads as the record being put away.
-
-   And the words file back into the picture rather than fading where they
-   stand — "the text then files in and out of the art, nothing should just
-   blink and appear." They slide left toward the cover while a wipe takes them
-   from the right, so the last of the name disappears behind the record's own
-   edge. Gone by 40%, which leaves the turn as one shrinking circle and
-   nothing else. */
-.hn-bar-beacon--blink .hn-bar-cover { animation: hnLidShut 1300ms ease-in-out both; }
-.hn-bar-beacon--blink .hn-bar-said  { animation: hnLidHush 1300ms ease-in-out both; }
+   one movement, and the hand-over happens while both are a point, so neither
+   has to know where the other is. */
+.hn-bar-beacon--blink { animation: hnLidShut 1300ms ease-in-out both; }
 @keyframes hnLidShut {
-  0%       { clip-path: circle(75% at 50% 50%); }
-  50%,100% { clip-path: circle(0% at 50% 50%); }
-}
-@keyframes hnLidHush {
-  0%       { transform: translateX(0); clip-path: inset(0 0 0 0); }
-  40%,100% { transform: translateX(-14px); clip-path: inset(0 100% 0 0); }
+  0%       { clip-path: circle(150% at 22px 50%); }
+  50%,100% { clip-path: circle(0 at 22px 50%); }
 }
 @media (prefers-reduced-motion: reduce) { .hn-bar-beacon--blink { animation: none; } }
 /* And the card's own cover steps aside at once rather than fading with the
