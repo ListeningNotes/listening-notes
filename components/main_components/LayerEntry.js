@@ -145,18 +145,7 @@ export function useBeforeLeaving(fn) {
 // On a phone `over` changes nothing: the stylesheet reads it above 769px only
 // (.lay--over-* in entry.css); this file does the leaving and measures the
 // growth from the sheet's own corner.
-// `byHand` is a sheet that does not close on the pull. One thing uses it — a
-// listen — and the reason is not the sheet but what closing it costs: every
-// other layer is something you were reading, where a pull made by accident
-// costs you scrolling back, and this one ends a listen. The record comes off
-// the desk, the beacon goes dark, and the afternoon becomes a draft you have
-// to go and find. Miyel, 2026-09-18: "from beacon to session the swipe down
-// feels too easy to close — we should keep it gated behind an ×."
-//
-// The pull is refused rather than made harder. A longer pull or a second
-// confirmation would still be the same gesture answering two questions, and
-// the × is already the answer to this one.
-export default function LayerEntry({ children, label = 'Entry', scrolls = false, arrives = 'tile', over = null, byHand = false }) {
+export default function LayerEntry({ children, label = 'Entry', scrolls = false, arrives = 'tile', over = null }) {
   const sheetRef = useRef(null);
   const [headerSlot] = useState(() => (typeof document === 'undefined' ? null : document.createElement('div')));
   useLayoutEffect(() => {
@@ -598,7 +587,7 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
       if (!pull.axis) {
         if (Math.abs(dx) < 6 && Math.abs(dy) < 6) return;
         if (Math.abs(dx) > Math.abs(dy)) pull.axis = browses ? 'x' : null;
-        else if (pull.top && dy > 0) pull.axis = byHand ? null : 'y';
+        else if (pull.top && dy > 0) pull.axis = 'y';
         if (!pull.axis) { pull = null; return; }
         setSettling(false);
       }
@@ -645,7 +634,7 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
       sheet.removeEventListener('touchend', end);
       sheet.removeEventListener('touchcancel', end);
     };
-  }, [leave, go, neighbours.prev, neighbours.next, browses, byHand]);
+  }, [leave, go, neighbours.prev, neighbours.next, browses]);
 
   const pulled = dragY > 0;
 

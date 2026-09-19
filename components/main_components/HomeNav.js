@@ -70,7 +70,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ArrowRight, ArrowsLeftRight } from '@phosphor-icons/react';
+import { ArrowRight, ArrowsLeftRight, X } from '@phosphor-icons/react';
 import { CAPTION, announce, useListeningBeacon } from '../../hooks/useListeningBeacon';
 import MarqueeTitle from './MarqueeTitle';
 import { useSpineWidth } from '../../hooks/useSpineWidth';
@@ -944,54 +944,6 @@ export default function HomeNav() {
     return () => el.removeEventListener('scroll', onScroll);
   }, [stir]);
 
-  // ── Down, out of the picker ─────────────────────────────────────────────
-  // The gesture that closed the session closes this too, and for the reason
-  // Miyel gave for taking the × off both: "swiping down is intuitive since the
-  // screen comes up." The picker rose out of the floor when Start a listen was
-  // pressed; a pull down is the same movement run backwards.
-  //
-  // From the top of the pane only, and not out of the search field — a finger
-  // put on a keyboard-focused input and dragged belongs to the keyboard. The
-  // threshold is a fifth of the screen or a flick, which is the layer's own
-  // rule (FAR_ENOUGH / FAST_ENOUGH in LayerEntry) rather than a second set of
-  // numbers for the same gesture.
-  //
-  // Passive: nothing is prevented. There is nothing under the picker to scroll
-  // at the top of the pane, so letting the browser have the touch costs
-  // nothing and keeps this out of the way of every other drag on the screen.
-  useEffect(() => {
-    if (!choosing) return undefined;
-    const el = homeRef.current;
-    if (!el) return undefined;
-    let from = null;
-    const begin = event => {
-      if (event.touches.length !== 1 || el.scrollTop > 0
-        || event.target?.closest?.('input, textarea, [role="slider"]')) { from = null; return; }
-      const t = event.touches[0];
-      from = { x: t.clientX, y: t.clientY, at: event.timeStamp };
-    };
-    const end = event => {
-      const done = from;
-      from = null;
-      if (!done) return;
-      const t = event.changedTouches[0];
-      const dy = t.clientY - done.y;
-      const dx = t.clientX - done.x;
-      if (dy <= 0 || dy < Math.abs(dx) * 1.5) return;
-      const far = dy > (el.clientHeight || window.innerHeight) * 0.2;
-      const fast = dy / Math.max(1, event.timeStamp - done.at) > 0.5;
-      if (far || fast) setChoosing(false);
-    };
-    el.addEventListener('touchstart', begin, { passive: true });
-    el.addEventListener('touchend', end, { passive: true });
-    el.addEventListener('touchcancel', end, { passive: true });
-    return () => {
-      el.removeEventListener('touchstart', begin);
-      el.removeEventListener('touchend', end);
-      el.removeEventListener('touchcancel', end);
-    };
-  }, [choosing]);
-
   // ── Measuring depth ───────────────────────────────────────────────────────
   // A pane is deep when its scroller overflows. Re-measured whenever the thing
   // inside it could have changed size — entries landing, the card's portrait
@@ -1129,14 +1081,35 @@ export default function HomeNav() {
   // journal, which is the beacon, so it simply stays.
   const header = (
     <div className={'hn-bar' + (down[pane] || choosing ? ' hn-bar--scrolled' : '')}>
-      {/* The picker had a × in this corner until 2026-09-18, where the
-          up-caret sits the rest of the time. It went with the session's, and
-          for the same reason: "I don't want an × on even the album selection
-          screen — I don't have them anywhere else on the site." The way out is
-          the pull down, which is the way out of every other screen that came
-          up from the floor, and it is already wired below (see the swipe on
-          .hn — swiping down while choosing closes the picker). */}
-      {!choosing && down[pane] && (
+      {/* ── The way out of the picker ────────────────────────────────────
+          In the corner the up-caret holds the rest of the time — the two never
+          want the row at once, because while the picker is open there is no
+          pane under it to go back to the top of.
+
+          This came off for an hour on 2026-09-18 and went straight back on,
+          and the pair of decisions is the useful part. Off, because nothing
+          else on the site has a close button and a pull down is how every
+          sheet goes back where it came from. On again, because of what a pull
+          costs *here*: Miyel, "from beacon to session the swipe down feels too
+          easy to close — we should keep it gated behind an ×."
+
+          She is right, and the reason is that this screen is not a sheet you
+          are reading. It is the front door of a listen: you have come off the
+          beacon to find a record, the search is half typed, and a stray
+          downward drag on a grid of covers puts you back on the beacon with
+          all of it gone. The listen behind it is the opposite case — it is
+          notetaking, it saves as it goes, and it keeps the pull. */}
+      {choosing ? (
+        <button
+          type="button"
+          className="hn-totop hn-shut"
+          onClick={() => setChoosing(false)}
+          aria-label="Stop choosing"
+          title="Stop choosing"
+        >
+          <X size={20} weight="regular" aria-hidden="true" />
+        </button>
+      ) : down[pane] && (
         <button
           type="button"
           className="hn-totop"

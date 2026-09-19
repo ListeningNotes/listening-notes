@@ -464,17 +464,17 @@ already drifted into three different objects, one missing the artist, one
 missing the caption, one captioning `NOW LOGGING` whether or not it was. Cover,
 record, artist, in both sizes, 0.625 apart on the type.
 
-**A pull closes what you were reading; a listen closes by hand, 2026-09-18.**
-Every sheet on this site goes down the way it came up — an entry, the inbox, a
-person's page, the send form, the album picker — and none of them has a close
-button. A listen is the exception and has an × (`byHand` on its LayerEntry,
-which refuses the downward pull outright rather than making it harder). The
-line is not which screen it is, it is what closing costs: everywhere else a pull
-made by accident costs you scrolling back, and here it ends the listen, darkens
-the beacon and turns what you were writing into a draft you have to go and find.
-Where leaving has to do something first, the page registers it with
-`useBeforeLeaving` — a listen writes its draft, and a write that fails stops the
-sheet — so Escape and the desk's back caret cannot skip it either.
+**A pull closes what you were reading; the picker closes by hand, 2026-09-18.**
+Every sheet on this site goes back down the way it came up, with no close
+button — an entry, the inbox, a person's page, the send form and the listen
+itself, which is notetaking and saves as it goes. The album picker is the one
+exception and keeps its ×. It is not a sheet you are reading, it is the front
+door of a listen: you have come off the beacon to find a record, the search is
+half typed, and a stray downward drag on a grid of covers puts you back on the
+beacon with all of it gone. Where leaving has to do something first, the page
+registers it with `useBeforeLeaving` (LayerEntry) — a listen writes its draft,
+and a write that fails stops the sheet, so Escape and the desk's back caret
+cannot skip it either.
 
 **How each size says it is live, 2026-09-18.** The large beacon says it in
 colour and says nothing in words — full-colour art against a greyed one, a
