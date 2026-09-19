@@ -2619,8 +2619,21 @@ restructure: the three drawings of the beacon were made into one.
 - [x] **Columns are measured at the press**, not worked out from the geometry —
       the strip has a 26px indent, a 3px gap and `flex: 1` columns, and the
       arithmetic would be three numbers kept in step with a stylesheet by hand.
-      Rects give the gaps for free: a finger between two columns is inside
-      neither, and whatever was open stays open rather than flickering.
+- [x] **Nearest centre, not containment.** Containment was the first answer and
+      it lagged a track behind: the 3px gaps belong to no column, so a finger
+      crossing one kept the *previous* track lit. Miyel: "let it land on
+      whichever your finger last highlights — right now when I scroll and try
+      to land on a track it goes to the one behind it."
+- [x] **The titles lean, so the match leans with them.** Each title is anchored
+      on its own column's centre and turned −52°, so the text you can see runs
+      down and to the *left* of the column it names — put a finger on a title
+      and you are physically over a column two or three earlier, and the strip
+      picked the wrong song while doing exactly what it was told. A point in
+      the label rows is now leaned back by cot(52°) per pixel of depth before
+      it is matched. Measured: column 5's centre is at x=259 and its title is
+      drawn from x=195; pressing the middle of that text lands on 5.
+      **The angle is one number taken from `.ses-strip-title`** and has to
+      change with it.
 
 ### One cross, on the picker and nowhere else
 
