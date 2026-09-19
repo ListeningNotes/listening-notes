@@ -35,12 +35,6 @@ import StarRating from '../StarRating';
 const SWIPE_PX = 56;
 const SWIPE_RATIO = 1.5;
 
-// How far left a title leans from the column it names, per pixel down the
-// strip: cot(52°), because .ses-strip-title is turned -52° about its own right
-// edge, which sits on that column's centre. If that angle changes in
-// session.css this changes with it.
-const TITLE_LEAN = 1 / Math.tan((52 * Math.PI) / 180);
-
 // ── The strip ─────────────────────────────────────────────────────────────
 // Every track as a bar, the one you are on lit, the ones you have said
 // something about marked underneath. It lived in RecordContents.js for an
@@ -72,61 +66,36 @@ function Strip({
   // The columns are measured once, at the press, rather than worked out from
   // the geometry — the strip has a 26px indent and a 3px gap and the columns
   // are `flex: 1`, so the arithmetic would be three numbers kept in step with
-  // a stylesheet by hand.
-  //
-  // Nearest centre, not whichever column contains the point. Containment was
-  // the first answer and it lagged: the 3px gaps belong to no column, so a
-  // finger crossing one kept the *previous* track lit until it was fully
-  // inside the next. Miyel, 2026-09-18: "let it land on whichever your finger
-  // last highlights — right now when I scroll and try to land on a track it
-  // goes to the one behind it." Nearest centre has no gaps in it.
+  // a stylesheet by hand. Rects also give the gaps for free: a finger between
+  // two columns is inside neither, and the last column that *was* hit stays
+  // lit rather than flickering.
   //
   // Past either end the nearest track stays chosen. Sliding off the right of a
   // record should not walk you into the album notes — leaving the list is what
   // the carets and the swipe are for, and a gesture that overshoots is not a
   // decision to move on.
-  //
-  // ── And the titles lean ──────────────────────────────────────────────────
-  // The labels are the other half of the same complaint, and a worse case of
-  // it. Each title is anchored at its own column's centre and turned -52°
-  // (.ses-strip-title in session.css), so the text you can see runs down and
-  // to the *left* of the column it belongs to. Put a finger on a title and it
-  // is physically over a column two or three earlier — so the strip did
-  // exactly what it was told and picked the wrong song.
-  //
-  // So a point in the label rows is leaned back before it is matched: the
-  // further down the title you are, the further right its column actually is,
-  // by cot(52°) per pixel. That is one number taken from the stylesheet, and
-  // it has to change with it.
   const stripRef = useRef(null);
   const boxesRef = useRef([]);
-  const leanRef = useRef(0);
   const slidingRef = useRef(false);
   const pickRef = useRef(onPick);
   useEffect(() => { pickRef.current = onPick; }, [onPick]);
 
-  function pickAt(x, y) {
+  function pickAt(x) {
     const boxes = boxesRef.current;
     if (!boxes.length) return;
-    // Below the bars, follow the lean of the titles.
-    const lean = leanRef.current;
-    const at = lean && y > lean ? x + (y - lean) * TITLE_LEAN : x;
-    let best = 0;
-    let near = Infinity;
-    for (let k = 0; k < boxes.length; k += 1) {
-      const d = Math.abs((boxes[k].left + boxes[k].right) / 2 - at);
-      if (d < near) { near = d; best = k; }
+    let k = boxes.findIndex(b => x >= b.left && x <= b.right);
+    if (k < 0) {
+      if (x < boxes[0].left) k = 0;
+      else if (x > boxes[boxes.length - 1].right) k = boxes.length - 1;
+      else return;            // in a gap: leave whatever is open, open
     }
-    pickRef.current?.(best);
+    pickRef.current?.(k);
   }
 
   function slideStart(event) {
     const el = stripRef.current;
     if (!el || event.button > 0) return;
     boxesRef.current = [...el.children].map(c => c.getBoundingClientRect());
-    // Where the titles start, measured rather than added up from the grid's
-    // own row heights (56/16, and 52/14 when the strip is dense).
-    leanRef.current = el.querySelector('.ses-strip-label')?.getBoundingClientRect().top || 0;
     slidingRef.current = true;
     onSliding?.(true);
     // Keeps the drag on this row even when the finger wanders off it — which
@@ -135,11 +104,11 @@ function Strip({
     // not issue throws, which is only reachable from synthetic events but
     // costs nothing to survive.
     try { el.setPointerCapture?.(event.pointerId); } catch { /* not a real pointer */ }
-    pickAt(event.clientX, event.clientY);
+    pickAt(event.clientX);
   }
   function slideMove(event) {
     if (!slidingRef.current) return;
-    pickAt(event.clientX, event.clientY);
+    pickAt(event.clientX);
   }
   function slideEnd() {
     if (!slidingRef.current) return;
