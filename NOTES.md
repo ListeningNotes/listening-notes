@@ -2692,6 +2692,20 @@ restructure: the three drawings of the beacon were made into one.
       four columns and **5928 at two**, so that is the one you are likeliest to
       have scrolled. `goUp` already did this by hand on the way back from the
       wall; the cutaway did not.
+- [x] **Choosing a record clears the picker.** The search that found it, the
+      results under it, and any armed discard all go the moment it is taken —
+      so whatever happens next, posting it or pulling out of the listen, you
+      come back to the blank screen the picker is supposed to be. Miyel,
+      2026-09-18: "coming back should act as a new choice… it could even be
+      cleared when a listen is selected, not just on post."
+
+      On selection rather than on the return, because that covers both ways
+      back with one rule. It has to be said out loud at all because **nothing
+      ever unmounts the picker**: the session is a sheet over it and the
+      cutaway is a scroll past it, so the picker you come back to is the same
+      picker with everything you left on it. Backing out of the picker without
+      choosing still keeps your search, which is right — that is not a new
+      choice, it is the same one interrupted.
 - [x] **The picker hears about a posted listen.** Publishing deletes the draft
       — both copies, `finish()` in useSessionDraft — but it shouts `SAVED_EVENT`
       and the picker only listened for `PENDING_EVENT`, so the record you had

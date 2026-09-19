@@ -257,9 +257,34 @@ export default function AlbumPicker({ onPick, onResume, inline = false }) {
 
   // The tile's cover is where the landing starts from, so its box goes along
   // with the record.
+  // ── Taking a record is the end of choosing one ───────────────────────────
+  // The search that found it goes with it. Miyel, 2026-09-18: "coming back
+  // should act as a new choice — draft gone and ready for new, or search gone
+  // ready for new… it could even be cleared when a listen is selected, not
+  // just on post."
+  //
+  // On selection rather than on the way back, and it covers both: by the time
+  // you return — posted, or pulled out of the listen — this screen is already
+  // the blank one it should be. It has to be said out loud because nothing
+  // ever takes this screen down: the session is a sheet over it and the
+  // cutaway is a scroll past it, so the picker you come back to is the same
+  // picker, with everything you left on it.
+  //
+  // The armed discard goes too. A question asked before a listen and still
+  // asked after it is a question about a screen that has been away.
+  function chosen() {
+    setTyped('');
+    setResults([]);
+    setLooking(false);
+    setAsked(false);
+    setConfirmDiscard(null);
+    setByHand(false);
+  }
+
   function take(album, e) {
     const img = e.currentTarget.querySelector('img');
     const from = img ? img.getBoundingClientRect() : null;
+    chosen();
     onPick({
       album: album.name,
       artist: album.artist,
@@ -275,6 +300,7 @@ export default function AlbumPicker({ onPick, onResume, inline = false }) {
 
   function takeByHand() {
     if (!hand.album.trim() || !hand.artist.trim()) return;
+    chosen();
     onPick({
       album: hand.album.trim(),
       artist: hand.artist.trim(),
@@ -496,6 +522,7 @@ export default function AlbumPicker({ onPick, onResume, inline = false }) {
                         if (armed) { discardDraft(draft.id); return; }
                         if (confirmDiscard !== null) { setConfirmDiscard(null); return; }
                         const img = e.currentTarget.querySelector('img');
+                        chosen();
                         onResume(draft, img ? img.getBoundingClientRect() : null);
                       }}
                       aria-label={armed
