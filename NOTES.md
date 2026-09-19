@@ -2568,6 +2568,28 @@ restructure: the three drawings of the beacon were made into one.
 
 ### One cross, on the picker and nowhere else
 
+- [x] **Manual entry takes a cover, and says what it will cost.** A record
+      typed in by hand is one nowhere has — a small press, a Bandcamp release,
+      a tape — so nothing can be looked up for it, and it is the only record on
+      the site that has to be told where its cover lives. Not required: a
+      listen has had no requirements since this morning, and a beacon with no
+      cover draws its own quiet square. But it is asked for on the form rather
+      than discovered as a blank square afterwards, and the form says outright
+      that the tracklist will have to be typed in. That screen already existed
+      ("No tracklist found for this record" → *Type them in*); what was missing
+      was knowing before you started.
+- [x] **The long-press delete is the toolbar's trash over DELETE DRAFT?**, on a
+      red field over the cover and nothing else, with the name and the artist
+      left alone underneath. `.ses-tile-art` was not a positioning context, so
+      the field had been reaching past the cover onto the text — 174×214 over a
+      174×174 cover. Wraps to two lines at 96px, which is a phone's three-across
+      grid.
+- [x] **A press anywhere is the no.** Pressing another tile already answered
+      no; the rest of the screen was dead, and a question you can only answer
+      by finding one of two right places to press has taken the screen hostage.
+      Captured at the document, so the state is clear before the press reaches
+      whatever it landed on — with the armed tile itself excepted, since a
+      press there is the yes.
 - [x] **The picker's × is the session's rotating one**, moved there when it
       came off the listen: press the mark and it turns ninety degrees, and the
       word comes out of it rather than two controls swapping places. The word
