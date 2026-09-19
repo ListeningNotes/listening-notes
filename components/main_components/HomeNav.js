@@ -158,9 +158,10 @@ const TURN_MS = 400;
 // already in that exact box, so letting go of the flown copy is a frame with
 // nothing in it to notice.
 const TO_THE_BAR_MS = 620;
-// The eyelid. Slow enough to read as a thing closing rather than a flicker,
-// and it ends a beat before the session's rise does.
-const BLINK_MS = 720;
+// The aperture, closing and opening. Slow on purpose — long enough that it
+// reads as the record being put away and another brought out, rather than as
+// a screen changing. The body's rise is shorter and finishes inside it.
+const BLINK_MS = 1300;
 // How long the session takes to resolve over the pane. It has to agree with
 // .lay--over-journal's own duration in entry.css — the picker folds away
 // behind it on this clock.
