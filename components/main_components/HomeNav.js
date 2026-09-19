@@ -1378,27 +1378,35 @@ export default function HomeNav() {
                       <button
                         type="button"
                         className="ln-onward"
-                        onClick={() => {
-                          // ── The mark goes up; the beacon is made later ───
-                          // Miyel, 2026-09-18: "maybe what needs to go up to
-                          // the top is the logo. The LN logo, with the same
-                          // animation. The beacon goes away. And then when you
-                          // choose your album, it makes the beacon."
+                        onClick={event => {
+                          // ── The beacon shrinks into the bar ──────────────
+                          // Miyel, 2026-09-18: "bring back the mini beacon as
+                          // the header of the draft/search page, with last log
+                          // vs LN logo — I liked the beacon shrinking mini
+                          // when you enter session."
                           //
-                          // Which is truer than sending the last record up
-                          // there: at this moment you have not chosen
-                          // anything, and a mini beacon showing last night's
-                          // record while you look for tonight's is a claim
-                          // nobody made. The mark is what the bar carries when
-                          // there is nothing to say, everywhere else on this
-                          // site. So the crown shrinks into it — it already
-                          // does, on its own 0.7s — the card stands down, and
-                          // the bar is a mark over a grid of records.
-                          //
-                          // The beacon arrives when you make one: the record
-                          // you press flies up and takes the mark's place.
-                          setOnTheBar(null);
+                          // It carried the mark instead for twenty minutes, on
+                          // the reasoning that you have not chosen anything yet
+                          // and last night's record in the bar is a claim
+                          // nobody made. True, and beside the point: the record
+                          // up there is not claiming to be tonight's, it is the
+                          // beacon, which is the thing this pane is, and
+                          // watching it shrink into the row is what makes the
+                          // picker feel like the same screen rather than a new
+                          // one. The mark is what it falls back to when there
+                          // is no record to carry at all.
+                          const art = event.currentTarget
+                            .closest('.beacon-card')?.querySelector('img.beacon-art');
+                          const box = art?.getBoundingClientRect();
+                          setOnTheBar(onAirAlbum ? { art: onAir, album: onAirAlbum, artist: onAirArtist } : null);
                           setChoosing(true);
+                          if (!box || !onAir) return;
+                          if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+                          setLanding({
+                            art: onAir,
+                            from: { left: box.left, top: box.top, width: box.width, height: box.height },
+                            to: null, go: false, ms: TO_THE_BAR_MS, into: '.hn-bar-cover',
+                          });
                         }}
                       >
                         Start a listen
