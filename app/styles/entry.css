@@ -175,8 +175,11 @@
   /* Straight away, and once. It waited out a whole first half while the
      screen emptied itself downward, which is the motion Miyel took off on
      2026-09-18 — "too much motion, too dramatic". There is nothing to wait
-     for now: the record in the bar becomes the one you pressed and the sheet
-     comes up over the picker. */
+     for now, and by the end of that day nothing to coordinate with either:
+     the sheet simply comes up over the picker, and the beacon underneath
+     becomes the record you chose once the screen is covered. Miyel, on why
+     two days of choreography here were wasted: "you don't see the
+     transition." See BEHIND_THE_SHEET_MS in HomeNav.js. */
   animation-duration: 620ms;
 }
 @keyframes layRiseTall {

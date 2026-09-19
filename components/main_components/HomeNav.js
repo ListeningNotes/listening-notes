@@ -165,7 +165,13 @@ const TO_THE_BAR_MS = 620;
 // cover to tonight's lit one, so that change is something you see happen
 // rather than something already done by the time the sheet clears the floor.
 // Short: a press that sits for half a second reads as a press that missed.
-const TURN_ON_MS = 180;
+// How long until the sheet has the screen. The layer's own rise is 420ms
+// (GROW_MS in LayerEntry, layRise in entry.css); this is that plus a frame or
+// two of margin, and it is when the beacon underneath becomes the record you
+// just chose. Nobody can see it happen — which is the whole idea, and why
+// there is no animation here to get right. A pull down cannot arrive before
+// the sheet it would be pulling has finished coming up.
+const BEHIND_THE_SHEET_MS = 460;
 // The aperture, closing and opening. Slow on purpose — long enough that it
 // reads as the record being put away and another brought out, rather than as
 // a screen changing. The body's rise is shorter and finishes inside it.
@@ -567,37 +573,34 @@ export default function HomeNav() {
     // detaching from a row and sailing up is a fourth thing happening on top
     // of a session arriving and a picker folding away.
     //
-    // ── Up to the mini beacon, and then the work ────────────────────────
-    // "When you choose an album from this state it just needs to move up and
-    // make the mini beacon." So the record leaves the square you pressed and
-    // goes to the one place it is going to live, and the session follows it
-    // rather than arriving beside it.
-    // The slot is made now so the flight has something to measure and land
-    // on, and it is drawn but not shown for the length of the journey — the
-    // record is in the air and must not also be sitting where it is going.
-    // The mark goes in the same commit: one thing in that space, always.
-    // ── The beacon turns on. Nothing flies. ─────────────────────────────
-    // The record went up from the tile you pressed for a day — the picker's
-    // square detaching and climbing into the bar — and Miyel took it off on
-    // 2026-09-18: "we don't even need an album card to float up from
-    // drafts/search. It simply turns on with the selection."
+    // ── The sheet comes up, and the beacon changes behind it ────────────
+    // Miyel, 2026-09-18, after two days of trying to make one record hand over
+    // to another in front of somebody: "it might be as simple as this. When
+    // you choose an album from the selector it simply comes up over the screen
+    // without the old beacon changing. On dragging down it basically leaves
+    // the new one behind." And then, in three words, the reason it works:
+    // "you don't see the transition."
     //
-    // Which is the same answer she gave coming the other way, for the same
-    // reason (see the note above): a record in a grid of a dozen is not a
-    // thing you are following, so watching one of them travel is a third
-    // movement on top of a picker folding away and a session arriving. What
-    // the eye actually reads is the change of state — grey cover to lit
-    // cover, last night's record to this one — and that needs no journey.
+    // There isn't one. The sheet covers the whole screen, so the beacon under
+    // it can become the new record whenever it likes — and every attempt at
+    // this since the 17th had been choreographing a handover that nobody was
+    // ever in a position to watch. A record flying up from the tile, an
+    // aperture closing on one cover and opening on another, a cross-fade, two
+    // beacons measured to the tenth of a pixel so the seam would not show:
+    // all of it staging for an audience behind a curtain.
     //
-    // A listen just opened, so it goes up lit, and nothing about it changes
-    // when the session resolves over the top: the session draws this same
-    // beacon. No song — nothing is open yet, and the beacon's rule is the
-    // record until one is.
-    setOnTheBar({ art: record.artUrl, title: record.album, artist: record.artist, live: true });
-    // A beat, not a flight: long enough for the bar to light before the sheet
-    // starts up over the picker, short enough that the press feels answered.
-    // It was TO_THE_BAR_MS while there was a cover in the air to wait for.
-    flightTimers.current.push(setTimeout(() => router.push('/session'), TURN_ON_MS));
+    // So: the sheet goes up now, over a bar that has not moved. The record on
+    // it changes once the screen is covered. Pulling down reveals it — the
+    // listen leaves the record behind on the beacon on its way out, which is
+    // also exactly what putting a record down means.
+    //
+    // announce() above is untouched and still fires at the press: that is the
+    // *public* beacon, what a visitor sees, and it should say what is being
+    // listened to the moment it is true rather than half a second later.
+    flightTimers.current.push(setTimeout(() => router.push('/session'), 0));
+    flightTimers.current.push(setTimeout(() => {
+      setOnTheBar({ art: record.artUrl, title: record.album, artist: record.artist, live: true });
+    }, BEHIND_THE_SHEET_MS));
     // And the picker folds away once the sheet is over it — unseen, which is
     // the point. Doing it now would empty the screen behind a sheet that has
     // not covered it yet.

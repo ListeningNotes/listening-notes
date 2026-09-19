@@ -2611,12 +2611,27 @@ restructure: the three drawings of the beacon were made into one.
       watch. Measured on a 407px title: 7.0s hold, 455px lap, 32.3s cycle,
       identical in the bar and the session. The large beacon still wraps to two
       lines and always should — it has a whole screen to be tall in.
-- [x] **Nothing floats up from the picker.** "It simply turns on with the
-      selection." The mini changes record and lights where it stands. Same
-      reasoning as the return journey: a record in a grid of a dozen is not
-      something you are following, so watching one travel is a third movement
-      over a picker folding away and a session arriving. `TURN_ON_MS` (180ms)
-      is the beat the bar gets before the sheet starts up.
+- [x] **There is no transition, because nobody can see one.** The end of two
+      days of trying to hand one record over to another in front of somebody.
+      Miyel: "it might be as simple as this — when you choose an album from the
+      selector it simply comes up over the screen without the old beacon
+      changing; on dragging down it basically leaves the new one behind." And
+      then the three words that settle it: **"you don't see the transition."**
+
+      The sheet covers the whole screen. Everything tried since 2026-09-17 —
+      the record flying up from the tile, the aperture closing on one cover and
+      opening on another, the cross-fade, the two beacons measured to a tenth
+      of a pixel so the seam would not show — was staging for an audience
+      behind a curtain. The sheet goes up over a bar that has not moved; the
+      bar becomes the new record at `BEHIND_THE_SHEET_MS` (460ms, the layer's
+      420ms rise plus margin); pulling down reveals it. Which is also what
+      putting a record down means.
+
+      Measured: sheet up by 120ms, bar still says last night's record at 420ms,
+      says the new one at 480ms. On the way out the sheet goes at 320ms with
+      the bar unchanged the whole way — nothing to see at either end.
+      `announce()` is untouched and still fires at the press: that is the
+      *public* beacon, and it should be true the moment it is true.
 - [x] **A dull record stays dull in the air**, on the one flight that is left
       — the card shrinking into the bar. The flier is its own `<img>`, neither
       of the two covers, so it drew in full colour between a greyed card and a
