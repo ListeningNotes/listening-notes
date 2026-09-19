@@ -1169,6 +1169,50 @@
   height: calc(env(safe-area-inset-top, 0px) + 68px);
   padding-top: env(safe-area-inset-top, 0px);
 }
+/* The way into a listen sits under the recents, about 26px below the BEFORE
+   THAT line (Miyel's brief, 2026-09-18). Centred on the floor rather than on
+   the row, because the row is not always there: a copy with nothing logged
+   yet has no recents and this is still the way in.
+
+   `margin-top` and not a gap on the floor, so removing the recents removes
+   their spacing with them and the control does not end up marooned. */
+.hn-pane--home .ln-onward {
+  /* 26px below the BEFORE THAT row, of which the screen's own column gap
+     (.hn-screen, 20px) already gives twenty — so six here, and the comment is
+     the only thing tying the two numbers together. The brief's number is the
+     gap between the two boxes; the space you actually see is larger by the
+     clearance this control's 44px thumb target keeps above its own type. */
+  margin: 6px auto 0;
+  display: flex;
+}
+
+/* ── A short phone ────────────────────────────────────────────────────────
+   The way in is 44px of thumb plus the 26 above it, and on a 667px screen —
+   an SE, the shortest thing this has to fit — that is what puts the floor over
+   its own footer. Measured 2026-09-18: the control ran 594 to 638 against
+   carets at 590 and a footer at 613.
+
+   The brief says where to take it from: "if it's tight, take the gap out above
+   BEFORE THAT rather than shrinking the art." So the screen's column gap and
+   the recents' own gap both close up, and the art, the type and the crown are
+   all left alone. */
+@media (max-height: 700px) {
+  .hn-pane--home .hn-screen { gap: 8px; }
+  .hn-pane--home .hp-recent-set { gap: 4px; }
+  .hn-pane--home .ln-onward { margin-top: 2px; }
+  /* And the crown gives the last of it. The gaps alone got the control off the
+     footer and left it sitting *on* the down-caret — ink at 591 against a
+     caret at 590 — so the rest has to come from somewhere, and the choice is
+     the logo or the record. The record stays: "rather than shrinking the art"
+     is the brief's own instruction and the art is the whole screen.
+
+     A quarter of the height instead of 0.28, which is twenty pixels on an SE
+     and nothing at all on anything taller, because this only applies here.
+     --hn-crown is already a clamp that scales with the screen; this is the
+     same idea one notch further down for the one size where it has to be. */
+  .hn { --hn-crown: clamp(140px, calc(var(--hn-h) * 0.24), 248px); }
+}
+
 /* ── The mini beacon, in the bar ──────────────────────────────────────────
    The record, its album and its artist — .ses-head-beacon's own shape, so
    that when the session resolves over this its header is the same three

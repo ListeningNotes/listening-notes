@@ -2618,6 +2618,41 @@ restructure: the three drawings of the beacon were made into one.
 - [x] **Idle, the small beacon shows nothing but the greyed cover.** No dot,
       no words. It says the listen is over before you have read anything.
 
+### The way into a listen, rebuilt
+
+- [x] **The button moves out from under the artist and becomes a mono line
+      under the recents.** Miyel's brief, 2026-09-18: "every other control on
+      this screen is either an icon or a mono caption. A bold sans button with
+      an arrow is the only thing in a different voice, and it sits where the
+      artwork needs to travel upward."
+
+      A PlayCircle glyph at 17px, then the words, in DM Mono 12px uppercase at
+      0.22em — the caption face. What separates it from LAST LOGGED and BEFORE
+      THAT is not its shape but full ink where they are muted, which is what
+      makes it read as the one pressable thing rather than a third label. 44px
+      of thumb out of padding, no border, no pill, no background. The arrow is
+      gone; the glyph does that job. Hover and press go to `--lift`, a new
+      token that is white in the dark and black in the light — everything else
+      on this screen dims on hover and this one is already the loudest thing
+      on it, so it had nowhere to go but brighter.
+
+      **Both states moved**, not just one: a record in hand and it is the way
+      back to it, nothing in hand and it opens the picker. They are one control
+      and leaving one under the artist in bold would be two sets of clothes for
+      one job.
+
+      **And it does not fit a 667px phone on the gaps alone.** Measured — the
+      control ran 594→638 against carets at 590 and a footer at 613, and
+      closing the gaps above BEFORE THAT (the brief's own instruction) got it
+      off the footer but left its ink at 591 sitting *on* a caret at 590. The
+      last 20px comes from the crown, at `max-height: 700px` only: 0.24 of the
+      height instead of 0.28, which is a logo 20px smaller on an SE and no
+      change at all on anything taller. **The art is untouched at 180px**,
+      which is what the brief asked to protect. Clears by 25px now.
+- [x] **`ListeningBeacon` lost its `children`.** That was how the control got
+      under the artist; nothing passes it now, so the prop and the two places
+      it was drawn are gone. The component draws a record and nothing else.
+
 ### The save is a cutaway
 
 - [x] **Saving takes the screen down to the journal, files the record in, and

@@ -34,13 +34,14 @@ import { CAPTION, useListeningBeacon } from '../../hooks/useListeningBeacon';
 // is under the record too, because a label floating on an empty square is a
 // label on nothing.
 
-// `children` is the owner's line, and it belongs to whoever is drawing the
-// beacon rather than to the beacon: pressing it turns floor one into the
-// picker, which is a thing about the pane and not about this component (see
-// HomeNav). It lands under the artist, inside the meta stack, so it reads as
-// the last line of the record's own block rather than as furniture parked
-// underneath it. Drawn on the empty beacon too — a copy on its first
-// afternoon is exactly the one that needs a way to start.
+// The owner's way into a listen used to be passed in here as `children` and
+// drawn under the artist, inside this stack. It went on 2026-09-18 with
+// Miyel's brief: it is a control about the pane and not about the record, it
+// was the one thing on the screen in a different voice, and it stood in the
+// column the cover has to be able to grow into. It lives under the recents
+// now and belongs entirely to HomeNav — this component draws a record and
+// nothing else.
+//
 // `choosing` stands the whole record down: while one is being picked the
 // beacon is not reporting anything, it is a target waiting for a cover to
 // land in it (Miyel's beacon brief, 2026-09-17). The art stays on screen,
@@ -52,15 +53,15 @@ import { CAPTION, useListeningBeacon } from '../../hooks/useListeningBeacon';
 // already three things saying it, and a fourth in small caps was a label on a
 // state nobody could be in by accident.
 //
-// It is passed in rather than worked out here for the same reason `children`
-// is: what the pane is doing is the pane's business.
+// It is passed in rather than worked out here because what the pane is doing
+// is the pane's business.
 // `emptied` takes the picture out of the slot and leaves the slot. It is the
 // middle of the drop: the cover has left the beacon and is on its way down
 // into the journal, and for those few hundred milliseconds the beacon is
 // holding a space rather than showing a record (Miyel's beacon brief, item
 // 4). Everything else stays where it is, so nothing on the screen moves while
 // one thing falls across it.
-export default function ListeningBeacon({ children = null, choosing = false, emptied = false }) {
+export default function ListeningBeacon({ choosing = false, emptied = false }) {
   const { state, album, artist, art, track, isLive } = useListeningBeacon();
   // A song wherever there is one — including after a listen has been shut,
   // which keeps the track that was open up rather than dropping back to the
@@ -88,7 +89,6 @@ export default function ListeningBeacon({ children = null, choosing = false, emp
     return (
       <div className="beacon-stage beacon-stage--quiet">
         {!choosing && <p className="beacon-quiet">Nothing logged yet.</p>}
-        {children}
       </div>
     );
   }
@@ -160,7 +160,6 @@ export default function ListeningBeacon({ children = null, choosing = false, emp
               and it is the last of what Miyel kept calling not fluid. */}
           <div className="beacon-track beacon-track--wrap">{title}</div>
           {artist && <div className="beacon-artist">{artist}</div>}
-          {children}
         </div>
       </div>
     </div>

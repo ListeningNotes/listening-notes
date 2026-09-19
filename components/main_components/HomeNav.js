@@ -70,7 +70,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ArrowRight, ArrowsLeftRight, X } from '@phosphor-icons/react';
+import { ArrowsLeftRight, PlayCircle, X } from '@phosphor-icons/react';
 import { CAPTION, announce, useListeningBeacon } from '../../hooks/useListeningBeacon';
 import MarqueeTitle from './MarqueeTitle';
 import { useSpineWidth } from '../../hooks/useSpineWidth';
@@ -1403,6 +1403,99 @@ export default function HomeNav() {
     </div>
   );
 
+  // ── The way in ───────────────────────────────────────────────────────────
+  // Under the recents, not under the artist, and in the captions' own voice.
+  //
+  // Miyel's brief, 2026-09-18: "every other control on this screen is either
+  // an icon or a mono caption. A bold sans button with an arrow is the only
+  // thing in a different voice, and it sits where the artwork needs to travel
+  // upward." Both halves are right — it was Nunito bold with an arrow in a
+  // screen of DM Mono labels, and it was standing in the beacon's own column,
+  // where the cover has to be able to grow.
+  //
+  // Full ink where LAST LOGGED and BEFORE THAT are muted, which is the whole
+  // of what makes it read as the one thing here you can press rather than a
+  // third caption. The arrow goes; the glyph does that job.
+  //
+  // Both states live here, because they are one control: a record in hand and
+  // it is the way back to it, nothing in hand and it opens the picker. Leaving
+  // one under the artist in bold and moving the other would be two controls
+  // wearing different clothes for the same job.
+  const theWayIn = authed && (inHand ? (
+    <Link href="/session" className="ln-onward" title={`Back to ${inHand.album}`}>
+      <PlayCircle size={17} weight="regular" aria-hidden="true" />
+      Back to the listen
+    </Link>
+  ) : (
+    /* A button and not a link, because it does not navigate: floor one
+       becomes the picker where it stands. */
+    <button
+      type="button"
+      className="ln-onward"
+      onClick={event => {
+          // ── The beacon shrinks into the bar ──────────────
+          // Miyel, 2026-09-18: "bring back the mini beacon as
+          // the header of the draft/search page, with last log
+          // vs LN logo — I liked the beacon shrinking mini
+          // when you enter session."
+          //
+          // It carried the mark instead for twenty minutes, on
+          // the reasoning that you have not chosen anything yet
+          // and last night's record in the bar is a claim
+          // nobody made. True, and beside the point: the record
+          // up there is not claiming to be tonight's, it is the
+          // beacon, which is the thing this pane is, and
+          // watching it shrink into the row is what makes the
+          // picker feel like the same screen rather than a new
+          // one. The mark is what it falls back to when there
+          // is no record to carry at all.
+          const art = event.currentTarget
+            .closest('.beacon-card')?.querySelector('img.beacon-art');
+          const box = art?.getBoundingClientRect();
+          const meta = event.currentTarget
+            .closest('.beacon-card')?.querySelector('.beacon-meta');
+          const said = meta?.getBoundingClientRect();
+          // A copy of what the card is showing this second,
+          // state and all — Miyel, 2026-09-18: "it's gonna
+          // have to either have a live dot saying now logging,
+          // or it's gonna have to be dull and say last logged.
+          // It is a copy of the real beacon." Including the
+          // open song, because that is what the card says: the
+          // record's name only while nothing is playing.
+          setOnTheBar(onAirAlbum ? {
+            art: onAir,
+            title: onAirTrack || onAirAlbum,
+            artist: onAirArtist,
+            live: isLive,
+          } : null);
+          setChoosing(true);
+          // Never armed on the way in. The × keeps its state
+          // in this component and the picker's markup goes
+          // away and comes back around it, so without this a
+          // picker closed while the × was open — press the
+          // mark, change your mind, leave another way —
+          // reopened with END already showing, which is a
+          // confirmation nobody gave. Blur puts it away too,
+          // but blur is not the only way out of here.
+          setEnding(false);
+          if (!box || !onAir) return;
+          if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+          // Where the record's name is standing, so it can
+          // travel rather than blink out — see wordsFrom.
+          if (said && said.width) wordsFrom.current = said;
+          setLanding({
+            art: onAir,
+            live: isLive,
+            from: { left: box.left, top: box.top, width: box.width, height: box.height },
+            to: null, go: false, ms: TO_THE_BAR_MS, into: '.hn-bar-beacon .ses-cover',
+          });
+        }}
+    >
+      <PlayCircle size={17} weight="regular" aria-hidden="true" />
+      Start a listen
+    </button>
+  ));
+
   // "+ Start a listen" and "Messages" used to sit under the beacon, from when
   // the cover was the only screen an owner had and the writing had to be
   // reachable from it. The desk is one swipe right and carries both, with the
@@ -1593,101 +1686,7 @@ export default function HomeNav() {
                       turns it into the way floor one becomes the picker. A
                       visitor has no listen to start, and the writing routes
                       check the wristband for themselves whatever is drawn. */}
-                  <ListeningBeacon choosing={choosing} emptied={false}>
-                    {/* Kept on the page while a record is being chosen, and
-                        collapsed with the rest of the meta around it. It used
-                        to be removed the instant it was pressed — which took
-                        43px of link plus its gap out of the card in one frame,
-                        and a card that is suddenly shorter re-centres, so the
-                        cover *dropped* 44px before it began climbing. Pressing
-                        a button and watching the thing you pressed it on lurch
-                        downwards is the last of what Miyel kept calling not
-                        fluid, measured out of it on 2026-09-18. */}
-                    {authed && (inHand ? (
-                      /* A record already in hand: the way back to it, and
-                         only that. There was a second, quieter line under
-                         this one for an hour — the way *out* of the listen —
-                         and Miyel took it off on 2026-09-18: ending a listen
-                         belongs in the listen, and this screen's whole job is
-                         one record, not two lines of words about what you
-                         could do with it. The × in the session's own corner
-                         is where a record is put down now. */
-                      <Link href="/session" className="ln-onward" title={`Back to ${inHand.album}`}>
-                        Back to the listen
-                        <ArrowRight size={16} weight="regular" aria-hidden="true" />
-                      </Link>
-                    ) : (
-                      /* And with nothing in hand it opens the picker here,
-                         rather than going anywhere. A button and not a link,
-                         because it does not navigate — which is the whole
-                         idea of this brief. */
-                      <button
-                        type="button"
-                        className="ln-onward"
-                        onClick={event => {
-                          // ── The beacon shrinks into the bar ──────────────
-                          // Miyel, 2026-09-18: "bring back the mini beacon as
-                          // the header of the draft/search page, with last log
-                          // vs LN logo — I liked the beacon shrinking mini
-                          // when you enter session."
-                          //
-                          // It carried the mark instead for twenty minutes, on
-                          // the reasoning that you have not chosen anything yet
-                          // and last night's record in the bar is a claim
-                          // nobody made. True, and beside the point: the record
-                          // up there is not claiming to be tonight's, it is the
-                          // beacon, which is the thing this pane is, and
-                          // watching it shrink into the row is what makes the
-                          // picker feel like the same screen rather than a new
-                          // one. The mark is what it falls back to when there
-                          // is no record to carry at all.
-                          const art = event.currentTarget
-                            .closest('.beacon-card')?.querySelector('img.beacon-art');
-                          const box = art?.getBoundingClientRect();
-                          const meta = event.currentTarget
-                            .closest('.beacon-card')?.querySelector('.beacon-meta');
-                          const said = meta?.getBoundingClientRect();
-                          // A copy of what the card is showing this second,
-                          // state and all — Miyel, 2026-09-18: "it's gonna
-                          // have to either have a live dot saying now logging,
-                          // or it's gonna have to be dull and say last logged.
-                          // It is a copy of the real beacon." Including the
-                          // open song, because that is what the card says: the
-                          // record's name only while nothing is playing.
-                          setOnTheBar(onAirAlbum ? {
-                            art: onAir,
-                            title: onAirTrack || onAirAlbum,
-                            artist: onAirArtist,
-                            live: isLive,
-                          } : null);
-                          setChoosing(true);
-                          // Never armed on the way in. The × keeps its state
-                          // in this component and the picker's markup goes
-                          // away and comes back around it, so without this a
-                          // picker closed while the × was open — press the
-                          // mark, change your mind, leave another way —
-                          // reopened with END already showing, which is a
-                          // confirmation nobody gave. Blur puts it away too,
-                          // but blur is not the only way out of here.
-                          setEnding(false);
-                          if (!box || !onAir) return;
-                          if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
-                          // Where the record's name is standing, so it can
-                          // travel rather than blink out — see wordsFrom.
-                          if (said && said.width) wordsFrom.current = said;
-                          setLanding({
-                            art: onAir,
-                            live: isLive,
-                            from: { left: box.left, top: box.top, width: box.width, height: box.height },
-                            to: null, go: false, ms: TO_THE_BAR_MS, into: '.hn-bar-beacon .ses-cover',
-                          });
-                        }}
-                      >
-                        Start a listen
-                        <ArrowRight size={16} weight="regular" aria-hidden="true" />
-                      </button>
-                    ))}
-                  </ListeningBeacon>
+                  <ListeningBeacon choosing={choosing} emptied={false} />
                 </div>
               </div>
               {/* What came before, or what comes next. The row of earlier
@@ -1695,7 +1694,10 @@ export default function HomeNav() {
                   while a record is being chosen; the picker takes its room. */}
               {choosing
                 ? <AlbumPicker inline onPick={beginListen} onResume={resumeDraft} />
-                : recentRow}
+                : <>
+                    {recentRow}
+                    {theWayIn}
+                  </>}
             </div>
           </div>
           {/* Floor two — the wall, scrolling inside a box of its own, so
