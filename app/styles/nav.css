@@ -931,6 +931,32 @@
    again, which is the one thing a *last logged* cover must never do. */
 .hn-flight--idle { filter: grayscale(80%) brightness(0.7); }
 
+/* ── passing ───────────────────────────────────────────────────────────────
+   The copies that fly when a record is put down: the one leaving the big slot
+   for the top of the column, and the one falling off the end of it. Both are
+   made, thrown and removed by HomeNav's `passing` — the module comment there
+   is the description; this is only what they look like.
+
+   Under `.hn-flight`'s 300 rather than beside it. A pass happens on the floor
+   you are standing on and a flight crosses a rising session, and if the two
+   ever share a second the one going somewhere should be on top.
+
+   transform-origin at the corner, like the flight's, so a copy that is also
+   shrinking lands its top-left on the top-left it was aimed at instead of
+   half a width to one side. */
+.hn-passing {
+  position: fixed;
+  z-index: 120;
+  pointer-events: none;
+  object-fit: cover;
+  /* A tenth, which is what a record's corners are at every size on this site
+     — see the note on .beacon-art-wrap. A number here would make the square
+     change shape on the way down. */
+  border-radius: 10%;
+  transform-origin: top left;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.28);
+}
+
 /* ── Choosing a record, on the pane ────────────────────────────────────────
    Floor one becomes the picker and the rest of the cross stands down: the
    band at the foot, the crown, the row of earlier covers and the snap between
@@ -2783,3 +2809,78 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   .hn-pane--home .hp-recent-tile img { transition: none; }
 }
 .hn-pane--home .hp-recent-set { align-items: flex-start; gap: 8px; }
+
+/* ── The picker gets the whole screen back ─────────────────────────────────
+   Everything above this comment describes a floor with a record and its past
+   side by side. While a record is being chosen there is no past on screen —
+   the picker stands where it was — and the two-column grid had nowhere to put
+   the picker but the 76px column the three small covers had been using. That
+   is what it did: a search box 76px wide, ranged right, beside a 235px empty
+   slot. Broken from the morning the second column arrived until 2026-09-19.
+
+   The rules it broke were all still there and all still correct; they are in
+   .hn--choosing above, written when this screen was one column, and every one
+   of them lost on source order to a `.hn-pane--home` rule of equal weight
+   further down this file. So this is the same handful of declarations again
+   with the pane in front of them, rather than a second answer: one column,
+   the choosing paddings, the small cover.
+
+   If the picker's screen is ever changed, change it in .hn--choosing and let
+   this block inherit — it exists only to outrank the grid. */
+.hn--choosing .hn-pane--home .hn-screen {
+  grid-template-columns: minmax(0, 1fr);
+  justify-content: stretch;
+  column-gap: 0;
+  row-gap: 14px;
+  padding: calc(env(safe-area-inset-top, 0px) + 80px) 24px 40px;
+}
+/* ── And the card stands down, as it was always told to ───────────────────
+   `.hn--choosing .beacon-stage` above has collapsed the card to nothing since
+   the picker was built, and it was silently doing nothing from the morning
+   the second column arrived: `display: contents` makes an element generate no
+   box, and a box is exactly what a max-height collapse needs. The stage was
+   flattened so the cover and the name could become grid items of the screen,
+   and flattening it took away the height it was animating to zero. What was
+   left on screen was the slot it should have been closing — full size, empty,
+   between the bar and the search. Miyel, 2026-09-19: "this phantom box
+   doesn't belong and wasn't a part of the last session." It was not; it was a
+   rule that had stopped applying.
+
+   Turning the stage back into a box while choosing removed the slot and lost
+   the movement with it — `display` cannot be transitioned, so the box arrived
+   already collapsed and the screen simply jumped. Miyel, the same hour: "it
+   happens so quickly I don't even get to appreciate it; it should be
+   intentional like all other site animations."
+
+   So the collapse is asked of the grid items instead, which is where the
+   height now lives. The cover closes from its full width to nothing on the
+   screen's own clock — .beacon-art-wrap's 0.7s on the site's curve, the same
+   0.7s the crown, the card's gap and the name below it are all moving on —
+   and the search rises into the room as it goes. `.beacon-meta` needs nothing
+   here: its own collapse is a max-height and a max-height on a grid item
+   still works.
+
+   To nothing rather than to the brief's 132px: that number was from before
+   the record moved up into the bar, when the shrunken cover was the thing a
+   picked record flew into. With the bar carrying it, a 132px square below is
+   the second copy the collapse exists to remove.
+
+   Width only. The height here is `auto` derived from `aspect-ratio: 1`, and
+   `auto` is not a value anything can be interpolated from — setting it to 0
+   took the whole 235px out in one frame while the width was still easing
+   beside it, which is the jump Miyel was watching for and not seeing.
+   Left alone, the height follows the width down and the two arrive
+   together. */
+.hn--choosing .hn-pane--home .beacon-art-wrap {
+  width: 0;
+  opacity: 0;
+}
+/* The picker takes the row under the record and the full width of it. Left to
+   auto-placement it lands in the same cell; saying so is what stops the next
+   thing added to this screen from taking the row from underneath it. */
+.hn--choosing .hn-pane--home .ses-picker {
+  grid-column: 1;
+  grid-row: 3;
+  width: 100%;
+  min-width: 0;
+}

@@ -175,6 +175,167 @@ const WATCH_MS = 1300;
 // failed one must not leave the pane sitting on the journal for ever.
 const ARRIVE_MAX_MS = 4000;
 
+// ── passing ────────────────────────────────────────────────────────────────
+// A record leaving the big slot and taking its place at the top of the column
+// beside it, everything under it stepping down, and the oldest going off the
+// end. Named by Miyel, 2026-09-19, and a name of its own because it is the
+// third movement this floor has: `landing` is a record's flight into a
+// session and `filing` is the save cutaway, and three unnamed movements in one
+// file is three things nobody can talk about.
+//
+// Her brief: "it logs going from top to bottom. As a listen moves into being a
+// last played, it should move from the big spot over to the top in the row,
+// the top in the column, and everything filters down. And with the last one,
+// the third one down, leaving as the new one comes in."
+//
+// The journal already did all of that — the data has always reshuffled exactly
+// this way — and it did it between two paints, so there was nothing to watch.
+// This is only the watching.
+//
+// ── Why it is done to the DOM rather than through state ───────────────────
+// `landing` is React state and a rendered <img>, which is right for it: it
+// starts on one press and is gone in one journey. This starts on a *change* —
+// four objects have to move at once, three of which React has just finished
+// putting in their new places, and asking React to put them back where they
+// were so they can be animated forwards again is a second render of a layout
+// that is already correct. So the boxes are measured either side of the
+// commit and the difference is handed to the browser, which is what a FLIP is.
+//
+// The Web Animations API and not a class with a transition, for the reason
+// MarqueeTitle gives: every one of these distances is different, and a
+// stylesheet cannot hold a number that is only known at the moment it is
+// needed. It also sidesteps the trap this project keeps meeting — an
+// animation driven by requestAnimationFrame never starts in a tab that is not
+// painting, and `element.animate()` does not need a frame to be scheduled.
+// 0.7s, which is this floor's number and not a new one: the crown's collapse,
+// the card's gap, the name under it and the cover's own shrink are all moving
+// on it, and a record crossing the same screen at a different speed is a
+// second clock in one room. The flight into a session is 620 because it is
+// crossing into somewhere else.
+const PASS_MS = 700;
+const PASS_EASE = 'cubic-bezier(0.22, 0.61, 0.36, 1)';
+// What a record put down looks like. The same filter the beacon's own cover
+// wears when the listen is over and the same one the column wears, written
+// here because the flier is neither of those elements — it is the one in
+// between, and it has to arrive wearing what it is landing in.
+const PUT_DOWN = 'grayscale(80%) brightness(0.7)';
+
+// A copy of a cover, fixed to the window, drawn over everything and thrown
+// away when it stops moving. Two of these fly in a pass: the record being put
+// down, and the one falling off the end of the column.
+function passingCopy(art, box, extra = {}) {
+  const copy = document.createElement('img');
+  copy.src = art;
+  copy.alt = '';
+  copy.setAttribute('aria-hidden', 'true');
+  copy.className = 'hn-passing';
+  copy.style.left = `${box.left}px`;
+  copy.style.top = `${box.top}px`;
+  copy.style.width = `${box.w}px`;
+  copy.style.height = `${box.h}px`;
+  Object.assign(copy.style, extra);
+  document.body.appendChild(copy);
+  return copy;
+}
+
+// `was` and `now` are the same floor measured either side of one commit, in
+// coordinates relative to the screen — see the note where they are taken.
+// `base` is that screen's box this frame, which turns them back into window
+// coordinates: a pane that scrolled between the two commits moves the old
+// boxes with its contents, which is what should happen and what a pair of
+// raw viewport rects would get wrong.
+function passing(was, now, base) {
+  const at = b => ({ left: base.left + b.x, top: base.top + b.y, w: b.w, h: b.h });
+  const parts = [];
+
+  // ── The pass owns the movement ───────────────────────────────────────────
+  // Each tile carries its own arrival, `hp-recent-arrive`, which slides it in
+  // from the left as it fades up. That is the right welcome for a column
+  // redrawing on its own and the wrong one here: a tile cannot both step down
+  // from the place above it and arrive from off to the left, and a record
+  // being flown into a tile that is itself still sliding is two movements
+  // fighting over one square. Finished rather than cancelled — finishing puts
+  // the tile at rest, which is exactly where the FLIP below wants to find it.
+  now.tiles.forEach(tile => {
+    tile.el.getAnimations().forEach(a => { if (a.animationName === 'hp-recent-arrive') a.finish(); });
+  });
+
+  // ── The record being put down ────────────────────────────────────────────
+  // Out of the big slot and into the top of the column, shrinking on the way
+  // and losing its colour as it goes — it is in hand at one end of the
+  // journey and filed at the other, and the grey is what says so.
+  const top = now.tiles[0];
+  if (was.cover && was.art && top) {
+    const from = at(was.cover);
+    const to = at(top.box);
+    const copy = passingCopy(was.art, from, { filter: was.filter || 'none' });
+    const k = to.w / from.w;
+    // transform-origin is top left (nav.css), so the corner lands on the
+    // corner and the scale does not drag the box off its mark.
+    const run = copy.animate([
+      { transform: 'none', filter: was.filter || 'none' },
+      { transform: `translate(${to.left - from.left}px, ${to.top - from.top}px) scale(${k})`, filter: PUT_DOWN },
+    ], { duration: PASS_MS, easing: PASS_EASE, fill: 'forwards' });
+    // The real tile waits underneath until the copy has arrived on it, so the
+    // record is never in two places at once.
+    top.el.style.opacity = '0';
+    // A timer beside the promise, for the same reason every rAF in this file
+    // has one: an animation whose element is torn out from under it never
+    // resolves, and the two things this tidies up are a cover fixed over the
+    // page and a tile holding itself invisible. Neither may be left behind.
+    const done = () => { top.el.style.opacity = ''; copy.remove(); };
+    const backstop = setTimeout(done, PASS_MS + 400);
+    parts.push(run.finished.then(() => { clearTimeout(backstop); done(); }));
+  }
+
+  // ── And everything under it steps down ───────────────────────────────────
+  // The tiles are already in their new places; this puts each one back where
+  // it was for a moment and lets it travel forward. Matched by record and not
+  // by position, so a tile that did not move is not animated and a column
+  // that changed some other way is left alone.
+  now.tiles.forEach((tile, i) => {
+    if (i === 0) return;
+    const before = was.tiles.find(o => o.key === tile.key);
+    if (!before) return;
+    const dx = before.box.x - tile.box.x;
+    const dy = before.box.y - tile.box.y;
+    if (!dx && !dy) return;
+    tile.el.animate([
+      { transform: `translate(${dx}px, ${dy}px)` },
+      { transform: 'none' },
+    ], { duration: PASS_MS, easing: PASS_EASE });
+  });
+
+  // ── And the oldest goes off the end ──────────────────────────────────────
+  // Down and out of the column rather than simply gone. Its slot is being
+  // taken by the tile above it in the same breath, so this has to leave while
+  // that arrives — which is the sentence in the brief, "the third one down,
+  // leaving as the new one comes in."
+  const gone = was.tiles.find(o => o.key && !now.tiles.some(t => t.key === o.key));
+  if (gone && gone.art) {
+    const box = at(gone.box);
+    const copy = passingCopy(gone.art, box, { filter: PUT_DOWN });
+    const run = copy.animate([
+      { transform: 'none', opacity: 1 },
+      { transform: `translateY(${Math.round(box.h * 0.9)}px) scale(0.86)`, opacity: 0 },
+    ], { duration: PASS_MS, easing: PASS_EASE, fill: 'forwards' });
+    const backstop = setTimeout(() => copy.remove(), PASS_MS + 400);
+    parts.push(run.finished.then(() => { clearTimeout(backstop); copy.remove(); }));
+  }
+
+  // ── And the new record arrives in the slot it left ───────────────────────
+  // Quietly. The eye is following the one that is travelling, and a record
+  // that also grows or slides is a second thing to watch in the same second.
+  if (now.coverEl) {
+    now.coverEl.animate([
+      { opacity: 0 },
+      { opacity: 1 },
+    ], { duration: PASS_MS, easing: PASS_EASE });
+  }
+
+  return Promise.allSettled(parts);
+}
+
 // What each pane is, as a mark and as a sentence, used to live here for the
 // carets at the foot. The band names all three outright now and owns its own
 // list (Footer.js); the panes carry their labels in the markup.
@@ -1018,6 +1179,97 @@ export default function HomeNav() {
     el.addEventListener('scroll', onScroll, { passive: true });
     return () => el.removeEventListener('scroll', onScroll);
   }, [stir]);
+
+  // ── Watching the floor, so a pass can be seen ────────────────────────────
+  // The measurement half of `passing` (module scope, above). It runs after
+  // every commit and keeps one thing: where the record and its column were
+  // the last time this floor was laid out, and what the record looked like.
+  //
+  // Which is the whole trick. React has already put the new record in the big
+  // slot and moved the column down by the time this runs — the layout on
+  // screen is the right one, a frame early — so the old boxes are the only
+  // thing missing, and they are sitting in this ref from last time.
+  //
+  // In coordinates relative to the screen, never the window. The pane scrolls,
+  // and between one commit and the next it may have: a pair of raw viewport
+  // rects would read that scroll as movement and send the record travelling a
+  // few hundred pixels it never went. Measured against the screen, a scroll
+  // moves both ends together and cancels out — the same correction the wall's
+  // arrival FLIP needed (NOTES, Gotchas).
+  const floorWas = useRef(null);
+  useLayoutEffect(() => {
+    const screen = homeRef.current?.querySelector('.hn-screen');
+    if (!screen) { floorWas.current = null; return; }
+    const base = screen.getBoundingClientRect();
+    // ── Offsets, not rects ────────────────────────────────────────────────
+    // A tile plays its own 0.5s arrival — translateX(-14px) scale(0.85) to
+    // nothing, `hp-recent-arrive` — and a rect taken while that is running is
+    // the box it is passing through rather than the box it is coming to rest
+    // in. Aimed at one of those, the record landed 10px left of the tile and
+    // 9px too small, and sat there for a frame before the tile caught up
+    // underneath it. Measured 2026-09-19.
+    //
+    // `offsetLeft` and `offsetWidth` are layout, and a transform is not
+    // layout: they answer where the tile *is* however it is being drawn this
+    // instant. Accumulated to the document and then taken off the screen's
+    // own, so it works whether or not anything in between is positioned.
+    const offs = el => {
+      let x = 0; let y = 0; let n = el;
+      while (n) { x += n.offsetLeft; y += n.offsetTop; n = n.offsetParent; }
+      return { x, y };
+    };
+    const screenOff = offs(screen);
+    const rel = el => {
+      const o = offs(el);
+      return { x: o.x - screenOff.x, y: o.y - screenOff.y, w: el.offsetWidth, h: el.offsetHeight };
+    };
+    const coverEl = screen.querySelector('img.beacon-art');
+    const tileEls = [...screen.querySelectorAll('.hp-recent-tile')];
+    const now = {
+      key: onAirAlbum || '',
+      art: onAir || '',
+      // Read off the element rather than worked out from `isLive`, because
+      // what the flier has to leave wearing is whatever the cover is wearing
+      // this second, and that is a question for the stylesheet.
+      filter: coverEl ? getComputedStyle(coverEl).filter : 'none',
+      cover: coverEl ? rel(coverEl) : null,
+      coverEl,
+      tiles: tileEls.map((el, i) => ({
+        key: before[i]?.album || '',
+        art: before[i]?.art || '',
+        el,
+        box: rel(el),
+      })),
+    };
+
+    const was = floorWas.current;
+    // Kept without the elements: those are this render's nodes and the next
+    // render may not use them. What survives is where things were.
+    floorWas.current = {
+      key: now.key,
+      art: now.art,
+      filter: now.filter,
+      cover: now.cover,
+      tiles: now.tiles.map(t => ({ key: t.key, art: t.art, box: t.box })),
+    };
+
+    // Nothing to compare against on the first lay-out, and nothing to watch
+    // when the record has not changed.
+    if (!was || !was.key || !now.key || was.key === now.key) return;
+    // And only when the record that left really is the one now at the top of
+    // the column. A journal loading its first data, a copy with the beacon
+    // switched off, a record corrected rather than logged — all of those
+    // change the key without anything having been put down, and a pass that
+    // fires on those is a cover flying out of a slot into a tile it does not
+    // belong in.
+    if (now.tiles[0]?.key !== was.key) return;
+    // Not while you are somewhere else, and not in a tab nobody is looking
+    // at: a pass is a thing to be seen, and one that happens off screen
+    // should simply have happened.
+    if (pane !== HOME || document.visibilityState !== 'visible') return;
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+    passing(was, now, base);
+  });
 
   // ── Anywhere else puts the × back ────────────────────────────────────────
   // Miyel, 2026-09-18: "clicking away anywhere will undo the animation and

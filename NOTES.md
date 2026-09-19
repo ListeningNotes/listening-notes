@@ -1549,6 +1549,31 @@ Project → Settings → Environment Variables.
 
 ## Gotchas
 
+**`display: contents` takes away the box a collapse needs, 2026-09-19.** It
+makes an element generate no box at all, which is the point — its children
+become items of the grid above it. It also means `max-height`, `overflow`,
+`opacity` and every other thing written on that element quietly stop doing
+anything. The card's collapse when the picker opens had been dead for a day
+before anybody saw it, because what it left behind looked like a slot somebody
+had added rather than one that had failed to close. **If a flattened element
+was carrying a rule, the rule has to move to whatever kept a box.**
+
+**`auto` is not a value anything can ease from, 2026-09-19.** Animating a
+height from `auto` to `0` does not animate: it jumps in one frame. The fix on
+the beacon's cover was to animate the *width* and leave the height to
+`aspect-ratio`, which follows it down. The same trap with `display`: turning a
+box on and collapsing it in the same frame gives you the collapsed box and no
+movement, because `display` cannot be transitioned either.
+
+**Measure by offsets when the target has an entrance of its own, 2026-09-19.**
+`passing` aimed a flying cover at a tile that plays `hp-recent-arrive` —
+`translateX(-14px) scale(0.85)` to nothing — so a `getBoundingClientRect()`
+taken at that moment described a box the tile was passing *through*. The
+record landed 10px left and 9px small and sat there while the tile crept out
+from under it. `offsetLeft` and `offsetWidth` are layout and a transform is
+not, so they answer where a thing is however it is being drawn. Related to the
+scroll version of this already below, and a second reason to reach for offsets.
+
 **A widened press must be on the thing that is pressed, 2026-09-19.** A 24px
 tag was given an invisible `::after` reaching past its edges so a thumb could
 find it — put on the wrapper round the control rather than on the control.
@@ -2632,6 +2657,48 @@ current.
 ---
 
 ## Complete
+
+**2026-09-19 — `passing`, and two things the calling card's layout broke.**
+The side-by-side floor that shipped this morning put the record and its past
+in two grid columns, and flattened the wrappers between the screen and the
+record with `display: contents` so the title could centre on the screen rather
+than under the art. Both were right and both had a cost that only showed when
+somebody used the screen.
+
+- [x] **The picker gets the whole screen back.** Pressing *Start a listen* put
+      the search in the 76px column the three small covers had been using — a
+      sliver on the right reading "Sear…" beside a 235px empty square. The
+      rules for the choosing screen were all still there and all still correct;
+      they were written when it was one column and every one of them was losing
+      on source order to a `.hn-pane--home` rule of equal weight further down
+      nav.css. Restated with the pane in front of them, at the end of that
+      block, with a note saying to change `.hn--choosing` and let this inherit.
+- [x] **The phantom box is gone, and its collapse animates again.** The card's
+      collapse when the picker opens — max-height, opacity, the screen's
+      clock — had nothing left to act on, because `display: contents` means no
+      box. What stood on screen was the slot it should have been closing.
+      Miyel: "this phantom box doesn't belong and wasn't a part of the last
+      session." It didn't; it was a rule that had stopped applying. The
+      collapse is asked of the grid items now, where the height lives.
+- [x] **`passing` — the record being put down, watched.** Miyel's brief and her
+      name for it. Out of the big slot, into the top of the column, shrinking
+      and losing its colour; the two tiles under it step down; the oldest falls
+      out of the bottom and fades; the new record comes up in the slot it left.
+      700ms, the floor's own number. The data had always reshuffled this way
+      between two paints — this is only the watching.
+      It is a FLIP, done to the DOM rather than through state: the boxes are
+      measured either side of the commit and the difference handed to the
+      browser, because asking React to put three tiles back where they were so
+      they can travel forward again is a second render of a layout that is
+      already right. Web Animations rather than a class, for MarqueeTitle's
+      reason — every distance is different and a stylesheet cannot hold a
+      number only known at the moment it is needed — and because `element.
+      animate()` does not need a frame to be scheduled. Skipped on another
+      pane, in an unpainted tab, and under reduced motion.
+      Tested by stubbing the beacon's own poll in the browser to hand back the
+      state a real save produces. The flier lands within one pixel of the tile;
+      afterwards no copies are left, no tile is holding a transform, and the
+      column reads in the right order.
 
 **2026-09-19 — the calling card. Branch `beacon-shapes`.** A visitor landed on
 the beacon floor and found a quarter of the screen empty: the only thing that
