@@ -1286,6 +1286,18 @@
   transition: color 0.15s;
 }
 .hn-shut:hover { color: var(--ink); }
+/* Wearing .ses-shut as well as this, so the mark turns and the word opens the
+   way it does in a listen. session.css loads after this file, so its own
+   `margin: -8px` would win and the row would lose the auto that holds this
+   against the left edge; and its inline-flex box is sized by the mark, where
+   this one claims a 40px square for the thumb. Both said again here, together,
+   because the pair only makes sense together. */
+.hn-shut.ses-shut {
+  margin: -8px auto -8px 0;
+  width: auto;
+  font-family: var(--font-label); font-size: 10px; letter-spacing: 0.1em;
+  text-transform: uppercase; white-space: nowrap;
+}
 @media (prefers-reduced-motion: reduce) {
   .hn .beacon-stage,
   .beacon-art-wrap,
