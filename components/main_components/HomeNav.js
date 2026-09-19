@@ -539,9 +539,20 @@ export default function HomeNav() {
     // And the picker folds away once the sheet is over it — unseen, which is
     // the point. Doing it now would empty the screen behind a sheet that has
     // not covered it yet.
-    // At the turn, not after it. The picker has finished leaving by then and
-    // the bar's record is a point, so both go while there is nothing to see.
-    flightTimers.current.push(setTimeout(() => { setChoosing(false); setBlinking(false); }, THE_TURN_MS));
+    // ── Not until the session has covered it ────────────────────────────
+    // This fired at the turn for twenty minutes, which put the whole beacon
+    // screen back — crown, card, foot, caret — while the session was still
+    // only halfway up. Miyel: "we see the background (big beacon screen)
+    // between the search leaving and the session rising. We shouldn't see
+    // behind during that sequence."
+    //
+    // Nothing needs it earlier. The picker has already gone down and stayed
+    // down (its leaving animation holds its end state), the bar's record is a
+    // point, and `.hn--choosing` is what keeps everything under the bar
+    // collapsed — so holding it to the end of the blink is what makes the
+    // screen blank for the whole of the second half. The pane comes back
+    // behind a session that is already covering it.
+    flightTimers.current.push(setTimeout(() => { setChoosing(false); setBlinking(false); }, BLINK_MS + 80));
   }, [openSession, router]);
 
   // The journey: out of the picker and into the bar's slot, which is the
