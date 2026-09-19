@@ -238,14 +238,20 @@ export function useListeningSession({ step }) {
     // for the flow it was written in, where the picker was a page of its own
     // and the album screen was where you had a last look before committing.
     //
-    // It is not the flow any more. A record is chosen on the beacon now: it
-    // flies out of the picker into the beacon slot, lights, and the session
-    // opens over the top of it (Miyel's beacon brief). The deciding happens in
-    // the picker, before any of that — so by the time a record is in hand the
-    // choice has been made, and a beacon that stayed dark until the first
-    // track was opened would be contradicting the animation somebody had just
-    // watched. This reverses "a record with no track chosen yet is not a
-    // beacon" (DECISIONS, 2026-09-15), which the brief calls out by name.
+    // It is not the flow any more. A record is chosen on the beacon: you press
+    // Start a listen, the picker takes that screen, and pressing a record
+    // brings the session up over it. The deciding happens in the picker,
+    // before any of that — so by the time a record is in hand the choice has
+    // been made, and a beacon that stayed dark until the first track was
+    // opened would be contradicting a screen somebody had already committed
+    // to. This reverses "a record with no track chosen yet is not a beacon"
+    // (DECISIONS, 2026-09-15), which the brief calls out by name.
+    //
+    // It said the record "flies out of the picker into the beacon slot" until
+    // the evening of 2026-09-18. Nothing flies any more, and the beacon does
+    // not light in front of anybody either: the sheet covers the screen and
+    // the record underneath changes behind it. The gate above is unaffected —
+    // it was never about the animation, only about when a record counts.
     //
     // The two seconds below still stand between a mis-tap and a broadcast,
     // and leaving lifts the needle as it always did.
