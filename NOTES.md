@@ -2627,11 +2627,27 @@ restructure: the three drawings of the beacon were made into one.
       420ms rise plus margin); pulling down reveals it. Which is also what
       putting a record down means.
 
-      Measured: sheet up by 120ms, bar still says last night's record at 420ms,
-      says the new one at 480ms. On the way out the sheet goes at 320ms with
-      the bar unchanged the whole way — nothing to see at either end.
-      `announce()` is untouched and still fires at the press: that is the
-      *public* beacon, and it should be true the moment it is true.
+      **On a clock for an hour, and the clock was wrong.** Miyel: "let the
+      selection screen delay the change, I shouldn't see it change at all — it
+      will have to change after the notetaking session has opened all the way."
+      The sheet exists in the DOM the instant it is pushed and then spends half
+      a second climbing, and it climbs from the floor — so the bar, at the top
+      of the screen, is the *last* thing it covers. Measured, the sheet's top
+      edge: 841 → 635 → 414 → 259 → 178 → 103 → 54 → 30 → 10 → 1 → 0, reaching
+      the top at ~780ms. A timer set to the layer's 420ms would have swapped
+      the record while the top hundred pixels were still open.
+
+      So the sheet says when: its own `animationend`. Exact on either layout
+      and at either duration (420ms `layRise` on a phone, 620ms `layRiseTall`
+      on a desk), with no number to get wrong. `BEHIND_THE_SHEET_MS` is now
+      only a backstop for a sheet that animates not at all — reduced motion.
+      Measured again: the bar holds last night's record for the whole climb and
+      turns over on the frame the sheet lands.
+
+      On the way out the sheet goes at 320ms with the bar unchanged the whole
+      way — nothing to see at either end. `announce()` is untouched and still
+      fires at the press: that is the *public* beacon, and it should be true
+      the moment it is true.
 - [x] **A dull record stays dull in the air**, on the one flight that is left
       — the card shrinking into the bar. The flier is its own `<img>`, neither
       of the two covers, so it drew in full colour between a greyed card and a
