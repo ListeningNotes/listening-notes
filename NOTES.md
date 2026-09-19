@@ -2666,6 +2666,29 @@ restructure: the three drawings of the beacon were made into one.
       file-in speed of deleting" — they were one number already, so slowing the
       arrival slowed the deletion with it, which is the point of it being one
       number.
+- [x] **The wall is asked for at the save, not on arrival.** It is a fetch and
+      took about a second, so the pane reached the journal and then sat there
+      waiting — a stall in the middle of a cutaway, which is the one place
+      there is nothing else to look at. `fetchEntries` is now separate from
+      `askEntries`: the answer is held in a ref from the moment of the save and
+      applied when the pane gets there. Measured: the record is on the wall and
+      landing the frame the pane arrives, at 1700ms instead of 2800.
+- [x] **The wall goes back to its own top first.** Floor two has a scroller of
+      its own and the newest record is the first tile in it, so a wall left
+      scrolled down meant arriving in the middle of the journal with the record
+      filing itself in above the fold. Measured at all three densities — the
+      first tile is off-screen at every one of them if the wall was left down,
+      and at `top: 96` after the reset. It bit hardest on the two-column view
+      because that is where the wall is tallest: the same wall is 1464px at
+      four columns and **5928 at two**, so that is the one you are likeliest to
+      have scrolled. `goUp` already did this by hand on the way back from the
+      wall; the cutaway did not.
+- [x] **The picker hears about a posted listen.** Publishing deletes the draft
+      — both copies, `finish()` in useSessionDraft — but it shouts `SAVED_EVENT`
+      and the picker only listened for `PENDING_EVENT`, so the record you had
+      just posted was still sitting under Unfinished when the cutaway put you
+      back. It was gone from the server the whole time; the list had not been
+      told.
 - [x] **Journal files an arrival the way it closes a deletion.** Same
       machinery, run backwards: every tile measured before the new list lands,
       put back where it was, let go. The newcomer grows in on a 210ms delay,

@@ -283,16 +283,18 @@ export default function HomeNav() {
   // On mount, and again the moment a listen becomes an entry — the wall has
   // to actually contain the record that is about to fall into it, or the
   // cover lands on a tile that is not there yet.
+  // Asking for the wall, in two halves. Ordinarily they run together and this
+  // is one function; the cutaway needs them apart, because the fetch should
+  // start at the save and the answer should not be *applied* until the pane
+  // has arrived at the wall to see it land.
+  const fetchEntries = useCallback(() => fetch('/api/entries')
+    .then(r => r.json())
+    .then(data => (Array.isArray(data) ? data : (data.entries || []))), []);
   const askEntries = useCallback(() => {
-    fetch('/api/entries')
-      .then(r => r.json())
-      .then(data => {
-        const list = Array.isArray(data) ? data : (data.entries || []);
-        setEntries(list);
-        setLoading(false);
-      })
+    fetchEntries()
+      .then(list => { setEntries(list); setLoading(false); })
       .catch(() => setLoading(false));
-  }, []);
+  }, [fetchEntries]);
   useEffect(() => { askEntries(); }, [askEntries]);
 
   // Fetched on mount rather than on first swipe: it is a few hundred bytes,
@@ -711,6 +713,8 @@ export default function HomeNav() {
   // The record being filed, and the whole of the cutaway's state: it opens the
   // wall while the picker is over it, and the pane goes down to it and back.
   const [filing, setFiling] = useState(null);
+  // The wall's next answer, in flight since the save.
+  const onTheWay = useRef(null);
   const dropTimers = useRef([]);
   useEffect(() => () => {
     dropTimers.current.forEach(id => { clearTimeout(id); cancelAnimationFrame(id); });
@@ -719,6 +723,12 @@ export default function HomeNav() {
   useEffect(() => {
     const onSaved = event => {
       const record = event.detail || {};
+      // Asked for now, applied later. It was asked for on arrival at the wall
+      // until 2026-09-18 and the pane sat there for about a second waiting for
+      // it — a stall in the middle of a cutaway, which is the one place there
+      // is nothing else to look at. The answer is held until the pane is there
+      // to watch it land; see the effect below.
+      onTheWay.current = fetchEntries().catch(() => null);
       // And the listen is over, so the sheet goes. router.back() because the
       // layer is open by virtue of the address and closing it is going back —
       // see the note at the top of LayerEntry.
@@ -727,7 +737,8 @@ export default function HomeNav() {
       if (!record.art || still) {
         // No cutaway. The record is simply on the beacon and in the wall,
         // which is the brief's own answer for reduced motion.
-        askEntries();
+        onTheWay.current.then(list => { if (list) setEntries(list); });
+        onTheWay.current = null;
         announce(record, 'logged');
         return;
       }
@@ -750,7 +761,7 @@ export default function HomeNav() {
     };
     window.addEventListener(SAVED_EVENT, onSaved);
     return () => window.removeEventListener(SAVED_EVENT, onSaved);
-  }, [askEntries, router]);
+  }, [fetchEntries, router]);
 
   // ── Down to the wall, and back ───────────────────────────────────────────
   // The whole of the cutaway, and all of it on stated clocks. The floor opens,
@@ -766,12 +777,32 @@ export default function HomeNav() {
   useEffect(() => {
     if (!filing) return undefined;
     const pane = homeRef.current;
-    if (!pane) { askEntries(); announce(filing, 'logged'); setFiling(null); return undefined; }
+    if (!pane) {
+      onTheWay.current?.then(list => { if (list) setEntries(list); });
+      onTheWay.current = null;
+      announce(filing, 'logged');
+      setFiling(null);
+      return undefined;
+    }
 
     // The beacon takes the record now rather than at the end. By the time the
     // pane is back this screen has been away and come again, and a beacon that
     // changed on arrival would be the one thing on it that had not settled.
     announce(filing, 'logged');
+
+    // The wall goes back to its own top before anything moves. Floor two has a
+    // scroller of its own and the newest record is the first tile in it, so a
+    // wall left scrolled down means arriving in the middle of the journal with
+    // the record filing itself in somewhere above the fold. It is worst where
+    // the grid is widest: measured 2026-09-18, the same wall is 1464px tall at
+    // four columns across and 5928 at two, which is why Miyel saw it on the
+    // two-column view and not the others.
+    //
+    // Instantly, and here rather than on arrival: the floor is behind the
+    // picker at this moment and nobody can see it happen. `goUp` does the same
+    // thing for the same reason on the way back from the wall by hand.
+    const wall = floorRef.current;
+    if (wall && getComputedStyle(wall).overflowY === 'auto') wall.scrollTop = 0;
 
     const clocks = [];
     let stop = null;
@@ -780,9 +811,14 @@ export default function HomeNav() {
       // it is display: none under the picker until .hn--filing opens it, and a
       // hidden floor has no offsetTop to aim at.
       stop = slide(pane, secondFloorTop(pane), DOWN_MS, () => {
-        // Now. Journal has been holding the old positions since the save and
-        // files the record in against them — see its own note.
-        askEntries();
+        // Now. The wall was asked for at the moment of the save and has most
+        // likely already answered; this is where the answer is put on screen,
+        // with the pane here to watch it. Journal has been holding the old
+        // positions since the save and files the record in against them — see
+        // its own note.
+        const waiting = onTheWay.current || fetchEntries().catch(() => null);
+        onTheWay.current = null;
+        waiting.then(list => { if (list) { setEntries(list); setLoading(false); } });
 
         // And the wall is held from the moment the record is *on* it, not from
         // the moment the pane got here. Asking for it is a fetch: it took about
@@ -811,7 +847,7 @@ export default function HomeNav() {
       if (stop) stop();
       clocks.forEach(id => { clearTimeout(id); cancelAnimationFrame(id); });
     };
-  }, [filing, askEntries]);
+  }, [filing, fetchEntries]);
 
   // Where the flying cover is drawn this frame: at its start until it is told
   // to go, then translated and scaled onto the beacon's slot.
