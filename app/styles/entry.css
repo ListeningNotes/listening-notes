@@ -204,29 +204,21 @@
    opens over the second half. Two elements, one movement — the swap happens
    while the lid is closed, so nothing has to line up and nothing is seen to
    change hands. See hnBlink in nav.css for the other half. */
-.lay--rises.lay--over-journal .ses-cover {
+/* The other half of the one circle — see hnLidShut in nav.css. The same
+   radius, the same centre, the same curve: this opens out of the record where
+   that one closed into it, so the record arrives first and its name comes out
+   of the record's own edge as the circle passes over it. One motion for both,
+   which is what the art doing a circle while the words slid sideways was not. */
+.lay--rises.lay--over-journal .ses-head-beacon {
   animation: layLidOpen 1300ms ease-in-out both;
 }
-.lay--rises.lay--over-journal .ses-head-text {
-  animation: layLidSpeak 1300ms ease-in-out both;
-}
 @keyframes layLidOpen {
-  0%, 50% { clip-path: circle(0% at 50% 50%); }
-  100%    { clip-path: circle(75% at 50% 50%); }
-}
-/* And the name files out of the picture, the way the old one filed into it —
-   sliding right from behind the record's edge while a wipe lets it out.
-   Nothing on this screen appears; everything arrives from somewhere. It
-   starts at 60%, a beat after the record has begun opening, so the order
-   reads as the record first and then what it is called. */
-@keyframes layLidSpeak {
-  0%, 60% { transform: translateX(-14px); clip-path: inset(0 100% 0 0); }
-  100%    { transform: translateX(0); clip-path: inset(0 0 0 0); }
+  0%, 50% { clip-path: circle(0 at 22px 50%); }
+  100%    { clip-path: circle(150% at 22px 50%); }
 }
 @media (prefers-reduced-motion: reduce) {
   .lay--rises.lay--over-journal .ses-head,
-  .lay--rises.lay--over-journal .ses-cover,
-  .lay--rises.lay--over-journal .ses-head-text { animation: none; }
+  .lay--rises.lay--over-journal .ses-head-beacon { animation: none; }
 }
 /* The listen rises from the foot of the screen, and it is the third answer
    here. It cross-faded, then it settled in from four per cent too big, and
