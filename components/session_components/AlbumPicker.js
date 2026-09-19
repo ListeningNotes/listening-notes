@@ -31,10 +31,15 @@
 // answers you already gave and did not finish.
 
 'use client';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { MagnifyingGlass } from '@phosphor-icons/react';
 import SiteNav from '../main_components/SiteNav';
 import { searchAlbums } from '../../library/music_data_api';
+import { PENDING_EVENT } from '../../hooks/useListeningSession';
+
+// How long the grid takes to shuffle over, and how long the newcomer waits
+// before growing into the slot the others are clearing.
+const FILE_MS = 420;
 
 // Long enough that typing an artist's name is one search rather than eight,
 // short enough that it never feels like waiting.
@@ -109,12 +114,85 @@ export default function AlbumPicker({ onPick, onResume, inline = false }) {
   // results with the stale ones.
   const askedFor = useRef('');
 
+  // ── The drafts, and when to ask again ────────────────────────────────────
+  // Once on mount was enough while the picker was a page you arrived at. It is
+  // not a page any more: it is what floor one *is* while a record is being
+  // chosen, and it stays mounted underneath the listen for the whole of that
+  // listen. So the draft a listen leaves behind on its way out would never
+  // have reached this grid — the component that draws it never re-ran.
+  //
+  // PENDING_EVENT is already shouted whenever a listen is picked up or put
+  // down (see saidSoAboutTheDesk); the desk has listened to it since
+  // 2026-09-16 for the same reason, that the listen and the thing underneath
+  // it are one route and nothing else would tell it.
   useEffect(() => {
-    fetch('/api/drafts')
-      .then(r => r.json())
-      .then(d => setDrafts(d.drafts || []))
-      .catch(() => {});
+    let alive = true;
+    const ask = () => {
+      fetch('/api/drafts')
+        .then(r => r.json())
+        .then(d => { if (alive) setDrafts(d.drafts || []); })
+        .catch(() => {});
+    };
+    ask();
+    window.addEventListener(PENDING_EVENT, ask);
+    return () => { alive = false; window.removeEventListener(PENDING_EVENT, ask); };
   }, []);
+
+  // ── The grid files across ────────────────────────────────────────────────
+  // Miyel, 2026-09-18: "a new draft files all drafts across the screen and the
+  // new draft appears." A CSS grid cannot be transitioned — reflowing it moves
+  // every tile in one frame, with nothing in between to animate — so the tiles
+  // are measured before and after and put back where they were, then let go.
+  // FLIP, the same machinery the wall uses when an entry is deleted out of it.
+  //
+  // The newcomer is the one tile with no previous box. It grows in after the
+  // others have finished moving, because the slot it grows into is the slot
+  // they are still clearing.
+  const gridRef = useRef(null);
+  const placedRef = useRef(new Map());
+  useLayoutEffect(() => {
+    const grid = gridRef.current;
+    if (!grid) { placedRef.current = new Map(); return undefined; }
+    const before = placedRef.current;
+    const after = new Map();
+    const moved = [];
+    const arrived = [];
+    for (const tile of grid.children) {
+      const id = tile.dataset.draft;
+      const box = tile.getBoundingClientRect();
+      after.set(id, { left: box.left, top: box.top });
+      const was = before.get(id);
+      if (!was) { if (before.size) arrived.push(tile); continue; }
+      if (was.left !== box.left || was.top !== box.top) {
+        moved.push([tile, was.left - box.left, was.top - box.top]);
+      }
+    }
+    placedRef.current = after;
+    if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return undefined;
+    for (const tile of arrived) tile.classList.add('ses-tile--new');
+    if (!moved.length) return undefined;
+    for (const [tile, dx, dy] of moved) {
+      tile.style.transition = 'none';
+      tile.style.transform = `translate(${dx}px, ${dy}px)`;
+    }
+    // Let go on the next frame — or on a timer if no frame comes. A tab that
+    // is not being painted runs no rAF callback at all, and the cost of that
+    // here is not a missing animation but tiles left sitting where they used
+    // to be, holding a transform nothing will ever clear. The same pair guards
+    // the beacon's words in HomeNav, for the same reason.
+    let gone = false;
+    const release = () => {
+      if (gone) return;
+      gone = true;
+      for (const [tile] of moved) {
+        tile.style.transition = `transform ${FILE_MS}ms cubic-bezier(0.22, 0.61, 0.36, 1)`;
+        tile.style.transform = '';
+      }
+    };
+    const frame = requestAnimationFrame(release);
+    const late = setTimeout(release, 120);
+    return () => { cancelAnimationFrame(frame); clearTimeout(late); };
+  }, [drafts]);
 
   // Typing is an event, not something to react to after the fact — clearing
   // the grid and showing "Looking…" happen here. The effect below owns only
@@ -309,11 +387,11 @@ export default function AlbumPicker({ onPick, onResume, inline = false }) {
 
                Only the discard is extra, and it sits on the art, so the tile's
                footprint is a search result's to the pixel. */
-            <div className="ses-grid">
+            <div className="ses-grid" ref={gridRef}>
               {drafts.map(draft => {
                 const armed = confirmDiscard === draft.id;
                 return (
-                  <div key={draft.id} className={'ses-tile ses-tile--draft' + (armed ? ' ses-tile--armed' : '')}>
+                  <div key={draft.id} data-draft={draft.id} className={'ses-tile ses-tile--draft' + (armed ? ' ses-tile--armed' : '')}>
                     <button
                       type="button"
                       className="ses-tile-open"

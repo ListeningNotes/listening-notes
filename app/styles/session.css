@@ -971,6 +971,22 @@
   gap: 18px 14px; margin-top: 24px;
 }
 @media (min-width: 769px) { .ses-grid { grid-template-columns: repeat(auto-fill, minmax(136px, 1fr)); gap: 24px 18px; } }
+/* ── The newcomer ────────────────────────────────────────────────────────
+   The draft a listen just left behind, growing into the slot the rest of the
+   grid is still clearing — which is why it waits: the others file across for
+   420ms (FILE_MS in AlbumPicker) and this starts two thirds of the way
+   through, so the two movements overlap rather than queue.
+
+   It grows rather than fades in. Nothing on this site simply appears, and
+   what this is growing out of is a sheet that has just gone down past it. */
+@keyframes ses-tile-in {
+  from { opacity: 0; transform: scale(0.82); }
+  to   { opacity: 1; transform: none; }
+}
+.ses-tile--new {
+  animation: ses-tile-in 340ms 280ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+@media (prefers-reduced-motion: reduce) { .ses-tile--new { animation: none; } }
 .ses-tile {
   display: flex; flex-direction: column; gap: 2px; min-width: 0;
   background: none; border: none; padding: 0; text-align: left; cursor: pointer; color: inherit;

@@ -2576,6 +2576,20 @@ restructure: the three drawings of the beacon were made into one.
 - [x] **The picker closes on the pull too**, from the top of the pane, at the
       layer's own thresholds (a fifth of the screen or a flick) rather than a
       second set of numbers for one gesture.
+- [x] **The drafts file across and the new one grows in.** "A new draft files
+      all drafts across the screen and the new draft appears." A FLIP, because
+      a CSS grid cannot be transitioned — every tile is measured before and
+      after, put back where it was and let go over 420ms. The newcomer is the
+      one tile with no previous box; it grows in on a 280ms delay, into the
+      slot the others are still clearing. Measured: tiles held at
+      `translate(-184px, 0px)` — exactly one column — then `transform 420ms
+      cubic-bezier(0.22, 0.61, 0.36, 1)`.
+- [x] **The picker asks for its drafts again when a listen is put down.** It
+      fetched once on mount, which was right while it was a page you arrived
+      at and wrong now that it stays mounted underneath the listen for the
+      whole listen: the draft a session left behind never reached the grid,
+      because nothing re-ran. It listens to `PENDING_EVENT`, the same shout the
+      desk has listened to since 2026-09-16 and for the same reason.
 - [x] **Long titles scroll again.** `MarqueeTitle` is back — restored from
       before 2026-08-28, not rebuilt — on the small beacon's title line, in a
       190px slot (the old compact beacon's own cap). Seven seconds on the first
