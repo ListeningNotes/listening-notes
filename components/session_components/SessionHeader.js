@@ -177,8 +177,9 @@ export default function SessionHeader({
           </span>
 
           <div className="ses-head-text">
-            {/* The one green thing on the screen, and it means what it means
-                everywhere else on this site: somebody is being told. */}
+            {/* The status, centred over the record and the artist — a label
+                for the two lines under it. Always green here: a session is a
+                listen. */}
             <span className="ses-head-live">
               <span className="ses-head-dot" aria-hidden="true" />
               {CAPTION.logging}

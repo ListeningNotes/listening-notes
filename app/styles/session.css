@@ -407,6 +407,18 @@
   gap: 12px;
   min-height: 48px;
 }
+/* ── The beacon's shape ───────────────────────────────────────────────────
+   The cover, and beside it a centred column: the status, the record, the
+   artist. Which is the large beacon's own arrangement with the cover moved
+   from above the words to the left of them — the same object, laid along the
+   row a header gives it instead of down the screen a pane gives it.
+
+   The status spent twenty minutes centred over the cover AND the words, as a
+   row of its own above both (Miyel, 2026-09-18: "it's a status above the
+   beacon"). Her next look took it back: "centred above the text only, not the
+   art — it'll take up less space, this all seems like it can fit beside the
+   album art." It can, and it did: two rows made the beacon 64px tall in a
+   48px header and the bar had to grow 16px to hold it. */
 .ses-head-beacon { display: flex; align-items: center; gap: 12px; min-width: 0; }
 /* No min-width: 0 on the sides, deliberately. It was on both for an hour and
    a long song title ate them: a grid track is allowed to shrink below its
@@ -569,7 +581,12 @@
    read as sitting left of centre. Miyel saw it at once. There is no cross-fade
    to line up any more: the session rises and the bar's mini blinks, and
    neither needs the other to be anywhere in particular. */
-.ses-head-text { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.ses-head-text {
+  min-width: 0;
+  display: flex; flex-direction: column; align-items: center;
+  text-align: center;
+  gap: 3px;
+}
 /* NOW LOGGING, with the one green thing on the screen beside it. Green means
    live everywhere on this site and this is the owner's own copy of what a
    visitor is being told while they write. */
@@ -589,6 +606,15 @@
   50%      { opacity: 0.5; }
 }
 @media (prefers-reduced-motion: reduce) { .ses-head-dot { animation: none; } }
+/* Not live. The dot stays — it is the status, and a status that vanishes makes
+   the caption jump sideways between the two states — but it goes the colour of
+   the words beside it and stops breathing. Green means playing and nothing
+   else on this site, so this is the one thing it must not be. */
+.ses-head-dot--idle {
+  background: var(--ink-faint);
+  box-shadow: none;
+  animation: none;
+}
 .ses-head-album {
   font-family: var(--font-display); font-weight: 700; font-size: 15px; line-height: 1.2;
   color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;

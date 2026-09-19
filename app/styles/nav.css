@@ -927,6 +927,12 @@
   transform-origin: top left;
   box-shadow: 0 12px 40px rgba(0, 0, 0, 0.28);
 }
+/* The same grey the card's cover and the mini's wear — .beacon-art--idle above
+   and .ses-cover--idle in session.css. A record that is dull at both ends of
+   the journey must be dull for the journey: it was full colour in the air, so
+   pressing Start a listen made last night's record flare and then go out
+   again, which is the one thing a *last logged* cover must never do. */
+.hn-flight--idle { filter: grayscale(80%) brightness(0.7); }
 
 /* ── Choosing a record, on the pane ────────────────────────────────────────
    Floor one becomes the picker and the rest of the cross stands down: the
@@ -1147,7 +1153,6 @@
   left: 50%;
   top: calc(env(safe-area-inset-top, 0px) + 10px);
   transform: translateX(-50%);
-  display: flex; align-items: center; gap: 12px;
   max-width: calc(100% - 150px);
 }
 @media (min-width: 769px) {
