@@ -464,6 +464,15 @@ already drifted into three different objects, one missing the artist, one
 missing the caption, one captioning `NOW LOGGING` whether or not it was. Cover,
 record, artist, in both sizes, 0.625 apart on the type.
 
+**Nothing on this site has a close button, 2026-09-18.** Sheets come up from
+the floor and go back down: the pull is the way out of an entry, the inbox, a
+person's page, the send form, a listen and the album picker. The listen and the
+picker had an × until this date and were the only two that did. Where closing
+has to do something first — a listen writes its draft, and a write that fails
+must not lose the afternoon — the page registers it with `useBeforeLeaving`
+(LayerEntry) rather than earning back a button. The one place a button survives
+is the desk's back caret, above 769px, where there is no pull to make.
+
 **How each size says it is live, 2026-09-18.** The large beacon says it in
 colour and says nothing in words — full-colour art against a greyed one, a
 deeper shadow, and the lit dot on the mark beside it. The small one has no mark,
