@@ -574,7 +574,7 @@ export default function HomeNav() {
     // No song: nothing is open yet, and the beacon's rule is the record until
     // one is.
     setOnTheBar({ art: record.artUrl, title: record.album, artist: record.artist, live: true });
-    setLanding({ record, art: record.artUrl, from, to: null, go: false, ms: TO_THE_BAR_MS, into: '.hn-bar-beacon .ses-cover' });
+    setLanding({ record, art: record.artUrl, live: true, from, to: null, go: false, ms: TO_THE_BAR_MS, into: '.hn-bar-beacon .ses-cover' });
     // And the session comes up under a bar that is already right.
     flightTimers.current.push(setTimeout(() => router.push('/session'), TO_THE_BAR_MS));
     // And the picker folds away once the sheet is over it — unseen, which is
@@ -1100,7 +1100,7 @@ export default function HomeNav() {
           other screen with nothing to say. */}
       {choosing && onTheBar && (
         <span
-          className={'hn-bar-beacon' + (landing ? ' hn-bar-beacon--flying' : '')}
+          className={'ses-head-beacon hn-bar-beacon' + (landing ? ' hn-bar-beacon--flying' : '')}
           aria-hidden="true"
         >
           {/* ── One beacon, two sizes ────────────────────────────────────
@@ -1128,12 +1128,17 @@ export default function HomeNav() {
           </span>
           {onTheBar?.title && (
             <span className="ses-head-text">
-              {/* Dull and captioned Last logged when the record up here is
-                  last night's, lit and captioned Now logging once one has
-                  been chosen. The dot is the only green thing in the row and
-                  it means what it means everywhere else on this site. */}
+              {/* The status, centred over the record and the artist — and the
+                  dot is always drawn, because the dot IS the status. Grey
+                  while the record up here is last night's, green once one has
+                  been chosen. It was drawn only when live for an hour, so the
+                  caption shifted sideways between the two states and read as
+                  two different rows rather than one row saying two things. */}
               <span className="ses-head-live">
-                {onTheBar.live && <span className="ses-head-dot" aria-hidden="true" />}
+                <span
+                  className={'ses-head-dot' + (onTheBar.live ? '' : ' ses-head-dot--idle')}
+                  aria-hidden="true"
+                />
                 {CAPTION[onTheBar.live ? 'logging' : 'logged']}
               </span>
               <span className="ses-head-album">{onTheBar.title}</span>
@@ -1505,6 +1510,7 @@ export default function HomeNav() {
                           if (said && said.width) wordsFrom.current = said;
                           setLanding({
                             art: onAir,
+                            live: isLive,
                             from: { left: box.left, top: box.top, width: box.width, height: box.height },
                             to: null, go: false, ms: TO_THE_BAR_MS, into: '.hn-bar-beacon .ses-cover',
                           });
@@ -1583,7 +1589,18 @@ export default function HomeNav() {
           it is travelling between two boxes that belong to different parts of
           the page and neither of them can hold it. */}
       {landing && flightStyle && (
-        <img src={landing.art} alt="" aria-hidden="true" className="hn-flight" style={flightStyle} />
+        <img
+          src={landing.art}
+          alt=""
+          aria-hidden="true"
+          /* Greyed in the air when the record is greyed at both ends. The
+             flier is its own <img> — it is not either cover, it is the one
+             between them — so it drew in full colour while the card it left
+             and the slot it was landing in were both dull. Miyel, 2026-09-18:
+             "right now it gets colour then it goes grey again." */
+          className={'hn-flight' + (landing.live === false ? ' hn-flight--idle' : '')}
+          style={flightStyle}
+        />
       )}
       {dropping && dropStyle && (
         <img src={dropping.art} alt="" aria-hidden="true" className="hn-flight" style={dropStyle} />
