@@ -34,13 +34,15 @@ import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { useBookplate } from './Bookplate';
 import { PaperPlaneTilt, Plus } from '@phosphor-icons/react';
-import { knownHere, subscribeSender } from '../../library/return_address';
+import { journalUrl, knownHere, recallSender, subscribeSender } from '../../library/return_address';
 
 // useSyncExternalStore wants a server snapshot, and the server cannot know
 // whether the reader keeps a journal — so on the server nobody does, and the
 // Add pill appears on the client if it is wanted. Module-level so the store
 // reads a stable function.
 const readNothing = () => false;
+const readNothingSaid = () => '';
+const readHome = () => recallSender().address || '';
 
 export default function CallingCard({ onOpenCard }) {
   const { cover_name, portrait_url, portrait_position, site_address } = useBookplate();
@@ -55,10 +57,22 @@ export default function CallingCard({ onOpenCard }) {
   // Never for the owner: this whole piece is drawn only for a visitor, so
   // there is nobody here with nothing to add themselves to.
   const address = site_address ? site_address.replace(/^https?:\/\//, '') : null;
+
   // Hidden from a visitor whose own copy said, arriving, that this journal is
   // already in their book. Cold, it shows — the journal has no way to know and
   // does not go looking.
   const known = useSyncExternalStore(subscribeSender, knownHere, readNothing);
+  // ── Where this reader keeps their own journal, if this one has been told ──
+  // A journal never learns who is reading it — but a keeper arriving from
+  // their own address book, feed, inbox or person's page comes through a link
+  // their copy wrote, and that link carries their name and address. Sending a
+  // record from this browser leaves the same thing behind. Either way it is
+  // held here, at this origin, by the reader's own browser (return_address).
+  //
+  // Read through the store rather than off localStorage during render: the
+  // server cannot know it, and a component that renders one thing on the
+  // server and another in the browser is a hydration mismatch.
+  const home = useSyncExternalStore(subscribeSender, readHome, readNothingSaid);
   const [added, setAdded] = useState(false);
   const addedTimer = useRef(null);
   useEffect(() => () => clearTimeout(addedTimer.current), []);
@@ -126,7 +140,37 @@ export default function CallingCard({ onOpenCard }) {
           been, the quiet control of this screen rather than one particular
           control. */}
       <div className="calling-acts">
-        {address && !known && (
+        {/* ── Add ────────────────────────────────────────────────────────
+            Two presses wearing one word, because there are two things a
+            journal can do for a reader's address book and which one depends
+            on something it may not know.
+
+            Knowing where the reader keeps their own journal, it hands them
+            back to it with this address in the link, and their copy files it
+            — the only place the writing can happen, since nothing at this
+            address may write to theirs. Miyel, 2026-09-19, on the trade of
+            leaving this page to do it: "I think it's fair, because it lands
+            you exactly where you need to be to easily get back."
+
+            Not knowing — a reader who arrived from a text, a code or a search
+            — it copies the address and says so, which is what it has always
+            done and all it can honestly do. It does not ask, and it does not
+            guess: a journal that started requesting the reader's address
+            would be a journal learning who reads it.
+
+            A plain <a> and not a Link: the destination is somebody else's
+            copy at another address, which is not this app's router's to
+            prefetch or own. */}
+        {address && !known && (home ? (
+          <a
+            className="ln-onward"
+            href={`${journalUrl(home)}/dashboard/people?add=${encodeURIComponent(address)}`}
+            title={`Add this journal to your book on ${home}`}
+          >
+            <Plus size={14} weight="regular" aria-hidden="true" />
+            Add
+          </a>
+        ) : (
           <button
             type="button"
             className="ln-onward"
@@ -137,7 +181,7 @@ export default function CallingCard({ onOpenCard }) {
             <Plus size={14} weight="regular" aria-hidden="true" />
             {added ? 'Copied' : 'Add'}
           </button>
-        )}
+        ))}
         <Link href="/submit" className="ln-onward">
           <PaperPlaneTilt size={14} weight="regular" aria-hidden="true" />
           Send

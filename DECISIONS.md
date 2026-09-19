@@ -254,6 +254,13 @@ stands in — a stranger lands on the beacon and reaches the card by choosing to
 — and the card carries no copy of them. One pair of controls, one place;
 `CallingCard.js`.
 
+**Add hands the reader home rather than copying, when it can, 2026-09-19.**
+A journal cannot write to a reader's address book — different origin — but it
+is often told where that book is, because every link out of a copy carries its
+keeper's address. Knowing, Add links home with this address in it and that copy
+files it, after confirming; not knowing, it copies as before. The journal never
+asks for the address and never guesses: asking would be learning who reads it.
+
 **Nothing on the beacon floor is a box, 2026-09-19.** Every control there is a
 glyph and a mono capital, a visitor's included. Four shapes were tried in one
 day — a filled pill, the entry editor's round flag, an entry's squared tag, a

@@ -2658,6 +2658,51 @@ current.
 
 ## Complete
 
+**2026-09-19 — Add goes home, and the slot gets a rule with a note in it.**
+
+- [x] **Add files for real, where the journal knows where home is.** It copied
+      an address and said "Copied", which Miyel's look at it settled: "all I
+      saw on click was Copied." The journal being read cannot write to the
+      reader's book — different origin, different database — but it is often
+      told where that book lives: every link out of a copy carries its
+      keeper's name and address, and so does sending a record from that
+      browser (`recallSender`). Knowing, Add is a link home with this address
+      in it and the reader's own copy does the filing. Not knowing — a text, a
+      code, a search — it copies, as before. It never asks and never guesses:
+      a journal that collected the reader's address would be a journal
+      learning who reads it.
+- [x] **And the book takes an address from a link.** `/dashboard/people?add=`,
+      read after mount, taken straight back off the address bar so a reload
+      cannot ask twice. **Offered, not filed** (Miyel: "confirm before
+      filing") — a link that writes the moment it opens is a link anybody
+      could send you, and the book's one promise is that a person is written
+      down by the keeper and nobody else. NAME: `?add=` is a placeholder for
+      Miyel to overrule.
+- [x] **A hairline over the slot, with ♪ in the middle of it.** From her own
+      f6 mock-up of 2026-09-17, which the row had independently arrived at two
+      days later without the rule. Both versions wear it — the keeper's way in
+      and a visitor's calling card are one shape at two contents — and the
+      line lands on the same pixel either way (measured, y=594 on an 812
+      phone), running the record's left edge to the right edge of the past
+      column. The note is not a gap cut in the border: it sits on the line on
+      a patch of `--bg`, which works because everything from the cross down to
+      that row is transparent. ♪ because the empty beacon and an unanswering
+      tile already wear it.
+- [x] **And the glyph came off the way in.** Miyel: "no glyph for now." The
+      arrow went on the 18th and the glyph took over saying *this is a thing
+      you press*; a rule above the line says it harder, and both was twice.
+      The superseded `.hn-pane--home .ln-onward` block — positioning measured
+      from a BEFORE THAT row that has been a column since the 18th — went with
+      it; its declarations are restated beside the calling card they align to.
+
+**Known and left alone: the book's rows wrap a name one letter to a line on a
+phone.** At 375 the row gives 40 to the envelope, 83 to VISIT and 48 to
+REMOVE, leaving 54 for a face and a name, and `.bk-name` carries
+`overflow-wrap: anywhere` so it shrinks to one character rather than pushing
+back. Pre-existing, not from this work. Not fixed on purpose: the friends
+brief replaces those rows with a grid of faces, so the fix would be thrown
+away (Miyel, 2026-09-19: "don't need to fix if the list goes").
+
 **2026-09-19 — `passing`, and two things the calling card's layout broke.**
 The side-by-side floor that shipped this morning put the record and its past
 in two grid columns, and flattened the wrappers between the screen and the

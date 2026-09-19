@@ -61,9 +61,43 @@ export default function AddressBook({ layered = false }) {
   // than a boolean, because the sheet opens already knowing who — that is the
   // whole difference between starting here and starting on a record.
   const [sendingTo, setSendingTo] = useState(null);
+  // ── An address that arrived in the link ──────────────────────────────────
+  // Somebody reading another journal pressed Add there. That journal cannot
+  // write to this copy — nothing at another address can — so what it does
+  // instead is send the reader home with the address in hand, and this files
+  // it. See CallingCard.js for the other end.
+  //
+  // NAME: `?add=` is a placeholder for Miyel to overrule (AGENTS.md).
+  //
+  // Held rather than filed. Miyel, 2026-09-19: "confirm before filing." A
+  // link that writes to the book the moment it opens is a link anybody could
+  // send you, and the one promise this book makes is that a person is written
+  // down by the keeper and nobody else. So the address is offered, in words,
+  // with a press on each side of the question.
+  const [offered, setOffered] = useState('');
 
   useEffect(() => {
     fetch('/api/auth/check').then(r => r.json()).then(d => setAuthed(!!d.authed)).catch(() => {}).finally(() => setChecking(false));
+  }, []);
+
+  // Read after mount, not during render, so the server and the browser agree
+  // about what this page says on its first frame — the same reason the card
+  // reads its return address through a store rather than off `window`.
+  //
+  // And taken back off the address bar as soon as it is read, which is what
+  // every other address this project carries in a link does (see noteArrival).
+  // A reload should not ask the question twice, and the address of somebody
+  // else's journal should not sit in this one's history.
+  useEffect(() => {
+    let asked = '';
+    try { asked = new URLSearchParams(window.location.search).get('add') || ''; } catch { /* no URL to read */ }
+    const address = tidyJournal(asked);
+    if (!address) return;
+    setOffered(address);
+    try {
+      const clean = window.location.pathname + window.location.hash;
+      window.history.replaceState(window.history.state, '', clean);
+    } catch { /* a browser that will not rewrite its own bar is no reason to fail */ }
   }, []);
 
   useEffect(() => {
@@ -152,6 +186,24 @@ export default function AddressBook({ layered = false }) {
                   <Camera size={14} aria-hidden="true" /> Scan a code
                 </button>
               </form>
+            )}
+            {offered && !scanning && (
+              <div className="bk-offer">
+                <p className="bk-offer-said">
+                  Add <strong>{offered}</strong> to your book?
+                </p>
+                <div className="bk-offer-acts">
+                  <button
+                    type="button"
+                    className="own-act own-act--solid"
+                    disabled={filing}
+                    onClick={() => { const a = offered; setOffered(''); file(a); }}
+                  >
+                    {filing ? 'Adding…' : 'Add them'}
+                  </button>
+                  <button type="button" className="own-act" onClick={() => setOffered('')}>Not now</button>
+                </div>
+              </div>
             )}
             <p className="bk-said" role="status">{said}</p>
 
