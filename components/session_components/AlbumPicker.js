@@ -32,7 +32,7 @@
 
 'use client';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { MagnifyingGlass } from '@phosphor-icons/react';
+import { MagnifyingGlass, Trash } from '@phosphor-icons/react';
 import SiteNav from '../main_components/SiteNav';
 import { searchAlbums } from '../../library/music_data_api';
 import { PENDING_EVENT } from '../../hooks/useListeningSession';
@@ -424,19 +424,23 @@ export default function AlbumPicker({ onPick, onResume, inline = false }) {
                     >
                       <span className="ses-tile-art">
                         {draft.album_art ? <img src={draft.album_art} alt="" loading="lazy" /> : null}
-                        {armed && <span className="ses-tile-sure">Delete</span>}
+                        {armed && (
+                          <span className="ses-tile-sure">
+                            <Trash size={20} weight="fill" aria-hidden="true" />
+                            Sure?
+                          </span>
+                        )}
                       </span>
+                      {/* The words underneath do not change and do not turn
+                          red. Miyel, 2026-09-18: "a red field over just the
+                          art, not the text." The question is a thing that has
+                          come down over the record, and the record's name is
+                          still its name while it is being asked. It said
+                          "press again" here and the name went red with it,
+                          which made the whole tile the question. */}
                       <span className="ses-tile-name">{draft.album}</span>
                       <span className="ses-tile-year">
-                        {/* Two words. The line is 96px wide at 9px and
-                            ellipsises anything longer — "press again to
-                            delete" came back as "press again to d…", which is
-                            a sentence about deleting cut off mid-word on a
-                            tile that has just turned red. The overlay above it
-                            says what; this only has to say how. */}
-                        {armed
-                          ? 'press again'
-                          : <>{draft.artist}{draft.artist ? ' · ' : ''}{sinceLabel(draft.updated_at)}</>}
+                        {draft.artist}{draft.artist ? ' · ' : ''}{sinceLabel(draft.updated_at)}
                       </span>
                     </button>
                   </div>

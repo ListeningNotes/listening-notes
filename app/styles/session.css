@@ -997,6 +997,12 @@
 }
 .ses-tile-art {
   display: block; width: 100%; aspect-ratio: 1; border-radius: 6px; overflow: hidden;
+  /* The containing block for the question that comes down over it. Without
+     this, .ses-tile-sure's `inset: 0` reached past the art to the whole tile
+     and the red field covered the record's name and its artist as well —
+     measured 2026-09-18 at 174x214 over a 174x174 cover, which is exactly the
+     "over just the art, not the text" Miyel was asking for. */
+  position: relative;
   background: var(--panel); box-shadow: 0 4px 18px rgba(0,0,0,0.16); margin-bottom: 6px;
   transition: transform 0.2s cubic-bezier(0.34, 1.2, 0.64, 1);
 }
@@ -1036,11 +1042,21 @@
    trap. */
 .ses-tile--armed .ses-tile-art { box-shadow: 0 4px 18px color-mix(in srgb, var(--fav) 40%, transparent); }
 .ses-tile--armed .ses-tile-art img { filter: grayscale(70%) brightness(0.55); }
-.ses-tile--armed .ses-tile-name { color: var(--fav); }
-.ses-tile--armed .ses-tile-year { color: var(--fav); }
+/* The name and the artist stay exactly as they are. They turned red with the
+   art until 2026-09-18 and the whole tile became the question; the record's
+   name is still its name while something is being asked about it. Miyel: "a
+   red field over just the art, not the text." */
+/* ── The question, over the record ────────────────────────────────────────
+   A glyph over a word, which is the one shape this software uses for
+   something you can press — an entry's ···, the address book's doors, the
+   marks on a listen. The trash is the toolbar's own, at the weight the
+   toolbar gives it once it has been asked (fill, not regular, in
+   KeeperTools), because this IS that second press: the first one already
+   happened, it was the long press that brought this down. */
 .ses-tile-sure {
   position: absolute; inset: 0; z-index: 2;
-  display: flex; align-items: center; justify-content: center;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 5px;
   background: color-mix(in srgb, var(--fav) 72%, transparent);
   color: #fff;
   font-family: var(--font-label); font-size: 10px;
