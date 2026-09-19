@@ -160,11 +160,11 @@ const TURN_MS = 400;
 const TO_THE_BAR_MS = 620;
 // The eyelid. Slow enough to read as a thing closing rather than a flicker,
 // and it ends a beat before the session's rise does.
-const BLINK_MS = 520;
+const BLINK_MS = 720;
 // How long the session takes to resolve over the pane. It has to agree with
 // .lay--over-journal's own duration in entry.css — the picker folds away
 // behind it on this clock.
-const RISE_MS = 620;
+const RISE_MS = 720;
 
 // ── And the way back down ─────────────────────────────────────────────────
 // A listen becomes an entry, the layer closes, and the record falls out of
@@ -521,18 +521,17 @@ export default function HomeNav() {
     // detaching from a row and sailing up is a fourth thing happening on top
     // of a session arriving and a picker folding away.
     //
-    // The eyelid closes, the record is changed behind it, and it opens on the
-    // new one. Half of BLINK_MS each way, so the swap lands at the shut.
+    // The lid closes on this beacon and opens on the session's, which is
+    // already in place because the session's header does not rise with its
+    // sheet (layHoldStill / layLidOpen in entry.css). Nothing is swapped here
+    // — the hand-over happens while the lid is shut, and the bar's mini goes
+    // with the picker a beat later without ever being seen to open again.
     setBlinking(true);
-    flightTimers.current.push(setTimeout(() => {
-      setOnTheBar({ art: record.artUrl, album: record.album, artist: record.artist });
-    }, BLINK_MS / 2));
-    flightTimers.current.push(setTimeout(() => setBlinking(false), BLINK_MS));
     router.push('/session');
     // And the picker folds away once the sheet is over it — unseen, which is
     // the point. Doing it now would empty the screen behind a sheet that has
     // not covered it yet.
-    flightTimers.current.push(setTimeout(() => setChoosing(false), RISE_MS + 120));
+    flightTimers.current.push(setTimeout(() => { setChoosing(false); setBlinking(false); }, RISE_MS + 120));
   }, [openSession, router]);
 
   // The journey: out of the picker and into the bar's slot, which is the
