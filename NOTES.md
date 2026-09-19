@@ -2680,6 +2680,13 @@ restructure: the three drawings of the beacon were made into one.
       **The word's slot is `pointer-events: none`** — it is a positioned box
       sitting on the mark, and without that it swallowed every press meant for
       the ×, which did nothing at all. See the Gotcha.
+
+      **The face is the first edition's**, said outright rather than inherited:
+      DM Mono, uppercase, 0.1em — the site's label face, which is what this was
+      at 10px in the gap beside the mark. Only the size changed. It rendered
+      sentence case for ten minutes because browsers reset `text-transform` on
+      form controls in their own stylesheet, so the row's `uppercase` reached
+      it or did not depending on the browser.
       **The word is sentence case on purpose** (`text-transform: none`, set
       explicitly): browsers reset text-transform on form controls in their own
       stylesheet, so it was inheriting the row's `uppercase` or not depending

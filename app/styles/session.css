@@ -551,14 +551,16 @@
   font: inherit;
   /* The size the × is drawn at. A 20px glyph and 10px type were never the
      same control; this is, so they are. */
-  font-size: 17px; line-height: 20px; letter-spacing: 0.06em;
-  /* Said, not stamped. Every label on this site is uppercase DM Mono at 9 or
-     10px and this is not a label any more — it is the control, at the size the
-     × was drawn at, and END at 17px is a shout where the × was a mark.
-     Explicit because it was arriving here by accident: browsers reset
-     text-transform on form controls in their own stylesheet, so this inherited
-     the row's `uppercase` or did not depending on whose browser it was. */
-  text-transform: none;
+  /* The first edition's own face, at the size the × is drawn at: DM Mono,
+     uppercase, 0.1em — the site's label face, which is what this was when it
+     was 10px in the gap beside the mark. Only the size changed.
+
+     It went sentence case for ten minutes because browsers reset
+     text-transform on form controls in their own stylesheet, so the row's
+     `uppercase` was reaching this or not depending on whose browser it was.
+     Said here outright so it is the same everywhere. */
+  font-size: 17px; line-height: 20px; letter-spacing: 0.1em;
+  text-transform: uppercase;
   color: var(--ink);
   opacity: 0;
   transform: scale(0.72);
