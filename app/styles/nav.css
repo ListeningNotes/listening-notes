@@ -1118,14 +1118,28 @@
   height: calc(env(safe-area-inset-top, 0px) + 68px);
   padding-top: env(safe-area-inset-top, 0px);
 }
-/* The record itself, in the middle of that line. .ses-cover's own numbers:
-   44px, 14px of radius, the same panel behind it and the same small shadow
-   under it. */
-.hn-bar-cover {
+/* ── The mini beacon, in the bar ──────────────────────────────────────────
+   The record, its album and its artist — .ses-head-beacon's own shape, so
+   that when the session resolves over this its header is the same three
+   things in the same three places. Centred as a group rather than the cover
+   being centred alone: the session's cover sits left of centre with the words
+   to its right, and a cover centred by itself lands 52px off that.
+
+   Picking a record does not fly it here from the list (Miyel, 2026-09-18:
+   "it's too much for the album to float from picker to beacon — maybe it just
+   updates"). announce() has already put it on the beacon, so this simply *is*
+   the new record on the next frame. */
+.hn-bar-beacon {
   position: absolute;
   left: 50%;
   top: calc(env(safe-area-inset-top, 0px) + 12px);
   transform: translateX(-50%);
+  display: flex; align-items: center; gap: 12px;
+  max-width: calc(100% - 140px);
+}
+/* .ses-cover's own numbers. */
+.hn-bar-cover {
+  flex-shrink: 0;
   width: 44px; height: 44px;
   border-radius: 14px;
   overflow: hidden;
@@ -1133,10 +1147,20 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.14);
 }
 .hn-bar-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
-/* Drawn but not shown while a record is on its way to it — the flight has to
-   be able to measure the box it is aiming at, and two copies of the same
-   record on one screen is the thing the flight exists to avoid. */
-.hn-bar-cover--flying { opacity: 0; }
+/* And .ses-head-text's. */
+.hn-bar-said { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.hn-bar-album {
+  font-family: var(--font-display); font-weight: 700; font-size: 15px; line-height: 1.2;
+  color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.hn-bar-artist {
+  font-family: var(--font-label); font-size: 10px; letter-spacing: 0.08em;
+  color: var(--ink-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+/* Drawn but not shown while the record is on its way up from the card — the
+   flight measures the box it is aiming at, and it cannot be showing the same
+   record at the same time. */
+.hn-bar-beacon--flying { opacity: 0; }
 /* And the card's own cover steps aside at once rather than fading with the
    rest of the card. The stage takes 0.4s to go and the flight takes 620ms, so
    without this there would be four hundred milliseconds of the record in two
