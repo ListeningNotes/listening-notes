@@ -351,8 +351,18 @@
 /* ── Header ────────────────────────────────────────────────────────────── */
 .ses-head {
   position: sticky; top: 0; z-index: 20;
-  background: var(--panel-strong);
-  backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
+  /* The page's own colour, not a frosted white panel. --panel-strong is
+     rgba(255,255,255,0.86) and over this site's cream it reads as white —
+     which made the one screen you type into feel like a different application
+     from the one you chose the record in. Miyel, 2026-09-18: "I don't know
+     why the header in the actual session is so bright white and it's not
+     matching the muted colours we use site-wide… it doesn't need to be white
+     on off-white, it should just be our site colour all the way through."
+     The blur goes with it: there is nothing to see through an opaque header,
+     and a backdrop filter that filters nothing is a compositing layer for
+     free. The hairline stays and is now the only thing saying where the
+     header ends, which is enough — it is what says it everywhere else. */
+  background: var(--bg);
   border-bottom: 1px solid var(--border);
   padding-top: env(safe-area-inset-top, 0px);
 }

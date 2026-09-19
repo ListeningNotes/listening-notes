@@ -514,13 +514,14 @@ export default function HomeNav() {
     // make the mini beacon." So the record leaves the square you pressed and
     // goes to the one place it is going to live, and the session follows it
     // rather than arriving beside it.
+    // The slot is made now so the flight has something to measure and land
+    // on, and it is drawn but not shown for the length of the journey — the
+    // record is in the air and must not also be sitting where it is going.
+    // The mark goes in the same commit: one thing in that space, always.
+    setOnTheBar({ art: record.artUrl, album: record.album, artist: record.artist });
     setLanding({ record, art: record.artUrl, from, to: null, go: false, ms: TO_THE_BAR_MS, into: '.hn-bar-cover' });
-    // The mini becomes this record as the flight lands on it, and the session
-    // comes up under a bar that is already right.
-    flightTimers.current.push(setTimeout(() => {
-      setOnTheBar({ art: record.artUrl, album: record.album, artist: record.artist });
-      router.push('/session');
-    }, TO_THE_BAR_MS));
+    // And the session comes up under a bar that is already right.
+    flightTimers.current.push(setTimeout(() => router.push('/session'), TO_THE_BAR_MS));
     // And the picker folds away once the sheet is over it — unseen, which is
     // the point. Doing it now would empty the screen behind a sheet that has
     // not covered it yet.
@@ -1039,7 +1040,10 @@ export default function HomeNav() {
           already exactly here and nothing appears to move. The bar's own row
           shifts up to meet it (.hn--choosing .hn-bar in nav.css), so the ×
           and the lights sit on the line they will sit on in a moment. */}
-      {choosing && (
+      {/* The mini, once a record has been chosen — see the Start a listen
+          button. Until then the bar carries the mark, the way it does on every
+          other screen with nothing to say. */}
+      {choosing && onTheBar && (
         <span
           className={'hn-bar-beacon' + (landing ? ' hn-bar-beacon--flying' : '')}
           aria-hidden="true"
@@ -1374,35 +1378,27 @@ export default function HomeNav() {
                       <button
                         type="button"
                         className="ln-onward"
-                        onClick={event => {
-                          // ── The beacon comes up and the drafts appear ────
-                          // Miyel, 2026-09-18, comparing this with what is
-                          // live: "I do like the beacon coming from the beacon
-                          // on the page and making itself a part of the
-                          // session when you're in your drafts — it makes it
-                          // feel like the beacon comes alive. I like clicking
-                          // start a listen and the old beacon moves up, you
-                          // see your drafts."
+                        onClick={() => {
+                          // ── The mark goes up; the beacon is made later ───
+                          // Miyel, 2026-09-18: "maybe what needs to go up to
+                          // the top is the logo. The LN logo, with the same
+                          // animation. The beacon goes away. And then when you
+                          // choose your album, it makes the beacon."
                           //
-                          // It pushed straight into the session for half an
-                          // hour and she is right about what that cost: the
-                          // sheet slid up with no way back — "it swipes up
-                          // from the bottom, but I have to go swipe back,
-                          // that's not intuitive." The picker belongs on this
-                          // pane, where the × in the bar is the way out and
-                          // the beacon is the thing that travels.
-                          const art = event.currentTarget
-                            .closest('.beacon-card')?.querySelector('img.beacon-art');
-                          const box = art?.getBoundingClientRect();
-                          setOnTheBar({ art: onAir, album: onAirAlbum, artist: onAirArtist });
+                          // Which is truer than sending the last record up
+                          // there: at this moment you have not chosen
+                          // anything, and a mini beacon showing last night's
+                          // record while you look for tonight's is a claim
+                          // nobody made. The mark is what the bar carries when
+                          // there is nothing to say, everywhere else on this
+                          // site. So the crown shrinks into it — it already
+                          // does, on its own 0.7s — the card stands down, and
+                          // the bar is a mark over a grid of records.
+                          //
+                          // The beacon arrives when you make one: the record
+                          // you press flies up and takes the mark's place.
+                          setOnTheBar(null);
                           setChoosing(true);
-                          if (!box || !onAir) return;
-                          if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
-                          setLanding({
-                            art: onAir,
-                            from: { left: box.left, top: box.top, width: box.width, height: box.height },
-                            to: null, go: false, ms: TO_THE_BAR_MS, into: '.hn-bar-cover',
-                          });
                         }}
                       >
                         Start a listen

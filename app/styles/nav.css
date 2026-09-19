@@ -1181,9 +1181,17 @@
    without this there would be four hundred milliseconds of the record in two
    places — the real one shrinking away and the copy climbing past it. */
 .hn--flying .beacon-art-wrap { visibility: hidden; }
-/* And no LN mark beside it. Two marks in one row is the thing she asked to be
-   rid of — "without the small LN logo in between". */
-.hn--choosing .hn-bar-mark { display: none; }
+/* The mark is what the bar carries while you are choosing and have not chosen
+   — it is the crown, shrunk into the row, and it is what this bar carries on
+   every other screen with nothing to say. It hides the moment a record takes
+   its place, which is what makes the beacon read as something you made rather
+   than something that was already there (Miyel, 2026-09-18: "the beacon goes
+   away, and then when you choose your album it makes the beacon").
+
+   A sibling selector and not :has(), which this build silently drops (see
+   NOTES). It works because the beacon is written before the mark in the bar,
+   so "the mark that follows a beacon" is exactly the case to hide. */
+.hn--choosing .hn-bar-beacon ~ .hn-bar-mark { display: none; }
 /* ── The card stands down entirely ────────────────────────────────────────
    It shrank to 132px and held the middle of the screen while you searched,
    which is the shape this had before the record moved into the bar. With the

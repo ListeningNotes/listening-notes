@@ -191,7 +191,15 @@ export default function AlbumPicker({ onPick, onResume, inline = false }) {
               underline (the mockup). The glyph is inside the label so the
               whole line is the tap target, which is what a rule with no box
               round it otherwise loses. */}
-          <label className={'ses-search' + (inline ? ' ses-search--hair' : '')}>
+          {/* Boxed on the pane too, from 2026-09-18. It was a hairline and a
+              magnifier there on the reasoning that the floor had just become
+              the picker and said so already — and Miyel, comparing the two:
+              "bring back the boxed search, I did like that from the last
+              version. The search bar being an actual box that was white."
+              The floor says less than it did now that the drafts are squares
+              rather than a list: a grid of album art looks the same whether
+              or not you may type at it, and the box is what says you may. */}
+          <label className="ses-search">
             {inline && <MagnifyingGlass size={18} weight="regular" aria-hidden="true" />}
             <input
               className="ses-input"
