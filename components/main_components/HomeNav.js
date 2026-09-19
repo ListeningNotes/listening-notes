@@ -1230,7 +1230,7 @@ export default function HomeNav() {
               aria-hidden={!ending}
               title="End this session and go back to the beacon"
             >
-              End?
+              End
             </button>
           </span>
         </div>
