@@ -2649,13 +2649,24 @@ restructure: the three drawings of the beacon were made into one.
       Captured at the document, so the state is clear before the press reaches
       whatever it landed on — with the armed tile itself excepted, since a
       press there is the yes.
-- [x] **The picker's × is the session's rotating one**, moved there when it
-      came off the listen: press the mark and it turns ninety degrees, and the
-      word comes out of it rather than two controls swapping places. The word
-      is **END** — Miyel asked for "end session?" and then answered the
-      constraint herself, "it can even just say END", which is what the gap
-      allows. Measured at 375px: the mark ends at 64, the beacon's cover starts
-      at 134, END runs 64→86. The beacon does not move.
+- [x] **The picker's × turns into the word and goes.** Press the mark: it
+      turns ninety degrees, shrinks away, and leaves **End** standing exactly
+      where it stood, at 17px — the size the × was drawn at. A press anywhere
+      else turns it back into a plain ×.
+
+      It was a *pair* for a day — the × staying put with the word budding out
+      of its right-hand side into the gap before the beacon — and that is what
+      kept the word at 10px, because 68px of gap was all it had. Miyel: "have
+      the × turn into the End button… it can move out and leave the End as the
+      only button. That allows End to be bigger font, should match × size."
+      One control at a time, in one place, so the word gets the whole corner.
+
+      Measured at 375px: the × box is 28→64, End runs 28→78, and the beacon's
+      cover starts at 134, so 56px of clearance. The beacon does not move.
+      **The word is sentence case on purpose** (`text-transform: none`, set
+      explicitly): browsers reset text-transform on form controls in their own
+      stylesheet, so it was inheriting the row's `uppercase` or not depending
+      on the browser — and END at 17px is a shout where the × was a mark.
 - [x] **The listen closes on the pull; the picker keeps its ×.** Both crosses
       came off first — "I don't have them anywhere else on the site, and
       swiping down is intuitive since the screen comes up" — and one went

@@ -485,99 +485,90 @@
    there while the animation runs on — "Leave" was open in 90ms of a 340ms
    turn. A track going 0fr → 1fr resolves to exactly the text's width, so
    both words take the whole turn and neither is told a number. */
-/* The pair: the mark, and the word that comes out of it. Not one button —
-   the mark shuts what it opened and the word is what commits, so they are two
-   things with two jobs sitting in one row. */
+/* ── One control that changes its mind ────────────────────────────────────
+   The mark turns, goes, and leaves the word standing where it stood. Miyel,
+   2026-09-18: "have the × turn into the End button — I still like the
+   animation, I just think it can move out and leave the End as the only
+   button."
+
+   It was a pair for a day: the × stayed put and the word budded out of its
+   right-hand side into the gap before the beacon. That put two things in the
+   row saying two different things, and it is what kept the word small — it
+   had 68px of gap to live in and no more. One at a time, in one place, the
+   word gets the whole corner and can be read at the size the × is drawn at.
+
+   Going back is a press anywhere else, which is the same answer the draft's
+   delete gives (AlbumPicker) and the reason the × does not need to stay on
+   screen to be pressed again. */
 .ses-shut {
+  position: relative;
   display: inline-flex;
   align-items: center;
   margin: -8px;
   color: var(--ink-soft);
-  font-family: var(--font-label); font-size: 10px; letter-spacing: 0.1em;
+  font-family: var(--font-label); letter-spacing: 0.1em;
   text-transform: uppercase; white-space: nowrap;
   transition: color 0.15s;
 }
+/* The mark's own box, which is also the box the word lands in — 34px, the
+   thumb's, from 8px of padding around an 18–20px glyph. */
 .ses-shut-door {
   display: inline-flex; align-items: center; justify-content: center;
   padding: 8px; border: 0; background: none; cursor: pointer;
   color: inherit;
+  transition: transform 0.34s cubic-bezier(0.22, 0.61, 0.36, 1),
+              opacity 0.2s ease;
 }
 .ses-shut-door:hover { color: var(--ink); }
-.ses-shut-mark {
-  flex: 0 0 auto;
-  transition: transform 0.34s cubic-bezier(0.22, 0.61, 0.36, 1);
+.ses-shut-mark { flex: 0 0 auto; }
+/* Turned and gone. Ninety degrees on an × lands exactly where it started, so
+   what you see is the turning and not the angle — and then it leaves, rather
+   than sitting behind the word it turned into. */
+.ses-shut--sure .ses-shut-door {
+  transform: rotate(90deg) scale(0.35);
+  opacity: 0;
+  pointer-events: none;
 }
-/* ── The word opens into the room that was already empty ───────────────────
-   Out of the flow, deliberately (Miyel, 2026-09-18: "the spacing does feel a
-   little strange… when it's open it's like right next to the beacon"). In the
-   flow it grew the row's left track, and a grid with a centred middle answers
-   that by moving the middle — so opening the × shoved the beacon sideways and
-   then let it back. Absolute, it opens across the gap between the mark and
-   the cover, which is empty at every other moment, and nothing on the row
-   moves at all.
-
-   That gap is what decides the word. The mark ends at 44px and the beacon's
-   cover starts at 112 on a 375px phone, so there are about 68 to open into.
-   "Save draft" is 70 and would have run under the cover; one word is 30 to
-   36 and clears it with room to spare. The × already says close — the word
-   only has to say what closing does with it.
-
-   And a max-width rather than the 0fr → 1fr track it opened on while it was
-   in the flow. An `fr` needs a definite width to resolve against, and an
-   absolutely positioned box is sized by its contents, so the track collapsed
-   to nothing and the word never appeared. The number is fine here for the
-   reason it was not before: both words are five letters and land within a
-   pixel or two of 36, so 42 is a hair past either and the opening is
-   proportional for both. A longer word would want measuring again. */
-.ses-shut { position: relative; }
+/* The word, in the mark's place. Absolute so the row does not change width as
+   it arrives — the beacon beside it is centred on the whole bar and would have
+   nothing to do with this, but the lights at the far end would shuffle. */
 .ses-shut-slot {
-  position: absolute;
-  left: 100%;
-  top: 50%;
+  position: absolute; left: 0; top: 50%;
   transform: translateY(-50%);
   display: block;
-  max-width: 0;
-  overflow: hidden;
-  padding-left: 0;
-  transition: max-width 0.34s cubic-bezier(0.22, 0.61, 0.36, 1),
-              padding-left 0.34s cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 .ses-shut-word {
-  min-width: 0;
-  overflow: hidden;
-  white-space: nowrap;
-  padding: 8px 0;
-  border: 0;
-  background: none;
-  color: inherit;
+  display: block;
+  padding: 8px;
+  border: 0; background: none; cursor: pointer;
   font: inherit;
-  /* Tighter than the label face around it. Measured on a 375px phone: the
-     mark's box ends at 40 and the cover starts at 112, so there are 72 to
-     open into, and "End & save" at the header's own 0.12em tracking is 70 —
-     which fits and touches. At 0.06em it is 65 and clears the cover by five.
-     Ten characters is twice what the old words were ("Draft", "Leave"), and
-     this is what pays for them. */
-  letter-spacing: 0.06em;
-  text-transform: inherit;
-  text-align: left;
-  cursor: pointer;
+  /* The size the × is drawn at. A 20px glyph and 10px type were never the
+     same control; this is, so they are. */
+  font-size: 17px; line-height: 20px; letter-spacing: 0.06em;
+  /* Said, not stamped. Every label on this site is uppercase DM Mono at 9 or
+     10px and this is not a label any more — it is the control, at the size the
+     × was drawn at, and END at 17px is a shout where the × was a mark.
+     Explicit because it was arriving here by accident: browsers reset
+     text-transform on form controls in their own stylesheet, so this inherited
+     the row's `uppercase` or did not depending on whose browser it was. */
+  text-transform: none;
+  color: var(--ink);
   opacity: 0;
-  /* Nothing to press while there is nothing to read. */
+  transform: scale(0.72);
+  transform-origin: 8px 50%;
   pointer-events: none;
-  /* A beat behind the opening, so it reads as the word coming out rather than
-     appearing and then being made room for. */
-  transition: opacity 0.22s ease 0.08s;
+  transition: opacity 0.22s ease 0.06s,
+              transform 0.34s cubic-bezier(0.22, 0.61, 0.36, 1) 0.06s;
 }
-.ses-shut--sure .ses-shut-word { pointer-events: auto; }
+.ses-shut--sure .ses-shut-word {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
 .ses-shut-word:hover { color: var(--ink); }
-/* Armed. Ink rather than a filled shape: it is a save, not a delete, and
-   nothing here deserves a red button. */
 .ses-shut--sure { color: var(--ink); }
-.ses-shut--sure .ses-shut-mark { transform: rotate(90deg); }
-.ses-shut--sure .ses-shut-slot { max-width: 68px; padding-left: 2px; }
-.ses-shut--sure .ses-shut-word { opacity: 1; }
 @media (prefers-reduced-motion: reduce) {
-  .ses-shut-mark, .ses-shut-slot, .ses-shut-word { transition: none; }
+  .ses-shut-door, .ses-shut-word { transition: none; }
 }
 
 /* The ? that opened a reference lived here (.ses-ask-door) and is gone with
