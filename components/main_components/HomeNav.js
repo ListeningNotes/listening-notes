@@ -926,6 +926,25 @@ export default function HomeNav() {
     return () => el.removeEventListener('scroll', onScroll);
   }, [stir]);
 
+  // ── Anywhere else puts the × back ────────────────────────────────────────
+  // Miyel, 2026-09-18: "clicking away anywhere will undo the animation and
+  // bring back a regular ×." The same answer the draft's delete gives, and for
+  // the same reason: once the mark has turned into the word there is no mark
+  // left to press, so the way back cannot be the control itself.
+  //
+  // Captured at the document, so the state is clear before the press reaches
+  // whatever it landed on — with the control excepted, because a press there
+  // is the yes.
+  useEffect(() => {
+    if (!ending) return undefined;
+    const away = event => {
+      if (event.target?.closest?.('.ses-shut')) return;
+      setEnding(false);
+    };
+    document.addEventListener('pointerdown', away, true);
+    return () => document.removeEventListener('pointerdown', away, true);
+  }, [ending]);
+
   // ── Measuring depth ───────────────────────────────────────────────────────
   // A pane is deep when its scroller overflows. Re-measured whenever the thing
   // inside it could have changed size — entries landing, the card's portrait
@@ -1085,20 +1104,19 @@ export default function HomeNav() {
         // The session's own two-press ×, which is where it went when it came
         // off the listen (Miyel, 2026-09-18: "then the rotating × lives on the
         // selection screen — it's asking 'end session?'"). The same markup and
-        // the same stylesheet as the listen's was, so the mark turns ninety
-        // degrees and the word comes out of it rather than two controls
-        // swapping places.
+        // the same stylesheet as the listen's was: the mark turns, goes, and
+        // leaves END standing where it stood, at the size the × was drawn at.
         //
-        // One word, because there is 68px of gap between the mark and the
-        // beacon's cover and that is the whole room it has — see the note
-        // above .ses-shut in session.css, which measured it. Her own answer
-        // when the two-word version came up: "it can even just say END."
-        <div
-          className={'hn-shut ses-shut' + (ending ? ' ses-shut--sure' : '')}
-          onBlur={event => {
-            if (!event.currentTarget.contains(event.relatedTarget)) setEnding(false);
-          }}
-        >
+        // It was a pair for a day — the × staying put with the word budding
+        // out of its right-hand side into the gap before the beacon — which
+        // put two things in the row saying two different things, and kept the
+        // word at 10px because 68px of gap was all it had. One at a time, in
+        // one place: "have the × turn into the End button… it can move out and
+        // leave the End as the only button."
+        //
+        // Pressing anywhere else turns it back, which is why the mark does not
+        // have to stay on screen to be pressed again — see the effect above.
+        <div className={'hn-shut ses-shut' + (ending ? ' ses-shut--sure' : '')}>
           <button
             type="button"
             className="ses-shut-door"
