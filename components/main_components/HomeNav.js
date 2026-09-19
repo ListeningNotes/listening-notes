@@ -153,18 +153,26 @@ const BEHIND_THE_SHEET_MS = 900;
 // the wall is below the fold — and a fall that finished as quickly as the
 // climb read as the cover being snatched rather than let go.
 const LAYER_OUT_MS = 420;
-// How long the wall is held on screen once the record has filed into it.
-// Journal's filing takes 420ms and the newcomer finishes growing around 600,
-// so this is that and then long enough to read what landed. A feel, not a
-// measurement — the only number in the cutaway that is.
-const WATCH_MS = 1400;
-// And how long to wait for a smooth scroll that never says it arrived. The
-// pane is polled rather than timed because the distance differs by screen; this
-// is only here so a scroll interrupted by a finger cannot strand the cutaway.
-const ARRIVE_MAX_MS = 1800;
-// And how long the way back takes, before the floor is allowed to shut. The
-// browser owns the scroll itself; this only has to outlast it.
-const BACK_MS = 700;
+// ── How slow the cutaway is ───────────────────────────────────────────────
+// Miyel, 2026-09-18: "sloooow it all down, it should feel intentional. Slow
+// swipe down into the journal, album files in slowly, then a slow swipe back
+// up into the session."
+//
+// The scroll is run here rather than handed to `behavior: 'smooth'`, which was
+// what it used first. A smooth scroll's duration belongs to the browser and is
+// a function of how far it is going — about a second for a phone-sized pane
+// and a blink on a desk — so there was no number to slow down, and the same
+// save felt like two different things on two screens. These are that number.
+const DOWN_MS = 1200;
+const UP_MS = 1200;
+// The wall, once the record has landed on it. Journal's filing is 700ms and the
+// newcomer finishes growing around a second, so this is the stillness after
+// that — long enough to read what arrived rather than to catch it arriving.
+const WATCH_MS = 1300;
+// And how long to wait for the record to appear on the wall before giving up
+// and treating it as landed. Asking for the wall is a fetch, and a slow or
+// failed one must not leave the pane sitting on the journal for ever.
+const ARRIVE_MAX_MS = 4000;
 
 // What each pane is, as a mark and as a sentence, used to live here for the
 // carets at the foot. The band names all three outright now and owns its own
@@ -201,6 +209,44 @@ function ease() {
 
 // Where a pane's second floor begins: the top of its second .hn-floor when it
 // has floors, one screen down when it does not (the no-beacon copy's wall).
+// ── Scrolling on purpose ─────────────────────────────────────────────────
+// The site's own curve, over a stated number of milliseconds, because the
+// cutaway has to feel deliberate and `behavior: 'smooth'` has no opinion to
+// offer about that. Returns a function that stops it.
+//
+// The frame loop has a way out that does not need frames: a tab the browser is
+// not painting runs no rAF callback, and this must not leave a pane stranded
+// halfway down. It lands where it was going and the cutaway carries on.
+function slide(pane, to, ms, done) {
+  const from = pane.scrollTop;
+  const span = to - from;
+  if (!span) { done(); return () => {}; }
+  const started = performance.now();
+  let frame = 0;
+  let over = false;
+  const finish = () => {
+    if (over) return;
+    over = true;
+    cancelAnimationFrame(frame);
+    clearTimeout(backstop);
+    pane.scrollTop = to;
+    done();
+  };
+  const step = now => {
+    if (over) return;
+    const t = Math.min(1, (now - started) / ms);
+    // The site's curve, as an easing rather than a bezier: slow out of the
+    // start, slow into the end, and most of the distance in the middle.
+    const e = t < 0.5 ? 4 * t * t * t : 1 - ((-2 * t + 2) ** 3) / 2;
+    pane.scrollTop = from + span * e;
+    if (t >= 1) { finish(); return; }
+    frame = requestAnimationFrame(step);
+  };
+  const backstop = setTimeout(finish, ms + 400);
+  frame = requestAnimationFrame(step);
+  return () => { if (!over) { over = true; cancelAnimationFrame(frame); clearTimeout(backstop); } };
+}
+
 function secondFloorTop(pane) {
   const floors = pane.querySelectorAll(':scope > .hn-floor, :scope > * > .hn-floor');
   return floors.length > 1 ? floors[1].offsetTop - floors[0].offsetTop : pane.clientHeight;
@@ -707,20 +753,16 @@ export default function HomeNav() {
   }, [askEntries, router]);
 
   // ── Down to the wall, and back ───────────────────────────────────────────
-  // The whole of the cutaway. The floor opens, the pane goes down to it, the
-  // record files in *once it has arrived*, it is held long enough to be read,
-  // and the pane comes back up to the drafts it left.
+  // The whole of the cutaway, and all of it on stated clocks. The floor opens,
+  // the pane goes down over DOWN_MS, the record files in *once the pane has
+  // got there*, the wall is held for WATCH_MS, and the pane comes back up over
+  // UP_MS to the drafts it left.
   //
   // The order is the part that had to be measured. Asking for the wall at the
   // moment of the save — which is what this did first — meant the record filed
-  // itself in while the pane was still travelling: the scroll to the wall takes
-  // around 1.4s on a phone-sized pane and the filing was over by 1.5. What
-  // there was to see happened off-screen, which is the same failure the falling
-  // cover had, one floor further on.
-  //
-  // So the wall is asked for when the pane gets there, and the pane says when
-  // that is rather than a timer guessing — a smooth scroll's duration is the
-  // browser's business and depends on how far it is going.
+  // itself in while the pane was still travelling, and what there was to see
+  // happened off-screen. Which is the same failure the falling cover it
+  // replaced had, one floor further on.
   useEffect(() => {
     if (!filing) return undefined;
     const pane = homeRef.current;
@@ -732,40 +774,41 @@ export default function HomeNav() {
     announce(filing, 'logged');
 
     const clocks = [];
-    let stopped = false;
-    const at = (ms, fn) => clocks.push(setTimeout(fn, ms));
-
+    let stop = null;
     clocks.push(requestAnimationFrame(() => {
       // One frame first, so the floor is on the page before it is scrolled to:
       // it is display: none under the picker until .hn--filing opens it, and a
       // hidden floor has no offsetTop to aim at.
-      const target = secondFloorTop(pane);
-      pane.scrollTo({ top: target, behavior: 'smooth' });
-
-      // Arrived, or given up on arriving. Polled rather than timed: the
-      // distance is a whole screen on a phone and a good deal less on a desk.
-      const waitForIt = since => {
-        if (stopped) return;
-        if (Math.abs(pane.scrollTop - target) <= 4 || since >= ARRIVE_MAX_MS) { atTheWall(); return; }
-        at(50, () => waitForIt(since + 50));
-      };
-      const atTheWall = () => {
+      stop = slide(pane, secondFloorTop(pane), DOWN_MS, () => {
         // Now. Journal has been holding the old positions since the save and
         // files the record in against them — see its own note.
         askEntries();
-        at(WATCH_MS, () => {
-          pane.scrollTo({ top: 0, behavior: 'smooth' });
-          // Cleared after the way back, not before: .hn--filing is what holds
-          // the floor open, and taking it off mid-scroll shuts the wall while
-          // the pane is still on it.
-          at(BACK_MS, () => setFiling(null));
-        });
-      };
-      waitForIt(0);
+
+        // And the wall is held from the moment the record is *on* it, not from
+        // the moment the pane got here. Asking for it is a fetch: it took about
+        // 800ms on the dev server, so a watch started on the scroll's own end
+        // spent most of itself waiting for a tile that had not arrived and then
+        // left again half a second after it did. Measured exactly that.
+        const goUpAgain = () => {
+          stop = slide(pane, 0, UP_MS, () => {
+            // Cleared after the way back, not before: .hn--filing is what
+            // holds the floor open, and taking it off mid-scroll would shut
+            // the wall while the pane was still on it.
+            setFiling(null);
+          });
+        };
+        const landed = () => clocks.push(setTimeout(goUpAgain, WATCH_MS));
+        const watchFor = waited => {
+          if (document.querySelector(`[data-tile-slug="${CSS.escape(filing.slug || '')}"]`)
+            || waited >= ARRIVE_MAX_MS) { landed(); return; }
+          clocks.push(setTimeout(() => watchFor(waited + 80), 80));
+        };
+        watchFor(0);
+      });
     }));
 
     return () => {
-      stopped = true;
+      if (stop) stop();
       clocks.forEach(id => { clearTimeout(id); cancelAnimationFrame(id); });
     };
   }, [filing, askEntries]);

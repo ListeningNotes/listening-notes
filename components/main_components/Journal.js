@@ -58,8 +58,13 @@ import { SAVED_EVENT } from '../../hooks/useListeningSession';
 //      to the new one on the site's own curve. It is the standard trick and it
 //      is the only way this looks like anything.
 const SHEET_OUT_MS = 420;   // the sheet getting out of the way
-const TILE_OUT_MS  = 320;   // the tile shrinking where it stands
-const FILE_MS      = 420;   // the rest closing over it
+const TILE_OUT_MS  = 520;   // the tile shrinking where it stands
+// The wall rearranging itself, whichever direction it is going: closing over a
+// record that has gone, or making room for one that has arrived. One number,
+// because they are one movement — Miyel, 2026-09-18: "match the file-in speed
+// of deleting." Slowed from 420 with the rest of the cutaway, which means the
+// delete slowed with it, which is the point of it being one number.
+const FILE_MS      = 700;
 
 // Beyonce should find Beyoncé, and Bjork should find Bjork. Accents are a
 // spelling most people don't reach for and half the archive's artists have

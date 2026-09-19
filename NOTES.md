@@ -2632,9 +2632,40 @@ restructure: the three drawings of the beacon were made into one.
       the pane says when that is (polled, capped by `ARRIVE_MAX_MS`) rather
       than a timer guessing at a smooth scroll's duration.
 
-      Measured end to end from the picker: at the wall by 1500ms with the new
-      tile first and growing in, held to 2600, back at the drafts by 3600 —
-      and the picker is still there the whole way, search and all.
+      **Slowed on purpose, 2026-09-18:** "sloooow it all down, it should feel
+      intentional." The scroll is run here rather than handed to
+      `behavior: 'smooth'`, whose duration belongs to the browser and depends
+      on how far it is going — about a second on a phone-sized pane and a blink
+      on a desk, so there was no number to slow and the same save felt like two
+      different things on two screens. `DOWN_MS` and `UP_MS` are 1200 each,
+      `WATCH_MS` 1300 after the record lands.
+
+      **The snap had to stand down for any of it to work.** This pane snaps to
+      a floor, and a snapping scroller does not hold an in-between position:
+      every frame the slide set was pulled to the nearest floor, so what looked
+      like a slide was the pane sitting at 0 and jumping to the wall as the
+      halfway point went past. Measured — asked for 221, got 0; asked for 514,
+      got 987.
+
+      **The hold starts when the record lands, not when the pane does.** Asking
+      for the wall is a fetch and took about a second, so a watch begun on the
+      scroll's own end spent itself waiting for a tile that had not arrived and
+      left half a second after it did.
+
+      Measured end to end: sheet gone by 400, down the wall 600→1700 (`7, 96,
+      374, 775, 950, 987` — slow out, quick through, slow in), the record files
+      in 2800→3600, back up 4400→5200. The picker is there the whole way,
+      search and all.
+- [x] **The wall arrives clear.** The filter bar stands down for the length of
+      the cutaway, on the same clock and in the same way the footer and the
+      carets already do while a record is being chosen — opacity, because
+      `display` cannot be transitioned and the wall must not jump as it opens.
+      "It should all be clear since there's no footer either."
+- [x] **One speed for the wall rearranging**, whichever way it goes: `FILE_MS`
+      is 700 and the tile's own shrink and grow are 520 and 620. "Match the
+      file-in speed of deleting" — they were one number already, so slowing the
+      arrival slowed the deletion with it, which is the point of it being one
+      number.
 - [x] **Journal files an arrival the way it closes a deletion.** Same
       machinery, run backwards: every tile measured before the new list lands,
       put back where it was, let go. The newcomer grows in on a 210ms delay,
