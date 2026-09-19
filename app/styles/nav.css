@@ -143,7 +143,6 @@
 .sitenav-row[data-tooling] .sitenav-logo { opacity: 0; pointer-events: none; }
 .sitenav-logo { transition: opacity 0.18s linear; }
 
-
 /* The keeper's tools. Deliberately the same object as the About card's pencil
    — 36px box, 10px radius, faint until you go near it — because they are the
    same kind of control and two treatments would read as two ideas. The card
@@ -323,7 +322,6 @@
   50%      { opacity: 0.55; }
 }
 
-
 /* The mark on a phone: small enough to read as one navbar unit with the
    beacon art, and its live dot pulses. */
 @media (max-width: 768px) {
@@ -456,7 +454,6 @@
   letter-spacing: 0.18em;
   text-transform: uppercase;
 }
-
 
 /* The caption under the art: what the record is, before the title says
    which. Never green — see the dot on the mark. */
@@ -1235,33 +1232,30 @@
   left: 50%;
   top: calc(env(safe-area-inset-top, 0px) + 10px);
   transform: translateX(-50%);
-  /* 170, not 150. The two corners this has to clear are not the same width —
-     the mark's 64 on the left against the lights' 48 on the right — and being
-     centred on the screen it has to clear the wider of them on both sides.
-     150 left eleven pixels between the mark and the cover on a 375px screen,
-     which is not a gap, it is a near miss. */
-  max-width: calc(100% - 170px);
+  /* One width, and it is the widest corner's. This has to clear the left
+     corner at its widest — which is not the mark but END?, the word the mark
+     turns into — and it is centred on the screen, so it pays for that on both
+     sides. 210 is the word's 86 plus a 19px gap, doubled.
+
+     It was 150, then 170 with a second rule narrowing it to 230 only while the
+     word was up. That second rule is gone: it made the beacon *condense on
+     itself* when the × was pressed, which is the one thing this row must not
+     do (Miyel, 2026-09-18). Nothing on this bar moves because something else
+     on it changed — the room for the word is simply always there, whether the
+     word is or not.
+
+     What it costs is honest and worth writing down: the slot is narrower at
+     rest than it needs to be, so a long title marquees all the time rather
+     than only while the question is up. A still row is worth more than a still
+     title. */
+  max-width: calc(100% - 210px);
   /* 150 is the two corners: the mark's 64 on the left and the lights' on the
      right, doubled because this is centred on the screen and has to clear the
      wider of them on both sides. Centred on the *screen* and not in the space
      between them, because the session's header centres its beacon the same way
      and the two have to land on each other. */
 }
-/* Once the mark has turned into END? the left corner is wider than the mark's,
-   and a record with a long enough name reached under it — measured 2026-09-18
-   at 375px: the cover at x=75 against a word ending at 92, with the beacon
-   painting over the word because it is the positioned one.
 
-   Widened again the same evening, from 208. The boxes had stopped overlapping
-   and it still read as a collision, because the title in that slot is usually
-   *mid-marquee* — cut off at both ends, which looks like text running into the
-   thing beside it whether or not it is. Miyel: "make the width of the mini
-   beacon a little tighter, right now EUSEXUA Afterglow is too long and
-   collides with END?" What a clipped word needs is not a hairline of clearance
-   but visibly empty space to be clipped against. */
-.hn--choosing .ses-shut--sure ~ .hn-bar-beacon {
-  max-width: calc(100% - 230px);
-}
 @media (min-width: 769px) {
   .hn-bar-beacon { top: calc(env(safe-area-inset-top, 0px) + 12px); }
 }

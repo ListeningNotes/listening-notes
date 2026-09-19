@@ -2682,11 +2682,20 @@ restructure: the three drawings of the beacon were made into one.
       and a word cut off at both ends looks like text running into whatever is
       beside it whether or not it is. What a clipped word needs is not a
       hairline of clearance but visibly empty space to be clipped against.
-      `100% - 170px` resting (was 150) and `100% - 230px` while the word is up
-      (was 208); `END?` goes 17px → 15px. At 375px: the gap is **23px resting**
-      and **29px while asking**, up from 11 and 12 — and at rest "EUSEXUA
-      Afterglow" now *fits* its slot exactly, so it does not scroll at all
-      unless the question is up.
+      **One width, not two.** The first fix narrowed the beacon only while the
+      word was up, and that made it *condense on itself* the moment the × was
+      pressed — the one thing this row must not do. So the room for END? is
+      always there whether the word is or not: `100% - 210px`, which is the
+      word's 86 plus a 19px gap, doubled because the beacon is centred on the
+      screen and pays for its widest corner on both sides. `END?` goes 17px →
+      15px with it. Measured at 375px: the beacon is `[105, 270]` resting and
+      `[105, 270]` armed — identical, cover and all.
+
+      What it costs, and it is worth writing down: the slot is narrower at rest
+      than it needs to be, so a long title marquees all the time rather than
+      only while the question is up. **A still row is worth more than a still
+      title** — and the title now starts from its beginning rather than sitting
+      mid-scroll, which is most of what made it look like a collision.
 - [x] **`ListeningBeacon` lost its `children`.** That was how the control got
       under the artist; nothing passes it now, so the prop and the two places
       it was drawn are gone. The component draws a record and nothing else.
