@@ -94,6 +94,7 @@ import { useState } from 'react';
 import { X } from '@phosphor-icons/react';
 import { SESSION_STEPS } from '../../hooks/useListeningSession';
 import { CAPTION } from '../../hooks/useListeningBeacon';
+import MarqueeTitle from '../main_components/MarqueeTitle';
 import { useTheme } from '../main_components/Lightswitch';
 
 export default function SessionHeader({
@@ -184,7 +185,7 @@ export default function SessionHeader({
               <span className="ses-head-dot" aria-hidden="true" />
               {CAPTION.logging}
             </span>
-            <span className="ses-head-album">{naming}</span>
+            <MarqueeTitle text={naming} textClassName="ses-head-album" />
             {/* The artist. Missing here until 2026-09-18, which is most of
                 what made this a different object from the beacon in the bar
                 it grew out of — the bar said a record and an artist, the
