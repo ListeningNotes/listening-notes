@@ -49,14 +49,89 @@ const SWIPE_RATIO = 1.5;
 // reach before hearing a note.
 function Strip({
   tracks, trackRatings = {}, trackFavorites = {}, trackNotes = {},
-  current = -1, onPick,
+  current = -1, onPick, onSliding,
 }) {
   const list = tracks || [];
+  // ── Sliding along it ─────────────────────────────────────────────────────
+  // Press the strip and drag, and the track under your finger is the one on
+  // screen — the note, the stars and the heart underneath all following.
+  // Miyel, 2026-09-18: "smooth scrolling across the track horizon builder, to
+  // scroll through tracks the same way you can lock and scroll through stars,
+  // without switching screens."
+  //
+  // It is the same gesture the stars already use and it earns the same guard,
+  // one column up: a drag that begins here belongs here, and must not also
+  // turn the page or pull the sheet down. See `data-slide` below.
+  //
+  // The columns are measured once, at the press, rather than worked out from
+  // the geometry — the strip has a 26px indent and a 3px gap and the columns
+  // are `flex: 1`, so the arithmetic would be three numbers kept in step with
+  // a stylesheet by hand. Rects also give the gaps for free: a finger between
+  // two columns is inside neither, and the last column that *was* hit stays
+  // lit rather than flickering.
+  //
+  // Past either end the nearest track stays chosen. Sliding off the right of a
+  // record should not walk you into the album notes — leaving the list is what
+  // the carets and the swipe are for, and a gesture that overshoots is not a
+  // decision to move on.
+  const stripRef = useRef(null);
+  const boxesRef = useRef([]);
+  const slidingRef = useRef(false);
+  const pickRef = useRef(onPick);
+  useEffect(() => { pickRef.current = onPick; }, [onPick]);
+
+  function pickAt(x) {
+    const boxes = boxesRef.current;
+    if (!boxes.length) return;
+    let k = boxes.findIndex(b => x >= b.left && x <= b.right);
+    if (k < 0) {
+      if (x < boxes[0].left) k = 0;
+      else if (x > boxes[boxes.length - 1].right) k = boxes.length - 1;
+      else return;            // in a gap: leave whatever is open, open
+    }
+    pickRef.current?.(k);
+  }
+
+  function slideStart(event) {
+    const el = stripRef.current;
+    if (!el || event.button > 0) return;
+    boxesRef.current = [...el.children].map(c => c.getBoundingClientRect());
+    slidingRef.current = true;
+    onSliding?.(true);
+    // Keeps the drag on this row even when the finger wanders off it — which
+    // it will, because the strip is 56px tall and a slide along it is not a
+    // careful movement. In a try because capturing a pointer the browser did
+    // not issue throws, which is only reachable from synthetic events but
+    // costs nothing to survive.
+    try { el.setPointerCapture?.(event.pointerId); } catch { /* not a real pointer */ }
+    pickAt(event.clientX);
+  }
+  function slideMove(event) {
+    if (!slidingRef.current) return;
+    pickAt(event.clientX);
+  }
+  function slideEnd() {
+    if (!slidingRef.current) return;
+    slidingRef.current = false;
+    onSliding?.(false);
+  }
+  useEffect(() => () => onSliding?.(false), [onSliding]);
+
   return (
     <div
+      ref={stripRef}
       className={'ses-strip' + (list.length > 18 ? ' ses-strip--dense' : '')}
       role="tablist"
       aria-label="Tracks"
+      /* What the stars say with role="slider": a drag that starts here is
+         this row's, not the page's. The session's own swipe and the layer's
+         pull both stand down for it — a tablist cannot claim to be a slider,
+         so it says the same thing in its own words. */
+      data-slide=""
+      onPointerDown={slideStart}
+      onPointerMove={slideMove}
+      onPointerUp={slideEnd}
+      onPointerCancel={slideEnd}
     >
       {list.map((tr, k) => {
         const r = trackRatings[k] || 0;
@@ -121,6 +196,13 @@ export default function TrackNotes({
   // Which way the last turn went, so the card slides in from the right going
   // forward and from the left coming back — the same language as the steps.
   const [dir, setDir] = useState(1);
+  // While a finger is travelling along the strip the card must not play its
+  // turn on every column it passes — a dozen 300ms slides fired a few
+  // milliseconds apart is a strobe, not a movement. The card still remounts
+  // (it is keyed on the track), it simply arrives without the animation, so
+  // what you see is the note changing under a finger rather than a stack of
+  // cards being dealt.
+  const [sliding, setSliding] = useState(false);
   const textRef = useRef(null);
   const touch = useRef(null);
 
@@ -218,10 +300,11 @@ export default function TrackNotes({
         trackNotes={trackNotes}
         current={i}
         onPick={goTo}
+        onSliding={setSliding}
       />
 
       {/* Keyed on the track so each one mounts fresh and slides in. */}
-      <div key={i} className={`ses-turn${dir < 0 ? ' ses-turn--back' : ''}`}>
+      <div key={i} className={`ses-turn${sliding ? ' ses-turn--still' : dir < 0 ? ' ses-turn--back' : ''}`}>
         {/* ── The title and its marks, on one line ────────────────────────
             They were stacked until 2026-09-18 — the title, then the stars
             under it — which is the one arrangement this site uses nowhere

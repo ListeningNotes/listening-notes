@@ -303,8 +303,10 @@ export default function SessionPage() {
     // rating album stars as well"). The same guard the tracks screen got the
     // day before, and the same one the layer's pull-to-close uses: the row
     // says what it is with role="slider", so nothing here has to know where
-    // the stars are.
-    if (e.target?.closest?.('[role="slider"]')) { swipe.current = null; return; }
+    // the stars are. The track strip earns the same guard and says it with
+    // `data-slide`, because a tablist cannot claim to be a slider — sliding
+    // along it moves through the tracks (Strip in steps/TrackNotes.js).
+    if (e.target?.closest?.('[role="slider"], [data-slide]')) { swipe.current = null; return; }
     const t = e.touches[0];
     // Where the page was when the finger landed: a pull down means leave only
     // from the top, the same rule the sheet's own pull follows.
