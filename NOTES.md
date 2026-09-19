@@ -1525,6 +1525,18 @@ Project → Settings → Environment Variables.
 
 ## Gotchas
 
+**The automated browser pane does not deliver focus events, 2026-09-18.** A
+blur-reset could not be verified there: moving focus with `.focus()` changes
+`document.activeElement` but fires no `blur`/`focusout` at all, not even to a
+native listener, because the pane does not hold document focus. Same family as
+the two already known — it reports `visibilityState: 'hidden'` however it is
+fronted, so the beacon never polls and `requestAnimationFrame` never fires.
+Anything that depends on focus, page visibility or animation frames has to be
+reasoned about or tried on a real device; measuring it in the pane produces a
+confident wrong answer.
+
+
+
 **`router.push` out of an open layer freezes the app — 2026-09-18.** Deleting
 an entry ended in `router.push('/')`, which is right on a page of its own and
 froze Miyel's phone over the journal; she had to reset it. The layer is a
@@ -2556,6 +2568,13 @@ restructure: the three drawings of the beacon were made into one.
 
 ### One cross, on the picker and nowhere else
 
+- [x] **The picker's × is the session's rotating one**, moved there when it
+      came off the listen: press the mark and it turns ninety degrees, and the
+      word comes out of it rather than two controls swapping places. The word
+      is **END** — Miyel asked for "end session?" and then answered the
+      constraint herself, "it can even just say END", which is what the gap
+      allows. Measured at 375px: the mark ends at 64, the beacon's cover starts
+      at 134, END runs 64→86. The beacon does not move.
 - [x] **The listen closes on the pull; the picker keeps its ×.** Both crosses
       came off first — "I don't have them anywhere else on the site, and
       swiping down is intuitive since the screen comes up" — and one went

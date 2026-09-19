@@ -466,6 +466,10 @@ export default function HomeNav() {
   // session will open on. So the bar does not change. The session arriving IS
   // the beacon updating, and there is one thing moving instead of two.
   const [onTheBar, setOnTheBar] = useState(null);
+  // Whether the × has been pressed once and is showing what it will do. Reset
+  // on blur, the way the draft's discard is: a confirmation left armed behind
+  // your back is a confirmation you did not give.
+  const [ending, setEnding] = useState(false);
   // ── The name travels with the record ────────────────────────────────────
   // Miyel, 2026-09-18: "don't have text disappear on the transition, but
   // rather move into place and shrink with art."
@@ -1140,15 +1144,48 @@ export default function HomeNav() {
           all of it gone. The listen behind it is the opposite case — it is
           notetaking, it saves as it goes, and it keeps the pull. */}
       {choosing ? (
-        <button
-          type="button"
-          className="hn-totop hn-shut"
-          onClick={() => setChoosing(false)}
-          aria-label="Stop choosing"
-          title="Stop choosing"
+        // The session's own two-press ×, which is where it went when it came
+        // off the listen (Miyel, 2026-09-18: "then the rotating × lives on the
+        // selection screen — it's asking 'end session?'"). The same markup and
+        // the same stylesheet as the listen's was, so the mark turns ninety
+        // degrees and the word comes out of it rather than two controls
+        // swapping places.
+        //
+        // One word, because there is 68px of gap between the mark and the
+        // beacon's cover and that is the whole room it has — see the note
+        // above .ses-shut in session.css, which measured it. Her own answer
+        // when the two-word version came up: "it can even just say END."
+        <div
+          className={'hn-shut ses-shut' + (ending ? ' ses-shut--sure' : '')}
+          onBlur={event => {
+            if (!event.currentTarget.contains(event.relatedTarget)) setEnding(false);
+          }}
         >
-          <X size={20} weight="regular" aria-hidden="true" />
-        </button>
+          <button
+            type="button"
+            className="ses-shut-door"
+            onClick={() => setEnding(open => !open)}
+            aria-expanded={ending}
+            aria-label={ending ? 'Keep choosing' : 'End this session'}
+            title={ending ? 'Keep choosing' : 'End this session'}
+          >
+            <X size={20} weight="regular" aria-hidden="true" className="ses-shut-mark" />
+          </button>
+          {/* Out of the tab order and out of reach while it is closed, so
+              nothing can be pressed that cannot be read. */}
+          <span className="ses-shut-slot">
+            <button
+              type="button"
+              className="ses-shut-word"
+              onClick={() => { setEnding(false); setChoosing(false); }}
+              tabIndex={ending ? 0 : -1}
+              aria-hidden={!ending}
+              title="End this session and go back to the beacon"
+            >
+              End
+            </button>
+          </span>
+        </div>
       ) : down[pane] && (
         <button
           type="button"
@@ -1575,6 +1612,15 @@ export default function HomeNav() {
                             live: isLive,
                           } : null);
                           setChoosing(true);
+                          // Never armed on the way in. The × keeps its state
+                          // in this component and the picker's markup goes
+                          // away and comes back around it, so without this a
+                          // picker closed while the × was open — press the
+                          // mark, change your mind, leave another way —
+                          // reopened with END already showing, which is a
+                          // confirmation nobody gave. Blur puts it away too,
+                          // but blur is not the only way out of here.
+                          setEnding(false);
                           if (!box || !onAir) return;
                           if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
                           // Where the record's name is standing, so it can
