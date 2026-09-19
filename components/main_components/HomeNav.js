@@ -165,13 +165,15 @@ const TO_THE_BAR_MS = 620;
 // cover to tonight's lit one, so that change is something you see happen
 // rather than something already done by the time the sheet clears the floor.
 // Short: a press that sits for half a second reads as a press that missed.
-// How long until the sheet has the screen. The layer's own rise is 420ms
-// (GROW_MS in LayerEntry, layRise in entry.css); this is that plus a frame or
-// two of margin, and it is when the beacon underneath becomes the record you
-// just chose. Nobody can see it happen — which is the whole idea, and why
-// there is no animation here to get right. A pull down cannot arrive before
-// the sheet it would be pulling has finished coming up.
-const BEHIND_THE_SHEET_MS = 460;
+// The backstop for "the sheet has the screen", used only when the sheet's own
+// rise never announces itself — reduced motion, or a layout with no animation
+// on it. Comfortably past the longest rise there is (layRiseTall, 620ms on a
+// desk; layRise is 420 on a phone) plus the render the push has to do first.
+//
+// Late costs nothing here. Nobody can see the beacon change while the sheet is
+// over it, and a pull down cannot arrive before the sheet it would be pulling
+// has finished coming up, let alone before this.
+const BEHIND_THE_SHEET_MS = 900;
 // The aperture, closing and opening. Slow on purpose — long enough that it
 // reads as the record being put away and another brought out, rather than as
 // a screen changing. The body's rise is shorter and finishes inside it.
@@ -598,9 +600,44 @@ export default function HomeNav() {
     // *public* beacon, what a visitor sees, and it should say what is being
     // listened to the moment it is true rather than half a second later.
     flightTimers.current.push(setTimeout(() => router.push('/session'), 0));
-    flightTimers.current.push(setTimeout(() => {
-      setOnTheBar({ art: record.artUrl, title: record.album, artist: record.artist, live: true });
-    }, BEHIND_THE_SHEET_MS));
+    // ── Not on a clock. When the sheet has actually arrived. ────────────
+    // This was a timer for an hour and Miyel saw straight through it: "let the
+    // selection screen delay the change, I shouldn't see it change at all — it
+    // will have to change after the notetaking session has opened all the way."
+    //
+    // The sheet exists in the DOM the moment it is pushed and spends the next
+    // half second climbing, and it climbs from the floor — so the bar, at the
+    // top of the screen, is the *last* thing it covers rather than the first.
+    // A timer set to the layer's 420ms left forty milliseconds of margin on a
+    // phone and none at all on a desk, where the rise is 620 (layRiseTall).
+    //
+    // So the sheet says when. Its own rise ending is the exact moment the
+    // screen is covered, on either layout and at either duration, and there is
+    // no number here to be wrong.
+    const settle = () => setOnTheBar({
+      art: record.artUrl, title: record.album, artist: record.artist, live: true,
+    });
+    let done = false;
+    const once = () => { if (done) return; done = true; settle(); };
+    let tries = 0;
+    const waitForTheSheet = () => {
+      if (done) return;
+      const sheet = document.querySelector('.lay--rises');
+      if (!sheet) {
+        // The push has not rendered yet. Keep looking, but not forever.
+        if (tries++ < 40) flightTimers.current.push(setTimeout(waitForTheSheet, 25));
+        else once();
+        return;
+      }
+      sheet.addEventListener('animationend', event => {
+        // Its own rise, not something animating inside it.
+        if (event.target === sheet) once();
+      });
+      // And a backstop, because a sheet that arrives with no animation at all
+      // — reduced motion, or a layout that does not use one — never fires.
+      flightTimers.current.push(setTimeout(once, BEHIND_THE_SHEET_MS));
+    };
+    waitForTheSheet();
     // And the picker folds away once the sheet is over it — unseen, which is
     // the point. Doing it now would empty the screen behind a sheet that has
     // not covered it yet.
