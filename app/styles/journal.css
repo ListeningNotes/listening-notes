@@ -27,6 +27,23 @@
    than being found missing on the next visit. The tiles after it close the gap
    once this has finished — that part is measured in Journal.js, because a grid
    reflows instantly and no stylesheet can animate it. */
+/* ── Arriving ─────────────────────────────────────────────────────────────
+   The record that has just become an entry, growing into the space the wall
+   has made for it while the others file over (closeTheGap in Journal.js runs
+   on the same 420ms). Delayed by half of that, so it arrives into a gap that
+   is still opening rather than after everything has stopped.
+
+   It grows rather than fades. Nothing on this site simply appears, and what
+   this is growing out of is a listen that has just been put down. */
+@keyframes ftLanding {
+  from { opacity: 0; transform: scale(0.8); }
+  to   { opacity: 1; transform: none; }
+}
+.ft--landing {
+  animation: ftLanding 380ms 210ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+  z-index: 2;
+}
+@media (prefers-reduced-motion: reduce) { .ft--landing { animation: none; } }
 .ft--going {
   transform: scale(0.82);
   opacity: 0;

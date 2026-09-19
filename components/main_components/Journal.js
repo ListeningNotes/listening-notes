@@ -27,13 +27,14 @@
 
 'use client';
 
-import { memo, useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
+import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import { parseRating } from '../../library/entry_formatter';
 import AlbumTile from './AlbumTile';
 import { handOffOrder } from '../../library/handoff';
 import GridDensity, { DEFAULT_DENSITY, readStoredDensity, storeDensity } from './GridDensity';
 import JournalFilters, { SORTS, SortArrow } from './JournalFilters';
 import { DELETE_ENTRY } from '../../hooks/useEntryEditor';
+import { SAVED_EVENT } from '../../hooks/useListeningSession';
 
 // ── A record coming off the wall ───────────────────────────────────────────
 // Miyel, 2026-09-18: "I think it should do an animation to show it deletes.
@@ -284,11 +285,19 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
   }, []);
 
   // Where every tile is, right now, by slug.
+  //
+  // Offsets and not getBoundingClientRect, which is what this used until
+  // 2026-09-18. A rect is measured from the viewport, so anything that scrolls
+  // between the two measurements shows up as every tile having moved by the
+  // scroll — and the cutaway scrolls the whole pane down to the wall between
+  // the record being saved and the record arriving. Offsets are measured from
+  // the grid and do not care. The delete path was always within one frame and
+  // is unaffected either way.
   const positions = () => {
     const found = new Map();
     const box = grid.current;
     if (box) for (const tile of box.querySelectorAll('[data-tile-slug]')) {
-      found.set(tile.dataset.tileSlug, tile.getBoundingClientRect());
+      found.set(tile.dataset.tileSlug, { left: tile.offsetLeft, top: tile.offsetTop });
     }
     return found;
   };
@@ -302,9 +311,8 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
     for (const tile of box.querySelectorAll('[data-tile-slug]')) {
       const then = was.get(tile.dataset.tileSlug);
       if (!then) continue;
-      const now = tile.getBoundingClientRect();
-      const dx = then.left - now.left;
-      const dy = then.top - now.top;
+      const dx = then.left - tile.offsetLeft;
+      const dy = then.top - tile.offsetTop;
       // A tile that has not moved is left entirely alone: everything before
       // the gap in the grid, which is most of the wall.
       if (!dx && !dy) continue;
@@ -316,7 +324,14 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
     // One frame with them held in the old place, then let go. Without the
     // wait the browser coalesces both styles into one paint and nothing
     // moves — the transform is set and unset before anything is drawn.
-    clocks.current.push(requestAnimationFrame(() => {
+    // On the next frame — or on a timer if no frame comes. A tab the browser
+    // is not painting runs no rAF callback at all, and the cost here is not a
+    // missing animation but a wall of tiles left holding a transform that
+    // nothing will ever clear. The same pair guards the drafts grid.
+    let gone = false;
+    const release = () => {
+      if (gone) return;
+      gone = true;
       for (const tile of moved) {
         tile.style.transition = `transform ${FILE_MS}ms cubic-bezier(0.22, 0.61, 0.36, 1)`;
         tile.style.transform = '';
@@ -327,7 +342,9 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
       clocks.current.push(setTimeout(() => {
         for (const tile of moved) { tile.style.transition = ''; tile.style.transform = ''; }
       }, FILE_MS + 40));
-    }));
+    };
+    clocks.current.push(requestAnimationFrame(release));
+    clocks.current.push(setTimeout(release, 120));
   }, []);
 
   useEffect(() => {
@@ -353,6 +370,53 @@ function Journal({ entries: given, loading: givenLoading, scroller, foot = null 
     };
     window.addEventListener(DELETE_ENTRY, onDeleted);
     return () => window.removeEventListener(DELETE_ENTRY, onDeleted);
+  }, [entries, closeTheGap]);
+
+  // ── And a record arriving ────────────────────────────────────────────────
+  // The same three beats run backwards. A listen becomes an entry, the wall is
+  // asked again, and the tile that was first is no longer first — so every
+  // tile is measured before the new list lands, put back where it was, and let
+  // go. What you watch is the wall making room.
+  //
+  // Miyel, 2026-09-18: "have the screen show the journal during the save
+  // process and just show the album file into the grid." The screen is
+  // HomeNav's half of it — the pane goes down to the wall, waits here, and
+  // comes back. This half is what there is to see when it arrives.
+  //
+  // Keyed on the slug and not on a count, because the wall re-sorts, filters
+  // and pages: "the list is one longer" is true of a page turn as well.
+  const arriving = useRef(null);
+  const wasRef = useRef(null);
+  useEffect(() => {
+    const onSaved = event => {
+      const slug = event.detail?.slug;
+      if (!slug) return;
+      if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+      // Measured now, while the wall is still the wall it was. The entries
+      // arrive from a fetch a moment later and there is no frame in between
+      // in which to catch the old positions.
+      arriving.current = slug;
+      wasRef.current = positions();
+    };
+    window.addEventListener(SAVED_EVENT, onSaved);
+    return () => window.removeEventListener(SAVED_EVENT, onSaved);
+  });
+
+  useLayoutEffect(() => {
+    const slug = arriving.current;
+    if (!slug || !entries.some(e => e.slug === slug)) return;
+    arriving.current = null;
+    const was = wasRef.current;
+    wasRef.current = null;
+    if (was) closeTheGap(was);
+    // And the newcomer grows into the space the others have just left. The
+    // class goes on by hand rather than through a render: React has already
+    // drawn this tile and putting it in state would draw it a second time to
+    // say something the stylesheet can say on its own.
+    const tile = grid.current?.querySelector(`[data-tile-slug="${CSS.escape(slug)}"]`);
+    if (!tile) return;
+    tile.classList.add('ft--landing');
+    clocks.current.push(setTimeout(() => tile.classList.remove('ft--landing'), FILE_MS + 400));
   }, [entries, closeTheGap]);
 
   const filtered = useMemo(() => {
