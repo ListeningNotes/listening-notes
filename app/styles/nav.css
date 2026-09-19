@@ -1021,10 +1021,34 @@
    cutaway but not fully leaving." Nothing is unmounted and the picker keeps
    its search: the pane simply scrolls, which is what a pane does. */
 .hn--filing .hn-pane--home > .hn-floor:nth-of-type(2) { display: block; }
-/* And the pane does its own scrolling for the length of it. Snapping is off
-   while choosing already; this stops a stray touch mid-cutaway leaving the
-   pane between two floors. */
-.hn--filing .hn-pane--home { overflow-y: hidden; }
+/* And the wall arrives with nothing on it but records. The filter bar is a
+   thing you use when you are looking for something, and nobody filing a record
+   is looking for one — Miyel, 2026-09-18: "don't show the filter bar when
+   adding, it should all be clear since there's no footer either." The footer
+   and the carets already stand down while a record is being chosen, a few
+   rules up, and on the same clock and in the same way: opacity, because
+   `display` cannot be transitioned and the wall must not jump as it opens. */
+.hn--filing .arc-bar-wrap {
+  opacity: 0;
+  pointer-events: none;
+}
+.arc-bar-wrap { transition: opacity 0.7s cubic-bezier(0.22, 0.61, 0.36, 1); }
+/* And the pane is driven from JavaScript for the length of it, which means
+   the snap has to stand down.
+   
+   This pane snaps to a floor, and a snapping scroller does not hold an
+   in-between position: every frame the cutaway set was pulled to the nearest
+   floor, so what looked like a slow slide was the pane sitting at 0 and then
+   jumping to the wall as the halfway point went past. Measured 2026-09-18 —
+   asked for 221, got 0; asked for 514, got 987.
+   
+   `overflow-y: hidden` with it, so a stray touch cannot leave the pane between
+   two floors while the snap is off. It stays a scroll container and scrollTop
+   still moves it; it simply does not take fingers. */
+.hn--filing .hn-pane--home {
+  scroll-snap-type: none;
+  overflow-y: hidden;
+}
 /* On the one clock with everything else. Choosing hands this screen a 90px
    padding-top where it had none — the room the bar needs once the crown is
    not holding it — and it arrived in a single frame, which put the cover 59px
