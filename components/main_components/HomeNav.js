@@ -535,7 +535,13 @@ export default function HomeNav() {
     // them moves. Miyel, 2026-09-18, on the version where the whole screen
     // left by the floor first: "it looks like too much motion. It's too
     // dramatic."
-    setOnTheBar({ art: record.artUrl, album: record.album, artist: record.artist });
+    // The bar's beacon hands over rather than being joined. It is the beacon
+    // right up to the press; from the press it is the session's, which is
+    // rising with the record already in it. Both on screen at once is the
+    // doubling Miyel keeps seeing — they are the same record in two places
+    // twenty pixels apart, because each is centred on its own words and the
+    // session's has a line the bar's has not.
+    setBlinking(true);
     router.push('/session');
     // And the picker folds away once the sheet is over it — unseen, which is
     // the point. Doing it now would empty the screen behind a sheet that has
@@ -1064,9 +1070,9 @@ export default function HomeNav() {
           already exactly here and nothing appears to move. The bar's own row
           shifts up to meet it (.hn--choosing .hn-bar in nav.css), so the ×
           and the lights sit on the line they will sit on in a moment. */}
-      {choosing && (
+      {choosing && !blinking && (
         <span
-          className={'hn-bar-beacon' + (landing ? ' hn-bar-beacon--flying' : '') + (blinking ? ' hn-bar-beacon--blink' : '')}
+          className={'hn-bar-beacon' + (landing ? ' hn-bar-beacon--flying' : '')}
           aria-hidden="true"
         >
           <span className="hn-bar-cover">
