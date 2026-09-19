@@ -22,7 +22,12 @@ const TONES = {
 // behind a record, 2026-09-14 — drawn exactly as the others so the row stays
 // one object repeated; what says it can be pressed is the small caret its
 // caller puts inside it, the way the cover wears its corner mark.
-export default function Chip({ children, accent, tone, onClick, expanded, label }) {
+//
+// `type` makes it a form's own button without an onClick: the send page's Send
+// it, 2026-09-19, which has to submit rather than call something. Passing it is
+// the only way a caller gets a button out of this without a handler, and every
+// caller that does not pass it is drawn exactly as before.
+export default function Chip({ children, accent, tone, onClick, expanded, label, type, disabled }) {
   const t = TONES[tone];
   // inline-flex and nowrap, so a chip that carries a mark before its word
   // — the envelope on Submission, 2026-09-13 — never folds the two onto
@@ -34,14 +39,22 @@ export default function Chip({ children, accent, tone, onClick, expanded, label 
     color: t ? t.color : accent ? 'var(--accent)' : 'var(--ink-soft)',
     borderRadius: '4px', padding: '3px 8px'
   };
-  if (onClick) {
+  if (onClick || type) {
     return (
       <button
-        type="button"
+        type={type || 'button'}
         onClick={onClick}
+        disabled={disabled}
         aria-expanded={expanded}
         aria-label={label}
-        style={{ ...style, background: 'transparent', cursor: 'pointer', lineHeight: 'inherit', WebkitTapHighlightColor: 'transparent' }}
+        style={{
+          ...style,
+          background: 'transparent',
+          cursor: disabled ? 'not-allowed' : 'pointer',
+          opacity: disabled ? 0.5 : 1,
+          lineHeight: 'inherit',
+          WebkitTapHighlightColor: 'transparent',
+        }}
       >
         {children}
       </button>
