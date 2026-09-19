@@ -338,9 +338,13 @@ export default function AlbumPicker({ onPick, onResume, inline = false }) {
             {nothing && <span className="ses-label">Nothing found for that.</span>}
             {/* Offered from the start rather than only once a search has come
                 back empty: somebody who already knows the record is not on
-                Apple Music should not have to prove it first. */}
+                Apple Music should not have to prove it first.
+
+                No arrow, and smaller than the rest of the quiet buttons
+                (Miyel, 2026-09-18). It is a way round the search rather than a
+                step onward from it, and an arrow says onward. */}
             <button type="button" className="ses-quiet" onClick={() => setByHand(true)}>
-              Type it in yourself →
+              Manual entry
             </button>
           </div>
 
