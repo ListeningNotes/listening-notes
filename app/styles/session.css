@@ -438,6 +438,12 @@
   transition: box-shadow 0.15s, transform 0.15s;
 }
 .ses-cover:hover { box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2); transform: translateY(-1px); }
+/* Greyed, the way the card's cover is greyed when nothing is open — the same
+   filter, off .beacon-art--idle in nav.css. Only the bar ever wears this: a
+   session is a listen, so the cover in a session header is always lit. It is
+   the record you logged last night sitting in the row while you choose
+   tonight's, and it should not be claiming to be tonight's. */
+.ses-cover--idle img { filter: grayscale(80%) brightness(0.7); }
 .ses-cover-none { font-size: 18px; line-height: 1; }
 
 /* ── The × that ends the listen ────────────────────────────────────────────
@@ -587,8 +593,26 @@
   font-family: var(--font-display); font-weight: 700; font-size: 15px; line-height: 1.2;
   color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
+/* ── The beacon's own type, at five eighths ───────────────────────────────
+   The record and the artist are the card's, reduced by 0.625: 24px becomes 15,
+   13.6 becomes 8.5. Two reasons, and they are the same reason.
+
+   Miyel, 2026-09-18: "keep the font consistent from the large beacon." The
+   artist was DM Mono here and Nunito on the card, so the record changed voice
+   between the two sizes of one object — which is the whole of what she meant
+   by "the beacons cannot look different."
+
+   And the flight. This beacon is drawn in the nav bar as well, and the words
+   travel between the bar and the card rather than blinking out. Words can only
+   *shrink* into place if the two ends are the same shape at two sizes; at any
+   other ratio the movement has to end on a jump.
+
+   The caption above them does not scale and should not: it is a label, and a
+   label on this site is DM Mono at 9–10px wherever it appears. Five eighths of
+   9.9px is 6, which is not small type, it is unreadable type. */
 .ses-head-artist {
-  font-family: var(--font-label); font-size: 10px; letter-spacing: 0.08em;
+  font-family: var(--font-nunito), sans-serif; font-weight: 400;
+  font-size: 8.5px; letter-spacing: 0.08em;
   color: var(--ink-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .ses-theme { width: 32px; height: 32px; flex-shrink: 0; color: var(--ink-soft); }

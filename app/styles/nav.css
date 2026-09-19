@@ -1136,50 +1136,43 @@
    "it's too much for the album to float from picker to beacon — maybe it just
    updates"). announce() has already put it on the beacon, so this simply *is*
    the new record on the next frame. */
+/* .ses-head's own inset, and .ses-head-in's own padding — 10px on a phone and
+   12px on a desk, which is the one number in the two files that has to be said
+   twice. Measured 2026-09-18 with it hard-coded to 12: the bar's cover sat at
+   y=16.4 and the session's at 14.4, so the record hopped two pixels at the
+   moment the sheet took over. Everything else about the two boxes agreed to
+   the tenth of a pixel, which is exactly why two pixels were visible. */
 .hn-bar-beacon {
   position: absolute;
   left: 50%;
-  top: calc(env(safe-area-inset-top, 0px) + 12px);
+  top: calc(env(safe-area-inset-top, 0px) + 10px);
   transform: translateX(-50%);
   display: flex; align-items: center; gap: 12px;
   max-width: calc(100% - 150px);
 }
-/* .ses-cover's own numbers. */
-.hn-bar-cover {
-  flex-shrink: 0;
-  width: 44px; height: 44px;
-  border-radius: 10%;
-  overflow: hidden;
-  background: var(--panel);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.14);
+@media (min-width: 769px) {
+  .hn-bar-beacon { top: calc(env(safe-area-inset-top, 0px) + 12px); }
 }
-.hn-bar-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
-/* And .ses-head-text's. */
-/* .ses-head-text's shape, and like it, its own width. */
-/* ── The beacon's own type, at 0.625 ──────────────────────────────────────
-   Exactly five eighths of the card below it, line for line: 24px becomes 15,
-   13.6 becomes 8.5, the 10px gap becomes 6.25. Two reasons, and they are the
-   same reason.
+/* ── One beacon, two sizes ───────────────────────────────────────────────
+   There is no small beacon of its own any more. The bar draws .ses-head-beacon
+   — the session's, from session.css, class for class — so this file has only
+   to say where it stands, and the two can no longer disagree about what a
+   record looks like.
 
-   Miyel, 2026-09-18: "keep font consistent from large beacon." The artist was
-   DM Mono here and Nunito down there, so the record changed voice on its way
-   up — the one thing that is meant to be the same object throughout.
+   There was a matching .hn-bar-cover / -said / -album / -artist set here for a
+   day, five eighths of the card below and kept in step by hand, and the cost
+   was not the duplication: it was that the two drawings had already begun
+   saying different things. This one had a record and an artist and no caption;
+   the session's had the open song and a caption that said NOW LOGGING whether
+   or not it was true, and no artist at all. Miyel, 2026-09-18: "the beacons
+   cannot look different, it has to be the same beacon."
 
-   And "don't have text disappear on the transition, but rather move into
-   place and shrink with art." Words can only *shrink* into place if the two
-   ends are the same shape at two sizes; at any other ratio the flight has to
-   end on a jump. One number, so one transform carries the whole block. */
-.hn-bar-said { min-width: 0; display: flex; flex-direction: column; gap: 6.25px; }
-.hn-bar-album {
-  font-family: var(--font-nunito), sans-serif; font-weight: 700;
-  font-size: 15px; line-height: 1.15;
-  color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-.hn-bar-artist {
-  font-family: var(--font-nunito), sans-serif; font-weight: 400;
-  font-size: 8.5px; letter-spacing: 0.08em;
-  color: var(--ink-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
+   The handoff is what pays for it. The session resolving over this row puts
+   the same beacon in the same place at the same size, so the seam has nothing
+   to show — no cross-fade to line up, no cover to hop 22px, which is what
+   every attempt at this transition since the 17th had been trying to hide. */
+.hn-bar-beacon .ses-cover { cursor: default; }
+.hn-bar-beacon .ses-cover:hover { box-shadow: 0 2px 8px rgba(0, 0, 0, 0.14); transform: none; }
 /* Drawn but not shown while the record is on its way up from the card — the
    flight measures the box it is aiming at, and it cannot be showing the same
    record at the same time. */

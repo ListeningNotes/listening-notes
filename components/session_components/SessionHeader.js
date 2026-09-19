@@ -93,6 +93,7 @@
 import { useState } from 'react';
 import { X } from '@phosphor-icons/react';
 import { SESSION_STEPS } from '../../hooks/useListeningSession';
+import { CAPTION } from '../../hooks/useListeningBeacon';
 import { useTheme } from '../main_components/Lightswitch';
 
 export default function SessionHeader({
@@ -180,9 +181,15 @@ export default function SessionHeader({
                 everywhere else on this site: somebody is being told. */}
             <span className="ses-head-live">
               <span className="ses-head-dot" aria-hidden="true" />
-              Now logging
+              {CAPTION.logging}
             </span>
             <span className="ses-head-album">{naming}</span>
+            {/* The artist. Missing here until 2026-09-18, which is most of
+                what made this a different object from the beacon in the bar
+                it grew out of — the bar said a record and an artist, the
+                session said a record, and the handoff dropped a line.
+                .ses-head-artist had been sitting in the stylesheet unused. */}
+            {artist && <span className="ses-head-artist">{artist}</span>}
           </div>
           </div>
 
