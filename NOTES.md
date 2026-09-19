@@ -1540,6 +1540,20 @@ Project → Settings → Environment Variables.
 
 ## Gotchas
 
+**Comments rot faster than code, 2026-09-18.** A day of reversals left four
+files describing versions of themselves that no longer existed: a session
+header narrating a × that had moved to another file, a `?` that was deleted and
+a swipe that had come to mean the opposite; three stacked section headers in
+HomeNav each explaining a different superseded version of one transition; a
+comment block orphaned by a deleted constant, sitting above the next one;
+`@keyframes laySettle` unused; and cross-references to `hnLeaveDown` and
+`hnBlink`, neither of which existed any more. None of it broke anything, and
+that is the point — nothing fails, so nothing tells you. Worth a sweep after a
+day of changing the same few things: grep the comments for the names of things
+you removed, and check that every "see X" still resolves.
+
+
+
 **The automated browser pane does not deliver focus events, 2026-09-18.** A
 blur-reset could not be verified there: moving focus with `.focus()` changes
 `document.activeElement` but fires no `blur`/`focusout` at all, not even to a

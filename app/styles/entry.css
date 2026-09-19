@@ -186,35 +186,23 @@
   from { transform: translateY(100dvh); }
   to   { transform: none; }
 }
-/* The header no longer holds still, and there is no reveal on its record.
-   Both went on 2026-09-18 with the whole choreography: what is on screen when
-   you pick leaves by the floor as one surface, and the session comes up from
-   the same floor whole — its own header and its own record with it. See the
-   note above hnLeaveDown in nav.css. What is left here is a sheet that rises,
-   which is all it ever needed to be. */
 /* The listen rises from the foot of the screen, and it is the third answer
-   here. It cross-faded, then it settled in from four per cent too big, and
-   Miyel's verdict on both was the same: "I think the issue now is that I
-   don't like cross-fades." What the rise buys is the ending — "that way on
-   ending, everything can just leave out the bottom instead of disappearing"
-   — and the beacon's own change is carried by the blink instead (hnBlink in
-   nav.css) rather than by one surface dissolving into another.
-   The note below is kept because the settle may come back for something.
+   here. It cross-faded first, then settled in from four per cent too big, and
+   Miyel's verdict on both was the same: "I don't like cross-fades." What the
+   rise buys is the ending — "that way on ending, everything can just leave out
+   the bottom instead of disappearing."
 
-   A plain cross-fade was the first answer and this was the second: it starts
-   four per cent too big for the screen and settles to rest as it resolves.
-   Four per cent, not ten — the difference between a screen coming to rest and
-   a screen zooming, and past about six it stops being a settle and starts
-   being an effect. Reads as stepping toward the thing rather than the thing
-   coming at you, which is Miyel's own words for what this was always meant to
-   be: "I want it to feel like going into something."
-   Nothing translates. A surface that moves in a direction is a surface
-   arriving from somewhere, and this one is not arriving — it is what the
-   beacon turns into. */
-@keyframes laySettle {
-  from { opacity: 0; transform: scale(1.04); }
-  to   { opacity: 1; transform: none; }
-}
+   Nothing else on this journey is animated at all any more. The header holding
+   still, the reveal on its record, the blink the beacon changed on, the whole
+   screen leaving by the floor: all of it went across 2026-09-18, and what
+   ended it was not a better answer but Miyel noticing there was nothing to
+   watch — the sheet covers the screen, so the beacon changing underneath it is
+   not something anybody can see. `laySettle` was here and is in the history
+   with the rest.
+
+   Comments here pointed at `hnLeaveDown` and `hnBlink` in nav.css until this
+   was tidied; both had gone and the notes went on pointing at them, which is
+   how a file ends up describing a version of itself nobody can find. */
 @media (prefers-reduced-motion: reduce) {
   .lay--rises.lay--over-journal { animation-name: layFade; }
 }

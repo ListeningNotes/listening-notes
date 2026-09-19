@@ -8,86 +8,52 @@
 // carry what you are logging without eating a phone's screen. So what you are
 // logging sits here and stays put while the screens turn underneath.
 //
-// ── The header is the beacon now, 2026-09-18 ──────────────────────────────
+// ── The header is the beacon, 2026-09-18 ──────────────────────────────────
 // The cover came off this row on 2026-09-15 with a good reason: the album
 // screen is the art, large and centred, and a thumbnail of it up here was the
-// same picture twice. That is no longer what this strip is. A listen begins
-// on the beacon now — the record flies into the beacon slot, the beacon
-// lights, and the session opens over it (Miyel's beacon brief) — so the row
-// at the top of the listen is the beacon, small, carried into the room. The
-// cover, the green dot and NOW LOGGING are the beacon's own three things,
-// which means the thing you were looking at a second ago is still on screen
-// rather than having been swapped for a caption about it.
+// same picture twice. That stopped being what this strip is. A listen begins
+// on the beacon now, and the sheet comes up over it — so the row at the top
+// of the listen is the beacon, small, carried into the room. The thing you
+// were looking at a second ago is still on screen rather than having been
+// swapped for a caption about it.
 //
-// It also answers what a visitor is seeing while you write, which is the
-// thing this row could not say before and the one fact an owner might
-// actually want up there.
+// It also answers what a visitor is seeing while you write, which is the one
+// fact an owner might actually want up there and the thing this row could not
+// say before.
+//
+// Cover, dot, record, artist — the same four things at the same two sizes as
+// the mini in the nav bar, which is the same component's worth of markup
+// drawn twice (HomeNav.js). **They must not disagree.** The beacon that
+// carries the dot is the small one, because it has no mark beside it to
+// light; the large one on the pane says it in colour and says nothing in
+// words. See CAPTION in hooks/useListeningBeacon.js.
 //
 // The line under the dot is what the beacon is naming: the song you have
-// open, or the record itself while none is. That is `track || album`, which
-// is the beacon's own rule, stated once here and once in ListeningBeacon —
-// the two are showing the same thing and must not disagree about it.
+// open, or the record itself while none is. That is `track || album`, the
+// beacon's own rule, stated once here and once in ListeningBeacon.
 //
-// ── The × in the corner ───────────────────────────────────────────────────
-// The way to put the record down, and the one deliberate end a listen has.
+// ── There is no way out of this file ──────────────────────────────────────
+// The × that used to sit in the left slot is gone, and the slot is now a
+// spacer that keeps the beacon on the middle of the row. Both halves of that
+// happened on 2026-09-18 and the second is the one to know: the × did not go
+// away, it moved to the picker, which is the screen a listen is started from
+// (HomeNav.js, and the note beside it there). A pull down closes what you
+// were reading and a listen is notetaking that saves as it goes, so the cost
+// of a stray pull here is nothing much; on the picker it throws away a
+// half-typed search.
 //
-// Two presses: the mark opens a word out of itself and the word does it. It
-// went to one press for half an hour on 2026-09-18 and came back — "I miss
-// the × giving an option to be sure you're leaving, and the animated ×" —
-// and she is right about what was lost. This is the one deliberate end a
-// listen has, and a control that ends something should take a breath even
-// when it cannot lose anything.
-//
-// The word is **BACK TO DRAFTS**. It said END & SAVE for an hour, which was
-// true of what the control did then and stopped being true on 2026-09-18:
-// "this end and save is not correct — it needs to be like going back, going
-// back to the first home of a session." The × does not leave the session any
-// more. It puts the record down, which saves it, and lands on the picker the
-// session opened on, so the next record is one press away instead of a whole
-// journey back in. The word says where you are going rather than what is
-// being done to the record, because where you are going is the surprising
-// part.
-//
-// What did not come back is the condition. The listen is kept every time,
-// written on or not: a record you went and found is a record you meant to
-// play. Drafts are a page you clear out in a press each; a lost search is an
-// afternoon you do again.
-//
-// ── The mark shuts what it opened ─────────────────────────────────────────
-// Two targets once it is open, and the *word* is what commits — the mark puts
-// it away again. The same × doing the same job at a smaller scale, which is
-// what the ··· does when it turns into an × and files the tools back in.
-//
-// ── The mark shuts what it opened ─────────────────────────────────────────
-// Two targets once it is open, and this is the part worth being exact about:
-// the *word* is what commits, and the mark puts it away again. Miyel asked
-// for a way back out of it and wondered whether that meant a second glyph —
-// it does not, and the reason is next door. KeeperTools does this already:
-// the ··· turns into an × and pressing it files the tools back in. The door
-// stays the door; it opens and it shuts. An × that closes what it just opened
-// is the same × doing the same job at a smaller scale.
-//
-// Pressing the word is also the natural thing rather than the clever one: it
-// arrives under your thumb saying what will happen, and you press the thing
-// that says it.
-//
-// It is not the same as swiping the sheet down. Swiping is stepping away: the
-// record stays on the desk, the beacon goes quiet until you come back, and
-// coming back lands you on the step you left with everything you wrote. That
-// gesture should stay as easy as it is, because it does not end anything —
-// what was worth making deliberate is the ending, and this is it.
+// Which means leaving is a gesture, and a gesture must not skip writing the
+// draft. app/session/page.js registers that with `useBeforeLeaving` — a save
+// that fails stops the sheet with Trouble showing why.
 //
 // The cover was this corner's control for a day, as "change album". It is not
 // a control any more: it is the beacon, and you change record by putting this
-// one down. One thing in the corner, and it is the one that ends the mode you
-// are in.
+// one down.
 //
-// Top right, where every other screen keeps its day-and-night switch: the
-// switch, and beside it the question mark. That is the reference — something
-// to ask about the album or the notes, from any screen, that never writes a
-// word of the entry. It glows a little so it reads as a door rather than a
-// decoration, and it is absent on a copy with no key rather than present and
-// broken. There is no Save draft button: the draft saves itself.
+// Top right, where every other screen keeps its day-and-night switch. The
+// question mark beside it opened a reference and went with the research on
+// 2026-09-18 (docs/RETIRED-PROMPTS.md). There is no Save draft button; the
+// draft is written on the way out, however you leave.
 
 'use client';
 import { SESSION_STEPS } from '../../hooks/useListeningSession';

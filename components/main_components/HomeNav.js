@@ -109,62 +109,26 @@ const FACE_KEY = 'ln-spine-face';
 // nav.css too, on the transition; if one moves the other has to.
 const TURN_MS = 400;
 
-// ── The flight, and what happens either side of it ────────────────────────
-// The cover leaves the tile it was tapped in and lands in the beacon; the
-// beacon lights; then the session opens over a beacon already showing the
-// record (Miyel's beacon brief, 2026-09-17: "I do want the chosen album to
-// have its moment in the beacon").
+// ── The one flight left ───────────────────────────────────────────────────
+// Press *Start a listen* and the beacon's cover shrinks out of the card into
+// the small square in the nav bar, where it stays for as long as you are
+// choosing. That is the whole of the movement on this pane now, and Miyel
+// likes it: "I like the animation of the beacon becoming small."
 //
-// 520ms is the session's own landing, which flies a cover from the same tiles
-// into the same-shaped slot — the two are the same journey to two different
-// rooms and have no business moving at different speeds.
+// Everything else that used to be here is gone, and the list is worth keeping
+// because every item on it was built, watched and rejected on 2026-09-17 and
+// -18: a cover flying from the picker's tile into the beacon's slot, then a
+// second leg up to the session's header; the beacon having "its moment" lit
+// and full size before the listen arrived; an aperture closing on one record
+// and opening on another; a cross-fade; a horizontal erase; the whole screen
+// leaving by the floor and coming back. BLINK_MS, THE_TURN_MS, RISE_MS and
+// TURN_ON_MS were all constants here and all went with the moves they timed.
 //
-// Then the beacon has its moment — 620ms of being lit, full size, with the
-// record's name under it — before the listen arrives on top. That number is
-// the only one here that is a feel rather than a measurement: long enough to
-// read the title, short enough that nobody taps twice thinking it did not
-// work. The beacon is still growing for the first 520ms of it, which is the
-// point — you watch it take the record.
-// ── The pass from choosing a record to writing about it ────────────────────
-// It used to be three moves in a row: the cover flew from the picker into the
-// beacon's slot (520ms), the beacon had a moment of being the beacon again
-// (620ms), and then the session rose over the top of it. Miyel, 2026-09-18:
-// "it goes to the correct spot, then it shows the beacon again, then it opens
-// the session from the art… first it's all happening way too fast, this
-// should feel like slow morphs so we can actually appreciate the animation."
-//
-// It is one move now, and it goes where the record is actually going. Press a
-// record and the session rises immediately while its cover flies out of the
-// picker into the small square in the session's own header — the mini beacon,
-// which is where that cover lives for the rest of the listen. Her words: "the
-// art should just go directly to a mini beacon, replacing the LN logo, then
-// the session just rises to meet it. No going back to the beacon page again."
-//
-// The beacon is told about the record all the same, at the moment of the
-// press. It simply is not watched doing it: by the time anybody sees the pane
-// again the listen is over.
-//
-// ── One record, one move ──────────────────────────────────────────────────
-// It went in two legs for an hour on 2026-09-18 — across to the beacon's card,
-// then up to the session's header — because the card was where a chosen record
-// was put while you looked at it. The card does not stand there any more: the
-// bar carries the record the whole time you are choosing, in the session
-// header's own coordinates, so there is one destination and it is the one the
-// record is going to live in. Miyel: "that takes the place of the mini beacon
-// and the session shows up. It cuts that middle step."
-//
-// The session is pushed as the record leaves, so its own settling and the
-// record's journey are the same 620ms. The record lands in the bar slot at the
-// moment the session finishes resolving over it — and the session's cover is
-// already in that exact box, so letting go of the flown copy is a frame with
-// nothing in it to notice.
+// What ended it was not a better animation. It was Miyel noticing that there
+// is nothing to animate: the sheet covers the screen, so the beacon changing
+// underneath it is not a thing anybody is in a position to watch. "You don't
+// see the transition." See beginListen below, and the note in NOTES.
 const TO_THE_BAR_MS = 620;
-// And how long the bar has to itself once a record is picked, before the
-// session starts up over the picker. Not a journey — there is nothing in the
-// air any more — just the beat in which the mini goes from last night's greyed
-// cover to tonight's lit one, so that change is something you see happen
-// rather than something already done by the time the sheet clears the floor.
-// Short: a press that sits for half a second reads as a press that missed.
 // The backstop for "the sheet has the screen", used only when the sheet's own
 // rise never announces itself — reduced motion, or a layout with no animation
 // on it. Comfortably past the longest rise there is (layRiseTall, 620ms on a
@@ -174,16 +138,6 @@ const TO_THE_BAR_MS = 620;
 // over it, and a pull down cannot arrive before the sheet it would be pulling
 // has finished coming up, let alone before this.
 const BEHIND_THE_SHEET_MS = 900;
-// The aperture, closing and opening. Slow on purpose — long enough that it
-// reads as the record being put away and another brought out, rather than as
-// a screen changing. The body's rise is shorter and finishes inside it.
-// BLINK_MS, THE_TURN_MS and RISE_MS lived here. The aperture that closed on
-// one record and opened on another, the turn it hinged on, and the two-half
-// clock the whole screen left and arrived on all went on 2026-09-18 — see the
-// note on the Start a listen button for what replaced them. What is left is
-// the flight, which is the one movement this pane has ever needed: a record
-// travelling from where it was pressed to where it is going.
-
 // ── And the way back down ─────────────────────────────────────────────────
 // A listen becomes an entry, the layer closes, and the record falls out of
 // the beacon into the journal underneath it — which is a real place on this
@@ -562,23 +516,7 @@ export default function HomeNav() {
     // from this the moment it is published.
     announce({ album: record.album, artist: record.artist, art: record.artUrl });
     const still = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-    // No flight: the record is simply on the beacon and the listen opens. The
-    // same answer the session's own picker gives, and the brief's.
     if (!from || !record.artUrl || still) { openSession(); return; }
-    // ── No flight on the way in ─────────────────────────────────────────
-    // The record flew from the picker's tile into the header for an hour on
-    // 2026-09-18 and Miyel took it off: "it's too much for the album to float
-    // from picker to beacon. Maybe it just updates in the beacon without
-    // that — the beacon updates the art and the album title and artist while
-    // the session page comes up."
-    //
-    // She is right, and the reason is that there is nothing to follow. Going
-    // *into* the picker the record is the thing you are already looking at
-    // and it has somewhere to be, so watching it go is the move. Coming back
-    // out, the record is one of a dozen in a list you were reading: a cover
-    // detaching from a row and sailing up is a fourth thing happening on top
-    // of a session arriving and a picker folding away.
-    //
     // ── The sheet comes up, and the beacon changes behind it ────────────
     // Miyel, 2026-09-18, after two days of trying to make one record hand over
     // to another in front of somebody: "it might be as simple as this. When
