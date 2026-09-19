@@ -1175,14 +1175,32 @@
    rather than the site's usual curve — a lid accelerates closed and
    decelerates open, and the site's curve is front-loaded for things that
    travel. */
-.hn-bar-beacon--blink {
-  animation: hnBlink 520ms ease-in-out;
+/* ── The record closes to a point ─────────────────────────────────────────
+   Not an eyelid. Miyel, 2026-09-18: "the blink animation for the beacon art
+   should be coming in to a point (circle) then coming back out to fill the
+   cube again. Slowly." A lid shutting is a thing happening *to* the record;
+   an aperture closing on it is the record itself going, which is what this
+   moment is.
+
+   75% rather than 50%: a circle has to reach the corners of the square to
+   cover it, and half the diagonal is 70.7% of half the side. Anything less
+   and the square's corners are clipped off before it starts.
+
+   This half closes and stays closed. The other half is the session's own
+   header opening on the new record (layLidOpen in entry.css) — two elements,
+   one movement, and the hand-over happens while it is shut, so neither has to
+   know where the other is. The words go a little ahead of the picture, so
+   what is left at the turn is one shrinking circle rather than a circle with
+   a name beside it. */
+.hn-bar-beacon--blink .hn-bar-cover { animation: hnLidShut 720ms ease-in-out both; }
+.hn-bar-beacon--blink .hn-bar-said  { animation: hnLidHush 720ms ease-in-out both; }
+@keyframes hnLidShut {
+  0%       { clip-path: circle(75% at 50% 50%); }
+  50%,100% { clip-path: circle(0% at 50% 50%); }
 }
-@keyframes hnBlink {
-  0%   { transform: translateX(-50%) scaleY(1); }
-  46%  { transform: translateX(-50%) scaleY(0.02); }
-  54%  { transform: translateX(-50%) scaleY(0.02); }
-  100% { transform: translateX(-50%) scaleY(1); }
+@keyframes hnLidHush {
+  0%       { opacity: 1; }
+  38%,100% { opacity: 0; }
 }
 @media (prefers-reduced-motion: reduce) { .hn-bar-beacon--blink { animation: none; } }
 /* And the card's own cover steps aside at once rather than fading with the
