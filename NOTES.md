@@ -58,6 +58,105 @@ deploy a copy — and none of it is anything they need.
 
 ## Pending
 
+**THE HEADER IS THE BEACON — briefed 2026-09-18.** One surface, three
+states. Not an animation job: an evening of animation work proved that.
+
+### The problem
+
+The beacon and the session are two separate surfaces, each carrying its own
+copy of the same idea — a record, its name, a mark. Every transition between
+them is a hand-over between two objects, and every animation built on
+2026-09-18 was a way of disguising that hand-over. Miyel felt it every time,
+because it is real:
+
+- *"it's redundant the way it is now"* — two beacons
+- *"the session beacon still doubles itself"*
+- *"I need it to not feel like it's just another layer on top"* — and it
+  literally is one; `/session` is a `@layer` route that mounts a second
+  header over the first
+- *"the session is a new state"*
+- *"I don't have anything that just appears"*
+- *"there's no way to close it"*
+
+Each of those was answered on the day and the feeling did not change, which
+is the evidence that no curve fixes it.
+
+### The rule
+
+**The header belongs to the page, not to the listen.** One object lives at the
+top of the screen permanently and changes what it is doing. It never leaves,
+never re-arrives, and is never two.
+
+  resting     the last record sat down with, greyed — Last logged
+  choosing    the mark, because nothing has been chosen yet
+  listening   this record, live, with the song and the × beside it
+
+The body underneath is what changes: beacon screen → drafts → the listen.
+Three states of one page.
+
+### The motion grammar, which already exists
+
+Miyel's own words: *"things slide in from a direction most times, or appear
+from the point of being clicked."* Nothing fades, nothing dissolves, nothing
+appears. The two moves this site already owns are the only two needed:
+
+- a thing travels from where it was pressed to where it is going (the
+  flight; the wall's tiles; the drop)
+- a surface grows out of the thing that was pressed (LayerEntry, an entry
+  growing from its tile)
+
+### What has to move
+
+- `SessionHeader` comes out of `app/session/page.js`. The header is the
+  page's, so it is rendered once, above whatever state the body is in.
+- `/session` stops being a `@layer` route, or keeps the address and stops
+  mounting a header. The listen is a body state, not a sheet.
+- The cross's bar and the session's header become the same component. They
+  already carry the same three things in nearly the same place; they are two
+  copies of one idea and that is the whole bug.
+- The picker is a body state too — it is where a session starts, and the ×
+  in a listen returns to it (settled 2026-09-18 and still right).
+
+### What this deletes
+
+Everything on the cross that exists to disguise the hand-over:
+`.hn-bar-beacon` and its cover, `.hn--choosing`'s collapse of the beacon
+card, the flight's `into` targets, and the session's own `landing`. Two
+copies become one and the machinery between them has nothing left to do.
+
+### What NOT to try again
+
+All of these were built on 2026-09-18, shipped, looked at, and rejected. Each
+took a round; together they took an evening. **They are rejected for the same
+reason — they animate a hand-over instead of removing it.**
+
+- a cross-fade between the pane and the session
+- a settle (the session arriving at scale 1.04 and easing to rest)
+- the session growing out of the beacon's artwork
+- an eyelid (scaleY) on the beacon, closing and reopening on the new record
+- an aperture (a circle closing to a point) — twice, once per element and
+  once as a single circle centred on the record
+- a horizontal erase down and a draw back up, timed to the sheet's rise
+- the whole screen leaving by the floor and the session coming back up
+- pinning both text columns to one width so the two covers line up (this one
+  also put the beacon off centre, which she saw at once)
+
+### Two things that came out of the evening and should survive
+
+- **Drafts and search results are the same square.** A grid of album art with
+  the name and one line under it; a draft says how long ago where a record
+  says the year; the discard sits on the art so the footprint matches. This
+  is what made the picker one thing instead of two, and it is the half of the
+  fix that is already right.
+- **The session's surfaces are the site's.** The header is `--bg`, not an
+  86%-white panel; the search is a box. A transition into a place that looks
+  like a different application will read as a jump whatever it does.
+
+### Names to settle before building
+
+The shared header component, and whatever the three states are called in the
+code. Miyel names them.
+
 **The album's own stars are hidden until a track is rated, 2026-09-18.** Found
 in passing and raised three times without an answer, so it is written down
 rather than lost: on the Album screen the star row sits inside the same

@@ -449,6 +449,13 @@ the archive, and a listen written up over three evenings is still the thing
 that was on. Somebody who sent you a record can see you sat with it, which is
 the loop the send flow exists to close.
 
+**The header belongs to the page, not to the listen, 2026-09-18.** The beacon
+and the session each carried their own copy of a record, a name and a mark, so
+every move between them was a hand-over between two objects — and an evening of
+cross-fades, apertures, erases and settles proved that no animation hides one.
+One header, three states (resting, choosing, listening), and the body is what
+changes underneath it. The brief and the list of what was tried is in NOTES.
+
 **Deleting an entry keeps the listen, 2026-09-18.** The beacon reads entries,
 drafts and the one live needle row, so a published listen's only lasting
 record was its entry, and deleting one took the evening with it. `delete_entry`
