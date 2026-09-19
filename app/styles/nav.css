@@ -1154,6 +1154,20 @@
   top: calc(env(safe-area-inset-top, 0px) + 10px);
   transform: translateX(-50%);
   max-width: calc(100% - 150px);
+  /* 150 is the two corners: the mark's 64 on the left and the lights' on the
+     right, doubled because this is centred on the screen and has to clear the
+     wider of them on both sides. Centred on the *screen* and not in the space
+     between them, because the session's header centres its beacon the same way
+     and the two have to land on each other. */
+}
+/* Once the mark has turned into END? the left corner is 92 wide instead of 64,
+   and a record with a long enough name reached under it — measured 2026-09-18
+   at 375px: the cover at x=75 against a word ending at 92, with the beacon
+   painting over the word because it is the positioned one. So the beacon gives
+   way, and only while the word is showing: this costs nothing at all the rest
+   of the time, and the only record it moves is one already at the cap. */
+.hn--choosing .ses-shut--sure ~ .hn-bar-beacon {
+  max-width: calc(100% - 208px);
 }
 @media (min-width: 769px) {
   .hn-bar-beacon { top: calc(env(safe-area-inset-top, 0px) + 12px); }
