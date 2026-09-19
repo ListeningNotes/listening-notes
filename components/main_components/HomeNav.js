@@ -162,10 +162,17 @@ const TO_THE_BAR_MS = 620;
 // reads as the record being put away and another brought out, rather than as
 // a screen changing. The body's rise is shorter and finishes inside it.
 const BLINK_MS = 1300;
-// How long the session takes to resolve over the pane. It has to agree with
-// .lay--over-journal's own duration in entry.css — the picker folds away
-// behind it on this clock.
-const RISE_MS = 720;
+// The turn: the moment the record is a point and nothing is on screen but the
+// bar. Everything before it leaves, everything after it arrives, and the two
+// halves are the same length. Miyel's whole sequence, 2026-09-18: "when the
+// album art goes away (close in) the selections and drafts leave the screen
+// down; as the album opens (blink open) the new session rises from the bottom.
+// Timed together, intentional."
+const THE_TURN_MS = BLINK_MS / 2;
+// The body's rise, which is the second half and nothing else: it waits out
+// the closing, then comes up as the record opens. entry.css carries the same
+// number as a delay and a duration on .lay--over-journal.
+const RISE_MS = THE_TURN_MS;
 
 // ── And the way back down ─────────────────────────────────────────────────
 // A listen becomes an entry, the layer closes, and the record falls out of
@@ -532,7 +539,9 @@ export default function HomeNav() {
     // And the picker folds away once the sheet is over it — unseen, which is
     // the point. Doing it now would empty the screen behind a sheet that has
     // not covered it yet.
-    flightTimers.current.push(setTimeout(() => { setChoosing(false); setBlinking(false); }, RISE_MS + 120));
+    // At the turn, not after it. The picker has finished leaving by then and
+    // the bar's record is a point, so both go while there is nothing to see.
+    flightTimers.current.push(setTimeout(() => { setChoosing(false); setBlinking(false); }, THE_TURN_MS));
   }, [openSession, router]);
 
   // The journey: out of the picker and into the bar's slot, which is the
@@ -1236,6 +1245,7 @@ export default function HomeNav() {
         + (spine.dragging ? ' hn--dragging' : '')
         + (choosing ? ' hn--choosing' : '')
         + (landing ? ' hn--flying' : '')
+        + (blinking ? ' hn--blinking' : '')
       }
       data-pane={pane}
     >
