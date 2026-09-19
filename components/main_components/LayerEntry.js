@@ -95,6 +95,40 @@ export function useLayerHeaderSlot() {
   return useContext(LayerHeaderSlot);
 }
 
+// ── Asking the page before the sheet goes ─────────────────────────────────
+// A pull down closes the layer, and for an entry or a person's page that is
+// the whole of it — there is nothing to put away. A listen is not like that.
+// Closing one has to write the draft to the server first, and if that write
+// fails the sheet must stay exactly where it is with the afternoon still on
+// it, which is what the × used to guarantee and what the pull had no way of
+// knowing (2026-09-18, when the × came off: "swiping down from this screen
+// ends sessions").
+//
+// So the page registers what has to happen first. Return false — or resolve
+// false — and the sheet does not go. Anything else and it does. Nothing that
+// does not call this is affected: the pull closes as directly as it ever did.
+export const LayerLeaving = createContext(null);
+export function useBeforeLeaving(fn) {
+  const holdRef = useContext(LayerLeaving);
+  const latestRef = useRef(fn);
+  // In an effect, not in the render: a ref written during render is the one
+  // thing react-hooks/refs refuses, and the handler is only ever read later,
+  // from the layer, so a frame's delay cannot matter.
+  useEffect(() => { latestRef.current = fn; }, [fn]);
+  useEffect(() => {
+    if (!holdRef) return undefined;
+    // Through a ref, so re-registering on every render of a page whose state
+    // changes constantly does not churn the layer.
+    holdRef.current = (...args) => latestRef.current?.(...args);
+    return () => { holdRef.current = null; };
+  }, [holdRef]);
+  // Whether there is a layer at all. The session is also a page of its own —
+  // opened cold from a bookmark or a home-screen icon, with no sheet around it
+  // and so no pull to close — and it has to know, because it is then the one
+  // that has to provide a way out.
+  return !!holdRef;
+}
+
 // `arrives` is 'tile' (grow from the pressed tile, with a fade where there is
 // none — the entry) or 'bottom' (rise from the foot of the screen and sink
 // back on a pull — the send page, a form). Both close on the pull down.
@@ -283,13 +317,17 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
   }, []);
 
   const leaving = useRef(false);
+  // The page's "before you go", if it registered one, and whether it is
+  // being asked right now.
+  const held = useRef(null);
+  const asking = useRef(false);
   // A page turn waiting to change the address — see go() below.
   const pendingTurn = useRef(null);
   // Whether this layer is still mounted, for the timer that checks the
   // close actually took.
   const alive = useRef(true);
   useEffect(() => () => { alive.current = false; }, []);
-  const leave = useCallback((fromX = 0) => {
+  const goAway = useCallback((fromX = 0) => {
     if (leaving.current) return;
     leaving.current = true;
     // Whatever this closes onto is being returned to, not arrived at.
@@ -379,6 +417,33 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
     // The flying copy must not outlive the sheet, animation or not.
     window.setTimeout(() => flyer.remove(), GROW_MS + 100);
   }, [goBack, slug, rises, over, router]);
+
+  // ── What the page wants done first ───────────────────────────────────────
+  // Every way out goes through here — the pull, Escape, the back caret — so a
+  // page that registered a "before you go" gets asked once, whichever of them
+  // was used. See useBeforeLeaving above.
+  //
+  // The answer may be a promise, because a listen's is a write to the server,
+  // and a false one means the sheet stays put with everything still on it.
+  // `asking` is not `leaving`: the sheet has not started going anywhere yet,
+  // and a second pull while the first is still being written must not set
+  // another save running.
+  const leave = useCallback((fromX = 0) => {
+    if (asking.current || leaving.current) return;
+    const first = held.current?.();
+    if (first && typeof first.then === 'function') {
+      asking.current = true;
+      first.then(ok => {
+        asking.current = false;
+        // Asked and answered: it does not get asked again on the way out.
+        if (ok !== false) { held.current = null; goAway(fromX); }
+      }, () => { asking.current = false; });
+      return;
+    }
+    if (first === false) return;
+    held.current = null;
+    goAway(fromX);
+  }, [goAway]);
 
   // ── To a neighbour ────────────────────────────────────────────────────────
   // A page turn. The record on screen keeps going the way it was pushed,
@@ -601,6 +666,7 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
       {/* The content. It follows a finger sideways, springs back if let go
           early, or leaves off the edge; a neighbour is a new layer and
           enters from the side it was on. */}
+      <LayerLeaving.Provider value={held}>
       <LayerHeaderSlot.Provider value={headerSlot}>
       <div
         className={'lay-content'
@@ -610,6 +676,7 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
         {children}
       </div>
       </LayerHeaderSlot.Provider>
+      </LayerLeaving.Provider>
 
       {/* For a pointer, where there is no swipe: a caret at each edge, and
           only where there is somewhere to go. Stop at the ends, never wrap. */}

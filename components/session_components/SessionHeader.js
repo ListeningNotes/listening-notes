@@ -90,8 +90,6 @@
 // broken. There is no Save draft button: the draft saves itself.
 
 'use client';
-import { useState } from 'react';
-import { X } from '@phosphor-icons/react';
 import { SESSION_STEPS } from '../../hooks/useListeningSession';
 import { CAPTION } from '../../hooks/useListeningBeacon';
 import MarqueeTitle from '../main_components/MarqueeTitle';
@@ -101,14 +99,8 @@ export default function SessionHeader({
   album, artist, year,
   art = '', track = '',
   step, onStep,
-  onEnd,
 }) {
   const { theme, toggle } = useTheme();
-  // Whether the × has been opened into its word.
-  const [ending, setEnding] = useState(false);
-  // Whether the × has been pressed once and is now showing what it will do.
-  // Reset on blur, the way the draft's discard is: a confirmation left armed
-  // behind your back is a confirmation you did not give.
 
   // The beacon's own rule, and it has to be the same one: whatever song is
   // open, and the record itself while none is.
@@ -124,51 +116,22 @@ export default function SessionHeader({
     <header className="ses-head">
       <div className="ses-head-in">
         <div className="ses-head-row">
-          {/* The left slot, and there is nothing in it. It is a spacer that
-              holds the beacon on the middle of the row — the same three-slot
-              row SiteNav and the ID card's header are, for the same reason: a
-              row with controls at one end and nothing at the other centres its
-              middle child on what is left over rather than on the page
-              (Miyel, 2026-09-18). */}
-          <div className="ses-head-side">
-            {/* Focus leaving the pair puts it away — but only when it has
-                actually left, or moving from the mark to the word would shut
-                the word on the way to pressing it. */}
-            {/* Focus leaving the pair puts it away — but only when it has
-                actually left, or moving from the mark to the word would shut
-                the word on the way to pressing it. */}
-            <div
-              className={'ses-shut' + (ending ? ' ses-shut--sure' : '')}
-              onBlur={event => {
-                if (!event.currentTarget.contains(event.relatedTarget)) setEnding(false);
-              }}
-            >
-              <button
-                type="button"
-                className="ses-shut-door"
-                onClick={() => setEnding(open => !open)}
-                aria-expanded={ending}
-                aria-label={ending ? 'Keep listening' : 'Put this record down'}
-                title={ending ? 'Keep listening' : 'Put this record down'}
-              >
-                <X size={18} weight="regular" aria-hidden="true" className="ses-shut-mark" />
-              </button>
-              {/* Out of the tab order and out of reach while it is closed, so
-                  nothing can be pressed that cannot be read. */}
-              <span className="ses-shut-slot">
-                <button
-                  type="button"
-                  className="ses-shut-word"
-                  onClick={onEnd}
-                  tabIndex={ending ? 0 : -1}
-                  aria-hidden={!ending}
-                  title="Put this record down and go back to your drafts"
-                >
-                  Back to drafts
-                </button>
-              </span>
-            </div>
-          </div>
+          {/* The left slot, and there is nothing in it at all now. It is a
+              spacer, holding the beacon on the middle of the row — the same
+              three-slot row SiteNav and the ID card's header are, and for the
+              same reason: a row with a control at one end and nothing at the
+              other centres its middle child on what is left over rather than
+              on the page.
+
+              It held the × until 2026-09-18. Miyel took it off: "I don't have
+              them anywhere else on the site, and swiping down is intuitive
+              since the screen comes up." Both true — the entry, the inbox, a
+              person's page and the send form all close on the pull, and this
+              was the one sheet with a button as well. What the × did instead
+              of closing is registered in app/session/page.js now, so the
+              gesture writes the draft and a write that fails still stops the
+              sheet going anywhere. */}
+          <div className="ses-head-side" />
 
           <div className="ses-head-beacon">
           <span className="ses-cover" aria-hidden="true">

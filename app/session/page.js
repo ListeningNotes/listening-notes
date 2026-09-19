@@ -48,6 +48,7 @@ import TrackNotes from '../../components/session_components/steps/TrackNotes';
 import AlbumNotes from '../../components/session_components/steps/AlbumNotes';
 import SessionPreview from '../../components/session_components/steps/SessionPreview';
 import Trouble from '../../components/session_components/Trouble';
+import { useBeforeLeaving } from '../../components/main_components/LayerEntry';
 
 // How long the picked cover takes to reach the header. The step body slides in
 // on the same curve at nearly the same length, so the two read as one move.
@@ -238,28 +239,25 @@ export default function SessionPage() {
   // on a draft follows — and the second press says what it will do rather
   // than asking whether you are sure.
   const router = useRouter();
-  async function endListen() {
-    // Kept, always — not only when something has been written. A record you
-    // went and found is a record you meant to play, and losing the search
-    // because you closed the screen before typing a word is the one thing
-    // Miyel kept running into while testing (2026-09-18: "let's just let the
-    // drafts build"). Drafts are cleared in a press each; a lost search is an
-    // afternoon done twice.
-    //
-    // A draft that would not save keeps you here. The message is up, the
-    // listen is still on screen behind it, and nothing has been cleared — so
-    // pressing again after fixing whatever it was does the whole thing
-    // properly. Leaving anyway would have thrown away the one copy of the
-    // afternoon that is not on this device.
-    if (!s.saved && !(await s.saveDraft())) return;
+
+  // ── Putting the record down ──────────────────────────────────────────────
+  // There is no × any more (2026-09-18). The way out of a listen is the pull
+  // down that brought it up, which is the layer's own gesture and the one
+  // every other sheet on this site already uses — Miyel: "I don't have them
+  // anywhere else on the site, and swiping down is intuitive since the screen
+  // comes up."
+  //
+  // Which means the draft has to be written by the gesture rather than by a
+  // button, and a write that fails has to stop the sheet going. That is what
+  // this registers: the layer asks before it moves, and a false answer leaves
+  // the listen exactly where it is with Trouble showing why.
+  const layered = useBeforeLeaving(async () => {
+    if (!s.saved && !(await s.saveDraft())) return false;
     try { localStorage.removeItem(PENDING_KEY); } catch { /* nothing to clear */ }
     saidSoAboutTheDesk();
-    // Over the cross the sheet goes and the pane is underneath, already
-    // showing a beacon with no record in hand. Opened cold there is no cross,
-    // and the picker on this same page is where you land.
-    if (document.querySelector('.hn')) router.back();
-    else leave();
-  }
+    return true;
+  });
+
 
   // Back to the picker. Nothing is confirmed and nothing is lost: a listen with
   // writing on it is kept as a draft first, so it is waiting under Unfinished
@@ -308,15 +306,26 @@ export default function SessionPage() {
     // the stars are.
     if (e.target?.closest?.('[role="slider"]')) { swipe.current = null; return; }
     const t = e.touches[0];
-    swipe.current = { x: t.clientX, y: t.clientY };
+    // Where the page was when the finger landed: a pull down means leave only
+    // from the top, the same rule the sheet's own pull follows.
+    swipe.current = { x: t.clientX, y: t.clientY, top: window.scrollY <= 0 };
   }
   function swipeEnd(e) {
     const from = swipe.current;
     swipe.current = null;
-    if (!from || step === 1) return;   // the tracks screen has its own
+    if (!from) return;
     const t = e.changedTouches[0];
     const dx = t.clientX - from.x;
     const dy = t.clientY - from.y;
+    // ── Down, out of a listen with no sheet around it ─────────────────────
+    // In the layer this is the layer's own job and doing it here as well
+    // would put the record down twice. Opened cold there is no layer and no
+    // pull, and since the × came off (2026-09-18) there would otherwise be no
+    // way out of the page at all — so the same gesture is honoured here, from
+    // the top of the screen, and `leave` writes the draft exactly as the
+    // sheet's own way out does.
+    if (!layered && from.top && dy > 80 && dy > Math.abs(dx) * 1.5) { leave(); return; }
+    if (step === 1) return;   // the tracks screen has its own
     if (Math.abs(dx) < 56 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
     if (dx < 0) forward(); else goToStep(step - 1);
   }
@@ -388,7 +397,6 @@ export default function SessionPage() {
                closing this lands on the drafts it was started from. `leave`
                is the answer when a session was opened cold at this address
                and there is no pane under it — endListen asks which. */
-            onEnd={endListen}
             hasWriting={s.hasWriting}
           />
 
