@@ -2635,8 +2635,16 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
    bottom of, so shrinking the block raises the logo; shrinking the logo as
    well opens the air between it and the record, which is the "bring LN up"
    half of the ask. */
-.hn-crown-svg { height: 54px; }
-.hn { --hn-crown: clamp(104px, calc(var(--hn-h) * 0.19), 168px); }
+.hn-crown-svg { height: 82px; }
+/* The mark goes back to the size it always was and its block comes back down
+   with it — "I want it same size as before, there's space" (Miyel,
+   2026-09-18), which there is now that the record and its past share a row
+   instead of stacking. 0.23 of the screen rather than the 0.19 it dropped to,
+   which is most of the way back to the 0.28 it started at.
+
+   The logo's own height is free: it stands at the bottom of a block taller
+   than itself, so 54 to 82 costs the screen nothing. Only the block costs. */
+.hn { --hn-crown: clamp(104px, calc(var(--hn-h) * 0.23), 200px); }
 
 /* Two columns and a row under them: the record and its past side by side, the
    way in spanning both. A grid rather than a flex row because .ln-onward is a
@@ -2653,9 +2661,14 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   align-content: start;
   align-items: start;
   column-gap: 16px;
-  row-gap: 22px;
-  /* The air the mark gave up, handed to the gap above the record. */
-  padding-top: calc(var(--hn-square-top) + 22px);
+  /* Scaled, like the record and the crown above it. A tall phone gets the 22
+     this was drawn at; a short one gets less, which is how the whole screen
+     gives a little rather than one thing giving a lot. */
+  row-gap: clamp(14px, calc(var(--hn-h) * 0.027), 22px);
+  /* The composition is wider than the column it replaced, so it takes a
+     narrower gutter: 24 rather than the pane's 34. At 375 that is 327px of
+     room for a 240 record, a 16 gap and a 58 column — 314, with air left. */
+  padding: calc(var(--hn-square-top) + 14px) 24px 92px;
 }
 /* ── The name is the screen's, not the record column's ────────────────────
    Centred under the art it sat left of the middle of the screen, because the
@@ -2691,7 +2704,10 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
 .hn-pane--home .ln-onward {
   grid-column: 1 / -1;
   grid-row: 3;
-  margin: 38px auto 0;
+  /* 38 on a phone the size of hers, less on a short one. At 667 the record,
+     the crown and this were between them leaving eight pixels above the down
+     caret, which is not clearance, it is a coincidence. */
+  margin: clamp(16px, calc(var(--hn-h) * 0.047), 38px) auto 0;
 }
 /* The empty beacon has neither a cover nor a name — it has one quiet line, and
    it spans. */
@@ -2701,7 +2717,12 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
    record rather than a horizontal scroll. 220 with a 48px column and a 16px
    gap comes to 284 inside the 307 a 375px screen has between its gutters. */
 .hn-pane--home .beacon-art-wrap {
-  width: min(220px, calc(100vw - 150px));
+  /* As large as the screen can afford, in both directions. The width term
+     leaves room for the column beside it and the gutters; the height term
+     stops a tall record on a short phone pushing the way in into the footer,
+     which is what the old max-height block used to be cleaning up after.
+     A 375x812 phone gets 240; the same width at 667 gets 213. */
+  width: min(240px, calc(100vw - 140px), calc(var(--hn-h) * 0.32));
   height: auto;
   aspect-ratio: 1;
 }
@@ -2714,4 +2735,8 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
    read as a column beside it, where centring reads as two things that happen
    to be near each other. */
 .hn-pane--home .hp-recent { flex-direction: column; gap: 8px; }
+/* The past, larger with the record. Three of these plus their gaps come to
+   190, which is still shorter than the record they stand beside, so the column
+   never sets the height of the row. */
+.hn-pane--home .hp-recent-tile { width: 58px; height: 58px; border-radius: 12px; }
 .hn-pane--home .hp-recent-set { align-items: flex-start; gap: 8px; }
