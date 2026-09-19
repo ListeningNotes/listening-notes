@@ -1156,13 +1156,28 @@
 .hn-bar-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
 /* And .ses-head-text's. */
 /* .ses-head-text's shape, and like it, its own width. */
-.hn-bar-said { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+/* ── The beacon's own type, at 0.625 ──────────────────────────────────────
+   Exactly five eighths of the card below it, line for line: 24px becomes 15,
+   13.6 becomes 8.5, the 10px gap becomes 6.25. Two reasons, and they are the
+   same reason.
+
+   Miyel, 2026-09-18: "keep font consistent from large beacon." The artist was
+   DM Mono here and Nunito down there, so the record changed voice on its way
+   up — the one thing that is meant to be the same object throughout.
+
+   And "don't have text disappear on the transition, but rather move into
+   place and shrink with art." Words can only *shrink* into place if the two
+   ends are the same shape at two sizes; at any other ratio the flight has to
+   end on a jump. One number, so one transform carries the whole block. */
+.hn-bar-said { min-width: 0; display: flex; flex-direction: column; gap: 6.25px; }
 .hn-bar-album {
-  font-family: var(--font-display); font-weight: 700; font-size: 15px; line-height: 1.2;
+  font-family: var(--font-nunito), sans-serif; font-weight: 700;
+  font-size: 15px; line-height: 1.15;
   color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .hn-bar-artist {
-  font-family: var(--font-label); font-size: 10px; letter-spacing: 0.08em;
+  font-family: var(--font-nunito), sans-serif; font-weight: 400;
+  font-size: 8.5px; letter-spacing: 0.08em;
   color: var(--ink-soft); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 /* Drawn but not shown while the record is on its way up from the card — the
@@ -1180,7 +1195,8 @@
    rest of the card. The stage takes 0.4s to go and the flight takes 620ms, so
    without this there would be four hundred milliseconds of the record in two
    places — the real one shrinking away and the copy climbing past it. */
-.hn--flying .beacon-art-wrap { visibility: hidden; }
+.hn--flying .beacon-art-wrap,
+.hn--flying .beacon-meta { visibility: hidden; }
 /* The mark is the fallback, not the rule. The bar carries the beacon while you
    choose — the record shrinks into it from the card below (Miyel, 2026-09-18:
    "I liked the beacon shrinking mini when you enter session") — and the mark

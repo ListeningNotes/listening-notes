@@ -450,6 +450,56 @@ export default function HomeNav() {
   // session will open on. So the bar does not change. The session arriving IS
   // the beacon updating, and there is one thing moving instead of two.
   const [onTheBar, setOnTheBar] = useState(null);
+  // ── The name travels with the record ────────────────────────────────────
+  // Miyel, 2026-09-18: "don't have text disappear on the transition, but
+  // rather move into place and shrink with art."
+  //
+  // It did disappear: the card's meta collapsed while the bar's appeared, so
+  // the album and the artist blinked out in one place and in again in
+  // another while the cover made an unhurried journey between them.
+  //
+  // The bar's own words are what travel — not a copy of the card's. They are
+  // put back where the card's were standing, at the size the card's were
+  // (0.625 apart, which is why the type had to agree first), and then let go.
+  // Drawn at the destination and pulled back to the origin, so the end of the
+  // movement is exactly right by construction and cannot land on a jump.
+  // Centres rather than corners: the card's are centred under a 180px cover
+  // and the bar's are left of a 44px one, and a corner-to-corner flight of
+  // two differently aligned blocks slides sideways for no reason.
+  const wordsFrom = useRef(null);
+  useEffect(() => {
+    const from = wordsFrom.current;
+    if (!from || !choosing) return;
+    wordsFrom.current = null;
+    const said = document.querySelector('.hn-bar-said');
+    if (!said) return;
+    const to = said.getBoundingClientRect();
+    if (!to.width) return;
+    const k = 1 / 0.625;   // the card's type over the bar's
+    const dx = (from.left + from.width / 2) - (to.left + to.width / 2);
+    const dy = (from.top + from.height / 2) - (to.top + to.height / 2);
+    said.style.transition = 'none';
+    said.style.transform = `translate(${dx}px, ${dy}px) scale(${k})`;
+    // Released on the next frame — and by a clock as well, because a frame is
+    // not guaranteed. A tab the browser thinks is hidden runs no animation
+    // frames at all, and the whole of this is set-then-release: without the
+    // second way out, the name would sit at 1.6 times its size in the wrong
+    // place for as long as the picker was open. Seen exactly that way in the
+    // preview pane on 2026-09-18, which reports hidden always (NOTES).
+    let gone = false;
+    const release = () => {
+      if (gone) return;
+      gone = true;
+      said.style.transition = `transform ${TO_THE_BAR_MS}ms cubic-bezier(0.22, 0.61, 0.36, 1)`;
+      said.style.transform = 'none';
+      flightTimers.current.push(setTimeout(() => {
+        said.style.transition = '';
+        said.style.transform = '';
+      }, TO_THE_BAR_MS + 40));
+    };
+    flightTimers.current.push(requestAnimationFrame(release));
+    flightTimers.current.push(setTimeout(release, 120));
+  }, [choosing]);
   const router = useRouter();
 
   // ── Off the picker and into the listen ────────────────────────────────────
@@ -1398,10 +1448,16 @@ export default function HomeNav() {
                           const art = event.currentTarget
                             .closest('.beacon-card')?.querySelector('img.beacon-art');
                           const box = art?.getBoundingClientRect();
+                          const meta = event.currentTarget
+                            .closest('.beacon-card')?.querySelector('.beacon-meta');
+                          const said = meta?.getBoundingClientRect();
                           setOnTheBar(onAirAlbum ? { art: onAir, album: onAirAlbum, artist: onAirArtist } : null);
                           setChoosing(true);
                           if (!box || !onAir) return;
                           if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+                          // Where the record's name is standing, so it can
+                          // travel rather than blink out — see wordsFrom.
+                          if (said && said.width) wordsFrom.current = said;
                           setLanding({
                             art: onAir,
                             from: { left: box.left, top: box.top, width: box.width, height: box.height },
