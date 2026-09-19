@@ -480,7 +480,7 @@ export default function AlbumPicker({ onPick, onResume, inline = false }) {
                         {armed && (
                           <span className="ses-tile-sure">
                             <Trash size={20} weight="fill" aria-hidden="true" />
-                            Delete draft?
+                            Delete
                           </span>
                         )}
                       </span>

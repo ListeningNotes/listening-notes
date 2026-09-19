@@ -1070,10 +1070,12 @@
   font-family: var(--font-label); font-size: 10px;
   letter-spacing: 0.16em; text-transform: uppercase;
   border-radius: inherit;
-  /* DELETE DRAFT? rather than SURE? from 2026-09-18 — "so it's unambiguous."
-     Thirteen characters at this size is wider than a cover is on a phone,
-     where the grid is three across, so it wraps and is centred rather than
-     being cut off or forcing the tile wider. */
+  /* SURE? → DELETE DRAFT? → DELETE, all on 2026-09-18. The middle one was for
+     being unambiguous and the last for being short, and the trash above it is
+     what makes both work at once: the glyph says what, so the word only has to
+     confirm it. Centred and allowed to wrap even so — a cover is 96px on a
+     phone's three-across grid, and a longer word here would be cut off rather
+     than widen the tile. */
   padding: 0 6px;
   text-align: center; line-height: 1.35; text-wrap: balance;
 }
