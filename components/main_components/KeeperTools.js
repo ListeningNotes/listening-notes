@@ -168,6 +168,30 @@ export default function KeeperTools({
     return () => row.removeAttribute('data-tooling');
   }, [phase]);
 
+  // ── A press anywhere else takes the question back ────────────────────────
+  // Miyel, 2026-09-18: "a click away anywhere should unclick delete." The same
+  // answer the draft's delete and the picker's × give, and the same reasoning:
+  // a question you can only answer by finding the one control that asked it
+  // has taken the screen hostage.
+  //
+  // Only the arming, not the drawer. Pressing another tool is a perfectly good
+  // thing to do with the tools open, and it should disarm Delete rather than
+  // put everything away — which is what makes the exception here the *button*
+  // and not the whole row.
+  //
+  // Captured at the document so `sure` is already false by the time the press
+  // reaches whatever it landed on: a press on Relisten, say, must not find a
+  // Delete still armed behind it.
+  useEffect(() => {
+    if (!sure) return undefined;
+    const away = event => {
+      if (event.target?.closest?.('.kt-tool--end')) return;
+      setSure(false);
+    };
+    document.addEventListener('pointerdown', away, true);
+    return () => document.removeEventListener('pointerdown', away, true);
+  }, [sure]);
+
   // Escape closes it, and closing is all Escape does here — the sheet under
   // this has its own Escape and would otherwise take the entry away with the
   // menu still on screen.
@@ -313,7 +337,7 @@ export default function KeeperTools({
           onDelete();
         }}
         {...box(
-          sure ? 'Sure?' : words.remove[0],
+          sure ? 'Delete?' : words.remove[0],
           sure ? 'Press again to delete this entry for good' : words.remove[1],
           <Trash size={22} weight={sure ? 'fill' : 'regular'} aria-hidden="true" />,
           ' kt-tool--end' + (sure ? ' kt-tool--sure' : ''),

@@ -2609,6 +2609,25 @@ restructure: the three drawings of the beacon were made into one.
 - [x] **Idle, the small beacon shows nothing but the greyed cover.** No dot,
       no words. It says the listen is over before you have read anything.
 
+### One way of asking, everywhere
+
+- [x] **The entry toolbar's Delete says `Delete?`**, not `Sure?`, and a press
+      anywhere else takes the question back. Miyel, 2026-09-18: "have it say
+      the same as drafts — it changes to Delete?, a double check. But a click
+      away anywhere should unclick delete."
+
+      That is now the site's one shape for an irreversible press, in three
+      places built a few hours apart: the draft's long-press (trash over
+      `DELETE` on the cover), the picker's × (turns into `END?`), and this. All
+      three arm on a press, say what they will do rather than asking whether
+      you are sure, and disarm on a press anywhere else — captured at the
+      document, with the control itself excepted because a press there is the
+      yes.
+
+      Here the exception is the **button**, not the whole row: pressing another
+      tool is a reasonable thing to do with the tools open, and it should take
+      the question back rather than put everything away.
+
 ### Sliding through a record
 
 - [x] **The strip is slid along, not only tapped.** Press it and drag, and the
