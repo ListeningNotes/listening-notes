@@ -1133,6 +1133,15 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.14);
 }
 .hn-bar-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* Drawn but not shown while a record is on its way to it — the flight has to
+   be able to measure the box it is aiming at, and two copies of the same
+   record on one screen is the thing the flight exists to avoid. */
+.hn-bar-cover--flying { opacity: 0; }
+/* And the card's own cover steps aside at once rather than fading with the
+   rest of the card. The stage takes 0.4s to go and the flight takes 620ms, so
+   without this there would be four hundred milliseconds of the record in two
+   places — the real one shrinking away and the copy climbing past it. */
+.hn--flying .beacon-art-wrap { visibility: hidden; }
 /* And no LN mark beside it. Two marks in one row is the thing she asked to be
    rid of — "without the small LN logo in between". */
 .hn--choosing .hn-bar-mark { display: none; }

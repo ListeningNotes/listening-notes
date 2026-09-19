@@ -468,7 +468,7 @@ export default function HomeNav() {
     // No flight: the record is simply on the beacon and the listen opens. The
     // same answer the session's own picker gives, and the brief's.
     if (!from || !record.artUrl || still) { openSession(); return; }
-    setLanding({ record, art: record.artUrl, from, to: null, go: false, ms: TO_THE_BAR_MS });
+    setLanding({ record, art: record.artUrl, from, to: null, go: false, ms: TO_THE_BAR_MS, into: '.ses-cover' });
     // The session comes up as the record leaves, not after it lands.
     router.push('/session');
     // And the picker folds away once the sheet is over it — unseen, which is
@@ -509,7 +509,7 @@ export default function HomeNav() {
     // leaves and draws its header on its first frame, but a first frame is
     // not this frame.
     const lookFor = (tries = 0) => {
-      const slot = document.querySelector('.ses-cover');
+      const slot = document.querySelector(landing.into);
       if (!slot && tries < 40) {
         flightTimers.current.push(requestAnimationFrame(() => lookFor(tries + 1)));
         return;
@@ -520,7 +520,10 @@ export default function HomeNav() {
       // shrinking — aiming at that lands the record somewhere the cover is
       // only passing through. Undoing the scale about the sheet's own centre
       // gives the box it is coming to rest in.
-      const sheet = document.querySelector('.lay');
+      // Only a slot inside the arriving sheet needs this; the bar's is on the
+      // page and sits still. `closest` asks the target itself rather than the
+      // flight having to know which move it is on.
+      const sheet = slot.closest('.lay');
       const at = slot.getBoundingClientRect();
       let to = { left: at.left, top: at.top, width: at.width, height: at.height };
       if (sheet) {
@@ -982,8 +985,8 @@ export default function HomeNav() {
           already exactly here and nothing appears to move. The bar's own row
           shifts up to meet it (.hn--choosing .hn-bar in nav.css), so the ×
           and the lights sit on the line they will sit on in a moment. */}
-      {choosing && !landing && (
-        <span className="hn-bar-cover" aria-hidden="true">
+      {choosing && (
+        <span className={'hn-bar-cover' + (landing ? ' hn-bar-cover--flying' : '')} aria-hidden="true">
           {onAir ? <img src={onAir} alt="" /> : null}
         </span>
       )}
@@ -1163,6 +1166,7 @@ export default function HomeNav() {
         + (turning ? ' hn--turning' : '')
         + (spine.dragging ? ' hn--dragging' : '')
         + (choosing ? ' hn--choosing' : '')
+        + (landing ? ' hn--flying' : '')
       }
       data-pane={pane}
     >
@@ -1302,7 +1306,31 @@ export default function HomeNav() {
                          rather than going anywhere. A button and not a link,
                          because it does not navigate — which is the whole
                          idea of this brief. */
-                      <button type="button" className="ln-onward" onClick={() => setChoosing(true)}>
+                      <button
+                        type="button"
+                        className="ln-onward"
+                        onClick={event => {
+                          // ── Into the picker ─────────────────────────────
+                          // Miyel: "when you start a session the beacon
+                          // automatically becomes the mini — the art becomes
+                          // the beacon." So the record travels rather than the
+                          // card collapsing under one cover while another
+                          // appears in the bar. Same flight the picking uses,
+                          // pointed at the bar's slot instead of the
+                          // session's; the card folds away underneath it.
+                          const art = event.currentTarget
+                            .closest('.beacon-card')?.querySelector('img.beacon-art');
+                          const box = art?.getBoundingClientRect();
+                          setChoosing(true);
+                          if (!box || !onAir) return;
+                          if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+                          setLanding({
+                            art: onAir,
+                            from: { left: box.left, top: box.top, width: box.width, height: box.height },
+                            to: null, go: false, ms: TO_THE_BAR_MS, into: '.hn-bar-cover',
+                          });
+                        }}
+                      >
                         Start a listen
                         <ArrowRight size={16} weight="regular" aria-hidden="true" />
                       </button>
