@@ -41,6 +41,11 @@ import { PENDING_EVENT, SAVED_EVENT } from '../../hooks/useListeningSession';
 // before growing into the slot the others are clearing.
 const FILE_MS = 420;
 
+// Whether the picker offers a way to type a record in by hand. Off since
+// 2026-09-18 and the only thing holding the door: turn it on and the form is
+// back, unchanged. See the note beside the button, and MANUAL ENTRY in NOTES.
+const BY_HAND_OFFERED = false;
+
 // Long enough that typing an artist's name is one search rather than eight,
 // short enough that it never feels like waiting.
 const SETTLE_MS = 420;
@@ -401,16 +406,26 @@ export default function AlbumPicker({ onPick, onResume, inline = false }) {
           <div className="ses-under">
             {looking && <span className="ses-label">Looking…</span>}
             {nothing && <span className="ses-label">Nothing found for that.</span>}
-            {/* Offered from the start rather than only once a search has come
-                back empty: somebody who already knows the record is not on
-                Apple Music should not have to prove it first.
+            {/* The door to it is shut. Miyel, 2026-09-18: "let's remove the
+                manual entry button from the session, juuuust until I build it
+                correctly — I don't want people using it messed up. We'll keep
+                it to what currently works."
 
-                No arrow, and smaller than the rest of the quiet buttons
-                (Miyel, 2026-09-18). It is a way round the search rather than a
-                step onward from it, and an arrow says onward. */}
-            <button type="button" className="ses-quiet" onClick={() => setByHand(true)}>
-              Manual entry
-            </button>
+                Everything behind this still stands — the form, `byHand`, the
+                hand-typed tracklist it hands on to — and it is a word away
+                from being offered again. It is held rather than deleted
+                because what is wrong with it is the shape, not the code, and
+                nobody has said yet what the right shape is (MANUAL ENTRY in
+                NOTES).
+
+                What this costs, plainly: there is no way to log a record Apple
+                Music does not have. That is the trade she made, knowingly, for
+                not shipping a way in that does the wrong thing. */}
+            {BY_HAND_OFFERED && (
+              <button type="button" className="ses-quiet" onClick={() => setByHand(true)}>
+                Manual entry
+              </button>
+            )}
           </div>
 
           {results.length > 0 && (
