@@ -2578,9 +2578,12 @@ restructure: the three drawings of the beacon were made into one.
       that the tracklist will have to be typed in. That screen already existed
       ("No tracklist found for this record" → *Type them in*); what was missing
       was knowing before you started.
-- [x] **The long-press delete is the toolbar's trash over DELETE DRAFT?**, on a
-      red field over the cover and nothing else, with the name and the artist
-      left alone underneath. `.ses-tile-art` was not a positioning context, so
+- [x] **The long-press delete is the toolbar's trash over DELETE**, on a red
+      field over the cover and nothing else, with the name and the artist left
+      alone underneath. `SURE?` → `DELETE DRAFT?` → `DELETE` in one afternoon:
+      the middle one for being unambiguous and the last for being short, and
+      the glyph above is what lets it be both — it says what, so the word only
+      has to confirm it. `.ses-tile-art` was not a positioning context, so
       the field had been reaching past the cover onto the text — 174×214 over a
       174×174 cover. Wraps to two lines at 96px, which is a phone's three-across
       grid.
