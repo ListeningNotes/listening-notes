@@ -2554,13 +2554,19 @@ restructure: the three drawings of the beacon were made into one.
 - [x] **Idle, the small beacon shows nothing but the greyed cover.** No dot,
       no words. It says the listen is over before you have read anything.
 
-### No crosses anywhere
+### One cross, on the one screen that earns it
 
-- [x] **The × is off the session and off the picker.** "I don't have them
-      anywhere else on the site, and swiping down is intuitive since the screen
-      comes up." Both true: the entry, the inbox, a person's page and the send
-      form all close on the pull, and the listen was the one sheet carrying a
-      button as well.
+- [x] **The × is off the picker and back on the session.** Both in the same
+      evening, and both right. Off first — "I don't have them anywhere else on
+      the site, and swiping down is intuitive since the screen comes up" — and
+      then, after a look: "from beacon to session the swipe down feels too easy
+      to close, we should keep it gated behind an ×." The dividing line is not
+      which screen it is, it is what closing costs. A pull made by accident on
+      an entry costs you scrolling back; on a listen it ends the listen.
+- [x] **`byHand` on LayerEntry**, which refuses the downward pull rather than
+      making it longer or asking twice. A sheet that follows your finger and
+      springs back says you nearly closed it, which is its own kind of alarm.
+      One layer uses it.
 - [x] **`useBeforeLeaving`, in LayerEntry.** The pull could not close a listen
       safely on its own — a listen has to write its draft to the server first,
       and a write that fails has to leave the sheet exactly where it is, which
@@ -2568,11 +2574,10 @@ restructure: the three drawings of the beacon were made into one.
       a false answer stops the sheet. Nothing that does not register one is
       affected. Every way out goes through it: the pull, Escape, the back
       caret on a desk.
-- [x] **The standalone /session page keeps a way out.** Opened cold there is
-      no layer and no pull, so with the × gone there would have been none at
-      all. Its own downward swipe from the top of the page calls the same
-      `leave`, which writes the draft the same way. `useBeforeLeaving` returns
-      whether there is a layer, which is how the page knows not to do both.
+- [x] **The standalone /session page needed nothing in the end.** It had a
+      downward swipe for the few hours the × was gone — opened cold there is no
+      layer and so no pull, and it would have had no way out at all. The × is
+      back and serves both, so the swipe went with it.
 - [x] **The picker closes on the pull too**, from the top of the pane, at the
       layer's own thresholds (a fifth of the screen or a flick) rather than a
       second set of numbers for one gesture.

@@ -251,12 +251,38 @@ export default function SessionPage() {
   // button, and a write that fails has to stop the sheet going. That is what
   // this registers: the layer asks before it moves, and a false answer leaves
   // the listen exactly where it is with Trouble showing why.
-  const layered = useBeforeLeaving(async () => {
+  useBeforeLeaving(async () => {
     if (!s.saved && !(await s.saveDraft())) return false;
     try { localStorage.removeItem(PENDING_KEY); } catch { /* nothing to clear */ }
     saidSoAboutTheDesk();
     return true;
   });
+
+  // The × in the header, which is the only gesture that ends a listen — see
+  // the note beside it in SessionHeader. Everything it does is what the guard
+  // above does; what it adds is the going.
+  async function endListen() {
+    // Kept, always — not only when something has been written. A record you
+    // went and found is a record you meant to play, and losing the search
+    // because you closed the screen before typing a word is the one thing
+    // Miyel kept running into while testing (2026-09-18: "let's just let the
+    // drafts build"). Drafts are cleared in a press each; a lost search is an
+    // afternoon done twice.
+    //
+    // A draft that would not save keeps you here. The message is up, the
+    // listen is still on screen behind it, and nothing has been cleared — so
+    // pressing again after fixing whatever it was does the whole thing
+    // properly. Leaving anyway would have thrown away the one copy of the
+    // afternoon that is not on this device.
+    if (!s.saved && !(await s.saveDraft())) return;
+    try { localStorage.removeItem(PENDING_KEY); } catch { /* nothing to clear */ }
+    saidSoAboutTheDesk();
+    // Over the cross the sheet goes and the pane is underneath, already
+    // showing a beacon with no record in hand. Opened cold there is no cross,
+    // and the picker on this same page is where you land.
+    if (document.querySelector('.hn')) router.back();
+    else leave();
+  }
 
 
   // Back to the picker. Nothing is confirmed and nothing is lost: a listen with
@@ -306,9 +332,7 @@ export default function SessionPage() {
     // the stars are.
     if (e.target?.closest?.('[role="slider"]')) { swipe.current = null; return; }
     const t = e.touches[0];
-    // Where the page was when the finger landed: a pull down means leave only
-    // from the top, the same rule the sheet's own pull follows.
-    swipe.current = { x: t.clientX, y: t.clientY, top: window.scrollY <= 0 };
+    swipe.current = { x: t.clientX, y: t.clientY };
   }
   function swipeEnd(e) {
     const from = swipe.current;
@@ -317,14 +341,12 @@ export default function SessionPage() {
     const t = e.changedTouches[0];
     const dx = t.clientX - from.x;
     const dy = t.clientY - from.y;
-    // ── Down, out of a listen with no sheet around it ─────────────────────
-    // In the layer this is the layer's own job and doing it here as well
-    // would put the record down twice. Opened cold there is no layer and no
-    // pull, and since the × came off (2026-09-18) there would otherwise be no
-    // way out of the page at all — so the same gesture is honoured here, from
-    // the top of the screen, and `leave` writes the draft exactly as the
-    // sheet's own way out does.
-    if (!layered && from.top && dy > 80 && dy > Math.abs(dx) * 1.5) { leave(); return; }
+    // No pull to leave here either. It was added for the few hours the × was
+    // gone, when a page opened cold would otherwise have had no way out; the ×
+    // is back and it is the way out at both sizes. Down on a listen means what
+    // it means on every screen of one — nothing — and the reason is the reason
+    // the layer does not close on it: ending a listen is not a thing to do
+    // with a gesture you could make by accident.
     if (step === 1) return;   // the tracks screen has its own
     if (Math.abs(dx) < 56 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
     if (dx < 0) forward(); else goToStep(step - 1);
@@ -397,6 +419,7 @@ export default function SessionPage() {
                closing this lands on the drafts it was started from. `leave`
                is the answer when a session was opened cold at this address
                and there is no pane under it — endListen asks which. */
+            onEnd={endListen}
             hasWriting={s.hasWriting}
           />
 
