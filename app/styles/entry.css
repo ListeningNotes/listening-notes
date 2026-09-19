@@ -172,16 +172,28 @@
    The body slides up under a header that was never anywhere else. */
 .lay--rises.lay--over-journal {
   animation-name: layRiseTall;
-  /* The same 0.72s the aperture takes, so the body finishes arriving as the
-     record finishes opening. "Slowly", 2026-09-18. */
-  animation-duration: 0.72s;
+  /* The second half, and only the second half. It waits out the closing —
+     held off screen by `both` through the delay — and comes up as the record
+     opens: 650ms of nothing, then 650ms of rising, which is the same 1300 the
+     aperture takes. Miyel: "as the album opens (blink open) the new session
+     rises from the bottom. Timed together, intentional."
+     THE_TURN_MS in HomeNav.js is this number. */
+  animation-duration: 650ms;
+  animation-delay: 650ms;
+  animation-fill-mode: both;
 }
 @keyframes layRiseTall {
   from { transform: translateY(100dvh); }
   to   { transform: none; }
 }
+/* And the header holds still through that rise. `forwards` rather than
+   `both`, deliberately: with `both` it would take its start value during the
+   delay too, which cancels a translation the sheet has not begun — so the
+   header would sit at the top of the screen, alone and empty, for the whole
+   of the closing. With `forwards` it has no transform until the turn and
+   simply waits off screen with its sheet. */
 .lay--rises.lay--over-journal .ses-head {
-  animation: layHoldStill 0.72s cubic-bezier(0.22, 0.61, 0.36, 1);
+  animation: layHoldStill 650ms cubic-bezier(0.22, 0.61, 0.36, 1) 650ms forwards;
 }
 @keyframes layHoldStill {
   from { transform: translateY(-100dvh); }

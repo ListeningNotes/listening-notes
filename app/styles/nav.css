@@ -1105,6 +1105,22 @@
   to   { max-height: 200vh; opacity: 1; }
 }
 @media (prefers-reduced-motion: reduce) { .hn .ses-picker { animation: none; } }
+/* ── And leaves downward as the record closes ─────────────────────────────
+   "When the album art goes away (close in) the selections and drafts leave
+   the screen down." They used to be there and then not be, at the moment
+   `choosing` went false. They go the way they came now, over the first half
+   of the blink, so by the turn the screen is the bar and nothing else — which
+   is what makes the second half read as an arrival rather than a swap.
+   Down and out, not down and stopping: the fade is what stops it looking like
+   a list that has merely scrolled. */
+.hn--blinking .ses-picker {
+  animation: hnPickerLeave 650ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+@keyframes hnPickerLeave {
+  from { transform: none; opacity: 1; }
+  to   { transform: translateY(38vh); opacity: 0; }
+}
+@media (prefers-reduced-motion: reduce) { .hn--blinking .ses-picker { animation: none; } }
 /* No line across the top while a record is being chosen. The bar wears
    .hn-bar--scrolled the whole time the picker is open, and its hairline sat
    between the LN mark and the cover directly under it — two boxes with a rule
