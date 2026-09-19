@@ -186,41 +186,12 @@
   from { transform: translateY(100dvh); }
   to   { transform: none; }
 }
-/* And the header holds still through that rise. `forwards` rather than
-   `both`, deliberately: with `both` it would take its start value during the
-   delay too, which cancels a translation the sheet has not begun — so the
-   header would sit at the top of the screen, alone and empty, for the whole
-   of the closing. With `forwards` it has no transform until the turn and
-   simply waits off screen with its sheet. */
-.lay--rises.lay--over-journal .ses-head {
-  animation: layHoldStill 650ms cubic-bezier(0.22, 0.61, 0.36, 1) 650ms forwards;
-}
-@keyframes layHoldStill {
-  from { transform: translateY(-100dvh); }
-  to   { transform: none; }
-}
-/* ── And the lid opens on it ──────────────────────────────────────────────
-   The bar's mini closes over the first half of the blink and stays shut; this
-   opens over the second half. Two elements, one movement — the swap happens
-   while the lid is closed, so nothing has to line up and nothing is seen to
-   change hands. See hnBlink in nav.css for the other half. */
-/* The other half of the line — see hnLidShut in nav.css. The bar's beacon was
-   erased downward over the first half; this draws back upward over the second,
-   on layRiseTall's own curve, so the edge crossing the record and the top edge
-   of the sheet climbing the screen keep pace and reach the top together. A
-   record being drawn in by the same motion that is bringing the page it
-   belongs to. */
-.lay--rises.lay--over-journal .ses-head-beacon {
-  animation: layLidOpen 1300ms both;
-}
-@keyframes layLidOpen {
-  0%, 50% { clip-path: inset(100% 0 0 0); animation-timing-function: cubic-bezier(0.22, 0.61, 0.36, 1); }
-  100%    { clip-path: inset(0 0 0 0); }
-}
-@media (prefers-reduced-motion: reduce) {
-  .lay--rises.lay--over-journal .ses-head,
-  .lay--rises.lay--over-journal .ses-head-beacon { animation: none; }
-}
+/* The header no longer holds still, and there is no reveal on its record.
+   Both went on 2026-09-18 with the whole choreography: what is on screen when
+   you pick leaves by the floor as one surface, and the session comes up from
+   the same floor whole — its own header and its own record with it. See the
+   note above hnLeaveDown in nav.css. What is left here is a sheet that rises,
+   which is all it ever needed to be. */
 /* The listen rises from the foot of the screen, and it is the third answer
    here. It cross-faded, then it settled in from four per cent too big, and
    Miyel's verdict on both was the same: "I think the issue now is that I
