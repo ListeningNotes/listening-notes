@@ -2634,80 +2634,76 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   .hn:not([data-pane="1"]) .hn-lights { display: none; }
 }
 
-/* ═════════════════════════════════════════════════════════════════════════
-   EXPERIMENT — the record larger, the mark smaller, the past beside it
-   ─────────────────────────────────────────────────────────────────────────
+/* ── The record, its past beside it ───────────────────────────────────────
    Miyel, 2026-09-18: "larger album art, smaller LN logo, a little more space
    between the two (bring LN up), and the three previous listens in a vertical
    column to the right of the current log."
 
-   Behind .hn--beside and switched on with /?beside, the same way the last one
-   was, so the two can be looked at one after the other on a phone. Nothing
-   runs unless the class is on.
-
    The composition stops being a centred column and becomes a record with its
-   past standing beside it — which is the interesting part of this and the part
-   that has to be judged by eye rather than argued about. */
+   past standing beside it. main holds the shape this replaced — that is what
+   the branch is for — so there is nothing here holding both at once. */
 
 /* The mark, smaller and higher. --hn-crown is the block it stands at the
    bottom of, so shrinking the block raises the logo; shrinking the logo as
    well opens the air between it and the record, which is the "bring LN up"
    half of the ask. */
-.hn--beside .hn-crown-svg { height: 54px; }
-.hn--beside.hn { --hn-crown: clamp(104px, calc(var(--hn-h) * 0.19), 168px); }
+.hn-crown-svg { height: 54px; }
+.hn { --hn-crown: clamp(104px, calc(var(--hn-h) * 0.19), 168px); }
 
-/* Two columns and a row under them: the record and its past side by side,
-   the way in spanning both. A grid rather than a flex row because .ln-onward
-   is a third child of this screen and would otherwise become a third column. */
-.hn--beside .hn-pane--home .hn-screen {
+/* Two columns and a row under them: the record and its past side by side, the
+   way in spanning both. A grid rather than a flex row because .ln-onward is a
+   third child of this screen and would otherwise become a third column.
+
+   align-content: start because a grid's default is `stretch` and this screen
+   is taller than its contents — the rows were being grown to fill it, 362px of
+   row for 299px of record, which put 93px of nothing between the artist and
+   the way in where 30 was asked for. */
+.hn-pane--home .hn-screen {
   display: grid;
   grid-template-columns: auto auto;
   justify-content: center;
+  align-content: start;
   align-items: start;
   column-gap: 16px;
   row-gap: 30px;
-  /* The screen is taller than this content and a grid's default align-content
-     is `stretch`, so the two rows were being grown to fill it — 362px of row
-     for 299px of record, which put 93px of nothing between the artist and the
-     way in where 30 was asked for. `start` keeps the rows their own height and
-     lets the slack fall to the bottom, where it belongs. */
-  align-content: start;
-  /* The air the mark left behind, given to the gap above the record. */
+  /* The air the mark gave up, handed to the gap above the record. */
   padding-top: calc(var(--hn-square-top) + 22px);
 }
-.hn--beside .hn-pane--home .hp-dashboard { grid-column: 1; grid-row: 1; margin: 0; }
-.hn--beside .hn-pane--home .hp-recent-set { grid-column: 2; grid-row: 1; }
-.hn--beside .hn-pane--home .ln-onward { grid-column: 1 / -1; grid-row: 2; margin: 0 auto; }
-/* The card's own padding went with its panel — it is drawing no panel here,
-   so eighteen pixels of it under the artist was just a gap nobody asked for
-   between the record and the way in. */
-.hn--beside .hn-pane--home .hp-dashboard { padding: 0; }
+.hn-pane--home .hp-dashboard {
+  grid-column: 1;
+  grid-row: 1;
+  margin: 0;
+  /* No panel here, so none of a panel's padding either. */
+  padding: 0;
+}
+.hn-pane--home .hp-recent-set { grid-column: 2; grid-row: 1; }
+.hn-pane--home .ln-onward { grid-column: 1 / -1; grid-row: 2; margin: 0 auto; }
 
-/* The record, larger. 220 rather than 180 — which with a 48px column and a
-   16px gap comes to 284 inside the 307 a 375px screen has between its
-   gutters, so it is the biggest round number that still leaves air at the
-   edges. It is a max, not a width: a narrower phone gets a smaller record
-   rather than a horizontal scroll. */
-.hn--beside .beacon-art-wrap {
+/* The record, larger. A max and not a width: a narrower phone gets a smaller
+   record rather than a horizontal scroll. 220 with a 48px column and a 16px
+   gap comes to 284 inside the 307 a 375px screen has between its gutters. */
+.hn-pane--home .beacon-art-wrap {
   width: min(220px, calc(100vw - 150px));
   height: auto;
   aspect-ratio: 1;
 }
-.hn--beside .beacon-stage { height: auto; }
-.hn--beside .beacon-card--main { position: static; transform: none; }
-.hn--beside .beacon-card { gap: 20px; }
+/* The stage was a fixed 250px box with the card absolutely placed inside it,
+   which is the right shape for a card centred on a page and the wrong one for
+   a record that sets its own height. */
+.hn-pane--home .beacon-stage { height: auto; }
+.hn-pane--home .beacon-card--main { position: static; transform: none; }
+.hn-pane--home .beacon-card { gap: 20px; }
 
 /* And the past, stacked. Top-aligned with the record rather than centred
    against it: three covers hanging from the same line the record starts on
-   reads as a column beside it, where centring reads as two things that happen
+   read as a column beside it, where centring reads as two things that happen
    to be near each other. */
-.hn--beside .hp-recent { flex-direction: column; gap: 8px; }
-.hn--beside .hp-recent-set { align-items: flex-start; gap: 8px; }
+.hn-pane--home .hp-recent { flex-direction: column; gap: 8px; }
+.hn-pane--home .hp-recent-set { align-items: flex-start; gap: 8px; }
 /* The label has a 48px column to live in rather than the width of the screen,
    and at its usual size it broke as "BEFORE / THAT" — which reads as a
-   sentence that ran out of room rather than a label. Smaller and tighter so it
-   holds one line in the column it is labelling. */
-.hn--beside .hp-recent-head {
+   sentence that ran out of room rather than a label. */
+.hn-pane--home .hp-recent-head {
   font-size: 0.5rem;
   letter-spacing: 0.1em;
   text-align: left;
