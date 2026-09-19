@@ -1549,6 +1549,17 @@ Project → Settings → Environment Variables.
 
 ## Gotchas
 
+**Every `closest()` in the repo, audited 2026-09-18.** After the one below bit,
+all five were checked and the other four resolve correctly today:
+`slot.closest('.lay')` (HomeNav) asks the *target* whether it is in a sheet,
+which is a question about itself; `railRef.closest('.hn')` climbs from a
+component's own ref to its own root; `mine.closest('.sitenav-row')` in
+KeeperTools is deliberately optional and says so; `closest('section')` in
+MetadataLabel was verified against a live entry — both sticky labels resolve.
+The last two are the *same shape* as the bug and would fail the same silent
+way, but both degrade to doing nothing rather than losing something you would
+watch for.
+
 **Moving a control breaks whatever was measuring from it, 2026-09-18.** The
 beacon's shrink-into-the-bar stopped happening the moment the way-in moved out
 from under the artist, because the flight found the cover by walking *up* from
@@ -2665,6 +2676,17 @@ restructure: the three drawings of the beacon were made into one.
       height instead of 0.28, which is a logo 20px smaller on an SE and no
       change at all on anything taller. **The art is untouched at 180px**,
       which is what the brief asked to protect. Clears by 25px now.
+- [x] **The bar's beacon is tighter, and END? is smaller.** The boxes were not
+      actually overlapping — 12px of clearance, measured — but it read as a
+      collision anyway, because the title in that slot is usually *mid-marquee*
+      and a word cut off at both ends looks like text running into whatever is
+      beside it whether or not it is. What a clipped word needs is not a
+      hairline of clearance but visibly empty space to be clipped against.
+      `100% - 170px` resting (was 150) and `100% - 230px` while the word is up
+      (was 208); `END?` goes 17px → 15px. At 375px: the gap is **23px resting**
+      and **29px while asking**, up from 11 and 12 — and at rest "EUSEXUA
+      Afterglow" now *fits* its slot exactly, so it does not scroll at all
+      unless the question is up.
 - [x] **`ListeningBeacon` lost its `children`.** That was how the control got
       under the artist; nothing passes it now, so the prop and the two places
       it was drawn are gone. The component draws a record and nothing else.

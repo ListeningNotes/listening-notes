@@ -1235,21 +1235,32 @@
   left: 50%;
   top: calc(env(safe-area-inset-top, 0px) + 10px);
   transform: translateX(-50%);
-  max-width: calc(100% - 150px);
+  /* 170, not 150. The two corners this has to clear are not the same width —
+     the mark's 64 on the left against the lights' 48 on the right — and being
+     centred on the screen it has to clear the wider of them on both sides.
+     150 left eleven pixels between the mark and the cover on a 375px screen,
+     which is not a gap, it is a near miss. */
+  max-width: calc(100% - 170px);
   /* 150 is the two corners: the mark's 64 on the left and the lights' on the
      right, doubled because this is centred on the screen and has to clear the
      wider of them on both sides. Centred on the *screen* and not in the space
      between them, because the session's header centres its beacon the same way
      and the two have to land on each other. */
 }
-/* Once the mark has turned into END? the left corner is 92 wide instead of 64,
+/* Once the mark has turned into END? the left corner is wider than the mark's,
    and a record with a long enough name reached under it — measured 2026-09-18
    at 375px: the cover at x=75 against a word ending at 92, with the beacon
-   painting over the word because it is the positioned one. So the beacon gives
-   way, and only while the word is showing: this costs nothing at all the rest
-   of the time, and the only record it moves is one already at the cap. */
+   painting over the word because it is the positioned one.
+
+   Widened again the same evening, from 208. The boxes had stopped overlapping
+   and it still read as a collision, because the title in that slot is usually
+   *mid-marquee* — cut off at both ends, which looks like text running into the
+   thing beside it whether or not it is. Miyel: "make the width of the mini
+   beacon a little tighter, right now EUSEXUA Afterglow is too long and
+   collides with END?" What a clipped word needs is not a hairline of clearance
+   but visibly empty space to be clipped against. */
 .hn--choosing .ses-shut--sure ~ .hn-bar-beacon {
-  max-width: calc(100% - 208px);
+  max-width: calc(100% - 230px);
 }
 @media (min-width: 769px) {
   .hn-bar-beacon { top: calc(env(safe-area-inset-top, 0px) + 12px); }
