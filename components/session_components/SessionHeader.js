@@ -38,11 +38,15 @@
 // listen has, and a control that ends something should take a breath even
 // when it cannot lose anything.
 //
-// The word is **END & SAVE**, hers, and it is better than either word it
-// replaced. "Draft" and "Leave" described the two things this used to do
-// depending on whether anything had been written; it does one thing now, and
-// saying both halves of it out loud is what makes the second press safe to
-// make without thinking. Nothing is being decided — you are being told.
+// The word is **BACK TO DRAFTS**. It said END & SAVE for an hour, which was
+// true of what the control did then and stopped being true on 2026-09-18:
+// "this end and save is not correct — it needs to be like going back, going
+// back to the first home of a session." The × does not leave the session any
+// more. It puts the record down, which saves it, and lands on the picker the
+// session opened on, so the next record is one press away instead of a whole
+// journey back in. The word says where you are going rather than what is
+// being done to the record, because where you are going is the surprising
+// part.
 //
 // What did not come back is the condition. The listen is kept every time,
 // written on or not: a record you went and found is a record you meant to
@@ -142,8 +146,8 @@ export default function SessionHeader({
                 className="ses-shut-door"
                 onClick={() => setEnding(open => !open)}
                 aria-expanded={ending}
-                aria-label={ending ? 'Keep listening' : 'End this listen'}
-                title={ending ? 'Keep listening' : 'End this listen'}
+                aria-label={ending ? 'Keep listening' : 'Put this record down'}
+                title={ending ? 'Keep listening' : 'Put this record down'}
               >
                 <X size={18} weight="regular" aria-hidden="true" className="ses-shut-mark" />
               </button>
@@ -156,9 +160,9 @@ export default function SessionHeader({
                   onClick={onEnd}
                   tabIndex={ending ? 0 : -1}
                   aria-hidden={!ending}
-                  title="End this listen and keep it as a draft"
+                  title="Put this record down and go back to your drafts"
                 >
-                  End &amp; save
+                  Back to drafts
                 </button>
               </span>
             </div>

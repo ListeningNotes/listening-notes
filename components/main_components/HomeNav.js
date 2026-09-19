@@ -1406,28 +1406,20 @@ export default function HomeNav() {
                       <button
                         type="button"
                         className="ln-onward"
-                        onClick={event => {
-                          // ── Into the picker ─────────────────────────────
-                          // Miyel: "when you start a session the beacon
-                          // automatically becomes the mini — the art becomes
-                          // the beacon." So the record travels rather than the
-                          // card collapsing under one cover while another
-                          // appears in the bar. Same flight the picking uses,
-                          // pointed at the bar's slot instead of the
-                          // session's; the card folds away underneath it.
-                          const art = event.currentTarget
-                            .closest('.beacon-card')?.querySelector('img.beacon-art');
-                          const box = art?.getBoundingClientRect();
-                          // Taken now and held: see onTheBar above.
-                          setOnTheBar({ art: onAir, album: onAirAlbum, artist: onAirArtist });
-                          setChoosing(true);
-                          if (!box || !onAir) return;
-                          if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
-                          setLanding({
-                            art: onAir,
-                            from: { left: box.left, top: box.top, width: box.width, height: box.height },
-                            to: null, go: false, ms: TO_THE_BAR_MS, into: '.hn-bar-cover',
-                          });
+                        onClick={() => {
+                          // ── Straight into the session ───────────────────
+                          // The picker was drawn on this pane and the session
+                          // opened over it once a record was chosen, which is
+                          // the "three layers" Miyel kept feeling: "everything
+                          // from here should feel fluid, like going between
+                          // different states — I need it to not feel like it's
+                          // just another layer on top."
+                          // It is one layer now. The session opens on its own
+                          // picker, the record flies from the tile into the
+                          // session's own beacon, and the × in a listen lands
+                          // back on that picker. The pane's job ends at the
+                          // press.
+                          openSession();
                         }}
                       >
                         Start a listen

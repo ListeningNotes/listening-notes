@@ -201,7 +201,11 @@ export default function SessionPage() {
 
   // A saved draft travels whole, so the session can put the notes back without
   // a second round trip.
-  function resume(draft) {
+  // `from` is the box of the cover on the tile that was pressed, so a resumed
+  // draft flies into the header exactly as a searched record does. It was
+  // hardcoded null, which meant every draft opened with no movement at all —
+  // the same one-argument miss the cross had (2026-09-18).
+  function resume(draft, from = null) {
     pick({
       album: draft.album,
       artist: draft.artist || '',
@@ -215,7 +219,7 @@ export default function SessionPage() {
       // inbox does (migrations/015).
       submissionId: draft.submission_id ?? null,
       draft,
-    }, null);
+    }, from);
   }
 
   // ── Putting the record down ───────────────────────────────────────────────
@@ -371,7 +375,18 @@ export default function SessionPage() {
             track={s.tracks?.[s.openTrack]?.title || ''}
             step={step}
             onStep={goToStep}
-            onEnd={endListen}
+            /* ── Back to drafts, not out of the session ──────────────────
+               Miyel, 2026-09-18, and it is the reframe the whole thing was
+               missing: "the session is a new state… drafts is really the
+               landing starting page, and being in a session needs to take me
+               back to drafts. I'm tired of going in and then closing and
+               having to restart a listen. When you're in session you might be
+               listening to multiple albums."
+               So the × in a listen puts the record down and lands on the
+               picker — same sheet, other state — and it is the × on the
+               picker that leaves. `leave` already did exactly this and
+               nothing had ever called it from here. */
+            onEnd={leave}
             hasWriting={s.hasWriting}
           />
 
