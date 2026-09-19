@@ -2739,4 +2739,27 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
    190, which is still shorter than the record they stand beside, so the column
    never sets the height of the row. */
 .hn-pane--home .hp-recent-tile { width: 58px; height: 58px; border-radius: 12px; }
+
+/* ── And greyed, the way a finished log is ────────────────────────────────
+   The same filter the beacon's own cover wears when the listen is over —
+   .beacon-art--idle above, grayscale(80%) brightness(0.7) — so one rule reads
+   across the whole screen: colour is a record in hand, grey is a record put
+   down. These are all put down, which is what a column of them is.
+
+   The row's old 0.65 opacity goes with it. Faded *and* grey is two ways of
+   saying the same thing, and together they were quiet enough to be furniture.
+   Full strength and grey says past, not unimportant.
+
+   Colour comes back under a finger, because these are doors: the record you
+   are reaching for is the one you are about to be inside. */
+.hn-pane--home .hp-recent { opacity: 1; }
+.hn-pane--home .hp-recent-tile img {
+  filter: grayscale(80%) brightness(0.7);
+  transition: filter 0.3s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.hn-pane--home .hp-recent-tile:hover img,
+.hn-pane--home .hp-recent-tile:focus-visible img { filter: none; }
+@media (prefers-reduced-motion: reduce) {
+  .hn-pane--home .hp-recent-tile img { transition: none; }
+}
 .hn-pane--home .hp-recent-set { align-items: flex-start; gap: 8px; }
