@@ -2665,19 +2665,40 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   align-content: start;
   align-items: start;
   column-gap: 16px;
-  row-gap: 30px;
+  row-gap: 22px;
   /* The air the mark gave up, handed to the gap above the record. */
   padding-top: calc(var(--hn-square-top) + 22px);
 }
-.hn-pane--home .hp-dashboard {
-  grid-column: 1;
+/* ── The name is the screen's, not the record column's ────────────────────
+   Centred under the art it sat left of the middle of the screen, because the
+   art is one of two columns. Miyel, 2026-09-18: "the title should be centred
+   on screen, not under the art."
+
+   So the wrappers between the screen and the record stand down — dashboard,
+   cell, stage and card all become `display: contents` — and the cover and the
+   name become grid items of the screen itself. The cover keeps the first
+   column; the name takes a row of its own across both. None of the four is a
+   button or carries anything of its own to draw here, which is what makes
+   flattening them safe. */
+.hn-pane--home .hp-dashboard,
+.hn-pane--home .hp-dash-cell,
+.hn-pane--home .beacon-stage,
+.hn-pane--home .beacon-card { display: contents; }
+
+.hn-pane--home .beacon-art-wrap { grid-column: 1; grid-row: 1; }
+.hn-pane--home .hp-recent-set {
+  grid-column: 2;
   grid-row: 1;
-  margin: 0;
-  /* No panel here, so none of a panel's padding either. */
-  padding: 0;
+  /* Centred against the record's height rather than hung from its top line.
+     Top-aligned was right when the column was as tall as the art; at three
+     covers against 220px it left the column looking dropped in at the top. */
+  align-self: center;
 }
-.hn-pane--home .hp-recent-set { grid-column: 2; grid-row: 1; }
-.hn-pane--home .ln-onward { grid-column: 1 / -1; grid-row: 2; margin: 0 auto; }
+.hn-pane--home .beacon-meta { grid-column: 1 / -1; grid-row: 2; }
+.hn-pane--home .ln-onward { grid-column: 1 / -1; grid-row: 3; margin: 0 auto; }
+/* The empty beacon has neither a cover nor a name — it has one quiet line, and
+   it spans. */
+.hn-pane--home .beacon-quiet { grid-column: 1 / -1; grid-row: 1; }
 
 /* The record, larger. A max and not a width: a narrower phone gets a smaller
    record rather than a horizontal scroll. 220 with a 48px column and a 16px
@@ -2687,12 +2708,9 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   height: auto;
   aspect-ratio: 1;
 }
-/* The stage was a fixed 250px box with the card absolutely placed inside it,
-   which is the right shape for a card centred on a page and the wrong one for
-   a record that sets its own height. */
-.hn-pane--home .beacon-stage { height: auto; }
+/* The card was absolutely placed inside a fixed 250px stage. With the stage
+   gone as a box there is nothing for it to be placed against. */
 .hn-pane--home .beacon-card--main { position: static; transform: none; }
-.hn-pane--home .beacon-card { gap: 20px; }
 
 /* And the past, stacked. Top-aligned with the record rather than centred
    against it: three covers hanging from the same line the record starts on
@@ -2700,12 +2718,3 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
    to be near each other. */
 .hn-pane--home .hp-recent { flex-direction: column; gap: 8px; }
 .hn-pane--home .hp-recent-set { align-items: flex-start; gap: 8px; }
-/* The label has a 48px column to live in rather than the width of the screen,
-   and at its usual size it broke as "BEFORE / THAT" — which reads as a
-   sentence that ran out of room rather than a label. */
-.hn-pane--home .hp-recent-head {
-  font-size: 0.5rem;
-  letter-spacing: 0.1em;
-  text-align: left;
-  white-space: nowrap;
-}
