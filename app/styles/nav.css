@@ -1192,22 +1192,11 @@
   height: calc(env(safe-area-inset-top, 0px) + 68px);
   padding-top: env(safe-area-inset-top, 0px);
 }
-/* The way into a listen sits under the recents, about 26px below the BEFORE
-   THAT line (Miyel's brief, 2026-09-18). Centred on the floor rather than on
-   the row, because the row is not always there: a copy with nothing logged
-   yet has no recents and this is still the way in.
-
-   `margin-top` and not a gap on the floor, so removing the recents removes
-   their spacing with them and the control does not end up marooned. */
-.hn-pane--home .ln-onward {
-  /* 26px below the BEFORE THAT row, of which the screen's own column gap
-     (.hn-screen, 20px) already gives twenty — so six here, and the comment is
-     the only thing tying the two numbers together. The brief's number is the
-     gap between the two boxes; the space you actually see is larger by the
-     clearance this control's 44px thumb target keeps above its own type. */
-  margin: 6px auto 0;
-  display: flex;
-}
+/* `.hn-pane--home .ln-onward` stood here with its own margin and a comment
+   about sitting 26px under the BEFORE THAT row. Both went on 2026-09-19: the
+   row it measured from has been a column beside the record since the 18th,
+   and every declaration it made is now made again, correctly, at the end of
+   this file beside the calling card it has to line up with. */
 
 /* ── A short phone ────────────────────────────────────────────────────────
    There was a block here that tightened the gaps and shrank the crown below
@@ -2727,13 +2716,35 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
    beacon"). The row gap above it is the screen's 22; this is the rest, and it
    is on the control rather than in the gap because the gap is also what holds
    the name off the cover, which wants to stay where it is. */
-.hn-pane--home .ln-onward {
+/* The child combinator matters: the calling card's own two words wear
+   `.ln-onward` as well, and they are inside it rather than in this grid. The
+   way in is the grid's own child, and this is only ever about the way in. */
+.hn-pane--home .hn-screen > .ln-onward {
   grid-column: 1 / -1;
   grid-row: 3;
-  /* 38 on a phone the size of hers, less on a short one. At 667 the record,
-     the crown and this were between them leaving eight pixels above the down
-     caret, which is not clearance, it is a coincidence. */
-  margin: clamp(16px, calc(var(--hn-h) * 0.047), 38px) auto 0;
+  /* ── The same hairline, and in the same place ──────────────────────────
+     Miyel, 2026-09-19: "we should do the hairline above start a listen as
+     well." The two versions of this slot are one shape at two contents —
+     the keeper gets a way in, a visitor gets whose journal this is — and a
+     rule over one of them and not the other makes them two different
+     floors to anybody who has seen both.
+
+     Which is why the spacing is copied from `.calling` rather than kept:
+     same row, same margin above the line, so the line lands on the same
+     pixel whoever is looking. The 38 this used to take was the way in
+     hanging further from the record, and the line does that job now — the
+     words sit lower than they did, below a rule instead of below air.
+
+     Full width for the same reason the calling card is: the line runs the
+     record's left edge to the right edge of the past column, and a rule
+     only as wide as two words would be an underline for them. The words
+     stay centred, because .ln-onward already centres its own contents. */
+  display: flex;
+  width: 100%;
+  max-width: min(100%, calc(100vw - 48px));
+  margin: clamp(12px, calc(var(--hn-h) * 0.032), 26px) auto 0;
+  border-top: 1px solid var(--border);
+  padding-top: clamp(14px, calc(var(--hn-h) * 0.026), 22px);
 }
 /* The visitor's answer stands in the keeper's slot — same row, same column
    span, and never on screen at the same time as it. Its own margin because it
@@ -2754,6 +2765,22 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   width: 100%;
   max-width: min(100%, calc(100vw - 48px));
   margin: clamp(12px, calc(var(--hn-h) * 0.032), 26px) auto 0;
+  /* ── A hairline above it ───────────────────────────────────────────────
+     From Miyel's own mock-up of this floor, f6, drawn 2026-09-17. The row
+     was arrived at independently two days later — the same two glyphs in
+     the same order — and this line was the one thing it was missing.
+
+     It is the only rule on this floor and it earns that by separating two
+     subjects rather than decorating one: above it is the record, below it
+     is the person whose record it is. Which is also why it is not a box.
+     It divides where an outline would enclose, and nothing on this floor
+     is enclosed.
+
+     A border rather than a child, because the row already spans exactly the
+     width the line wants: the record's left edge to the right edge of the
+     past column. */
+  border-top: 1px solid var(--border);
+  padding-top: clamp(14px, calc(var(--hn-h) * 0.026), 22px);
 }
 /* The empty beacon has neither a cover nor a name — it has one quiet line, and
    it spans. */
@@ -2809,6 +2836,48 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   .hn-pane--home .hp-recent-tile img { transition: none; }
 }
 .hn-pane--home .hp-recent-set { align-items: flex-start; gap: 8px; }
+
+/* ── The note in the middle of the rule ────────────────────────────────────
+   Miyel, 2026-09-19: "maybe there can be a music note in the middle of the
+   hairline that breaks it into two centred — that way there's a glyph but
+   not next to the text." Which is the whole argument for it and against
+   where the last one was: a mark beside a word is a second voice saying the
+   same thing, and a mark *in* the rule is the rule having a middle.
+
+   ♪ and not a drawn icon. It is already this site's stand-in for a record
+   with no cover — the empty beacon and an unanswering tile both wear it —
+   so the floor is not being taught a new character.
+
+   No gap is cut in the border; the note simply sits on it, on a patch of the
+   page's own colour, which is the oldest trick there is and the only one
+   that keeps the line a border. It works because everything from the cross
+   down to this row is transparent: the colour behind the note is `--bg`
+   itself, in either theme, and never a panel that would show as a patch.
+
+   Both slots wear it, because both wear the rule — the keeper's way in and a
+   visitor's calling card are one shape at two contents. */
+.hn-pane--home .calling,
+.hn-pane--home .hn-screen > .ln-onward { position: relative; }
+.hn-pane--home .calling::before,
+.hn-pane--home .hn-screen > .ln-onward::before {
+  content: '\266A';
+  position: absolute;
+  top: 0;
+  left: 50%;
+  /* Half its own width to the left and half its own height up, so it is
+     centred on the line however wide the character turns out to be — a
+     phone that substitutes its own font for this one moves nothing. */
+  transform: translate(-50%, -50%);
+  padding: 0 11px;
+  background: var(--bg);
+  color: var(--ink-faint);
+  font-size: 13px;
+  line-height: 1;
+  /* It is a mark on a rule, not a control: a thumb aiming at Start a listen
+     must not land on it, and a screen reader has no use for it. */
+  pointer-events: none;
+}
+
 
 /* ── The picker gets the whole screen back ─────────────────────────────────
    Everything above this comment describes a floor with a record and its past

@@ -70,7 +70,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ArrowsLeftRight, PlayCircle, X } from '@phosphor-icons/react';
+import { ArrowsLeftRight, X } from '@phosphor-icons/react';
 import { CAPTION, announce, useListeningBeacon } from '../../hooks/useListeningBeacon';
 import MarqueeTitle from './MarqueeTitle';
 import { useSpineWidth } from '../../hooks/useSpineWidth';
@@ -1669,7 +1669,11 @@ export default function HomeNav() {
   //
   // Full ink where LAST LOGGED and BEFORE THAT are muted, which is the whole
   // of what makes it read as the one thing here you can press rather than a
-  // third caption. The arrow goes; the glyph does that job.
+  // third caption. The arrow went that day and the glyph did that job in its
+  // place; the glyph went too on 2026-09-19 ("no glyph for now"), once there
+  // was a hairline over the line. A rule above it is a stronger statement
+  // that this is a thing and not more writing than a mark beside it was, and
+  // the two say the same thing twice.
   //
   // Both states live here, because they are one control: a record in hand and
   // it is the way back to it, nothing in hand and it opens the picker. Leaving
@@ -1677,7 +1681,6 @@ export default function HomeNav() {
   // wearing different clothes for the same job.
   const theWayIn = authed && (inHand ? (
     <Link href="/session" className="ln-onward" title={`Back to ${inHand.album}`}>
-      <PlayCircle size={17} weight="regular" aria-hidden="true" />
       Back to the listen
     </Link>
   ) : (
@@ -1755,7 +1758,6 @@ export default function HomeNav() {
           });
         }}
     >
-      <PlayCircle size={17} weight="regular" aria-hidden="true" />
       Start a listen
     </button>
   ));

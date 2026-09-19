@@ -977,6 +977,40 @@ a.pp-name:hover svg { color: var(--ink); }
   font-family: var(--font-sans); font-size: 14px;
 }
 .bk-field:focus { outline: none; border-color: var(--ink-faint); }
+/* ── An address that came home in a link ────────────────────────────────────
+   Somebody pressed Add on another journal and was sent back here carrying its
+   address. Offered rather than filed (Miyel, 2026-09-19: "confirm before
+   filing"), so it is a question with a press on each side of it and not a
+   line reporting something that already happened.
+
+   A panel rather than a line, because it is the one thing on this screen that
+   wants answering: the field under it can wait, and the list below it is not
+   going anywhere. It sits above the field for the same reason. */
+.bk-offer {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 14px;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: var(--panel);
+}
+.bk-offer-said {
+  margin: 0;
+  font-size: 14px; line-height: 1.5;
+  color: var(--ink-soft);
+}
+/* The address itself in full ink, because it is the fact being checked. This
+   is the one place a journal's address is printed on purpose — everywhere
+   else a row is a face and a name (see the note at the top of the book). */
+.bk-offer-said strong {
+  color: var(--ink);
+  font-weight: var(--font-display-weight);
+  overflow-wrap: anywhere;
+}
+.bk-offer-acts { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+
 .bk-said {
   font-family: var(--font-label); font-size: 10px; letter-spacing: 0.1em;
   text-transform: uppercase; color: var(--ink-faint); margin: 8px 0 0; min-height: 14px;
