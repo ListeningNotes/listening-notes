@@ -559,7 +559,7 @@
      text-transform on form controls in their own stylesheet, so the row's
      `uppercase` was reaching this or not depending on whose browser it was.
      Said here outright so it is the same everywhere. */
-  font-size: 17px; line-height: 20px; letter-spacing: 0.1em;
+  font-size: 15px; line-height: 20px; letter-spacing: 0.1em;
   text-transform: uppercase;
   /* The mark's own colour, not ink. It was full ink for an hour and at 17px
      that is a heavy word in the corner of a screen you are choosing a record
