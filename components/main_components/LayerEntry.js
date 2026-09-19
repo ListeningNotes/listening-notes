@@ -565,8 +565,10 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
       // keyboard, and that is true whatever the viewport says.
       // And not off the stars, for the reason the track screen gives: a drag
       // that begins on a rating belongs to the rating. A diagonal one would
-      // otherwise start closing the sheet under it.
-      if (event.target?.closest?.('[role="slider"]')) { pull = null; return; }
+      // otherwise start closing the sheet under it. `data-slide` is the same
+      // claim made by something that cannot call itself a slider — the track
+      // strip, which is slid along to move through a record.
+      if (event.target?.closest?.('[role="slider"], [data-slide]')) { pull = null; return; }
       const writing = document.activeElement;
       const intoText = writing && (
         writing.tagName === 'TEXTAREA'

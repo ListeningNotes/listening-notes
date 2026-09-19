@@ -59,6 +59,11 @@
 @keyframes sesStepFade { from { opacity: 0; } to { opacity: 1; } }
 .ses-turn { animation: sesStepFwd 0.3s cubic-bezier(0.22, 0.61, 0.36, 1) both; }
 .ses-turn--back { animation-name: sesStepBack; }
+/* Arriving under a finger that is still moving. The card is keyed on the
+   track, so sliding along the strip remounts it once per column — and a dozen
+   300ms slides fired milliseconds apart is a strobe rather than a movement.
+   See Strip in steps/TrackNotes.js. */
+.ses-turn--still { animation: none; }
 @keyframes sesStepFwd  { from { opacity: 0; transform: translateX(28px); }  to { opacity: 1; transform: none; } }
 @keyframes sesStepBack { from { opacity: 0; transform: translateX(-28px); } to { opacity: 1; transform: none; } }
 
@@ -720,7 +725,11 @@
    rotated down-left so its end points at the bar it belongs to. */
 /* Room on the left for the first title, which leans out past its own
    column the way every rotated label does. */
-.ses-strip { display: flex; gap: 3px; margin: 14px 0 22px; padding-left: 26px; }
+/* touch-action so the browser does not pan the page out from under a finger
+   travelling along this — the same thing the star row does, and for the same
+   reason. It only stops the *browser*; the session's own swipe handlers still
+   fire, which is what data-slide is for. */
+.ses-strip { display: flex; gap: 3px; margin: 14px 0 22px; padding-left: 26px; touch-action: none; }
 /* When the browser scrolls a focused field into view inside the layer, it
    lands under the header without this. */
 .lay--scrolls { scroll-padding-top: 120px; }

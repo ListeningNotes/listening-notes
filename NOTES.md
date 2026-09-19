@@ -2595,6 +2595,33 @@ restructure: the three drawings of the beacon were made into one.
 - [x] **Idle, the small beacon shows nothing but the greyed cover.** No dot,
       no words. It says the listen is over before you have read anything.
 
+### Sliding through a record
+
+- [x] **The strip is slid along, not only tapped.** Press it and drag, and the
+      track under your finger is the one on screen — note, stars and heart
+      following. Miyel, 2026-09-18: "smooth scrolling across the track horizon
+      builder, to scroll through tracks the same way you can lock and scroll
+      through stars, without switching screens." It is the answer to long
+      tracklists as well: at fourteen tracks a column is a few pixels wide and
+      a finger is not, so sliding beats aiming.
+- [x] **The same guard the stars have.** A drag that begins on the strip is the
+      strip's: it must not also turn the page or pull the sheet down. The stars
+      say that with `role="slider"`; a tablist cannot claim to be one, so the
+      strip says it with `data-slide`, and both guards — the session's swipe
+      and the layer's pull — now honour either.
+- [x] **The card does not play its turn while a finger is moving.** It is keyed
+      on the track, so sliding remounts it once per column, and a dozen 300ms
+      slides milliseconds apart is a strobe rather than a movement.
+      `.ses-turn--still` for the length of the drag.
+- [x] **Overshooting either end stays on the record.** Past the last column is
+      the last track, not the album notes. Leaving the list is what the carets
+      and the swipe are for; a gesture that overshoots is not a decision.
+- [x] **Columns are measured at the press**, not worked out from the geometry —
+      the strip has a 26px indent, a 3px gap and `flex: 1` columns, and the
+      arithmetic would be three numbers kept in step with a stylesheet by hand.
+      Rects give the gaps for free: a finger between two columns is inside
+      neither, and whatever was open stays open rather than flickering.
+
 ### One cross, on the picker and nowhere else
 
 - [x] **Manual entry takes a cover, and says what it will cost.** A record
