@@ -1017,6 +1017,14 @@
   overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .ses-hand { display: flex; flex-direction: column; gap: 16px; max-width: 440px; }
+/* What typing a record in by hand costs you, said on the form rather than on
+   the screen after it. Prose and not a label: it is a sentence to read once,
+   and the uppercase label face is for naming fields. */
+.ses-hand-note {
+  margin: -4px 0 0;
+  font-size: 13px; line-height: 1.5;
+  color: var(--ink-soft);
+}
 
 /* ── A draft is the same tile a search result is ──────────────────────────
    .ses-drafts, .ses-draft, .ses-draft-open, .ses-draft-art, .ses-draft-album,
@@ -1062,6 +1070,12 @@
   font-family: var(--font-label); font-size: 10px;
   letter-spacing: 0.16em; text-transform: uppercase;
   border-radius: inherit;
+  /* DELETE DRAFT? rather than SURE? from 2026-09-18 — "so it's unambiguous."
+     Thirteen characters at this size is wider than a cover is on a phone,
+     where the grid is three across, so it wraps and is centred rather than
+     being cut off or forcing the tile wider. */
+  padding: 0 6px;
+  text-align: center; line-height: 1.35; text-wrap: balance;
 }
 .ses-tile-open {
   display: flex; flex-direction: column; gap: 2px; min-width: 0; width: 100%;

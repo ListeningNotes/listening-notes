@@ -76,7 +76,7 @@ export default function AlbumPicker({ onPick, onResume, inline = false }) {
   const [looking, setLooking]   = useState(false);
   const [asked, setAsked]       = useState(false);   // a search has come back
   const [byHand, setByHand]     = useState(false);
-  const [hand, setHand]         = useState({ album: '', artist: '', year: '' });
+  const [hand, setHand]         = useState({ album: '', artist: '', year: '', art: '' });
 
   // Listens saved and walked away from, newest first.
   const [drafts, setDrafts]                 = useState([]);
@@ -137,6 +137,27 @@ export default function AlbumPicker({ onPick, onResume, inline = false }) {
     window.addEventListener(PENDING_EVENT, ask);
     return () => { alive = false; window.removeEventListener(PENDING_EVENT, ask); };
   }, []);
+
+  // ── Anywhere else is the no ──────────────────────────────────────────────
+  // Miyel, 2026-09-18: "clicking away anywhere on the screen should cancel
+  // it." Pressing another tile already did — the tile's own handler treats a
+  // press while something else is armed as the answer no — but that left the
+  // rest of the screen dead, and a question you can only answer by finding one
+  // of two right places to press is a question that has taken the screen
+  // hostage.
+  //
+  // In the capture phase, so the state is already clear by the time the press
+  // reaches whatever it landed on. The armed tile itself is the exception: a
+  // press there is the yes, and it has to reach its own handler intact.
+  useEffect(() => {
+    if (confirmDiscard === null) return undefined;
+    const away = event => {
+      if (event.target?.closest?.('.ses-tile--armed')) return;
+      setConfirmDiscard(null);
+    };
+    document.addEventListener('pointerdown', away, true);
+    return () => document.removeEventListener('pointerdown', away, true);
+  }, [confirmDiscard]);
 
   // ── The grid files across ────────────────────────────────────────────────
   // Miyel, 2026-09-18: "a new draft files all drafts across the screen and the
@@ -241,7 +262,7 @@ export default function AlbumPicker({ onPick, onResume, inline = false }) {
       album: hand.album.trim(),
       artist: hand.artist.trim(),
       year: hand.year.trim(),
-      artUrl: '',
+      artUrl: hand.art.trim(),
       collectionId: null,
       genre: '',
       entryType: '',
@@ -283,6 +304,38 @@ export default function AlbumPicker({ onPick, onResume, inline = false }) {
             <span className="ses-label">Year</span>
             <input className="ses-input" value={hand.year} onChange={e => setHand(h => ({ ...h, year: e.target.value }))} />
           </label>
+          {/* ── The cover, since nowhere is going to hand us one ─────────────
+              A record typed in by hand is a record Apple Music does not have —
+              a small press, a Bandcamp release, a tape (Miyel, 2026-09-18:
+              "this is for smaller indie projects, or maybe albums not on
+              iTunes"). Every other record on this site arrives with its cover
+              attached; this is the one that has to be told where to find one.
+
+              Not required. A listen has had no requirements since this morning
+              and this is not the place to bring one back — a beacon with no
+              cover draws its own quiet square, and it can be filled in later
+              from the entry. But it is asked for here rather than left to be
+              discovered, because the blank square is the first thing you see
+              and the link is easiest to fetch while you are already looking at
+              the record's page. */}
+          <label className="ses-field">
+            <span className="ses-label">Album art</span>
+            <input
+              className="ses-input"
+              type="url"
+              inputMode="url"
+              placeholder="Link to a cover image"
+              value={hand.art}
+              onChange={e => setHand(h => ({ ...h, art: e.target.value }))}
+            />
+          </label>
+          {/* What is different about this way in, said before you take it
+              rather than found out on the next screen. */}
+          <p className="ses-hand-note">
+            Nowhere has this record, so nothing can be looked up for it. You
+            will be asked to type the tracklist in yourself, one title a line,
+            on the screen after this.
+          </p>
           <div className="ses-actions">
             <button type="button" className="ses-btn ses-btn--primary" onClick={takeByHand} disabled={!hand.album.trim() || !hand.artist.trim()}>
               Start listening →
@@ -427,7 +480,7 @@ export default function AlbumPicker({ onPick, onResume, inline = false }) {
                         {armed && (
                           <span className="ses-tile-sure">
                             <Trash size={20} weight="fill" aria-hidden="true" />
-                            Sure?
+                            Delete draft?
                           </span>
                         )}
                       </span>
