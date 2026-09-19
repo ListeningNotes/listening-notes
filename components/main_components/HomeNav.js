@@ -172,7 +172,7 @@ const THE_TURN_MS = BLINK_MS / 2;
 // The body's rise, which is the second half and nothing else: it waits out
 // the closing, then comes up as the record opens. entry.css carries the same
 // number as a delay and a duration on .lay--over-journal.
-const RISE_MS = THE_TURN_MS;
+const RISE_MS = 620;
 
 // ── And the way back down ─────────────────────────────────────────────────
 // A listen becomes an entry, the layer closes, and the record falls out of
@@ -529,12 +529,13 @@ export default function HomeNav() {
     // detaching from a row and sailing up is a fourth thing happening on top
     // of a session arriving and a picker folding away.
     //
-    // The lid closes on this beacon and opens on the session's, which is
-    // already in place because the session's header does not rise with its
-    // sheet (layHoldStill / layLidOpen in entry.css). Nothing is swapped here
-    // — the hand-over happens while the lid is shut, and the bar's mini goes
-    // with the picker a beat later without ever being seen to open again.
-    setBlinking(true);
+    // ── The least that is still a change ────────────────────────────────
+    // The record in the bar becomes the one just pressed, and the session
+    // comes up over the picker it was pressed in. Two things, and only one of
+    // them moves. Miyel, 2026-09-18, on the version where the whole screen
+    // left by the floor first: "it looks like too much motion. It's too
+    // dramatic."
+    setOnTheBar({ art: record.artUrl, album: record.album, artist: record.artist });
     router.push('/session');
     // And the picker folds away once the sheet is over it — unseen, which is
     // the point. Doing it now would empty the screen behind a sheet that has
@@ -552,7 +553,7 @@ export default function HomeNav() {
     // collapsed — so holding it to the end of the blink is what makes the
     // screen blank for the whole of the second half. The pane comes back
     // behind a session that is already covering it.
-    flightTimers.current.push(setTimeout(() => { setChoosing(false); setBlinking(false); }, BLINK_MS + 80));
+    flightTimers.current.push(setTimeout(() => { setChoosing(false); setBlinking(false); }, RISE_MS + 120));
   }, [openSession, router]);
 
   // The journey: out of the picker and into the bar's slot, which is the

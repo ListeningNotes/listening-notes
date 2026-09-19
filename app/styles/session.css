@@ -867,32 +867,31 @@
 }
 .ses-hand { display: flex; flex-direction: column; gap: 16px; max-width: 440px; }
 
-.ses-drafts { display: flex; flex-direction: column; gap: 8px; margin-top: 30px; }
-.ses-drafts .ses-label { margin-bottom: 4px; }
-.ses-draft {
-  display: flex; align-items: center; gap: 12px; padding: 8px;
-  border-radius: 14px; background: var(--panel); border: 1px solid var(--border);
+/* ── A draft is the same tile a search result is ──────────────────────────
+   .ses-drafts, .ses-draft, .ses-draft-open, .ses-draft-art, .ses-draft-album,
+   .ses-draft-meta and .ses-draft-x all went on 2026-09-18: a list beside a
+   grid was two shapes for one act, and a draft now draws as .ses-tile like
+   everything else. What is left is the one thing a draft has that a record
+   has not — a way to throw it away — and it lives on the art so the tile
+   measures the same. See the note in AlbumPicker.js. */
+.ses-tile--draft { position: relative; }
+.ses-tile-open {
+  display: flex; flex-direction: column; gap: 2px; min-width: 0; width: 100%;
+  background: none; border: none; padding: 0; text-align: left; cursor: pointer;
+  color: inherit;
 }
-.ses-draft-open {
-  flex: 1; min-width: 0; display: flex; align-items: center; gap: 12px;
-  background: none; border: none; padding: 0; cursor: pointer; text-align: left; color: inherit;
-}
-.ses-draft-art {
-  width: 42px; height: 42px; border-radius: 9px; object-fit: cover; flex-shrink: 0;
-  background: var(--border); display: block;
-}
-.ses-draft-album {
-  display: block; font-weight: 600; font-size: 14px; color: var(--ink);
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-}
-.ses-draft-meta {
-  display: block; font-family: var(--font-label); font-size: 10px; color: var(--ink-soft);
-  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; margin-top: 2px;
-}
-.ses-draft-x {
-  flex-shrink: 0; height: 24px; min-width: 24px; padding: 0 8px; border-radius: 999px;
-  border: none; background: var(--border); color: var(--ink-soft); cursor: pointer;
+/* On the art, top right, and small. A tile is mostly album art and the only
+   thing that may sit on somebody's artwork is the one control that is about
+   the tile rather than about the record. */
+.ses-tile-x {
+  position: absolute; top: 6px; right: 6px; z-index: 2;
+  height: 22px; min-width: 22px; padding: 0 7px; border-radius: 999px;
+  border: none; cursor: pointer;
+  background: color-mix(in srgb, var(--bg) 82%, transparent);
+  backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+  color: var(--ink-soft);
   font-family: var(--font-label); font-size: 10px; letter-spacing: 0.06em; line-height: 1;
   transition: background 0.15s, color 0.15s;
 }
-.ses-draft-x--sure { background: var(--ink); color: var(--bg); padding: 0 12px; }
+.ses-tile-x:hover { color: var(--ink); }
+.ses-tile-x--sure { background: var(--ink); color: var(--bg); padding: 0 10px; }

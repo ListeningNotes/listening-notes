@@ -172,15 +172,12 @@
    The body slides up under a header that was never anywhere else. */
 .lay--rises.lay--over-journal {
   animation-name: layRiseTall;
-  /* The second half, and only the second half. It waits out the closing —
-     held off screen by `both` through the delay — and comes up as the record
-     opens: 650ms of nothing, then 650ms of rising, which is the same 1300 the
-     aperture takes. Miyel: "as the album opens (blink open) the new session
-     rises from the bottom. Timed together, intentional."
-     THE_TURN_MS in HomeNav.js is this number. */
-  animation-duration: 650ms;
-  animation-delay: 650ms;
-  animation-fill-mode: both;
+  /* Straight away, and once. It waited out a whole first half while the
+     screen emptied itself downward, which is the motion Miyel took off on
+     2026-09-18 — "too much motion, too dramatic". There is nothing to wait
+     for now: the record in the bar becomes the one you pressed and the sheet
+     comes up over the picker. */
+  animation-duration: 620ms;
 }
 @keyframes layRiseTall {
   from { transform: translateY(100dvh); }

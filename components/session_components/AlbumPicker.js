@@ -35,7 +35,6 @@ import { useEffect, useRef, useState } from 'react';
 import { MagnifyingGlass } from '@phosphor-icons/react';
 import SiteNav from '../main_components/SiteNav';
 import { searchAlbums } from '../../library/music_data_api';
-import { SESSION_STEPS } from '../../hooks/useListeningSession';
 
 // Long enough that typing an artist's name is one search rather than eight,
 // short enough that it never feels like waiting.
@@ -252,56 +251,60 @@ export default function AlbumPicker({ onPick, onResume, inline = false }) {
           )}
 
           {drafts.length > 0 && !typed.trim() && (
-            <div className="ses-drafts">
-              {/* "Drafts", Miyel 2026-09-18. Unfinished described them
-                  accurately and named them as a state of failure; a draft is
-                  a thing you have, and it is the word the rest of the
-                  software already uses — the table, the route, the button
-                  that makes one. */}
-              <span className="ses-label">Drafts</span>
-              {drafts.map(draft => {
-                const at = Math.min(draft.step || 0, SESSION_STEPS.length - 1);
-                return (
-                  <div key={draft.id} className="ses-draft">
-                    {/* The cover's own box travels with it, exactly as a
-                        search result's does in `take` above. It did not until
-                        2026-09-18, so resuming a draft had no `from` and
-                        `beginListen` took its no-flight branch: the session
-                        simply appeared, with the record already in the header
-                        and nothing having moved. Miyel: "choosing from draft
-                        OR starting new, it's not working." Half of that was
-                        this, and it was one missing argument. */}
-                    <button
-                      type="button"
-                      className="ses-draft-open"
-                      onClick={e => {
-                        const img = e.currentTarget.querySelector('img');
-                        onResume(draft, img ? img.getBoundingClientRect() : null);
-                      }}
-                    >
-                      {draft.album_art
-                        ? <img src={draft.album_art} alt="" className="ses-draft-art" />
-                        : <span className="ses-draft-art" aria-hidden="true" />}
-                      <span style={{ minWidth: 0 }}>
-                        <span className="ses-draft-album">{draft.album}</span>
-                        <span className="ses-draft-meta">
-                          {draft.artist} · {SESSION_STEPS[at]} · {sinceLabel(draft.updated_at)}
-                        </span>
-                      </span>
-                    </button>
-                    <button
-                      type="button"
-                      className={`ses-draft-x${confirmDiscard === draft.id ? ' ses-draft-x--sure' : ''}`}
-                      onClick={() => discardDraft(draft.id)}
-                      onBlur={() => setConfirmDiscard(c => (c === draft.id ? null : c))}
-                      title="Discard this draft"
-                      aria-label="Discard this draft"
-                    >
-                      {confirmDiscard === draft.id ? 'discard?' : '×'}
-                    </button>
-                  </div>
-                );
-              })}
+            /* ── Drafts, as the same squares a search gives ────────────────
+               They were rows — a small cover, a name, and the step they were
+               left on — under a heading, beside a grid of album art. Two
+               shapes for one act. Miyel, 2026-09-18: "making the drafts and
+               the album search look the same. Instead of a list and a grid,
+               they should all be a grid… so that when I search something, it
+               doesn't really change the motion that needs to happen between a
+               draft and choosing a fresh album."
+
+               So a draft is a tile, and it is the same tile: the same art, the
+               same name, the same second line. Where a search result says the
+               year, a draft says how long ago it was — "I do like them saying
+               when the last time you worked on them is" — which is the one
+               thing a draft has that a record has not, put where the record's
+               own extra already goes rather than in a row of its own.
+
+               The step it was left on is gone. "We don't need overview,
+               tracks, we don't need where it left off." It was what made a
+               draft need a wider row than a square, and it answers a question
+               nobody was asking: opening it puts you where you were.
+
+               Only the discard is extra, and it sits on the art, so the tile's
+               footprint is a search result's to the pixel. */
+            <div className="ses-grid">
+              {drafts.map(draft => (
+                <div key={draft.id} className="ses-tile ses-tile--draft">
+                  <button
+                    type="button"
+                    className="ses-tile-open"
+                    onClick={e => {
+                      const img = e.currentTarget.querySelector('img');
+                      onResume(draft, img ? img.getBoundingClientRect() : null);
+                    }}
+                  >
+                    <span className="ses-tile-art">
+                      {draft.album_art ? <img src={draft.album_art} alt="" loading="lazy" /> : null}
+                    </span>
+                    <span className="ses-tile-name">{draft.album}</span>
+                    <span className="ses-tile-year">
+                      {draft.artist}{draft.artist ? ' · ' : ''}{sinceLabel(draft.updated_at)}
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    className={`ses-tile-x${confirmDiscard === draft.id ? ' ses-tile-x--sure' : ''}`}
+                    onClick={() => discardDraft(draft.id)}
+                    onBlur={() => setConfirmDiscard(c => (c === draft.id ? null : c))}
+                    title="Discard this draft"
+                    aria-label={`Discard the draft of ${draft.album}`}
+                  >
+                    {confirmDiscard === draft.id ? 'discard?' : '×'}
+                  </button>
+                </div>
+              ))}
             </div>
           )}
         </>
