@@ -93,7 +93,6 @@
 import { useState } from 'react';
 import { X } from '@phosphor-icons/react';
 import { SESSION_STEPS } from '../../hooks/useListeningSession';
-import { CAPTION } from '../../hooks/useListeningBeacon';
 import { useTheme } from '../main_components/Lightswitch';
 
 export default function SessionHeader({
@@ -120,7 +119,10 @@ export default function SessionHeader({
   const naming = (step > 0 && track) || album;
 
   return (
-    <header className="ses-head">
+    // Always live: a session is a listen. The class is here rather than
+    // assumed by the stylesheet so the bar can wear the same line while it is
+    // holding a live record — see .hn-bar--live in nav.css.
+    <header className="ses-head ses-head--live">
       <div className="ses-head-in">
         <div className="ses-head-row">
           {/* The left slot, and there is nothing in it. It is a spacer that
@@ -177,13 +179,11 @@ export default function SessionHeader({
           </span>
 
           <div className="ses-head-text">
-            {/* The status, centred over the record and the artist — a label
-                for the two lines under it. Always green here: a session is a
-                listen. */}
-            <span className="ses-head-live">
-              <span className="ses-head-dot" aria-hidden="true" />
-              {CAPTION.logging}
-            </span>
+            {/* No caption. A live beacon says it in colour, not in words
+                (Miyel, 2026-09-18) — the cover is bright where an idle one is
+                grey, and the line under this header is the green one. The
+                words were half the height of the beacon and said the one
+                thing you could already see. */}
             <span className="ses-head-album">{naming}</span>
             {/* The artist. Missing here until 2026-09-18, which is most of
                 what made this a different object from the beacon in the bar

@@ -461,9 +461,16 @@ and small in the nav bar and the session's header — and the small one is a
 single thing: the bar renders `.ses-head-beacon` in the session's own classes.
 Never a second set of rules at the same size. Kept in step by hand they had
 already drifted into three different objects, one missing the artist, one
-missing the caption, one captioning `NOW LOGGING` whether or not it was. All
-four lines, always: cover, caption, record, artist. The two sizes are 0.625
-apart on the record and the artist; captions do not scale.
+missing the caption, one captioning `NOW LOGGING` whether or not it was. Cover,
+record, artist, in both sizes, 0.625 apart on the type.
+
+**A live beacon says it in colour, not in words, 2026-09-18.** No `NOW LOGGING`
+line at either size: full-colour art against a greyed one, a deeper shadow, and
+the lit dot on the mark. The idle beacon keeps its words, on the cover, at both
+sizes — 4px in the small one, unreadable on purpose, because what carries there
+is that something is written at all. A session has no mark to light, so its
+signal is the header's own hairline in `--live`, breathing on the dot's clock.
+Not a line that travels: this is the top of a page somebody is writing on.
 
 **Deleting an entry keeps the listen, 2026-09-18.** The beacon reads entries,
 drafts and the one live needle row, so a published listen's only lasting

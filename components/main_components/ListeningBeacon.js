@@ -134,7 +134,14 @@ export default function ListeningBeacon({ children = null, choosing = false, emp
               on it. See the note at the top: greyed art carries its own
               caption and this line would be the second copy of it. Never
               green; the dot beside it is the one thing that lights. */}
-          {!emptied && (isLive || !artUrl) && <div className="beacon-status">{CAPTION[state]}</div>}
+          {/* Only where there is no cover to say it on, and only when the
+              listen is over. A live beacon says nothing in words at all
+              (Miyel, 2026-09-18): "there doesn't need to be a Now logging
+              line — the green dot and the coloured album is enough." It is:
+              the art is in full colour, the card's shadow deepens, and the
+              dot on the mark is lit. Three signals and a caption repeating
+              them is the fourth. */}
+          {!emptied && !isLive && !artUrl && <div className="beacon-status">{CAPTION[state]}</div>}
           {/* Two lines, not a marquee. The marquee is the right answer in the
               nav row, where the slot is a couple of hundred pixels wide and
               there is nowhere for a long title to go — but here the title has

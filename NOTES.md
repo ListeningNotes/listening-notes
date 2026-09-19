@@ -2538,26 +2538,34 @@ restructure: the three drawings of the beacon were made into one.
 - [x] **All three say the same four things.** Cover, caption, record, artist.
       The bar had no caption and the session had no artist, so a record
       crossing between them lost a line each way.
-- [x] **The caption tells the truth in the bar.** Dull with `LAST LOGGED` when
-      the record up there is last night's, lit with a dot and `NOW LOGGING`
-      once one has been chosen. It said nothing at all before. The session's
-      is hard-coded to `NOW LOGGING` on purpose — a session *is* a listen.
-- [x] **The dot is always drawn**, grey when the listen is over. It appeared
-      only when live, so the caption shifted sideways between the two states.
-      Grey and not green: green means playing and nothing else on this site.
-- [x] **The status is centred over the record and the artist**, at the top of
-      the column beside the cover — the large beacon's own arrangement, turned
-      along the row. It was the column's first line (left-aligned, reading as
-      one of three lines rather than a label), then a row of its own centred
-      over the cover *and* the words, which made the beacon 64px tall in a
-      48px header. Miyel settled it: "centred above the text only, not the
-      art — it'll take up less space, this all seems like it can fit beside
-      the album art."
-- [x] **A dull record stays dull in the air.** The flier is its own `<img>`,
-      neither of the two covers, so it drew in full colour between a greyed
-      card and a greyed slot: pressing *Start a listen* made last night's
-      record flare and go out again. `landing.live` now carries the state.
-      Measured across the whole 620ms — grey on every sample.
+- [x] **No caption anywhere, in the end.** The status spent the evening being
+      moved — into the text column, out to a row of its own centred over the
+      whole beacon (which made it 64px tall in a 48px header), back beside the
+      art — and then Miyel deleted the question: "there doesn't need to be a
+      Now logging line. The green dot and the coloured album is enough." It
+      is. The live beacon says it in colour: full-colour art, deeper shadow,
+      the dot on the mark lit. The idle one says it in words on the cover,
+      where it always did.
+- [x] **The mini keeps the words on its cover**, at 4px, far too small to
+      read. That is the ask: "it's ok if it's too small to see, this is just
+      to show it is a replicated beacon." Same class as the card's overlay.
+- [x] **The session has its own signal: the header's hairline is green**, and
+      breathes on the mark's dot's clock, off its keyframes. The bar wears the
+      same line once the record on it is live, so it is already green and
+      already breathing when the sheet's header takes over. A *travelling*
+      line was the other option on her list and is the wrong thing to put at
+      the top of a page somebody is writing on.
+- [x] **Nothing floats up from the picker.** "It simply turns on with the
+      selection." The mini changes record and lights where it stands. Same
+      reasoning as the return journey: a record in a grid of a dozen is not
+      something you are following, so watching one travel is a third movement
+      over a picker folding away and a session arriving. `TURN_ON_MS` (180ms)
+      is the beat the bar gets before the sheet starts up.
+- [x] **A dull record stays dull in the air**, on the one flight that is left
+      — the card shrinking into the bar. The flier is its own `<img>`, neither
+      of the two covers, so it drew in full colour between a greyed card and a
+      greyed slot: pressing *Start a listen* made last night's record flare
+      and go out again. Measured across the whole 620ms, grey on every sample.
 - [x] **CAPTION lives in `hooks/useListeningBeacon.js`**, with the states it
       names, rather than in one of the three components that draws them.
 - [x] **The artist scales instead of changing voice.** DM Mono 10px in the
