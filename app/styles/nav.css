@@ -1011,6 +1011,20 @@
 
 .hn--choosing .hn-pane--home { scroll-snap-type: none; }
 .hn--choosing .hn-pane--home > .hn-floor:nth-of-type(2) { display: none; }
+/* ── The cutaway ──────────────────────────────────────────────────────────
+   Except while a record is filing into it. The wall is floor two and the
+   picker is floor one, so the picker is *standing where the wall is* — and a
+   record saved from a listen had nowhere on screen to go.
+
+   So the floor opens, the pane goes down to it, the record files in, and the
+   pane comes back up to the drafts it left. Miyel, 2026-09-18: "it's like a
+   cutaway but not fully leaving." Nothing is unmounted and the picker keeps
+   its search: the pane simply scrolls, which is what a pane does. */
+.hn--filing .hn-pane--home > .hn-floor:nth-of-type(2) { display: block; }
+/* And the pane does its own scrolling for the length of it. Snapping is off
+   while choosing already; this stops a stray touch mid-cutaway leaving the
+   pane between two floors. */
+.hn--filing .hn-pane--home { overflow-y: hidden; }
 /* On the one clock with everything else. Choosing hands this screen a 90px
    padding-top where it had none — the room the bar needs once the crown is
    not holding it — and it arrived in a single frame, which put the cover 59px

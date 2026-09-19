@@ -2609,6 +2609,43 @@ restructure: the three drawings of the beacon were made into one.
 - [x] **Idle, the small beacon shows nothing but the greyed cover.** No dot,
       no words. It says the listen is over before you have read anything.
 
+### The save is a cutaway
+
+- [x] **Saving takes the screen down to the journal, files the record in, and
+      comes back.** Miyel, 2026-09-18: "have the screen show the journal during
+      the save process and just show the album file into the grid, then the
+      screen returns to the session drafts. It's like a cutaway but not fully
+      leaving."
+
+      The cover used to fall out of the beacon toward the wall — and the wall
+      is floor two, which while a record is being chosen is where the *picker*
+      is standing. So it fell at a target that was `display: none` and what
+      there was to see was a cover dropping off the bottom of the screen.
+      Going to the wall answers it and is less machinery, not more: the wall
+      does not have to be found or aimed at, because it is what you are
+      looking at. `wallLanding`, `dropStyle` and `FALL_MS` are gone.
+
+      **The order had to be measured.** Asking for the wall at the moment of
+      the save — the first try — meant the record filed itself in while the
+      pane was still travelling: the scroll takes about a second and the filing
+      was over by 1.5s. So the wall is asked for when the pane *arrives*, and
+      the pane says when that is (polled, capped by `ARRIVE_MAX_MS`) rather
+      than a timer guessing at a smooth scroll's duration.
+
+      Measured end to end from the picker: at the wall by 1500ms with the new
+      tile first and growing in, held to 2600, back at the drafts by 3600 —
+      and the picker is still there the whole way, search and all.
+- [x] **Journal files an arrival the way it closes a deletion.** Same
+      machinery, run backwards: every tile measured before the new list lands,
+      put back where it was, let go. The newcomer grows in on a 210ms delay,
+      into a gap that is still opening.
+- [x] **`positions()` measures from the grid, not the viewport.** It used
+      `getBoundingClientRect`, which is viewport-relative — and the cutaway
+      scrolls a whole pane between the record being saved and the record
+      arriving, so every tile would have read as having moved by the scroll.
+      `offsetLeft`/`offsetTop` do not care. The delete path was always within
+      one frame and is unaffected either way.
+
 ### One way of asking, everywhere
 
 - [x] **The entry toolbar's Delete says `Delete?`**, not `Sure?`, and a press
