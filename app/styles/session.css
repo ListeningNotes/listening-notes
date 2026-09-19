@@ -522,22 +522,14 @@
    it, 2026-09-18 — see docs/RETIRED-PROMPTS.md. So is the sheet it opened,
    further down: .ses-ask and everything under it. */
 .ses-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
-/* ── A fixed column, so the cover never moves ─────────────────────────────
-   The width of this block decides where the cover beside it sits, because the
-   two are centred together. Left to its contents that is a different number
-   for every record and every song — and the cross's bar carries the same
-   cover 20-odd pixels away, so the record hops as the session resolves over
-   it. Measured 2026-09-18: the bar's at x=132, this at x=109, both saying
-   Halfaxa. Not a tuning problem either, because this block has a line the
-   bar's has not — NOW LOGGING is wider than most album titles and sets the
-   width on its own.
-   So both are told the same number, and .hn-bar-said in nav.css carries this
-   exact expression. Change one and change the other. */
-.ses-head-text {
-  min-width: 0;
-  width: clamp(120px, 42vw, 220px);
-  display: flex; flex-direction: column; gap: 3px;
-}
+/* Its own width again. It was pinned to clamp(120px, 42vw, 220px) for half an
+   hour on 2026-09-18 so that this cover and the cross's bar cover would land
+   in the same place through a cross-fade — and the cost was that a short
+   album title left a hundred pixels of empty column beside it, so the beacon
+   read as sitting left of centre. Miyel saw it at once. There is no cross-fade
+   to line up any more: the session rises and the bar's mini blinks, and
+   neither needs the other to be anywhere in particular. */
+.ses-head-text { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
 /* NOW LOGGING, with the one green thing on the screen beside it. Green means
    live everywhere on this site and this is the owner's own copy of what a
    visitor is being told while they write. */

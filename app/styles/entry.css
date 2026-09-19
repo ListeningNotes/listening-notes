@@ -157,12 +157,17 @@
    The way out is untouched: it still sinks, which is what the pull down
    expects. RISE_MS in HomeNav.js is this number — the picker folds away
    behind it on the same clock. */
-.lay--rises.lay--over-journal {
-  animation-name: laySettle;
-  animation-duration: 0.62s;
-  animation-timing-function: cubic-bezier(0.22, 0.61, 0.36, 1);
-}
-/* A plain cross-fade was the first answer and this is the second: it starts
+.lay--rises.lay--over-journal { animation-duration: 0.62s; }
+/* The listen rises from the foot of the screen, and it is the third answer
+   here. It cross-faded, then it settled in from four per cent too big, and
+   Miyel's verdict on both was the same: "I think the issue now is that I
+   don't like cross-fades." What the rise buys is the ending — "that way on
+   ending, everything can just leave out the bottom instead of disappearing"
+   — and the beacon's own change is carried by the blink instead (hnBlink in
+   nav.css) rather than by one surface dissolving into another.
+   The note below is kept because the settle may come back for something.
+
+   A plain cross-fade was the first answer and this was the second: it starts
    four per cent too big for the screen and settles to rest as it resolves.
    Four per cent, not ten — the difference between a screen coming to rest and
    a screen zooming, and past about six it stops being a settle and starts

@@ -158,6 +158,9 @@ const TURN_MS = 400;
 // already in that exact box, so letting go of the flown copy is a frame with
 // nothing in it to notice.
 const TO_THE_BAR_MS = 620;
+// The eyelid. Slow enough to read as a thing closing rather than a flicker,
+// and it ends a beat before the session's rise does.
+const BLINK_MS = 520;
 // How long the session takes to resolve over the pane. It has to agree with
 // .lay--over-journal's own duration in entry.css — the picker folds away
 // behind it on this clock.
@@ -445,6 +448,20 @@ export default function HomeNav() {
   // session will open on. So the bar does not change. The session arriving IS
   // the beacon updating, and there is one thing moving instead of two.
   const [onTheBar, setOnTheBar] = useState(null);
+  // ── The blink ───────────────────────────────────────────────────────────
+  // Miyel, 2026-09-18, after three goes at dissolving one surface into
+  // another: "I think the issue now is that I don't like cross-fades. Maybe
+  // the beacon art can blink closed slowly then re-open with the new album
+  // and titles. While that's happening the session comes up from the bottom."
+  //
+  // It is a better mechanic than any of the fades, and the reason is that it
+  // is the *beacon's* change rather than a transition between two screens.
+  // Nothing has to line up with anything: the record closes like an eyelid,
+  // the new one is put behind it while it is shut, and it opens on the new
+  // one. The session rises from the foot of the screen at the same time,
+  // which also gives the ending its shape — everything leaves by the way it
+  // came in rather than fading out where it stands.
+  const [blinking, setBlinking] = useState(false);
   const router = useRouter();
 
   // ── Off the picker and into the listen ────────────────────────────────────
@@ -504,9 +521,13 @@ export default function HomeNav() {
     // detaching from a row and sailing up is a fourth thing happening on top
     // of a session arriving and a picker folding away.
     //
-    // announce() above has already put it on the beacon, so the bar's mini
-    // simply is the new record on the very next frame — art, album and
-    // artist — and the session resolves over it.
+    // The eyelid closes, the record is changed behind it, and it opens on the
+    // new one. Half of BLINK_MS each way, so the swap lands at the shut.
+    setBlinking(true);
+    flightTimers.current.push(setTimeout(() => {
+      setOnTheBar({ art: record.artUrl, album: record.album, artist: record.artist });
+    }, BLINK_MS / 2));
+    flightTimers.current.push(setTimeout(() => setBlinking(false), BLINK_MS));
     router.push('/session');
     // And the picker folds away once the sheet is over it — unseen, which is
     // the point. Doing it now would empty the screen behind a sheet that has
@@ -1023,7 +1044,10 @@ export default function HomeNav() {
           shifts up to meet it (.hn--choosing .hn-bar in nav.css), so the ×
           and the lights sit on the line they will sit on in a moment. */}
       {choosing && (
-        <span className={'hn-bar-beacon' + (landing ? ' hn-bar-beacon--flying' : '')} aria-hidden="true">
+        <span
+          className={'hn-bar-beacon' + (landing ? ' hn-bar-beacon--flying' : '') + (blinking ? ' hn-bar-beacon--blink' : '')}
+          aria-hidden="true"
+        >
           <span className="hn-bar-cover">
             {onTheBar?.art ? <img src={onTheBar.art} alt="" /> : null}
           </span>

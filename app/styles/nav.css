@@ -1135,6 +1135,7 @@
   top: calc(env(safe-area-inset-top, 0px) + 12px);
   transform: translateX(-50%);
   display: flex; align-items: center; gap: 12px;
+  max-width: calc(100% - 150px);
 }
 /* .ses-cover's own numbers. */
 .hn-bar-cover {
@@ -1147,14 +1148,8 @@
 }
 .hn-bar-cover img { width: 100%; height: 100%; object-fit: cover; display: block; }
 /* And .ses-head-text's. */
-/* The same fixed column .ses-head-text has, and it must stay the same: the
-   two decide where their cover sits, and the record must not move when one
-   surface resolves over the other. See the note there. */
-.hn-bar-said {
-  min-width: 0;
-  width: clamp(120px, 42vw, 220px);
-  display: flex; flex-direction: column; gap: 3px;
-}
+/* .ses-head-text's shape, and like it, its own width. */
+.hn-bar-said { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
 .hn-bar-album {
   font-family: var(--font-display); font-weight: 700; font-size: 15px; line-height: 1.2;
   color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
@@ -1167,6 +1162,29 @@
    flight measures the box it is aiming at, and it cannot be showing the same
    record at the same time. */
 .hn-bar-beacon--flying { opacity: 0; }
+/* ── The blink ─────────────────────────────────────────────────────────────
+   An eyelid, not a fade. The record closes to a line, the new one is put
+   behind it while it is shut, and it opens on the new one — see the note in
+   HomeNav.js for why this is a better mechanic than dissolving one screen
+   into another. Miyel: "maybe the beacon art can blink closed slowly then
+   re-open with the new album and titles."
+
+   scaleY about the middle, so it shuts the way a shutter does. 0.02 rather
+   than 0 at the turn: a box scaled to nothing is a box the browser may stop
+   compositing, and coming back from it can snap. Ease in and out of the shut
+   rather than the site's usual curve — a lid accelerates closed and
+   decelerates open, and the site's curve is front-loaded for things that
+   travel. */
+.hn-bar-beacon--blink {
+  animation: hnBlink 520ms ease-in-out;
+}
+@keyframes hnBlink {
+  0%   { transform: translateX(-50%) scaleY(1); }
+  46%  { transform: translateX(-50%) scaleY(0.02); }
+  54%  { transform: translateX(-50%) scaleY(0.02); }
+  100% { transform: translateX(-50%) scaleY(1); }
+}
+@media (prefers-reduced-motion: reduce) { .hn-bar-beacon--blink { animation: none; } }
 /* And the card's own cover steps aside at once rather than fading with the
    rest of the card. The stage takes 0.4s to go and the flight takes 620ms, so
    without this there would be four hundred milliseconds of the record in two
