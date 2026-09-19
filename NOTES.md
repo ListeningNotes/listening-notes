@@ -1540,6 +1540,20 @@ Project → Settings → Environment Variables.
 
 ## Gotchas
 
+**`.click()` does not prove a control works, 2026-09-18.** The picker's × was
+dead on arrival — an invisible positioned box (`.ses-shut-slot`) sat exactly on
+top of it and swallowed every press — and every test said it was fine, because
+the tests called `element.click()`. A programmatic click is dispatched straight
+at the element and skips hit-testing altogether, so it cannot see anything
+sitting over the thing it is pressing. Neither can `dispatchEvent`. What finds
+it: `document.elementFromPoint(x, y)` at the control's own centre, and driving
+the real pointer at those coordinates rather than the node. Anything absolutely
+positioned near a control wants `pointer-events: none` unless it is meant to be
+pressed, and a child that wants presses can still claim them with
+`pointer-events: auto`.
+
+
+
 **Comments rot faster than code, 2026-09-18.** A day of reversals left four
 files describing versions of themselves that no longer existed: a session
 header narrating a × that had moved to another file, a `?` that was deleted and
@@ -2663,6 +2677,9 @@ restructure: the three drawings of the beacon were made into one.
 
       Measured at 375px: the × box is 28→64, End runs 28→78, and the beacon's
       cover starts at 134, so 56px of clearance. The beacon does not move.
+      **The word's slot is `pointer-events: none`** — it is a positioned box
+      sitting on the mark, and without that it swallowed every press meant for
+      the ×, which did nothing at all. See the Gotcha.
       **The word is sentence case on purpose** (`text-transform: none`, set
       explicitly): browsers reset text-transform on form controls in their own
       stylesheet, so it was inheriting the row's `uppercase` or not depending

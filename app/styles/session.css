@@ -536,6 +536,13 @@
   position: absolute; left: 0; top: 50%;
   transform: translateY(-50%);
   display: block;
+  /* Not a target, ever. It is a positioned box sitting exactly on top of the
+     mark, so without this it swallowed every press meant for the × and the
+     control did nothing at all — Miyel, 2026-09-18: "nothing happens." The
+     word inside says `pointer-events: auto` for itself once it is showing,
+     and a descendant that claims it is a target still is, whatever its
+     ancestor says. */
+  pointer-events: none;
 }
 .ses-shut-word {
   display: block;
