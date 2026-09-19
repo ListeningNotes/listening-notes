@@ -1118,6 +1118,23 @@
    "remove the line between the album art in the selector and the LN header,
    that will make it feel more like it morphs to this screen." */
 .hn--choosing .hn-bar--scrolled { border-bottom-color: transparent; }
+/* ── The live line, in the bar ────────────────────────────────────────────
+   The session's own signal (.ses-head--live in session.css), worn by the bar
+   while the record on it is a listen in progress — so the line is already
+   green and already breathing when the sheet rises and its header takes over,
+   and the handoff has one less thing to change. Green only once a record has
+   been chosen: the record sitting up there when the picker opens is last
+   night's, and a green line over it would be the claim the greyed cover is
+   there to deny. */
+.hn--choosing .hn-bar--live,
+.hn--choosing .hn-bar--live.hn-bar--scrolled { border-bottom-color: var(--live); }
+.hn--choosing .hn-bar--live::after {
+  content: '';
+  position: absolute; left: 0; right: 0; bottom: -1px; height: 1px;
+  background: var(--live);
+  animation: ses-dot-breathe 2.5s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) { .hn--choosing .hn-bar--live::after { animation: none; } }
 /* ── The bar becomes the session's header ─────────────────────────────────
    Choosing a record, this row is the row the session is about to have, so it
    takes the session's geometry rather than its own: the notch, then 10px,

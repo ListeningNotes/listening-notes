@@ -158,6 +158,13 @@ const TURN_MS = 400;
 // already in that exact box, so letting go of the flown copy is a frame with
 // nothing in it to notice.
 const TO_THE_BAR_MS = 620;
+// And how long the bar has to itself once a record is picked, before the
+// session starts up over the picker. Not a journey — there is nothing in the
+// air any more — just the beat in which the mini goes from last night's greyed
+// cover to tonight's lit one, so that change is something you see happen
+// rather than something already done by the time the sheet clears the floor.
+// Short: a press that sits for half a second reads as a press that missed.
+const TURN_ON_MS = 180;
 // The aperture, closing and opening. Slow on purpose — long enough that it
 // reads as the record being put away and another brought out, rather than as
 // a screen changing. The body's rise is shorter and finishes inside it.
@@ -568,15 +575,28 @@ export default function HomeNav() {
     // on, and it is drawn but not shown for the length of the journey — the
     // record is in the air and must not also be sitting where it is going.
     // The mark goes in the same commit: one thing in that space, always.
-    // A record just chosen is a listen just opened, so it goes up lit and
-    // captioned Now logging — and nothing about it changes when the session
-    // resolves over the top, because the session draws this same beacon.
-    // No song: nothing is open yet, and the beacon's rule is the record until
-    // one is.
+    // ── The beacon turns on. Nothing flies. ─────────────────────────────
+    // The record went up from the tile you pressed for a day — the picker's
+    // square detaching and climbing into the bar — and Miyel took it off on
+    // 2026-09-18: "we don't even need an album card to float up from
+    // drafts/search. It simply turns on with the selection."
+    //
+    // Which is the same answer she gave coming the other way, for the same
+    // reason (see the note above): a record in a grid of a dozen is not a
+    // thing you are following, so watching one of them travel is a third
+    // movement on top of a picker folding away and a session arriving. What
+    // the eye actually reads is the change of state — grey cover to lit
+    // cover, last night's record to this one — and that needs no journey.
+    //
+    // A listen just opened, so it goes up lit, and nothing about it changes
+    // when the session resolves over the top: the session draws this same
+    // beacon. No song — nothing is open yet, and the beacon's rule is the
+    // record until one is.
     setOnTheBar({ art: record.artUrl, title: record.album, artist: record.artist, live: true });
-    setLanding({ record, art: record.artUrl, live: true, from, to: null, go: false, ms: TO_THE_BAR_MS, into: '.hn-bar-beacon .ses-cover' });
-    // And the session comes up under a bar that is already right.
-    flightTimers.current.push(setTimeout(() => router.push('/session'), TO_THE_BAR_MS));
+    // A beat, not a flight: long enough for the bar to light before the sheet
+    // starts up over the picker, short enough that the press feels answered.
+    // It was TO_THE_BAR_MS while there was a cover in the air to wait for.
+    flightTimers.current.push(setTimeout(() => router.push('/session'), TURN_ON_MS));
     // And the picker folds away once the sheet is over it — unseen, which is
     // the point. Doing it now would empty the screen behind a sheet that has
     // not covered it yet.
@@ -1059,7 +1079,8 @@ export default function HomeNav() {
   // stylesheet hides it on the turning pane; on a desk this row is over the
   // journal, which is the beacon, so it simply stays.
   const header = (
-    <div className={'hn-bar' + (down[pane] || choosing ? ' hn-bar--scrolled' : '')}>
+    <div className={'hn-bar' + (down[pane] || choosing ? ' hn-bar--scrolled' : '')
+      + (choosing && onTheBar?.live ? ' hn-bar--live' : '')}>
       {/* The way out of the picker, in the corner the up-caret holds the rest
           of the time — the two never want the row at once, because while the
           picker is open there is no pane under it to go back to the top of.
@@ -1125,22 +1146,19 @@ export default function HomeNav() {
             {onTheBar?.art
               ? <img src={onTheBar.art} alt="" />
               : <span className="ses-cover-none">♪</span>}
+            {/* The card's own idle overlay, at this size — .beacon-idle-overlay
+                from nav.css, the same class on the same greyed cover. It is
+                far too small to read at 44px and that is the point: the words
+                are not the job here, being visibly the same object is.
+                Miyel, 2026-09-18: "keep the tiny last logged text on the art
+                when the mini is idle — it's ok if it's too small to see, this
+                is just to show it is a replicated beacon." */}
+            {!onTheBar.live && onTheBar?.art && (
+              <span className="beacon-idle-overlay"><span>{CAPTION.logged}</span></span>
+            )}
           </span>
           {onTheBar?.title && (
             <span className="ses-head-text">
-              {/* The status, centred over the record and the artist — and the
-                  dot is always drawn, because the dot IS the status. Grey
-                  while the record up here is last night's, green once one has
-                  been chosen. It was drawn only when live for an hour, so the
-                  caption shifted sideways between the two states and read as
-                  two different rows rather than one row saying two things. */}
-              <span className="ses-head-live">
-                <span
-                  className={'ses-head-dot' + (onTheBar.live ? '' : ' ses-head-dot--idle')}
-                  aria-hidden="true"
-                />
-                {CAPTION[onTheBar.live ? 'logging' : 'logged']}
-              </span>
               <span className="ses-head-album">{onTheBar.title}</span>
               {onTheBar.artist && <span className="ses-head-artist">{onTheBar.artist}</span>}
             </span>
