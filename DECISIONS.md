@@ -240,6 +240,13 @@ small one in their own header instead, beside the pencil and the gear; on a
 desk even that goes, because the bar over the journal already has it and two
 marks on screen is two marks.
 
+**The beacon floor's movements are named, and share one clock, 2026-09-19.**
+`landing` is a record's flight into a session, `filing` is the save cutaway,
+`passing` is a record leaving the big slot for the top of the column while the
+rest step down and the oldest goes. All 0.7s on the site's curve, except the
+flight, which is crossing into somewhere else. A fourth movement on that floor
+gets a name from Miyel and that clock, or it reads as a different room.
+
 **A visitor's two controls stand at the foot of the beacon, 2026-09-19.**
 Send and Add were beside the name on the identity card from the day it was
 built. They are on the landing floor now, in the slot the owner's way in
