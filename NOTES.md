@@ -3157,7 +3157,7 @@ else's, which is an argument for a version on that URL and is not built.
       that slot has always made, one step further: it holds whichever answer
       fits whoever is looking, and now the two answers are one shape as well.
       The portrait is the circle, hung on the rule, and ADD and SEND are hung
-      on it either side, 56px out from the middle — the circle's own half plus
+      on it either side, 50px out from the middle — the circle's own half plus
       fourteen — each carrying the page colour so the line stops at all three.
       Positioned from the middle, so the two words stay symmetric whatever
       they measure.
@@ -3181,8 +3181,12 @@ else's, which is an argument for a version on that URL and is not built.
       line stops at its edge. **84 for an hour and then 72** — it is the one
       control on that screen and wants to be reachable rather than large, and
       the two words in it are 47px at their widest, so the ring can come in
-      twelve and still be a ring round words rather than one on them. A
-      visitor's circle stays 84: it holds a face, which wants the room. The note is in the markup rather than on
+      twelve and still be a ring round words rather than one on them. **The
+      visitor's circle follows it to 72**, and everything measured off it: the
+      two words move in to 50 and the row's own padding to 36. The two are the
+      same shape in the same slot, and a face twelve pixels larger than the
+      ring on the other version of the screen reads as two objects rather than
+      one at two contents. The note is in the markup rather than on
       `::before`, because it has to stack with the words; a visitor's calling
       card keeps the `::before` version, there being no control in that slot.
       **Absolutely positioned, not a negative margin** — a flex item's margin

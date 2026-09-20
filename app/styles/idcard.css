@@ -154,7 +154,11 @@
   left: 50%;
   top: 0;
   transform: translate(-50%, -50%);
-  width: 84px; height: 84px;
+  /* 72, matching the way in it stands in for (Miyel, 2026-09-20). They are
+     the same shape in the same slot, and a face twelve pixels larger than the
+     ring on the other version of this screen reads as two objects rather than
+     one at two contents. */
+  width: 72px; height: 72px;
   padding: 0;
   border: 1px solid var(--border);
   border-radius: 999px;
@@ -174,7 +178,7 @@
 }
 /* Either side of it and on the same line, which is what "left and right sides
    of the circle" means: on the rule, not under it. So they are hung on it the
-   way the circle is, 56px out from the middle — the circle's own half plus
+   way the circle is, 50px out from the middle — the circle's own half plus
    fourteen — and they carry the page colour so the line stops either side of
    them too. Three things standing in one rule.
 
@@ -193,8 +197,8 @@
   letter-spacing: 0.16em;
   white-space: nowrap;
 }
-.calling > .ln-onward:first-child { right: calc(50% + 56px); }
-.calling > .ln-onward:last-child { left: calc(50% + 56px); }
+.calling > .ln-onward:first-child { right: calc(50% + 50px); }
+.calling > .ln-onward:last-child { left: calc(50% + 50px); }
 
 /* ── Three counts ───────────────────────────────────────────────────────────
    Records, masterpieces, formative — each in its own flag's colour, which is
