@@ -770,12 +770,24 @@
   background: var(--panel);
   text-wrap: pretty;
 }
+/* ── The question, in the pinned record's face, 2026-09-20 ────────────────
+   Miyel: "can the prompt question use the font we use for pinned album
+   titles." It was the caption face — ten pixels, small caps, wide tracking —
+   which is the face this site puts on labels, and an opening is not a label:
+   it is a sentence somebody is answering. Nunito at the display weight, the
+   size and the case the pinned record's title is set in, so the two things on
+   this pane that are titles are titled the same.
+
+   A step quieter than the answer under it. The question is bold and small and
+   the answer is large and plain, which is the pull quote this block has always
+   been — the weight says which is the asking and the size says which is the
+   part worth reading. */
 .ab-prompt-ask {
   margin: 0;
-  font-family: var(--font-label);
-  font-size: 10px; line-height: 1.5;
-  letter-spacing: 0.15em; text-transform: uppercase;
-  color: var(--ink-faint);
+  font-family: var(--font-display);
+  font-weight: var(--font-display-weight, 700);
+  font-size: 15px; line-height: 1.4;
+  color: var(--ink-soft);
 }
 /* Indented behind a rule, like a pull quote: the answer is being quoted into
    the question's card, not continuing its sentence. */
@@ -835,42 +847,45 @@
    and two gaps. */
 .ab-prompt-none { color: var(--ink-faint); font-style: italic; }
 
-/* The list. Same stock as the card's mark chooser — a warm panel, a hairline
-   rule, ten pixels of radius — because it is the same gesture in a different
-   shape and two chooser styles on one page is two answers to one question. */
+/* ── The list, 2026-09-20 ─────────────────────────────────────────────────
+   Miyel: "popdown for choosing prompt needs to match site better in edit
+   mode." It was a warm ground inside a hairline box, which is a shape nothing
+   else here wears: this site's raised surfaces are `--panel` with a generous
+   corner and no rule round them, which is what the answers themselves print
+   on eight lines further up this same column. Same stock as those, so the
+   list of openings and the openings once answered are the same object. */
 .ab-prompt-menu {
   display: flex;
   flex-direction: column;
   margin-top: 8px;
   padding: 6px;
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  background: var(--bg-warm);
+  border-radius: 14px;
+  background: var(--panel);
 }
 .ab-prompt-opt {
   display: flex;
   align-items: center;
   gap: 8px;
   width: 100%;
-  padding: 9px 10px;
-  border: 1px solid transparent;
-  border-radius: 7px;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 10px;
   background: transparent;
   font-family: inherit;
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1.45;
   text-align: left;
   color: var(--ink-soft);
   cursor: pointer;
-  transition: color 0.15s, background 0.15s, border-color 0.15s;
+  transition: color 0.15s, background 0.15s;
 }
 .ab-prompt-opt > span:first-child { flex: 1; min-width: 0; }
-.ab-prompt-opt:hover { color: var(--ink); background: var(--bg); }
-.ab-prompt-opt--on {
-  color: var(--ink);
-  background: var(--bg);
-  border-color: var(--ink-faint);
-}
+.ab-prompt-opt:hover { color: var(--ink); background: var(--panel-strong); }
+/* The one you have taken is lit and ticked, not boxed. A mark in a container
+   is the shape this site took off its controls in September — see DECISIONS,
+   a control is the mark — and a bordered row inside a bordered panel was two
+   boxes deep for one answer. */
+.ab-prompt-opt--on { color: var(--ink); background: transparent; }
 .ab-prompt-opt--taken { color: var(--ink-faint); }
 /* Marked rather than disabled: taking one that is already in another slot
    swaps the two, which is a move somebody is allowed to make and should be
