@@ -1097,6 +1097,12 @@ export default function FullPostPage({ entry, references = [], authed = false, l
     if (sheet && sheet.classList.contains('lay--swiped') && cameReadingOn()) {
       want = Math.max(0, one.getBoundingClientRect().bottom - row.getBoundingClientRect().bottom);
       settle();
+      // And it arrives *as* the header, so the turn has nothing to stand the
+      // header down for. Without this the collapse waited the turn out the
+      // way it does when the record is still the record — and while it
+      // waited, the journal's mark had never been told to give the row up:
+      // Miyel, "the mini LN loads over the mini card on swipe."
+      done = true;
     }
 
     measure();
