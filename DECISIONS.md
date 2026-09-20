@@ -264,8 +264,13 @@ tried in between and caught on a real phone, as it had in August.
 **A pane scrolls the way a long page scrolls, and the way down is a press.**
 The press lands exactly; `scroll-margin-top` on the second floor is what tells
 it where to stop and is load-bearing with no snap in sight. What the snap was
-for survives without it: a first floor one screen tall, a peek of what is
-under it, and a row above the peek saying what that is. Miyel, on the seam
+for survives without it: a first floor one screen tall, a row at the foot of
+it saying what is below, and — on the book, not the beacon — a peek of it.
+**The beacon has the row and no peek, 2026-09-20.** Its screen is full at the
+sizes the mark and the record are drawn at, so a sliver cost a smaller mark
+and tighter air above the cover, and what it bought was forty pixels under the
+wall's own search bar. A feed is rows and forty pixels of a row reads as a
+row; forty pixels of cover under a bar does not. Miyel, on the seam
 being gone: "i don't even mind that it scrolls seamless from top to bottom,
 that was something i wanted to address anyway."
 

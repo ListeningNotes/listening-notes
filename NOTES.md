@@ -1549,6 +1549,17 @@ Project → Settings → Environment Variables.
 
 ## Gotchas
 
+**A row at the foot of a full-screen floor is behind the band,
+2026-09-20.** Putting the beacon's mark and spacing back to what they were
+made its floor a whole screen again, and the JOURNAL row at the foot of it
+landed at 761–812 — under the four doors, invisible. A record does not care,
+because a screen's content is measured from the top and nothing of it is lost;
+a row at the foot is exactly what the band is sitting on. The floor is
+`calc(var(--hn-h) - var(--hn-foot-h))` now: not a peek, just the band's own
+height, so the word and the chevron stand on the doors rather than behind
+them. **Any floor whose last child has to be seen has to clear
+`--hn-foot-h`.**
+
 **Taking the mark out of a three-column header left the middle column,
 2026-09-20.** `.sitenav-row` is `1fr auto 1fr` with the mark in the middle,
 and the mark stopped being drawn on everything but entries. The row then had
