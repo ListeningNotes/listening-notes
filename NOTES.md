@@ -1549,6 +1549,23 @@ Project → Settings → Environment Variables.
 
 ## Gotchas
 
+**Do not press anything on this site by guessed coordinates, 2026-09-20.**
+Verifying the pin door, a click went in at a point read off a screenshot
+rather than at an element found by name, and it landed on a door in the row
+that also holds **Send** and, under it, **Remove**. It happened to be Pin, and
+the write it sent came back 409 because the cap held — but nothing about the
+method made that the outcome. **Localhost writes to the live database**, so a
+verification press is a real press. Find the element first (`find` /
+`read_page` → `ref`), read back what it is, then press it.
+
+**And the book can move while you are measuring it.** The same session read
+six people pinned, then three, then zero, then two, then three, with no click
+in between — the dev server is the one Miyel watches on her phone, and she was
+pressing pins on it at the time. A count that changes between two reads is not
+necessarily a bug in the page. Check the tab's own network log for the write
+before believing the page did it, and never "restore" state that looks wrong:
+it is likely somebody's hand.
+
 **Keyframe animations do not advance while the browser pane is not painting,
 2026-09-20.** Half an hour went on a close animation that looked dead: the
 element had the right class, `getAnimations()` reported the right names and
@@ -2822,6 +2839,31 @@ else's, which is an argument for a version on that URL and is not built.
       — that module opens the database and this one runs in a browser. If they
       ever disagree the write wins and the door is merely wrong about itself,
       which is the right way round.
+- [x] **A full shelf shakes its head.** "Can the pin button shake like saying
+      no if 6 are already pinned." It was `disabled` before, so a press did
+      nothing at all — and nothing at all is the one answer that does not say
+      why. It is dimmed and still pressable now, `aria-disabled` rather than
+      `disabled`, and a press is four pixels each way and gone in a third of a
+      second: a head shake, not an alarm. Run through `element.animate()` and
+      not a class, for the same reason as every other one-off movement here —
+      a class has to come off before it can go on again, so the second press
+      in a row would be the silence this is fixing. A shake already running is
+      cancelled by name, so two quick presses are one shake rather than two
+      stacked, and a reduced-motion setting turns it off.
+- [x] **A face travels between the two.** "Can there be an animation that
+      takes a pfp from the group up to the pin and vice versa." It re-sorted
+      instantly before, so the person you pressed was gone from one place and
+      present in another with nothing in between. Now every face that moved
+      slides to where it is going, over 340ms — the one that was pressed most
+      of all, and it changes size on the way because the shelf's faces are
+      larger than the book's. First/Last/Invert/Play: measure the page,
+      let React draw the new order, measure again, put each face back with a
+      transform and take the transform off. It works across the re-sort even
+      though React throws the old button away, because the two measurements
+      are matched on the person's id and not on the element. **Every face and
+      not only the moved one** — the grid closes up behind somebody leaving
+      it, and one face gliding while nine jump is worse than nothing moving.
+
 - [x] **Pin is the fourth door**, where Remove is the quiet line under them.
       Pinning is a thing you do *with* somebody like the three beside it;
       removing is the end of there being a somebody.

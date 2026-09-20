@@ -136,6 +136,73 @@ function shakeNo(el) {
   shake.id = 'shake';
 }
 
+// ── Somebody moving between the shelf and the book ────────────────────────
+// Pinning re-sorts the page, so the face you pressed is drawn somewhere else
+// on the very next frame — up into the pinned row, or back down among the
+// rest — and without this it is simply gone from one place and present in
+// another. Miyel, 2026-09-20: "can there be an animation that takes a pfp
+// from the group up to the pin and vice versa."
+//
+// First, Last, Invert, Play, which is the oldest trick there is: measure
+// where every face is, let React draw the new order, measure again, put each
+// face back where it was with a transform, and then take the transform off.
+// The browser does the travelling. It survives the re-sort even though React
+// throws the old button away and builds a new one in the other row, because
+// what is matched is the person's id and not the element.
+//
+// Every face that moved travels, not only the one that was pressed. The rest
+// of the grid closes up behind somebody leaving it, and a page where one face
+// glides while nine jump is worse than a page where nothing moves at all.
+const TRAVEL_MS = 340;
+
+function whereEveryoneIs(box) {
+  const was = new Map();
+  if (box) {
+    for (const el of box.querySelectorAll('[data-face]')) {
+      was.set(el.dataset.face, el.getBoundingClientRect());
+    }
+  }
+  return was;
+}
+
+function travel(box, was) {
+  if (!box || !was) return;
+  if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+  for (const el of box.querySelectorAll('[data-face]')) {
+    const before = was.get(el.dataset.face);
+    // Somebody who was not on the page a frame ago has nowhere to travel
+    // from, so they arrive the way they always did.
+    if (!before) continue;
+    const after = el.getBoundingClientRect();
+    if (!before.width || !after.width) continue;
+    const dx = before.left - after.left;
+    const dy = before.top - after.top;
+    // The shelf's faces are larger than the book's, so this is a journey and
+    // a change of size, and one transform does both.
+    const size = before.width / after.width;
+    if (Math.abs(dx) < 1 && Math.abs(dy) < 1 && Math.abs(size - 1) < 0.01) continue;
+    // Over the rows it crosses rather than under them. A transform makes its
+    // own stacking context but keeps its place in the paint order, so a face
+    // going back down into the book would otherwise pass behind the rows it
+    // is falling through.
+    for (const going of el.getAnimations()) if (going.id === 'travel') going.cancel();
+    el.style.position = 'relative';
+    el.style.zIndex = '4';
+    const trip = el.animate(
+      [
+        { transformOrigin: 'top left', transform: `translate(${dx}px, ${dy}px) scale(${size})` },
+        { transformOrigin: 'top left', transform: 'none' },
+      ],
+      { duration: TRAVEL_MS, easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)' }
+    );
+    trip.id = 'travel';
+    // Only a trip that finished puts the face back down. A cancelled one has
+    // been replaced by a trip that has just set these two itself, and
+    // clearing them here would undo that.
+    trip.finished.then(() => { el.style.position = ''; el.style.zIndex = ''; }, () => {});
+  }
+}
+
 // `shelf` is the floor of the friends pane: one screen, as many faces as fit,
 // and a line out to the whole book. Without it this is the whole book — the
 // standalone address, and the view that line opens.
@@ -185,6 +252,9 @@ export default function Friends({ shelf = false, onCount = null }) {
   // layout and does not move when the number of faces in it does, which is
   // what keeps the measuring below from chasing its own tail.
   const shelfRef = useRef(null);
+  // Where every face was standing, taken the instant before the re-sort
+  // and read back by the layout effect below. See travel(), above.
+  const flight = useRef(null);
   const [fits, setFits] = useState(0);
 
   // Up to whoever is drawing this, once it is known and whenever it changes.
@@ -296,6 +366,10 @@ export default function Friends({ shelf = false, onCount = null }) {
       body: JSON.stringify({ pinned: on }),
     }).then(r => (r.ok ? r.json() : null)).catch(() => null);
     if (answer?.person) {
+      // Now, and not before the fetch: the page is free to have moved while
+      // the write was in the air, and what a face travels from is where it
+      // was on the last frame anybody saw.
+      flight.current = whereEveryoneIs(shelfRef.current);
       setPeople(prev => inOrder(prev.map(q => (q.id === answer.person.id ? answer.person : q))));
     }
   }
@@ -388,6 +462,18 @@ export default function Friends({ shelf = false, onCount = null }) {
   const across = people.length > A_DOZEN ? 5 : 4;
 
   // ── How many fit ────────────────────────────────────────────────────────
+  // ── The second half of the travelling ───────────────────────────────────
+  // This runs after React has drawn the new order and before the browser has
+  // painted it, which is the one moment where the old positions and the new
+  // ones both exist. A layout effect and not an ordinary one for exactly
+  // that reason: an ordinary one runs a frame late, and a frame late is a
+  // frame in which everybody has already jumped.
+  useLayoutEffect(() => {
+    const was = flight.current;
+    flight.current = null;
+    if (was) travel(shelfRef.current, was);
+  }, [people]);
+
   // Measured, not counted out: a row costs a different number of pixels on a
   // phone with a notch than on one without, and a name that wraps to two
   // lines costs more again. The shelf is a box of settled height with the
@@ -663,6 +749,7 @@ export default function Friends({ shelf = false, onCount = null }) {
                         key={p.id}
                         type="button"
                         className={'fr-one' + (isOpen ? ' fr-one--open' : '')}
+                        data-face={p.id}
                         onClick={() => choose(p.id)}
                         aria-expanded={isOpen}
                         title={called}
