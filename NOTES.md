@@ -3085,6 +3085,15 @@ else's, which is an argument for a version on that URL and is not built.
       row (`onBusy`, handed up the way the count is). The address field is
       271px of the 319 the row has. The Add / Scan row stays on the floor and
       is now the first thing on it, so it opens directly under the bar.
+      **And then a pill instead of a line, 2026-09-20.** "Can I see that
+      search field as a small rounded search pill instead?" So it is the
+      site's own field shape at the smallest it goes — a 999px corner, a
+      hairline, the panel ground, 37px tall — sized to the words rather than
+      to the row and centred in the slot. **Not dead centre on the screen**:
+      centred there, a 190px phrase on a 375px screen reaches further right
+      than the corner button does and the camera ends up inside the pill.
+      Something has to give and the pill gives; it sits a little left of where
+      the name it replaces does. The line is one revision back in git.
       **And a field in a header is a line, not a box.** "The search bar feels
       big and bulky compared to the other title header... it feels so
       disjointed." It was arriving as a panel with a rule round it and 44px of
