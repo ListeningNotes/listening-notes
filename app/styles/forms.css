@@ -1166,6 +1166,28 @@ a.pp-name:hover svg { color: var(--ink); }
    A row at a time rather than one grid, because the doors open *between* two
    rows and CSS grid cannot say "after whichever row that item landed in". */
 .fr-row { display: flex; flex-direction: column; }
+/* ── What a row is called ──────────────────────────────────────────────────
+   PINNED over the first, EVERYONE over the rest, and only when there is a
+   pinned row to tell them apart — one list needs no label saying it is the
+   list. The caption face, the caption size, the same as the book's own name
+   above it, because they are the same kind of thing: words about what is
+   under them rather than anything you can press. */
+.fr-said {
+  margin: 0 0 2px;
+  font-family: var(--font-label);
+  font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--ink-faint);
+}
+/* ── The pinned row ────────────────────────────────────────────────────────
+   Three across and larger, which is the whole of how it differs: the same
+   faces, the same names, the same press, standing further apart because
+   there are fewer of them and they are the ones you meant. */
+.fr-row--pinned .fr-face { max-width: 84px; }
+.fr-row--pinned .fr-grid { gap: 20px 14px; }
+.fr-row--pinned .fr-name { font-size: 14px; }
+/* A door that is already done. Ink rather than a second glyph: the word under
+   it changes and that is what says which way the press goes. */
+.fr-door--on { color: var(--ink); }
 .fr-grid {
   display: grid;
   grid-template-columns: repeat(var(--fr-across, 4), 1fr);
@@ -1287,8 +1309,7 @@ a.pp-name:hover svg { color: var(--ink); }
               opacity 0.2s ease;
 }
 .fr-doors--open {
-  /* Room for the three doors and the quiet line under them. It was 104 for a
-     row of four with nothing below it. */
+  /* Room for the four doors and the quiet line under them. */
   max-height: 152px;
   padding: 18px 0 14px;
   opacity: 1;
