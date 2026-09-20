@@ -2362,25 +2362,71 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
     padding: calc(36px + var(--safe-top)) 0 calc(var(--hn-foot-h) + 20px);
     box-sizing: border-box;
   }
-  /* The inbox brings its own gutter — it is a page with a body inside it and
-     that body is already inset. The book does not: its gutter was the
-     standalone page's .fr-body, which is not here, so without this the search
-     field and the faces start hard against the left edge. 24px, .fr-body's
-     own number, so the book is the same width whichever way you reach it. */
+  /* ── The book's two floors ─────────────────────────────────────────
+     The same machinery the beacon uses, and for the same reason: this is the
+     other pane where down means cover-then-contents — the people, and then
+     what they have been playing.
+
+     The pane keeps none of the padding the inbox does, because a floor is a
+     screen and has to measure one; the padding belongs inside each floor. */
   .hn-pane--friends {
-    padding-left: 24px;
-    padding-right: 24px;
-    /* And the feed inside it takes the gutter from the pane rather than
-       adding a second one. Stated rather than left undefined: an undefined
-       var in a shorthand throws the whole declaration away, which happened to
-       give the right answer here and would stop doing so the moment anybody
-       wrote a fallback into .fd-wrap. */
+    padding: 0;
+    scroll-snap-type: y mandatory;
+    /* How much of the second floor shows under the first. It has to carry
+       the bar's height as well as the sliver: the feed's heading starts a
+       bar's-worth down its floor, so that when the floor is snapped to the
+       top of the screen the heading lands under the mark rather than behind
+       it. Above that is the sliver proper — the heading, and the first cover
+       beginning — with the band eating its last 54. */
+    --hn-peek: calc(150px + var(--hn-bar-h));
+    /* The feed takes its gutter from the floor rather than adding a second
+       one. Stated rather than left undefined: an undefined var in a
+       shorthand throws the whole declaration away, which happens to give
+       the right answer here and would stop doing so the day somebody wrote
+       a fallback into .fd-wrap. */
     --page-gutter: 0px;
   }
-  /* Where the book ends and the feed begins. Air rather than a rule of its
-     own — the feed's heading already carries one, and two lines ten pixels
-     apart is a border nobody drew on purpose. */
-  .hn-pane--friends .fd-wrap { padding-top: 40px; }
+  /* Short of a screen by the peek, so the feed shows under it. 24px of
+     gutter, .fr-body's own number, so the book is the same width whichever
+     way you reach it. */
+  /* height, not min-height, and this is the one floor on the site where that
+     is right. Everywhere else a floor grows rather than clip what is on it —
+     the beacon's would cut the Send button off the card. Here the thing that
+     would overflow is the shelf, and the shelf is a scroller: it takes the
+     room it is given and the faces that do not fit are behind See all. A
+     floor that grew would push the sliver off the screen, which is the one
+     thing this floor exists to hold in place. */
+  .hn-floor--book {
+    height: calc(var(--hn-h) - var(--hn-peek));
+    min-height: 0;
+    padding: calc(36px + var(--safe-top)) 24px 0;
+  }
+  /* The book fills the floor, which is what makes "as many faces as fit" a
+     question with an answer: the shelf inside it measures the room it is
+     given, and a book at its content's height would be measuring itself. */
+  .hn-floor--book > .fr { flex: 1; min-height: 0; }
+  /* The caret at the foot of the floor, in the flow rather than fixed over
+     it — the cross's own caret lives above the band, which is exactly where
+     the sliver of covers is, and a chevron drawn over somebody's album art
+     is the thing this site takes carets off pages to avoid. */
+  .hn-down { display: flex; justify-content: center; padding: 10px 0 14px; }
+  .hn-down .edge-caret--down { position: static; transform: none; }
+  .hn-floor--feed { padding: 0 24px; }
+  /* The heading starts a bar's-worth down and sticks exactly there, which is
+     the one position that is right in both places this floor is ever seen:
+     at rest it is in the sliver under the caret, and snapped to the top it is
+     under the mark. Its own natural position and its stuck position are the
+     same number, so it does not move when the floor arrives. */
+  .hn-floor--feed .fd-wrap { padding-top: var(--hn-bar-h); }
+  .hn-floor--feed .fd-head {
+    position: sticky; top: var(--hn-bar-h); z-index: 2;
+    margin: 0 0 18px;
+    padding: 0 0 10px;
+    background: var(--bg);
+  }
+  /* Clear of the band, which has a ground of its own and would otherwise
+     cover the last record rather than letting it show through. */
+  .hn-floor--feed .fd-wrap { padding-bottom: calc(var(--hn-foot-h) + 20px); }
   /* A page drawn inside a pane has no bar of its own to clear and no screen
      of its own to fill. */
   .hn-pane--inbox .own-screen--pane,
