@@ -3120,10 +3120,14 @@ else's, which is an argument for a version on that URL and is not built.
       Scan is a camera beside the way out, only while the field is open. Both
       are the mark rather than a mark in a container, which is the rule this
       site already keeps. `.fr-add-acts` and its max-height dance are gone.
-      **The placeholder is the hint**: `Type or scan address`, because the
+      **The placeholder is the hint**: `Scan or type address`, because the
       camera is two marks away and nothing said what it was for. An empty
       field is the one place on a screen where a sentence costs nothing — it
-      is gone the moment anybody acts on it.
+      is gone the moment anybody acts on it. Scan first, then type: "I want to
+      encourage scanning, and the camera is on the left now anyway" — which is
+      one reason twice. The camera is the first thing on the row so it is the
+      first word in the sentence, and the code was always the way in where
+      typing an address out is the fallback.
       **The two fields cross by fading here**, not by clipping: the clip read
       as one box leaving while another arrived, and with no box round either
       there is no edge for it to read as. Careful with the order — an
