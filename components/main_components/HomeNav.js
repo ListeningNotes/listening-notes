@@ -1850,8 +1850,12 @@ export default function HomeNav() {
   // one under the artist in bold and moving the other would be two controls
   // wearing different clothes for the same job.
   const theWayIn = authed && (inHand ? (
-    <Link href="/session" className="ln-onward" title={`Back to ${inHand.album}`}>
-      Back to the listen
+    <Link href="/session" className="ln-onward" title={`Back to ${inHand.album}`} aria-label="Back to the listen">
+      <span className="hn-go" aria-hidden="true">
+        <span className="hn-go-note">&#9834;</span>
+        <span className="hn-go-say">Back to</span>
+        <span className="hn-go-say">the listen</span>
+      </span>
     </Link>
   ) : (
     /* A button and not a link, because it does not navigate: floor one
@@ -1927,8 +1931,42 @@ export default function HomeNav() {
             to: null, go: false, ms: TO_THE_BAR_MS, into: '.hn-bar-beacon .ses-cover',
           });
         }}
+      aria-label="Log a listen"
     >
-      Start a listen
+      {/* ── The way in is a dial on the line, 2026-09-20 ────────────────────
+          Miyel: "make start a listen feel intentional — maybe it can be a
+          circle between the hairlines that looks like a button, that music
+          note then start a listen in the circle under the note, smaller font,
+          'start a' and 'listen' can be two separate lines. Maybe that will
+          feel better to me and also give more space."
+
+          It was a line of small caps under a rule with the note sitting in a
+          gap in that rule — three things on one axis, none of them shaped
+          like a control. The circle is one thing: the note keeps its place on
+          the line and the words move inside it, which is where the space
+          comes from as well.
+
+          The note is in the markup rather than on ::before now, because it
+          has to stack with the words. A visitor's calling card keeps the
+          ::before version — there is no control in that slot, so the mark
+          stays a mark on a rule. */}
+      <span className="hn-go" aria-hidden="true">
+        <span className="hn-go-note">&#9834;</span>
+        {/* Two words, and then the verb changed: "get rid of a", then "Log
+            Listen" (Miyel, 2026-09-20). The article was carrying the line
+            break — Start a / listen — and once the words are stacked in a
+            circle the break is the shape doing it. Log rather than Start
+            because it is the word this journal already uses for the act
+            everywhere else: LAST LOGGED over the cover, `I've already logged
+            this` in the inbox, logged in the feed. Start named the beginning
+            of a flow, which is a thing about the software; Log names the
+            thing you came to do.
+
+            The whole phrase stays on the label, because Log Listen is not a
+            sentence and a screen reader has no shape to read. */}
+        <span className="hn-go-say">Log</span>
+        <span className="hn-go-say">Listen</span>
+      </span>
     </button>
   ));
 

@@ -3032,6 +3032,34 @@ else's, which is an argument for a version on that URL and is not built.
       something you do to the page. The version line and Report stay at the
       foot.
 
+- [x] **The way into a listen is a circle on the rule.** "Make start a listen
+      feel intentional — maybe it can be a circle between the hairlines that
+      looks like a button, that music note then start a listen in the circle
+      under the note, smaller font." It was three things on one axis — a rule,
+      a note sitting in a gap in the rule, a line of small caps under it — and
+      none of them shaped like a control. Now it is one: an 84px ring hung on
+      the rule, half above and half below, carrying the page colour so the
+      line stops at its edge. The note is in the markup rather than on
+      `::before`, because it has to stack with the words; a visitor's calling
+      card keeps the `::before` version, there being no control in that slot.
+      **Absolutely positioned, not a negative margin** — a flex item's margin
+      is taken into the line it sits on rather than out of it, which left the
+      circle under the rule instead of on it.
+      **The rule stops twelve pixels short of it** ("don't make hairlines
+      touch circle") — a `box-shadow` ring of the page colour, which follows
+      the radius, so the line ends away from the edge on both sides and the
+      circle sits in a gap rather than in a hole it has cut. **And the words
+      are soft grey**: `.ln-onward` is full ink because it used to be a bare
+      line that had to out-shout two captions beside it, and inside a ring
+      nothing is competing with it.
+      **And it says LOG LISTEN**: "get rid of a", then "Log Listen". Log
+      rather than Start because it is the word the journal already uses for
+      the act — LAST LOGGED over the cover, logged in the feed. Start named
+      the beginning of a flow, which is a fact about the software. The whole
+      phrase stays on the label: Log Listen is not a sentence and a screen
+      reader has no shape to read. **The inbox's row still says Start a
+      listen** and is the same action by another name.
+
 - [x] **No dissolve over the band on the friends pane.** A soft top edge is
       for a floor whose content runs off the bottom and should read as
       continuing — a wall of covers, a record mid-scroll. The book and its
