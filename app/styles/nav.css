@@ -1914,18 +1914,28 @@
    Six to a screen: the art at 56, the name over its line of meta, and the
    stars and marks at the right. Her brief, 2026-09-20. */
 .fd-rowwrap { border-bottom: 1px solid var(--border); }
-/* ── The ring goes round the row, not the art ──────────────────────────────
-   Miyel, 2026-09-20: "in list view that amber highlight can be the whole box
-   not just the art." A 56px thumbnail is too small a thing to hang the one
-   at-a-glance fact on, and a ring round it reads as something about the
-   picture. Round the row it is about the record.
+/* ── A shared row sits on a ground ─────────────────────────────────────────
+   Third go at this, 2026-09-20. It was a ring round the art, then a ring
+   round the whole row, and Miyel did not want either: "is there another
+   subtle way... maybe subtle but still there."
 
-   The row gives up its own hairline while it wears one: two rules two pixels
-   apart, one faint and one gold, is a box with a smudge under it. */
-.fd-rowwrap--shared { border-bottom-color: transparent; }
+   **The trouble was the colour, not the size.** Gold is what a star is on
+   this site, everywhere, and a gold rule beside five gold stars is the rating
+   said twice — so it read as loud and as being about the rating. Nothing else
+   here is gold that is not a score.
+
+   So no colour and no rule: the row is lifted onto a surface instead, which
+   is the one thing this site's vocabulary already has for *this is a thing
+   and not just some words* — `--panel`, the same ground the card and the tile
+   and the sheet all stand on. Scrolling, it is a shape rather than a line,
+   and a shape is what the eye catches without reading. Standing still it is
+   barely there, which is the brief.
+
+   It keeps its hairline: a ground and a rule are not two of the same thing
+   the way a ring and a rule were. */
 .fd-rowwrap--shared .fd-row {
-  outline: 1.5px solid var(--gold);
-  outline-offset: -2px;
+  background: var(--panel);
+  box-shadow: inset 0 0 0 1px var(--border);
 }
 .fd-rowwrap:last-child { border-bottom: 0; }
 .fd-row {
@@ -2078,23 +2088,24 @@
    Nothing in it can be pressed on the way out: it is already gone as far as
    the page is concerned, and a control that answers while it is leaving
    answers for a row you have closed. */
+/* One movement, not two, 2026-09-20. It was the opening run backwards — bars
+   down, then the panel — and Miyel: "the horizon bars don't need a reversed
+   animation, just the door needs to feel like it closes on them." She is
+   right, and the reason is what the two movements are for. The bars rising is
+   the comparison being made; running it backwards un-makes it, which is not
+   what closing means. Closing is the door. The bars stay exactly as they are
+   and the door comes down over them.
+
+   So: no delay, because there is nothing to wait for, and the bars keep their
+   heights the whole way. `overflow: hidden` on the panel is what does the
+   work — the horizon is not shrinking, it is being covered. */
 .fd-cmp--shutting {
   pointer-events: none;
-  animation: fd-cmp-shut 0.28s cubic-bezier(0.22, 0.61, 0.36, 1) 0.3s both;
+  animation: fd-cmp-shut 0.3s cubic-bezier(0.22, 0.61, 0.36, 1) both;
 }
 @keyframes fd-cmp-shut {
   from { max-height: 260px; opacity: 1; }
-  to   { max-height: 0; opacity: 0; }
-}
-/* Quicker down than up. A thing arriving can take its time and a thing
-   leaving should not keep you waiting — the site's rule everywhere else it
-   has both. */
-.fd-cmp--shutting .fd-cmp-bar {
-  animation: fd-sink 0.3s cubic-bezier(0.22, 0.61, 0.36, 1) both;
-}
-@keyframes fd-sink {
-  from { height: var(--tall); }
-  to   { height: 4px; }
+  to   { max-height: 0; opacity: 0.4; }
 }
 /* Both horizons are drawn the same way up. A mirrored pair reads as a
    difference chart, and these are two listens, not one difference. */
@@ -2137,7 +2148,7 @@
   color: var(--fav);
 }
 @media (prefers-reduced-motion: reduce) {
-  .fd-cmp, .fd-cmp-bar, .fd-cmp--shutting, .fd-cmp--shutting .fd-cmp-bar { animation: none; }
+  .fd-cmp, .fd-cmp-bar, .fd-cmp--shutting { animation: none; }
   .fd-cmp { max-height: none; }
 }
 /* Theirs is the listen you came to look at, so it is the lit one. Yours is
