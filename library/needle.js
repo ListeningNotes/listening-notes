@@ -172,9 +172,23 @@ export async function pull_recent_listens() {
       UNION ALL
       SELECT album, artist, album_art, NULL, NULL  AS track, updated_at AS at FROM drafts
       UNION ALL
+      -- ── An ended needle does not expire, 2026-09-20 ────────────────────
+      -- It carried the twenty-minute window the live read has, and that
+      -- window is about a *claim*: a needle nobody has touched for twenty
+      -- minutes has stopped being "now", because nobody can say what
+      -- happened to it. A needle that was deliberately ended is not a claim
+      -- about now, it is a fact about the last thing that was listened to —
+      -- and facts do not expire.
+      --
+      -- The window measured from updated_at, which is the last track turn,
+      -- so a listen longer than twenty minutes lost its song the instant it
+      -- finished. Miyel: "I kept trying to have Dogtooth be the final song
+      -- and it keeps reverting to the album."
+      --
+      -- No backticks in here. This is a tagged template and a backtick ends
+      -- it, SQL comment or not.
       SELECT album, artist, album_art, NULL, track AS track, updated_at AS at FROM needle
         WHERE ended_at IS NOT NULL
-          AND updated_at > now() - ${LIFTS_AFTER_MINUTES} * interval '1 minute'
       UNION ALL
       -- And the listens whose posts were deleted. No slug, by definition.
       SELECT album, artist, album_art, NULL, NULL  AS track, at         AS at FROM sat_with
@@ -195,6 +209,12 @@ export async function pull_recent_listens() {
       if (at.has(key)) {
         const kept = listens[at.get(key)];
         if (!kept.slug && row.slug) kept.slug = row.slug;
+        // And the song, the same way. Saving a listen writes an entry stamped
+        // a moment after the needle it came from, so the entry wins the order
+        // and the entry has no song in it — which took the song off the
+        // beacon at the exact moment the listen finished. The rows are two
+        // halves of one listen; between them they know both things.
+        if (!kept.track && row.track) kept.track = String(row.track).trim();
         continue;
       }
       at.set(key, listens.length);
