@@ -1549,6 +1549,18 @@ Project → Settings → Environment Variables.
 
 ## Gotchas
 
+**Two goes at a vertical snap, and the phone was right both times,
+2026-09-20.** `mandatory` on the cross's two-floor panes cost nothing while a
+second floor was one screen tall with its own scroller in it — two stops,
+nothing between them. The peek took the inner scroller out (a sliver of one is
+a scroller you can reach before arriving at it), the pane's own scroll went
+five screens deep, and mandatory spent all of it pulling back to the top of
+the feed. `proximity` was the obvious remedy and caught on a real phone
+exactly as it had in August. **There is no vertical snap on the cross now**,
+and `scroll-margin-top` on the second floors stayed: it is what `goDown` reads
+to know where the press should stop, so it is load-bearing with no snap left
+to serve. Do not delete it as dead.
+
 **A box with `overflow: auto` is a scroll container whether or not it
 overflows, 2026-09-20.** The shelf of faces carried `overflow-y: auto` all the
 time, on the reasoning that the rows always fit so there would be nothing to

@@ -839,20 +839,27 @@
    only, as the entry's two screens are — on a desk the floors are plain
    wrappers in a column that scrolls, and the column is the scroller. */
 @media (max-width: 768px) {
-  /* ── Proximity, not mandatory, 2026-09-20 ──────────────────────────────
-     Miyel: "scrolling feed doesn't scroll freely, it's sticky."
-     Mandatory was safe while a second floor was exactly one screen tall with
-     its own scroller inside it: the pane had two stops and nothing between
-     them, so "must rest on a stop" cost nothing. Both second floors are long
-     now — that is what lets the peek show the thing itself rather than a
-     bar's-worth of padding — and a pane that must rest on a stop, over a feed
-     five screens deep, spends the whole scroll being pulled back to the top
-     of it.
+  /* ── No vertical snap on these panes at all, 2026-09-20 ────────────────
+     Two goes at this and the phone was right both times.
 
-     Proximity snaps when you finish near the boundary and leaves you alone
-     everywhere else. The cost is honest: end up halfway between the floors
-     and you stay there. The way down is a press, and a press lands exactly. */
-  .hn-pane--home { scroll-snap-type: y proximity; }
+     `mandatory` was safe while a second floor was exactly one screen tall
+     with its own scroller inside it: two stops, nothing between them, so
+     "must rest on a stop" was always already true. Giving those floors a peek
+     meant taking the inner scroller out, and over a feed five screens deep
+     `mandatory` spent the whole scroll pulling back to the top of it.
+     `proximity` was meant to leave you alone once you were away from the
+     boundary, and on iOS it did not — Miyel: "it still catches in the feed."
+
+     So: nothing. A drag scrolls, the way a long page scrolls, and the way
+     down is the press — which lands exactly and always did. The thing the
+     snap was for is still there without it: the first floor is one screen
+     tall, the peek shows what is under it, and the row above the peek says
+     what that is.
+
+     What it costs: stop halfway and you stay halfway, looking at the foot of
+     one floor and the top of the next. With the peek that is a legible place
+     to be rather than a broken one, which is the whole reason it can go. */
+  .hn-pane--home { scroll-snap-type: none; }
 
   /* ── How much of a second floor shows under a first ───────────────────
      One number for both panes that have one, because they are the same
@@ -897,7 +904,8 @@
   }
   /* The snap stops a bar's-worth short, so the wall lands under the mark
      rather than behind it — and at rest the peek is all wall and no gap. */
-  .hn-floor--wall { scroll-margin-top: var(--hn-bar-h); scroll-snap-stop: normal; }
+  /* Same, and read by the same press. See the note on .hn-floor--feed. */
+  .hn-floor--wall { scroll-margin-top: var(--hn-bar-h); }
   /* And the wall stops being a scroller of its own on a phone. It was one so
      the pane had only two stops; with a sliver of it showing at rest that
      became a scroller you could reach before arriving at it, and a flick
@@ -2581,7 +2589,8 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
      screen and has to measure one; the padding belongs inside each floor. */
   .hn-pane--friends {
     padding: 0;
-    scroll-snap-type: y proximity;
+    /* None, for the reason written against .hn-pane--home above. */
+    scroll-snap-type: none;
     /* Inherited from .hn now — the beacon wants the same number. */
 
     /* The feed takes its gutter from the floor rather than adding a second
@@ -2639,12 +2648,14 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
      floor lands with its top a bar's-worth down the screen, and at rest its
      first cover begins immediately under the caret. The floor above rides up
      behind the bar's own ground, which is what that ground is for. */
+  /* ── scroll-margin is load-bearing and not dead, 2026-09-20 ───────────
+     It was here for the snap, to stop this floor a bar's-worth short so the
+     first record lands under the mark rather than behind it. There is no snap
+     any more and the property still matters: `goDown` reads it off this
+     element to work out where the press should stop. Delete it and the way
+     down puts a record behind the logo. */
   .hn-floor--feed {
     scroll-margin-top: var(--hn-bar-h);
-    /* And a flick is allowed through it. `always` forces a stop at every snap
-       point a scroll crosses, which on a phone means one deliberate throw
-       into the feed stops dead at the first record. */
-    scroll-snap-stop: normal;
     /* A breath, so the cover is not welded to the caret in the peek. */
     padding-top: 12px;
   }
