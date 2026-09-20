@@ -2714,6 +2714,22 @@ current.
 
 ## Complete
 
+**2026-09-20 — The mark is the beacon's alone, on a phone.** Miyel: "remove
+the LN logo from header of all pages except beacon." It had shown on the inbox
+and the book since the evening before, on the argument that every page here
+says what it belongs to — and the answer is that the mark belongs to the
+*journal*, which is the beacon, and repeating it over the rooms behind it says
+nothing except that this is still the same website. The card gave up its own
+in the same breath. The beacon keeps the crown, and the bar's small one still
+takes over there once the crown has scrolled away.
+
+The two panes got their forty pixels back: they clear the status bar again
+rather than the whole bar, which on a tall phone is most of another row of
+faces. **A desk is untouched** — no band, one page at a time, and the bar's
+mark is the only one it has. **The standalone addresses are untouched too**:
+/settings and the rest still carry SiteNav's mark, which is a different
+header on a different surface. Say if that should go as well.
+
 **2026-09-20 — The beacon gets the book's way down, and three fixes.**
 
 - [x] **The beacon's floor stops short and names what is under it.** Miyel:
