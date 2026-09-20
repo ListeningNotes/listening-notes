@@ -22,6 +22,7 @@
 // colour of the room.
 
 import { useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { arrivingAlone } from '../../library/handoff';
 import { Check, Eye, EyeSlash, PushPin, UploadSimple, User, X } from '@phosphor-icons/react';
@@ -321,8 +322,111 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
 
   const off = key => (editing && edit.hidden.has(key) ? ' idc-off' : '');
 
-  // Whether the counted line under the name has anything left on it.
-  const showAlbums = records != null && showing('albums');
+  // ── The tools stay in the header when the header goes ───────────────────
+  // Miyel, 2026-09-20: "the toolbar needs to stay in the header on scroll."
+  // This row is the first thing on a pane that scrolls, so a screen into the
+  // card the only door it has — Edit, Share, Settings — was above the window,
+  // and the way back to it was to scroll the whole card up again.
+  //
+  // Sticky was the obvious answer and cannot work here: a sticky element is
+  // held by its own containing block, which is the card object, and the card
+  // object ends where the writing starts. It would let go a third of the way
+  // down the page.
+  //
+  // So the row moves into the cross's bar instead, which is the header that
+  // is already fixed up there, by the same trick a layer uses for its own
+  // header (LayerEntry.js): a slot element of this component's making, put in
+  // the bar and drawn into from here. One row, in one of two places, never
+  // both — so the drawer's state, the editing buttons and everything else
+  // about it exist once.
+  //
+  // Phones only, and the width is the question rather than the bar: the bar
+  // exists on a desk too, where it sits over the *journal* and this card is
+  // the left page. Tools posted into it there would be a door to one page
+  // standing on another.
+  const [barSlot, setBarSlot] = useState(null);
+  useEffect(() => {
+    const narrow = window.matchMedia('(max-width: 768px)');
+    let slot = null;
+    const fit = () => {
+      const bar = document.querySelector('.hn-bar');
+      if (narrow.matches && bar && !slot) {
+        slot = document.createElement('div');
+        slot.className = 'hn-bar-tools';
+        bar.appendChild(slot);
+        setBarSlot(slot);
+      } else if ((!narrow.matches || !bar) && slot) {
+        slot.remove();
+        slot = null;
+        setBarSlot(null);
+      }
+    };
+    fit();
+    narrow.addEventListener('change', fit);
+    return () => {
+      narrow.removeEventListener('change', fit);
+      if (slot) slot.remove();
+      setBarSlot(null);
+    };
+  }, []);
+
+  // Whether this card's own header has gone under the bar. Measured against
+  // the bar's own bottom edge rather than a number, so the notch is in it.
+  const headRef = useRef(null);
+  const [headGone, setHeadGone] = useState(false);
+  useEffect(() => {
+    const head = headRef.current;
+    const bar = document.querySelector('.hn-bar');
+    const scroller = head?.closest('.hn-pane');
+    if (!head || !bar || !scroller) return undefined;
+    const look = () => {
+      setHeadGone(head.getBoundingClientRect().bottom <= bar.getBoundingClientRect().bottom);
+    };
+    look();
+    scroller.addEventListener('scroll', look, { passive: true });
+    return () => scroller.removeEventListener('scroll', look);
+  }, []);
+
+  const inBar = Boolean(barSlot && headGone);
+
+  const toolsRow = authed && (editing ? (
+    <>
+      <button
+        type="button"
+        className="idc-tool idc-tool--keep"
+        onClick={edit.save}
+        disabled={edit.saving || edit.busy}
+        aria-label="Save this card"
+        title="Save"
+      >
+        <Check size={18} weight="regular" aria-hidden="true" />
+      </button>
+      <button
+        type="button"
+        className="idc-tool"
+        onClick={edit.cancel}
+        disabled={edit.saving}
+        aria-label="Stop editing without saving"
+        title="Cancel"
+      >
+        <X size={18} weight="regular" aria-hidden="true" />
+      </button>
+    </>
+  ) : (
+    <KeeperTools what="card" onEdit={edit.begin} />
+  ));
+
+  // Whether each counted line has anything left on it. `showing` is the
+  // keeper's own answer and is always true while editing, so the eye that
+  // turns a line off is still reachable on the line it turned off.
+  //
+  // These were computed and then not asked, 2026-09-20: the counts drew on
+  // "is there anything to count" alone and the genres drew on nothing at all,
+  // so the eyes saved a preference that no reader's card ever read. Miyel:
+  // "albums masterpieces and formative hiding option doesn't work... I think
+  // genres should be hideable."
+  const showCounts = (records !== null || marks.length > 0) && showing('albums');
+  const showGenres = genres.length > 0 && showing('genres');
   const showSince = Boolean(since) && showing('since');
 
   // The photograph used to be lifted down the column by a measured spacer, to
@@ -377,7 +481,9 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
             abandon it is worse than a tidy header. Nothing here is a
             permission check — the writing endpoints check the wristband
             whatever is drawn. */}
-        <div className="idc-head">
+        {inBar && createPortal(<div className="idc-tools">{toolsRow}</div>, barSlot)}
+
+        <div className="idc-head" ref={headRef}>
           <svg
             viewBox={`${MARK_BOX.x} ${MARK_BOX.y} ${MARK_BOX.w} ${MARK_BOX.h}`}
             className="idc-mark"
@@ -395,34 +501,7 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
             />
           </svg>
 
-          <div className="idc-tools">
-            {authed && (editing ? (
-              <>
-                <button
-                  type="button"
-                  className="idc-tool idc-tool--keep"
-                  onClick={edit.save}
-                  disabled={edit.saving || edit.busy}
-                  aria-label="Save this card"
-                  title="Save"
-                >
-                  <Check size={18} weight="regular" aria-hidden="true" />
-                </button>
-                <button
-                  type="button"
-                  className="idc-tool"
-                  onClick={edit.cancel}
-                  disabled={edit.saving}
-                  aria-label="Stop editing without saving"
-                  title="Cancel"
-                >
-                  <X size={18} weight="regular" aria-hidden="true" />
-                </button>
-              </>
-            ) : (
-              <KeeperTools what="card" onEdit={edit.begin} />
-            ))}
-          </div>
+          <div className="idc-tools">{inBar ? null : toolsRow}</div>
         </div>
 
         {/* ── The object ───────────────────────────────────────────────────
@@ -480,7 +559,7 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
             Typeset, not stamped. Stamps were tried the hour before and the
             answer is that with a photograph that size above them the photo is
             already the flourish. */}
-        {(records !== null || marks.length > 0) && (
+        {showCounts && (
           <div className={'idc-counts' + off('albums')}>
             {counts.map(c => (
               c.opens ? (
@@ -512,10 +591,11 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
             belongs with them rather than down in the writing, which is where
             it sat for an hour. Computed, never chosen: what this journal
             listens to, not what its keeper would claim. */}
-        {genres.length > 0 && (
-          <p className="idc-genres">
+        {showGenres && (
+          <p className={'idc-genres' + off('genres')}>
             <span className="idc-genres-label">Top genres</span>
             <span className="idc-genres-said">{genres.join(' · ')}</span>
+            {eyeFor('genres')}
           </p>
         )}
 

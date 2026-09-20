@@ -65,7 +65,7 @@
 
 import { cloneElement, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { DotsThree, EnvelopeSimple, Export, FilePlus, Pencil, Trash, UserCircle, X } from '@phosphor-icons/react';
+import { DotsThree, EnvelopeSimple, Export, FilePlus, GearSix, Pencil, Trash, UserCircle, X } from '@phosphor-icons/react';
 
 // How long the tools take to file back in. It has to outlast the longest
 // kt-file-in in nav.css or the last one is unmounted mid-stride and vanishes,
@@ -104,6 +104,13 @@ const WORDS = {
     all:    'What you can do with this card',
     edit:     ['Edit',  'Edit this card'],
     print:    ['Share', 'Make a picture of this card to share'],
+    // Only here. Settings is about the journal — the address, the beacon, the
+    // key, the password — and the card is the page about the journal. It sat
+    // at the foot of this pane as a door of its own from 2026-09-19 until
+    // Miyel moved it up here on 2026-09-20: everything else you can do to
+    // this page is behind the ···, and one of the keeper's doors standing
+    // outside the drawer is a door you have to remember the position of.
+    settings: ['Settings', 'The key, password, beacon, address'],
     sender:   null,
     send:     null,
     relisten: null,
@@ -134,6 +141,7 @@ export default function KeeperTools({
   // packing-up clock is the same number the animation uses. A plain value and
   // not a ref: it is decided by the props and read while closing.
   const count = 2
+    + (words.settings ? 1 : 0)
     + (onSender && words.sender ? 1 : 0)
     + (onSend && words.send ? 1 : 0)
     + (onRelisten && words.relisten ? 1 : 0)
@@ -252,6 +260,14 @@ export default function KeeperTools({
   tools.push(
     <button key="edit" type="button" onClick={() => { shut(); onEdit(); }} {...box(...words.edit, <Pencil size={22} weight="regular" aria-hidden="true" />)} />
   );
+
+  // A room rather than an action, which is why it is last: the two above it
+  // do something to the page you are looking at and this one leaves it.
+  if (words.settings) {
+    tools.push(
+      <Link key="settings" href="/settings" {...box(...words.settings, <GearSix size={22} weight="regular" aria-hidden="true" />)} />
+    );
+  }
 
   // Sent by left the correction on 2026-09-16 and is its own door now. It was
   // a field among fifteen others, which meant saying who gave you a record —
