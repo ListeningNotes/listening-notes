@@ -266,6 +266,29 @@ export default function Friends({ shelf = false, onCount = null }) {
   // whoever is open next.
   useEffect(() => { setSure(false); }, [open]);
 
+  // ── Doors opened off the bottom of the shelf ────────────────────────────
+  // Miyel, 2026-09-19: "opening bottom row of friends is cut off." On the
+  // floor the faces are clipped to a box, and pressing somebody in the last
+  // row unfolds 150px of doors below them — past the edge of it. The shelf
+  // has always been able to scroll to them; nothing said so, which is the
+  // same as not being able to.
+  //
+  // So the shelf goes to them, once they have finished opening, and only by
+  // as much as it takes. Nothing moves when the doors were already in view,
+  // which is every row but the last.
+  useEffect(() => {
+    if (!shelf || open === null) return undefined;
+    const box = shelfRef.current;
+    if (!box) return undefined;
+    const settle = setTimeout(() => {
+      const doors = box.querySelector('.fr-doors--open');
+      if (!doors) return;
+      const over = doors.getBoundingClientRect().bottom - box.getBoundingClientRect().bottom;
+      if (over > 1) box.scrollTo({ top: box.scrollTop + over + 10, behavior: 'smooth' });
+    }, DOORS_MS + 30);
+    return () => clearTimeout(settle);
+  }, [shelf, open]);
+
   // ── Anywhere else closes the doors ──────────────────────────────────────
   // Miyel, 2026-09-19: "clicking away should close." Pressing the face again
   // closes it and always did, but that asks you to find the thing you

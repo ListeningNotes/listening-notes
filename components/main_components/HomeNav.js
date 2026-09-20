@@ -79,7 +79,6 @@ import { useBookplate } from './Bookplate';
 import ListeningBeacon from './ListeningBeacon';
 import CallingCard from './CallingCard';
 import Journal from './Journal';
-import EdgeCaret from './EdgeCaret';
 import Footer from './Footer';
 import About from './About';
 import Dashboard, { heldNow, subscribeHeld } from './Dashboard';
@@ -1999,7 +1998,7 @@ export default function HomeNav() {
           {/* Floor one — the crown, the record with its caption, and what
               came before. On a phone it is exactly one screen tall, so the
               snap has one place to land; on a desk it is a wrapper. */}
-          <div className="hn-floor">
+          <div className="hn-floor hn-floor--beacon">
             {crown}
             {/* The screen on a phone; the band on a desk, where the same
                 children lie in one row — the cover and its words, and
@@ -2050,11 +2049,28 @@ export default function HomeNav() {
                     {theCallingCard}
                   </>}
             </div>
+            {/* ── The way down, in the flow ────────────────────────────
+                The same thing the book has, and Miyel asked for it here:
+                "the beacon should have the same effect." A word and a
+                chevron at the foot of the floor, with the top of the wall
+                showing under them.
+
+                It replaces the caret that floated above the band. That one
+                said there is more that way; this says what is down there,
+                and it does it over the edge of the thing itself. The mark
+                above had to come down in size to pay for the room — see
+                --hn-crown in nav.css. */}
+            {deep[HOME] && (
+              <button type="button" className="hn-down" onClick={() => goDown(HOME)} aria-label="The journal">
+                <span className="hn-down-say">Journal</span>
+                <CaretDown size={11} weight="bold" aria-hidden="true" />
+              </button>
+            )}
           </div>
           {/* Floor two — the wall, scrolling inside a box of its own, so
               the pane only ever has two stops. The entry's second screen,
               in the cross. */}
-          <div className="hn-floor">
+          <div className="hn-floor hn-floor--wall">
             <div className="hn-floor-scroll" ref={floorRef}>
               <div className="hn-under">
                 <Journal
@@ -2186,14 +2202,11 @@ export default function HomeNav() {
           one pane with a whole screen and nothing cut off at its fold, so
           nothing else needs telling there is more. It sits above the band,
           fades while anything moves, and goes for good once you are down. */}
-      <div className={'hn-controls' + (busy ? ' hn-controls--busy' : '')}>
-        <EdgeCaret
-          direction="down"
-          onClick={() => goDown(pane)}
-          label="Read on"
-          hidden={!deep[pane] || down[pane]}
-        />
-      </div>
+      {/* The floating caret is gone, 2026-09-19. It lived above the band and
+          said "there is more that way" on whichever pane had a second floor.
+          Both of those panes say it themselves now, at the foot of their own
+          first floor, with a word and the top of what is down there showing
+          under it — which is the same sentence with a subject in it. */}
 
       {/* The cover in the air. Fixed to the window and over everything, because
           it is travelling between two boxes that belong to different parts of
