@@ -3076,6 +3076,19 @@ else's, which is an argument for a version on that URL and is not built.
       that is the only thing left saying it can be written in. 16px and not
       the caption's 10, because base.css forces every field on a phone to 16
       to stop Safari zooming; the face carries the row, not the size.
+      **The field's face is the page's, not the caption's.** It was DM Mono
+      for an hour on the reasoning that the row is a caption — "don't like
+      that font" — and a typewriter face at sixteen pixels in a header is a
+      typewriter in a header. What makes it belong to the row is that it is a
+      line rather than a box; the letters are the site's.
+      **Add and Scan came up into the header with it.** "I'm not a huge fan of
+      add and scan being under, but I have no idea where else to put them",
+      then "there needs to be an actual add button but I also don't really
+      like pills." So Add is an arrow at the end of the field — where the
+      sentence it commits ends — arriving with the first character typed, and
+      Scan is a camera beside the way out, only while the field is open. Both
+      are the mark rather than a mark in a container, which is the rule this
+      site already keeps. `.fr-add-acts` and its max-height dance are gone.
       **The two fields cross by fading here**, not by clipping: the clip read
       as one box leaving while another arrived, and with no box round either
       there is no edge for it to read as. Careful with the order — an
