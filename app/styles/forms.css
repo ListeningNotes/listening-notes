@@ -1115,22 +1115,23 @@ a.pp-name:hover svg { color: var(--ink); }
 
    `.own-act` sets no gap of its own — every other caller passes it a word
    alone — so the camera and SCAN A CODE were touching. */
-/* ── Centred on the field, not on the page, 2026-09-19 ────────────────────
-   Miyel: "centering feels off when search bar is open." It was, and this is
-   the arithmetic of it. The head is a field and a +, so the field gives up
-   the +'s 40 and the 8 between them — all of it off its right-hand end — and
-   comes out 24px left of centre. Everything else on the floor is centred on
-   the pane: the mark above, the faces below, and this row. So two buttons
-   that plainly belong to the box above them sat 24px to the right of it.
+/* ── Centred on the page, 2026-09-20 ──────────────────────────────────────
+   These sat 24px left of the pane's middle for a day, lined up with the field
+   above them: the head is a field and a +, so the field gives up the +'s 40
+   and the 8 between them, all off its right-hand end, and comes out left of
+   centre. Lining these up with it made the box and its two actions one
+   object — and Miyel's call, looking at it: "can we center add and scan code
+   to page not the box."
 
-   The right padding is the + and its gap, which puts this row's middle on the
-   field's middle. The alternative was to centre the field instead by floating
-   the + over its right-hand end, and that buys one centre line for the whole
-   screen at the cost of putting the × on top of the thing it cancels. */
+   She is right, and the reason is what else is on the screen. Everything on
+   this floor is centred on the pane — the book's name, the faces, the way
+   down — so a pair of buttons on their own private centre line is one thing
+   out of true with the whole page to keep one small group internally tidy.
+   The field is the odd one out because it has a + beside it; nothing else
+   should follow it there. */
 .fr-add-acts {
   display: flex; align-items: center; justify-content: center;
   gap: 10px; flex-wrap: wrap;
-  padding-right: 48px;
   max-height: 0; margin-top: 0; opacity: 0; overflow: hidden;
   transform: translateY(-8px);
   pointer-events: none;

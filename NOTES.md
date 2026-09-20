@@ -3018,6 +3018,16 @@ rules in nav.css are the same order said twice, and the band counts against
 the first. Change one without the other and the third word walks you to the
 fourth pane.
 
+**2026-09-20 — Add and Scan go back to the page's centre.** They spent a day
+lined up with the field above them and Miyel moved them back: "can we center
+add and scan code to page not the box." She is right, and the reason is what
+else is on that screen. Everything on the floor is centred on the pane — the
+book's name, the faces, the way down — so a pair of buttons on their own
+private centre line is one thing out of true with a whole page in order to
+keep one small group internally tidy. The field is the odd one out because it
+has a + beside it; nothing else should follow it there. The entry below is the
+day-old reasoning it replaces.
+
 **2026-09-19 — Add and Scan sit under the field, not under the page.** Miyel:
 "centering feels off when search bar is open." It was, and the arithmetic is
 plain once you measure it: the head is a field and a +, so the field gives up
