@@ -1945,7 +1945,14 @@
 .fd-row-words { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
 .fd-row-album {
   font-family: var(--font-display); font-weight: var(--font-display-weight, 700);
-  font-size: 16px; line-height: 1.2; color: var(--ink); text-decoration: none;
+  /* 14, down from 16, Miyel 2026-09-20: "quite large". It was the full view's
+     size brought over unchanged, and the full view gives a record most of a
+     screen — at six rows to a screen the name is a label rather than a title,
+     and 16px bold beside a 10.5px meta line was a heading with a caption
+     under it. It still leads: bold display face against a mono caption four
+     steps smaller says which is which without needing the size to say it
+     twice. */
+  font-size: 14px; line-height: 1.25; color: var(--ink); text-decoration: none;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .fd-row-album:hover { text-decoration: underline; text-underline-offset: 3px; }
