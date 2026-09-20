@@ -3569,9 +3569,8 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
      past column. */
   border-top: 1px solid var(--border);
   /* And the bottom half under it. The circle is out of the flow, so this is
-     the whole of what the row occupies below the rule — the two words stand
-     in it, either side of what is hanging over them. */
-  padding-top: 42px;
+     the whole of what the row occupies below the rule — half of 72. */
+  padding-top: 36px;
 }
 /* The empty beacon has neither a cover nor a name — it has one quiet line, and
    it spans. */
