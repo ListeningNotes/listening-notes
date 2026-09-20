@@ -11,12 +11,29 @@
 import database from './database_connection.js';
 import { tidyJournal, journalUrl } from './return_address.js';
 
+// Pinned first, in the order they were pinned, then everybody else by name.
+// `pinned_at IS NULL` sorts false before true, which puts the pinned ones at
+// the top without a second query or a sort in the page.
 export async function pull_people() {
   return await database`
-    SELECT id, address, name, added_at
+    SELECT id, address, name, added_at, pinned_at
     FROM people
-    ORDER BY lower(coalesce(name, address)), added_at
+    ORDER BY (pinned_at IS NULL), pinned_at, lower(coalesce(name, address)), added_at
   `;
+}
+
+// Pinning is a stamp or nothing — see migrations/021_pinned_people.sql. The
+// stamp is the order as well as the fact, so re-pinning somebody already
+// pinned moves them to the end of the pinned row rather than doing nothing;
+// that is the honest reading of pressing it again on purpose.
+export async function pin_person(id, on) {
+  const [row] = await database`
+    UPDATE people
+    SET pinned_at = ${on ? new Date() : null}
+    WHERE id = ${id}
+    RETURNING id, address, name, added_at, pinned_at
+  `;
+  return row || null;
 }
 
 // Filing an address already there is not an error: it is the same person,
@@ -30,14 +47,14 @@ export async function save_person({ address, name }) {
     VALUES (${host}, ${String(name || '').trim() || null})
     ON CONFLICT (address) DO UPDATE
       SET name = COALESCE(EXCLUDED.name, people.name)
-    RETURNING id, address, name, added_at
+    RETURNING id, address, name, added_at, pinned_at
   `;
   return row;
 }
 
 export async function pull_person(id) {
   const [row] = await database`
-    SELECT id, address, name, added_at FROM people WHERE id = ${id} LIMIT 1
+    SELECT id, address, name, added_at, pinned_at FROM people WHERE id = ${id} LIMIT 1
   `;
   return row || null;
 }

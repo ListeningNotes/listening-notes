@@ -38,16 +38,25 @@
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
-import { BookOpen, Camera, MagnifyingGlass, PaperPlaneTilt, Plus, Shuffle, User, X } from '@phosphor-icons/react';
+import { BookOpen, Camera, MagnifyingGlass, PaperPlaneTilt, Plus, PushPin, Shuffle, User, X } from '@phosphor-icons/react';
 import CodeScanner from './CodeScanner';
 import SendSheet from './SendSheet';
 import { carrySender, journalUrl, tidyJournal } from '../../library/return_address';
 import { useBookplate } from './Bookplate';
 
-// The order the server keeps: by name, or by address for anyone without one.
+// The order the server keeps: pinned first in the order they were pinned,
+// then by name, or by address for anyone without one. Said twice — here and
+// in pull_people — because the page re-sorts after a write rather than asking
+// again, and a page that sorted differently from the server would put
+// somebody in one place now and another on the next load.
 function inOrder(people) {
   const called = p => (p.name || p.address).toLowerCase();
-  return [...people].sort((a, b) => called(a).localeCompare(called(b)));
+  const when = p => (p.pinned_at ? new Date(p.pinned_at).getTime() : 0);
+  return [...people].sort((a, b) => {
+    if (Boolean(a.pinned_at) !== Boolean(b.pinned_at)) return a.pinned_at ? -1 : 1;
+    if (a.pinned_at && b.pinned_at) return when(a) - when(b);
+    return called(a).localeCompare(called(b));
+  });
 }
 
 // ── How many across ───────────────────────────────────────────────────────
@@ -232,6 +241,21 @@ export default function Friends({ shelf = false, onCount = null }) {
     setPeople(prev => prev.filter(p => p.id !== id));
   }
 
+  // ── Pinning ─────────────────────────────────────────────────────────────
+  // One field, two values, and nothing else about a person is editable from
+  // here. The page re-sorts off what came back rather than asking for the
+  // book again: the row it returns is the row the server now holds.
+  async function pin(id, on) {
+    const answer = await fetch(`/api/people/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pinned: on }),
+    }).then(r => (r.ok ? r.json() : null)).catch(() => null);
+    if (answer?.person) {
+      setPeople(prev => inOrder(prev.map(q => (q.id === answer.person.id ? answer.person : q))));
+    }
+  }
+
   // ── The + does not open the keyboard ────────────────────────────────────
   // It did, on the reasoning that a + which opens a box you then have to tap
   // is two presses for one act. Miyel, 2026-09-19, off a real phone: "this can
@@ -334,12 +358,17 @@ export default function Friends({ shelf = false, onCount = null }) {
     const box = shelfRef.current;
     if (!box) return undefined;
     const reckon = () => {
-      const room = box.clientHeight;
-      if (!room) return;
+      // Less whatever the pinned row is taking, if there is one: it stands in
+      // this box with the others and is a different height from them, so the
+      // sum below would count it as an ordinary row and promise space that is
+      // already spent.
+      const above = box.querySelector('.fr-row--pinned')?.offsetHeight || 0;
+      const room = box.clientHeight - above;
+      if (room <= 0) return;
       // A whole row, not a face: each row is its own grid with its own air
       // above and below it, and measuring the face alone lost 36px a row —
       // enough that the fourth row came back cut in half at five across.
-      const tall = box.querySelector('.fr-row')?.offsetHeight || A_ROW;
+      const tall = box.querySelector('.fr-row:not(.fr-row--pinned)')?.offsetHeight || A_ROW;
       const lines = Math.max(1, Math.floor(room / tall));
       const next = lines * across;
       setFits(was => (was === next ? was : next));
@@ -356,11 +385,29 @@ export default function Friends({ shelf = false, onCount = null }) {
   // shelf that hides the person you just typed the name of is a search that
   // does not work.
   const narrowed = Boolean(finding.trim());
-  const onShow = useMemo(
-    () => (shelf && !narrowed && fits > 0 ? shown.slice(0, fits) : shown),
-    [shelf, narrowed, fits, shown]
+
+  // ── Pinned, and everybody else ──────────────────────────────────────────
+  // Brief 1 asked for this on 2026-09-17, Miyel held it back the same week,
+  // and asked for it back on 2026-09-20 once the pane had a shelf and a
+  // header and looked empty under them. Three across and larger, above the
+  // rest, in the order they were pinned — see migrations/021, where the stamp
+  // is the order as well as the fact.
+  //
+  // Not while a search is narrowing the book: searching is one flat list of
+  // whoever matches, and a pinned section that answered a search would be
+  // telling you where somebody sits rather than that they are there.
+  const pinned = useMemo(() => people.filter(p => p.pinned_at), [people]);
+  const showPins = !narrowed && pinned.length > 0;
+  const loose = useMemo(
+    () => (showPins ? shown.filter(p => !p.pinned_at) : shown),
+    [showPins, shown]
   );
-  const held = shelf && !narrowed && people.length > onShow.length;
+
+  const onShow = useMemo(
+    () => (shelf && !narrowed && fits > 0 ? loose.slice(0, fits) : loose),
+    [shelf, narrowed, fits, loose]
+  );
+  const held = shelf && !narrowed && loose.length > onShow.length;
 
   // ── Where the search field lives ────────────────────────────────────────
   // Miyel, 2026-09-19: "the search field lives in the full view. On the floor
@@ -378,8 +425,22 @@ export default function Friends({ shelf = false, onCount = null }) {
   // *between* two rows and CSS grid has no way to say "after whichever row
   // that item landed in". Chunking is what turns that into an ordinary list
   // of rows with a panel that can sit after one of them.
+  //
+  // A row carries how wide it is and what stands over it, so the pinned row
+  // and an ordinary one are the same thing drawn from the same map — three
+  // large faces under PINNED, or four or five small ones under EVERYONE. The
+  // doors open under whichever row the face is in, either way.
   const rows = [];
-  for (let i = 0; i < onShow.length; i += across) rows.push(onShow.slice(i, i + across));
+  if (showPins) rows.push({ key: 'pinned', people: pinned, across: 3, big: true, label: 'Pinned' });
+  for (let i = 0; i < onShow.length; i += across) {
+    rows.push({
+      key: `r${i}`,
+      people: onShow.slice(i, i + across),
+      across,
+      big: false,
+      label: showPins && i === 0 ? 'Everyone' : null,
+    });
+  }
 
   const who = people.find(p => p.id === open) || null;
 
@@ -545,15 +606,19 @@ export default function Friends({ shelf = false, onCount = null }) {
         ) : shown.length === 0 ? (
           <div className="own-empty">Nobody in your book by that name.</div>
         ) : (
-          rows.map((row, i) => {
-            const holdsOpen = who && row.some(p => p.id === who.id);
+          rows.map(row => {
+            const holdsOpen = who && row.people.some(p => p.id === who.id);
             // The row's doors, and who they belong to: the open person, or
             // the one still on their way out of this row.
-            const mine = row.find(p => p.id === open) || row.find(p => p.id === leaving) || null;
+            const mine = row.people.find(p => p.id === open) || row.people.find(p => p.id === leaving) || null;
             return (
-              <div key={i} className={'fr-row' + (holdsOpen ? ' fr-row--open' : '')}>
-                <div className="fr-grid" style={{ '--fr-across': across }}>
-                  {row.map(p => {
+              <div
+                key={row.key}
+                className={'fr-row' + (holdsOpen ? ' fr-row--open' : '') + (row.big ? ' fr-row--pinned' : '')}
+              >
+                {row.label && <p className="fr-said">{row.label}</p>}
+                <div className="fr-grid" style={{ '--fr-across': row.across }}>
+                  {row.people.map(p => {
                     const called = p.name || 'Not answering yet';
                     const isOpen = who?.id === p.id;
                     return (
@@ -640,6 +705,23 @@ export default function Friends({ shelf = false, onCount = null }) {
                     <button type="button" className="fr-door" onClick={() => setSendingTo(who)}>
                       <PaperPlaneTilt size={22} weight="regular" aria-hidden="true" />
                       Send
+                    </button>
+                    {/* The fourth door, 2026-09-20. Pinning is a thing you do
+                        *with* somebody, like the three beside it, so it is one
+                        of them — where Remove is the end of there being a
+                        somebody and stays the quiet line underneath.
+
+                        The pin fills once they are on the shelf, which is the
+                        lit-not-filled shape this site uses for a mark that is
+                        on: the word under it says which way pressing goes. */}
+                    <button
+                      type="button"
+                      className={'fr-door' + (mine.pinned_at ? ' fr-door--on' : '')}
+                      onClick={() => pin(mine.id, !mine.pinned_at)}
+                      aria-pressed={Boolean(mine.pinned_at)}
+                    >
+                      <PushPin size={22} weight={mine.pinned_at ? 'fill' : 'regular'} aria-hidden="true" />
+                      {mine.pinned_at ? 'Unpin' : 'Pin'}
                     </button>
                   </div>
                   )}

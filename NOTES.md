@@ -2769,6 +2769,30 @@ current.
 
 ## Complete
 
+**2026-09-20 — The book has a header again, and people can be pinned.**
+
+- [x] **ADDRESS BOOK and a count**, in the slot rather than on a row of its
+      own — a row of its own is 48px of header over a page whose argument is
+      that it is faces and not furniture. The slot already held two things and
+      showed one; this is the third, and it leaves the way the search does.
+- [x] **PINNED over three large faces, EVERYONE over the rest**, and the
+      labels only when there is a pinned row to tell apart: one list needs no
+      label saying it is the list. A search puts them back into one flat list,
+      because a pinned section that answered a search would be telling you
+      where somebody sits rather than that they are there.
+- [x] **Pin is the fourth door**, where Remove is the quiet line under them.
+      Pinning is a thing you do *with* somebody like the three beside it;
+      removing is the end of there being a somebody.
+- [x] **The shelf gives the pinned row its room back.** It stands in the same
+      box and is a different height, so the fit sum subtracts it and measures
+      an ordinary row — `.fr-row:not(.fr-row--pinned)`. Verified at 10 people:
+      473px of shelf less a 164px pinned row leaves two rows of eight, nothing
+      clipped, and *See all 10* appears because two are held back.
+
+**Tested against the real book and put back.** One person was pinned, the
+section and the ordering checked at both sizes, and unpinned again — who is on
+that shelf is Miyel's to say, not something a test should decide.
+
 **2026-09-20 — The feed at two densities.** Her brief: "one toggle, two
 states, nothing in between."
 
@@ -3245,9 +3269,21 @@ the other side, which is what comparing two shelves looks like: the same
 records, taken in a different order, by somebody else. Still not
 `ArrowsLeftRight`; this site uses that for turning the spine.
 
-**Not built, and deliberately: pinning.** Miyel, 2026-09-19: "let's not add
-pinning friends yet, mostly just beta testers, we don't need it yet." The
-brief asks for it; the book is nine people.
+**Pinning, held back on 2026-09-19 and built on 2026-09-20** once the pane had
+a shelf and a header and looked empty under them. One nullable stamp
+(migration 021) and nothing else: a boolean would say who is pinned, a stamp
+says that and the order, which the brief asks for. NULL is not pinned, so
+every row that existed was already right and there was nothing to fill in.
+Private and one-sided like adding — nobody learns, nothing is sent, no other
+copy is told.
+
+`PATCH /api/people/[id]` with `{ pinned: true|false }`, and nothing else about
+a person is editable there: the name is read off their journal and the address
+is what they are. **The order is written twice on purpose** — `pull_people`
+and `inOrder` in Friends.js — because the page re-sorts off what a write
+returns rather than asking for the book again, and a page that sorted
+differently from the server would put somebody in one place now and another on
+the next load.
 
 **2026-09-19 — Add goes home, and the slot gets a rule with a note in it.**
 
