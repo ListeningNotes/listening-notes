@@ -3071,6 +3071,18 @@ else's, which is an argument for a version on that URL and is not built.
       because then floor one *is* the picker and there is no crown to arrive.
       **Nothing about the layout moves**: a transform is paint, so the record
       under it scrolls exactly as it did.
+      **The journey is 180px, not its own 70.** Off a real phone: "it flies
+      out the top pretty fast, because the scroll can happen really fast." Its
+      natural distance — where the crown stands to where the bar's line is —
+      is about seventy pixels, and seventy pixels of scroll is one flick. A
+      morph nobody can see is a cut. Clamped at the line so a longer journey
+      cannot carry it past where it is going: 82px at 138, 61 at 79, 39 at 56,
+      and docked at 28 on 51 by 180.
+      **And the bar keeps its own mark unless the crown says otherwise.** The
+      other half of what she saw — "it disappears into nothing" — is a hidden
+      small mark plus a morph that is not running, which is a header with
+      nothing in it. The crown puts `hn--morph` on the cross while it is
+      handling the job and the stylesheet only hides the small one then.
       **Two traps.** `next/link` in this version does not hand its anchor back
       through a ref — it read null on every render while the element was
       plainly on the page — so the mark is found in the pane instead. And the

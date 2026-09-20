@@ -1144,16 +1144,54 @@ export default function HomeNav() {
     const bar = pane.closest('.hn')?.querySelector('.hn-bar');
     if (!bar) return undefined;
 
+    // ── How long the journey is, 2026-09-20 ────────────────────────────
+    // Miyel, off a real phone: "it flies out the top pretty fast, because the
+    // scroll can happen really fast. When I slow down my thumb it kind of
+    // leaves into the header, but it disappears into nothing — it's like
+    // disappearing but not becoming small."
+    //
+    // The first half is the distance. It travelled its own natural distance,
+    // which is about seventy pixels on a phone — the gap between where the
+    // crown stands and where the bar's line is — and seventy pixels of scroll
+    // is one flick. A morph nobody can see is a cut. So the journey is
+    // stretched over a good part of a screen and the mark *lags*: the page
+    // goes up at the speed of the thumb and the mark goes up more slowly,
+    // which is the whole of what makes it read as a transformation rather
+    // than a thing scrolling away.
+    //
+    // Clamped at the line, so a long journey cannot carry it past the place
+    // it is going. It docks about half way through and spends the rest of the
+    // distance settling to the small size.
+    const JOURNEY = 180;
+
     // Measured rather than written down, because every number in it is a
     // clamp on the screen's height: where the crown stands, how tall it is,
     // and where the bar's line falls on a phone with a notch.
     let base = null;
     const measure = () => {
-      if (!window.matchMedia('(max-width: 768px)').matches) { mark.style.transform = ''; base = null; return; }
+      if (!window.matchMedia('(max-width: 768px)').matches) {
+        mark.style.transform = '';
+        base = null;
+        pane.closest('.hn')?.classList.remove('hn--morph');
+        return;
+      }
       mark.style.transform = 'none';
       const m = mark.getBoundingClientRect();
       const b = bar.getBoundingClientRect();
-      if (!m.height) { base = null; return; }
+      // ── And if it cannot run, the bar keeps its own mark ──────────────
+      // The second half of what she saw: with the small mark hidden and the
+      // morph not happening, the crown scrolls off and *nothing arrives* —
+      // "it disappears into nothing". Whatever the reason for the morph not
+      // running on a given screen, the answer must not be a header with no
+      // mark in it. So the crown says out loud that it is handling this, and
+      // the stylesheet only hides the small one while it is.
+      const cross = pane.closest('.hn');
+      if (!m.height) {
+        base = null;
+        cross?.classList.remove('hn--morph');
+        return;
+      }
+      cross?.classList.add('hn--morph');
       // The small mark is 28px on the middle of the bar's 58px row, which is
       // 29 up from the band's own bottom edge. Same sum .hn-bar-mark uses.
       const small = 28;
@@ -1169,13 +1207,13 @@ export default function HomeNav() {
     const ease = t => 1 - (1 - t) * (1 - t);
     const draw = () => {
       if (!base) return;
-      const gone = Math.max(1, base.top - base.target);
-      const t = ease(Math.min(1, Math.max(0, pane.scrollTop / gone)));
+      const t = ease(Math.min(1, Math.max(0, pane.scrollTop / JOURNEY)));
       if (t === 0) { mark.style.transform = 'none'; return; }
       const natural = base.top - pane.scrollTop;
-      const y = (base.target - natural) * t;
+      // Never above the line it is going to, however far the page has gone.
+      const at = Math.max(base.target, natural + (base.target - natural) * t);
       const k = 1 + (base.scale - 1) * t;
-      mark.style.transform = `translateY(${y.toFixed(1)}px) scale(${k.toFixed(4)})`;
+      mark.style.transform = `translateY(${(at - natural).toFixed(1)}px) scale(${k.toFixed(4)})`;
     };
 
     measure();
@@ -1199,6 +1237,7 @@ export default function HomeNav() {
       window.removeEventListener('resize', measure);
       watch.disconnect();
       mark.style.transform = '';
+      pane.closest('.hn')?.classList.remove('hn--morph');
     };
   }, [paneRefs, authed]);
 
