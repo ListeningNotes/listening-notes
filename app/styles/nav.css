@@ -700,6 +700,31 @@
   background: var(--bg);
   transform: translateZ(0);
 }
+/* ── The header's floor, 2026-09-20 ─────────────────────────────────────
+   The bar's own opaque ground, drawn as a child so it can reach below the
+   80px row. On the beacon the morph writes --ground on it every frame: the
+   foot of the crown at whatever size it currently is, plus a little air. So
+   the header is as tall as the mark in it, everything scrolls *under* it
+   rather than past it, and it collapses onto the row as the mark shrinks.
+
+   Everywhere else it is exactly the bar, which is what it already was. The
+   pane gate matters because this row is one row over all of the panes: a
+   ground measured against the beacon would otherwise hang over the address
+   book's faces on the swipe across.
+
+   It does not take taps. The bar hands pointer events to its children and
+   this one is a floor, not a control — .hn-totop is the tap strip. */
+.hn-bar-ground {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: var(--hn-bar-h);
+  background: var(--bg);
+  pointer-events: none;
+}
+.hn[data-pane="1"] .hn-bar-ground { height: var(--ground, var(--hn-bar-h)); }
+
 .hn-bar-mark {
   position: absolute;
   left: 50%;

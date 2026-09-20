@@ -1191,6 +1191,9 @@ export default function HomeNav() {
     // JOURNEY is therefore how far ahead of the wall the shrink begins, not
     // how much scrolling it takes.
     const JOURNEY = 250;
+    // The air between the foot of the mark and the foot of the header.
+    const GROUND = 16;
+    const ground = pane.closest('.hn')?.querySelector('.hn-bar-ground');
 
     // Measured rather than written down, because every number in it is a
     // clamp on the screen's height: where the crown stands, how tall it is,
@@ -1200,6 +1203,7 @@ export default function HomeNav() {
       if (!window.matchMedia('(max-width: 768px)').matches) {
         mark.style.transform = '';
         base = null;
+        ground?.style.removeProperty('--ground');
         setMorphing(false);
         return;
       }
@@ -1215,6 +1219,7 @@ export default function HomeNav() {
       // the stylesheet only hides the small one while it is.
       if (!m.height) {
         base = null;
+        ground?.style.removeProperty('--ground');
         setMorphing(false);
         return;
       }
@@ -1222,18 +1227,35 @@ export default function HomeNav() {
       // The small mark is 28px on the middle of the bar's 58px row, which is
       // 29 up from the band's own bottom edge. Same sum .hn-bar-mark uses.
       const small = 28;
-      // Where the wall has to be for the shrink to be over. `arrives` is the
-      // scroll position at which its first row is under the bar, measured
-      // rather than assumed: floor one is a different height on every phone,
-      // because the record, the ring and the caret are all laid out against
-      // the screen.
+      // The two landmarks the shrink runs between, both measured rather than
+      // assumed: floor one is a different height on every phone, because the
+      // record, the ring and the caret are all laid out against the screen.
+      //
+      // `begins` is the scroll at which the ring reaches the foot of the
+      // header — "it'll shrink as Log a listen passes it". `ends` is the
+      // scroll at which the wall's first row is under the bar, which on this
+      // pane is the same instant the caret goes behind the header, because
+      // the caret is the last thing on floor one and the wall starts where it
+      // stops. One number, two of her sentences.
       const wall = pane.querySelector('.hn-floor--wall');
+      const ring = pane.querySelector('.hn-go');
       const w = wall && wall.getBoundingClientRect();
+      const g = ring && ring.getBoundingClientRect();
+      const top = m.top + pane.scrollTop;
+      const ends = w ? w.top + pane.scrollTop - b.bottom : null;
       base = {
-        top: m.top + pane.scrollTop,
+        top,
+        height: m.height,
         target: b.bottom - 29 - small / 2,
         scale: small / m.height,
-        arrives: w ? w.top + pane.scrollTop - b.bottom : null,
+        floor: b.bottom,
+        ends,
+        // No ring means this is not the keeper's beacon — a visitor's way in
+        // is a face, not this control — so the shrink falls back to the last
+        // JOURNEY of the approach. Still finishing as the wall lands, which
+        // is the part that matters.
+        begins: g ? g.top + pane.scrollTop - (top + m.height + GROUND)
+               : ends == null ? 0 : Math.max(0, ends - JOURNEY),
       };
       draw();
     };
@@ -1246,13 +1268,17 @@ export default function HomeNav() {
       // How far through the handover: nothing until the wall is JOURNEY away,
       // all of it once the wall has landed. A pane with no wall in it falls
       // back to the old rule, so the mark still has somewhere to go.
-      const raw = base.arrives == null
+      const raw = base.ends == null
         ? gone / JOURNEY
-        : 1 - (base.arrives - gone) / JOURNEY;
+        : (gone - base.begins) / (base.ends - base.begins);
       const t = ease(Math.min(1, Math.max(0, raw)));
       // At the very top, and only there, the mark is the page's own again: a
       // rubber band pulling down should take it along.
-      if (gone <= 0 && t === 0) { mark.style.transform = 'none'; return; }
+      if (gone <= 0 && t === 0) {
+        mark.style.transform = 'none';
+        if (ground) ground.style.setProperty('--ground', `${(base.top + base.height + GROUND).toFixed(1)}px`);
+        return;
+      }
       // Where it would be if it were simply part of the page, and where it is
       // instead: standing still at full size, then carried up to the line as
       // the wall comes in. Never above the line it is going to.
@@ -1260,6 +1286,14 @@ export default function HomeNav() {
       const at = Math.max(base.target, base.top + (base.target - base.top) * t);
       const k = 1 + (base.scale - 1) * t;
       mark.style.transform = `translateY(${(at - natural).toFixed(1)}px) scale(${k.toFixed(4)})`;
+      // And the header ends under it, whatever size it is now. At the end of
+      // the journey that sum is the bar's own height, so the collapse needs
+      // no separate clock: the ground is always the mark's foot plus the air
+      // under it.
+      if (ground) {
+        const foot = Math.max(base.floor, at + base.height * k + GROUND);
+        ground.style.setProperty('--ground', `${foot.toFixed(1)}px`);
+      }
     };
 
     measure();
@@ -1283,12 +1317,28 @@ export default function HomeNav() {
     // a dozen pixels above the line and leaves it there, which is what
     // "doesn't stay in the header" was.
     watch.observe(bar);
+    // ── And the floor the landmarks stand on, 2026-09-20 ──────────────────
+    // The pane is the height of the screen and never changes, so watching it
+    // says nothing about the beacon settling underneath. Floor one does
+    // change: the cover arrives, the title wraps or does not, the column of
+    // earlier covers fills in. Every one of those moves the ring, and a ring
+    // measured before them put the shrink 250px early — it had already begun
+    // while the record was still on screen, which is the thing this was
+    // written to stop.
+    const beacon = pane.querySelector('.hn-floor--beacon');
+    if (beacon) watch.observe(beacon);
+    // A picture finishing is the common one and it does not resize anything
+    // that is being watched: the cover has its box from the start and fills
+    // it in. `load` does not bubble, so this listens on the way down.
+    pane.addEventListener('load', measure, true);
     return () => {
       pane.removeEventListener('scroll', draw);
+      pane.removeEventListener('load', measure, true);
       narrow.removeEventListener('change', measure);
       window.removeEventListener('resize', measure);
       watch.disconnect();
       mark.style.transform = '';
+      ground?.style.removeProperty('--ground');
       setMorphing(false);
     };
   }, [paneRefs, authed]);
@@ -1739,6 +1789,22 @@ export default function HomeNav() {
 
   const header = (
     <div className={'hn-bar' + (down[pane] || choosing ? ' hn-bar--scrolled' : '')}>
+      {/* ── The ground the header stands on, 2026-09-20 ──────────────────
+          The bar is 80px of opaque page colour and the crown hangs below it,
+          which made the crown a logo *floating over* the beacon: the record
+          slid visibly behind it on its way up. Miyel: "think of it like it's
+          already one very large header, where you can't see behind it, and
+          it ends right under the logo. Everything should disappear behind it."
+
+          So the header has a floor that reaches to just under whatever size
+          the mark currently is, and it collapses onto the bar as the mark
+          does. Same colour as the page, so at the top of the beacon there is
+          nothing to see; what it buys is that the record, the ring and the
+          caret go *under* it rather than past it.
+
+          It is the bar's first child, so the lights and the small mark draw
+          on top of it, and .hn-crown is above the whole bar already. */}
+      <div className="hn-bar-ground" aria-hidden="true" />
       {/* The feed's name, once the feed is what you are on. It is the same
           word that stands at the foot of the floor above with the chevron
           under it — that one labels the way down, which is a thing you are
