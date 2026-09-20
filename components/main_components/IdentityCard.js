@@ -25,7 +25,7 @@ import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { arrivingAlone } from '../../library/handoff';
-import { Eye, EyeSlash, PushPin, UploadSimple, User, X } from '@phosphor-icons/react';
+import { Eye, EyeSlash, UploadSimple, User, X } from '@phosphor-icons/react';
 import { useRouter } from 'next/navigation';
 import { useTheme } from './Lightswitch';
 import { useListeningBeacon } from '../../hooks/useListeningBeacon';
@@ -593,22 +593,40 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
             finds out the card can hold one at all. */}
         {(pinned || editing) && (
           editing ? (
-            <button type="button" className="idc-pinned idc-pinned--pick" onClick={onPickPin}>
-              {/* A pin rather than the word PINNED, beside the art (Miyel,
-                  2026-09-15). The label was a third line of small caps over
-                  an album and an artist, saying what the mark says in one
-                  glyph. The word survives where it is actually needed — in
-                  the row's own label, for anybody who cannot see the pin. */}
-              <PushPin size={15} weight="fill" className="idc-pinned-mark" aria-hidden="true" />
-              <span className="idc-pinned-art">
-                {pinned?.album_art
-                  ? <img src={pinned.album_art} alt="" />
-                  : <span className="idc-pinned-none" aria-hidden="true">♪</span>}
-              </span>
-              <span className="idc-pinned-said">
-                <span className="idc-pinned-album">{pinned ? pinned.album : 'Choose a record'}</span>
-                <span className="idc-pinned-artist">{pinned ? pinned.artist : 'Nothing pinned'}</span>
-              </span>
+            <button
+              type="button"
+              className={'idc-pinned idc-pinned--pick' + (pinned ? '' : ' idc-pinned--empty')}
+              onClick={onPickPin}
+            >
+              {pinned ? (
+                <>
+                  <span className="idc-pinned-art">
+                    {pinned.album_art
+                      ? <img src={pinned.album_art} alt="" />
+                      : <span className="idc-pinned-none" aria-hidden="true">♪</span>}
+                  </span>
+                  <span className="idc-pinned-said">
+                    <span className="idc-pinned-album">{pinned.album}</span>
+                    <span className="idc-pinned-artist">{pinned.artist}</span>
+                  </span>
+                </>
+              ) : (
+                /* ── Empty, 2026-09-20 ──────────────────────────────────────
+                   The blank square a record would sit in, and three words
+                   beside it. It held four things — a pin, the square,
+                   `Choose a record` and `Nothing pinned` under it — and two
+                   of them were instructions: "just center nothing pinned, we
+                   don't need choose record." The square stayed on its own
+                   merits ("I liked the stand-in blank album that was there
+                   though"), which are that an empty slot the shape of a
+                   record says what is missing better than a sentence does. */
+                <>
+                  <span className="idc-pinned-art">
+                    <span className="idc-pinned-none" aria-hidden="true">♪</span>
+                  </span>
+                  <span className="idc-pinned-empty">Nothing pinned</span>
+                </>
+              )}
               {/* ── It has to say it can be changed, 2026-09-20 ────────────
                   Miyel: "editing pinned album should be more obvious you can
                   swap that out." The row looked in a correction exactly as it
@@ -628,6 +646,16 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
                   picture explained. The rule is in .idc-pinned--pick. */}
             </button>
           ) : (
+            /* ── No pin glyph, 2026-09-20 ─────────────────────────────────
+               A filled pin sat beside the cover in both states from
+               2026-09-15, standing in for the word PINNED. Miyel took it off:
+               "let's remove pin icon from ID card entirely — the edit mode
+               makes it noticeable." It was a mark explaining a thing that
+               needs no explaining. One record on somebody's card, above their
+               writing and below their face, is plainly the one they chose;
+               nothing else on the page is a record at all. The word survives
+               where it is actually needed, in the row's own label, for
+               anybody who cannot see the card. */
             <Link
               href={`/entries/${pinned.slug}`}
               className="idc-pinned"
@@ -636,7 +664,6 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
                  a person, not a second journal — see handoff.js. */
               onClick={() => arrivingAlone()}
             >
-              <PushPin size={15} weight="fill" className="idc-pinned-mark" aria-hidden="true" />
               <span className="idc-pinned-art">
                 {pinned.album_art
                   ? <img src={pinned.album_art} alt="" />

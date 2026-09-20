@@ -2916,6 +2916,20 @@ else's, which is an argument for a version on that URL and is not built.
       box round the one object on the page that is not writing says place
       something here on its own. In a correction only: printed, the row is a
       link, and a dashed box round a link is a form on somebody's card.
+- [x] **The empty slot is the blank square and three words.** It held four
+      things — a pin, the square, `Choose a record` and `Nothing pinned` under
+      it — and two of them were instructions: "just center nothing pinned, we
+      don't need choose record." The square stayed on its own merits ("I liked
+      the stand-in blank album that was there though"): an empty slot the
+      shape of a record says what is missing better than a sentence does.
+- [x] **The pin glyph is off the card entirely.** A filled pin stood beside
+      the cover in both states from 2026-09-15, where the word PINNED had
+      been — "let's remove pin icon from ID card entirely, the edit mode makes
+      it noticeable." It was a mark explaining a thing that needs no
+      explaining: one record on somebody's card, under their face and over
+      their writing, is plainly the one they chose, and nothing else on the
+      page is a record at all. The word survives on the row's own label.
+
 - [x] **And you pick one off a wall of covers.** "The selection should be grid
       of albums not list." Three across, the cover square, the album name
       under it, the one you have marked by a tick in its corner and nothing
