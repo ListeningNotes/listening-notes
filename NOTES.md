@@ -1549,6 +1549,18 @@ Project → Settings → Environment Variables.
 
 ## Gotchas
 
+**A stale stylesheet outlives the dev server, 2026-09-19.** The note already
+below says a restart may be needed after editing a global sheet. It is worse
+than that: a restart is sometimes *not enough*. Half an afternoon went on a
+switch that would not change size — the file on disk said 38px, the browser
+said 46px, and stopping and starting the dev server changed nothing, because
+Turbopack handed back the same cached build. **The tell is the stylesheet's
+filename hash: if the `<link>` still points at the same file after an edit,
+nothing you are looking at came from the edit.** The only fix that worked was
+`rm -rf .next` with the server *down*, then start it again. Doing it while the
+server is up leaves it rebuilding into a directory that has just been pulled
+out from under it.
+
 **`display: contents` takes away the box a collapse needs, 2026-09-19.** It
 makes an element generate no box at all, which is the point — its children
 become items of the grid above it. It also means `max-height`, `overflow`,
@@ -2657,6 +2669,98 @@ current.
 ---
 
 ## Complete
+
+**2026-09-19 — The book is faces, and sending is two screens.** Brief 1 of the
+friends brief (2026-09-17), and everything the brief's own send sheet turned
+out to need once it was used.
+
+- [x] **The address book is a pane of faces.** `Friends.js`, a component and
+      not a page, because the brief's next step hangs the same thing off the
+      cross with the feed on its second floor — a route that was also a design
+      would have to be taken apart to get there. Four across up to twelve
+      people, five beyond, and `/dashboard/people` is now a lock and a frame
+      around it. **No card:** Miyel, "no card around this, make it live
+      directly on the page." A grid of faces has edges of its own, and the
+      panel colour was showing through behind squares that are meant to be
+      the only ground on the screen.
+- [x] **A person opens in place, under their own row.** Four doors — Journal,
+      Compare, Send, Remove — sliding down from the face that was pressed,
+      inside the row it is in, so the faces below step aside rather than being
+      covered. 340ms, and a switch across rows holds the leaving id long
+      enough for both to animate. Clicking away closes it, Miyel's ask. The
+      face that is open grows; the rest dim, **on the same frame it is pressed**
+      ("make the other users dim the same time a user is clicked"), and the
+      chosen one wears no outline ("i don't like the black border").
+- [x] **Squares, not circles, where faces sit alone.** Her call: "circle is
+      fine when the pfp and album share a screen but here squares work" — the
+      rounded square is the beacon's and the entry's shape, and a screen of
+      nothing but people is a screen of records' worth of squares.
+- [x] **Remove is the fourth door, not a footnote.** "remove can be the same
+      as all the other glyphs on the row not a separate entity." Trash, and
+      the two-press *Remove?* the entry editor already uses, so the shape of
+      taking something out is one shape everywhere.
+- [x] **The search bar shrinks and the address field opens out of the +.**
+      Not a dissolve — "i want it to look more like the search bar shrinks and
+      the new one opens," "every animation fluid and moves not just appears."
+      A shutter: `clip-path` with a rounded inset, the two fields tiling
+      across each other rather than fading through. The + turns 45° into the
+      × rather than being swapped for one, because a plus turned 45° **is** a
+      cross. *Enter journal address*, and *Add* and *Scan a code* centred
+      under it.
+- [x] **What somebody has sent you is a shelf of covers.** Four across, the
+      name and the note opening when one is pressed. It was a stack of rows
+      carrying a name that was already at the top of the page.
+
+**And the send sheet, which took the rest of the evening.** It is reached from
+a person now, which is a different thing from sending cold off a stranger's
+journal, and it was still wearing the cold version's clothes.
+
+- [x] **No To, no From.** "i dont even think to is needed. it already says
+      send to june and we literally chose him" — and the from line is the
+      keeper's own journal, which the keeper knows. The sender's name and face
+      travel with the send; the address does not need printing at either end.
+- [x] **Quiet always starts untoggled**, and is never what a draft remembers.
+      A saved draft that comes back already quiet is a decision made on
+      somebody's behalf and not noticed.
+- [x] **Two screens.** "the whole screen should be the album list and then you
+      choose one and then the message." Step one is the sheet at nearly full
+      height holding only the finder, cursor already in the field. Choosing a
+      record shrinks the sheet to the message: a 62px row with the cover, the
+      title and a quiet *Change*, then *A message for June* — her wording, and
+      the name is the person's.
+- [x] **It cannot reach into the status bar.** The ceiling subtracts the
+      safe-area inset, so a full list of covers stops below the clock instead
+      of running under it.
+- [x] **Scrolling the list does not close the sheet.** This was mine, from an
+      hour earlier: the invisible grab strip was 48px and reached over the
+      search field and the first row of covers, so a scroll that started there
+      read as a pull. 26px, on the sheet's own edge — an edge is not something
+      you scroll.
+- [x] **No ×.** "i don't think we need an X button to close this. i think just
+      a simple up and down swipe is fine." The pull, the dimmed ground and
+      Escape.
+- [x] **The keyboard stops throwing the screen around.** The sheet is pinned
+      to `visualViewport` rather than the layout viewport, always, with no
+      threshold — "it's also doing that thing where when the keyboard opens
+      and closes the screen moves all over."
+- [x] **And the finder lost its empty box.** Her note, in full: a 400px
+      placeholder with a music note was the largest thing on screen before you
+      had done anything. Search first, record only once it exists. The
+      full-screen takeover it used to open went with it, the grid of covers is
+      tighter, the title smaller, and the fields are hairlines rather than
+      three different roundings.
+- [x] **The switch is 38 by 22**, down from 46 by 28, and everywhere rather
+      than only here: one control answering one question on three surfaces,
+      and a switch that is two sizes is two switches.
+
+**Names still open, and shipped as placeholders:** the file `Friends.js`, the
+branch `friends-pane`, and the Compare glyph (Phosphor `ArrowsDownUp` —
+deliberately not `ArrowsLeftRight`, which this site already uses for turning
+the spine). Flagged in the code where each one lives.
+
+**Not built, and deliberately: pinning.** Miyel, 2026-09-19: "let's not add
+pinning friends yet, mostly just beta testers, we don't need it yet." The
+brief asks for it; the book is nine people.
 
 **2026-09-19 — Add goes home, and the slot gets a rule with a note in it.**
 
