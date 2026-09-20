@@ -3176,9 +3176,13 @@ else's, which is an argument for a version on that URL and is not built.
       looks like a button, that music note then start a listen in the circle
       under the note, smaller font." It was three things on one axis — a rule,
       a note sitting in a gap in the rule, a line of small caps under it — and
-      none of them shaped like a control. Now it is one: an 84px ring hung on
+      none of them shaped like a control. Now it is one: a 72px ring hung on
       the rule, half above and half below, carrying the page colour so the
-      line stops at its edge. The note is in the markup rather than on
+      line stops at its edge. **84 for an hour and then 72** — it is the one
+      control on that screen and wants to be reachable rather than large, and
+      the two words in it are 47px at their widest, so the ring can come in
+      twelve and still be a ring round words rather than one on them. A
+      visitor's circle stays 84: it holds a face, which wants the room. The note is in the markup rather than on
       `::before`, because it has to stack with the words; a visitor's calling
       card keeps the `::before` version, there being no control in that slot.
       **Absolutely positioned, not a negative margin** — a flex item's margin

@@ -3458,9 +3458,10 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   margin: clamp(46px, calc(var(--hn-h) * 0.075), 62px) auto 0;
   border-top: 1px solid var(--border);
   /* And the bottom half under it. The circle is taken out of the flow, so
-     this padding is the whole of what the row occupies below the rule. */
+     this padding is the whole of what the row occupies below the rule —
+     half the circle, which is 36 of 72. */
   position: relative;
-  padding-top: 42px;
+  padding-top: 36px;
   min-height: 0;
 }
 
@@ -3491,8 +3492,13 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   align-items: center;
   justify-content: center;
   gap: 3px;
-  width: 84px;
-  height: 84px;
+  /* 72, down from 84 (Miyel, 2026-09-20: "a bit smaller"). It is the one
+     control on this screen and wants to be reachable rather than large — and
+     the two words inside it are 47px at their widest, so the ring can come in
+     twelve pixels and still be a ring round words rather than a ring on
+     them. The row below it takes half of whatever this is. */
+  width: 72px;
+  height: 72px;
   border: 1px solid var(--border);
   border-radius: 999px;
   background: var(--bg);
