@@ -1549,6 +1549,16 @@ Project → Settings → Environment Variables.
 
 ## Gotchas
 
+**A box with `overflow: auto` is a scroll container whether or not it
+overflows, 2026-09-20.** The shelf of faces carried `overflow-y: auto` all the
+time, on the reasoning that the rows always fit so there would be nothing to
+scroll. True, and not the point: on a phone that box still takes the first
+part of every drag that begins inside it before deciding it has nowhere to go,
+and the faces fill most of the floor — so that was most of the drags anybody
+makes on that pane. You pull down over somebody's face and the pane does not
+move. **Give a box `auto` only while it has something to scroll**, and flip it
+on a press rather than during a scroll.
+
 **A mandatory snap over a floor taller than the screen is a scroll that
 fights you, 2026-09-20.** The cross's two-floor panes snapped `mandatory` for
 a week and it cost nothing, because a second floor was exactly one screen tall
