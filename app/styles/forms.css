@@ -1233,6 +1233,22 @@ a.pp-name:hover svg { color: var(--ink); }
   overflow: hidden;
   transition: box-shadow 0.2s, transform 0.2s;
 }
+/* ── And no long press on somebody else's face ────────────────────────────
+   The crop is the real fix and it is the other copy's to ship: this book
+   draws faces served by other people's journals, and until each of them
+   updates their file is still the whole photograph. iOS offers that file on a
+   long press — the picture, all of it, saved or shared.
+   
+   `-webkit-touch-callout: none` takes the offer away on this page. It is a
+   guard and not a fix, and it is the half of the problem this copy can close
+   today. The keeper's own portrait on the card keeps its long press: it is
+   their picture, on their card, and saving it is a thing they might mean. */
+.fr-face img, .fd-face img {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  pointer-events: none;
+}
 .fr-face img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 /* It grows, and that is all it does. There was a 2px ink ring round it as
    well — the lit-not-filled shape a chosen flag on an entry wears — and

@@ -16,6 +16,7 @@
 // the actual image is not on the allow-list, so a portrait cannot end up
 // inlined into the HTML of the archive.
 
+import sharp from 'sharp';
 import database from '@/library/database_connection';
 import { requireWristband } from '@/library/wristband';
 import { pull_settings, save_settings } from '@/library/settings_actions';
@@ -27,6 +28,42 @@ import { darkPageCode, isCurrentCode } from '@/library/portrait_code';
 const MAX_BYTES = 2 * 1024 * 1024;
 
 const ALLOWED = new Set(['image/jpeg', 'image/png', 'image/webp']);
+
+// ── What leaves is what was on the page ───────────────────────────────────
+// Every surface that draws a portrait draws it square, and until 2026-09-20
+// the squareness was a CSS `cover` — the file kept the whole photograph and
+// the page hid its edges, which is not hiding. This route is public, because
+// the face on the front of a journal is; so anybody could ask for the file
+// and get the parts that were never on screen, and on a phone a long press on
+// somebody's face offers exactly that.
+//
+// Uploads are cropped in the browser now (IdentificationCardEditor). This is
+// for the ones already in the database — here and on every copy that updates
+// — so nobody has to re-upload a picture to stop showing the edges of it.
+// A portrait that is already square costs one metadata read and is handed
+// back untouched.
+//
+// It never fails the request: a picture sharp cannot read is a picture this
+// route has been serving all along, and a 500 where a face was is worse than
+// a face.
+async function middleSquare(bytes) {
+  try {
+    const picture = sharp(bytes);
+    const { width, height } = await picture.metadata();
+    if (!width || !height || width === height) return bytes;
+    const side = Math.min(width, height);
+    return await picture
+      .extract({
+        left: Math.round((width - side) / 2),
+        top: Math.round((height - side) / 2),
+        width: side,
+        height: side,
+      })
+      .toBuffer();
+  } catch {
+    return bytes;
+  }
+}
 
 // GET is public, because the picture is: it is the face on the front of a
 // journal anybody can read. Cached hard and busted by the ?v= the writer puts
@@ -49,9 +86,11 @@ export async function GET(request) {
     const stored = wantsCode ? row?.portrait_code : row?.portrait_data;
     if (!stored) return new Response('No portrait', { status: 404 });
 
-    const bytes = wantsCode && wantsDark && isCurrentCode(row.portrait_code_url)
-      ? await darkPageCode(stored)
-      : Buffer.from(stored, 'base64');
+    const bytes = wantsCode
+      ? (wantsDark && isCurrentCode(row.portrait_code_url)
+        ? await darkPageCode(stored)
+        : Buffer.from(stored, 'base64'))
+      : await middleSquare(Buffer.from(stored, 'base64'));
     return new Response(bytes, {
       headers: {
         'Content-Type': wantsCode ? 'image/png' : (row.portrait_mime || 'image/jpeg'),

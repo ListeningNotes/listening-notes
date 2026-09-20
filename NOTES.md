@@ -2769,6 +2769,39 @@ current.
 
 ## Complete
 
+**2026-09-20 — A portrait is cropped to the square it is shown at.** Miyel,
+and it is a real one: "long pressing images of people shouldn't show the
+entire picture, the picture uploaded should be cropped to the size, just
+privacy wise."
+
+Every surface that draws a portrait draws it square — the card, the faces in
+the book, the small one beside a record in the feed — and the squareness was
+`object-fit: cover` and nothing else. So the file kept the whole photograph
+and the page merely hid its edges, which is not hiding. `/api/portrait` is
+public, because the face on the front of a journal is, so anybody could ask
+for the file and get the parts that were never on screen; on a phone a long
+press offers exactly that. Measured on this copy: the stored picture was
+507×900 and 393 rows of it had never been on a screen.
+
+- [x] **Uploads are cropped in the browser** to their middle square, which is
+      exactly what `cover` was showing. Nothing on any page changes.
+- [x] **And what is already stored is cropped on the way out**, with sharp, so
+      no one has to re-upload to stop showing the edges of a picture. A
+      portrait that is already square costs one metadata read and is handed
+      back untouched, and a picture sharp cannot read is served as it always
+      was — a 500 where a face should be is worse than a face.
+- [x] **Long press is taken off other people's faces** in the book and the
+      feed. That half is a guard rather than a fix: those files are served by
+      *their* copies and stay whole until each of them updates. The keeper's
+      own portrait on their own card keeps its long press — it is their
+      picture and saving it is a thing they might mean.
+
+**What this does not reach: caches.** The route answers `immutable` for a
+year, and a friend's portrait is fetched at a bare address with no version on
+it, so a browser that already has the whole picture keeps it. Re-saving a
+portrait busts its own copy's cache. Nothing busts a year-old copy of somebody
+else's, which is an argument for a version on that URL and is not built.
+
 **2026-09-20 — The book has a header again, and people can be pinned.**
 
 - [x] **ADDRESS BOOK and a count**, in the slot rather than on a row of its
