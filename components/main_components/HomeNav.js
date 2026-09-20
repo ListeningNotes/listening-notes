@@ -1120,6 +1120,10 @@ export default function HomeNav() {
   // screen above it: a header that said FEED while you were looking at the
   // faces would be naming the wrong floor. See the scroll effect below.
   const [atFeed, setAtFeed] = useState(false);
+  // Whether the book has a field open in the bar's row. The name is drawn
+  // absolutely on the middle of that row and a field opening there has to
+  // have it — see the relay note on barSays.
+  const [bookBusy, setBookBusy] = useState(false);
 
   // ── The bar, against the keyboard ─────────────────────────────────────────
   // The row at the top is `position: fixed`, which on iOS means fixed to the
@@ -1540,6 +1544,9 @@ export default function HomeNav() {
   // thing it puts up here.
   const barSays = pane !== BOOK ? null
     : atFeed ? 'Recent listens'
+    // The name steps aside for the field the + opens, which arrives in this
+    // same row: "it needs to open and replace address book text."
+    : bookBusy ? null
     : bookSize > 0 ? `Address book \u00b7 ${bookSize}`
     : 'Address book';
 
@@ -2289,7 +2296,7 @@ export default function HomeNav() {
             {visited[BOOK] && (
               <>
                 <div className="hn-floor hn-floor--book">
-                  <Friends shelf onCount={setBookSize} />
+                  <Friends shelf onCount={setBookSize} onBusy={setBookBusy} />
                   {/* The feed's name lives here rather than at the top of
                       the feed (Miyel, 2026-09-19: "can i see feed living
                       above the down caret?"). It is the right place for it:

@@ -3058,6 +3058,18 @@ else's, which is an argument for a version on that URL and is not built.
       land on the same line, because it is one header — the book's title used
       to be a line on its own floor ten pixels below this one, which is a
       title and a title rather than a header.
+      **The whole header goes up, fields and all.** It was only the + at
+      first and the field it opens stayed seventy pixels below it on the
+      floor, which is the thing the title moving broke: "the clicking and
+      opening... needs to open and replace address book text." So the book's
+      `.fr-head` — the slot with its two fields and the + — is what is
+      portalled, and the cross takes its own word down while a field is in the
+      row (`onBusy`, handed up the way the count is). The address field is
+      271px of the 319 the row has. The Add / Scan row stays on the floor and
+      is now the first thing on it, so it opens directly under the bar.
+      **The floor had to be told to clear the band**: its 36px of top padding
+      was 36px *plus the header standing in the rest of it*, and the header is
+      not on that floor any more. `--hn-bar-h + 8` now.
       **Neither half knows about the other.** Friends puts the + in a slot it
       makes in the bar (the trick IdentityCard uses for its tools) and HomeNav
       puts `hn--at-feed` on the cross; the corner is handed over in CSS by the

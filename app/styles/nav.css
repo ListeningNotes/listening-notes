@@ -2698,7 +2698,25 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
      feed's density toggle. Neither knows about the other — the corner is
      handed over by the cross, which is the only thing that knows which floor
      is up (Friends.js puts the slot here, HomeNav puts the class on). */
-  .hn-bar-add { display: flex; align-items: center; }
+  /* Across the row rather than in the flex flow, so the field the + opens
+     has the whole width and the strip that takes you back to the top is not
+     fighting it for space. The name is drawn absolutely on the same row and
+     steps aside while a field is in it (barSays in HomeNav.js). */
+  .hn-bar-add {
+    position: absolute;
+    left: 28px; right: 28px;
+    top: calc(22px + var(--safe-top));
+    height: 58px;
+    display: flex; align-items: center;
+  }
+  .hn-bar-add > .fr-head { flex: 1; min-width: 0; }
+  /* The empty slot lets the row through. It is a box with nothing in it most
+     of the time, and a box with nothing in it still swallows a tap — which
+     here is the tap that takes you back to the top of the pane. */
+  .hn-bar-add .fr-slot { pointer-events: none; }
+  .hn-bar-add .fr-field { pointer-events: auto; }
+  .hn-bar-add .fr-field--gone,
+  .hn-bar-add .fr-field--waiting { pointer-events: none; }
   /* The book's, and only while you are on the book. Pane 2 is the friends
      pane; see the constants in HomeNav.js. */
   .hn:not([data-pane="2"]) .hn-bar-add,
@@ -2810,7 +2828,12 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   .hn-floor--book {
     height: calc(var(--hn-h) - var(--hn-peek));
     min-height: 0;
-    padding: calc(36px + var(--safe-top)) 24px 0;
+    /* Clear of the bar, 2026-09-20. It used to be 36 and the book's own
+       header stood in the rest of it; the header is in the bar now, so what
+       was holding this floor off the band is not on this floor any more. The
+       shelf measures whatever room is left and fits what it can, so the only
+       thing this number has to get right is where the faces start. */
+    padding: calc(var(--hn-bar-h) + 8px) 24px 0;
   }
   /* The book fills the floor, which is what makes "as many faces as fit" a
      question with an answer: the shelf inside it measures the room it is
