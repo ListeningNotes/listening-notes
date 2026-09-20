@@ -2745,12 +2745,20 @@ current.
       snap position instead of the content, so the cover starts immediately
       under the caret and still lands clear of the mark when snapped.
 
-**OPEN, and it is Miyel's call: the beacon's peek shows the journal's search
-bar, not covers.** The wall's bar is `position: sticky` against the bottom of
-the scrollport, so it is what occupies the peek whatever the peek's depth, and
-the first covers sit 96px below the wall's top — behind it. Showing covers
-instead needs the first floor to give up about another 50px, out of the mark,
-the record or the gaps between them. Not guessed at.
+**SETTLED, 2026-09-20: the beacon's peek is covers, and the fifty pixels came
+out of the mark and the gaps.** Asked where to take it from, Miyel's answer was
+the mark and the air above the record rather than the record itself. So the
+mark went 0.17 → 0.13 of the screen and 62px → 52, `--hn-square-top` is capped
+at 34 on a phone rather than 80, and the beacon's peek is 190 where the book's
+is 140 — deeper because the wall holds its first 96px whatever is drawn in
+them.
+
+**And the wall's search bar is faded out while you are upstairs.** It is
+`position: sticky` against the bottom of the scrollport, which is exactly
+where the sliver of covers is, so left alone it *was* the peek: a search box
+for a page you are not on, sitting over the records it would be showing.
+Faded rather than removed, because it keeps its 96px of flow either way and
+nothing may move when you arrive and it comes back.
 
 **2026-09-19 — The band goes Card, Beacon, Friends, Inbox.** Miyel's reason,
 and it is about the shape of the rail rather than what the rooms are for:

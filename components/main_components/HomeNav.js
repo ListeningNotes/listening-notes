@@ -1983,7 +1983,18 @@ export default function HomeNav() {
             which is why it is the one pane with two floors, a snap and a down
             caret. On a desk it is the right page and does not move when the
             spine turns. */}
-        <section className="hn-pane hn-pane--home" ref={homeRef} aria-label="The beacon and the journal">
+        <section
+          /* `--inside` is whether you have gone down to the journal. The wall
+             keeps its search bar stuck to the bottom of the screen, which is
+             right while you are reading it and wrong while it is only a
+             sliver under the beacon — there it is a search box for a page you
+             are not on, sitting on top of the covers it would be showing.
+             Faded out until you arrive, and it keeps its place in the flow
+             the whole time, so nothing moves when it comes back. */
+          className={'hn-pane hn-pane--home' + (down[HOME] ? ' hn-pane--inside' : '')}
+          ref={homeRef}
+          aria-label="The beacon and the journal"
+        >
           {/* Two floors, always. There is no version of this pane without a
               beacon on it (Miyel, 2026-09-16): a journal showing a record it
               sat with months ago is not a beacon failing, that IS the signal,
