@@ -1223,6 +1223,11 @@ a.ln-sent-who:hover { text-decoration: underline; text-underline-offset: 3px; }
        this sits in is swapped out from under it on a swipe, and a number
        written on the old one is written on nothing. */
     opacity: var(--ln-lede, 1);
+    /* And no transition on it. The sitewide rule fades this corner over
+       0.18s, which turned the changeover into exactly the thing Miyel said
+       not to do — "just not cross fade" — with the mark and the record both
+       half-drawn over each other for a fifth of a second. */
+    transition: none;
   }
   /* Already collapsed before anything was drawn — the wait state, when the
      swipe came from the notes. The entry writes this corner's opacity from
@@ -1314,7 +1319,6 @@ a.ln-sent-who:hover { text-decoration: underline; text-underline-offset: 3px; }
      something to come back to rather than something to read past a menu.
      KeeperTools sets the attribute; see the note in that file. */
   .sitenav-row[data-tooling] .ln-crown { opacity: 0; pointer-events: none; }
-  .ln-crown { transition: opacity 0.18s linear; }
 
   /* The record's own art stays on the page and scrolls away with it. It was
      hidden here while the header was carrying a travelling copy of it; there
