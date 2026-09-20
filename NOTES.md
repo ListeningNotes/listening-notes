@@ -2780,7 +2780,16 @@ states, nothing in between."
       A row gives its meta about 140px, and "ago" is 26 of them said three
       times over; the artist and the name are the part that cannot be guessed.
       Her own mock-up writes it that way.
-- [x] **A gold ring on a shared cover, in both densities.** The one thing in a
+- [x] **A gold ring: on the cover in full, round the whole row in list.**
+      Miyel, 2026-09-20: "in list view that amber highlight can be the whole
+      box not just the art." A 56px thumbnail is too small a thing to hang the
+      one at-a-glance fact on, and a ring round it reads as something about
+      the picture where round the row it is about the record. The row gives up
+      its own hairline while it wears one — two rules two pixels apart, one
+      faint and one gold, is a box with a smudge under it — and every row
+      carries the 10px of side padding the ring needs, or the shared ones
+      would sit inset from the rest and the list would be ragged down an edge.
+- [x] **Why a ring at all, in either density.** The one thing in a
       feed you can act on that is worth spotting without reading — and reading
       is what scrolling past eight rows a screen does not leave time for. An
       `outline` rather than a border, so it takes nothing off the art and

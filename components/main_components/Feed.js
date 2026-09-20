@@ -439,10 +439,10 @@ export default function Feed({ entries = [], titled = true }) {
 
           if (asRows) {
             return (
-              <div key={key} className="fd-rowwrap">
+              <div key={key} className={'fd-rowwrap' + (shared ? ' fd-rowwrap--shared' : '')}>
                 <article className="fd-row">
                   <a
-                    className={'fd-row-art' + (shared ? ' fd-art--shared' : '')}
+                    className="fd-row-art"
                     href={there}
                     target="_blank"
                     rel="noopener noreferrer"
