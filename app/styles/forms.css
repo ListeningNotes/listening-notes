@@ -1182,9 +1182,12 @@ a.pp-name:hover svg { color: var(--ink); }
 /* A door that is already done. Ink rather than a second glyph: the word under
    it changes and that is what says which way the press goes. */
 .fr-door--on { color: var(--ink); }
-/* A door with no room left behind it. Dimmed rather than taken away: the row
-   is four doors wide and a gap where one was is a row that moves. */
-.fr-door:disabled { opacity: 0.3; cursor: default; }
+/* A door with no room left behind it. Dimmed rather than taken away — the row
+   is four doors wide and a gap where one was is a row that moves — and still
+   pressable, because it has something to say when you press it. See shakeNo
+   in Friends.js. */
+.fr-door--full { opacity: 0.35; }
+.fr-door--full:hover { opacity: 0.35; }
 .fr-grid {
   display: grid;
   grid-template-columns: repeat(var(--fr-across, 4), 1fr);
