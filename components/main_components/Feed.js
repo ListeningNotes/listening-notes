@@ -139,9 +139,16 @@ function Face({ address }) {
 //
 // The track notes are writing and the feed carries none, so they stay where
 // they are and the foot of the panel points at both entries.
-function Compared({ mine, theirs, name, there }) {
+// A '1' per hearted track, in track order, from the lists — see HEARTS_FIELD
+// in database_actions. A copy that has not been updated sends nothing, which
+// reads here as no hearts rather than as an error.
+const heartsOf = entry => String(entry?.hearts || '');
+
+function Compared({ mine, theirs, name }) {
   const yours = parseHorizon(mine.horizon);
   const hers = parseHorizon(theirs.horizon);
+  const yourHearts = heartsOf(mine);
+  const theirHearts = heartsOf(theirs);
   const x = Number(mine.rating_value), y = Number(theirs.rating_value);
   const apart = Number.isFinite(x) && Number.isFinite(y)
     && mine.rating_value !== null && theirs.rating_value !== null
@@ -153,7 +160,11 @@ function Compared({ mine, theirs, name, there }) {
     <div className="fd-cmp">
       {hers.length > 0 && (
         <div className="fd-cmp-bars fd-cmp-bars--theirs" aria-label={`How ${name} heard it, track by track`}>
-          {hers.map((v, i) => <span key={i} style={{ height: `${Math.max(9, v * 100)}%` }} />)}
+          {hers.map((v, i) => (
+            <span key={i} className={theirHearts[i] === '1' ? 'fd-cmp-bar fd-cmp-bar--loved' : 'fd-cmp-bar'} style={{ '--tall': `${Math.max(9, v * 100)}%`, '--wait': `${i * 26}ms` }}>
+              {theirHearts[i] === '1' && <Heart size={11} weight="fill" aria-hidden="true" />}
+            </span>
+          ))}
         </div>
       )}
 
@@ -168,7 +179,11 @@ function Compared({ mine, theirs, name, there }) {
 
       {yours.length > 0 && (
         <div className="fd-cmp-bars fd-cmp-bars--yours" aria-label="How you heard it, track by track">
-          {yours.map((v, i) => <span key={i} style={{ height: `${Math.max(9, v * 100)}%` }} />)}
+          {yours.map((v, i) => (
+            <span key={i} className={yourHearts[i] === '1' ? 'fd-cmp-bar fd-cmp-bar--loved' : 'fd-cmp-bar'} style={{ '--tall': `${Math.max(9, v * 100)}%`, '--wait': `${i * 26}ms` }}>
+              {yourHearts[i] === '1' && <Heart size={11} weight="fill" aria-hidden="true" />}
+            </span>
+          ))}
         </div>
       )}
 
@@ -179,13 +194,12 @@ function Compared({ mine, theirs, name, there }) {
         </div>
       )}
 
-      {/* Her reference says READ BOTH on one line. One press cannot open two
-          pages, so it is the two of them on that line: theirs leaves for
-          their journal, yours stays on this one. */}
+      {/* Only yours. Theirs is linked from the cover and the title directly
+          above this — Miyel, 2026-09-20: "theirs link not needed, its linked
+          right above" — and a second way to the same page, four lines under
+          the first, is a page repeating itself. */}
       <p className="fd-cmp-read">
-        <a href={there} target="_blank" rel="noopener noreferrer">Theirs &#8599;</a>
-        <span aria-hidden="true">&middot;</span>
-        <Link href={`/entries/${mine.slug}`}>Yours</Link>
+        <Link href={`/entries/${mine.slug}`}>Your copy</Link>
       </p>
     </div>
   );
@@ -340,9 +354,14 @@ export default function Feed({ entries = [], titled = true }) {
                     title={open === key ? 'Close' : 'Compare'}
                   >
                     <Shuffle size={20} weight="regular" aria-hidden="true" />
+                    {/* The word, under the mark, until the mark has been used
+                        once (Miyel: "compare can be under the glyph disappear
+                        on open"). It is there to teach what the mark is and
+                        has nothing to say once the thing it names is open. */}
+                    <span className="fd-compare-say">Compare</span>
                   </button>
                 )}
-                {open === key && mine && <Compared mine={mine} theirs={entry} name={person.name || 'them'} there={there} />}
+                {open === key && mine && <Compared mine={mine} theirs={entry} name={person.name || 'them'} />}
               </article>
             </div>
           );

@@ -2758,10 +2758,36 @@ From Miyel's reference.
       boxes on it, and a card would make the comparison a separate object from
       the thing being compared.
 
-**One deviation, and it is the only one:** her reference says READ BOTH on a
-single line. One press cannot open two pages, so it is the two of them on that
-line — *Theirs ↗* leaves for their journal, *Yours* stays on this one. Say if
-it should be one thing that opens theirs.
+**And then, the same evening:**
+
+- [x] **Hearted tracks show on both horizons.** They were not in the data at
+      all: `horizon` carries heights and nothing else, and `tracks` — where the
+      hearts live — is deliberately kept out of every list because it is
+      writing. So a small string is derived in the query, a '1' or a '0' per
+      track (`HEARTS_FIELD`), and nothing is stored: `tracks` stays the source
+      of truth and there is no second copy to keep in step. Derived in SQL and
+      not in JS on purpose, or reading the hearts back would pull every word
+      of every note across the wire on a page that draws none of them.
+      **NAME: `hearts` is a placeholder.**
+- [x] **Theirs is not linked again.** The cover and the title above already
+      go there. Only *Your copy* is left, centred under your stars.
+- [x] **The mark turns a quarter, not a half.** Open, the arrows point down at
+      what has opened; half a turn only sent them the other way along the same
+      line, which says nothing.
+- [x] **The word COMPARE sits under the mark until it is used.** It is there
+      to teach what the mark is and has nothing to say once the thing it names
+      is open.
+- [x] **The bars rise** out of their own baseline, left to right, a frame
+      apart each — the shape of a listen arriving in the order it happened.
+
+**What another copy sends, and when.** The hearts cross between journals, so
+a friend's horizon stays bare until their copy is updated — theirs simply
+answers without the field and the bars draw as they always did. Nothing breaks
+and nothing waits.
+
+**One deviation from the reference:** it says READ BOTH on a single line. One
+press cannot open two pages, and theirs is linked above, so the line is
+*Your copy* alone.
 
 **2026-09-20 — The mark is the beacon's alone, on a phone.** Miyel: "remove
 the LN logo from header of all pages except beacon." It had shown on the inbox
