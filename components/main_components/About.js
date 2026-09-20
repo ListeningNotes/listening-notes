@@ -41,7 +41,7 @@
 
 'use client';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowSquareOut, CaretDown, Check, GearSix, GlobeSimple, LinkSimple, MagnifyingGlass, Plus, X } from '@phosphor-icons/react';
+import { ArrowSquareOut, CaretDown, Check, GlobeSimple, LinkSimple, MagnifyingGlass, Plus, X } from '@phosphor-icons/react';
 import Link from 'next/link';
 import { arrivingAlone } from '../../library/handoff';
 import { useHoldStill } from '../../hooks/useHoldStill';
@@ -910,19 +910,16 @@ export default function About({ stamps, authed = false, pinned = null, entries =
           its keeper can see, at the bottom, where you go looking for it
           rather than past it.
 
-          It wears the desk's own row and the desk's own colophon line, which
-          is not laziness: somebody who has used this copy for a week knows
-          that row, and a new shape for a door that does the same thing is a
-          thing to learn for nothing. */}
+          The door is gone from it, 2026-09-20. Settings went up into the ···
+          at the head of this pane, where everything else you can do to this
+          page already is — Miyel, "settings on ID card should live in the
+          toolbar" — and a single door standing on its own down here was one
+          the keeper had to remember the position of rather than one place to
+          look. What is left is the line about the software, which is not a
+          door and is not the keeper's business alone: it says which version
+          this copy is running. */}
       {authed && (
         <section className="ab-keep" aria-label="This copy">
-          <Link href="/settings" className="ln-tile db-door" title="The key, password, beacon, address">
-            <GearSix size={22} weight="regular" aria-hidden="true" className="db-door-mark" />
-            <span className="db-door-text">
-              <span className="db-door-label">Settings</span>
-            </span>
-          </Link>
-
           {/* The one line about the software rather than the journal: which
               version this is, and — only when it is true — that there is a
               newer one. No Source: §13 is owed to visitors and this is the

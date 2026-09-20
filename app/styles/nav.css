@@ -2659,6 +2659,24 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
      loses to it whatever the media query says. */
   .hn-face--card .idc-head .idc-mark { display: none; }
 
+  /* ── The card's tools stay in the header, 2026-09-20 ──────────────────
+     Miyel: "the toolbar needs to stay in the header on scroll." It was the
+     first row of a pane that scrolls, so a screen into the card the only
+     door it has — Edit, Share, and now Settings — was above the window and
+     gone, and the way back to it was to scroll all the way up.
+
+     Sticky was tried first and cannot work: a sticky element is held by its
+     own containing block, which here is the card object, and the card object
+     ends where the writing starts — it would let go a third of the way down
+     the page. The row moves into this bar instead; IdentityCard.js puts the
+     slot here and draws into it. */
+  .hn-bar-tools { display: flex; align-items: center; }
+  /* The card's, and only while you are on the card. The slot belongs to a
+     pane that stays mounted while you swipe away from it, and a door to
+     somebody's card sitting over the beacon is a door to the wrong page.
+     Pane 0 is the turning pane; see the constants in HomeNav.js. */
+  .hn:not([data-pane="0"]) .hn-bar-tools { display: none; }
+
   /* ── Three panes on the rail ──────────────────────────────────────────
      ID, beacon, desk, and the beacon is where you land. Three was tried once
      and failed, and neither reason was the count: the panes were the same

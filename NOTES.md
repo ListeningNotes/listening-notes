@@ -2881,6 +2881,30 @@ else's, which is an argument for a version on that URL and is not built.
       eight pixels into any scroll of the pane, because it was keyed on
       `down`, which is the flag for *this pane has moved at all*.
 
+- [x] **The three hideable rows actually hide.** "Albums masterpieces and
+      formative hiding option doesn't work... I think genres should be
+      hideable." The eyes were saving a preference no card ever read: the
+      counts drew on "is there anything to count" and the genres drew on
+      nothing at all, and `showing()` sat in the file with one caller. Counts
+      and genres ask it now, and genres has an eye of its own — it was in
+      HIDEABLE with no way to turn it off. Proved by hiding all three on this
+      copy and putting them back.
+- [x] **The card's tools stay in the header.** "The toolbar needs to stay in
+      the header on scroll." **Sticky cannot do this**: a sticky element is
+      held by its own containing block, which here is the card object, and the
+      card object ends where the writing starts — it lets go a third of the
+      way down. The row is posted into the cross's bar instead, by the trick
+      LayerEntry uses for a layer's header: a slot element of IdentityCard's
+      making, appended to `.hn-bar` and drawn into with a portal. One row in
+      one of two places, never both. **Phones only** — the bar exists on a
+      desk too, where it is over the journal and the card is the left page.
+      Scoped to `data-pane="0"` as well, or the card's door would stand over
+      the beacon while the pane sits mounted behind it.
+- [x] **Settings is a tool on the card, not a door at its foot.** It joins
+      Share and Edit behind the ···, last, because it is a room rather than
+      something you do to the page. The version line and Report stay at the
+      foot.
+
 - [x] **No dissolve over the band on the friends pane.** A soft top edge is
       for a floor whose content runs off the bottom and should read as
       continuing — a wall of covers, a record mid-scroll. The book and its
