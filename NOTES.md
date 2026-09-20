@@ -3150,6 +3150,27 @@ else's, which is an argument for a version on that URL and is not built.
       the pane's own business: the faces are directly above it and the band
       says FRIENDS.
 
+- [x] **And a visitor's answer is the keeper's face in that circle.** "When
+      logged out this looks terrible — let's have it match the new beacon
+      design. The round photo is the pfp replacing log listen, and the add and
+      send can take left and right sides of the circle." Which is the move
+      that slot has always made, one step further: it holds whichever answer
+      fits whoever is looking, and now the two answers are one shape as well.
+      The portrait is the circle, hung on the rule, and ADD and SEND are hung
+      on it either side, 56px out from the middle — the circle's own half plus
+      fourteen — each carrying the page colour so the line stops at all three.
+      Positioned from the middle, so the two words stay symmetric whatever
+      they measure.
+      **The name is on the label, not in the row.** There is nowhere in a
+      circle to put it and nowhere beside one that does not make a fourth
+      thing on a line that has three, and it is the first line of the card
+      this opens. `.calling-name` and `.calling-acts` are gone.
+      **The ♪ is gone from both slots**: the keeper's is a ring with two words
+      in it and a visitor's is a face, and a mark over a mark explains one.
+      **Not seen signed out.** The CSS was checked by building the row by hand
+      in the page with the real classes — signing out to look at it would have
+      wanted the password to get back in.
+
 - [x] **The way into a listen is a circle on the rule.** "Make start a listen
       feel intentional — maybe it can be a circle between the hairlines that
       looks like a button, that music note then start a listen in the circle

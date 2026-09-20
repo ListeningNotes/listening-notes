@@ -93,7 +93,29 @@ export default function CallingCard({ onOpenCard }) {
           name on its own is still the whole of what this line has to say. The
           card falls back to its address code there, which is a fine object at
           260px and unreadable at 34. */}
-      <button type="button" className="calling-who" onClick={onOpenCard} title="About this journal">
+      {/* ── The face is the circle, 2026-09-20 ──────────────────────────
+          Miyel, on the signed-out beacon: "let's have it match the new beacon
+          design — the round photo is the pfp replacing log listen, and the
+          add and send can take left and right sides of the circle."
+
+          Which is the same move this file has always made, one step further:
+          the slot under the record holds whichever answer fits whoever is
+          looking, and the keeper's answer became a circle on the rule an hour
+          ago. A visitor's is the keeper's face in that circle, with the two
+          things a reader can do about it either side.
+
+          The name is on the label rather than in the row now. There is
+          nowhere in a circle to put it and nowhere beside one that does not
+          make a third thing on a line that has three already — and it is the
+          first line of the card, which is one pane left and is what pressing
+          this opens. */}
+      <button
+        type="button"
+        className="calling-who"
+        onClick={onOpenCard}
+        aria-label={cover_name ? `About ${cover_name}` : 'About this journal'}
+        title={cover_name || 'About this journal'}
+      >
         {portrait_url && (
           <img
             src={portrait_url}
@@ -106,7 +128,6 @@ export default function CallingCard({ onOpenCard }) {
             style={{ objectPosition: portrait_position || '50% 50%' }}
           />
         )}
-        <span className="calling-name">{cover_name}</span>
       </button>
       {/* ── One line, words ───────────────────────────────────────────────
           Miyel's mock-up, 2026-09-19, and the end of a day of trying boxes:
@@ -139,8 +160,7 @@ export default function CallingCard({ onOpenCard }) {
           `.ln-onward` is the way in's own class — which is what it has always
           been, the quiet control of this screen rather than one particular
           control. */}
-      <div className="calling-acts">
-        {/* ── Add ────────────────────────────────────────────────────────
+      {/* ── Add ────────────────────────────────────────────────────────
             Two presses wearing one word, because there are two things a
             journal can do for a reader's address book and which one depends
             on something it may not know.
@@ -182,11 +202,10 @@ export default function CallingCard({ onOpenCard }) {
             {added ? 'Copied' : 'Add'}
           </button>
         ))}
-        <Link href="/submit" className="ln-onward">
-          <PaperPlaneTilt size={14} weight="regular" aria-hidden="true" />
-          Send
-        </Link>
-      </div>
+      <Link href="/submit" className="ln-onward">
+        <PaperPlaneTilt size={14} weight="regular" aria-hidden="true" />
+        Send
+      </Link>
     </div>
   );
 }

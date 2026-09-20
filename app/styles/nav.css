@@ -3544,7 +3544,9 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
      viewport less this screen's two 24px gutters. */
   width: 100%;
   max-width: min(100%, calc(100vw - 48px));
-  margin: clamp(12px, calc(var(--hn-h) * 0.032), 26px) auto 0;
+  /* Room over the rule for the top half of the circle that straddles it, the
+     same as the keeper's slot takes. */
+  margin: clamp(46px, calc(var(--hn-h) * 0.075), 62px) auto 0;
   /* ── A hairline above it ───────────────────────────────────────────────
      From Miyel's own mock-up of this floor, f6, drawn 2026-09-17. The row
      was arrived at independently two days later — the same two glyphs in
@@ -3560,7 +3562,10 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
      width the line wants: the record's left edge to the right edge of the
      past column. */
   border-top: 1px solid var(--border);
-  padding-top: clamp(14px, calc(var(--hn-h) * 0.026), 22px);
+  /* And the bottom half under it. The circle is out of the flow, so this is
+     the whole of what the row occupies below the rule — the two words stand
+     in it, either side of what is hanging over them. */
+  padding-top: 42px;
 }
 /* The empty beacon has neither a cover nor a name — it has one quiet line, and
    it spans. */
@@ -3636,27 +3641,9 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
 
    Both slots wear it, because both wear the rule — the keeper's way in and a
    visitor's calling card are one shape at two contents. */
-/* The keeper's slot draws its own note inside the circle now (HomeNav.js), so
-   only the calling card wears this. */
-.hn-pane--home .calling { position: relative; }
-.hn-pane--home .calling::before {
-  content: '\266A';
-  position: absolute;
-  top: 0;
-  left: 50%;
-  /* Half its own width to the left and half its own height up, so it is
-     centred on the line however wide the character turns out to be — a
-     phone that substitutes its own font for this one moves nothing. */
-  transform: translate(-50%, -50%);
-  padding: 0 11px;
-  background: var(--bg);
-  color: var(--ink-faint);
-  font-size: 13px;
-  line-height: 1;
-  /* It is a mark on a rule, not a control: a thumb aiming at Start a listen
-     must not land on it, and a screen reader has no use for it. */
-  pointer-events: none;
-}
+/* The ♪ that sat in the break in the rule is gone from both slots now: the
+   keeper's is a ring with two words in it and a visitor's is the keeper's
+   face, and a mark over a mark is a mark explaining one. */
 
 
 /* ── The picker gets the whole screen back ─────────────────────────────────
