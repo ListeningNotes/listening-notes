@@ -585,24 +585,42 @@ export default function About({ stamps, authed = false, pinned = null, entries =
               />
             </div>
 
-            <div className="ab-pin-list">
+            {/* ── Covers, not rows, 2026-09-20 ───────────────────────────
+                Miyel: "the selection should be grid of albums not list." A
+                row spends most of its width on words and gives the record a
+                40px thumbnail, and a record is a picture: you know the one
+                you are looking for by its cover long before you have read its
+                title. It is also the shape the rest of this site picks
+                records in — the wall on the beacon, the window a count
+                opens, the archive — so this stops being the one place that
+                asks you to read a list.
+
+                The artist goes. Three across a phone leaves room for one line
+                under the art, and between the cover and the title the artist
+                is the third thing you need; it stays on the label for anybody
+                who cannot see the picture. */}
+            <div className="ab-pin-grid">
               {pinResults.map(row => (
                 <button
                   key={row.id}
                   type="button"
-                  className={'ab-pin-hit' + (row.id === edit.pin ? ' ab-pin-hit--on' : '')}
+                  className={'ab-pin-one' + (row.id === edit.pin ? ' ab-pin-one--on' : '')}
                   onClick={() => choosePin(row.id)}
+                  aria-pressed={row.id === edit.pin}
+                  aria-label={`${row.album} — ${row.artist}`}
+                  title={`${row.album} — ${row.artist}`}
                 >
-                  <span className="ab-pin-hit-art">
+                  <span className="ab-pin-one-art">
                     {row.album_art
                       ? <img src={row.album_art} alt="" />
                       : <span aria-hidden="true">♪</span>}
+                    {row.id === edit.pin && (
+                      <span className="ab-pin-one-tick" aria-hidden="true">
+                        <Check size={12} weight="bold" />
+                      </span>
+                    )}
                   </span>
-                  <span className="ab-pin-hit-said">
-                    <span className="ab-pin-hit-album">{row.album}</span>
-                    <span className="ab-pin-hit-artist">{row.artist}</span>
-                  </span>
-                  {row.id === edit.pin && <Check size={14} weight="bold" aria-hidden="true" />}
+                  <span className="ab-pin-one-album">{row.album}</span>
                 </button>
               ))}
               {pinResults.length === 0 && (

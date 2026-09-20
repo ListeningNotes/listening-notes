@@ -2902,6 +2902,24 @@ else's, which is an argument for a version on that URL and is not built.
 - [x] **Edit is the first tool behind the ···**, which is the shortest reach:
       the row opens back towards the mark that opened it, so the head of the
       list lands nearest the thumb. It is also the one that gets pressed.
+- [x] **The pinned record says it can be changed.** "Editing pinned album
+      should be more obvious you can swap that out." In a correction the row
+      looked exactly as it looks printed — a pin, a cover, a title — so the
+      one thing that had changed about it, that it is now a door, was
+      invisible. It wears the photograph's own pill: CHANGE, same face, same
+      rule, same radius as the REPLACE over the portrait, so the two editable
+      objects on the card say so the same way.
+- [x] **And you pick one off a wall of covers.** "The selection should be grid
+      of albums not list." Three across, the cover square, the album name
+      under it, the one you have on a ring with a tick in the corner — a ring
+      alone is a hover state on a laptop and nothing at all on a phone. The
+      artist goes: between the picture and the title it is the third thing you
+      need, and it stays on the label for anybody who cannot see the picture.
+      `.ab-pin-list` and `.ab-pin-hit*` are gone with the rows.
+- [x] **The opening is full ink**, not a step quieter. At the display weight
+      and four pixels smaller it already reads as the smaller of the two, and
+      the grey was making a question somebody chose look like boilerplate.
+
 - [x] **The openings are set in the pinned record's face.** "Can the prompt
       question use the font we use for pinned album titles." They were the
       caption face — ten pixels, small caps, wide tracking — which is what
