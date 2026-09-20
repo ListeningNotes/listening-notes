@@ -672,18 +672,25 @@ export default function Friends({ shelf = false, onCount = null, onBusy = null }
           />
         </label>
         {/* ── The placeholder is the hint, 2026-09-20 ────────────────────
-            Miyel: "maybe placeholder text can be the hint — type or scan
-            address." Better than `Enter journal address` was, because the
-            camera is sitting two marks away and nothing said what it was
-            for. An empty field is the one place on a screen where a sentence
-            costs nothing: it is gone the moment anybody acts on it. */}
+            Miyel: "maybe placeholder text can be the hint." Better than
+            `Enter journal address` was, because the camera is sitting beside
+            the field and nothing said what it was for. An empty field is the
+            one place on a screen where a sentence costs nothing: it is gone
+            the moment anybody acts on it.
+
+            Scan first, then type — "I want to encourage scanning, and the
+            camera is on the left now anyway." Both halves of that are the
+            same reason: the camera is the first thing on the row, so it
+            should be the first thing in the sentence, and the order of the
+            two words is the order of the two ways in. Typing a journal's
+            address out was always the fallback; the code is the way in. */}
         <label className={'fr-field fr-field--address' + (adding ? '' : ' fr-field--waiting')} inert={adding ? undefined : true}>
           <input
             ref={fieldRef}
             value={typed}
             onChange={e => setTyped(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); file(typed); } }}
-            placeholder="Type or scan address"
+            placeholder="Scan or type address"
             aria-label="The address of a journal to add"
             autoComplete="url"
             inputMode="url"
