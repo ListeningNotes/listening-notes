@@ -2355,19 +2355,23 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
    the small mark are never on screen together, so it is still one mark. */
 @media (max-width: 768px) {
   .hn-bar:not(.hn-bar--scrolled) .hn-bar-mark { display: none; }
-  /* Except on the inbox and the book, where it shows from the start, 2026-09-19.
-     The rule above is about the beacon: the crown is the mark there and the
-     small one waits until it has gone. The card and the desk are exempt
-     because they draw their own mark at the top of themselves — every page on
-     this site says what it belongs to. These two panes are pages that did
-     not, and there was nothing at the top of the friends floor but a +.
+  /* ── The mark is the beacon's and nobody else's, 2026-09-20 ───────────
+     Miyel: "remove the LN logo from header of all pages except beacon."
+     It showed on the inbox and the book from the start for one evening —
+     the argument was that every page here says what it belongs to — and
+     the answer is that the mark belongs to the *journal*, which is the
+     beacon, and repeating it over the rooms behind it says nothing except
+     that this is still the same website.
 
-     Shown here rather than drawn inside each pane: it is the same mark in the
-     same place, and pressing it does what pressing it does everywhere, which
-     is go back to the top. Keyed on --keeper because signed out pane 2 is the
-     colophon, and the colophon keeps the crown. */
-  .hn--keeper[data-pane="2"] .hn-bar-mark,
-  .hn--keeper[data-pane="3"] .hn-bar-mark { display: block; }
+     So on a phone the small mark is the beacon's alone, and even there
+     only once the crown has scrolled away. The card gives its own up in
+     the same breath, below. A desk is untouched: it has no band, one page
+     at a time, and the bar's mark is the only one it has. */
+  .hn:not([data-pane="1"]) .hn-bar-mark { display: none; }
+  /* Three classes deep on purpose: idcard.css has `.ab-card .idc-mark` and
+     is loaded after this sheet, so anything of equal weight written here
+     loses to it whatever the media query says. */
+  .hn-face--card .idc-head .idc-mark { display: none; }
 
   /* ── Three panes on the rail ──────────────────────────────────────────
      ID, beacon, desk, and the beacon is where you land. Three was tried once
@@ -2428,13 +2432,13 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
      band at the foot. Written here rather than on the pages inside, because
      it is the cross's furniture they are clearing and those pages have their
      own addresses where none of it exists. */
-  /* Starting under the bar, not under the status bar: the mark is drawn over
-     these two panes now and 36px put the search field and the folder tabs
-     straight through it. --hn-bar-h is the bar's whole height and is what the
-     feed's own floor already clears. */
+  /* Back to clearing the status bar rather than the whole bar, now that
+     there is no mark drawn over these two to run through. The book gets the
+     difference: about forty pixels, which is most of another row of faces on
+     a tall phone. */
   .hn-pane--inbox,
   .hn-pane--friends {
-    padding: var(--hn-bar-h) 0 calc(var(--hn-foot-h) + 20px);
+    padding: calc(36px + var(--safe-top)) 0 calc(var(--hn-foot-h) + 20px);
     box-sizing: border-box;
   }
   /* ── The book's two floors ─────────────────────────────────────────
@@ -2469,7 +2473,7 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   .hn-floor--book {
     height: calc(var(--hn-h) - var(--hn-peek));
     min-height: 0;
-    padding: var(--hn-bar-h) 24px 0;
+    padding: calc(36px + var(--safe-top)) 24px 0;
   }
   /* The book fills the floor, which is what makes "as many faces as fit" a
      question with an answer: the shelf inside it measures the room it is
