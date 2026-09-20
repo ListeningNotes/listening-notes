@@ -719,10 +719,15 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   // nav row is styled off .ln-entry / .ln-entry--scrolled, which the row is
   // no longer inside, so the slot is given the same two classes.
   const headerSlot = useLayerHeaderSlot();
+  // Whether the header is standing in for the record — see the collapse
+  // further down, which is what turns it on.
+  const [crowning, setCrowning] = useState(false);
   useEffect(() => {
     if (!headerSlot) return;
-    headerSlot.setAttribute('class', 'lay-header ln-entry' + (scrolled ? ' ln-entry--scrolled' : ''));
-  }, [headerSlot, scrolled]);
+    headerSlot.setAttribute('class', 'lay-header ln-entry'
+      + (scrolled ? ' ln-entry--scrolled' : '')
+      + (crowning ? ' ln-entry--crowning' : ''));
+  }, [headerSlot, scrolled, crowning]);
   // Whether the first screen was already on the layer before this rendered —
   // drawn by LayerWaiting from what the wall handed over. Read once, on the
   // first render, because the handoff is about the moment of arrival.
@@ -875,7 +880,6 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   // so anything that has to end up *in* that row has to start there too.
   // The page's own art goes invisible while this one stands in for it, and
   // keeps its box, which is what everything below it is positioned against.
-  const [crowning, setCrowning] = useState(false);
   useEffect(() => {
     // Not while the page is something else. Printing makes screen one a
     // sheet of paper and editing makes it a form; in both the art is a
@@ -891,6 +895,26 @@ export default function FullPostPage({ entry, references = [], authed = false, l
     const one = document.querySelector('.ln-screen-one');
     if (!screens || !art || !seat || !hole || !row || !one) return undefined;
 
+    // ── Nothing until the sheet has landed, 2026-09-20 ────────────────────
+    // An entry rises from the foot of the screen now, and its header is held
+    // where it is by running the inverse of that rise on it. Which means that
+    // while the arrival is playing the header and the page are in different
+    // frames — a whole screen apart — and anything measured across the two is
+    // measured in neither. The first attempt read the art at 172 and the seat
+    // at 172 minus a screen, and put the record off the top of the page.
+    //
+    // So the collapse does not exist until the sheet is still. Until then the
+    // page's own art is the art, which is the thing rising anyway, and the
+    // seat is not drawn. They are the same picture at the same place, so the
+    // handover at the end is not something anybody can see.
+    const sheet = row.closest('.lay');
+    // By name, not just by "something is running". The caret at the foot of
+    // the record bobs on a 2.2s loop that never ends, so asking the subtree
+    // whether anything is playing is asking whether the page exists — and
+    // the collapse never started.
+    const landing = () => Boolean(sheet) && sheet.getAnimations({ subtree: true })
+      .some(a => a.playState === 'running' && String(a.animationName || '').startsWith('lay'));
+
     let base = null;
     const middle = el => {
       const r = el.getBoundingClientRect();
@@ -905,6 +929,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
         setCrowning(false);
         return;
       }
+      if (landing()) { base = null; setCrowning(false); return; }
       const gone = screens.scrollTop;
       const from = middle(art);
       const land = middle(hole);
@@ -964,6 +989,9 @@ export default function FullPostPage({ entry, references = [], authed = false, l
     };
 
     measure();
+    // And again the moment the arrival is over, which is the measurement
+    // that counts.
+    if (sheet) sheet.addEventListener('animationend', measure);
     screens.addEventListener('scroll', draw, { passive: true });
     screens.addEventListener('load', measure, true);
     const narrow = window.matchMedia('(max-width: 768px)');
@@ -974,6 +1002,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
     watch.observe(one);
     watch.observe(row);
     return () => {
+      if (sheet) sheet.removeEventListener('animationend', measure);
       screens.removeEventListener('scroll', draw);
       screens.removeEventListener('load', measure, true);
       narrow.removeEventListener('change', measure);

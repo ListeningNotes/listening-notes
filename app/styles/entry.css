@@ -215,6 +215,44 @@
 }
 @keyframes layRise { from { transform: translateY(100%); } to { transform: none; } }
 
+/* ── The header does not rise with it, 2026-09-20 ────────────────────────
+   Miyel, on the album: "instead of opening from where it is, it can just
+   slide up from the bottom, all the way from the bottom, covering the
+   footer, the filters and the search, and just meet the header, since we're
+   down here anyway, and connect. That little moon and sun will turn into
+   the toolbar. And then it's just swipe down to close."
+
+   So the record comes up to a header that was already there. The sheet is
+   translated a whole screen down and this runs the exact inverse on the
+   header for the same length on the same curve, which leaves it standing
+   still on the line the page underneath was already drawing one on.
+
+   The fade is the second half of her sentence. The lights are the cross's,
+   in that corner, and they are what is under this until it lands — so the
+   header comes up to full in the first third and the corner reads as the
+   sun and the moon turning into the tools rather than as one control being
+   swapped for another between frames.
+
+   Only sheets that use the slot have anything in it. The listen draws its
+   own header inside its content, which is why this cannot disturb it.
+
+   A transform makes this the containing block for the fixed row inside it,
+   which is the point: the row travels with it and is back on the window's
+   own coordinates the moment the animation is over. The same fact is a trap
+   on a sheet that scrolls — see the note over .lay--over-journal — and this
+   sheet does not scroll; the entry has a scroller of its own. */
+.lay--rises.lay--over-journal .lay-header {
+  animation: layHold 620ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+@keyframes layHold {
+  from { transform: translateY(-100dvh); opacity: 0; }
+  34%  { opacity: 1; }
+  to   { transform: none; opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lay--rises.lay--over-journal .lay-header { animation: none; }
+}
+
 /* ── Browsing sideways ──
    The content follows the finger while held, settles when let go, and a
    neighbour enters from the side it was on. */
@@ -1200,7 +1238,12 @@ a.ln-sent-who:hover { text-decoration: underline; text-underline-offset: 3px; }
     justify-content: center;
     transform-origin: top left;
     will-change: transform;
+    /* Not drawn until the collapse has something true to say about where it
+       goes — while a sheet is still arriving, the header and the page are a
+       screen apart and the page's own art is the one you are watching. */
+    visibility: hidden;
   }
+  .ln-entry--crowning .ln-crown-art { visibility: visible; }
   .ln-crown-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .ln-crown-none { font-size: 13px; color: var(--ink-faint); }
   /* Its place in the row, which is all the row ever has to lay out — and
