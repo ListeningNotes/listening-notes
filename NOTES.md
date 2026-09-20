@@ -3067,6 +3067,20 @@ else's, which is an argument for a version on that URL and is not built.
       row (`onBusy`, handed up the way the count is). The address field is
       271px of the 319 the row has. The Add / Scan row stays on the floor and
       is now the first thing on it, so it opens directly under the bar.
+      **And a field in a header is a line, not a box.** "The search bar feels
+      big and bulky compared to the other title header... it feels so
+      disjointed." It was arriving as a panel with a rule round it and 44px of
+      height into a row that holds a ten-pixel caption — the shape a field
+      wears in a form, on a row that is not one. In the bar it gives all that
+      up: type on the middle of the line in the caption face, over a hairline
+      that is the only thing left saying it can be written in. 16px and not
+      the caption's 10, because base.css forces every field on a phone to 16
+      to stop Safari zooming; the face carries the row, not the size.
+      **The two fields cross by fading here**, not by clipping: the clip read
+      as one box leaving while another arrived, and with no box round either
+      there is no edge for it to read as. Careful with the order — an
+      `opacity: 1` on the two field classes beat `--gone`'s `opacity: 0`
+      written above it, and both fields drew at once, one on top of the other.
       **The floor had to be told to clear the band**: its 36px of top padding
       was 36px *plus the header standing in the rest of it*, and the header is
       not on that floor any more. `--hn-bar-h + 8` now.

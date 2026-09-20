@@ -2717,6 +2717,46 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   .hn-bar-add .fr-field { pointer-events: auto; }
   .hn-bar-add .fr-field--gone,
   .hn-bar-add .fr-field--waiting { pointer-events: none; }
+
+  /* ── A field in a header is a line, not a box, 2026-09-20 ─────────────
+     Miyel: "the search bar feels big and bulky compared to the other title
+     header... it feels so disjointed." It does, and the reason is that the
+     row it drops into holds a ten-pixel caption and it arrives as a panel
+     with a rule round it and forty-four pixels of height — the shape a field
+     wears in a form, on a row that is not one.
+
+     So in the bar it gives all that up and becomes what the row already is:
+     type on the middle of the line, in the caption face, over a hairline
+     that is the only thing left saying it can be written in. The same
+     argument `.ab-prompt-input` makes on the card — the box should be the
+     shape of the sentence, not the shape of a form.
+
+     Sixteen pixels and not the caption's ten: base.css sets every field on a
+     phone to 16 with !important, because Safari zooms the page in on
+     anything smaller and does not reliably zoom back out. The face is what
+     carries the row here, not the size. */
+  .hn-bar-add .fr-field {
+    padding: 0;
+    border: 0;
+    border-bottom: 1px solid var(--border);
+    border-radius: 0;
+    background: none;
+    clip-path: none;
+    transition: border-color 0.15s, opacity 0.22s ease;
+  }
+  .hn-bar-add .fr-field:focus-within { border-bottom-color: var(--ink-faint); }
+  .hn-bar-add .fr-field input {
+    padding: 8px 0;
+    text-align: center;
+    font-family: var(--font-label);
+    letter-spacing: 0.04em;
+  }
+  /* Away rather than clipped. The clip was how one field left while the
+     other arrived across a row they shared; with no box round either of
+     them there is no edge for a clip to read as, so they cross by fading —
+     which is also what the name in the middle of this row does. */
+  .hn-bar-add .fr-field--gone,
+  .hn-bar-add .fr-field--waiting { opacity: 0; }
   /* The book's, and only while you are on the book. Pane 2 is the friends
      pane; see the constants in HomeNav.js. */
   .hn:not([data-pane="2"]) .hn-bar-add,
