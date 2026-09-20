@@ -3052,13 +3052,21 @@ else's, which is an argument for a version on that URL and is not built.
       are soft grey**: `.ln-onward` is full ink because it used to be a bare
       line that had to out-shout two captions beside it, and inside a ring
       nothing is competing with it.
-      **And it says LOG LISTEN**: "get rid of a", then "Log Listen". Log
-      rather than Start because it is the word the journal already uses for
-      the act — LAST LOGGED over the cover, logged in the feed. Start named
-      the beginning of a flow, which is a fact about the software. The whole
-      phrase stays on the label: Log Listen is not a sentence and a screen
-      reader has no shape to read. **The inbox's row still says Start a
-      listen** and is the same action by another name.
+      **And it says LOG A / LISTEN**, in that order over ten minutes: "get
+      rid of a", "Log Listen", "Log a / listen". Log rather than Start because
+      it is the word the journal already uses for the act — LAST LOGGED over
+      the cover, logged in the feed. Start named the beginning of a flow,
+      which is a fact about the software. The article earns its place after
+      all: two bare words on two lines read as two labels, where a phrase
+      broken mid-sentence reads as one thing said across a break.
+      **And no mark in it.** A ♪ sat over the words for an hour, because one
+      had sat on the rule before the circle existed. "Is there a better icon
+      than that music note — is it even needed?" It is not: it said *music* on
+      a site that is entirely about music, over two words that already say
+      what pressing does. The calling card keeps its ♪ — no control in that
+      slot, so what is on the rule there is a mark and nothing else.
+      **The inbox's row still says Start a listen** and is the same action by
+      another name.
 
 - [x] **No dissolve over the band on the friends pane.** A soft top edge is
       for a floor whose content runs off the bottom and should read as
