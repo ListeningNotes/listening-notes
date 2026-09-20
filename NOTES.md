@@ -2757,6 +2757,43 @@ current.
 
 ## Complete
 
+**2026-09-20 — The feed at two densities.** Her brief: "one toggle, two
+states, nothing in between."
+
+- [x] **A two-bar glyph at the top right of the feed's header**, and the glyph
+      is the shape it makes — the rule the archive's density control already
+      keeps. Which state you are in is said by the ink, not by swapping the
+      mark: a control that changes its own picture is two controls. Remembered
+      between visits (`ln-feed-density`), because a density you chose is a
+      preference and re-picking it every visit is the page forgetting.
+- [x] **The header went from one word centred to a name and a control at the
+      two ends of a line.** On the feed's own address it says *Feed*; on the
+      cross it does not, because the name is at the foot of the floor above
+      with the caret under it — there it is the toggle alone, and the row
+      gives up its rule and its air, which the peek needs back.
+- [x] **Rows: 56px art, the title, then artist · who · when in the caption
+      face**, cut with an ellipsis rather than wrapped. Stars at 11 and the
+      marks at 14 on the right, a hairline between, about eight to a screen.
+- [x] **The marks survive the squeeze**, which is the point: the envelope and
+      the compare are the two reasons to stop on a row.
+- [x] **The short time in rows** — `6h` where the tall version says `6h ago`.
+      A row gives its meta about 140px, and "ago" is 26 of them said three
+      times over; the artist and the name are the part that cannot be guessed.
+      Her own mock-up writes it that way.
+- [x] **A gold ring on a shared cover, in both densities.** The one thing in a
+      feed you can act on that is worth spotting without reading — and reading
+      is what scrolling past eight rows a screen does not leave time for. An
+      `outline` rather than a border, so it takes nothing off the art and
+      moves nothing beside it.
+- [x] **The compare mark moves into the row** beside the stars, because there
+      is no *under the record* in a row. Opening it is unchanged.
+
+**What the header cost the peek, and it is a choice:** the feed floor now
+starts with a 39px row, so the sliver of record showing under the caret went
+from about 50px to about 22. Getting it back is one number — the book pane's
+`--hn-peek` — and it costs the shelf a row of faces on a phone this size. Left
+as it is until Miyel says which she would rather have.
+
 **2026-09-20 — The compare is a mark, and opens as two listens stacked.**
 From Miyel's reference.
 
