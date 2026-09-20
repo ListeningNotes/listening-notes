@@ -1326,15 +1326,23 @@ a.pp-name:hover svg { color: var(--ink); }
    "as many as fit" means, and it is measured in Friends.js off this box. Off
    the floor there is no box — the whole book runs down the page. */
 .fr-shelf { display: flex; flex-direction: column; }
-/* `auto` and not `hidden`: with the rows that fit there is nothing to scroll,
-   which is the point — but opening somebody unfolds 150px of doors between
-   two rows, and a clipped shelf would take the bottom row away rather than
-   letting you reach it. A scroller that is only ever a scroller while
-   something is open. The beacon's second floor is the same shape, and its
-   `auto` overscroll is deliberate there too: a pull at the top has to reach
-   the pane, because the pane is what carries you back. */
-.fr-shelf--floor { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior-y: auto; scrollbar-width: none; }
-.fr-shelf--floor::-webkit-scrollbar { display: none; }
+/* ── A scroller only while it has something to scroll, 2026-09-20 ─────────
+   It was `overflow-y: auto` all the time, on the reasoning that the rows
+   always fit so there would be nothing to scroll — true, and not the point.
+   A box with `auto` on it is a scroll container whether or not it overflows,
+   and on a phone it takes the first part of every drag that starts inside it
+   before deciding it has nowhere to go. The faces fill most of this floor, so
+   that was most of the drags anybody makes on it: you pull down over somebody
+   and the pane does not move.
+
+   `hidden` until a person is open, which is the only thing that ever
+   overflows it — 150px of doors unfolding between two rows, with the bottom
+   row pushed past the edge. Then it is a scroller, and the doors are scrolled
+   to (see Friends.js). The toggle is on a press and never during a scroll,
+   which is the version of this that bit the rail once before. */
+.fr-shelf--floor { flex: 1; min-height: 0; overflow: hidden; }
+.fr--open .fr-shelf--floor { overflow-y: auto; overscroll-behavior-y: auto; scrollbar-width: none; }
+.fr--open .fr-shelf--floor::-webkit-scrollbar { display: none; }
 /* The way to everybody. Quiet, in the caption face, and the only number on
    the floor — which it earns, because the number is the point of it. */
 .fr-all {
