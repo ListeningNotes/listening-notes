@@ -2850,6 +2850,26 @@ else's, which is an argument for a version on that URL and is not built.
       — that module opens the database and this one runs in a browser. If they
       ever disagree the write wins and the door is merely wrong about itself,
       which is the right way round.
+- [x] **The feed's name sticks in the header once you are on the feed.**
+      "Let feed word stick in the header without the caret on scroll." The
+      word rises with the floor it stands at the foot of, goes under the bar,
+      and comes back in the middle of the bar without its chevron — there is
+      nowhere further down from there, so the chevron has nothing to say. The
+      middle is free on this pane because the small mark is the beacon's, and
+      the word is out of the flex flow entirely, so it cannot move the toggle
+      at the end of the row however long a floor's name gets. It is also
+      `pointer-events: none`: the strip that takes you back to the top fills
+      this row, and a word on the middle of it would be a dead spot in the one
+      place a thumb lands.
+      **Measured off the way-down button's bottom, not its top.** At its top
+      the whole button is still in plain sight under the bar and the word
+      would be on the screen twice; by the time the chevron's last pixel is
+      behind the header there is exactly one. Handing over at 592px on a
+      375-wide phone, which is where the floor itself arrives.
+      **And the toggle now waits for the same moment** — it was appearing
+      eight pixels into any scroll of the pane, because it was keyed on
+      `down`, which is the flag for *this pane has moved at all*.
+
 - [x] **A full shelf shakes its head.** "Can the pin button shake like saying
       no if 6 are already pinned." It was `disabled` before, so a press did
       nothing at all — and nothing at all is the one answer that does not say

@@ -1892,6 +1892,32 @@
 }
 .fd-dense:hover { color: var(--ink-soft); }
 .fd-dense:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 2px; border-radius: 7px; }
+/* ── The floor's name in the bar ──────────────────────────────────────────
+   The caption face at the size and tracking the address book's own title
+   carries, because the two are the same object one floor apart.
+
+   In the middle (Miyel, 2026-09-20: "it can stick right in the middle"), by
+   the same geometry the small mark uses — absolute, half across, centred on
+   the 58px row rather than on the band, which is taller by the notch
+   allowance. Out of the flex flow entirely, so it cannot move the toggle at
+   the end of the row whatever length the word is, and it takes the middle on
+   the one pane where the mark is not drawn.
+
+   Nothing to press: the invisible strip that takes you back to the top of a
+   pane fills this row, and a word sitting on the middle of it would be a dead
+   spot in the one place a thumb lands. */
+.hn-bar-say {
+  position: absolute;
+  left: 50%;
+  top: calc(22px + var(--safe-top) + 29px);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  font-family: var(--font-label);
+  font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+
 /* Room between it and the sun, when both are there. On the pane it actually
    appears on the lights are hidden, so the gap goes on the lights rather than
    on this — put it here and the glyph sits ten pixels short of the edge every
