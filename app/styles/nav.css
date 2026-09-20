@@ -842,6 +842,41 @@
   /* Home only. It is the pane with a cover, so it is the pane with two
      floors and a snap; the turning pane is a page and scrolls like one. */
   .hn-pane--home { scroll-snap-type: y mandatory; }
+
+  /* ── How much of a second floor shows under a first ───────────────────
+     One number for both panes that have one, because they are the same
+     idea: the top of the thing below, under a word saying what it is. Not
+     the bar's height on top of it — that is scroll-margin's job now, or the
+     peek would be mostly dead air. See .hn-floor--wall and .hn-floor--feed. */
+  .hn { --hn-peek: 140px; }
+
+  /* ── The beacon's floor stops short, 2026-09-19 ───────────────────────
+     Miyel: "the beacon should have the same effect." So it is the book's
+     shape exactly — a first floor a peek shy of the screen, a word and a
+     chevron at the foot of it, and the top of the wall showing underneath.
+     height rather than min-height for the same reason the book's floor has
+     it: what is below must not be pushed off the screen by what is on it. */
+  /* Scoped to the pane so it outranks .hn-floor's own min-height, which is
+     written after this block and would otherwise hold the floor at a full
+     screen however short this said to make it. */
+  .hn-pane--home .hn-floor--beacon {
+    height: calc(var(--hn-h) - var(--hn-peek));
+    min-height: 0;
+  }
+  /* The snap stops a bar's-worth short, so the wall lands under the mark
+     rather than behind it — and at rest the peek is all wall and no gap. */
+  .hn-floor--wall { scroll-margin-top: var(--hn-bar-h); }
+  /* And the wall stops being a scroller of its own on a phone. It was one so
+     the pane had only two stops; with a sliver of it showing at rest that
+     became a scroller you could reach before arriving at it, and a flick
+     over the peek slid the wall inside its own box while the pane stood
+     still. The floor is a snap area taller than the screen instead, which
+     the snap allows to rest anywhere once it covers the port — the same
+     answer the feed's floor got an hour earlier. */
+  .hn-floor--wall .hn-floor-scroll {
+    height: auto;
+    overflow: visible;
+  }
   .hn-floor {
     /* min-height, not height: a floor is one screen, and on a phone too
        short for everything on it the floor grows and scrolls that overrun
@@ -2385,13 +2420,8 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   .hn-pane--friends {
     padding: 0;
     scroll-snap-type: y mandatory;
-    /* How much of the second floor shows under the first. It has to carry
-       the bar's height as well as the sliver: the feed's heading starts a
-       bar's-worth down its floor, so that when the floor is snapped to the
-       top of the screen the heading lands under the mark rather than behind
-       it. Above that is the sliver proper — the heading, and the first cover
-       beginning — with the band eating its last 54. */
-    --hn-peek: calc(120px + var(--hn-bar-h));
+    /* Inherited from .hn now — the beacon wants the same number. */
+
     /* The feed takes its gutter from the floor rather than adding a second
        one. Stated rather than left undefined: an undefined var in a
        shorthand throws the whole declaration away, which happens to give
@@ -2424,7 +2454,9 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
      is the thing this site takes carets off pages to avoid. */
   .hn-down {
     display: flex; flex-direction: column; align-items: center; gap: 6px;
-    padding: 20px 0 14px;
+    /* Tight, because on the beacon this row is the last twelve pixels of a
+       floor that is already full. The book has slack and does not care. */
+    padding: 12px 0 12px;
     border: 0; background: none; cursor: pointer;
     color: var(--ink-faint);
     transition: color 0.15s;
@@ -2437,12 +2469,19 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
     line-height: 1;
   }
   .hn-floor--feed { padding: 0 24px; }
-  /* The records start a bar's-worth down, so that when this floor is snapped
-     to the top of the screen the first cover lands under the mark rather than
-     behind it. The feed says no name here — the name is at the foot of the
-     floor above, over the caret — so there is nothing between the padding and
-     the first record. */
-  .hn-floor--feed .fd-wrap { padding-top: var(--hn-bar-h); }
+  /* ── The snap stops a bar's-worth short, 2026-09-19 ───────────────────
+     The first cover has to clear the mark when this floor is snapped to the
+     top, and it used to do that with padding — which meant the same gap sat
+     in the peek at rest, between the caret and the record it points at.
+     `scroll-margin-top` moves the snap position instead of the content: the
+     floor lands with its top a bar's-worth down the screen, and at rest its
+     first cover begins immediately under the caret. The floor above rides up
+     behind the bar's own ground, which is what that ground is for. */
+  .hn-floor--feed {
+    scroll-margin-top: var(--hn-bar-h);
+    /* A breath, so the cover is not welded to the caret in the peek. */
+    padding-top: 12px;
+  }
   /* Clear of the band, which has a ground of its own and would otherwise
      cover the last record rather than letting it show through. */
   .hn-floor--feed .fd-wrap { padding-bottom: calc(var(--hn-foot-h) + 20px); }
@@ -2817,7 +2856,20 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
 
    The logo's own height is free: it stands at the bottom of a block taller
    than itself, so 54 to 82 costs the screen nothing. Only the block costs. */
-.hn { --hn-crown: clamp(104px, calc(var(--hn-h) * 0.23), 200px); }
+/* ── Smaller again, to pay for the way down, 2026-09-19 ────────────────────
+   Miyel: "the LN. logo on beacon must become smaller, everything lives higher,
+   then caret has journal and peek at journal." The mark is the top of a block
+   it stands at the bottom of, so both numbers move together: a shorter block
+   walks the mark up the window and brings everything under it up too, and a
+   shorter mark opens the air between it and the record.
+
+   0.23 → 0.17 of the screen, and the logo 82 → 62. Between them that is about
+   a hundred pixels on a phone, which is what the floor gives up to the peek
+   plus the row that names it. The 0.23 note below is kept: it is the reason
+   the number went back up in September, and this is the first thing since
+   then that has been worth spending it on. */
+.hn { --hn-crown: clamp(84px, calc(var(--hn-h) * 0.17), 150px); }
+@media (max-width: 768px) { .hn-crown-svg { height: 62px; } }
 
 /* Two columns and a row under them: the record and its past side by side, the
    way in spanning both. A grid rather than a flex row because .ln-onward is a
@@ -2842,6 +2894,21 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
      narrower gutter: 24 rather than the pane's 34. At 375 that is 327px of
      room for a 240 record, a 16 gap and a 58 column — 314, with air left. */
   padding: calc(var(--hn-square-top) + 14px) 24px 92px;
+}
+/* ── The 92 goes back to the screen on a phone, 2026-09-19 ────────────────
+   It was the room for the caret that floated above the band, and that caret
+   does not exist any more: the way down is a row in the flow at the foot of
+   this floor, and it brings its own air. Nearly the whole of the peek under
+   it is paid for out of this one number; the mark came down in size for the
+   rest, and for the look of the thing.
+
+   Written here rather than up in the phone block with the floor it serves,
+   because the rule above has the same weight and comes later in the file —
+   the two of them are one number stated twice and they have to stay next to
+   each other. On a desk there is no band, no caret and no peek: 92 is just
+   the space under a record, and it stays. */
+@media (max-width: 768px) {
+  .hn-pane--home .hn-screen { padding-bottom: 4px; }
 }
 /* ── The name is the screen's, not the record column's ────────────────────
    Centred under the art it sat left of the middle of the screen, because the

@@ -2714,6 +2714,44 @@ current.
 
 ## Complete
 
+**2026-09-20 — The beacon gets the book's way down, and three fixes.**
+
+- [x] **The beacon's floor stops short and names what is under it.** Miyel:
+      "the beacon should have the same effect... LN. logo must become smaller,
+      everything lives higher, then caret has journal and peek at journal." So
+      it is the book's shape exactly — a word and a chevron at the foot of the
+      first floor, the snap stopping a bar's-worth short, and the top of the
+      wall showing underneath. The mark went from 0.23 of the screen to 0.17
+      and from 82px to 62.
+- [x] **And the 92px under the record paid for nearly all of it.** That was
+      the room the caret kept while it floated above the band. The caret is a
+      row in the flow now and brings its own air, so the number went back to
+      the screen. Phone only — on a desk there is no band, no caret and no
+      peek, and 92 is just the space under a record.
+- [x] **The floating caret is gone.** It said "there is more that way" on
+      whichever pane had a second floor. Both panes say it themselves now,
+      with a word and the top of the thing below showing under it, which is
+      the same sentence with a subject in it.
+- [x] **The wall stops being a scroller of its own on a phone**, for the same
+      reason the feed's floor did an hour before: a sliver of an inner
+      scroller is a scroller you can reach before you have arrived at it.
+- [x] **Opening somebody in the bottom row is no longer cut off.** The shelf
+      could always scroll to the doors; nothing said so. It goes to them once
+      they have opened, by as much as it takes, and not at all for the rows
+      that were already in view.
+- [x] **The way down sits lower, against the thing it points at.** The feed's
+      floor cleared the bar with padding, which put 80px of nothing between
+      the caret and the first cover at rest. `scroll-margin-top` moves the
+      snap position instead of the content, so the cover starts immediately
+      under the caret and still lands clear of the mark when snapped.
+
+**OPEN, and it is Miyel's call: the beacon's peek shows the journal's search
+bar, not covers.** The wall's bar is `position: sticky` against the bottom of
+the scrollport, so it is what occupies the peek whatever the peek's depth, and
+the first covers sit 96px below the wall's top — behind it. Showing covers
+instead needs the first floor to give up about another 50px, out of the mark,
+the record or the gaps between them. Not guessed at.
+
 **2026-09-19 — The band goes Card, Beacon, Friends, Inbox.** Miyel's reason,
 and it is about the shape of the rail rather than what the rooms are for:
 "two double levels two not sandwiched." Two of the four panes have a second
