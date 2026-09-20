@@ -38,7 +38,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
-import { ArrowsDownUp, BookOpen, Camera, Cards, MagnifyingGlass, PaperPlaneTilt, Plus, Trash, User, X } from '@phosphor-icons/react';
+import { ArrowsDownUp, BookOpen, Camera, MagnifyingGlass, PaperPlaneTilt, Plus, Trash, User, X } from '@phosphor-icons/react';
 import CodeScanner from './CodeScanner';
 import SendSheet from './SendSheet';
 import { carrySender, journalUrl, tidyJournal } from '../../library/return_address';
@@ -499,22 +499,6 @@ export default function Friends() {
           })
         )}
       </div>
-
-      {/* ── The feed, for now a door, 2026-09-19 ─────────────────────────
-          The brief puts the feed on this pane's second floor: people up here,
-          what they logged one scroll down. It is not that yet — the feed is
-          still two views and making it one is its own piece of work — but the
-          desk it used to be a row on has gone, so it needs a way in, and this
-          is where the way in ends up being. A row and not the mock-up's
-          FEED ⌄, deliberately: a caret promises a scroll, and pressing this
-          leaves the cross. When the floor arrives, the row goes and the caret
-          is telling the truth. */}
-      <Link href="/dashboard/feed" className="ln-tile db-door fr-feed" title="What the journals you read have logged">
-        <Cards size={22} weight="regular" aria-hidden="true" className="db-door-mark" />
-        <span className="db-door-text">
-          <span className="db-door-label">Feed</span>
-        </span>
-      </Link>
 
       {/* One sheet for the page, told who it is for. Mounted outside the grid
           so that closing it does not depend on the face surviving a refresh
