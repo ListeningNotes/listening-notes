@@ -2714,6 +2714,19 @@ current.
 
 ## Complete
 
+**2026-09-19 — The band goes Card, Beacon, Friends, Inbox.** Miyel's reason,
+and it is about the shape of the rail rather than what the rooms are for:
+"two double levels two not sandwiched." Two of the four panes have a second
+floor — the beacon with the journal under it, the book with the feed — and two
+are a single page. With the inbox third, a flat pane sat between the two deep
+ones and down meant something different on every second stop. The rail reads
+flat, deep, deep, flat now.
+
+**The two lists that have to agree:** `paneRefs` in HomeNav and the `order`
+rules in nav.css are the same order said twice, and the band counts against
+the first. Change one without the other and the third word walks you to the
+fourth pane.
+
 **2026-09-19 — Add and Scan sit under the field, not under the page.** Miyel:
 "centering feels off when search bar is open." It was, and the arithmetic is
 plain once you measure it: the head is a field and a +, so the field gives up

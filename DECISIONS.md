@@ -207,15 +207,20 @@ side, their tools on the other. With two, one page always carries more.
 The book was an interpretation, not a rule. What it gave this project was an
 object and then the writing underneath, and that survives at any pane count.
 
-**The band at the foot: Card · Beacon · Inbox · Friends, 2026-09-15, widened
-2026-09-19.** A glyph over a word, the pane you are on in ink and the rest
+**The band at the foot: Card · Beacon · Friends · Inbox, 2026-09-15, widened
+2026-09-19.** **The order is by depth, not by subject:** two of the four panes
+have a second floor and two do not, so they go flat, deep, deep, flat rather
+than letting a single-floor pane sit between the two that go down. Down should
+mean the same thing on neighbouring stops.
+
+A glyph over a word, the pane you are on in ink and the rest
 pale. It is the whole of what is down there — it replaced the dots, the edge
 carets and the mini beacon. Every mark on it is one this site already uses for
 that exact thing, so none has to be learned twice.
 
 Pressing a name moves the rail exactly as a swipe does, because it is the
 visible version of the gesture and not an alternative to it: somebody presses
-Desk once, watches it move, and swipes from then on. That was always what the
+Friends once, watches it move, and swipes from then on. That was always what the
 carets were for, and a word does it better than a chevron — a chevron says
 there is something that way and a word says what.
 

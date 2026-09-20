@@ -112,8 +112,8 @@ const HOME = 1;
 // Where the keeper's two extra rooms sit on the rail. Only ever true when the
 // lock has said yes — a visitor's rail is three panes and neither of these is
 // on it. See paneRefs, which is the list these index into.
-const INBOX = 2;
-const BOOK = 3;
+const BOOK = 2;
+const INBOX = 3;
 
 // Which face the spine was left on, per browser. Not a setting and not on the
 // settings row: it is where somebody put their own left-hand page down, the
@@ -582,7 +582,7 @@ export default function HomeNav() {
   const faceNow = useRef('card');
   // In rail order, and the order depends on who is looking, 2026-09-19.
   //
-  //   signed in    the ID, the beacon, the inbox, the book
+  //   signed in    the ID, the beacon, the book, the inbox
   //   signed out   the ID, the beacon, the colophon
   //
   // The desk is not in either. It is still in the markup and still the spine's
@@ -595,7 +595,7 @@ export default function HomeNav() {
   // lock answers. Every effect that lists it re-runs then and re-attaches to
   // the panes that now exist, which is exactly right and is why they list it.
   const paneRefs = useMemo(
-    () => (authed ? [cardRef, homeRef, inboxRef, friendsRef] : [cardRef, homeRef, deskRef]),
+    () => (authed ? [cardRef, homeRef, friendsRef, inboxRef] : [cardRef, homeRef, deskRef]),
     [authed]
   );
   // Kept in step on every render, and read by the getter above. It has to be
