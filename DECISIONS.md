@@ -241,12 +241,28 @@ with a cover, meaning the one pane where something is cut off at a fold rather
 than simply running on. Everything else scrolls, and content running off the
 edge is its own cue.
 
-**No vertical snap on a one-long-scroll pane; the only vertical snap wanted
-is the entry's, 2026-09-07.** Proximity on the long pane argued with the thumb
-and came off 2026-08-28; mandatory over three screens and a bit would drag a
-reader back to a screen edge halfway down the wall. The two-floor shape (NOTES)
-is different: mandatory over exactly two viewport-tall floors with the reading
-in an inner scroller, which is how the entry keeps its first screen still.
+**No vertical snap anywhere on the cross, 2026-09-20.** The two-floor panes
+snapped for a fortnight and the exception has now gone with the shape that
+earned it: `mandatory` was safe only while a second floor was exactly one
+screen tall with its own scroller inside it — two stops and nothing between
+them. Giving those floors a peek meant taking the inner scroller out, because
+a sliver of an inner scroller is one you can scroll before arriving at it, and
+snapping over a five-screen feed pulls back on every throw. `proximity` was
+tried in between and caught on a real phone, as it had in August.
+
+**A pane scrolls the way a long page scrolls, and the way down is a press.**
+The press lands exactly; `scroll-margin-top` on the second floor is what tells
+it where to stop and is load-bearing with no snap in sight. What the snap was
+for survives without it: a first floor one screen tall, a peek of what is
+under it, and a row above the peek saying what that is. Miyel, on the seam
+being gone: "i don't even mind that it scrolls seamless from top to bottom,
+that was something i wanted to address anyway."
+
+What follows is the 2026-09-07 reasoning, which is why there was ever an
+exception: proximity on the long pane argued with the thumb and came off
+2026-08-28; mandatory over three screens and a bit would drag a reader back to
+a screen edge halfway down the wall. The two-floor shape was different while
+it lasted.
 
 **The large mark is the beacon's alone, 2026-09-15.** It was on every pane at
 one height, so the square under it landed on the same line whichever pane you
@@ -747,6 +763,9 @@ gesture that wants to mean something else has to be somewhere the rail is not.
 pane is the snap container, `y mandatory` over two screen-tall floors with the
 reading in an inner scroller, rail untouched, no gesture code. The 08-29 run
 was three changes at once with the rail lock live; on its own the shape works.
+**The vertical half of that came off on 2026-09-20** — see "No vertical snap
+anywhere on the cross" — and none of the rest changed: the rail's own
+`x mandatory` is untouched, and it was never the thing being argued about.
 
 **An entry is a layer over the journal, not a fourth pane, 2026-08-29.** Left
 and right meaning different things depending on which row you are in is ruled
