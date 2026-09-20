@@ -44,7 +44,7 @@
 // are simply large, because the feed holds little and can afford to be
 // (Miyel, 2026-09-13). The Compare panel opens under the item.
 'use client';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import { Envelope, Fingerprint, Heart, Shuffle, SketchLogo, User } from '@phosphor-icons/react';
 import { useBookplate } from './Bookplate';
@@ -59,6 +59,10 @@ const RECENT_MOST = 40;
 const SUBMISSIONS_MOST = 30;
 // How long one journal gets to answer before its rows are simply absent.
 const EACH_MS = 8000;
+// How long a comparison takes to put itself away: the bars sink, and then the
+// panel folds after them. The open runs the other way round — the panel first
+// and the bars into it — so closing is the same two movements read backwards.
+const SHUT_MS = 600;
 
 // ── Two densities ─────────────────────────────────────────────────────────
 // The feed one record a screen, or six rows of one. Her brief, 2026-09-20:
@@ -201,7 +205,7 @@ function Face({ address }) {
 // reads here as no hearts rather than as an error.
 const heartsOf = entry => String(entry?.hearts || '');
 
-function Compared({ mine, theirs, name }) {
+function Compared({ mine, theirs, name, closing = false }) {
   const yours = parseHorizon(mine.horizon);
   const hers = parseHorizon(theirs.horizon);
   const yourHearts = heartsOf(mine);
@@ -214,7 +218,7 @@ function Compared({ mine, theirs, name }) {
   const rated = mine.rating_value !== null && mine.rating_value !== undefined && mine.rating_value !== '';
 
   return (
-    <div className="fd-cmp">
+    <div className={'fd-cmp' + (closing ? ' fd-cmp--shutting' : '')}>
       {hers.length > 0 && (
         <div className="fd-cmp-bars fd-cmp-bars--theirs" aria-label={`How ${name} heard it, track by track`}>
           {hers.map((v, i) => (
@@ -274,6 +278,25 @@ export default function Feed({ entries = [], titled = true }) {
   // the first rows are on screen before the slowest journal has spoken.
   const [journals, setJournals] = useState({});
   const [open, setOpen] = useState(null);
+  // ── And the one on its way out ──────────────────────────────────────────
+  // A comparison that is closing has to still be in the page to close in.
+  // The key is held for the length of the movement and then let go — the
+  // same shape the book's doors use for the same reason (Friends.js), and
+  // the reason is Miyel's: "it just disappears the way it is now."
+  const [shutting, setShutting] = useState(null);
+  const shutTimer = useRef(null);
+  const toggle = key => {
+    clearTimeout(shutTimer.current);
+    if (open === key) {
+      setShutting(key);
+      setOpen(null);
+      shutTimer.current = setTimeout(() => setShutting(null), SHUT_MS);
+      return;
+    }
+    setShutting(null);
+    setOpen(key);
+  };
+  useEffect(() => () => clearTimeout(shutTimer.current), []);
   // Read after mount rather than during the first render: the server has no
   // localStorage and a value taken from it here would be the two of them
   // disagreeing about what the page says.
@@ -471,7 +494,7 @@ export default function Feed({ entries = [], titled = true }) {
                       <button
                         type="button"
                         className={'fd-compare fd-compare--mark' + (open === key ? ' fd-compare--open' : '')}
-                        onClick={() => setOpen(open === key ? null : key)}
+                        onClick={() => toggle(key)}
                         aria-expanded={open === key}
                         aria-label={open === key ? 'Close the comparison' : `Compare your listen with ${person.name || 'theirs'}`}
                         title={open === key ? 'Close' : 'Compare'}
@@ -481,7 +504,9 @@ export default function Feed({ entries = [], titled = true }) {
                     )}
                   </div>
                 </article>
-                {open === key && mine && <Compared mine={mine} theirs={entry} name={person.name || 'them'} />}
+                {(open === key || shutting === key) && mine && (
+                  <Compared mine={mine} theirs={entry} name={person.name || 'them'} closing={shutting === key} />
+                )}
               </div>
             );
           }
@@ -512,7 +537,7 @@ export default function Feed({ entries = [], titled = true }) {
                     <button
                       type="button"
                       className={'fd-compare fd-compare--mark' + (open === key ? ' fd-compare--open' : '')}
-                      onClick={() => setOpen(open === key ? null : key)}
+                      onClick={() => toggle(key)}
                       aria-expanded={open === key}
                       aria-label={open === key ? 'Close the comparison' : `Compare your listen with ${person.name || 'theirs'}`}
                       title={open === key ? 'Close' : 'Compare'}
@@ -528,7 +553,9 @@ export default function Feed({ entries = [], titled = true }) {
                   </Link>
                   <span className="fd-when">&middot; {timeAgo(entry.posted_at)}</span>
                 </div>
-                {open === key && mine && <Compared mine={mine} theirs={entry} name={person.name || 'them'} />}
+                {(open === key || shutting === key) && mine && (
+                  <Compared mine={mine} theirs={entry} name={person.name || 'them'} closing={shutting === key} />
+                )}
               </article>
             </div>
           );

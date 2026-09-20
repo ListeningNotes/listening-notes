@@ -1549,6 +1549,18 @@ Project → Settings → Environment Variables.
 
 ## Gotchas
 
+**Keyframe animations do not advance while the browser pane is not painting,
+2026-09-20.** Half an hour went on a close animation that looked dead: the
+element had the right class, `getAnimations()` reported the right names and
+`playState: "running"` — and `currentTime` stayed at 0 however long the script
+waited. The document was not being rendered, so its animation timeline was
+frozen; each forced screenshot advanced it by about one frame. **Sample an
+animation by interleaving screenshots, not by `setTimeout` alone**, and read
+`currentTime` rather than trusting a height that is not moving. A CSS
+transition looks like it is working in the same conditions, which is what
+makes this confusing: a few forced frames are enough to see a 320ms rotation
+move and not enough to see a 300ms height.
+
 **Two goes at a vertical snap, and the phone was right both times,
 2026-09-20.** `mandatory` on the cross's two-floor panes cost nothing while a
 second floor was one screen tall with its own scroller in it — two stops,
@@ -2800,6 +2812,13 @@ states, nothing in between."
       from the version where it stood alone; a mark in a row of marks does not
       get a caption, the envelope beside it never had one, and the ring round
       the cover has already said the thing before you read anything.
+- [x] **And closing one is the same two movements read backwards.** It
+      vanished — Miyel: "it just disappears the way it is now." A comparison
+      that is closing has to still be in the page to close in, so the key is
+      held for 600ms and let go after, the shape the book's doors already use.
+      The bars sink and the panel folds after them, quicker down than up,
+      because a thing arriving can take its time and a thing leaving should
+      not keep you waiting.
 - [x] **Opening one scrolls it into view**, by as much as it takes and never
       when it was already in view. A control that reports its result somewhere
       you cannot see has not reported anything. It waits for the panel to
