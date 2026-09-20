@@ -1852,7 +1852,6 @@ export default function HomeNav() {
   const theWayIn = authed && (inHand ? (
     <Link href="/session" className="ln-onward" title={`Back to ${inHand.album}`} aria-label="Back to the listen">
       <span className="hn-go" aria-hidden="true">
-        <span className="hn-go-note">&#9834;</span>
         <span className="hn-go-say">Back to</span>
         <span className="hn-go-say">the listen</span>
       </span>
@@ -1951,21 +1950,34 @@ export default function HomeNav() {
           ::before version — there is no control in that slot, so the mark
           stays a mark on a rule. */}
       <span className="hn-go" aria-hidden="true">
-        <span className="hn-go-note">&#9834;</span>
-        {/* Two words, and then the verb changed: "get rid of a", then "Log
-            Listen" (Miyel, 2026-09-20). The article was carrying the line
-            break — Start a / listen — and once the words are stacked in a
-            circle the break is the shape doing it. Log rather than Start
-            because it is the word this journal already uses for the act
-            everywhere else: LAST LOGGED over the cover, `I've already logged
-            this` in the inbox, logged in the feed. Start named the beginning
-            of a flow, which is a thing about the software; Log names the
-            thing you came to do.
+        {/* ── No mark in it, 2026-09-20 ────────────────────────────────────
+            A ♪ sat over the words for an hour, because a ♪ had sat on the
+            rule before the circle existed and moving it inside was the
+            obvious thing to do. Miyel: "is there a better icon than that
+            music note — is it even needed?" It is not. It said *music* on a
+            site that is entirely about music, over two words that already say
+            what pressing does, in a circle 84 across with three things
+            stacked in it. The ring is the object on the rule now; the mark
+            was what the rule had instead of one.
 
-            The whole phrase stays on the label, because Log Listen is not a
-            sentence and a screen reader has no shape to read. */}
-        <span className="hn-go-say">Log</span>
-        <span className="hn-go-say">Listen</span>
+            The calling card keeps its ♪, and should: there is no control in
+            that slot, so what is on the rule there is a mark and nothing
+            else. */}
+        {/* The verb, then the article back: "get rid of a", "Log Listen",
+            "Log a / listen" (Miyel, 2026-09-20, in that order over ten
+            minutes). Log rather than Start because it is the word this
+            journal already uses for the act everywhere else — LAST LOGGED
+            over the cover, `I've already logged this` in the inbox, logged in
+            the feed. Start named the beginning of a flow, which is a thing
+            about the software; Log names the thing you came to do.
+
+            And the article earns its place after all: two words on two lines
+            read as two labels, where a phrase broken mid-sentence reads as
+            one thing said across a break. It is also what the line is for —
+            there has to be something in the first line to hold the second
+            one under it. */}
+        <span className="hn-go-say">Log a</span>
+        <span className="hn-go-say">listen</span>
       </span>
     </button>
   ));

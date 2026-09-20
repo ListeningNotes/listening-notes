@@ -3417,16 +3417,8 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
 }
 .ln-onward:hover .hn-go,
 .ln-onward:active .hn-go { border-color: var(--ink-faint); }
-/* The words are the ink; the ring is the rule. Without this the whole circle
-   lifts to --lift on hover, which is a ring brighter than the line it stands
-   on and reads as the line breaking rather than the control answering. */
-.ln-onward:hover .hn-go-note { color: var(--ink-soft); }
-.hn-go-note {
-  font-size: 15px;
-  line-height: 1;
-  color: var(--ink-faint);
-  margin-bottom: 1px;
-}
+
+/* .hn-go-note is gone with the ♪ it dressed — see HomeNav.js. */
 /* Smaller than the line it replaces, because two of them are stacked and the
    circle is 84 across: 12px at 0.22em ran to 96 for `Start a`. */
 .hn-go-say {
