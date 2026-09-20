@@ -92,6 +92,15 @@ const A_ROW = 123;
 // pressing a face and pressing the + cost the same.
 const DOORS_MS = 340;
 
+// How many faces the shelf above the book will hold. **The rule is in
+// library/people_actions.js, where the write is** — `PINS_MOST` there refuses
+// a seventh whatever this page does. This copy of the number is a courtesy,
+// so nobody presses a door that is going to say no; it is not imported from
+// there because that module opens the database and this one runs in a
+// browser. If the two ever disagree the write wins and the door is wrong,
+// which is the right way round for them to be wrong.
+const PINS_MOST = 6;
+
 // `shelf` is the floor of the friends pane: one screen, as many faces as fit,
 // and a line out to the whole book. Without it this is the whole book — the
 // standalone address, and the view that line opens.
@@ -431,15 +440,9 @@ export default function Friends({ shelf = false, onCount = null }) {
   // large faces under PINNED, or four or five small ones under EVERYONE. The
   // doors open under whichever row the face is in, either way.
   const rows = [];
-  if (showPins) rows.push({ key: 'pinned', people: pinned, across: 3, big: true, label: 'Pinned' });
+  if (showPins) rows.push({ key: 'pinned', people: pinned, across: 3, big: true });
   for (let i = 0; i < onShow.length; i += across) {
-    rows.push({
-      key: `r${i}`,
-      people: onShow.slice(i, i + across),
-      across,
-      big: false,
-      label: showPins && i === 0 ? 'Everyone' : null,
-    });
+    rows.push({ key: `r${i}`, people: onShow.slice(i, i + across), across, big: false });
   }
 
   const who = people.find(p => p.id === open) || null;
@@ -616,7 +619,6 @@ export default function Friends({ shelf = false, onCount = null }) {
                 key={row.key}
                 className={'fr-row' + (holdsOpen ? ' fr-row--open' : '') + (row.big ? ' fr-row--pinned' : '')}
               >
-                {row.label && <p className="fr-said">{row.label}</p>}
                 <div className="fr-grid" style={{ '--fr-across': row.across }}>
                   {row.people.map(p => {
                     const called = p.name || 'Not answering yet';
@@ -719,6 +721,13 @@ export default function Friends({ shelf = false, onCount = null }) {
                       className={'fr-door' + (mine.pinned_at ? ' fr-door--on' : '')}
                       onClick={() => pin(mine.id, !mine.pinned_at)}
                       aria-pressed={Boolean(mine.pinned_at)}
+                      /* Offered only while there is room. The write refuses
+                         past six as well; this is so nobody presses a door
+                         that is going to say no. */
+                      disabled={!mine.pinned_at && pinned.length >= PINS_MOST}
+                      title={!mine.pinned_at && pinned.length >= PINS_MOST
+                        ? `Six is the most you can pin. Unpin somebody first.`
+                        : undefined}
                     >
                       <PushPin size={22} weight={mine.pinned_at ? 'fill' : 'regular'} aria-hidden="true" />
                       {mine.pinned_at ? 'Unpin' : 'Pin'}

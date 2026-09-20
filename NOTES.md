@@ -2808,11 +2808,20 @@ else's, which is an argument for a version on that URL and is not built.
       own — a row of its own is 48px of header over a page whose argument is
       that it is faces and not furniture. The slot already held two things and
       showed one; this is the third, and it leaves the way the search does.
-- [x] **PINNED over three large faces, EVERYONE over the rest**, and the
-      labels only when there is a pinned row to tell apart: one list needs no
-      label saying it is the list. A search puts them back into one flat list,
-      because a pinned section that answered a search would be telling you
-      where somebody sits rather than that they are there.
+- [x] **Three large faces above the rest, and no labels.** They had PINNED
+      and EVERYONE over them for an hour and Miyel took both off: the size and
+      the position say it, and two labels on a page of ten faces are two more
+      words than the page can spare. A search puts them back into one flat
+      list, because a pinned section that answered a search would be telling
+      you where somebody sits rather than that they are there.
+- [x] **Six is the cap**, which is two rows of three at 92px — up from 84,
+      "a smidge bigger, I know there's not much space". **The rule is in
+      `people_actions`, where the write is**: a seventh is refused with a 409
+      and a sentence. Friends.js keeps its own copy of the number so it can
+      grey the door out before it is pressed, and cannot import the other one
+      — that module opens the database and this one runs in a browser. If they
+      ever disagree the write wins and the door is merely wrong about itself,
+      which is the right way round.
 - [x] **Pin is the fourth door**, where Remove is the quiet line under them.
       Pinning is a thing you do *with* somebody like the three beside it;
       removing is the end of there being a somebody.
