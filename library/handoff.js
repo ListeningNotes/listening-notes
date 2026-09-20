@@ -174,6 +174,9 @@ let carried = false;
 export function readingOn(yes) { atTheNotes = Boolean(yes); }
 export function carryReading() { carried = atTheNotes; }
 export function cameReadingOn() { const was = carried; carried = false; return was; }
+// Asked by the wait state, which draws before the record does and must not
+// spend the answer the record is coming for.
+export function stillReadingOn() { return carried; }
 
 // ── Opened from somewhere that does not browse ────────────────────────────
 // The wall's order is a module variable and it outlives the wall, which is
