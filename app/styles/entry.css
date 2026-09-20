@@ -1230,6 +1230,12 @@ a.ln-sent-who:hover { text-decoration: underline; text-underline-offset: 3px; }
   .ln-entry--crowned .sitenav-logo { opacity: 0; }
   .ln-crown {
     position: relative;
+    opacity: 0;
+    background: none;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
     display: flex;
     align-items: center;
     gap: 9px;
@@ -1278,12 +1284,6 @@ a.ln-sent-who:hover { text-decoration: underline; text-underline-offset: 3px; }
     gap: 1px;
     min-width: 0;
     text-align: left;
-    background: none;
-    border: 0;
-    padding: 0;
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-    opacity: 0;
   }
   .ln-crown-album {
     font-family: var(--font-display);
@@ -1303,7 +1303,6 @@ a.ln-sent-who:hover { text-decoration: underline; text-underline-offset: 3px; }
     flex-direction: column;
     align-items: flex-end;
     gap: 3px;
-    opacity: 0;
   }
   .ln-crown-flags { display: flex; align-items: center; gap: 5px; }
   .ln-crown-flag { display: inline-flex; }
@@ -1317,10 +1316,9 @@ a.ln-sent-who:hover { text-decoration: underline; text-underline-offset: 3px; }
   .sitenav-row[data-tooling] .ln-crown { opacity: 0; pointer-events: none; }
   .ln-crown { transition: opacity 0.18s linear; }
 
-  /* And the page's own art goes quiet while the header is standing in for
-     it. Not `display: none`: its box is what the title, the score and the
-     chips are laid out under, and what the morph measures. */
-  .ln-entry--crowning .ln-screen-one-art { visibility: hidden; }
+  /* The record's own art stays on the page and scrolls away with it. It was
+     hidden here while the header was carrying a travelling copy of it; there
+     is no travelling copy any more — see the note in FullPostPage. */
 }
 
 @media (max-width: 768px) {
@@ -1397,14 +1395,24 @@ a.ln-sent-who:hover { text-decoration: underline; text-underline-offset: 3px; }
      --ln-lede: this row is a portal and the node it is drawn on is replaced
      out from under anything holding a reference to it. */
   .ln-entry .sitenav-row::before {
-    height: var(--ln-ground, var(--ln-band));
+    height: var(--ln-band);
     background: var(--bg);
     border-bottom: none;
+    /* Zero rather than the -1 it has elsewhere, with the row's own contents
+       lifted over it. At -1 it is behind everything in the row, which is what
+       one wants when the only job is a backdrop — but here it has to hide the
+       album screen going past underneath, and a negative child is not
+       somewhere to put a thing that must cover. The same arrangement the
+       beacon's bar has (.hn-bar-ground). */
+    z-index: 0;
   }
-  /* Solid for the whole of the collapse. At the top of a record there is
-     nothing behind it and it is the page's own colour, so there is nothing
-     to see; what it buys is that the screen below has somewhere to go. */
-  .ln-entry--crowning .sitenav-row::before { opacity: 1; }
+  /* Positioned, because a z-index on a static element is nothing. */
+  .ln-entry .sitenav-logo,
+  .ln-entry .sitenav-side,
+  .ln-entry .ln-crown { position: relative; z-index: 1; }
+  /* Except the mark, which is already absolute and centred. */
+  .ln-entry .sitenav-logo { position: absolute; }
+
   /* SiteNav fades its own band in off window.scrollY, which never moves
      now that the container is what scrolls — so this page drives it. */
   .ln-entry--scrolled .sitenav-row::before { opacity: 1; }
