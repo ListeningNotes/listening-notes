@@ -161,7 +161,7 @@ function Compared({ mine, theirs, name }) {
       {hers.length > 0 && (
         <div className="fd-cmp-bars fd-cmp-bars--theirs" aria-label={`How ${name} heard it, track by track`}>
           {hers.map((v, i) => (
-            <span key={i} className={theirHearts[i] === '1' ? 'fd-cmp-bar fd-cmp-bar--loved' : 'fd-cmp-bar'} style={{ '--tall': `${Math.max(9, v * 100)}%`, '--wait': `${i * 26}ms` }}>
+            <span key={i} className={theirHearts[i] === '1' ? 'fd-cmp-bar fd-cmp-bar--loved' : 'fd-cmp-bar'} style={{ '--tall': `${Math.max(9, v * 100)}%` }}>
               {theirHearts[i] === '1' && <Heart size={11} weight="fill" aria-hidden="true" />}
             </span>
           ))}
@@ -180,7 +180,7 @@ function Compared({ mine, theirs, name }) {
       {yours.length > 0 && (
         <div className="fd-cmp-bars fd-cmp-bars--yours" aria-label="How you heard it, track by track">
           {yours.map((v, i) => (
-            <span key={i} className={yourHearts[i] === '1' ? 'fd-cmp-bar fd-cmp-bar--loved' : 'fd-cmp-bar'} style={{ '--tall': `${Math.max(9, v * 100)}%`, '--wait': `${i * 26}ms` }}>
+            <span key={i} className={yourHearts[i] === '1' ? 'fd-cmp-bar fd-cmp-bar--loved' : 'fd-cmp-bar'} style={{ '--tall': `${Math.max(9, v * 100)}%` }}>
               {yourHearts[i] === '1' && <Heart size={11} weight="fill" aria-hidden="true" />}
             </span>
           ))}
