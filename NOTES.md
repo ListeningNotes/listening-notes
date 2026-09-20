@@ -2785,8 +2785,21 @@ states, nothing in between."
       is what scrolling past eight rows a screen does not leave time for. An
       `outline` rather than a border, so it takes nothing off the art and
       moves nothing beside it.
-- [x] **The compare mark moves into the row** beside the stars, because there
-      is no *under the record* in a row. Opening it is unchanged.
+- [x] **The compare mark stands with the marks, in both densities.** That is
+      what her brief says — "Compare, in both modes" — and what her reference
+      draws, and I read it as rows-only for half a day. It had a word under it
+      from the version where it stood alone; a mark in a row of marks does not
+      get a caption, the envelope beside it never had one, and the ring round
+      the cover has already said the thing before you read anything.
+- [x] **Opening one scrolls it into view**, by as much as it takes and never
+      when it was already in view. A control that reports its result somewhere
+      you cannot see has not reported anything. It waits for the panel to
+      finish opening, so the scroll and the bars rising arrive together.
+- [x] **And nothing under the stars.** *Theirs* went first (it is linked from
+      the cover above); *Your copy* followed — "it's understandable without".
+      The lower horizon is yours because the stars under it are yours, and a
+      label naming the thing you are looking at is a caption on a photograph
+      of your own house.
 
 **What the header cost the peek, and it is a choice:** the feed floor now
 starts with a 39px row, so the sliver of record showing under the caret went
