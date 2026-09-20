@@ -1917,18 +1917,68 @@
 }
 .fd-face img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
 .fd-when { color: var(--ink-faint); }
-.fd-compare { margin-top: 18px; font-size: 11px; padding: 9px 22px; }
-.fd-panel { margin: 18px 0 0; width: 100%; box-sizing: border-box; text-align: left; padding: 14px 16px; border: 1px solid var(--border); border-radius: 14px; background: var(--panel); }
-.fd-panel-scores { display: flex; flex-wrap: wrap; gap: 18px; font-family: var(--font-label); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-soft); }
-.fd-panel-scores b { color: var(--ink); font-weight: 600; }
-.fd-panel-gap { color: var(--ink-faint); }
-.fd-horizons { display: flex; flex-direction: column; gap: 6px; margin-top: 12px; }
-.fd-horizon-label { font-family: var(--font-label); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint); }
-.fd-horizon { display: flex; align-items: flex-end; gap: 2px; height: 24px; }
-.fd-horizon span { flex: 1 1 0; background: var(--ink-faint); border-radius: 1px; min-height: 2px; opacity: 0.8; }
-.fd-horizon--mine span { background: var(--ink); opacity: 1; }
-.fd-panel-note { font-size: 13px; color: var(--ink-soft); margin: 12px 0 0; }
-.fd-panel-note a { color: var(--ink); }
+/* ── The compare mark ──────────────────────────────────────────────────────
+   A glyph and nothing else, 2026-09-20. It is only ever drawn on a record you
+   also have, so its being there is the announcement — the word under it was
+   saying the same thing a second time. Quiet at rest and in ink while the
+   comparison is open, which is the only state it has. */
+.fd-compare {
+  display: inline-flex; align-items: center; justify-content: center;
+  margin-top: 16px; padding: 8px;
+  border: 0; background: none; cursor: pointer;
+  color: var(--ink-faint);
+  transition: color 0.18s, transform 0.28s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.fd-compare:hover { color: var(--ink-soft); }
+/* Open, it is in ink and turned a little — the mark saying it is the thing
+   that is showing rather than the thing you press. */
+.fd-compare.fd-compare--open { color: var(--ink); transform: rotate(180deg); }
+.fd-compare:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 2px; border-radius: 8px; }
+/* ── The compare, opened ───────────────────────────────────────────────────
+   Theirs, the distance, yours, your stars, and the way to both entries. No
+   panel round it: it opens underneath a record on a page with no boxes on it,
+   and a card here would make the comparison a separate object from the thing
+   being compared. (Miyel's reference, 2026-09-20.) */
+.fd-cmp { width: 100%; margin: 16px 0 0; }
+/* Both horizons are drawn the same way up. A mirrored pair reads as a
+   difference chart, and these are two listens, not one difference. */
+.fd-cmp-bars {
+  display: flex; align-items: flex-end; gap: 3px;
+  height: 64px; width: 100%;
+}
+.fd-cmp-bars span { flex: 1 1 0; border-radius: 3px 3px 1px 1px; min-height: 4px; }
+/* Theirs is the listen you came to look at, so it is the lit one. Yours is
+   the line you are measuring it against and sits back. */
+.fd-cmp-bars--theirs span { background: var(--ink); opacity: 0.92; }
+.fd-cmp-bars--yours span { background: var(--ink-faint); opacity: 0.85; }
+/* The distance, on the rule between the two listens: the shape the beacon's
+   slot already uses, a hairline with one thing sitting on it. */
+.fd-apart {
+  position: relative;
+  display: flex; align-items: center; justify-content: center;
+  margin: 14px 0; padding: 0;
+}
+.fd-apart::before {
+  content: ''; position: absolute; left: 0; right: 0; top: 50%;
+  border-top: 1px solid var(--border);
+}
+.fd-apart span {
+  position: relative;
+  padding: 0 12px; background: var(--bg);
+  font-family: var(--font-label);
+  font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.fd-cmp-stars { display: flex; justify-content: center; margin-top: 10px; }
+.fd-cmp-read {
+  display: flex; align-items: baseline; justify-content: center; gap: 10px;
+  margin: 16px 0 0;
+  font-family: var(--font-label);
+  font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+}
+.fd-cmp-read a { color: var(--ink-faint); text-decoration: none; transition: color 0.15s; }
+.fd-cmp-read a:hover { color: var(--ink); }
+.fd-cmp-read span { color: var(--ink-faint); opacity: 0.5; }
 .fd-empty { padding: 40px 0; text-align: center; font-family: var(--font-label); font-size: 11px; color: var(--ink-faint); line-height: 1.9; }
 .fd-empty a { color: var(--ink-soft); }
 
@@ -2801,7 +2851,7 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   .fd-who { justify-content: flex-start; font-size: 11px; margin-top: 10px; gap: 6px; }
   .fd-face { width: 24px; height: 24px; border-radius: 7px; }
   .fd-compare { margin-top: 10px; }
-  .fd-panel { padding: 10px 12px; }
+  .fd-cmp-bars { height: 52px; }
 }
 
 /* The foot of the pitch pane: the source link, and the way in. Two quiet lines

@@ -2735,6 +2735,34 @@ current.
 
 ## Complete
 
+**2026-09-20 — The compare is a mark, and opens as two listens stacked.**
+From Miyel's reference.
+
+- [x] **The control is the shuffle and nothing else.** "when a compare is
+      available i just want it to be the symbol." The word was doing two jobs
+      — saying a comparison exists, and being the thing you press — and the
+      first is the mark's. It is only ever drawn on a record you also have, so
+      its being there is the whole announcement. Under the entry, where the
+      word was: her reference drew it as a badge on the album art and she took
+      it off again, because the art is the record and not a place to hang
+      controls.
+- [x] **Theirs on top, the distance on the line, yours below, your stars under
+      yours.** Theirs carries no stars of its own — they are on the entry four
+      lines up, which this opens underneath, and printing them twice on one
+      screen is the same fact twice.
+- [x] **The two horizons are not mirrored.** "don't mirror beacons they should
+      be one above the other." A pair growing away from a shared line is a
+      difference chart and this is not one: two listens of the same record,
+      each with its own shape, drawn the same way up.
+- [x] **No panel around it.** It opens under a record on a page that has no
+      boxes on it, and a card would make the comparison a separate object from
+      the thing being compared.
+
+**One deviation, and it is the only one:** her reference says READ BOTH on a
+single line. One press cannot open two pages, so it is the two of them on that
+line — *Theirs ↗* leaves for their journal, *Yours* stays on this one. Say if
+it should be one thing that opens theirs.
+
 **2026-09-20 — The mark is the beacon's alone, on a phone.** Miyel: "remove
 the LN logo from header of all pages except beacon." It had shown on the inbox
 and the book since the evening before, on the argument that every page here

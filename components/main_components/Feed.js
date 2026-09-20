@@ -46,7 +46,7 @@
 'use client';
 import { useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { Envelope, Fingerprint, Heart, SketchLogo, User } from '@phosphor-icons/react';
+import { Envelope, Fingerprint, Heart, Shuffle, SketchLogo, User } from '@phosphor-icons/react';
 import { useBookplate } from './Bookplate';
 import StarRating from './StarRating';
 import { parseHorizon } from '../../library/entry_formatter';
@@ -121,35 +121,71 @@ function Face({ address }) {
   );
 }
 
-// The narrow compare: one album, two verdicts, and the shape of each listen.
+// ── The compare, opened ────────────────────────────────────────────────────
+// One album and two listens of it, stacked: theirs above, yours below, and
+// how far apart the two verdicts are written on the line between them. From
+// Miyel's reference, 2026-09-20.
+//
+// **Theirs carries no stars of its own.** They are already on the entry four
+// lines up — this panel opens underneath them — and printing them again would
+// be the same fact twice on one screen. Yours are under your own horizon,
+// which is the only place they appear at all.
+//
+// **The two horizons are not mirrored.** A pair of charts growing away from a
+// shared line is a difference chart, and this is not one: these are two
+// listens of the same record, each with its own shape, and the honest drawing
+// of that is one above the other with the same baseline logic. Miyel: "don't
+// mirror beacons they should be one above the other."
+//
 // The track notes are writing and the feed carries none, so they stay where
-// they are and the panel points at both entries.
+// they are and the foot of the panel points at both entries.
 function Compared({ mine, theirs, name, there }) {
-  const a = parseHorizon(mine.horizon);
-  const b = parseHorizon(theirs.horizon);
+  const yours = parseHorizon(mine.horizon);
+  const hers = parseHorizon(theirs.horizon);
   const x = Number(mine.rating_value), y = Number(theirs.rating_value);
-  const gap = Number.isFinite(x) && Number.isFinite(y) && mine.rating_value !== null && theirs.rating_value !== null ? Math.abs(x - y) : null;
+  const apart = Number.isFinite(x) && Number.isFinite(y)
+    && mine.rating_value !== null && theirs.rating_value !== null
+    ? Math.abs(x - y)
+    : null;
+  const rated = mine.rating_value !== null && mine.rating_value !== undefined && mine.rating_value !== '';
+
   return (
-    <div className="fd-panel">
-      <div className="fd-panel-scores">
-        <span>You <b>{mine.rating_value ?? '—'}</b></span>
-        <span>{name} <b>{theirs.rating_value ?? '—'}</b></span>
-        {gap !== null && <span className="fd-panel-gap">{gap === 0 ? 'the same' : `${gap.toFixed(1)} apart`}</span>}
-      </div>
-      {(a.length > 0 || b.length > 0) && (
-        <div className="fd-horizons">
-          <span className="fd-horizon-label">Track by track — you, then {name}</span>
-          <div className="fd-horizon fd-horizon--mine" aria-hidden="true">
-            {a.map((v, i) => <span key={i} style={{ height: `${Math.max(8, v * 100)}%` }} />)}
-          </div>
-          <div className="fd-horizon" aria-hidden="true">
-            {b.map((v, i) => <span key={i} style={{ height: `${Math.max(8, v * 100)}%` }} />)}
-          </div>
+    <div className="fd-cmp">
+      {hers.length > 0 && (
+        <div className="fd-cmp-bars fd-cmp-bars--theirs" aria-label={`How ${name} heard it, track by track`}>
+          {hers.map((v, i) => <span key={i} style={{ height: `${Math.max(9, v * 100)}%` }} />)}
         </div>
       )}
-      <p className="fd-panel-note">
-        The notes stay on the journals: <a href={there} target="_blank" rel="noopener noreferrer">read theirs &#8599;</a>
-        {' · '}<Link href={`/entries/${mine.slug}`}>yours</Link>
+
+      {/* The one number, on the line between the two listens. A rule with a
+          word sitting on it, which is the shape the beacon's slot already
+          uses — see .hn-pane--home's hairline and its note. */}
+      <p className="fd-apart">
+        <span>
+          {apart === null ? 'Not both rated' : apart === 0 ? 'The same' : `${apart.toFixed(1)} apart`}
+        </span>
+      </p>
+
+      {yours.length > 0 && (
+        <div className="fd-cmp-bars fd-cmp-bars--yours" aria-label="How you heard it, track by track">
+          {yours.map((v, i) => <span key={i} style={{ height: `${Math.max(9, v * 100)}%` }} />)}
+        </div>
+      )}
+
+      {/* Yours, and only yours. Theirs are on the entry above this. */}
+      {rated && (
+        <div className="fd-cmp-stars">
+          <StarRating rating={Number(mine.rating_value)} size={17} />
+        </div>
+      )}
+
+      {/* Her reference says READ BOTH on one line. One press cannot open two
+          pages, so it is the two of them on that line: theirs leaves for
+          their journal, yours stays on this one. */}
+      <p className="fd-cmp-read">
+        <a href={there} target="_blank" rel="noopener noreferrer">Theirs &#8599;</a>
+        <span aria-hidden="true">&middot;</span>
+        <Link href={`/entries/${mine.slug}`}>Yours</Link>
       </p>
     </div>
   );
@@ -283,14 +319,27 @@ export default function Feed({ entries = [], titled = true }) {
                   </Link>
                   <span className="fd-when">&middot; {timeAgo(entry.posted_at)}</span>
                 </div>
+                {/* ── Just the symbol, 2026-09-20 ──────────────────────
+                    Miyel: "when a compare is available i just want it to be
+                    the symbol." The word was doing two jobs — saying a
+                    comparison exists, and being the thing you press — and the
+                    first of those is the mark's job. It only appears on a
+                    record you also have, so its being there is the whole
+                    announcement.
+
+                    Under the entry, where the word was. Her reference drew it
+                    as a badge on the album art and she took it off again: the
+                    art is the record, not a place to hang controls. */}
                 {mine && (
                   <button
                     type="button"
-                    className={'own-act fd-compare' + (open === key ? ' own-act--solid' : '')}
+                    className={'fd-compare' + (open === key ? ' fd-compare--open' : '')}
                     onClick={() => setOpen(open === key ? null : key)}
                     aria-expanded={open === key}
+                    aria-label={open === key ? 'Close the comparison' : `Compare your listen with ${person.name || 'theirs'}`}
+                    title={open === key ? 'Close' : 'Compare'}
                   >
-                    Compare
+                    <Shuffle size={20} weight="regular" aria-hidden="true" />
                   </button>
                 )}
                 {open === key && mine && <Compared mine={mine} theirs={entry} name={person.name || 'them'} there={there} />}
