@@ -1038,27 +1038,37 @@ a.pp-name:hover svg { color: var(--ink); }
 .fr-slot { display: grid; flex: 1; min-width: 0; }
 .fr-field {
   grid-area: 1 / 1;
-  display: flex; align-items: center; gap: 9px;
+  display: flex; align-items: center; gap: 10px;
   min-width: 0;
-  padding: 10px 14px; border-radius: 999px;
+  /* The shape of the beacon's album search, 2026-09-19 — "a bit more square"
+     (Miyel). Same 10px corner, same 12px inset, same 10px gap, so the one box
+     you type into on this site is one box wherever it is. The pill it was is
+     the shape of a control you press, and this is a field.
+
+     The clip's corner has to follow it, or the field grows a straight end on
+     its way through the slot. */
+  padding: 0 12px; border-radius: 10px;
   border: 1px solid var(--border); background: var(--panel);
   color: var(--ink-faint);
   white-space: nowrap;
-  clip-path: inset(0 0 0 0 round 999px);
+  clip-path: inset(0 0 0 0 round 10px);
   transition: clip-path 0.38s cubic-bezier(0.22, 0.61, 0.36, 1),
               border-color 0.15s, color 0.15s;
 }
 /* Closed toward its left edge: the right edge travels left and it is gone
    into the side it came from. `inert` takes the keyboard off it, this takes
    the thumb. */
-.fr-field--gone { clip-path: inset(0 100% 0 0 round 999px); pointer-events: none; }
+.fr-field--gone { clip-path: inset(0 100% 0 0 round 10px); pointer-events: none; }
 /* Opened out of its right edge, which is the corner the button is in. */
 .fr-field--address { border-color: var(--ink-faint); color: var(--ink-soft); }
-.fr-field--waiting { clip-path: inset(0 0 0 100% round 999px); pointer-events: none; }
+.fr-field--waiting { clip-path: inset(0 0 0 100% round 10px); pointer-events: none; }
 .fr-field:focus-within { border-color: var(--ink-faint); }
 .fr-field input {
   flex: 1; min-width: 0;
   border: 0; background: none; outline: none;
+  /* The height comes from the field's own padding — the box has none left
+     and right of the text now, the way .ses-search is built. */
+  padding: 12px 0;
   /* 16px, like every other field on a touch screen: Safari zooms in on
      anything smaller and does not reliably zoom back out. */
   color: var(--ink); font-family: var(--font-sans); font-size: 16px;
@@ -1244,16 +1254,18 @@ a.pp-name:hover svg { color: var(--ink); }
               opacity 0.2s ease;
 }
 .fr-doors--open {
-  max-height: 104px;
-  padding: 18px 0 16px;
+  /* Room for the three doors and the quiet line under them. It was 104 for a
+     row of four with nothing below it. */
+  max-height: 152px;
+  padding: 18px 0 14px;
   opacity: 1;
   transform: none;
   border-top-width: 1px;
   border-bottom-width: 1px;
   pointer-events: auto;
 }
-/* Evenly spread rather than gathered in the middle: four doors under a row
-   of four faces should answer the grid above them. */
+/* Evenly spread rather than gathered in the middle: doors under a row of
+   faces should answer the grid above them. */
 .fr-doors-row {
   display: flex; align-items: flex-start; justify-content: space-evenly;
   width: 100%;
@@ -1268,16 +1280,80 @@ a.pp-name:hover svg { color: var(--ink); }
   transition: opacity 0.15s, color 0.15s;
 }
 .fr-door:hover { opacity: 0.65; }
-/* Quiet at rest, like the rest of the row — the difference is the second
-   press, not the colour. Red only once it has been asked, and then it is the
-   only red on the page. */
-.fr-door--remove { color: var(--ink-soft); }
-.fr-door--remove:hover { color: var(--fav); opacity: 1; }
-.fr-door--sure,
-.fr-door--sure:hover { color: var(--fav); opacity: 1; }
+/* ── Remove, below the row and not in it ───────────────────────────────────
+   Miyel, 2026-09-19: "it undoes the relationship and shouldn't be one mis-tap
+   from Send." So it is not a door: the caption face rather than the display
+   one, small, muted, centred on its own line with air above it. Everything
+   about it says it is a different kind of act from the three above.
+
+   Red only once it has been asked — and then it is the only red on the page,
+   which is the whole of how the second press announces itself. The doubled
+   class beats :hover, because iOS leaves :hover on whatever was last tapped
+   and the armed line must not go quiet at the moment it arms. */
+.fr-cut {
+  display: block;
+  margin: 14px auto 0;
+  padding: 4px 8px;
+  border: 0; background: none; cursor: pointer;
+  font-family: var(--font-label);
+  font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--ink-faint);
+  transition: color 0.15s;
+}
+.fr-cut:hover { color: var(--ink-soft); }
+.fr-cut.fr-cut--sure { color: var(--fav); }
+.fr-cut:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 2px; border-radius: 4px; }
 
 @media (prefers-reduced-motion: reduce) {
   .fr-one, .fr-face, .fr-door, .fr-plus, .fr-doors { transition: none; }
+}
+
+/* ── The shelf, and the line off the end of it ─────────────────────────────
+   On the floor the faces are clipped to a box of settled height: that is what
+   "as many as fit" means, and it is measured in Friends.js off this box. Off
+   the floor there is no box — the whole book runs down the page. */
+.fr-shelf { display: flex; flex-direction: column; }
+/* `auto` and not `hidden`: with the rows that fit there is nothing to scroll,
+   which is the point — but opening somebody unfolds 150px of doors between
+   two rows, and a clipped shelf would take the bottom row away rather than
+   letting you reach it. A scroller that is only ever a scroller while
+   something is open. The beacon's second floor is the same shape, and its
+   `auto` overscroll is deliberate there too: a pull at the top has to reach
+   the pane, because the pane is what carries you back. */
+.fr-shelf--floor { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior-y: auto; scrollbar-width: none; }
+.fr-shelf--floor::-webkit-scrollbar { display: none; }
+/* The way to everybody. Quiet, in the caption face, and the only number on
+   the floor — which it earns, because the number is the point of it. */
+.fr-all {
+  display: block;
+  margin: 10px auto 0;
+  padding: 6px 10px;
+  font-family: var(--font-label);
+  font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--ink-faint); text-decoration: none;
+  transition: color 0.15s;
+}
+.fr-all:hover { color: var(--ink); }
+
+/* ── Nobody filed ──────────────────────────────────────────────────────────
+   The first screen of a new install. Centred in what the shelf leaves, which
+   on this floor is most of the screen, so it reads as the state of the page
+   rather than a notice pinned to the top of an empty list. */
+.fr-nobody {
+  flex: 1; min-height: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 10px;
+  padding: 0 8px 40px;
+  text-align: center;
+}
+.fr-nobody-said {
+  margin: 0;
+  font-family: var(--font-display); font-weight: var(--font-display-weight, 700);
+  font-size: 17px; color: var(--ink-soft);
+}
+.fr-nobody-how {
+  margin: 0; max-width: 26em;
+  font-size: 13px; line-height: 1.55; color: var(--ink-faint);
 }
 
 /* ── An address that came home in a link ────────────────────────────────────

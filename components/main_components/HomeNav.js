@@ -1097,6 +1097,10 @@ export default function HomeNav() {
   // cheap. Passing through the inbox on the way to the book counts as
   // arriving, which is right: you went past it and it is now behind you.
   const [visited, setVisited] = useState(() => ({ [HOME]: true }));
+  // How many people are in the book, as the book itself reports it. null until
+  // it has been asked, which is why the second floor is drawn on `> 0` rather
+  // than on `!== 0`: an unanswered question is not an empty book.
+  const [bookSize, setBookSize] = useState(null);
   useEffect(() => {
     setVisited(seen => (seen[pane] ? seen : { ...seen, [pane]: true }));
   }, [pane]);
@@ -2086,20 +2090,56 @@ export default function HomeNav() {
           </section>
         )}
 
-        {/* Two floors, and the second one starts rather than being opened
-            (Miyel, 2026-09-19: "feed should just start not be a button").
-            People up here, what they logged one scroll down — the brief's
-            own shape, and the beacon's.
+        {/* ── Two floors, and it snaps, 2026-09-19 ─────────────────────
+            People on the first, what they logged on the second, exactly the
+            way the journal sits under the beacon — the same snap, the same
+            inner scroller, the same rule that down means cover-then-contents.
 
-            No snap between them, unlike the beacon. That pane's first floor
-            is exactly one screen tall so a mandatory snap has one place to
-            land; a grid of faces is as tall as there are people, and a snap
-            over a variable first floor is a scroll that argues with the
-            thumb. One continuous scroll, with the feed's own heading as the
-            line where the floor changes. */}
+            It could not snap while the first floor was as tall as there were
+            people in the book, which is the whole reason the floor is a shelf
+            now (Miyel's brief): as many faces as fit and a line out to the
+            rest. One screen whether the book holds six people or a hundred,
+            so the feed is always exactly one scroll away.
+
+            The first floor stops short of the screen by --hn-peek, so the top
+            of the second shows under it: the feed's own heading and the first
+            covers beginning. That sliver is the invitation — a caret on its
+            own says there is more, and a caret over the top of a record says
+            what.
+
+            **No second floor at all when nobody is filed.** Her rule, and the
+            right one: a caret pointing down at a feed of nobody's records is
+            a promise the page cannot keep. The cross learns the size of the
+            book from the book — see onCount — and until it has, there is one
+            floor. */}
         {authed && (
           <section className="hn-pane hn-pane--friends" ref={friendsRef} aria-label="The journals you read">
-            {visited[BOOK] && <><Friends /><Feed entries={entries} /></>}
+            {visited[BOOK] && (
+              <>
+                <div className="hn-floor hn-floor--book">
+                  <Friends shelf onCount={setBookSize} />
+                  {bookSize > 0 && (
+                    <div className="hn-down">
+                      <EdgeCaret direction="down" onClick={() => goDown(BOOK)} label="The feed" />
+                    </div>
+                  )}
+                </div>
+                {/* No inner scroller, unlike the journal under the beacon.
+                    That floor is never visible until you arrive at it; this
+                    one shows a sliver of itself at rest, and a scroller you
+                    can reach before you have arrived is one you scroll by
+                    accident — the feed slid up inside its own box while the
+                    pane sat still on the faces. The floor is a snap area
+                    taller than the screen instead, which the snap allows to
+                    rest anywhere once it covers the screen: it catches you on
+                    the way in and then gets out of the way. */}
+                {bookSize > 0 && (
+                  <div className="hn-floor hn-floor--feed">
+                    <Feed entries={entries} />
+                  </div>
+                )}
+              </>
+            )}
           </section>
         )}
 

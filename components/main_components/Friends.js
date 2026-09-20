@@ -36,9 +36,9 @@
 // one thing the old rows nearly broke. The one place an address shows is the
 // offer below, where it is the fact being confirmed.
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
-import { ArrowsDownUp, BookOpen, Camera, MagnifyingGlass, PaperPlaneTilt, Plus, Trash, User, X } from '@phosphor-icons/react';
+import { ArrowsDownUp, BookOpen, Camera, MagnifyingGlass, PaperPlaneTilt, Plus, User, X } from '@phosphor-icons/react';
 import CodeScanner from './CodeScanner';
 import SendSheet from './SendSheet';
 import { carrySender, journalUrl, tidyJournal } from '../../library/return_address';
@@ -60,12 +60,34 @@ function inOrder(people) {
 // only exists past twelve people is a slot the + has nowhere to open into.
 const A_DOZEN = 12;
 
+// ── A shelf, not the library ──────────────────────────────────────────────
+// Miyel, 2026-09-19: "as many others as fit on one screen, then a quiet line:
+// See all 100." The floor is one screen because the feed has to be exactly
+// one scroll away whether the book holds six people or a hundred — the same
+// bargain the beacon makes, where the cover and three recents stand for a
+// journal of four hundred records.
+//
+// What fits is measured rather than assumed: the shelf is a box of fixed
+// height and a row costs whatever a row costs on this phone, with this
+// person's name in it. The number below is only the first guess, used for the
+// one frame before anything has been drawn to measure — 62px of face, 9 of
+// gap and a line of name.
+const A_ROW = 87;
+const BETWEEN_ROWS = 18;
+
 // How long the doors take to open and close. The site's number for a thing
 // unfolding in place, and the same one the head's two fields cross on, so
 // pressing a face and pressing the + cost the same.
 const DOORS_MS = 340;
 
-export default function Friends() {
+// `shelf` is the floor of the friends pane: one screen, as many faces as fit,
+// and a line out to the whole book. Without it this is the whole book — the
+// standalone address, and the view that line opens.
+//
+// `onCount` is how the cross learns whether there is a book at all, which it
+// needs before it can decide whether this pane has a second floor. The count
+// is this component's to know: it is the one that asks for the people.
+export default function Friends({ shelf = false, onCount = null }) {
   // Who this copy belongs to, carried on every link out to another journal so
   // the form there knows who is sending. See carrySender.
   const { keeper_name: myName, site_address: myAddress } = useBookplate();
@@ -103,6 +125,14 @@ export default function Friends() {
   const fieldRef = useRef(null);
   const binRef = useRef(null);
   const paneRef = useRef(null);
+  // The box the faces are clipped to on the floor. Its height is fixed by the
+  // layout and does not move when the number of faces in it does, which is
+  // what keeps the measuring below from chasing its own tail.
+  const shelfRef = useRef(null);
+  const [fits, setFits] = useState(0);
+
+  // Up to whoever is drawing this, once it is known and whenever it changes.
+  useEffect(() => { if (!loading) onCount?.(people.length); }, [loading, people.length, onCount]);
 
   useEffect(() => {
     fetch('/api/people').then(r => r.json()).then(d => {
@@ -254,13 +284,64 @@ export default function Friends() {
     : people;
   const across = people.length > A_DOZEN ? 5 : 4;
 
+  // ── How many fit ────────────────────────────────────────────────────────
+  // Measured, not counted out: a row costs a different number of pixels on a
+  // phone with a notch than on one without, and a name that wraps to two
+  // lines costs more again. The shelf is a box of settled height with the
+  // faces clipped inside it, so the sum is room ÷ row and nothing about the
+  // answer depends on how many faces are currently drawn.
+  //
+  // It settles in two passes and cannot oscillate: the first uses the guess
+  // above because there is nothing on screen to measure yet, the second uses
+  // the real row, and the guard means a third never happens.
+  useLayoutEffect(() => {
+    if (!shelf) return undefined;
+    const box = shelfRef.current;
+    if (!box) return undefined;
+    const reckon = () => {
+      const room = box.clientHeight;
+      if (!room) return;
+      const tall = box.querySelector('.fr-one')?.offsetHeight || A_ROW;
+      const lines = Math.max(1, Math.floor((room + BETWEEN_ROWS) / (tall + BETWEEN_ROWS)));
+      const next = lines * across;
+      setFits(was => (was === next ? was : next));
+    };
+    reckon();
+    if (typeof ResizeObserver === 'undefined') return undefined;
+    const watch = new ResizeObserver(reckon);
+    watch.observe(box);
+    return () => watch.disconnect();
+  }, [shelf, across, people.length, fits]);
+
+  // What the floor actually draws. The whole book everywhere else, and on the
+  // floor whatever fits — but never while a search is narrowing it, because a
+  // shelf that hides the person you just typed the name of is a search that
+  // does not work.
+  const narrowed = Boolean(finding.trim());
+  const onShow = useMemo(
+    () => (shelf && !narrowed && fits > 0 ? shown.slice(0, fits) : shown),
+    [shelf, narrowed, fits, shown]
+  );
+  const held = shelf && !narrowed && people.length > onShow.length;
+
+  // ── Where the search field lives ────────────────────────────────────────
+  // Miyel, 2026-09-19: "the search field lives in the full view. On the floor
+  // it appears only once the book passes about a dozen." Which is the brief's
+  // original rule, reinstated: a field over eight faces you can already see
+  // is a box asking you to type the name of somebody you are looking at.
+  //
+  // Never over an empty book, in either view. A search box on a page with
+  // nothing to search is the emptiest thing you can put on a first screen,
+  // and the first screen of every new install is this one.
+  const searchable = people.length > 0 && (!shelf || people.length > A_DOZEN);
+
   // ── The rows ────────────────────────────────────────────────────────────
   // Built here rather than left to the grid, because the doors have to open
   // *between* two rows and CSS grid has no way to say "after whichever row
   // that item landed in". Chunking is what turns that into an ordinary list
   // of rows with a panel that can sit after one of them.
   const rows = [];
-  for (let i = 0; i < shown.length; i += across) rows.push(shown.slice(i, i + across));
+  for (let i = 0; i < onShow.length; i += across) rows.push(onShow.slice(i, i + across));
 
   const who = people.find(p => p.id === open) || null;
 
@@ -301,7 +382,7 @@ export default function Friends() {
             reader only ever meet the field that is actually there. */}
         <div className="fr-head">
           <div className="fr-slot">
-            <label className={'fr-field fr-field--find' + (adding ? ' fr-field--gone' : '')} inert={adding ? true : undefined}>
+            <label className={'fr-field fr-field--find' + (adding || !searchable ? ' fr-field--gone' : '')} inert={adding || !searchable ? true : undefined}>
               <MagnifyingGlass size={15} weight="regular" aria-hidden="true" />
               <input
                 value={finding}
@@ -379,12 +460,36 @@ export default function Friends() {
 
         <p className="bk-said" role="status">{said}</p>
 
+        {/* ── The shelf ───────────────────────────────────────────────────
+            A box of settled height with the faces clipped inside it, which is
+            what makes "as many as fit" a fact about the screen rather than a
+            number somebody chose. Off the floor it is a plain wrapper and the
+            whole book runs down it. */}
+        <div className={'fr-shelf' + (shelf ? ' fr-shelf--floor' : '')} ref={shelfRef}>
         {loading ? (
           <div className="fr-grid" style={{ '--fr-across': across }}>
             {[...Array(8)].map((_, i) => <div key={i} className="fr-one"><span className="own-skeleton fr-face" /></div>)}
           </div>
         ) : people.length === 0 ? (
-          <div className="own-empty">Nobody yet. Add a journal&rsquo;s address, or scan a code.</div>
+          /* ── Nobody filed ──────────────────────────────────────────────
+             The first screen of every new install, and the only one of the
+             empty states that is about the software rather than about a
+             quiet week. So it says what this page is for and both ways in,
+             and it points at the + rather than repeating it as a button: the
+             control is four inches away and a second one would be two doors
+             into one room.
+
+             No count, no search, no caret, and no feed underneath — see the
+             cross, which is told there is no book and draws one floor. A
+             caret pointing down at a feed of nobody's records is a promise
+             the page cannot keep. */
+          <div className="fr-nobody">
+            <p className="fr-nobody-said">Nobody in your book yet.</p>
+            <p className="fr-nobody-how">
+              Add a journal by its address, or point the camera at somebody&rsquo;s code.
+              What they log shows up here.
+            </p>
+          </div>
         ) : shown.length === 0 ? (
           <div className="own-empty">Nobody in your book by that name.</div>
         ) : (
@@ -479,24 +584,58 @@ export default function Friends() {
                       <PaperPlaneTilt size={22} weight="regular" aria-hidden="true" />
                       Send
                     </button>
+                  </div>
+                  )}
+
+                  {/* ── And Remove, which is not one of them ──────────────
+                      Miyel, 2026-09-19, changing her own earlier call: it
+                      "sits below as a quiet mono line, in muted ink. It
+                      undoes the relationship and shouldn't be one mis-tap
+                      from Send."
+
+                      She is right and it is the stronger rule: the three
+                      above are things you do *with* somebody, and this is the
+                      end of there being a somebody. A row of four evenly
+                      spaced doors says they are four of a kind, and the
+                      thumb believes the row.
+
+                      Still two presses, still red on the second, still put
+                      back by a press anywhere else — the shape the entry's
+                      Delete and the picker's discard already have. What
+                      changed is where it sits, not how it behaves. */}
+                  {mine && (
                     <button
                       ref={binRef}
                       type="button"
-                      className={'fr-door fr-door--remove' + (sure ? ' fr-door--sure' : '')}
+                      className={'fr-cut' + (sure ? ' fr-cut--sure' : '')}
                       onClick={() => { if (!sure) { setSure(true); return; } cross(mine.id); }}
                       title={sure
                         ? `Press again to take ${mine.name || 'them'} out of your book`
                         : `Take ${mine.name || 'them'} out of your book`}
                     >
-                      <Trash size={22} weight={sure ? 'fill' : 'regular'} aria-hidden="true" />
-                      {sure ? 'Remove?' : 'Remove'}
+                      {sure ? 'Remove from journal?' : 'Remove from journal'}
                     </button>
-                  </div>
                   )}
                 </div>
               </div>
             );
           })
+        )}
+        </div>
+
+        {/* ── The line out to the whole book ──────────────────────────────
+            Miyel, 2026-09-19: "a quiet line: See all 100." It is the only
+            thing on the floor that is a number, and it earns it — the point
+            of the line is that there are more of them than this.
+
+            A link and not a state, so it opens the book as its own view at
+            its own address: the cross catches it and it arrives as a layer
+            over this pane, with the search at the top and everybody in it.
+            Closing it puts you back on the shelf, where you were. */}
+        {held && (
+          <Link href="/dashboard/people" className="fr-all">
+            See all {people.length}
+          </Link>
         )}
       </div>
 

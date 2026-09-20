@@ -1549,6 +1549,28 @@ Project → Settings → Environment Variables.
 
 ## Gotchas
 
+**A sliver of a nested scroller is a scroller you can reach, 2026-09-19.**
+The book's second floor was built the way the journal's is — a screen-tall
+floor with its own scroller inside it — and it worked exactly as badly as that
+sounds. The journal's floor is never visible until you arrive at it; this one
+shows 150px of itself at rest, and a wheel over that sliver scrolled the feed
+*inside its box* while the pane sat still on the faces, sliding records up
+behind a heading that stayed put. **If any part of an inner scroller is
+visible before you have arrived at it, it must not be an inner scroller.** The
+floor is a snap area taller than the screen instead, which the snap spec
+allows to rest anywhere once it covers the port: it catches you on the way in
+and then gets out of the way.
+
+**A flex child cannot measure the room it is in if the parent sizes to it,
+2026-09-19.** The shelf asks how tall it is and divides by a row. It was
+answering with the height of the faces already in it — perfectly stable,
+completely wrong — because every box above it in the chain was `min-height`
+and grew to its contents. The floor is `height` now, not `min-height`, which
+is the one place on this site that is right: what would overflow is a
+scroller, and the thing below it is a sliver that must not be pushed off the
+screen. **A measured layout needs one box in the chain whose height does not
+come from its contents.**
+
 **An undefined custom property throws away the whole declaration,
 2026-09-19.** `padding: 24px var(--page-gutter) 40px` with no `--page-gutter`
 in scope is not "24px 0 40px" — it is invalid at computed-value time, and the
@@ -2691,6 +2713,50 @@ current.
 ---
 
 ## Complete
+
+**2026-09-19 — The book is a shelf, and the feed is a floor under it.** Her
+brief, tightening the pane she had just been given.
+
+- [x] **As many faces as fit on one screen, then See all N.** The floor is a
+      shelf and not the library — her words, and the reason is the feed: it
+      has to be exactly one scroll away whether the book holds six people or a
+      hundred. Measured rather than counted out, off a box of settled height,
+      so a phone with a notch and a phone without get different answers and
+      both are right. Whole rows only.
+- [x] **The line opens the whole book as its own view.** A link, not a state,
+      so it is the address the book already has — the cross catches it and it
+      arrives as a layer with the search at the top and everybody in it.
+      Closing it puts you back on the shelf where you were.
+- [x] **The search field lives in the full view.** On the floor it appears
+      only past about a dozen, which is the brief's original rule reinstated:
+      a field over eight faces you can already see is a box asking you to type
+      the name of somebody you are looking at. Never over an empty book.
+- [x] **The feed is a floor and the pane snaps to it**, the way the journal
+      does under the beacon. It could not snap while the first floor was as
+      tall as there were people in it, which is what the shelf is for. The
+      floor stops short of the screen by --hn-peek so the top of the feed
+      shows under the caret: the heading, and the first covers beginning.
+- [x] **Remove left the door row.** Miyel, changing her own earlier call: "it
+      undoes the relationship and shouldn't be one mis-tap from Send." A quiet
+      mono line under the three, red on the second press, put back by a press
+      anywhere else. Journal, Compare and Send stay as glyph over word.
+- [x] **Nobody filed is its own screen**: what the page is for, both ways in,
+      the +, and **no caret and no second floor**. A caret pointing down at a
+      feed of nobody's records is a promise the page cannot keep. The cross
+      learns the size of the book from the book (`onCount`) and draws one
+      floor until it has.
+- [x] **The book's field is the shape of the beacon's album search** — 10px
+      corner, 12px inset, "a bit more square". One box to type in on this
+      site, one shape for it. The shutter's `clip-path` corner had to follow,
+      or the field grows a straight end on its way through the slot.
+
+**Two of the three empty states.** She named "no one filed" and "people filed,
+nothing logged" — both built, the second already being the feed's own line.
+The third was not named and is not guessed at; ask.
+
+**Still not built, and deliberately: pinned people.** The shelf draws them
+first the day they exist; there is nothing to draw yet (Miyel, 2026-09-19:
+"let's not add pinning friends yet").
 
 **2026-09-19 — Four doors at the foot, and the desk is gone.** The second half
 of brief 1: the band that names the panes goes from three words to four, and
