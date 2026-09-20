@@ -1549,6 +1549,27 @@ Project → Settings → Environment Variables.
 
 ## Gotchas
 
+**A mandatory snap over a floor taller than the screen is a scroll that
+fights you, 2026-09-20.** The cross's two-floor panes snapped `mandatory` for
+a week and it cost nothing, because a second floor was exactly one screen tall
+with its own scroller inside it: two stops, nothing between them, and "must
+rest on a stop" was always already true. Giving those floors a peek meant
+taking the inner scroller out — a sliver of an inner scroller is one you can
+scroll before you have arrived at it — and the moment the pane's own scroll
+ran five screens deep, `mandatory` started pulling back toward the top of the
+feed on every throw. Miyel, from a phone: "scrolling feed doesn't scroll
+freely, it's sticky." **`proximity` snaps when you finish near a boundary and
+leaves you alone everywhere else**, which is the only strictness that suits a
+pane with one boundary and a long way past it.
+
+**And a press has to do for itself what the snap used to do for it.** `goDown`
+scrolled to the second floor's own top and let `mandatory` correct the last
+80px, which is `scroll-margin-top` on that floor. Proximity does not correct,
+so the number has to be right when it is asked for — read off the floor's
+computed `scrollMarginTop`, not off `--hn-bar-h`, because a custom property
+comes back as the `calc()` it was written as and `parseFloat` quietly takes
+the first number in it.
+
 **A sliver of a nested scroller is a scroller you can reach, 2026-09-19.**
 The book's second floor was built the way the journal's is — a screen-tall
 floor with its own scroller inside it — and it worked exactly as badly as that

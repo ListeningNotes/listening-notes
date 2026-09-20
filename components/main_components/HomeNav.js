@@ -1443,10 +1443,23 @@ export default function HomeNav() {
   // To the second floor where there is one — its own top, not one viewport
   // down, because a first floor that had to grow past the screen on a short
   // phone puts the second one lower than that.
+  //
+  // Less the bar, 2026-09-20. Both second floors carry `scroll-margin-top` of
+  // exactly that, so the first record lands under the mark rather than behind
+  // it, and their own top is a bar's-worth further down than where the scroll
+  // should stop. The snap used to correct for it on arrival; it is proximity
+  // now and will not, so the number has to be right when it is asked for.
+  // Read off the floor's own scroll-margin rather than written down twice.
+  // A custom property comes back unresolved — `calc(80px + max(...))`, which
+  // parseFloat reads as 80 on a phone with no notch and 80 on one with —
+  // where scrollMarginTop comes back in pixels with the safe area already in
+  // it. The one number, asked for in the one place it is true.
   function goDown(index) {
     const el = paneRefs[index].current;
     if (!el) return;
-    el.scrollTo({ top: secondFloorTop(el), behavior: ease() });
+    const floors = el.querySelectorAll(':scope > .hn-floor, :scope > * > .hn-floor');
+    const clear = floors.length > 1 ? parseFloat(getComputedStyle(floors[1]).scrollMarginTop) || 0 : 0;
+    el.scrollTo({ top: Math.max(0, secondFloorTop(el) - clear), behavior: ease() });
   }
 
   // ── The one row that sits over all three panes ────────────────────────────
