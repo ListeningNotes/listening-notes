@@ -112,6 +112,14 @@ const HOME = 1;
 // lock has said yes — a visitor's rail is three panes and neither of these is
 // on it. See paneRefs, which is the list these index into.
 const BOOK = 2;
+// How far out the bar takes the feed's name over from the way-down button it
+// is travelling in. Far enough that the takeover never happens near the
+// landing, where a frame's worth of scroll would be the two of them
+// disagreeing by a visible amount; short enough that it is a stretch nobody
+// is sitting still in. Miyel, 2026-09-20, on the version that swapped at the
+// line: "there's a split second where it goes past the hairline and
+// disappears until it hits the middle."
+const CARRY_FROM = 120;
 const INBOX = 3;
 
 // Which face the spine was left on, per browser. Not a setting and not on the
@@ -1120,6 +1128,13 @@ export default function HomeNav() {
   // screen above it: a header that said FEED while you were looking at the
   // faces would be naming the wrong floor. See the scroll effect below.
   const [atFeed, setAtFeed] = useState(false);
+  // And whether the bar is the one drawing the word yet. It takes over a good
+  // way before the word lands and draws it exactly where the travelling one
+  // was, so there is no frame on which the two disagree — see the scroll
+  // effect. The button underneath keeps its own hit area either way: only the
+  // word inside it goes invisible, and a hidden child does not take a
+  // parent's tap.
+  const [carry, setCarry] = useState(false);
 
   // ── The bar, against the keyboard ─────────────────────────────────────────
   // The row at the top is `position: fixed`, which on iOS means fixed to the
@@ -1408,21 +1423,49 @@ export default function HomeNav() {
       const onScroll = () => {
         stir();
         const moved = el.scrollTop > 8;
-        // The word sticks when the way down has gone under the bar: the
-        // label rises with the floor it stands at the foot of, slides behind
-        // the header, and the header keeps the word. Miyel, 2026-09-20: "let
-        // feed word stick in the header without the caret on scroll."
+        // ── The word arrives and stays ──────────────────────────────────
+        // Miyel, 2026-09-20: "There's a split second where it goes past the
+        // hairline and disappears until it hits the middle. It would be
+        // perfect if it was one." It was two words and a swap: the one at the
+        // foot of the floor above slid under an opaque bar and was gone, and
+        // the one in the bar turned on later and higher up. Two objects, and
+        // the eye reads the gap between them.
         //
-        // Its *bottom* against the bar's, not its top: at the top the whole
-        // button is still sitting in plain sight under the bar and the word
-        // would be on the screen twice. By the time its last pixel — the
-        // chevron's — is behind the header, there is one Feed on the screen
-        // and the handoff is a word passing under a line and coming back
-        // without its chevron, which is the thing she asked for.
+        // One object now, as far as the eye is concerned. The travelling word
+        // is drawn *over* the bar for its last stretch rather than under it
+        // (see .hn-floor--book .hn-down in nav.css), the chevron under it
+        // fades out on the way in, and the swap happens on the frame where
+        // the travelling word's middle is exactly where the bar's word sits.
+        // Same face, same size, same tracking, same colour, same centre: the
+        // handover is one word that stops moving while the rest keeps going.
+        //
+        // The line is the middle of the 58px row inside the bar, which is 29
+        // up from the bar's own bottom edge — the same sum .hn-bar-say is
+        // positioned with, read off the element so the notch is in it.
         if (i === BOOK) {
           const way = el.querySelector('.hn-down');
-          const lip = bar ? bar.getBoundingClientRect().bottom : 0;
-          setAtFeed(Boolean(way) && way.getBoundingClientRect().bottom <= lip);
+          const word = way?.querySelector('.hn-down-say');
+          if (!word || !bar) {
+            setAtFeed(false);
+            setCarry(false);
+          } else {
+            const line = bar.getBoundingClientRect().bottom - 29;
+            const box = word.getBoundingClientRect();
+            const middle = (box.top + box.bottom) / 2;
+            // The bar takes the word over well before the landing and draws
+            // it at the travelling word's own middle, so no frame can show a
+            // jump: it is the same word in the same place, drawn by something
+            // else, and then it stops at the line while the floor goes on.
+            setCarry(middle <= line + CARRY_FROM);
+            setAtFeed(middle <= line);
+            bar.style.setProperty('--hn-say-y', `${Math.max(line, middle).toFixed(1)}px`);
+            // The chevron goes before the word lands: it points at a floor
+            // you are already arriving at, and it has no business being drawn
+            // on a header. Written straight onto the element — it changes on
+            // every frame of a scroll and is no business of React's.
+            const fade = Math.min(1, Math.max(0, (middle - (line + 12)) / 46));
+            way.style.setProperty('--hn-down-go', String(fade));
+          }
         }
         setDown(prev => {
           if (prev[i] === moved) return prev;
@@ -1539,6 +1582,7 @@ export default function HomeNav() {
   // the floor and leaves with it.
   const { density, flip: flipDensity } = useFeedDensity();
   const onTheFeed = pane === BOOK && atFeed;
+  const carryWord = pane === BOOK && carry;
 
   const header = (
     <div className={'hn-bar' + (down[pane] || choosing ? ' hn-bar--scrolled' : '')}>
@@ -1551,7 +1595,7 @@ export default function HomeNav() {
           In the middle of the row, where the mark stands on the pane that
           draws one — so on this pane the middle is free and a name in it
           reads as a header's name rather than as a label at one end. */}
-      {onTheFeed && <span className="hn-bar-say">Feed</span>}
+      {carryWord && <span className="hn-bar-say">Feed</span>}
       {/* ── The way out of the picker ────────────────────────────────────
           In the corner the up-caret holds the rest of the time — the two never
           want the row at once, because while the picker is open there is no
@@ -2217,7 +2261,16 @@ export default function HomeNav() {
                       chevron under it, and the site took a week to get back
                       to what she drew. */}
                   {bookSize > 0 && (
-                    <button type="button" className="hn-down" onClick={() => goDown(BOOK)} aria-label="The feed">
+                    <button
+                      type="button"
+                      /* Out of sight the moment the bar has the word, so the
+                         two are never both on the screen. Hidden and not
+                         removed: the scroll listener goes on measuring it to
+                         know when to hand the word back on the way up. */
+                      className={'hn-down' + (carry ? ' hn-down--gone' : '')}
+                      onClick={() => goDown(BOOK)}
+                      aria-label="The feed"
+                    >
                       <span className="hn-down-say">Feed</span>
                       {/* The chevron drawn here rather than through EdgeCaret,
                           which is a button of its own and cannot go inside

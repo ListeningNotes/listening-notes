@@ -2861,14 +2861,32 @@ else's, which is an argument for a version on that URL and is not built.
       `pointer-events: none`: the strip that takes you back to the top fills
       this row, and a word on the middle of it would be a dead spot in the one
       place a thumb lands.
-      **Measured off the way-down button's bottom, not its top.** At its top
-      the whole button is still in plain sight under the bar and the word
-      would be on the screen twice; by the time the chevron's last pixel is
-      behind the header there is exactly one. Handing over at 592px on a
-      375-wide phone, which is where the floor itself arrives.
+      **One word, not two and a swap.** The first version handed over at the
+      line and it showed: "there's a split second where it goes past the
+      hairline and disappears until it hits the middle." The bar has an opaque
+      ground, so the travelling word was eaten from the top as it climbed into
+      it, and the bar's own word then turned on higher up — two objects, and
+      the eye reads the gap. Now the bar takes the word over 120px out and
+      draws it *at the travelling word's own middle*, clamped at the line: the
+      button's word goes invisible on the same frame, the chevron has already
+      faded, and what is left is one word that climbs, stops, and stays.
+      Measured at 158/158, 118/118, 78/78, 53/53 and then 51, 51, 51.
+      **The book's way down is drawn over the bar, not under it**
+      (`z-index: 96`), which is what stops it being eaten on the way in. The
+      beacon's is not: a chevron riding over the header there would be drawn
+      on somebody's cover art. And only the *word* inside the button hides, so
+      the button keeps its tap — a hidden child does not take a parent's hit
+      area.
       **And the toggle now waits for the same moment** — it was appearing
       eight pixels into any scroll of the pane, because it was keyed on
       `down`, which is the flag for *this pane has moved at all*.
+
+- [x] **No dissolve over the band on the friends pane.** A soft top edge is
+      for a floor whose content runs off the bottom and should read as
+      continuing — a wall of covers, a record mid-scroll. The book and its
+      feed end in rows with hairlines between them, and 26px of the last row
+      going grey over a hard line is a fade with nothing to say. Keyed on
+      `data-pane`, so every other pane keeps it.
 
 - [x] **A full shelf shakes its head.** "Can the pin button shake like saying
       no if 6 are already pinned." It was `disabled` before, so a press did
