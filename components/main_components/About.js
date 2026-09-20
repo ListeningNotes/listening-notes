@@ -660,8 +660,11 @@ export default function About({ stamps, authed = false, pinned = null, entries =
           past. The entrance to a pane's lower half wants designing properly;
           until it is, this is just where one thing stops and the next
           begins. */}
+      {/* `--kept` when there is a colophon under it: that section brings its
+          own air and this one's 40px at the foot of the writing would be a
+          second helping of it. Keyed on authed because .ab-keep is. */}
       {hasReading && (
-      <div className="ab-below">
+      <div className={'ab-below' + (authed ? ' ab-below--kept' : '')}>
         {/* The prompts. Prompt and answer on one line, because they are one
             sentence: "I can never skip — Voodoo, side two" is a thought, and
             the same words as a label over a value are two things stacked. The
