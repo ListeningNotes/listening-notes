@@ -1549,6 +1549,16 @@ Project → Settings → Environment Variables.
 
 ## Gotchas
 
+**A class an effect writes onto an element React renders, 2026-09-20.** The
+crown's morph flag was `classList.add('hn--morph')` on `.hn` — and `.hn` is an
+element whose `className` React builds from eight other flags. Any re-render
+writes the whole attribute back, so the first time something *else* on the
+cross moved (scrolling the book down to the feed) the flag vanished and the
+small mark it was hiding came back, on top of the address book's own header.
+It looked like a CSS bug and it is not one: React owns that attribute.
+**Anything an element wears goes in the className React renders — state, not
+`classList`** — unless React never touches that element's class at all.
+
 **Do not write prose comments between JSX attributes, 2026-09-20.** Four
 parse breaks in one day, all the same family. `{/* ... */}` is a *child*
 expression, so between attributes it is a syntax error, and the plain
