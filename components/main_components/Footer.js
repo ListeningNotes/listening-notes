@@ -1,7 +1,7 @@
 // Copyright (C) 2026 Miyel Brown
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // components/main_components/Footer.js
-// The band across the foot of the cross: Card · Beacon · Inbox · Friends, the
+// The band across the foot of the cross: Card · Beacon · Friends · Inbox, the
 // panes named, with the one you are on in ink.
 //
 // ── Why this exists ───────────────────────────────────────────────────────
@@ -58,15 +58,25 @@ function stops(authed) {
     here.push({ key: 'about', word: 'About', Icon: Info, label: 'About this software' });
     return here;
   }
+  // ── Friends before Inbox, 2026-09-19 ─────────────────────────────────
+  // Miyel's reason, and it is about the shape of the rail rather than about
+  // what the rooms are for: "two double levels two not sandwiched." Two of
+  // these four panes have a second floor — the beacon with the journal under
+  // it, and the book with the feed — and two are a single page. With the
+  // inbox third, a flat pane sat between the two deep ones and down meant
+  // something different on every second stop. Together, the rail reads
+  // flat, deep, deep, flat, and going sideways from one two-floor pane to
+  // the other does not pass through a page with no downstairs.
+  //
+  // The address book's own mark, as the desk's row wore it. Not a pair of
+  // people: this is a book of addresses you keep, not a group you belong to,
+  // and the difference is the whole model.
+  here.push({ key: 'friends', word: 'Friends', Icon: AddressBook, label: 'The journals you read' });
   // Envelope is the mark the whole site already puts on a record that arrived
   // from somebody — it is what the room of arrivals should wear, and the
   // sending tool deliberately wears a different one so the two never read as
   // the same verb (KeeperTools, 2026-09-17).
   here.push({ key: 'inbox', word: 'Inbox', Icon: Envelope, label: 'What has arrived' });
-  // The address book's own mark, as the desk's row wore it. Not a pair of
-  // people: this is a book of addresses you keep, not a group you belong to,
-  // and the difference is the whole model.
-  here.push({ key: 'friends', word: 'Friends', Icon: AddressBook, label: 'The journals you read' });
   return here;
 }
 

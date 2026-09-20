@@ -2351,8 +2351,17 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
      but still in the flexbox is a screenful of desk you can swipe into and
      not swipe out of by pressing anything. */
   .hn--keeper .hn-face--desk { display: none; }
-  .hn-pane--inbox { order: 3; }
-  .hn-pane--friends { order: 4; }
+  /* Friends before the inbox (Miyel, 2026-09-19: "two double levels two not
+     sandwiched"). Two of these panes have a second floor and two do not, and
+     with the inbox third the flat one sat between the two deep ones. The rail
+     reads flat, deep, deep, flat now, so down means the same thing on
+     neighbouring stops.
+
+     The order here and the order of paneRefs in HomeNav are the same list
+     said twice — change one and change the other, or the band's third word
+     walks you to the fourth pane. */
+  .hn-pane--friends { order: 3; }
+  .hn-pane--inbox { order: 4; }
   /* The same clearance the faces take: under the bar at the top, above the
      band at the foot. Written here rather than on the pages inside, because
      it is the cross's furniture they are clearing and those pages have their
