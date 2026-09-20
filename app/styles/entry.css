@@ -1246,7 +1246,13 @@ a.ln-sent-who:hover { text-decoration: underline; text-underline-offset: 3px; }
     gap: 9px;
     grid-column: 2;
     min-width: 0;
-    max-width: calc(100vw - 104px);
+    /* ── Room for the tools, 2026-09-20 ──────────────────────────────────
+       Miyel: "make sure the toolbar doesn't cover the album." The row is
+       three tracks with the outer two sharing whatever the middle leaves, so
+       a middle that grows takes the corner the ··· stands in from both sides
+       at once. The sum: 56 of side padding, two 10px gaps, and 36 for the
+       door itself — which leaves this. */
+    max-width: calc(100vw - 148px);
   }
   /* The seat is the record's size and gets scaled *down* — a promoted layer
      is rastered at the size it is laid out at, so a 28px box blown up ten
@@ -1294,7 +1300,7 @@ a.ln-sent-who:hover { text-decoration: underline; text-underline-offset: 3px; }
     font-family: var(--font-display);
     font-weight: var(--font-display-weight);
     font-size: 14px; line-height: 1.25; color: var(--ink);
-    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    white-space: nowrap;
   }
   .ln-crown-artist {
     font-family: var(--font-label);

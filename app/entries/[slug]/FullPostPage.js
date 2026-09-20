@@ -35,6 +35,7 @@ import MiniAddressBook from '../../../components/main_components/MiniAddressBook
 import PrintBar from '../../../components/main_components/Slug_Page/PrintBar';
 import HorizonChart from '../../../components/main_components/HorizonChart';
 import MiniCard from '../../../components/main_components/Slug_Page/MiniCard';
+import MarqueeTitle from '../../../components/main_components/MarqueeTitle';
 import { handedOver, cameReadingOn } from '../../../library/handoff';
 import { tidyAddress, tidyJournal } from '../../../library/return_address';
 import { useBookplate } from '../../../components/main_components/Bookplate';
@@ -1154,7 +1155,13 @@ export default function FullPostPage({ entry, references = [], authed = false, l
       </span>
       <span className="ln-crown-hole" aria-hidden="true" />
       <span className="ln-crown-said">
-        <span className="ln-crown-album">{entry.album}</span>
+        {/* A long record name scrolls rather than eating the row. There is a
+            cover to its left and a score and three marks to its right, and
+            past those the tools — so what is left for a title is about a
+            hundred pixels, and a title that ellipsises at a hundred pixels
+            is four letters and a full stop. The beacon's own marquee, which
+            is where it came from. */}
+        <MarqueeTitle text={entry.album} textClassName="ln-crown-album" />
         {entry.artist && <span className="ln-crown-artist">{entry.artist}</span>}
       </span>
       {/* The score and the marks come with it — Miyel, on losing them with
