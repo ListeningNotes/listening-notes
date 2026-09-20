@@ -3089,11 +3089,15 @@ else's, which is an argument for a version on that URL and is not built.
       search field as a small rounded search pill instead?" So it is the
       site's own field shape at the smallest it goes — a 999px corner, a
       hairline, the panel ground, 37px tall — sized to the words rather than
-      to the row and centred in the slot. **Not dead centre on the screen**:
-      centred there, a 190px phrase on a 375px screen reaches further right
-      than the corner button does and the camera ends up inside the pill.
-      Something has to give and the pill gives; it sits a little left of where
-      the name it replaces does. The line is one revision back in git.
+      to the row. **And the camera moved to the left of it**, which is what
+      lets it be centred on the row rather than on what is left of the row:
+      with both corner marks at the right end, a 190px phrase centred on a
+      375px screen reached further right than the corner did and the camera
+      ended up inside the pill. Miyel offered the choice — shorten the
+      placeholder to `Address`, or move the camera — and the second is the one
+      that does not pay for the centring with the sentence that explains the
+      camera. One mark either side, the field dead centre at 188 of 187.5.
+      The line is two revisions back in git.
       **And a field in a header is a line, not a box.** "The search bar feels
       big and bulky compared to the other title header... it feels so
       disjointed." It was arriving as a panel with a rule round it and 44px of

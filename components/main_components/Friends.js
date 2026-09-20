@@ -612,6 +612,29 @@ export default function Friends({ shelf = false, onCount = null, onBusy = null }
   // stays at the top of the page where it was.
   const head = (
     <div className="fr-head">
+      {/* ── One mark either side, 2026-09-20 ────────────────────────────
+          Scanning is the other way to say the same address, and it stands to
+          the left of the field while the way out stands to the right — which
+          is what lets the field be centred on the row rather than on what is
+          left of it. Miyel offered the choice: "shorten placeholder to
+          Address so it can center, or the camera can be left of the search
+          bar and search bar can be centered." This is the second, because the
+          first pays for the centring with the sentence that explains the
+          camera, and the camera is the thing the sentence is there for.
+
+          Only while the field is open: a camera on a page of faces is a
+          camera pointed at nothing. */}
+      {adding && (
+        <button
+          type="button"
+          className="fr-scan"
+          onClick={() => setScanning(true)}
+          aria-label="Point the camera at a code"
+          title="Scan a code"
+        >
+          <Camera size={18} weight="regular" aria-hidden="true" />
+        </button>
+      )}
       <div className="fr-slot">
         {/* ── What the book is called, when nothing is being typed ─────
             Miyel, 2026-09-20: "let's bring back the address book title at
@@ -706,21 +729,6 @@ export default function Friends({ shelf = false, onCount = null, onBusy = null }
           one slot, so a book still narrowed to one person while you type
           an address into the box above it is a page quietly lying about
           how many people are in it. */}
-      {/* Scanning is the other way to say the same address, so it stands
-          beside the way out rather than under the field. Only while the
-          field is open: a camera on a page of faces is a camera pointed at
-          nothing. */}
-      {adding && (
-        <button
-          type="button"
-          className="fr-scan"
-          onClick={() => setScanning(true)}
-          aria-label="Point the camera at a code"
-          title="Scan a code"
-        >
-          <Camera size={18} weight="regular" aria-hidden="true" />
-        </button>
-      )}
       {plus}
     </div>
   );
