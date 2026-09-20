@@ -1211,6 +1211,15 @@ a.ln-sent-who:hover { text-decoration: underline; text-underline-offset: 3px; }
    view, and there is no scroll here for a collapse to ride on. */
 .ln-crown { display: none; }
 @media (max-width: 768px) {
+  /* The journal's mark, centred on the row rather than in the middle grid
+     track — the track is the record's, and its width is the record's name,
+     so a mark sharing it would sit wherever that name happened to end. Both
+     are drawn and only one is ever on; see the note in SiteNav.js. */
+  .ln-entry .sitenav-logo {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+  }
   .ln-crown {
     position: relative;
     display: flex;
