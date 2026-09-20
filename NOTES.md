@@ -2714,6 +2714,22 @@ current.
 
 ## Complete
 
+**2026-09-19 — Add and Scan sit under the field, not under the page.** Miyel:
+"centering feels off when search bar is open." It was, and the arithmetic is
+plain once you measure it: the head is a field and a +, so the field gives up
+the +'s 40px and the 8px between them, all of it off its right-hand end, and
+lands 24px left of centre. Everything else on the floor is centred on the pane
+— the mark, the faces, and that row of buttons — so two controls that plainly
+belong to the box above them sat 24px to the right of it. The row takes the
++'s width as right padding now, which puts its middle on the field's middle.
+
+**What is left, and it is a choice not an oversight:** the field is still 24px
+left of the mark above it. Closing that means letting the field span the full
+width and floating the + over its right-hand end, which buys one centre line
+for the whole screen and puts the × on top of the thing it cancels — a tap
+near the end of a typed address would throw the address away. Not worth it
+unless Miyel says so.
+
 **2026-09-19, later still — the mark was missing from the two new panes.**
 Every page on this site says what it belongs to: the card and the desk draw
 their own small mark at the top of themselves, and the beacon has the crown.
