@@ -2714,6 +2714,17 @@ current.
 
 ## Complete
 
+**2026-09-19, later still — the mark was missing from the two new panes.**
+Every page on this site says what it belongs to: the card and the desk draw
+their own small mark at the top of themselves, and the beacon has the crown.
+The inbox and the book drew nothing, so the top of the friends floor was a +
+and some faces (Miyel: "we need LN. header i just noticed"). The bar's own
+mark is shown on those two panes from the start now — the same mark in the
+same place, and pressing it does what it does everywhere, which is go back to
+the top. Their content starts at `--hn-bar-h` rather than 36px so nothing runs
+through it. Keyed on `.hn--keeper`, because signed out pane 2 is the colophon
+and the colophon keeps the crown.
+
 **2026-09-19, later — four small ones off a real phone.**
 
 - [x] **Came back is gone.** The corner filter lasted one evening. What came
