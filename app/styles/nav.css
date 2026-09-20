@@ -2738,6 +2738,18 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   /* Clear of the band, which has a ground of its own and would otherwise
      cover the last record rather than letting it show through. */
   .hn-floor--feed .fd-wrap { padding-bottom: calc(var(--hn-foot-h) + 20px); }
+  /* ── The toggle stays reachable, 2026-09-20 ──────────────────────────
+     On the cross this row is the toggle alone, and it sits at the top of a
+     floor that scrolls — so a screen into the feed the only control it has
+     was above the window and gone. Stuck under the bar instead, which is
+     where it already is at the top of the floor, so it does not appear to
+     move. It carries the page colour for the reason the bar above it does:
+     records pass under it. */
+  .hn-floor--feed .fd-head--bare {
+    position: sticky; top: var(--hn-bar-h); z-index: 3;
+    background: var(--bg);
+    padding: 4px 0 6px; margin-bottom: 0;
+  }
   /* A page drawn inside a pane has no bar of its own to clear and no screen
      of its own to fill. */
   .hn-pane--inbox .own-screen--pane,
