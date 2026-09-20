@@ -2053,7 +2053,8 @@
    growing is two things moving in the same direction at once, and neither
    reads.
 
-   340, against a panel measured at 257 on a phone: near the real height and
+   260, against a panel measured at 225 on a phone once *Your copy* came off
+   the foot of it: near the real height and
    not wildly above it, which is the rule this stylesheet keeps everywhere it
    caps a max-height (see .fr-doors, .fd-add-acts). The height is bounded by
    design — the bars are a fixed 64 whatever the record — so the only things
@@ -2065,7 +2066,35 @@
 }
 @keyframes fd-cmp-open {
   from { max-height: 0; opacity: 0; }
-  to   { max-height: 300px; opacity: 1; }
+  to   { max-height: 260px; opacity: 1; }
+}
+/* ── And the same two movements, read backwards ────────────────────────────
+   Miyel, 2026-09-20: "reverse animation and close for closing compare, it
+   just disappears the way it is now." Opening is the panel and then the bars
+   into it; closing is the bars down and then the panel after them. The key
+   stays in the page for the length of it — see SHUT_MS in Feed.js — because
+   a thing that has been unmounted has nowhere to close.
+
+   Nothing in it can be pressed on the way out: it is already gone as far as
+   the page is concerned, and a control that answers while it is leaving
+   answers for a row you have closed. */
+.fd-cmp--shutting {
+  pointer-events: none;
+  animation: fd-cmp-shut 0.28s cubic-bezier(0.22, 0.61, 0.36, 1) 0.3s both;
+}
+@keyframes fd-cmp-shut {
+  from { max-height: 260px; opacity: 1; }
+  to   { max-height: 0; opacity: 0; }
+}
+/* Quicker down than up. A thing arriving can take its time and a thing
+   leaving should not keep you waiting — the site's rule everywhere else it
+   has both. */
+.fd-cmp--shutting .fd-cmp-bar {
+  animation: fd-sink 0.3s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+@keyframes fd-sink {
+  from { height: var(--tall); }
+  to   { height: 4px; }
 }
 /* Both horizons are drawn the same way up. A mirrored pair reads as a
    difference chart, and these are two listens, not one difference. */
@@ -2108,7 +2137,7 @@
   color: var(--fav);
 }
 @media (prefers-reduced-motion: reduce) {
-  .fd-cmp, .fd-cmp-bar { animation: none; }
+  .fd-cmp, .fd-cmp-bar, .fd-cmp--shutting, .fd-cmp--shutting .fd-cmp-bar { animation: none; }
   .fd-cmp { max-height: none; }
 }
 /* Theirs is the listen you came to look at, so it is the lit one. Yours is
