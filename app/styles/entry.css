@@ -20,18 +20,25 @@
    So they live here, where the rest of the .ln-* family already lives. See
    LayerWaiting, which is the other thing that draws them. */
 @media (max-width: 768px) {
+/* ── One page, not two snapped screens, 2026-09-20 ──────────────────────
+   The record and the reading were two viewport-tall snap areas with the
+   notes in a scroller of their own, and the snap was what made that safe.
+   It is gone with the thing that earned it (the cross lost its vertical
+   snap the same day, for the same reason): the art collapses into the
+   header as you scroll now, and a morph needs a page that moves under your
+   thumb rather than two stops with a jump between them. Miyel, asking for
+   it: "I can lose the two-level album."
+
+   So this scrolls like any long page, screen one is still a screenful, and
+   the notes simply carry on underneath. `scroll-margin-top` is what the
+   caret's press lands against — the same load-bearing leftover the panes
+   kept. */
 .ln-screens {
   height: 100dvh;
   overflow-y: auto;
-  scroll-snap-type: y mandatory;
   -webkit-overflow-scrolling: touch;
   touch-action: pan-y;
   overscroll-behavior-y: none;
-}
-.ln-screen-one {
-  height: 100dvh;
-  scroll-snap-align: start;
-  scroll-snap-stop: always;
 }
 
 .ln-screen-one {
@@ -1155,6 +1162,75 @@ a.ln-sent-who:hover { text-decoration: underline; text-underline-offset: 3px; }
    keeps the record in view. */
 .ln-mini        { display: none; }
 
+/* ── The record, in the header ──────────────────────────────────────────
+   What the entry hands SiteNav for the middle of its row, in place of the
+   mark every other page stopped drawing. On a phone the album art collapses
+   into the cover here as the notes come up — the seat is what the morph in
+   FullPostPage transforms, so it has a size of its own to be scaled from
+   and an origin in its own middle.
+
+   Not drawn on a desk: the hero over the notes is already the record in
+   view, and there is no scroll here for a collapse to ride on. */
+.ln-crown { display: none; }
+@media (max-width: 768px) {
+  .ln-crown {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    grid-column: 2;
+    min-width: 0;
+    background: none;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .ln-crown-art {
+    flex-shrink: 0;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
+    overflow: hidden;
+    background: var(--panel);
+    border: 1px solid var(--panel-border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transform-origin: center;
+    will-change: transform;
+  }
+  .ln-crown-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .ln-crown-none { font-size: 13px; color: var(--ink-faint); }
+  /* Nothing until the collapse is nearly over — a name beside a cover the
+     size of a record is a caption on a photograph, and this is a header. */
+  .ln-crown-said {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+    text-align: left;
+    opacity: 0;
+  }
+  .ln-crown-album {
+    font-family: var(--font-display);
+    font-weight: var(--font-display-weight);
+    font-size: 13px; line-height: 1.2; color: var(--ink);
+    max-width: 42vw;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .ln-crown-artist {
+    font-family: var(--font-label);
+    font-size: 8px; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--ink-soft);
+    max-width: 42vw;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  /* And the page's own art goes quiet while the header is standing in for
+     it. Not `display: none`: its box is what the title, the score and the
+     chips are laid out under, and what the morph measures. */
+  .ln-entry--crowning .ln-screen-one-art { visibility: hidden; }
+}
+
 @media (max-width: 768px) {
   /* ── SCREEN ONE ── a full viewport of album: art on top, everything
      we know about it centred underneath, and a cue to scroll on. */
@@ -1167,11 +1243,6 @@ a.ln-sent-who:hover { text-decoration: underline; text-underline-offset: 3px; }
      exactly one viewport tall, and a mandatory snap over
      viewport-sized areas can commit hard without ever trapping the
      reading. scroll-snap-stop stops a fast flick skipping past. */
-  .ln-screen-two {
-    height: 100dvh;
-    scroll-snap-align: start;
-    scroll-snap-stop: always;
-  }
 
   .ln-screen-one-chips {
     display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
@@ -1240,8 +1311,13 @@ a.ln-sent-who:hover { text-decoration: underline; text-underline-offset: 3px; }
      scrolls inside. Padding rather than margin so the inner scroller
      starts below the band — that puts sticky labels at top:0 right
      underneath the header instead of behind it. */
+  /* The caret's press lands here, and with the snap gone `scroll-margin-top`
+     is the only thing that stops it landing behind the header — the same
+     load-bearing leftover the cross's floors kept. The number is the row's
+     own bottom, so the notes come to rest exactly where the collapse ends. */
   .ln-screen-two {
-    padding-top: var(--ln-band);
+    scroll-margin-top: calc(80px + var(--safe-top));
+    padding-top: 16px;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
@@ -1262,7 +1338,14 @@ a.ln-sent-who:hover { text-decoration: underline; text-underline-offset: 3px; }
      scroll in .ln-screen-two-scroll, which now begins below this strip
      rather than below the band. What still has to be covered is the
      logo row, and that is above this. */
-  .ln-mini {
+  /* ── Retired on a phone, 2026-09-20 ──────────────────────────────────
+     This was the record kept at the head of the reading, and the header is
+     that now — cover, album, artist, collapsed up out of the page. Two of
+     them one above the other is the same record twice. The rest of the rule
+     is left where it is: the desktop hero does not use it, but the shape is
+     worth keeping legible if it is ever wanted back. */
+  .ln-mini { display: none; }
+  .ln-mini--retired {
     position: relative;
     z-index: 101;
     background: var(--bg);
@@ -1324,17 +1407,13 @@ a.ln-sent-who:hover { text-decoration: underline; text-underline-offset: 3px; }
   .ln-mini-flags { display: flex; align-items: center; gap: 5px; }
   .ln-mini-flag { display: inline-flex; }
 
+  /* Not a scroller any more — see the note over .ln-screens. It was one so
+     that screen two could be exactly a screen tall with the reading inside
+     it, and there is no screen two now, only a page that keeps going. The
+     element stays because a good deal of padding is hung on it. */
   .ln-screen-two-scroll {
     flex: 1;
     min-height: 0;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    /* Deliberately auto, not contain. Containing it is what made
-       screen one unreachable: with the notes filling the whole screen,
-       refusing to hand the scroll back meant pulling down at the top
-       of the notes did nothing at all, however hard you pulled.
-       Letting it chain is what carries you back up to the album. */
-    overscroll-behavior-y: auto;
   }
 
   /* Section headings pin themselves while their section is what you

@@ -856,9 +856,126 @@ export default function FullPostPage({ entry, references = [], authed = false, l
     }
   }
 
+  // ── The record collapses into the header, 2026-09-20 ────────────────────
+  // Miyel: "the album transforms into the header — we don't need the
+  // Listening Notes logo up there, it could just be the album, almost like
+  // when you have the mini beacon in the session."
+  //
+  // The same morph the beacon's mark does, with one difference she picked
+  // between: the mark up there holds still and everything passes behind an
+  // opaque header, and the art down here is far too big for that — a header
+  // reaching past it would be half the screen, and the title, the score and
+  // the chips would be gone the moment you moved. So this one *lags*. It
+  // drifts up at a fraction of the page's speed, keeps its size until the
+  // notes are close, and then collapses into the row. Nothing is hidden;
+  // everything scrolls past it the way it always did.
+  //
+  // Drawn by the header and not by the page, which is the lesson the beacon
+  // cost four evenings: on a phone the content paints under the fixed row,
+  // so anything that has to end up *in* that row has to start there too.
+  // The page's own art goes invisible while this one stands in for it, and
+  // keeps its box, which is what everything below it is positioned against.
+  const [crowning, setCrowning] = useState(false);
+  useEffect(() => {
+    // Not while the page is something else. Printing makes screen one a
+    // sheet of paper and editing makes it a form; in both the art is a
+    // control you are using, not a thing on its way somewhere.
+    if (printing || edit.editing) { setCrowning(false); return undefined; }
+    const screens = document.querySelector('.ln-screens');
+    const art = document.querySelector('.ln-screen-one-art');
+    const seat = document.querySelector('.ln-crown-art');
+    const said = document.querySelector('.ln-crown-said');
+    const row = document.querySelector('.sitenav-row');
+    const one = document.querySelector('.ln-screen-one');
+    if (!screens || !art || !seat || !row || !one) return undefined;
+
+    let base = null;
+    const middle = el => {
+      const r = el.getBoundingClientRect();
+      return { cx: r.left + r.width / 2, cy: r.top + r.height / 2, h: r.height };
+    };
+    const measure = () => {
+      if (!window.matchMedia('(max-width: 768px)').matches) {
+        seat.style.transform = '';
+        base = null;
+        setCrowning(false);
+        return;
+      }
+      seat.style.transform = 'none';
+      const gone = screens.scrollTop;
+      const from = middle(art);
+      const to = middle(seat);
+      if (!from.h || !to.h) { base = null; setCrowning(false); return; }
+      setCrowning(true);
+      // Both in the coordinates the page has at rest, because the art holds
+      // no fixed place on the screen — it is where the page put it.
+      base = {
+        from: { cx: from.cx, cy: from.cy + gone, h: from.h },
+        to,
+        // The journey is over when screen one has gone under the header, so
+        // the last thing the collapse is waiting for is the notes arriving.
+        ends: Math.max(1, one.getBoundingClientRect().bottom + gone - row.getBoundingClientRect().bottom),
+      };
+      draw();
+    };
+    const draw = () => {
+      if (!base) return;
+      const u = Math.min(1, Math.max(0, screens.scrollTop / base.ends));
+      // Two clocks. The position runs straight, so the art drifts up the
+      // whole way rather than arriving early and parking; the size waits,
+      // so it is still the record when the notes come up and then goes
+      // quickly. Squared is the whole of "stays large, then shrinks".
+      const walk = u;
+      const small = u * u;
+      const h = base.from.h + (base.to.h - base.from.h) * small;
+      const cx = base.from.cx + (base.to.cx - base.from.cx) * walk;
+      const cy = base.from.cy + (base.to.cy - base.from.cy) * walk;
+      seat.style.transform =
+        `translate(${(cx - base.to.cx).toFixed(1)}px, ${(cy - base.to.cy).toFixed(1)}px) scale(${(h / base.to.h).toFixed(4)})`;
+      // The name arrives at the end, once there is a header to put it in.
+      if (said) said.style.opacity = Math.min(1, Math.max(0, (small - 0.88) / 0.12)).toFixed(3);
+    };
+
+    measure();
+    screens.addEventListener('scroll', draw, { passive: true });
+    screens.addEventListener('load', measure, true);
+    const narrow = window.matchMedia('(max-width: 768px)');
+    narrow.addEventListener('change', measure);
+    window.addEventListener('resize', measure);
+    const watch = new ResizeObserver(measure);
+    watch.observe(screens);
+    watch.observe(one);
+    watch.observe(row);
+    return () => {
+      screens.removeEventListener('scroll', draw);
+      screens.removeEventListener('load', measure, true);
+      narrow.removeEventListener('change', measure);
+      window.removeEventListener('resize', measure);
+      watch.disconnect();
+      seat.style.transform = '';
+      if (said) said.style.opacity = '';
+      setCrowning(false);
+    };
+  }, [printing, edit.editing, coverSrc, entry.slug]);
+
+  // What the header carries on this page. A press goes back to the record,
+  // which is the job MiniCard used to do at the head of the notes — and the
+  // reason that card is not drawn on a phone any more.
+  const headerMark = (
+    <button type="button" className="ln-crown" onClick={backToTheRecord} aria-label="Back to the record">
+      <span className="ln-crown-art">
+        {coverSrc ? <img src={coverSrc} alt="" /> : <span className="ln-crown-none">♪</span>}
+      </span>
+      <span className="ln-crown-said">
+        <span className="ln-crown-album">{entry.album}</span>
+        {entry.artist && <span className="ln-crown-artist">{entry.artist}</span>}
+      </span>
+    </button>
+  );
+
   return (
     <div
-      className={'ln-entry' + (scrolled ? ' ln-entry--scrolled' : '')}
+      className={'ln-entry' + (scrolled ? ' ln-entry--scrolled' : '') + (crowning ? ' ln-entry--crowning' : '')}
       style={{ background: 'var(--bg)', minHeight: '100vh', color: 'var(--ink)', fontFamily: fonts.sans }}
     >
 
@@ -868,7 +985,9 @@ export default function FullPostPage({ entry, references = [], authed = false, l
           swipe, so the mark and the tools hold still while the record
           beneath them changes. The slot wears this page's classes so the
           band behind the row keeps working — see the effect below. */}
-      {headerSlot ? createPortal(<SiteNav tools={keeperTools} />, headerSlot) : <SiteNav tools={keeperTools} />}
+      {headerSlot
+        ? createPortal(<SiteNav tools={keeperTools} mark={headerMark} />, headerSlot)
+        : <SiteNav tools={keeperTools} mark={headerMark} />}
 
       {/* A correction is open, and the page is long. The controls that started
           it are at the top of the entry, which is a screen and a half away by
