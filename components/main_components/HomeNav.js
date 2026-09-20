@@ -94,7 +94,7 @@ import Friends from './Friends';
 // journal's own records — the same list the wall draws — because the one
 // thing it asks of them is whether a row is a record you also have, and
 // therefore whether Compare is worth offering.
-import Feed from './Feed';
+import Feed, { DensityToggle, useFeedDensity } from './Feed';
 import AlbumPicker from '../session_components/AlbumPicker';
 // The same two the desk already reaches for, from the same module, so the
 // pane and the desk agree about what "a listen is open" means and say so the
@@ -1502,6 +1502,18 @@ export default function HomeNav() {
   // and on the one pane where it is not sitting over somebody's reading. The
   // stylesheet hides it on the turning pane; on a desk this row is over the
   // journal, which is the beacon, so it simply stays.
+  // ── The feed's one control, in the row that is already a header ────────
+  // Miyel, 2026-09-20: "there's already a header up there with a hairline,
+  // just put it above that hairline — I think the LN. used to live there."
+  // It had a bare row of its own under this bar, which read as a second
+  // header belonging to nothing. This is the header, so it goes in this.
+  //
+  // Only while the feed is what is under it. The bar belongs to every pane
+  // and a control for a list four swipes away is furniture; it arrives with
+  // the floor and leaves with it.
+  const { density, flip: flipDensity } = useFeedDensity();
+  const onTheFeed = pane === BOOK && down[BOOK];
+
   const header = (
     <div className={'hn-bar' + (down[pane] || choosing ? ' hn-bar--scrolled' : '')}>
       {/* ── The way out of the picker ────────────────────────────────────
@@ -1644,6 +1656,7 @@ export default function HomeNav() {
       <button type="button" className="hn-bar-mark" onClick={() => goUp(pane)} aria-label="Back to the top">
         {mark('hn-bar-svg')}
       </button>
+      {onTheFeed && <DensityToggle density={density} onFlip={flipDensity} />}
       <button className="hp-icon-btn hn-lights" onClick={toggleTheme} aria-label="Toggle theme">
         {/* The sun and the moon. Drawn as a switch on a wall for an hour, on
             the grounds that the component is called Lightswitch; the file name
@@ -2189,7 +2202,7 @@ export default function HomeNav() {
                     the way in and then gets out of the way. */}
                 {bookSize > 0 && (
                   <div className="hn-floor hn-floor--feed">
-                    <Feed entries={entries} titled={false} />
+                    <Feed entries={entries} density={density} />
                   </div>
                 )}
               </>
