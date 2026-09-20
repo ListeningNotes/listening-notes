@@ -2855,9 +2855,10 @@ current.
 header's.** The big mark used to scroll away and a small one faded in behind
 it. It morphs now: it holds its place at full size for the whole of the
 beacon, everything on the floor passes *under* the header, and the shrink is
-spent on the wall's arrival — it begins as Log a listen reaches the foot of
-the header and ends as the first row of covers lands under it, which is the
-same moment the caret goes behind. 82px to 28px, landing on the bar's line.
+spent on the wall's arrival — it begins as the caret reaches the foot of the
+header and ends as the first row of covers lands under it, which is the same
+moment the caret goes behind. 82px to 28px, landing on the bar's line, and
+the whole of it in the last stretch with the albums already coming up.
 
 The header has a floor to make that true: the page's own colour, so there is
 nothing to see at rest, reaching to just under the mark at whatever size it

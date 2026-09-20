@@ -1235,16 +1235,21 @@ export default function HomeNav() {
       // assumed: floor one is a different height on every phone, because the
       // record, the ring and the caret are all laid out against the screen.
       //
-      // `begins` is the scroll at which the ring reaches the foot of the
-      // header — "it'll shrink as Log a listen passes it". `ends` is the
-      // scroll at which the wall's first row is under the bar, which on this
-      // pane is the same instant the caret goes behind the header, because
-      // the caret is the last thing on floor one and the wall starts where it
-      // stops. One number, two of her sentences.
+      // `ends` is the scroll at which the wall's first row is under the bar,
+      // which on this pane is the same instant the caret goes behind the
+      // header, because the caret is the last thing on floor one and the wall
+      // starts where it stops.
+      //
+      // `begins` is the caret arriving at the foot of the header. It was the
+      // ring — "it'll shrink as Log a listen passes it" — and once the mark
+      // was actually staying big the whole way down she wanted it later:
+      // "it can happen closer to the albums". The caret is the last thing
+      // before them, so the shrink is now the last stretch of the journey
+      // rather than most of it.
       const wall = pane.querySelector('.hn-floor--wall');
-      const ring = pane.querySelector('.hn-go');
+      const last = pane.querySelector('.hn-down');
       const w = wall && wall.getBoundingClientRect();
-      const g = ring && ring.getBoundingClientRect();
+      const g = last && last.getBoundingClientRect();
       const top = m.top + pane.scrollTop;
       const ends = w ? w.top + pane.scrollTop - b.bottom : null;
       base = {
@@ -1254,10 +1259,9 @@ export default function HomeNav() {
         scale: small / m.height,
         floor: b.bottom,
         ends,
-        // No ring means this is not the keeper's beacon — a visitor's way in
-        // is a face, not this control — so the shrink falls back to the last
-        // JOURNEY of the approach. Still finishing as the wall lands, which
-        // is the part that matters.
+        // No caret means there is no second floor to point at, so the shrink
+        // falls back to the last JOURNEY of the approach. Still finishing as
+        // the wall lands, which is the part that matters.
         begins: g ? g.top + pane.scrollTop - (top + m.height + GROUND)
                : ends == null ? 0 : Math.max(0, ends - JOURNEY),
       };
