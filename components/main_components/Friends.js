@@ -37,6 +37,7 @@
 // offer below, where it is the fact being confirmed.
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { BookOpen, Camera, MagnifyingGlass, PaperPlaneTilt, Plus, PushPin, Shuffle, User, X } from '@phosphor-icons/react';
 import CodeScanner from './CodeScanner';
@@ -255,6 +256,29 @@ export default function Friends({ shelf = false, onCount = null }) {
   // Where every face was standing, taken the instant before the re-sort
   // and read back by the layout effect below. See travel(), above.
   const flight = useRef(null);
+
+  // ── The + goes up into the bar with the name ────────────────────────────
+  // Miyel, 2026-09-20: "the + and address book becomes a header that passes
+  // itself off to the next header — it's a relay, if it needs a title or a
+  // name." So the two halves of this floor's header are the bar's while the
+  // shelf is what you are on, and the feed's name and its toggle take them
+  // over a floor down. The same slot trick the card's tools use
+  // (IdentityCard.js): an element of this component's making, put in the bar
+  // and drawn into from here.
+  //
+  // Only on the shelf. At the book's own address there is no bar to put it
+  // in, and the header is the page's own.
+  const [barSlot, setBarSlot] = useState(null);
+  useEffect(() => {
+    if (!shelf) return undefined;
+    const bar = document.querySelector('.hn-bar');
+    if (!bar) return undefined;
+    const slot = document.createElement('div');
+    slot.className = 'hn-bar-add';
+    bar.appendChild(slot);
+    setBarSlot(slot);
+    return () => { slot.remove(); setBarSlot(null); };
+  }, [shelf]);
   const [fits, setFits] = useState(0);
 
   // Up to whoever is drawing this, once it is known and whenever it changes.
@@ -556,6 +580,21 @@ export default function Friends({ shelf = false, onCount = null }) {
   // that item landed in". Chunking is what turns that into an ordinary list
   // of rows with a panel that can sit after one of them.
   //
+  // One button, drawn in the bar on the cross and in this page's own header
+  // at the book's address. Never both: `plus` is null once the bar has it.
+  const plus = (
+    <button
+      type="button"
+      className={'fr-plus' + (adding ? ' fr-plus--shut' : '')}
+      onClick={() => { setAdding(a => !a); setSaid(''); setTyped(''); setFinding(''); }}
+      aria-expanded={adding}
+      aria-label={adding ? 'Never mind' : 'Add a journal'}
+      title={adding ? 'Never mind' : 'Add a journal'}
+    >
+      <Plus size={18} weight="regular" aria-hidden="true" />
+    </button>
+  );
+
   // A row carries how wide it is and what stands over it, so the pinned row
   // and an ordinary one are the same thing drawn from the same map — three
   // large faces under PINNED, or four or five small ones under EVERYONE. The
@@ -603,6 +642,8 @@ export default function Friends({ shelf = false, onCount = null }) {
 
             `inert` on whichever one is away, so the keyboard and a screen
             reader only ever meet the field that is actually there. */}
+        {barSlot && createPortal(plus, barSlot)}
+
         <div className="fr-head">
           <div className="fr-slot">
             {/* ── What the book is called, when nothing is being typed ─────
@@ -615,10 +656,21 @@ export default function Friends({ shelf = false, onCount = null }) {
                 things and shows one; this is the third, and it leaves the
                 same way the search does — clipped off to the left as the
                 address field arrives from the right. */}
-            <p className={'fr-book' + (adding || searchable ? ' fr-field--gone' : '')} aria-hidden={adding || searchable ? true : undefined}>
-              Address book
-              {!loading && people.length > 0 && <span> &middot; {people.length}</span>}
-            </p>
+            {/* ── Not on the shelf, 2026-09-20 ─────────────────────────
+                On the cross the name is in the bar, where the feed's name
+                also is — Miyel: "center address book · #, so basically that
+                gets replaced by recent listens once you hit the feed." One
+                header with two names in it, one floor apart, rather than a
+                title on the floor and a different title in the bar ten pixels
+                above it. HomeNav draws it, off the count this component hands
+                up (see onCount). At the book's own address there is no bar to
+                put it in, so it stays here. */}
+            {!shelf && (
+              <p className={'fr-book' + (adding || searchable ? ' fr-field--gone' : '')} aria-hidden={adding || searchable ? true : undefined}>
+                Address book
+                {!loading && people.length > 0 && <span> &middot; {people.length}</span>}
+              </p>
+            )}
             <label className={'fr-field fr-field--find' + (adding || !searchable ? ' fr-field--gone' : '')} inert={adding || !searchable ? true : undefined}>
               <MagnifyingGlass size={15} weight="regular" aria-hidden="true" />
               <input
@@ -654,16 +706,7 @@ export default function Friends({ shelf = false, onCount = null }) {
               one slot, so a book still narrowed to one person while you type
               an address into the box above it is a page quietly lying about
               how many people are in it. */}
-          <button
-            type="button"
-            className={'fr-plus' + (adding ? ' fr-plus--shut' : '')}
-            onClick={() => { setAdding(a => !a); setSaid(''); setTyped(''); setFinding(''); }}
-            aria-expanded={adding}
-            aria-label={adding ? 'Never mind' : 'Add a journal'}
-            title={adding ? 'Never mind' : 'Add a journal'}
-          >
-            <Plus size={18} weight="regular" aria-hidden="true" />
-          </button>
+          {barSlot ? null : plus}
         </div>
 
         {/* Centred under the address field, and collapsed rather than taken
