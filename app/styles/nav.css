@@ -1919,22 +1919,21 @@
    Nothing to press: the invisible strip that takes you back to the top of a
    pane fills this row, and a word sitting on the middle of it would be a dead
    spot in the one place a thumb lands. */
+@keyframes hn-say-in { from { opacity: 0; } to { opacity: 1; } }
 .hn-bar-say {
   position: absolute;
   left: 50%;
-  /* Wherever the travelling word is, until it reaches the line and stops.
-     The fallback is that line: the middle of the 58px row inside the band,
-     which is what the number resolves to once it has arrived. .hn-bar is the
-     containing block and starts at the top of the window, so this is a
-     window coordinate and the same one the scroll listener measures in. */
-  top: var(--hn-say-y, calc(22px + var(--safe-top) + 29px));
+  /* The middle of the 58px row inside the band. It followed a word climbing
+     up from the floor above for an hour; that word is a chevron now, so this
+     is not the same object arriving, it is a name appearing once you are
+     somewhere — which is what the fade is for. */
+  top: calc(22px + var(--safe-top) + 29px);
+  animation: hn-say-in 0.22s ease both;
   transform: translate(-50%, -50%);
   pointer-events: none;
   font-family: var(--font-label);
   font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase;
-  /* The travelling word's colour, not the address book title's. These two
-     are the same word on the same frame at the moment of the handover, and a
-     step of brightness across that frame is the join showing. */
+  /* The quiet end of the ink, like the toggle at the other end of the row. */
   color: var(--ink-faint);
   line-height: 1;
   white-space: nowrap;
@@ -2821,31 +2820,25 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   }
   .hn-down:hover { color: var(--ink-soft); }
   .hn-down:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 3px; border-radius: 6px; }
-  .hn-down-say {
-    font-family: var(--font-label);
-    font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase;
-    line-height: 1;
+  /* ── The chevron, larger, and breathing, 2026-09-20 ──────────────────
+     Miyel: "those down carets on feed and journal can just be larger and bob
+     up and down to show there's more vs having more text." `.hn-down-say` is
+     gone with the words. Eighteen rather than eleven, and four pixels of
+     travel on a slow loop: a mark that moves says there is more that way in a
+     language a word has to spell out, and it was the third line of small caps
+     on a screen that is mostly type. */
+  .hn-down > svg { animation: hn-bob 1.9s ease-in-out infinite; }
+  @keyframes hn-bob {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(4px); }
   }
-  /* ── The book's way down crosses the bar, 2026-09-20 ──────────────────
-     Over it, not under it. The bar has a ground once a pane has scrolled, so
-     a word climbing into it used to be eaten from the top and then reappear,
-     already in the middle, as a second word — "a split second where it goes
-     past the hairline and disappears until it hits the middle". Drawn above
-     the bar it simply keeps climbing until it arrives, and the swap on
-     arrival is invisible because it lands exactly where the bar's word sits.
-
-     The book's alone. The beacon has a way down too, at the foot of a floor
-     that is somebody's cover art, and a chevron riding over the header there
-     is the thing carets were taken off pages to avoid. */
-  .hn-floor--book .hn-down { position: relative; z-index: 96; }
-  /* The chevron goes before the word lands: it points at a floor you are
-     already arriving at, and it has no business being drawn on a header.
-     The number comes from the scroll listener in HomeNav. */
-  .hn-floor--book .hn-down > svg { opacity: var(--hn-down-go, 1); }
-  /* Only the word goes: the button keeps its shape, its place and its tap —
-     a hidden child does not take a parent's hit area — so Feed is still a way
-     down while the bar is the thing drawing the word. */
-  .hn-down--gone .hn-down-say { visibility: hidden; }
+  @media (prefers-reduced-motion: reduce) {
+    .hn-down > svg { animation: none; }
+  }
+  /* The book's way down was drawn over the bar for an hour, so the word
+     climbing into the header was not eaten on the way in. There is no word on
+     it now and nothing to carry over, so it goes under the bar like
+     everything else on that floor. */
   .hn-floor--feed { padding: 0 24px; }
   /* ── The snap stops a bar's-worth short, 2026-09-19 ───────────────────
      The first cover has to clear the mark when this floor is snapped to the
