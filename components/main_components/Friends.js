@@ -38,7 +38,7 @@
 
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
-import { ArrowsDownUp, BookOpen, Camera, MagnifyingGlass, PaperPlaneTilt, Plus, User, X } from '@phosphor-icons/react';
+import { BookOpen, Camera, MagnifyingGlass, PaperPlaneTilt, Plus, Shuffle, User, X } from '@phosphor-icons/react';
 import CodeScanner from './CodeScanner';
 import SendSheet from './SendSheet';
 import { carrySender, journalUrl, tidyJournal } from '../../library/return_address';
@@ -608,14 +608,19 @@ export default function Friends({ shelf = false, onCount = null }) {
                       Journal
                     </a>
                     <Link className="fr-door" href={`/dashboard/people/${mine.id}`}>
-                      {/* NAME: the compare glyph is the one the mock-up
-                          left hand-drawn — two arrows side by side — and the
-                          README does not say which Phosphor one it stands
-                          for. This is the nearest single glyph that reads as
-                          two things measured against each other, and it is
-                          Miyel's to overrule. Not ArrowsLeftRight, which this
-                          site already uses for turning the spine. */}
-                      <ArrowsDownUp size={22} weight="regular" aria-hidden="true" />
+                      {/* Shuffle, settled 2026-09-20 (Miyel). It was
+                          ArrowsDownUp for a day — my stand-in for the two
+                          arrows her mock-up left hand-drawn — and two arrows
+                          running past each other is a sort order, which is
+                          the one thing this door is not.
+
+                          Shuffle is two paths that cross and come out the
+                          other side, which is what comparing two people's
+                          shelves looks like: the same records, taken in a
+                          different order, by somebody else. Still not
+                          ArrowsLeftRight — this site already uses that for
+                          turning the spine. */}
+                      <Shuffle size={22} weight="regular" aria-hidden="true" />
                       Compare
                     </Link>
                     <button type="button" className="fr-door" onClick={() => setSendingTo(who)}>

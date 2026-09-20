@@ -3062,10 +3062,16 @@ journal, and it was still wearing the cold version's clothes.
       than only here: one control answering one question on three surfaces,
       and a switch that is two sizes is two switches.
 
-**Names still open, and shipped as placeholders:** the file `Friends.js`, the
-branch `friends-pane`, and the Compare glyph (Phosphor `ArrowsDownUp` —
-deliberately not `ArrowsLeftRight`, which this site already uses for turning
-the spine). Flagged in the code where each one lives.
+**Names still open, and shipped as placeholders:** the file `Friends.js` and
+the branch `friends-pane`. Flagged in the code where each one lives.
+
+**The Compare glyph is settled: Phosphor `Shuffle`** (Miyel, 2026-09-20). It
+was `ArrowsDownUp` for a day — my stand-in for the two arrows her mock-up left
+hand-drawn — and two arrows running past each other is a sort order, which is
+the one thing that door is not. Shuffle is two paths that cross and come out
+the other side, which is what comparing two shelves looks like: the same
+records, taken in a different order, by somebody else. Still not
+`ArrowsLeftRight`; this site uses that for turning the spine.
 
 **Not built, and deliberately: pinning.** Miyel, 2026-09-19: "let's not add
 pinning friends yet, mostly just beta testers, we don't need it yet." The
