@@ -187,7 +187,7 @@
      becomes the record you chose once the screen is covered. Miyel, on why
      two days of choreography here were wasted: "you don't see the
      transition." See BEHIND_THE_SHEET_MS in HomeNav.js. */
-  animation-duration: 620ms;
+  animation-duration: var(--lay-rise, 620ms);
 }
 @keyframes layRiseTall {
   from { transform: translateY(100dvh); }
@@ -242,7 +242,7 @@
    on a sheet that scrolls — see the note over .lay--over-journal — and this
    sheet does not scroll; the entry has a scroller of its own. */
 .lay--rises.lay--over-journal .lay-header {
-  animation: layHold 620ms cubic-bezier(0.22, 0.61, 0.36, 1);
+  animation: layHold var(--lay-rise, 620ms) cubic-bezier(0.22, 0.61, 0.36, 1);
 }
 @keyframes layHold {
   from { transform: translateY(-100dvh); opacity: 0; }

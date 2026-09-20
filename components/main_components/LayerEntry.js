@@ -145,7 +145,7 @@ export function useBeforeLeaving(fn) {
 // On a phone `over` changes nothing: the stylesheet reads it above 769px only
 // (.lay--over-* in entry.css); this file does the leaving and measures the
 // growth from the sheet's own corner.
-export default function LayerEntry({ children, label = 'Entry', scrolls = false, arrives = 'tile', over = null }) {
+export default function LayerEntry({ children, label = 'Entry', scrolls = false, arrives = 'tile', over = null, rise = 0 }) {
   const sheetRef = useRef(null);
   const [headerSlot] = useState(() => (typeof document === 'undefined' ? null : document.createElement('div')));
   useLayoutEffect(() => {
@@ -153,8 +153,15 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
     if (!sheet || !headerSlot) return undefined;
     headerSlot.setAttribute('class', 'lay-header');
     sheet.appendChild(headerSlot);
+    // How long the rise takes, when this sheet wants its own answer. Written
+    // here rather than as a React style prop because that attribute is
+    // already shared with the pull-down's transform and with two properties
+    // the keyboard writes, and a fourth owner of it is a fourth chance for
+    // one of them to wipe another. Set before paint, once, and the
+    // stylesheet's own number stands wherever nothing is written.
+    if (rise) sheet.style.setProperty('--lay-rise', `${rise}ms`);
     return () => headerSlot.remove();
-  }, [headerSlot]);
+  }, [headerSlot, rise]);
   const router = useRouter();
   const pathname = usePathname();
 
