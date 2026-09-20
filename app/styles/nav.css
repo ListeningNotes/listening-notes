@@ -1923,16 +1923,28 @@
    saying the same thing a second time. Quiet at rest and in ink while the
    comparison is open, which is the only state it has. */
 .fd-compare {
-  display: inline-flex; align-items: center; justify-content: center;
+  display: inline-flex; flex-direction: column; align-items: center; gap: 5px;
   margin-top: 16px; padding: 8px;
   border: 0; background: none; cursor: pointer;
   color: var(--ink-faint);
-  transition: color 0.18s, transform 0.28s cubic-bezier(0.22, 0.61, 0.36, 1);
+  transition: color 0.18s;
 }
 .fd-compare:hover { color: var(--ink-soft); }
-/* Open, it is in ink and turned a little — the mark saying it is the thing
-   that is showing rather than the thing you press. */
-.fd-compare.fd-compare--open { color: var(--ink); transform: rotate(180deg); }
+.fd-compare svg { transition: transform 0.32s cubic-bezier(0.22, 0.61, 0.36, 1); }
+/* A quarter turn, so the arrows point down at the thing that has opened
+   (Miyel, 2026-09-20: "should point down towards horizons not left"). Half a
+   turn only sent them the other way along the same line, which says nothing.
+   The glyph turns; the word under it does not, because it is leaving. */
+.fd-compare.fd-compare--open { color: var(--ink); }
+.fd-compare.fd-compare--open svg { transform: rotate(90deg); }
+.fd-compare-say {
+  font-family: var(--font-label);
+  font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase;
+  line-height: 1;
+  transition: opacity 0.2s ease, max-height 0.28s ease;
+  max-height: 12px; opacity: 1; overflow: hidden;
+}
+.fd-compare--open .fd-compare-say { opacity: 0; max-height: 0; }
 .fd-compare:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 2px; border-radius: 8px; }
 /* ── The compare, opened ───────────────────────────────────────────────────
    Theirs, the distance, yours, your stars, and the way to both entries. No
@@ -1945,12 +1957,41 @@
 .fd-cmp-bars {
   display: flex; align-items: flex-end; gap: 3px;
   height: 64px; width: 100%;
+  /* Headroom, so a ♥ over a full-height bar is drawn rather than clipped —
+     the same 13px HorizonChart keeps for the same reason. */
+  padding-top: 13px; box-sizing: content-box;
 }
-.fd-cmp-bars span { flex: 1 1 0; border-radius: 3px 3px 1px 1px; min-height: 4px; }
+/* ── The bars rise ────────────────────────────────────────────────────────
+   Miyel: "can the horizons rise not just appear." They grow out of their own
+   baseline, left to right, a frame apart each — which is the shape of a
+   listen arriving in the order it was listened to. Height is the animated
+   property and the height it is going to is on the element, because every bar
+   goes somewhere different and a stylesheet cannot hold a number only known
+   at the moment it is drawn. */
+.fd-cmp-bar {
+  flex: 1 1 0; min-height: 4px;
+  position: relative;
+  border-radius: 3px 3px 1px 1px;
+  height: var(--tall);
+  animation: fd-rise 0.44s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+  animation-delay: var(--wait, 0ms);
+}
+@keyframes fd-rise { from { height: 4px; } to { height: var(--tall); } }
+/* A hearted track carries its ♥ above the bar, which is where the horizon
+   draws one everywhere else on this site (HorizonChart). Above, not on: a
+   mark inside the bar is a mark inside somebody's rating. */
+.fd-cmp-bar--loved svg {
+  position: absolute; left: 50%; bottom: 100%;
+  transform: translate(-50%, -2px);
+  color: var(--fav);
+}
+@media (prefers-reduced-motion: reduce) {
+  .fd-cmp-bar { animation: none; }
+}
 /* Theirs is the listen you came to look at, so it is the lit one. Yours is
    the line you are measuring it against and sits back. */
-.fd-cmp-bars--theirs span { background: var(--ink); opacity: 0.92; }
-.fd-cmp-bars--yours span { background: var(--ink-faint); opacity: 0.85; }
+.fd-cmp-bars--theirs .fd-cmp-bar { background: var(--ink); opacity: 0.92; }
+.fd-cmp-bars--yours .fd-cmp-bar { background: var(--ink-faint); opacity: 0.85; }
 /* The distance, on the rule between the two listens: the shape the beacon's
    slot already uses, a hairline with one thing sitting on it. */
 .fd-apart {
