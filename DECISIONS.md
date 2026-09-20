@@ -635,12 +635,14 @@ pane sends people; the About pane carries a short paragraph. `/get` is not
 linked from the About pane, because it does not exist on a copy that has not
 written one.
 
-**The bar is a flush line with the small mark in it, 2026-09-06.** Once a
-pane has scrolled its crown away the row becomes a bar: page colour, one
-hairline, the small mark centred, which is also the way back up. Every other
-page's nav row has the same edge. A fade was a smear the covers dissolved
-into. The crown and the small mark are never on screen together, so it is
-still one mark; the wall starts under the bar so its first row is whole.
+**The bar is page colour and nothing else, 2026-09-06 / 2026-09-20.** Once a
+pane has scrolled its crown away the row becomes a bar: page colour, flush,
+what the pane has to put in it. A fade was a smear the covers dissolved into
+and a hairline replaced it for five days; the hairline came off too, because
+what is in the row — a name, a mark, a control — is what says header. Every
+other page's nav row is the same. The crown and the small mark are never on
+screen together, so it is still one mark; the wall starts under the bar so
+its first row is whole.
 
 **Each caret carries a mark for what is that way** — a card left, a book down,
 a cog right for the owner and an `i` for a visitor. The caret is the verb and
