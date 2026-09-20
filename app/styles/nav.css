@@ -2696,6 +2696,21 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
      caught on a slow drag. The picker is the exception because floor one
      *is* the picker while it is open, so there is no crown to arrive. */
   .hn--morph:not(.hn--choosing) .hn-bar-mark { display: none; }
+  /* ── And only over the beacon, 2026-09-20 ────────────────────────────
+     Miyel: "remove LN logo from address book. this only lives on beacon
+     and journal." The book's header is its own — ADDRESS BOOK and the count,
+     handed to RECENT LISTENS at the feed — and both of those are drawn on
+     the middle of the row, which is where the mark stands. Two things in one
+     slot is what she was looking at.
+
+     The rule underneath it is that the mark belongs to the journal: the
+     beacon here, an entry on a standalone page (SiteNav.js), and nowhere
+     else. The rooms behind those get their own name in the header instead,
+     which says more than a logo saying this is still the same website.
+
+     A desk is untouched, below: it has no band and one page at a time, and
+     the bar's mark is the only one it has. */
+  .hn:not([data-pane="1"]) .hn-bar-mark { display: none; }
   /* Three classes deep on purpose: idcard.css has `.ab-card .idc-mark` and
      is loaded after this sheet, so anything of equal weight written here
      loses to it whatever the media query says. */

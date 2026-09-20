@@ -1137,6 +1137,17 @@ export default function HomeNav() {
   // this version does not hand its anchor back through one — measured, the ref
   // read null on every render while the element was plainly on the page — and
   // there is exactly one crown, inside the pane this effect already has.
+  //
+  // ── Why this is state and not a class the effect writes, 2026-09-20 ──────
+  // It was `classList.add('hn--morph')` for a day, and that is a class on an
+  // element React renders the className of. Every re-render rewrites the whole
+  // class attribute, so the first time any *other* flag on the cross moved —
+  // scrolling the book down to the feed, opening the picker — React wrote its
+  // own list back over this one and the flag was gone. The small mark, which
+  // that flag is the only thing hiding, came back: a logo standing on top of
+  // the address book's own header. Anything the cross wears goes in the list
+  // below, where React can see it.
+  const [morphing, setMorphing] = useState(false);
   useEffect(() => {
     const pane = paneRefs[HOME]?.current;
     const mark = pane?.querySelector('.hn-crown-mark');
@@ -1162,7 +1173,11 @@ export default function HomeNav() {
     // Clamped at the line, so a long journey cannot carry it past the place
     // it is going. It docks about half way through and spends the rest of the
     // distance settling to the small size.
-    const JOURNEY = 180;
+    //
+    // 70 to 180 to 250, each time on her asking to see it slower. 250 is
+    // most of a phone's screen: the mark is still shrinking when the record
+    // it stood over has gone.
+    const JOURNEY = 250;
 
     // Measured rather than written down, because every number in it is a
     // clamp on the screen's height: where the crown stands, how tall it is,
@@ -1172,7 +1187,7 @@ export default function HomeNav() {
       if (!window.matchMedia('(max-width: 768px)').matches) {
         mark.style.transform = '';
         base = null;
-        pane.closest('.hn')?.classList.remove('hn--morph');
+        setMorphing(false);
         return;
       }
       mark.style.transform = 'none';
@@ -1185,13 +1200,12 @@ export default function HomeNav() {
       // running on a given screen, the answer must not be a header with no
       // mark in it. So the crown says out loud that it is handling this, and
       // the stylesheet only hides the small one while it is.
-      const cross = pane.closest('.hn');
       if (!m.height) {
         base = null;
-        cross?.classList.remove('hn--morph');
+        setMorphing(false);
         return;
       }
-      cross?.classList.add('hn--morph');
+      setMorphing(true);
       // The small mark is 28px on the middle of the bar's 58px row, which is
       // 29 up from the band's own bottom edge. Same sum .hn-bar-mark uses.
       const small = 28;
@@ -1237,7 +1251,7 @@ export default function HomeNav() {
       window.removeEventListener('resize', measure);
       watch.disconnect();
       mark.style.transform = '';
-      pane.closest('.hn')?.classList.remove('hn--morph');
+      setMorphing(false);
     };
   }, [paneRefs, authed]);
 
@@ -2200,6 +2214,9 @@ export default function HomeNav() {
            bar can be handed from the book's + to the feed's toggle without
            either of them knowing about the other. See .hn-bar-add. */
         + (atFeed ? ' hn--at-feed' : '')
+        /* The crown is travelling into the bar on this screen, so the bar's
+           own small mark stays out of its way. See the morph effect. */
+        + (morphing ? ' hn--morph' : '')
       }
       data-pane={pane}
     >
