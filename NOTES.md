@@ -2872,6 +2872,16 @@ else's, which is an argument for a version on that URL and is not built.
       `pointer-events: none`: the strip that takes you back to the top fills
       this row, and a word on the middle of it would be a dead spot in the one
       place a thumb lands.
+      **And then the word at the foot went, 2026-09-20 (evening).** "Those
+      down carets on feed and journal can just be larger and bob up and down
+      to show there's more vs having more text." So there is nothing to travel
+      from: the name is not climbing into the header any more, it is appearing
+      once you are on the feed, and it fades in for that reason. The whole
+      carry — `CARRY_FROM`, the `--hn-say-y` the bar followed, the chevron's
+      fade, the z-index that let it cross the bar — came out with it. What
+      follows is why it was built, which is worth keeping: the same handover
+      will be wanted again the next time two of anything have to look like
+      one.
       **One word, not two and a swap.** The first version handed over at the
       line and it showed: "there's a split second where it goes past the
       hairline and disappears until it hits the middle." The bar has an opaque
@@ -3031,6 +3041,15 @@ else's, which is an argument for a version on that URL and is not built.
       Share and Edit behind the ···, last, because it is a room rather than
       something you do to the page. The version line and Report stay at the
       foot.
+
+- [x] **Both ways down are a bigger chevron that breathes.** "Those down
+      carets on feed and journal can just be larger and bob up and down to
+      show there's more vs having more text." 18px rather than 11, four pixels
+      of travel on a 1.9s loop, and the word over each of them gone — it was
+      the third line of small caps at the foot of a screen that is mostly
+      type, next to a mark that already means *down*. The floor's name stays
+      on the button's label, and the feed's still arrives in the header once
+      you are on it, which is where a name belongs.
 
 - [x] **The way into a listen is a circle on the rule.** "Make start a listen
       feel intentional — maybe it can be a circle between the hairlines that
