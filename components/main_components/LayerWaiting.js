@@ -32,7 +32,7 @@
 // Chip are cheap and this is the only way the two can be relied on to match.
 
 'use client';
-import { useLayoutEffect } from 'react';
+import { useLayoutEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Fingerprint, Heart, SketchLogo } from '@phosphor-icons/react';
 import { handedOver, stillReadingOn } from '../../library/handoff';
@@ -65,11 +65,14 @@ export default function LayerWaiting({ slug, authed = false }) {
   // So when the swipe came from the notes, the wait is the header the record
   // is about to draw and nothing else. Asked without spending the answer —
   // this draws first and the record is the one that needs it.
-  const onward = stillReadingOn();
+  // Looked at once and without spending it — the record is the one that
+  // needs the answer. The mark's strength is said at the same moment, so the
+  // row this draws is already wearing it on its first frame.
+  const [onward] = useState(stillReadingOn);
   useLayoutEffect(() => {
     if (!headerSlot) return;
     headerSlot.setAttribute('class', 'lay-header ln-entry'
-      + (onward ? ' ln-entry--scrolled ln-entry--crowning ln-entry--crowned' : ''));
+      + (onward ? ' ln-entry--scrolled ln-entry--crowning' : ''));
   }, [headerSlot, onward]);
   const header = headerSlot
     ? createPortal(
@@ -117,7 +120,7 @@ export default function LayerWaiting({ slug, authed = false }) {
     return (<>
       {headerSlot
         ? createPortal(
-            <SiteNav mark={crown} tools={authed ? <KeeperTools onEdit={() => {}} slug={slug} /> : null} />,
+            <SiteNav mark={crown} lede={false} tools={authed ? <KeeperTools onEdit={() => {}} slug={slug} /> : null} />,
             headerSlot,
           )
         : null}

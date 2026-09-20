@@ -35,7 +35,7 @@ import MiniAddressBook from '../../../components/main_components/MiniAddressBook
 import PrintBar from '../../../components/main_components/Slug_Page/PrintBar';
 import HorizonChart from '../../../components/main_components/HorizonChart';
 import MiniCard from '../../../components/main_components/Slug_Page/MiniCard';
-import { handedOver, readingOn, cameReadingOn } from '../../../library/handoff';
+import { handedOver, cameReadingOn } from '../../../library/handoff';
 import { tidyAddress, tidyJournal } from '../../../library/return_address';
 import { useBookplate } from '../../../components/main_components/Bookplate';
 import { useTheme } from '../../../components/main_components/Lightswitch';
@@ -722,6 +722,42 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   // Whether the header is standing in for the record — see the collapse
   // further down, which is what turns it on.
   const [crowning, setCrowning] = useState(false);
+  // ── Did this record arrive already reading, 2026-09-20 ──────────────────
+  // Asked once, in the first render, and never again. It was asked in the
+  // layout effect off the sheet's class, and that is a race: the class says
+  // `swiped` only once the layer itself has remounted for the new address,
+  // which on a real phone is a few hundred milliseconds after the record has
+  // drawn. For that window the record did not know it had arrived at the
+  // notes, so it stood its header down and the journal's mark came back at
+  // full strength over the card — Miyel, twice: "the mini LN loads over the
+  // mini card on swipe."
+  //
+  // Read here, the answer is true before the first frame and cannot change.
+  // LayerWaiting has already looked without spending it.
+  const [arrivesReading] = useState(cameReadingOn);
+  // ── The mark is not drawn at all until it could be right ────────────────
+  // Fading it was two evenings of the same bug wearing different clothes: a
+  // number on the document, a number on the element, a class on the slot —
+  // and every one of them had a window where the row had been drawn and the
+  // number had not been said yet, so the journal's mark stood at full
+  // strength over the record's own card.
+  //
+  // A record that arrives already reading does not draw the mark at all. Once
+  // its collapse has measured itself, there is a true answer for every frame
+  // and the fade takes over. Nothing to race.
+  const [ledeDrawn, setLedeDrawn] = useState(!arrivesReading);
+  // The mark's strength, said before this record's first frame and said
+  // either way. Every later moment is a race with something: the record that
+  // is leaving, and the collapse, which cannot speak until it has measured
+  // and on a sheet still arriving has not. Between those two the row had the
+  // journal's mark at full strength over the record's own card.
+  //
+  // In a layout effect and not in the initializer above: a state initializer
+  // is called twice in development, so anything it touches outside itself is
+  // done twice with two different answers.
+  useLayoutEffect(() => {
+    document.documentElement.style.setProperty('--ln-lede', arrivesReading ? '0' : '1');
+  }, [arrivesReading, entry.slug]);
   useEffect(() => {
     if (!headerSlot) return;
     headerSlot.setAttribute('class', 'lay-header ln-entry'
@@ -892,13 +928,35 @@ export default function FullPostPage({ entry, references = [], authed = false, l
     if (printing || edit.editing) { setCrowning(false); return undefined; }
     const screens = document.querySelector('.ln-screens');
     const art = document.querySelector('.ln-screen-one-art');
-    const seat = document.querySelector('.ln-crown-art');
-    const hole = document.querySelector('.ln-crown-hole');
-    const said = document.querySelector('.ln-crown-said');
-    const marks = document.querySelector('.ln-crown-marks');
     const row = document.querySelector('.sitenav-row');
-    const lede = document.querySelector('.sitenav-logo');
     const one = document.querySelector('.ln-screen-one');
+    // ── Found again, never held, 2026-09-20 ──────────────────────────────
+    // The header is a portal into a slot the layer owns, and on a swipe the
+    // wait state's row is in that slot first and the record's replaces it.
+    // Anything this effect grabbed on the way in is then a node that is no
+    // longer on the page, and writing to it writes to nothing — which is why
+    // the journal's mark was still at full strength over the record's own
+    // card (Miyel, twice: "the mini LN loads over the mini card on swipe").
+    //
+    // So the row's pieces are looked up whenever there is something to say
+    // about them, and the one thing that must be true before the first frame
+    // is said to the document, which nothing replaces.
+    let seat = null;
+    let hole = null;
+    let said = null;
+    let marks = null;
+    const parts = () => {
+      seat = document.querySelector('.ln-crown-art');
+      hole = document.querySelector('.ln-crown-hole');
+      said = document.querySelector('.ln-crown-said');
+      marks = document.querySelector('.ln-crown-marks');
+      return Boolean(seat && hole);
+    };
+    // The mark's own strength, said on the root: .ln-entry .sitenav-logo
+    // reads it, so whichever row is in the slot is already wearing the right
+    // answer the moment it is drawn.
+    const lede = amount => document.documentElement.style.setProperty('--ln-lede', amount);
+    parts();
     if (!screens || !art || !seat || !hole || !row || !one) return undefined;
 
     // ── Nothing until the sheet has landed, 2026-09-20 ────────────────────
@@ -986,10 +1044,13 @@ export default function FullPostPage({ entry, references = [], authed = false, l
     };
     const measure = () => {
       settle();
+      if (!parts()) return;
       if (!window.matchMedia('(max-width: 768px)').matches) {
-        seat.style.transform = '';
-        seat.style.removeProperty('--seat');
-        seat.style.borderRadius = '';
+        if (seat) {
+          seat.style.transform = '';
+          seat.style.removeProperty('--seat');
+          seat.style.borderRadius = '';
+        }
         base = null;
         setCrowning(false);
         return;
@@ -1080,9 +1141,9 @@ export default function FullPostPage({ entry, references = [], authed = false, l
       // And the journal's own mark gives the row up as they arrive. Never
       // both: this is the publication's name over a page of it, and the page
       // only takes the middle once it is small enough to be a header.
-      if (lede) lede.style.opacity = (1 - shows).toFixed(3);
-      // Where the next record should open, if you thumb sideways from here.
-      readingOn(u >= 1);
+      lede((1 - shows).toFixed(3));
+      // And now it can be drawn: there is a number for it.
+      setLedeDrawn(true);
     };
 
     // ── Reading on lands where you were, 2026-09-20 ───────────────────────
@@ -1094,7 +1155,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
     //
     // Before the first measure, so the numbers it takes are the ones this
     // record is actually going to be drawn with.
-    if (sheet && sheet.classList.contains('lay--swiped') && cameReadingOn()) {
+    if (arrivesReading) {
       want = Math.max(0, one.getBoundingClientRect().bottom - row.getBoundingClientRect().bottom);
       settle();
       // And it arrives *as* the header, so the turn has nothing to stand the
@@ -1103,6 +1164,9 @@ export default function FullPostPage({ entry, references = [], authed = false, l
       // waited, the journal's mark had never been told to give the row up:
       // Miyel, "the mini LN loads over the mini card on swipe."
       done = true;
+      // Said before anything is drawn, because the row that will read it may
+      // not be the row that is in the slot right now.
+      lede('0');
     }
 
     measure();
@@ -1138,15 +1202,18 @@ export default function FullPostPage({ entry, references = [], authed = false, l
       narrow.removeEventListener('change', measure);
       window.removeEventListener('resize', measure);
       watch.disconnect();
-      seat.style.transform = '';
-      seat.style.removeProperty('--seat');
-      seat.style.borderRadius = '';
+      if (seat) {
+        seat.style.transform = '';
+        seat.style.removeProperty('--seat');
+        seat.style.borderRadius = '';
+      }
       if (said) said.style.opacity = '';
       if (marks) marks.style.opacity = '';
-      if (lede) lede.style.opacity = '';
+      // Not taken away. The record arriving sets it for itself, and a
+      // leaving one that cleared it was clearing the new one's answer.
       setCrowning(false);
     };
-  }, [printing, edit.editing, coverSrc, entry.slug]);
+  }, [printing, edit.editing, coverSrc, entry.slug, arrivesReading]);
 
   // What the header carries on this page. A press goes back to the record,
   // which is the job MiniCard used to do at the head of the notes — and the
@@ -1223,8 +1290,8 @@ export default function FullPostPage({ entry, references = [], authed = false, l
           beneath them changes. The slot wears this page's classes so the
           band behind the row keeps working — see the effect below. */}
       {headerSlot
-        ? createPortal(<SiteNav tools={keeperTools} mark={headerMark} />, headerSlot)
-        : <SiteNav tools={keeperTools} mark={headerMark} />}
+        ? createPortal(<SiteNav tools={keeperTools} mark={headerMark} lede={ledeDrawn} />, headerSlot)
+        : <SiteNav tools={keeperTools} mark={headerMark} lede={ledeDrawn} />}
 
       {/* A correction is open, and the page is long. The controls that started
           it are at the top of the entry, which is a screen and a half away by

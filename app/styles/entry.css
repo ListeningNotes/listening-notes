@@ -1219,6 +1219,10 @@ a.ln-sent-who:hover { text-decoration: underline; text-underline-offset: 3px; }
     position: absolute;
     left: 50%;
     transform: translateX(-50%);
+    /* Written on the document by the collapse, not on this element: the row
+       this sits in is swapped out from under it on a swipe, and a number
+       written on the old one is written on nothing. */
+    opacity: var(--ln-lede, 1);
   }
   /* Already collapsed before anything was drawn — the wait state, when the
      swipe came from the notes. The entry writes this corner's opacity from

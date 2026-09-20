@@ -53,7 +53,7 @@ import { useBookplate } from './Bookplate';
 // a flag because this row should not know what a keeper is: it holds a slot
 // open and the page decides what belongs in it. On every other page the slot
 // is an empty grid column, which is the thing holding the mark in the middle.
-export default function SiteNav({ tools = null, mark = null }) {
+export default function SiteNav({ tools = null, mark = null, lede = true }) {
   const { cover_name } = useBookplate();
   const { isLive } = useListeningBeacon();
   const here = usePathname();
@@ -100,7 +100,7 @@ export default function SiteNav({ tools = null, mark = null }) {
           the mark on the middle of the row. */}
       <div className="sitenav-side sitenav-side--left" aria-hidden="true" />
 
-      {onAnEntry && (
+      {onAnEntry && lede && (
       <Link href="/" className="sitenav-logo" aria-label={cover_name}>
         <svg viewBox="76 96 241 140" className="sitenav-logo-mark" xmlns="http://www.w3.org/2000/svg">
           <path

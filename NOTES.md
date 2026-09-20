@@ -1549,6 +1549,26 @@ Project → Settings → Environment Variables.
 
 ## Gotchas
 
+**A thing that must not be seen should not be drawn, 2026-09-20.** The
+journal's mark over an album was faded out by the collapse, and it kept
+appearing at full strength over the record's own card on a swipe. Four
+attempts, all the same shape: a number on the element (the header is a portal
+and the node had been replaced), a number on the document (the leaving record
+cleared it), a class on the slot (the arriving record overwrote it), and the
+number said in a state initializer (**React calls those twice in development**,
+so the side effect ran twice with two different answers). Every one had a
+window where the row had been drawn and the number had not been said. It went
+away the moment the mark stopped being rendered at all until there was a true
+answer for it. **If a frame of it is wrong, do not style it — do not draw
+it.**
+
+**One-shot handoff flags cannot be read twice, 2026-09-20.** `cameReadingOn`
+spent itself on read, and a state initializer's second call in development got
+`false`. The flags that survive this are the stamped ones — `cameBack` has
+always been a timestamp. Also: `arrivingBack()` is called by the history
+listener, so **a turn to a neighbour runs it too** — anything cleared there is
+cleared on every page turn, not just on a close.
+
 **On a phone the cross's panes paint under the bar, 2026-09-20.** Whatever
 `z-index` says. The crown carried `z-index: 96` against the bar's 95 and it
 works in a desktop browser; on a real iPhone the pane is composited under the

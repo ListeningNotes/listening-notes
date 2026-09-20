@@ -51,7 +51,7 @@
 import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { CaretLeft, CaretRight } from '@phosphor-icons/react';
-import { tileBoxOf, neighboursOf, handOffNeighbour, arrivingBySwipe, tookASwipe, growBoxOf, arrivingBack, cameBack, cameAlone, carryReading } from '../../library/handoff';
+import { tileBoxOf, neighboursOf, handOffNeighbour, arrivingBySwipe, tookASwipe, growBoxOf, arrivingBack, cameBack, cameAlone, carryReading, endReading } from '../../library/handoff';
 
 // How long the sheet takes to grow to the screen. Unhurried, slowing as it
 // lands — the same curve the slide used.
@@ -345,6 +345,8 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
     leaving.current = true;
     // Whatever this closes onto is being returned to, not arrived at.
     arrivingBack();
+    // And the read ends here. Closing is not turning a page.
+    endReading();
     window.clearTimeout(pendingTurn.current);
     pendingTurn.current = null;
     // If going back did not remove this layer — nowhere to go back to, which
