@@ -941,23 +941,17 @@ export default function FullPostPage({ entry, references = [], authed = false, l
     // So the row's pieces are looked up whenever there is something to say
     // about them, and the one thing that must be true before the first frame
     // is said to the document, which nothing replaces.
-    let seat = null;
-    let hole = null;
-    let said = null;
-    let marks = null;
+    let crown = null;
     const parts = () => {
-      seat = document.querySelector('.ln-crown-art');
-      hole = document.querySelector('.ln-crown-hole');
-      said = document.querySelector('.ln-crown-said');
-      marks = document.querySelector('.ln-crown-marks');
-      return Boolean(seat && hole);
+      crown = document.querySelector('.ln-crown');
+      return Boolean(crown);
     };
     // The mark's own strength, said on the root: .ln-entry .sitenav-logo
     // reads it, so whichever row is in the slot is already wearing the right
     // answer the moment it is drawn.
     const lede = amount => document.documentElement.style.setProperty('--ln-lede', amount);
     parts();
-    if (!screens || !art || !seat || !hole || !row || !one) return undefined;
+    if (!screens || !art || !crown || !row || !one) return undefined;
 
     // ── Nothing until the sheet has landed, 2026-09-20 ────────────────────
     // An entry rises from the foot of the screen now, and its header is held
@@ -987,7 +981,8 @@ export default function FullPostPage({ entry, references = [], authed = false, l
 
     // How far the record takes to become the header. Not the whole album
     // screen — see the note beside `over` in measure().
-    const COLLAPSE = 320;
+    // How much of the album screen's last stretch the changeover takes.
+    const SWAP = 160;
     // Where this record has to start, when it starts at the notes. Kept
     // rather than set once: on the first frame the writing underneath may
     // not be laid out yet, and a scroller shorter than the number simply
@@ -1021,23 +1016,6 @@ export default function FullPostPage({ entry, references = [], authed = false, l
     //
     // Only while it is still the record. Once it is the header, the header
     // is where it belongs and holding still is what a header does.
-    //
-    // A turn says so in three different ways and none of them is a class on
-    // the sheet: a finger on it moves the content by an inline transform, a
-    // let-go settles it with a transition, and the record arriving runs
-    // layFrom. The transform covers the first two, so it is what is asked.
-    const content = sheet && sheet.querySelector('.lay-content');
-    const shifted = () => {
-      if (!content) return false;
-      const t = getComputedStyle(content).transform;
-      if (!t || t === 'none') return false;
-      const x = Number(t.slice(t.indexOf('(') + 1).split(',')[4]);
-      return Number.isFinite(x) && Math.abs(x) > 0.5;
-    };
-    const turning = () => Boolean(sheet) && (
-      shifted()
-      || sheet.getAnimations({ subtree: true })
-        .some(a => a.playState === 'running' && String(a.animationName || '').startsWith('layFrom')));
     const middle = el => {
       const r = el.getBoundingClientRect();
       return { cx: r.left + r.width / 2, cy: r.top + r.height / 2, h: r.height };
@@ -1046,122 +1024,49 @@ export default function FullPostPage({ entry, references = [], authed = false, l
       settle();
       if (!parts()) return;
       if (!window.matchMedia('(max-width: 768px)').matches) {
-        if (seat) {
-          seat.style.transform = '';
-          seat.style.removeProperty('--seat');
-          seat.style.borderRadius = '';
-        }
         base = null;
         setCrowning(false);
         return;
       }
       if (landing()) { base = null; setCrowning(false); return; }
-      if (turning() && !done) { base = null; setCrowning(false); return; }
       const gone = screens.scrollTop;
-      const from = middle(art);
-      const land = middle(hole);
-      if (!from.h || !land.h) { base = null; setCrowning(false); return; }
+      if (!middle(art).h) { base = null; setCrowning(false); return; }
       setCrowning(true);
-      // ── Big, and scaled down, 2026-09-20 ──────────────────────────────
-      // Miyel: "the album art is all blurry and not legible." It was laid
-      // out at 28px and blown up ten times — a promoted layer is rastered
-      // at the size it is laid out at and then stretched, so the header was
-      // painting a 28px thumbnail across a third of the screen.
-      //
-      // So the seat is the *record's* size in the layout and is only ever
-      // scaled down. It is out of the row's flow, and .ln-crown-hole holds
-      // its place in it, so a 293px box up here costs the header nothing.
-      seat.style.setProperty('--seat', `${from.h.toFixed(1)}px`);
-      seat.style.transform = 'none';
-      const p = seat.getBoundingClientRect();
       base = {
-        big: from.h,
-        // In the coordinates the page has at rest: the art holds no fixed
-        // place on the screen, it is wherever the page put it.
-        from: { cx: from.cx, cy: from.cy + gone, h: from.h },
-        land,
-        // Where the seat's own box sits, which is what a transform is
-        // measured from.
-        seat: { x: p.left, y: p.top },
-        // Where the notes come to rest: screen one gone under the header.
-        // It is what the caret lands on, and what a swipe from one record's
-        // notes lands on in the next.
+        // Where the notes come to rest: the album screen gone under the
+        // header. It is what the caret lands on, what a swipe from one
+        // record's notes lands on in the next, and where the changeover
+        // finishes.
         ends: Math.max(1, one.getBoundingClientRect().bottom + gone - row.getBoundingClientRect().bottom),
-        // The header's own height, which is where its floor ends up.
-        floor: row.getBoundingClientRect().bottom,
       };
-      // ── And the collapse does not wait for them, 2026-09-20 ─────────────
-      // It ran the whole length of the album screen to begin with, which is
-      // most of a thumb's travel, and Miyel's read was "make the card to
-      // mini card much faster". So it has a distance of its own: the record
-      // is the header by the time the album has half gone, and what is left
-      // of that screen is screen on its way past.
-      //
-      // Clamped to the journey, so a record with almost nothing written
-      // about it — whose notes arrive sooner than that — still finishes on
-      // time rather than mid-shrink.
-      base.over = Math.min(base.ends, COLLAPSE);
       draw();
-      // ── Reading on lands where you were, 2026-09-20 ─────────────────────
-      // A thumb sideways is turning a page, not opening a book. If the record
-      // you left had already gone up into the header, this one arrives the
-      // same way: at its own notes, with its own cover already collapsed.
-      // Not the same scroll position — albums have different amounts written
-      // about them, and 700px into a short one is the end of it.
-      //
-      // Here rather than beside the first measure(), because the first one
-      // does not get as far as this: the slide from the side is a `lay`
-      // animation too, so the collapse stands down for it and the numbers
-      // only exist once it is over. Asked once per record either way, so a
-      // rise cannot inherit an answer a swipe left lying about.
     };
     const draw = () => {
       if (!base) return;
-      // ── The header swallows it, 2026-09-20 ────────────────────────────
-      // It drifted up at a fraction of the page's speed and shrank as it
-      // went, and Miyel's read after living with it was that it is "a little
-      // bit dramatic for the page": "could we try it where the header just
-      // relays it — it all disappears under until it's all the way up there.
-      // It doesn't even really need an animation. It swallows it up behind,
-      // and by the time everything gets to the top it just sticks and
-      // replaces the header."
+      // ── Nothing travels, 2026-09-20 ───────────────────────────────────
+      // Miyel: "the image needs to pass under the header, not animate up."
+      // Which is the rest of the sentence she started with — "it all
+      // disappears under until it's all the way up there, it doesn't even
+      // really need an animation, and by the time everything gets to the top
+      // it just sticks and replaces the header."
       //
-      // Which is the beacon's rule, so there is one rule for both now. The
-      // record holds its place at full size and the header has a floor that
-      // ends just under it, so the title, the score and the chips go *under*
-      // the header rather than past the cover. One clock, spent late: the
-      // collapse is the last COLLAPSE pixels of the album screen, and it
-      // finishes as that screen does.
+      // So the record does not move and does not shrink. The album screen
+      // goes up and under the header the way any page goes under any header,
+      // cover and all, and the header changes over as the last of it passes:
+      // the journal's name out, the record in. A relay, not a morph. There
+      // were two other answers before this one — a lag with a shrink, and a
+      // hold with a floor reaching past the cover — and both were, in her
+      // words, a little bit dramatic for the page.
+      //
+      // The whole of it is the last SWAP pixels of the album screen, which
+      // is also where it finishes. Eased, so it is a change and not a blink.
       const u = Math.min(1, Math.max(0,
-        (screens.scrollTop - (base.ends - base.over)) / base.over));
-      // Ease out, so it settles rather than stops.
-      const t = 1 - (1 - u) * (1 - u);
-      const walk = t;
-      const small = t;
+        (screens.scrollTop - (base.ends - SWAP)) / SWAP));
+      const shows = 1 - (1 - u) * (1 - u);
       done = u >= 1;
-      const h = base.from.h + (base.land.h - base.from.h) * small;
-      const k = h / base.big;
-      const cx = base.from.cx + (base.land.cx - base.from.cx) * walk;
-      const cy = base.from.cy + (base.land.cy - base.from.cy) * walk;
-      seat.style.transform =
-        `translate(${(cx - h / 2 - base.seat.x).toFixed(1)}px, ${(cy - h / 2 - base.seat.y).toFixed(1)}px) scale(${k.toFixed(4)})`;
-      // The corner travels too, and has to be asked for pre-scale: 16 on the
-      // record, 6 in the header, divided by whatever it is about to be
-      // multiplied by.
-      seat.style.borderRadius = `${((16 + (8 - 16) * small) / Math.max(k, 0.001)).toFixed(1)}px`;
-      // And the header's floor ends just under it, wherever it is and
-      // whatever size it is. At the end that sum is the row's own height, so
-      // the collapse of the one is the collapse of the other.
-      document.documentElement.style.setProperty(
-        '--ln-ground', `${Math.max(base.floor, cy + h / 2 + 16).toFixed(1)}px`);
-      // The name, the score and the marks arrive at the end, once there is a
-      // header to put them in.
-      const shows = Math.min(1, Math.max(0, (small - 0.88) / 0.12));
-      if (said) said.style.opacity = shows.toFixed(3);
-      if (marks) marks.style.opacity = shows.toFixed(3);
-      // And the journal's own mark gives the row up as they arrive. Never
-      // both: this is the publication's name over a page of it, and the page
-      // only takes the middle once it is small enough to be a header.
+      if (crown) crown.style.opacity = shows.toFixed(3);
+      // Never both. This is the publication's name over a page of it, and
+      // the page only takes the middle once the record itself has gone.
       lede((1 - shows).toFixed(3));
       // And now it can be drawn: there is a number for it.
       setLedeDrawn(true);
@@ -1223,13 +1128,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
       narrow.removeEventListener('change', measure);
       window.removeEventListener('resize', measure);
       watch.disconnect();
-      if (seat) {
-        seat.style.transform = '';
-        seat.style.removeProperty('--seat');
-        seat.style.borderRadius = '';
-      }
-      if (said) said.style.opacity = '';
-      if (marks) marks.style.opacity = '';
+      if (crown) crown.style.opacity = '';
       // Not taken away. The record arriving sets it for itself, and a
       // leaving one that cleared it was clearing the new one's answer.
       setCrowning(false);
@@ -1240,47 +1139,29 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   // which is the job MiniCard used to do at the head of the notes — and the
   // reason that card is not drawn on a phone any more.
   const headerMark = (
-    <div className="ln-crown">
-      {/* The record itself, and the same press it has on screen one: on this
-          site an album's art turns into its code, and hiding the art behind a
-          stand-in took that away (Miyel: "we lost QR code changing"). So the
-          stand-in *is* the art — the same CodeSlot with the same handlers —
-          and the page's copy is the one standing down.
-
-          Out of the row's flow, because its box is the size of the record
-          while the collapse is running. The hole beside it is what the row
-          lays out against. */}
-      {entry.album_art && canTurnCover ? (
-        <CodeSlot
-          key={'crown-' + entry.slug}
-          className="ln-crown-art"
-          picture={<img src={entry.album_art} alt={entry.album} />}
-          {...coverSlot}
-        />
-      ) : (
-        <span className="ln-crown-art">
-          {coverSrc ? <img src={coverSrc} alt="" /> : <span className="ln-crown-none">♪</span>}
-        </span>
-      )}
+    // The whole strip is the way back up to the record, which is the job the
+    // mini card at the head of the notes used to do. The cover is not the
+    // code up here: the record's own art is on the page and still is, and
+    // pressing that is where the address comes from.
+    <button
+      type="button"
+      className="ln-crown"
+      onClick={backToTheRecord}
+      aria-label={`Back to ${entry.album}`}
+    >
+      <span className="ln-crown-art" aria-hidden="true">
+        {coverSrc ? <img src={coverSrc} alt="" /> : <span className="ln-crown-none">♪</span>}
+      </span>
       <span className="ln-crown-hole" aria-hidden="true" />
-
-      {/* And the way back up to the record is the name, which is what the
-          mini card at the head of the notes used to be. */}
-      <button
-        type="button"
-        className="ln-crown-said"
-        onClick={backToTheRecord}
-        aria-label={`Back to ${entry.album}`}
-      >
+      <span className="ln-crown-said">
         <span className="ln-crown-album">{entry.album}</span>
         {entry.artist && <span className="ln-crown-artist">{entry.artist}</span>}
-      </button>
-
-      {/* The score and the marks come up with the name — Miyel, on losing
-          them with the mini card: "maybe those can travel too." No glow and
-          no burst: both belong to the score arriving on screen one, and a
-          firework going off beside somebody's reading on every scroll is
-          the same argument that took them off the mini card. */}
+      </span>
+      {/* The score and the marks come with it — Miyel, on losing them with
+          the mini card: "maybe those can travel too." No glow and no burst:
+          both belong to the score arriving on the album screen, and a
+          firework going off beside somebody's reading on every scroll is the
+          same argument that took them off the mini card. */}
       <span className="ln-crown-marks" aria-hidden="true">
         {displayRating > 0 && <StarRating rating={displayRating} size={11} glow={false} animate={false} />}
         <span className="ln-crown-flags">
@@ -1295,7 +1176,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
           )}
         </span>
       </span>
-    </div>
+    </button>
   );
 
   return (
