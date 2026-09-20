@@ -1963,18 +1963,21 @@
 }
 /* ── The bars rise ────────────────────────────────────────────────────────
    Miyel: "can the horizons rise not just appear." They grow out of their own
-   baseline, left to right, a frame apart each — which is the shape of a
-   listen arriving in the order it was listened to. Height is the animated
-   property and the height it is going to is on the element, because every bar
-   goes somewhere different and a stylesheet cannot hold a number only known
-   at the moment it is drawn. */
+   baseline. **All at once** — they were a frame apart, left to right, on the
+   argument that it was the shape of a listen arriving in the order it
+   happened, and she is right that it is not: a horizon is one thing you look
+   at whole, and dealing it out left to right makes it a list being read to
+   you. One listen, one movement (2026-09-20).
+
+   Height is the animated property and the height each bar is going to is on
+   the element, because every one goes somewhere different and a stylesheet
+   cannot hold a number only known at the moment it is drawn. */
 .fd-cmp-bar {
   flex: 1 1 0; min-height: 4px;
   position: relative;
   border-radius: 3px 3px 1px 1px;
   height: var(--tall);
-  animation: fd-rise 0.44s cubic-bezier(0.22, 0.61, 0.36, 1) both;
-  animation-delay: var(--wait, 0ms);
+  animation: fd-rise 0.46s cubic-bezier(0.22, 0.61, 0.36, 1) both;
 }
 @keyframes fd-rise { from { height: 4px; } to { height: var(--tall); } }
 /* A hearted track carries its ♥ above the bar, which is where the horizon

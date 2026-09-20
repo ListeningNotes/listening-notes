@@ -2777,8 +2777,11 @@ From Miyel's reference.
 - [x] **The word COMPARE sits under the mark until it is used.** It is there
       to teach what the mark is and has nothing to say once the thing it names
       is open.
-- [x] **The bars rise** out of their own baseline, left to right, a frame
-      apart each — the shape of a listen arriving in the order it happened.
+- [x] **The bars rise** out of their own baseline, **all at once.** They were
+      a frame apart, left to right, on the argument that it was the shape of a
+      listen arriving in the order it happened — and Miyel is right that it is
+      not: a horizon is one thing you look at whole, and dealing it out left to
+      right makes it a list being read to you. One listen, one movement.
 
 **What another copy sends, and when.** The hearts cross between journals, so
 a friend's horizon stays bare until their copy is updated — theirs simply
