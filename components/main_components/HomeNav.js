@@ -1170,13 +1170,26 @@ export default function HomeNav() {
     // which is the whole of what makes it read as a transformation rather
     // than a thing scrolling away.
     //
-    // Clamped at the line, so a long journey cannot carry it past the place
-    // it is going. It docks about half way through and spends the rest of the
-    // distance settling to the small size.
+    // ── And then it stopped being a distance at all, 2026-09-20 ────────────
+    // 70 to 180 to 250, each time on her asking to see it slower, and the
+    // same thing wrong underneath every one of them: whatever the number is,
+    // the mark is already small while the beacon is still on screen, and by
+    // the time the wall of covers arrives — the thing it is becoming a header
+    // *for* — it has been sitting up there for half a screen.
     //
-    // 70 to 180 to 250, each time on her asking to see it slower. 250 is
-    // most of a phone's screen: the mark is still shrinking when the record
-    // it stood over has gone.
+    // Miyel: "the big logo should stay where it's at. It'll stay large until
+    // you get to the actual first album in the grid, and then that's when it
+    // shrinks. Not on the way down."
+    //
+    // So it does not scroll away and it does not shrink on the way down. It
+    // holds its place on the screen at full size for the whole of the beacon,
+    // and the shrink is spent on the wall's arrival: it starts when the first
+    // row of covers is JOURNEY from the bar and finishes as that row lands
+    // under it. A handover between two things you can see at once, which is
+    // the same relay the book's header does with the feed's.
+    //
+    // JOURNEY is therefore how far ahead of the wall the shrink begins, not
+    // how much scrolling it takes.
     const JOURNEY = 250;
 
     // Measured rather than written down, because every number in it is a
@@ -1209,10 +1222,18 @@ export default function HomeNav() {
       // The small mark is 28px on the middle of the bar's 58px row, which is
       // 29 up from the band's own bottom edge. Same sum .hn-bar-mark uses.
       const small = 28;
+      // Where the wall has to be for the shrink to be over. `arrives` is the
+      // scroll position at which its first row is under the bar, measured
+      // rather than assumed: floor one is a different height on every phone,
+      // because the record, the ring and the caret are all laid out against
+      // the screen.
+      const wall = pane.querySelector('.hn-floor--wall');
+      const w = wall && wall.getBoundingClientRect();
       base = {
         top: m.top + pane.scrollTop,
         target: b.bottom - 29 - small / 2,
         scale: small / m.height,
+        arrives: w ? w.top + pane.scrollTop - b.bottom : null,
       };
       draw();
     };
@@ -1221,11 +1242,22 @@ export default function HomeNav() {
     const ease = t => 1 - (1 - t) * (1 - t);
     const draw = () => {
       if (!base) return;
-      const t = ease(Math.min(1, Math.max(0, pane.scrollTop / JOURNEY)));
-      if (t === 0) { mark.style.transform = 'none'; return; }
-      const natural = base.top - pane.scrollTop;
-      // Never above the line it is going to, however far the page has gone.
-      const at = Math.max(base.target, natural + (base.target - natural) * t);
+      const gone = pane.scrollTop;
+      // How far through the handover: nothing until the wall is JOURNEY away,
+      // all of it once the wall has landed. A pane with no wall in it falls
+      // back to the old rule, so the mark still has somewhere to go.
+      const raw = base.arrives == null
+        ? gone / JOURNEY
+        : 1 - (base.arrives - gone) / JOURNEY;
+      const t = ease(Math.min(1, Math.max(0, raw)));
+      // At the very top, and only there, the mark is the page's own again: a
+      // rubber band pulling down should take it along.
+      if (gone <= 0 && t === 0) { mark.style.transform = 'none'; return; }
+      // Where it would be if it were simply part of the page, and where it is
+      // instead: standing still at full size, then carried up to the line as
+      // the wall comes in. Never above the line it is going to.
+      const natural = base.top - gone;
+      const at = Math.max(base.target, base.top + (base.target - base.top) * t);
       const k = 1 + (base.scale - 1) * t;
       mark.style.transform = `translateY(${(at - natural).toFixed(1)}px) scale(${k.toFixed(4)})`;
     };
@@ -1245,6 +1277,12 @@ export default function HomeNav() {
     window.addEventListener('resize', measure);
     const watch = new ResizeObserver(measure);
     watch.observe(pane);
+    // And the bar, because half of what is measured is *its* box. It grows
+    // and shrinks on its own — a live beacon arriving in it, a name fading
+    // through — and a target measured against the old height parks the mark
+    // a dozen pixels above the line and leaves it there, which is what
+    // "doesn't stay in the header" was.
+    watch.observe(bar);
     return () => {
       pane.removeEventListener('scroll', draw);
       narrow.removeEventListener('change', measure);
