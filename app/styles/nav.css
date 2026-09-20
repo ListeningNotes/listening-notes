@@ -2735,23 +2735,42 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
      phone to 16 with !important, because Safari zooms the page in on
      anything smaller and does not reliably zoom back out. The face is what
      carries the row here, not the size. */
+  /* ── Or a pill, 2026-09-20 ────────────────────────────────────────────
+     "Can I see that search field as a small rounded search pill instead?"
+     So: the site's own field shape at the smallest it goes — a 999px corner,
+     a hairline, the panel ground — sized to the words rather than to the row,
+     and centred in the slot. The line it replaced is one revision back in
+     git if this is not it.
+
+     Narrower than the row on purpose. A field that fills the header is a
+     header that has become a form; one that sits in the middle of it with
+     air either side is a control standing in a header. */
   .hn-bar-add .fr-field {
-    padding: 0;
-    border: 0;
-    border-bottom: 1px solid var(--border);
-    border-radius: 0;
-    background: none;
+    /* Centred in the slot, which is the row less its two corner buttons —
+       so it sits a little left of where the name it replaces does. Dead
+       centre was tried and the camera ends up inside the pill: a 190px
+       phrase centred on a 375px screen reaches further right than the
+       corner does, and something has to give. The pill gives. */
+    justify-self: center;
+    width: min(250px, 100%);
+    padding: 0 14px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--panel);
     clip-path: none;
     transition: border-color 0.15s, opacity 0.22s ease;
   }
-  .hn-bar-add .fr-field:focus-within { border-bottom-color: var(--ink-faint); }
+  .hn-bar-add .fr-field:focus-within { border-color: var(--ink-faint); }
   /* The page's own face, not the caption's. It was DM Mono for an hour, on
      the reasoning that the row it sits in is a caption — and a caption face
      at sixteen pixels is a typewriter in a header (Miyel: "don't like that
      font"). What makes it belong to the row is that it is a line rather than
      a box; the letters are the site's. */
+  /* Five and not twelve: this is the small version of the shape, standing in
+     a 58px row with a corner button at either end. It comes out at 33px,
+     which is a pill in a header rather than a field in a form. */
   .hn-bar-add .fr-field input {
-    padding: 8px 0;
+    padding: 5px 0;
     text-align: center;
   }
   /* Away rather than clipped. The clip was how one field left while the
