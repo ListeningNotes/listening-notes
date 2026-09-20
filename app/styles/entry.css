@@ -1385,11 +1385,26 @@ a.ln-sent-who:hover { text-decoration: underline; text-underline-offset: 3px; }
      dissolve and nothing for a line to separate — the strip's own edge is
      the edge. The sitewide bar carries a hairline at 80px; here that line
      would cut through the strip, so it comes off. */
+  /* ── And it is as tall as the record standing in it, 2026-09-20 ─────
+     The collapse writes --ln-ground on the document: the foot of the cover
+     at whatever size it currently is, plus a little air. So while the record
+     is the record, this reaches past it and the album screen goes *under*
+     the header on its way up rather than sliding past a cover that floats
+     over it; and as the cover collapses, so does this, until the sum is the
+     row's own height again. The same floor the beacon's bar has.
+
+     Said on the document and not here, for the reason in the note over
+     --ln-lede: this row is a portal and the node it is drawn on is replaced
+     out from under anything holding a reference to it. */
   .ln-entry .sitenav-row::before {
-    height: var(--ln-band);
+    height: var(--ln-ground, var(--ln-band));
     background: var(--bg);
     border-bottom: none;
   }
+  /* Solid for the whole of the collapse. At the top of a record there is
+     nothing behind it and it is the page's own colour, so there is nothing
+     to see; what it buys is that the screen below has somewhere to go. */
+  .ln-entry--crowning .sitenav-row::before { opacity: 1; }
   /* SiteNav fades its own band in off window.scrollY, which never moves
      now that the container is what scrolls — so this page drives it. */
   .ln-entry--scrolled .sitenav-row::before { opacity: 1; }

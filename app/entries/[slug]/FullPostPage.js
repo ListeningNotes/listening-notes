@@ -1087,6 +1087,8 @@ export default function FullPostPage({ entry, references = [], authed = false, l
         // It is what the caret lands on, and what a swipe from one record's
         // notes lands on in the next.
         ends: Math.max(1, one.getBoundingClientRect().bottom + gone - row.getBoundingClientRect().bottom),
+        // The header's own height, which is where its floor ends up.
+        floor: row.getBoundingClientRect().bottom,
       };
       // ── And the collapse does not wait for them, 2026-09-20 ─────────────
       // It ran the whole length of the album screen to begin with, which is
@@ -1115,13 +1117,27 @@ export default function FullPostPage({ entry, references = [], authed = false, l
     };
     const draw = () => {
       if (!base) return;
-      const u = Math.min(1, Math.max(0, screens.scrollTop / base.over));
-      // Two clocks. The position runs straight, so the art drifts up the
-      // whole way rather than arriving early and parking; the size waits,
-      // so it is still the record when the notes come up and then goes
-      // quickly. Squared is the whole of "stays large, then shrinks".
-      const walk = u;
-      const small = u * u;
+      // ── The header swallows it, 2026-09-20 ────────────────────────────
+      // It drifted up at a fraction of the page's speed and shrank as it
+      // went, and Miyel's read after living with it was that it is "a little
+      // bit dramatic for the page": "could we try it where the header just
+      // relays it — it all disappears under until it's all the way up there.
+      // It doesn't even really need an animation. It swallows it up behind,
+      // and by the time everything gets to the top it just sticks and
+      // replaces the header."
+      //
+      // Which is the beacon's rule, so there is one rule for both now. The
+      // record holds its place at full size and the header has a floor that
+      // ends just under it, so the title, the score and the chips go *under*
+      // the header rather than past the cover. One clock, spent late: the
+      // collapse is the last COLLAPSE pixels of the album screen, and it
+      // finishes as that screen does.
+      const u = Math.min(1, Math.max(0,
+        (screens.scrollTop - (base.ends - base.over)) / base.over));
+      // Ease out, so it settles rather than stops.
+      const t = 1 - (1 - u) * (1 - u);
+      const walk = t;
+      const small = t;
       done = u >= 1;
       const h = base.from.h + (base.land.h - base.from.h) * small;
       const k = h / base.big;
@@ -1133,6 +1149,11 @@ export default function FullPostPage({ entry, references = [], authed = false, l
       // record, 6 in the header, divided by whatever it is about to be
       // multiplied by.
       seat.style.borderRadius = `${((16 + (8 - 16) * small) / Math.max(k, 0.001)).toFixed(1)}px`;
+      // And the header's floor ends just under it, wherever it is and
+      // whatever size it is. At the end that sum is the row's own height, so
+      // the collapse of the one is the collapse of the other.
+      document.documentElement.style.setProperty(
+        '--ln-ground', `${Math.max(base.floor, cy + h / 2 + 16).toFixed(1)}px`);
       // The name, the score and the marks arrive at the end, once there is a
       // header to put them in.
       const shows = Math.min(1, Math.max(0, (small - 0.88) / 0.12));
