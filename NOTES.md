@@ -1549,6 +1549,16 @@ Project → Settings → Environment Variables.
 
 ## Gotchas
 
+**An undefined custom property throws away the whole declaration,
+2026-09-19.** `padding: 24px var(--page-gutter) 40px` with no `--page-gutter`
+in scope is not "24px 0 40px" — it is invalid at computed-value time, and the
+element gets no padding at all. The feed's wrapper had been running with zero
+side padding on every phone since it was written, and nothing showed it,
+because the only thing in it that touched the edges was a row of tabs centred
+in the middle of the page. **Write the fallback: `var(--x, 24px)`.** The
+failure is silent, it is total rather than partial, and it surfaces the day
+somebody puts something at the edge.
+
 **A callback with no dependencies holds the first render's world,
 2026-09-19.** The cross's `measure` listed nothing and closed over the list of
 panes, which was fine for as long as that list was fixed. It stopped being
@@ -2706,10 +2716,31 @@ the two rooms that were behind the desk become places you can be.
       page about this journal and Settings is where the journal's own facts
       are kept. It wears the desk's own row and the desk's own colophon line
       rather than a new shape for the same door.
-- [x] **The feed is a row at the foot of the book**, where the brief wants its
-      second floor. A row and not the mock-up's `FEED ⌄`, because a caret
-      promises a scroll and this still navigates. When the floor arrives the
-      row goes and the caret tells the truth.
+- [x] **The feed is the book's second floor.** It was a row for an hour;
+      Miyel: "feed should just start not be a button." So it does — the faces,
+      then the feed's own heading on a rule, then the records, one continuous
+      scroll. No snap between the floors, unlike the beacon: that pane's first
+      floor is exactly one screen tall so a snap has one place to land, and a
+      grid of faces is as tall as there are people.
+- [x] **And one feed, which had to come with it.** Two centred tabs under a
+      grid of faces would read as a control somebody left there. So Recent is
+      the feed and Submissions is a word in the corner that narrows it —
+      brief 1's second item, arrived at because the first one needed it.
+      NAME: *Came back* is the word her own mock-up put in that corner.
+- [x] **The rooms are built on arrival, not on load.** Both new panes fetch
+      when they mount — the inbox asks for submissions, comments, reports and
+      the book; the feed asks every journal in that book, one cross-origin
+      request each. Mounting them with the cross meant paying all of it on
+      every visit to the front door, including visits that never leave the
+      beacon and every visit on a desktop, where neither is drawn. They build
+      the first time you arrive and are never taken down, which keeps the
+      rail's actual promise — come back and it is where you left it.
+- [x] **`.fd-wrap` had no side padding on a phone and never had.** Its gutter
+      is `var(--page-gutter)`, which is set on the cross's own faces and
+      nowhere else, so on the feed's standalone address the whole shorthand
+      was invalid and resolved to zero. A centred row of tabs hid it for
+      months; a heading that reaches for both edges showed it in one frame.
+      Fallback added, and the 320px cover has not moved.
 - [x] **Desktop is untouched, deliberately.** Above 769px there is no band, so
       there is nothing to reach a pane with: the book keeps its spine, the
       desk keeps its four doors, and the two new panes are not drawn at all.

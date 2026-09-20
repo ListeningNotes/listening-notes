@@ -1742,12 +1742,3 @@ a.pn-item-album:hover { text-decoration: underline; text-underline-offset: 3px; 
   background: var(--panel); color: var(--ink-soft); cursor: pointer;
 }
 .bk-send:hover { color: var(--ink); border-color: var(--ink-faint); }
-
-/* The feed's way in, at the foot of the book — see Friends.js for why it is a
-   row rather than the brief's caret. Set well down from the last face so it
-   reads as the next thing rather than the last person's neighbour. */
-.fr-feed { margin-top: 34px; }
-/* And only where the desk is gone, for the same reason the card's Settings
-   row is — above 769px the book opens on the spine with the desk one turn
-   away, and the desk still has a Feed door on it. */
-@media (min-width: 769px) { .fr-feed { display: none; } }

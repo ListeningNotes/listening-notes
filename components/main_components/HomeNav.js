@@ -91,6 +91,11 @@ import Dashboard, { heldNow, subscribeHeld } from './Dashboard';
 // component the page is a frame around, which is why Friends.js exists.
 import Inbox from '../../app/dashboard/inbox/page';
 import Friends from './Friends';
+// The feed sits under the book as that pane's second floor. It is handed the
+// journal's own records — the same list the wall draws — because the one
+// thing it asks of them is whether a row is a record you also have, and
+// therefore whether Compare is worth offering.
+import Feed from './Feed';
 import AlbumPicker from '../session_components/AlbumPicker';
 // The same two the desk already reaches for, from the same module, so the
 // pane and the desk agree about what "a listen is open" means and say so the
@@ -104,6 +109,11 @@ import Pitch from './Pitch';
 // said whose journal this is, so the record is the more interesting thing to
 // meet and the person is one swipe away.
 const HOME = 1;
+// Where the keeper's two extra rooms sit on the rail. Only ever true when the
+// lock has said yes — a visitor's rail is three panes and neither of these is
+// on it. See paneRefs, which is the list these index into.
+const INBOX = 2;
+const BOOK = 3;
 
 // Which face the spine was left on, per browser. Not a setting and not on the
 // settings row: it is where somebody put their own left-hand page down, the
@@ -1071,6 +1081,25 @@ export default function HomeNav() {
   }, [beginListen]);
 
   const [pane, setPane] = useState(HOME);
+  // ── A room is built the first time you walk into it ───────────────────────
+  // The card and the beacon are always drawn: you land on one and the other is
+  // one swipe away, and both are this journal's own pages. The inbox and the
+  // book are not. Each of them is a page that fetches when it mounts — the
+  // inbox asks for submissions, comments, reports and the address book, and
+  // the feed asks every journal in that book, one cross-origin request each.
+  // Mounting them with the cross would mean paying for all of that on every
+  // visit to the front door, including the visits that never leave the beacon
+  // and every visit on a desktop, where neither pane is drawn at all.
+  //
+  // So they are built on arrival and never taken down again. That keeps the
+  // rail's actual promise — come back and the pane is where you left it —
+  // without the part of it that was only ever true because the panes were
+  // cheap. Passing through the inbox on the way to the book counts as
+  // arriving, which is right: you went past it and it is now behind you.
+  const [visited, setVisited] = useState(() => ({ [HOME]: true }));
+  useEffect(() => {
+    setVisited(seen => (seen[pane] ? seen : { ...seen, [pane]: true }));
+  }, [pane]);
   // Whether anything is moving right now. The controls sit over the page
   // rather than beside it, so while a wall of covers is going past underneath
   // they are three marks on top of somebody's album art. They fade out on the
@@ -2053,13 +2082,24 @@ export default function HomeNav() {
             is at the address is what is here. */}
         {authed && (
           <section className="hn-pane hn-pane--inbox" ref={inboxRef} aria-label="What has arrived">
-            <Inbox inPane />
+            {visited[INBOX] && <Inbox inPane />}
           </section>
         )}
 
+        {/* Two floors, and the second one starts rather than being opened
+            (Miyel, 2026-09-19: "feed should just start not be a button").
+            People up here, what they logged one scroll down — the brief's
+            own shape, and the beacon's.
+
+            No snap between them, unlike the beacon. That pane's first floor
+            is exactly one screen tall so a mandatory snap has one place to
+            land; a grid of faces is as tall as there are people, and a snap
+            over a variable first floor is a scroll that argues with the
+            thumb. One continuous scroll, with the feed's own heading as the
+            line where the floor changes. */}
         {authed && (
           <section className="hn-pane hn-pane--friends" ref={friendsRef} aria-label="The journals you read">
-            <Friends />
+            {visited[BOOK] && <><Friends /><Feed entries={entries} /></>}
           </section>
         )}
 

@@ -1780,10 +1780,48 @@
 /* The page's measure, like everything else on this face — it had 480px and
    the cross's 34px gutter, which put the feed twelve pixels further in than
    the doors above it on the same scroll. */
-.fd-wrap { width: 100%; max-width: none; margin: 0; padding: 24px var(--page-gutter) 40px; box-sizing: border-box; }
+/* The fallback matters and did not exist: --page-gutter is set on the cross's
+   own faces and nowhere else, so on the feed's standalone address the whole
+   shorthand was invalid and the wrap had no padding at all. Nothing showed it
+   while the row at the top was two centred tabs — a heading that reaches for
+   both edges shows it at once. 24px is .fr-body's number, and it leaves the
+   320px cover exactly where it already sat. */
+.fd-wrap { width: 100%; max-width: none; margin: 0; padding: 24px var(--page-gutter, 24px) 40px; box-sizing: border-box; }
 /* On a phone the floor starts under the bar, the way the writing under the
    card does. */
 .hn-floor-scroll .fd-wrap { padding-top: calc(var(--hn-bar-h) + 24px); }
+/* ── The feed's heading, 2026-09-19 ────────────────────────────────────────
+   Its name on the left and the one word that narrows it on the right, on a
+   rule. It replaced a centred row of two tabs: under the faces this has to
+   read as the heading of what follows, and a pair of tabs in the middle of
+   the page reads as a control somebody left behind. Both halves are the
+   caption face at caption size, so neither is louder than the records. */
+.fd-head {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+  margin: 0 0 18px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
+}
+.fd-title, .fd-only {
+  font-family: var(--font-label);
+  font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase;
+  line-height: 1;
+}
+.fd-title { color: var(--ink-soft); }
+.fd-only {
+  padding: 0; border: 0; background: none; cursor: pointer;
+  color: var(--ink-faint);
+  transition: color 0.2s;
+}
+.fd-only:hover { color: var(--ink-soft); }
+/* On, and it is the only state that needs saying: the feed is everyone until
+   somebody narrows it, so ink here means you are looking at a part of it.
+   Doubled class so it beats :hover, which is not pedantry: iOS leaves :hover
+   stuck on whatever you last tapped until you tap something else, so the
+   word would go *dimmer* at the moment you switched it on. */
+.fd-only.fd-only--on { color: var(--ink); }
+.fd-only:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 3px; border-radius: 3px; }
+
 .fd-views { display: flex; justify-content: center; gap: 22px; margin-bottom: 18px; }
 .fd-view {
   font-family: var(--font-label); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
@@ -2087,7 +2125,7 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   padding-top: calc(22px + var(--safe-top));
   background: var(--bg);
 }
-.fd-screen .fd-views {
+.fd-screen .fd-head {
   position: sticky;
   top: var(--hn-bar-h);
   z-index: 99;
@@ -2324,6 +2362,25 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
     padding: calc(36px + var(--safe-top)) 0 calc(var(--hn-foot-h) + 20px);
     box-sizing: border-box;
   }
+  /* The inbox brings its own gutter — it is a page with a body inside it and
+     that body is already inset. The book does not: its gutter was the
+     standalone page's .fr-body, which is not here, so without this the search
+     field and the faces start hard against the left edge. 24px, .fr-body's
+     own number, so the book is the same width whichever way you reach it. */
+  .hn-pane--friends {
+    padding-left: 24px;
+    padding-right: 24px;
+    /* And the feed inside it takes the gutter from the pane rather than
+       adding a second one. Stated rather than left undefined: an undefined
+       var in a shorthand throws the whole declaration away, which happened to
+       give the right answer here and would stop doing so the moment anybody
+       wrote a fallback into .fd-wrap. */
+    --page-gutter: 0px;
+  }
+  /* Where the book ends and the feed begins. Air rather than a rule of its
+     own — the feed's heading already carries one, and two lines ten pixels
+     apart is a border nobody drew on purpose. */
+  .hn-pane--friends .fd-wrap { padding-top: 40px; }
   /* A page drawn inside a pane has no bar of its own to clear and no screen
      of its own to fill. */
   .hn-pane--inbox .own-screen--pane,
@@ -2584,6 +2641,7 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   .fd-wrap { padding: 6px var(--hn-gutter) 40px; }
   .hn-floor-scroll .fd-wrap { padding-top: 6px; }
   .fd-views { justify-content: flex-start; gap: 16px; margin-bottom: 14px; }
+  .fd-head { margin-bottom: 14px; }
   .fd-list { gap: 30px; }
   .fd-item { align-items: flex-start; text-align: left; }
   .fd-art { width: 100%; border-radius: 10px; margin-bottom: 10px; box-shadow: 0 8px 22px rgba(0, 0, 0, 0.14); }

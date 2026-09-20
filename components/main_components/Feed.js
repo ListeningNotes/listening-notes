@@ -10,16 +10,21 @@
 // Nothing central, nobody learns they were read, and nothing here is stored:
 // the book says whose feeds to ask and the feeds say the rest.
 //
-// Two views. **Recent opens, from 2026-09-16** (Miyel, once the book had
-// enough people in it to fill one): it is everyone in the book, newest first,
-// and capped — a shelf, not a river. Submissions was the default while the
-// feed was mostly empty, when what came back from a send was the only thing
-// it reliably had; with a populated book that is the narrower of the two and
-// the quieter one, so it is now the second tab rather than the first.
-// Submissions is who logged what you sent them and how they rated it — the
-// entries whose credit names this journal — and it cannot become a scroll,
-// because it only ever holds what came back. No counts, no badges, no unread
-// state on either.
+// One feed, from 2026-09-19 (the friends brief). There were two views in a
+// tab row — Recent and Submissions — and they are not two kinds of thing you
+// choose between, they are a list and a subset of it. So the feed is everyone
+// in the book, newest first and capped, a shelf rather than a river; and what
+// came back from a send is a word in the corner that narrows it, not a place
+// you go instead.
+//
+// The subset is still worth having: it is who logged what you sent them and
+// how they rated it, matched by the credit naming this journal, and it cannot
+// become a scroll because it only ever holds what came back. It keeps its own
+// cap and its own empty line. No counts, no badges, no unread state — the dot
+// on an inbox row is the only new-state this site has.
+//
+// NAME: **Came back** is the word her own mock-up put in that corner, kept
+// until she says otherwise.
 //
 // A row offers Compare only when it is a record you also have: this album,
 // their rating against yours and the shape of the two listens, track by
@@ -157,7 +162,10 @@ export default function Feed({ entries = [] }) {
   // address → { entries, name, failed }. Filled as each journal answers, so
   // the first rows are on screen before the slowest journal has spoken.
   const [journals, setJournals] = useState({});
-  const [view, setView] = useState('recent');
+  // 'everyone' or 'back'. Everyone is the default and the reason the corner
+  // word is a filter rather than a tab: you are always in the feed, and the
+  // word says which part of it.
+  const [view, setView] = useState('everyone');
   const [open, setOpen] = useState(null);
 
   useEffect(() => {
@@ -214,7 +222,7 @@ export default function Feed({ entries = [] }) {
   }).slice(0, SUBMISSIONS_MOST), [rows, me, myName]);
 
   const recent = useMemo(() => rows.slice(0, RECENT_MOST), [rows]);
-  const shown = view === 'submissions' ? submissions : recent;
+  const shown = view === 'back' ? submissions : recent;
   const stillAsking = Boolean(people?.some(p => !journals[p.address]));
 
   let body;
@@ -234,7 +242,7 @@ export default function Feed({ entries = [] }) {
   } else if (shown.length === 0) {
     body = (
       <div className="fd-empty">
-        {view === 'submissions'
+        {view === 'back'
           ? 'Nothing you sent has come back yet.'
           : 'Nobody in your address book has logged anything yet.'}
       </div>
@@ -266,7 +274,7 @@ export default function Feed({ entries = [] }) {
                     {person.name || 'Someone'}
                   </Link>
                   <span className="fd-when">&middot; {timeAgo(entry.posted_at)}</span>
-                  {view === 'submissions' && <span className="fd-when">&middot; from you</span>}
+                  {view === 'back' && <span className="fd-when">&middot; from you</span>}
                 </div>
                 {mine && (
                   <button
@@ -289,14 +297,21 @@ export default function Feed({ entries = [] }) {
 
   return (
     <div className="fd-wrap">
-      {/* Recent first in the row as well as first on open: a tab row that
-          starts on its second tab reads as something having been pressed. */}
-      <div className="fd-views" role="tablist" aria-label="What to show">
-        <button type="button" role="tab" aria-selected={view === 'recent'} className={'fd-view' + (view === 'recent' ? ' fd-view--on' : '')} onClick={() => setView('recent')}>
-          Recent
-        </button>
-        <button type="button" role="tab" aria-selected={view === 'submissions'} className={'fd-view' + (view === 'submissions' ? ' fd-view--on' : '')} onClick={() => setView('submissions')}>
-          Submissions
+      {/* The feed says its own name on the left and carries the one word that
+          narrows it on the right. It is the line the second floor starts at,
+          which is the whole reason it is a line and not a centred row of
+          tabs: under the faces it has to read as a heading for what follows,
+          not as a control somebody left there. */}
+      <div className="fd-head">
+        <span className="fd-title">Feed</span>
+        <button
+          type="button"
+          className={'fd-only' + (view === 'back' ? ' fd-only--on' : '')}
+          aria-pressed={view === 'back'}
+          onClick={() => setView(view === 'back' ? 'everyone' : 'back')}
+          title={view === 'back' ? 'Show everyone again' : 'Only the records that came back from something you sent'}
+        >
+          Came back
         </button>
       </div>
       {body}
