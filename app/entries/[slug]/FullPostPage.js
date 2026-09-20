@@ -880,7 +880,12 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   // so anything that has to end up *in* that row has to start there too.
   // The page's own art goes invisible while this one stands in for it, and
   // keeps its box, which is what everything below it is positioned against.
-  useEffect(() => {
+  // A layout effect, not an effect: everything in it decides what the first
+  // frame of a record looks like — where its scroller starts and how far
+  // through the collapse its cover is. After paint, both of those are a
+  // frame of the wrong thing first (Miyel: "no blink between swiping through
+  // albums in mini header state, they all reload").
+  useLayoutEffect(() => {
     // Not while the page is something else. Printing makes screen one a
     // sheet of paper and editing makes it a form; in both the art is a
     // control you are using, not a thing on its way somewhere.
@@ -913,11 +918,55 @@ export default function FullPostPage({ entry, references = [], authed = false, l
     // the record bobs on a 2.2s loop that never ends, so asking the subtree
     // whether anything is playing is asking whether the page exists — and
     // the collapse never started.
+    // A page turn is not one of them. `layFromLeft` and `layFromRight` move
+    // the content sideways and leave the header alone, so nothing measured
+    // across the two is wrong — and waiting them out is what made every
+    // record swiped to in the mini state open at the top and then jump.
     const landing = () => Boolean(sheet) && sheet.getAnimations({ subtree: true })
-      .some(a => a.playState === 'running' && String(a.animationName || '').startsWith('lay'));
+      .some(a => a.playState === 'running'
+        && String(a.animationName || '').startsWith('lay')
+        && !String(a.animationName || '').startsWith('layFrom'));
 
+    // How far the record takes to become the header. Not the whole album
+    // screen — see the note beside `over` in measure().
+    const COLLAPSE = 320;
     let base = null;
-    let landed = false;
+    // Whether the record has finished becoming the header. Kept from the
+    // last frame drawn, because the question gets asked at moments when
+    // there is nothing measured to ask it of.
+    let done = false;
+    // ── A page turn takes the record with it, 2026-09-20 ──────────────────
+    // Miyel: "in large card format, swiping albums takes the text away first
+    // then the art — they should swipe at the same time." Of course it does:
+    // the art is drawn by the header now, and the header is the one thing on
+    // this screen that does not slide sideways. The title and the score are
+    // in the content and leave with it; the cover stands there.
+    //
+    // So while a turn is in the air and the record is still the record, the
+    // header stands down and the page's own art — which is in the content,
+    // and slides — is the art again. They are the same picture at the same
+    // place at that point in the collapse, so the handover either side of
+    // the turn is not something anybody can see.
+    //
+    // Only while it is still the record. Once it is the header, the header
+    // is where it belongs and holding still is what a header does.
+    //
+    // A turn says so in three different ways and none of them is a class on
+    // the sheet: a finger on it moves the content by an inline transform, a
+    // let-go settles it with a transition, and the record arriving runs
+    // layFrom. The transform covers the first two, so it is what is asked.
+    const content = sheet && sheet.querySelector('.lay-content');
+    const shifted = () => {
+      if (!content) return false;
+      const t = getComputedStyle(content).transform;
+      if (!t || t === 'none') return false;
+      const x = Number(t.slice(t.indexOf('(') + 1).split(',')[4]);
+      return Number.isFinite(x) && Math.abs(x) > 0.5;
+    };
+    const turning = () => Boolean(sheet) && (
+      shifted()
+      || sheet.getAnimations({ subtree: true })
+        .some(a => a.playState === 'running' && String(a.animationName || '').startsWith('layFrom')));
     const middle = el => {
       const r = el.getBoundingClientRect();
       return { cx: r.left + r.width / 2, cy: r.top + r.height / 2, h: r.height };
@@ -932,6 +981,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
         return;
       }
       if (landing()) { base = null; setCrowning(false); return; }
+      if (turning() && !done) { base = null; setCrowning(false); return; }
       const gone = screens.scrollTop;
       const from = middle(art);
       const land = middle(hole);
@@ -958,10 +1008,22 @@ export default function FullPostPage({ entry, references = [], authed = false, l
         // Where the seat's own box sits, which is what a transform is
         // measured from.
         seat: { x: p.left, y: p.top },
-        // The journey is over when screen one has gone under the header, so
-        // the last thing the collapse is waiting for is the notes arriving.
+        // Where the notes come to rest: screen one gone under the header.
+        // It is what the caret lands on, and what a swipe from one record's
+        // notes lands on in the next.
         ends: Math.max(1, one.getBoundingClientRect().bottom + gone - row.getBoundingClientRect().bottom),
       };
+      // ── And the collapse does not wait for them, 2026-09-20 ─────────────
+      // It ran the whole length of the album screen to begin with, which is
+      // most of a thumb's travel, and Miyel's read was "make the card to
+      // mini card much faster". So it has a distance of its own: the record
+      // is the header by the time the album has half gone, and what is left
+      // of that screen is screen on its way past.
+      //
+      // Clamped to the journey, so a record with almost nothing written
+      // about it — whose notes arrive sooner than that — still finishes on
+      // time rather than mid-shrink.
+      base.over = Math.min(base.ends, COLLAPSE);
       draw();
       // ── Reading on lands where you were, 2026-09-20 ─────────────────────
       // A thumb sideways is turning a page, not opening a book. If the record
@@ -975,24 +1037,17 @@ export default function FullPostPage({ entry, references = [], authed = false, l
       // animation too, so the collapse stands down for it and the numbers
       // only exist once it is over. Asked once per record either way, so a
       // rise cannot inherit an answer a swipe left lying about.
-      if (!landed) {
-        landed = true;
-        const on = cameReadingOn();
-        if (on && sheet && sheet.classList.contains('lay--swiped')) {
-          screens.scrollTop = base.ends;
-          draw();
-        }
-      }
     };
     const draw = () => {
       if (!base) return;
-      const u = Math.min(1, Math.max(0, screens.scrollTop / base.ends));
+      const u = Math.min(1, Math.max(0, screens.scrollTop / base.over));
       // Two clocks. The position runs straight, so the art drifts up the
       // whole way rather than arriving early and parking; the size waits,
       // so it is still the record when the notes come up and then goes
       // quickly. Squared is the whole of "stays large, then shrinks".
       const walk = u;
       const small = u * u;
+      done = u >= 1;
       const h = base.from.h + (base.land.h - base.from.h) * small;
       const k = h / base.big;
       const cx = base.from.cx + (base.land.cx - base.from.cx) * walk;
@@ -1016,10 +1071,34 @@ export default function FullPostPage({ entry, references = [], authed = false, l
       readingOn(u >= 1);
     };
 
+    // ── Reading on lands where you were, 2026-09-20 ───────────────────────
+    // A thumb sideways is turning a page, not opening a book. If the record
+    // you left had already gone up into the header, this one starts there:
+    // at its own notes, its own cover already collapsed. Not the same scroll
+    // position — albums have different amounts written about them, and 700px
+    // into a short one is the end of it.
+    //
+    // Before the first measure, so the numbers it takes are the ones this
+    // record is actually going to be drawn with.
+    if (sheet && sheet.classList.contains('lay--swiped') && cameReadingOn()) {
+      screens.scrollTop = Math.max(0,
+        one.getBoundingClientRect().bottom - row.getBoundingClientRect().bottom);
+    }
+
     measure();
     // And again the moment the arrival is over, which is the measurement
     // that counts.
     if (sheet) sheet.addEventListener('animationend', measure);
+    // A finger on the sheet is the only one of the three that fires nothing
+    // else. Asked while the record is still the record, which is the only
+    // time the answer can change.
+    const onTurn = () => { if (!done) measure(); };
+    if (sheet) sheet.addEventListener('touchmove', onTurn, { passive: true });
+    if (sheet) sheet.addEventListener('transitionend', measure);
+    // The turn says so in the class list on its way in and on its way out,
+    // and both ends of it want a fresh answer.
+    const watchSheet = sheet ? new MutationObserver(measure) : null;
+    if (watchSheet) watchSheet.observe(sheet, { attributes: true, attributeFilter: ['class'] });
     screens.addEventListener('scroll', draw, { passive: true });
     screens.addEventListener('load', measure, true);
     const narrow = window.matchMedia('(max-width: 768px)');
@@ -1031,6 +1110,9 @@ export default function FullPostPage({ entry, references = [], authed = false, l
     watch.observe(row);
     return () => {
       if (sheet) sheet.removeEventListener('animationend', measure);
+      if (sheet) sheet.removeEventListener('touchmove', onTurn);
+      if (sheet) sheet.removeEventListener('transitionend', measure);
+      if (watchSheet) watchSheet.disconnect();
       screens.removeEventListener('scroll', draw);
       screens.removeEventListener('load', measure, true);
       narrow.removeEventListener('change', measure);
