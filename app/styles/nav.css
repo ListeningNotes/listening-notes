@@ -839,9 +839,20 @@
    only, as the entry's two screens are — on a desk the floors are plain
    wrappers in a column that scrolls, and the column is the scroller. */
 @media (max-width: 768px) {
-  /* Home only. It is the pane with a cover, so it is the pane with two
-     floors and a snap; the turning pane is a page and scrolls like one. */
-  .hn-pane--home { scroll-snap-type: y mandatory; }
+  /* ── Proximity, not mandatory, 2026-09-20 ──────────────────────────────
+     Miyel: "scrolling feed doesn't scroll freely, it's sticky."
+     Mandatory was safe while a second floor was exactly one screen tall with
+     its own scroller inside it: the pane had two stops and nothing between
+     them, so "must rest on a stop" cost nothing. Both second floors are long
+     now — that is what lets the peek show the thing itself rather than a
+     bar's-worth of padding — and a pane that must rest on a stop, over a feed
+     five screens deep, spends the whole scroll being pulled back to the top
+     of it.
+
+     Proximity snaps when you finish near the boundary and leaves you alone
+     everywhere else. The cost is honest: end up halfway between the floors
+     and you stay there. The way down is a press, and a press lands exactly. */
+  .hn-pane--home { scroll-snap-type: y proximity; }
 
   /* ── How much of a second floor shows under a first ───────────────────
      One number for both panes that have one, because they are the same
@@ -886,7 +897,7 @@
   }
   /* The snap stops a bar's-worth short, so the wall lands under the mark
      rather than behind it — and at rest the peek is all wall and no gap. */
-  .hn-floor--wall { scroll-margin-top: var(--hn-bar-h); }
+  .hn-floor--wall { scroll-margin-top: var(--hn-bar-h); scroll-snap-stop: normal; }
   /* And the wall stops being a scroller of its own on a phone. It was one so
      the pane had only two stops; with a sliver of it showing at rest that
      became a scroller you could reach before arriving at it, and a flick
@@ -2450,7 +2461,7 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
      screen and has to measure one; the padding belongs inside each floor. */
   .hn-pane--friends {
     padding: 0;
-    scroll-snap-type: y mandatory;
+    scroll-snap-type: y proximity;
     /* Inherited from .hn now — the beacon wants the same number. */
 
     /* The feed takes its gutter from the floor rather than adding a second
@@ -2510,6 +2521,10 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
      behind the bar's own ground, which is what that ground is for. */
   .hn-floor--feed {
     scroll-margin-top: var(--hn-bar-h);
+    /* And a flick is allowed through it. `always` forces a stop at every snap
+       point a scroll crosses, which on a phone means one deliberate throw
+       into the feed stops dead at the first record. */
+    scroll-snap-stop: normal;
     /* A breath, so the cover is not welded to the caret in the peek. */
     padding-top: 12px;
   }
