@@ -981,8 +981,6 @@ export default function FullPostPage({ entry, references = [], authed = false, l
 
     // How far the record takes to become the header. Not the whole album
     // screen — see the note beside `over` in measure().
-    // How much of the album screen's last stretch the changeover takes.
-    const SWAP = 160;
     // Where this record has to start, when it starts at the notes. Kept
     // rather than set once: on the first frame the writing underneath may
     // not be laid out yet, and a scroller shorter than the number simply
@@ -1058,16 +1056,18 @@ export default function FullPostPage({ entry, references = [], authed = false, l
       // hold with a floor reaching past the cover — and both were, in her
       // words, a little bit dramatic for the page.
       //
-      // The whole of it is the last SWAP pixels of the album screen, which
-      // is also where it finishes. Eased, so it is a change and not a blink.
-      const u = Math.min(1, Math.max(0,
-        (screens.scrollTop - (base.ends - SWAP)) / SWAP));
-      const shows = 1 - (1 - u) * (1 - u);
-      done = u >= 1;
-      if (crown) crown.style.opacity = shows.toFixed(3);
-      // Never both. This is the publication's name over a page of it, and
-      // the page only takes the middle once the record itself has gone.
-      lede((1 - shows).toFixed(3));
+      // And it is a swap, not a fade. It ran over the last hundred and sixty
+      // pixels for an hour, and Miyel's answer was the same one she gave the
+      // listen's arrival a fortnight ago: "just not cross fade." Two things
+      // half-drawn over each other in the middle of a row is not a header
+      // becoming another header, it is a header nobody can read. So the
+      // journal's name holds the middle for the whole of the album screen
+      // and the record takes it the instant that screen has gone.
+      const on = screens.scrollTop >= base.ends;
+      done = on;
+      if (crown) crown.style.opacity = on ? '1' : '0';
+      // Never both, and never half of either.
+      lede(on ? '0' : '1');
       // And now it can be drawn: there is a number for it.
       setLedeDrawn(true);
     };
