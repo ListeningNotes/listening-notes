@@ -72,8 +72,11 @@ const A_DOZEN = 12;
 // person's name in it. The number below is only the first guess, used for the
 // one frame before anything has been drawn to measure — 62px of face, 9 of
 // gap and a line of name.
-const A_ROW = 87;
-const BETWEEN_ROWS = 18;
+// A row of faces costs its own height plus the air the grid keeps above and
+// below it — 62 of face, 9 of gap, a line of name, and 18 either side. It is
+// measured off a real row as soon as there is one; this is the guess used for
+// the single frame before there is.
+const A_ROW = 123;
 
 // How long the doors take to open and close. The site's number for a thing
 // unfolding in place, and the same one the head's two fields cross on, so
@@ -229,12 +232,21 @@ export default function Friends({ shelf = false, onCount = null }) {
     setPeople(prev => prev.filter(p => p.id !== id));
   }
 
-  // The cursor goes into whichever field the + has just put there; a + that
-  // opens a box you then have to tap is two presses for one act. Searching
-  // is not focused on arrival — the page is for looking at, and a keyboard
-  // over the faces before you have asked for one is a page that opened
-  // itself.
-  useEffect(() => { if (adding) fieldRef.current?.focus(); }, [adding]);
+  // ── The + does not open the keyboard ────────────────────────────────────
+  // It did, on the reasoning that a + which opens a box you then have to tap
+  // is two presses for one act. Miyel, 2026-09-19, off a real phone: "this can
+  // open not in typing mode. most people will scan."
+  //
+  // She is right twice. Typing a journal's address out is the fallback — the
+  // camera is the way in, and Scan a code is sitting right there — so the
+  // keyboard was answering the rarer half. And on iOS it did more than
+  // appear: focusing a field near the top of a pane makes the system scroll
+  // the page to clear the keyboard, which lifted the whole floor up behind
+  // the status bar. Her "the placement is off" is that scroll, and this is
+  // what was causing it.
+  //
+  // The field is still the first thing under your thumb if you do want to
+  // type. It just waits to be asked.
 
   // ── Anywhere else puts the bin back ─────────────────────────────────────
   // Once the word has become the question there is no un-armed control left
@@ -301,8 +313,11 @@ export default function Friends({ shelf = false, onCount = null }) {
     const reckon = () => {
       const room = box.clientHeight;
       if (!room) return;
-      const tall = box.querySelector('.fr-one')?.offsetHeight || A_ROW;
-      const lines = Math.max(1, Math.floor((room + BETWEEN_ROWS) / (tall + BETWEEN_ROWS)));
+      // A whole row, not a face: each row is its own grid with its own air
+      // above and below it, and measuring the face alone lost 36px a row —
+      // enough that the fourth row came back cut in half at five across.
+      const tall = box.querySelector('.fr-row')?.offsetHeight || A_ROW;
+      const lines = Math.max(1, Math.floor(room / tall));
       const next = lines * across;
       setFits(was => (was === next ? was : next));
     };
