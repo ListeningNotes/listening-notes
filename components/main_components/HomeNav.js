@@ -1114,6 +1114,12 @@ export default function HomeNav() {
   // already down there. Both are measured, never declared.
   const [deep, setDeep] = useState([false, false, false]);
   const [down, setDown] = useState([false, false, false]);
+  // ── Whether the feed has reached the header ─────────────────────────────
+  // Not the same question as `down`, which is true eight pixels into any
+  // pane. The word and the toggle belong to the feed, and the book is a whole
+  // screen above it: a header that said FEED while you were looking at the
+  // faces would be naming the wrong floor. See the scroll effect below.
+  const [atFeed, setAtFeed] = useState(false);
 
   // ── The bar, against the keyboard ─────────────────────────────────────────
   // The row at the top is `position: fixed`, which on iOS means fixed to the
@@ -1395,9 +1401,29 @@ export default function HomeNav() {
     const cleanups = paneRefs.map((ref, i) => {
       const el = ref.current;
       if (!el) return null;
+      // The bar this pane scrolls under. Measured rather than read off
+      // --hn-bar-h, which is a calc with an env() in it and comes back as the
+      // token rather than a number.
+      const bar = el.closest('.hn')?.querySelector('.hn-bar') || null;
       const onScroll = () => {
         stir();
         const moved = el.scrollTop > 8;
+        // The word sticks when the way down has gone under the bar: the
+        // label rises with the floor it stands at the foot of, slides behind
+        // the header, and the header keeps the word. Miyel, 2026-09-20: "let
+        // feed word stick in the header without the caret on scroll."
+        //
+        // Its *bottom* against the bar's, not its top: at the top the whole
+        // button is still sitting in plain sight under the bar and the word
+        // would be on the screen twice. By the time its last pixel — the
+        // chevron's — is behind the header, there is one Feed on the screen
+        // and the handoff is a word passing under a line and coming back
+        // without its chevron, which is the thing she asked for.
+        if (i === BOOK) {
+          const way = el.querySelector('.hn-down');
+          const lip = bar ? bar.getBoundingClientRect().bottom : 0;
+          setAtFeed(Boolean(way) && way.getBoundingClientRect().bottom <= lip);
+        }
         setDown(prev => {
           if (prev[i] === moved) return prev;
           const next = [...prev];
@@ -1512,10 +1538,20 @@ export default function HomeNav() {
   // and a control for a list four swipes away is furniture; it arrives with
   // the floor and leaves with it.
   const { density, flip: flipDensity } = useFeedDensity();
-  const onTheFeed = pane === BOOK && down[BOOK];
+  const onTheFeed = pane === BOOK && atFeed;
 
   const header = (
     <div className={'hn-bar' + (down[pane] || choosing ? ' hn-bar--scrolled' : '')}>
+      {/* The feed's name, once the feed is what you are on. It is the same
+          word that stands at the foot of the floor above with the chevron
+          under it — that one labels the way down, which is a thing you are
+          deciding whether to do, and this one names the floor you took it to.
+          No chevron on this one: there is nowhere further down.
+
+          In the middle of the row, where the mark stands on the pane that
+          draws one — so on this pane the middle is free and a name in it
+          reads as a header's name rather than as a label at one end. */}
+      {onTheFeed && <span className="hn-bar-say">Feed</span>}
       {/* ── The way out of the picker ────────────────────────────────────
           In the corner the up-caret holds the rest of the time — the two never
           want the row at once, because while the picker is open there is no
