@@ -60,6 +60,63 @@ const SUBMISSIONS_MOST = 30;
 // How long one journal gets to answer before its rows are simply absent.
 const EACH_MS = 8000;
 
+// ── Two densities ─────────────────────────────────────────────────────────
+// The feed one record a screen, or six rows of one. Her brief, 2026-09-20:
+// "one toggle, two states, nothing in between." No menu and no settings page
+// — the control is a glyph in the feed's own header and the glyph is the
+// shape it makes, which is the rule the archive's density control already
+// keeps (GridDensity.js).
+//
+// Remembered between visits, for the reason that one does: a density you
+// chose is a preference, and re-picking it every time you open the page is
+// the page forgetting something you told it.
+//
+// NAME: `rows` and `full` are placeholders for Miyel.
+const DENSITIES = ['full', 'rows'];
+const DEFAULT_DENSITY = 'full';
+const DENSITY_KEY = 'ln-feed-density';
+
+function readStoredDensity() {
+  if (typeof window === 'undefined') return DEFAULT_DENSITY;
+  try {
+    const saved = window.localStorage.getItem(DENSITY_KEY);
+    return DENSITIES.includes(saved) ? saved : DEFAULT_DENSITY;
+  } catch {
+    return DEFAULT_DENSITY;
+  }
+}
+
+function storeDensity(value) {
+  try { window.localStorage.setItem(DENSITY_KEY, value); } catch { /* private window */ }
+}
+
+// The glyph is the thing it makes: a box with two rows in it. One control and
+// one mark for both states — which one you are in is said by the ink, the way
+// the band at the foot says which pane you are on.
+function RowsGlyph() {
+  return (
+    <svg viewBox="0 0 18 18" width="18" height="18" aria-hidden="true">
+      <rect x="0.9" y="0.9" width="16.2" height="16.2" rx="3.2" fill="none" stroke="currentColor" strokeWidth="1.5" />
+      <rect x="4" y="5.1" width="10" height="2.6" rx="1.1" fill="currentColor" />
+      <rect x="4" y="10.3" width="10" height="2.6" rx="1.1" fill="currentColor" />
+    </svg>
+  );
+}
+
+// ── The short form, for rows ──────────────────────────────────────────────
+// `6h` where the tall version says `6h ago`. A row gives its meta line about
+// 140px between the art and the stars, and "ago" is 26 of them said three
+// times over — the artist and the name are the part that cannot be guessed,
+// and they are what the ellipsis was eating. Her own mock-up writes the short
+// form in rows and the long one under a record, which is the right split:
+// under a record the line is a sentence, and in a row it is a label.
+function briefly(when) {
+  const long = timeAgo(when);
+  if (long === 'just now') return 'now';
+  if (long === 'yesterday') return 'Yesterday';
+  return long.replace(' ago', '');
+}
+
 function timeAgo(when) {
   const t = new Date(when).getTime();
   if (!t) return '';
@@ -217,6 +274,19 @@ export default function Feed({ entries = [], titled = true }) {
   // the first rows are on screen before the slowest journal has spoken.
   const [journals, setJournals] = useState({});
   const [open, setOpen] = useState(null);
+  // Read after mount rather than during the first render: the server has no
+  // localStorage and a value taken from it here would be the two of them
+  // disagreeing about what the page says.
+  const [density, setDensity] = useState(DEFAULT_DENSITY);
+  useEffect(() => { setDensity(readStoredDensity()); }, []);
+  // `asRows`, not `rows`: this file already has a `rows` and it is the flat
+  // list of everything everybody logged.
+  const asRows = density === 'rows';
+  const flip = () => {
+    const next = asRows ? 'full' : 'rows';
+    setDensity(next);
+    storeDensity(next);
+  };
 
   useEffect(() => {
     let gone = false;
@@ -307,17 +377,77 @@ export default function Feed({ entries = [], titled = true }) {
     );
   } else {
     body = (
-      <div className="fd-list">
+      /* The gap between records belongs to the tall version; rows carry their
+         own rule and sit against each other. */
+      <div className={'fd-list' + (asRows ? ' fd-list--rows' : '')}>
         {shown.map(({ person, entry }) => {
           const key = `${person.address}/${entry.slug}`;
           const mine = mineByKey.get(entry.album_key);
           // Carrying who this copy belongs to — see carrySender.
           const there = carrySender(`${journalUrl(person.address)}/entries/${entry.slug}`, { name: keeper_name, address: site_address }, { known: true });
           const rated = entry.rating_value !== null && entry.rating_value !== undefined && entry.rating_value !== '';
+          // ── The ring on a shared cover ─────────────────────────────
+          // A record you both have wears a thin gold rule round its art, in
+          // both densities (her brief). It is the one thing on a feed you can
+          // act on that is worth spotting without reading, and reading is
+          // exactly what scrolling past six rows a screen does not leave time
+          // for. The same fact the compare mark states in words; this states
+          // it at a glance and on the object itself.
+          const shared = Boolean(mine);
+
+          if (asRows) {
+            return (
+              <div key={key} className="fd-rowwrap">
+                <article className="fd-row">
+                  <a
+                    className={'fd-row-art' + (shared ? ' fd-art--shared' : '')}
+                    href={there}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    aria-label={`${entry.album} on ${person.name || 'their'} journal`}
+                  >
+                    {entry.album_art && <img src={entry.album_art} alt="" loading="lazy" />}
+                  </a>
+                  <div className="fd-row-words">
+                    <a className="fd-row-album" href={there} target="_blank" rel="noopener noreferrer">{entry.album}</a>
+                    {/* Artist, who, when — one line, in the caption face, cut
+                        with an ellipsis rather than wrapped. A row that grows
+                        a second line for a long artist is not a row. */}
+                    <div className="fd-row-meta">
+                      {entry.artist}
+                      {' \u00b7 '}{person.name || 'Someone'}
+                      {' \u00b7 '}{briefly(entry.posted_at)}
+                    </div>
+                  </div>
+                  {/* The marks survive the squeeze. The envelope and the
+                      compare are the two reasons to stop on a row, and a
+                      density that hid them would be hiding the good part. */}
+                  <div className="fd-row-marks">
+                    {rated && <StarRating rating={Number(entry.rating_value)} size={11} />}
+                    <Marks entry={entry} size={14} />
+                    {mine && (
+                      <button
+                        type="button"
+                        className={'fd-compare fd-compare--mark' + (open === key ? ' fd-compare--open' : '')}
+                        onClick={() => setOpen(open === key ? null : key)}
+                        aria-expanded={open === key}
+                        aria-label={open === key ? 'Close the comparison' : `Compare your listen with ${person.name || 'theirs'}`}
+                        title={open === key ? 'Close' : 'Compare'}
+                      >
+                        <Shuffle size={14} weight="regular" aria-hidden="true" />
+                      </button>
+                    )}
+                  </div>
+                </article>
+                {open === key && mine && <Compared mine={mine} theirs={entry} name={person.name || 'them'} />}
+              </div>
+            );
+          }
+
           return (
             <div key={key}>
               <article className="fd-item">
-                <a className="fd-art" href={there} target="_blank" rel="noopener noreferrer" aria-label={`${entry.album} on ${person.name || 'their'} journal`}>
+                <a className={'fd-art' + (shared ? ' fd-art--shared' : '')} href={there} target="_blank" rel="noopener noreferrer" aria-label={`${entry.album} on ${person.name || 'their'} journal`}>
                   {entry.album_art && <img src={entry.album_art} alt="" loading="lazy" />}
                 </a>
                 <a className="fd-album" href={there} target="_blank" rel="noopener noreferrer">{entry.album}</a>
@@ -376,11 +506,29 @@ export default function Feed({ entries = [], titled = true }) {
           is not here at all — it is at the foot of the floor above, over the
           caret, where it labels the way down rather than the top of a list
           you have already arrived at (Miyel, 2026-09-19). */}
-      {titled && (
-        <div className="fd-head">
-          <span className="fd-title">Feed</span>
-        </div>
-      )}
+      {/* ── The feed's header ─────────────────────────────────────────
+          Its name on the left and the density on the right. It was one word
+          centred until the toggle needed a home, and a name and a control on
+          one line want the two ends of it rather than a stack.
+
+          The name is drawn at the feed's own address, where nothing else
+          would say what the page is. On the cross it is not: the name is at
+          the foot of the floor above with the caret under it, and this row is
+          the toggle alone. The empty span holds the left end so the glyph
+          stays at the right whether or not there is a word beside it. */}
+      <div className={'fd-head' + (titled ? '' : ' fd-head--bare')}>
+        {titled ? <span className="fd-title">Feed</span> : <span />}
+        <button
+          type="button"
+          className={'fd-dense' + (asRows ? ' fd-dense--on' : '')}
+          onClick={flip}
+          aria-pressed={asRows}
+          aria-label={asRows ? 'Show one record at a time' : 'Show the feed as rows'}
+          title={asRows ? 'One record at a time' : 'Rows'}
+        >
+          <RowsGlyph />
+        </button>
+      </div>
       {body}
     </div>
   );

@@ -1872,11 +1872,82 @@
    the page reads as a control somebody left behind. Both halves are the
    caption face at caption size, so neither is louder than the records. */
 .fd-head {
-  display: flex; align-items: baseline; justify-content: center;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
   margin: 0 0 18px;
   padding-bottom: 10px;
   border-bottom: 1px solid var(--border);
 }
+/* ── The density toggle ────────────────────────────────────────────────────
+   One control, two states, and the glyph is the shape it makes: a box with
+   two rows in it. Which state you are in is said by the ink, the way the band
+   at the foot says which pane you are on — not by swapping the mark, because
+   a control that changes its own picture is two controls. */
+/* On the cross this row holds nothing but the glyph, so it gives up the rule
+   and the air under it: the rule was there to underline a word and there is
+   no word. It matters more than it sounds — that margin sat between the
+   toggle and the first record, and the sliver of record showing under the
+   caret is what the peek is for. */
+.fd-head--bare { margin-bottom: 2px; padding-bottom: 0; border-bottom: 0; }
+.fd-dense {
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 4px; border: 0; background: none; cursor: pointer;
+  color: var(--ink-faint);
+  transition: color 0.18s;
+}
+.fd-dense:hover { color: var(--ink-soft); }
+.fd-dense.fd-dense--on { color: var(--ink); }
+.fd-dense:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 2px; border-radius: 7px; }
+
+/* ── A record you both have ────────────────────────────────────────────────
+   A thin gold rule round the art, in both densities. It is the one thing in a
+   feed you can act on that is worth spotting without reading — and reading is
+   what scrolling past six rows a screen does not leave time for. `outline`
+   rather than a border so it does not take a pixel off the art or move
+   anything beside it; `outline-offset: -1px` keeps it inside the corner
+   radius instead of drawing a square round a rounded picture. */
+.fd-art--shared {
+  outline: 1.5px solid var(--gold);
+  outline-offset: -1px;
+}
+
+/* ── Rows ──────────────────────────────────────────────────────────────────
+   Six to a screen: the art at 56, the name over its line of meta, and the
+   stars and marks at the right. Her brief, 2026-09-20. */
+.fd-rowwrap { border-bottom: 1px solid var(--border); }
+.fd-rowwrap:last-child { border-bottom: 0; }
+.fd-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 11px 0;
+  text-align: left;
+}
+.fd-row-art {
+  flex: 0 0 auto; width: 56px; height: 56px;
+  border-radius: 8px; overflow: hidden;
+  background: var(--panel); display: block;
+}
+.fd-row-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+/* min-width: 0 the whole way down, or the meta refuses to shrink and pushes
+   the stars off the end — the rule this stylesheet has learned twice. */
+.fd-row-words { flex: 1 1 auto; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.fd-row-album {
+  font-family: var(--font-display); font-weight: var(--font-display-weight, 700);
+  font-size: 16px; line-height: 1.2; color: var(--ink); text-decoration: none;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.fd-row-album:hover { text-decoration: underline; text-underline-offset: 3px; }
+.fd-row-meta {
+  font-family: var(--font-label);
+  /* No tracking. The caption face carries 0.14em almost everywhere on this
+     site and it is worth 20px of a line that is already being cut short. */
+  font-size: 10.5px; letter-spacing: 0;
+  color: var(--ink-faint);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.fd-row-marks { flex: 0 0 auto; display: flex; align-items: center; gap: 5px; }
+/* The compare, squeezed into the row: the same control with the word and the
+   padding taken off it, standing with the other marks rather than under the
+   record — there is no under, in a row. */
+.fd-compare--mark { margin-top: 0; padding: 2px; }
 .fd-title {
   font-family: var(--font-label);
   font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase;
@@ -1893,6 +1964,11 @@
 .fd-view:hover { color: var(--ink-soft); }
 .fd-view--on { color: var(--ink); border-bottom-color: var(--ink); }
 .fd-list { display: flex; flex-direction: column; gap: 52px; }
+/* Rows carry their own rule and sit against each other, so the gap between
+   records is the tall version's alone. Written here rather than up with the
+   other row rules because it has to come after the line above, which has the
+   same weight — a habit this stylesheet is on its third lesson about. */
+.fd-list--rows { gap: 0; }
 /* The record, large and centred, the words under it: the shape an entry's
    first screen has. No box — the art is the tile, with the square's own
    shadow, and everything under it is simply large, because a feed item
