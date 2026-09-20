@@ -1878,10 +1878,11 @@
   border-bottom: 1px solid var(--border);
 }
 /* ── The density toggle ────────────────────────────────────────────────────
-   One control, two states, and the glyph is the shape it makes: a box with
-   two rows in it. Which state you are in is said by the ink, the way the band
-   at the foot says which pane you are on — not by swapping the mark, because
-   a control that changes its own picture is two controls. */
+   One control and two marks, each the shape it stands for: a screen with two
+   rows in it, or a screen with one record filling it. The mark says which
+   view you are in and the label says what pressing does. It carried one mark
+   and said the state with ink for a few hours; the ink was doing a job a
+   picture does better, and there was nothing to compare the ink against. */
 /* On the cross this row holds nothing but the glyph, so it gives up the rule
    and the air under it: the rule was there to underline a word and there is
    no word. It matters more than it sounds — that margin sat between the
@@ -1894,8 +1895,7 @@
   color: var(--ink-faint);
   transition: color 0.18s;
 }
-.fd-dense:hover { color: var(--ink-soft); }
-.fd-dense.fd-dense--on { color: var(--ink); }
+.fd-dense:hover { color: var(--ink); }
 .fd-dense:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 2px; border-radius: 7px; }
 
 /* ── A record you both have ────────────────────────────────────────────────
@@ -1914,38 +1914,24 @@
    Six to a screen: the art at 56, the name over its line of meta, and the
    stars and marks at the right. Her brief, 2026-09-20. */
 .fd-rowwrap { border-bottom: 1px solid var(--border); }
-/* ── A shared row sits on a ground ─────────────────────────────────────────
-   Third go at this, 2026-09-20. It was a ring round the art, then a ring
-   round the whole row, and Miyel did not want either: "is there another
-   subtle way... maybe subtle but still there."
-
-   **The trouble was the colour, not the size.** Gold is what a star is on
-   this site, everywhere, and a gold rule beside five gold stars is the rating
-   said twice — so it read as loud and as being about the rating. Nothing else
-   here is gold that is not a score.
-
-   So no colour and no rule: the row is lifted onto a surface instead, which
-   is the one thing this site's vocabulary already has for *this is a thing
-   and not just some words* — `--panel`, the same ground the card and the tile
-   and the sheet all stand on. Scrolling, it is a shape rather than a line,
-   and a shape is what the eye catches without reading. Standing still it is
-   barely there, which is the brief.
-
-   It keeps its hairline: a ground and a rule are not two of the same thing
-   the way a ring and a rule were. */
-.fd-rowwrap--shared .fd-row {
-  background: var(--panel);
-  box-shadow: inset 0 0 0 1px var(--border);
-}
+/* ── Back to the ring on the art, 2026-09-20 ───────────────────────────────
+   Three treatments were tried in an evening — the ring on the art, a ring
+   round the whole row, the row lifted onto a ground — and Miyel took the
+   first: "it was simple and works."
+   
+   Which settles the argument the other two were about. The objection to gold
+   was that it is the star colour and so says *rating* — true of a rule
+   running the length of a row beside five stars, and not true of a ring round
+   a picture, where it is plainly about the picture and the record in it. A
+   ring is also the one of the three that is the same idea in both densities:
+   56px of art or 300px of it, the mark is the same mark. */
 .fd-rowwrap:last-child { border-bottom: 0; }
 .fd-row {
   display: flex; align-items: center; gap: 12px;
-  /* Ten each side so the gold ring on a shared row has somewhere to be
-     drawn without touching the art or the marks. Every row pays it, or the
-     shared ones would sit inset from the rest and the list would be ragged
-     down one edge. */
-  padding: 11px 10px;
-  border-radius: 10px;
+  /* No side padding: the ring is round the art now and needs no room of its
+     own, and those twenty pixels are twenty the meta line does not have to
+     give to an ellipsis. */
+  padding: 11px 0;
   text-align: left;
 }
 .fd-row-art {

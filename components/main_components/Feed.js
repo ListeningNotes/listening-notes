@@ -95,15 +95,34 @@ function storeDensity(value) {
   try { window.localStorage.setItem(DENSITY_KEY, value); } catch { /* private window */ }
 }
 
-// The glyph is the thing it makes: a box with two rows in it. One control and
-// one mark for both states — which one you are in is said by the ink, the way
-// the band at the foot says which pane you are on.
-function RowsGlyph() {
+// ── Two glyphs, one per view ──────────────────────────────────────────────
+// A mark each, and the mark is the thing it makes: a screen with two rows in
+// it, or a screen with one record filling it. It said the state with ink and
+// one mark for a few hours (Miyel, 2026-09-20: "glyph for feed view needs to
+// change when you're in list view and have a second symbol for icon view").
+//
+// The mark names the view you are *in*, not the one you would get. That is
+// how the archive's density control reads — each icon is the grid it produces
+// and the live one is lit — and how the band at the foot reads. A control
+// that shows you somewhere you are not is a different convention, and one on
+// a page is worse than either.
+//
+// The frame is the screen in both, so the two are plainly a pair and the only
+// thing that differs is what is standing in it.
+function DensityGlyph({ rows }) {
   return (
     <svg viewBox="0 0 18 18" width="18" height="18" aria-hidden="true">
       <rect x="0.9" y="0.9" width="16.2" height="16.2" rx="3.2" fill="none" stroke="currentColor" strokeWidth="1.5" />
-      <rect x="4" y="5.1" width="10" height="2.6" rx="1.1" fill="currentColor" />
-      <rect x="4" y="10.3" width="10" height="2.6" rx="1.1" fill="currentColor" />
+      {rows ? (
+        <>
+          <rect x="4" y="5.1" width="10" height="2.6" rx="1.1" fill="currentColor" />
+          <rect x="4" y="10.3" width="10" height="2.6" rx="1.1" fill="currentColor" />
+        </>
+      ) : (
+        /* One record, filling the screen it is on — the same rounded square a
+           cover is drawn as everywhere else here. */
+        <rect x="4.6" y="4.6" width="8.8" height="8.8" rx="2" fill="currentColor" />
+      )}
     </svg>
   );
 }
@@ -463,10 +482,10 @@ export default function Feed({ entries = [], titled = true }) {
 
           if (asRows) {
             return (
-              <div key={key} className={'fd-rowwrap' + (shared ? ' fd-rowwrap--shared' : '')}>
+              <div key={key} className="fd-rowwrap">
                 <article className="fd-row">
                   <a
-                    className="fd-row-art"
+                    className={'fd-row-art' + (shared ? ' fd-art--shared' : '')}
                     href={there}
                     target="_blank"
                     rel="noopener noreferrer"
@@ -585,13 +604,15 @@ export default function Feed({ entries = [], titled = true }) {
         {titled ? <span className="fd-title">Feed</span> : <span />}
         <button
           type="button"
-          className={'fd-dense' + (asRows ? ' fd-dense--on' : '')}
+          className="fd-dense"
           onClick={flip}
           aria-pressed={asRows}
+          /* The label says what pressing does, where the mark says where you
+             are. They are not the same sentence and neither is redundant. */
           aria-label={asRows ? 'Show one record at a time' : 'Show the feed as rows'}
           title={asRows ? 'One record at a time' : 'Rows'}
         >
-          <RowsGlyph />
+          <DensityGlyph rows={asRows} />
         </button>
       </div>
       {body}

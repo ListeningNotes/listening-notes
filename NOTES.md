@@ -2772,10 +2772,16 @@ current.
 **2026-09-20 — The feed at two densities.** Her brief: "one toggle, two
 states, nothing in between."
 
-- [x] **A two-bar glyph at the top right of the feed's header**, and the glyph
-      is the shape it makes — the rule the archive's density control already
-      keeps. Which state you are in is said by the ink, not by swapping the
-      mark: a control that changes its own picture is two controls. Remembered
+- [x] **A glyph at the top right of the feed's header, one per view** — a
+      screen with two rows in it, or a screen with one record filling it. The
+      mark is the shape it stands for, which is the rule the archive's density
+      control already keeps. It was one mark saying the state with ink for a
+      few hours and Miyel overruled it: "glyph for feed view needs to change
+      when you're in list view and have a second symbol for icon view." She is
+      right — the ink was doing a job a picture does better, and with one mark
+      there was nothing to compare the ink against. **The mark names the view
+      you are in, not the one you would get**, which is how the density
+      control and the band at the foot both read. Remembered
       between visits (`ln-feed-density`), because a density you chose is a
       preference and re-picking it every visit is the page forgetting.
 - [x] **The header went from one word centred to a name and a control at the
@@ -2792,22 +2798,15 @@ states, nothing in between."
       A row gives its meta about 140px, and "ago" is 26 of them said three
       times over; the artist and the name are the part that cannot be guessed.
       Her own mock-up writes it that way.
-- [x] **How a shared record shows, third go.** A ring round the art, then a
-      ring round the whole row, and neither was it. **The trouble was the
-      colour, not the size:** gold is what a star is on this site, everywhere,
-      so a gold rule beside five gold stars is the rating said twice — it read
-      as loud, and as being about the score. Nothing else here is gold that is
-      not a score.
-
-      So in rows there is no colour and no rule: the row is lifted onto
-      `--panel`, the ground the card and the tile and the sheet all stand on,
-      which is this site's existing way of saying *this is a thing and not
-      just some words*. Scrolling, it is a shape rather than a line, and a
-      shape is what the eye catches without reading. Standing still it is
-      barely there, which was the brief. Every row keeps the 10px of side
-      padding, or the lifted ones would sit inset and the list would go ragged
-      down an edge. The tall version keeps the gold ring on its cover, which
-      is what her own reference drew and where the cover is 300px of record.
+- [x] **A gold ring round the art, in both densities.** Three treatments were
+      tried in an evening — the ring, a ring round the whole row, the row
+      lifted onto `--panel` — and Miyel took the first: "it was simple and
+      works." Which settles the argument the other two were about. The case
+      against gold was that it is the star colour and so says *rating*: true
+      of a rule running the length of a row beside five stars, and not true of
+      a ring round a picture, where it is plainly about the picture and the
+      record in it. The ring is also the one of the three that is the same
+      idea at both sizes — 56px of art or 300px of it, one mark.
 - [x] **Why a ring at all, in either density.** The one thing in a
       feed you can act on that is worth spotting without reading — and reading
       is what scrolling past eight rows a screen does not leave time for. An
