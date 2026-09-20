@@ -2777,6 +2777,12 @@ From Miyel's reference.
 - [x] **The word COMPARE sits under the mark until it is used.** It is there
       to teach what the mark is and has nothing to say once the thing it names
       is open.
+- [x] **The panel opens, and then the bars rise.** Two movements in order,
+      not one on top of the other: the compare unfolds and pushes the feed
+      below it down, and only once it has stopped moving do the bars leave the
+      baseline. Bars growing inside a box that is itself still growing is two
+      things moving the same way at once and neither reads. Measured: the
+      unfold lands at 250ms, the bars start at 340 and take 720 over it.
 - [x] **The bars rise** out of their own baseline, **all at once.** They were
       a frame apart, left to right, on the argument that it was the shape of a
       listen arriving in the order it happened — and Miyel is right that it is
