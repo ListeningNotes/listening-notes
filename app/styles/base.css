@@ -546,19 +546,29 @@ button { cursor: pointer; background: none; border: none; font: inherit; color: 
    a checkbox — the label still works, the keyboard still works, and
    role="switch" is what tells a screen reader it is on or off rather than
    ticked. appearance: none is what lets the box become a track. */
+/* 38 by 22, down from 46 by 28 on 2026-09-19. It was drawn before the
+   surfaces it sits on lost their boxes, and beside 12px type on a sheet of
+   hairlines it was the heaviest object on the screen after the send button.
+   Smaller everywhere rather than smaller here: it is one control answering
+   one question on three surfaces, and a switch that is two sizes is two
+   switches.
+
+   The proportions are the same ones scaled — a knob three pixels inside the
+   track on every side, travelling the rest — so it reads as the same object,
+   not a different one that happens to be smaller. */
 .ln-switch {
   appearance: none; -webkit-appearance: none;
   position: relative; flex-shrink: 0; margin: 0; cursor: pointer;
-  width: 46px; height: 28px; border-radius: 999px;
+  width: 38px; height: 22px; border-radius: 999px;
   border: 1px solid var(--border); background: var(--panel);
   transition: background 0.18s ease, border-color 0.18s ease;
 }
 .ln-switch::after {
   content: ''; position: absolute; top: 3px; left: 3px;
-  width: 20px; height: 20px; border-radius: 999px;
+  width: 14px; height: 14px; border-radius: 999px;
   background: var(--ink-faint);
   transition: transform 0.18s cubic-bezier(0.22, 0.61, 0.36, 1), background 0.18s ease;
 }
 .ln-switch:checked { background: var(--ink); border-color: var(--ink); }
-.ln-switch:checked::after { transform: translateX(18px); background: var(--bg); }
+.ln-switch:checked::after { transform: translateX(16px); background: var(--bg); }
 .ln-switch:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }

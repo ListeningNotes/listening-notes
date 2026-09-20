@@ -1287,6 +1287,13 @@ is whether the thing has a *place* on the page.
 because that is the platform's habit and nothing is lost. A form in the page
 does not: a tap outside would throw away what has been typed. Both keep Escape.
 
+**A sheet that asks two things is two screens, 2026-09-19.** The send sheet
+picks a record and writes a message; both at once is a form you read before
+you can start. The list at nearly full height, then the message at a third of
+it — the change of size is what says they are steps. **And no × on a sheet
+that pulls down:** it is a mark for a gesture the site already trusts you to
+know, and it sits where the thing worth pressing should be.
+
 ---
 
 ## The lock
