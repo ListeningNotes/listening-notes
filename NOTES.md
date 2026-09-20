@@ -2902,6 +2902,24 @@ else's, which is an argument for a version on that URL and is not built.
 - [x] **Edit is the first tool behind the ···**, which is the shortest reach:
       the row opens back towards the mark that opened it, so the head of the
       list lands nearest the thumb. It is also the one that gets pressed.
+- [x] **The openings are set in the pinned record's face.** "Can the prompt
+      question use the font we use for pinned album titles." They were the
+      caption face — ten pixels, small caps, wide tracking — which is what
+      this site puts on labels, and an opening is not a label: it is a
+      sentence somebody is answering. Nunito at the display weight, 15px,
+      sentence case, a step quieter than the answer under it.
+- [x] **The pop-down is the site's panel.** "Popdown for choosing prompt needs
+      to match site better in edit mode." It was a warm ground inside a
+      hairline box, a shape nothing else here wears — the site's raised
+      surfaces are `--panel` with a generous corner and no rule, which is what
+      the answers print on further up the same column. The chosen row is lit
+      and ticked rather than boxed (DECISIONS, a control is the mark); a
+      bordered row inside a bordered panel was two boxes deep for one answer.
+- [x] **And the openings lose their trailing dash in the editor.** It was
+      stripped at the print and left on everywhere else — on the line you
+      press and on all nine in the list, where a column of sentences each
+      ending in a dash reads as nine unfinished thoughts.
+
 - [x] **Every tool says what it is.** It hung on how many there were — glyphs
       alone up to three, glyph-over-word past that — and Miyel took the count
       out: "toolbar should be uniform across site, those glyphs should be

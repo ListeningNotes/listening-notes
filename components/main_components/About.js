@@ -59,6 +59,17 @@ import { VERSION, RELEASE_URL } from '../../library/version';
 // makes the band follow the bar back up rather than cross it is there too.
 const EDIT_BAR_MS = 300;
 
+// The openings carry a trailing em dash of their own (bioprompt.js), put there
+// when the question and the answer shared a line and it had to separate them.
+// They have not shared a line since 2026-09-15 — two lines in two faces, which
+// separate themselves — and the dash was being taken off at the print and left
+// on everywhere else: on the line you press to change an opening, and on all
+// nine in the list under it, where a column of sentences each ending in a dash
+// reads as nine unfinished thoughts. Taken off at the render rather than out of
+// the nine strings, because it is the typography that made it redundant and
+// the typography is the thing most likely to change again.
+const noDash = text => text.replace(/\s*[—–-]\s*$/, '');
+
 
 // Three, and the cap is the point. Somewhere to be found is not somewhere to
 // list every account anybody has ever opened — a row of three marks reads at a
@@ -657,7 +668,7 @@ export default function About({ stamps, authed = false, pinned = null, entries =
                     aria-label={`Opening ${index + 1}`}
                   >
                     <span className={chosen ? 'ab-prompt-ask' : 'ab-prompt-none'}>
-                      {chosen ? chosen.text : 'Choose a prompt'}
+                      {chosen ? noDash(chosen.text) : 'Choose a prompt'}
                     </span>
                     <CaretDown size={11} weight="bold" aria-hidden="true" />
                   </button>
@@ -680,7 +691,7 @@ export default function About({ stamps, authed = false, pinned = null, entries =
                             onClick={() => { edit.setBioKey(index, prompt.key); setPicking(null); }}
                             aria-pressed={on}
                           >
-                            <span>{prompt.text}</span>
+                            <span>{noDash(prompt.text)}</span>
                             {on && <Check size={12} weight="bold" aria-hidden="true" />}
                             {elsewhere && <span className="ab-prompt-taken" aria-hidden="true">in use</span>}
                           </button>
@@ -726,7 +737,7 @@ export default function About({ stamps, authed = false, pinned = null, entries =
                 thing most likely to change again. */}
             {answered.map(row => (
               <div className="ab-prompt" key={row.key}>
-                <p className="ab-prompt-ask">{row.text.replace(/\s*[—–-]\s*$/, '')}</p>
+                <p className="ab-prompt-ask">{noDash(row.text)}</p>
                 <p className="ab-prompt-said">{row.answer}</p>
               </div>
             ))}
