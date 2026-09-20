@@ -1549,6 +1549,11 @@ Project → Settings → Environment Variables.
 
 ## Gotchas
 
+**No backticks inside a tagged template, 2026-09-20.** Including in an SQL
+comment inside a `database\`...\`` call. A backtick ends the template wherever
+it is, and the error points at the word after it rather than at the quote —
+"Expected a semicolon", on a line that is a comment.
+
 **A thing that must not be seen should not be drawn, 2026-09-20.** The
 journal's mark over an album was faded out by the collapse, and it kept
 appearing at full strength over the record's own card on a swipe. Four
