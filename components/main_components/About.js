@@ -41,7 +41,7 @@
 
 'use client';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ArrowSquareOut, CaretDown, Check, GlobeSimple, LinkSimple, MagnifyingGlass, Plus, X } from '@phosphor-icons/react';
+import { ArrowSquareOut, CaretDown, Check, GearSix, GlobeSimple, LinkSimple, MagnifyingGlass, Plus, X } from '@phosphor-icons/react';
 import Link from 'next/link';
 import { arrivingAlone } from '../../library/handoff';
 import { useHoldStill } from '../../hooks/useHoldStill';
@@ -52,6 +52,7 @@ import {
 import { useIdentificationCardEditor } from './IdentificationCardEditor';
 import { useBookplate } from './Bookplate';
 import { BIO_PROMPTS, readBioAnswers } from '../../library/bioprompt';
+import { VERSION, RELEASE_URL } from '../../library/version';
 
 // Three, and the cap is the point. Somewhere to be found is not somewhere to
 // list every account anybody has ever opened — a row of three marks reads at a
@@ -93,6 +94,21 @@ export default function About({ stamps, authed = false, pinned = null, entries =
   // on it; the prompts print below it now, and two instances of the hook would
   // be two drafts of the same page with one save button between them.
   const edit = useIdentificationCardEditor(settings);
+
+  // Whether a newer Listening Notes exists, for the line at the foot. Asked
+  // once, of this copy's own server, which asks GitHub's public releases at
+  // most once an hour (app/api/update/route.js). The only thing it can ever
+  // say is that there is a newer version and where the button to take it is.
+  // Only asked of a keeper: a visitor never sees the line and a fetch nobody
+  // reads is a fetch on every journal on the internet.
+  const [update, setUpdate] = useState(null);
+  useEffect(() => {
+    if (!authed) return;
+    fetch('/api/update')
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => d?.newer && setUpdate(d))
+      .catch(() => {});
+  }, [authed]);
 
   // Whether the pin's search is open, and what has been typed into it. Both
   // belong to the pane rather than to the card: the sheet covers the pane, and
@@ -882,6 +898,54 @@ export default function About({ stamps, authed = false, pinned = null, entries =
         )}
 
       </div>
+      )}
+
+      {/* ── The machinery, at the foot of the card, 2026-09-19 ────────────
+          The desk was a page of doors and it is gone; three of its four went
+          to the band and this is the fourth, with the software's own line
+          under it. Here rather than anywhere else because the card is the
+          page about this journal and Settings is where the journal's own
+          facts are kept — the address, the beacon, the key, the password.
+          The rest of the card is what a visitor reads; this is the part only
+          its keeper can see, at the bottom, where you go looking for it
+          rather than past it.
+
+          It wears the desk's own row and the desk's own colophon line, which
+          is not laziness: somebody who has used this copy for a week knows
+          that row, and a new shape for a door that does the same thing is a
+          thing to learn for nothing. */}
+      {authed && (
+        <section className="ab-keep" aria-label="This copy">
+          <Link href="/settings" className="ln-tile db-door" title="The key, password, beacon, address">
+            <GearSix size={22} weight="regular" aria-hidden="true" className="db-door-mark" />
+            <span className="db-door-text">
+              <span className="db-door-label">Settings</span>
+            </span>
+          </Link>
+
+          {/* The one line about the software rather than the journal: which
+              version this is, and — only when it is true — that there is a
+              newer one. No Source: §13 is owed to visitors and this is the
+              half of the page a visitor never sees; the pitch pane carries it
+              for them. */}
+          <p className="db-colophon">
+            <a className="pt-source" href={RELEASE_URL} target="_blank" rel="noopener noreferrer" title="What this version contains">
+              {VERSION}
+            </a>
+            {update && (
+              <>
+                <span className="pt-colophon-dot" aria-hidden="true">&middot;</span>
+                <a className="db-update db-update--newer" href={update.page} target="_blank" rel="noopener noreferrer">
+                  A newer version is available &#8599;
+                </a>
+              </>
+            )}
+            <span className="pt-colophon-dot" aria-hidden="true">&middot;</span>
+            <Link className="db-update" href="/dashboard/report" title="Something did not work">
+              Report a problem
+            </Link>
+          </p>
+        </section>
       )}
     </div>
   );

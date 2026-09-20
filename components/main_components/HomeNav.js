@@ -67,7 +67,7 @@
 // layout — the stylesheet does all of it above 769px.
 
 'use client';
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { ArrowsLeftRight, X } from '@phosphor-icons/react';
@@ -83,6 +83,14 @@ import EdgeCaret from './EdgeCaret';
 import Footer from './Footer';
 import About from './About';
 import Dashboard, { heldNow, subscribeHeld } from './Dashboard';
+// The two rooms that used to be behind the desk and are stops of their own
+// from 2026-09-19. Both mount with the cross and stay mounted, which is the
+// rail's whole bargain: the inbox goes on counting and the book goes on
+// asking whether anybody is answering while you are looking at the card.
+// The inbox is the page itself, drawn without its own bar; the book is the
+// component the page is a frame around, which is why Friends.js exists.
+import Inbox from '../../app/dashboard/inbox/page';
+import Friends from './Friends';
 import AlbumPicker from '../session_components/AlbumPicker';
 // The same two the desk already reaches for, from the same module, so the
 // pane and the desk agree about what "a listen is open" means and say so the
@@ -559,14 +567,27 @@ export default function HomeNav() {
   const cardRef = useRef(null);
   const deskRef = useRef(null);
   const homeRef = useRef(null);
+  const inboxRef = useRef(null);
+  const friendsRef = useRef(null);
   const faceNow = useRef('card');
-  // In rail order: the ID, the beacon, the desk. There were two of these and a
-  // getter that handed over whichever face of the left page was up; the two
-  // faces are panes in their own right on a phone now, so each has its own
-  // scroller and there is nothing to choose between. On a desk they are still
-  // the spine's two pages and only one is on screen, which costs nothing here
-  // — a hidden scroller measures zero and reports nothing.
-  const paneRefs = useRef([cardRef, homeRef, deskRef]).current;
+  // In rail order, and the order depends on who is looking, 2026-09-19.
+  //
+  //   signed in    the ID, the beacon, the inbox, the book
+  //   signed out   the ID, the beacon, the colophon
+  //
+  // The desk is not in either. It is still in the markup and still the spine's
+  // second page on a desktop, where there is no band to reach the other rooms
+  // with; the stylesheet takes it out of the rail on a phone. So this list is
+  // what the band counts against and what a swipe lands on, and it has to be
+  // the same list in the same order as what the flexbox actually lays out.
+  //
+  // Shaped rather than fixed, which means it changes identity once — when the
+  // lock answers. Every effect that lists it re-runs then and re-attaches to
+  // the panes that now exist, which is exactly right and is why they list it.
+  const paneRefs = useMemo(
+    () => (authed ? [cardRef, homeRef, inboxRef, friendsRef] : [cardRef, homeRef, deskRef]),
+    [authed]
+  );
   // Kept in step on every render, and read by the getter above. It has to be
   // set here rather than beside the state it mirrors: the ref is declared in
   // this block, and writing to it earlier in the body is the dead zone.
@@ -581,7 +602,11 @@ export default function HomeNav() {
     get current() {
       const inner = floorRef.current;
       if (inner && getComputedStyle(inner).overflowY === 'auto') return inner;
-      return paneRefs[HOME].current;
+      // homeRef and not paneRefs[HOME]: the list is rebuilt when the lock
+      // answers and this object is made once, so it would be holding the old
+      // one. They are the same ref either way, which is precisely why reaching
+      // through the list for it would have gone unnoticed.
+      return homeRef.current;
     },
   }).current;
 
@@ -1299,14 +1324,18 @@ export default function HomeNav() {
   // it is a page — and a down caret on it would be promising an arrival that
   // this layout deliberately does not have. Down is a cover, and the card is
   // not one.
+  //
+  // paneRefs is a dependency and was not, which was harmless until the list
+  // stopped being fixed on 2026-09-19: a callback made once holds the list the
+  // first render gave it, and the first render of a keeper's cross is always
+  // the signed-out shape because the lock has not answered yet.
   const measure = useCallback(() => {
     setDeep(paneRefs.map((ref, i) => {
       if (i !== HOME) return false;
       const el = ref.current;
       return !!el && el.scrollHeight - el.clientHeight > 8;
     }));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [paneRefs]);
 
   useEffect(() => {
     measure();
@@ -1348,8 +1377,11 @@ export default function HomeNav() {
       return () => el.removeEventListener('scroll', onScroll);
     });
     return () => cleanups.forEach(fn => fn && fn());
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [stir]);
+    // And here too: the panes this listens to are the panes that exist, and
+    // two of them arrive when the lock answers. Without paneRefs the inbox and
+    // the book would scroll with nothing listening — no fade on the controls
+    // while they move, and a `down` that never changes for them.
+  }, [stir, paneRefs]);
 
   function goTo(index) {
     const el = railRef.current;
@@ -1850,6 +1882,11 @@ export default function HomeNav() {
     <div
       className={
         'hn hn--face-' + face
+        /* Whether the keeper is looking. The stylesheet needs to know because
+           the rail is a different shape either way — four panes or three —
+           and which panes those are is not something a selector can work out
+           from the markup. */
+        + (authed ? ' hn--keeper' : '')
         + (turning ? ' hn--turning' : '')
         + (spine.dragging ? ' hn--dragging' : '')
         + (choosing ? ' hn--choosing' : '')
@@ -1996,6 +2033,35 @@ export default function HomeNav() {
             </div>
           </div>
         </section>
+
+        {/* ── The inbox, and the book ───────────────────────────────────
+            Two stops of their own from 2026-09-19, where they were rows on a
+            desk. Both are rooms you stand in rather than corridors you pass
+            through, which is the whole argument for the band having four
+            words on it instead of three and a page of doors behind one of
+            them (Miyel's friends brief).
+
+            Owner-only, and drawn only once the lock has said so, which is
+            also what keeps the rail three panes wide for a visitor. They are
+            not drawn at all on a desktop — see nav.css — because a desktop
+            has no band to reach them with and opens both on the spine, the
+            way it always has.
+
+            Full pages inside a pane. The inbox is its own route drawn without
+            its bar; the book is the component its route is a frame around.
+            Neither is a copy of anything: the address still works, and what
+            is at the address is what is here. */}
+        {authed && (
+          <section className="hn-pane hn-pane--inbox" ref={inboxRef} aria-label="What has arrived">
+            <Inbox inPane />
+          </section>
+        )}
+
+        {authed && (
+          <section className="hn-pane hn-pane--friends" ref={friendsRef} aria-label="The journals you read">
+            <Friends />
+          </section>
+        )}
 
       </div>
 

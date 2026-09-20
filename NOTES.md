@@ -1549,6 +1549,18 @@ Project → Settings → Environment Variables.
 
 ## Gotchas
 
+**A callback with no dependencies holds the first render's world,
+2026-09-19.** The cross's `measure` listed nothing and closed over the list of
+panes, which was fine for as long as that list was fixed. It stopped being
+fixed the moment the rail had a different shape for a keeper than for a
+visitor — and the first render of a keeper's cross is always the visitor shape,
+because the lock has not answered yet. So the callback was measuring a rail
+that no longer existed, forever. **When a value that a memo or a callback
+closes over starts depending on state, every one of them has to list it**, and
+an `eslint-disable-next-line react-hooks/exhaustive-deps` is exactly where that
+will not be noticed. Two in the same file had it; both were wrong the moment
+the list moved.
+
 **A stale stylesheet outlives the dev server, 2026-09-19.** The note already
 below says a restart may be needed after editing a global sheet. It is worse
 than that: a restart is sometimes *not enough*. Half an afternoon went on a
@@ -2669,6 +2681,47 @@ current.
 ---
 
 ## Complete
+
+**2026-09-19 — Four doors at the foot, and the desk is gone.** The second half
+of brief 1: the band that names the panes goes from three words to four, and
+the two rooms that were behind the desk become places you can be.
+
+- [x] **Card · Beacon · Inbox · Friends.** The band drew Card · Beacon · Desk
+      and the desk was a page of doors — a corridor, with the two rooms worth
+      standing in behind it. They are stops of their own now, which is the
+      whole shape of the brief's own mock-up. Signed out it is still three:
+      Card · Beacon · About, because there is no inbox and nobody to read.
+- [x] **The rail is four panes wide for a keeper.** Both new ones mount with
+      the cross and stay mounted — the rail's bargain, and what lets the inbox
+      go on counting while you are looking at the card. The inbox is its own
+      page drawn without its bar (`inPane`); the book is `Friends`, which is
+      a component and not a route precisely so that it could be hung here.
+- [x] **And Compare opens over the cross.** A door in the book now lands on
+      `/dashboard/people/[id]` from `/`, which the `(.)` interception catches
+      — so a person opens as a layer with the book still underneath, and
+      closing it puts you back on the pane where you were. It used to be a
+      navigation out of the cross. Nothing was written to make that happen.
+- [x] **Settings, the version and Report a problem moved to the foot of the
+      card**, below everything a visitor reads, behind a rule. The card is the
+      page about this journal and Settings is where the journal's own facts
+      are kept. It wears the desk's own row and the desk's own colophon line
+      rather than a new shape for the same door.
+- [x] **The feed is a row at the foot of the book**, where the brief wants its
+      second floor. A row and not the mock-up's `FEED ⌄`, because a caret
+      promises a scroll and this still navigates. When the floor arrives the
+      row goes and the caret tells the truth.
+- [x] **Desktop is untouched, deliberately.** Above 769px there is no band, so
+      there is nothing to reach a pane with: the book keeps its spine, the
+      desk keeps its four doors, and the two new panes are not drawn at all.
+      The card's foot and the feed row are phone-only for the same reason —
+      the desk is still there to hold them, and the same door twice one turn
+      apart is worse than either.
+
+**Left alone, and named here so it is a choice:** the desk still mounts on a
+phone, hidden, so `Dashboard` still asks `/api/update` once beside the card's
+own ask. Two GETs to your own server, to an endpoint that asks GitHub at most
+once an hour. Not worth a media query in JavaScript and the hydration question
+that comes with it; worth fixing when the desk goes for good.
 
 **2026-09-19 — The book is faces, and sending is two screens.** Brief 1 of the
 friends brief (2026-09-17), and everything the brief's own send sheet turned

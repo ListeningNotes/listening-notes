@@ -2302,6 +2302,35 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   .hn-face--card { order: 1; }
   .hn-pane--home { order: 2; }
   .hn-face--desk { order: 3; }
+
+  /* ── Four stops for the keeper, 2026-09-19 ────────────────────────────
+     The desk comes out of the rail and the two rooms behind it take their own
+     places. It is still in the markup and still the spine's second page above
+     769px, where there is no band to reach anything with; here it would be a
+     fourth pane nothing points at.
+
+     `display: none` and not `order: 99`: a pane out of the band's reckoning
+     but still in the flexbox is a screenful of desk you can swipe into and
+     not swipe out of by pressing anything. */
+  .hn--keeper .hn-face--desk { display: none; }
+  .hn-pane--inbox { order: 3; }
+  .hn-pane--friends { order: 4; }
+  /* The same clearance the faces take: under the bar at the top, above the
+     band at the foot. Written here rather than on the pages inside, because
+     it is the cross's furniture they are clearing and those pages have their
+     own addresses where none of it exists. */
+  .hn-pane--inbox,
+  .hn-pane--friends {
+    padding: calc(36px + var(--safe-top)) 0 calc(var(--hn-foot-h) + 20px);
+    box-sizing: border-box;
+  }
+  /* A page drawn inside a pane has no bar of its own to clear and no screen
+     of its own to fill. */
+  .hn-pane--inbox .own-screen--pane,
+  .hn-pane--friends .own-screen {
+    --own-nav-bottom: 0px;
+    min-height: 0;
+  }
   /* Nothing is hidden and nothing is turning. Both of those belong to a spine
      that shows one page at a time; here all three are panes and all three are
      always there, a swipe away. */
@@ -2381,6 +2410,12 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
     overflow-x: hidden;
   }
   .hn-pane { width: auto; min-width: 0; }
+  /* The book has two pages and neither of them is one of these. A desktop
+     reaches the inbox and the address book the way it always has — a door on
+     the desk, opening as a layer over the spine — so the panes the band
+     needs are not drawn at all here. Not hidden with visibility: they mount,
+     they fetch, and a grid would still give them a column. */
+  .hn-pane--inbox, .hn-pane--friends { display: none; }
   .hn-pane--turn { grid-column: 1; }
   .hn-pane--home { grid-column: 2; border-left: 1px solid var(--border); }
   /* The faces pay nothing at either end here: the switch is at the top and

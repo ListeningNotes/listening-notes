@@ -75,7 +75,14 @@ function FolderTab({ id, tab, onSelect, children }) {
 // shelf now and the message is on the front of every item, which is what it
 // was always for.
 
-export default function Inbox({ layered = false }) {
+// `inPane` is the third way this page is drawn, from 2026-09-19: as a pane of
+// the cross rather than a screen of its own. The band at the foot made the
+// inbox one of four places you can be, so the whole page mounts inside the
+// rail — which means no SiteNav (the cross has its own bar above every pane)
+// and no redirect when the check says no, because the cross has already asked
+// the same question and would not be drawing this if the answer were no. The
+// standalone address stays exactly as it was; a bookmark is a promise.
+export default function Inbox({ layered = false, inPane = false }) {
   const router = useRouter();
   // Who this copy belongs to, carried on every link out to another journal
   // so the form there knows who is sending. See carrySender.
@@ -466,12 +473,12 @@ export default function Inbox({ layered = false }) {
   }
 
   if (checking) return <div style={{ minHeight: '100vh', background: 'var(--bg)' }} />;
-  if (!authed) { if (typeof window !== 'undefined') window.location.replace('/login'); return null; }
+  if (!authed) { if (!inPane && typeof window !== 'undefined') window.location.replace('/login'); return null; }
 
 
   return (
-    <div className={'own-screen' + (layered ? ' own-screen--layered' : '')}>
-      <SiteNav />
+    <div className={'own-screen' + (layered ? ' own-screen--layered' : '') + (inPane ? ' own-screen--pane' : '')}>
+      {!inPane && <SiteNav />}
 
       <div className="own-body ib-body">
         <div className="ib-tabs">
