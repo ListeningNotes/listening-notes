@@ -2687,12 +2687,15 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
      the same breath, below. A desk is untouched: it has no band, one page
      at a time, and the bar's mark is the only one it has. */
   /* ── One mark, 2026-09-20 ─────────────────────────────────────────────
-     None at all on a phone, except while the picker is open. The crown is
+     None at all on a phone *while the crown is doing the travelling*, and
+     the crown says so on the cross — without that, a screen where the morph
+     cannot run has a header with nothing in it, which is what "it disappears
+     into nothing" was. Also not while the picker is open. The crown is
      what arrives in this row now — it travels there as the pane scrolls and
      stays — so a second copy fading in behind it is the two logos Miyel
      caught on a slow drag. The picker is the exception because floor one
      *is* the picker while it is open, so there is no crown to arrive. */
-  .hn:not(.hn--choosing) .hn-bar-mark { display: none; }
+  .hn--morph:not(.hn--choosing) .hn-bar-mark { display: none; }
   /* Three classes deep on purpose: idcard.css has `.ab-card .idc-mark` and
      is loaded after this sheet, so anything of equal weight written here
      loses to it whatever the media query says. */
