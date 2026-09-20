@@ -59,10 +59,11 @@ const RECENT_MOST = 40;
 const SUBMISSIONS_MOST = 30;
 // How long one journal gets to answer before its rows are simply absent.
 const EACH_MS = 8000;
-// How long a comparison takes to put itself away: the bars sink, and then the
-// panel folds after them. The open runs the other way round — the panel first
-// and the bars into it — so closing is the same two movements read backwards.
-const SHUT_MS = 600;
+// How long a comparison takes to put itself away. One movement, not two: the
+// door comes down over a horizon that does not move (Miyel, 2026-09-20). A
+// frame or two more than the fold itself, so the panel is not taken out of
+// the page on the same tick it finishes.
+const SHUT_MS = 340;
 
 // ── Two densities ─────────────────────────────────────────────────────────
 // The feed one record a screen, or six rows of one. Her brief, 2026-09-20:

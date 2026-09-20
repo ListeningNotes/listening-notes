@@ -2792,15 +2792,22 @@ states, nothing in between."
       A row gives its meta about 140px, and "ago" is 26 of them said three
       times over; the artist and the name are the part that cannot be guessed.
       Her own mock-up writes it that way.
-- [x] **A gold ring: on the cover in full, round the whole row in list.**
-      Miyel, 2026-09-20: "in list view that amber highlight can be the whole
-      box not just the art." A 56px thumbnail is too small a thing to hang the
-      one at-a-glance fact on, and a ring round it reads as something about
-      the picture where round the row it is about the record. The row gives up
-      its own hairline while it wears one — two rules two pixels apart, one
-      faint and one gold, is a box with a smudge under it — and every row
-      carries the 10px of side padding the ring needs, or the shared ones
-      would sit inset from the rest and the list would be ragged down an edge.
+- [x] **How a shared record shows, third go.** A ring round the art, then a
+      ring round the whole row, and neither was it. **The trouble was the
+      colour, not the size:** gold is what a star is on this site, everywhere,
+      so a gold rule beside five gold stars is the rating said twice — it read
+      as loud, and as being about the score. Nothing else here is gold that is
+      not a score.
+
+      So in rows there is no colour and no rule: the row is lifted onto
+      `--panel`, the ground the card and the tile and the sheet all stand on,
+      which is this site's existing way of saying *this is a thing and not
+      just some words*. Scrolling, it is a shape rather than a line, and a
+      shape is what the eye catches without reading. Standing still it is
+      barely there, which was the brief. Every row keeps the 10px of side
+      padding, or the lifted ones would sit inset and the list would go ragged
+      down an edge. The tall version keeps the gold ring on its cover, which
+      is what her own reference drew and where the cover is 300px of record.
 - [x] **Why a ring at all, in either density.** The one thing in a
       feed you can act on that is worth spotting without reading — and reading
       is what scrolling past eight rows a screen does not leave time for. An
@@ -2812,13 +2819,16 @@ states, nothing in between."
       from the version where it stood alone; a mark in a row of marks does not
       get a caption, the envelope beside it never had one, and the ring round
       the cover has already said the thing before you read anything.
-- [x] **And closing one is the same two movements read backwards.** It
-      vanished — Miyel: "it just disappears the way it is now." A comparison
-      that is closing has to still be in the page to close in, so the key is
-      held for 600ms and let go after, the shape the book's doors already use.
-      The bars sink and the panel folds after them, quicker down than up,
-      because a thing arriving can take its time and a thing leaving should
-      not keep you waiting.
+- [x] **And closing one is a door, not the opening rewound.** It vanished —
+      "it just disappears the way it is now" — and the first go ran the open
+      backwards, bars down then panel. Wrong, and she said why: "the horizon
+      bars don't need a reversed animation, just the door needs to feel like
+      it closes on them." The bars rising *is* the comparison being made, and
+      running it backwards un-makes it, which is not what closing means. The
+      bars hold their heights and the panel comes down over them; `overflow:
+      hidden` does the work. A comparison that is closing still has to be in
+      the page to close in, so its key is held for the length of it — the
+      shape the book's doors already use.
 - [x] **Opening one scrolls it into view**, by as much as it takes and never
       when it was already in view. A control that reports its result somewhere
       you cannot see has not reported anything. It waits for the panel to
