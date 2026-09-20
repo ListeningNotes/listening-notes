@@ -2902,6 +2902,13 @@ else's, which is an argument for a version on that URL and is not built.
 - [x] **Edit is the first tool behind the ···**, which is the shortest reach:
       the row opens back towards the mark that opened it, so the head of the
       list lands nearest the thumb. It is also the one that gets pressed.
+- [x] **Every tool says what it is.** It hung on how many there were — glyphs
+      alone up to three, glyph-over-word past that — and Miyel took the count
+      out: "toolbar should be uniform across site, those glyphs should be
+      labels." The count was the wrong thing to hang it on. A control that
+      changes what it looks like depending on how many neighbours it has wears
+      two faces on two pages, and the card had just gained a third tool and
+      would have changed clothes for it.
 - [x] **No hairline over the version line.** The same argument as the one
       under the header: a rule separates two things that would otherwise run
       together, and a caption 46px below the last of the writing is already
