@@ -44,6 +44,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { useListeningBeacon } from '../../hooks/useListeningBeacon';
 import { useBookplate } from './Bookplate';
 
@@ -55,6 +56,19 @@ import { useBookplate } from './Bookplate';
 export default function SiteNav({ tools = null }) {
   const { cover_name } = useBookplate();
   const { isLive } = useListeningBeacon();
+  // ── Where the mark is drawn, 2026-09-20 ─────────────────────────────────
+  // On an entry, and nowhere else (Miyel: "all standalone pages except
+  // entries"). The mark belongs to the journal, and the one standalone page
+  // that is *of* the journal — a listen, at an address you can send somebody
+  // — is the entry. Settings, the inbox at its own address, a report: those
+  // are rooms in the back of the house, and a logo over each of them says
+  // nothing except that this is still the same website.
+  //
+  // Read off the address rather than passed in, because it is a fact about
+  // where you are and not a decision each page should get to make
+  // differently. The layer routes see their own address here, which is right.
+  const here = usePathname();
+  const onAnEntry = Boolean(here && here.startsWith('/entries/'));
 
   // This row and the dot-nav beneath it are fixed with no background of their
   // own, so page text scrolled straight through the logo and the dot labels. The backdrop that hides it (.sitenav-row::before) only fades
@@ -80,6 +94,7 @@ export default function SiteNav({ tools = null }) {
           the mark on the middle of the row. */}
       <div className="sitenav-side sitenav-side--left" aria-hidden="true" />
 
+      {onAnEntry && (
       <Link href="/" className="sitenav-logo" aria-label={cover_name}>
         <svg viewBox="76 96 241 140" className="sitenav-logo-mark" xmlns="http://www.w3.org/2000/svg">
           <path
@@ -98,6 +113,7 @@ export default function SiteNav({ tools = null }) {
           />
         </svg>
       </Link>
+      )}
 
       {/* The right slot: the owner's ···, on the pages that have one, in the
           corner the card keeps its own in. */}
