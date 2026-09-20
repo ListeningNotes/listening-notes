@@ -2692,6 +2692,17 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
      the page. The row moves into this bar instead; IdentityCard.js puts the
      slot here and draws into it. */
   .hn-bar-tools { display: flex; align-items: center; }
+  /* ── The book's + in the bar, 2026-09-20 ──────────────────────────────
+     The other half of the relay: while the shelf is what you are on, this
+     corner is the book's way of adding somebody; a floor down it is the
+     feed's density toggle. Neither knows about the other — the corner is
+     handed over by the cross, which is the only thing that knows which floor
+     is up (Friends.js puts the slot here, HomeNav puts the class on). */
+  .hn-bar-add { display: flex; align-items: center; }
+  /* The book's, and only while you are on the book. Pane 2 is the friends
+     pane; see the constants in HomeNav.js. */
+  .hn:not([data-pane="2"]) .hn-bar-add,
+  .hn--at-feed .hn-bar-add { display: none; }
   /* The card's, and only while you are on the card. The slot belongs to a
      pane that stays mounted while you swipe away from it, and a door to
      somebody's card sitting over the beacon is a door to the wrong page.

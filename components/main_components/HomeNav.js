@@ -1535,6 +1535,13 @@ export default function HomeNav() {
   // the floor and leaves with it.
   const { density, flip: flipDensity } = useFeedDensity();
   const onTheFeed = pane === BOOK && atFeed;
+  // What the bar is called while you are on the friends pane. Nothing on the
+  // others: the beacon has a mark of its own and the card's tools are the only
+  // thing it puts up here.
+  const barSays = pane !== BOOK ? null
+    : atFeed ? 'Recent listens'
+    : bookSize > 0 ? `Address book \u00b7 ${bookSize}`
+    : 'Address book';
 
   const header = (
     <div className={'hn-bar' + (down[pane] || choosing ? ' hn-bar--scrolled' : '')}>
@@ -1547,15 +1554,22 @@ export default function HomeNav() {
           In the middle of the row, where the mark stands on the pane that
           draws one — so on this pane the middle is free and a name in it
           reads as a header's name rather than as a label at one end. */}
-      {/* ── Its name is longer now, 2026-09-20 ──────────────────────────
-          Miyel: "I think feed can take a different name. Recent listens
-          maybe? It was short before because of the chevron and how it lived.
-          Now it's different." Exactly so — it was a word standing over a
-          chevron at the foot of a screen, where every character costs, and it
-          is a header's name now, where the room is the row. Whose listens is
-          the pane's own business: the faces are directly above it and the
-          band says FRIENDS. */}
-      {onTheFeed && <span className="hn-bar-say">Recent listens</span>}
+      {/* ── One header, two names, 2026-09-20 ───────────────────────────
+          The friends pane has two floors and the bar says which one you are
+          on: the book and how many are in it upstairs, what they have been
+          listening to downstairs. Miyel: "center address book · #, so
+          basically that gets replaced by recent listens once you hit the
+          feed." The book's name was a line on its own floor ten pixels below
+          this one, which is a title and a title rather than a header.
+
+          Recent listens rather than Feed because there is room for it here —
+          "it was short before because of the chevron and how it lived, now
+          it's different" — and whose listens is the pane's own business: the
+          faces are directly above and the band says FRIENDS.
+
+          Keyed on the word so React builds a new one when it changes, which
+          is what makes the swap fade rather than cut. */}
+      {barSays && <span key={barSays} className="hn-bar-say">{barSays}</span>}
       {/* ── The way out of the picker ────────────────────────────────────
           In the corner the up-caret holds the rest of the time — the two never
           want the row at once, because while the picker is open there is no
@@ -2040,6 +2054,10 @@ export default function HomeNav() {
         + (choosing ? ' hn--choosing' : '')
         + (filing ? ' hn--filing' : '')
         + (landing ? ' hn--flying' : '')
+        /* Which floor of the friends pane you are on, so the corner of the
+           bar can be handed from the book's + to the feed's toggle without
+           either of them knowing about the other. See .hn-bar-add. */
+        + (atFeed ? ' hn--at-feed' : '')
       }
       data-pane={pane}
     >

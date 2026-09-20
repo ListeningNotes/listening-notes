@@ -3050,6 +3050,20 @@ else's, which is an argument for a version on that URL and is not built.
       type, next to a mark that already means *down*. The floor's name stays
       on the button's label, and the feed's still arrives in the header once
       you are on it, which is where a name belongs.
+- [x] **The friends pane's header is a relay.** "The + and address book
+      becomes a header that passes itself off to the next header — it's a
+      relay, if it needs a title or a name." So the bar carries both floors:
+      ADDRESS BOOK · N with the + at the corner while the shelf is what you
+      are on, RECENT LISTENS with the density toggle a floor down. Both names
+      land on the same line, because it is one header — the book's title used
+      to be a line on its own floor ten pixels below this one, which is a
+      title and a title rather than a header.
+      **Neither half knows about the other.** Friends puts the + in a slot it
+      makes in the bar (the trick IdentityCard uses for its tools) and HomeNav
+      puts `hn--at-feed` on the cross; the corner is handed over in CSS by the
+      one thing that knows which floor is up. The word is keyed on itself so
+      React builds a new one when it changes, which is what makes the swap
+      fade rather than cut.
 - [x] **And the feed is called Recent listens.** "It was short before because
       of the chevron and how it lived. Now it's different." Exactly: Feed was
       a word standing over a chevron at the foot of a screen, where every
