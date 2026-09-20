@@ -962,6 +962,10 @@ a.pp-name:hover svg { color: var(--ink); }
    row is a face and a name, never the address — the row itself opens your
    page about them, the arrow beside it opens their journal. */
 .bk-body { max-width: 720px; padding: 18px 24px 40px; }
+/* The friends pane stands on the page itself — no panel, no second border
+   inside a screen that already has one. The gutters are the book's; what
+   goes is the card. */
+.fr-body { max-width: 720px; padding: 18px 24px 40px; display: flex; flex-direction: column; }
 .bk-panel { border-radius: 24px; }
 .bk-scroll { position: relative; z-index: 1; flex: 1; padding: 22px 26px 28px; }
 /* The field, as wide as the list under it, and its two ways in centred
@@ -977,6 +981,291 @@ a.pp-name:hover svg { color: var(--ink); }
   font-family: var(--font-sans); font-size: 14px;
 }
 .bk-field:focus { outline: none; border-color: var(--ink-faint); }
+/* ══ The friends pane ══════════════════════════════════════════════════════
+   Faces, not rows. From Miyel's brief of 2026-09-17 (f1, f2, f4); the
+   component is components/main_components/Friends.js and the reasoning is
+   there. This is only what it looks like.
+
+   The `.bk-*` rows it replaces are gone from the markup; what is left of
+   that family below is the frame around this — the body, the panel, the
+   scroller — and the field, which the + still opens. */
+.fr { display: flex; flex-direction: column; }
+
+/* ── The one slot at the top ───────────────────────────────────────────────
+   A field and a +, and the + decides which field it is: searching the book,
+   or typing an address into it. One box rather than two stacked, because a
+   page whose top is a search box and an address box at once is asking which
+   one you meant before you have done anything.
+
+   What was here was the word EVERYONE and a count. Both went with the search
+   (Miyel, 2026-09-19): the count was a fact about the page rather than
+   something you needed, and a number beside a search box reads as a result
+   rather than a total. The faces are the count.
+
+   ── And the two of them pass ──────────────────────────────────────────────
+   Both fields live in the same grid cell, so the slot is as tall as they are
+   and neither has to be told a height. They are never mounted or unmounted:
+   a thing that appears cannot move.
+
+   And they do not fade. Miyel, 2026-09-19: "I want it to look more like the
+   search bar shrinks and the new one opens, not a dissolve." So nothing here
+   touches opacity — each field is clipped, and the clip is the whole
+   movement. The search closes toward its own left edge, which is the
+   "disappears left" of her first note; the address opens out of its right
+   edge, which is the × it came from. At any moment in the middle, the search
+   is the left part of the slot and the address is the right part of it: they
+   tile rather than lying on top of each other, which is the thing a
+   crossfade cannot do and the reason this reads as one object making room
+   for another.
+
+   `round 999px` on the clip, or a pill being clipped by a rectangle grows a
+   straight end on its way out. */
+.fr-head { display: flex; align-items: center; gap: 8px; }
+.fr-slot { display: grid; flex: 1; min-width: 0; }
+.fr-field {
+  grid-area: 1 / 1;
+  display: flex; align-items: center; gap: 9px;
+  min-width: 0;
+  padding: 10px 14px; border-radius: 999px;
+  border: 1px solid var(--border); background: var(--panel);
+  color: var(--ink-faint);
+  white-space: nowrap;
+  clip-path: inset(0 0 0 0 round 999px);
+  transition: clip-path 0.38s cubic-bezier(0.22, 0.61, 0.36, 1),
+              border-color 0.15s, color 0.15s;
+}
+/* Closed toward its left edge: the right edge travels left and it is gone
+   into the side it came from. `inert` takes the keyboard off it, this takes
+   the thumb. */
+.fr-field--gone { clip-path: inset(0 100% 0 0 round 999px); pointer-events: none; }
+/* Opened out of its right edge, which is the corner the button is in. */
+.fr-field--address { border-color: var(--ink-faint); color: var(--ink-soft); }
+.fr-field--waiting { clip-path: inset(0 0 0 100% round 999px); pointer-events: none; }
+.fr-field:focus-within { border-color: var(--ink-faint); }
+.fr-field input {
+  flex: 1; min-width: 0;
+  border: 0; background: none; outline: none;
+  /* 16px, like every other field on a touch screen: Safari zooms in on
+     anything smaller and does not reliably zoom back out. */
+  color: var(--ink); font-family: var(--font-sans); font-size: 16px;
+}
+.fr-field input::placeholder { color: var(--ink-faint); }
+
+/* One glyph that turns. A plus at forty-five degrees is a cross, so this
+   control becomes the other thing rather than being swapped for it. */
+.fr-plus {
+  display: inline-flex; align-items: center; justify-content: center;
+  flex: 0 0 auto;
+  width: 40px; height: 40px;
+  border: 0; background: none; padding: 0;
+  color: var(--ink-soft); cursor: pointer;
+  transition: color 0.15s;
+}
+.fr-plus:hover { color: var(--ink); }
+.fr-plus svg { transition: transform 0.34s cubic-bezier(0.22, 0.61, 0.36, 1); }
+.fr-plus--shut svg { transform: rotate(45deg); }
+
+/* Add and Scan, centred under the address field. Collapsed rather than taken
+   away, so the row opens and closes on the same clock as the fields crossing
+   above it instead of blinking in when they have finished.
+
+   `.own-act` sets no gap of its own — every other caller passes it a word
+   alone — so the camera and SCAN A CODE were touching. */
+.fr-add-acts {
+  display: flex; align-items: center; justify-content: center;
+  gap: 10px; flex-wrap: wrap;
+  max-height: 0; margin-top: 0; opacity: 0; overflow: hidden;
+  transform: translateY(-8px);
+  pointer-events: none;
+  transition: max-height 0.34s cubic-bezier(0.22, 0.61, 0.36, 1),
+              margin-top 0.34s cubic-bezier(0.22, 0.61, 0.36, 1),
+              transform 0.34s cubic-bezier(0.22, 0.61, 0.36, 1),
+              opacity 0.22s ease;
+}
+/* Near the real height, not wildly above it — the same note `.beacon-meta`
+   carries in nav.css, and the same mistake made again here first. The row is
+   32px and the cap was 80, so the opening was over at two fifths of the
+   clock and the rest of the transition was max-height climbing through air
+   with nothing moving. 56 leaves room for the two words to wrap onto a
+   second line on a narrow phone and still spends most of the duration
+   actually opening. */
+.fr-add-acts--open {
+  max-height: 56px; margin-top: 12px; opacity: 1;
+  transform: none;
+  pointer-events: auto;
+}
+.fr-add-acts .own-act { gap: 7px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .fr-field, .fr-plus svg, .fr-add-acts { transition: none; }
+}
+
+/* ── The grid ──────────────────────────────────────────────────────────────
+   Four across up to a dozen people, five beyond it, set from the component
+   because the count is the component's to know. Scale by shrinking, not by
+   changing shape: the same square, the same name under it, one more of them
+   in the row.
+
+   A row at a time rather than one grid, because the doors open *between* two
+   rows and CSS grid cannot say "after whichever row that item landed in". */
+.fr-row { display: flex; flex-direction: column; }
+.fr-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--fr-across, 4), 1fr);
+  gap: 18px 10px;
+  padding: 18px 0;
+}
+.fr-one {
+  display: flex; flex-direction: column; align-items: center; gap: 9px;
+  border: 0; background: none; padding: 0;
+  cursor: pointer; min-width: 0;
+  /* Quicker than the face grows. Both used to be 0.2s and both started on
+     the same frame — measured, there was never a delay in the code — but a
+     dim that takes as long as the thing it is deferring to reads as
+     arriving after it. The context should be out of the way before the
+     subject has finished arriving, not alongside it. */
+  transition: opacity 0.12s ease;
+}
+/* Everyone else stands down while one is open — the whole book, not just
+   that row, which is what the mock-up draws and the truer statement: one
+   person is chosen, and the rest of the page is waiting rather than offering
+   itself. */
+.fr--open .fr-one { opacity: 0.4; }
+.fr--open .fr-one--open { opacity: 1; }
+/* ── A record's shape, not a circle ───────────────────────────────────────
+   Miyel, 2026-09-19: the faces should be "the rounded square of the beacon
+   and album entry shape." Which is where the book already was — the rows
+   these faces replace carried the same note from 2026-09-12, and the circles
+   came in with the mock-up rather than from the site.
+
+   10%, the proportion the record wears at every size it is drawn (see
+   .beacon-art-wrap in nav.css): written as a percentage rather than a number
+   so a face and a cover are the same shape whatever size either is given.
+   A portrait in the shape of a record is the whole idea of this page — these
+   are journals, and a journal is a shelf of records. */
+.fr-face {
+  position: relative;
+  display: flex; align-items: center; justify-content: center;
+  width: 100%; max-width: 62px; aspect-ratio: 1;
+  border-radius: 10%;
+  background: var(--panel);
+  color: var(--ink-faint);
+  overflow: hidden;
+  transition: box-shadow 0.2s, transform 0.2s;
+}
+.fr-face img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+/* It grows, and that is all it does. There was a 2px ink ring round it as
+   well — the lit-not-filled shape a chosen flag on an entry wears — and
+   Miyel took it off, 2026-09-19: "I don't like the black border over the
+   chosen user." She is right that it was a third thing saying one thing,
+   and the wrong third: a hard rule drawn over somebody's face, on the one
+   page where the faces are the content.
+
+   What is left says it twice, which is enough. Dimming the other eight says
+   *not those*; growing says *this one*. A seventh — 1.15 of 61px is nine
+   pixels across, four and a half each side, inside a ten-pixel gutter — so
+   it never touches a neighbour and the grid below never moves: the face
+   grows out of its own square rather than taking room from the row. */
+.fr-one--open .fr-face { transform: scale(1.15); }
+.fr-name {
+  font-family: var(--font-display); font-weight: var(--font-display-weight, 700);
+  font-size: 13px; line-height: 1.2; color: var(--ink);
+  text-align: center;
+  max-width: 100%;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+/* A journal that has not answered keeps its pale face and says so, and the
+   row never prints the address in its place. */
+.fr-name--none { color: var(--ink-faint); font-weight: 400; }
+
+/* ── The four doors ────────────────────────────────────────────────────────
+   Between two hairlines under the row the face is in, glyph over word, which
+   is the band's pattern and this site's one way of drawing a row of places
+   to go.
+
+   Remove is one of them (Miyel, 2026-09-19: "remove can be the same as all
+   the other glyphs on the row, not a separate entity"). It was a faint word
+   on its own line for an hour, on the grounds that the mock-up draws three.
+   Four is the better reading of the same rule: these are everything you can
+   do about one person, and drawing one of them differently makes the row
+   three things and a warning. The second press is what stops it being
+   pressed by accident — a smaller typeface never was. The brief says a fifth
+   is where this row needs rethinking rather than wrapping, and that still
+   holds. */
+/* ── And they open, rather than appearing ──────────────────────────────────
+   Miyel, 2026-09-19: "can we make the friends options open with an animation
+   than just appear." One of these sits in every row, collapsed to nothing,
+   so the one being opened already has a frame to move from — a panel mounted
+   with its open state on it has nothing to transition out of, which is
+   exactly what React hands you if the panel only exists while it is open.
+
+   Everything collapses together: the height, the padding the doors stand in,
+   the hairlines top and bottom, and a short lift. Border-box is site-wide,
+   so a max-height of nothing takes the two borders with it and a closed
+   panel draws no line across the grid.
+
+   The cap is near the real height and not wildly above it — the doors are
+   80px and this is 104, leaving room for a fifth word or a wrap. Set it to
+   300 and the opening would be over in the first quarter of the clock with
+   the rest of the transition climbing through air, which is the mistake the
+   add row's cap made first and .beacon-meta's note warned about. */
+.fr-doors {
+  display: flex; flex-direction: column;
+  max-height: 0;
+  padding: 0;
+  opacity: 0;
+  overflow: hidden;
+  transform: translateY(-6px);
+  /* Width and not just colour. A closed panel with transparent 1px borders
+     is still two pixels tall in every row — border-box takes the borders
+     inside max-height, but it cannot take them below their own width. Three
+     rows of that is six pixels of nothing spread down the grid. */
+  border-top: 0 solid var(--border);
+  border-bottom: 0 solid var(--border);
+  pointer-events: none;
+  transition: max-height 0.34s cubic-bezier(0.22, 0.61, 0.36, 1),
+              padding 0.34s cubic-bezier(0.22, 0.61, 0.36, 1),
+              transform 0.34s cubic-bezier(0.22, 0.61, 0.36, 1),
+              border-width 0.34s cubic-bezier(0.22, 0.61, 0.36, 1),
+              opacity 0.2s ease;
+}
+.fr-doors--open {
+  max-height: 104px;
+  padding: 18px 0 16px;
+  opacity: 1;
+  transform: none;
+  border-top-width: 1px;
+  border-bottom-width: 1px;
+  pointer-events: auto;
+}
+/* Evenly spread rather than gathered in the middle: four doors under a row
+   of four faces should answer the grid above them. */
+.fr-doors-row {
+  display: flex; align-items: flex-start; justify-content: space-evenly;
+  width: 100%;
+}
+.fr-door {
+  display: inline-flex; flex-direction: column; align-items: center; gap: 8px;
+  border: 0; background: none; padding: 4px 2px;
+  color: var(--ink); text-decoration: none; cursor: pointer;
+  font-family: var(--font-display); font-weight: var(--font-display-weight, 700);
+  font-size: 13px;
+  white-space: nowrap;
+  transition: opacity 0.15s, color 0.15s;
+}
+.fr-door:hover { opacity: 0.65; }
+/* Quiet at rest, like the rest of the row — the difference is the second
+   press, not the colour. Red only once it has been asked, and then it is the
+   only red on the page. */
+.fr-door--remove { color: var(--ink-soft); }
+.fr-door--remove:hover { color: var(--fav); opacity: 1; }
+.fr-door--sure,
+.fr-door--sure:hover { color: var(--fav); opacity: 1; }
+
+@media (prefers-reduced-motion: reduce) {
+  .fr-one, .fr-face, .fr-door, .fr-plus, .fr-doors { transition: none; }
+}
+
 /* ── An address that came home in a link ────────────────────────────────────
    Somebody pressed Add on another journal and was sent back here carrying its
    address. Offered rather than filed (Miyel, 2026-09-19: "confirm before
@@ -1083,6 +1372,66 @@ a.pp-name:hover svg { color: var(--ink); }
 .pn-section-title { font-family: var(--font-display); font-weight: var(--font-display-weight, 700); font-size: 17px; color: var(--ink); }
 .pn-section-note { font-family: var(--font-label); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-faint); white-space: nowrap; }
 .pn-empty { padding: 18px 2px; font-family: var(--font-label); font-size: 11px; color: var(--ink-faint); }
+/* ── What they have sent you: a shelf ──────────────────────────────────────
+   Covers, four across, with the name and the note behind a press. Miyel,
+   2026-09-19. The same square and the same 10% as a record everywhere else
+   on this site, and the same grid-of-squares the friends pane draws — this
+   page and that pane are the same two objects at two sizes.
+
+   `.pn-item` and its parts stay: the other sections on this page are still
+   rows, and the opened detail borrows the album, artist and note from them
+   rather than growing a second set of type. */
+.pn-sent-row { display: flex; flex-direction: column; }
+.pn-sent-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px 10px;
+  padding: 12px 0;
+}
+.pn-sent { border: 0; background: none; padding: 0; cursor: pointer; min-width: 0; }
+.pn-sent-art {
+  position: relative; display: flex; align-items: center; justify-content: center;
+  width: 100%; aspect-ratio: 1;
+  border-radius: 10%;
+  overflow: hidden;
+  background: var(--panel);
+  color: var(--ink-faint);
+  transition: box-shadow 0.2s, transform 0.2s, filter 0.3s;
+}
+.pn-sent-art img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+/* Greyed until you have logged it — the beacon's idle cover and the past
+   listens beside it wear the same filter, so one rule reads across the site:
+   colour is a record in hand, grey is one you have not sat with. It means
+   the shelf answers what they sent and what you got to before anything is
+   pressed. */
+.pn-sent-art--unlogged { filter: grayscale(80%) brightness(0.7); }
+.pn-sent--open .pn-sent-art {
+  box-shadow: 0 0 0 2px var(--ink);
+  transform: scale(1.06);
+  filter: none;
+}
+.pn-sent-row--open .pn-sent { opacity: 0.45; }
+.pn-sent-row--open .pn-sent--open { opacity: 1; }
+.pn-sent-none { font-size: 20px; }
+/* The name, the artist and the whole note — not the 140-character trim the
+   row used, because a note you have chosen to open should not be cut. */
+.pn-sent-said {
+  display: flex; flex-direction: column; gap: 5px;
+  padding: 14px 2px 16px;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+}
+/* The same small caps the rows use for a rating or a state. It said "Not
+   logged yet" at body size for a few minutes, because the row's tail carried
+   that type and the row is gone: a line that had always been a footnote
+   became the loudest thing under the note. */
+.pn-sent-tail {
+  margin-top: 5px;
+  font-family: var(--font-label); font-size: 10px; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--ink-soft);
+}
+@media (prefers-reduced-motion: reduce) { .pn-sent-art { transition: none; } }
+
 .pn-item { display: flex; align-items: center; gap: 14px; padding: 12px 2px; border-bottom: 1px solid var(--border); }
 .pn-item:last-child { border-bottom: none; }
 .pn-item-art { width: 54px; height: 54px; border-radius: 8px; overflow: hidden; flex-shrink: 0; background: var(--bg); display: block; }

@@ -1,0 +1,509 @@
+// Copyright (C) 2026 Miyel Brown
+// SPDX-License-Identifier: AGPL-3.0-or-later
+'use client';
+
+// components/main_components/Friends.js
+// The journals this keeper reads, as faces.
+//
+// From Miyel's friends brief of 2026-09-17, mock-ups f1, f2 and f4. It
+// replaces the list of rows the address book has drawn since 2026-09-13: the
+// same people, the same three things you can do about each of them, arranged
+// so that the page is who you read rather than a table of addresses.
+//
+// ── Why faces and not rows ────────────────────────────────────────────────
+// A row spends its width on controls — an envelope, Visit, remove — and gives
+// the person whatever is left, which on a phone was 54px for a face and a
+// name. A grid gives every person the same square and puts the controls away
+// until one is chosen. It also scales: the brief's number is thirty people,
+// and thirty rows is a scroll where thirty faces is a page.
+//
+// ── One open at a time, and it opens in place ─────────────────────────────
+// Pressing a face does not navigate. The three doors unfold directly under
+// the row that face is in, between two hairlines, and pressing the same face
+// again closes them. Under *its* row rather than under the whole grid: the
+// brief says under the pinned row and there is no pinned row yet, and a door
+// twelve faces away from the face that opened it is a door about nothing.
+//
+// ── No pinning yet ────────────────────────────────────────────────────────
+// The brief puts pinned people above everyone else, on a nullable timestamp
+// and a migration. Miyel, 2026-09-19: "let's not add pinning friends yet,
+// mostly just beta testers, we don't need it yet." So there is no column, no
+// migration and no PINNED row, and the grid is everyone. When it arrives it
+// is a second grid above this one and nothing here has to move.
+//
+// ── The address is never printed ──────────────────────────────────────────
+// A person is a face and a name, which is the rule from 2026-09-12 and the
+// one thing the old rows nearly broke. The one place an address shows is the
+// offer below, where it is the fact being confirmed.
+
+import { useCallback, useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
+import { ArrowsDownUp, BookOpen, Camera, MagnifyingGlass, PaperPlaneTilt, Plus, Trash, User, X } from '@phosphor-icons/react';
+import CodeScanner from './CodeScanner';
+import SendSheet from './SendSheet';
+import { carrySender, journalUrl, tidyJournal } from '../../library/return_address';
+import { useBookplate } from './Bookplate';
+
+// The order the server keeps: by name, or by address for anyone without one.
+function inOrder(people) {
+  const called = p => (p.name || p.address).toLowerCase();
+  return [...people].sort((a, b) => called(a).localeCompare(called(b)));
+}
+
+// ── How many across ───────────────────────────────────────────────────────
+// "Roughly: four across up to a dozen people, five across beyond that" (the
+// brief). A dozen is where a grid stops being a glance.
+//
+// The brief hung the find field on this number too, and it does not any more:
+// searching is the top of the page from the first person (Miyel, 2026-09-19),
+// because the field is also where the + puts the address box, and a slot that
+// only exists past twelve people is a slot the + has nowhere to open into.
+const A_DOZEN = 12;
+
+// How long the doors take to open and close. The site's number for a thing
+// unfolding in place, and the same one the head's two fields cross on, so
+// pressing a face and pressing the + cost the same.
+const DOORS_MS = 340;
+
+export default function Friends() {
+  // Who this copy belongs to, carried on every link out to another journal so
+  // the form there knows who is sending. See carrySender.
+  const { keeper_name: myName, site_address: myAddress } = useBookplate();
+  const me = { name: myName, address: myAddress };
+
+  const [people, setPeople] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [open, setOpen] = useState(null);      // the id of the person showing their doors
+  // ── And the one on its way out ──────────────────────────────────────────
+  // The doors have to be in the DOM to collapse, and the person they belong
+  // to has to still be known while they do it, or the panel empties halfway
+  // through closing. So the outgoing id is held for the length of the
+  // movement and then let go. Switching straight from one face to another in
+  // a different row is the case this exists for: without it the first row's
+  // doors would vanish in a frame while the second row's opened properly.
+  const [leaving, setLeaving] = useState(null);
+  const leaveTimer = useRef(null);
+  const [adding, setAdding] = useState(false); // the + pressed: the field and the scanner
+  const [scanning, setScanning] = useState(false);
+  const [typed, setTyped] = useState('');
+  const [finding, setFinding] = useState('');
+  const [filing, setFiling] = useState(false);
+  const [said, setSaid] = useState('');
+  const [sendingTo, setSendingTo] = useState(null);
+  // An address that arrived in a link, held rather than filed — see the note
+  // in the offer below.
+  const [offered, setOffered] = useState('');
+  // Whether the bin has been pressed once. Miyel, 2026-09-19: "we can use the
+  // trashcan and remove with the double check that we do for deleting an
+  // entry." That is KeeperTools' shape exactly — the first press arms it and
+  // the word turns into the question, the second press does it — and it is
+  // also how a draft is discarded in the picker, so it is not a third thing
+  // to learn.
+  const [sure, setSure] = useState(false);
+  const fieldRef = useRef(null);
+  const binRef = useRef(null);
+  const paneRef = useRef(null);
+
+  useEffect(() => {
+    fetch('/api/people').then(r => r.json()).then(d => {
+      const had = d.people || [];
+      setPeople(had);
+      setLoading(false);
+      // Anyone filed without a name is asked for it again now — the same
+      // write as adding them, which is not an error the second time and keeps
+      // the name if one comes back.
+      for (const p of had.filter(q => !q.name)) {
+        fetch('/api/people', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ address: p.address }),
+        }).then(r => (r.ok ? r.json() : null)).then(a => {
+          if (a?.person?.name) setPeople(prev => inOrder(prev.map(q => (q.id === a.person.id ? a.person : q))));
+        }).catch(() => {});
+      }
+    }).catch(() => setLoading(false));
+  }, []);
+
+  // ── An address that arrived in the link ─────────────────────────────────
+  // Somebody reading another journal pressed Add there. That journal cannot
+  // write to this copy, so it sends the reader home with the address in hand
+  // and this files it. See CallingCard.js for the other end.
+  //
+  // Offered, not filed: a link that writes the moment it opens is a link
+  // anybody could send you, and the one promise this book makes is that a
+  // person is written down by the keeper and nobody else.
+  //
+  // Read after mount so the server and the browser agree on the first frame,
+  // and taken back off the address bar at once, as every other address this
+  // project carries in a link is (see noteArrival).
+  useEffect(() => {
+    let asked = '';
+    try { asked = new URLSearchParams(window.location.search).get('add') || ''; } catch { /* no URL to read */ }
+    const address = tidyJournal(asked);
+    if (!address) return;
+    setOffered(address);
+    try {
+      window.history.replaceState(window.history.state, '', window.location.pathname + window.location.hash);
+    } catch { /* a browser that will not rewrite its own bar is no reason to fail */ }
+  }, []);
+
+  // Files an address, however it arrived — a paste, a scanned code, an
+  // entry's whole link, or the offer above. The server tidies it again and
+  // reads the name off the journal; the check here only saves a round trip
+  // for a name typed into the wrong box.
+  const file = useCallback(async (value) => {
+    const address = tidyJournal(value);
+    if (!address) { setSaid("That doesn't look like a web address."); return; }
+    setFiling(true);
+    setSaid('');
+    try {
+      const r = await fetch('/api/people', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ address }),
+      });
+      const d = await r.json().catch(() => ({}));
+      if (!r.ok) { setSaid(d.error || 'That could not be added.'); return; }
+      setPeople(prev => inOrder([...prev.filter(p => p.id !== d.person.id), d.person]));
+      setTyped('');
+      setAdding(false);
+      setSaid(d.reached ? '' : "Added, but that journal isn't answering just now, so there's no name yet.");
+    } catch {
+      setSaid('That could not be added.');
+    } finally {
+      setFiling(false);
+    }
+  }, []);
+
+  const read = useCallback((text) => { setScanning(false); file(text); }, [file]);
+
+  // Pressing a face opens it, pressing it again closes it, and pressing a
+  // different one moves. Whatever was open goes on the way-out list for the
+  // length of the movement so it can be watched leaving.
+  function choose(id) {
+    const was = open;
+    const next = was === id ? null : id;
+    setOpen(next);
+    if (was !== null && was !== next) {
+      setLeaving(was);
+      clearTimeout(leaveTimer.current);
+      leaveTimer.current = setTimeout(() => setLeaving(null), DOORS_MS + 80);
+    }
+  }
+  useEffect(() => () => clearTimeout(leaveTimer.current), []);
+
+  async function cross(id) {
+    setSure(false);
+    setOpen(null);
+    await fetch(`/api/people/${id}`, { method: 'DELETE' });
+    setPeople(prev => prev.filter(p => p.id !== id));
+  }
+
+  // The cursor goes into whichever field the + has just put there; a + that
+  // opens a box you then have to tap is two presses for one act. Searching
+  // is not focused on arrival — the page is for looking at, and a keyboard
+  // over the faces before you have asked for one is a page that opened
+  // itself.
+  useEffect(() => { if (adding) fieldRef.current?.focus(); }, [adding]);
+
+  // ── Anywhere else puts the bin back ─────────────────────────────────────
+  // Once the word has become the question there is no un-armed control left
+  // to press, so the way back cannot be the control itself — the same answer
+  // the entry's tools and the picker's drafts give. Captured at the document
+  // so the state is clear before the press reaches whatever it landed on,
+  // with the bin excepted, because a press there is the yes.
+  useEffect(() => {
+    if (!sure) return undefined;
+    const away = event => { if (!binRef.current?.contains(event.target)) setSure(false); };
+    document.addEventListener('pointerdown', away, true);
+    return () => document.removeEventListener('pointerdown', away, true);
+  }, [sure]);
+
+  // And choosing somebody else, or closing the doors, puts it back too: an
+  // armed bin that outlived the face it belonged to would be pointing at
+  // whoever is open next.
+  useEffect(() => { setSure(false); }, [open]);
+
+  // ── Anywhere else closes the doors ──────────────────────────────────────
+  // Miyel, 2026-09-19: "clicking away should close." Pressing the face again
+  // closes it and always did, but that asks you to find the thing you
+  // pressed; everywhere else on this site a press outside an open thing puts
+  // it away, and this was the exception.
+  //
+  // A face and the doors themselves are excepted — one is how you move to
+  // somebody else, the other is the thing you opened. Everything outside,
+  // including the search field above and the empty floor below, closes.
+  useEffect(() => {
+    if (open === null) return undefined;
+    const away = event => {
+      if (event.target.closest?.('.fr-one, .fr-doors')) return;
+      choose(open);
+    };
+    document.addEventListener('pointerdown', away, true);
+    return () => document.removeEventListener('pointerdown', away, true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]);
+
+  // ── Narrowing ───────────────────────────────────────────────────────────
+  // Over the name alone — the address is not printed here, so it is not
+  // searched here either. A journal that has not answered has no name to
+  // search, so it is matched on the address it was filed under, which is the
+  // only string that person has.
+  const shown = finding.trim()
+    ? people.filter(p => (p.name || p.address).toLowerCase().includes(finding.trim().toLowerCase()))
+    : people;
+  const across = people.length > A_DOZEN ? 5 : 4;
+
+  // ── The rows ────────────────────────────────────────────────────────────
+  // Built here rather than left to the grid, because the doors have to open
+  // *between* two rows and CSS grid has no way to say "after whichever row
+  // that item landed in". Chunking is what turns that into an ordinary list
+  // of rows with a panel that can sit after one of them.
+  const rows = [];
+  for (let i = 0; i < shown.length; i += across) rows.push(shown.slice(i, i + across));
+
+  const who = people.find(p => p.id === open) || null;
+
+  return (
+    <>
+      <div className={'fr' + (who ? ' fr--open' : '')}>
+        {/* ── One slot at the top, two fields ─────────────────────────────
+            Miyel, 2026-09-19: "there should be a search feature at the top,
+            search address book instead of EVERYONE 9. When clicking add, the
+            search can replace the search bar with address bar and add / scan
+            a code."
+
+            So the head is a field and a +, and the + swaps which field it
+            is. Not two boxes stacked — a page whose top is a search box and
+            an address box at the same time is a page asking you which one
+            you meant before you have done anything.
+
+            The count went with the label. It was a fact about the page
+            rather than something you needed, and a number beside a search
+            box reads as a result rather than a total. The faces are the
+            count: you can see how many there are. */}
+        {/* ── One slot, two fields, and they cross ────────────────────────
+            Miyel, 2026-09-19: "there should be a search feature at the top,
+            search address book instead of EVERYONE 9. When clicking add, the
+            search can replace the search bar with address bar and add / scan
+            a code" — and then: "I want an animation, like the search bar
+            disappears left as the journal search opens right from the x, and
+            make the + turn into the x. Every animation fluid and moves, not
+            just appears."
+
+            So both fields are always here, in one grid cell, and the swap is
+            the two of them passing: the search leaves to the left while the
+            address arrives from the right, out of the button that asked for
+            it. Neither is mounted or unmounted — a thing that appears cannot
+            move, and React would give us the appearing version for free.
+
+            `inert` on whichever one is away, so the keyboard and a screen
+            reader only ever meet the field that is actually there. */}
+        <div className="fr-head">
+          <div className="fr-slot">
+            <label className={'fr-field fr-field--find' + (adding ? ' fr-field--gone' : '')} inert={adding ? true : undefined}>
+              <MagnifyingGlass size={15} weight="regular" aria-hidden="true" />
+              <input
+                value={finding}
+                onChange={e => setFinding(e.target.value)}
+                placeholder="Search your address book"
+                aria-label="Find somebody in your book"
+                spellCheck={false}
+              />
+            </label>
+            <label className={'fr-field fr-field--address' + (adding ? '' : ' fr-field--waiting')} inert={adding ? undefined : true}>
+              <input
+                ref={fieldRef}
+                value={typed}
+                onChange={e => setTyped(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); file(typed); } }}
+                placeholder="Enter journal address"
+                aria-label="The address of a journal to add"
+                autoComplete="url"
+                inputMode="url"
+                spellCheck={false}
+              />
+            </label>
+          </div>
+          {/* ── The + turns into the × ───────────────────────────────────
+              One glyph, not two. A plus rotated forty-five degrees *is* a
+              cross, so the control can turn into the other thing rather than
+              being replaced by it — which is the difference between a mark
+              that moves and a mark that blinks. The same trick the session's
+              × does on its way to becoming END.
+
+              And the search is dropped on the way in: the two fields share
+              one slot, so a book still narrowed to one person while you type
+              an address into the box above it is a page quietly lying about
+              how many people are in it. */}
+          <button
+            type="button"
+            className={'fr-plus' + (adding ? ' fr-plus--shut' : '')}
+            onClick={() => { setAdding(a => !a); setSaid(''); setTyped(''); setFinding(''); }}
+            aria-expanded={adding}
+            aria-label={adding ? 'Never mind' : 'Add a journal'}
+            title={adding ? 'Never mind' : 'Add a journal'}
+          >
+            <Plus size={18} weight="regular" aria-hidden="true" />
+          </button>
+        </div>
+
+        {/* Centred under the address field, and collapsed rather than taken
+            away, so the row opens and closes rather than blinking. */}
+        <div className={'fr-add-acts' + (adding && !scanning ? ' fr-add-acts--open' : '')} inert={adding && !scanning ? undefined : true}>
+          <button type="button" className="own-act own-act--solid" onClick={() => file(typed)} disabled={filing || !typed.trim()}>
+            {filing ? 'Adding…' : 'Add'}
+          </button>
+          <button type="button" className="own-act" onClick={() => setScanning(true)} title="Point the camera at a code">
+            <Camera size={14} aria-hidden="true" /> Scan a code
+          </button>
+        </div>
+        {scanning && <CodeScanner onRead={read} onClose={() => setScanning(false)} />}
+
+        {offered && !scanning && (
+          <div className="bk-offer">
+            <p className="bk-offer-said">Add <strong>{offered}</strong> to your book?</p>
+            <div className="bk-offer-acts">
+              <button
+                type="button"
+                className="own-act own-act--solid"
+                disabled={filing}
+                onClick={() => { const a = offered; setOffered(''); file(a); }}
+              >
+                {filing ? 'Adding…' : 'Add them'}
+              </button>
+              <button type="button" className="own-act" onClick={() => setOffered('')}>Not now</button>
+            </div>
+          </div>
+        )}
+
+        <p className="bk-said" role="status">{said}</p>
+
+        {loading ? (
+          <div className="fr-grid" style={{ '--fr-across': across }}>
+            {[...Array(8)].map((_, i) => <div key={i} className="fr-one"><span className="own-skeleton fr-face" /></div>)}
+          </div>
+        ) : people.length === 0 ? (
+          <div className="own-empty">Nobody yet. Add a journal&rsquo;s address, or scan a code.</div>
+        ) : shown.length === 0 ? (
+          <div className="own-empty">Nobody in your book by that name.</div>
+        ) : (
+          rows.map((row, i) => {
+            const holdsOpen = who && row.some(p => p.id === who.id);
+            // The row's doors, and who they belong to: the open person, or
+            // the one still on their way out of this row.
+            const mine = row.find(p => p.id === open) || row.find(p => p.id === leaving) || null;
+            return (
+              <div key={i} className={'fr-row' + (holdsOpen ? ' fr-row--open' : '')}>
+                <div className="fr-grid" style={{ '--fr-across': across }}>
+                  {row.map(p => {
+                    const called = p.name || 'Not answering yet';
+                    const isOpen = who?.id === p.id;
+                    return (
+                      <button
+                        key={p.id}
+                        type="button"
+                        className={'fr-one' + (isOpen ? ' fr-one--open' : '')}
+                        onClick={() => choose(p.id)}
+                        aria-expanded={isOpen}
+                        title={called}
+                      >
+                        {/* Their journal's own portrait, read straight off it
+                            and never stored; a journal without one, or one
+                            that is out, leaves the plain mark showing. */}
+                        <span className="fr-face" aria-hidden="true">
+                          <User size={22} weight="regular" />
+                          <img
+                            src={`${journalUrl(p.address)}/api/portrait`}
+                            alt=""
+                            loading="lazy"
+                            onError={e => { e.currentTarget.style.display = 'none'; }}
+                          />
+                        </span>
+                        <span className={'fr-name' + (p.name ? '' : ' fr-name--none')}>{called}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* ── The three doors ──────────────────────────────────────
+                    Under the row the face is in, between two hairlines, in
+                    the band's pattern: glyph over word. Journal leaves the
+                    site, Compare is your page about them — which *is* the
+                    compare, so it needs no second link — and Send is the
+                    sheet with the person already chosen.
+
+                    Remove is the fourth of them and not a footnote under
+                    them. It sat on its own line for an hour, on the grounds
+                    that the mock-up draws three and the brief says a fourth
+                    is where this row starts needing a rethink — and Miyel's
+                    answer, 2026-09-19, is that it "can be the same as all
+                    the other glyphs on the row, not a separate entity."
+
+                    Which is the better reading of her own rule: the four are
+                    everything you can do about one person, and singling one
+                    out by drawing it differently makes the row three things
+                    and a warning. What keeps it from being pressed by
+                    accident is the second press, not a smaller typeface —
+                    that is the whole reason the second press exists. It goes
+                    red only once it has been asked. */}
+                {/* Always here, collapsed to nothing, in every row. That is
+                    what lets it open and close rather than appear: a panel
+                    mounted with its open state already on it has no frame to
+                    start the movement from, and React would hand us exactly
+                    that. An empty collapsed one costs a div. */}
+                <div className={'fr-doors' + (holdsOpen ? ' fr-doors--open' : '')} inert={holdsOpen ? undefined : true}>
+                  {mine && (
+                  <div className="fr-doors-row">
+                    <a
+                      className="fr-door"
+                      href={carrySender(journalUrl(mine.address), me, { known: true })}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <BookOpen size={22} weight="regular" aria-hidden="true" />
+                      Journal
+                    </a>
+                    <Link className="fr-door" href={`/dashboard/people/${mine.id}`}>
+                      {/* NAME: the compare glyph is the one the mock-up
+                          left hand-drawn — two arrows side by side — and the
+                          README does not say which Phosphor one it stands
+                          for. This is the nearest single glyph that reads as
+                          two things measured against each other, and it is
+                          Miyel's to overrule. Not ArrowsLeftRight, which this
+                          site already uses for turning the spine. */}
+                      <ArrowsDownUp size={22} weight="regular" aria-hidden="true" />
+                      Compare
+                    </Link>
+                    <button type="button" className="fr-door" onClick={() => setSendingTo(who)}>
+                      <PaperPlaneTilt size={22} weight="regular" aria-hidden="true" />
+                      Send
+                    </button>
+                    <button
+                      ref={binRef}
+                      type="button"
+                      className={'fr-door fr-door--remove' + (sure ? ' fr-door--sure' : '')}
+                      onClick={() => { if (!sure) { setSure(true); return; } cross(mine.id); }}
+                      title={sure
+                        ? `Press again to take ${mine.name || 'them'} out of your book`
+                        : `Take ${mine.name || 'them'} out of your book`}
+                    >
+                      <Trash size={22} weight={sure ? 'fill' : 'regular'} aria-hidden="true" />
+                      {sure ? 'Remove?' : 'Remove'}
+                    </button>
+                  </div>
+                  )}
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {/* One sheet for the page, told who it is for. Mounted outside the grid
+          so that closing it does not depend on the face surviving a refresh
+          of the book. */}
+      <SendSheet open={Boolean(sendingTo)} person={sendingTo} onClose={() => setSendingTo(null)} />
+    </>
+  );
+}
