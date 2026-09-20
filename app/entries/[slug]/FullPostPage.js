@@ -35,7 +35,7 @@ import MiniAddressBook from '../../../components/main_components/MiniAddressBook
 import PrintBar from '../../../components/main_components/Slug_Page/PrintBar';
 import HorizonChart from '../../../components/main_components/HorizonChart';
 import MiniCard from '../../../components/main_components/Slug_Page/MiniCard';
-import { handedOver } from '../../../library/handoff';
+import { handedOver, readingOn, cameReadingOn } from '../../../library/handoff';
 import { tidyAddress, tidyJournal } from '../../../library/return_address';
 import { useBookplate } from '../../../components/main_components/Bookplate';
 import { useTheme } from '../../../components/main_components/Lightswitch';
@@ -892,6 +892,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
     const said = document.querySelector('.ln-crown-said');
     const marks = document.querySelector('.ln-crown-marks');
     const row = document.querySelector('.sitenav-row');
+    const lede = document.querySelector('.sitenav-logo');
     const one = document.querySelector('.ln-screen-one');
     if (!screens || !art || !seat || !hole || !row || !one) return undefined;
 
@@ -916,6 +917,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
       .some(a => a.playState === 'running' && String(a.animationName || '').startsWith('lay'));
 
     let base = null;
+    let landed = false;
     const middle = el => {
       const r = el.getBoundingClientRect();
       return { cx: r.left + r.width / 2, cy: r.top + r.height / 2, h: r.height };
@@ -961,6 +963,26 @@ export default function FullPostPage({ entry, references = [], authed = false, l
         ends: Math.max(1, one.getBoundingClientRect().bottom + gone - row.getBoundingClientRect().bottom),
       };
       draw();
+      // ── Reading on lands where you were, 2026-09-20 ─────────────────────
+      // A thumb sideways is turning a page, not opening a book. If the record
+      // you left had already gone up into the header, this one arrives the
+      // same way: at its own notes, with its own cover already collapsed.
+      // Not the same scroll position — albums have different amounts written
+      // about them, and 700px into a short one is the end of it.
+      //
+      // Here rather than beside the first measure(), because the first one
+      // does not get as far as this: the slide from the side is a `lay`
+      // animation too, so the collapse stands down for it and the numbers
+      // only exist once it is over. Asked once per record either way, so a
+      // rise cannot inherit an answer a swipe left lying about.
+      if (!landed) {
+        landed = true;
+        const on = cameReadingOn();
+        if (on && sheet && sheet.classList.contains('lay--swiped')) {
+          screens.scrollTop = base.ends;
+          draw();
+        }
+      }
     };
     const draw = () => {
       if (!base) return;
@@ -983,9 +1005,15 @@ export default function FullPostPage({ entry, references = [], authed = false, l
       seat.style.borderRadius = `${((16 + (8 - 16) * small) / Math.max(k, 0.001)).toFixed(1)}px`;
       // The name, the score and the marks arrive at the end, once there is a
       // header to put them in.
-      const shows = Math.min(1, Math.max(0, (small - 0.88) / 0.12)).toFixed(3);
-      if (said) said.style.opacity = shows;
-      if (marks) marks.style.opacity = shows;
+      const shows = Math.min(1, Math.max(0, (small - 0.88) / 0.12));
+      if (said) said.style.opacity = shows.toFixed(3);
+      if (marks) marks.style.opacity = shows.toFixed(3);
+      // And the journal's own mark gives the row up as they arrive. Never
+      // both: this is the publication's name over a page of it, and the page
+      // only takes the middle once it is small enough to be a header.
+      if (lede) lede.style.opacity = (1 - shows).toFixed(3);
+      // Where the next record should open, if you thumb sideways from here.
+      readingOn(u >= 1);
     };
 
     measure();
@@ -1013,6 +1041,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
       seat.style.borderRadius = '';
       if (said) said.style.opacity = '';
       if (marks) marks.style.opacity = '';
+      if (lede) lede.style.opacity = '';
       setCrowning(false);
     };
   }, [printing, edit.editing, coverSrc, entry.slug]);

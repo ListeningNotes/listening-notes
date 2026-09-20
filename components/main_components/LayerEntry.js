@@ -51,7 +51,7 @@
 import { createContext, useCallback, useContext, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { CaretLeft, CaretRight } from '@phosphor-icons/react';
-import { tileBoxOf, neighboursOf, handOffNeighbour, arrivingBySwipe, tookASwipe, growBoxOf, arrivingBack, cameBack, cameAlone } from '../../library/handoff';
+import { tileBoxOf, neighboursOf, handOffNeighbour, arrivingBySwipe, tookASwipe, growBoxOf, arrivingBack, cameBack, cameAlone, carryReading } from '../../library/handoff';
 
 // How long the sheet takes to grow to the screen. Unhurried, slowing as it
 // lands — the same curve the slide used.
@@ -477,6 +477,8 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
     if (!target || leaving.current || pendingTurn.current) return;
     handOffNeighbour(target);
     arrivingBySwipe(dir);
+    // And where in the record you were, so the next one opens the same way.
+    carryReading();
     setSettling(true);
     setShift(-dir * (sheetRef.current?.offsetWidth || window.innerWidth));
     pendingTurn.current = window.setTimeout(() => {
@@ -655,7 +657,12 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
 
   return (
     <div
-      className={'lay' + (arrival.still ? ' lay--still' : rises ? ' lay--rises' : arrival.swiped ? ' lay--swiped' : growFrom ? ' lay--grows' : ' lay--fades') + (scrolls ? ' lay--scrolls' : '')
+      /* A swipe is read before the rise, and for the same reason it is read
+         first when the arrival is decided: the sheet is already here. With
+         the rise ahead of it, every thumb to the next album sent the whole
+         sheet to the floor and brought it back up — Miyel, "they're coming
+         off from all over the place." */
+      className={'lay' + (arrival.still ? ' lay--still' : arrival.swiped ? ' lay--swiped' : rises ? ' lay--rises' : growFrom ? ' lay--grows' : ' lay--fades') + (scrolls ? ' lay--scrolls' : '')
         + (over ? ` lay--over-${over}` : '') + (settling ? ' lay--settling' : '') + (pulled ? ' lay--dragging' : '')}
       ref={sheetRef}
       style={pulled ? { transform: `translateY(${dragY}px)` } : undefined}

@@ -157,6 +157,24 @@ export function handOffNeighbour(entry) {
   passing = entry ? firstScreen(entry) : null;
 }
 
+// ── Reading on, one record to the next ────────────────────────────────────
+// Whether the record you are leaving had already collapsed into the header —
+// Miyel: "if you're in the mini version of the card, scrolling left and right
+// should keep it at mini, the next one should come up mini." The entry writes
+// it as it scrolls and the next one asks once, on the way in, so a swipe
+// carries where you were reading rather than the top of an album you did not
+// ask to see again.
+// Two variables and not one, because the moment matters. `atTheNotes` is
+// live — the entry keeps it true while its cover is up in the header — and it
+// goes false again the instant the outgoing record's scroller is emptied,
+// which happens while the swipe is still in the air. So the swipe takes a
+// copy on its way out, and the record arriving reads the copy.
+let atTheNotes = false;
+let carried = false;
+export function readingOn(yes) { atTheNotes = Boolean(yes); }
+export function carryReading() { carried = atTheNotes; }
+export function cameReadingOn() { const was = carried; carried = false; return was; }
+
 // ── Opened from somewhere that does not browse ────────────────────────────
 // The wall's order is a module variable and it outlives the wall, which is
 // what lets a tapped cover know its neighbours. It also meant an entry opened
@@ -194,7 +212,23 @@ export function tookASwipe() { const was = bySwipe; bySwipe = 0; return was; }
 // mounts — the way back led to the desk — the flag must not linger to
 // silence the next door somebody presses (2026-09-13).
 let wentBack = 0;
-export function arrivingBack() { wentBack = Date.now(); }
+export function arrivingBack() {
+  wentBack = Date.now();
+  // ── And the next press spends it, 2026-09-20 ────────────────────────────
+  // The clock alone was not enough once an album started rising. Closing one
+  // and opening another takes well under a second and a half, so the second
+  // album mounted, found this still stamped, and drew itself at rest — Miyel:
+  // "if I open one and slide it down and open the next one, it doesn't slide
+  // up, it just kind of opens."
+  //
+  // What this is actually for is a layer that remounts *because* another one
+  // closed over it, and that happens with no hand near the screen. A press is
+  // therefore proof that this is not that. The clock stays as the backstop
+  // for a close that leads nowhere and is never followed by anything.
+  if (typeof document === 'undefined') return;
+  const spend = () => { wentBack = 0; document.removeEventListener('pointerdown', spend, true); };
+  document.addEventListener('pointerdown', spend, true);
+}
 export function cameBack() {
   const recent = wentBack && Date.now() - wentBack < 1500;
   wentBack = 0;
