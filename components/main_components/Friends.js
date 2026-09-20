@@ -211,7 +211,7 @@ function travel(box, was) {
 // `onCount` is how the cross learns whether there is a book at all, which it
 // needs before it can decide whether this pane has a second floor. The count
 // is this component's to know: it is the one that asks for the people.
-export default function Friends({ shelf = false, onCount = null }) {
+export default function Friends({ shelf = false, onCount = null, onBusy = null }) {
   // Who this copy belongs to, carried on every link out to another journal so
   // the form there knows who is sending. See carrySender.
   const { keeper_name: myName, site_address: myAddress } = useBookplate();
@@ -279,6 +279,7 @@ export default function Friends({ shelf = false, onCount = null }) {
     setBarSlot(slot);
     return () => { slot.remove(); setBarSlot(null); };
   }, [shelf]);
+
   const [fits, setFits] = useState(0);
 
   // Up to whoever is drawing this, once it is known and whenever it changes.
@@ -573,6 +574,15 @@ export default function Friends({ shelf = false, onCount = null }) {
   // nothing to search is the emptiest thing you can put on a first screen,
   // and the first screen of every new install is this one.
   const searchable = people.length > 0 && (!shelf || people.length > A_DOZEN);
+  // ── The header knows when a field is in it ──────────────────────────────
+  // The book's name is drawn by the cross, absolutely centred on the bar's
+  // row, and a field opening in the same row has to have that row: Miyel,
+  // 2026-09-20, "the clicking and opening... needs to open and replace
+  // address book text." So the fact travels up the way the count does and
+  // the cross takes its word down. See barSays in HomeNav.js.
+  useEffect(() => {
+    if (shelf) onBusy?.(adding || searchable);
+  }, [shelf, adding, searchable, onBusy]);
 
   // ── The rows ────────────────────────────────────────────────────────────
   // Built here rather than left to the grid, because the doors have to open
@@ -580,8 +590,8 @@ export default function Friends({ shelf = false, onCount = null }) {
   // that item landed in". Chunking is what turns that into an ordinary list
   // of rows with a panel that can sit after one of them.
   //
-  // One button, drawn in the bar on the cross and in this page's own header
-  // at the book's address. Never both: `plus` is null once the bar has it.
+  // The + and the fields it opens, drawn in the bar on the cross and in this
+  // page's own header at the book's address. Never both.
   const plus = (
     <button
       type="button"
@@ -594,6 +604,79 @@ export default function Friends({ shelf = false, onCount = null }) {
       <Plus size={18} weight="regular" aria-hidden="true" />
     </button>
   );
+
+  // ── The book's whole header, drawn in one of two places ─────────────────
+  // On the cross it is the cross's bar: the name is already up there and a
+  // field that opens has to open in the same row, not seventy pixels under it
+  // (Miyel, 2026-09-20). At the book's own address there is no bar, so it
+  // stays at the top of the page where it was.
+  const head = (
+    <div className="fr-head">
+      <div className="fr-slot">
+        {/* ── What the book is called, when nothing is being typed ─────
+            Miyel, 2026-09-20: "let's bring back the address book title at
+            the top and a count of how many people you have in your book."
+
+            In the slot rather than on a row of its own, because a row of
+            its own is 48px of header over a page whose whole argument is
+            that it is faces and not furniture. The slot already holds two
+            things and shows one; this is the third, and it leaves the
+            same way the search does — clipped off to the left as the
+            address field arrives from the right. */}
+        {/* ── Not on the shelf, 2026-09-20 ─────────────────────────
+            On the cross the name is in the bar, where the feed's name
+            also is — Miyel: "center address book · #, so basically that
+            gets replaced by recent listens once you hit the feed." One
+            header with two names in it, one floor apart, rather than a
+            title on the floor and a different title in the bar ten pixels
+            above it. HomeNav draws it, off the count this component hands
+            up (see onCount). At the book's own address there is no bar to
+            put it in, so it stays here. */}
+        {!shelf && (
+          <p className={'fr-book' + (adding || searchable ? ' fr-field--gone' : '')} aria-hidden={adding || searchable ? true : undefined}>
+            Address book
+            {!loading && people.length > 0 && <span> &middot; {people.length}</span>}
+          </p>
+        )}
+        <label className={'fr-field fr-field--find' + (adding || !searchable ? ' fr-field--gone' : '')} inert={adding || !searchable ? true : undefined}>
+          <MagnifyingGlass size={15} weight="regular" aria-hidden="true" />
+          <input
+            value={finding}
+            onChange={e => setFinding(e.target.value)}
+            placeholder="Search your address book"
+            aria-label="Find somebody in your book"
+            spellCheck={false}
+          />
+        </label>
+        <label className={'fr-field fr-field--address' + (adding ? '' : ' fr-field--waiting')} inert={adding ? undefined : true}>
+          <input
+            ref={fieldRef}
+            value={typed}
+            onChange={e => setTyped(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); file(typed); } }}
+            placeholder="Enter journal address"
+            aria-label="The address of a journal to add"
+            autoComplete="url"
+            inputMode="url"
+            spellCheck={false}
+          />
+        </label>
+      </div>
+          {/* ── The + turns into the × ───────────────────────────────────
+          One glyph, not two. A plus rotated forty-five degrees *is* a
+          cross, so the control can turn into the other thing rather than
+          being replaced by it — which is the difference between a mark
+          that moves and a mark that blinks. The same trick the session's
+          × does on its way to becoming END.
+
+          And the search is dropped on the way in: the two fields share
+          one slot, so a book still narrowed to one person while you type
+          an address into the box above it is a page quietly lying about
+          how many people are in it. */}
+      {plus}
+    </div>
+  );
+
 
   // A row carries how wide it is and what stands over it, so the pinned row
   // and an ordinary one are the same thing drawn from the same map — three
@@ -642,72 +725,7 @@ export default function Friends({ shelf = false, onCount = null }) {
 
             `inert` on whichever one is away, so the keyboard and a screen
             reader only ever meet the field that is actually there. */}
-        {barSlot && createPortal(plus, barSlot)}
-
-        <div className="fr-head">
-          <div className="fr-slot">
-            {/* ── What the book is called, when nothing is being typed ─────
-                Miyel, 2026-09-20: "let's bring back the address book title at
-                the top and a count of how many people you have in your book."
-
-                In the slot rather than on a row of its own, because a row of
-                its own is 48px of header over a page whose whole argument is
-                that it is faces and not furniture. The slot already holds two
-                things and shows one; this is the third, and it leaves the
-                same way the search does — clipped off to the left as the
-                address field arrives from the right. */}
-            {/* ── Not on the shelf, 2026-09-20 ─────────────────────────
-                On the cross the name is in the bar, where the feed's name
-                also is — Miyel: "center address book · #, so basically that
-                gets replaced by recent listens once you hit the feed." One
-                header with two names in it, one floor apart, rather than a
-                title on the floor and a different title in the bar ten pixels
-                above it. HomeNav draws it, off the count this component hands
-                up (see onCount). At the book's own address there is no bar to
-                put it in, so it stays here. */}
-            {!shelf && (
-              <p className={'fr-book' + (adding || searchable ? ' fr-field--gone' : '')} aria-hidden={adding || searchable ? true : undefined}>
-                Address book
-                {!loading && people.length > 0 && <span> &middot; {people.length}</span>}
-              </p>
-            )}
-            <label className={'fr-field fr-field--find' + (adding || !searchable ? ' fr-field--gone' : '')} inert={adding || !searchable ? true : undefined}>
-              <MagnifyingGlass size={15} weight="regular" aria-hidden="true" />
-              <input
-                value={finding}
-                onChange={e => setFinding(e.target.value)}
-                placeholder="Search your address book"
-                aria-label="Find somebody in your book"
-                spellCheck={false}
-              />
-            </label>
-            <label className={'fr-field fr-field--address' + (adding ? '' : ' fr-field--waiting')} inert={adding ? undefined : true}>
-              <input
-                ref={fieldRef}
-                value={typed}
-                onChange={e => setTyped(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); file(typed); } }}
-                placeholder="Enter journal address"
-                aria-label="The address of a journal to add"
-                autoComplete="url"
-                inputMode="url"
-                spellCheck={false}
-              />
-            </label>
-          </div>
-          {/* ── The + turns into the × ───────────────────────────────────
-              One glyph, not two. A plus rotated forty-five degrees *is* a
-              cross, so the control can turn into the other thing rather than
-              being replaced by it — which is the difference between a mark
-              that moves and a mark that blinks. The same trick the session's
-              × does on its way to becoming END.
-
-              And the search is dropped on the way in: the two fields share
-              one slot, so a book still narrowed to one person while you type
-              an address into the box above it is a page quietly lying about
-              how many people are in it. */}
-          {barSlot ? null : plus}
-        </div>
+        {barSlot ? createPortal(head, barSlot) : head}
 
         {/* Centred under the address field, and collapsed rather than taken
             away, so the row opens and closes rather than blinking. */}
