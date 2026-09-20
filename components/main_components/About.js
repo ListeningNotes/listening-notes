@@ -389,7 +389,33 @@ export default function About({ stamps, authed = false, pinned = null, entries =
   const hasReading = answered.length > 0 || rigList.length > 0 || edit.editing;
 
   return (
-    <div className="ab-pane" ref={paneRef}>
+    <div className={'ab-pane' + (edit.editing ? ' ab-pane--editing' : '')} ref={paneRef}>
+      {/* ── The bar that says a correction is open ──────────────────────
+          The entry's own, class for class (entry.css, .ln-editing-bar), and
+          for the same reason: the controls that started it are at the top of
+          a page you are three screens down by the time you are rewriting an
+          answer, and once the portrait has scrolled off nothing else on the
+          screen says you are editing at all. Miyel, 2026-09-20: "edit ID page
+          should take same look as edit mode in entry with same footer to end
+          editing."
+
+          It covers the band while it is up, which is the point: the four
+          doors are four ways to leave a correction without deciding what to
+          do with it. Save and Cancel are the way out. */}
+      {edit.editing && (
+        <div className="ln-editing-bar">
+          <span className="ln-editing-label">Editing</span>
+          <button type="button" className="ln-pin ln-pin--on" onClick={edit.save} disabled={edit.saving || edit.busy}>
+            <Check size={13} weight="bold" aria-hidden="true" />
+            <span>{edit.saving ? 'Saving' : 'Save'}</span>
+          </button>
+          <button type="button" className="ln-pin" onClick={edit.cancel} disabled={edit.saving}>
+            <X size={13} weight="bold" aria-hidden="true" />
+            <span>Cancel</span>
+          </button>
+        </div>
+      )}
+      {edit.trouble && <p className="ln-trouble">{edit.trouble}</p>}
       {/* No floors, and no crown, since 2026-09-15. The card is a page and
           pages scroll: the glance is at the top, the reading continues down
           the same scroll, and there is nothing to arrive at. Down means

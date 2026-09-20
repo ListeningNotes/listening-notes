@@ -2881,6 +2881,20 @@ else's, which is an argument for a version on that URL and is not built.
       eight pixels into any scroll of the pane, because it was keyed on
       `down`, which is the flag for *this pane has moved at all*.
 
+- [x] **Correcting the card wears the entry's clothes.** "Edit ID page should
+      take same look as edit mode in entry with same footer to end editing."
+      The tick and the cross came out of the top corner and the entry's own
+      `.ln-editing-bar` goes up at the foot — EDITING, Save, Cancel, class for
+      class, so the two corrections are one mode. It covers the band while it
+      is up, which is right: four doors are four ways to leave a correction
+      without deciding what to do with it. `.ab-pane--editing` gives it 96px
+      of room, on the pane, which is the box that actually scrolls.
+      `.idc-tool` and `.idc-tool--keep` are gone with the buttons they dressed.
+- [x] **No hairline over the version line.** The same argument as the one
+      under the header: a rule separates two things that would otherwise run
+      together, and a caption 46px below the last of the writing is already
+      apart. It was the foot of a section when a door stood in it.
+
 - [x] **The three hideable rows actually hide.** "Albums masterpieces and
       formative hiding option doesn't work... I think genres should be
       hideable." The eyes were saving a preference no card ever read: the

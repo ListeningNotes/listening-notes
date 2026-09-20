@@ -21,6 +21,12 @@
    with a picture in it, and 68px of it given away to margins is a column of
    reading lost. */
 .ab-pane { padding: 0 var(--page-gutter); }
+/* Room for the bar that ends a correction. On the element that actually
+   scrolls this time — the pane is the scroller's only child, so its own
+   padding is the page's bottom — or the last answer goes on being typed
+   underneath the button that saves it, which is the note entry.css carries
+   about the same bar over a track list. 96 is that bar's number. */
+.ab-pane--editing { padding-bottom: 96px; }
 /* .ab-card's own padding and .idc's max-width are set further down, where
    those rules already live — stated twice, the copy up here lost to the copy
    down there and the page kept an inset it was supposed to have given up. */
@@ -350,9 +356,15 @@
    no prompts answered, no rig, no links, and therefore no .ab-below at all —
    still has its own way into Settings. */
 .ab-keep {
+  /* No rule over it, 2026-09-20 (Miyel: "remove final hairline at base of
+     about page before version and report"). The same argument that took the
+     one out from under the header: a line is drawn to separate two things
+     that would otherwise run together, and a caption in the caption face
+     sitting 46px below the last of the writing is already apart from it. It
+     was the foot of a section when a door stood in it; what is left is one
+     quiet line about the software. */
   margin-top: 46px;
   padding-top: 22px;
-  border-top: 1px solid var(--border);
 }
 /* Only where the desk is gone. Above 769px the book still has its spine and
    the desk is still its second page, with Settings on it — so this would be
@@ -1027,20 +1039,11 @@ a.ab-rig-name:hover { text-decoration: underline; }
    simply starting further down the page. The header is corner
    furniture; space under it reads as air. */
 .idc-tools { display: flex; align-items: center; gap: 2px; }
-/* The same box as the lights on the other end of the line — 36px,
-   a 10px radius, an 18px glyph — so the two ends of the bar read as
-   one row of controls rather than a big one and a small one. */
-.idc-tool {
-  display: inline-flex; align-items: center; justify-content: center;
-  width: 36px; height: 36px; border-radius: 10px;
-  color: var(--ink-faint); background: transparent; border: 0;
-  cursor: pointer; transition: color 0.15s, background 0.15s;
-}
-.idc-tool:hover { color: var(--ink); background: var(--bg-warm); }
-.idc-tool:disabled { opacity: 0.4; cursor: default; }
-/* Saving is the one of these that commits something, so it carries
-   full ink where the others are quiet. */
-.idc-tool--keep { color: var(--ink); }
+/* .idc-tool and .idc-tool--keep are gone, 2026-09-20. They dressed the tick
+   and the cross that used to sit in this corner while a correction was open;
+   the two are at the foot now, in the bar an entry raises (entry.css,
+   .ln-editing-bar). What is left in this row is the ···, which brings its own
+   clothes from KeeperTools. */
 
 /* ── The name ── the beacon's own title face, set a step above the
    size it uses. They started matched, which was tidy and wrong: the

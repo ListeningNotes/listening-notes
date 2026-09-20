@@ -25,7 +25,7 @@ import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { arrivingAlone } from '../../library/handoff';
-import { Check, Eye, EyeSlash, PushPin, UploadSimple, User, X } from '@phosphor-icons/react';
+import { Eye, EyeSlash, PushPin, UploadSimple, User, X } from '@phosphor-icons/react';
 import { useRouter } from 'next/navigation';
 import { useTheme } from './Lightswitch';
 import { useListeningBeacon } from '../../hooks/useListeningBeacon';
@@ -389,32 +389,13 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
 
   const inBar = Boolean(barSlot && headGone);
 
-  const toolsRow = authed && (editing ? (
-    <>
-      <button
-        type="button"
-        className="idc-tool idc-tool--keep"
-        onClick={edit.save}
-        disabled={edit.saving || edit.busy}
-        aria-label="Save this card"
-        title="Save"
-      >
-        <Check size={18} weight="regular" aria-hidden="true" />
-      </button>
-      <button
-        type="button"
-        className="idc-tool"
-        onClick={edit.cancel}
-        disabled={edit.saving}
-        aria-label="Stop editing without saving"
-        title="Cancel"
-      >
-        <X size={18} weight="regular" aria-hidden="true" />
-      </button>
-    </>
-  ) : (
-    <KeeperTools what="card" onEdit={edit.begin} />
-  ));
+  // Nothing up here while a correction is open. Save and Cancel were a tick
+  // and a cross in this corner until 2026-09-20; they are at the foot now, in
+  // the bar an entry raises, which is the shape Miyel asked for — "edit ID
+  // page should take same look as edit mode in entry with same footer to end
+  // editing". An entry's ··· goes the same way while it is being corrected.
+  // See About.js, which owns the editor and raises the bar.
+  const toolsRow = authed && !editing && <KeeperTools what="card" onEdit={edit.begin} />;
 
   // Whether each counted line has anything left on it. `showing` is the
   // keeper's own answer and is always true while editing, so the eye that
