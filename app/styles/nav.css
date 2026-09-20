@@ -722,8 +722,45 @@
   height: var(--hn-bar-h);
   background: var(--bg);
   pointer-events: none;
+  /* Zero and not auto. An absolutely positioned child paints over a static
+     sibling whatever the order, and the lights are static — so the ground
+     put the moon out on its first evening. Everything in this row that has
+     to be seen sits at 1. */
+  z-index: 0;
 }
 .hn[data-pane="1"] .hn-bar-ground { height: var(--ground, var(--hn-bar-h)); }
+/* Only the two static ones need lifting; everything else in this row is
+   absolute already and later in the order, which is enough. Written as the
+   two names rather than as `> :not(.hn-bar-ground)`, which was a wider net
+   than it looked: it set `position: relative` on the big mark as well and
+   dropped it back into the flex row at the far right. */
+.hn-lights,
+.hn-bar-tools { position: relative; z-index: 1; }
+
+/* The big mark, drawn by the header rather than by the pane — see the note
+   beside it in HomeNav.js. Centred on the row and placed outright by the
+   morph: `translate(-50%, <top>px) scale(k)`, which is why the origin is the
+   top of its own middle and why there is no `top` here to fight with.
+
+   Only on a phone, and only on the beacon, where the crown it stands in for
+   is. Everywhere else the crown is the mark and this is not drawn at all. */
+.hn-bar-crown {
+  display: none;
+  position: absolute;
+  left: 50%;
+  top: 0;
+  line-height: 0;
+  transform-origin: top center;
+  will-change: transform;
+  pointer-events: none;
+  z-index: 1;
+}
+@media (max-width: 768px) {
+  .hn--morph[data-pane="1"] .hn-bar-crown { display: block; }
+  /* And the crown goes quiet while it does. Not `display: none`: its box is
+     what holds the record where it is, and what the morph measures. */
+  .hn--morph .hn-pane--home .hn-crown-mark { visibility: hidden; }
+}
 
 .hn-bar-mark {
   position: absolute;

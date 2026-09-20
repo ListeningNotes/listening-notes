@@ -1549,6 +1549,21 @@ Project → Settings → Environment Variables.
 
 ## Gotchas
 
+**On a phone the cross's panes paint under the bar, 2026-09-20.** Whatever
+`z-index` says. The crown carried `z-index: 96` against the bar's 95 and it
+works in a desktop browser; on a real iPhone the pane is composited under the
+fixed row and the mark vanishes into it. Two separate evenings were spent on
+this reading as two different bugs — "the big one disappears under the header",
+and then "I don't even see the logo any more". **Anything that has to be drawn
+over the bar has to be drawn *by* the bar** (see `.hn-bar-crown`).
+
+**A positioned child paints over a static sibling, 2026-09-20.** Order in the
+markup does not save you. `.hn-bar-ground` is absolute and `.hn-lights` is not,
+so the floor put the moon out on every screen — including in the preview
+browser, where it went unnoticed for an hour. Give the static ones
+`position: relative; z-index: 1`, and check the *whole* row after adding
+anything absolute to it.
+
 **A class an effect writes onto an element React renders, 2026-09-20.** The
 crown's morph flag was `classList.add('hn--morph')` on `.hn` — and `.hn` is an
 element whose `className` React builds from eight other flags. Any re-render
