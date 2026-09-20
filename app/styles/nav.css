@@ -1909,12 +1909,21 @@
 .hn-bar-say {
   position: absolute;
   left: 50%;
-  top: calc(22px + var(--safe-top) + 29px);
+  /* Wherever the travelling word is, until it reaches the line and stops.
+     The fallback is that line: the middle of the 58px row inside the band,
+     which is what the number resolves to once it has arrived. .hn-bar is the
+     containing block and starts at the top of the window, so this is a
+     window coordinate and the same one the scroll listener measures in. */
+  top: var(--hn-say-y, calc(22px + var(--safe-top) + 29px));
   transform: translate(-50%, -50%);
   pointer-events: none;
   font-family: var(--font-label);
   font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase;
-  color: var(--ink-soft);
+  /* The travelling word's colour, not the address book title's. These two
+     are the same word on the same frame at the moment of the handover, and a
+     step of brightness across that frame is the join showing. */
+  color: var(--ink-faint);
+  line-height: 1;
   white-space: nowrap;
 }
 
@@ -2477,6 +2486,13 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
     background: linear-gradient(to top, var(--bg), transparent);
     pointer-events: none;
   }
+  /* Except over the book and its feed (Miyel, 2026-09-20). A dissolve is for
+     a floor whose content runs off the bottom edge and should read as
+     continuing — a wall of covers, a record mid-scroll. This pane ends in
+     rows with hairlines between them, and a soft top edge over a hard line
+     is 26px of the last row going grey for no reason anybody can name.
+     Pane 2 is the book; see the constants in HomeNav.js. */
+  .hn[data-pane="2"] .hn-foot::before { display: none; }
   .hn-foot-stop {
     flex: 1 1 0;
     min-width: 0;
@@ -2761,6 +2777,26 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
     font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase;
     line-height: 1;
   }
+  /* ── The book's way down crosses the bar, 2026-09-20 ──────────────────
+     Over it, not under it. The bar has a ground once a pane has scrolled, so
+     a word climbing into it used to be eaten from the top and then reappear,
+     already in the middle, as a second word — "a split second where it goes
+     past the hairline and disappears until it hits the middle". Drawn above
+     the bar it simply keeps climbing until it arrives, and the swap on
+     arrival is invisible because it lands exactly where the bar's word sits.
+
+     The book's alone. The beacon has a way down too, at the foot of a floor
+     that is somebody's cover art, and a chevron riding over the header there
+     is the thing carets were taken off pages to avoid. */
+  .hn-floor--book .hn-down { position: relative; z-index: 96; }
+  /* The chevron goes before the word lands: it points at a floor you are
+     already arriving at, and it has no business being drawn on a header.
+     The number comes from the scroll listener in HomeNav. */
+  .hn-floor--book .hn-down > svg { opacity: var(--hn-down-go, 1); }
+  /* Only the word goes: the button keeps its shape, its place and its tap —
+     a hidden child does not take a parent's hit area — so Feed is still a way
+     down while the bar is the thing drawing the word. */
+  .hn-down--gone .hn-down-say { visibility: hidden; }
   .hn-floor--feed { padding: 0 24px; }
   /* ── The snap stops a bar's-worth short, 2026-09-19 ───────────────────
      The first cover has to clear the mark when this floor is snapped to the
