@@ -1036,6 +1036,26 @@ a.pp-name:hover svg { color: var(--ink); }
    straight end on its way out. */
 .fr-head { display: flex; align-items: center; gap: 8px; }
 .fr-slot { display: grid; flex: 1; min-width: 0; }
+/* The book's name and how many are in it, standing in the slot when there is
+   no field in it. Same cell, same clip, so the three of them are one object
+   changing what it says rather than three things appearing and disappearing.
+   The caption face and the caption size: it is a label on the page, not a
+   heading over it — the faces are the heading. */
+.fr-book {
+  grid-area: 1 / 1;
+  display: flex; align-items: center; gap: 0;
+  margin: 0; min-width: 0;
+  padding: 0 2px;
+  font-family: var(--font-label);
+  font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--ink-soft);
+  white-space: nowrap;
+  clip-path: inset(0 0 0 0);
+  transition: clip-path 0.38s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.fr-book span { color: var(--ink-faint); }
+.fr-book.fr-field--gone { clip-path: inset(0 100% 0 0); }
+
 .fr-field {
   grid-area: 1 / 1;
   display: flex; align-items: center; gap: 10px;
