@@ -608,20 +608,20 @@
   font-size: 11px; line-height: 1.3; color: var(--ink-soft);
 }
 .ab-pin-one--on .ab-pin-one-album { color: var(--ink); }
-/* ── Change, on the pinned record, 2026-09-20 ─────────────────────────────
-   The photograph's own pill, word for word and rule for rule (see
-   .idc-portrait-said), because the two editable objects on this card should
-   say they are editable the same way. Only while a correction is open — it
-   hangs off .idc-pinned--pick, which is the shape the row takes then. */
+/* ── The swap mark on the pinned record, 2026-09-20 ───────────────────────
+   The eyes' own box — 22px, a 6px corner, faint ink — because the counted
+   rows on this card are turned off by a mark that shape on a line that shape,
+   and a second mark in the same place reading the same way is one language
+   rather than two. It said CHANGE on a pill for an hour and the pill went
+   (Miyel: "I don't even like the pill for change").
+
+   No hover ground of its own: it is not a control, it is the row saying what
+   pressing the row does, and the row is the control. */
 .idc-pinned-swap {
   flex: none;
-  font-family: var(--font-label);
-  font-size: 8.5px; letter-spacing: 0.1em; text-transform: uppercase;
-  color: var(--ink-soft);
-  background: var(--bg);
-  border: 1px solid var(--idc-rule);
-  border-radius: 999px;
-  padding: 4px 10px;
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 22px; height: 22px;
+  color: var(--ink-faint);
   transition: color 0.15s;
 }
 .idc-pinned--pick:hover .idc-pinned-swap { color: var(--ink); }
@@ -630,7 +630,18 @@
   margin: 12px 0; text-align: center;
   font-family: var(--font-label); font-size: 11px; color: var(--ink-faint);
 }
-.ab-pin-foot { display: flex; gap: 8px; justify-content: center; }
+/* One line, centred, in the caption face — the shape a quiet way out wears
+   everywhere else here. `.ab-pin-foot` and its two pills are gone. */
+.ab-pin-none {
+  align-self: center;
+  padding: 6px 4px;
+  border: 0; background: none; cursor: pointer;
+  font-family: var(--font-label);
+  font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+  color: var(--ink-faint);
+  transition: color 0.15s;
+}
+.ab-pin-none:hover { color: var(--ink-soft); }
 
 @media (max-width: 768px) {
   /* A panel in the middle is a desktop idiom; on a phone it wants to be under
@@ -643,7 +654,14 @@
        much screen is left above it. The fallbacks are the no-keyboard case and
        are what a browser without visualViewport gets. */
     bottom: var(--ab-pin-lift, 0px);
-    max-height: calc(min(var(--ab-pin-room, 100dvh), 100dvh) - 72px);
+    /* ── Half a screen, 2026-09-20 ──────────────────────────────────────
+       Miyel: "let's just do a simple half rise from the bottom to choose the
+       new album vs this full screen second state." It took the screen less
+       72px, which is not a sheet over a page, it is a second page — and the
+       card it covered was the thing you were choosing *for*, so you could no
+       longer see what you were changing. Half, and the keyboard still wins:
+       whichever of the two is smaller. */
+    max-height: min(calc(min(var(--ab-pin-room, 100dvh), 100dvh) - 72px), 56dvh);
     border-radius: 20px 20px 0 0; border-bottom: none;
     padding: 16px 20px calc(16px + env(safe-area-inset-bottom));
     animation: abPinSlide 0.22s ease;

@@ -25,7 +25,7 @@ import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { arrivingAlone } from '../../library/handoff';
-import { Eye, EyeSlash, PushPin, UploadSimple, User, X } from '@phosphor-icons/react';
+import { Eye, EyeSlash, PushPin, Swap, UploadSimple, User, X } from '@phosphor-icons/react';
 import { useRouter } from 'next/navigation';
 import { useTheme } from './Lightswitch';
 import { useListeningBeacon } from '../../hooks/useListeningBeacon';
@@ -614,11 +614,23 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
                   swap that out." The row looked in a correction exactly as it
                   looks printed — a pin, a cover, a title — so the one thing
                   about it that had changed, that it is now a door, was
-                  invisible. The photograph above it has said `Replace` on a
-                  small pill since the day it was editable; this is that pill,
-                  and the two editable objects on this card now wear the same
-                  word in the same clothes. */}
-              {pinned && <span className="idc-pinned-swap">Change</span>}
+                  invisible.
+
+                  It said CHANGE on a pill for an hour, borrowed from the
+                  photograph above it, and she took the pill off the same hour:
+                  "I don't even like the pill for change. Maybe there can just
+                  be an icon next to it like the eye that would suggest
+                  swapping it." So it is a glyph in the eyes' own clothes —
+                  the counted rows on this card are turned off by an eye, and
+                  a mark in that shape on that line already reads as the thing
+                  you do to it. Not a button: the whole row is the door, and a
+                  control inside a control is two places to press for one
+                  outcome. */}
+              {pinned && (
+                <span className="idc-pinned-swap" aria-hidden="true">
+                  <Swap size={14} weight="regular" />
+                </span>
+              )}
             </button>
           ) : (
             <Link

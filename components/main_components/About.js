@@ -628,16 +628,22 @@ export default function About({ stamps, authed = false, pinned = null, entries =
               )}
             </div>
 
-            <div className="ab-pin-foot">
-              {/* Clearing it is a thing somebody means to do, so it says so
-                  rather than being the absence of a choice. */}
-              <button type="button" className="ln-pill" onClick={() => choosePin(null)}>
-                Pin nothing
-              </button>
-              <button type="button" className="ln-pill" onClick={() => setPinOpen(false)}>
-                Done
-              </button>
-            </div>
+            {/* ── One quiet line, 2026-09-20 ─────────────────────────────
+                Two pills sat here, Pin nothing and Done, and Miyel took both:
+                "pin nothing and done don't like the pills". Done was already
+                saying nothing — pressing a cover chooses it and closes the
+                sheet, and the screen above the sheet closes it without
+                choosing — so a button whose whole job is the thing that
+                happens anyway is a button in the way.
+
+                Clearing it stays, because it is a thing somebody means to do
+                rather than the absence of a choice. As a line and not a pill:
+                `.ln-pill` is for navigation and for the one primary action a
+                screen has (DECISIONS), and on a sheet whose primary action is
+                forty covers this is neither. */}
+            <button type="button" className="ab-pin-none" onClick={() => choosePin(null)}>
+              Pin nothing
+            </button>
           </div>
         </>
       )}
