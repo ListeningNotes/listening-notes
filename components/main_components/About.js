@@ -54,6 +54,12 @@ import { useBookplate } from './Bookplate';
 import { BIO_PROMPTS, readBioAnswers } from '../../library/bioprompt';
 import { VERSION, RELEASE_URL } from '../../library/version';
 
+// How long the row at the foot takes to change places with the band. The
+// band's own transition in nav.css is the same number, and the delay that
+// makes the band follow the bar back up rather than cross it is there too.
+const EDIT_BAR_MS = 300;
+
+
 // Three, and the cap is the point. Somewhere to be found is not somewhere to
 // list every account anybody has ever opened — a row of three marks reads at a
 // glance and a row of nine reads as a footer.
@@ -94,6 +100,40 @@ export default function About({ stamps, authed = false, pinned = null, entries =
   // on it; the prompts print below it now, and two instances of the hook would
   // be two drafts of the same page with one save button between them.
   const edit = useIdentificationCardEditor(settings);
+
+  // ── The band and the editing bar change places ──────────────────────────
+  // One row at the foot of the screen at a time. The band drops out of the
+  // window as the bar rises into it, and on the way back the bar sinks first
+  // and the band follows it up a beat later (the delay is in nav.css).
+  //
+  // The band belongs to the cross and this bar belongs to the card, and they
+  // have no component in common short of HomeNav — so they are joined by a
+  // class on `.hn` rather than by threading editing state up through a pane
+  // and back down. The DOM write is this file's own: it puts the class on and
+  // takes it off, including if the pane goes away mid-correction.
+  const [barUp, setBarUp] = useState(false);
+  const [barGoing, setBarGoing] = useState(false);
+  useEffect(() => {
+    const cross = document.querySelector('.hn');
+    if (edit.editing) {
+      setBarGoing(false);
+      setBarUp(true);
+      cross?.classList.add('hn--editing');
+      return () => cross?.classList.remove('hn--editing');
+    }
+    cross?.classList.remove('hn--editing');
+    setBarGoing(going => going);
+    return undefined;
+  }, [edit.editing]);
+
+  // And the way out, which is a state of its own because a row that is
+  // unmounted on the frame it stops being wanted does not leave, it vanishes.
+  useEffect(() => {
+    if (edit.editing || !barUp) return undefined;
+    setBarGoing(true);
+    const done = setTimeout(() => { setBarUp(false); setBarGoing(false); }, EDIT_BAR_MS);
+    return () => clearTimeout(done);
+  }, [edit.editing, barUp]);
 
   // Whether a newer Listening Notes exists, for the line at the foot. Asked
   // once, of this copy's own server, which asks GitHub's public releases at
@@ -399,11 +439,21 @@ export default function About({ stamps, authed = false, pinned = null, entries =
           should take same look as edit mode in entry with same footer to end
           editing."
 
-          It covers the band while it is up, which is the point: the four
-          doors are four ways to leave a correction without deciding what to
-          do with it. Save and Cancel are the way out. */}
-      {edit.editing && (
-        <div className="ln-editing-bar">
+          It does not cover the band: the two change places. Miyel,
+          2026-09-20 — "we can have the nav bar leave out the screen down and
+          the edit toolbar come up; when finishing editing that one exits down
+          and the nav bar comes back up." An entry has no band to swap with,
+          which is why the bar simply appears there and why it looked wrong
+          here: two rows stacked at the foot of the screen, one of them four
+          doors out of a correction you have not decided what to do with.
+
+          The band is HomeNav's and this is About's, so the two are joined by
+          a class on the cross rather than by a prop — see the effect above.
+          It stays mounted for the length of the way out, which is what
+          `barGoing` is: unmounted on the frame editing ends, it would vanish
+          rather than leave. */}
+      {barUp && (
+        <div className={'ln-editing-bar' + (barGoing ? ' ln-editing-bar--going' : '')}>
           <span className="ln-editing-label">Editing</span>
           <button type="button" className="ln-pin ln-pin--on" onClick={edit.save} disabled={edit.saving || edit.busy}>
             <Check size={13} weight="bold" aria-hidden="true" />

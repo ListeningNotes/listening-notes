@@ -247,6 +247,14 @@ export default function KeeperTools({
 
   const tools = [];
 
+  // Edit first, which is nearest the ··· when the drawer is out: the row
+  // opens back towards the mark that opened it, so the head of the list is
+  // the shortest reach (Miyel, 2026-09-20). It is also the one of these that
+  // gets pressed most.
+  tools.push(
+    <button key="edit" type="button" onClick={() => { shut(); onEdit(); }} {...box(...words.edit, <Pencil size={22} weight="regular" aria-hidden="true" />)} />
+  );
+
   tools.push(
     onPrint ? (
       <button key="print" type="button" onClick={() => { shut(); onPrint(); }} {...box(...words.print, <Export size={22} weight="regular" aria-hidden="true" />)} />
@@ -255,10 +263,6 @@ export default function KeeperTools({
          whichever one happens to be first in the list. */
       <Link key="print" href={slug ? `/printer?entry=${encodeURIComponent(slug)}` : '/printer'} {...box(...words.print, <Export size={22} weight="regular" aria-hidden="true" />)} />
     )
-  );
-
-  tools.push(
-    <button key="edit" type="button" onClick={() => { shut(); onEdit(); }} {...box(...words.edit, <Pencil size={22} weight="regular" aria-hidden="true" />)} />
   );
 
   // A room rather than an action, which is why it is last: the two above it

@@ -2885,11 +2885,23 @@ else's, which is an argument for a version on that URL and is not built.
       take same look as edit mode in entry with same footer to end editing."
       The tick and the cross came out of the top corner and the entry's own
       `.ln-editing-bar` goes up at the foot — EDITING, Save, Cancel, class for
-      class, so the two corrections are one mode. It covers the band while it
-      is up, which is right: four doors are four ways to leave a correction
-      without deciding what to do with it. `.ab-pane--editing` gives it 96px
-      of room, on the pane, which is the box that actually scrolls.
+      class, so the two corrections are one mode. `.ab-pane--editing` gives it
+      96px of room, on the pane, which is the box that actually scrolls.
       `.idc-tool` and `.idc-tool--keep` are gone with the buttons they dressed.
+      **The band and the bar change places rather than stacking.** Drawn over
+      each other they were two rows in one strip and it read wrong — "the
+      issue is that in edit mode the site nav bar is at the bottom and on
+      entry editing it isn't", which is the thing an entry never has to solve.
+      The band drops out of the window as the bar rises into it, and on the
+      way back the bar sinks first and the band follows a beat later
+      (`transition-delay` on the way up only). They are joined by
+      `.hn--editing`, a class About puts on the cross, because the band is
+      HomeNav's and the bar is About's and the two share no component short of
+      HomeNav. `barGoing` keeps the bar mounted for its own way out:
+      unmounted on the frame editing ends, it vanishes rather than leaves.
+- [x] **Edit is the first tool behind the ···**, which is the shortest reach:
+      the row opens back towards the mark that opened it, so the head of the
+      list lands nearest the thumb. It is also the one that gets pressed.
 - [x] **No hairline over the version line.** The same argument as the one
       under the header: a rule separates two things that would otherwise run
       together, and a caption 46px below the last of the writing is already

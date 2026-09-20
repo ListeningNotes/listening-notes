@@ -917,6 +917,18 @@ a.ln-sent-who:hover { text-decoration: underline; text-underline-offset: 3px; }
   background: var(--bg);
   border-top: 1px solid var(--border);
 }
+/* ── The card's copy rises and sinks, 2026-09-20 ───────────────────────────
+   Scoped to the card, because an entry has no band for this to change places
+   with: there the bar is the only row at the foot and simply being there is
+   the whole of what it has to say. On the card it is taking the band's place,
+   and a swap you can see is what makes the two read as one row rather than as
+   two fighting over the same strip. See .hn-foot in nav.css for the other
+   half, and About.js for the state that keeps this mounted while it leaves. */
+.ab-pane .ln-editing-bar { animation: ln-edit-rise 0.3s cubic-bezier(0.22, 0.61, 0.36, 1) both; }
+.ab-pane .ln-editing-bar--going { animation: ln-edit-sink 0.3s cubic-bezier(0.55, 0, 0.68, 0.53) both; }
+@keyframes ln-edit-rise { from { transform: translateY(100%); } to { transform: none; } }
+@keyframes ln-edit-sink { from { transform: none; } to { transform: translateY(100%); } }
+
 /* Room for it, on the element that actually scrolls. .ln-screen-two holds an
    inner scroller, so padding on the outer box is padding the content slides
    straight past — the last track's note went on being written underneath the

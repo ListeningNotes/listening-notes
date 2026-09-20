@@ -2476,6 +2476,20 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
     position: absolute;
     left: 0; right: 0; bottom: 0;
     z-index: 96;
+    /* ── It steps down while the card is being corrected, 2026-09-20 ────
+       One row at the foot of the screen at a time. The editing bar used to
+       be drawn over the band, which is two rows stacked in the same place
+       and one of them four doors out of a correction you have not decided
+       what to do with — and on an entry, which is the shape that bar was
+       borrowed from, there is no band at all. Miyel: "we can have the nav
+       bar leave out the screen down and the edit toolbar come up. When
+       finishing editing that one exits down and the nav bar comes back up."
+
+       .hn is overflow: hidden, so a hundred percent down is off the screen
+       rather than over the band's own ground. The delay is on the way *back*
+       only — see below — so the band waits a beat and follows the bar up
+       instead of crossing it. */
+    transition: transform 0.3s cubic-bezier(0.22, 0.61, 0.36, 1) 0.12s;
     display: flex;
     align-items: stretch;
     justify-content: center;
@@ -2495,6 +2509,10 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
     background: linear-gradient(to top, var(--bg), transparent);
     pointer-events: none;
   }
+  /* Down it goes, with no delay: the bar is on its way up on the same frame
+     and nothing should be in the way of it. */
+  .hn--editing .hn-foot { transform: translateY(100%); transition-delay: 0s; }
+
   /* Except over the book and its feed (Miyel, 2026-09-20). A dissolve is for
      a floor whose content runs off the bottom edge and should read as
      continuing — a wall of covers, a record mid-scroll. This pane ends in
