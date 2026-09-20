@@ -65,16 +65,33 @@ function Face({ address }) {
   );
 }
 
-function Section({ title, note, rows, empty, children }) {
+// `all` is for a section that is not a list of rows — the sends, which are a
+// grid of covers and have to be laid out as a whole. Everything else still
+// hands over a row renderer.
+function Section({ title, note, rows, empty, children, all = null }) {
   return (
     <section className="pn-section">
       <div className="pn-section-head">
         <span className="pn-section-title">{title}</span>
         {note && <span className="pn-section-note">{note}</span>}
       </div>
-      {rows.length === 0 ? <div className="pn-empty">{empty}</div> : rows.map(children)}
+      {rows.length === 0 ? <div className="pn-empty">{empty}</div> : (all || rows.map(children))}
     </section>
   );
+}
+
+// How many covers across in what they have sent you. Four, like the faces in
+// the book — this page and that pane are the same two objects at two sizes,
+// and a record is drawn the same square as a person here.
+const SENT_ACROSS = 4;
+
+// A flat list into rows. CSS grid has no way to say "after whichever row
+// that item landed in", so the rows are real and the detail is a sibling of
+// the one it belongs under.
+function chunk(list, per) {
+  const out = [];
+  for (let i = 0; i < list.length; i += per) out.push(list.slice(i, i + per));
+  return out;
 }
 
 export default function PersonPage({ layered = false }) {
@@ -103,6 +120,13 @@ export default function PersonPage({ layered = false }) {
   const [theirs, setTheirs] = useState(null);
   const [mine, setMine] = useState([]);
   const [sent, setSent] = useState([]);
+  // Which sent record is showing its name and its note. Miyel, 2026-09-19:
+  // "in the what ___ has sent you, show them as just album covers; when
+  // clicked the actual name and note can open." Covers first because that is
+  // how a shelf is read — you know the record by its face long before you
+  // read its name — and because a column of rows for four sends was a table
+  // where a handful of squares is a shelf.
+  const [openSend, setOpenSend] = useState(null);
 
   useEffect(() => {
     fetch('/api/auth/check').then(r => r.json()).then(d => setAuthed(!!d.authed)).catch(() => {}).finally(() => setChecking(false));
@@ -282,26 +306,67 @@ export default function PersonPage({ layered = false }) {
                   )}
                 </Section>
 
-                <Section title={`What ${name} has sent you`} rows={facts.sends} empty={`${name} hasn't sent you anything yet.`}>
-                  {s => (
-                    <div key={s.id} className="pn-item">
-                      {s.logged
-                        ? <Link href={`/entries/${s.logged.slug}`} className="pn-item-art">{s.album_art && <img src={s.album_art} alt="" loading="lazy" />}</Link>
-                        : <span className="pn-item-art">{s.album_art && <img src={s.album_art} alt="" loading="lazy" />}</span>}
-                      <div className="pn-item-said">
-                        {s.logged
-                          ? <Link href={`/entries/${s.logged.slug}`} className="pn-item-album">{s.album}</Link>
-                          : <span className="pn-item-album">{s.album}</span>}
-                        <div className="pn-item-artist">{s.artist}{s.year ? ` · ${s.year}` : ''}{s.created_at && <> &middot; {new Date(s.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</>}</div>
-                        {s.note && <p className="pn-item-note">{s.note.length > 140 ? s.note.slice(0, 140).trim() + '…' : s.note}</p>}
+                {/* ── What they have sent you ─────────────────────────────
+                    Covers, and the name and the note behind a press. The
+                    grid is chunked into rows so a record's detail can open
+                    directly under the row it is in, which is the same thing
+                    the friends pane does with a face and for the same
+                    reason: a panel a row away from the thing that opened it
+                    is a panel about nothing.
+
+                    A cover that has not been logged is greyed, which is the
+                    site's one way of saying a record is not in hand — the
+                    beacon's idle art and the past listens beside it wear the
+                    same filter. So the shelf answers "what did they send me
+                    and what have I got to" before anything is pressed. */}
+                <Section
+                  title={`What ${name} has sent you`}
+                  rows={facts.sends}
+                  empty={`${name} hasn't sent you anything yet.`}
+                  all={chunk(facts.sends, SENT_ACROSS).map((row, i) => {
+                    const here = row.find(x => x.id === openSend) || null;
+                    return (
+                      <div key={i} className={'pn-sent-row' + (here ? ' pn-sent-row--open' : '')}>
+                        <div className="pn-sent-grid">
+                          {row.map(x => (
+                            <button
+                              key={x.id}
+                              type="button"
+                              className={'pn-sent' + (here?.id === x.id ? ' pn-sent--open' : '')}
+                              onClick={() => setOpenSend(o => (o === x.id ? null : x.id))}
+                              aria-expanded={here?.id === x.id}
+                              title={`${x.album} — ${x.artist}`}
+                            >
+                              <span className={'pn-sent-art' + (x.logged ? '' : ' pn-sent-art--unlogged')}>
+                                {x.album_art
+                                  ? <img src={x.album_art} alt="" loading="lazy" />
+                                  : <span className="pn-sent-none" aria-hidden="true">♪</span>}
+                              </span>
+                            </button>
+                          ))}
+                        </div>
+                        {here && (
+                          <div className="pn-sent-said">
+                            {here.logged
+                              ? <Link href={`/entries/${here.logged.slug}`} className="pn-item-album">{here.album}</Link>
+                              : <span className="pn-item-album">{here.album}</span>}
+                            <div className="pn-item-artist">
+                              {here.artist}{here.year ? ` · ${here.year}` : ''}
+                              {here.created_at && <> &middot; {new Date(here.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</>}
+                            </div>
+                            {here.note && <p className="pn-item-note">{here.note}</p>}
+                            <div className="pn-sent-tail">
+                              {here.logged
+                                ? (here.rating !== null ? <StarRating rating={here.rating} size={12} /> : <span className="pn-gap">Logged</span>)
+                                : <span className="pn-gap">Not logged yet</span>}
+                            </div>
+                          </div>
+                        )}
                       </div>
-                      <div className="pn-item-tail">
-                        {s.logged
-                          ? (s.rating !== null ? <StarRating rating={s.rating} size={12} /> : <span>Logged</span>)
-                          : <span className="pn-gap">Not logged yet</span>}
-                      </div>
-                    </div>
-                  )}
+                    );
+                  })}
+                >
+                  {() => null}
                 </Section>
 
               </div>
