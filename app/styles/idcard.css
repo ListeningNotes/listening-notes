@@ -357,9 +357,23 @@
      sitting 46px below the last of the writing is already apart from it. It
      was the foot of a section when a door stood in it; what is left is one
      quiet line about the software. */
+  /* 46 where there is nothing above it — a fresh copy with no prompts, no
+     rig and therefore no .ab-below at all still has to put air between the
+     card and this line. */
   margin-top: 46px;
-  padding-top: 22px;
 }
+/* ── And ten where there is, 2026-09-20 ───────────────────────────────────
+   Miyel: "there's a strange space between rig and version/report." There was:
+   .ab-below ends in 40px of its own — the air at the foot of the writing —
+   and this was adding 46 more and then 22 of padding under a rule that came
+   off this morning. A hundred and eight pixels of nothing between the last
+   thing somebody wrote and one grey line about the software. */
+.ab-below + .ab-keep { margin-top: 10px; }
+/* The writing gives up its own bottom air when the colophon follows it. */
+.ab-below--kept { padding-bottom: 0; }
+/* And the line gives up the 22px it wore under the Settings door, which went
+   up into the ··· this morning and left it spacing itself from nothing. */
+.ab-keep .db-colophon { margin-top: 0; }
 /* Only where the desk is gone. Above 769px the book still has its spine and
    the desk is still its second page, with Settings on it — so this would be
    the same door twice, one turn apart. The card's foot exists *because* the

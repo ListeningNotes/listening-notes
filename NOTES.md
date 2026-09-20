@@ -2982,6 +2982,16 @@ else's, which is an argument for a version on that URL and is not built.
       changes what it looks like depending on how many neighbours it has wears
       two faces on two pages, and the card had just gained a third tool and
       would have changed clothes for it.
+- [x] **And the space under the rig closed.** "There's a strange space
+      between rig and version/report." Three helpings of air stacked: 40px at
+      the foot of the writing, 46 more on the colophon, and 22 of padding
+      under a rule that came off this morning — 108px of nothing between the
+      last thing somebody wrote and one grey line about the software. The
+      padding went with the rule, the writing gives up its own bottom air when
+      a colophon follows it (`.ab-below--kept`, keyed on authed because
+      `.ab-keep` is), and the line gives up the 22px it wore under the
+      Settings door. 62px now.
+
 - [x] **No hairline over the version line.** The same argument as the one
       under the header: a rule separates two things that would otherwise run
       together, and a caption 46px below the last of the writing is already
