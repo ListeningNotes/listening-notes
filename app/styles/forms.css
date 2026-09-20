@@ -1109,53 +1109,45 @@ a.pp-name:hover svg { color: var(--ink); }
 .fr-plus svg { transition: transform 0.34s cubic-bezier(0.22, 0.61, 0.36, 1); }
 .fr-plus--shut svg { transform: rotate(45deg); }
 
-/* Add and Scan, centred under the address field. Collapsed rather than taken
-   away, so the row opens and closes on the same clock as the fields crossing
-   above it instead of blinking in when they have finished.
+/* ── Add and Scan moved into the header, 2026-09-20 ───────────────────────
+   `.fr-add-acts` and everything that dressed it are gone. They were a row of
+   two buttons under the field, collapsing open and shut on a max-height, and
+   Miyel: "I'm not a huge fan of add and scan being under, but I have no idea
+   where else to put them", then "there needs to be an actual add button but
+   I also don't really like pills."
 
-   `.own-act` sets no gap of its own — every other caller passes it a word
-   alone — so the camera and SCAN A CODE were touching. */
-/* ── Centred on the page, 2026-09-20 ──────────────────────────────────────
-   These sat 24px left of the pane's middle for a day, lined up with the field
-   above them: the head is a field and a +, so the field gives up the +'s 40
-   and the 8 between them, all off its right-hand end, and comes out left of
-   centre. Lining these up with it made the box and its two actions one
-   object — and Miyel's call, looking at it: "can we center add and scan code
-   to page not the box."
-
-   She is right, and the reason is what else is on the screen. Everything on
-   this floor is centred on the pane — the book's name, the faces, the way
-   down — so a pair of buttons on their own private centre line is one thing
-   out of true with the whole page to keep one small group internally tidy.
-   The field is the odd one out because it has a + beside it; nothing else
-   should follow it there. */
-.fr-add-acts {
-  display: flex; align-items: center; justify-content: center;
-  gap: 10px; flex-wrap: wrap;
-  max-height: 0; margin-top: 0; opacity: 0; overflow: hidden;
-  transform: translateY(-8px);
-  pointer-events: none;
-  transition: max-height 0.34s cubic-bezier(0.22, 0.61, 0.36, 1),
-              margin-top 0.34s cubic-bezier(0.22, 0.61, 0.36, 1),
-              transform 0.34s cubic-bezier(0.22, 0.61, 0.36, 1),
-              opacity 0.22s ease;
+   So Add is a mark at the end of the field — where the sentence it commits
+   ends — and Scan is a camera beside the way out. Both are controls that are
+   the mark rather than marks in containers, which is the rule this site
+   already keeps, and the row under the field is simply not there. */
+.fr-scan {
+  display: inline-flex; align-items: center; justify-content: center;
+  flex: 0 0 auto;
+  width: 40px; height: 40px;
+  border: 0; background: none; padding: 0;
+  color: var(--ink-soft); cursor: pointer;
+  transition: color 0.15s;
 }
-/* Near the real height, not wildly above it — the same note `.beacon-meta`
-   carries in nav.css, and the same mistake made again here first. The row is
-   32px and the cap was 80, so the opening was over at two fifths of the
-   clock and the rest of the transition was max-height climbing through air
-   with nothing moving. 56 leaves room for the two words to wrap onto a
-   second line on a narrow phone and still spends most of the duration
-   actually opening. */
-.fr-add-acts--open {
-  max-height: 56px; margin-top: 12px; opacity: 1;
-  transform: none;
-  pointer-events: auto;
+.fr-scan:hover { color: var(--ink); }
+/* At the end of the line, inside it. It arrives with the first character
+   typed, so at rest the row is a field and its two corners. */
+.fr-go {
+  display: inline-flex; align-items: center; justify-content: center;
+  flex: 0 0 auto;
+  width: 30px; height: 30px;
+  margin: -6px -4px -6px 4px;
+  border: 0; background: none; padding: 0;
+  color: var(--ink); cursor: pointer;
+  transition: color 0.15s, opacity 0.15s;
+  animation: fr-go-in 0.16s ease both;
 }
-.fr-add-acts .own-act { gap: 7px; }
+.fr-go:hover { color: var(--lift); }
+.fr-go:disabled { opacity: 0.4; cursor: default; }
+@keyframes fr-go-in { from { opacity: 0; transform: translateX(-4px); } to { opacity: 1; transform: none; } }
 
 @media (prefers-reduced-motion: reduce) {
-  .fr-field, .fr-plus svg, .fr-add-acts { transition: none; }
+  .fr-field, .fr-plus svg { transition: none; }
+  .fr-go { animation: none; }
 }
 
 /* ── The grid ──────────────────────────────────────────────────────────────

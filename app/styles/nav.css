@@ -2745,11 +2745,14 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
     transition: border-color 0.15s, opacity 0.22s ease;
   }
   .hn-bar-add .fr-field:focus-within { border-bottom-color: var(--ink-faint); }
+  /* The page's own face, not the caption's. It was DM Mono for an hour, on
+     the reasoning that the row it sits in is a caption — and a caption face
+     at sixteen pixels is a typewriter in a header (Miyel: "don't like that
+     font"). What makes it belong to the row is that it is a line rather than
+     a box; the letters are the site's. */
   .hn-bar-add .fr-field input {
     padding: 8px 0;
     text-align: center;
-    font-family: var(--font-label);
-    letter-spacing: 0.04em;
   }
   /* Away rather than clipped. The clip was how one field left while the
      other arrived across a row they shared; with no box round either of

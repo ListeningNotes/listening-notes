@@ -39,7 +39,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
-import { BookOpen, Camera, MagnifyingGlass, PaperPlaneTilt, Plus, PushPin, Shuffle, User, X } from '@phosphor-icons/react';
+import { ArrowRight, BookOpen, Camera, MagnifyingGlass, PaperPlaneTilt, Plus, PushPin, Shuffle, User, X } from '@phosphor-icons/react';
 import CodeScanner from './CodeScanner';
 import SendSheet from './SendSheet';
 import { carrySender, journalUrl, tidyJournal } from '../../library/return_address';
@@ -660,6 +660,33 @@ export default function Friends({ shelf = false, onCount = null, onBusy = null }
             inputMode="url"
             spellCheck={false}
           />
+          {/* ── The Add button, at the end of the line it acts on ──────────
+              A row of two buttons used to hang under this field — Add and
+              Scan a code — and Miyel took against it: "I'm not a huge fan of
+              add and scan being under, but I have no idea where else to put
+              them", and then "there needs to be an actual add button but I
+              also don't really like pills."
+
+              So Add is a mark at the end of the field, which is where the
+              sentence it commits ends. It is a control that is the mark and
+              not a mark in a container (DECISIONS), and it is only there once
+              there is something to add — at rest the row is a field and two
+              corners, and the arrow arrives with the first character typed.
+
+              Inside the label and pressable anyway: a click on an interactive
+              descendant is not forwarded to the labelled control. */}
+          {adding && typed.trim() !== '' && (
+            <button
+              type="button"
+              className="fr-go"
+              onClick={() => file(typed)}
+              disabled={filing}
+              aria-label="Add this journal"
+              title="Add"
+            >
+              <ArrowRight size={16} weight="bold" aria-hidden="true" />
+            </button>
+          )}
         </label>
       </div>
           {/* ── The + turns into the × ───────────────────────────────────
@@ -673,6 +700,21 @@ export default function Friends({ shelf = false, onCount = null, onBusy = null }
           one slot, so a book still narrowed to one person while you type
           an address into the box above it is a page quietly lying about
           how many people are in it. */}
+      {/* Scanning is the other way to say the same address, so it stands
+          beside the way out rather than under the field. Only while the
+          field is open: a camera on a page of faces is a camera pointed at
+          nothing. */}
+      {adding && (
+        <button
+          type="button"
+          className="fr-scan"
+          onClick={() => setScanning(true)}
+          aria-label="Point the camera at a code"
+          title="Scan a code"
+        >
+          <Camera size={18} weight="regular" aria-hidden="true" />
+        </button>
+      )}
       {plus}
     </div>
   );
@@ -727,16 +769,12 @@ export default function Friends({ shelf = false, onCount = null, onBusy = null }
             reader only ever meet the field that is actually there. */}
         {barSlot ? createPortal(head, barSlot) : head}
 
-        {/* Centred under the address field, and collapsed rather than taken
-            away, so the row opens and closes rather than blinking. */}
-        <div className={'fr-add-acts' + (adding && !scanning ? ' fr-add-acts--open' : '')} inert={adding && !scanning ? undefined : true}>
-          <button type="button" className="own-act own-act--solid" onClick={() => file(typed)} disabled={filing || !typed.trim()}>
-            {filing ? 'Adding…' : 'Add'}
-          </button>
-          <button type="button" className="own-act" onClick={() => setScanning(true)} title="Point the camera at a code">
-            <Camera size={14} aria-hidden="true" /> Scan a code
-          </button>
-        </div>
+        {/* The Add / Scan row that stood here is gone, 2026-09-20. Both of
+            them are in the header now — Add as a mark at the end of the
+            field, Scan as a camera beside the way out — which is what Miyel
+            was asking for without a place to put it: "I'm not a huge fan of
+            add and scan being under, but I have no idea where else to put
+            them." */}
         {scanning && <CodeScanner onRead={read} onClose={() => setScanning(false)} />}
 
         {offered && !scanning && (
