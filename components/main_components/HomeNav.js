@@ -1538,11 +1538,19 @@ export default function HomeNav() {
   // and a control for a list four swipes away is furniture; it arrives with
   // the floor and leaves with it.
   const { density, flip: flipDensity } = useFeedDensity();
-  const onTheFeed = pane === BOOK && atFeed;
+  const onTheFeed = authed && pane === BOOK && atFeed;
   // What the bar is called while you are on the friends pane. Nothing on the
   // others: the beacon has a mark of its own and the card's tools are the only
   // thing it puts up here.
-  const barSays = pane !== BOOK ? null
+  // ── The keeper's, and only the keeper's ─────────────────────────────────
+  // `pane` is where the rail has scrolled to, counted in panes — and a
+  // visitor's rail has fewer of them, so the index that is the book when
+  // somebody is signed in is a different pane when nobody is. Miyel,
+  // 2026-09-20: "address book header shows on about page when signed out."
+  // The name of a room a visitor cannot enter should never be drawn for
+  // them, whatever the arithmetic says, so it is gated on the wristband as
+  // well as on the position.
+  const barSays = !authed || pane !== BOOK ? null
     : atFeed ? 'Recent listens'
     // The name steps aside for the field the + opens, which arrives in this
     // same row: "it needs to open and replace address book text."

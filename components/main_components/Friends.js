@@ -684,7 +684,7 @@ export default function Friends({ shelf = false, onCount = null, onBusy = null }
               aria-label="Add this journal"
               title="Add"
             >
-              <ArrowRight size={16} weight="bold" aria-hidden="true" />
+              <ArrowRight size={18} weight="bold" aria-hidden="true" />
             </button>
           )}
         </label>

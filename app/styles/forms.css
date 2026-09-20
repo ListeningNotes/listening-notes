@@ -1137,11 +1137,18 @@ a.pp-name:hover svg { color: var(--ink); }
   width: 30px; height: 30px;
   margin: -6px -4px -6px 4px;
   border: 0; background: none; padding: 0;
-  color: var(--ink); cursor: pointer;
+  /* Full ink, 2026-09-20 — and it already was `--ink`, which is the thing
+     worth writing down: what made it read grey was the stroke, not the
+     colour. A bold Phosphor arrow at sixteen pixels is four thin lines on a
+     dark ground beside a sixteen-pixel word set solid. So it goes to the far
+     end of the ink — white in the dark, black in the light, the same step
+     the way into a listen takes when it is reached for — and up two pixels,
+     which between them is the difference between a mark that is the right
+     colour and a mark that looks it. */
+  color: var(--lift); cursor: pointer;
   transition: color 0.15s, opacity 0.15s;
   animation: fr-go-in 0.16s ease both;
 }
-.fr-go:hover { color: var(--lift); }
 .fr-go:disabled { opacity: 0.4; cursor: default; }
 @keyframes fr-go-in { from { opacity: 0; transform: translateX(-4px); } to { opacity: 1; transform: none; } }
 
