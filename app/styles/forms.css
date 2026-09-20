@@ -1167,28 +1167,24 @@ a.pp-name:hover svg { color: var(--ink); }
    A row at a time rather than one grid, because the doors open *between* two
    rows and CSS grid cannot say "after whichever row that item landed in". */
 .fr-row { display: flex; flex-direction: column; }
-/* ── What a row is called ──────────────────────────────────────────────────
-   PINNED over the first, EVERYONE over the rest, and only when there is a
-   pinned row to tell them apart — one list needs no label saying it is the
-   list. The caption face, the caption size, the same as the book's own name
-   above it, because they are the same kind of thing: words about what is
-   under them rather than anything you can press. */
-.fr-said {
-  margin: 0 0 2px;
-  font-family: var(--font-label);
-  font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase;
-  color: var(--ink-faint);
-}
 /* ── The pinned row ────────────────────────────────────────────────────────
-   Three across and larger, which is the whole of how it differs: the same
-   faces, the same names, the same press, standing further apart because
-   there are fewer of them and they are the ones you meant. */
-.fr-row--pinned .fr-face { max-width: 84px; }
+   Three across and larger, which is now the whole of how it differs. It had
+   PINNED over it and EVERYONE over the rest for an hour and Miyel took both
+   off: the size and the position say it, and two labels on a page of ten
+   faces are two more words than the page can spare.
+
+   92, up from 84 (Miyel: "a smidge bigger, I know there's not much space").
+   Three across a 327px shelf leaves a 100px cell, so this is most of what
+   there is — and six is the cap, which is two rows of it. */
+.fr-row--pinned .fr-face { max-width: 92px; }
 .fr-row--pinned .fr-grid { gap: 20px 14px; }
 .fr-row--pinned .fr-name { font-size: 14px; }
 /* A door that is already done. Ink rather than a second glyph: the word under
    it changes and that is what says which way the press goes. */
 .fr-door--on { color: var(--ink); }
+/* A door with no room left behind it. Dimmed rather than taken away: the row
+   is four doors wide and a gap where one was is a row that moves. */
+.fr-door:disabled { opacity: 0.3; cursor: default; }
 .fr-grid {
   display: grid;
   grid-template-columns: repeat(var(--fr-across, 4), 1fr);

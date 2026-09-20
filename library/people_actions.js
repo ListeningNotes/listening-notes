@@ -22,11 +22,30 @@ export async function pull_people() {
   `;
 }
 
+// How many can be up there at once (Miyel, 2026-09-20). Six is two rows of
+// three at the size they are drawn, and past that the shelf is pins and the
+// book is a line under them — which is the pane inside out.
+//
+// **This is the rule.** Friends.js keeps its own copy of the number so it can
+// grey the door out before you press it, and cannot import this one: this
+// module opens the database and that one runs in a browser. If they ever
+// disagree, this wins and the door is merely wrong about itself.
+export const PINS_MOST = 6;
+
 // Pinning is a stamp or nothing — see migrations/021_pinned_people.sql. The
 // stamp is the order as well as the fact, so re-pinning somebody already
 // pinned moves them to the end of the pinned row rather than doing nothing;
 // that is the honest reading of pressing it again on purpose.
 export async function pin_person(id, on) {
+  if (on) {
+    const [{ count }] = await database`
+      SELECT count(*)::int AS count FROM people WHERE pinned_at IS NOT NULL AND id <> ${id}`;
+    if (count >= PINS_MOST) {
+      const full = new Error(`Six is the most you can pin. Unpin somebody first.`);
+      full.full = true;
+      throw full;
+    }
+  }
   const [row] = await database`
     UPDATE people
     SET pinned_at = ${on ? new Date() : null}

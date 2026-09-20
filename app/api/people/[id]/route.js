@@ -40,6 +40,9 @@ export async function PATCH(request, { params }) {
     if (!person) return Response.json({ error: 'Nobody by that id.' }, { status: 404 });
     return Response.json({ person });
   } catch (error) {
+    // The shelf being full is not the server going wrong, and the page has
+    // something to say about it rather than something to log.
+    if (error.full) return Response.json({ error: error.message }, { status: 409 });
     return Response.json({ error: error.message }, { status: 500 });
   }
 }
