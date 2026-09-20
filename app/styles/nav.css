@@ -1914,10 +1914,28 @@
    Six to a screen: the art at 56, the name over its line of meta, and the
    stars and marks at the right. Her brief, 2026-09-20. */
 .fd-rowwrap { border-bottom: 1px solid var(--border); }
+/* ── The ring goes round the row, not the art ──────────────────────────────
+   Miyel, 2026-09-20: "in list view that amber highlight can be the whole box
+   not just the art." A 56px thumbnail is too small a thing to hang the one
+   at-a-glance fact on, and a ring round it reads as something about the
+   picture. Round the row it is about the record.
+
+   The row gives up its own hairline while it wears one: two rules two pixels
+   apart, one faint and one gold, is a box with a smudge under it. */
+.fd-rowwrap--shared { border-bottom-color: transparent; }
+.fd-rowwrap--shared .fd-row {
+  outline: 1.5px solid var(--gold);
+  outline-offset: -2px;
+}
 .fd-rowwrap:last-child { border-bottom: 0; }
 .fd-row {
   display: flex; align-items: center; gap: 12px;
-  padding: 11px 0;
+  /* Ten each side so the gold ring on a shared row has somewhere to be
+     drawn without touching the art or the marks. Every row pays it, or the
+     shared ones would sit inset from the rest and the list would be ragged
+     down one edge. */
+  padding: 11px 10px;
+  border-radius: 10px;
   text-align: left;
 }
 .fd-row-art {
