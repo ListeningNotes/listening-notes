@@ -2851,6 +2851,24 @@ current.
 
 ## Complete
 
+**2026-09-20 — The beacon's header is a tall one, and the mark is the
+header's.** The big mark used to scroll away and a small one faded in behind
+it. It morphs now: it holds its place at full size for the whole of the
+beacon, everything on the floor passes *under* the header, and the shrink is
+spent on the wall's arrival — it begins as Log a listen reaches the foot of
+the header and ends as the first row of covers lands under it, which is the
+same moment the caret goes behind. 82px to 28px, landing on the bar's line.
+
+The header has a floor to make that true: the page's own colour, so there is
+nothing to see at rest, reaching to just under the mark at whatever size it
+is. Both are drawn by the bar and not by the pane — see the two painting
+gotchas above, which is where the four evenings went. Landmarks are measured
+rather than written down, and re-measured when a picture finishes.
+
+Also here: the small mark now shows over the beacon and nowhere else, the
+wall's first row sits eight pixels under the header instead of ninety-six,
+and the morph flag is React state so a re-render cannot wipe it.
+
 **2026-09-20 — A portrait is cropped to the square it is shown at.** Miyel,
 and it is a real one: "long pressing images of people shouldn't show the
 entire picture, the picture uploaded should be cropped to the size, just
