@@ -101,6 +101,41 @@ const DOORS_MS = 340;
 // which is the right way round for them to be wrong.
 const PINS_MOST = 6;
 
+// ── Saying no ─────────────────────────────────────────────────────────────
+// A door with no room behind it used to be `disabled`, which meant pressing
+// it did nothing at all — and nothing at all is the one answer that does not
+// tell you anything. Miyel, 2026-09-20: "can the pin button shake like saying
+// no if 6 are already pinned."
+//
+// Run on the element rather than through a class, for the reason the rest of
+// this site's one-off movements are (passing, MarqueeTitle): a class has to
+// come off before it can go on again, so the second press in a row does
+// nothing, and the state that gets you round that is state kept for the
+// length of an animation. `element.animate()` restarts every time it is
+// called and needs nothing remembered.
+//
+// Small and quick. It is a refusal, not an alarm: four pixels each way and
+// gone in a third of a second, which is a head shake rather than a shout.
+function shakeNo(el) {
+  if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+  // Press it twice quickly and there is one head shake, not two on top of
+  // each other. Only this one is cancelled by name — the door has colour
+  // transitions of its own and they are none of this function's business.
+  for (const going of el.getAnimations()) if (going.id === 'shake') going.cancel();
+  const shake = el.animate(
+    [
+      { transform: 'translateX(0)' },
+      { transform: 'translateX(-4px)' },
+      { transform: 'translateX(4px)' },
+      { transform: 'translateX(-3px)' },
+      { transform: 'translateX(2px)' },
+      { transform: 'translateX(0)' },
+    ],
+    { duration: 340, easing: 'ease-in-out' }
+  );
+  shake.id = 'shake';
+}
+
 // `shelf` is the floor of the friends pane: one screen, as many faces as fit,
 // and a line out to the whole book. Without it this is the whole book — the
 // standalone address, and the view that line opens.
@@ -718,13 +753,21 @@ export default function Friends({ shelf = false, onCount = null }) {
                         on: the word under it says which way pressing goes. */}
                     <button
                       type="button"
-                      className={'fr-door' + (mine.pinned_at ? ' fr-door--on' : '')}
-                      onClick={() => pin(mine.id, !mine.pinned_at)}
+                      className={'fr-door' + (mine.pinned_at ? ' fr-door--on' : '')
+                        + (!mine.pinned_at && pinned.length >= PINS_MOST ? ' fr-door--full' : '')}
+                      onClick={event => {
+                        if (!mine.pinned_at && pinned.length >= PINS_MOST) {
+                          shakeNo(event.currentTarget);
+                          return;
+                        }
+                        pin(mine.id, !mine.pinned_at);
+                      }}
                       aria-pressed={Boolean(mine.pinned_at)}
-                      /* Offered only while there is room. The write refuses
-                         past six as well; this is so nobody presses a door
-                         that is going to say no. */
-                      disabled={!mine.pinned_at && pinned.length >= PINS_MOST}
+                      /* `aria-disabled` and not `disabled`: it is refusing,
+                         not absent, and a disabled button cannot be pressed
+                         — which means it cannot shake its head either. The
+                         write refuses a seventh regardless. */
+                      aria-disabled={(!mine.pinned_at && pinned.length >= PINS_MOST) || undefined}
                       title={!mine.pinned_at && pinned.length >= PINS_MOST
                         ? `Six is the most you can pin. Unpin somebody first.`
                         : undefined}
