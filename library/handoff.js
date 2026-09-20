@@ -169,14 +169,39 @@ export function handOffNeighbour(entry) {
 // goes false again the instant the outgoing record's scroller is emptied,
 // which happens while the swipe is still in the air. So the swipe takes a
 // copy on its way out, and the record arriving reads the copy.
-let atTheNotes = false;
-let carried = false;
-export function readingOn(yes) { atTheNotes = Boolean(yes); }
-export function carryReading() { carried = atTheNotes; }
-export function cameReadingOn() { const was = carried; carried = false; return was; }
+// Stamped rather than spent, the same shape `wentBack` has and for the same
+// reason turned inside out: React calls a state initializer twice in
+// development, so a one-shot read answers the first caller and lies to the
+// second, and which of the two React keeps is not something to build on. A
+// timestamp can be read as often as anybody likes. Closing a layer clears it,
+// so a record opened from the wall a moment later is not told it arrived
+// mid-read.
+let carriedAt = 0;
+// ── Asked of the page, not of a running total, 2026-09-20 ─────────────────
+// The entry kept this up to date as it scrolled, and that is a promise the
+// browser does not make: a scroll that has not been painted yet has not told
+// anybody anything, so a swipe taken straight after one carried the answer
+// from before it. The question is about what is on the screen, so it is put
+// to the screen — the record is in the header when the cover up there is the
+// size of a cover in a header.
+//
+// Sixty, which is comfortably over the forty-four it lands at and far under
+// anything on its way there.
+export function carryReading() {
+  if (typeof document === 'undefined') { carriedAt = 0; return; }
+  const seat = document.querySelector('.ln-crown-art');
+  const small = Boolean(seat) && seat.getBoundingClientRect().height <= 60;
+  carriedAt = small ? Date.now() : 0;
+}
+export function cameReadingOn() { return Boolean(carriedAt) && Date.now() - carriedAt < 1500; }
+// Closing a record ends the read: what comes next is an arrival, not a page
+// turn. Deliberately not in arrivingBack, which the history listener also
+// calls — and a turn to a neighbour is a history move, so that cleared the
+// answer the turn had just given.
+export function endReading() { carriedAt = 0; }
 // Asked by the wait state, which draws before the record does and must not
 // spend the answer the record is coming for.
-export function stillReadingOn() { return carried; }
+export function stillReadingOn() { return cameReadingOn(); }
 
 // ── Opened from somewhere that does not browse ────────────────────────────
 // The wall's order is a module variable and it outlives the wall, which is
