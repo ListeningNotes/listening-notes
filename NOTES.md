@@ -1549,6 +1549,15 @@ Project → Settings → Environment Variables.
 
 ## Gotchas
 
+**`pane` is where the rail has scrolled to, not which room you are in,
+2026-09-20.** It is `round(scrollLeft / width)`, counted in panes — and a
+visitor's rail has fewer panes than a keeper's, because the inbox and the
+friends pane are both behind the wristband. So the index that is the book
+when somebody is signed in is a different pane when nobody is, and the bar
+said ADDRESS BOOK over the colophon to a visitor. **Anything keyed on `pane`
+that is only the keeper's has to be keyed on `authed` as well.** The
+arithmetic is right and it is answering a different question.
+
 **A row at the foot of a full-screen floor is behind the band,
 2026-09-20.** Putting the beacon's mark and spacing back to what they were
 made its floor a whole screen again, and the JOURNAL row at the foot of it
