@@ -1,8 +1,8 @@
 // Copyright (C) 2026 Miyel Brown
 // SPDX-License-Identifier: AGPL-3.0-or-later
 // components/main_components/Footer.js
-// The band across the foot of the cross: Card · Beacon · Desk, the three panes
-// named, with the one you are on in ink.
+// The band across the foot of the cross: Card · Beacon · Inbox · Friends, the
+// panes named, with the one you are on in ink.
 //
 // ── Why this exists ───────────────────────────────────────────────────────
 // The cross went to two panes and a button because sideways meant two
@@ -21,34 +21,53 @@
 // something that way, and a word says what.
 //
 // It replaces the dots, the carets and everything else that used to live down
-// there. One band, three destinations, nothing else.
+// there. One band, and nothing else.
 //
 // ── The glyphs are decoration and have to earn it ─────────────────────────
-// The labels carry the meaning. Two of the marks were already in use and mean
-// what they draw — the broadcast for what is playing, the card for the person.
-// The desk's is a stack of lines, which is what a desk of rows looks like from
-// above and what no other mark on this site is; an open book was the obvious
-// one and is wrong, because the book is the journal and the journal is *down*
-// from the beacon, not sideways. If any of the three ever needs explaining,
-// the brief's own instruction is to drop all three and keep the words.
+// The labels carry the meaning. Every mark here is one this site already uses
+// for exactly this thing — the broadcast for what is playing, the card for the
+// person, the envelope for something that arrived, the address book for the
+// journals you read — so none of them is a coinage and none has to be learned
+// twice. The desk's stack of lines went with the desk. An open book was
+// considered once and is wrong for any of them, because the book is the
+// journal and the journal is *down* from the beacon, not sideways. If one of
+// these ever needs explaining, the brief's own instruction is to drop them all
+// and keep the words.
 'use client';
 
-import { Broadcast, IdentificationCard, Info, Rows } from '@phosphor-icons/react';
+import { AddressBook, Broadcast, Envelope, IdentificationCard, Info } from '@phosphor-icons/react';
 
-// Signed out the third pane is the colophon rather than a desk, and it is a
-// different kind of thing — a page about the software, not a set of doors — so
-// it takes its own word and its own mark rather than wearing the owner's.
+// ── Four for the keeper, three for everybody else, 2026-09-19 ────────────
+// The desk was the third stop and is gone. It was a page of doors, which is a
+// place you pass through on the way somewhere — and the two rooms worth
+// standing in, the inbox and the people, were behind it. They are stops of
+// their own now, so nothing on this band is a corridor (Miyel's friends
+// brief, and the band it draws).
+//
+// Signed out there is no inbox and nobody to read, so the third stop is the
+// colophon: a page about the software rather than a set of doors, which is
+// why it takes its own word and its own mark rather than wearing the owner's.
+// Three either way is a coincidence and not a rule; the count follows what
+// there is.
 function stops(authed) {
-  return [
+  const here = [
     { key: 'card', word: 'Card', Icon: IdentificationCard, label: 'About this journal' },
     { key: 'beacon', word: 'Beacon', Icon: Broadcast, label: 'Now listening' },
-    {
-      key: 'desk',
-      word: authed ? 'Desk' : 'About',
-      Icon: authed ? Rows : Info,
-      label: authed ? 'Your desk' : 'About this software',
-    },
   ];
+  if (!authed) {
+    here.push({ key: 'about', word: 'About', Icon: Info, label: 'About this software' });
+    return here;
+  }
+  // Envelope is the mark the whole site already puts on a record that arrived
+  // from somebody — it is what the room of arrivals should wear, and the
+  // sending tool deliberately wears a different one so the two never read as
+  // the same verb (KeeperTools, 2026-09-17).
+  here.push({ key: 'inbox', word: 'Inbox', Icon: Envelope, label: 'What has arrived' });
+  // The address book's own mark, as the desk's row wore it. Not a pair of
+  // people: this is a book of addresses you keep, not a group you belong to,
+  // and the difference is the whole model.
+  here.push({ key: 'friends', word: 'Friends', Icon: AddressBook, label: 'The journals you read' });
+  return here;
 }
 
 export default function Footer({ pane, goTo, authed = false }) {

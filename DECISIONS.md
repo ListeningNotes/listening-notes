@@ -180,6 +180,15 @@ three tools and a door reach into it on a 375px phone — so the row becomes the
 menu while the menu is open and the mark comes back when it shuts. The card
 has two tools and 29px to spare and keeps its mark.
 
+**Four panes for the keeper, three for everybody else, 2026-09-19.** Card,
+beacon, inbox, friends — and card, beacon, colophon signed out. **A stop on
+the band is a room you stand in, never a corridor you pass through.** The desk
+was a page of doors, which is a corridor: the two rooms worth being in were
+behind it and Settings is a thing you do twice a year. So the rooms took their
+own stops, Settings went to the foot of the card, and the desk left the phone.
+It is still the spine's second page above 769px, where there is no band. What
+follows is the 2026-09-15 version and still holds, apart from the count.
+
 **The cross is three panes on a phone: ID, beacon, desk, 2026-09-15.** You
 land on the beacon. Three was tried before and failed, and neither reason was
 the count — the panes were the same shape as each other and nothing said where
@@ -198,9 +207,11 @@ side, their tools on the other. With two, one page always carries more.
 The book was an interpretation, not a rule. What it gave this project was an
 object and then the writing underneath, and that survives at any pane count.
 
-**The band at the foot: Card · Beacon · Desk, 2026-09-15.** A glyph over a
-word, the pane you are on in ink and the other two pale. It is the whole of
-what is down there — it replaced the dots, the edge carets and the mini beacon.
+**The band at the foot: Card · Beacon · Inbox · Friends, 2026-09-15, widened
+2026-09-19.** A glyph over a word, the pane you are on in ink and the rest
+pale. It is the whole of what is down there — it replaced the dots, the edge
+carets and the mini beacon. Every mark on it is one this site already uses for
+that exact thing, so none has to be learned twice.
 
 Pressing a name moves the rail exactly as a swipe does, because it is the
 visible version of the gesture and not an alternative to it: somebody presses

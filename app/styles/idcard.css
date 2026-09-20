@@ -340,6 +340,26 @@
    boundary. */
 .ab-below { margin-top: 34px; }
 
+/* ── The keeper's own foot, 2026-09-19 ──────────────────────────────────────
+   Settings and the software's line, where the desk used to keep them. Below
+   everything a visitor reads, and separated by a rule and a lot of air rather
+   than a heading: it is not another section of the card, it is the machinery
+   under it, and a heading would put it in the reading.
+
+   It hangs off .ab-pane and not .ab-below, so a copy on its first afternoon —
+   no prompts answered, no rig, no links, and therefore no .ab-below at all —
+   still has its own way into Settings. */
+.ab-keep {
+  margin-top: 46px;
+  padding-top: 22px;
+  border-top: 1px solid var(--border);
+}
+/* Only where the desk is gone. Above 769px the book still has its spine and
+   the desk is still its second page, with Settings on it — so this would be
+   the same door twice, one turn apart. The card's foot exists *because* the
+   desk does not, and that is only true on a phone. */
+@media (min-width: 769px) { .ab-keep { display: none; } }
+
 /* ── Below the fold ─────────────────────────────────────────────────────────
    A quiet line saying whose voice the answers are in, then the answers, then
    what the journal actually listens to. The heading is small caps and faint:
