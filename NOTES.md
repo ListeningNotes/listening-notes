@@ -3060,6 +3060,24 @@ else's, which is an argument for a version on that URL and is not built.
       something you do to the page. The version line and Report stay at the
       foot.
 
+- [x] **The mark travels into the header instead of being replaced by one.**
+      "I want the big logo to slowly transform into the small one that becomes
+      the header for the journal... right now if I drag and hold I can see two
+      logos." There were two: the crown scrolling away and the bar's own small
+      one fading in behind it. The crown travels to where the small one stood
+      now, shrinking as it goes, and stays pinned there however far you scroll
+      — measured landing at 28px with its middle on 51, which is the bar's own
+      line. `.hn-bar-mark` is hidden on phones except while the picker is open,
+      because then floor one *is* the picker and there is no crown to arrive.
+      **Nothing about the layout moves**: a transform is paint, so the record
+      under it scrolls exactly as it did.
+      **Two traps.** `next/link` in this version does not hand its anchor back
+      through a ref — it read null on every render while the element was
+      plainly on the page — so the mark is found in the pane instead. And the
+      first measurement has to be re-taken: taken once at whatever width the
+      page loaded at, it was never revisited, so a media-query change and a
+      ResizeObserver on the pane both re-measure now.
+
 - [x] **Both ways down are a bigger chevron that breathes.** "Those down
       carets on feed and journal can just be larger and bob up and down to
       show there's more vs having more text." 18px rather than 11, four pixels
