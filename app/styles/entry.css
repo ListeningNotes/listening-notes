@@ -1174,33 +1174,42 @@ a.ln-sent-who:hover { text-decoration: underline; text-underline-offset: 3px; }
 .ln-crown { display: none; }
 @media (max-width: 768px) {
   .ln-crown {
+    position: relative;
     display: flex;
     align-items: center;
     gap: 9px;
     grid-column: 2;
     min-width: 0;
-    background: none;
-    border: 0;
-    padding: 0;
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
+    max-width: calc(100vw - 104px);
   }
+  /* The seat is the record's size and gets scaled *down* — a promoted layer
+     is rastered at the size it is laid out at, so a 28px box blown up ten
+     times is a 28px thumbnail across a third of the screen. --seat is the
+     art's own height, written by the morph. */
   .ln-crown-art {
-    flex-shrink: 0;
-    width: 28px;
-    height: 28px;
-    border-radius: 6px;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: var(--seat, 44px);
+    height: var(--seat, 44px);
+    border-radius: 8px;
     overflow: hidden;
     background: var(--panel);
-    border: 1px solid var(--panel-border);
     display: flex;
     align-items: center;
     justify-content: center;
-    transform-origin: center;
+    transform-origin: top left;
     will-change: transform;
   }
   .ln-crown-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
   .ln-crown-none { font-size: 13px; color: var(--ink-faint); }
+  /* Its place in the row, which is all the row ever has to lay out — and
+     the size the record lands at. Forty-four, which is what the mini card
+     at the head of the notes used to be: Miyel, "the header can be larger
+     for entries, the photo doesn't have to be super tiny, the size as
+     before would be good." It still sits inside the 80px band, because the
+     row is 58 tall and a 44 box centred in it ends at 73. */
+  .ln-crown-hole { flex-shrink: 0; width: 44px; height: 44px; }
   /* Nothing until the collapse is nearly over — a name beside a cover the
      size of a record is a caption on a photograph, and this is a header. */
   .ln-crown-said {
@@ -1209,22 +1218,45 @@ a.ln-sent-who:hover { text-decoration: underline; text-underline-offset: 3px; }
     gap: 1px;
     min-width: 0;
     text-align: left;
+    background: none;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
     opacity: 0;
   }
   .ln-crown-album {
     font-family: var(--font-display);
     font-weight: var(--font-display-weight);
-    font-size: 13px; line-height: 1.2; color: var(--ink);
-    max-width: 42vw;
+    font-size: 14px; line-height: 1.25; color: var(--ink);
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
   .ln-crown-artist {
     font-family: var(--font-label);
-    font-size: 8px; letter-spacing: 0.12em; text-transform: uppercase;
+    font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase;
     color: var(--ink-soft);
-    max-width: 42vw;
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
+  .ln-crown-marks {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 3px;
+    opacity: 0;
+  }
+  .ln-crown-flags { display: flex; align-items: center; gap: 5px; }
+  .ln-crown-flag { display: inline-flex; }
+
+  /* ── The tools take the row, 2026-09-20 ──────────────────────────────
+     Miyel: "the toolbar needs to override album in header when open." The
+     same answer the mark got when it was still drawn here — six tools and a
+     door reach most of the way across a 375px phone, and the record is
+     something to come back to rather than something to read past a menu.
+     KeeperTools sets the attribute; see the note in that file. */
+  .sitenav-row[data-tooling] .ln-crown { opacity: 0; pointer-events: none; }
+  .ln-crown { transition: opacity 0.18s linear; }
+
   /* And the page's own art goes quiet while the header is standing in for
      it. Not `display: none`: its box is what the title, the score and the
      chips are laid out under, and what the morph measures. */

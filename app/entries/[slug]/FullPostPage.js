@@ -884,10 +884,12 @@ export default function FullPostPage({ entry, references = [], authed = false, l
     const screens = document.querySelector('.ln-screens');
     const art = document.querySelector('.ln-screen-one-art');
     const seat = document.querySelector('.ln-crown-art');
+    const hole = document.querySelector('.ln-crown-hole');
     const said = document.querySelector('.ln-crown-said');
+    const marks = document.querySelector('.ln-crown-marks');
     const row = document.querySelector('.sitenav-row');
     const one = document.querySelector('.ln-screen-one');
-    if (!screens || !art || !seat || !row || !one) return undefined;
+    if (!screens || !art || !seat || !hole || !row || !one) return undefined;
 
     let base = null;
     const middle = el => {
@@ -897,21 +899,38 @@ export default function FullPostPage({ entry, references = [], authed = false, l
     const measure = () => {
       if (!window.matchMedia('(max-width: 768px)').matches) {
         seat.style.transform = '';
+        seat.style.removeProperty('--seat');
+        seat.style.borderRadius = '';
         base = null;
         setCrowning(false);
         return;
       }
-      seat.style.transform = 'none';
       const gone = screens.scrollTop;
       const from = middle(art);
-      const to = middle(seat);
-      if (!from.h || !to.h) { base = null; setCrowning(false); return; }
+      const land = middle(hole);
+      if (!from.h || !land.h) { base = null; setCrowning(false); return; }
       setCrowning(true);
-      // Both in the coordinates the page has at rest, because the art holds
-      // no fixed place on the screen — it is where the page put it.
+      // ── Big, and scaled down, 2026-09-20 ──────────────────────────────
+      // Miyel: "the album art is all blurry and not legible." It was laid
+      // out at 28px and blown up ten times — a promoted layer is rastered
+      // at the size it is laid out at and then stretched, so the header was
+      // painting a 28px thumbnail across a third of the screen.
+      //
+      // So the seat is the *record's* size in the layout and is only ever
+      // scaled down. It is out of the row's flow, and .ln-crown-hole holds
+      // its place in it, so a 293px box up here costs the header nothing.
+      seat.style.setProperty('--seat', `${from.h.toFixed(1)}px`);
+      seat.style.transform = 'none';
+      const p = seat.getBoundingClientRect();
       base = {
+        big: from.h,
+        // In the coordinates the page has at rest: the art holds no fixed
+        // place on the screen, it is wherever the page put it.
         from: { cx: from.cx, cy: from.cy + gone, h: from.h },
-        to,
+        land,
+        // Where the seat's own box sits, which is what a transform is
+        // measured from.
+        seat: { x: p.left, y: p.top },
         // The journey is over when screen one has gone under the header, so
         // the last thing the collapse is waiting for is the notes arriving.
         ends: Math.max(1, one.getBoundingClientRect().bottom + gone - row.getBoundingClientRect().bottom),
@@ -927,13 +946,21 @@ export default function FullPostPage({ entry, references = [], authed = false, l
       // quickly. Squared is the whole of "stays large, then shrinks".
       const walk = u;
       const small = u * u;
-      const h = base.from.h + (base.to.h - base.from.h) * small;
-      const cx = base.from.cx + (base.to.cx - base.from.cx) * walk;
-      const cy = base.from.cy + (base.to.cy - base.from.cy) * walk;
+      const h = base.from.h + (base.land.h - base.from.h) * small;
+      const k = h / base.big;
+      const cx = base.from.cx + (base.land.cx - base.from.cx) * walk;
+      const cy = base.from.cy + (base.land.cy - base.from.cy) * walk;
       seat.style.transform =
-        `translate(${(cx - base.to.cx).toFixed(1)}px, ${(cy - base.to.cy).toFixed(1)}px) scale(${(h / base.to.h).toFixed(4)})`;
-      // The name arrives at the end, once there is a header to put it in.
-      if (said) said.style.opacity = Math.min(1, Math.max(0, (small - 0.88) / 0.12)).toFixed(3);
+        `translate(${(cx - h / 2 - base.seat.x).toFixed(1)}px, ${(cy - h / 2 - base.seat.y).toFixed(1)}px) scale(${k.toFixed(4)})`;
+      // The corner travels too, and has to be asked for pre-scale: 16 on the
+      // record, 6 in the header, divided by whatever it is about to be
+      // multiplied by.
+      seat.style.borderRadius = `${((16 + (8 - 16) * small) / Math.max(k, 0.001)).toFixed(1)}px`;
+      // The name, the score and the marks arrive at the end, once there is a
+      // header to put them in.
+      const shows = Math.min(1, Math.max(0, (small - 0.88) / 0.12)).toFixed(3);
+      if (said) said.style.opacity = shows;
+      if (marks) marks.style.opacity = shows;
     };
 
     measure();
@@ -953,7 +980,10 @@ export default function FullPostPage({ entry, references = [], authed = false, l
       window.removeEventListener('resize', measure);
       watch.disconnect();
       seat.style.transform = '';
+      seat.style.removeProperty('--seat');
+      seat.style.borderRadius = '';
       if (said) said.style.opacity = '';
+      if (marks) marks.style.opacity = '';
       setCrowning(false);
     };
   }, [printing, edit.editing, coverSrc, entry.slug]);
@@ -962,15 +992,62 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   // which is the job MiniCard used to do at the head of the notes — and the
   // reason that card is not drawn on a phone any more.
   const headerMark = (
-    <button type="button" className="ln-crown" onClick={backToTheRecord} aria-label="Back to the record">
-      <span className="ln-crown-art">
-        {coverSrc ? <img src={coverSrc} alt="" /> : <span className="ln-crown-none">♪</span>}
-      </span>
-      <span className="ln-crown-said">
+    <div className="ln-crown">
+      {/* The record itself, and the same press it has on screen one: on this
+          site an album's art turns into its code, and hiding the art behind a
+          stand-in took that away (Miyel: "we lost QR code changing"). So the
+          stand-in *is* the art — the same CodeSlot with the same handlers —
+          and the page's copy is the one standing down.
+
+          Out of the row's flow, because its box is the size of the record
+          while the collapse is running. The hole beside it is what the row
+          lays out against. */}
+      {entry.album_art && canTurnCover ? (
+        <CodeSlot
+          key={'crown-' + entry.slug}
+          className="ln-crown-art"
+          picture={<img src={entry.album_art} alt={entry.album} />}
+          {...coverSlot}
+        />
+      ) : (
+        <span className="ln-crown-art">
+          {coverSrc ? <img src={coverSrc} alt="" /> : <span className="ln-crown-none">♪</span>}
+        </span>
+      )}
+      <span className="ln-crown-hole" aria-hidden="true" />
+
+      {/* And the way back up to the record is the name, which is what the
+          mini card at the head of the notes used to be. */}
+      <button
+        type="button"
+        className="ln-crown-said"
+        onClick={backToTheRecord}
+        aria-label={`Back to ${entry.album}`}
+      >
         <span className="ln-crown-album">{entry.album}</span>
         {entry.artist && <span className="ln-crown-artist">{entry.artist}</span>}
+      </button>
+
+      {/* The score and the marks come up with the name — Miyel, on losing
+          them with the mini card: "maybe those can travel too." No glow and
+          no burst: both belong to the score arriving on screen one, and a
+          firework going off beside somebody's reading on every scroll is
+          the same argument that took them off the mini card. */}
+      <span className="ln-crown-marks" aria-hidden="true">
+        {displayRating > 0 && <StarRating rating={displayRating} size={11} glow={false} animate={false} />}
+        <span className="ln-crown-flags">
+          {(entry.favorite === true || entry.favorite === 'true') && (
+            <span className="ln-crown-flag" style={{ color: 'var(--fav, #f0484f)' }}><Heart size={12} weight="fill" /></span>
+          )}
+          {isMasterpiece && (
+            <span className="ln-crown-flag" style={{ color: 'var(--mp, #4a9bf0)' }}><SketchLogo size={12} weight="fill" /></span>
+          )}
+          {isFormative && (
+            <span className="ln-crown-flag" style={{ color: 'var(--formative, #3fa96b)' }}><Fingerprint size={12} weight="bold" /></span>
+          )}
+        </span>
       </span>
-    </button>
+    </div>
   );
 
   return (
