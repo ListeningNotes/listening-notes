@@ -55,7 +55,14 @@ const SETTLE_MS = 420;
 // shopping, so a second screenful would be answering a question nobody asked.
 const MOST_SHOWN = 24;
 
-export default function AlbumFinder({ picked, onPick, onClear }) {
+// `wants` asks for the cursor as soon as the field is on screen. The send
+// sheet opens straight onto this — Miyel, 2026-09-19: "it should already have
+// the keyboard open on search an artist, because you're already searching for
+// it; you're going to have to open it anyway." iOS does not always grant a
+// focus that did not come directly from a tap, so this is a request rather
+// than a promise: where it is refused the field is still the first thing and
+// still one tap away.
+export default function AlbumFinder({ picked, onPick, onClear, wants = false }) {
   const [typed, setTyped]       = useState('');
   const [results, setResults]   = useState([]);
   const [looking, setLooking]   = useState(false);
@@ -65,9 +72,9 @@ export default function AlbumFinder({ picked, onPick, onClear }) {
   // results. Opens when the landing field is focused, closes on a pick, on
   // Back, or on Escape. The landing page underneath keeps its sleeve, which
   // is where the chosen cover flies to.
-  const [open, setOpen]         = useState(false);
-  const chooserInput = useRef(null);
   const sleeveRef = useRef(null);
+  const fieldRef = useRef(null);
+  useEffect(() => { if (wants && !picked) fieldRef.current?.focus(); }, [wants, picked]);
   const [hand, setHand]         = useState({ album: '', artist: '', year: '' });
 
   // Which search the results on screen belong to. A slow answer to "rad"
@@ -112,14 +119,22 @@ export default function AlbumFinder({ picked, onPick, onClear }) {
       art: album.art || '',
       collectionId: album.collectionId || null,
     };
-    setOpen(false);
     onType('');
     const reduced = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (!from || !album.art || reduced) { onPick(chosen); return; }
-    // One frame for the chooser to leave and the sleeve to be laid out.
-    requestAnimationFrame(() => {
+    // ── The record is handed over first, and then flown into ─────────────
+    // It used to be the other way round: the cover flew into an empty
+    // sleeve that was already on the page, and `onPick` was called when it
+    // landed. There is no sleeve any more — the record does not exist on
+    // this page until it is chosen — so the order flips. The picture is put
+    // in place, and the copy catches up with it.
+    onPick(chosen);
+    // Two frames: one for React to commit the chosen state, one for the
+    // browser to lay it out. A missed frame costs the flight and nothing
+    // else, because the record is already where it is going.
+    requestAnimationFrame(() => requestAnimationFrame(() => {
       const to = sleeveRef.current?.getBoundingClientRect();
-      if (!to || !to.width) { onPick(chosen); return; }
+      if (!to || !to.width) return;
       const img = document.createElement('img');
       img.src = album.art;
       img.alt = '';
@@ -134,21 +149,19 @@ export default function AlbumFinder({ picked, onPick, onClear }) {
         { transform: 'translate(0,0) scale(1,1)' },
         { transform: `translate(${to.left - from.left}px, ${to.top - from.top}px) scale(${to.width / from.width}, ${to.height / from.height})` },
       ], { duration: 380, easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)', fill: 'forwards' });
+      // Nothing to hand over on landing any more — that happened before the
+      // flight started. All that is left is to take the copy away.
       let done = false;
-      const land = () => { if (done) return; done = true; onPick(chosen); img.remove(); };
+      const land = () => { if (done) return; done = true; img.remove(); };
       run.onfinish = land;
       run.oncancel = land;
-      window.setTimeout(land, 500);
-    });
+      window.setTimeout(land, 520);
+    }));
   }
 
-  // Escape closes the chooser, the way it closes everything else here.
-  useEffect(() => {
-    if (!open) return undefined;
-    const onKey = event => { if (event.key === 'Escape') { event.stopPropagation(); setOpen(false); } };
-    window.addEventListener('keydown', onKey, true);
-    return () => window.removeEventListener('keydown', onKey, true);
-  }, [open]);
+  // Escape used to close the takeover. There is nothing to close now — the
+  // results are part of the page, and whatever this is inside keeps its own
+  // Escape (the sheet's, the layer's).
 
   function takeByHand() {
     if (!hand.album.trim() || !hand.artist.trim()) return;
@@ -182,24 +195,11 @@ export default function AlbumFinder({ picked, onPick, onClear }) {
               its own corners, and a badge parked on that corner would be
               clipped by it. */}
           <span className="af-held-frame">
-            <span className="af-square af-held-art">
+            <span className="af-held-art" ref={sleeveRef}>
               {picked.art
                 ? <img src={picked.art} alt="" />
                 : <span className="af-none" aria-hidden="true">♪</span>}
             </span>
-            {/* A mark on the corner of the record rather than a line of type
-                under it. "Choose a different one" was a sentence explaining a
-                control where the control could just be there, and it sat in
-                the run of centred text under the cover arguing with the
-                album's own name for the eye. */}
-            <button
-              type="button"
-              className="af-clear"
-              onClick={onClear}
-              aria-label="Choose a different album"
-            >
-              <X size={11} weight="bold" aria-hidden="true" />
-            </button>
           </span>
 
           <span className="af-held-meta">
@@ -208,6 +208,15 @@ export default function AlbumFinder({ picked, onPick, onClear }) {
               {picked.artist}{picked.year ? ` · ${picked.year}` : ''}
             </span>
           </span>
+
+          {/* A word, not a mark on the corner. The cover is 62px now and a
+              24px badge hung off a 62px square is a badge on a badge; and
+              once the record is small enough to be a line rather than a
+              subject, what you want is the plain thing you would say —
+              change it. */}
+          <button type="button" className="af-change" onClick={onClear}>
+            Change
+          </button>
         </div>
       </div>
     );
@@ -268,74 +277,68 @@ export default function AlbumFinder({ picked, onPick, onClear }) {
   return (
     <div className="af">
 
-      {/* The landing: an empty sleeve, waiting, and the field under it. Not
-          a spinner and not a message — the sleeve is the shape of the thing
-          being asked for, standing where it is going to stand, and it is
-          where the chosen cover flies to. */}
-      <div className="af-slot">
-        <span className="af-square af-sleeve" aria-hidden="true" ref={sleeveRef}>
-          <span className="af-none">♪</span>
-        </span>
-      </div>
+      {/* ── No empty sleeve ────────────────────────────────────────────
+          There was one here: a square the size of a record, holding a ♪,
+          standing where the cover was going to stand. The argument was that
+          the shape of the thing being asked for is better than a spinner,
+          and on its own that is true — but it made a 400px placeholder the
+          largest thing on the screen before you had done anything, above a
+          form it pushed off the bottom. Miyel, 2026-09-19: "lose the empty
+          square. Let the search be the first thing, and let the record
+          appear only once it exists."
 
+          So the field is the first thing, and there are two states rather
+          than one form with a hole in it: searching, which is a field and a
+          wall of covers, and chosen, which is a small cover, its name, and
+          a way to change it. You never look at an empty box waiting to be
+          filled. */}
       <input
+        ref={fieldRef}
         className="af-input"
         value={typed}
         onChange={e => onType(e.target.value)}
-        onFocus={() => setOpen(true)}
         placeholder="Search an artist or an album"
         autoComplete="off"
       />
 
-      {/* The chooser: over the page, the field at its head and the results as
-          a wall of covers under it, newest first. It opens when the field is
-          focused and takes the focus with it, so typing carries on and the
-          keyboard stays up. The page's own sleeve is underneath, out of
-          sight, waiting for the flight. */}
-      {open && (
-        <div className="af-chooser" role="dialog" aria-label="Find the album">
-          <div className="af-chooser-head">
-            <button type="button" className="af-chooser-back" onClick={() => setOpen(false)} aria-label="Back">
-              <ArrowLeft size={18} weight="bold" aria-hidden="true" />
-            </button>
-            <input
-              ref={chooserInput}
-              className="af-input"
-              value={typed}
-              onChange={e => onType(e.target.value)}
-              placeholder="Search an artist or an album"
-              autoComplete="off"
-              autoFocus
-            />
-          </div>
-          <div className="af-chooser-body">
-            {results.length > 0 && (
-              <div className="af-wall">
-                {results.map(album => (
-                  <button
-                    type="button"
-                    key={album.collectionId}
-                    className="af-cover"
-                    onClick={event => take(album, event.currentTarget.querySelector('.af-cover-art')?.getBoundingClientRect())}
-                  >
-                    <span className="af-cover-art">
-                      <img src={album.art} alt="" loading="lazy" />
-                    </span>
-                    <span className="af-cover-album">{album.name}</span>
-                    <span className="af-cover-artist">{album.artist}{album.year ? ' · ' + album.year : ''}</span>
-                  </button>
-                ))}
-              </div>
-            )}
-            <div className="af-under">
-              {looking && <span className="af-word">Looking…</span>}
-              {nothing && <span className="af-word">Nothing found for that.</span>}
-              {!typed.trim() && !looking && <span className="af-word">Type an artist or an album.</span>}
-              <button type="button" className="af-quiet" onClick={() => { setOpen(false); setByHand(true); }}>
-                Can’t find it? Type it in →
-              </button>
+      {/* ── The results, here, under the field ─────────────────────────────
+          They used to open a panel over the whole screen: fixed, inset 0, a
+          second copy of the field at its head and a back arrow. The reason
+          was real at the time — the wall pushed the message, the name and
+          the Send button off the bottom of a phone, because the sheet also
+          carried a 400px empty square above it. That square is gone and the
+          fields are hairlines, so the room exists.
+
+          Miyel, 2026-09-19: "the submit form becomes oddly full screen when
+          you go to search an album." It did, and a full-screen takeover for
+          one field is a second surface to get out of — its own field, its
+          own back arrow, its own idea of where you are.
+
+          A box of its own height instead, scrolling inside itself, so a
+          hundred covers cannot push anything off the bottom. That was the
+          whole job the takeover was doing. */}
+      {(looking || results.length > 0 || nothing) && (
+        <div className="af-results">
+          {results.length > 0 && (
+            <div className="af-wall">
+              {results.map(album => (
+                <button
+                  type="button"
+                  key={album.collectionId}
+                  className="af-cover"
+                  onClick={event => take(album, event.currentTarget.querySelector('.af-cover-art')?.getBoundingClientRect())}
+                >
+                  <span className="af-cover-art">
+                    <img src={album.art} alt="" loading="lazy" />
+                  </span>
+                  <span className="af-cover-album">{album.name}</span>
+                  <span className="af-cover-artist">{album.artist}{album.year ? ' · ' + album.year : ''}</span>
+                </button>
+              ))}
             </div>
-          </div>
+          )}
+          {looking && results.length === 0 && <span className="af-word">Looking…</span>}
+          {nothing && <span className="af-word">Nothing found for that.</span>}
         </div>
       )}
 
