@@ -1547,7 +1547,15 @@ export default function HomeNav() {
           In the middle of the row, where the mark stands on the pane that
           draws one — so on this pane the middle is free and a name in it
           reads as a header's name rather than as a label at one end. */}
-      {onTheFeed && <span className="hn-bar-say">Feed</span>}
+      {/* ── Its name is longer now, 2026-09-20 ──────────────────────────
+          Miyel: "I think feed can take a different name. Recent listens
+          maybe? It was short before because of the chevron and how it lived.
+          Now it's different." Exactly so — it was a word standing over a
+          chevron at the foot of a screen, where every character costs, and it
+          is a header's name now, where the room is the row. Whose listens is
+          the pane's own business: the faces are directly above it and the
+          band says FRIENDS. */}
+      {onTheFeed && <span className="hn-bar-say">Recent listens</span>}
       {/* ── The way out of the picker ────────────────────────────────────
           In the corner the up-caret holds the rest of the time — the two never
           want the row at once, because while the picker is open there is no
@@ -2282,7 +2290,7 @@ export default function HomeNav() {
                          know when to hand the word back on the way up. */
                       className="hn-down"
                       onClick={() => goDown(BOOK)}
-                      aria-label="The feed"
+                      aria-label="Recent listens"
                     >
                       {/* The chevron drawn here rather than through EdgeCaret,
                           which is a button of its own and cannot go inside

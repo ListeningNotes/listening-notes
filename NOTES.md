@@ -3050,6 +3050,13 @@ else's, which is an argument for a version on that URL and is not built.
       type, next to a mark that already means *down*. The floor's name stays
       on the button's label, and the feed's still arrives in the header once
       you are on it, which is where a name belongs.
+- [x] **And the feed is called Recent listens.** "It was short before because
+      of the chevron and how it lived. Now it's different." Exactly: Feed was
+      a word standing over a chevron at the foot of a screen, where every
+      character costs, and it is a header's name now, where the room is the
+      row — 106px of 375, with eighty clear of the toggle. Whose listens is
+      the pane's own business: the faces are directly above it and the band
+      says FRIENDS.
 
 - [x] **The way into a listen is a circle on the rule.** "Make start a listen
       feel intentional — maybe it can be a circle between the hairlines that
