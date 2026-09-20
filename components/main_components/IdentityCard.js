@@ -609,6 +609,16 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
                 <span className="idc-pinned-album">{pinned ? pinned.album : 'Choose a record'}</span>
                 <span className="idc-pinned-artist">{pinned ? pinned.artist : 'Nothing pinned'}</span>
               </span>
+              {/* ── It has to say it can be changed, 2026-09-20 ────────────
+                  Miyel: "editing pinned album should be more obvious you can
+                  swap that out." The row looked in a correction exactly as it
+                  looks printed — a pin, a cover, a title — so the one thing
+                  about it that had changed, that it is now a door, was
+                  invisible. The photograph above it has said `Replace` on a
+                  small pill since the day it was editable; this is that pill,
+                  and the two editable objects on this card now wear the same
+                  word in the same clothes. */}
+              {pinned && <span className="idc-pinned-swap">Change</span>}
             </button>
           ) : (
             <Link

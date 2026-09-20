@@ -556,32 +556,76 @@
 /* The list scrolls, the sheet does not. A sheet that scrolls as a whole takes
    the search field away with it exactly when somebody wants to narrow the
    list further. */
-.ab-pin-list {
+/* ── The wall of covers, 2026-09-20 ───────────────────────────────────────
+   Rows until this morning: 40px of thumbnail and the rest of the width given
+   to a title and an artist. A record is a picture and you know the one you
+   are after by its cover before you have read anything, which is why every
+   other place on this site that picks one — the beacon's wall, a count's
+   window, the archive — is covers. `.ab-pin-list` and `.ab-pin-hit*` are gone
+   with the rows they dressed. */
+.ab-pin-grid {
   flex: 1; min-height: 0;
   overflow-y: auto; overscroll-behavior: contain;
-  display: flex; flex-direction: column; gap: 2px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px 10px;
+  /* The last row does not sit on the sheet's own edge. */
+  padding-bottom: 2px;
 }
-.ab-pin-hit {
-  display: flex; align-items: center; gap: 10px;
-  width: 100%; padding: 6px; border: 0; border-radius: 10px;
-  background: transparent; color: var(--ink);
+.ab-pin-one {
+  display: flex; flex-direction: column; align-items: stretch; gap: 6px;
+  min-width: 0; padding: 0;
+  border: 0; background: none; color: var(--ink);
   text-align: left; cursor: pointer;
-  transition: background 0.14s;
 }
-.ab-pin-hit:hover { background: var(--bg-warm); }
-.ab-pin-hit--on { background: var(--bg-warm); }
-.ab-pin-hit-art {
+.ab-pin-one-art {
+  position: relative;
   display: flex; align-items: center; justify-content: center;
-  width: 40px; height: 40px; flex-shrink: 0;
+  width: 100%; aspect-ratio: 1;
   border-radius: 8px; overflow: hidden;
   background: var(--bg-warm); color: var(--ink-faint);
+  /* The ring is drawn inside the corner rather than round it — an outline, so
+     it takes no pixel off the picture and moves nothing beside it. This is the
+     same mark a record you both have wears in the feed. */
+  outline: 0 solid var(--ink);
+  outline-offset: -1px;
+  transition: outline-width 0.14s;
 }
-.ab-pin-hit-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.ab-pin-hit-said { display: flex; flex-direction: column; gap: 1px; min-width: 0; flex: 1; }
-.ab-pin-hit-album,
-.ab-pin-hit-artist { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ab-pin-hit-album { font-size: 13px; line-height: 1.3; }
-.ab-pin-hit-artist { font-size: 11px; line-height: 1.3; color: var(--ink-faint); }
+.ab-pin-one-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.ab-pin-one:hover .ab-pin-one-art { outline-width: 1px; outline-color: var(--ink-faint); }
+.ab-pin-one--on .ab-pin-one-art,
+.ab-pin-one--on:hover .ab-pin-one-art { outline-width: 2px; outline-color: var(--ink); }
+/* And a tick, because a ring alone is a hover state on a machine with a
+   pointer and nothing at all on a phone until you have pressed something. */
+.ab-pin-one-tick {
+  position: absolute; right: 4px; bottom: 4px;
+  display: flex; align-items: center; justify-content: center;
+  width: 20px; height: 20px; border-radius: 999px;
+  background: var(--bg); color: var(--ink);
+}
+.ab-pin-one-album {
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  font-size: 11px; line-height: 1.3; color: var(--ink-soft);
+}
+.ab-pin-one--on .ab-pin-one-album { color: var(--ink); }
+/* ── Change, on the pinned record, 2026-09-20 ─────────────────────────────
+   The photograph's own pill, word for word and rule for rule (see
+   .idc-portrait-said), because the two editable objects on this card should
+   say they are editable the same way. Only while a correction is open — it
+   hangs off .idc-pinned--pick, which is the shape the row takes then. */
+.idc-pinned-swap {
+  flex: none;
+  font-family: var(--font-label);
+  font-size: 8.5px; letter-spacing: 0.1em; text-transform: uppercase;
+  color: var(--ink-soft);
+  background: var(--bg);
+  border: 1px solid var(--idc-rule);
+  border-radius: 999px;
+  padding: 4px 10px;
+  transition: color 0.15s;
+}
+.idc-pinned--pick:hover .idc-pinned-swap { color: var(--ink); }
+
 .ab-pin-empty {
   margin: 12px 0; text-align: center;
   font-family: var(--font-label); font-size: 11px; color: var(--ink-faint);
@@ -787,7 +831,11 @@
   font-family: var(--font-display);
   font-weight: var(--font-display-weight, 700);
   font-size: 15px; line-height: 1.4;
-  color: var(--ink-soft);
+  /* Full ink (Miyel, 2026-09-20). It was a step quieter on the reasoning that
+     the answer should lead; at the display weight and four pixels smaller it
+     already reads as the smaller of the two, and the grey was making a
+     question somebody chose look like boilerplate. */
+  color: var(--ink);
 }
 /* Indented behind a rule, like a pull quote: the answer is being quoted into
    the question's card, not continuing its sentence. */
