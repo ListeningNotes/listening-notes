@@ -1549,6 +1549,17 @@ Project → Settings → Environment Variables.
 
 ## Gotchas
 
+**Taking the mark out of a three-column header left the middle column,
+2026-09-20.** `.sitenav-row` is `1fr auto 1fr` with the mark in the middle,
+and the mark stopped being drawn on everything but entries. The row then had
+two children for three columns, so they auto-placed into one and two — and a
+page's tools sat in the *middle of the row* instead of the right-hand end.
+The person's page had been doing it since the mark came off and nobody
+noticed; it only showed when the feed put a glyph up there, alone, dead
+centre. **Both sides name their column now** (`grid-column: 1` / `3`), which
+is what a named slot should have done from the start. Anything that removes
+one child of a three-column row should check the other two.
+
 **Do not press anything on this site by guessed coordinates, 2026-09-20.**
 Verifying the pin door, a click went in at a point read off a screenshot
 rather than at an element found by name, and it landed on a door in the row

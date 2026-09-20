@@ -46,7 +46,7 @@
 'use client';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
-import { Envelope, Fingerprint, Heart, Shuffle, SketchLogo, User } from '@phosphor-icons/react';
+import { Envelope, Fingerprint, Heart, Rows, Shuffle, SketchLogo, SquaresFour, User } from '@phosphor-icons/react';
 import { useBookplate } from './Bookplate';
 import StarRating from './StarRating';
 import { parseHorizon } from '../../library/entry_formatter';
@@ -95,36 +95,60 @@ function storeDensity(value) {
   try { window.localStorage.setItem(DENSITY_KEY, value); } catch { /* private window */ }
 }
 
-// ── Two glyphs, one per view ──────────────────────────────────────────────
-// A mark each, and the mark is the thing it makes: a screen with two rows in
-// it, or a screen with one record filling it. It said the state with ink and
-// one mark for a few hours (Miyel, 2026-09-20: "glyph for feed view needs to
-// change when you're in list view and have a second symbol for icon view").
+// ── The mark is where pressing takes you ─────────────────────────────────
+// Phosphor's own, like every other mark on this site (Miyel, 2026-09-20: "we
+// need to use phosphor icons, this looks different"). Two were drawn by hand
+// here for a day — a frame with two bars in it, a frame with one square — and
+// neither read as the thing it stood for, which is the whole job of a glyph
+// standing alone in a corner with no word beside it.
 //
-// The mark names the view you are *in*, not the one you would get. That is
-// how the archive's density control reads — each icon is the grid it produces
-// and the live one is lit — and how the band at the foot reads. A control
-// that shows you somewhere you are not is a different convention, and one on
-// a page is worse than either.
+// It shows the view you are *in*, not the one pressing would get you. Miyel
+// picked the other way round and turned it back the same hour — "you had it
+// right, switch the glyph to match the view you're on" — and seeing both is
+// the only way that question ever gets settled. It is the reading the rest of
+// this site keeps: the archive's density control lights the grid it is
+// drawing, and the band at the foot lights the pane you are on. A mark that
+// shows you somewhere you are not is a fine convention and a bad second one.
 //
-// The frame is the screen in both, so the two are plainly a pair and the only
-// thing that differs is what is standing in it.
-function DensityGlyph({ rows }) {
+// The label is the other sentence, and says what pressing does.
+export function DensityToggle({ density, onFlip }) {
+  const asRows = density === 'rows';
   return (
-    <svg viewBox="0 0 18 18" width="18" height="18" aria-hidden="true">
-      <rect x="0.9" y="0.9" width="16.2" height="16.2" rx="3.2" fill="none" stroke="currentColor" strokeWidth="1.5" />
-      {rows ? (
-        <>
-          <rect x="4" y="5.1" width="10" height="2.6" rx="1.1" fill="currentColor" />
-          <rect x="4" y="10.3" width="10" height="2.6" rx="1.1" fill="currentColor" />
-        </>
-      ) : (
-        /* One record, filling the screen it is on — the same rounded square a
-           cover is drawn as everywhere else here. */
-        <rect x="4.6" y="4.6" width="8.8" height="8.8" rx="2" fill="currentColor" />
-      )}
-    </svg>
+    <button
+      type="button"
+      className="fd-dense"
+      onClick={onFlip}
+      aria-label={asRows ? 'Show one record at a time' : 'Show the feed as rows'}
+      title={asRows ? 'One record at a time' : 'Rows'}
+    >
+      {asRows
+        ? <Rows size={18} weight="regular" aria-hidden="true" />
+        : <SquaresFour size={18} weight="regular" aria-hidden="true" />}
+    </button>
   );
+}
+
+// ── Who holds the density ─────────────────────────────────────────────────
+// The control lives in the header at the top of the screen and the list it
+// changes lives in the feed, and those are two different components — so
+// neither of them can own this. Whoever draws the header owns it and hands
+// the feed the answer: HomeNav on the cross, FeedPage at the feed's own
+// address.
+//
+// Read after mount rather than during the first render: the server has no
+// localStorage, and a value taken from it here would be the two of them
+// disagreeing about what the page says.
+//
+// NAME: `useFeedDensity` is a placeholder for Miyel.
+export function useFeedDensity() {
+  const [density, setDensity] = useState(DEFAULT_DENSITY);
+  useEffect(() => { setDensity(readStoredDensity()); }, []);
+  const flip = () => {
+    const next = density === 'rows' ? 'full' : 'rows';
+    setDensity(next);
+    storeDensity(next);
+  };
+  return { density, flip };
 }
 
 // ── The short form, for rows ──────────────────────────────────────────────
@@ -286,10 +310,10 @@ function Compared({ mine, theirs, name, closing = false }) {
   );
 }
 
-// `titled` is whether the feed says its own name at the top of itself. It does
-// at its own address, where nothing else would; it does not on the cross,
-// where the name is at the foot of the floor above with the caret under it.
-export default function Feed({ entries = [], titled = true }) {
+// `density` is handed in rather than kept here, because the control that sets
+// it is in the header at the top of the screen and this component is what is
+// under it. See useFeedDensity, above.
+export default function Feed({ entries = [], density = DEFAULT_DENSITY }) {
   const { keeper_name, site_address } = useBookplate();
   // null until the book has answered, so an empty book and a book not yet
   // read draw differently.
@@ -317,19 +341,9 @@ export default function Feed({ entries = [], titled = true }) {
     setOpen(key);
   };
   useEffect(() => () => clearTimeout(shutTimer.current), []);
-  // Read after mount rather than during the first render: the server has no
-  // localStorage and a value taken from it here would be the two of them
-  // disagreeing about what the page says.
-  const [density, setDensity] = useState(DEFAULT_DENSITY);
-  useEffect(() => { setDensity(readStoredDensity()); }, []);
   // `asRows`, not `rows`: this file already has a `rows` and it is the flat
   // list of everything everybody logged.
   const asRows = density === 'rows';
-  const flip = () => {
-    const next = asRows ? 'full' : 'rows';
-    setDensity(next);
-    storeDensity(next);
-  };
 
   useEffect(() => {
     let gone = false;
@@ -586,35 +600,18 @@ export default function Feed({ entries = [], titled = true }) {
 
   return (
     <div className="fd-wrap">
-      {/* Its own name, centred, and nothing beside it. On the cross the name
-          is not here at all — it is at the foot of the floor above, over the
-          caret, where it labels the way down rather than the top of a list
-          you have already arrived at (Miyel, 2026-09-19). */}
-      {/* ── The feed's header ─────────────────────────────────────────
-          Its name on the left and the density on the right. It was one word
-          centred until the toggle needed a home, and a name and a control on
-          one line want the two ends of it rather than a stack.
-
-          The name is drawn at the feed's own address, where nothing else
-          would say what the page is. On the cross it is not: the name is at
-          the foot of the floor above with the caret under it, and this row is
-          the toggle alone. The empty span holds the left end so the glyph
-          stays at the right whether or not there is a word beside it. */}
-      <div className={'fd-head' + (titled ? '' : ' fd-head--bare')}>
-        {titled ? <span className="fd-title">Feed</span> : <span />}
-        <button
-          type="button"
-          className="fd-dense"
-          onClick={flip}
-          aria-pressed={asRows}
-          /* The label says what pressing does, where the mark says where you
-             are. They are not the same sentence and neither is redundant. */
-          aria-label={asRows ? 'Show one record at a time' : 'Show the feed as rows'}
-          title={asRows ? 'One record at a time' : 'Rows'}
-        >
-          <DensityGlyph rows={asRows} />
-        </button>
-      </div>
+      {/* ── No header on this page ────────────────────────────────────
+          There was one for a day: the feed's name on the left, the density
+          on the right, on a rule of its own. Miyel took it off on
+          2026-09-20 — "it's also giving a false header, it's outside true
+          header" — and she is right about what it was. Every screen here
+          already has a header at the top with a hairline under it, and a
+          second bar a little way below the first is a page claiming a
+          heading it does not have. The control moved up into the real one,
+          which is the cross's bar on a phone and SiteNav's right-hand slot
+          at this page's own address, and the name went with the row because
+          the name was only ever there to give the control company.
+          See DensityToggle, above; whoever draws the header draws it. */}
       {body}
     </div>
   );

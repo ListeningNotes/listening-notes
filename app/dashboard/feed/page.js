@@ -23,12 +23,15 @@
 
 import { useEffect, useState } from 'react';
 import SiteNav from '../../../components/main_components/SiteNav';
-import Feed from '../../../components/main_components/Feed';
+import Feed, { DensityToggle, useFeedDensity } from '../../../components/main_components/Feed';
 
 export default function FeedPage({ layered = false }) {
   const [authed, setAuthed] = useState(false);
   const [checking, setChecking] = useState(true);
   const [entries, setEntries] = useState([]);
+  // The density is the header's, not the feed's — see useFeedDensity. This
+  // page draws the header, so this page holds it.
+  const { density, flip } = useFeedDensity();
 
   useEffect(() => {
     fetch('/api/auth/check').then(r => r.json()).then(d => setAuthed(!!d.authed)).catch(() => {}).finally(() => setChecking(false));
@@ -49,15 +52,23 @@ export default function FeedPage({ layered = false }) {
 
   return (
     <div className={'own-screen fd-screen' + (layered ? ' own-screen--layered' : '')}>
-      <SiteNav />
+      {/* In the row that is already a header, rather than in a row of its
+          own under it (Miyel, 2026-09-20). The slot is the one the owner's
+          ··· uses on the pages that have one, in the corner the card keeps
+          its own in. */}
+      <SiteNav tools={<DensityToggle density={density} onFlip={flip} />} />
 
       <div className="own-body fd-page">
         {/* No title, 2026-09-16. It said FEED over a row that says RECENT and
             SUBMISSIONS, which is three words of small caps stacked to name one
             page — and the tabs already say where you are. It was here so that
             arriving by bookmark or back button did not land on an unlabelled
-            row; the row turns out to label itself. */}
-        <Feed entries={entries} />
+            row; the row turns out to label itself.
+
+            It came back for a day on 2026-09-20 to give the density toggle
+            somewhere to stand, and went again the same day when the toggle
+            found the real header. */}
+        <Feed entries={entries} density={density} />
       </div>
     </div>
   );

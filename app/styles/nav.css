@@ -134,8 +134,15 @@
 .sitenav-side { display: flex; align-items: center; gap: 2px; min-width: 0; }
 /* Nothing in it. It is a spacer that keeps the mark on the middle of the row
    now that the tools have gone to the other end. */
-.sitenav-side--left { justify-content: flex-start; }
-.sitenav-side--right { justify-content: flex-end; }
+/* ── Each side in its own column, 2026-09-20 ──────────────────────────────
+   Named columns rather than left to fall where they land. The mark stopped
+   being drawn on every page but entries yesterday, and the middle column it
+   was filling did not stop existing — so on a page with tools and no mark
+   the two children auto-placed into columns one and two, and the tools sat
+   in the middle of the row. It showed the moment the feed put a control up
+   here; the person's page had been doing it since the mark came off. */
+.sitenav-side--left { justify-content: flex-start; grid-column: 1; }
+.sitenav-side--right { justify-content: flex-end; grid-column: 3; }
 /* An open ··· takes the row. Three tools and a door reach further back than
    28px of padding leaves, and the mark is what they reach into — so it goes
    while they are out, rather than being drawn on top of. KeeperTools puts the
@@ -1865,38 +1872,31 @@
 /* On a phone the floor starts under the bar, the way the writing under the
    card does. */
 .hn-floor-scroll .fd-wrap { padding-top: calc(var(--hn-bar-h) + 24px); }
-/* ── The feed's heading, 2026-09-19 ────────────────────────────────────────
-   Its name on the left and the one word that narrows it on the right, on a
-   rule. It replaced a centred row of two tabs: under the faces this has to
-   read as the heading of what follows, and a pair of tabs in the middle of
-   the page reads as a control somebody left behind. Both halves are the
-   caption face at caption size, so neither is louder than the records. */
-.fd-head {
-  display: flex; align-items: center; justify-content: space-between; gap: 12px;
-  margin: 0 0 18px;
-  padding-bottom: 10px;
-  border-bottom: 1px solid var(--border);
-}
 /* ── The density toggle ────────────────────────────────────────────────────
-   One control and two marks, each the shape it stands for: a screen with two
-   rows in it, or a screen with one record filling it. The mark says which
-   view you are in and the label says what pressing does. It carried one mark
-   and said the state with ink for a few hours; the ink was doing a job a
-   picture does better, and there was nothing to compare the ink against. */
-/* On the cross this row holds nothing but the glyph, so it gives up the rule
-   and the air under it: the rule was there to underline a word and there is
-   no word. It matters more than it sounds — that margin sat between the
-   toggle and the first record, and the sliver of record showing under the
-   caret is what the peek is for. */
-.fd-head--bare { margin-bottom: 2px; padding-bottom: 0; border-bottom: 0; }
+   One control, and it lives in whatever header the screen already has: the
+   cross's bar on a phone, SiteNav's right-hand slot at the feed's own
+   address. It had a row of its own under the bar until 2026-09-20 — the
+   feed's name on the left, this on the right, on a rule — and Miyel took it
+   off: "it's also giving a false header, it's outside true header." A second
+   bar a little way below the first is a page claiming a heading it has not
+   got, and there was already a header up there with a hairline under it.
+
+   No ground and no border of its own: it is sitting in a row that has both.
+   The colour is the lights' colour beside it, because the two are now the
+   same kind of thing — one small control in a corner. */
 .fd-dense {
   display: inline-flex; align-items: center; justify-content: center;
   padding: 4px; border: 0; background: none; cursor: pointer;
   color: var(--ink-faint);
   transition: color 0.18s;
 }
-.fd-dense:hover { color: var(--ink); }
+.fd-dense:hover { color: var(--ink-soft); }
 .fd-dense:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 2px; border-radius: 7px; }
+/* Room between it and the sun, when both are there. On the pane it actually
+   appears on the lights are hidden, so the gap goes on the lights rather than
+   on this — put it here and the glyph sits ten pixels short of the edge every
+   other thing in this row lines up with. */
+.hn-bar .fd-dense + .hn-lights { margin-left: 10px; }
 
 /* ── A record you both have ────────────────────────────────────────────────
    A thin gold rule round the art, in both densities. It is the one thing in a
@@ -1969,13 +1969,6 @@
    place that draws it says which it means, and the day one of them wants
    something else this is the hook that is already there. */
 .fd-compare--mark { padding: 2px; }
-.fd-title {
-  font-family: var(--font-label);
-  font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase;
-  line-height: 1;
-}
-.fd-title { color: var(--ink-soft); }
-
 .fd-views { display: flex; justify-content: center; gap: 22px; margin-bottom: 18px; }
 .fd-view {
   font-family: var(--font-label); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
@@ -2418,14 +2411,6 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   padding-top: calc(22px + var(--safe-top));
   background: var(--bg);
 }
-.fd-screen .fd-head {
-  position: sticky;
-  top: var(--hn-bar-h);
-  z-index: 99;
-  background: var(--bg);
-  margin: 0;
-  padding: 4px 0 14px;
-}
 
 .hn-foot { display: none; }
 /* And neither is the way down. It belongs to a floor that is one screen tall
@@ -2773,18 +2758,6 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   /* Clear of the band, which has a ground of its own and would otherwise
      cover the last record rather than letting it show through. */
   .hn-floor--feed .fd-wrap { padding-bottom: calc(var(--hn-foot-h) + 20px); }
-  /* ── The toggle stays reachable, 2026-09-20 ──────────────────────────
-     On the cross this row is the toggle alone, and it sits at the top of a
-     floor that scrolls — so a screen into the feed the only control it has
-     was above the window and gone. Stuck under the bar instead, which is
-     where it already is at the top of the floor, so it does not appear to
-     move. It carries the page colour for the reason the bar above it does:
-     records pass under it. */
-  .hn-floor--feed .fd-head--bare {
-    position: sticky; top: var(--hn-bar-h); z-index: 3;
-    background: var(--bg);
-    padding: 4px 0 6px; margin-bottom: 0;
-  }
   /* A page drawn inside a pane has no bar of its own to clear and no screen
      of its own to fill. */
   .hn-pane--inbox .own-screen--pane,
@@ -3045,7 +3018,6 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
   .fd-wrap { padding: 6px var(--hn-gutter) 40px; }
   .hn-floor-scroll .fd-wrap { padding-top: 6px; }
   .fd-views { justify-content: flex-start; gap: 16px; margin-bottom: 14px; }
-  .fd-head { margin-bottom: 14px; }
   .fd-list { gap: 30px; }
   .fd-item { align-items: flex-start; text-align: left; }
   .fd-art { width: 100%; border-radius: 10px; margin-bottom: 10px; box-shadow: 0 8px 22px rgba(0, 0, 0, 0.14); }

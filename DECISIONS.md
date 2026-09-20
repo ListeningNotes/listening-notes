@@ -104,6 +104,17 @@ behind the card. Home is a horizontal scroll container and the browser does
 the physics. Entries stay real routes — an entry has an address you can send
 somebody and a pane does not.
 
+**A page's controls go in the header the screen already has, 2026-09-20.**
+Not in a row of their own under it: a second bar below the first reads as a
+heading the page has not got. The cross's bar and SiteNav's right-hand slot
+are the two real ones, and a control that belongs to one floor arrives and
+leaves with it.
+
+**A view control's mark names the view you are in**, not the one pressing
+would get; the label says what pressing does. Settled twice in an hour on
+2026-09-20, both ways round, and this is the way the archive's density
+control and the band at the foot already read.
+
 **Panes are named after the routes they absorb**, and those routes mount the
 same component the pane does: `/archive` → Journal, `/about` → About. One
 description of each thing, two places it can be reached.
