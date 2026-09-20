@@ -216,23 +216,29 @@ export default function KeeperTools({
     return () => window.removeEventListener('keydown', onKey, true);
   }, [open, count]);
 
-  // Nearest the door first, which is also the order they file out in:
-  // Share, Edit, Credit, Send, Relisten, Delete (Miyel, 2026-09-17). Share is
-  // nearest the door because it is the shortest reach and the most-used; the row
-  // is reversed in CSS, so markup order is distance from the ··· and nothing
-  // here has to know which corner it is in.
+  // Nearest the door first, which is also the order they file out in: Edit,
+  // Share, Credit, Send, Relisten, Delete. Edit is nearest the door because
+  // it is the shortest reach and the most-used (Miyel, 2026-09-20 — Share
+  // held that place from 2026-09-17); the row is reversed in CSS, so markup
+  // order is distance from the ··· and nothing here has to know which corner
+  // it is in.
   //
-  // A tool is a glyph, and a glyph over a word once there are more than three
-  // of them. That is the brief's rule, driven off the count rather than off
-  // which surface this is, so it cannot drift: two tools on a card stay
-  // glyphs, because a pencil and a printer in a corner are learned in one
-  // press and a word under each would be a toolbar. Five cannot be learned, so
-  // five say what they are — the same glyph-over-a-word the band at the foot
-  // uses, which means the pattern is familiar before anybody opens this.
+  // ── Every tool says what it is, 2026-09-20 ──────────────────────────────
+  // It used to depend on how many there were: a glyph on its own up to three
+  // of them, a glyph over a word past that, on the reasoning that two marks
+  // in a corner are learned in one press and five cannot be. Miyel: "the
+  // tools are missing their word as well — toolbar should be uniform across
+  // site, those glyphs should be labels."
   //
-  // The word is drawn *and* the whole sentence stays on aria-label: "Print"
+  // She is right and the count was the wrong thing to hang it on. A rule that
+  // changes what a control looks like depending on how many of its neighbours
+  // exist means the same tool wears two faces on two pages, and the card just
+  // gained a third tool and would have changed its clothes for it. It is the
+  // same glyph-over-a-word the band at the foot uses, everywhere.
+  //
+  // The word is drawn *and* the whole sentence stays on aria-label: "Share"
   // under a glyph is enough to choose by and not enough to hear read out.
-  const withWords = count > 3;
+  const withWords = true;
   const box = (word, whole, glyph, extra = '') => ({
     className: 'kt-tool kt-tool--out' + (withWords ? ' kt-tool--said' : '') + extra,
     'aria-label': whole,
