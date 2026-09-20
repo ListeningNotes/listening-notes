@@ -1240,14 +1240,14 @@ export default function HomeNav() {
       // header, because the caret is the last thing on floor one and the wall
       // starts where it stops.
       //
-      // `begins` is the caret arriving at the foot of the header. It was the
-      // ring — "it'll shrink as Log a listen passes it" — and once the mark
-      // was actually staying big the whole way down she wanted it later:
-      // "it can happen closer to the albums". The caret is the last thing
-      // before them, so the shrink is now the last stretch of the journey
-      // rather than most of it.
+      // `begins` is the ring arriving at the foot of the header — "it'll
+      // shrink as Log a listen passes it". It moved to the caret for an hour,
+      // on "it can happen closer to the albums", and came straight back the
+      // moment the entry's own collapse was given a short distance of its
+      // own: the two are the same gesture on two screens and they should not
+      // disagree about when a thing starts becoming a header.
       const wall = pane.querySelector('.hn-floor--wall');
-      const last = pane.querySelector('.hn-down');
+      const last = pane.querySelector('.hn-go');
       const w = wall && wall.getBoundingClientRect();
       const g = last && last.getBoundingClientRect();
       const top = m.top + pane.scrollTop;

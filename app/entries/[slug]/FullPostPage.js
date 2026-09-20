@@ -930,6 +930,19 @@ export default function FullPostPage({ entry, references = [], authed = false, l
     // How far the record takes to become the header. Not the whole album
     // screen — see the note beside `over` in measure().
     const COLLAPSE = 320;
+    // Where this record has to start, when it starts at the notes. Kept
+    // rather than set once: on the first frame the writing underneath may
+    // not be laid out yet, and a scroller shorter than the number simply
+    // ignores it — so it is asked for again until it takes, or until the
+    // record turns out to be short enough that the top is the answer.
+    let want = null;
+    const settle = () => {
+      if (want == null) return;
+      const far = Math.max(0, screens.scrollHeight - screens.clientHeight);
+      const aim = Math.min(want, far);
+      if (screens.scrollTop < aim - 1) screens.scrollTop = aim;
+      if (screens.scrollTop >= aim - 1) want = null;
+    };
     let base = null;
     // Whether the record has finished becoming the header. Kept from the
     // last frame drawn, because the question gets asked at moments when
@@ -972,6 +985,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
       return { cx: r.left + r.width / 2, cy: r.top + r.height / 2, h: r.height };
     };
     const measure = () => {
+      settle();
       if (!window.matchMedia('(max-width: 768px)').matches) {
         seat.style.transform = '';
         seat.style.removeProperty('--seat');
@@ -1081,8 +1095,8 @@ export default function FullPostPage({ entry, references = [], authed = false, l
     // Before the first measure, so the numbers it takes are the ones this
     // record is actually going to be drawn with.
     if (sheet && sheet.classList.contains('lay--swiped') && cameReadingOn()) {
-      screens.scrollTop = Math.max(0,
-        one.getBoundingClientRect().bottom - row.getBoundingClientRect().bottom);
+      want = Math.max(0, one.getBoundingClientRect().bottom - row.getBoundingClientRect().bottom);
+      settle();
     }
 
     measure();

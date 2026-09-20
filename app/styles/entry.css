@@ -1220,6 +1220,10 @@ a.ln-sent-who:hover { text-decoration: underline; text-underline-offset: 3px; }
     left: 50%;
     transform: translateX(-50%);
   }
+  /* Already collapsed before anything was drawn — the wait state, when the
+     swipe came from the notes. The entry writes this corner's opacity from
+     the collapse once it lands, and an inline number beats this. */
+  .ln-entry--crowned .sitenav-logo { opacity: 0; }
   .ln-crown {
     position: relative;
     display: flex;
