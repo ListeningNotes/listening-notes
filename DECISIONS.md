@@ -150,6 +150,14 @@ thumb gets its 44px and the eye sees only the mark. `.ln-pill` keeps its jobs �
 navigation, and the one primary action a screen has — and stops being the
 default shape for everything else.
 
+**One exception, 2026-09-20: the way into a listen is a circle on the
+beacon's rule.** It is the one thing on that screen you can press and it was
+reading as a third caption under a line. The ring is a hairline of the same
+weight as the rule it stands in the break of, which is the rule making room
+for a control rather than a box drawn round a word. Miyel asked for it by
+name: "make start a listen feel intentional — maybe it can be a circle
+between the hairlines that looks like a button.
+
 **No loose icons in headers, 2026-09-15.** The mark is centred and the sides
 are for navigation. A single ··· is not a row of tools, it is a door, and it
 is allowed. Anything that acts on the thing you are looking at goes behind

@@ -3361,12 +3361,90 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
      only as wide as two words would be an underline for them. The words
      stay centred, because .ln-onward already centres its own contents. */
   display: flex;
+  justify-content: center;
   width: 100%;
   max-width: min(100%, calc(100vw - 48px));
-  margin: clamp(12px, calc(var(--hn-h) * 0.032), 26px) auto 0;
+  /* Room over the rule for the top half of the circle that straddles it, on
+     top of the gap the rule wanted anyway. */
+  margin: clamp(46px, calc(var(--hn-h) * 0.075), 62px) auto 0;
   border-top: 1px solid var(--border);
-  padding-top: clamp(14px, calc(var(--hn-h) * 0.026), 22px);
+  /* And the bottom half under it. The circle is taken out of the flow, so
+     this padding is the whole of what the row occupies below the rule. */
+  position: relative;
+  padding-top: 42px;
+  min-height: 0;
 }
+
+/* ── The circle on the line, 2026-09-20 ───────────────────────────────────
+   Miyel: "a circle between the hairlines that looks like a button." It sits
+   in the break in the rule the note used to sit in, half above the line and
+   half below, carrying the page's own colour so the rule stops at its edge
+   and starts again the other side — the same trick the note used, at the size
+   of a control rather than a mark.
+
+   A ring is a container and this site's rule is that a control is the mark
+   (DECISIONS, 2026-09-17). The exception is deliberate and it is hers: this
+   is the one thing on the beacon you can press and it was reading as a third
+   caption under a rule. A ring that is a hairline of the same weight as the
+   rule it stands on is the rule making room for it, not a box drawn round a
+   word. */
+.hn-go {
+  /* Out of the flow and hung on the rule: half of it above the line and half
+     below, whatever the row around it is doing. A negative margin was tried
+     first and a flex item's margin is taken into the line it sits on rather
+     than out of it, which left the circle under the rule instead of on it. */
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  width: 84px;
+  height: 84px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--bg);
+  /* The rule stops short of it rather than running into it (Miyel,
+     2026-09-20: "don't make hairlines touch circle"). A ring of the page's
+     own colour twelve pixels out from the edge, which follows the radius
+     because a box-shadow does — so the line ends twelve pixels away on both
+     sides and the circle sits in a gap rather than in a hole it has cut. */
+  box-shadow: 0 0 0 12px var(--bg);
+  transition: border-color 0.15s, transform 0.15s;
+}
+.ln-onward:hover .hn-go,
+.ln-onward:active .hn-go { border-color: var(--ink-faint); }
+/* The words are the ink; the ring is the rule. Without this the whole circle
+   lifts to --lift on hover, which is a ring brighter than the line it stands
+   on and reads as the line breaking rather than the control answering. */
+.ln-onward:hover .hn-go-note { color: var(--ink-soft); }
+.hn-go-note {
+  font-size: 15px;
+  line-height: 1;
+  color: var(--ink-faint);
+  margin-bottom: 1px;
+}
+/* Smaller than the line it replaces, because two of them are stacked and the
+   circle is 84 across: 12px at 0.22em ran to 96 for `Start a`. */
+.hn-go-say {
+  font-size: 9px;
+  letter-spacing: 0.14em;
+  line-height: 1.25;
+  /* Soft grey, not full ink (Miyel, 2026-09-20). .ln-onward is full ink
+     because it used to be a bare line of type that had to out-shout two
+     captions beside it; inside a ring nothing is competing with it, and at
+     nine pixels full ink on this ground reads as loud rather than clear. */
+  color: var(--ink-soft);
+  transition: color 0.15s;
+}
+/* It still answers a press. Without this the ring's own words keep their grey
+   while everything else about the control lifts, which is a button going
+   half-bright. */
+.ln-onward:hover .hn-go-say,
+.ln-onward:active .hn-go-say { color: var(--ink); }
 /* The visitor's answer stands in the keeper's slot — same row, same column
    span, and never on screen at the same time as it. Its own margin because it
    is two lines rather than one and the same 38 under a taller object puts it
@@ -3477,10 +3555,10 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
 
    Both slots wear it, because both wear the rule — the keeper's way in and a
    visitor's calling card are one shape at two contents. */
-.hn-pane--home .calling,
-.hn-pane--home .hn-screen > .ln-onward { position: relative; }
-.hn-pane--home .calling::before,
-.hn-pane--home .hn-screen > .ln-onward::before {
+/* The keeper's slot draws its own note inside the circle now (HomeNav.js), so
+   only the calling card wears this. */
+.hn-pane--home .calling { position: relative; }
+.hn-pane--home .calling::before {
   content: '\266A';
   position: absolute;
   top: 0;
