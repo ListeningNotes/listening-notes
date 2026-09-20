@@ -64,7 +64,7 @@ async function Entry({ slug }) {
 
 export default function EntryOverTheJournal({ params }) {
   return (
-    <LayerEntry over="journal">
+    <LayerEntry over="journal" arrives="bottom">
       {/* The fallback is handed the slug so it can check that what the
           journal left behind is about this record and not the last one
           tapped — see LayerWaiting — and whether the reader is the keeper,

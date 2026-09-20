@@ -183,9 +183,15 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
     // an entry opened from a place that does not browse has no neighbours.
     const alone = cameAlone();
     const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (arrives === 'bottom') return { swiped: 0, growFrom: null, alone };
+    // A swipe is read before anything else about how this sheet normally
+    // arrives, because it is not an arrival — the sheet is already here and
+    // the record inside it is being turned. It moved above the rise on
+    // 2026-09-20, when the entry started rising: without it, thumbing to the
+    // next album sent the whole sheet back to the floor and brought it up
+    // again, which is a page reload with a curve on it.
     const swiped = tookASwipe();
     if (swiped) return { swiped, growFrom: null, alone };
+    if (arrives === 'bottom') return { swiped: 0, growFrom: null, alone };
     if (reduced) return { swiped: 0, growFrom: null, alone };
     // An entry grows out of its tile; anything else grows out of whatever
     // declared this address in data-grows (a row, a face) — see handoff.js.
