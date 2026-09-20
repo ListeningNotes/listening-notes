@@ -178,9 +178,15 @@
 }
 /* Either side of it and on the same line, which is what "left and right sides
    of the circle" means: on the rule, not under it. So they are hung on it the
-   way the circle is, 50px out from the middle — the circle's own half plus
-   fourteen — and they carry the page colour so the line stops either side of
-   them too. Three things standing in one rule.
+   way the circle is, and far enough out that the rule shows on both sides of
+   each of them: 66 from the middle, which leaves about thirty pixels of line
+   between a word and the circle and about thirty outside it. At fifty they
+   hugged the circle and the whole of the rule was outside them — four
+   segments, two of them too short to read as anything (Miyel, 2026-09-20:
+   "fix the left side hairline, it should be before the plus").
+
+   They carry the page colour so the line stops either side of them. Three
+   things standing in one rule, with the rule visible between all of them.
 
    Symmetric whatever the two words measure, because each is positioned from
    the middle rather than packed from an end. */
@@ -197,8 +203,8 @@
   letter-spacing: 0.16em;
   white-space: nowrap;
 }
-.calling > .ln-onward:first-child { right: calc(50% + 50px); }
-.calling > .ln-onward:last-child { left: calc(50% + 50px); }
+.calling > .ln-onward:first-child { right: calc(50% + 66px); }
+.calling > .ln-onward:last-child { left: calc(50% + 66px); }
 
 /* ── Three counts ───────────────────────────────────────────────────────────
    Records, masterpieces, formative — each in its own flag's colour, which is

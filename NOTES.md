@@ -3187,8 +3187,12 @@ else's, which is an argument for a version on that URL and is not built.
       that slot has always made, one step further: it holds whichever answer
       fits whoever is looking, and now the two answers are one shape as well.
       The portrait is the circle, hung on the rule, and ADD and SEND are hung
-      on it either side, 50px out from the middle — the circle's own half plus
-      fourteen — each carrying the page colour so the line stops at all three.
+      on it either side, 66px out from the middle, each carrying the page
+      colour so the line stops at all three. **66 and not 50**: at 50 they
+      hugged the circle and the whole of the rule was outside them, which is
+      four segments with two of them too short to read — "fix the left side
+      hairline, it should be before the plus". Measured at 393: 28 outside,
+      30 in, 29 in, 38 outside.
       Positioned from the middle, so the two words stay symmetric whatever
       they measure.
       **The name is on the label, not in the row.** There is nowhere in a
