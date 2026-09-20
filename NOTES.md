@@ -2726,9 +2726,21 @@ takes over there once the crown has scrolled away.
 The two panes got their forty pixels back: they clear the status bar again
 rather than the whole bar, which on a tall phone is most of another row of
 faces. **A desk is untouched** — no band, one page at a time, and the bar's
-mark is the only one it has. **The standalone addresses are untouched too**:
-/settings and the rest still carry SiteNav's mark, which is a different
-header on a different surface. Say if that should go as well.
+mark is the only one it has.
+
+**And then the standalone addresses too, except entries** (Miyel, same
+evening: "all standalone pages except entries"). SiteNav reads the address
+rather than taking a prop, because it is a fact about where you are and not a
+decision each page should get to make differently. The one standalone page
+that is *of* the journal — a listen, at an address you can send somebody — is
+the entry, and it keeps the mark. Settings, the archive, a report and the rest
+are rooms in the back of the house.
+
+**What that costs, and it is worth knowing:** on those pages the mark was the
+only way home. Every one of them opens as a layer over the cross in normal use
+and closes back onto it, so this only bites on a cold open — a bookmark, or a
+hard reload. The left slot of that row is empty and is where a way back would
+go if it turns out to be wanted.
 
 **2026-09-20 — The beacon gets the book's way down, and three fixes.**
 
