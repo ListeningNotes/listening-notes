@@ -420,6 +420,20 @@ export default function Friends({ shelf = false, onCount = null }) {
             reader only ever meet the field that is actually there. */}
         <div className="fr-head">
           <div className="fr-slot">
+            {/* ── What the book is called, when nothing is being typed ─────
+                Miyel, 2026-09-20: "let's bring back the address book title at
+                the top and a count of how many people you have in your book."
+
+                In the slot rather than on a row of its own, because a row of
+                its own is 48px of header over a page whose whole argument is
+                that it is faces and not furniture. The slot already holds two
+                things and shows one; this is the third, and it leaves the
+                same way the search does — clipped off to the left as the
+                address field arrives from the right. */}
+            <p className={'fr-book' + (adding || searchable ? ' fr-field--gone' : '')} aria-hidden={adding || searchable ? true : undefined}>
+              Address book
+              {!loading && people.length > 0 && <span> &middot; {people.length}</span>}
+            </p>
             <label className={'fr-field fr-field--find' + (adding || !searchable ? ' fr-field--gone' : '')} inert={adding || !searchable ? true : undefined}>
               <MagnifyingGlass size={15} weight="regular" aria-hidden="true" />
               <input
