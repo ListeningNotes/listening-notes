@@ -2714,6 +2714,30 @@ current.
 
 ## Complete
 
+**2026-09-19, later — four small ones off a real phone.**
+
+- [x] **Came back is gone.** The corner filter lasted one evening. What came
+      back from a send is on its way to the inbox as an arrival (brief 1's
+      third item), and a filter nobody asked for is a control to read past on
+      every visit. The match that found them is kept and commented, because
+      the brief's instruction for that third item is to reuse it.
+- [x] **The feed says its name above the caret, not above itself.** Her
+      mock-up drew it that way and it took a week to arrive there: down at the
+      foot of the book it labels the way down, which is a thing you are
+      deciding whether to do. At the top of the list it would be naming a
+      place you had already arrived at. On the feed's own address it still
+      says its name at the top, centred, because nothing else there would.
+- [x] **The + no longer opens the keyboard.** Miyel, off a real phone: "this
+      can open not in typing mode. most people will scan." Two reasons and
+      both good: the camera is the way in and typing is the fallback, and on
+      iOS a focused field near the top of a pane makes the system scroll the
+      page to clear the keyboard — which lifted the whole floor up behind the
+      status bar. Her "the placement is off" was that scroll.
+- [x] **The shelf was measuring a face where it should have measured a row.**
+      Each row is its own grid with 18px of air above and below it, so the sum
+      lost 36px a row and the fourth came back cut in half at five across.
+      Measured off `.fr-row` now, and the air is part of what a row costs.
+
 **2026-09-19 — The book is a shelf, and the feed is a floor under it.** Her
 brief, tightening the pane she had just been given.
 

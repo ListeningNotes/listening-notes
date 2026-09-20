@@ -13,18 +13,19 @@
 // One feed, from 2026-09-19 (the friends brief). There were two views in a
 // tab row — Recent and Submissions — and they are not two kinds of thing you
 // choose between, they are a list and a subset of it. So the feed is everyone
-// in the book, newest first and capped, a shelf rather than a river; and what
-// came back from a send is a word in the corner that narrows it, not a place
-// you go instead.
+// in the book, newest first and capped: a shelf rather than a river.
 //
-// The subset is still worth having: it is who logged what you sent them and
-// how they rated it, matched by the credit naming this journal, and it cannot
-// become a scroll because it only ever holds what came back. It keeps its own
-// cap and its own empty line. No counts, no badges, no unread state — the dot
-// on an inbox row is the only new-state this site has.
+// The subset had a word in the corner for an hour — *Came back*, off her own
+// mock-up — and it went the same evening (Miyel: "remove came back and just
+// center feed"). A filter nobody asked for is a control to read past on every
+// visit, and what came back from a send is on its way to the inbox as an
+// arrival, which is where something that happened belongs. See brief 1's
+// third item.
 //
-// NAME: **Came back** is the word her own mock-up put in that corner, kept
-// until she says otherwise.
+// The match that found them is still here and still unused, deliberately:
+// the brief's instruction for that third item is to reuse it rather than
+// write a second one. No counts, no badges, no unread state — the dot on an
+// inbox row is the only new-state this site has.
 //
 // A row offers Compare only when it is a record you also have: this album,
 // their rating against yours and the shape of the two listens, track by
@@ -154,7 +155,10 @@ function Compared({ mine, theirs, name, there }) {
   );
 }
 
-export default function Feed({ entries = [] }) {
+// `titled` is whether the feed says its own name at the top of itself. It does
+// at its own address, where nothing else would; it does not on the cross,
+// where the name is at the foot of the floor above with the caret under it.
+export default function Feed({ entries = [], titled = true }) {
   const { keeper_name, site_address } = useBookplate();
   // null until the book has answered, so an empty book and a book not yet
   // read draw differently.
@@ -162,10 +166,6 @@ export default function Feed({ entries = [] }) {
   // address → { entries, name, failed }. Filled as each journal answers, so
   // the first rows are on screen before the slowest journal has spoken.
   const [journals, setJournals] = useState({});
-  // 'everyone' or 'back'. Everyone is the default and the reason the corner
-  // word is a filter rather than a tab: you are always in the feed, and the
-  // word says which part of it.
-  const [view, setView] = useState('everyone');
   const [open, setOpen] = useState(null);
 
   useEffect(() => {
@@ -210,9 +210,19 @@ export default function Feed({ entries = [] }) {
     return all;
   }, [people, journals]);
 
-  // What came back: their Submission entries whose credit names this
-  // journal — by address when the credit carries one, by the name the send
-  // carried when it does not (an entry from before the address travelled).
+  // ── What came back ──────────────────────────────────────────────────────
+  // Their Submission entries whose credit names this journal — by address
+  // when the credit carries one, by the name the send carried when it does
+  // not (an entry from before the address travelled).
+  //
+  // **Nothing reads this today and that is on purpose.** It drove a filter in
+  // the corner of the feed for one evening and she took the filter off; what
+  // it finds belongs in the inbox as an arrival, which is the third item of
+  // the friends brief, and the brief's own instruction for building that is
+  // to reuse this match rather than write a second one. Deleting it would
+  // mean writing it again in a fortnight, subtly differently, against the
+  // same two cases. It costs one pass over a list that is already in memory.
+  // eslint-disable-next-line no-unused-vars
   const submissions = useMemo(() => rows.filter(({ entry }) => {
     if (entry.entry_type !== 'Submission') return false;
     const url = tidyJournal(entry.received_from_url);
@@ -222,7 +232,7 @@ export default function Feed({ entries = [] }) {
   }).slice(0, SUBMISSIONS_MOST), [rows, me, myName]);
 
   const recent = useMemo(() => rows.slice(0, RECENT_MOST), [rows]);
-  const shown = view === 'back' ? submissions : recent;
+  const shown = recent;
   const stillAsking = Boolean(people?.some(p => !journals[p.address]));
 
   let body;
@@ -242,9 +252,7 @@ export default function Feed({ entries = [] }) {
   } else if (shown.length === 0) {
     body = (
       <div className="fd-empty">
-        {view === 'back'
-          ? 'Nothing you sent has come back yet.'
-          : 'Nobody in your address book has logged anything yet.'}
+        Nobody in your address book has logged anything yet.
       </div>
     );
   } else {
@@ -274,7 +282,6 @@ export default function Feed({ entries = [] }) {
                     {person.name || 'Someone'}
                   </Link>
                   <span className="fd-when">&middot; {timeAgo(entry.posted_at)}</span>
-                  {view === 'back' && <span className="fd-when">&middot; from you</span>}
                 </div>
                 {mine && (
                   <button
@@ -297,23 +304,15 @@ export default function Feed({ entries = [] }) {
 
   return (
     <div className="fd-wrap">
-      {/* The feed says its own name on the left and carries the one word that
-          narrows it on the right. It is the line the second floor starts at,
-          which is the whole reason it is a line and not a centred row of
-          tabs: under the faces it has to read as a heading for what follows,
-          not as a control somebody left there. */}
-      <div className="fd-head">
-        <span className="fd-title">Feed</span>
-        <button
-          type="button"
-          className={'fd-only' + (view === 'back' ? ' fd-only--on' : '')}
-          aria-pressed={view === 'back'}
-          onClick={() => setView(view === 'back' ? 'everyone' : 'back')}
-          title={view === 'back' ? 'Show everyone again' : 'Only the records that came back from something you sent'}
-        >
-          Came back
-        </button>
-      </div>
+      {/* Its own name, centred, and nothing beside it. On the cross the name
+          is not here at all — it is at the foot of the floor above, over the
+          caret, where it labels the way down rather than the top of a list
+          you have already arrived at (Miyel, 2026-09-19). */}
+      {titled && (
+        <div className="fd-head">
+          <span className="fd-title">Feed</span>
+        </div>
+      )}
       {body}
     </div>
   );

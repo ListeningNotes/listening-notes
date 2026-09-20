@@ -1797,30 +1797,17 @@
    the page reads as a control somebody left behind. Both halves are the
    caption face at caption size, so neither is louder than the records. */
 .fd-head {
-  display: flex; align-items: baseline; justify-content: space-between; gap: 12px;
+  display: flex; align-items: baseline; justify-content: center;
   margin: 0 0 18px;
   padding-bottom: 10px;
   border-bottom: 1px solid var(--border);
 }
-.fd-title, .fd-only {
+.fd-title {
   font-family: var(--font-label);
   font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase;
   line-height: 1;
 }
 .fd-title { color: var(--ink-soft); }
-.fd-only {
-  padding: 0; border: 0; background: none; cursor: pointer;
-  color: var(--ink-faint);
-  transition: color 0.2s;
-}
-.fd-only:hover { color: var(--ink-soft); }
-/* On, and it is the only state that needs saying: the feed is everyone until
-   somebody narrows it, so ink here means you are looking at a part of it.
-   Doubled class so it beats :hover, which is not pedantry: iOS leaves :hover
-   stuck on whatever you last tapped until you tap something else, so the
-   word would go *dimmer* at the moment you switched it on. */
-.fd-only.fd-only--on { color: var(--ink); }
-.fd-only:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 3px; border-radius: 3px; }
 
 .fd-views { display: flex; justify-content: center; gap: 22px; margin-bottom: 18px; }
 .fd-view {
@@ -2378,7 +2365,7 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
        top of the screen the heading lands under the mark rather than behind
        it. Above that is the sliver proper — the heading, and the first cover
        beginning — with the band eating its last 54. */
-    --hn-peek: calc(150px + var(--hn-bar-h));
+    --hn-peek: calc(120px + var(--hn-bar-h));
     /* The feed takes its gutter from the floor rather than adding a second
        one. Stated rather than left undefined: an undefined var in a
        shorthand throws the whole declaration away, which happens to give
@@ -2409,21 +2396,27 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
      it — the cross's own caret lives above the band, which is exactly where
      the sliver of covers is, and a chevron drawn over somebody's album art
      is the thing this site takes carets off pages to avoid. */
-  .hn-down { display: flex; justify-content: center; padding: 10px 0 14px; }
-  .hn-down .edge-caret--down { position: static; transform: none; }
-  .hn-floor--feed { padding: 0 24px; }
-  /* The heading starts a bar's-worth down and sticks exactly there, which is
-     the one position that is right in both places this floor is ever seen:
-     at rest it is in the sliver under the caret, and snapped to the top it is
-     under the mark. Its own natural position and its stuck position are the
-     same number, so it does not move when the floor arrives. */
-  .hn-floor--feed .fd-wrap { padding-top: var(--hn-bar-h); }
-  .hn-floor--feed .fd-head {
-    position: sticky; top: var(--hn-bar-h); z-index: 2;
-    margin: 0 0 18px;
-    padding: 0 0 10px;
-    background: var(--bg);
+  .hn-down {
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    padding: 20px 0 14px;
+    border: 0; background: none; cursor: pointer;
+    color: var(--ink-faint);
+    transition: color 0.15s;
   }
+  .hn-down:hover { color: var(--ink-soft); }
+  .hn-down:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 3px; border-radius: 6px; }
+  .hn-down-say {
+    font-family: var(--font-label);
+    font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase;
+    line-height: 1;
+  }
+  .hn-floor--feed { padding: 0 24px; }
+  /* The records start a bar's-worth down, so that when this floor is snapped
+     to the top of the screen the first cover lands under the mark rather than
+     behind it. The feed says no name here — the name is at the foot of the
+     floor above, over the caret — so there is nothing between the padding and
+     the first record. */
+  .hn-floor--feed .fd-wrap { padding-top: var(--hn-bar-h); }
   /* Clear of the band, which has a ground of its own and would otherwise
      cover the last record rather than letting it show through. */
   .hn-floor--feed .fd-wrap { padding-bottom: calc(var(--hn-foot-h) + 20px); }

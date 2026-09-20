@@ -70,7 +70,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ArrowsLeftRight, X } from '@phosphor-icons/react';
+import { ArrowsLeftRight, CaretDown, X } from '@phosphor-icons/react';
 import { CAPTION, announce, useListeningBeacon } from '../../hooks/useListeningBeacon';
 import MarqueeTitle from './MarqueeTitle';
 import { useSpineWidth } from '../../hooks/useSpineWidth';
@@ -2118,10 +2118,24 @@ export default function HomeNav() {
               <>
                 <div className="hn-floor hn-floor--book">
                   <Friends shelf onCount={setBookSize} />
+                  {/* The feed's name lives here rather than at the top of
+                      the feed (Miyel, 2026-09-19: "can i see feed living
+                      above the down caret?"). It is the right place for it:
+                      down here it labels the way down, which is a thing you
+                      are deciding whether to do — at the top of the list it
+                      would be naming a place you had already arrived at. Her
+                      own mock-up drew it exactly this way, the word and the
+                      chevron under it, and the site took a week to get back
+                      to what she drew. */}
                   {bookSize > 0 && (
-                    <div className="hn-down">
-                      <EdgeCaret direction="down" onClick={() => goDown(BOOK)} label="The feed" />
-                    </div>
+                    <button type="button" className="hn-down" onClick={() => goDown(BOOK)} aria-label="The feed">
+                      <span className="hn-down-say">Feed</span>
+                      {/* The chevron drawn here rather than through EdgeCaret,
+                          which is a button of its own and cannot go inside
+                          one. Same glyph at the same weight and size the
+                          beacon's caret uses, so the two read as one mark. */}
+                      <CaretDown size={11} weight="bold" aria-hidden="true" />
+                    </button>
                   )}
                 </div>
                 {/* No inner scroller, unlike the journal under the beacon.
@@ -2135,7 +2149,7 @@ export default function HomeNav() {
                     the way in and then gets out of the way. */}
                 {bookSize > 0 && (
                   <div className="hn-floor hn-floor--feed">
-                    <Feed entries={entries} />
+                    <Feed entries={entries} titled={false} />
                   </div>
                 )}
               </>
