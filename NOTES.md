@@ -1549,6 +1549,15 @@ Project → Settings → Environment Variables.
 
 ## Gotchas
 
+**Do not write prose comments between JSX attributes, 2026-09-20.** Four
+parse breaks in one day, all the same family. `{/* ... */}` is a *child*
+expression, so between attributes it is a syntax error, and the plain
+`/* ... */` that is legal there ends at the first `*/` in the text — which a
+comment explaining JSX comments naturally contains. **Notes go above the
+element, in a child comment, where prose belongs.** The dev server serves the
+error to every open page, including a phone across the room, so a careless
+comment is a broken site for whoever is watching.
+
 **`pane` is where the rail has scrolled to, not which room you are in,
 2026-09-20.** It is `round(scrollLeft / width)`, counted in panes — and a
 visitor's rail has fewer panes than a keeper's, because the inbox and the
@@ -3098,6 +3107,10 @@ else's, which is an argument for a version on that URL and is not built.
       Scan is a camera beside the way out, only while the field is open. Both
       are the mark rather than a mark in a container, which is the rule this
       site already keeps. `.fr-add-acts` and its max-height dance are gone.
+      **The placeholder is the hint**: `Type or scan address`, because the
+      camera is two marks away and nothing said what it was for. An empty
+      field is the one place on a screen where a sentence costs nothing — it
+      is gone the moment anybody acts on it.
       **The two fields cross by fading here**, not by clipping: the clip read
       as one box leaving while another arrived, and with no box round either
       there is no edge for it to read as. Careful with the order — an

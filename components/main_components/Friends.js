@@ -648,13 +648,19 @@ export default function Friends({ shelf = false, onCount = null, onBusy = null }
             spellCheck={false}
           />
         </label>
+        {/* ── The placeholder is the hint, 2026-09-20 ────────────────────
+            Miyel: "maybe placeholder text can be the hint — type or scan
+            address." Better than `Enter journal address` was, because the
+            camera is sitting two marks away and nothing said what it was
+            for. An empty field is the one place on a screen where a sentence
+            costs nothing: it is gone the moment anybody acts on it. */}
         <label className={'fr-field fr-field--address' + (adding ? '' : ' fr-field--waiting')} inert={adding ? undefined : true}>
           <input
             ref={fieldRef}
             value={typed}
             onChange={e => setTyped(e.target.value)}
             onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); file(typed); } }}
-            placeholder="Enter journal address"
+            placeholder="Type or scan address"
             aria-label="The address of a journal to add"
             autoComplete="url"
             inputMode="url"
