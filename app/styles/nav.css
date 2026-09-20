@@ -849,6 +849,27 @@
      the bar's height on top of it — that is scroll-margin's job now, or the
      peek would be mostly dead air. See .hn-floor--wall and .hn-floor--feed. */
   .hn { --hn-peek: 140px; }
+  /* Deeper on the beacon, because what peeks there is further down its floor:
+     the wall's search bar holds the first 96px of it whether it is drawn or
+     not, so the covers only begin below that. 190 puts about 40px of cover on
+     screen under the chevron (Miyel's call, 2026-09-20, paid for out of the
+     mark and the gaps above the record rather than out of the record). */
+  .hn-pane--home { --hn-peek: 190px; }
+  /* And the wall's bar is not drawn while you are upstairs. It sticks to the
+     bottom of the scrollport, which is exactly where the sliver of covers is,
+     so leaving it there means the peek is a search box for a page you are not
+     on. Faded, not removed: it keeps its 96px of flow the whole time, so
+     nothing jumps when you arrive and it comes back. */
+  .hn-pane--home:not(.hn-pane--inside) .arc-bar-wrap {
+    opacity: 0;
+    pointer-events: none;
+  }
+  .arc-bar-wrap { transition: opacity 0.3s ease; }
+  /* The gaps above the record give up the rest. --hn-square-top is the air
+     between the mark's block and the cover, and it grows with the screen —
+     capped harder here so a tall phone spends the difference on the peek
+     instead. */
+  .hn { --hn-square-top: clamp(10px, calc((var(--hn-h) - var(--hn-crown) - 568px) / 2), 34px); }
 
   /* ── The beacon's floor stops short, 2026-09-19 ───────────────────────
      Miyel: "the beacon should have the same effect." So it is the book's
@@ -2157,6 +2178,12 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
 }
 
 .hn-foot { display: none; }
+/* And neither is the way down. It belongs to a floor that is one screen tall
+   with another under it, and above 769px there are no floors — the beacon and
+   the wall are one column that scrolls, the way a page does. Its styling
+   lives in the phone block, so without this it would draw here as a bare
+   button between the record and the covers. */
+.hn-down { display: none; }
 @media (max-width: 768px) {
   /* Stated on the cross so the panes can read it: every scroller inside has
      to end above the band rather than under it. */
@@ -2868,8 +2895,13 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
    plus the row that names it. The 0.23 note below is kept: it is the reason
    the number went back up in September, and this is the first thing since
    then that has been worth spending it on. */
-.hn { --hn-crown: clamp(84px, calc(var(--hn-h) * 0.17), 150px); }
-@media (max-width: 768px) { .hn-crown-svg { height: 62px; } }
+/* 0.17 → 0.13 and 62 → 52 the next morning, for the other half of the ask:
+   the peek under the chevron shows records rather than the journal's search
+   bar, and the fifty pixels that buys come from here and from the air above
+   the cover. The record itself does not move or change size — Miyel's call
+   when asked where to take it from. */
+.hn { --hn-crown: clamp(64px, calc(var(--hn-h) * 0.13), 120px); }
+@media (max-width: 768px) { .hn-crown-svg { height: 52px; } }
 
 /* Two columns and a row under them: the record and its past side by side, the
    way in spanning both. A grid rather than a flex row because .ln-onward is a
