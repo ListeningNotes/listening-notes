@@ -1095,9 +1095,22 @@ a.pp-name:hover svg { color: var(--ink); }
 
    `.own-act` sets no gap of its own — every other caller passes it a word
    alone — so the camera and SCAN A CODE were touching. */
+/* ── Centred on the field, not on the page, 2026-09-19 ────────────────────
+   Miyel: "centering feels off when search bar is open." It was, and this is
+   the arithmetic of it. The head is a field and a +, so the field gives up
+   the +'s 40 and the 8 between them — all of it off its right-hand end — and
+   comes out 24px left of centre. Everything else on the floor is centred on
+   the pane: the mark above, the faces below, and this row. So two buttons
+   that plainly belong to the box above them sat 24px to the right of it.
+
+   The right padding is the + and its gap, which puts this row's middle on the
+   field's middle. The alternative was to centre the field instead by floating
+   the + over its right-hand end, and that buys one centre line for the whole
+   screen at the cost of putting the × on top of the thing it cancels. */
 .fr-add-acts {
   display: flex; align-items: center; justify-content: center;
   gap: 10px; flex-wrap: wrap;
+  padding-right: 48px;
   max-height: 0; margin-top: 0; opacity: 0; overflow: hidden;
   transform: translateY(-8px);
   pointer-events: none;
