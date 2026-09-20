@@ -68,9 +68,9 @@
   min-height: 58px;
 }
 /* The bar behind the fixed header once the page has scrolled: the page
-   colour, flush, ending on the same 80px line every page clears, with one
-   hairline under it. A fade used to do this and dissolved the covers into
-   the logo; an edge is what a header is. z-index -1 puts it behind this
+   colour, flush, ending on the same 80px line every page clears. A fade used
+   to do this and dissolved the covers into the logo; it then had a hairline
+   under it for five days, and that came off too (2026-09-20). z-index -1 puts it behind this
    row's own logo/tools/toggle, while the row's stacking context keeps it
    above the page. translateZ(0) forces it onto its own compositing layer —
    the archive grid's tiles carry a perspective and would paint over an
@@ -87,7 +87,8 @@
   opacity: 0;
   transition: opacity 0.22s ease;
   background: var(--bg);
-  border-bottom: 1px solid var(--border);
+  /* And none here either, so the two headers are one header — see the note
+     over .hn-bar--scrolled. */
   transform: translateZ(0);
   will-change: opacity, transform;
 }
@@ -676,9 +677,17 @@
    screen together. translateZ(0) is not decoration — the archive tiles carry
    a perspective and are on their own compositing layers, which paint over an
    unpromoted bar no matter what its z-index says. */
+/* ── No rule under it, 2026-09-20 ─────────────────────────────────────────
+   Miyel: "do we even need the hairline?" It replaced a fade on 2026-09-15 on
+   the grounds that a fade is a smear and an edge is what a header is — and
+   the header has since become a thing with a name in the middle of it and a
+   control at the end, which says header without a line having to. What the
+   line was doing beyond that is marking where content goes under the bar,
+   and the bar is the page colour, so a cover or a paragraph passing under it
+   simply stops. That is the one thing to look at on a real phone: the wall on
+   the beacon and the writing on the card are what pass under this. */
 .hn-bar--scrolled {
   background: var(--bg);
-  border-bottom: 1px solid var(--border);
   transform: translateZ(0);
 }
 .hn-bar-mark {
