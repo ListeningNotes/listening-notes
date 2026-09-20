@@ -2909,16 +2909,20 @@ else's, which is an argument for a version on that URL and is not built.
       invisible. **Three goes at saying it**, and the third is the one: a
       CHANGE pill borrowed from the photograph ("I don't even like the pill
       for change"), a Swap mark borrowed from the eyes ("I don't like icon
-      either"), and then the row itself as a slot — a dashed rule round it
-      with UPDATE PIN under the record. It is the only one of the three that
-      does not stand a control inside a control, and a dashed box is the shape
-      a place something goes wears everywhere. In a correction only: printed,
-      the row is a link, and a dashed box round a link is a form on somebody's
-      card.
+      either"), and then the row itself as a slot — a dashed rule round it,
+      tight to what it holds, and no words at all: "we can even remove update
+      pin, I think it's able to understand without it." It is the only one of
+      the four that does not stand a control inside a control, and a dashed
+      box round the one object on the page that is not writing says place
+      something here on its own. In a correction only: printed, the row is a
+      link, and a dashed box round a link is a form on somebody's card.
 - [x] **And you pick one off a wall of covers.** "The selection should be grid
       of albums not list." Three across, the cover square, the album name
-      under it, the one you have on a ring with a tick in the corner — a ring
-      alone is a hover state on a laptop and nothing at all on a phone. The
+      under it, the one you have marked by a tick in its corner and nothing
+      else — "we know it's chosen from the tick mark", and a hard rule drawn
+      over somebody's cover is what came off the chosen face in the address
+      book on 2026-09-19 for the same reason. There is a hairline under a
+      pointer and that is all. The
       artist goes: between the picture and the title it is the third thing you
       need, and it stays on the label for anybody who cannot see the picture.
       `.ab-pin-list` and `.ab-pin-hit*` are gone with the rows.

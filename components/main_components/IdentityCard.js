@@ -616,17 +616,16 @@ export default function IdentityCard({ stamps, authed = false, edit, pinned = nu
                   about it that had changed, that it is now a door, was
                   invisible.
 
-                  Three goes at saying it. A CHANGE pill borrowed from the
-                  photograph above — "I don't even like the pill for change".
-                  Then a Swap mark in the eyes' own box — "I don't like icon
-                  either". Now the row itself is the slot: a dashed rule round
-                  it and the words under the record, which is the shape a
-                  thing you can put something into wears everywhere, and the
-                  one of the three that does not put a second control inside
-                  a control. Miyel: "let's try an outlined box that is dashed
-                  lines then some kind of greyed out card that says update pin
-                  or something." */}
-              {pinned && <span className="idc-pinned-swap">Update pin</span>}
+                  Four goes, and the last is nothing at all here. A CHANGE
+                  pill borrowed from the photograph above — "I don't even like
+                  the pill for change". A Swap mark in the eyes' own box — "I
+                  don't like icon either". Then the row inside a dashed rule
+                  with UPDATE PIN under it, and then the words came off too:
+                  "we can even remove update pin, I think it's able to
+                  understand without it." She is right. A dashed box round the
+                  one object on the page that is not writing says place
+                  something here on its own, and the word under it was the
+                  picture explained. The rule is in .idc-pinned--pick. */}
             </button>
           ) : (
             <Link

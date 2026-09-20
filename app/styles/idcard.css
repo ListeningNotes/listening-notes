@@ -584,19 +584,21 @@
   width: 100%; aspect-ratio: 1;
   border-radius: 8px; overflow: hidden;
   background: var(--bg-warm); color: var(--ink-faint);
-  /* The ring is drawn inside the corner rather than round it — an outline, so
-     it takes no pixel off the picture and moves nothing beside it. This is the
-     same mark a record you both have wears in the feed. */
-  outline: 0 solid var(--ink);
+  /* A hairline under the pointer and nothing else. The one you have wore a
+     2px ring as well until Miyel took it off, 2026-09-20 — "remove black
+     border over chosen album, we know it's chosen from the tick mark" — and
+     she is right twice: the tick says it outright, and a hard rule drawn over
+     somebody's cover is the thing this site took off the chosen face in the
+     address book on 2026-09-19 for the same reason. Drawn inside the corner
+     as an outline, so it takes no pixel off the picture. */
+  outline: 0 solid var(--ink-faint);
   outline-offset: -1px;
   transition: outline-width 0.14s;
 }
 .ab-pin-one-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
-.ab-pin-one:hover .ab-pin-one-art { outline-width: 1px; outline-color: var(--ink-faint); }
-.ab-pin-one--on .ab-pin-one-art,
-.ab-pin-one--on:hover .ab-pin-one-art { outline-width: 2px; outline-color: var(--ink); }
-/* And a tick, because a ring alone is a hover state on a machine with a
-   pointer and nothing at all on a phone until you have pressed something. */
+.ab-pin-one:hover .ab-pin-one-art { outline-width: 1px; }
+/* The tick is the whole of it, and it has to be: a ring is a hover state on a
+   machine with a pointer and nothing at all on a phone. */
 .ab-pin-one-tick {
   position: absolute; right: 4px; bottom: 4px;
   display: flex; align-items: center; justify-content: center;
@@ -619,27 +621,15 @@
    Only in a correction. Printed, the row is a link to the record and a dashed
    box round a link is a form on somebody's card. */
 .idc-pinned--pick {
-  flex-wrap: wrap;
-  justify-content: center;
-  padding: 12px 16px;
+  /* Close to what it holds (Miyel: "bring the box in tighter"). A slot is the
+     size of the thing that goes in it; loose, it reads as a panel with a
+     record sitting somewhere inside. */
+  padding: 8px 12px;
   border: 1px dashed var(--idc-rule);
-  border-radius: 14px;
+  border-radius: 12px;
   transition: border-color 0.15s;
 }
 .idc-pinned--pick:hover { border-color: var(--ink-faint); }
-/* Under the record rather than beside it: the row is already a picture and
-   two lines of type, and a fourth thing on the same line is the line running
-   out of width on a phone. */
-.idc-pinned-swap {
-  flex: 0 0 100%;
-  margin-top: 2px;
-  text-align: center;
-  font-family: var(--font-label);
-  font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase;
-  color: var(--ink-faint);
-  transition: color 0.15s;
-}
-.idc-pinned--pick:hover .idc-pinned-swap { color: var(--ink-soft); }
 
 .ab-pin-empty {
   margin: 12px 0; text-align: center;
