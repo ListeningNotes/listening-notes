@@ -1944,10 +1944,10 @@
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .fd-row-marks { flex: 0 0 auto; display: flex; align-items: center; gap: 5px; }
-/* The compare, squeezed into the row: the same control with the word and the
-   padding taken off it, standing with the other marks rather than under the
-   record — there is no under, in a row. */
-.fd-compare--mark { margin-top: 0; padding: 2px; }
+/* Kept as a name even though it is now the only shape the control has: every
+   place that draws it says which it means, and the day one of them wants
+   something else this is the hook that is already there. */
+.fd-compare--mark { padding: 2px; }
 .fd-title {
   font-family: var(--font-label);
   font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase;
@@ -2007,8 +2007,8 @@
    saying the same thing a second time. Quiet at rest and in ink while the
    comparison is open, which is the only state it has. */
 .fd-compare {
-  display: inline-flex; flex-direction: column; align-items: center; gap: 5px;
-  margin-top: 16px; padding: 8px;
+  display: inline-flex; align-items: center; justify-content: center;
+  padding: 2px;
   border: 0; background: none; cursor: pointer;
   color: var(--ink-faint);
   transition: color 0.18s;
@@ -2021,14 +2021,6 @@
    The glyph turns; the word under it does not, because it is leaving. */
 .fd-compare.fd-compare--open { color: var(--ink); }
 .fd-compare.fd-compare--open svg { transform: rotate(90deg); }
-.fd-compare-say {
-  font-family: var(--font-label);
-  font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase;
-  line-height: 1;
-  transition: opacity 0.2s ease, max-height 0.28s ease;
-  max-height: 12px; opacity: 1; overflow: hidden;
-}
-.fd-compare--open .fd-compare-say { opacity: 0; max-height: 0; }
 .fd-compare:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 2px; border-radius: 8px; }
 /* ── The compare, opened ───────────────────────────────────────────────────
    Theirs, the distance, yours, your stars, and the way to both entries. No
@@ -2055,7 +2047,7 @@
 }
 @keyframes fd-cmp-open {
   from { max-height: 0; opacity: 0; }
-  to   { max-height: 340px; opacity: 1; }
+  to   { max-height: 300px; opacity: 1; }
 }
 /* Both horizons are drawn the same way up. A mirrored pair reads as a
    difference chart, and these are two listens, not one difference. */
@@ -2124,15 +2116,7 @@
   color: var(--ink-faint);
 }
 .fd-cmp-stars { display: flex; justify-content: center; margin-top: 10px; }
-.fd-cmp-read {
-  display: flex; align-items: baseline; justify-content: center; gap: 10px;
-  margin: 16px 0 0;
-  font-family: var(--font-label);
-  font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
-}
-.fd-cmp-read a { color: var(--ink-faint); text-decoration: none; transition: color 0.15s; }
-.fd-cmp-read a:hover { color: var(--ink); }
-.fd-cmp-read span { color: var(--ink-faint); opacity: 0.5; }
+
 .fd-empty { padding: 40px 0; text-align: center; font-family: var(--font-label); font-size: 11px; color: var(--ink-faint); line-height: 1.9; }
 .fd-empty a { color: var(--ink-soft); }
 

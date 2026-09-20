@@ -251,13 +251,13 @@ function Compared({ mine, theirs, name }) {
         </div>
       )}
 
-      {/* Only yours. Theirs is linked from the cover and the title directly
-          above this — Miyel, 2026-09-20: "theirs link not needed, its linked
-          right above" — and a second way to the same page, four lines under
-          the first, is a page repeating itself. */}
-      <p className="fd-cmp-read">
-        <Link href={`/entries/${mine.slug}`}>Your copy</Link>
-      </p>
+      {/* Nothing under the stars. Theirs was linked from the cover above and
+          came off first; *Your copy* followed on 2026-09-20 — "it's
+          understandable without". The lower horizon is yours because the
+          stars under it are yours, and a label naming the thing you are
+          looking at is a caption on a photograph of your own house. Your
+          entry is on your own wall, one pane away, where it has always been.
+      */}
     </div>
   );
 }
@@ -313,6 +313,48 @@ export default function Feed({ entries = [], titled = true }) {
       .catch(() => { if (!gone) setPeople([]); });
     return () => { gone = true; };
   }, []);
+
+  // ── Opening a comparison brings it into view ────────────────────────────
+  // Miyel, 2026-09-20: "when clicking, please make sure screen scrolls to show
+  // the opened horizons." Press the mark on a record near the foot of the
+  // screen and everything the press produced is below it — a control that
+  // reports its result somewhere you cannot see has not reported anything.
+  //
+  // After the panel has opened, not during: it unfolds over 0.34s and its
+  // height is not settled until it has. The bars start rising at the same
+  // moment, so the scroll and the rise arrive together rather than one after
+  // the other.
+  //
+  // By as much as it takes and no more, and never when the panel was already
+  // in view — which is most presses, because most records are read from the
+  // top of the screen.
+  useEffect(() => {
+    if (!open) return undefined;
+    const settle = setTimeout(() => {
+      const panel = document.querySelector('.fd-cmp');
+      if (!panel) return;
+      // Whichever box is doing the scrolling: the pane on the cross, the
+      // window at the feed's own address.
+      let box = panel.parentElement;
+      while (box) {
+        const how = getComputedStyle(box).overflowY;
+        if ((how === 'auto' || how === 'scroll') && box.scrollHeight - box.clientHeight > 1) break;
+        box = box.parentElement;
+      }
+      // The band has a ground and would cover the foot of the panel rather
+      // than letting it show through. Measured off the element, because its
+      // height carries a safe area that a custom property hands back as the
+      // calc it was written as.
+      const band = document.querySelector('.hn-foot')?.getBoundingClientRect().height || 0;
+      const seen = panel.getBoundingClientRect();
+      const floor = (box ? box.getBoundingClientRect().bottom : window.innerHeight) - band - 12;
+      const over = seen.bottom - floor;
+      if (over <= 1) return;
+      if (box) box.scrollTo({ top: box.scrollTop + over, behavior: 'smooth' });
+      else window.scrollBy({ top: over, behavior: 'smooth' });
+    }, 360);
+    return () => clearTimeout(settle);
+  }, [open]);
 
   const me = tidyJournal(site_address);
   const myName = String(keeper_name || '').trim().toLowerCase();
@@ -452,9 +494,32 @@ export default function Feed({ entries = [], titled = true }) {
                 </a>
                 <a className="fd-album" href={there} target="_blank" rel="noopener noreferrer">{entry.album}</a>
                 <div className="fd-artist">{entry.artist}{entry.year ? ` · ${entry.year}` : ''}</div>
+                {/* ── Compare stands with the marks, 2026-09-20 ────────
+                    In both densities, which is what her brief says and what
+                    her reference draws: the compare is one of the marks on
+                    the line, beside the envelope, not a control of its own
+                    below the record.
+
+                    It had a word under it for half a day, from the version
+                    where it stood alone. A mark in a row of marks does not
+                    get a caption — the envelope beside it has never had one —
+                    and the ring round the cover has already said, before you
+                    read anything, that this is a record you both have. */}
                 <div className="fd-stars">
                   {rated && <StarRating rating={Number(entry.rating_value)} size={20} />}
                   <Marks entry={entry} size={20} />
+                  {mine && (
+                    <button
+                      type="button"
+                      className={'fd-compare fd-compare--mark' + (open === key ? ' fd-compare--open' : '')}
+                      onClick={() => setOpen(open === key ? null : key)}
+                      aria-expanded={open === key}
+                      aria-label={open === key ? 'Close the comparison' : `Compare your listen with ${person.name || 'theirs'}`}
+                      title={open === key ? 'Close' : 'Compare'}
+                    >
+                      <Shuffle size={20} weight="regular" aria-hidden="true" />
+                    </button>
+                  )}
                 </div>
                 <div className="fd-who">
                   <Link href={`/dashboard/people/${person.id}`} title={`Your page about ${person.name || 'them'}`} data-grows={`/dashboard/people/${person.id}`}>
@@ -463,34 +528,6 @@ export default function Feed({ entries = [], titled = true }) {
                   </Link>
                   <span className="fd-when">&middot; {timeAgo(entry.posted_at)}</span>
                 </div>
-                {/* ── Just the symbol, 2026-09-20 ──────────────────────
-                    Miyel: "when a compare is available i just want it to be
-                    the symbol." The word was doing two jobs — saying a
-                    comparison exists, and being the thing you press — and the
-                    first of those is the mark's job. It only appears on a
-                    record you also have, so its being there is the whole
-                    announcement.
-
-                    Under the entry, where the word was. Her reference drew it
-                    as a badge on the album art and she took it off again: the
-                    art is the record, not a place to hang controls. */}
-                {mine && (
-                  <button
-                    type="button"
-                    className={'fd-compare' + (open === key ? ' fd-compare--open' : '')}
-                    onClick={() => setOpen(open === key ? null : key)}
-                    aria-expanded={open === key}
-                    aria-label={open === key ? 'Close the comparison' : `Compare your listen with ${person.name || 'theirs'}`}
-                    title={open === key ? 'Close' : 'Compare'}
-                  >
-                    <Shuffle size={20} weight="regular" aria-hidden="true" />
-                    {/* The word, under the mark, until the mark has been used
-                        once (Miyel: "compare can be under the glyph disappear
-                        on open"). It is there to teach what the mark is and
-                        has nothing to say once the thing it names is open. */}
-                    <span className="fd-compare-say">Compare</span>
-                  </button>
-                )}
                 {open === key && mine && <Compared mine={mine} theirs={entry} name={person.name || 'them'} />}
               </article>
             </div>
