@@ -650,7 +650,10 @@ written one.
 
 **The bar is page colour and nothing else, 2026-09-06 / 2026-09-20.** Once a
 pane has scrolled its crown away the row becomes a bar: page colour, flush,
-what the pane has to put in it. A fade was a smear the covers dissolved into
+what the pane has to put in it. **The crown is what arrives in it on a
+phone**: it travels there as the beacon scrolls, shrinking as it goes, and
+stays — one mark rather than a large one leaving and a small one fading in
+behind it, which you could catch both of on a slow drag. A fade was a smear the covers dissolved into
 and a hairline replaced it for five days; the hairline came off too, because
 what is in the row — a name, a mark, a control — is what says header. Every
 other page's nav row is the same. The crown and the small mark are never on

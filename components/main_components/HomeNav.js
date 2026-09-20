@@ -1114,6 +1114,94 @@ export default function HomeNav() {
   // already down there. Both are measured, never declared.
   const [deep, setDeep] = useState([false, false, false]);
   const [down, setDown] = useState([false, false, false]);
+  // ── The mark becomes the header, 2026-09-20 ─────────────────────────────
+  // Miyel: "I want the big logo to slowly transform into the small one that
+  // becomes the header for the journal — kind of the same way the beacon
+  // transforms into the smaller version when you press log listen. Right now
+  // if I drag and hold I can see two logos; the big one just disappears under
+  // the header of the small one, but it doesn't transform."
+  //
+  // Two marks were exactly what it was: the crown scrolling away and the
+  // bar's own small one fading in behind it, and on a slow drag you catch
+  // them both. One mark now. The crown travels to where the small one stood,
+  // shrinking as it goes, and stays there — so the header of the journal is
+  // the thing that was the crown rather than a second copy of it, and nothing
+  // has to cross-fade with anything.
+  //
+  // Driven off the pane's own scroll, straight onto the element: it changes
+  // every frame of a drag and is no business of React's. Nothing about the
+  // page's layout moves — a transform is paint, so the record under it scrolls
+  // exactly as it did.
+  //
+  // The mark is found in the pane rather than held on a ref. `next/link` in
+  // this version does not hand its anchor back through one — measured, the ref
+  // read null on every render while the element was plainly on the page — and
+  // there is exactly one crown, inside the pane this effect already has.
+  useEffect(() => {
+    const pane = paneRefs[HOME]?.current;
+    const mark = pane?.querySelector('.hn-crown-mark');
+    if (!pane || !mark) return undefined;
+    const bar = pane.closest('.hn')?.querySelector('.hn-bar');
+    if (!bar) return undefined;
+
+    // Measured rather than written down, because every number in it is a
+    // clamp on the screen's height: where the crown stands, how tall it is,
+    // and where the bar's line falls on a phone with a notch.
+    let base = null;
+    const measure = () => {
+      if (!window.matchMedia('(max-width: 768px)').matches) { mark.style.transform = ''; base = null; return; }
+      mark.style.transform = 'none';
+      const m = mark.getBoundingClientRect();
+      const b = bar.getBoundingClientRect();
+      if (!m.height) { base = null; return; }
+      // The small mark is 28px on the middle of the bar's 58px row, which is
+      // 29 up from the band's own bottom edge. Same sum .hn-bar-mark uses.
+      const small = 28;
+      base = {
+        top: m.top + pane.scrollTop,
+        target: b.bottom - 29 - small / 2,
+        scale: small / m.height,
+      };
+      draw();
+    };
+    // Ease out, so it arrives rather than stops: a linear morph reads as the
+    // mark being dragged and this reads as it settling.
+    const ease = t => 1 - (1 - t) * (1 - t);
+    const draw = () => {
+      if (!base) return;
+      const gone = Math.max(1, base.top - base.target);
+      const t = ease(Math.min(1, Math.max(0, pane.scrollTop / gone)));
+      if (t === 0) { mark.style.transform = 'none'; return; }
+      const natural = base.top - pane.scrollTop;
+      const y = (base.target - natural) * t;
+      const k = 1 + (base.scale - 1) * t;
+      mark.style.transform = `translateY(${y.toFixed(1)}px) scale(${k.toFixed(4)})`;
+    };
+
+    measure();
+    pane.addEventListener('scroll', draw, { passive: true });
+    // Three things can change what was measured and all three have to say so.
+    // A resize is the obvious one; the media query is the phone-or-desk
+    // answer, which flips without the window necessarily firing anything this
+    // effect hears in time; and the pane's own box changes when the keyboard
+    // comes up. Measured once at mount and then whenever any of them moves —
+    // without the last two the first measurement was taken at whatever width
+    // the page happened to load at and never revisited, which is the bug this
+    // was found with.
+    const narrow = window.matchMedia('(max-width: 768px)');
+    narrow.addEventListener('change', measure);
+    window.addEventListener('resize', measure);
+    const watch = new ResizeObserver(measure);
+    watch.observe(pane);
+    return () => {
+      pane.removeEventListener('scroll', draw);
+      narrow.removeEventListener('change', measure);
+      window.removeEventListener('resize', measure);
+      watch.disconnect();
+      mark.style.transform = '';
+    };
+  }, [paneRefs, authed]);
+
   // ── Whether the feed has reached the header ─────────────────────────────
   // Not the same question as `down`, which is true eight pixels into any
   // pane. The word and the toggle belong to the feed, and the book is a whole

@@ -801,7 +801,19 @@
      to it, which is what keeps everything below where it was put. */
   padding: env(safe-area-inset-top) 16px 8px;
 }
-.hn-crown-mark { display: block; line-height: 0; }
+.hn-crown-mark {
+  display: block;
+  line-height: 0;
+  /* It travels into the bar on a phone (see the morph in HomeNav.js), so it
+     has to be drawn over the bar's ground rather than under it — and it moves
+     every frame of a drag, which is what will-change is for. Its origin is the
+     top of its own middle: both marks are centred on the pane, so the journey
+     is vertical and the shrink should not drag it sideways. */
+  position: relative;
+  z-index: 96;
+  transform-origin: top center;
+  will-change: transform;
+}
 /* 82px, not 112. This SVG is cropped tight to the glyphs while the PNG it
    replaced carried transparent margin, so the same box height rendered
    smaller letters — 82 here measures out to the letter height the old logo
@@ -2674,7 +2686,13 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
      only once the crown has scrolled away. The card gives its own up in
      the same breath, below. A desk is untouched: it has no band, one page
      at a time, and the bar's mark is the only one it has. */
-  .hn:not([data-pane="1"]) .hn-bar-mark { display: none; }
+  /* ── One mark, 2026-09-20 ─────────────────────────────────────────────
+     None at all on a phone, except while the picker is open. The crown is
+     what arrives in this row now — it travels there as the pane scrolls and
+     stays — so a second copy fading in behind it is the two logos Miyel
+     caught on a slow drag. The picker is the exception because floor one
+     *is* the picker while it is open, so there is no crown to arrive. */
+  .hn:not(.hn--choosing) .hn-bar-mark { display: none; }
   /* Three classes deep on purpose: idcard.css has `.ab-card .idc-mark` and
      is loaded after this sheet, so anything of equal weight written here
      loses to it whatever the media query says. */
