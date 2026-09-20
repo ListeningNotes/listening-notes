@@ -640,9 +640,14 @@ export default function About({ stamps, authed = false, pinned = null, entries =
                 rather than the absence of a choice. As a line and not a pill:
                 `.ln-pill` is for navigation and for the one primary action a
                 screen has (DECISIONS), and on a sheet whose primary action is
-                forty covers this is neither. */}
+                forty covers this is neither.
+
+                "Remove pin" and not "Pin nothing" (Miyel, 2026-09-20). The
+                old wording named the outcome, which is a state; this names the
+                act, which is what a control is for — and the row it acts on
+                says UPDATE PIN, so the two are the same object said twice. */}
             <button type="button" className="ab-pin-none" onClick={() => choosePin(null)}>
-              Pin nothing
+              Remove pin
             </button>
           </div>
         </>

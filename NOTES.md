@@ -2906,14 +2906,15 @@ else's, which is an argument for a version on that URL and is not built.
       should be more obvious you can swap that out." In a correction the row
       looked exactly as it looks printed — a pin, a cover, a title — so the
       one thing that had changed about it, that it is now a door, was
-      invisible. It said CHANGE on a pill for an hour, borrowed from the
-      photograph above it, and the pill went the same hour — "I don't even
-      like the pill for change; maybe there can just be an icon next to it
-      like the eye that would suggest swapping it." So it is a Swap glyph in
-      the eyes' own box: the counted rows are turned off by a mark that shape
-      on a line that shape, and a second mark reading the same way is one
-      language rather than two. Not a button — the row is the door, and a
-      control inside a control is two places to press for one outcome.
+      invisible. **Three goes at saying it**, and the third is the one: a
+      CHANGE pill borrowed from the photograph ("I don't even like the pill
+      for change"), a Swap mark borrowed from the eyes ("I don't like icon
+      either"), and then the row itself as a slot — a dashed rule round it
+      with UPDATE PIN under the record. It is the only one of the three that
+      does not stand a control inside a control, and a dashed box is the shape
+      a place something goes wears everywhere. In a correction only: printed,
+      the row is a link, and a dashed box round a link is a form on somebody's
+      card.
 - [x] **And you pick one off a wall of covers.** "The selection should be grid
       of albums not list." Three across, the cover square, the album name
       under it, the one you have on a ring with a tick in the corner — a ring
@@ -2931,7 +2932,9 @@ else's, which is an argument for a version on that URL and is not built.
       closes it without choosing — so it was a button for the thing that
       happens anyway. Pin nothing stays, as one quiet caption line: `.ln-pill`
       is for navigation and for a screen's one primary action, and on a sheet
-      whose primary action is forty covers it is neither.
+      whose primary action is forty covers it is neither. It says **Remove
+      pin** and not Pin nothing: the old wording named the outcome, which is a
+      state, and this names the act, which is what a control is for.
 - [x] **The opening is full ink**, not a step quieter. At the display weight
       and four pixels smaller it already reads as the smaller of the two, and
       the grey was making a question somebody chose look like boilerplate.
