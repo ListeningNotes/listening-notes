@@ -9,17 +9,17 @@
 'use client';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { Check, Fingerprint, Heart, SketchLogo, VinylRecord, X } from '@phosphor-icons/react';
+import { Envelope, Fingerprint, Heart, SketchLogo, VinylRecord } from '@phosphor-icons/react';
 import { fonts } from '../../../library/sitewide_visuals';
 import { sizedAlbumArt, fetchAlbumArtUrl } from '../../../library/music_data_api';
-import { parseHorizon, entryTracks, splitNotes, entryTypeLabel, parseRating, flawless } from '../../../library/entry_formatter';
+import { parseHorizon, entryTracks, splitNotes, parseRating, flawless } from '../../../library/entry_formatter';
 import { kept_receipts } from '../../../library/receipts';
 import { buildReferenceIndex, createReferenceLinker } from '../../../library/cross_references';
 import SiteNav from '../../../components/main_components/SiteNav';
 import { createPortal } from 'react-dom';
 import { useLayerHeaderSlot } from '../../../components/main_components/LayerEntry';
 import KeeperTools from '../../../components/main_components/KeeperTools';
+import EditingBar from '../../../components/main_components/EditingBar';
 import { entryPlate } from '../../../components/main_components/EntryPlate';
 import { usePress } from '../../../hooks/usePress';
 import { FRAMES, FRAME_ORDER } from '../../../components/main_components/SharePrinter';
@@ -31,12 +31,12 @@ import Chip from '../../../components/main_components/Slug_Page/Chip';
 import SentBy, { creditOn, useTrail } from '../../../components/main_components/Slug_Page/SentBy';
 import SenderTool from '../../../components/main_components/Slug_Page/SenderTool';
 import SendSheet from '../../../components/main_components/SendSheet';
-import MiniAddressBook from '../../../components/main_components/MiniAddressBook';
 import PrintBar from '../../../components/main_components/Slug_Page/PrintBar';
 import HorizonChart from '../../../components/main_components/HorizonChart';
 import MiniCard from '../../../components/main_components/Slug_Page/MiniCard';
-import { handedOver } from '../../../library/handoff';
-import { tidyAddress, tidyJournal } from '../../../library/return_address';
+import MarqueeTitle from '../../../components/main_components/MarqueeTitle';
+import { handedOver, cameReadingOn } from '../../../library/handoff';
+import { tidyAddress } from '../../../library/return_address';
 import { useBookplate } from '../../../components/main_components/Bookplate';
 import { useTheme } from '../../../components/main_components/Lightswitch';
 import CodeSlot from '../../../components/main_components/CodeSlot';
@@ -719,10 +719,51 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   // nav row is styled off .ln-entry / .ln-entry--scrolled, which the row is
   // no longer inside, so the slot is given the same two classes.
   const headerSlot = useLayerHeaderSlot();
+  // Whether the header is standing in for the record — see the collapse
+  // further down, which is what turns it on.
+  const [crowning, setCrowning] = useState(false);
+  // ── Did this record arrive already reading, 2026-09-20 ──────────────────
+  // Asked once, in the first render, and never again. It was asked in the
+  // layout effect off the sheet's class, and that is a race: the class says
+  // `swiped` only once the layer itself has remounted for the new address,
+  // which on a real phone is a few hundred milliseconds after the record has
+  // drawn. For that window the record did not know it had arrived at the
+  // notes, so it stood its header down and the journal's mark came back at
+  // full strength over the card — Miyel, twice: "the mini LN loads over the
+  // mini card on swipe."
+  //
+  // Read here, the answer is true before the first frame and cannot change.
+  // LayerWaiting has already looked without spending it.
+  const [arrivesReading] = useState(cameReadingOn);
+  // ── The mark is not drawn at all until it could be right ────────────────
+  // Fading it was two evenings of the same bug wearing different clothes: a
+  // number on the document, a number on the element, a class on the slot —
+  // and every one of them had a window where the row had been drawn and the
+  // number had not been said yet, so the journal's mark stood at full
+  // strength over the record's own card.
+  //
+  // A record that arrives already reading does not draw the mark at all. Once
+  // its collapse has measured itself, there is a true answer for every frame
+  // and the fade takes over. Nothing to race.
+  const [ledeDrawn, setLedeDrawn] = useState(!arrivesReading);
+  // The mark's strength, said before this record's first frame and said
+  // either way. Every later moment is a race with something: the record that
+  // is leaving, and the collapse, which cannot speak until it has measured
+  // and on a sheet still arriving has not. Between those two the row had the
+  // journal's mark at full strength over the record's own card.
+  //
+  // In a layout effect and not in the initializer above: a state initializer
+  // is called twice in development, so anything it touches outside itself is
+  // done twice with two different answers.
+  useLayoutEffect(() => {
+    document.documentElement.style.setProperty('--ln-turn', arrivesReading ? '1' : '0');
+  }, [arrivesReading, entry.slug]);
   useEffect(() => {
     if (!headerSlot) return;
-    headerSlot.setAttribute('class', 'lay-header ln-entry' + (scrolled ? ' ln-entry--scrolled' : ''));
-  }, [headerSlot, scrolled]);
+    headerSlot.setAttribute('class', 'lay-header ln-entry'
+      + (scrolled ? ' ln-entry--scrolled' : '')
+      + (crowning ? ' ln-entry--crowning' : ''));
+  }, [headerSlot, scrolled, crowning]);
   // Whether the first screen was already on the layer before this rendered —
   // drawn by LayerWaiting from what the wall handed over. Read once, on the
   // first render, because the handoff is about the moment of arrival.
@@ -856,9 +897,476 @@ export default function FullPostPage({ entry, references = [], authed = false, l
     }
   }
 
+  // ── The record collapses into the header, 2026-09-20 ────────────────────
+  // Miyel: "the album transforms into the header — we don't need the
+  // Listening Notes logo up there, it could just be the album, almost like
+  // when you have the mini beacon in the session."
+  //
+  // The same morph the beacon's mark does, with one difference she picked
+  // between: the mark up there holds still and everything passes behind an
+  // opaque header, and the art down here is far too big for that — a header
+  // reaching past it would be half the screen, and the title, the score and
+  // the chips would be gone the moment you moved. So this one *lags*. It
+  // drifts up at a fraction of the page's speed, keeps its size until the
+  // notes are close, and then collapses into the row. Nothing is hidden;
+  // everything scrolls past it the way it always did.
+  //
+  // Drawn by the header and not by the page, which is the lesson the beacon
+  // cost four evenings: on a phone the content paints under the fixed row,
+  // so anything that has to end up *in* that row has to start there too.
+  // The page's own art goes invisible while this one stands in for it, and
+  // keeps its box, which is what everything below it is positioned against.
+  // A layout effect, not an effect: everything in it decides what the first
+  // frame of a record looks like — where its scroller starts and how far
+  // through the collapse its cover is. After paint, both of those are a
+  // frame of the wrong thing first (Miyel: "no blink between swiping through
+  // albums in mini header state, they all reload").
+  useLayoutEffect(() => {
+    // Not while the page is something else. Printing makes screen one a
+    // sheet of paper and editing makes it a form; in both the art is a
+    // control you are using, not a thing on its way somewhere.
+    if (printing || edit.editing) { setCrowning(false); return undefined; }
+    const screens = document.querySelector('.ln-screens');
+    const art = document.querySelector('.ln-screen-one-art');
+    const row = document.querySelector('.sitenav-row');
+    const one = document.querySelector('.ln-screen-one');
+    // ── Found again, never held, 2026-09-20 ──────────────────────────────
+    // The header is a portal into a slot the layer owns, and on a swipe the
+    // wait state's row is in that slot first and the record's replaces it.
+    // Anything this effect grabbed on the way in is then a node that is no
+    // longer on the page, and writing to it writes to nothing — which is why
+    // the journal's mark was still at full strength over the record's own
+    // card (Miyel, twice: "the mini LN loads over the mini card on swipe").
+    //
+    // So the row's pieces are looked up whenever there is something to say
+    // about them, and the one thing that must be true before the first frame
+    // is said to the document, which nothing replaces.
+    let crown = null;
+    let ledeEl = null;
+    const parts = () => {
+      crown = document.querySelector('.ln-crown');
+      ledeEl = document.querySelector('.sitenav-logo');
+      return Boolean(crown);
+    };
+    // The mark's own strength, said on the root: .ln-entry .sitenav-logo
+    // reads it, so whichever row is in the slot is already wearing the right
+    // answer the moment it is drawn.
+    parts();
+    if (!screens || !art || !crown || !row || !one) return undefined;
+
+    // ── Nothing until the sheet has landed, 2026-09-20 ────────────────────
+    // An entry rises from the foot of the screen now, and its header is held
+    // where it is by running the inverse of that rise on it. Which means that
+    // while the arrival is playing the header and the page are in different
+    // frames — a whole screen apart — and anything measured across the two is
+    // measured in neither. The first attempt read the art at 172 and the seat
+    // at 172 minus a screen, and put the record off the top of the page.
+    //
+    // So the collapse does not exist until the sheet is still. Until then the
+    // page's own art is the art, which is the thing rising anyway, and the
+    // seat is not drawn. They are the same picture at the same place, so the
+    // handover at the end is not something anybody can see.
+    const sheet = row.closest('.lay');
+    // By name, not just by "something is running". The caret at the foot of
+    // the record bobs on a 2.2s loop that never ends, so asking the subtree
+    // whether anything is playing is asking whether the page exists — and
+    // the collapse never started.
+    // A page turn is not one of them. `layFromLeft` and `layFromRight` move
+    // the content sideways and leave the header alone, so nothing measured
+    // across the two is wrong — and waiting them out is what made every
+    // record swiped to in the mini state open at the top and then jump.
+    const landing = () => {
+      if (!sheet) return false;
+      // The sheet's own animations, whatever they are: growing out of a tile
+      // is run by the Web Animations API and has no name to match on, and
+      // measuring anything while the whole surface is scaled to the size of
+      // a cover gives numbers about a cover.
+      if (sheet.getAnimations().some(a => a.playState === 'running')) return true;
+      // And the named ones underneath — but not a page turn, which moves the
+      // content sideways and leaves the header alone.
+      return sheet.getAnimations({ subtree: true }).some(a => a.playState === 'running'
+        && String(a.animationName || '').startsWith('lay')
+        && !String(a.animationName || '').startsWith('layFrom'));
+    };
+
+    // How far the record takes to become the header. Not the whole album
+    // screen — see the note beside `over` in measure().
+    // Where this record has to start, when it starts at the notes. Kept
+    // rather than set once: on the first frame the writing underneath may
+    // not be laid out yet, and a scroller shorter than the number simply
+    // ignores it — so it is asked for again until it takes, or until the
+    // record turns out to be short enough that the top is the answer.
+    let want = null;
+    // ── A record with too little written about it, 2026-09-20 ─────────────
+    // The changeover happens when the record's own words have gone under the
+    // header, and some records do not have enough page under them to get
+    // there — a cover, a score and two lines. Arriving at one of those from
+    // a reader meant the header could not finish becoming the record, so it
+    // showed the full card, and the swipe after it read that as "not
+    // reading" and took the whole run out of the reading state. Miyel:
+    // "randomly it will just decide the next swipe is a full card, like
+    // three swipes in."
+    //
+    // A record that arrives reading and cannot scroll far enough is already
+    // where it was going.
+    let stuck = false;
+    const settle = () => {
+      if (want == null) return;
+      const far = Math.max(0, screens.scrollHeight - screens.clientHeight);
+      const aim = Math.min(want, far);
+      if (aim < want - 1) stuck = true;
+      if (screens.scrollTop < aim - 1) screens.scrollTop = aim;
+      if (screens.scrollTop >= aim - 1) want = null;
+    };
+    // How long the shutter takes, and how far ahead of the last words the
+    // changeover starts. The lead is there for a fast thumb: at speed the
+    // line arrives and is gone before the eye has caught up with it, and
+    // sixty pixels of warning reads as the header getting there first rather
+    // than late (Miyel: "when you're scrolling fast it should happen a
+    // little quicker, or maybe sooner").
+    // How much scroll the whole handover takes. Not a duration: it is the
+    // distance your thumb travels while the two halves change places.
+    const SPAN = 90;
+    // ── And it finishes as the words do, 2026-09-20 ─────────────────────
+    // It used to start sixty pixels early, on a read about fast thumbs, and
+    // the cost was that the record's score was in the header while the
+    // record's score was still on the page underneath — Miyel: "I don't want
+    // anything doubled, it looks a little busy when I hold it. Maybe it
+    // needs to start a bit later." Nothing is doubled if the handover ends
+    // exactly as the last of the page's own words goes under.
+    const LEAD = 0;
+    let base = null;
+    // Whether the record has finished becoming the header. Kept from the
+    // last frame drawn, because the question gets asked at moments when
+    // there is nothing measured to ask it of.
+    let done = false;
+    // ── A page turn takes the record with it, 2026-09-20 ──────────────────
+    // Miyel: "in large card format, swiping albums takes the text away first
+    // then the art — they should swipe at the same time." Of course it does:
+    // the art is drawn by the header now, and the header is the one thing on
+    // this screen that does not slide sideways. The title and the score are
+    // in the content and leave with it; the cover stands there.
+    //
+    // So while a turn is in the air and the record is still the record, the
+    // header stands down and the page's own art — which is in the content,
+    // and slides — is the art again. They are the same picture at the same
+    // place at that point in the collapse, so the handover either side of
+    // the turn is not something anybody can see.
+    //
+    // Only while it is still the record. Once it is the header, the header
+    // is where it belongs and holding still is what a header does.
+    const middle = el => {
+      const r = el.getBoundingClientRect();
+      return { cx: r.left + r.width / 2, cy: r.top + r.height / 2, h: r.height };
+    };
+    const measure = () => {
+      settle();
+      if (!parts()) return;
+      if (!window.matchMedia('(max-width: 768px)').matches) {
+        base = null;
+        setCrowning(false);
+        return;
+      }
+      if (landing()) { base = null; setCrowning(false); return; }
+      const gone = screens.scrollTop;
+      if (!middle(art).h) { base = null; setCrowning(false); return; }
+      // The last words on the album screen: the posted line, or the chips if
+      // a listen has no date on it.
+      const last = document.querySelector('.ln-screen-one-posted')
+        || document.querySelector('.ln-screen-one-chips');
+      setCrowning(true);
+      // The slot's two heights, taken with nothing written on them.
+      if (ledeEl) { ledeEl.style.transform = ''; ledeEl.style.clipPath = ''; }
+      crown.style.removeProperty('--ln-slot');
+      crown.style.clipPath = '';
+      base = {
+        ledeH: ledeEl ? ledeEl.getBoundingClientRect().height || 28 : 28,
+        crownH: crown.getBoundingClientRect().height || 44,
+        // Where the notes come to rest: the album screen gone under the
+        // header. It is what the caret lands on, what a swipe from one
+        // record's notes lands on in the next, and where the changeover
+        // finishes.
+        ends: Math.max(1, one.getBoundingClientRect().bottom + gone - row.getBoundingClientRect().bottom),
+        // And where the header changes over, which is earlier: the last of
+        // the record's own words going under it. Miyel, on where it should
+        // happen — "maybe when you hit the caret, or the submitted-by, or
+        // that blank space." Past that line the album screen is a caret and
+        // air, so there is nothing left up there for the header to be about.
+        turns: Math.max(1, (last || one).getBoundingClientRect().bottom + gone - row.getBoundingClientRect().bottom - LEAD),
+      };
+      draw();
+    };
+    const draw = () => {
+      if (!base || !parts()) return;
+      // ── The handover is under your thumb, 2026-09-20 ──────────────────
+      // It was a clip that played when the scroll crossed a line, and Miyel's
+      // read of it was that a played animation is the wrong idea however it
+      // is timed: "it should move with your thumb — if you're slow enough you
+      // could hold it in the middle and see half of the logo and half of the
+      // mini card. That's how closely I'm looking at it. It doesn't need to
+      // be slower or faster, because it actually moves with the swipe."
+      //
+      // So it is a slot with two things in it, and the scroll is what moves
+      // them. Both travel *up*, because that is the direction the record is
+      // going: the journal's mark rises out of the top of the row and the
+      // record rises into the bottom of it, each clipped to the slot so what
+      // has left is gone and what has not arrived is not there yet. Hold it
+      // half way and you have half of each.
+      //
+      // Backwards is the same sum with a smaller number in it, so there is
+      // nothing to reverse and nothing to time.
+      const p = stuck ? 1 : Math.min(1, Math.max(0,
+        (screens.scrollTop - (base.turns - SPAN)) / SPAN));
+      const up = amount => `${amount.toFixed(1)}px`;
+      if (ledeEl) {
+        ledeEl.style.transform = `translateX(-50%) translateY(${up(-p * base.ledeH)})`;
+        ledeEl.style.clipPath = `inset(${up(p * base.ledeH)} 0 0 0)`;
+      }
+      // Said as a number and not as a transform: the leaf's own sideways
+      // drag is written on the sheet by LayerEntry, and the two are added up
+      // in the stylesheet. Two authors, one transform, neither overwriting
+      // the other.
+      crown.style.setProperty('--ln-slot', up((1 - p) * base.crownH));
+      crown.style.clipPath = `inset(0 0 ${up((1 - p) * base.crownH)} 0)`;
+      // How far through, for anybody who needs to know without measuring:
+      // the swipe asks this when it carries a reader to the next record.
+      document.documentElement.style.setProperty('--ln-turn', p.toFixed(3));
+      done = p >= 1;
+      setLedeDrawn(true);
+    };
+
+    // ── Reading on lands where you were, 2026-09-20 ───────────────────────
+    // A thumb sideways is turning a page, not opening a book. If the record
+    // you left had already gone up into the header, this one starts there:
+    // at its own notes, its own cover already collapsed. Not the same scroll
+    // position — albums have different amounts written about them, and 700px
+    // into a short one is the end of it.
+    //
+    // Before the first measure, so the numbers it takes are the ones this
+    // record is actually going to be drawn with.
+    if (arrivesReading) {
+      want = Math.max(0, one.getBoundingClientRect().bottom - row.getBoundingClientRect().bottom);
+      settle();
+      // And it arrives *as* the header, so the turn has nothing to stand the
+      // header down for. Without this the collapse waited the turn out the
+      // way it does when the record is still the record — and while it
+      // waited, the journal's mark had never been told to give the row up:
+      // Miyel, "the mini LN loads over the mini card on swipe."
+      done = true;
+    }
+
+    // ── A page that arrives after its own turn, and why it is left alone ──
+    // The sheet slides its content out to one side and the next in from the
+    // other, and a record is a fetch away — so on anything slower than a
+    // prefetch the animation is over before there is a page to move, and the
+    // writing appears where it should have arrived.
+    //
+    // Sliding it a second time here was worse: what you saw was the page
+    // land and then leave and come back (Miyel: "it loads once without the
+    // barcode glyph, then slides back in with it"). One arrival that misses
+    // its turn beats two arrivals. The fetch is the thing to fix, and it is
+    // a prefetch already — this is a dev-server reading, and worth judging
+    // again on a build.
+
+    // ── The gap carries you across itself, 2026-09-20 ────────────────────
+    // Between the last of a record's own words and the first of the writing
+    // there is a stretch of nothing: the album screen is a screenful and its
+    // facts do not fill one. Miyel: "I wish it kind of skipped you ahead to
+    // where you're already trying to get to — it's almost like it auto
+    // scrolls the gap for you, so you can't just stop in the middle."
+    //
+    // Which is not a snap. A snap owns the whole page and pulls back on
+    // every throw, and this site took its vertical snapping off this morning
+    // for exactly that (DECISIONS). This owns one stretch and nothing else:
+    // let go inside the gap and it finishes the gap for you, in whichever
+    // direction you were already going. Let go anywhere else and nothing
+    // happens at all, which is most of the record.
+    //
+    // Only once a finger is off the glass, and only once the scrolling has
+    // actually stopped — a throw that is still travelling is not somewhere
+    // anybody has stopped.
+    let held = false;
+    let idle = null;
+    let lift = null;
+    let ours = false;
+    let wentDown = true;
+    let wasAt = 0;
+    const onHold = () => { held = true; clearTimeout(idle); clearTimeout(lift); };
+    // ── It catches a record still moving, 2026-09-20 ─────────────────────
+    // Waiting for the scrolling to stop meant a light throw carried on for
+    // most of a second and settled wherever it ran out — Miyel: "even if the
+    // album is lightly scrolling it should still catch it and push it the
+    // rest of the way, not wait for a full stop."
+    //
+    // So a finger leaving the glass is the signal, not the scrolling
+    // stopping. On a timer of its own, which the scroll events cannot
+    // postpone the way they postpone the idle one below — that is the whole
+    // of what was holding it back, since momentum is a stream of scroll
+    // events and every one of them was pushing the answer further away.
+    const onLetGo = () => {
+      held = false;
+      clearTimeout(lift);
+      lift = setTimeout(rest, 40);
+    };
+    const rest = () => {
+      if (!base || held || ours) return;
+      const at = screens.scrollTop;
+      // ── The album screen is one stop, 2026-09-20 ───────────────────────
+      // The stretch was drawn round the dead air first, then round the
+      // handover, and Miyel could still find somewhere to stop above both:
+      // "it should happen on any slight movement down, I feel."
+      //
+      // Which is the simpler rule and the one she has been describing all
+      // along. The record is one thing to look at and the writing is the
+      // next; there is nowhere in between that anybody means to be. So any
+      // downward movement and a hand off the glass finishes the journey, and
+      // any upward one puts the record back whole.
+      //
+      // Holding it half way still works and always did: this only ever acts
+      // once a finger is off the glass, so a thumb resting mid-change holds
+      // the change for as long as it is there.
+      const from = 0;
+      const to = base.ends;
+      if (to - from < 80) return;              // no gap worth crossing
+      if (at <= from + 8 || at >= to - 8) return;
+      ours = true;
+      clearTimeout(idle);
+      clearTimeout(lift);
+      // Whichever way you were already going, not whichever edge is nearer.
+      // The gap is crossed on the way to something; being put back where you
+      // came from because you stopped an inch early is the opposite of
+      // "skips you ahead to where you're already trying to get to".
+      const home = wentDown ? to : from;
+      screens.scrollTo({ top: home, behavior: 'smooth' });
+      setTimeout(() => { ours = false; }, 500);
+    };
+    const settleLater = () => {
+      const at = screens.scrollTop;
+      if (at !== wasAt) wentDown = at > wasAt;
+      wasAt = at;
+      clearTimeout(idle);
+      idle = setTimeout(rest, 140);
+    };
+    screens.addEventListener('touchstart', onHold, { passive: true });
+    screens.addEventListener('touchend', onLetGo, { passive: true });
+    screens.addEventListener('touchcancel', onLetGo, { passive: true });
+    screens.addEventListener('scroll', settleLater, { passive: true });
+
+    measure();
+    // And again the moment the arrival is over, which is the measurement
+    // that counts.
+    if (sheet) sheet.addEventListener('animationend', measure);
+    // A finger on the sheet is the only one of the three that fires nothing
+    // else. Asked while the record is still the record, which is the only
+    // time the answer can change.
+    const onTurn = () => { if (!done) measure(); };
+    if (sheet) sheet.addEventListener('touchmove', onTurn, { passive: true });
+    if (sheet) sheet.addEventListener('transitionend', measure);
+    // The turn says so in the class list on its way in and on its way out,
+    // and both ends of it want a fresh answer.
+    const watchSheet = sheet ? new MutationObserver(measure) : null;
+    if (watchSheet) watchSheet.observe(sheet, { attributes: true, attributeFilter: ['class'] });
+    screens.addEventListener('scroll', draw, { passive: true });
+    screens.addEventListener('load', measure, true);
+    const narrow = window.matchMedia('(max-width: 768px)');
+    narrow.addEventListener('change', measure);
+    window.addEventListener('resize', measure);
+    const watch = new ResizeObserver(measure);
+    watch.observe(screens);
+    watch.observe(one);
+    watch.observe(row);
+    return () => {
+      if (sheet) sheet.removeEventListener('animationend', measure);
+      if (sheet) sheet.removeEventListener('touchmove', onTurn);
+      if (sheet) sheet.removeEventListener('transitionend', measure);
+      if (watchSheet) watchSheet.disconnect();
+      screens.removeEventListener('scroll', draw);
+      screens.removeEventListener('scroll', settleLater);
+      screens.removeEventListener('touchstart', onHold);
+      screens.removeEventListener('touchend', onLetGo);
+      screens.removeEventListener('touchcancel', onLetGo);
+      clearTimeout(idle);
+      clearTimeout(lift);
+      screens.removeEventListener('load', measure, true);
+      narrow.removeEventListener('change', measure);
+      window.removeEventListener('resize', measure);
+      watch.disconnect();
+      // Nothing taken away: the record arriving sets these for itself, and a
+      // leaving one that cleared them left the header blank for the length of
+      // a page turn — which is what took the record out of the row on a swipe
+      // and the reading state with it.
+      if (crown) { crown.style.removeProperty('--ln-slot'); crown.style.clipPath = ''; }
+      if (ledeEl) { ledeEl.style.transform = ''; ledeEl.style.clipPath = ''; }
+      // Not taken away. The record arriving sets it for itself, and a
+      // leaving one that cleared it was clearing the new one's answer.
+      setCrowning(false);
+    };
+  }, [printing, edit.editing, coverSrc, entry.slug, arrivesReading]);
+
+  // What the header carries on this page. A press goes back to the record,
+  // which is the job MiniCard used to do at the head of the notes — and the
+  // reason that card is not drawn on a phone any more.
+  const headerMark = (
+    // The whole strip is the way back up to the record, which is the job the
+    // mini card at the head of the notes used to do. The cover is not the
+    // code up here: the record's own art is on the page and still is, and
+    // pressing that is where the address comes from.
+    <button
+      type="button"
+      className="ln-crown"
+      onClick={backToTheRecord}
+      aria-label={`Back to ${entry.album}`}
+    >
+      <span className="ln-crown-art" aria-hidden="true">
+        {/* Synchronously, like the one on the page: this is the same picture
+            the record was just showing, and an async decode of a new element
+            is a frame with no cover in it on every turn. */}
+        {coverSrc
+          ? <img src={coverSrc} alt="" decoding="sync" />
+          : <span className="ln-crown-none">♪</span>}
+      </span>
+      <span className="ln-crown-hole" aria-hidden="true" />
+      <span className="ln-crown-said">
+        {/* A long record name scrolls rather than eating the row. There is a
+            cover to its left and a score and three marks to its right, and
+            past those the tools — so what is left for a title is about a
+            hundred pixels, and a title that ellipsises at a hundred pixels
+            is four letters and a full stop. The beacon's own marquee, which
+            is where it came from. */}
+        <MarqueeTitle text={entry.album} textClassName="ln-crown-album" />
+        {entry.artist && <span className="ln-crown-artist">{entry.artist}</span>}
+      </span>
+      {/* The score and the marks come with it — Miyel, on losing them with
+          the mini card: "maybe those can travel too." No glow and no burst:
+          both belong to the score arriving on the album screen, and a
+          firework going off beside somebody's reading on every scroll is the
+          same argument that took them off the mini card. */}
+      <span className="ln-crown-marks" aria-hidden="true">
+        {displayRating > 0 && <StarRating rating={displayRating} size={11} glow={false} animate={false} />}
+        <span className="ln-crown-flags">
+          {/* The envelope, the fourth mark. A record somebody sent wears it
+              everywhere else on this site and was the one thing the header
+              dropped. Faint ink, like the rest of them. */}
+          {entry.entry_type === 'Submission' && (
+            <span className="ln-crown-flag" style={{ color: 'var(--ink-faint)' }}><Envelope size={12} weight="regular" /></span>
+          )}
+          {(entry.favorite === true || entry.favorite === 'true') && (
+            <span className="ln-crown-flag" style={{ color: 'var(--fav, #f0484f)' }}><Heart size={12} weight="fill" /></span>
+          )}
+          {isMasterpiece && (
+            <span className="ln-crown-flag" style={{ color: 'var(--mp, #4a9bf0)' }}><SketchLogo size={12} weight="fill" /></span>
+          )}
+          {isFormative && (
+            <span className="ln-crown-flag" style={{ color: 'var(--formative, #3fa96b)' }}><Fingerprint size={12} weight="bold" /></span>
+          )}
+        </span>
+      </span>
+    </button>
+  );
+
   return (
     <div
-      className={'ln-entry' + (scrolled ? ' ln-entry--scrolled' : '')}
+      className={'ln-entry' + (scrolled ? ' ln-entry--scrolled' : '') + (crowning ? ' ln-entry--crowning' : '')}
       style={{ background: 'var(--bg)', minHeight: '100vh', color: 'var(--ink)', fontFamily: fonts.sans }}
     >
 
@@ -868,7 +1376,9 @@ export default function FullPostPage({ entry, references = [], authed = false, l
           swipe, so the mark and the tools hold still while the record
           beneath them changes. The slot wears this page's classes so the
           band behind the row keeps working — see the effect below. */}
-      {headerSlot ? createPortal(<SiteNav tools={keeperTools} />, headerSlot) : <SiteNav tools={keeperTools} />}
+      {headerSlot
+        ? createPortal(<SiteNav tools={keeperTools} mark={headerMark} lede={ledeDrawn} />, headerSlot)
+        : <SiteNav tools={keeperTools} mark={headerMark} lede={ledeDrawn} />}
 
       {/* A correction is open, and the page is long. The controls that started
           it are at the top of the entry, which is a screen and a half away by
@@ -876,17 +1386,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
           It is also the only thing on the page that says you are editing at
           all once the hero has scrolled off. */}
       {edit.editing && (
-        <div className="ln-editing-bar">
-          <span className="ln-editing-label">Editing</span>
-          <button type="button" className="ln-pin ln-pin--on" onClick={edit.save} disabled={edit.saving}>
-            <Check size={13} weight="bold" aria-hidden="true" />
-            <span>{edit.saving ? 'Saving' : 'Save'}</span>
-          </button>
-          <button type="button" className="ln-pin" onClick={edit.cancel} disabled={edit.saving}>
-            <X size={13} weight="bold" aria-hidden="true" />
-            <span>Cancel</span>
-          </button>
-        </div>
+        <EditingBar onSave={edit.save} onCancel={edit.cancel} saving={edit.saving} />
       )}
       {edit.trouble && <p className="ln-trouble">{edit.trouble}</p>}
       <div ref={setBarSlot} />
@@ -1236,7 +1736,6 @@ export default function FullPostPage({ entry, references = [], authed = false, l
                 slug={entry.slug}
                 trackIndex={-1}
                 comments={albumComments}
-                label={entry.album}
                 onRefresh={loadComments}
               />
             )}

@@ -40,7 +40,7 @@
 
 'use client';
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { QrCode } from '@phosphor-icons/react';
+import { Barcode } from '@phosphor-icons/react';
 import QRCode from 'qrcode';
 import AddressCode from './AddressCode';
 import { CODE_QUIET, LEAST_VERSION } from '../../library/code_shape';
@@ -168,7 +168,21 @@ export default function CodeSlot({
       )}
       {turnable && (
         <span className="ln-turn-badge" aria-hidden="true">
-          {turned ? backGlyph : <QrCode size={12} weight="bold" />}
+          {/* ── A viewfinder, not a code, 2026-09-20 ────────────────────
+              It was Phosphor's QrCode, and at twelve pixels a QR code is a
+              rounded square with some noise in it — Miyel: "it doesn't even
+              look like a Phosphor icon." It was a share glyph for an hour
+              after that and came straight off: the toolbar's own Share is
+              one of those, and two different things wearing one mark is
+              worse than a mark nobody can read. "We can keep it to a QR
+              idea."
+
+              A viewfinder's corners were the next answer and a barcode is
+              the one that stuck — Miyel: "use the Barcode Phosphor icon, it's
+              recognisable." It is: a row of bars is a thing that gets
+              scanned, at any size, with nothing else on this site wearing
+              it. */}
+          {turned ? backGlyph : <Barcode size={14} weight="bold" />}
         </span>
       )}
       {/* The words are added and removed rather than faded, because that is

@@ -1549,6 +1549,306 @@ Project → Settings → Environment Variables.
 
 ## Gotchas
 
+**A ResizeObserver says nothing about a transform, 2026-09-21.** The beacon's
+morph re-measures whenever the pane, the bar or floor one changes size. Start a
+listen and the crown folds away — height and padding to nothing, *and* a scale
+down to a quarter. The observer hears the height and not the scale, so its last
+word came while the box was still a fraction of itself, and `getBoundingClientRect`
+on a scaled ancestor returns a scaled rect. The mark's resting place was written
+down as the collapsed one and never revisited: 48px too high, after every
+session. Two halves to the cure — **do not measure a thing that is folded away**
+(read the class off the DOM, not a state the effect closed over), and **measure
+again on `transitionend` for `transform`**, which is the one frame the observer
+cannot give you.
+
+The folded test is not enough on its own: `hn--choosing` comes off the moment a
+session ends and the crown then takes 0.7s to grow back, so there is most of a
+second in which nothing is folded and nothing is settled either. The half-grown
+answers taken in that window landed the mark on the header's line, where it sat
+for a beat before dropping the last 48px into place — one arrival read as two.
+**A transform on the crown means it is still moving, and a rect read off a
+moving box is not a measurement.**
+
+**Holding the last good measurement means holding what it wrote, 2026-09-21.**
+Straight out of the above: skipping the measurement left `--ground` — the height
+of the opaque band behind the header, written from the mark's foot — at its
+full-size value, so 173px of header stood over the picker's search field. It was
+still hit-testable, which is why it took a screenshot rather than a click to
+find: the band is `pointer-events: none`, so `elementFromPoint` reported the
+field on top while the band was painting over it. **When a guard stops a
+calculation, ask what that calculation was writing.**
+
+**iOS opens the keyboard only inside the tap, 2026-09-21.** A `focus()` that
+runs in a `useEffect` is run *after the browser has painted*, which is past the
+moment Safari grants for raising the keyboard — the cursor lands in the field,
+the field looks ready, and nothing comes up until it is tapped again.
+`useLayoutEffect` runs inside the same turn as the press that caused it, so the
+focus is still the tap's. One word, in SendSheet.js.
+
+**A stylesheet can go stale without a build, 2026-09-21.** The known trap was
+`npm run build` while the dev server is up. This time nothing was built: five
+sheets were edited in one sitting (a sweep, then a block moved from entry.css to
+base.css) and the served bundle came out as a *mix* — entry.css fresh (the moved
+block gone from it), base.css stale (the moved block not in it). So `.ln-word`
+was in no sheet at all and every quiet word on the site rendered as 24px
+Nunito. (A first reading also blamed forms.css and nav.css, on seeing `.bk-` and
+`.edge-caret` selectors still served; those were live ones the sweep never
+touched, `.bk-scan`, `.bk-send`, `.edge-caret-mark`. Check the disk before
+calling a served rule stale.) The
+HMR socket had dropped in the meantime (`webpack-hmr ... failed`,
+`ERR_CONNECTION_REFUSED` in the console), which is the tell. **The diagnostic
+that settles it in one call:** fetch the served chunk from the page
+(`document.styleSheets[n].href`, `cache: 'no-store'`) and count selectors you
+know you added and ones you know you removed. Fresh and stale in the same file
+means the dev server, not the CSS. Restart it. The same dropped socket also
+produced a React warning that looked like a real bug — "the final argument
+passed to useEffect changed size between renders" on the send sheet, its old
+three-item deps against the new five — which is what a hot-swapped module says
+about a mounted instance. Reproduced only until a cold load: then zero errors.
+**A hook-order warning that names old code is HMR, not you; test it cold.**
+
+**Do not truncate the evidence, 2026-09-21.** Checking whether
+`.idc-count--masterpieces` was still used, the grep was piped through `head -4`.
+Four lines of RecordContents came back, none of them building the modifier, so
+it went in the dead pile — and IdentityCard, which builds it as
+`'idc-count idc-count--' + c.word`, was on line five. The rule that colours the
+card's masterpiece count was deleted and had to be put back. **A `head` on a
+verification grep is how a live rule gets deleted.** The pattern to keep: a
+class that never appears literally anywhere is not dead until you have checked
+what the code *builds*, with the whole output in front of you.
+
+**A flag on the cross written from outside HomeNav must be an attribute,
+2026-09-21.** The cross's `class` attribute is React's and is rewritten whole on
+every render, so `classList.add` from another component survives only until
+anything else on it moves. HomeNav learned this for the morph on 2026-09-20 and
+its note says the cure is to put the flag in the list React renders — which is
+not available from outside. `data-*` is: React never touches an attribute it
+does not render. `data-sending` and `data-editing` are that; **`hn--editing` had
+been a class since 2026-09-20 and had been failing silently the whole time**,
+which nobody saw because it only shows when a re-render and an open editing bar
+coincide. Measured: with the send sheet open the class was already gone.
+
+**Focus events do not fire in a window that is not focused, 2026-09-21.** A
+`focusin` handler looked dead in the Browser pane — `element.focus()` set
+`document.activeElement` and fired nothing at all, so a `hn--typing` flag that
+works perfectly on a tap looked like it had never been wired. Same family as the
+click below: **anything keyed on focus or on a gesture has to be tested with a
+real click through the pane, not a scripted one.**
+
+**A programmatic `.click()` is not a tap, 2026-09-21.** Testing the above from
+a script said the focus was still arriving late *after* it had been fixed. A
+click fired from an async script does not go through React's synchronous flush
+for a discrete event, so the layout effect really did run late — in the test
+only. Driving a real click through the browser pane told the truth. **When a
+fix depends on the timing of a user gesture, the test has to be a user
+gesture.**
+
+**No backticks inside a tagged template, 2026-09-20.** Including in an SQL
+comment inside a `database\`...\`` call. A backtick ends the template wherever
+it is, and the error points at the word after it rather than at the quote —
+"Expected a semicolon", on a line that is a comment.
+
+**A thing that must not be seen should not be drawn, 2026-09-20.** The
+journal's mark over an album was faded out by the collapse, and it kept
+appearing at full strength over the record's own card on a swipe. Four
+attempts, all the same shape: a number on the element (the header is a portal
+and the node had been replaced), a number on the document (the leaving record
+cleared it), a class on the slot (the arriving record overwrote it), and the
+number said in a state initializer (**React calls those twice in development**,
+so the side effect ran twice with two different answers). Every one had a
+window where the row had been drawn and the number had not been said. It went
+away the moment the mark stopped being rendered at all until there was a true
+answer for it. **If a frame of it is wrong, do not style it — do not draw
+it.**
+
+**One-shot handoff flags cannot be read twice, 2026-09-20.** `cameReadingOn`
+spent itself on read, and a state initializer's second call in development got
+`false`. The flags that survive this are the stamped ones — `cameBack` has
+always been a timestamp. Also: `arrivingBack()` is called by the history
+listener, so **a turn to a neighbour runs it too** — anything cleared there is
+cleared on every page turn, not just on a close.
+
+**On a phone the cross's panes paint under the bar, 2026-09-20.** Whatever
+`z-index` says. The crown carried `z-index: 96` against the bar's 95 and it
+works in a desktop browser; on a real iPhone the pane is composited under the
+fixed row and the mark vanishes into it. Two separate evenings were spent on
+this reading as two different bugs — "the big one disappears under the header",
+and then "I don't even see the logo any more". **Anything that has to be drawn
+over the bar has to be drawn *by* the bar** (see `.hn-bar-crown`).
+
+**A positioned child paints over a static sibling, 2026-09-20.** Order in the
+markup does not save you. `.hn-bar-ground` is absolute and `.hn-lights` is not,
+so the floor put the moon out on every screen — including in the preview
+browser, where it went unnoticed for an hour. Give the static ones
+`position: relative; z-index: 1`, and check the *whole* row after adding
+anything absolute to it.
+
+**A class an effect writes onto an element React renders, 2026-09-20.** The
+crown's morph flag was `classList.add('hn--morph')` on `.hn` — and `.hn` is an
+element whose `className` React builds from eight other flags. Any re-render
+writes the whole attribute back, so the first time something *else* on the
+cross moved (scrolling the book down to the feed) the flag vanished and the
+small mark it was hiding came back, on top of the address book's own header.
+It looked like a CSS bug and it is not one: React owns that attribute.
+**Anything an element wears goes in the className React renders — state, not
+`classList`** — unless React never touches that element's class at all.
+
+**Do not write prose comments between JSX attributes, 2026-09-20.** Four
+parse breaks in one day, all the same family. `{/* ... */}` is a *child*
+expression, so between attributes it is a syntax error, and the plain
+`/* ... */` that is legal there ends at the first `*/` in the text — which a
+comment explaining JSX comments naturally contains. **Notes go above the
+element, in a child comment, where prose belongs.** The dev server serves the
+error to every open page, including a phone across the room, so a careless
+comment is a broken site for whoever is watching.
+
+**`pane` is where the rail has scrolled to, not which room you are in,
+2026-09-20.** It is `round(scrollLeft / width)`, counted in panes — and a
+visitor's rail has fewer panes than a keeper's, because the inbox and the
+friends pane are both behind the wristband. So the index that is the book
+when somebody is signed in is a different pane when nobody is, and the bar
+said ADDRESS BOOK over the colophon to a visitor. **Anything keyed on `pane`
+that is only the keeper's has to be keyed on `authed` as well.** The
+arithmetic is right and it is answering a different question.
+
+**A row at the foot of a full-screen floor is behind the band,
+2026-09-20.** Putting the beacon's mark and spacing back to what they were
+made its floor a whole screen again, and the JOURNAL row at the foot of it
+landed at 761–812 — under the four doors, invisible. A record does not care,
+because a screen's content is measured from the top and nothing of it is lost;
+a row at the foot is exactly what the band is sitting on. The floor is
+`calc(var(--hn-h) - var(--hn-foot-h))` now: not a peek, just the band's own
+height, so the word and the chevron stand on the doors rather than behind
+them. **Any floor whose last child has to be seen has to clear
+`--hn-foot-h`.**
+
+**Taking the mark out of a three-column header left the middle column,
+2026-09-20.** `.sitenav-row` is `1fr auto 1fr` with the mark in the middle,
+and the mark stopped being drawn on everything but entries. The row then had
+two children for three columns, so they auto-placed into one and two — and a
+page's tools sat in the *middle of the row* instead of the right-hand end.
+The person's page had been doing it since the mark came off and nobody
+noticed; it only showed when the feed put a glyph up there, alone, dead
+centre. **Both sides name their column now** (`grid-column: 1` / `3`), which
+is what a named slot should have done from the start. Anything that removes
+one child of a three-column row should check the other two.
+
+**Do not press anything on this site by guessed coordinates, 2026-09-20.**
+Verifying the pin door, a click went in at a point read off a screenshot
+rather than at an element found by name, and it landed on a door in the row
+that also holds **Send** and, under it, **Remove**. It happened to be Pin, and
+the write it sent came back 409 because the cap held — but nothing about the
+method made that the outcome. **Localhost writes to the live database**, so a
+verification press is a real press. Find the element first (`find` /
+`read_page` → `ref`), read back what it is, then press it.
+
+**And the book can move while you are measuring it.** The same session read
+six people pinned, then three, then zero, then two, then three, with no click
+in between — the dev server is the one Miyel watches on her phone, and she was
+pressing pins on it at the time. A count that changes between two reads is not
+necessarily a bug in the page. Check the tab's own network log for the write
+before believing the page did it, and never "restore" state that looks wrong:
+it is likely somebody's hand.
+
+**Keyframe animations do not advance while the browser pane is not painting,
+2026-09-20.** Half an hour went on a close animation that looked dead: the
+element had the right class, `getAnimations()` reported the right names and
+`playState: "running"` — and `currentTime` stayed at 0 however long the script
+waited. The document was not being rendered, so its animation timeline was
+frozen; each forced screenshot advanced it by about one frame. **Sample an
+animation by interleaving screenshots, not by `setTimeout` alone**, and read
+`currentTime` rather than trusting a height that is not moving. A CSS
+transition looks like it is working in the same conditions, which is what
+makes this confusing: a few forced frames are enough to see a 320ms rotation
+move and not enough to see a 300ms height.
+
+**Two goes at a vertical snap, and the phone was right both times,
+2026-09-20.** `mandatory` on the cross's two-floor panes cost nothing while a
+second floor was one screen tall with its own scroller in it — two stops,
+nothing between them. The peek took the inner scroller out (a sliver of one is
+a scroller you can reach before arriving at it), the pane's own scroll went
+five screens deep, and mandatory spent all of it pulling back to the top of
+the feed. `proximity` was the obvious remedy and caught on a real phone
+exactly as it had in August. **There is no vertical snap on the cross now**,
+and `scroll-margin-top` on the second floors stayed: it is what `goDown` reads
+to know where the press should stop, so it is load-bearing with no snap left
+to serve. Do not delete it as dead.
+
+**A box with `overflow: auto` is a scroll container whether or not it
+overflows, 2026-09-20.** The shelf of faces carried `overflow-y: auto` all the
+time, on the reasoning that the rows always fit so there would be nothing to
+scroll. True, and not the point: on a phone that box still takes the first
+part of every drag that begins inside it before deciding it has nowhere to go,
+and the faces fill most of the floor — so that was most of the drags anybody
+makes on that pane. You pull down over somebody's face and the pane does not
+move. **Give a box `auto` only while it has something to scroll**, and flip it
+on a press rather than during a scroll.
+
+**A mandatory snap over a floor taller than the screen is a scroll that
+fights you, 2026-09-20.** The cross's two-floor panes snapped `mandatory` for
+a week and it cost nothing, because a second floor was exactly one screen tall
+with its own scroller inside it: two stops, nothing between them, and "must
+rest on a stop" was always already true. Giving those floors a peek meant
+taking the inner scroller out — a sliver of an inner scroller is one you can
+scroll before you have arrived at it — and the moment the pane's own scroll
+ran five screens deep, `mandatory` started pulling back toward the top of the
+feed on every throw. Miyel, from a phone: "scrolling feed doesn't scroll
+freely, it's sticky." **`proximity` snaps when you finish near a boundary and
+leaves you alone everywhere else**, which is the only strictness that suits a
+pane with one boundary and a long way past it.
+
+**And a press has to do for itself what the snap used to do for it.** `goDown`
+scrolled to the second floor's own top and let `mandatory` correct the last
+80px, which is `scroll-margin-top` on that floor. Proximity does not correct,
+so the number has to be right when it is asked for — read off the floor's
+computed `scrollMarginTop`, not off `--hn-bar-h`, because a custom property
+comes back as the `calc()` it was written as and `parseFloat` quietly takes
+the first number in it.
+
+**A sliver of a nested scroller is a scroller you can reach, 2026-09-19.**
+The book's second floor was built the way the journal's is — a screen-tall
+floor with its own scroller inside it — and it worked exactly as badly as that
+sounds. The journal's floor is never visible until you arrive at it; this one
+shows 150px of itself at rest, and a wheel over that sliver scrolled the feed
+*inside its box* while the pane sat still on the faces, sliding records up
+behind a heading that stayed put. **If any part of an inner scroller is
+visible before you have arrived at it, it must not be an inner scroller.** The
+floor is a snap area taller than the screen instead, which the snap spec
+allows to rest anywhere once it covers the port: it catches you on the way in
+and then gets out of the way.
+
+**A flex child cannot measure the room it is in if the parent sizes to it,
+2026-09-19.** The shelf asks how tall it is and divides by a row. It was
+answering with the height of the faces already in it — perfectly stable,
+completely wrong — because every box above it in the chain was `min-height`
+and grew to its contents. The floor is `height` now, not `min-height`, which
+is the one place on this site that is right: what would overflow is a
+scroller, and the thing below it is a sliver that must not be pushed off the
+screen. **A measured layout needs one box in the chain whose height does not
+come from its contents.**
+
+**An undefined custom property throws away the whole declaration,
+2026-09-19.** `padding: 24px var(--page-gutter) 40px` with no `--page-gutter`
+in scope is not "24px 0 40px" — it is invalid at computed-value time, and the
+element gets no padding at all. The feed's wrapper had been running with zero
+side padding on every phone since it was written, and nothing showed it,
+because the only thing in it that touched the edges was a row of tabs centred
+in the middle of the page. **Write the fallback: `var(--x, 24px)`.** The
+failure is silent, it is total rather than partial, and it surfaces the day
+somebody puts something at the edge.
+
+**A callback with no dependencies holds the first render's world,
+2026-09-19.** The cross's `measure` listed nothing and closed over the list of
+panes, which was fine for as long as that list was fixed. It stopped being
+fixed the moment the rail had a different shape for a keeper than for a
+visitor — and the first render of a keeper's cross is always the visitor shape,
+because the lock has not answered yet. So the callback was measuring a rail
+that no longer existed, forever. **When a value that a memo or a callback
+closes over starts depending on state, every one of them has to list it**, and
+an `eslint-disable-next-line react-hooks/exhaustive-deps` is exactly where that
+will not be noticed. Two in the same file had it; both were wrong the moment
+the list moved.
+
 **A stale stylesheet outlives the dev server, 2026-09-19.** The note already
 below says a restart may be needed after editing a global sheet. It is worse
 than that: a restart is sometimes *not enough*. Half an afternoon went on a
@@ -2670,6 +2970,1141 @@ current.
 
 ## Complete
 
+**2026-09-21 — Words instead of pills, and one send flow by either door.**
+Save and Cancel on the editing bar are plain uppercase words with a hairline
+under the one that commits (`.ln-word`), no tick and no cross. Four screens
+share that band by design and all four changed together: an entry, the
+identity card, crediting a send, and the session preview. The band is exactly
+the height it was — the new line-height is pinned to the old number — and the
+error band's Close keeps its pill, since that is not editing.
+
+The send sheet is the same flow whichever door you come in by. Whichever half
+is still a question gets the whole sheet: a wall of covers from a friend's
+row, a wall of faces from a record's tools. Then the identical screen either
+way — the cover centred over its name, the message, the credit switch, and a
+button with a name in it. The strip of faces inside the form is gone, and the
+record is the centred stack on both routes rather than a left-aligned row on
+one, with **Change** under it only when the record was the half you picked.
+
+The four doors step down off the screen while the sheet is up and come back
+when it closes (`hn--sending`, kept separate from the card's `hn--editing`,
+her call). The cross sizes itself to the part of the window you can see, so a
+keyboard was walking the nav row up into the gap between the sheet and the
+keys. And choosing a person now brings the keyboard with it — see the first
+gotcha.
+
+Loose end: coming from an album, once a face is picked there is no way to
+change it short of closing the sheet. The message is kept, so nothing is lost;
+whether it wants a Change of its own is open.
+
+**The comments, rebuilt.** Miyel: "I feel like they are so outdated. The box is
+old. It's a thing that has not been touched since we have basically designed
+every new aspect of this site." It was the last corner of the entry still
+carrying its styling inline — a hand-drawn speech bubble, 6px fields on a
+frosted panel, a filled `--accent` button with its text colour written out in
+hex, a reply form that opened as a modal over a dimmed screen. All three files
+are class-only now (`.ln-say-*` in entry.css) and nothing in them is a value
+that is not a token.
+
+Two of those were not just old, they contradicted things written down since.
+**The reply modal** went: CommentBubble had already argued, in its own file,
+that a comment belongs under the note it answers rather than in a box on a
+dimmed screen — and CommentThread two screens below was still doing exactly
+that, quoting a clamped copy of the comment so you could read what you were
+answering *once it had been covered over*. The cure for hiding the thing is not
+to reprint it. **And the filled accent button** went: the words that commit are
+`.ln-word` now, the same pair the editing bar carries.
+
+**And then the form lost most of itself.** The heading went — ADD A COMMENT, and
+under it the name of the track: "we know what song we're on, that's extra bulk."
+It opens under the note it answers, and where a thing opens is what it is about.
+The same goes for the reply form's REPLY TO <name>, with the name on the row
+directly above it.
+
+**A keeper signs with their face.** "We don't need name if you're commenting
+from a journal — it can just put your keeper name and pfp bubble." Where both a
+name and an address are known, the two fields become a portrait and a name, with
+`Not you` as the way out; the portrait is `.ln-sender-portrait`, served from the
+visitor's own journal, the same object the address book draws. Both or neither:
+an address with no name is a face with nothing to call it, and the fields come
+back for anything short of both, prefilled, so there is at most one thing left
+to type. **A stranger still just types a name**, which is the whole of what the
+field was ever for.
+
+**Does it work on somebody else's copy?** Yes, if they got there from their own
+— the address book's, the feed's, the person's page's and the inbox's links all
+carry `?from=` and `?as=` (`carrySender`), and the journal landed on keeps them
+and clears the bar (`noteArrival`, called from Bookplate on every page). Proved
+end to end: arriving at an entry as `?from=userone-silk.vercel.app&as=June` put
+June's name and her own journal's portrait on the form with one field left.
+**Arriving any other way — a typed URL, a text, a scanned code, a shared card —
+carries nothing**, and that is the honest limit: storage is per origin, which is
+also the reason nobody can be followed from one journal to the next. Then it is
+one name, once, and remembered on that journal after.
+
+**The placeholder is "Leave a comment"** ("Leave a reply" inside a branch), and
+the form takes the cursor as it opens, so the keyboard is already up — a layout
+effect, inside the tap, for the reason in the gotcha above. No `preventScroll`
+here, which is where it differs from the send sheet: the sheet places itself
+against the visible window and has nowhere to scroll, and this wants the
+browser to carry the field up over the keys. What lets it is 96px of floor
+while a form is open (`.ln-saying`, written from NewCommentForm, which is
+mounted exactly when one is) — the same floor a correction and a credit already
+ask for. Measured with the last track's form open: the Post row sits ~100px
+below the window and there are 365px of scroll left under it.
+
+**The four doors step down while you are typing** (`hn--typing`, HomeNav's own
+state). Miyel, filtering her journal: "I shouldn't see the footer between the
+keyboard again." Same cause as the send sheet's: the cross is made as tall as
+the part of the window you can see — which is what stops everything sliding up
+when a keyboard opens — and the band is held against its bottom edge, so a
+keyboard walks the four doors up into the middle of the screen. This one is the
+general answer rather than a third named case: any field the cross contains,
+which covers the journal's filter, the book's, the picker's and whatever comes
+next. It also turned up the attribute gotcha below.
+
+And the gap it left. The wall's search bar sticks at `bottom: var(--hn-foot-h)`
+— it stands *on* the band, deliberately, so a wall parked over the band does not
+leave somebody with no way to the card. With the band gone for the keyboard it
+was standing on nothing, 54px of it. The offset is for the band, so no band, no
+offset (`.hn--typing .arc-bar-wrap`), which is the same sentence the standalone
+wall's fallback already makes. Then the wall's own floor went with it, on her
+ask: that padding is the home indicator's room, and the home indicator is not at
+the bottom of what you can see while a keyboard is over it. Both phone-only and
+both only while a field has the focus. Measured: the bar's bottom edge lands on
+the keyboard line exactly, and goes back to standing on the band on blur.
+
+**Tried and reverted: the journal's filter as an editable block.** Miyel: "is it
+possible (site wide) to have it JUST be a keyboard here and not a keyboard with
+up down and checkmark options." That strip is **iOS's own form bar**, hung over
+the keyboard for any focused `<input>`, and **no attribute, meta tag or
+stylesheet rule takes it off** — that part is worth keeping, because it is the
+answer every time the question comes up. The one thing known to dodge it is to
+stop using a form field: `contentEditable` is rich-text editing as far as iOS is
+concerned.
+
+Built on the filter alone (never sitewide — an editable block cannot be
+autofilled, and the comment and send forms live on the return address coming
+back by itself). It passed everything in the pane: caret stayed put while
+typing, placeholder came back on empty, `?q=` filled it, paste forced to plain
+text. **On a real phone it was worse than the bar** — "it broke it more than
+help" — and it came straight back out.
+
+**So: do not try this again.** The form bar is iOS's and it stays. What is
+salvageable from the attempt, if something like it is ever needed: React must
+never render an editable block's text (a re-render on a keystroke puts the caret
+back at the start), the placeholder has to be drawn in CSS, and paste has to be
+forced to plain text. All three are in the git history of this day.
+
+**A sweep of the stylesheets before merging.** Sixty-odd class names that
+nothing in the tree referenced, mostly whole families left behind by things that
+were replaced: `.bk-*` (an old address-book panel), most of `.idc-*`, `.pp-*`,
+the session's pre-overhaul `.ses-album*`/`.ses-source*`/`.ses-chip`/`.ses-pulse`,
+`.fd-view*` (the feed's old toggle, now `.fd-dense`), and `.sn-label`, which only
+died that morning when the send sheet's To row became a step. About 300 lines.
+`EdgeCaret.js` went with its rules — nothing had imported it.
+
+Every one was checked against class names the code *builds* rather than spells
+out, which is the only way this is safe: `.ln-mark--fav`, `.ses-mark--formative`
+and `.ln-flag--fav` all look unreferenced and are live. One was got wrong anyway
+— see the first gotcha. **`session_components/backgrounds/` was left alone**:
+eleven files and 2,040 lines that nothing imports, but this project parks things
+on disk on purpose and that is Miyel's call, not a sweep's.
+
+**And a second, tidier pass.** Nine imports nothing used (an entry still
+importing the address book and `Link`, the session page a bookplate hook, the
+finder two glyphs, the plate an `ellipsize`, the book an `X`) — each verified by
+counting mentions with the whole output in front of me, after the morning's
+lesson; four flagged in IdentityCard turned out to be live and were left. One
+rule declared twice word for word (`.lay--settling .lay-content`). `data-typing`
+in LayerEntry, set on every focus and read by nothing, is gone — the trap it was
+written around now lives beside the one place that test is actually used,
+HomeNav's typing effect. And `.ln-word` moved from entry.css to base.css, where
+the shared pieces live: it stopped being the entry's the moment it went on the
+card, the credit, the preview and every comment.
+
+**Not touched, on purpose:** twenty-one library exports nothing imports. Some are
+kept by decision (`pull_briefing`/`save_briefing` — NOTES says the `briefings`
+table stayed), some are used inside their own file with a needless `export`,
+some are the printer's and the code's helpers. Deleting a library function is
+removing a capability, not cleaning, and that is a decision per function.
+Thirty inline `style={{}}` objects remain on the entry page — the last real "old
+box" — and converting them is a job of its own, after the merge.
+
+**The editing bar is one component.** It was the same fifteen lines written out
+by hand in three files — an entry being corrected, the card being corrected, a
+send being credited — sharing a stylesheet and nothing else, and it cost twice
+in one day: turning the pills into words was the same edit made three times, and
+the session preview had already drifted into having no glyphs while the other
+three still did. `EditingBar` owns the band, the word for what you are in the
+middle of, and Save and Cancel, because all three said exactly that and said it
+identically; a bar that only lent out its band would have left the two words to
+drift the way the glyphs did. Each call site is one line now.
+
+It does **not** own the session preview's foot. That borrows the look on purpose
+and says so in its own file, but it is a different class at a different height
+over a different surface, and its words are Go back and Save to journal — a
+different act, deliberately worded differently. Borrowing the look is not being
+the thing. The editing *state* stays two hooks, `useEntryEditor` and
+`useIdentificationCardEditor`, which is a decision already recorded in the first
+one's own opening note.
+
+**And a stale note corrected while in there.** `.ln-screen-two-scroll` is *not*
+the element that scrolls, though the note on the editing rule still said so —
+`.ln-screens` is, and has been since the entry became one page instead of two
+snapped screens on 2026-09-20. The padding works either way, because room at
+the end of the content is room the scroller can use; it was the reasoning that
+had gone stale, and anybody "fixing" it would have moved the rule onto the
+element it is already on.
+
+Two behaviours changed on the way, both small. The form imported `keepSender`
+and never called it, so a reader's name was read back on the next journal but
+only ever *written* by the send form — someone who comments and never sends a
+record was asked who they are every time, under a comment promising otherwise.
+And the reply half never sent `author_url` at all, so answering somebody cost
+you the link to your own journal that commenting did not. Both gone, because the
+two forms are now one component with a `parentId`: there is no second copy left
+to drift.
+
+And three in the beacon's mark, found from one report (Miyel: "when starting a
+session the LN. large logo is on the screen blocking minibeacon"). The mark the
+*bar* draws — the phone's copy, newer than the pane's — had never been told to
+stand down while a record is being chosen, so it sat at full strength over the
+mini beacon, which is centred on the same pixels of the same row. It leaves out
+of the top of the screen now and comes back down from it — it faded for an hour
+first, and Miyel: "i dont like fade outs." The movement is on the svg rather
+than on its box, because the box's transform is the morph's and written every
+frame; the mark inside had none, which made it the free surface. 0.7s each way,
+which is the crown's own clock: the sinking curve out, the arriving curve back.
+
+**And on the way in they take turns — `MAKE_ROOM_MS`, 300.** The press starts two
+movements through the same strip of screen: the mark leaving out of the top, and
+the record flying out of the card into the bar (`TO_THE_BAR_MS`). On their own
+clocks they collided — measured, the cover slid through the logo from 220ms to
+520ms (Miyel: "i dont want them overlapping"). **It is not a race the mark can
+win by hurrying**, because the cover is faster and starts below it; matching the
+mark to the flight's curve cleared it, but cost the exit any chance of being
+slower. So the cover waits instead: it holds at the card for 300ms while the
+mark sweeps out, then travels. The card is standing down through all of it (its
+own 0.7s), so nothing is left hanging anywhere. The whole way in is 920ms,
+measured, with no overlap at any frame.
+
+The record's *name* flies on its own transform, separately from its cover — give
+one the wait and not the other and the two halves of one object arrive apart.
+Traced together: both hold to 300, both set off at 360, both land at 900. The beacon
+carries its own z-index, because an explicit 1 on the mark beats a later
+sibling's auto. Behind all that: the mark parked 48px high after every session,
+the header's backing then stood over the search field, and the return landed in
+two stages. All three in the gotchas — they are one root.
+
+**2026-09-20 — The record becomes the entry's header, and a screen is two
+stops.** On a phone an entry is one page rather than two snapped screens.
+The album screen goes up and under the header the way any page goes under
+any header, and where the journal's mark was there is now the record —
+cover, name, score and marks, with the mark and the record changing places
+in a slot the scroll drives. Hold your thumb still half way and you have
+half of each; there is no animation in it at all.
+
+The turn between records is one page: the writing leaves one way and the
+next comes in the other, and the record in the header leaves with it. A turn
+out of the reading lands in the reading, and out of a card lands on a card.
+
+And any screen with a floor under it — the entry, the beacon, the book — is
+two stops. Move down at all, take your hand off, and it finishes the
+journey; move up and it puts the first floor back whole. Not a snap: see
+DECISIONS, and the twin notes in FullPostPage and HomeNav.
+
+The long way round is worth knowing, because four of the five attempts are
+still instructive and all of them are in the log: the mark travelled and
+lagged, then held still behind an opaque header, then collapsed on a timer,
+then cross-faded — each one right about something and wrong about the feel.
+What settled it was making the scroll the clock and drawing nothing that
+could be half true.
+
+Also here: the album arrives by growing out of the tile again, the code's
+badge is a barcode, the down carets go once you are going, the beacon keeps
+the song a listen ended on, and the feed's view button came back from behind
+the header's floor.
+
+**2026-09-20 — The beacon's header is a tall one, and the mark is the
+header's.** The big mark used to scroll away and a small one faded in behind
+it. It morphs now: it holds its place at full size for the whole of the
+beacon, everything on the floor passes *under* the header, and the shrink is
+spent on the wall's arrival — it begins as the caret reaches the foot of the
+header and ends as the first row of covers lands under it, which is the same
+moment the caret goes behind. 82px to 28px, landing on the bar's line, and
+the whole of it in the last stretch with the albums already coming up.
+
+The header has a floor to make that true: the page's own colour, so there is
+nothing to see at rest, reaching to just under the mark at whatever size it
+is. Both are drawn by the bar and not by the pane — see the two painting
+gotchas above, which is where the four evenings went. Landmarks are measured
+rather than written down, and re-measured when a picture finishes.
+
+Also here: the small mark now shows over the beacon and nowhere else, the
+wall's first row sits eight pixels under the header instead of ninety-six,
+and the morph flag is React state so a re-render cannot wipe it.
+
+**2026-09-20 — A portrait is cropped to the square it is shown at.** Miyel,
+and it is a real one: "long pressing images of people shouldn't show the
+entire picture, the picture uploaded should be cropped to the size, just
+privacy wise."
+
+Every surface that draws a portrait draws it square — the card, the faces in
+the book, the small one beside a record in the feed — and the squareness was
+`object-fit: cover` and nothing else. So the file kept the whole photograph
+and the page merely hid its edges, which is not hiding. `/api/portrait` is
+public, because the face on the front of a journal is, so anybody could ask
+for the file and get the parts that were never on screen; on a phone a long
+press offers exactly that. Measured on this copy: the stored picture was
+507×900 and 393 rows of it had never been on a screen.
+
+- [x] **Uploads are cropped in the browser** to their middle square, which is
+      exactly what `cover` was showing. Nothing on any page changes.
+- [x] **And what is already stored is cropped on the way out**, with sharp, so
+      no one has to re-upload to stop showing the edges of a picture. A
+      portrait that is already square costs one metadata read and is handed
+      back untouched, and a picture sharp cannot read is served as it always
+      was — a 500 where a face should be is worse than a face.
+- [x] **Long press is taken off other people's faces** in the book and the
+      feed. That half is a guard rather than a fix: those files are served by
+      *their* copies and stay whole until each of them updates. The keeper's
+      own portrait on their own card keeps its long press — it is their
+      picture and saving it is a thing they might mean.
+
+**What this does not reach: caches.** The route answers `immutable` for a
+year, and a friend's portrait is fetched at a bare address with no version on
+it, so a browser that already has the whole picture keeps it. Re-saving a
+portrait busts its own copy's cache. Nothing busts a year-old copy of somebody
+else's, which is an argument for a version on that URL and is not built.
+
+**2026-09-20 — The book has a header again, and people can be pinned.**
+
+- [x] **ADDRESS BOOK and a count**, in the slot rather than on a row of its
+      own — a row of its own is 48px of header over a page whose argument is
+      that it is faces and not furniture. The slot already held two things and
+      showed one; this is the third, and it leaves the way the search does.
+- [x] **Three large faces above the rest, and no labels.** They had PINNED
+      and EVERYONE over them for an hour and Miyel took both off: the size and
+      the position say it, and two labels on a page of ten faces are two more
+      words than the page can spare. A search puts them back into one flat
+      list, because a pinned section that answered a search would be telling
+      you where somebody sits rather than that they are there.
+- [x] **Six is the cap**, which is two rows of three at 92px — up from 84,
+      "a smidge bigger, I know there's not much space". **The rule is in
+      `people_actions`, where the write is**: a seventh is refused with a 409
+      and a sentence. Friends.js keeps its own copy of the number so it can
+      grey the door out before it is pressed, and cannot import the other one
+      — that module opens the database and this one runs in a browser. If they
+      ever disagree the write wins and the door is merely wrong about itself,
+      which is the right way round.
+- [x] **The feed's name sticks in the header once you are on the feed.**
+      "Let feed word stick in the header without the caret on scroll." The
+      word rises with the floor it stands at the foot of, goes under the bar,
+      and comes back in the middle of the bar without its chevron — there is
+      nowhere further down from there, so the chevron has nothing to say. The
+      middle is free on this pane because the small mark is the beacon's, and
+      the word is out of the flex flow entirely, so it cannot move the toggle
+      at the end of the row however long a floor's name gets. It is also
+      `pointer-events: none`: the strip that takes you back to the top fills
+      this row, and a word on the middle of it would be a dead spot in the one
+      place a thumb lands.
+      **And then the word at the foot went, 2026-09-20 (evening).** "Those
+      down carets on feed and journal can just be larger and bob up and down
+      to show there's more vs having more text." So there is nothing to travel
+      from: the name is not climbing into the header any more, it is appearing
+      once you are on the feed, and it fades in for that reason. The whole
+      carry — `CARRY_FROM`, the `--hn-say-y` the bar followed, the chevron's
+      fade, the z-index that let it cross the bar — came out with it. What
+      follows is why it was built, which is worth keeping: the same handover
+      will be wanted again the next time two of anything have to look like
+      one.
+      **One word, not two and a swap.** The first version handed over at the
+      line and it showed: "there's a split second where it goes past the
+      hairline and disappears until it hits the middle." The bar has an opaque
+      ground, so the travelling word was eaten from the top as it climbed into
+      it, and the bar's own word then turned on higher up — two objects, and
+      the eye reads the gap. Now the bar takes the word over 120px out and
+      draws it *at the travelling word's own middle*, clamped at the line: the
+      button's word goes invisible on the same frame, the chevron has already
+      faded, and what is left is one word that climbs, stops, and stays.
+      Measured at 158/158, 118/118, 78/78, 53/53 and then 51, 51, 51.
+      **The book's way down is drawn over the bar, not under it**
+      (`z-index: 96`), which is what stops it being eaten on the way in. The
+      beacon's is not: a chevron riding over the header there would be drawn
+      on somebody's cover art. And only the *word* inside the button hides, so
+      the button keeps its tap — a hidden child does not take a parent's hit
+      area.
+      **And the toggle now waits for the same moment** — it was appearing
+      eight pixels into any scroll of the pane, because it was keyed on
+      `down`, which is the flag for *this pane has moved at all*.
+
+- [x] **Correcting the card wears the entry's clothes.** "Edit ID page should
+      take same look as edit mode in entry with same footer to end editing."
+      The tick and the cross came out of the top corner and the entry's own
+      `.ln-editing-bar` goes up at the foot — EDITING, Save, Cancel, class for
+      class, so the two corrections are one mode. `.ab-pane--editing` gives it
+      96px of room, on the pane, which is the box that actually scrolls.
+      `.idc-tool` and `.idc-tool--keep` are gone with the buttons they dressed.
+      **The band and the bar change places rather than stacking.** Drawn over
+      each other they were two rows in one strip and it read wrong — "the
+      issue is that in edit mode the site nav bar is at the bottom and on
+      entry editing it isn't", which is the thing an entry never has to solve.
+      The band drops out of the window as the bar rises into it, and on the
+      way back the bar sinks first and the band follows a beat later
+      (`transition-delay` on the way up only). They are joined by
+      `.hn--editing`, a class About puts on the cross, because the band is
+      HomeNav's and the bar is About's and the two share no component short of
+      HomeNav. `barGoing` keeps the bar mounted for its own way out:
+      unmounted on the frame editing ends, it vanishes rather than leaves.
+- [x] **Edit is the first tool behind the ···**, which is the shortest reach:
+      the row opens back towards the mark that opened it, so the head of the
+      list lands nearest the thumb. It is also the one that gets pressed.
+- [x] **The pinned record says it can be changed.** "Editing pinned album
+      should be more obvious you can swap that out." In a correction the row
+      looked exactly as it looks printed — a pin, a cover, a title — so the
+      one thing that had changed about it, that it is now a door, was
+      invisible. **Three goes at saying it**, and the third is the one: a
+      CHANGE pill borrowed from the photograph ("I don't even like the pill
+      for change"), a Swap mark borrowed from the eyes ("I don't like icon
+      either"), and then the row itself as a slot — a dashed rule round it,
+      tight to what it holds, and no words at all: "we can even remove update
+      pin, I think it's able to understand without it." It is the only one of
+      the four that does not stand a control inside a control, and a dashed
+      box round the one object on the page that is not writing says place
+      something here on its own. In a correction only: printed, the row is a
+      link, and a dashed box round a link is a form on somebody's card.
+- [x] **The empty slot is the blank square and three words.** It held four
+      things — a pin, the square, `Choose a record` and `Nothing pinned` under
+      it — and two of them were instructions: "just center nothing pinned, we
+      don't need choose record." The square stayed on its own merits ("I liked
+      the stand-in blank album that was there though"): an empty slot the
+      shape of a record says what is missing better than a sentence does.
+- [x] **The pin glyph is off the card entirely.** A filled pin stood beside
+      the cover in both states from 2026-09-15, where the word PINNED had
+      been — "let's remove pin icon from ID card entirely, the edit mode makes
+      it noticeable." It was a mark explaining a thing that needs no
+      explaining: one record on somebody's card, under their face and over
+      their writing, is plainly the one they chose, and nothing else on the
+      page is a record at all. The word survives on the row's own label.
+
+- [x] **And you pick one off a wall of covers.** "The selection should be grid
+      of albums not list." Three across, the cover square, the album name
+      under it, the one you have marked by a tick in its corner and nothing
+      else — "we know it's chosen from the tick mark", and a hard rule drawn
+      over somebody's cover is what came off the chosen face in the address
+      book on 2026-09-19 for the same reason. There is a hairline under a
+      pointer and that is all. The
+      artist goes: between the picture and the title it is the third thing you
+      need, and it stays on the label for anybody who cannot see the picture.
+      `.ab-pin-list` and `.ab-pin-hit*` are gone with the rows.
+      **Half a screen, not most of one.** It rose to the window less 72px,
+      which is not a sheet over a page, it is a second page — and the card it
+      covered is the thing you are choosing *for*, so you could not see what
+      you were changing. 56dvh, or whatever the keyboard leaves, whichever is
+      smaller. That is also what was cutting the search off.
+      **And the two pills at its foot are gone.** Done was saying nothing —
+      pressing a cover chooses it and closes, and the screen above the sheet
+      closes it without choosing — so it was a button for the thing that
+      happens anyway. Pin nothing stays, as one quiet caption line: `.ln-pill`
+      is for navigation and for a screen's one primary action, and on a sheet
+      whose primary action is forty covers it is neither. It says **Remove
+      pin** and not Pin nothing: the old wording named the outcome, which is a
+      state, and this names the act, which is what a control is for.
+- [x] **The opening is full ink**, not a step quieter. At the display weight
+      and four pixels smaller it already reads as the smaller of the two, and
+      the grey was making a question somebody chose look like boilerplate.
+
+- [x] **The openings are set in the pinned record's face.** "Can the prompt
+      question use the font we use for pinned album titles." They were the
+      caption face — ten pixels, small caps, wide tracking — which is what
+      this site puts on labels, and an opening is not a label: it is a
+      sentence somebody is answering. Nunito at the display weight, 15px,
+      sentence case, a step quieter than the answer under it.
+- [x] **The pop-down is the site's panel.** "Popdown for choosing prompt needs
+      to match site better in edit mode." It was a warm ground inside a
+      hairline box, a shape nothing else here wears — the site's raised
+      surfaces are `--panel` with a generous corner and no rule, which is what
+      the answers print on further up the same column. The chosen row is lit
+      and ticked rather than boxed (DECISIONS, a control is the mark); a
+      bordered row inside a bordered panel was two boxes deep for one answer.
+- [x] **And the openings lose their trailing dash in the editor.** It was
+      stripped at the print and left on everywhere else — on the line you
+      press and on all nine in the list, where a column of sentences each
+      ending in a dash reads as nine unfinished thoughts.
+
+- [x] **Every tool says what it is.** It hung on how many there were — glyphs
+      alone up to three, glyph-over-word past that — and Miyel took the count
+      out: "toolbar should be uniform across site, those glyphs should be
+      labels." The count was the wrong thing to hang it on. A control that
+      changes what it looks like depending on how many neighbours it has wears
+      two faces on two pages, and the card had just gained a third tool and
+      would have changed clothes for it.
+- [x] **And the space under the rig closed.** "There's a strange space
+      between rig and version/report." Three helpings of air stacked: 40px at
+      the foot of the writing, 46 more on the colophon, and 22 of padding
+      under a rule that came off this morning — 108px of nothing between the
+      last thing somebody wrote and one grey line about the software. The
+      padding went with the rule, the writing gives up its own bottom air when
+      a colophon follows it (`.ab-below--kept`, keyed on authed because
+      `.ab-keep` is), and the line gives up the 22px it wore under the
+      Settings door. 62px now.
+
+- [x] **No hairline over the version line.** The same argument as the one
+      under the header: a rule separates two things that would otherwise run
+      together, and a caption 46px below the last of the writing is already
+      apart. It was the foot of a section when a door stood in it.
+
+- [x] **The three hideable rows actually hide.** "Albums masterpieces and
+      formative hiding option doesn't work... I think genres should be
+      hideable." The eyes were saving a preference no card ever read: the
+      counts drew on "is there anything to count" and the genres drew on
+      nothing at all, and `showing()` sat in the file with one caller. Counts
+      and genres ask it now, and genres has an eye of its own — it was in
+      HIDEABLE with no way to turn it off. Proved by hiding all three on this
+      copy and putting them back.
+- [x] **The card's tools stay in the header.** "The toolbar needs to stay in
+      the header on scroll." **Sticky cannot do this**: a sticky element is
+      held by its own containing block, which here is the card object, and the
+      card object ends where the writing starts — it lets go a third of the
+      way down. The row is posted into the cross's bar instead, by the trick
+      LayerEntry uses for a layer's header: a slot element of IdentityCard's
+      making, appended to `.hn-bar` and drawn into with a portal. One row in
+      one of two places, never both. **Phones only** — the bar exists on a
+      desk too, where it is over the journal and the card is the left page.
+      Scoped to `data-pane="0"` as well, or the card's door would stand over
+      the beacon while the pane sits mounted behind it.
+- [x] **Settings is a tool on the card, not a door at its foot.** It joins
+      Share and Edit behind the ···, last, because it is a room rather than
+      something you do to the page. The version line and Report stay at the
+      foot.
+
+- [x] **The mark travels into the header instead of being replaced by one.**
+      "I want the big logo to slowly transform into the small one that becomes
+      the header for the journal... right now if I drag and hold I can see two
+      logos." There were two: the crown scrolling away and the bar's own small
+      one fading in behind it. The crown travels to where the small one stood
+      now, shrinking as it goes, and stays pinned there however far you scroll
+      — measured landing at 28px with its middle on 51, which is the bar's own
+      line. `.hn-bar-mark` is hidden on phones except while the picker is open,
+      because then floor one *is* the picker and there is no crown to arrive.
+      **Nothing about the layout moves**: a transform is paint, so the record
+      under it scrolls exactly as it did.
+      **The journey is 180px, not its own 70.** Off a real phone: "it flies
+      out the top pretty fast, because the scroll can happen really fast." Its
+      natural distance — where the crown stands to where the bar's line is —
+      is about seventy pixels, and seventy pixels of scroll is one flick. A
+      morph nobody can see is a cut. Clamped at the line so a longer journey
+      cannot carry it past where it is going: 82px at 138, 61 at 79, 39 at 56,
+      and docked at 28 on 51 by 180.
+      **And the bar keeps its own mark unless the crown says otherwise.** The
+      other half of what she saw — "it disappears into nothing" — is a hidden
+      small mark plus a morph that is not running, which is a header with
+      nothing in it. The crown puts `hn--morph` on the cross while it is
+      handling the job and the stylesheet only hides the small one then.
+      **Two traps.** `next/link` in this version does not hand its anchor back
+      through a ref — it read null on every render while the element was
+      plainly on the page — so the mark is found in the pane instead. And the
+      first measurement has to be re-taken: taken once at whatever width the
+      page loaded at, it was never revisited, so a media-query change and a
+      ResizeObserver on the pane both re-measure now.
+
+- [x] **Both ways down are a bigger chevron that breathes.** "Those down
+      carets on feed and journal can just be larger and bob up and down to
+      show there's more vs having more text." 18px rather than 11, four pixels
+      of travel on a 1.9s loop, and the word over each of them gone — it was
+      the third line of small caps at the foot of a screen that is mostly
+      type, next to a mark that already means *down*. The floor's name stays
+      on the button's label, and the feed's still arrives in the header once
+      you are on it, which is where a name belongs.
+- [x] **The friends pane's header is a relay.** "The + and address book
+      becomes a header that passes itself off to the next header — it's a
+      relay, if it needs a title or a name." So the bar carries both floors:
+      ADDRESS BOOK · N with the + at the corner while the shelf is what you
+      are on, RECENT LISTENS with the density toggle a floor down. Both names
+      land on the same line, because it is one header — the book's title used
+      to be a line on its own floor ten pixels below this one, which is a
+      title and a title rather than a header.
+      **The whole header goes up, fields and all.** It was only the + at
+      first and the field it opens stayed seventy pixels below it on the
+      floor, which is the thing the title moving broke: "the clicking and
+      opening... needs to open and replace address book text." So the book's
+      `.fr-head` — the slot with its two fields and the + — is what is
+      portalled, and the cross takes its own word down while a field is in the
+      row (`onBusy`, handed up the way the count is). The address field is
+      271px of the 319 the row has. The Add / Scan row stays on the floor and
+      is now the first thing on it, so it opens directly under the bar.
+      **And then a pill instead of a line, 2026-09-20.** "Can I see that
+      search field as a small rounded search pill instead?" So it is the
+      site's own field shape at the smallest it goes — a 999px corner, a
+      hairline, the panel ground, 37px tall — sized to the words rather than
+      to the row. **And the camera moved to the left of it**, which is what
+      lets it be centred on the row rather than on what is left of the row:
+      with both corner marks at the right end, a 190px phrase centred on a
+      375px screen reached further right than the corner did and the camera
+      ended up inside the pill. Miyel offered the choice — shorten the
+      placeholder to `Address`, or move the camera — and the second is the one
+      that does not pay for the centring with the sentence that explains the
+      camera. One mark either side, the field dead centre at 188 of 187.5.
+      The line is two revisions back in git.
+      **And a field in a header is a line, not a box.** "The search bar feels
+      big and bulky compared to the other title header... it feels so
+      disjointed." It was arriving as a panel with a rule round it and 44px of
+      height into a row that holds a ten-pixel caption — the shape a field
+      wears in a form, on a row that is not one. In the bar it gives all that
+      up: type on the middle of the line in the caption face, over a hairline
+      that is the only thing left saying it can be written in. 16px and not
+      the caption's 10, because base.css forces every field on a phone to 16
+      to stop Safari zooming; the face carries the row, not the size.
+      **The field's face is the page's, not the caption's.** It was DM Mono
+      for an hour on the reasoning that the row is a caption — "don't like
+      that font" — and a typewriter face at sixteen pixels in a header is a
+      typewriter in a header. What makes it belong to the row is that it is a
+      line rather than a box; the letters are the site's.
+      **Add and Scan came up into the header with it.** "I'm not a huge fan of
+      add and scan being under, but I have no idea where else to put them",
+      then "there needs to be an actual add button but I also don't really
+      like pills." So Add is an arrow at the end of the field — where the
+      sentence it commits ends — arriving with the first character typed, and
+      Scan is a camera beside the way out, only while the field is open. Both
+      are the mark rather than a mark in a container, which is the rule this
+      site already keeps. `.fr-add-acts` and its max-height dance are gone.
+      **The placeholder is the hint**: `Scan or type address`, because the
+      camera is two marks away and nothing said what it was for. An empty
+      field is the one place on a screen where a sentence costs nothing — it
+      is gone the moment anybody acts on it. Scan first, then type: "I want to
+      encourage scanning, and the camera is on the left now anyway" — which is
+      one reason twice. The camera is the first thing on the row so it is the
+      first word in the sentence, and the code was always the way in where
+      typing an address out is the fallback.
+      **The two fields cross by fading here**, not by clipping: the clip read
+      as one box leaving while another arrived, and with no box round either
+      there is no edge for it to read as. Careful with the order — an
+      `opacity: 1` on the two field classes beat `--gone`'s `opacity: 0`
+      written above it, and both fields drew at once, one on top of the other.
+      **The floor had to be told to clear the band**: its 36px of top padding
+      was 36px *plus the header standing in the rest of it*, and the header is
+      not on that floor any more. `--hn-bar-h + 8` now.
+      **Neither half knows about the other.** Friends puts the + in a slot it
+      makes in the bar (the trick IdentityCard uses for its tools) and HomeNav
+      puts `hn--at-feed` on the cross; the corner is handed over in CSS by the
+      one thing that knows which floor is up. The word is keyed on itself so
+      React builds a new one when it changes, which is what makes the swap
+      fade rather than cut.
+- [x] **And the feed is called Recent listens.** "It was short before because
+      of the chevron and how it lived. Now it's different." Exactly: Feed was
+      a word standing over a chevron at the foot of a screen, where every
+      character costs, and it is a header's name now, where the room is the
+      row — 106px of 375, with eighty clear of the toggle. Whose listens is
+      the pane's own business: the faces are directly above it and the band
+      says FRIENDS.
+
+- [x] **And a visitor's answer is the keeper's face in that circle.** "When
+      logged out this looks terrible — let's have it match the new beacon
+      design. The round photo is the pfp replacing log listen, and the add and
+      send can take left and right sides of the circle." Which is the move
+      that slot has always made, one step further: it holds whichever answer
+      fits whoever is looking, and now the two answers are one shape as well.
+      The portrait is the circle, hung on the rule, and ADD and SEND are hung
+      on it either side, 66px out from the middle, each carrying the page
+      colour so the line stops at all three. **66 and not 50**: at 50 they
+      hugged the circle and the whole of the rule was outside them, which is
+      four segments with two of them too short to read — "fix the left side
+      hairline, it should be before the plus". Measured at 393: 28 outside,
+      30 in, 29 in, 38 outside.
+      Positioned from the middle, so the two words stay symmetric whatever
+      they measure.
+      **The name is on the label, not in the row.** There is nowhere in a
+      circle to put it and nowhere beside one that does not make a fourth
+      thing on a line that has three, and it is the first line of the card
+      this opens. `.calling-name` and `.calling-acts` are gone.
+      **The ♪ is gone from both slots**: the keeper's is a ring with two words
+      in it and a visitor's is a face, and a mark over a mark explains one.
+      **Not seen signed out.** The CSS was checked by building the row by hand
+      in the page with the real classes — signing out to look at it would have
+      wanted the password to get back in.
+
+- [x] **The way into a listen is a circle on the rule.** "Make start a listen
+      feel intentional — maybe it can be a circle between the hairlines that
+      looks like a button, that music note then start a listen in the circle
+      under the note, smaller font." It was three things on one axis — a rule,
+      a note sitting in a gap in the rule, a line of small caps under it — and
+      none of them shaped like a control. Now it is one: a 72px ring hung on
+      the rule, half above and half below, carrying the page colour so the
+      line stops at its edge. **84 for an hour and then 72** — it is the one
+      control on that screen and wants to be reachable rather than large, and
+      the two words in it are 47px at their widest, so the ring can come in
+      twelve and still be a ring round words rather than one on them. **The
+      visitor's circle follows it to 72**, and everything measured off it: the
+      two words move in to 50 and the row's own padding to 36. The two are the
+      same shape in the same slot, and a face twelve pixels larger than the
+      ring on the other version of the screen reads as two objects rather than
+      one at two contents. The note is in the markup rather than on
+      `::before`, because it has to stack with the words; a visitor's calling
+      card keeps the `::before` version, there being no control in that slot.
+      **Absolutely positioned, not a negative margin** — a flex item's margin
+      is taken into the line it sits on rather than out of it, which left the
+      circle under the rule instead of on it.
+      **The rule stops twelve pixels short of it** ("don't make hairlines
+      touch circle") — a `box-shadow` ring of the page colour, which follows
+      the radius, so the line ends away from the edge on both sides and the
+      circle sits in a gap rather than in a hole it has cut. **And the words
+      are soft grey**: `.ln-onward` is full ink because it used to be a bare
+      line that had to out-shout two captions beside it, and inside a ring
+      nothing is competing with it.
+      **And it says LOG A / LISTEN**, in that order over ten minutes: "get
+      rid of a", "Log Listen", "Log a / listen". Log rather than Start because
+      it is the word the journal already uses for the act — LAST LOGGED over
+      the cover, logged in the feed. Start named the beginning of a flow,
+      which is a fact about the software. The article earns its place after
+      all: two bare words on two lines read as two labels, where a phrase
+      broken mid-sentence reads as one thing said across a break.
+      **And no mark in it.** A ♪ sat over the words for an hour, because one
+      had sat on the rule before the circle existed. "Is there a better icon
+      than that music note — is it even needed?" It is not: it said *music* on
+      a site that is entirely about music, over two words that already say
+      what pressing does. The calling card keeps its ♪ — no control in that
+      slot, so what is on the rule there is a mark and nothing else.
+      **The inbox's row still says Start a listen** and is the same action by
+      another name.
+
+- [x] **No dissolve over the band on the friends pane.** A soft top edge is
+      for a floor whose content runs off the bottom and should read as
+      continuing — a wall of covers, a record mid-scroll. The book and its
+      feed end in rows with hairlines between them, and 26px of the last row
+      going grey over a hard line is a fade with nothing to say. Keyed on
+      `data-pane`, so every other pane keeps it.
+
+- [x] **A full shelf shakes its head.** "Can the pin button shake like saying
+      no if 6 are already pinned." It was `disabled` before, so a press did
+      nothing at all — and nothing at all is the one answer that does not say
+      why. It is dimmed and still pressable now, `aria-disabled` rather than
+      `disabled`, and a press is four pixels each way and gone in a third of a
+      second: a head shake, not an alarm. Run through `element.animate()` and
+      not a class, for the same reason as every other one-off movement here —
+      a class has to come off before it can go on again, so the second press
+      in a row would be the silence this is fixing. A shake already running is
+      cancelled by name, so two quick presses are one shake rather than two
+      stacked, and a reduced-motion setting turns it off.
+- [x] **A face travels between the two.** "Can there be an animation that
+      takes a pfp from the group up to the pin and vice versa." It re-sorted
+      instantly before, so the person you pressed was gone from one place and
+      present in another with nothing in between. Now every face that moved
+      slides to where it is going, over 340ms — the one that was pressed most
+      of all, and it changes size on the way because the shelf's faces are
+      larger than the book's. First/Last/Invert/Play: measure the page,
+      let React draw the new order, measure again, put each face back with a
+      transform and take the transform off. It works across the re-sort even
+      though React throws the old button away, because the two measurements
+      are matched on the person's id and not on the element. **Every face and
+      not only the moved one** — the grid closes up behind somebody leaving
+      it, and one face gliding while nine jump is worse than nothing moving.
+
+- [x] **Pin is the fourth door**, where Remove is the quiet line under them.
+      Pinning is a thing you do *with* somebody like the three beside it;
+      removing is the end of there being a somebody.
+- [x] **The shelf gives the pinned row its room back.** It stands in the same
+      box and is a different height, so the fit sum subtracts it and measures
+      an ordinary row — `.fr-row:not(.fr-row--pinned)`. Verified at 10 people:
+      473px of shelf less a 164px pinned row leaves two rows of eight, nothing
+      clipped, and *See all 10* appears because two are held back.
+
+**Tested against the real book and put back.** One person was pinned, the
+section and the ordering checked at both sizes, and unpinned again — who is on
+that shelf is Miyel's to say, not something a test should decide.
+
+**2026-09-20 — The feed at two densities.** Her brief: "one toggle, two
+states, nothing in between."
+
+- [x] **A glyph at the top right of the feed's header, one per view** — a
+      screen with two rows in it, or a screen with one record filling it. The
+      mark is the shape it stands for, which is the rule the archive's density
+      control already keeps. It was one mark saying the state with ink for a
+      few hours and Miyel overruled it: "glyph for feed view needs to change
+      when you're in list view and have a second symbol for icon view." She is
+      right — the ink was doing a job a picture does better, and with one mark
+      there was nothing to compare the ink against. **The mark names the view
+      you are in, not the one you would get**, which is how the density
+      control and the band at the foot both read. Remembered
+      between visits (`ln-feed-density`), because a density you chose is a
+      preference and re-picking it every visit is the page forgetting.
+- [x] **The header went from one word centred to a name and a control at the
+      two ends of a line.** On the feed's own address it says *Feed*; on the
+      cross it does not, because the name is at the foot of the floor above
+      with the caret under it — there it is the toggle alone, and the row
+      gives up its rule and its air, which the peek needs back.
+- [x] **Rows: 56px art, the title, then artist · who · when in the caption
+      face**, cut with an ellipsis rather than wrapped. Stars at 11 and the
+      marks at 14 on the right, a hairline between, about eight to a screen.
+- [x] **The marks survive the squeeze**, which is the point: the envelope and
+      the compare are the two reasons to stop on a row.
+- [x] **The short time in rows** — `6h` where the tall version says `6h ago`.
+      A row gives its meta about 140px, and "ago" is 26 of them said three
+      times over; the artist and the name are the part that cannot be guessed.
+      Her own mock-up writes it that way.
+- [x] **A gold ring round the art, in both densities.** Three treatments were
+      tried in an evening — the ring, a ring round the whole row, the row
+      lifted onto `--panel` — and Miyel took the first: "it was simple and
+      works." Which settles the argument the other two were about. The case
+      against gold was that it is the star colour and so says *rating*: true
+      of a rule running the length of a row beside five stars, and not true of
+      a ring round a picture, where it is plainly about the picture and the
+      record in it. The ring is also the one of the three that is the same
+      idea at both sizes — 56px of art or 300px of it, one mark.
+- [x] **Why a ring at all, in either density.** The one thing in a
+      feed you can act on that is worth spotting without reading — and reading
+      is what scrolling past eight rows a screen does not leave time for. An
+      `outline` rather than a border, so it takes nothing off the art and
+      moves nothing beside it.
+- [x] **The compare mark stands with the marks, in both densities.** That is
+      what her brief says — "Compare, in both modes" — and what her reference
+      draws, and I read it as rows-only for half a day. It had a word under it
+      from the version where it stood alone; a mark in a row of marks does not
+      get a caption, the envelope beside it never had one, and the ring round
+      the cover has already said the thing before you read anything.
+- [x] **And closing one is a door, not the opening rewound.** It vanished —
+      "it just disappears the way it is now" — and the first go ran the open
+      backwards, bars down then panel. Wrong, and she said why: "the horizon
+      bars don't need a reversed animation, just the door needs to feel like
+      it closes on them." The bars rising *is* the comparison being made, and
+      running it backwards un-makes it, which is not what closing means. The
+      bars hold their heights and the panel comes down over them; `overflow:
+      hidden` does the work. A comparison that is closing still has to be in
+      the page to close in, so its key is held for the length of it — the
+      shape the book's doors already use.
+- [x] **Opening one scrolls it into view**, by as much as it takes and never
+      when it was already in view. A control that reports its result somewhere
+      you cannot see has not reported anything. It waits for the panel to
+      finish opening, so the scroll and the bars rising arrive together.
+- [x] **And nothing under the stars.** *Theirs* went first (it is linked from
+      the cover above); *Your copy* followed — "it's understandable without".
+      The lower horizon is yours because the stars under it are yours, and a
+      label naming the thing you are looking at is a caption on a photograph
+      of your own house.
+
+**What the header cost the peek, and it is a choice:** the feed floor now
+starts with a 39px row, so the sliver of record showing under the caret went
+from about 50px to about 22. Getting it back is one number — the book pane's
+`--hn-peek` — and it costs the shelf a row of faces on a phone this size. Left
+as it is until Miyel says which she would rather have.
+
+**2026-09-20 — The compare is a mark, and opens as two listens stacked.**
+From Miyel's reference.
+
+- [x] **The control is the shuffle and nothing else.** "when a compare is
+      available i just want it to be the symbol." The word was doing two jobs
+      — saying a comparison exists, and being the thing you press — and the
+      first is the mark's. It is only ever drawn on a record you also have, so
+      its being there is the whole announcement. Under the entry, where the
+      word was: her reference drew it as a badge on the album art and she took
+      it off again, because the art is the record and not a place to hang
+      controls.
+- [x] **Theirs on top, the distance on the line, yours below, your stars under
+      yours.** Theirs carries no stars of its own — they are on the entry four
+      lines up, which this opens underneath, and printing them twice on one
+      screen is the same fact twice.
+- [x] **The two horizons are not mirrored.** "don't mirror beacons they should
+      be one above the other." A pair growing away from a shared line is a
+      difference chart and this is not one: two listens of the same record,
+      each with its own shape, drawn the same way up.
+- [x] **No panel around it.** It opens under a record on a page that has no
+      boxes on it, and a card would make the comparison a separate object from
+      the thing being compared.
+
+**And then, the same evening:**
+
+- [x] **Hearted tracks show on both horizons.** They were not in the data at
+      all: `horizon` carries heights and nothing else, and `tracks` — where the
+      hearts live — is deliberately kept out of every list because it is
+      writing. So a small string is derived in the query, a '1' or a '0' per
+      track (`HEARTS_FIELD`), and nothing is stored: `tracks` stays the source
+      of truth and there is no second copy to keep in step. Derived in SQL and
+      not in JS on purpose, or reading the hearts back would pull every word
+      of every note across the wire on a page that draws none of them.
+      **NAME: `hearts` is a placeholder.**
+- [x] **Theirs is not linked again.** The cover and the title above already
+      go there. Only *Your copy* is left, centred under your stars.
+- [x] **The mark turns a quarter, not a half.** Open, the arrows point down at
+      what has opened; half a turn only sent them the other way along the same
+      line, which says nothing.
+- [x] **The word COMPARE sits under the mark until it is used.** It is there
+      to teach what the mark is and has nothing to say once the thing it names
+      is open.
+- [x] **The panel opens, and then the bars rise.** Two movements in order,
+      not one on top of the other: the compare unfolds and pushes the feed
+      below it down, and only once it has stopped moving do the bars leave the
+      baseline. Bars growing inside a box that is itself still growing is two
+      things moving the same way at once and neither reads. Measured: the
+      unfold lands at 250ms, the bars start at 340 and take 720 over it.
+- [x] **The bars rise** out of their own baseline, **all at once.** They were
+      a frame apart, left to right, on the argument that it was the shape of a
+      listen arriving in the order it happened — and Miyel is right that it is
+      not: a horizon is one thing you look at whole, and dealing it out left to
+      right makes it a list being read to you. One listen, one movement.
+
+**What another copy sends, and when.** The hearts cross between journals, so
+a friend's horizon stays bare until their copy is updated — theirs simply
+answers without the field and the bars draw as they always did. Nothing breaks
+and nothing waits.
+
+**One deviation from the reference:** it says READ BOTH on a single line. One
+press cannot open two pages, and theirs is linked above, so the line is
+*Your copy* alone.
+
+**2026-09-20 — The mark is the beacon's alone, on a phone.** Miyel: "remove
+the LN logo from header of all pages except beacon." It had shown on the inbox
+and the book since the evening before, on the argument that every page here
+says what it belongs to — and the answer is that the mark belongs to the
+*journal*, which is the beacon, and repeating it over the rooms behind it says
+nothing except that this is still the same website. The card gave up its own
+in the same breath. The beacon keeps the crown, and the bar's small one still
+takes over there once the crown has scrolled away.
+
+The two panes got their forty pixels back: they clear the status bar again
+rather than the whole bar, which on a tall phone is most of another row of
+faces. **A desk is untouched** — no band, one page at a time, and the bar's
+mark is the only one it has.
+
+**And then the standalone addresses too, except entries** (Miyel, same
+evening: "all standalone pages except entries"). SiteNav reads the address
+rather than taking a prop, because it is a fact about where you are and not a
+decision each page should get to make differently. The one standalone page
+that is *of* the journal — a listen, at an address you can send somebody — is
+the entry, and it keeps the mark. Settings, the archive, a report and the rest
+are rooms in the back of the house.
+
+**What that costs, and it is worth knowing:** on those pages the mark was the
+only way home. Every one of them opens as a layer over the cross in normal use
+and closes back onto it, so this only bites on a cold open — a bookmark, or a
+hard reload. The left slot of that row is empty and is where a way back would
+go if it turns out to be wanted.
+
+**2026-09-20 — The beacon gets the book's way down, and three fixes.**
+
+- [x] **The beacon's floor stops short and names what is under it.** Miyel:
+      "the beacon should have the same effect... LN. logo must become smaller,
+      everything lives higher, then caret has journal and peek at journal." So
+      it is the book's shape exactly — a word and a chevron at the foot of the
+      first floor, the snap stopping a bar's-worth short, and the top of the
+      wall showing underneath. The mark went from 0.23 of the screen to 0.17
+      and from 82px to 62.
+- [x] **And the 92px under the record paid for nearly all of it.** That was
+      the room the caret kept while it floated above the band. The caret is a
+      row in the flow now and brings its own air, so the number went back to
+      the screen. Phone only — on a desk there is no band, no caret and no
+      peek, and 92 is just the space under a record.
+- [x] **The floating caret is gone.** It said "there is more that way" on
+      whichever pane had a second floor. Both panes say it themselves now,
+      with a word and the top of the thing below showing under it, which is
+      the same sentence with a subject in it.
+- [x] **The wall stops being a scroller of its own on a phone**, for the same
+      reason the feed's floor did an hour before: a sliver of an inner
+      scroller is a scroller you can reach before you have arrived at it.
+- [x] **Opening somebody in the bottom row is no longer cut off.** The shelf
+      could always scroll to the doors; nothing said so. It goes to them once
+      they have opened, by as much as it takes, and not at all for the rows
+      that were already in view.
+- [x] **The way down sits lower, against the thing it points at.** The feed's
+      floor cleared the bar with padding, which put 80px of nothing between
+      the caret and the first cover at rest. `scroll-margin-top` moves the
+      snap position instead of the content, so the cover starts immediately
+      under the caret and still lands clear of the mark when snapped.
+
+**SETTLED, 2026-09-20: the beacon's peek is covers, and the fifty pixels came
+out of the mark and the gaps.** Asked where to take it from, Miyel's answer was
+the mark and the air above the record rather than the record itself. So the
+mark went 0.17 → 0.13 of the screen and 62px → 52, `--hn-square-top` is capped
+at 34 on a phone rather than 80, and the beacon's peek is 190 where the book's
+is 140 — deeper because the wall holds its first 96px whatever is drawn in
+them.
+
+**And the wall's search bar is faded out while you are upstairs.** It is
+`position: sticky` against the bottom of the scrollport, which is exactly
+where the sliver of covers is, so left alone it *was* the peek: a search box
+for a page you are not on, sitting over the records it would be showing.
+Faded rather than removed, because it keeps its 96px of flow either way and
+nothing may move when you arrive and it comes back.
+
+**2026-09-19 — The band goes Card, Beacon, Friends, Inbox.** Miyel's reason,
+and it is about the shape of the rail rather than what the rooms are for:
+"two double levels two not sandwiched." Two of the four panes have a second
+floor — the beacon with the journal under it, the book with the feed — and two
+are a single page. With the inbox third, a flat pane sat between the two deep
+ones and down meant something different on every second stop. The rail reads
+flat, deep, deep, flat now.
+
+**The two lists that have to agree:** `paneRefs` in HomeNav and the `order`
+rules in nav.css are the same order said twice, and the band counts against
+the first. Change one without the other and the third word walks you to the
+fourth pane.
+
+**2026-09-20 — Add and Scan go back to the page's centre.** They spent a day
+lined up with the field above them and Miyel moved them back: "can we center
+add and scan code to page not the box." She is right, and the reason is what
+else is on that screen. Everything on the floor is centred on the pane — the
+book's name, the faces, the way down — so a pair of buttons on their own
+private centre line is one thing out of true with a whole page in order to
+keep one small group internally tidy. The field is the odd one out because it
+has a + beside it; nothing else should follow it there. The entry below is the
+day-old reasoning it replaces.
+
+**2026-09-19 — Add and Scan sit under the field, not under the page.** Miyel:
+"centering feels off when search bar is open." It was, and the arithmetic is
+plain once you measure it: the head is a field and a +, so the field gives up
+the +'s 40px and the 8px between them, all of it off its right-hand end, and
+lands 24px left of centre. Everything else on the floor is centred on the pane
+— the mark, the faces, and that row of buttons — so two controls that plainly
+belong to the box above them sat 24px to the right of it. The row takes the
++'s width as right padding now, which puts its middle on the field's middle.
+
+**What is left, and it is a choice not an oversight:** the field is still 24px
+left of the mark above it. Closing that means letting the field span the full
+width and floating the + over its right-hand end, which buys one centre line
+for the whole screen and puts the × on top of the thing it cancels — a tap
+near the end of a typed address would throw the address away. Not worth it
+unless Miyel says so.
+
+**2026-09-19, later still — the mark was missing from the two new panes.**
+Every page on this site says what it belongs to: the card and the desk draw
+their own small mark at the top of themselves, and the beacon has the crown.
+The inbox and the book drew nothing, so the top of the friends floor was a +
+and some faces (Miyel: "we need LN. header i just noticed"). The bar's own
+mark is shown on those two panes from the start now — the same mark in the
+same place, and pressing it does what it does everywhere, which is go back to
+the top. Their content starts at `--hn-bar-h` rather than 36px so nothing runs
+through it. Keyed on `.hn--keeper`, because signed out pane 2 is the colophon
+and the colophon keeps the crown.
+
+**2026-09-19, later — four small ones off a real phone.**
+
+- [x] **Came back is gone.** The corner filter lasted one evening. What came
+      back from a send is on its way to the inbox as an arrival (brief 1's
+      third item), and a filter nobody asked for is a control to read past on
+      every visit. The match that found them is kept and commented, because
+      the brief's instruction for that third item is to reuse it.
+- [x] **The feed says its name above the caret, not above itself.** Her
+      mock-up drew it that way and it took a week to arrive there: down at the
+      foot of the book it labels the way down, which is a thing you are
+      deciding whether to do. At the top of the list it would be naming a
+      place you had already arrived at. On the feed's own address it still
+      says its name at the top, centred, because nothing else there would.
+- [x] **The + no longer opens the keyboard.** Miyel, off a real phone: "this
+      can open not in typing mode. most people will scan." Two reasons and
+      both good: the camera is the way in and typing is the fallback, and on
+      iOS a focused field near the top of a pane makes the system scroll the
+      page to clear the keyboard — which lifted the whole floor up behind the
+      status bar. Her "the placement is off" was that scroll.
+- [x] **The shelf was measuring a face where it should have measured a row.**
+      Each row is its own grid with 18px of air above and below it, so the sum
+      lost 36px a row and the fourth came back cut in half at five across.
+      Measured off `.fr-row` now, and the air is part of what a row costs.
+
+**2026-09-19 — The book is a shelf, and the feed is a floor under it.** Her
+brief, tightening the pane she had just been given.
+
+- [x] **As many faces as fit on one screen, then See all N.** The floor is a
+      shelf and not the library — her words, and the reason is the feed: it
+      has to be exactly one scroll away whether the book holds six people or a
+      hundred. Measured rather than counted out, off a box of settled height,
+      so a phone with a notch and a phone without get different answers and
+      both are right. Whole rows only.
+- [x] **The line opens the whole book as its own view.** A link, not a state,
+      so it is the address the book already has — the cross catches it and it
+      arrives as a layer with the search at the top and everybody in it.
+      Closing it puts you back on the shelf where you were.
+- [x] **The search field lives in the full view.** On the floor it appears
+      only past about a dozen, which is the brief's original rule reinstated:
+      a field over eight faces you can already see is a box asking you to type
+      the name of somebody you are looking at. Never over an empty book.
+- [x] **The feed is a floor and the pane snaps to it**, the way the journal
+      does under the beacon. It could not snap while the first floor was as
+      tall as there were people in it, which is what the shelf is for. The
+      floor stops short of the screen by --hn-peek so the top of the feed
+      shows under the caret: the heading, and the first covers beginning.
+- [x] **Remove left the door row.** Miyel, changing her own earlier call: "it
+      undoes the relationship and shouldn't be one mis-tap from Send." A quiet
+      mono line under the three, red on the second press, put back by a press
+      anywhere else. Journal, Compare and Send stay as glyph over word.
+- [x] **Nobody filed is its own screen**: what the page is for, both ways in,
+      the +, and **no caret and no second floor**. A caret pointing down at a
+      feed of nobody's records is a promise the page cannot keep. The cross
+      learns the size of the book from the book (`onCount`) and draws one
+      floor until it has.
+- [x] **The book's field is the shape of the beacon's album search** — 10px
+      corner, 12px inset, "a bit more square". One box to type in on this
+      site, one shape for it. The shutter's `clip-path` corner had to follow,
+      or the field grows a straight end on its way through the slot.
+
+**Two of the three empty states.** She named "no one filed" and "people filed,
+nothing logged" — both built, the second already being the feed's own line.
+The third was not named and is not guessed at; ask.
+
+**Still not built, and deliberately: pinned people.** The shelf draws them
+first the day they exist; there is nothing to draw yet (Miyel, 2026-09-19:
+"let's not add pinning friends yet").
+
+**2026-09-19 — Four doors at the foot, and the desk is gone.** The second half
+of brief 1: the band that names the panes goes from three words to four, and
+the two rooms that were behind the desk become places you can be.
+
+- [x] **Card · Beacon · Inbox · Friends.** The band drew Card · Beacon · Desk
+      and the desk was a page of doors — a corridor, with the two rooms worth
+      standing in behind it. They are stops of their own now, which is the
+      whole shape of the brief's own mock-up. Signed out it is still three:
+      Card · Beacon · About, because there is no inbox and nobody to read.
+- [x] **The rail is four panes wide for a keeper.** Both new ones mount with
+      the cross and stay mounted — the rail's bargain, and what lets the inbox
+      go on counting while you are looking at the card. The inbox is its own
+      page drawn without its bar (`inPane`); the book is `Friends`, which is
+      a component and not a route precisely so that it could be hung here.
+- [x] **And Compare opens over the cross.** A door in the book now lands on
+      `/dashboard/people/[id]` from `/`, which the `(.)` interception catches
+      — so a person opens as a layer with the book still underneath, and
+      closing it puts you back on the pane where you were. It used to be a
+      navigation out of the cross. Nothing was written to make that happen.
+- [x] **Settings, the version and Report a problem moved to the foot of the
+      card**, below everything a visitor reads, behind a rule. The card is the
+      page about this journal and Settings is where the journal's own facts
+      are kept. It wears the desk's own row and the desk's own colophon line
+      rather than a new shape for the same door.
+- [x] **The feed is the book's second floor.** It was a row for an hour;
+      Miyel: "feed should just start not be a button." So it does — the faces,
+      then the feed's own heading on a rule, then the records, one continuous
+      scroll. No snap between the floors, unlike the beacon: that pane's first
+      floor is exactly one screen tall so a snap has one place to land, and a
+      grid of faces is as tall as there are people.
+- [x] **And one feed, which had to come with it.** Two centred tabs under a
+      grid of faces would read as a control somebody left there. So Recent is
+      the feed and Submissions is a word in the corner that narrows it —
+      brief 1's second item, arrived at because the first one needed it.
+      NAME: *Came back* is the word her own mock-up put in that corner.
+- [x] **The rooms are built on arrival, not on load.** Both new panes fetch
+      when they mount — the inbox asks for submissions, comments, reports and
+      the book; the feed asks every journal in that book, one cross-origin
+      request each. Mounting them with the cross meant paying all of it on
+      every visit to the front door, including visits that never leave the
+      beacon and every visit on a desktop, where neither is drawn. They build
+      the first time you arrive and are never taken down, which keeps the
+      rail's actual promise — come back and it is where you left it.
+- [x] **`.fd-wrap` had no side padding on a phone and never had.** Its gutter
+      is `var(--page-gutter)`, which is set on the cross's own faces and
+      nowhere else, so on the feed's standalone address the whole shorthand
+      was invalid and resolved to zero. A centred row of tabs hid it for
+      months; a heading that reaches for both edges showed it in one frame.
+      Fallback added, and the 320px cover has not moved.
+- [x] **Desktop is untouched, deliberately.** Above 769px there is no band, so
+      there is nothing to reach a pane with: the book keeps its spine, the
+      desk keeps its four doors, and the two new panes are not drawn at all.
+      The card's foot and the feed row are phone-only for the same reason —
+      the desk is still there to hold them, and the same door twice one turn
+      apart is worse than either.
+
+**Left alone, and named here so it is a choice:** the desk still mounts on a
+phone, hidden, so `Dashboard` still asks `/api/update` once beside the card's
+own ask. Two GETs to your own server, to an endpoint that asks GitHub at most
+once an hour. Not worth a media query in JavaScript and the hydration question
+that comes with it; worth fixing when the desk goes for good.
+
 **2026-09-19 — The book is faces, and sending is two screens.** Brief 1 of the
 friends brief (2026-09-17), and everything the brief's own send sheet turned
 out to need once it was used.
@@ -2753,14 +4188,32 @@ journal, and it was still wearing the cold version's clothes.
       than only here: one control answering one question on three surfaces,
       and a switch that is two sizes is two switches.
 
-**Names still open, and shipped as placeholders:** the file `Friends.js`, the
-branch `friends-pane`, and the Compare glyph (Phosphor `ArrowsDownUp` —
-deliberately not `ArrowsLeftRight`, which this site already uses for turning
-the spine). Flagged in the code where each one lives.
+**Names still open, and shipped as placeholders:** the file `Friends.js` and
+the branch `friends-pane`. Flagged in the code where each one lives.
 
-**Not built, and deliberately: pinning.** Miyel, 2026-09-19: "let's not add
-pinning friends yet, mostly just beta testers, we don't need it yet." The
-brief asks for it; the book is nine people.
+**The Compare glyph is settled: Phosphor `Shuffle`** (Miyel, 2026-09-20). It
+was `ArrowsDownUp` for a day — my stand-in for the two arrows her mock-up left
+hand-drawn — and two arrows running past each other is a sort order, which is
+the one thing that door is not. Shuffle is two paths that cross and come out
+the other side, which is what comparing two shelves looks like: the same
+records, taken in a different order, by somebody else. Still not
+`ArrowsLeftRight`; this site uses that for turning the spine.
+
+**Pinning, held back on 2026-09-19 and built on 2026-09-20** once the pane had
+a shelf and a header and looked empty under them. One nullable stamp
+(migration 021) and nothing else: a boolean would say who is pinned, a stamp
+says that and the order, which the brief asks for. NULL is not pinned, so
+every row that existed was already right and there was nothing to fill in.
+Private and one-sided like adding — nobody learns, nothing is sent, no other
+copy is told.
+
+`PATCH /api/people/[id]` with `{ pinned: true|false }`, and nothing else about
+a person is editable there: the name is read off their journal and the address
+is what they are. **The order is written twice on purpose** — `pull_people`
+and `inOrder` in Friends.js — because the page re-sorts off what a write
+returns rather than asking for the book again, and a page that sorted
+differently from the server would put somebody in one place now and another on
+the next load.
 
 **2026-09-19 — Add goes home, and the slot gets a rule with a note in it.**
 

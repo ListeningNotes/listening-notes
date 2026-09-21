@@ -32,8 +32,9 @@
 import { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
-import { Check, User, X } from '@phosphor-icons/react';
+import { User } from '@phosphor-icons/react';
 import MiniAddressBook from '../MiniAddressBook';
+import EditingBar from '../EditingBar';
 import { journalUrl, tidyJournal } from '../../../library/return_address';
 
 export default function SenderTool({ entry, barSlot = null, onDone }) {
@@ -251,21 +252,13 @@ export default function SenderTool({ entry, barSlot = null, onDone }) {
           (Miyel, 2026-09-17). Two reasons, and the second is the better one.
           A panel that carries its own pair of buttons is a form inside a page
           that already has somewhere to put them; and a site with one editing
-          chrome teaches it once. The pills went with the change — they gave a
-          rare quiet action the same weight as Save, and Save is what this bar
-          exists to make unmistakable. */}
+          chrome teaches it once. This panel's own pair of buttons went with
+          the change — they gave a rare quiet action the same weight as Save,
+          and Save is what this bar exists to make unmistakable. (The bar was
+          itself a pair of pills until 2026-09-20; it is two words on a rule
+          now, for every screen that borrows it. See .ln-word in entry.css.) */}
       {barSlot && createPortal(
-        <div className="ln-editing-bar">
-          <span className="ln-editing-label">Crediting</span>
-          <button type="button" className="ln-pin ln-pin--on" onClick={save} disabled={saving || !ready}>
-            <Check size={13} weight="bold" aria-hidden="true" />
-            <span>{saving ? 'Saving' : 'Save'}</span>
-          </button>
-          <button type="button" className="ln-pin" onClick={onDone} disabled={saving}>
-            <X size={13} weight="bold" aria-hidden="true" />
-            <span>Cancel</span>
-          </button>
-        </div>,
+        <EditingBar word="Crediting" onSave={save} onCancel={onDone} saving={saving} held={!ready} />,
         barSlot,
       )}
     </div>

@@ -62,6 +62,11 @@ async function Entry({ slug }) {
   return <PostClient entry={entry} references={references} authed={authed} layered />;
 }
 
+// It grows out of the tile that was pressed, which is what this layer has
+// always done. It rose from the foot of the screen for an evening — Miyel
+// asked to see it — and her verdict after living with it was "I prefer the
+// record to open from where you click it, almost like the album art grows
+// into the next screen and the rest of the page loads around that."
 export default function EntryOverTheJournal({ params }) {
   return (
     <LayerEntry over="journal">

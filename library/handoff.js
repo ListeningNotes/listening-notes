@@ -157,6 +157,61 @@ export function handOffNeighbour(entry) {
   passing = entry ? firstScreen(entry) : null;
 }
 
+// ── Reading on, one record to the next ────────────────────────────────────
+// Whether the record you are leaving had already collapsed into the header —
+// Miyel: "if you're in the mini version of the card, scrolling left and right
+// should keep it at mini, the next one should come up mini." The entry writes
+// it as it scrolls and the next one asks once, on the way in, so a swipe
+// carries where you were reading rather than the top of an album you did not
+// ask to see again.
+// Two variables and not one, because the moment matters. `atTheNotes` is
+// live — the entry keeps it true while its cover is up in the header — and it
+// goes false again the instant the outgoing record's scroller is emptied,
+// which happens while the swipe is still in the air. So the swipe takes a
+// copy on its way out, and the record arriving reads the copy.
+// Stamped rather than spent, the same shape `wentBack` has and for the same
+// reason turned inside out: React calls a state initializer twice in
+// development, so a one-shot read answers the first caller and lies to the
+// second, and which of the two React keeps is not something to build on. A
+// timestamp can be read as often as anybody likes. Closing a layer clears it,
+// so a record opened from the wall a moment later is not told it arrived
+// mid-read.
+let carriedAt = 0;
+// ── Asked of the page, not of a running total, 2026-09-20 ─────────────────
+// The entry kept this up to date as it scrolled, and that is a promise the
+// browser does not make: a scroll that has not been painted yet has not told
+// anybody anything, so a swipe taken straight after one carried the answer
+// from before it. The question is about what is on the screen, so it is put
+// to the screen — the record is in the header when the cover up there is the
+// size of a cover in a header.
+//
+// Sixty, which is comfortably over the forty-four it lands at and far under
+// anything on its way there.
+export function carryReading() {
+  if (typeof document === 'undefined') { carriedAt = 0; return; }
+  // Whether the header is showing the record. It asked whether the cover up
+  // there was small, which was true while the cover travelled and became
+  // true of every listen the moment it stopped travelling — so a swipe from
+  // a full card landed in the header state (Miyel: "if I'm on the full card
+  // it shouldn't switch to the mini beacon"). What is actually being asked
+  // is whether the changeover has happened, and the header says so.
+  // How far through the header's handover the reader is. Asked of the
+  // document rather than of a node, because the row is a portal and its
+  // nodes are replaced — and asked as a number rather than by measuring a
+  // cover, which stopped meaning anything once the cover stopped travelling.
+  const turn = Number(getComputedStyle(document.documentElement).getPropertyValue('--ln-turn'));
+  carriedAt = turn > 0.5 ? Date.now() : 0;
+}
+export function cameReadingOn() { return Boolean(carriedAt) && Date.now() - carriedAt < 1500; }
+// Closing a record ends the read: what comes next is an arrival, not a page
+// turn. Deliberately not in arrivingBack, which the history listener also
+// calls — and a turn to a neighbour is a history move, so that cleared the
+// answer the turn had just given.
+export function endReading() { carriedAt = 0; }
+// Asked by the wait state, which draws before the record does and must not
+// spend the answer the record is coming for.
+export function stillReadingOn() { return cameReadingOn(); }
+
 // ── Opened from somewhere that does not browse ────────────────────────────
 // The wall's order is a module variable and it outlives the wall, which is
 // what lets a tapped cover know its neighbours. It also meant an entry opened
@@ -194,7 +249,23 @@ export function tookASwipe() { const was = bySwipe; bySwipe = 0; return was; }
 // mounts — the way back led to the desk — the flag must not linger to
 // silence the next door somebody presses (2026-09-13).
 let wentBack = 0;
-export function arrivingBack() { wentBack = Date.now(); }
+export function arrivingBack() {
+  wentBack = Date.now();
+  // ── And the next press spends it, 2026-09-20 ────────────────────────────
+  // The clock alone was not enough once an album started rising. Closing one
+  // and opening another takes well under a second and a half, so the second
+  // album mounted, found this still stamped, and drew itself at rest — Miyel:
+  // "if I open one and slide it down and open the next one, it doesn't slide
+  // up, it just kind of opens."
+  //
+  // What this is actually for is a layer that remounts *because* another one
+  // closed over it, and that happens with no hand near the screen. A press is
+  // therefore proof that this is not that. The clock stays as the backstop
+  // for a close that leads nowhere and is never followed by anything.
+  if (typeof document === 'undefined') return;
+  const spend = () => { wentBack = 0; document.removeEventListener('pointerdown', spend, true); };
+  document.addEventListener('pointerdown', spend, true);
+}
 export function cameBack() {
   const recent = wentBack && Date.now() - wentBack < 1500;
   wentBack = 0;

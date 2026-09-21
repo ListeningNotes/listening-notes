@@ -221,6 +221,21 @@
        the carets were a hint. */
     bottom: var(--hn-foot-h, 0px);
   }
+  /* Except while a field in the cross has the focus, 2026-09-21. The band
+     steps out of the way of the keyboard then (.hn--typing in nav.css), and
+     this bar was still standing on top of where it had been — fifty-four
+     pixels of nothing between the search field and the keys. Miyel: "now
+     there's a gap." The offset is for the band, so when there is no band
+     there is no offset, which is the same sentence the fallback above makes
+     for a wall with no cross around it. */
+  .hn--typing .arc-bar-wrap { bottom: 0; }
+  /* And the wall's own floor with it (Miyel: "take it to zero while the
+     keyboard is up"). That padding is the home indicator's room — and the home
+     indicator is not at the bottom of what you can see while a keyboard is
+     over it, so reserving a strip for it there is reserving a strip for
+     something that is not there. Phone only, and only while a field has the
+     focus: everywhere else it is the floor the bar stands on. */
+  .hn--typing .hn-under { padding-bottom: 0; }
   /* Standing on the band rather than on the screen, so the home
      indicator's room is the band's to give and this must not give it a
      second time — thirty-odd pixels of empty bar under the search field

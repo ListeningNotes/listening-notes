@@ -67,10 +67,10 @@
 // layout — the stylesheet does all of it above 769px.
 
 'use client';
-import { useCallback, useEffect, useLayoutEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { ArrowsLeftRight, X } from '@phosphor-icons/react';
+import { ArrowsLeftRight, CaretDown, X } from '@phosphor-icons/react';
 import { CAPTION, announce, useListeningBeacon } from '../../hooks/useListeningBeacon';
 import MarqueeTitle from './MarqueeTitle';
 import { useSpineWidth } from '../../hooks/useSpineWidth';
@@ -79,10 +79,22 @@ import { useBookplate } from './Bookplate';
 import ListeningBeacon from './ListeningBeacon';
 import CallingCard from './CallingCard';
 import Journal from './Journal';
-import EdgeCaret from './EdgeCaret';
 import Footer from './Footer';
 import About from './About';
 import Dashboard, { heldNow, subscribeHeld } from './Dashboard';
+// The two rooms that used to be behind the desk and are stops of their own
+// from 2026-09-19. Both mount with the cross and stay mounted, which is the
+// rail's whole bargain: the inbox goes on counting and the book goes on
+// asking whether anybody is answering while you are looking at the card.
+// The inbox is the page itself, drawn without its own bar; the book is the
+// component the page is a frame around, which is why Friends.js exists.
+import Inbox from '../../app/dashboard/inbox/page';
+import Friends from './Friends';
+// The feed sits under the book as that pane's second floor. It is handed the
+// journal's own records — the same list the wall draws — because the one
+// thing it asks of them is whether a row is a record you also have, and
+// therefore whether Compare is worth offering.
+import Feed, { DensityToggle, useFeedDensity } from './Feed';
 import AlbumPicker from '../session_components/AlbumPicker';
 // The same two the desk already reaches for, from the same module, so the
 // pane and the desk agree about what "a listen is open" means and say so the
@@ -96,6 +108,11 @@ import Pitch from './Pitch';
 // said whose journal this is, so the record is the more interesting thing to
 // meet and the person is one swipe away.
 const HOME = 1;
+// Where the keeper's two extra rooms sit on the rail. Only ever true when the
+// lock has said yes — a visitor's rail is three panes and neither of these is
+// on it. See paneRefs, which is the list these index into.
+const BOOK = 2;
+const INBOX = 3;
 
 // Which face the spine was left on, per browser. Not a setting and not on the
 // settings row: it is where somebody put their own left-hand page down, the
@@ -130,6 +147,24 @@ const TURN_MS = 400;
 // underneath it is not a thing anybody is in a position to watch. "You don't
 // see the transition." See beginListen below, and the note in NOTES.
 const TO_THE_BAR_MS = 620;
+// ── And how long the record waits for the mark to get out of the way ──────
+// The two movements this press starts — the big mark leaving out of the top of
+// the screen, the record flying up out of the card into the bar — travel
+// through the same strip of screen, and until 2026-09-21 they did it at the
+// same time: measured, the cover slid through the logo from 220ms to 520ms.
+// Miyel: "i dont want them overlapping", and then "yes do the handover."
+//
+// So they take turns. The mark goes first, on its own slower curve (see
+// .hn--choosing .hn-bar-crown .hn-crown-svg in nav.css), and the record holds
+// at the card until it is clear — which reads as the logo making room rather
+// than as two things crossing. 300 is where the mark's foot passes the top of
+// the band the record is landing in, with a little to spare; the whole way in
+// is this plus TO_THE_BAR_MS, a shade over nine tenths of a second.
+//
+// The card is still standing down through all of it (a 0.7s collapse of its
+// own), so the record is not left hanging on its own anywhere: it sits with
+// the card it came from until it leaves it.
+const MAKE_ROOM_MS = 300;
 // The backstop for "the sheet has the screen", used only when the sheet's own
 // rise never announces itself — reduced motion, or a layout with no animation
 // on it. Comfortably past the longest rise there is (layRiseTall, 620ms on a
@@ -559,14 +594,27 @@ export default function HomeNav() {
   const cardRef = useRef(null);
   const deskRef = useRef(null);
   const homeRef = useRef(null);
+  const inboxRef = useRef(null);
+  const friendsRef = useRef(null);
   const faceNow = useRef('card');
-  // In rail order: the ID, the beacon, the desk. There were two of these and a
-  // getter that handed over whichever face of the left page was up; the two
-  // faces are panes in their own right on a phone now, so each has its own
-  // scroller and there is nothing to choose between. On a desk they are still
-  // the spine's two pages and only one is on screen, which costs nothing here
-  // — a hidden scroller measures zero and reports nothing.
-  const paneRefs = useRef([cardRef, homeRef, deskRef]).current;
+  // In rail order, and the order depends on who is looking, 2026-09-19.
+  //
+  //   signed in    the ID, the beacon, the book, the inbox
+  //   signed out   the ID, the beacon, the colophon
+  //
+  // The desk is not in either. It is still in the markup and still the spine's
+  // second page on a desktop, where there is no band to reach the other rooms
+  // with; the stylesheet takes it out of the rail on a phone. So this list is
+  // what the band counts against and what a swipe lands on, and it has to be
+  // the same list in the same order as what the flexbox actually lays out.
+  //
+  // Shaped rather than fixed, which means it changes identity once — when the
+  // lock answers. Every effect that lists it re-runs then and re-attaches to
+  // the panes that now exist, which is exactly right and is why they list it.
+  const paneRefs = useMemo(
+    () => (authed ? [cardRef, homeRef, friendsRef, inboxRef] : [cardRef, homeRef, deskRef]),
+    [authed]
+  );
   // Kept in step on every render, and read by the getter above. It has to be
   // set here rather than beside the state it mirrors: the ref is declared in
   // this block, and writing to it earlier in the body is the dead zone.
@@ -581,7 +629,11 @@ export default function HomeNav() {
     get current() {
       const inner = floorRef.current;
       if (inner && getComputedStyle(inner).overflowY === 'auto') return inner;
-      return paneRefs[HOME].current;
+      // homeRef and not paneRefs[HOME]: the list is rebuilt when the lock
+      // answers and this object is made once, so it would be holding the old
+      // one. They are the same ref either way, which is precisely why reaching
+      // through the list for it would have gone unnoticed.
+      return homeRef.current;
     },
   }).current;
 
@@ -659,12 +711,14 @@ export default function HomeNav() {
     const release = () => {
       if (gone) return;
       gone = true;
-      said.style.transition = `transform ${TO_THE_BAR_MS}ms cubic-bezier(0.22, 0.61, 0.36, 1)`;
+      // The same wait the cover takes, or the record's name would set off
+      // without it and the two halves of one object would arrive apart.
+      said.style.transition = `transform ${TO_THE_BAR_MS}ms cubic-bezier(0.22, 0.61, 0.36, 1) ${MAKE_ROOM_MS}ms`;
       said.style.transform = 'none';
       flightTimers.current.push(setTimeout(() => {
         said.style.transition = '';
         said.style.transform = '';
-      }, TO_THE_BAR_MS + 40));
+      }, MAKE_ROOM_MS + TO_THE_BAR_MS + 40));
     };
     flightTimers.current.push(requestAnimationFrame(release));
     flightTimers.current.push(setTimeout(release, 120));
@@ -854,7 +908,7 @@ export default function HomeNav() {
       // image, same place, and in the browser's cache because this is the copy
       // it has just finished flying. Letting go of the flown one is a frame
       // with nothing in it to notice.
-      flightTimers.current.push(setTimeout(() => setLanding(null), TO_THE_BAR_MS));
+      flightTimers.current.push(setTimeout(() => setLanding(null), (landing.wait || 0) + TO_THE_BAR_MS));
     };
     flightTimers.current.push(requestAnimationFrame(() => lookFor()));
   }, [landing]);
@@ -1023,7 +1077,12 @@ export default function HomeNav() {
     flightStyle = {
       left: from.left, top: from.top, width: from.width, height: from.height,
       transform: `translate(${dx}px, ${dy}px) scale(${k})`,
-      transition: travelling ? `transform ${landing.ms}ms cubic-bezier(0.22, 0.61, 0.36, 1)` : 'none',
+      // `wait` is the beat it holds at the card before it sets off, so the big
+      // mark has the strip to itself on the way out — see MAKE_ROOM_MS. A
+      // flight with none simply leaves at once.
+      transition: travelling
+        ? `transform ${landing.ms}ms cubic-bezier(0.22, 0.61, 0.36, 1) ${landing.wait || 0}ms`
+        : 'none',
     };
   }
 
@@ -1046,6 +1105,29 @@ export default function HomeNav() {
   }, [beginListen]);
 
   const [pane, setPane] = useState(HOME);
+  // ── A room is built the first time you walk into it ───────────────────────
+  // The card and the beacon are always drawn: you land on one and the other is
+  // one swipe away, and both are this journal's own pages. The inbox and the
+  // book are not. Each of them is a page that fetches when it mounts — the
+  // inbox asks for submissions, comments, reports and the address book, and
+  // the feed asks every journal in that book, one cross-origin request each.
+  // Mounting them with the cross would mean paying for all of that on every
+  // visit to the front door, including the visits that never leave the beacon
+  // and every visit on a desktop, where neither pane is drawn at all.
+  //
+  // So they are built on arrival and never taken down again. That keeps the
+  // rail's actual promise — come back and the pane is where you left it —
+  // without the part of it that was only ever true because the panes were
+  // cheap. Passing through the inbox on the way to the book counts as
+  // arriving, which is right: you went past it and it is now behind you.
+  const [visited, setVisited] = useState(() => ({ [HOME]: true }));
+  // How many people are in the book, as the book itself reports it. null until
+  // it has been asked, which is why the second floor is drawn on `> 0` rather
+  // than on `!== 0`: an unanswered question is not an empty book.
+  const [bookSize, setBookSize] = useState(null);
+  useEffect(() => {
+    setVisited(seen => (seen[pane] ? seen : { ...seen, [pane]: true }));
+  }, [pane]);
   // Whether anything is moving right now. The controls sit over the page
   // rather than beside it, so while a wall of covers is going past underneath
   // they are three marks on top of somebody's album art. They fade out on the
@@ -1057,6 +1139,309 @@ export default function HomeNav() {
   // already down there. Both are measured, never declared.
   const [deep, setDeep] = useState([false, false, false]);
   const [down, setDown] = useState([false, false, false]);
+  // ── The mark becomes the header, 2026-09-20 ─────────────────────────────
+  // Miyel: "I want the big logo to slowly transform into the small one that
+  // becomes the header for the journal — kind of the same way the beacon
+  // transforms into the smaller version when you press log listen. Right now
+  // if I drag and hold I can see two logos; the big one just disappears under
+  // the header of the small one, but it doesn't transform."
+  //
+  // Two marks were exactly what it was: the crown scrolling away and the
+  // bar's own small one fading in behind it, and on a slow drag you catch
+  // them both. One mark now. The crown travels to where the small one stood,
+  // shrinking as it goes, and stays there — so the header of the journal is
+  // the thing that was the crown rather than a second copy of it, and nothing
+  // has to cross-fade with anything.
+  //
+  // Driven off the pane's own scroll, straight onto the element: it changes
+  // every frame of a drag and is no business of React's. Nothing about the
+  // page's layout moves — a transform is paint, so the record under it scrolls
+  // exactly as it did.
+  //
+  // The mark is found in the pane rather than held on a ref. `next/link` in
+  // this version does not hand its anchor back through one — measured, the ref
+  // read null on every render while the element was plainly on the page — and
+  // there is exactly one crown, inside the pane this effect already has.
+  //
+  // ── Why this is state and not a class the effect writes, 2026-09-20 ──────
+  // It was `classList.add('hn--morph')` for a day, and that is a class on an
+  // element React renders the className of. Every re-render rewrites the whole
+  // class attribute, so the first time any *other* flag on the cross moved —
+  // scrolling the book down to the feed, opening the picker — React wrote its
+  // own list back over this one and the flag was gone. The small mark, which
+  // that flag is the only thing hiding, came back: a logo standing on top of
+  // the address book's own header. Anything the cross wears goes in the list
+  // below, where React can see it.
+  const [morphing, setMorphing] = useState(false);
+  useEffect(() => {
+    const pane = paneRefs[HOME]?.current;
+    // Where the mark belongs on the page, which is still the crown's place:
+    // it is measured here and drawn in the bar. Two elements, one mark — see
+    // .hn-bar-crown in the row above.
+    const place = pane?.querySelector('.hn-crown-mark');
+    if (!pane || !place) return undefined;
+    const cross = pane.closest('.hn');
+    const bar = cross?.querySelector('.hn-bar');
+    const mark = cross?.querySelector('.hn-bar-crown');
+    if (!bar || !mark) return undefined;
+
+    // ── How long the journey is, 2026-09-20 ────────────────────────────
+    // Miyel, off a real phone: "it flies out the top pretty fast, because the
+    // scroll can happen really fast. When I slow down my thumb it kind of
+    // leaves into the header, but it disappears into nothing — it's like
+    // disappearing but not becoming small."
+    //
+    // The first half is the distance. It travelled its own natural distance,
+    // which is about seventy pixels on a phone — the gap between where the
+    // crown stands and where the bar's line is — and seventy pixels of scroll
+    // is one flick. A morph nobody can see is a cut. So the journey is
+    // stretched over a good part of a screen and the mark *lags*: the page
+    // goes up at the speed of the thumb and the mark goes up more slowly,
+    // which is the whole of what makes it read as a transformation rather
+    // than a thing scrolling away.
+    //
+    // ── And then it stopped being a distance at all, 2026-09-20 ────────────
+    // 70 to 180 to 250, each time on her asking to see it slower, and the
+    // same thing wrong underneath every one of them: whatever the number is,
+    // the mark is already small while the beacon is still on screen, and by
+    // the time the wall of covers arrives — the thing it is becoming a header
+    // *for* — it has been sitting up there for half a screen.
+    //
+    // Miyel: "the big logo should stay where it's at. It'll stay large until
+    // you get to the actual first album in the grid, and then that's when it
+    // shrinks. Not on the way down."
+    //
+    // So it does not scroll away and it does not shrink on the way down. It
+    // holds its place on the screen at full size for the whole of the beacon,
+    // and the shrink is spent on the wall's arrival: it starts when the first
+    // row of covers is JOURNEY from the bar and finishes as that row lands
+    // under it. A handover between two things you can see at once, which is
+    // the same relay the book's header does with the feed's.
+    //
+    // JOURNEY is therefore how far ahead of the wall the shrink begins, not
+    // how much scrolling it takes.
+    const JOURNEY = 250;
+    // The air between the foot of the mark and the foot of the header — the
+    // line everything disappears under. Sixteen to begin with and six from
+    // 2026-09-20, on her asking for it closer to the logo: the header should
+    // read as the mark's own ground rather than as a band the mark happens
+    // to be standing in.
+    const GROUND = 6;
+    const ground = cross?.querySelector('.hn-bar-ground');
+    // The pane's own crown, which is the thing that folds away and grows back
+    // when a listen starts and ends. Its state is the test for whether a
+    // measurement is worth taking — see measure().
+    const crown = pane.querySelector('.hn-crown');
+
+    // Measured rather than written down, because every number in it is a
+    // clamp on the screen's height: where the crown stands, how tall it is,
+    // and where the bar's line falls on a phone with a notch.
+    let base = null;
+    const measure = () => {
+      // ── Not while the crown is folded away, 2026-09-21 ────────────────
+      // Starting a listen collapses it — height, padding and a scale down to
+      // a quarter (.hn--choosing .hn-crown in nav.css) — and a rect taken off
+      // a scaled ancestor is a scaled rect. Measured there, `top` is where a
+      // quarter-sized crown holds the mark and `height` is a fifth of what the
+      // mark is, and both get written into `base` and kept. That is what left
+      // the mark parked forty-eight pixels above its place after every
+      // session: nothing measured again once the crown had stood back up.
+      //
+      // The class rather than the `choosing` state, because this effect is
+      // built once and would hold whatever that was at the time.
+      //
+      // And the ground goes back to the bar's own height on the way in. It is
+      // written from the mark's foot, and the mark's foot while the crown is
+      // folded is a hundred and seventy pixels of opaque header standing over
+      // the picker's search field — which is what holding the last good
+      // measurement costs if the ground is not told. While you are choosing
+      // the band is a band: the record is in it, the mark is not, and there is
+      // nothing for it to be the ground of.
+      if (cross?.classList.contains('hn--choosing')) {
+        ground?.style.removeProperty('--ground');
+        return;
+      }
+      // ── Nor while it is on its way back, 2026-09-21 ───────────────────
+      // The class comes off the moment the session ends and the crown then
+      // takes 0.7s to grow back, so there is most of a second in which
+      // nothing is folded and nothing is settled either. The observer fires
+      // through all of it, and the half-grown answers it took were landing
+      // the mark on the header's line — where it sat for a beat before
+      // dropping the last forty-eight pixels into place. One arrival, not
+      // two: a transform on the crown means it is still moving, and a rect
+      // read off a moving box is not a measurement.
+      //
+      // `draw` rather than a bare return, so the band behind the header is
+      // kept true to the base we are holding. Skipping the measurement must
+      // not also skip what the measurement was writing — see the gotcha.
+      if (crown && getComputedStyle(crown).transform !== 'none') { draw(); return; }
+      if (!window.matchMedia('(max-width: 768px)').matches) {
+        mark.style.transform = '';
+        base = null;
+        ground?.style.removeProperty('--ground');
+        setMorphing(false);
+        return;
+      }
+      const m = place.getBoundingClientRect();
+      const b = bar.getBoundingClientRect();
+      // ── And if it cannot run, the bar keeps its own mark ──────────────
+      // The second half of what she saw: with the small mark hidden and the
+      // morph not happening, the crown scrolls off and *nothing arrives* —
+      // "it disappears into nothing". Whatever the reason for the morph not
+      // running on a given screen, the answer must not be a header with no
+      // mark in it. So the crown says out loud that it is handling this, and
+      // the stylesheet only hides the small one while it is.
+      if (!m.height) {
+        base = null;
+        ground?.style.removeProperty('--ground');
+        setMorphing(false);
+        return;
+      }
+      setMorphing(true);
+      // The small mark is 28px on the middle of the bar's 58px row, which is
+      // 29 up from the band's own bottom edge. Same sum .hn-bar-mark uses.
+      const small = 28;
+      // The two landmarks the shrink runs between, both measured rather than
+      // assumed: floor one is a different height on every phone, because the
+      // record, the ring and the caret are all laid out against the screen.
+      //
+      // `ends` is the scroll at which the wall's first row is under the bar,
+      // which on this pane is the same instant the caret goes behind the
+      // header, because the caret is the last thing on floor one and the wall
+      // starts where it stops.
+      //
+      // `begins` is the ring arriving at the foot of the header — "it'll
+      // shrink as Log a listen passes it". It moved to the caret for an hour,
+      // on "it can happen closer to the albums", and came straight back the
+      // moment the entry's own collapse was given a short distance of its
+      // own: the two are the same gesture on two screens and they should not
+      // disagree about when a thing starts becoming a header.
+      const wall = pane.querySelector('.hn-floor--wall');
+      const last = pane.querySelector('.hn-go');
+      const w = wall && wall.getBoundingClientRect();
+      const g = last && last.getBoundingClientRect();
+      const top = m.top + pane.scrollTop;
+      const ends = w ? w.top + pane.scrollTop - b.bottom : null;
+      base = {
+        top,
+        height: m.height,
+        target: b.bottom - 29 - small / 2,
+        scale: small / m.height,
+        floor: b.bottom,
+        ends,
+        // No caret means there is no second floor to point at, so the shrink
+        // falls back to the last JOURNEY of the approach. Still finishing as
+        // the wall lands, which is the part that matters.
+        begins: g ? g.top + pane.scrollTop - (top + m.height + GROUND)
+               : ends == null ? 0 : Math.max(0, ends - JOURNEY),
+      };
+      draw();
+    };
+    // Ease out, so it arrives rather than stops: a linear morph reads as the
+    // mark being dragged and this reads as it settling.
+    const ease = t => 1 - (1 - t) * (1 - t);
+    const draw = () => {
+      if (!base) return;
+      // Same reason as the measurement's: this runs on the pane's own scroll,
+      // and a scroll that happens while the crown is folded away would write
+      // the ground straight back.
+      if (cross?.classList.contains('hn--choosing')) return;
+      const gone = pane.scrollTop;
+      // How far through the handover: nothing until the wall is JOURNEY away,
+      // all of it once the wall has landed. A pane with no wall in it falls
+      // back to the old rule, so the mark still has somewhere to go.
+      const raw = base.ends == null
+        ? gone / JOURNEY
+        : (gone - base.begins) / (base.ends - base.begins);
+      const t = ease(Math.min(1, Math.max(0, raw)));
+      // Standing still at the crown's place at full size, then carried up to
+      // the line as the wall comes in. Never above the line it is going to.
+      // A rubber band pulling down at the top takes it along, which is the
+      // one time it moves with the page.
+      const at = gone < 0
+        ? base.top - gone
+        : Math.max(base.target, base.top + (base.target - base.top) * t);
+      const k = 1 + (base.scale - 1) * t;
+      mark.style.transform = `translate(-50%, ${at.toFixed(1)}px) scale(${k.toFixed(4)})`;
+      // And the header ends under it, whatever size it is now. At the end of
+      // the journey that sum is the bar's own height, so the collapse needs
+      // no separate clock: the ground is always the mark's foot plus the air
+      // under it.
+      if (ground) {
+        const foot = Math.max(base.floor, at + base.height * k + GROUND);
+        ground.style.setProperty('--ground', `${foot.toFixed(1)}px`);
+      }
+    };
+
+    measure();
+    pane.addEventListener('scroll', draw, { passive: true });
+    // Three things can change what was measured and all three have to say so.
+    // A resize is the obvious one; the media query is the phone-or-desk
+    // answer, which flips without the window necessarily firing anything this
+    // effect hears in time; and the pane's own box changes when the keyboard
+    // comes up. Measured once at mount and then whenever any of them moves —
+    // without the last two the first measurement was taken at whatever width
+    // the page happened to load at and never revisited, which is the bug this
+    // was found with.
+    const narrow = window.matchMedia('(max-width: 768px)');
+    narrow.addEventListener('change', measure);
+    window.addEventListener('resize', measure);
+    const watch = new ResizeObserver(measure);
+    watch.observe(pane);
+    // And the bar, because half of what is measured is *its* box. It grows
+    // and shrinks on its own — a live beacon arriving in it, a name fading
+    // through — and a target measured against the old height parks the mark
+    // a dozen pixels above the line and leaves it there, which is what
+    // "doesn't stay in the header" was.
+    watch.observe(bar);
+    // ── And the floor the landmarks stand on, 2026-09-20 ──────────────────
+    // The pane is the height of the screen and never changes, so watching it
+    // says nothing about the beacon settling underneath. Floor one does
+    // change: the cover arrives, the title wraps or does not, the column of
+    // earlier covers fills in. Every one of those moves the ring, and a ring
+    // measured before them put the shrink 250px early — it had already begun
+    // while the record was still on screen, which is the thing this was
+    // written to stop.
+    const beacon = pane.querySelector('.hn-floor--beacon');
+    if (beacon) watch.observe(beacon);
+    // A picture finishing is the common one and it does not resize anything
+    // that is being watched: the cover has its box from the start and fills
+    // it in. `load` does not bubble, so this listens on the way down.
+    pane.addEventListener('load', measure, true);
+    // ── And the crown finishing its way back up, 2026-09-21 ───────────────
+    // Leaving a listen grows the crown back over 0.7s. The observer above
+    // hears the height in that, because height is layout — but the scale is
+    // not, and a ResizeObserver says nothing about a transform. So its last
+    // word came while the box was still a fraction of itself, and there was
+    // nothing after it to correct the record. The transition saying it has
+    // ended is the exact frame the measurement is good again.
+    const stood = event => {
+      if (event.target === crown && event.propertyName === 'transform') measure();
+    };
+    crown?.addEventListener('transitionend', stood);
+    return () => {
+      pane.removeEventListener('scroll', draw);
+      pane.removeEventListener('load', measure, true);
+      crown?.removeEventListener('transitionend', stood);
+      narrow.removeEventListener('change', measure);
+      window.removeEventListener('resize', measure);
+      watch.disconnect();
+      mark.style.transform = '';
+      ground?.style.removeProperty('--ground');
+      setMorphing(false);
+    };
+  }, [paneRefs, authed]);
+
+  // ── Whether the feed has reached the header ─────────────────────────────
+  // Not the same question as `down`, which is true eight pixels into any
+  // pane. The word and the toggle belong to the feed, and the book is a whole
+  // screen above it: a header that said FEED while you were looking at the
+  // faces would be naming the wrong floor. See the scroll effect below.
+  const [atFeed, setAtFeed] = useState(false);
+  // Whether the book has a field open in the bar's row. The name is drawn
+  // absolutely on the middle of that row and a field opening there has to
+  // have it — see the relay note on barSays.
+  const [bookBusy, setBookBusy] = useState(false);
 
   // ── The bar, against the keyboard ─────────────────────────────────────────
   // The row at the top is `position: fixed`, which on iOS means fixed to the
@@ -1120,6 +1505,60 @@ export default function HomeNav() {
       root.style.removeProperty('--hn-h');
     };
   }, [paneRefs]);
+
+  // ── And the four doors step down while you are typing, 2026-09-21 ────────
+  // Straight out of the effect above. The cross is made as tall as the part of
+  // the window you can see, which is the cure for everything sliding up when a
+  // keyboard opens — and the band is held against the cross's bottom edge, so
+  // shrinking the cross walks the four doors up the screen until they are
+  // sitting in the gap between what you are typing and the keys. Miyel,
+  // 2026-09-21, filtering her journal: "I shouldn't see the footer between the
+  // keyboard again." Again, because the send sheet had it first (hn--sending).
+  //
+  // This one is the general answer rather than a third named case: while a
+  // field anywhere in the cross has the focus, the band is not what you are
+  // reaching for. It covers the journal's filter, the book's own field, the
+  // picker's search and whatever is added next, which a class per surface
+  // would not.
+  //
+  // Scoped to fields the cross contains. A sheet over it brings its own rule
+  // (hn--sending) and a layer over it hides the band anyway; a blanket test on
+  // document.activeElement would have this reacting to fields it has no
+  // business knowing about.
+  //
+  // A tick behind the event: `focusin` fires while the focus is still moving
+  // and activeElement can still be the element being left — the same trap
+  // LayerEntry's data-typing is written around, recorded there.
+  // State and not classList, which is the rule this file already learned the
+  // hard way for the morph: the cross's class attribute is React's, rewritten
+  // whole on every render, so a class put on from the outside survives exactly
+  // until any other flag here moves. Anything the cross wears goes in the list
+  // at the bottom of this file. The two flags written from outside it — the
+  // send sheet's and the card's — cannot use that list, so they are attributes
+  // instead, which React never touches. Both were classes and both were being
+  // wiped; see the notes in SendSheet.js and About.js.
+  const [typing, setTyping] = useState(false);
+  useEffect(() => {
+    const root = railRef.current?.closest('.hn');
+    if (!root) return undefined;
+    let settling = null;
+    const mark = () => {
+      clearTimeout(settling);
+      settling = setTimeout(() => {
+        const el = document.activeElement;
+        setTyping(Boolean(el) && root.contains(el)
+          && (el.tagName === 'TEXTAREA' || el.tagName === 'INPUT' || Boolean(el.isContentEditable)));
+      }, 0);
+    };
+    mark();
+    document.addEventListener('focusin', mark);
+    document.addEventListener('focusout', mark);
+    return () => {
+      clearTimeout(settling);
+      document.removeEventListener('focusin', mark);
+      document.removeEventListener('focusout', mark);
+    };
+  }, []);
 
   // Called by every scroller on the page, horizontal and vertical alike.
   const stir = useCallback(() => {
@@ -1299,14 +1738,18 @@ export default function HomeNav() {
   // it is a page — and a down caret on it would be promising an arrival that
   // this layout deliberately does not have. Down is a cover, and the card is
   // not one.
+  //
+  // paneRefs is a dependency and was not, which was harmless until the list
+  // stopped being fixed on 2026-09-19: a callback made once holds the list the
+  // first render gave it, and the first render of a keeper's cross is always
+  // the signed-out shape because the lock has not answered yet.
   const measure = useCallback(() => {
     setDeep(paneRefs.map((ref, i) => {
       if (i !== HOME) return false;
       const el = ref.current;
       return !!el && el.scrollHeight - el.clientHeight > 8;
     }));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [paneRefs]);
 
   useEffect(() => {
     measure();
@@ -1334,9 +1777,25 @@ export default function HomeNav() {
     const cleanups = paneRefs.map((ref, i) => {
       const el = ref.current;
       if (!el) return null;
+      // The bar this pane scrolls under. Measured rather than read off
+      // --hn-bar-h, which is a calc with an env() in it and comes back as the
+      // token rather than a number.
+      const bar = el.closest('.hn')?.querySelector('.hn-bar') || null;
       const onScroll = () => {
         stir();
         const moved = el.scrollTop > 8;
+        // ── The feed's name arrives in the header ───────────────────────
+        // Once the way down has gone under the bar, which is the moment the
+        // floor above is behind you. There is nothing to hand over from any
+        // more: the word that stood at the foot of the faces went on
+        // 2026-09-20 and what is there is a chevron, so the name is not
+        // travelling, it is arriving. It fades in for that reason — see
+        // .hn-bar-say in nav.css.
+        if (i === BOOK) {
+          const way = el.querySelector('.hn-down');
+          if (!way || !bar) setAtFeed(false);
+          else setAtFeed(way.getBoundingClientRect().bottom <= bar.getBoundingClientRect().bottom);
+        }
         setDown(prev => {
           if (prev[i] === moved) return prev;
           const next = [...prev];
@@ -1348,8 +1807,11 @@ export default function HomeNav() {
       return () => el.removeEventListener('scroll', onScroll);
     });
     return () => cleanups.forEach(fn => fn && fn());
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [stir]);
+    // And here too: the panes this listens to are the panes that exist, and
+    // two of them arrive when the lock answers. Without paneRefs the inbox and
+    // the book would scroll with nothing listening — no fade on the controls
+    // while they move, and a `down` that never changes for them.
+  }, [stir, paneRefs]);
 
   function goTo(index) {
     const el = railRef.current;
@@ -1379,11 +1841,97 @@ export default function HomeNav() {
   // To the second floor where there is one — its own top, not one viewport
   // down, because a first floor that had to grow past the screen on a short
   // phone puts the second one lower than that.
+  //
+  // Less the bar, 2026-09-20. Both second floors carry `scroll-margin-top` of
+  // exactly that, so the first record lands under the mark rather than behind
+  // it, and their own top is a bar's-worth further down than where the scroll
+  // should stop. The snap used to correct for it on arrival; it is proximity
+  // now and will not, so the number has to be right when it is asked for.
+  // Read off the floor's own scroll-margin rather than written down twice.
+  // A custom property comes back unresolved — `calc(80px + max(...))`, which
+  // parseFloat reads as 80 on a phone with no notch and 80 on one with —
+  // where scrollMarginTop comes back in pixels with the safe area already in
+  // it. The one number, asked for in the one place it is true.
+  // Where a pane's second floor comes to rest — the wall under the beacon,
+  // the feed under the book. The press lands here and so does the settle
+  // below, which is the point: one number, so a thumb and a press cannot
+  // disagree about where the next floor sits.
+  function floorTwo(el) {
+    if (!el) return 0;
+    const floors = el.querySelectorAll(':scope > .hn-floor, :scope > * > .hn-floor');
+    const clear = floors.length > 1 ? parseFloat(getComputedStyle(floors[1]).scrollMarginTop) || 0 : 0;
+    return Math.max(0, secondFloorTop(el) - clear);
+  }
   function goDown(index) {
     const el = paneRefs[index].current;
     if (!el) return;
-    el.scrollTo({ top: secondFloorTop(el), behavior: ease() });
+    el.scrollTo({ top: floorTwo(el), behavior: ease() });
   }
+
+  // ── Two floors, two stops, 2026-09-20 ─────────────────────────────────
+  // The entry got this first and Miyel asked for it here: move down at all
+  // and take your hand off and the pane finishes the journey to its second
+  // floor; move up and it puts the first one back whole. It stops mattering
+  // once you are past the second floor, which on the book is the whole of
+  // the feed.
+  //
+  // Not a snap — see DECISIONS, and the note in FullPostPage this is the
+  // twin of. A snap owns a scroller and pulls back on every throw; this
+  // acts between two places and is silent outside them.
+  //
+  // A finger leaving is the signal rather than the scrolling stopping,
+  // because momentum is a stream of scroll events and each one would push
+  // the answer further away. A hand still on the glass holds whatever is
+  // half way, which is how the mark can be held half in the header.
+  useEffect(() => {
+    const wire = el => {
+      if (!el) return () => {};
+      let held = false;
+      let idle = null;
+      let lift = null;
+      let ours = false;
+      let down = true;
+      let was = 0;
+      const rest = () => {
+        if (held || ours) return;
+        const to = floorTwo(el);
+        if (to < 80) return;
+        const at = el.scrollTop;
+        if (at <= 8 || at >= to - 8) return;
+        ours = true;
+        clearTimeout(idle);
+        clearTimeout(lift);
+        el.scrollTo({ top: down ? to : 0, behavior: 'smooth' });
+        setTimeout(() => { ours = false; }, 500);
+      };
+      const hold = () => { held = true; clearTimeout(idle); clearTimeout(lift); };
+      const letGo = () => { held = false; clearTimeout(lift); lift = setTimeout(rest, 40); };
+      const moved = () => {
+        const at = el.scrollTop;
+        if (at !== was) down = at > was;
+        was = at;
+        clearTimeout(idle);
+        idle = setTimeout(rest, 140);
+      };
+      el.addEventListener('touchstart', hold, { passive: true });
+      el.addEventListener('touchend', letGo, { passive: true });
+      el.addEventListener('touchcancel', letGo, { passive: true });
+      el.addEventListener('scroll', moved, { passive: true });
+      return () => {
+        el.removeEventListener('touchstart', hold);
+        el.removeEventListener('touchend', letGo);
+        el.removeEventListener('touchcancel', letGo);
+        el.removeEventListener('scroll', moved);
+        clearTimeout(idle);
+        clearTimeout(lift);
+      };
+    };
+    // The two panes that have a second floor. The card and the inbox are one
+    // screen each and have nothing to be carried to.
+    const offs = [paneRefs[HOME]?.current, paneRefs[BOOK]?.current].map(wire);
+    return () => offs.forEach(off => off());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [paneRefs, authed]);
 
   // ── The one row that sits over all three panes ────────────────────────────
   // The lights, and nothing else. There was a small mark in the corner here
@@ -1425,8 +1973,96 @@ export default function HomeNav() {
   // and on the one pane where it is not sitting over somebody's reading. The
   // stylesheet hides it on the turning pane; on a desk this row is over the
   // journal, which is the beacon, so it simply stays.
+  // ── The feed's one control, in the row that is already a header ────────
+  // Miyel, 2026-09-20: "there's already a header up there with a hairline,
+  // just put it above that hairline — I think the LN. used to live there."
+  // It had a bare row of its own under this bar, which read as a second
+  // header belonging to nothing. This is the header, so it goes in this.
+  //
+  // Only while the feed is what is under it. The bar belongs to every pane
+  // and a control for a list four swipes away is furniture; it arrives with
+  // the floor and leaves with it.
+  const { density, flip: flipDensity } = useFeedDensity();
+  const onTheFeed = authed && pane === BOOK && atFeed;
+  // What the bar is called while you are on the friends pane. Nothing on the
+  // others: the beacon has a mark of its own and the card's tools are the only
+  // thing it puts up here.
+  // ── The keeper's, and only the keeper's ─────────────────────────────────
+  // `pane` is where the rail has scrolled to, counted in panes — and a
+  // visitor's rail has fewer of them, so the index that is the book when
+  // somebody is signed in is a different pane when nobody is. Miyel,
+  // 2026-09-20: "address book header shows on about page when signed out."
+  // The name of a room a visitor cannot enter should never be drawn for
+  // them, whatever the arithmetic says, so it is gated on the wristband as
+  // well as on the position.
+  const barSays = !authed || pane !== BOOK ? null
+    : atFeed ? 'Recent listens'
+    // The name steps aside for the field the + opens, which arrives in this
+    // same row: "it needs to open and replace address book text."
+    : bookBusy ? null
+    : bookSize > 0 ? `Address book \u00b7 ${bookSize}`
+    : 'Address book';
+
   const header = (
     <div className={'hn-bar' + (down[pane] || choosing ? ' hn-bar--scrolled' : '')}>
+      {/* ── The ground the header stands on, 2026-09-20 ──────────────────
+          The bar is 80px of opaque page colour and the crown hangs below it,
+          which made the crown a logo *floating over* the beacon: the record
+          slid visibly behind it on its way up. Miyel: "think of it like it's
+          already one very large header, where you can't see behind it, and
+          it ends right under the logo. Everything should disappear behind it."
+
+          So the header has a floor that reaches to just under whatever size
+          the mark currently is, and it collapses onto the bar as the mark
+          does. Same colour as the page, so at the top of the beacon there is
+          nothing to see; what it buys is that the record, the ring and the
+          caret go *under* it rather than past it.
+
+          It is the bar's first child, so the lights and the small mark draw
+          on top of it, and .hn-crown is above the whole bar already. */}
+      <div className="hn-bar-ground" aria-hidden="true" />
+      {/* ── And the big mark is the header's too, 2026-09-20 ─────────────
+          It was the crown's, at the head of the pane, and on a phone that
+          does not work: the pane paints *under* this row. Miyel, twice —
+          "the big one just disappears under the header of the small one",
+          and then, with the ground above, "I don't even see the logo any
+          more". Both are the same fact. A thing that has to be drawn over
+          this row cannot live in the pane.
+
+          So the header draws it. The crown stays where it is, holding its
+          space in the layout so the record starts where it always did, and
+          on a phone it is invisible while this one is standing in for it —
+          still one mark on screen, which is the rule this file keeps.
+
+          Not a link. The crown was one, to re-centre the cross, and the
+          cross is already centred here; .hn-totop is the tap across this
+          row and it goes to the top, which is the only thing left to want. */}
+      <div className="hn-bar-crown" aria-hidden="true">{mark('hn-crown-svg')}</div>
+      {/* The feed's name, once the feed is what you are on. It is the same
+          word that stands at the foot of the floor above with the chevron
+          under it — that one labels the way down, which is a thing you are
+          deciding whether to do, and this one names the floor you took it to.
+          No chevron on this one: there is nowhere further down.
+
+          In the middle of the row, where the mark stands on the pane that
+          draws one — so on this pane the middle is free and a name in it
+          reads as a header's name rather than as a label at one end. */}
+      {/* ── One header, two names, 2026-09-20 ───────────────────────────
+          The friends pane has two floors and the bar says which one you are
+          on: the book and how many are in it upstairs, what they have been
+          listening to downstairs. Miyel: "center address book · #, so
+          basically that gets replaced by recent listens once you hit the
+          feed." The book's name was a line on its own floor ten pixels below
+          this one, which is a title and a title rather than a header.
+
+          Recent listens rather than Feed because there is room for it here —
+          "it was short before because of the chevron and how it lived, now
+          it's different" — and whose listens is the pane's own business: the
+          faces are directly above and the band says FRIENDS.
+
+          Keyed on the word so React builds a new one when it changes, which
+          is what makes the swap fade rather than cut. */}
+      {barSays && <span key={barSays} className="hn-bar-say">{barSays}</span>}
       {/* ── The way out of the picker ────────────────────────────────────
           In the corner the up-caret holds the rest of the time — the two never
           want the row at once, because while the picker is open there is no
@@ -1567,6 +2203,7 @@ export default function HomeNav() {
       <button type="button" className="hn-bar-mark" onClick={() => goUp(pane)} aria-label="Back to the top">
         {mark('hn-bar-svg')}
       </button>
+      {onTheFeed && <DensityToggle density={density} onFlip={flipDensity} />}
       <button className="hp-icon-btn hn-lights" onClick={toggleTheme} aria-label="Toggle theme">
         {/* The sun and the moon. Drawn as a switch on a wall for an hour, on
             the grounds that the component is called Lightswitch; the file name
@@ -1680,8 +2317,11 @@ export default function HomeNav() {
   // one under the artist in bold and moving the other would be two controls
   // wearing different clothes for the same job.
   const theWayIn = authed && (inHand ? (
-    <Link href="/session" className="ln-onward" title={`Back to ${inHand.album}`}>
-      Back to the listen
+    <Link href="/session" className="ln-onward" title={`Back to ${inHand.album}`} aria-label="Back to the listen">
+      <span className="hn-go" aria-hidden="true">
+        <span className="hn-go-say">Back to</span>
+        <span className="hn-go-say">the listen</span>
+      </span>
     </Link>
   ) : (
     /* A button and not a link, because it does not navigate: floor one
@@ -1754,11 +2394,59 @@ export default function HomeNav() {
             art: onAir,
             live: isLive,
             from: { left: box.left, top: box.top, width: box.width, height: box.height },
-            to: null, go: false, ms: TO_THE_BAR_MS, into: '.hn-bar-beacon .ses-cover',
+            to: null, go: false, ms: TO_THE_BAR_MS, wait: MAKE_ROOM_MS,
+            into: '.hn-bar-beacon .ses-cover',
           });
         }}
+      aria-label="Log a listen"
     >
-      Start a listen
+      {/* ── The way in is a dial on the line, 2026-09-20 ────────────────────
+          Miyel: "make start a listen feel intentional — maybe it can be a
+          circle between the hairlines that looks like a button, that music
+          note then start a listen in the circle under the note, smaller font,
+          'start a' and 'listen' can be two separate lines. Maybe that will
+          feel better to me and also give more space."
+
+          It was a line of small caps under a rule with the note sitting in a
+          gap in that rule — three things on one axis, none of them shaped
+          like a control. The circle is one thing: the note keeps its place on
+          the line and the words move inside it, which is where the space
+          comes from as well.
+
+          The note is in the markup rather than on ::before now, because it
+          has to stack with the words. A visitor's calling card keeps the
+          ::before version — there is no control in that slot, so the mark
+          stays a mark on a rule. */}
+      <span className="hn-go" aria-hidden="true">
+        {/* ── No mark in it, 2026-09-20 ────────────────────────────────────
+            A ♪ sat over the words for an hour, because a ♪ had sat on the
+            rule before the circle existed and moving it inside was the
+            obvious thing to do. Miyel: "is there a better icon than that
+            music note — is it even needed?" It is not. It said *music* on a
+            site that is entirely about music, over two words that already say
+            what pressing does, in a circle 84 across with three things
+            stacked in it. The ring is the object on the rule now; the mark
+            was what the rule had instead of one.
+
+            The calling card keeps its ♪, and should: there is no control in
+            that slot, so what is on the rule there is a mark and nothing
+            else. */}
+        {/* The verb, then the article back: "get rid of a", "Log Listen",
+            "Log a / listen" (Miyel, 2026-09-20, in that order over ten
+            minutes). Log rather than Start because it is the word this
+            journal already uses for the act everywhere else — LAST LOGGED
+            over the cover, `I've already logged this` in the inbox, logged in
+            the feed. Start named the beginning of a flow, which is a thing
+            about the software; Log names the thing you came to do.
+
+            And the article earns its place after all: two words on two lines
+            read as two labels, where a phrase broken mid-sentence reads as
+            one thing said across a break. It is also what the line is for —
+            there has to be something in the first line to hold the second
+            one under it. */}
+        <span className="hn-go-say">Log a</span>
+        <span className="hn-go-say">listen</span>
+      </span>
     </button>
   ));
 
@@ -1850,11 +2538,32 @@ export default function HomeNav() {
     <div
       className={
         'hn hn--face-' + face
+        /* Whether the keeper is looking. The stylesheet needs to know because
+           the rail is a different shape either way — four panes or three —
+           and which panes those are is not something a selector can work out
+           from the markup. */
+        + (authed ? ' hn--keeper' : '')
         + (turning ? ' hn--turning' : '')
         + (spine.dragging ? ' hn--dragging' : '')
         + (choosing ? ' hn--choosing' : '')
         + (filing ? ' hn--filing' : '')
         + (landing ? ' hn--flying' : '')
+        /* Which floor of the friends pane you are on, so the corner of the
+           bar can be handed from the book's + to the feed's toggle without
+           either of them knowing about the other. See .hn-bar-add. */
+        + (atFeed ? ' hn--at-feed' : '')
+        /* The crown is travelling into the bar on this screen, so the bar's
+           own small mark stays out of its way. See the morph effect. */
+        + (morphing ? ' hn--morph' : '')
+        /* Whether the pane you are looking at has moved. The way down is an
+           offer, and an offer you have already taken is a thing in the way:
+           "when you start swiping I'd like the down carets to disappear —
+           I'm already scrolling down, I don't need it to be there" (Miyel,
+           2026-09-20, and sitewide). */
+        + (down[pane] ? ' hn--moved' : '')
+        /* A field in the cross has the focus, so the four doors are out of the
+           way of the keyboard. See the effect beside the bar's own. */
+        + (typing ? ' hn--typing' : '')
       }
       data-pane={pane}
     >
@@ -1914,7 +2623,18 @@ export default function HomeNav() {
             which is why it is the one pane with two floors, a snap and a down
             caret. On a desk it is the right page and does not move when the
             spine turns. */}
-        <section className="hn-pane hn-pane--home" ref={homeRef} aria-label="The beacon and the journal">
+        <section
+          /* `--inside` is whether you have gone down to the journal. The wall
+             keeps its search bar stuck to the bottom of the screen, which is
+             right while you are reading it and wrong while it is only a
+             sliver under the beacon — there it is a search box for a page you
+             are not on, sitting on top of the covers it would be showing.
+             Faded out until you arrive, and it keeps its place in the flow
+             the whole time, so nothing moves when it comes back. */
+          className={'hn-pane hn-pane--home' + (down[HOME] ? ' hn-pane--inside' : '')}
+          ref={homeRef}
+          aria-label="The beacon and the journal"
+        >
           {/* Two floors, always. There is no version of this pane without a
               beacon on it (Miyel, 2026-09-16): a journal showing a record it
               sat with months ago is not a beacon failing, that IS the signal,
@@ -1929,7 +2649,7 @@ export default function HomeNav() {
           {/* Floor one — the crown, the record with its caption, and what
               came before. On a phone it is exactly one screen tall, so the
               snap has one place to land; on a desk it is a wrapper. */}
-          <div className="hn-floor">
+          <div className="hn-floor hn-floor--beacon">
             {crown}
             {/* The screen on a phone; the band on a desk, where the same
                 children lie in one row — the cover and its words, and
@@ -1980,11 +2700,39 @@ export default function HomeNav() {
                     {theCallingCard}
                   </>}
             </div>
+            {/* ── The way down, in the flow ────────────────────────────
+                The same thing the book has, and Miyel asked for it here:
+                "the beacon should have the same effect." A word and a
+                chevron at the foot of the floor, with the top of the wall
+                showing under them.
+
+                It replaces the caret that floated above the band. That one
+                said there is more that way; this says what is down there,
+                and it does it over the edge of the thing itself. The mark
+                above had to come down in size to pay for the room — see
+                --hn-crown in nav.css. */}
+            {/* ── A chevron, larger, breathing, 2026-09-20 ─────────────────
+                Miyel: "those down carets on feed and journal can just be
+                larger and bob up and down to show there's more vs having more
+                text." The word over it named the floor below, which is worth
+                saying once — and it was being said at the foot of every screen
+                that has one, in the caption face, next to a mark that already
+                means *down*. A chevron that moves says there is more that way
+                better than a word does, and the feed's name still arrives in
+                the header once you are on it, which is where a name belongs.
+
+                The name stays on the label, for anybody the movement does not
+                reach. */}
+            {deep[HOME] && (
+              <button type="button" className="hn-down" onClick={() => goDown(HOME)} aria-label="The journal">
+                <CaretDown size={18} weight="bold" aria-hidden="true" />
+              </button>
+            )}
           </div>
           {/* Floor two — the wall, scrolling inside a box of its own, so
               the pane only ever has two stops. The entry's second screen,
               in the cross. */}
-          <div className="hn-floor">
+          <div className="hn-floor hn-floor--wall">
             <div className="hn-floor-scroll" ref={floorRef}>
               <div className="hn-under">
                 <Journal
@@ -1996,6 +2744,106 @@ export default function HomeNav() {
             </div>
           </div>
         </section>
+
+        {/* ── The inbox, and the book ───────────────────────────────────
+            Two stops of their own from 2026-09-19, where they were rows on a
+            desk. Both are rooms you stand in rather than corridors you pass
+            through, which is the whole argument for the band having four
+            words on it instead of three and a page of doors behind one of
+            them (Miyel's friends brief).
+
+            Owner-only, and drawn only once the lock has said so, which is
+            also what keeps the rail three panes wide for a visitor. They are
+            not drawn at all on a desktop — see nav.css — because a desktop
+            has no band to reach them with and opens both on the spine, the
+            way it always has.
+
+            Full pages inside a pane. The inbox is its own route drawn without
+            its bar; the book is the component its route is a frame around.
+            Neither is a copy of anything: the address still works, and what
+            is at the address is what is here. */}
+        {authed && (
+          <section className="hn-pane hn-pane--inbox" ref={inboxRef} aria-label="What has arrived">
+            {visited[INBOX] && <Inbox inPane />}
+          </section>
+        )}
+
+        {/* ── Two floors, and it snaps, 2026-09-19 ─────────────────────
+            People on the first, what they logged on the second, exactly the
+            way the journal sits under the beacon — the same snap, the same
+            inner scroller, the same rule that down means cover-then-contents.
+
+            It could not snap while the first floor was as tall as there were
+            people in the book, which is the whole reason the floor is a shelf
+            now (Miyel's brief): as many faces as fit and a line out to the
+            rest. One screen whether the book holds six people or a hundred,
+            so the feed is always exactly one scroll away.
+
+            The first floor stops short of the screen by --hn-peek, so the top
+            of the second shows under it: the feed's own heading and the first
+            covers beginning. That sliver is the invitation — a caret on its
+            own says there is more, and a caret over the top of a record says
+            what.
+
+            **No second floor at all when nobody is filed.** Her rule, and the
+            right one: a caret pointing down at a feed of nobody's records is
+            a promise the page cannot keep. The cross learns the size of the
+            book from the book — see onCount — and until it has, there is one
+            floor. */}
+        {authed && (
+          <section className="hn-pane hn-pane--friends" ref={friendsRef} aria-label="The journals you read">
+            {visited[BOOK] && (
+              <>
+                <div className="hn-floor hn-floor--book">
+                  <Friends shelf onCount={setBookSize} onBusy={setBookBusy} />
+                  {/* The feed's name lives here rather than at the top of
+                      the feed (Miyel, 2026-09-19: "can i see feed living
+                      above the down caret?"). It is the right place for it:
+                      down here it labels the way down, which is a thing you
+                      are deciding whether to do — at the top of the list it
+                      would be naming a place you had already arrived at. Her
+                      own mock-up drew it exactly this way, the word and the
+                      chevron under it, and the site took a week to get back
+                      to what she drew. */}
+                  {bookSize > 0 && (
+                    <button
+                      type="button"
+                      /* Out of sight the moment the bar has the word, so the
+                         two are never both on the screen. Hidden and not
+                         removed: the scroll listener goes on measuring it to
+                         know when to hand the word back on the way up. */
+                      className="hn-down"
+                      onClick={() => goDown(BOOK)}
+                      aria-label="Recent listens"
+                    >
+                      {/* The chevron drawn here rather than through EdgeCaret,
+                          which is a button of its own and cannot go inside
+                          one. Same glyph at the same weight and size the
+                          beacon's caret uses, so the two read as one mark.
+                          The word over it went on 2026-09-20 — see the note on
+                          the beacon's copy, above. */}
+                      <CaretDown size={18} weight="bold" aria-hidden="true" />
+                    </button>
+                  )}
+                </div>
+                {/* No inner scroller, unlike the journal under the beacon.
+                    That floor is never visible until you arrive at it; this
+                    one shows a sliver of itself at rest, and a scroller you
+                    can reach before you have arrived is one you scroll by
+                    accident — the feed slid up inside its own box while the
+                    pane sat still on the faces. The floor is a snap area
+                    taller than the screen instead, which the snap allows to
+                    rest anywhere once it covers the screen: it catches you on
+                    the way in and then gets out of the way. */}
+                {bookSize > 0 && (
+                  <div className="hn-floor hn-floor--feed">
+                    <Feed entries={entries} density={density} />
+                  </div>
+                )}
+              </>
+            )}
+          </section>
+        )}
 
       </div>
 
@@ -2026,14 +2874,11 @@ export default function HomeNav() {
           one pane with a whole screen and nothing cut off at its fold, so
           nothing else needs telling there is more. It sits above the band,
           fades while anything moves, and goes for good once you are down. */}
-      <div className={'hn-controls' + (busy ? ' hn-controls--busy' : '')}>
-        <EdgeCaret
-          direction="down"
-          onClick={() => goDown(pane)}
-          label="Read on"
-          hidden={!deep[pane] || down[pane]}
-        />
-      </div>
+      {/* The floating caret is gone, 2026-09-19. It lived above the band and
+          said "there is more that way" on whichever pane had a second floor.
+          Both of those panes say it themselves now, at the foot of their own
+          first floor, with a word and the top of what is down there showing
+          under it — which is the same sentence with a subject in it. */}
 
       {/* The cover in the air. Fixed to the window and over everything, because
           it is travelling between two boxes that belong to different parts of

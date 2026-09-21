@@ -30,11 +30,12 @@ import { BIO_LIMIT, readBioAnswers } from '../../library/bioprompt';
 // many records it has is a journal whose numbers mean nothing.
 export const HIDEABLE = ['since', 'albums', 'genres'];
 
-// How large a portrait is worth keeping. The card draws it at about 240px on
-// the widest screen it has, so 900 is already twice what any display needs and
-// leaves room for a dense one. Straight off a camera the same picture is
-// several thousand pixels across and a few megabytes; shrinking it here is
-// what makes keeping the bytes in the journal's own database reasonable.
+// How large a portrait is worth keeping — the side of the square, since
+// 2026-09-20. The card draws it at about 240px on the widest screen it has,
+// so 900 is already twice what any display needs and leaves room for a dense
+// one. Straight off a camera the same picture is several thousand pixels
+// across and a few megabytes; shrinking it here is what makes keeping the
+// bytes in the journal's own database reasonable.
 const PORTRAIT_MAX = 900;
 const PORTRAIT_QUALITY = 0.85;
 
@@ -58,13 +59,30 @@ export async function shrink(file) {
     });
   }
 
+  // ── Square, and the square is the middle ────────────────────────────────
+  // Every place this picture is ever drawn draws it square — the card, the
+  // faces in the book, the small one beside a record in the feed — and until
+  // 2026-09-20 the squareness was a `object-fit: cover` and nothing else. So
+  // the file kept the whole photograph and the page merely hid the edges of
+  // it, which is not hiding: long-press the face on a phone and iOS offers
+  // you the picture, all of it, and /api/portrait is public because a
+  // journal's face is.
+  //
+  // Miyel: "long pressing images of people shouldn't show the entire picture,
+  // the picture uploaded should be cropped to the size, just privacy wise."
+  // So the crop is the file now. Nothing on any screen changes — the middle
+  // square is exactly what `cover` was showing — and what leaves the
+  // database is what was on the page.
   const w0 = source.width || source.naturalWidth;
   const h0 = source.height || source.naturalHeight;
-  const scale = Math.min(1, PORTRAIT_MAX / Math.max(w0, h0));
+  const side0 = Math.min(w0, h0);
+  const left = Math.round((w0 - side0) / 2);
+  const top = Math.round((h0 - side0) / 2);
+  const side = Math.round(Math.min(side0, PORTRAIT_MAX));
   const canvas = document.createElement('canvas');
-  canvas.width = Math.round(w0 * scale);
-  canvas.height = Math.round(h0 * scale);
-  canvas.getContext('2d').drawImage(source, 0, 0, canvas.width, canvas.height);
+  canvas.width = side;
+  canvas.height = side;
+  canvas.getContext('2d').drawImage(source, left, top, side0, side0, 0, 0, side, side);
   source.close?.();
 
   const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', PORTRAIT_QUALITY));

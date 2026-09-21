@@ -41,7 +41,6 @@
 
 'use client';
 import { useEffect, useRef, useState } from 'react';
-import { X, ArrowLeft } from '@phosphor-icons/react';
 import { searchAlbums } from '../../library/music_data_api';
 
 // Long enough that typing an artist's name is one search rather than eight,

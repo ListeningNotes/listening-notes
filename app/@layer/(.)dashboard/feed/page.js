@@ -18,7 +18,7 @@ import FeedPage from '../../../dashboard/feed/page';
 
 export default function FeedOverTheDesk() {
   return (
-    <LayerEntry label="Feed" scrolls arrives="bottom" over="spine">
+    <LayerEntry label="Recent listens" scrolls arrives="bottom" over="spine">
       <FeedPage layered />
     </LayerEntry>
   );

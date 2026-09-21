@@ -60,7 +60,7 @@
 
 'use client';
 
-import { loadMark, loadPicture, MARK_ASPECT, drawTracked, drawPath, ellipsize, wrapLines, roundRect } from './SharePrinter';
+import { loadMark, loadPicture, MARK_ASPECT, drawTracked, drawPath, wrapLines, roundRect } from './SharePrinter';
 import { parseRating, parseHorizon, entryTracks } from '../../library/entry_formatter';
 
 // The taps (see the note at the top): what each switchable line does when

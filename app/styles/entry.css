@@ -20,18 +20,25 @@
    So they live here, where the rest of the .ln-* family already lives. See
    LayerWaiting, which is the other thing that draws them. */
 @media (max-width: 768px) {
+/* ── One page, not two snapped screens, 2026-09-20 ──────────────────────
+   The record and the reading were two viewport-tall snap areas with the
+   notes in a scroller of their own, and the snap was what made that safe.
+   It is gone with the thing that earned it (the cross lost its vertical
+   snap the same day, for the same reason): the art collapses into the
+   header as you scroll now, and a morph needs a page that moves under your
+   thumb rather than two stops with a jump between them. Miyel, asking for
+   it: "I can lose the two-level album."
+
+   So this scrolls like any long page, screen one is still a screenful, and
+   the notes simply carry on underneath. `scroll-margin-top` is what the
+   caret's press lands against — the same load-bearing leftover the panes
+   kept. */
 .ln-screens {
   height: 100dvh;
   overflow-y: auto;
-  scroll-snap-type: y mandatory;
   -webkit-overflow-scrolling: touch;
   touch-action: pan-y;
   overscroll-behavior-y: none;
-}
-.ln-screen-one {
-  height: 100dvh;
-  scroll-snap-align: start;
-  scroll-snap-stop: always;
 }
 
 .ln-screen-one {
@@ -180,7 +187,7 @@
      becomes the record you chose once the screen is covered. Miyel, on why
      two days of choreography here were wasted: "you don't see the
      transition." See BEHIND_THE_SHEET_MS in HomeNav.js. */
-  animation-duration: 620ms;
+  animation-duration: var(--lay-rise, 620ms);
 }
 @keyframes layRiseTall {
   from { transform: translateY(100dvh); }
@@ -208,20 +215,78 @@
 }
 @keyframes layRise { from { transform: translateY(100%); } to { transform: none; } }
 
+/* ── The header does not rise with it, 2026-09-20 ────────────────────────
+   Miyel, on the album: "instead of opening from where it is, it can just
+   slide up from the bottom, all the way from the bottom, covering the
+   footer, the filters and the search, and just meet the header, since we're
+   down here anyway, and connect. That little moon and sun will turn into
+   the toolbar. And then it's just swipe down to close."
+
+   So the record comes up to a header that was already there. The sheet is
+   translated a whole screen down and this runs the exact inverse on the
+   header for the same length on the same curve, which leaves it standing
+   still on the line the page underneath was already drawing one on.
+
+   The fade is the second half of her sentence. The lights are the cross's,
+   in that corner, and they are what is under this until it lands — so the
+   header comes up to full in the first third and the corner reads as the
+   sun and the moon turning into the tools rather than as one control being
+   swapped for another between frames.
+
+   Only sheets that use the slot have anything in it. The listen draws its
+   own header inside its content, which is why this cannot disturb it.
+
+   A transform makes this the containing block for the fixed row inside it,
+   which is the point: the row travels with it and is back on the window's
+   own coordinates the moment the animation is over. The same fact is a trap
+   on a sheet that scrolls — see the note over .lay--over-journal — and this
+   sheet does not scroll; the entry has a scroller of its own. */
+.lay--rises.lay--over-journal .lay-header {
+  animation: layHold var(--lay-rise, 620ms) cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+@keyframes layHold {
+  from { transform: translateY(-100dvh); opacity: 0; }
+  34%  { opacity: 1; }
+  to   { transform: none; opacity: 1; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .lay--rises.lay--over-journal .lay-header { animation: none; }
+}
+
 /* ── Browsing sideways ──
    The content follows the finger while held, settles when let go, and a
    neighbour enters from the side it was on. */
 .lay-content { min-height: 100%; }
-.lay--settling .lay-content { transition: transform 0.16s cubic-bezier(0.22, 0.61, 0.36, 1); }
+.lay--settling .lay-content { transition: transform 0.36s cubic-bezier(0.22, 0.61, 0.36, 1); }
 /* A layer that arrived by swipe does not grow or fade; its content comes in
    from the side the finger sent the last one away from. The exit is the
    settling transition above, run to a full width. */
 .lay--swiped { animation: none; }
 /* Returned to, not arrived at: the sheet under a closed one draws at rest. */
 .lay--still { animation: none; }
-.lay--settling .lay-content { transition: transform 0.24s cubic-bezier(0.22, 0.61, 0.36, 1); }
-.lay-content--from-right { animation: layFromRight 0.26s cubic-bezier(0.22, 0.61, 0.36, 1); }
-.lay-content--from-left  { animation: layFromLeft  0.26s cubic-bezier(0.22, 0.61, 0.36, 1); }
+/* The page turn, and it is TURN_MS in LayerEntry — the two have to agree or
+   the sheet commits before the leaf has landed. Slowed on 2026-09-20: "it
+   can be slowed down a little so it reads smoother, like you're really
+   flipping through pages of a book." */
+.lay-content--from-right { animation: layFromRight 0.36s cubic-bezier(0.22, 0.61, 0.36, 1); }
+.lay-content--from-left  { animation: layFromLeft  0.36s cubic-bezier(0.22, 0.61, 0.36, 1); }
+
+/* ── And what is not in the content, 2026-09-20 ─────────────────────────
+   Two things were standing still through a turn they belong to. The record
+   in the header is outside the content by design — the slot is there so a
+   header does not slide off with every swipe — but in the reading state the
+   record *is* the page, so it turns with it. And the page itself arrives
+   after the content's animation has been and gone, because a record is a
+   fetch away, so it was popping in where it should have slid: "the text
+   leaves the correct direction but nothing comes in the correct direction."
+
+   Both run off the sheet's own direction, which outlives the one frame the
+   content's class is about. */
+.lay--from-right .ln-crown { animation: layFromRight 0.36s cubic-bezier(0.22, 0.61, 0.36, 1); }
+.lay--from-left  .ln-crown { animation: layFromLeft  0.36s cubic-bezier(0.22, 0.61, 0.36, 1); }
+@media (prefers-reduced-motion: reduce) {
+  .lay--from-right .ln-crown, .lay--from-left .ln-crown { animation: none; }
+}
 @keyframes layFromRight { from { transform: translateX(100%); } to { transform: none; } }
 @keyframes layFromLeft  { from { transform: translateX(-100%); } to { transform: none; } }
 
@@ -448,22 +513,7 @@
 /* The way back to the top of a piece of reading. Sized and coloured like the
    arrow half of an EdgeCaret, because that is what it is — the same family
    with nothing over it, since the place it lands is the place you are. */
-.ln-totop {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 30px;
-  height: 30px;
-  padding: 0;
-  border: 0;
-  border-radius: 9px;
-  background: none;
-  color: var(--ink-faint);
-  opacity: 0.6;
-  cursor: pointer;
-  transition: color 0.2s ease, opacity 0.2s ease;
-}
-.ln-totop:hover { color: var(--ink); opacity: 1; }
+
 
 /* ── The fields at the head of an entry ─────────────────────────────────────
    Each one is set in the type of the thing it replaces — the album title in
@@ -917,6 +967,18 @@ a.ln-sent-who:hover { text-decoration: underline; text-underline-offset: 3px; }
   background: var(--bg);
   border-top: 1px solid var(--border);
 }
+/* ── The card's copy rises and sinks, 2026-09-20 ───────────────────────────
+   Scoped to the card, because an entry has no band for this to change places
+   with: there the bar is the only row at the foot and simply being there is
+   the whole of what it has to say. On the card it is taking the band's place,
+   and a swap you can see is what makes the two read as one row rather than as
+   two fighting over the same strip. See .hn-foot in nav.css for the other
+   half, and About.js for the state that keeps this mounted while it leaves. */
+.ab-pane .ln-editing-bar { animation: ln-edit-rise 0.3s cubic-bezier(0.22, 0.61, 0.36, 1) both; }
+.ab-pane .ln-editing-bar--going { animation: ln-edit-sink 0.3s cubic-bezier(0.55, 0, 0.68, 0.53) both; }
+@keyframes ln-edit-rise { from { transform: translateY(100%); } to { transform: none; } }
+@keyframes ln-edit-sink { from { transform: none; } to { transform: translateY(100%); } }
+
 /* Room for it, on the element that actually scrolls. .ln-screen-two holds an
    inner scroller, so padding on the outer box is padding the content slides
    straight past — the last track's note went on being written underneath the
@@ -927,6 +989,22 @@ a.ln-sent-who:hover { text-decoration: underline; text-underline-offset: 3px; }
    whole screen and no bar, and padding it would move the page at the moment a
    sheet opens over it — which is the thing this panel was just fixed for. */
 .ln-crediting .ln-screen-two-scroll { padding-bottom: 96px; }
+/* And a comment being written, 2026-09-21. Not a bar at the foot this time but
+   the same problem it solves: the form opens where the note is, and a note on
+   the last track is already at the bottom of the scroller — so the field, and
+   the Post under it, land against the edge with the keyboard over them. The
+   floor is what lets the scroller carry them up. NewCommentForm writes the
+   class, and writes it for a reply inside a branch as readily as for a comment
+   on the album notes, because both of those are that one component. */
+.ln-saying .ln-screen-two-scroll { padding-bottom: 96px; }
+/* One correction to the three of them, measured 2026-09-21: `.ln-screen-two-scroll`
+   is not the element that scrolls any more, whatever the note above says. It
+   was, until the entry became one page instead of two snapped screens on
+   2026-09-20 — `.ln-screens` is the scroller now and this box simply grows. The
+   padding still does the right thing, because room at the end of the content
+   is room the scroller can use either way; it is the *reasoning* that went
+   stale, and anybody moving these to "the element that actually scrolls" would
+   be moving them onto the element they are already on. */
 .ln-editing-label {
   font-family: var(--font-label);
   font-size: 9px;
@@ -1071,6 +1149,162 @@ a.ln-sent-who:hover { text-decoration: underline; text-underline-offset: 3px; }
    dragging the sheet. See Journal.js. */
 .ln-locked { overflow: hidden !important; }
 
+/* ── What other people said ─────────────────────────────────────────────────
+   Rebuilt 2026-09-21. Miyel: "the comments — they are so outdated, the box is
+   old, it's a thing that has not been touched since we have basically designed
+   every new aspect of this site."
+
+   It was the last part of the entry still carrying its own styling inline: a
+   hand-drawn speech bubble, 6px fields on a frosted panel, a filled accent
+   button with its text colour written out in hex, and a reply form that opened
+   as a modal over a dimmed screen. Every one of those is a thing the rest of
+   the site has since decided against, in writing:
+
+     a control is the mark, not a mark in a container  (DECISIONS)
+     things open in the page, not over it              (DECISIONS)
+     a word that commits is a word on a rule           (.ln-word)
+     a field is a hairline, not a box                  (.sn-note, .af)
+
+   So this is that vocabulary, and nothing else. No panel, no blur, no radius,
+   no colour that is not a token. A comment is somebody's writing under yours,
+   and the page already knows how to set writing.
+
+   The one thing kept whole is the rail down the side of a branch and the
+   tap-to-fold on it: that is a borrowed idiom people already know, and it was
+   not what looked old. */
+
+/* The way in, at the end of a note. Right-aligned, because it belongs to the
+   note above it rather than to the page, and quiet, because the writing is the
+   thing worth looking at. A word and a count, where there used to be a drawn
+   bubble and a number: the site has no other hand-drawn glyph left in it.
+   Margins only when something is open below, so an empty track does not pay
+   three gaps for a control 23px tall. */
+.ln-say-way { display: flex; justify-content: flex-end; }
+.ln-say-way--open { margin-bottom: 10px; }
+.ln-says { display: flex; flex-direction: column; gap: 22px; margin-bottom: 12px; }
+/* A hairline over each comment and none over the first: the gap is enough
+   between the note and the first thing said about it, and a line there would
+   read as the note's own footer. */
+.ln-says > * + * { border-top: 1px solid var(--border); padding-top: 20px; }
+
+/* Who said it, and when. One row, pressable along its whole width to fold the
+   branch — the header has always been the second way to do what the rail does,
+   and on a phone it is the bigger target of the two. */
+.ln-say-who {
+  display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;
+  width: 100%; padding: 0; border: 0; background: none; cursor: pointer;
+  text-align: left;
+}
+.ln-say-name {
+  font-family: var(--font-label); font-size: 11px; letter-spacing: 0.04em;
+  color: var(--ink);
+}
+.ln-say-when, .ln-say-more {
+  font-family: var(--font-label); font-size: 9px; letter-spacing: 0.06em;
+  color: var(--ink-faint);
+}
+/* The same measure and leading the notes above are set in, because it is the
+   same kind of thing: somebody writing about a record. Softer than the owner's
+   own, which is the only thing that separates them. */
+.ln-say-body {
+  margin: 6px 0 0;
+  font-size: 14px; line-height: 1.75; color: var(--ink-soft);
+  overflow-wrap: anywhere; white-space: pre-wrap;
+}
+/* The row under a comment. .ln-word, the same word Save and Cancel are on the
+   editing bar — these were already quiet uppercase words and were the one part
+   of this that did not need rethinking, only rehousing. */
+.ln-say-acts { display: flex; gap: 2px; margin: 4px 0 0 -8px; flex-wrap: wrap; }
+.ln-say-up--on { color: var(--ink); cursor: default; }
+
+/* Held: posted, and waiting to be read. It reaches only the browser that wrote
+   it (a signed receipt, see receipts.js), so it is always *your* comment that
+   is dimmed, never somebody else's. The line under it is what explains the
+   dimming; without it the fade is just a rendering fault. */
+.ln-say--held { opacity: 0.55; }
+.ln-say-held-line {
+  margin: 8px 0 0;
+  font-family: var(--font-label); font-size: 9px; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--ink-faint);
+}
+
+/* The branch. The rail spans exactly what this comment owns and folds it on a
+   tap, which is the thing people reach for. 2px and --border, unchanged. */
+.ln-say-branch { display: flex; margin-top: 14px; }
+.ln-say-rail {
+  width: 2px; border-radius: 1px; background: var(--border);
+  flex-shrink: 0; padding: 0; border: 0; cursor: pointer;
+}
+.ln-say-rail:hover { background: var(--ink-faint); }
+.ln-say-kids {
+  flex: 1; min-width: 0; padding-left: 14px;
+  display: flex; flex-direction: column; gap: 18px;
+}
+
+/* ── Writing one ──────────────────────────────────────────────────────────
+   In the page, where it will go. The new-comment form already did this and
+   said why in its own note; the *reply* form was still a fixed overlay with a
+   scrim, which is the same instinct the same file had already argued against
+   two screens up. A reply is an answer to the comment directly above it, and a
+   box in the middle of a darkened screen has been taken away from the thing it
+   is about. Pushing the page down is what leaving room looks like.
+   A hairline over it, and nothing else: it is not a panel. */
+.ln-say-form {
+  margin: 12px 0 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+  animation: cb-unfold 0.24s ease both;
+}
+/* ── Who it will be signed by ───────────────────────────────────
+   Where two fields were, when the journal landed on already knows both. Miyel,
+   2026-09-21: "we don't need name if you're commenting from a journal — it can
+   just put your keeper name and pfp bubble." The portrait is .ln-sender-portrait,
+   the same object the address book and the feed and the send sheet draw, served
+   from the visitor's own journal at their own address. Smaller here, because it
+   is a signature and not a choice: there is one face and nothing to pick.
+
+   This block used to be a heading — ADD A COMMENT, and under it the name of the
+   track. "Take away 'add a comment' and also song title, we know what song
+   we're on, that's extra bulk." Both were the form telling you what you had
+   just pressed and which song you were already looking at. */
+.ln-say-me { display: flex; align-items: center; gap: 10px; }
+.ln-say-me .ln-sender-portrait { width: 28px; height: 28px; border-radius: 8px; flex-shrink: 0; }
+.ln-say-me-name {
+  font-family: var(--font-label); font-size: 11px; letter-spacing: 0.04em;
+  color: var(--ink);
+  min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+/* The way out of a wrong answer, as far from the face as the row is wide: a
+   shared browser, an old address, somebody who would rather not be introduced
+   as themselves this time. */
+.ln-say-me-not { margin-left: auto; flex-shrink: 0; }
+.ln-say-fields { display: flex; flex-direction: column; gap: 10px; }
+/* Two on a row where there is room and stacked where there is not: a name is
+   short and an address is not, and on a 375px phone side by side gives neither
+   enough to show what has been typed. */
+.ln-say-pair { display: flex; gap: 14px; flex-wrap: wrap; }
+.ln-say-pair > * { flex: 1 1 160px; min-width: 0; }
+/* A hairline, like every other field on this site since the finder's. 16px,
+   because Safari zooms in on anything smaller and does not reliably zoom back
+   out. box-sizing because width:100% plus padding and a border used to add up
+   to wider than the column and scrolled the whole page sideways on a phone —
+   the one note from the old form worth carrying over. */
+.ln-say-field {
+  width: 100%; box-sizing: border-box;
+  padding: 7px 2px; border: 0; border-bottom: 1px solid var(--border);
+  border-radius: 0; background: none;
+  font-family: inherit; font-size: 16px; line-height: 1.5; color: var(--ink);
+  resize: none;
+}
+.ln-say-field::placeholder { color: var(--ink-faint); }
+.ln-say-field:focus { outline: none; border-bottom-color: var(--ink-faint); }
+.ln-say-foot { display: flex; align-items: center; gap: 2px; margin: 12px 0 0 -8px; }
+.ln-say-trouble {
+  margin: 10px 0 0;
+  font-family: var(--font-label); font-size: 10px; letter-spacing: 0.06em;
+  color: var(--fav);
+}
+
 /* A comment form opening where the comment will go. It grows out of the note
    it is answering rather than arriving over the top of it — see the note in
    CommentBubble for why the modal it replaced was the wrong instinct. */
@@ -1143,6 +1377,155 @@ a.ln-sent-who:hover { text-decoration: underline; text-underline-offset: 3px; }
    keeps the record in view. */
 .ln-mini        { display: none; }
 
+/* ── The record, in the header ──────────────────────────────────────────
+   What the entry hands SiteNav for the middle of its row, in place of the
+   mark every other page stopped drawing. On a phone the album art collapses
+   into the cover here as the notes come up — the seat is what the morph in
+   FullPostPage transforms, so it has a size of its own to be scaled from
+   and an origin in its own middle.
+
+   Not drawn on a desk: the hero over the notes is already the record in
+   view, and there is no scroll here for a collapse to ride on. */
+.ln-crown { display: none; }
+@media (max-width: 768px) {
+  /* The journal's mark, centred on the row rather than in the middle grid
+     track — the track is the record's, and its width is the record's name,
+     so a mark sharing it would sit wherever that name happened to end. Both
+     are drawn and only one is ever on; see the note in SiteNav.js. */
+  .ln-entry .sitenav-logo {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    /* No fade either way. The mark leaves through the top of the slot and
+       the record comes up through the bottom, both clipped, and a clip is a
+       thing with an edge. The sitewide rule eases this corner over 0.18s and
+       would leave a ghost of the mark over the record — "just not cross
+       fade" (Miyel). */
+    transition: none;
+  }
+  /* Already collapsed before anything was drawn — the wait state, when the
+     swipe came from the notes. The entry writes this corner's opacity from
+     the collapse once it lands, and an inline number beats this. */
+  .ln-crown {
+    position: relative;
+    /* Always drawn, and hidden by the slot instead: the collapse writes a
+       clip and a transform on this every frame, and before the handover
+       begins the clip is the whole of it. Opacity is left alone so the
+       tools' rule below can have it. */
+    background: none;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    grid-column: 2;
+    min-width: 0;
+    /* ── Room for the tools, 2026-09-20 ──────────────────────────────────
+       Miyel: "make sure the toolbar doesn't cover the album." The row is
+       three tracks with the outer two sharing whatever the middle leaves, so
+       a middle that grows takes the corner the ··· stands in from both sides
+       at once. The sum: 56 of side padding, two 10px gaps, and 36 for the
+       door itself — which leaves this. */
+    max-width: calc(100vw - 148px);
+  }
+  /* The seat is the record's size and gets scaled *down* — a promoted layer
+     is rastered at the size it is laid out at, so a 28px box blown up ten
+     times is a 28px thumbnail across a third of the screen. --seat is the
+     art's own height, written by the morph. */
+  .ln-crown-art {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: var(--seat, 44px);
+    height: var(--seat, 44px);
+    border-radius: 8px;
+    overflow: hidden;
+    background: var(--panel);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transform-origin: top left;
+    will-change: transform;
+    /* Not drawn until the collapse has something true to say about where it
+       goes — while a sheet is still arriving, the header and the page are a
+       screen apart and the page's own art is the one you are watching. */
+    visibility: hidden;
+  }
+  .ln-entry--crowning .ln-crown-art { visibility: visible; }
+  .ln-crown-art img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .ln-crown-none { font-size: 13px; color: var(--ink-faint); }
+  /* Its place in the row, which is all the row ever has to lay out — and
+     the size the record lands at. Forty-four, which is what the mini card
+     at the head of the notes used to be: Miyel, "the header can be larger
+     for entries, the photo doesn't have to be super tiny, the size as
+     before would be good." It still sits inside the 80px band, because the
+     row is 58 tall and a 44 box centred in it ends at 73. */
+  .ln-crown-hole { flex-shrink: 0; width: 44px; height: 44px; }
+  /* Nothing until the collapse is nearly over — a name beside a cover the
+     size of a record is a caption on a photograph, and this is a header. */
+  .ln-crown-said {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+    text-align: left;
+  }
+  .ln-crown-album {
+    font-family: var(--font-display);
+    font-weight: var(--font-display-weight);
+    font-size: 14px; line-height: 1.25; color: var(--ink);
+    white-space: nowrap;
+  }
+  .ln-crown-artist {
+    font-family: var(--font-label);
+    font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase;
+    color: var(--ink-soft);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .ln-crown-marks {
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 3px;
+  }
+  .ln-crown-flags { display: flex; align-items: center; gap: 5px; }
+  .ln-crown-flag { display: inline-flex; }
+
+  /* ── The tools take the row, 2026-09-20 ──────────────────────────────
+     Miyel: "the toolbar needs to override album in header when open." The
+     same answer the mark got when it was still drawn here — six tools and a
+     door reach most of the way across a 375px phone, and the record is
+     something to come back to rather than something to read past a menu.
+     KeeperTools sets the attribute; see the note in that file. */
+  /* Three classes deep, so it beats the variable above whatever that says.
+     Miyel: "when I open the toolbar it still overlaps with the mini beacon." */
+  .sitenav-row[data-tooling] .ln-crown { opacity: 0; pointer-events: none; }
+
+  /* ── The slot ────────────────────────────────────────────────────────
+     Where the handover happens, and there is no keyframe in it: the scroll
+     is the clock. The collapse writes the clip and the offset on both halves
+     every frame, so holding your thumb still holds the handover still, half
+     a mark above half a record (Miyel: "that's how closely I'm looking at
+     it"). This is the state before any of that is written. */
+  .ln-crown {
+    clip-path: inset(0 0 100% 0);
+    /* Two authors. The collapse writes --ln-slot, which is how far down the
+       slot the record still is; the sheet writes --lay-shift, which is how
+       far the leaf has been dragged sideways. Added up here so neither has
+       to know about the other. */
+    transform: translate(var(--lay-shift, 0px), var(--ln-slot, 0px));
+  }
+  /* And it settles with the page it belongs to. */
+  .lay--settling .ln-crown { transition: transform 0.36s cubic-bezier(0.22, 0.61, 0.36, 1); }
+
+  /* The record's own art stays on the page and scrolls away with it. It was
+     hidden here while the header was carrying a travelling copy of it; there
+     is no travelling copy any more — see the note in FullPostPage. */
+}
+
 @media (max-width: 768px) {
   /* ── SCREEN ONE ── a full viewport of album: art on top, everything
      we know about it centred underneath, and a cue to scroll on. */
@@ -1155,11 +1538,6 @@ a.ln-sent-who:hover { text-decoration: underline; text-underline-offset: 3px; }
      exactly one viewport tall, and a mandatory snap over
      viewport-sized areas can commit hard without ever trapping the
      reading. scroll-snap-stop stops a fast flick skipping past. */
-  .ln-screen-two {
-    height: 100dvh;
-    scroll-snap-align: start;
-    scroll-snap-stop: always;
-  }
 
   .ln-screen-one-chips {
     display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
@@ -1210,26 +1588,63 @@ a.ln-sent-who:hover { text-decoration: underline; text-underline-offset: 3px; }
      dissolve and nothing for a line to separate — the strip's own edge is
      the edge. The sitewide bar carries a hairline at 80px; here that line
      would cut through the strip, so it comes off. */
+  /* ── And it is as tall as the record standing in it, 2026-09-20 ─────
+     The collapse writes --ln-ground on the document: the foot of the cover
+     at whatever size it currently is, plus a little air. So while the record
+     is the record, this reaches past it and the album screen goes *under*
+     the header on its way up rather than sliding past a cover that floats
+     over it; and as the cover collapses, so does this, until the sum is the
+     row's own height again. The same floor the beacon's bar has.
+
+     Said on the document and not here, for the reason in the note over
+     --ln-lede: this row is a portal and the node it is drawn on is replaced
+     out from under anything holding a reference to it. */
   .ln-entry .sitenav-row::before {
     height: var(--ln-band);
     background: var(--bg);
     border-bottom: none;
+    /* Zero rather than the -1 it has elsewhere, with the row's own contents
+       lifted over it. At -1 it is behind everything in the row, which is what
+       one wants when the only job is a backdrop — but here it has to hide the
+       album screen going past underneath, and a negative child is not
+       somewhere to put a thing that must cover. The same arrangement the
+       beacon's bar has (.hn-bar-ground). */
+    z-index: 0;
   }
+  /* Positioned, because a z-index on a static element is nothing. */
+  .ln-entry .sitenav-logo,
+  .ln-entry .sitenav-side,
+  .ln-entry .ln-crown { position: relative; z-index: 1; }
+  /* Except the mark, which is already absolute and centred. */
+  .ln-entry .sitenav-logo { position: absolute; }
+
   /* SiteNav fades its own band in off window.scrollY, which never moves
-     now that the container is what scrolls — so this page drives it. */
+     now that the container is what scrolls — so this page drives it.
+     And without the fade: the sitewide rule eases it over 0.22s, and on a
+     fast thumb that is a fifth of a second of the record's own score
+     showing through the header while the record's score arrives in it —
+     Miyel, "I don't want anything doubled, it looks a little busy." There
+     is nothing to ease anyway, since both sides of it are the page's own
+     colour and what it hides is whatever has gone under. */
+  .ln-entry .sitenav-row::before { transition: none; }
   .ln-entry--scrolled .sitenav-row::before { opacity: 1; }
-  .ln-entry--scrolled .hp-dotnav {
-    opacity: 0;
-    pointer-events: none;
-  }
-  .hp-dotnav { transition: opacity 0.25s ease; }
+  /* The record's own caret, on the same rule as the cross's: an offer you
+     have taken is a thing in the way. */
+  .ln-scroll-cue { transition: opacity 0.18s linear; }
+  .ln-entry--scrolled .ln-scroll-cue { opacity: 0; pointer-events: none; }
+
 
   /* Screen two: the header band holds the top, everything below it
      scrolls inside. Padding rather than margin so the inner scroller
      starts below the band — that puts sticky labels at top:0 right
      underneath the header instead of behind it. */
+  /* The caret's press lands here, and with the snap gone `scroll-margin-top`
+     is the only thing that stops it landing behind the header — the same
+     load-bearing leftover the cross's floors kept. The number is the row's
+     own bottom, so the notes come to rest exactly where the collapse ends. */
   .ln-screen-two {
-    padding-top: var(--ln-band);
+    scroll-margin-top: calc(80px + var(--safe-top));
+    padding-top: 16px;
     box-sizing: border-box;
     display: flex;
     flex-direction: column;
@@ -1250,28 +1665,14 @@ a.ln-sent-who:hover { text-decoration: underline; text-underline-offset: 3px; }
      scroll in .ln-screen-two-scroll, which now begins below this strip
      rather than below the band. What still has to be covered is the
      logo row, and that is above this. */
-  .ln-mini {
-    position: relative;
-    z-index: 101;
-    background: var(--bg);
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    width: 100%;
-    box-sizing: border-box;
-    flex-shrink: 0;
-    padding: 0 24px 12px;
-    margin: 0;
-    /* No rule under it. The Album Notes heading is directly below with
-       its own line, so the strip's border sat a few pixels above
-       another one and read as a double underline on the first thing
-       you see. What separates it from the notes is that the notes
-       move and it does not. */
-    border: none;
-    text-align: left;
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-  }
+  /* ── Retired on a phone, 2026-09-20 ──────────────────────────────────
+     This was the record kept at the head of the reading, and the header is
+     that now — cover, album, artist, collapsed up out of the page. Two of
+     them one above the other is the same record twice. The rest of the rule
+     is left where it is: the desktop hero does not use it, but the shape is
+     worth keeping legible if it is ever wanted back. */
+  .ln-mini { display: none; }
+
   .ln-mini-art {
     flex-shrink: 0;
     width: 44px; height: 44px;
@@ -1312,17 +1713,13 @@ a.ln-sent-who:hover { text-decoration: underline; text-underline-offset: 3px; }
   .ln-mini-flags { display: flex; align-items: center; gap: 5px; }
   .ln-mini-flag { display: inline-flex; }
 
+  /* Not a scroller any more — see the note over .ln-screens. It was one so
+     that screen two could be exactly a screen tall with the reading inside
+     it, and there is no screen two now, only a page that keeps going. The
+     element stays because a good deal of padding is hung on it. */
   .ln-screen-two-scroll {
     flex: 1;
     min-height: 0;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
-    /* Deliberately auto, not contain. Containing it is what made
-       screen one unreachable: with the notes filling the whole screen,
-       refusing to hand the scroll back meant pulling down at the top
-       of the notes did nothing at all, however hard you pulled.
-       Letting it chain is what carries you back up to the album. */
-    overscroll-behavior-y: auto;
   }
 
   /* Section headings pin themselves while their section is what you
