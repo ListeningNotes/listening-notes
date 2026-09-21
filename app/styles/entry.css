@@ -271,6 +271,30 @@
    flipping through pages of a book." */
 .lay-content--from-right { animation: layFromRight 0.36s cubic-bezier(0.22, 0.61, 0.36, 1); }
 .lay-content--from-left  { animation: layFromLeft  0.36s cubic-bezier(0.22, 0.61, 0.36, 1); }
+
+/* ── And what is not in the content, 2026-09-20 ─────────────────────────
+   Two things were standing still through a turn they belong to. The record
+   in the header is outside the content by design — the slot is there so a
+   header does not slide off with every swipe — but in the reading state the
+   record *is* the page, so it turns with it. And the page itself arrives
+   after the content's animation has been and gone, because a record is a
+   fetch away, so it was popping in where it should have slid: "the text
+   leaves the correct direction but nothing comes in the correct direction."
+
+   Both run off the sheet's own direction, which outlives the one frame the
+   content's class is about. */
+.lay--from-right .ln-crown { animation: layFromRight 0.36s cubic-bezier(0.22, 0.61, 0.36, 1); }
+.lay--from-left  .ln-crown { animation: layFromLeft  0.36s cubic-bezier(0.22, 0.61, 0.36, 1); }
+/* The page's own, and only when it is late. The content above it slides on
+   its own class, so a record that arrives in time is already moving and a
+   second animation on a child would move it twice as far. FullPostPage puts
+   these on, having looked. */
+.ln-screens--from-right { animation: layFromRight 0.36s cubic-bezier(0.22, 0.61, 0.36, 1); }
+.ln-screens--from-left  { animation: layFromLeft  0.36s cubic-bezier(0.22, 0.61, 0.36, 1); }
+@media (prefers-reduced-motion: reduce) {
+  .lay--from-right .ln-crown, .lay--from-left .ln-crown,
+  .ln-screens--from-right, .ln-screens--from-left { animation: none; }
+}
 @keyframes layFromRight { from { transform: translateX(100%); } to { transform: none; } }
 @keyframes layFromLeft  { from { transform: translateX(-100%); } to { transform: none; } }
 
@@ -1438,7 +1462,14 @@ a.ln-sent-who:hover { text-decoration: underline; text-underline-offset: 3px; }
   .ln-entry .sitenav-logo { position: absolute; }
 
   /* SiteNav fades its own band in off window.scrollY, which never moves
-     now that the container is what scrolls — so this page drives it. */
+     now that the container is what scrolls — so this page drives it.
+     And without the fade: the sitewide rule eases it over 0.22s, and on a
+     fast thumb that is a fifth of a second of the record's own score
+     showing through the header while the record's score arrives in it —
+     Miyel, "I don't want anything doubled, it looks a little busy." There
+     is nothing to ease anyway, since both sides of it are the page's own
+     colour and what it hides is whatever has gone under. */
+  .ln-entry .sitenav-row::before { transition: none; }
   .ln-entry--scrolled .sitenav-row::before { opacity: 1; }
   .ln-entry--scrolled .hp-dotnav {
     opacity: 0;

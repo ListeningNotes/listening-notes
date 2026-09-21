@@ -1013,8 +1013,15 @@ export default function FullPostPage({ entry, references = [], authed = false, l
     // little quicker, or maybe sooner").
     // How much scroll the whole handover takes. Not a duration: it is the
     // distance your thumb travels while the two halves change places.
-    const SPAN = 110;
-    const LEAD = 60;
+    const SPAN = 90;
+    // ── And it finishes as the words do, 2026-09-20 ─────────────────────
+    // It used to start sixty pixels early, on a read about fast thumbs, and
+    // the cost was that the record's score was in the header while the
+    // record's score was still on the page underneath — Miyel: "I don't want
+    // anything doubled, it looks a little busy when I hold it. Maybe it
+    // needs to start a bit later." Nothing is doubled if the handover ends
+    // exactly as the last of the page's own words goes under.
+    const LEAD = 0;
     let base = null;
     // Whether the record has finished becoming the header. Kept from the
     // last frame drawn, because the question gets asked at moments when
@@ -1131,6 +1138,26 @@ export default function FullPostPage({ entry, references = [], authed = false, l
       done = true;
     }
 
+    // ── A page that arrives after its own turn, 2026-09-20 ───────────────
+    // The sheet slides its content out to one side and the next in from the
+    // other, and a record is a fetch away — so on anything slower than a
+    // prefetch the animation has been and gone by the time there is a page
+    // to move, and the writing appears where it should have arrived. Miyel:
+    // "the text leaves the correct direction but nothing comes in the
+    // correct direction."
+    //
+    // So a page that finds its turn already over does the turn itself.
+    // Having looked, because a page that arrived in time is already moving
+    // and a second animation on a child of the thing moving it would carry
+    // it twice as far.
+    if (sheet && sheet.classList.contains('lay--swiped')) {
+      const moving = sheet.querySelector('.lay-content')
+        ?.getAnimations().some(a => a.playState === 'running');
+      const way = sheet.classList.contains('lay--from-right') ? 'right'
+        : sheet.classList.contains('lay--from-left') ? 'left' : null;
+      if (!moving && way) screens.classList.add(`ln-screens--from-${way}`);
+    }
+
     measure();
     // And again the moment the arrival is over, which is the measurement
     // that counts.
@@ -1168,6 +1195,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
       // leaving one that cleared them left the header blank for the length of
       // a page turn — which is what took the record out of the row on a swipe
       // and the reading state with it.
+      screens.classList.remove('ln-screens--from-right', 'ln-screens--from-left');
       if (crown) { crown.style.transform = ''; crown.style.clipPath = ''; }
       if (ledeEl) { ledeEl.style.transform = ''; ledeEl.style.clipPath = ''; }
       // Not taken away. The record arriving sets it for itself, and a
