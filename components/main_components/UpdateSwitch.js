@@ -114,7 +114,8 @@ export default function UpdateSwitch({ centered = false, onDone = null }) {
           <p className="usw-how">
             This opens GitHub in a new tab with the file already written out. Press the green
             <strong> Commit changes</strong>, then <strong>Commit changes</strong> again in the small
-            window. Then come back here.
+            window. Then come back here. If GitHub says the file already exists, you already have
+            it and there is nothing to do.
           </p>
           <button type="button" className="usw-go" onClick={press} disabled={!state?.install || watching}>
             {watching ? 'Waiting…' : 'Turn on updates'}
