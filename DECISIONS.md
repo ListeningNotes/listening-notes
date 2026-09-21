@@ -260,12 +260,12 @@ with a cover, meaning the one pane where something is cut off at a fold rather
 than simply running on. Everything else scrolls, and content running off the
 edge is its own cue.
 
-**A gap may carry you across itself, and that is not a snap, 2026-09-20.**
-Let go inside the dead stretch between a record's last words and its
-writing and it finishes the stretch, the way you were already going. Let go
-anywhere else and nothing happens. A snap owns a whole scroller and pulls
-back on every throw, which is why there is none; this owns one measured
-stretch and is silent everywhere else, including all of the reading.
+**An entry is two stops, and that is not a snap, 2026-09-20.** The record
+is one thing to look at and the writing is the next; move at all and let go
+and it finishes the journey, the way you were already going. It acts only
+between those two and never once the writing has started, and only with a
+hand off the glass — so a thumb held half way holds the change. A snap owns
+a whole scroller and pulls back on every throw, which is why there is none.
 
 **No vertical snap anywhere on the cross, 2026-09-20.** The two-floor panes
 snapped for a fortnight and the exception has now gone with the shape that
