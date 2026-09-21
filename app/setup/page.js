@@ -536,8 +536,10 @@ export default function WelcomeScreen() {
                 {/* No Skip on the password screen. Under this flow nobody
                     typed one at deploy, so there is nothing to keep; a
                     developer who set SESSION_PASSWORD by hand can find
-                    Settings. */}
-                {current !== 'password' && (
+                    Settings. And none on the updates screen, which draws its
+                    own way on — Carry on before it is done, Next after — so a
+                    second one beside it is a third way off one screen. */}
+                {current !== 'password' && current !== 'updates' && (
                   <button type="button" className="su-skip" disabled={busy} onClick={() => advance()}>Skip</button>
                 )}
               </div>
