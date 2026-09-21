@@ -2876,6 +2876,35 @@ current.
 
 ## Complete
 
+**2026-09-20 — The record becomes the entry's header, and a screen is two
+stops.** On a phone an entry is one page rather than two snapped screens.
+The album screen goes up and under the header the way any page goes under
+any header, and where the journal's mark was there is now the record —
+cover, name, score and marks, with the mark and the record changing places
+in a slot the scroll drives. Hold your thumb still half way and you have
+half of each; there is no animation in it at all.
+
+The turn between records is one page: the writing leaves one way and the
+next comes in the other, and the record in the header leaves with it. A turn
+out of the reading lands in the reading, and out of a card lands on a card.
+
+And any screen with a floor under it — the entry, the beacon, the book — is
+two stops. Move down at all, take your hand off, and it finishes the
+journey; move up and it puts the first floor back whole. Not a snap: see
+DECISIONS, and the twin notes in FullPostPage and HomeNav.
+
+The long way round is worth knowing, because four of the five attempts are
+still instructive and all of them are in the log: the mark travelled and
+lagged, then held still behind an opaque header, then collapsed on a timer,
+then cross-faded — each one right about something and wrong about the feel.
+What settled it was making the scroll the clock and drawing nothing that
+could be half true.
+
+Also here: the album arrives by growing out of the tile again, the code's
+badge is a barcode, the down carets go once you are going, the beacon keeps
+the song a listen ended on, and the feed's view button came back from behind
+the header's floor.
+
 **2026-09-20 — The beacon's header is a tall one, and the mark is the
 header's.** The big mark used to scroll away and a small one faded in behind
 it. It morphs now: it holds its place at full size for the whole of the
