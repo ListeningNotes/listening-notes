@@ -975,10 +975,19 @@ export default function FullPostPage({ entry, references = [], authed = false, l
     // the content sideways and leave the header alone, so nothing measured
     // across the two is wrong — and waiting them out is what made every
     // record swiped to in the mini state open at the top and then jump.
-    const landing = () => Boolean(sheet) && sheet.getAnimations({ subtree: true })
-      .some(a => a.playState === 'running'
+    const landing = () => {
+      if (!sheet) return false;
+      // The sheet's own animations, whatever they are: growing out of a tile
+      // is run by the Web Animations API and has no name to match on, and
+      // measuring anything while the whole surface is scaled to the size of
+      // a cover gives numbers about a cover.
+      if (sheet.getAnimations().some(a => a.playState === 'running')) return true;
+      // And the named ones underneath — but not a page turn, which moves the
+      // content sideways and leaves the header alone.
+      return sheet.getAnimations({ subtree: true }).some(a => a.playState === 'running'
         && String(a.animationName || '').startsWith('lay')
         && !String(a.animationName || '').startsWith('layFrom'));
+    };
 
     // How far the record takes to become the header. Not the whole album
     // screen — see the note beside `over` in measure().
@@ -1030,6 +1039,10 @@ export default function FullPostPage({ entry, references = [], authed = false, l
       if (landing()) { base = null; setCrowning(false); return; }
       const gone = screens.scrollTop;
       if (!middle(art).h) { base = null; setCrowning(false); return; }
+      // The last words on the album screen: the posted line, or the chips if
+      // a listen has no date on it.
+      const last = document.querySelector('.ln-screen-one-posted')
+        || document.querySelector('.ln-screen-one-chips');
       setCrowning(true);
       base = {
         // Where the notes come to rest: the album screen gone under the
@@ -1037,6 +1050,12 @@ export default function FullPostPage({ entry, references = [], authed = false, l
         // record's notes lands on in the next, and where the changeover
         // finishes.
         ends: Math.max(1, one.getBoundingClientRect().bottom + gone - row.getBoundingClientRect().bottom),
+        // And where the header changes over, which is earlier: the last of
+        // the record's own words going under it. Miyel, on where it should
+        // happen — "maybe when you hit the caret, or the submitted-by, or
+        // that blank space." Past that line the album screen is a caret and
+        // air, so there is nothing left up there for the header to be about.
+        turns: Math.max(1, (last || one).getBoundingClientRect().bottom + gone - row.getBoundingClientRect().bottom),
       };
       draw();
     };
@@ -1064,10 +1083,27 @@ export default function FullPostPage({ entry, references = [], authed = false, l
       // becoming another header, it is a header nobody can read. So the
       // journal's name holds the middle for the whole of the album screen
       // and the record takes it the instant that screen has gone.
-      const on = screens.scrollTop >= base.ends;
+      const on = screens.scrollTop >= base.turns;
+      // ── It arrives, it does not appear, 2026-09-20 ────────────────────
+      // Miyel: "I need it to have some kind of way to get there that is not
+      // just appearing, but also not so loud that your eye hits it. I don't
+      // like crossfades, but there must be something."
+      //
+      // A wipe. The record is uncovered from its top edge down over a fifth
+      // of a second — the shutter a departures board has — so there is
+      // movement to follow and never two things drawn over each other. The
+      // mark goes the instant it starts, because the whole point of not
+      // fading is that they are never both there.
+      if (on !== done && crown) {
+        crown.classList.remove('ln-crown--in');
+        if (on) { void crown.offsetWidth; crown.classList.add('ln-crown--in'); }
+      }
       done = on;
-      if (crown) crown.style.opacity = on ? '1' : '0';
-      // Never both, and never half of either.
+      // Both said on the document rather than on the elements: the row is a
+      // portal and its nodes are replaced out from under anything holding
+      // one, and a number written here as an inline style would also beat
+      // the rule that gets the record out of the tools' way.
+      document.documentElement.style.setProperty('--ln-crown', on ? '1' : '0');
       lede(on ? '0' : '1');
       // And now it can be drawn: there is a number for it.
       setLedeDrawn(true);
@@ -1129,7 +1165,8 @@ export default function FullPostPage({ entry, references = [], authed = false, l
       narrow.removeEventListener('change', measure);
       window.removeEventListener('resize', measure);
       watch.disconnect();
-      if (crown) crown.style.opacity = '';
+      document.documentElement.style.removeProperty('--ln-crown');
+      if (crown) crown.classList.remove('ln-crown--in');
       // Not taken away. The record arriving sets it for itself, and a
       // leaving one that cleared it was clearing the new one's answer.
       setCrowning(false);
