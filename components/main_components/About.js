@@ -50,6 +50,7 @@ import {
   DEFAULT_RIG_ICON, LINK_ICONS, RIG_ICONS, identify, readLink, rigIcon,
 } from '../../library/card_links';
 import { useIdentificationCardEditor } from './IdentificationCardEditor';
+import EditingBar from './EditingBar';
 import { useBookplate } from './Bookplate';
 import { BIO_PROMPTS, readBioAnswers } from '../../library/bioprompt';
 import { VERSION, RELEASE_URL } from '../../library/version';
@@ -129,10 +130,16 @@ export default function About({ stamps, authed = false, pinned = null, entries =
     if (edit.editing) {
       setBarGoing(false);
       setBarUp(true);
-      cross?.classList.add('hn--editing');
-      return () => cross?.classList.remove('hn--editing');
+      // An attribute, not a class — see the same change in SendSheet.js. The
+      // cross's class attribute belongs to React and is rewritten whole on
+      // every render of HomeNav, so this was being wiped whenever anything
+      // else on the cross moved, and the editing bar came up over the band it
+      // was supposed to be replacing. Since 2026-09-20 and not noticed,
+      // because it only shows when the two happen to coincide.
+      cross?.toggleAttribute('data-editing', true);
+      return () => cross?.removeAttribute('data-editing');
     }
-    cross?.classList.remove('hn--editing');
+    cross?.removeAttribute('data-editing');
     setBarGoing(going => going);
     return undefined;
   }, [edit.editing]);
@@ -459,22 +466,13 @@ export default function About({ stamps, authed = false, pinned = null, entries =
           doors out of a correction you have not decided what to do with.
 
           The band is HomeNav's and this is About's, so the two are joined by
-          a class on the cross rather than by a prop — see the effect above.
+          an attribute on the cross rather than by a prop — see the effect
+          above, and why it is an attribute and not a class.
           It stays mounted for the length of the way out, which is what
           `barGoing` is: unmounted on the frame editing ends, it would vanish
           rather than leave. */}
       {barUp && (
-        <div className={'ln-editing-bar' + (barGoing ? ' ln-editing-bar--going' : '')}>
-          <span className="ln-editing-label">Editing</span>
-          <button type="button" className="ln-pin ln-pin--on" onClick={edit.save} disabled={edit.saving || edit.busy}>
-            <Check size={13} weight="bold" aria-hidden="true" />
-            <span>{edit.saving ? 'Saving' : 'Save'}</span>
-          </button>
-          <button type="button" className="ln-pin" onClick={edit.cancel} disabled={edit.saving}>
-            <X size={13} weight="bold" aria-hidden="true" />
-            <span>Cancel</span>
-          </button>
-        </div>
+        <EditingBar onSave={edit.save} onCancel={edit.cancel} saving={edit.saving} held={edit.busy} going={barGoing} />
       )}
       {edit.trouble && <p className="ln-trouble">{edit.trouble}</p>}
       {/* No floors, and no crown, since 2026-09-15. The card is a page and
