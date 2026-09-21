@@ -92,13 +92,16 @@ export default function UpdateSwitch({ centered = false, onDone = null }) {
   // Proven on: this very deployment was pushed by the updater.
   const on = Boolean(state?.byUpdater) || landed;
   const lamp = on ? 'on' : (watching ? 'waiting' : 'off');
+  // Short, and none of it about how the machinery works. That it is
+  // automatic is the whole point; how often it checks is not theirs to
+  // carry.
   const said = on
-    ? (landed ? 'It worked. This journal keeps itself up to date.' : 'On. This journal keeps itself up to date.')
+    ? (landed ? 'It worked.' : 'On — your journal updates itself.')
     : watching
-      ? 'Waiting for GitHub — this takes a minute or two.'
+      ? 'Waiting for GitHub…'
       : state?.stalled
-        ? 'This journal has stopped updating itself.'
-        : 'Your journal can keep itself up to date, once an hour, on its own.';
+        ? 'Your journal has stopped updating itself.'
+        : 'Keep your journal up to date automatically.';
 
   return (
     <div className={'usw' + (centered ? ' usw--centered' : '')}>
@@ -107,32 +110,28 @@ export default function UpdateSwitch({ centered = false, onDone = null }) {
         <span>{said}</span>
       </p>
 
-      {!on && (
+      {/* Nothing to press where the link cannot be built — a copy not
+          running on Vercel, or a dev server. A dead button with a
+          paragraph apologising for itself is worse than no button. */}
+      {!on && state?.install && (
         <>
           {/* Said before the press, not after: a new tab nobody expected is
               a new tab nobody trusts. */}
           <p className="usw-how">
-            This opens GitHub in a new tab with the file already written out. Press the green
-            <strong> Commit changes</strong>, then <strong>Commit changes</strong> again in the small
-            window. Then come back here. If GitHub says the file already exists, you already have
-            it and there is nothing to do.
+            This opens a GitHub link for you in a new tab. Press the green
+            <strong> Commit changes</strong>, then <strong>Commit changes</strong> again.
           </p>
-          <button type="button" className="usw-go" onClick={press} disabled={!state?.install || watching}>
+          <button type="button" className="usw-go" onClick={press} disabled={watching}>
             {watching ? 'Waiting…' : 'Turn on updates'}
           </button>
-          {!state?.install && state && (
-            <p className="usw-how">
-              This copy could not work out where its own code lives, so it cannot fill the page in.
-              The file, and where it goes, are in the README under Updating.
-            </p>
-          )}
         </>
       )}
 
-      {onDone && (
-        <button type="button" className="usw-skip" onClick={onDone}>
-          {on ? 'Next' : 'Carry on — I’ll do it later'}
-        </button>
+      {/* Only once it is on. Before that the way past is the setup page's
+          own Skip, the same one every screen before this has, rather than a
+          second word for it sitting here. */}
+      {onDone && on && (
+        <button type="button" className="usw-go" onClick={onDone}>Next</button>
       )}
     </div>
   );
