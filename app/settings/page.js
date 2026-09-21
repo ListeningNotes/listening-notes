@@ -249,7 +249,7 @@ export default function SettingsPage({ layered = false }) {
             says so itself when it is already on. */}
         <div className="st-section">
           <h2 className="st-h">Keeping up to date</h2>
-          <UpdateSwitch />
+          <UpdateSwitch explain />
         </div>
 
         <div className="st-section">

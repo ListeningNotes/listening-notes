@@ -88,7 +88,8 @@ export async function GET(request) {
     || /^Update to Listening Notes /.test(process.env.VERCEL_GIT_COMMIT_MESSAGE || '');
   const install = await updaterLink(owner, slug);
   const quiet = {
-    current: pkg.version, latest: null, newer: false, stalled: false, commit, byUpdater, install,
+    current: pkg.version, latest: null, newer: false, stalled: false, major: false,
+    commit, byUpdater, install,
   };
   try {
     const res = await fetch(LATEST, {
@@ -103,13 +104,20 @@ export async function GET(request) {
       ? `https://github.com/${owner}/${slug}/actions/workflows/update.yml`
       : release.html_url;
     const newer = isNewer(latest, pkg.version);
+    // A major waits for a person on purpose — the updater will not cross one
+    // on its own — so a copy sitting behind a major is not stalled, it is
+    // waiting to be asked. Without this every copy would announce that its
+    // updates had stopped, three hours after any 2.0, which is both wrong
+    // and alarming.
+    const big = n => Number(String(n).split('.')[0]) || 0;
+    const major = newer && big(latest) > big(pkg.version);
     // Stalled, not merely behind. A release minutes old is on its way here
     // and worth nothing on screen; one this copy has had hours to take and
     // has not is a copy whose updates have stopped.
     const published = Date.parse(release.published_at || '');
-    const stalled = newer && Number.isFinite(published) && Date.now() - published > GRACE;
+    const stalled = newer && !major && Number.isFinite(published) && Date.now() - published > GRACE;
     return Response.json({
-      current: pkg.version, latest, newer, stalled, commit, byUpdater, install,
+      current: pkg.version, latest, newer, stalled, major, commit, byUpdater, install,
       page, notes: release.html_url,
     });
   } catch {
