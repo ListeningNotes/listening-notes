@@ -132,7 +132,7 @@ export default function UpdateSwitch({ centered = false, onDone = null, explain 
           {/* The sentence is the button: the offer and the action are one
               thing, not a label with a switch beside it. */}
           <button type="button" className="usw-switch" onClick={press} disabled={watching}>
-            Keep your journal up to date automatically
+            Turn on automatic updates
           </button>
           {/* Under it, because it describes what pressing does rather than
               competing with it. Said before the press, not after: a new tab
