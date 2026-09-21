@@ -40,6 +40,7 @@ import { fonts } from '../../library/sitewide_visuals';
 import SiteNav from '../../components/main_components/SiteNav';
 import PasswordGate from '../../components/session_components/PasswordGate';
 import AddToHomeScreen from '../../components/main_components/AddToHomeScreen';
+import UpdateSwitch from '../../components/main_components/UpdateSwitch';
 import { useJournalHost } from '../../hooks/useJournalHost';
 
 const PASSWORD_FLOOR = 8;
@@ -242,6 +243,14 @@ export default function SettingsPage({ layered = false }) {
             <input className="st-field" type="password" autoComplete="new-password" value={confirm} onChange={e => setConfirm(e.target.value)} />
           </div>
         </Section>
+
+        {/* Here as well as in setup, for anyone who skipped it there, and
+            for a copy whose updater was switched off or never arrived. It
+            says so itself when it is already on. */}
+        <div className="st-section">
+          <h2 className="st-h">Keeping up to date</h2>
+          <UpdateSwitch />
+        </div>
 
         <div className="st-section">
           <h2 className="st-h">On your home screen</h2>
