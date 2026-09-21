@@ -1915,14 +1915,14 @@ a.pn-item-album:hover { text-decoration: underline; text-underline-offset: 3px; 
   .usw-tick path { animation: none; stroke-dashoffset: 0; }
 }
 
-/* A sentence, so it is set in the body face rather than the label face
-   every other button on the site uses — those carry one or two words. */
+/* The label face every other button on the site wears. It was the body
+   face while it carried a whole sentence; four words belong with Save,
+   Next and Change password. */
 .usw-switch {
-  width: 100%; max-width: 250px; box-sizing: border-box;
-  padding: 13px 20px; border-radius: 999px; cursor: pointer;
+  padding: 11px 20px; border-radius: 999px; cursor: pointer;
   background: var(--ink); color: var(--bg); border: 1px solid var(--ink);
-  font-family: inherit; font-size: 14.5px; font-weight: 600; line-height: 1.35;
-  text-wrap: balance;
+  font-family: var(--font-mono); font-size: 10px;
+  letter-spacing: 0.14em; text-transform: uppercase;
 }
 .usw-switch:disabled { opacity: 0.45; cursor: default; }
 .usw--centered .usw-switch { align-self: center; }
