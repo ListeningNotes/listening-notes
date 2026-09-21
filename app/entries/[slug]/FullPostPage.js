@@ -1196,7 +1196,21 @@ export default function FullPostPage({ entry, references = [], authed = false, l
     const rest = () => {
       if (!base || held || ours) return;
       const at = screens.scrollTop;
-      const from = base.turns;
+      // ── The album screen is one stop, 2026-09-20 ───────────────────────
+      // The stretch was drawn round the dead air first, then round the
+      // handover, and Miyel could still find somewhere to stop above both:
+      // "it should happen on any slight movement down, I feel."
+      //
+      // Which is the simpler rule and the one she has been describing all
+      // along. The record is one thing to look at and the writing is the
+      // next; there is nowhere in between that anybody means to be. So any
+      // downward movement and a hand off the glass finishes the journey, and
+      // any upward one puts the record back whole.
+      //
+      // Holding it half way still works and always did: this only ever acts
+      // once a finger is off the glass, so a thumb resting mid-change holds
+      // the change for as long as it is there.
+      const from = 0;
       const to = base.ends;
       if (to - from < 80) return;              // no gap worth crossing
       if (at <= from + 8 || at >= to - 8) return;
