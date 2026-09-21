@@ -79,10 +79,13 @@ import { useJournalHost } from '../../hooks/useJournalHost';
 // now — see About.js. Last.fm and the Anthropic key followed the rig until
 // 2026-09-13 and were asked in Settings after that; Last.fm went altogether
 // on 2026-09-16 and the key is still there — the note at the top.
-// Updates sits after the password because it is the first thing the journal
-// asks of somebody who now owns it, and before the home screen because the
-// home screen is the door closing behind them — it stays last.
-const STEPS = ['name', 'photo', 'prompts', 'rig', 'password', 'updates', 'homescreen'];
+// Updates sits with the other housekeeping, before the password: the
+// password is the weight of the flow — it is the moment the journal becomes
+// theirs — and the home screen is the door closing behind them, so those two
+// stay together at the end. A copy in setup already carries a wristband
+// issued against its claim code, which is what lets this screen ask the
+// server anything before the password exists.
+const STEPS = ['name', 'photo', 'prompts', 'rig', 'updates', 'password', 'homescreen'];
 const PASSWORD_FLOOR = 8;
 
 async function patchSettings(fields) {
@@ -515,7 +518,6 @@ export default function WelcomeScreen() {
 
             {current === 'updates' && (
               <div className="su-fields">
-                <p className="su-why" style={{ textAlign: 'center' }}>One thing this copy cannot do for itself.</p>
                 <UpdateSwitch centered onDone={() => advance()} />
               </div>
             )}
@@ -536,10 +538,8 @@ export default function WelcomeScreen() {
                 {/* No Skip on the password screen. Under this flow nobody
                     typed one at deploy, so there is nothing to keep; a
                     developer who set SESSION_PASSWORD by hand can find
-                    Settings. And none on the updates screen, which draws its
-                    own way on — Carry on before it is done, Next after — so a
-                    second one beside it is a third way off one screen. */}
-                {current !== 'password' && current !== 'updates' && (
+                    Settings. */}
+                {current !== 'password' && (
                   <button type="button" className="su-skip" disabled={busy} onClick={() => advance()}>Skip</button>
                 )}
               </div>
