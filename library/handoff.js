@@ -189,9 +189,15 @@ let carriedAt = 0;
 // anything on its way there.
 export function carryReading() {
   if (typeof document === 'undefined') { carriedAt = 0; return; }
-  const seat = document.querySelector('.ln-crown-art');
-  const small = Boolean(seat) && seat.getBoundingClientRect().height <= 60;
-  carriedAt = small ? Date.now() : 0;
+  // Whether the header is showing the record. It asked whether the cover up
+  // there was small, which was true while the cover travelled and became
+  // true of every listen the moment it stopped travelling — so a swipe from
+  // a full card landed in the header state (Miyel: "if I'm on the full card
+  // it shouldn't switch to the mini beacon"). What is actually being asked
+  // is whether the changeover has happened, and the header says so.
+  const crown = document.querySelector('.ln-crown');
+  const up = Boolean(crown) && Number(getComputedStyle(crown).opacity) > 0.5;
+  carriedAt = up ? Date.now() : 0;
 }
 export function cameReadingOn() { return Boolean(carriedAt) && Date.now() - carriedAt < 1500; }
 // Closing a record ends the read: what comes next is an arrival, not a page

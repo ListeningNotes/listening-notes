@@ -1235,7 +1235,11 @@ a.ln-sent-who:hover { text-decoration: underline; text-underline-offset: 3px; }
   .ln-entry--crowned .sitenav-logo { opacity: 0; }
   .ln-crown {
     position: relative;
-    opacity: 0;
+    /* Read from the document, not written on this element: the row is a
+       portal and its nodes are replaced. Written here as an inline style it
+       would also beat the tools' rule below, which is why the menu opened
+       straight over the record. */
+    opacity: var(--ln-crown, 0);
     background: none;
     border: 0;
     padding: 0;
@@ -1324,7 +1328,22 @@ a.ln-sent-who:hover { text-decoration: underline; text-underline-offset: 3px; }
      door reach most of the way across a 375px phone, and the record is
      something to come back to rather than something to read past a menu.
      KeeperTools sets the attribute; see the note in that file. */
+  /* Three classes deep, so it beats the variable above whatever that says.
+     Miyel: "when I open the toolbar it still overlaps with the mini beacon." */
   .sitenav-row[data-tooling] .ln-crown { opacity: 0; pointer-events: none; }
+
+  /* ── The shutter ─────────────────────────────────────────────────────
+     The record is uncovered from its top edge down, which is movement to
+     follow without anything being drawn over anything else. Not a fade:
+     "I don't like crossfades, but there must be something" (Miyel). */
+  @keyframes ln-crown-in {
+    from { clip-path: inset(0 0 100% 0); }
+    to   { clip-path: inset(0 0 0 0); }
+  }
+  .ln-crown--in { animation: ln-crown-in 220ms cubic-bezier(0.22, 0.61, 0.36, 1); }
+  @media (prefers-reduced-motion: reduce) {
+    .ln-crown--in { animation: none; }
+  }
 
   /* The record's own art stays on the page and scrolls away with it. It was
      hidden here while the header was carrying a travelling copy of it; there
