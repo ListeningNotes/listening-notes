@@ -229,6 +229,21 @@ export function useListeningSession({ step }) {
   // turning to a track or writing a line. A timer that pinged while the page
   // merely sat open would keep the beacon claiming a listen all weekend, which
   // is the one loophole this had to close.
+  // ── The song a listen got to, 2026-09-20 ────────────────────────────────
+  // Kept for the length of one record rather than read off the screen each
+  // time. What is on screen answers "what is open", and the beacon is asking
+  // something else: how far into this record its keeper has got. Those are
+  // the same answer everywhere except the album screen, where nothing is
+  // open — so going back to the cover for a moment used to take the song off
+  // the beacon, and finishing from there left the record's name standing
+  // where a song had been (Miyel, 2026-09-20: "if it ends on a song, leave
+  // the song up").
+  //
+  // Blank until a song is actually reached, which is the whole of what the
+  // old guard was for: openTrack is 0 before anybody has pressed anything,
+  // so a record sitting on its own cover would otherwise announce track one.
+  // Cleared by a different record arriving, and by nothing else.
+  const gotTo = useRef({ album: '', track: '' });
   useEffect(() => {
     if (!albumInput || saved) return undefined;
     // ── Every record in hand is a beacon, 2026-09-18 ──────────────────────
@@ -271,14 +286,15 @@ export function useListeningSession({ step }) {
           // and Preview too: the listen is still open, and dropping to "Last
           // logged" while its keeper writes the album note would be wrong at
           // the most deliberate moment of the whole thing.
-          // Whatever song is open — and nothing is open on the album screen,
-          // whatever openTrack is pointing at. It defaults to the first
-          // track and the tracklist lands before anybody has pressed
-          // anything, so without this the beacon announced track one of a
-          // record still sitting on its own cover waiting to be started
-          // (2026-09-18). Blank is not the same as no beacon: the route
-          // names the record instead.
-          track: step > 0 ? (tracks?.[openTrack]?.title || '') : '',
+          // The furthest song this listen has reached — see gotTo above.
+          // Blank is not the same as no beacon: the route names the record
+          // instead.
+          track: (() => {
+            if (gotTo.current.album !== albumInput) gotTo.current = { album: albumInput, track: '' };
+            const open = step > 0 ? (tracks?.[openTrack]?.title || '') : '';
+            if (open) gotTo.current.track = open;
+            return gotTo.current.track;
+          })(),
         }),
       }).then(() => { litRef.current = true; })
         .catch(() => { /* the beacon is not worth an alert */ });
