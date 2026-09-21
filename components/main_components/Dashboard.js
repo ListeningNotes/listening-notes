@@ -166,15 +166,20 @@ export default function Dashboard({ waiting, mark = null }) {
   // still says Listening now, because the record is still on the desk and this
   // is the way back to it — and the green goes out, because the beacon has.
   const { isLive } = useListeningBeacon();
-  // Whether a newer Listening Notes exists. Asked once, of this copy's own
+  // Whether this copy's updates have stopped. Asked once, of this copy's own
   // server, which asks GitHub's public releases at most once an hour (see
-  // app/api/update/route.js). The only thing this can ever say is that
-  // there is a newer version, and where the button to take it is.
+  // app/api/update/route.js).
+  //
+  // Nothing is said about a release that is merely new: the copy takes it
+  // within the hour on its own, and a notice about something already in hand
+  // is a notice that teaches people to ignore notices. What is worth saying
+  // is that a copy has had hours to take a release and has not — which means
+  // its hourly check is not running, and only a person can start it again.
   const [update, setUpdate] = useState(null);
   useEffect(() => {
     fetch('/api/update')
       .then(r => (r.ok ? r.json() : null))
-      .then(d => d?.newer && setUpdate(d))
+      .then(d => d?.stalled && setUpdate(d))
       .catch(() => {});
   }, []);
 
@@ -250,8 +255,14 @@ export default function Dashboard({ waiting, mark = null }) {
               {/* In ink, not faint: it is only ever here when it is true,
                   and a line that appears once in a while can afford to be
                   seen — the Inbox count's rule (Miyel, 2026-09-13). */}
-              <a className="db-update db-update--newer" href={update.page} target="_blank" rel="noopener noreferrer">
-                A newer version is available &#8599;
+              <a
+                className="db-update db-update--newer"
+                href={update.page}
+                target="_blank"
+                rel="noopener noreferrer"
+                title={`This copy is on ${update.current}; ${update.latest} is out. Press Enable workflow, then Run workflow.`}
+              >
+                This copy has stopped updating itself &#8599;
               </a>
             </>
           )}

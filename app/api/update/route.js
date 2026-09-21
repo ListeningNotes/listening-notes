@@ -5,6 +5,7 @@
 //
 // Owner-only, and asked by the desk once per visit. This server asks GitHub
 // for the canonical repository's latest public release, at most once an hour,
+// and says whether this copy is merely behind or has stopped updating —
 // and compares its tag with the version in this copy's package.json. That is
 // the whole of it: no copy tells anyone it exists, nothing is sent but a
 // request for a public page, and the only thing this can ever say is that
@@ -20,6 +21,13 @@ import { requireWristband } from '@/library/wristband';
 import pkg from '../../../package.json';
 
 const LATEST = 'https://api.github.com/repos/ListeningNotes/listening-notes/releases/latest';
+// How long after a release a copy may still be on the old version with
+// nothing wrong. Its workflow checks on the hour, Vercel takes a couple of
+// minutes to build, and this route's own answer can be an hour old — so two
+// hours behind is honest. Past three, the copy is not updating itself, and
+// that is worth saying out loud (2026-09-21: four copies sat five days
+// behind because their workflow arrived switched off and nothing said so).
+const GRACE = 3 * 60 * 60 * 1000;
 // An hour, not a day (2026-09-15): a keeper told by a friend that there is
 // an update opened the desk and saw nothing, because the day-old answer
 // still said otherwise. One request an hour per copy is nothing to GitHub.
@@ -42,7 +50,7 @@ export async function GET(request) {
   const blocked = await requireWristband(request);
   if (blocked) return blocked;
 
-  const quiet = { current: pkg.version, latest: null, newer: false };
+  const quiet = { current: pkg.version, latest: null, newer: false, stalled: false };
   try {
     const res = await fetch(LATEST, {
       headers: { Accept: 'application/vnd.github+json', 'User-Agent': 'listening-notes' },
@@ -57,7 +65,13 @@ export async function GET(request) {
     const page = owner && slug
       ? `https://github.com/${owner}/${slug}/actions/workflows/update.yml`
       : release.html_url;
-    return Response.json({ current: pkg.version, latest, newer: isNewer(latest, pkg.version), page, notes: release.html_url });
+    const newer = isNewer(latest, pkg.version);
+    // Stalled, not merely behind. A release minutes old is on its way here
+    // and worth nothing on screen; one this copy has had hours to take and
+    // has not is a copy whose updates have stopped.
+    const published = Date.parse(release.published_at || '');
+    const stalled = newer && Number.isFinite(published) && Date.now() - published > GRACE;
+    return Response.json({ current: pkg.version, latest, newer, stalled, page, notes: release.html_url });
   } catch {
     // GitHub unreachable, or rate-limited: say nothing rather than guess.
     return Response.json(quiet);
