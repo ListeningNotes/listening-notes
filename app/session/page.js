@@ -39,7 +39,6 @@
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { useBookplate } from '../../components/main_components/Bookplate';
 import { useListeningSession, SESSION_STEPS, PENDING_KEY, saidSoAboutTheDesk, saidSoAboutTheEntry } from '../../hooks/useListeningSession';
 import AlbumPicker from '../../components/session_components/AlbumPicker';
 import SessionHeader from '../../components/session_components/SessionHeader';

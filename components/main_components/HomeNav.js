@@ -147,6 +147,24 @@ const TURN_MS = 400;
 // underneath it is not a thing anybody is in a position to watch. "You don't
 // see the transition." See beginListen below, and the note in NOTES.
 const TO_THE_BAR_MS = 620;
+// ── And how long the record waits for the mark to get out of the way ──────
+// The two movements this press starts — the big mark leaving out of the top of
+// the screen, the record flying up out of the card into the bar — travel
+// through the same strip of screen, and until 2026-09-21 they did it at the
+// same time: measured, the cover slid through the logo from 220ms to 520ms.
+// Miyel: "i dont want them overlapping", and then "yes do the handover."
+//
+// So they take turns. The mark goes first, on its own slower curve (see
+// .hn--choosing .hn-bar-crown .hn-crown-svg in nav.css), and the record holds
+// at the card until it is clear — which reads as the logo making room rather
+// than as two things crossing. 300 is where the mark's foot passes the top of
+// the band the record is landing in, with a little to spare; the whole way in
+// is this plus TO_THE_BAR_MS, a shade over nine tenths of a second.
+//
+// The card is still standing down through all of it (a 0.7s collapse of its
+// own), so the record is not left hanging on its own anywhere: it sits with
+// the card it came from until it leaves it.
+const MAKE_ROOM_MS = 300;
 // The backstop for "the sheet has the screen", used only when the sheet's own
 // rise never announces itself — reduced motion, or a layout with no animation
 // on it. Comfortably past the longest rise there is (layRiseTall, 620ms on a
@@ -693,12 +711,14 @@ export default function HomeNav() {
     const release = () => {
       if (gone) return;
       gone = true;
-      said.style.transition = `transform ${TO_THE_BAR_MS}ms cubic-bezier(0.22, 0.61, 0.36, 1)`;
+      // The same wait the cover takes, or the record's name would set off
+      // without it and the two halves of one object would arrive apart.
+      said.style.transition = `transform ${TO_THE_BAR_MS}ms cubic-bezier(0.22, 0.61, 0.36, 1) ${MAKE_ROOM_MS}ms`;
       said.style.transform = 'none';
       flightTimers.current.push(setTimeout(() => {
         said.style.transition = '';
         said.style.transform = '';
-      }, TO_THE_BAR_MS + 40));
+      }, MAKE_ROOM_MS + TO_THE_BAR_MS + 40));
     };
     flightTimers.current.push(requestAnimationFrame(release));
     flightTimers.current.push(setTimeout(release, 120));
@@ -888,7 +908,7 @@ export default function HomeNav() {
       // image, same place, and in the browser's cache because this is the copy
       // it has just finished flying. Letting go of the flown one is a frame
       // with nothing in it to notice.
-      flightTimers.current.push(setTimeout(() => setLanding(null), TO_THE_BAR_MS));
+      flightTimers.current.push(setTimeout(() => setLanding(null), (landing.wait || 0) + TO_THE_BAR_MS));
     };
     flightTimers.current.push(requestAnimationFrame(() => lookFor()));
   }, [landing]);
@@ -1057,7 +1077,12 @@ export default function HomeNav() {
     flightStyle = {
       left: from.left, top: from.top, width: from.width, height: from.height,
       transform: `translate(${dx}px, ${dy}px) scale(${k})`,
-      transition: travelling ? `transform ${landing.ms}ms cubic-bezier(0.22, 0.61, 0.36, 1)` : 'none',
+      // `wait` is the beat it holds at the card before it sets off, so the big
+      // mark has the strip to itself on the way out — see MAKE_ROOM_MS. A
+      // flight with none simply leaves at once.
+      transition: travelling
+        ? `transform ${landing.ms}ms cubic-bezier(0.22, 0.61, 0.36, 1) ${landing.wait || 0}ms`
+        : 'none',
     };
   }
 
@@ -1203,12 +1228,53 @@ export default function HomeNav() {
     // to be standing in.
     const GROUND = 6;
     const ground = cross?.querySelector('.hn-bar-ground');
+    // The pane's own crown, which is the thing that folds away and grows back
+    // when a listen starts and ends. Its state is the test for whether a
+    // measurement is worth taking — see measure().
+    const crown = pane.querySelector('.hn-crown');
 
     // Measured rather than written down, because every number in it is a
     // clamp on the screen's height: where the crown stands, how tall it is,
     // and where the bar's line falls on a phone with a notch.
     let base = null;
     const measure = () => {
+      // ── Not while the crown is folded away, 2026-09-21 ────────────────
+      // Starting a listen collapses it — height, padding and a scale down to
+      // a quarter (.hn--choosing .hn-crown in nav.css) — and a rect taken off
+      // a scaled ancestor is a scaled rect. Measured there, `top` is where a
+      // quarter-sized crown holds the mark and `height` is a fifth of what the
+      // mark is, and both get written into `base` and kept. That is what left
+      // the mark parked forty-eight pixels above its place after every
+      // session: nothing measured again once the crown had stood back up.
+      //
+      // The class rather than the `choosing` state, because this effect is
+      // built once and would hold whatever that was at the time.
+      //
+      // And the ground goes back to the bar's own height on the way in. It is
+      // written from the mark's foot, and the mark's foot while the crown is
+      // folded is a hundred and seventy pixels of opaque header standing over
+      // the picker's search field — which is what holding the last good
+      // measurement costs if the ground is not told. While you are choosing
+      // the band is a band: the record is in it, the mark is not, and there is
+      // nothing for it to be the ground of.
+      if (cross?.classList.contains('hn--choosing')) {
+        ground?.style.removeProperty('--ground');
+        return;
+      }
+      // ── Nor while it is on its way back, 2026-09-21 ───────────────────
+      // The class comes off the moment the session ends and the crown then
+      // takes 0.7s to grow back, so there is most of a second in which
+      // nothing is folded and nothing is settled either. The observer fires
+      // through all of it, and the half-grown answers it took were landing
+      // the mark on the header's line — where it sat for a beat before
+      // dropping the last forty-eight pixels into place. One arrival, not
+      // two: a transform on the crown means it is still moving, and a rect
+      // read off a moving box is not a measurement.
+      //
+      // `draw` rather than a bare return, so the band behind the header is
+      // kept true to the base we are holding. Skipping the measurement must
+      // not also skip what the measurement was writing — see the gotcha.
+      if (crown && getComputedStyle(crown).transform !== 'none') { draw(); return; }
       if (!window.matchMedia('(max-width: 768px)').matches) {
         mark.style.transform = '';
         base = null;
@@ -1276,6 +1342,10 @@ export default function HomeNav() {
     const ease = t => 1 - (1 - t) * (1 - t);
     const draw = () => {
       if (!base) return;
+      // Same reason as the measurement's: this runs on the pane's own scroll,
+      // and a scroll that happens while the crown is folded away would write
+      // the ground straight back.
+      if (cross?.classList.contains('hn--choosing')) return;
       const gone = pane.scrollTop;
       // How far through the handover: nothing until the wall is JOURNEY away,
       // all of it once the wall has landed. A pane with no wall in it falls
@@ -1338,9 +1408,21 @@ export default function HomeNav() {
     // that is being watched: the cover has its box from the start and fills
     // it in. `load` does not bubble, so this listens on the way down.
     pane.addEventListener('load', measure, true);
+    // ── And the crown finishing its way back up, 2026-09-21 ───────────────
+    // Leaving a listen grows the crown back over 0.7s. The observer above
+    // hears the height in that, because height is layout — but the scale is
+    // not, and a ResizeObserver says nothing about a transform. So its last
+    // word came while the box was still a fraction of itself, and there was
+    // nothing after it to correct the record. The transition saying it has
+    // ended is the exact frame the measurement is good again.
+    const stood = event => {
+      if (event.target === crown && event.propertyName === 'transform') measure();
+    };
+    crown?.addEventListener('transitionend', stood);
     return () => {
       pane.removeEventListener('scroll', draw);
       pane.removeEventListener('load', measure, true);
+      crown?.removeEventListener('transitionend', stood);
       narrow.removeEventListener('change', measure);
       window.removeEventListener('resize', measure);
       watch.disconnect();
@@ -1423,6 +1505,60 @@ export default function HomeNav() {
       root.style.removeProperty('--hn-h');
     };
   }, [paneRefs]);
+
+  // ── And the four doors step down while you are typing, 2026-09-21 ────────
+  // Straight out of the effect above. The cross is made as tall as the part of
+  // the window you can see, which is the cure for everything sliding up when a
+  // keyboard opens — and the band is held against the cross's bottom edge, so
+  // shrinking the cross walks the four doors up the screen until they are
+  // sitting in the gap between what you are typing and the keys. Miyel,
+  // 2026-09-21, filtering her journal: "I shouldn't see the footer between the
+  // keyboard again." Again, because the send sheet had it first (hn--sending).
+  //
+  // This one is the general answer rather than a third named case: while a
+  // field anywhere in the cross has the focus, the band is not what you are
+  // reaching for. It covers the journal's filter, the book's own field, the
+  // picker's search and whatever is added next, which a class per surface
+  // would not.
+  //
+  // Scoped to fields the cross contains. A sheet over it brings its own rule
+  // (hn--sending) and a layer over it hides the band anyway; a blanket test on
+  // document.activeElement would have this reacting to fields it has no
+  // business knowing about.
+  //
+  // A tick behind the event: `focusin` fires while the focus is still moving
+  // and activeElement can still be the element being left — the same trap
+  // LayerEntry's data-typing is written around, recorded there.
+  // State and not classList, which is the rule this file already learned the
+  // hard way for the morph: the cross's class attribute is React's, rewritten
+  // whole on every render, so a class put on from the outside survives exactly
+  // until any other flag here moves. Anything the cross wears goes in the list
+  // at the bottom of this file. The two flags written from outside it — the
+  // send sheet's and the card's — cannot use that list, so they are attributes
+  // instead, which React never touches. Both were classes and both were being
+  // wiped; see the notes in SendSheet.js and About.js.
+  const [typing, setTyping] = useState(false);
+  useEffect(() => {
+    const root = railRef.current?.closest('.hn');
+    if (!root) return undefined;
+    let settling = null;
+    const mark = () => {
+      clearTimeout(settling);
+      settling = setTimeout(() => {
+        const el = document.activeElement;
+        setTyping(Boolean(el) && root.contains(el)
+          && (el.tagName === 'TEXTAREA' || el.tagName === 'INPUT' || Boolean(el.isContentEditable)));
+      }, 0);
+    };
+    mark();
+    document.addEventListener('focusin', mark);
+    document.addEventListener('focusout', mark);
+    return () => {
+      clearTimeout(settling);
+      document.removeEventListener('focusin', mark);
+      document.removeEventListener('focusout', mark);
+    };
+  }, []);
 
   // Called by every scroller on the page, horizontal and vertical alike.
   const stir = useCallback(() => {
@@ -2258,7 +2394,8 @@ export default function HomeNav() {
             art: onAir,
             live: isLive,
             from: { left: box.left, top: box.top, width: box.width, height: box.height },
-            to: null, go: false, ms: TO_THE_BAR_MS, into: '.hn-bar-beacon .ses-cover',
+            to: null, go: false, ms: TO_THE_BAR_MS, wait: MAKE_ROOM_MS,
+            into: '.hn-bar-beacon .ses-cover',
           });
         }}
       aria-label="Log a listen"
@@ -2424,6 +2561,9 @@ export default function HomeNav() {
            I'm already scrolling down, I don't need it to be there" (Miyel,
            2026-09-20, and sitewide). */
         + (down[pane] ? ' hn--moved' : '')
+        /* A field in the cross has the focus, so the four doors are out of the
+           way of the keyboard. See the effect beside the bar's own. */
+        + (typing ? ' hn--typing' : '')
       }
       data-pane={pane}
     >

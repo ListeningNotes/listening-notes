@@ -295,40 +295,19 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
       sheet.style.setProperty('--lay-bottom', `${Math.max(0, Math.round(room - vv.offsetTop - vv.height))}px`);
     };
 
-    // And `data-typing` — which is only furniture standing down, never
-    // layout — off the focus, because that is the thing it is actually about.
-    //
-    // A tick behind the event, deliberately. `focusin` fires while the focus
-    // is still moving and `document.activeElement` can still be the element
-    // being left — reading it there said BODY with a textarea plainly
-    // focused. `focusout` has the same problem from the other end: the next
-    // element does not have it yet. A zero timeout lets it settle, and
-    // nothing here is urgent enough to care.
-    let settle = null;
-    const mark = () => {
-      clearTimeout(settle);
-      settle = setTimeout(() => {
-        const el = document.activeElement;
-        const into = el && (el.tagName === 'TEXTAREA' || el.tagName === 'INPUT' || el.isContentEditable);
-        sheet.toggleAttribute('data-typing', Boolean(into));
-      }, 0);
-    };
-
+    // (`data-typing` was set here on every focus until 2026-09-21 and nothing
+    // ever read it — a hook for furniture standing down that no furniture took
+    // up. The trap it had been written around is recorded where the same test
+    // is now actually used, HomeNav's typing effect: `focusin` fires while the
+    // focus is still moving, so read activeElement a tick later.)
     sync();
-    mark();
     vv.addEventListener('resize', sync);
     vv.addEventListener('scroll', sync);
-    document.addEventListener('focusin', mark);
-    document.addEventListener('focusout', mark);
     return () => {
-      clearTimeout(settle);
       vv.removeEventListener('resize', sync);
       vv.removeEventListener('scroll', sync);
-      document.removeEventListener('focusin', mark);
-      document.removeEventListener('focusout', mark);
       sheet.style.removeProperty('--lay-lift');
       sheet.style.removeProperty('--lay-bottom');
-      sheet.removeAttribute('data-typing');
     };
   }, []);
 

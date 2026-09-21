@@ -239,7 +239,7 @@ textarea.su-field { resize: vertical; min-height: 64px; }
 /* 16px on touch or Safari zooms in on focus and does not zoom back. */
 @media (pointer: coarse) { .su-field { font-size: 16px; } }
 .su-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.su-row { display: flex; flex-direction: column; gap: 8px; }
+
 .su-add {
   align-self: flex-start; background: none; border: 0; padding: 0;
   font-family: var(--font-label); font-size: 10px; letter-spacing: 0.1em;
@@ -296,7 +296,7 @@ textarea.su-field { resize: vertical; min-height: 64px; }
   display: block; font-family: var(--font-label); font-size: 10px;
   letter-spacing: 0.12em; text-transform: uppercase; color: var(--ink-faint); margin-bottom: 6px;
 }
-.st-status { font-family: var(--font-label); font-size: 10px; color: var(--ink-faint); margin: 0 0 8px; line-height: 1.5; }
+
 .st-field {
   display: block; width: 100%; box-sizing: border-box;
   background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
@@ -339,34 +339,18 @@ textarea.st-field { resize: vertical; min-height: 96px; }
   letter-spacing: 0.16em; text-transform: uppercase;
   color: var(--ink-faint); margin: 0 0 34px;
 }
-.pp-prose { font-size: 15px; line-height: 1.95; color: var(--ink); }
-.pp-prose p { margin: 0 0 22px; }
-.pp-prose p:last-child { margin-bottom: 0; }
-.pp-subhead {
-  font-family: var(--font-display); font-weight: var(--font-display-weight);
-  font-size: 20px; letter-spacing: -0.01em; color: var(--ink);
-  margin: 0 0 12px;
-}
+
+
 .pp-block + .pp-block { margin-top: 48px; }
 .pp-row { border-bottom: 1px solid var(--border); padding: 14px 0; }
 .pp-row-head { display: flex; align-items: center; gap: 12px; min-height: 20px; }
-.pp-row-tail {
-  margin-left: auto; flex-shrink: 0;
-  font-family: var(--font-label); font-size: 10px;
-  letter-spacing: 0.08em; color: var(--ink-faint);
-}
+
 .pp-row-body {
   font-size: 13px; line-height: 1.8; color: var(--ink-soft);
   margin: 8px 0 0;
 }
-.pp-name { font-size: 13px; color: var(--ink); }
-a.pp-name {
-  display: inline-flex; align-items: center; gap: 6px;
-  border-bottom: 1px solid var(--border); padding-bottom: 1px;
-}
-a.pp-name:hover { border-bottom-color: var(--ink-faint); }
-a.pp-name svg { color: var(--ink-faint); transition: color 0.15s; }
-a.pp-name:hover svg { color: var(--ink); }
+
+
 .pp-foot {
   margin-top: 48px; padding-top: 28px; border-top: 1px solid var(--border);
   display: flex; justify-content: center; align-items: center; gap: 12px; flex-wrap: wrap;
@@ -456,11 +440,6 @@ a.pp-name:hover svg { color: var(--ink); }
   gap: clamp(10px, 1.8dvh, 16px);
 }
 
-.af-square {
-  width: var(--af-square); aspect-ratio: 1;
-  border-radius: 18px; overflow: hidden;
-  display: flex; align-items: center; justify-content: center;
-}
 .af-none { font-size: 2.2rem; color: var(--ink-faint); line-height: 1; }
 
 /* `.af-slot` and `.af-sleeve` were here: a record-sized square holding a ♪
@@ -668,7 +647,7 @@ a.pp-name:hover svg { color: var(--ink); }
 
 @media (max-width: 768px) {
   .af { --af-square: min(140px, 19dvh); }
-  .af-square { border-radius: 15px; }
+
   .af-hand-pair { grid-template-columns: 1fr; }
 }
 
@@ -688,11 +667,7 @@ a.pp-name:hover svg { color: var(--ink); }
   display: flex; flex-direction: column; padding-top: var(--own-nav-bottom);
 }
 .own-screen--layered { --own-nav-bottom: 0px; min-height: 0; }
-.own-kicker {
-  width: 100%; max-width: 1000px; align-self: center; box-sizing: border-box;
-  padding: 10px 24px 0; font-family: var(--font-label); font-size: 10px;
-  letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink-faint);
-}
+
 .own-body {
   position: relative; flex: 1; width: 100%; box-sizing: border-box;
   align-self: center; display: flex; flex-direction: column;
@@ -975,26 +950,18 @@ a.pp-name:hover svg { color: var(--ink); }
 /* The address book: the inbox's sheet and panel, one column of people. A
    row is a face and a name, never the address — the row itself opens your
    page about them, the arrow beside it opens their journal. */
-.bk-body { max-width: 720px; padding: 18px 24px 40px; }
 /* The friends pane stands on the page itself — no panel, no second border
    inside a screen that already has one. The gutters are the book's; what
    goes is the card. */
 .fr-body { max-width: 720px; padding: 18px 24px 40px; display: flex; flex-direction: column; }
-.bk-panel { border-radius: 24px; }
-.bk-scroll { position: relative; z-index: 1; flex: 1; padding: 22px 26px 28px; }
+
+
 /* The field, as wide as the list under it, and its two ways in centred
    beneath: file what is in it, or point the camera at a code. Under, not
    beside, at every width — one shape on a phone and a desk (Miyel,
    2026-09-13). */
-.bk-add { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; align-items: center; margin-bottom: 6px; }
-.bk-add .own-act { gap: 6px; white-space: nowrap; }
-.bk-field {
-  flex: 1 1 100%; min-width: 0; box-sizing: border-box;
-  padding: 10px 14px; border-radius: 999px;
-  border: 1px solid var(--border); background: var(--bg); color: var(--ink);
-  font-family: var(--font-sans); font-size: 14px;
-}
-.bk-field:focus { outline: none; border-color: var(--ink-faint); }
+
+
 /* ══ The friends pane ══════════════════════════════════════════════════════
    Faces, not rows. From Miyel's brief of 2026-09-17 (f1, f2, f4); the
    component is components/main_components/Friends.js and the reasoning is
@@ -1471,42 +1438,30 @@ a.pp-name:hover svg { color: var(--ink); }
   font-family: var(--font-label); font-size: 10px; letter-spacing: 0.1em;
   text-transform: uppercase; color: var(--ink-faint); margin: 8px 0 0; min-height: 14px;
 }
-.bk-list { display: flex; flex-direction: column; margin-top: 18px; }
-.bk-row { display: flex; align-items: center; gap: 12px; padding: 14px 6px; border-bottom: 1px solid var(--border); }
-.bk-row:last-child { border-bottom: none; }
-.bk-person { display: flex; align-items: center; gap: 14px; flex: 1; min-width: 0; text-decoration: none; color: inherit; }
+
+
 /* Their journal's own portrait, read straight off it, over the plain mark
    that shows when there is none or the journal is out. A rounded square,
    the card's shape at this size, not a circle (Miyel, 2026-09-12). */
-.bk-face {
-  position: relative; width: 44px; height: 44px; border-radius: 10px; flex-shrink: 0;
-  background: var(--bg); border: 1px solid var(--border); overflow: hidden;
-  display: flex; align-items: center; justify-content: center; color: var(--ink-faint);
-}
-.bk-face img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
-.bk-who { display: flex; flex-direction: column; min-width: 0; }
+
+
 .bk-name { font-family: var(--font-display); font-weight: var(--font-display-weight, 700); font-size: 15px; color: var(--ink); line-height: 1.25; overflow-wrap: anywhere; }
 /* A journal that has not answered yet has no name, and the row never prints
    the address in its place. */
-.bk-name--none { color: var(--ink-faint); font-weight: 400; }
-.bk-visit { white-space: nowrap; }
+
 /* Crossing somebody out is the rare thing on this page, so it is a faint
    word and not a pill: red only under the pointer, never at rest. */
-.bk-remove {
-  font-family: var(--font-label); font-size: 9.5px; letter-spacing: 0.1em; text-transform: uppercase;
-  color: var(--ink-faint); background: none; border: 0; padding: 6px 4px; cursor: pointer;
-}
-.bk-remove:hover { color: var(--fav); }
+
 /* The camera, in the panel where the field was: a square of it, and Cancel. */
 .bk-scan { display: flex; flex-direction: column; align-items: center; gap: 12px; margin-bottom: 6px; }
 .bk-scan-video { width: 100%; max-width: 360px; aspect-ratio: 1; object-fit: cover; border-radius: 16px; background: #000; }
 .bk-scan-trouble { font-size: 13px; color: var(--fav); margin: 0; text-align: center; }
 @media (max-width: 640px) {
-  .bk-row { flex-wrap: wrap; }
+
 }
 /* Sixteen pixels on touch, like every other field, or Safari zooms in and
    stays there (the rule the send form's section explains). */
-@media (pointer: coarse) { .bk-field { font-size: 16px; } }
+@media (pointer: coarse) {  }
 
 
 /* ── from app/printer/page.js ─────────────────────────────────────────── */
@@ -1815,12 +1770,44 @@ a.pn-item-album:hover { text-decoration: underline; text-underline-offset: 3px; 
    step *is* the list, so there is nothing below it to protect. */
 .sn-sheet--picking .af-results { max-height: none; flex: 1; min-height: 0; }
 
+/* ── The same step, asking who ────────────────────────────────────────────
+   Coming in from a record's tools the question is the person, and it gets the
+   screen the covers get. The faces are MiniAddressBook's, which everywhere
+   else is one row that scrolls sideways — right in a form, wrong here, where
+   a sideways row in a screenful of nothing hides most of a book off the right
+   edge. So the strip becomes a wall for this one step, and grows: 44px faces
+   in a grid with a whole screen to spend read as a list that has not loaded.
+   Sized to land somewhere near the address book's own tiles, which is where
+   anybody looking at a wall of their friends has just come from. */
+.sn-sheet--picking .sn-who { gap: 14px; }
+.sn-sheet--picking .sn-who .ln-sender-book {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+  gap: 18px 10px;
+  align-content: start;
+  contain: none;
+  overflow-x: hidden;
+  overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+  padding: 3px 0 6px;
+}
+/* The auto margins that centre the strip are a row's answer to a row's
+   problem; in a grid they push the first and last tiles out of their own
+   columns. */
+.sn-sheet--picking .sn-who .ln-sender-face { width: auto; }
+.sn-sheet--picking .sn-who .ln-sender-face:first-child,
+.sn-sheet--picking .sn-who .ln-sender-face:last-child { margin-left: 0; margin-right: 0; }
+.sn-sheet--picking .sn-who .ln-sender-portrait {
+  width: 100%;
+  height: auto;
+  aspect-ratio: 1;
+  border-radius: 12px;
+}
+
 .sn-form { display: flex; flex-direction: column; gap: 18px; }
 .sn-group { display: flex; flex-direction: column; gap: 9px; }
-.sn-label {
-  font-family: var(--font-label); font-size: 10px; letter-spacing: 0.14em;
-  text-transform: uppercase; color: var(--ink-faint);
-}
+
 /* The record, when the send started on one. Centred, with the art over its
    name (Miyel, 2026-09-17): it is the object being handed across and the
    subject of everything below it, and a cover pushed into the left corner with

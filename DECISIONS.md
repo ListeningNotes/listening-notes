@@ -150,6 +150,13 @@ thumb gets its 44px and the eye sees only the mark. `.ln-pill` keeps its jobs �
 navigation, and the one primary action a screen has — and stops being the
 default shape for everything else.
 
+**And a word is a word, 2026-09-21.** Save and Cancel on the editing bar were
+an outlined pill and a filled one. A pill is the shape for something you could
+turn on — a filter, a keeper, a pin — and editing is not turned on from there;
+you are already in it. They are plain uppercase words now, the one that
+commits on a hairline, and no tick or cross beside them. `.ln-word`, shared by
+the four bars that share that band.
+
 **One exception, 2026-09-20: the way into a listen is a circle on the
 beacon's rule.** It is the one thing on that screen you can press and it was
 reading as a third caption under a line. The ring is a hairline of the same
@@ -1365,6 +1372,12 @@ you can start. The list at nearly full height, then the message at a third of
 it — the change of size is what says they are steps. **And no × on a sheet
 that pulls down:** it is a mark for a gesture the site already trusts you to
 know, and it sits where the thing worth pressing should be.
+
+**Either half is the step, 2026-09-21.** Whichever of the two is still a
+question takes the screen: a wall of covers coming from the book, a wall of
+faces coming from a record's tools. The half you arrived knowing is never a
+step — a wizard that makes you press through an answer you have already given
+— and the screen you write on is the same screen by either door.
 
 ---
 

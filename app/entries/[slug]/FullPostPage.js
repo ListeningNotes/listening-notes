@@ -9,17 +9,17 @@
 'use client';
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { Check, Envelope, Fingerprint, Heart, SketchLogo, VinylRecord, X } from '@phosphor-icons/react';
+import { Envelope, Fingerprint, Heart, SketchLogo, VinylRecord } from '@phosphor-icons/react';
 import { fonts } from '../../../library/sitewide_visuals';
 import { sizedAlbumArt, fetchAlbumArtUrl } from '../../../library/music_data_api';
-import { parseHorizon, entryTracks, splitNotes, entryTypeLabel, parseRating, flawless } from '../../../library/entry_formatter';
+import { parseHorizon, entryTracks, splitNotes, parseRating, flawless } from '../../../library/entry_formatter';
 import { kept_receipts } from '../../../library/receipts';
 import { buildReferenceIndex, createReferenceLinker } from '../../../library/cross_references';
 import SiteNav from '../../../components/main_components/SiteNav';
 import { createPortal } from 'react-dom';
 import { useLayerHeaderSlot } from '../../../components/main_components/LayerEntry';
 import KeeperTools from '../../../components/main_components/KeeperTools';
+import EditingBar from '../../../components/main_components/EditingBar';
 import { entryPlate } from '../../../components/main_components/EntryPlate';
 import { usePress } from '../../../hooks/usePress';
 import { FRAMES, FRAME_ORDER } from '../../../components/main_components/SharePrinter';
@@ -31,13 +31,12 @@ import Chip from '../../../components/main_components/Slug_Page/Chip';
 import SentBy, { creditOn, useTrail } from '../../../components/main_components/Slug_Page/SentBy';
 import SenderTool from '../../../components/main_components/Slug_Page/SenderTool';
 import SendSheet from '../../../components/main_components/SendSheet';
-import MiniAddressBook from '../../../components/main_components/MiniAddressBook';
 import PrintBar from '../../../components/main_components/Slug_Page/PrintBar';
 import HorizonChart from '../../../components/main_components/HorizonChart';
 import MiniCard from '../../../components/main_components/Slug_Page/MiniCard';
 import MarqueeTitle from '../../../components/main_components/MarqueeTitle';
 import { handedOver, cameReadingOn } from '../../../library/handoff';
-import { tidyAddress, tidyJournal } from '../../../library/return_address';
+import { tidyAddress } from '../../../library/return_address';
 import { useBookplate } from '../../../components/main_components/Bookplate';
 import { useTheme } from '../../../components/main_components/Lightswitch';
 import CodeSlot from '../../../components/main_components/CodeSlot';
@@ -1387,17 +1386,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
           It is also the only thing on the page that says you are editing at
           all once the hero has scrolled off. */}
       {edit.editing && (
-        <div className="ln-editing-bar">
-          <span className="ln-editing-label">Editing</span>
-          <button type="button" className="ln-pin ln-pin--on" onClick={edit.save} disabled={edit.saving}>
-            <Check size={13} weight="bold" aria-hidden="true" />
-            <span>{edit.saving ? 'Saving' : 'Save'}</span>
-          </button>
-          <button type="button" className="ln-pin" onClick={edit.cancel} disabled={edit.saving}>
-            <X size={13} weight="bold" aria-hidden="true" />
-            <span>Cancel</span>
-          </button>
-        </div>
+        <EditingBar onSave={edit.save} onCancel={edit.cancel} saving={edit.saving} />
       )}
       {edit.trouble && <p className="ln-trouble">{edit.trouble}</p>}
       <div ref={setBarSlot} />
@@ -1747,7 +1736,6 @@ export default function FullPostPage({ entry, references = [], authed = false, l
                 slug={entry.slug}
                 trackIndex={-1}
                 comments={albumComments}
-                label={entry.album}
                 onRefresh={loadComments}
               />
             )}
