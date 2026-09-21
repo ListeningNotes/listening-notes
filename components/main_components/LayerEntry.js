@@ -667,7 +667,13 @@ export default function LayerEntry({ children, label = 'Entry', scrolls = false,
          the rise ahead of it, every thumb to the next album sent the whole
          sheet to the floor and brought it back up — Miyel, "they're coming
          off from all over the place." */
+      /* Which way the leaf turned, said on the sheet as well as on the
+         content. The content's own class is what slides it; this is for
+         everything that is not in the content and still belongs to the turn
+         — the record in the header, and the page arriving late enough that
+         the content's animation has already been and gone. */
       className={'lay' + (arrival.still ? ' lay--still' : arrival.swiped ? ' lay--swiped' : rises ? ' lay--rises' : growFrom ? ' lay--grows' : ' lay--fades') + (scrolls ? ' lay--scrolls' : '')
+        + (arrival.swiped === 1 ? ' lay--from-right' : arrival.swiped === -1 ? ' lay--from-left' : '')
         + (over ? ` lay--over-${over}` : '') + (settling ? ' lay--settling' : '') + (pulled ? ' lay--dragging' : '')}
       ref={sheetRef}
       style={pulled ? { transform: `translateY(${dragY}px)` } : undefined}
