@@ -195,9 +195,12 @@ export function carryReading() {
   // a full card landed in the header state (Miyel: "if I'm on the full card
   // it shouldn't switch to the mini beacon"). What is actually being asked
   // is whether the changeover has happened, and the header says so.
-  const crown = document.querySelector('.ln-crown');
-  const up = Boolean(crown) && Number(getComputedStyle(crown).opacity) > 0.5;
-  carriedAt = up ? Date.now() : 0;
+  // How far through the header's handover the reader is. Asked of the
+  // document rather than of a node, because the row is a portal and its
+  // nodes are replaced — and asked as a number rather than by measuring a
+  // cover, which stopped meaning anything once the cover stopped travelling.
+  const turn = Number(getComputedStyle(document.documentElement).getPropertyValue('--ln-turn'));
+  carriedAt = turn > 0.5 ? Date.now() : 0;
 }
 export function cameReadingOn() { return Boolean(carriedAt) && Date.now() - carriedAt < 1500; }
 // Closing a record ends the read: what comes next is an arrival, not a page

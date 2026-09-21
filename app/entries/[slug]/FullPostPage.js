@@ -757,7 +757,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
   // is called twice in development, so anything it touches outside itself is
   // done twice with two different answers.
   useLayoutEffect(() => {
-    document.documentElement.style.setProperty('--ln-lede', arrivesReading ? '0' : '1');
+    document.documentElement.style.setProperty('--ln-turn', arrivesReading ? '1' : '0');
   }, [arrivesReading, entry.slug]);
   useEffect(() => {
     if (!headerSlot) return;
@@ -943,14 +943,15 @@ export default function FullPostPage({ entry, references = [], authed = false, l
     // about them, and the one thing that must be true before the first frame
     // is said to the document, which nothing replaces.
     let crown = null;
+    let ledeEl = null;
     const parts = () => {
       crown = document.querySelector('.ln-crown');
+      ledeEl = document.querySelector('.sitenav-logo');
       return Boolean(crown);
     };
     // The mark's own strength, said on the root: .ln-entry .sitenav-logo
     // reads it, so whichever row is in the slot is already wearing the right
     // answer the moment it is drawn.
-    const lede = amount => document.documentElement.style.setProperty('--ln-lede', amount);
     parts();
     if (!screens || !art || !crown || !row || !one) return undefined;
 
@@ -1010,9 +1011,10 @@ export default function FullPostPage({ entry, references = [], authed = false, l
     // sixty pixels of warning reads as the header getting there first rather
     // than late (Miyel: "when you're scrolling fast it should happen a
     // little quicker, or maybe sooner").
-    const SHUTTER = 320;
+    // How much scroll the whole handover takes. Not a duration: it is the
+    // distance your thumb travels while the two halves change places.
+    const SPAN = 110;
     const LEAD = 60;
-    let closing = null;
     let base = null;
     // Whether the record has finished becoming the header. Kept from the
     // last frame drawn, because the question gets asked at moments when
@@ -1053,7 +1055,13 @@ export default function FullPostPage({ entry, references = [], authed = false, l
       const last = document.querySelector('.ln-screen-one-posted')
         || document.querySelector('.ln-screen-one-chips');
       setCrowning(true);
+      // The slot's two heights, taken with nothing written on them.
+      if (ledeEl) { ledeEl.style.transform = ''; ledeEl.style.clipPath = ''; }
+      crown.style.transform = '';
+      crown.style.clipPath = '';
       base = {
+        ledeH: ledeEl ? ledeEl.getBoundingClientRect().height || 28 : 28,
+        crownH: crown.getBoundingClientRect().height || 44,
         // Where the notes come to rest: the album screen gone under the
         // header. It is what the caret lands on, what a swipe from one
         // record's notes lands on in the next, and where the changeover
@@ -1069,67 +1077,37 @@ export default function FullPostPage({ entry, references = [], authed = false, l
       draw();
     };
     const draw = () => {
-      if (!base) return;
-      // ── Nothing travels, 2026-09-20 ───────────────────────────────────
-      // Miyel: "the image needs to pass under the header, not animate up."
-      // Which is the rest of the sentence she started with — "it all
-      // disappears under until it's all the way up there, it doesn't even
-      // really need an animation, and by the time everything gets to the top
-      // it just sticks and replaces the header."
+      if (!base || !parts()) return;
+      // ── The handover is under your thumb, 2026-09-20 ──────────────────
+      // It was a clip that played when the scroll crossed a line, and Miyel's
+      // read of it was that a played animation is the wrong idea however it
+      // is timed: "it should move with your thumb — if you're slow enough you
+      // could hold it in the middle and see half of the logo and half of the
+      // mini card. That's how closely I'm looking at it. It doesn't need to
+      // be slower or faster, because it actually moves with the swipe."
       //
-      // So the record does not move and does not shrink. The album screen
-      // goes up and under the header the way any page goes under any header,
-      // cover and all, and the header changes over as the last of it passes:
-      // the journal's name out, the record in. A relay, not a morph. There
-      // were two other answers before this one — a lag with a shrink, and a
-      // hold with a floor reaching past the cover — and both were, in her
-      // words, a little bit dramatic for the page.
+      // So it is a slot with two things in it, and the scroll is what moves
+      // them. Both travel *up*, because that is the direction the record is
+      // going: the journal's mark rises out of the top of the row and the
+      // record rises into the bottom of it, each clipped to the slot so what
+      // has left is gone and what has not arrived is not there yet. Hold it
+      // half way and you have half of each.
       //
-      // And it is a swap, not a fade. It ran over the last hundred and sixty
-      // pixels for an hour, and Miyel's answer was the same one she gave the
-      // listen's arrival a fortnight ago: "just not cross fade." Two things
-      // half-drawn over each other in the middle of a row is not a header
-      // becoming another header, it is a header nobody can read. So the
-      // journal's name holds the middle for the whole of the album screen
-      // and the record takes it the instant that screen has gone.
-      const on = screens.scrollTop >= base.turns;
-      // ── It arrives, it does not appear, 2026-09-20 ────────────────────
-      // Miyel: "I need it to have some kind of way to get there that is not
-      // just appearing, but also not so loud that your eye hits it. I don't
-      // like crossfades, but there must be something."
-      //
-      // A wipe. The record is uncovered from its top edge down over a fifth
-      // of a second — the shutter a departures board has — so there is
-      // movement to follow and never two things drawn over each other. The
-      // mark goes the instant it starts, because the whole point of not
-      // fading is that they are never both there.
-      if (on !== done && crown) {
-        // ── And it undoes itself on the way back, 2026-09-20 ────────────
-        // Miyel: "when you go back up it needs to undo — it needs to reverse
-        // back to the logo, not just disappear." So the shutter runs the
-        // other way and the mark waits for it: the record is covered from
-        // its foot up, and only once it has gone does the row go back to
-        // being the journal's.
-        clearTimeout(closing);
-        crown.classList.remove('ln-crown--in', 'ln-crown--out');
-        void crown.offsetWidth;
-        crown.classList.add(on ? 'ln-crown--in' : 'ln-crown--out');
-        // Both said on the document rather than on the elements: the row is
-        // a portal and its nodes are replaced out from under anything
-        // holding one, and a number written here as an inline style would
-        // also beat the rule that gets the record out of the tools' way.
-        if (on) {
-          document.documentElement.style.setProperty('--ln-crown', '1');
-          lede('0');
-        } else {
-          closing = setTimeout(() => {
-            document.documentElement.style.setProperty('--ln-crown', '0');
-            lede('1');
-          }, SHUTTER);
-        }
+      // Backwards is the same sum with a smaller number in it, so there is
+      // nothing to reverse and nothing to time.
+      const p = Math.min(1, Math.max(0,
+        (screens.scrollTop - (base.turns - SPAN)) / SPAN));
+      const up = amount => `${amount.toFixed(1)}px`;
+      if (ledeEl) {
+        ledeEl.style.transform = `translateX(-50%) translateY(${up(-p * base.ledeH)})`;
+        ledeEl.style.clipPath = `inset(${up(p * base.ledeH)} 0 0 0)`;
       }
-      done = on;
-      // And now it can be drawn: there is a number for it.
+      crown.style.transform = `translateY(${up((1 - p) * base.crownH)})`;
+      crown.style.clipPath = `inset(0 0 ${up((1 - p) * base.crownH)} 0)`;
+      // How far through, for anybody who needs to know without measuring:
+      // the swipe asks this when it carries a reader to the next record.
+      document.documentElement.style.setProperty('--ln-turn', p.toFixed(3));
+      done = p >= 1;
       setLedeDrawn(true);
     };
 
@@ -1151,9 +1129,6 @@ export default function FullPostPage({ entry, references = [], authed = false, l
       // waited, the journal's mark had never been told to give the row up:
       // Miyel, "the mini LN loads over the mini card on swipe."
       done = true;
-      // Said before anything is drawn, because the row that will read it may
-      // not be the row that is in the slot right now.
-      lede('0');
     }
 
     measure();
@@ -1189,9 +1164,12 @@ export default function FullPostPage({ entry, references = [], authed = false, l
       narrow.removeEventListener('change', measure);
       window.removeEventListener('resize', measure);
       watch.disconnect();
-      clearTimeout(closing);
-      document.documentElement.style.removeProperty('--ln-crown');
-      if (crown) crown.classList.remove('ln-crown--in', 'ln-crown--out');
+      // Nothing taken away: the record arriving sets these for itself, and a
+      // leaving one that cleared them left the header blank for the length of
+      // a page turn — which is what took the record out of the row on a swipe
+      // and the reading state with it.
+      if (crown) { crown.style.transform = ''; crown.style.clipPath = ''; }
+      if (ledeEl) { ledeEl.style.transform = ''; ledeEl.style.clipPath = ''; }
       // Not taken away. The record arriving sets it for itself, and a
       // leaving one that cleared it was clearing the new one's answer.
       setCrowning(false);
