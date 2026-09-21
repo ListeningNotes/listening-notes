@@ -10,7 +10,7 @@
 import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Check, Fingerprint, Heart, SketchLogo, VinylRecord, X } from '@phosphor-icons/react';
+import { Check, Envelope, Fingerprint, Heart, SketchLogo, VinylRecord, X } from '@phosphor-icons/react';
 import { fonts } from '../../../library/sitewide_visuals';
 import { sizedAlbumArt, fetchAlbumArtUrl } from '../../../library/music_data_api';
 import { parseHorizon, entryTracks, splitNotes, entryTypeLabel, parseRating, flawless } from '../../../library/entry_formatter';
@@ -998,10 +998,24 @@ export default function FullPostPage({ entry, references = [], authed = false, l
     // ignores it — so it is asked for again until it takes, or until the
     // record turns out to be short enough that the top is the answer.
     let want = null;
+    // ── A record with too little written about it, 2026-09-20 ─────────────
+    // The changeover happens when the record's own words have gone under the
+    // header, and some records do not have enough page under them to get
+    // there — a cover, a score and two lines. Arriving at one of those from
+    // a reader meant the header could not finish becoming the record, so it
+    // showed the full card, and the swipe after it read that as "not
+    // reading" and took the whole run out of the reading state. Miyel:
+    // "randomly it will just decide the next swipe is a full card, like
+    // three swipes in."
+    //
+    // A record that arrives reading and cannot scroll far enough is already
+    // where it was going.
+    let stuck = false;
     const settle = () => {
       if (want == null) return;
       const far = Math.max(0, screens.scrollHeight - screens.clientHeight);
       const aim = Math.min(want, far);
+      if (aim < want - 1) stuck = true;
       if (screens.scrollTop < aim - 1) screens.scrollTop = aim;
       if (screens.scrollTop >= aim - 1) want = null;
     };
@@ -1102,7 +1116,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
       //
       // Backwards is the same sum with a smaller number in it, so there is
       // nothing to reverse and nothing to time.
-      const p = Math.min(1, Math.max(0,
+      const p = stuck ? 1 : Math.min(1, Math.max(0,
         (screens.scrollTop - (base.turns - SPAN)) / SPAN));
       const up = amount => `${amount.toFixed(1)}px`;
       if (ledeEl) {
@@ -1142,25 +1156,18 @@ export default function FullPostPage({ entry, references = [], authed = false, l
       done = true;
     }
 
-    // ── A page that arrives after its own turn, 2026-09-20 ───────────────
+    // ── A page that arrives after its own turn, and why it is left alone ──
     // The sheet slides its content out to one side and the next in from the
     // other, and a record is a fetch away — so on anything slower than a
-    // prefetch the animation has been and gone by the time there is a page
-    // to move, and the writing appears where it should have arrived. Miyel:
-    // "the text leaves the correct direction but nothing comes in the
-    // correct direction."
+    // prefetch the animation is over before there is a page to move, and the
+    // writing appears where it should have arrived.
     //
-    // So a page that finds its turn already over does the turn itself.
-    // Having looked, because a page that arrived in time is already moving
-    // and a second animation on a child of the thing moving it would carry
-    // it twice as far.
-    if (sheet && sheet.classList.contains('lay--swiped')) {
-      const moving = sheet.querySelector('.lay-content')
-        ?.getAnimations().some(a => a.playState === 'running');
-      const way = sheet.classList.contains('lay--from-right') ? 'right'
-        : sheet.classList.contains('lay--from-left') ? 'left' : null;
-      if (!moving && way) screens.classList.add(`ln-screens--from-${way}`);
-    }
+    // Sliding it a second time here was worse: what you saw was the page
+    // land and then leave and come back (Miyel: "it loads once without the
+    // barcode glyph, then slides back in with it"). One arrival that misses
+    // its turn beats two arrivals. The fetch is the thing to fix, and it is
+    // a prefetch already — this is a dev-server reading, and worth judging
+    // again on a build.
 
     measure();
     // And again the moment the arrival is over, which is the measurement
@@ -1199,7 +1206,6 @@ export default function FullPostPage({ entry, references = [], authed = false, l
       // leaving one that cleared them left the header blank for the length of
       // a page turn — which is what took the record out of the row on a swipe
       // and the reading state with it.
-      screens.classList.remove('ln-screens--from-right', 'ln-screens--from-left');
       if (crown) { crown.style.removeProperty('--ln-slot'); crown.style.clipPath = ''; }
       if (ledeEl) { ledeEl.style.transform = ''; ledeEl.style.clipPath = ''; }
       // Not taken away. The record arriving sets it for itself, and a
@@ -1249,6 +1255,12 @@ export default function FullPostPage({ entry, references = [], authed = false, l
       <span className="ln-crown-marks" aria-hidden="true">
         {displayRating > 0 && <StarRating rating={displayRating} size={11} glow={false} animate={false} />}
         <span className="ln-crown-flags">
+          {/* The envelope, the fourth mark. A record somebody sent wears it
+              everywhere else on this site and was the one thing the header
+              dropped. Faint ink, like the rest of them. */}
+          {entry.entry_type === 'Submission' && (
+            <span className="ln-crown-flag" style={{ color: 'var(--ink-faint)' }}><Envelope size={12} weight="regular" /></span>
+          )}
           {(entry.favorite === true || entry.favorite === 'true') && (
             <span className="ln-crown-flag" style={{ color: 'var(--fav, #f0484f)' }}><Heart size={12} weight="fill" /></span>
           )}
