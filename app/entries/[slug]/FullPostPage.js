@@ -1064,7 +1064,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
       setCrowning(true);
       // The slot's two heights, taken with nothing written on them.
       if (ledeEl) { ledeEl.style.transform = ''; ledeEl.style.clipPath = ''; }
-      crown.style.transform = '';
+      crown.style.removeProperty('--ln-slot');
       crown.style.clipPath = '';
       base = {
         ledeH: ledeEl ? ledeEl.getBoundingClientRect().height || 28 : 28,
@@ -1109,7 +1109,11 @@ export default function FullPostPage({ entry, references = [], authed = false, l
         ledeEl.style.transform = `translateX(-50%) translateY(${up(-p * base.ledeH)})`;
         ledeEl.style.clipPath = `inset(${up(p * base.ledeH)} 0 0 0)`;
       }
-      crown.style.transform = `translateY(${up((1 - p) * base.crownH)})`;
+      // Said as a number and not as a transform: the leaf's own sideways
+      // drag is written on the sheet by LayerEntry, and the two are added up
+      // in the stylesheet. Two authors, one transform, neither overwriting
+      // the other.
+      crown.style.setProperty('--ln-slot', up((1 - p) * base.crownH));
       crown.style.clipPath = `inset(0 0 ${up((1 - p) * base.crownH)} 0)`;
       // How far through, for anybody who needs to know without measuring:
       // the swipe asks this when it carries a reader to the next record.
@@ -1196,7 +1200,7 @@ export default function FullPostPage({ entry, references = [], authed = false, l
       // a page turn — which is what took the record out of the row on a swipe
       // and the reading state with it.
       screens.classList.remove('ln-screens--from-right', 'ln-screens--from-left');
-      if (crown) { crown.style.transform = ''; crown.style.clipPath = ''; }
+      if (crown) { crown.style.removeProperty('--ln-slot'); crown.style.clipPath = ''; }
       if (ledeEl) { ledeEl.style.transform = ''; ledeEl.style.clipPath = ''; }
       // Not taken away. The record arriving sets it for itself, and a
       // leaving one that cleared it was clearing the new one's answer.
@@ -1219,7 +1223,12 @@ export default function FullPostPage({ entry, references = [], authed = false, l
       aria-label={`Back to ${entry.album}`}
     >
       <span className="ln-crown-art" aria-hidden="true">
-        {coverSrc ? <img src={coverSrc} alt="" /> : <span className="ln-crown-none">♪</span>}
+        {/* Synchronously, like the one on the page: this is the same picture
+            the record was just showing, and an async decode of a new element
+            is a frame with no cover in it on every turn. */}
+        {coverSrc
+          ? <img src={coverSrc} alt="" decoding="sync" />
+          : <span className="ln-crown-none">♪</span>}
       </span>
       <span className="ln-crown-hole" aria-hidden="true" />
       <span className="ln-crown-said">
