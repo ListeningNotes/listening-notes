@@ -2341,6 +2341,12 @@ export default function HomeNav() {
         /* The crown is travelling into the bar on this screen, so the bar's
            own small mark stays out of its way. See the morph effect. */
         + (morphing ? ' hn--morph' : '')
+        /* Whether the pane you are looking at has moved. The way down is an
+           offer, and an offer you have already taken is a thing in the way:
+           "when you start swiping I'd like the down carets to disappear —
+           I'm already scrolling down, I don't need it to be there" (Miyel,
+           2026-09-20, and sitewide). */
+        + (down[pane] ? ' hn--moved' : '')
       }
       data-pane={pane}
     >

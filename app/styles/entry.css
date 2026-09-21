@@ -1473,6 +1473,10 @@ a.ln-sent-who:hover { text-decoration: underline; text-underline-offset: 3px; }
      colour and what it hides is whatever has gone under. */
   .ln-entry .sitenav-row::before { transition: none; }
   .ln-entry--scrolled .sitenav-row::before { opacity: 1; }
+  /* The record's own caret, on the same rule as the cross's: an offer you
+     have taken is a thing in the way. */
+  .ln-scroll-cue { transition: opacity 0.18s linear; }
+  .ln-entry--scrolled .ln-scroll-cue { opacity: 0; pointer-events: none; }
   .ln-entry--scrolled .hp-dotnav {
     opacity: 0;
     pointer-events: none;

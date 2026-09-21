@@ -260,6 +260,13 @@ with a cover, meaning the one pane where something is cut off at a fold rather
 than simply running on. Everything else scrolls, and content running off the
 edge is its own cue.
 
+**A gap may carry you across itself, and that is not a snap, 2026-09-20.**
+Let go inside the dead stretch between a record's last words and its
+writing and it finishes the stretch, the way you were already going. Let go
+anywhere else and nothing happens. A snap owns a whole scroller and pulls
+back on every throw, which is why there is none; this owns one measured
+stretch and is silent everywhere else, including all of the reading.
+
 **No vertical snap anywhere on the cross, 2026-09-20.** The two-floor panes
 snapped for a fortnight and the exception has now gone with the shape that
 earned it: `mandatory` was safe only while a second floor was exactly one

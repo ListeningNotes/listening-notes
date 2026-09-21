@@ -3028,6 +3028,14 @@ a.hp-recent-tile:hover { transform: translateY(-2px); }
     color: var(--ink-faint);
     transition: color 0.15s;
   }
+  /* ── And it goes once you are going, 2026-09-20 ──────────────────────
+     The caret says there is something below. The moment you have started
+     towards it that is a sentence nobody needs, and it is in the way of the
+     thing it was pointing at. It comes back at the top, where it is an
+     offer again. Faded rather than removed, so the row under it does not
+     jump, and not tappable while it is gone. */
+  .hn-down { transition: opacity 0.18s linear; }
+  .hn--moved .hn-down { opacity: 0; pointer-events: none; }
   .hn-down:hover { color: var(--ink-soft); }
   .hn-down:focus-visible { outline: 2px solid var(--ink-faint); outline-offset: 3px; border-radius: 6px; }
   /* ── The chevron, larger, and breathing, 2026-09-20 ──────────────────

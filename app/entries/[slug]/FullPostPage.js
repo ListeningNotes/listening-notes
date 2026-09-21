@@ -1169,6 +1169,58 @@ export default function FullPostPage({ entry, references = [], authed = false, l
     // a prefetch already — this is a dev-server reading, and worth judging
     // again on a build.
 
+    // ── The gap carries you across itself, 2026-09-20 ────────────────────
+    // Between the last of a record's own words and the first of the writing
+    // there is a stretch of nothing: the album screen is a screenful and its
+    // facts do not fill one. Miyel: "I wish it kind of skipped you ahead to
+    // where you're already trying to get to — it's almost like it auto
+    // scrolls the gap for you, so you can't just stop in the middle."
+    //
+    // Which is not a snap. A snap owns the whole page and pulls back on
+    // every throw, and this site took its vertical snapping off this morning
+    // for exactly that (DECISIONS). This owns one stretch and nothing else:
+    // let go inside the gap and it finishes the gap for you, in whichever
+    // direction you were already going. Let go anywhere else and nothing
+    // happens at all, which is most of the record.
+    //
+    // Only once a finger is off the glass, and only once the scrolling has
+    // actually stopped — a throw that is still travelling is not somewhere
+    // anybody has stopped.
+    let held = false;
+    let idle = null;
+    let ours = false;
+    let wentDown = true;
+    let wasAt = 0;
+    const onHold = () => { held = true; clearTimeout(idle); };
+    const onLetGo = () => { held = false; };
+    const rest = () => {
+      if (!base || held || ours) return;
+      const at = screens.scrollTop;
+      const from = base.turns;
+      const to = base.ends;
+      if (to - from < 80) return;              // no gap worth crossing
+      if (at <= from + 8 || at >= to - 8) return;
+      ours = true;
+      // Whichever way you were already going, not whichever edge is nearer.
+      // The gap is crossed on the way to something; being put back where you
+      // came from because you stopped an inch early is the opposite of
+      // "skips you ahead to where you're already trying to get to".
+      const home = wentDown ? to : from;
+      screens.scrollTo({ top: home, behavior: 'smooth' });
+      setTimeout(() => { ours = false; }, 500);
+    };
+    const settleLater = () => {
+      const at = screens.scrollTop;
+      if (at !== wasAt) wentDown = at > wasAt;
+      wasAt = at;
+      clearTimeout(idle);
+      idle = setTimeout(rest, 140);
+    };
+    screens.addEventListener('touchstart', onHold, { passive: true });
+    screens.addEventListener('touchend', onLetGo, { passive: true });
+    screens.addEventListener('touchcancel', onLetGo, { passive: true });
+    screens.addEventListener('scroll', settleLater, { passive: true });
+
     measure();
     // And again the moment the arrival is over, which is the measurement
     // that counts.
@@ -1198,6 +1250,11 @@ export default function FullPostPage({ entry, references = [], authed = false, l
       if (sheet) sheet.removeEventListener('transitionend', measure);
       if (watchSheet) watchSheet.disconnect();
       screens.removeEventListener('scroll', draw);
+      screens.removeEventListener('scroll', settleLater);
+      screens.removeEventListener('touchstart', onHold);
+      screens.removeEventListener('touchend', onLetGo);
+      screens.removeEventListener('touchcancel', onLetGo);
+      clearTimeout(idle);
       screens.removeEventListener('load', measure, true);
       narrow.removeEventListener('change', measure);
       window.removeEventListener('resize', measure);
