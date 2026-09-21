@@ -285,15 +285,8 @@
    content's class is about. */
 .lay--from-right .ln-crown { animation: layFromRight 0.36s cubic-bezier(0.22, 0.61, 0.36, 1); }
 .lay--from-left  .ln-crown { animation: layFromLeft  0.36s cubic-bezier(0.22, 0.61, 0.36, 1); }
-/* The page's own, and only when it is late. The content above it slides on
-   its own class, so a record that arrives in time is already moving and a
-   second animation on a child would move it twice as far. FullPostPage puts
-   these on, having looked. */
-.ln-screens--from-right { animation: layFromRight 0.36s cubic-bezier(0.22, 0.61, 0.36, 1); }
-.ln-screens--from-left  { animation: layFromLeft  0.36s cubic-bezier(0.22, 0.61, 0.36, 1); }
 @media (prefers-reduced-motion: reduce) {
-  .lay--from-right .ln-crown, .lay--from-left .ln-crown,
-  .ln-screens--from-right, .ln-screens--from-left { animation: none; }
+  .lay--from-right .ln-crown, .lay--from-left .ln-crown { animation: none; }
 }
 @keyframes layFromRight { from { transform: translateX(100%); } to { transform: none; } }
 @keyframes layFromLeft  { from { transform: translateX(-100%); } to { transform: none; } }
