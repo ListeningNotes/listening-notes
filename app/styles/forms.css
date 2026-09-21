@@ -1882,3 +1882,48 @@ a.pn-item-album:hover { text-decoration: underline; text-underline-offset: 3px; 
   background: var(--panel); color: var(--ink-soft); cursor: pointer;
 }
 .bk-send:hover { color: var(--ink); border-color: var(--ink-faint); }
+
+/* ── from components/main_components/UpdateSwitch.js ───────────────────────
+   Turning on the thing that keeps a journal current: a line with a light in
+   it, what the press will do, and the press. `--centered` is the setup
+   screen, which is centred top to bottom; Settings is a left-aligned page. */
+.usw { display: flex; flex-direction: column; gap: 14px; }
+.usw--centered { align-items: center; text-align: center; }
+.usw-line {
+  display: flex; align-items: center; gap: 10px; margin: 0;
+  font-size: 14px; line-height: 1.6; color: var(--ink);
+}
+.usw--centered .usw-line { justify-content: center; }
+/* The light. Off is a hollow ring, waiting spins, on is filled and green —
+   the one green on the site that is not the beacon, and it means the same
+   thing there: something is actually running. */
+.usw-lamp {
+  flex: 0 0 auto; width: 10px; height: 10px; border-radius: 50%;
+  border: 1.5px solid var(--ink-faint); box-sizing: border-box;
+}
+.usw-lamp--on { background: #4c9a70; border-color: #4c9a70; }
+.usw-lamp--waiting {
+  border-color: var(--ink-faint); border-top-color: transparent;
+  animation: usw-spin 0.8s linear infinite;
+}
+@keyframes usw-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+  .usw-lamp--waiting { animation: none; opacity: 0.5; }
+}
+.usw-how { margin: 0; font-size: 13px; line-height: 1.65; color: var(--ink-soft); max-width: 420px; }
+.usw--centered .usw-how { margin-inline: auto; }
+.usw-how strong { color: var(--ink); font-weight: 600; }
+.usw-go {
+  align-self: flex-start; padding: 10px 20px; border-radius: 999px; cursor: pointer;
+  background: var(--ink); color: var(--bg); border: 1px solid var(--ink);
+  font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase;
+}
+.usw--centered .usw-go { align-self: center; }
+.usw-go:disabled { opacity: 0.5; cursor: default; }
+.usw-skip {
+  align-self: flex-start; padding: 0; background: none; border: 0; cursor: pointer;
+  font-family: var(--font-label); font-size: 10px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--ink-faint);
+}
+.usw--centered .usw-skip { align-self: center; }
+.usw-skip:hover { color: var(--ink); }

@@ -69,6 +69,7 @@ import { BIO_PROMPTS, BIO_LIMIT } from '../../library/bioprompt';
 import PasswordGate from '../../components/session_components/PasswordGate';
 import { shrink } from '../../components/main_components/IdentificationCardEditor';
 import AddToHomeScreen from '../../components/main_components/AddToHomeScreen';
+import UpdateSwitch from '../../components/main_components/UpdateSwitch';
 import { useJournalHost } from '../../hooks/useJournalHost';
 
 // The password claims the journal; the home screen comes after, because it is
@@ -78,7 +79,10 @@ import { useJournalHost } from '../../hooks/useJournalHost';
 // now — see About.js. Last.fm and the Anthropic key followed the rig until
 // 2026-09-13 and were asked in Settings after that; Last.fm went altogether
 // on 2026-09-16 and the key is still there — the note at the top.
-const STEPS = ['name', 'photo', 'prompts', 'rig', 'password', 'homescreen'];
+// Updates sits after the password because it is the first thing the journal
+// asks of somebody who now owns it, and before the home screen because the
+// home screen is the door closing behind them — it stays last.
+const STEPS = ['name', 'photo', 'prompts', 'rig', 'password', 'updates', 'homescreen'];
 const PASSWORD_FLOOR = 8;
 
 async function patchSettings(fields) {
@@ -507,6 +511,13 @@ export default function WelcomeScreen() {
                   {busy ? 'Claiming…' : 'Claim the journal'}
                 </button>
               </form>
+            )}
+
+            {current === 'updates' && (
+              <div className="su-fields">
+                <p className="su-why" style={{ textAlign: 'center' }}>One thing this copy cannot do for itself.</p>
+                <UpdateSwitch centered onDone={() => advance()} />
+              </div>
             )}
 
             {current === 'homescreen' && (
