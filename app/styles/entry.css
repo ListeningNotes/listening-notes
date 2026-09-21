@@ -477,11 +477,6 @@
   border-radius: 6px;
   background: var(--border);
 }
-/* The reading version: a page of notes rather than a record. Left-aligned
-   and starting under the header, which is where the writing starts. */
-.lay-wait--read { align-items: stretch; padding: calc(var(--ln-band) + 40px) 24px 0; gap: 22px; }
-.lay-wait-line--read { height: 0.8rem; }
-.lay-wait-line--short { width: 58%; }
 .lay-wait-line--title { width: min(62%, 300px); height: 1.9rem; margin-top: 6px; }
 .lay-wait-line--byline { width: min(38%, 190px); height: 0.9rem; }
 /* Breathing rather than sweeping. A shimmer that travels reads as a progress
@@ -1228,14 +1223,11 @@ a.ln-sent-who:hover { text-decoration: underline; text-underline-offset: 3px; }
     position: absolute;
     left: 50%;
     transform: translateX(-50%);
-    /* Written on the document by the collapse, not on this element: the row
-       this sits in is swapped out from under it on a swipe, and a number
-       written on the old one is written on nothing. */
-    opacity: var(--ln-lede, 1);
-    /* And no transition on it. The sitewide rule fades this corner over
-       0.18s, which turned the changeover into exactly the thing Miyel said
-       not to do — "just not cross fade" — with the mark and the record both
-       half-drawn over each other for a fifth of a second. */
+    /* No fade either way. The mark leaves through the top of the slot and
+       the record comes up through the bottom, both clipped, and a clip is a
+       thing with an edge. The sitewide rule eases this corner over 0.18s and
+       would leave a ghost of the mark over the record — "just not cross
+       fade" (Miyel). */
     transition: none;
   }
   /* Already collapsed before anything was drawn — the wait state, when the
@@ -1244,11 +1236,10 @@ a.ln-sent-who:hover { text-decoration: underline; text-underline-offset: 3px; }
   .ln-entry--crowned .sitenav-logo { opacity: 0; }
   .ln-crown {
     position: relative;
-    /* Read from the document, not written on this element: the row is a
-       portal and its nodes are replaced. Written here as an inline style it
-       would also beat the tools' rule below, which is why the menu opened
-       straight over the record. */
-    opacity: var(--ln-crown, 0);
+    /* Always drawn, and hidden by the slot instead: the collapse writes a
+       clip and a transform on this every frame, and before the handover
+       begins the clip is the whole of it. Opacity is left alone so the
+       tools' rule below can have it. */
     background: none;
     border: 0;
     padding: 0;
@@ -1341,25 +1332,13 @@ a.ln-sent-who:hover { text-decoration: underline; text-underline-offset: 3px; }
      Miyel: "when I open the toolbar it still overlaps with the mini beacon." */
   .sitenav-row[data-tooling] .ln-crown { opacity: 0; pointer-events: none; }
 
-  /* ── The shutter ─────────────────────────────────────────────────────
-     The record is uncovered from its top edge down, which is movement to
-     follow without anything being drawn over anything else. Not a fade:
-     "I don't like crossfades, but there must be something" (Miyel). */
-  @keyframes ln-crown-in {
-    from { clip-path: inset(0 0 100% 0); }
-    to   { clip-path: inset(0 0 0 0); }
-  }
-  /* And the same shutter closing, for the way back up. */
-  @keyframes ln-crown-out {
-    from { clip-path: inset(0 0 0 0); }
-    to   { clip-path: inset(0 0 100% 0); }
-  }
-  .ln-crown--in  { animation: ln-crown-in  320ms cubic-bezier(0.22, 0.61, 0.36, 1); }
-  .ln-crown--out { animation: ln-crown-out 320ms cubic-bezier(0.22, 0.61, 0.36, 1); }
-  @media (prefers-reduced-motion: reduce) {
-    .ln-crown--in,
-    .ln-crown--out { animation: none; }
-  }
+  /* ── The slot ────────────────────────────────────────────────────────
+     Where the handover happens, and there is no keyframe in it: the scroll
+     is the clock. The collapse writes the clip and the offset on both halves
+     every frame, so holding your thumb still holds the handover still, half
+     a mark above half a record (Miyel: "that's how closely I'm looking at
+     it"). This is the state before any of that is written. */
+  .ln-crown { clip-path: inset(0 0 100% 0); }
 
   /* The record's own art stays on the page and scrolls away with it. It was
      hidden here while the header was carrying a travelling copy of it; there

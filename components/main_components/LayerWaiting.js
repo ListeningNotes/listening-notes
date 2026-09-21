@@ -73,6 +73,9 @@ export default function LayerWaiting({ slug, authed = false }) {
     if (!headerSlot) return;
     headerSlot.setAttribute('class', 'lay-header ln-entry'
       + (onward ? ' ln-entry--scrolled ln-entry--crowning' : ''));
+    // Where the handover stands, for the row this is about to draw and for
+    // the swipe that may leave from it.
+    if (onward) document.documentElement.style.setProperty('--ln-turn', '1');
   }, [headerSlot, onward]);
   const header = headerSlot
     ? createPortal(
@@ -124,19 +127,11 @@ export default function LayerWaiting({ slug, authed = false }) {
             headerSlot,
           )
         : null}
-      {/* Not an empty page. The turn slides whatever is on the sheet out to
-          one side and the next thing in from the other, and with nothing
-          here it was sliding a blank in — so the record arriving in the
-          header looked right and the page under it appeared out of nowhere
-          (Miyel, asking for the turn in the mini state too). Three ruled
-          lines is what a page of notes is from across the room. */}
-      <div className="ln-screens" aria-hidden="true">
-        <div className="lay-wait lay-wait--read">
-          <div className="lay-wait-line lay-wait-line--read" />
-          <div className="lay-wait-line lay-wait-line--read" />
-          <div className="lay-wait-line lay-wait-line--read lay-wait-line--short" />
-        </div>
-      </div>
+      {/* And nothing under it. Three ruled lines stood in for the notes here
+          for an hour and read as exactly what they were — Miyel: "it swipes
+          off the screen with these weird glyphs." A blank page for the length
+          of a prefetched fetch is the quieter wrong answer. */}
+      <div className="ln-screens" aria-hidden="true" />
     </>);
   }
 
