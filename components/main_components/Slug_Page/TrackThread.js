@@ -140,7 +140,6 @@ export default function TrackThread({
         slug={slug}
         trackIndex={trackIndex}
         comments={trackComments}
-        label={track.name}
         onRefresh={onRefresh}
       />}
     </div>
